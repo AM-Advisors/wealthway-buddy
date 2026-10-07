@@ -614,11 +614,9 @@ async function monthEndFacts(offeringId: string, month: string) {
   }
   // Pilot M7: NAV and allocation controls, where this period has them.
   const [{ data: navs }, { data: runs }, { data: exc }] = await Promise.all([
-    (async () => {
-      if (!book) return { data: [] };
-      const { data: per } = await db().from("accounting_periods").select("id").eq("book_id", book.id).eq("period_end", end).maybeSingle();
-      return per ? db().from("nav_versions").select("status").eq("period_id", per.id) : { data: [] };
-    })(),
+    // Run 3: NAVs calculated before the period row existed have no period_id,
+    // so match on the fund and the NAV's as-of date instead.
+    db().from("nav_versions").select("status").eq("offering_id", offeringId).eq("as_of_date", end),
     db().from("allocation_runs").select("status").eq("offering_id", offeringId).eq("period_end", end),
     db().from("accounting_exceptions").select("id").eq("offering_id", offeringId).in("status", ["open", "investigating"]).limit(200),
   ]);
@@ -626,7 +624,8 @@ async function monthEndFacts(offeringId: string, month: string) {
   const runRows = ((runs ?? []) as any[]).filter((r) => !["superseded", "cancelled"].includes(String(r.status)));
   return monthEndChecklist({
     periodEndBalance,
-    navPublished: navRows.length ? navRows.some((n) => n.status === "published") : null,
+    // A month with investor allocations must also have a published NAV.
+    navPublished: navRows.length ? navRows.some((n) => n.status === "published") : runRows.length ? false : null,
     allocationsFinalized: runRows.length ? runRows.some((r) => r.status === "finalized") : null,
     openAccountingExceptions: ((exc ?? []) as any[]).length,
     hasBook: Boolean(book),

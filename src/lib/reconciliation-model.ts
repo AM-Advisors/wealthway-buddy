@@ -160,6 +160,8 @@ const OUTFLOW_KEYWORDS: [RegExp, CashTransactionType][] = [
   [/(management\s*fee|mgmt\s*fee|advisory fee)/i, "management_fee"],
   [/(distribution|dividend to|lp distribution)/i, "distribution"],
   [/(organi[sz]ational|formation|legal formation)/i, "organizational_expense"],
+  // Pilot M3: professional-fee outflows are fund expenses, not "other".
+  [/(legal fees?|professional fees?|audit fees?|accounting fees?|tax prep(aration)? fees?|law firm|counsel)/i, "fund_expense"],
   [/(investment in|portfolio|purchase of (shares|units|safe|note))/i, "portfolio_investment"],
   [/(withholding|1042|backup withhold)/i, "withholding"],
   [/(irs|franchise tax|state tax|tax payment)/i, "tax_payment"],

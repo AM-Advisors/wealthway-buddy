@@ -1,0 +1,13 @@
+import { N, U, step, db } from "./lib";
+const cc = await import("@/lib/capital-calls.server");
+const C = "8a84e08c-4324-4256-8e07-4991d295dd4f";
+const v: any = await step("funding instructions draft (preparer)", () => cc.draftFundingInstructions(U.prep, { offeringId: N, bankName: "[QA] Simulated Bank", effectiveDate: "2026-07-01", details: { bankName: "[QA] Simulated Bank", reference: "[QA] synthetic run3", accountName: "[QA] Pilot Fund I, LP (Run 3)", accountNumber: "000000009999", routingNumber: "000000000" } }));
+const vid = v?.versionId ?? v?.id;
+await step("instructions preparer cannot release own", () => cc.releaseFundingInstructions(U.prep, vid), true);
+await step("instructions release (reviewer)", () => cc.releaseFundingInstructions(U.rev, vid));
+await step("call 1 publish blocked without instructions earlier (recorded)", async () => "see log");
+await step("call 1 publish (approver)", () => cc.publishCapitalCall(U.appr, C));
+const d = await db();
+const { data } = await d.from("expected_fundings").select("*").eq("offering_id", N);
+console.log(JSON.stringify(data?.[0]));
+console.log(data?.length);

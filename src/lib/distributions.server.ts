@@ -1563,7 +1563,7 @@ export async function approveStaleBasis(userId: string, batchId: string, reason:
 export async function finalApproveDistribution(userId: string, batchId: string) {
   const batch = await batchRow(batchId);
   if (batch.basis_stale && !batch.basis_override_by) {
-    fail(`STALE ALLOCATION BASIS: ${(batch.basis_stale_detail as any)?.reason ?? "capital activity exists after the basis date."} Select a newer basis or have a reviewer approve the older one with a reason.`);
+    fail(`${(batch.basis_stale_detail as any)?.reason ?? "STALE ALLOCATION BASIS: capital activity exists after the basis date."} Select a newer basis or have a reviewer approve the older one with a reason.`);
   }
   const { actor } = await assertCan(userId, String(batch.offering_id), "final_approve");
   if (String(batch.distribution_kind ?? "cash") !== "cash" && !batch.fee_approved_at) {
@@ -1601,6 +1601,14 @@ export async function finalApproveDistribution(userId: string, batchId: string) 
     for (const g of gate) identityBlockers.push(`${l.display_name ?? "Investor"}: ${g.reason}`);
   }
   if (identityBlockers.length > 0) fail(identityBlockers.join(" "));
+  // Run 3: every cash payee must have an approved, verified destination bound to
+  // their line before final approval; afterwards destinations are frozen.
+  const noDestination = ((approvalLines ?? []) as any[]).filter(
+    (l) => Number(l.net_cents ?? 0) > 0 && String(batch.distribution_kind ?? "cash") !== "shares" && (!l.payment_instruction_id || !l.destination_verified),
+  );
+  if (noDestination.length > 0) {
+    fail(`PAYMENT DESTINATION REQUIRED: ${noDestination.map((l) => l.display_name ?? "Investor").join(", ")} must confirm an approved, verified payout destination before final approval.`);
+  }
 
   const snapshot = economicSnapshotFor(batch, (approvalLines ?? []) as any[]);
   const frozenHash = snapshotHash(snapshot);
@@ -2355,8 +2363,21 @@ export async function postDistributionPayment(userId: string, paymentId: string)
   const postError = await chainCheck(paymentChain(payment), "posted", actor.userId, [payment.id, payment.batch_id]);
   if (postError) fail(postError);
 
-  await advanceReconciliationJournal(actor.userId, String(payment.reconciliation_id), "reviewed");
-  await advanceReconciliationJournal(actor.userId, String(payment.reconciliation_id), "approved");
+  // Run 3 fix: mirror the capital-call two-person pattern and resume from the
+  // journal's current state. The first caller reviews/approves the journal; a
+  // different person posts it. Only posting reduces capital.
+  const { data: journal } = payment.journal_entry_id
+    ? await db().from("journal_entries").select("status, approved_by, reviewed_by").eq("id", payment.journal_entry_id).maybeSingle()
+    : { data: null };
+  const journalStatus = String(journal?.status ?? "draft");
+  if (journalStatus === "draft" || journalStatus === "reviewed") {
+    if (journalStatus === "draft") await advanceReconciliationJournal(actor.userId, String(payment.reconciliation_id), "reviewed");
+    else if (String(journal?.reviewed_by ?? "") === actor.userId) fail("Maker/checker: the person who reviewed the payment journal cannot also approve it.");
+    await advanceReconciliationJournal(actor.userId, String(payment.reconciliation_id), "approved");
+    return { posted: false, awaitingPostingBy: "a different Harmonious approver", commitmentEventId: null };
+  }
+  if (journalStatus !== "approved") fail(`The payment journal is ${journalStatus}; it cannot be posted.`);
+  if (String(journal?.approved_by ?? "") === actor.userId) fail("Maker/checker: the person who approved the payment journal cannot also post it.");
   await advanceReconciliationJournal(actor.userId, String(payment.reconciliation_id), "posted");
 
   const { data: line } = await db()
@@ -2407,7 +2428,8 @@ export async function postDistributionPayment(userId: string, paymentId: string)
   // Compatibility read projection consumed by capital statements and reports.
   await db().from("fund_distributions").insert({
     offering_id: payment.offering_id,
-    paid_on: today(),
+    // Run 3 fix: the payout date, not the day someone clicked Post.
+    paid_on: String(payment.submitted_at ?? "").slice(0, 10) || line?.effective_date || today(),
     amount_cents: Number(line?.gross_cents ?? payment.submitted_amount_cents),
     kind: String(line?.distribution_type) === "return_of_capital" ? "return_of_capital" : "distribution",
     note: `Distribution payment ${payment.id}`,

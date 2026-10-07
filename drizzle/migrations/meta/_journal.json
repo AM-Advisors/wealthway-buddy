@@ -1317,6 +1317,13 @@
       "when": 1791353446377,
       "tag": "0187_distribution_basis_staleness",
       "breakpoints": true
+    },
+    {
+      "idx": 188,
+      "version": "7",
+      "when": 1791355632672,
+      "tag": "0188_bank_balance_one_time_review",
+      "breakpoints": true
     }
   ]
 }
