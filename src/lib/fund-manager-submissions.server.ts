@@ -69,7 +69,7 @@ export async function fileLink(userId: string, id: string) {
   return { url: data?.signedUrl as string };
 }
 
-export async function review(sb: any, userId: string, input: { id: string; decision: "approve" | "return"; note?: string | null }) {
+export async function review(sb: any, userId: string, input: { id: string; decision: "approve" | "return"; note?: string | null | undefined }) {
   const { data: s } = await db().from("fund_manager_submissions").select("*").eq("id", input.id).maybeSingle();
   if (!s) throw new Error("Submission not found.");
   const a = await actorFor(userId, s.offering_id);
@@ -87,8 +87,8 @@ export async function review(sb: any, userId: string, input: { id: string; decis
 const num = (v: unknown) => (v === "" || v == null || Number.isNaN(Number(v)) ? null : Number(v));
 const cents = (v: unknown) => { const n = num(v); return n == null ? null : Math.round(n * 100); };
 
-async function apply(sb: any, userId: string, s: any) {
-  const p = (s.payload ?? {}) as Record<string, any>;
+async function apply(sb: any, userId: string, s: any): Promise<unknown> {
+  const p: any = s.payload ?? {};
   const canon = await import("@/lib/fund-setup-canonical.server");
   if (s.section === "fund_details") {
     const fields: Record<string, unknown> = {};
@@ -136,4 +136,5 @@ async function apply(sb: any, userId: string, s: any) {
     if (error) throw new Error(error.message);
     await docs.uploadDocumentVersion(userId, { documentId: id, filePath: dest, fileName: s.file_name ?? "document.pdf", fileSizeBytes: blob.size });
   }
+  return null;
 }
