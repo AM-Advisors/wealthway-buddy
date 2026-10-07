@@ -123,13 +123,10 @@ export const saveServiceEngagement = createServerFn({ method: "POST" })
     if (row.recurring_invoice_amount == null && (!prior || tierChanged)) row.recurring_invoice_amount = cadencePrice(pv, fields.billing_frequency);
 
     const listAnnual = pv?.annual_price ?? pv?.starting_price ?? null;
-    const isOverride = (fields.pricing_type && fields.pricing_type !== "CURRENT") || fields.grandfathered === true
-      || (row.contracted_annual_value != null && listAnnual != null && Number(row.contracted_annual_value) !== Number(listAnnual) && fields.service_level !== "INSTITUTIONAL");
+    const { isPricingOverride, assertPricingOverrideAllowed } = await import("@/lib/service-pricing-rules");
+    const isOverride = isPricingOverride(fields, row.contracted_annual_value, listAnnual);
     const overrideChanged = !prior || isOverride && (prior.pricing_type !== fields.pricing_type || Number(prior.contracted_annual_value) !== Number(row.contracted_annual_value) || prior.grandfathered !== fields.grandfathered);
-    if (isOverride && overrideChanged) {
-      if (!isAdmin) throw new Error("Only a Harmonious Admin can apply negotiated, grandfathered or custom pricing.");
-      if (!fields.pricing_override_reason || fields.pricing_override_reason.trim().length < 10) throw new Error("Give a reason (10+ characters) for the pricing override.");
-    }
+    if (isOverride && overrideChanged) assertPricingOverrideAllowed(isAdmin, fields);
     // Core is included with SPV pricing; every other level is billed (fixes Core → paid upgrades staying "included").
     row.included_at_no_charge = fields.service_level === "CORE";
 
@@ -185,7 +182,7 @@ export const getFundServices = createServerFn({ method: "GET" })
     await assertFund(context.userId, data.fundId);
     const d = await db();
     const { data: rows } = await d.from("service_engagements")
-      .select(`id, service_product, service_level, service_status, contracted_annual_value, billing_frequency, recurring_invoice_amount, currency, effective_date, renewal_date, reporting_frequency, nav_frequency, included_at_no_charge, ${TEAM_FIELDS.join(", ")}`)
+      .select([...(await import("@/lib/service-pricing-rules")).CLIENT_SERVICE_FIELDS, ...TEAM_FIELDS].join(", "))
       .eq("fund_id", data.fundId).not("service_status", "in", "(CANCELLED,EXPIRED)").order("created_at");
     const list = (rows ?? []) as any[];
     const ids = [...new Set(list.flatMap((r) => [r.primary_administrator_user_id, r.relationship_lead_user_id]).filter(Boolean))];
