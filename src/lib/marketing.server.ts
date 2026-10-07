@@ -129,6 +129,19 @@ export async function decidePost(userId: string, id: string, action: "submit" | 
   return { ok: true };
 }
 
+/* Retry a failed post without re-approval: the original approval stands; only failed channels re-publish. */
+export async function retryPost(userId: string, id: string) {
+  const { db } = await requireMarketing(userId);
+  const { data: p } = await db.from("marketing_posts").select("*").eq("id", id).maybeSingle();
+  if (!p) throw new Error("Post not found.");
+  if (p.status !== "failed") throw new Error("Only failed posts can be retried.");
+  await db.from("marketing_post_targets").update({ status: "pending", error: null }).eq("post_id", id).eq("status", "failed");
+  await db.from("marketing_posts").update({ status: "scheduled", scheduled_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("id", id);
+  await audit(db, "post", id, "retried", userId);
+  await runDue().catch((e) => console.error("marketing run after retry", e));
+  return { ok: true };
+}
+
 /* ---------- Channels ---------- */
 async function channelRows(db: any) {
   const { data } = await db.from("marketing_channels").select("*");
