@@ -48,8 +48,19 @@ export function OpsFundPage({ fundId, tab = "setup", onTab }: { fundId: string; 
       </section>}
     </> : <p>Fund details are available to the Operations team.</p>}
   </>;
+  const openTask = (d.tasks ?? []).find((t: { status: string }) => t.status !== "complete") as { label: string } | undefined;
+  const openCond = (d.conditions ?? []).find((c: { satisfied: boolean }) => !c.satisfied) as { label: string } | undefined;
+  const next = openTask
+    ? { label: openTask.label, tab: "setup" }
+    : openCond ? { label: openCond.label, tab: "setup" } : d.hasSetup ? { label: "Invite and onboard investors", tab: "investors" } : null;
   return <main className="mx-auto max-w-7xl space-y-6 px-4 py-8 sm:px-6">
     <Button variant="ghost" size="sm" asChild><Link to="/ops/funds">← Funds</Link></Button>
+    {next && !d.retired && d.canSeeOperations && (
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-primary/30 bg-primary/5 px-4 py-3">
+        <div className="min-w-0"><p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Next step</p><p className="font-medium">{next.label}</p></div>
+        <Button size="sm" onClick={() => { onTab(next.tab); setTimeout(() => document.getElementById("fund-workspace-tabs")?.scrollIntoView({ behavior: "smooth" }), 50); }}>{next.tab === "setup" ? "Go to Setup" : "Go to Investors"}</Button>
+      </div>
+    )}
     {(d.retired || !d.canSeeOperations) && <header><h1 className="font-heading text-2xl font-semibold">{d.name}</h1><p className="text-muted-foreground">{d.clientName ?? "Client not assigned"} · {d.fundType ?? "Fund"}</p><p className="text-xs text-muted-foreground">Fund ID: {fundId}</p></header>}
     {d.retired || !d.canSeeOperations ? setupBody : <FundWorkspace fundId={fundId} mode="harmonious" tab={tab} onTab={(v) => onTab(v)}
       headerExtra={<>
