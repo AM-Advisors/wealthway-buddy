@@ -411,6 +411,16 @@ export async function explainDrift(userId: string, i: { offeringId: string; snap
 
 // ------------------------------------------------------------ bank alerts
 
+/** Bank items the canonical reconciliation engine has reconciled or posted. */
+async function reconciledBankTxnIds(txnIds: string[]): Promise<Set<string>> {
+  const out = new Set<string>();
+  for (let i = 0; i < txnIds.length; i += 200) {
+    const { data } = await db().from("bank_reconciliations").select("bank_transaction_id").in("bank_transaction_id", txnIds.slice(i, i + 200)).in("status", ["reconciled", "posted"]);
+    for (const r of (data ?? []) as any[]) out.add(String(r.bank_transaction_id));
+  }
+  return out;
+}
+
 /** Detect and record alerts for one Fund. Safe to call repeatedly (dedupe keys). */
 export async function scanBankAlerts(offeringId: string, extra?: { withdrawals?: WithdrawalFact[] }) {
   const now = new Date();
@@ -421,6 +431,8 @@ export async function scanBankAlerts(offeringId: string, extra?: { withdrawals?:
     db().from("distribution_payments").select("submitted_amount_cents, submitted_at, status").eq("offering_id", offeringId).not("submitted_at", "is", null).limit(2000),
     db().from("bank_balance_snapshots").select("bank_account_id, as_of, balance_cents, created_at").eq("offering_id", offeringId).order("created_at", { ascending: false }).limit(50),
   ]);
+  const recIds = await reconciledBankTxnIds(((deposits ?? []) as any[]).map((d) => String(d.id)));
+  for (const d of (deposits ?? []) as any[]) d.reconciled = recIds.has(String(d.id));
   // Latest snapshot per account, all on the most recent date.
   const latest = new Map<string, any>();
   for (const b of (balances ?? []) as any[]) { const k = b.bank_account_id ?? "manual"; if (!latest.has(k)) latest.set(k, b); }
@@ -561,6 +573,9 @@ async function monthEndFacts(offeringId: string, month: string) {
     db().from("bank_alerts").select("id, bank_alert_events(action, created_at, actor_user_id)").eq("offering_id", offeringId).limit(500),
     db().from("qbo_drift_snapshots").select("max_diff_cents, explanation, as_of").eq("offering_id", offeringId).lte("as_of", end).order("created_at", { ascending: false }).limit(1),
   ]);
+  const unrecIds = ((unrec ?? []) as any[]).map((r) => String(r.id));
+  const recUnrec = await reconciledBankTxnIds(unrecIds);
+  const unreconciledCount = unrecIds.filter((id) => !recUnrec.has(id)).length;
   let unposted = 0;
   let ties = true;
   if (book) {
@@ -572,7 +587,7 @@ async function monthEndFacts(offeringId: string, month: string) {
   const d = (drift ?? [])[0];
   return monthEndChecklist({
     hasBook: Boolean(book),
-    unreconciledBankItems: (unrec ?? []).length,
+    unreconciledBankItems: unreconciledCount,
     openBankAlerts: openAlerts,
     unpostedEntries: unposted,
     trialBalanceTies: ties,

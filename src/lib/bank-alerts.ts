@@ -29,6 +29,8 @@ export type DepositFact = {
   matched_application_id: string | null;
   matched_invoice_id: string | null;
   matched_wire_request_id: string | null;
+  /** True when the canonical reconciliation engine has reconciled or posted this item. */
+  reconciled?: boolean;
 };
 export type WithdrawalFact = { plaidId: string; date: string; amountCents: number; name: string };
 export type ApprovedPaymentFact = { amountCents: number; date: string };
@@ -55,7 +57,7 @@ export function detectAlerts(input: {
   const threshold = input.unmatchedDays ?? DEFAULTS.unmatchedDays;
 
   for (const d of input.deposits ?? []) {
-    const matched = d.matched_application_id || d.matched_invoice_id || d.matched_wire_request_id;
+    const matched = d.reconciled || d.matched_application_id || d.matched_invoice_id || d.matched_wire_request_id;
     const age = days(d.posted_on, input.now);
     if (!matched && age > threshold) {
       out.push({ kind: "unmatched_deposit", dedupeKey: `${o}:deposit:${d.id}`, bankTransactionId: d.id, amountCents: d.amount_cents, detail: { name: d.name, postedOn: d.posted_on, ageDays: age } });
