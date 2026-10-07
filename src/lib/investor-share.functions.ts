@@ -3,8 +3,32 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/lib/require-auth";
 import { rollByYear, summarize, tieToK1, toPeriod, type K1Lite } from "@/lib/investor-share-model";
 
-/** Only approved records ever feed this view. */
+/** Only released records ever feed this view. */
 const APPROVED_CA = ["published"];
+
+/**
+ * Capital accounts investors may see: those marked published, plus finalized
+ * ("approved") accounts whose investor statement has been published. The
+ * allocation engine releases accounts through published statements and never
+ * sets a "published" status on the account itself.
+ */
+async function releasedCapitalAccounts(d: any, offeringId: string, f: { investorUserId?: string; periodEnd?: string; columns?: string } = {}) {
+  const cols = f.columns ?? "*";
+  let pub = d.from("capital_accounts").select(cols).eq("offering_id", offeringId).in("status", APPROVED_CA);
+  let st = d.from("investor_statements").select("capital_account_id").eq("offering_id", offeringId).eq("status", "published").not("capital_account_id", "is", null);
+  if (f.investorUserId) { pub = pub.eq("investor_user_id", f.investorUserId); st = st.eq("investor_user_id", f.investorUserId); }
+  if (f.periodEnd) pub = pub.eq("period_end", f.periodEnd);
+  const [{ data: a }, { data: s }] = await Promise.all([pub, st]);
+  const rows = [...((a ?? []) as any[])];
+  const ids = [...new Set(((s ?? []) as any[]).map((r) => String(r.capital_account_id)))];
+  if (ids.length) {
+    let q = d.from("capital_accounts").select(cols).in("id", ids).eq("status", "approved");
+    if (f.periodEnd) q = q.eq("period_end", f.periodEnd);
+    const { data: b } = await q;
+    rows.push(...((b ?? []) as any[]));
+  }
+  return { data: rows };
+}
 const FINAL_K1 = ["final", "delivered"];
 
 async function db() {
@@ -32,7 +56,7 @@ export const investorShareFn = createServerFn({ method: "POST" })
     const d = await db();
     const uid = context.userId;
     const [{ data: ca }, { data: k1 }, { data: off }] = await Promise.all([
-      d.from("capital_accounts").select("*").eq("offering_id", data.offeringId).eq("investor_user_id", uid).in("status", APPROVED_CA),
+      releasedCapitalAccounts(d, data.offeringId, { investorUserId: uid }),
       d.from("k1_forms").select("tax_year, boxes, tax_capital, status").eq("offering_id", data.offeringId).eq("investor_user_id", uid).in("status", FINAL_K1),
       d.from("offerings").select("id, client_id, entity_type").eq("id", data.offeringId).maybeSingle(),
     ]);
@@ -42,7 +66,7 @@ export const investorShareFn = createServerFn({ method: "POST" })
     let fundNetAssets: number | null = null;
     const asOf = mine.summary.asOf;
     if (asOf && off) {
-      const { data: all } = await d.from("capital_accounts").select("ending_capital_cents").eq("offering_id", data.offeringId).eq("period_end", asOf).in("status", APPROVED_CA);
+      const { data: all } = await releasedCapitalAccounts(d, data.offeringId, { periodEnd: asOf, columns: "id, ending_capital_cents" });
       fundNetAssets = ((all ?? []) as any[]).reduce((s, r) => s + Number(r.ending_capital_cents ?? 0), 0);
     }
     const entityType = String((off as any)?.entity_type ?? "").toLowerCase();
@@ -59,7 +83,7 @@ export const capitalTieReportFn = createServerFn({ method: "POST" })
     await assertFund(context.userId, data.offeringId);
     const d = await db();
     const [{ data: ca }, { data: k1 }] = await Promise.all([
-      d.from("capital_accounts").select("*").eq("offering_id", data.offeringId).in("status", APPROVED_CA),
+      releasedCapitalAccounts(d, data.offeringId),
       d.from("k1_forms").select("investor_user_id, tax_year, boxes, tax_capital, status").eq("offering_id", data.offeringId).in("status", FINAL_K1),
     ]);
     const byInvestor = new Map<string, any[]>();
