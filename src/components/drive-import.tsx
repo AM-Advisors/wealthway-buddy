@@ -387,13 +387,13 @@ function DocumentDetailsButton({ row, onSaved }: { row: any; onSaved: () => void
             </div>
             {d.group === "fund_document" ? (
               <>
-                <Select value={d.kind || undefined} onValueChange={(v) => setD({ ...d, kind: v, signatureStatus: null, signatureBoxes: [] })}>
+                <Select value={d.kind} onValueChange={(v) => setD({ ...d, kind: v, signatureStatus: null, signatureBoxes: [] })}>
                   <SelectTrigger aria-label="Document type"><SelectValue placeholder="Choose document type" /></SelectTrigger>
                   <SelectContent>{Object.entries(FUND_DOCUMENT_KINDS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
                 </Select>
                 {d.kind === "other" ? <Input placeholder="Name this document" value={d.otherName ?? ""} onChange={(e) => setD({ ...d, otherName: e.target.value })} /> : null}
                 {isSub ? (
-                  <Select value={d.signatureStatus ?? undefined} onValueChange={(v) => setD({ ...d, signatureStatus: v as any, signatureBoxes: v === "template" && !d.signatureBoxes.length ? SUGGESTED_SUBSCRIPTION_BOXES : d.signatureBoxes })}>
+                  <Select value={d.signatureStatus ?? ""} onValueChange={(v) => setD({ ...d, signatureStatus: v as any, signatureBoxes: v === "template" && !d.signatureBoxes.length ? SUGGESTED_SUBSCRIPTION_BOXES : d.signatureBoxes })}>
                     <SelectTrigger aria-label="Signature status"><SelectValue placeholder="Signature status" /></SelectTrigger>
                     <SelectContent>{Object.entries(SIGNATURE_STATUSES).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
                   </Select>
@@ -419,7 +419,7 @@ function DocumentDetailsButton({ row, onSaved }: { row: any; onSaved: () => void
                 ) : null}
               </>
             ) : (
-              <Select value={d.kind || undefined} onValueChange={(v) => setD({ ...d, kind: v })}>
+              <Select value={d.kind} onValueChange={(v) => setD({ ...d, kind: v })}>
                 <SelectTrigger aria-label="Tax form"><SelectValue placeholder="Which tax form?" /></SelectTrigger>
                 <SelectContent>{Object.entries(TAX_FORMS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
               </Select>
@@ -431,7 +431,7 @@ function DocumentDetailsButton({ row, onSaved }: { row: any; onSaved: () => void
                   <SelectTrigger aria-label="Investor"><SelectValue placeholder="Choose investor" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">Don't share</SelectItem>
-                    {(inv.data?.investors ?? []).map((x) => <SelectItem key={x.id} value={x.id}>{x.label}</SelectItem>)}
+                    {(inv.data?.investors ?? []).map((x: { id: string; label: string }) => <SelectItem key={x.id} value={x.id}>{x.label}</SelectItem>)}
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground">The investor will see and download this file in their documents. Only that investor sees it.</p>
