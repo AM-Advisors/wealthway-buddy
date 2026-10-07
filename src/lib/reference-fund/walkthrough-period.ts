@@ -292,13 +292,10 @@ export function runPeriod() {
   const openingBankCents = $(1_760_000);
   const bankLines: BankLine[] = [
     { id: "chk-opening", bookedOn: "2025-12-29", postedOn: "2026-01-05", amountCents: $(-10_000), description: "CHECK 1041 (pre-cutover)", kind: "opening_check" },
-    { id: "pay-accrued", bookedOn: "2026-01-15", postedOn: "2026-01-15", amountCents: $(-40_000), description: "ACCRUED PAYABLES", kind: "payment" },
+    { id: "pay-accrued", bookedOn: "2026-01-15", postedOn: "2026-01-15", amountCents: $(-50_000), description: "ACCRUED PAYABLES", kind: "payment" },
     ...DEPOSITS, ...investmentPayments, ...expensePayments, interest,
   ];
-  // The opening $50,000 accrual: $10,000 was already paid by check 1041 before cutover? No -
-  // check 1041 is the Phase 1 outstanding item; the remaining $40,000 is wired in January and
-  // the GL entry settles the full $50,000 accrual it covers together with check 1041's $10,000
-  // that was in GL cash but not yet in the bank at cutover.
+  // Check 1041 was already deducted in GL cash at cutover (Phase 1 outstanding item); it clears 1/5.
   const cleared = bankLines.filter((b) => b.postedOn && b.postedOn <= PERIOD.end);
   const bankStatementCents = openingBankCents + cleared.reduce((s, b) => s + b.amountCents, 0);
   const notCleared = bankLines.filter((b) => b.bookedOn <= PERIOD.end && (!b.postedOn || b.postedOn > PERIOD.end));
