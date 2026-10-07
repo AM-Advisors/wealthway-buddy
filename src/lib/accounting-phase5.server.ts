@@ -348,7 +348,7 @@ export async function decideOutboundBatch(userId: string, i: { offeringId: strin
   await staff(userId);
   const { data: batch } = await db().from("qbo_outbound_batches").select("*").eq("id", i.batchId).eq("offering_id", i.offeringId).maybeSingle();
   if (!batch) fail("Batch not found.");
-  if (!outboundDecisionAllowed(batch.created_by, userId)) fail("A batch must be approved by someone other than the person who queued it.");
+  if (!outboundDecisionAllowed(batch.created_by, userId) && !(await (await import("@/lib/self-approval.server")).selfApprove(userId, "outbound_batch", [batch.id]))) fail("A batch must be approved by someone other than the person who queued it.");
   if (i.decision === "declined" && !i.reason?.trim()) fail("Say why the batch is declined.");
   const { error } = await db().from("qbo_outbound_decisions").insert({ batch_id: i.batchId, decision: i.decision, reason: i.reason ?? null, decided_by: userId });
   if (error) fail(/duplicate key/i.test(error.message) ? "This batch has already been decided." : error.message);
