@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Panel } from "@/components/sales/sales-ui";
 import { MkPage, StatusBadge, fileToBase64, fmt, fromLocalInput, mkHead, toLocalInput } from "@/components/marketing-ui";
-import { CHANNELS, CHANNEL_LABEL, CHANNEL_LIMIT, postProblems, type Channel } from "@/lib/marketing-model";
+import { CHANNELS, CHANNEL_LABEL, CHANNEL_LIMIT, UNAVAILABLE_CHANNELS, postProblems, type Channel } from "@/lib/marketing-model";
 import { PostBrandLayout } from "@/components/marketing/post-brand-layout";
 import { MarketingDrivePicker } from "@/components/marketing-drive-picker";
 import { useMarketingDriveImage } from "@/lib/marketing-drive.functions";
@@ -38,14 +38,14 @@ function PostEditor() {
 
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
-  const [channels, setChannels] = useState<Channel[]>(["linkedin"]);
+  const [channels, setChannels] = useState<Channel[]>(["facebook"]);
   const [images, setImages] = useState<{ path: string; url: string }[]>([]);
   const [when, setWhen] = useState("");
   const [brief, setBrief] = useState("");
   const [imgPrompt, setImgPrompt] = useState("");
   const [note, setNote] = useState("");
   const [imgMode, setImgMode] = useState<"brand" | "free">("brand");
-  const [preview, setPreview] = useState<Channel>("linkedin");
+  const [preview, setPreview] = useState<Channel>("facebook");
 
   // Fill the form once per post; refetches must never overwrite what's on screen.
   const loadedFor = useRef<string | null>(null);
@@ -74,8 +74,14 @@ function PostEditor() {
     const next = f(imagesRef.current);
     imagesRef.current = next;
     setImages(next);
+    if (isNew) {
+      void save({ data: { id: null, title: title || "Untitled post", body, channels, imagePaths: next.map((i) => i.path), scheduledAt: fromLocalInput(when) } })
+        .then((r) => { toast.success("Image saved to a new draft"); qc.invalidateQueries({ queryKey: ["mk-posts"] }); nav({ to: "/marketing/posts/$id", params: { id: r.id } }); })
+        .catch((e) => toast.error((e as Error).message));
+      return;
+    }
     {
-      if (!isNew && saved && (saved.status === "draft" || saved.status === "rejected")) {
+      if (saved && (saved.status === "draft" || saved.status === "rejected")) {
         const seq = ++imgSeq.current;
         void save({ data: { id, title: saved.title, body: saved.body, channels: saved.channels, imagePaths: next.map((i) => i.path), scheduledAt: saved.scheduled_at ? new Date(saved.scheduled_at).toISOString() : null } })
           .then(() => { if (seq === imgSeq.current) void q.refetch(); })
@@ -125,7 +131,7 @@ function PostEditor() {
           <div>
             <Label>Channels</Label>
             <div className="mt-2 flex gap-4">{CHANNELS.map((c) => (
-              <label key={c} className="flex items-center gap-2 text-sm"><Checkbox checked={channels.includes(c)} disabled={locked} onCheckedChange={(v) => setChannels((x) => v ? [...x, c] : x.filter((y) => y !== c))} />{CHANNEL_LABEL[c]}</label>
+              <label key={c} className="flex items-center gap-2 text-sm"><Checkbox checked={channels.includes(c)} disabled={locked || (UNAVAILABLE_CHANNELS.includes(c) && !channels.includes(c))} onCheckedChange={(v) => setChannels((x) => v ? [...x, c] : x.filter((y) => y !== c))} />{CHANNEL_LABEL[c]}{UNAVAILABLE_CHANNELS.includes(c) && <span className="text-xs text-muted-foreground">(unavailable for now)</span>}</label>
             ))}</div>
           </div>
           <div>

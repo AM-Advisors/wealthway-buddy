@@ -252,10 +252,8 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
     { id: "mk-assists", title: "Sales requests", url: "/marketing/assists", icon: "tasks" },
     { id: "mk-audiences", title: "Audiences", url: "/marketing/audiences", icon: "people" },
     { id: "mk-channels", title: "Channels", url: "/marketing/channels", icon: "check" },
-    { id: "mk-drive", title: "Drive & sheets", url: "/marketing/drive", icon: "document" },
-    { id: "mk-collateral", title: "Collateral Studio", url: "/marketing/collateral", icon: "document" },
+    { id: "mk-library", title: "Content library", url: "/marketing/drive", icon: "document" },
     { id: "mk-classroom", title: "Classroom", url: "/marketing/classroom", icon: "document" },
-    { id: "mk-imports", title: "Imports", url: "/marketing/imports", icon: "document" },
   ] : [];
 
   const exact = (i: NavItem) => pathname === i.url;
@@ -338,7 +336,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
             <NavSection id="finance" label="Accounting & Finance" items={financeItems} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={opsActive} />
             <NavSection id="sales" label="Sales" items={salesItems} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={exact} />
             <NavSection id="account-management" label="Account Management" items={amItems} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={exact} />
-            <NavSection id="marketing" label="Marketing" items={mkItems} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={(i) => i.url === "/marketing" ? pathname === i.url : pathname.startsWith(i.url)} />
+            <NavSection id="marketing" label="Marketing" items={mkItems} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={(i) => i.url === "/marketing" ? pathname === i.url : i.id === "mk-library" ? ["/marketing/drive", "/marketing/collateral", "/marketing/imports"].some((u) => pathname.startsWith(u)) : pathname.startsWith(i.url)} />
             <NavSection id="team" label="Team" items={teamItems} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={(i) => i.id === "people-access" ? pathname.startsWith("/ops/people-access") || pathname.startsWith("/ops/employees") : pathname === i.url} />
             <NavSection id="leadership" label="Leadership" items={leadershipItems} pathname={pathname} collapsed={collapsed} onNavigate={close}
               isActive={(i) => i.sub ? i.sub.some((x) => pathname === x.url) : pathname === i.url} />

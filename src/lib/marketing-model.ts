@@ -10,6 +10,9 @@ export type Channel = (typeof CHANNELS)[number];
 export const CHANNEL_LABEL: Record<Channel, string> = { linkedin: "LinkedIn", facebook: "Facebook", instagram: "Instagram" };
 export const CHANNEL_LIMIT: Record<Channel, number> = { linkedin: 3000, facebook: 63206, instagram: 2200 };
 
+/** Channels switched off platform-wide (LinkedIn awaits the company-page API approval). */
+export const UNAVAILABLE_CHANNELS: readonly Channel[] = ["linkedin"];
+
 export const AUDIENCE_SOURCES = ["sales", "clients", "investors", "csv"] as const;
 export type AudienceSource = (typeof AUDIENCE_SOURCES)[number];
 export const SOURCE_LABEL: Record<AudienceSource, string> = { sales: "Sales contacts", clients: "Clients / fund managers", investors: "Investors", csv: "Imported list" };
@@ -32,6 +35,7 @@ export function postProblems(p: { title: string; body: string; channels: string[
   if (!p.title.trim()) out.push("Add a title.");
   if (!p.body.trim()) out.push("Write the post text.");
   if (!p.channels.length) out.push("Pick at least one channel.");
+  for (const c of p.channels) if ((UNAVAILABLE_CHANNELS as readonly string[]).includes(c)) out.push(`${CHANNEL_LABEL[c as Channel]} is unavailable for now. Untick it.`);
   if (p.channels.includes("instagram") && p.imageCount === 0) out.push("Instagram posts need an image. Add one and save the post.");
   for (const c of p.channels as Channel[]) if (CHANNEL_LIMIT[c] && p.body.length > CHANNEL_LIMIT[c]) out.push(`${CHANNEL_LABEL[c]} allows ${CHANNEL_LIMIT[c]} characters.`);
   return out;

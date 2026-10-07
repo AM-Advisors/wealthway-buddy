@@ -1,3 +1,4 @@
+import { MkLibraryTabs } from "@/components/marketing-ui";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -96,6 +97,7 @@ function Studio() {
 
   return (
     <main className="mx-auto w-full max-w-7xl space-y-5 p-6">
+      <MkLibraryTabs />
       <header className="space-y-1">
         <h1 className="text-3xl">Collateral Studio</h1>
         <p className="text-sm text-muted-foreground">Pick a template, edit the content, and export on-brand sheets. Layout, colors and fonts are fixed by the Harmonious brand rules.</p>
