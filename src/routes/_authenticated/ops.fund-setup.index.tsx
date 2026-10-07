@@ -64,7 +64,7 @@ function FundSetupRegister() {
         <div className="min-w-0"><p className="font-medium">{f.name} {f.retired && <span className="text-muted-foreground">· Retired</span>}</p>
           <p className="text-sm text-muted-foreground">{f.clientName ?? "Client not assigned"} · {f.fundType ?? "Fund"} · {f.id.slice(0, 8)}{f.setupStage ? ` · Setup: ${f.setupStage.replaceAll("_", " ")} · Launch: ${(f.launchState ?? "not ready").replaceAll("_", " ")}` : ""}</p></div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" size="sm" asChild><Link to="/ops/fund-setup/$fundId" params={{ fundId: f.id }}>Open Setup</Link></Button>
+          <Button variant="outline" size="sm" asChild><Link to="/ops/fund/$fundId" params={{ fundId: f.id }}>Open Setup</Link></Button>
           {q.data.canPrepare && !f.retired && <Button variant="ghost" size="sm" onClick={() => { setEditing(f.id); setSummary(f.summary ?? ""); }}>Edit summary</Button>}
           {q.data.canDelete && <DeleteFundDialog fundId={f.id} fundName={f.name} onDeleted={() => qc.invalidateQueries({ queryKey: ["staff-funds"] })} />}
         </div>

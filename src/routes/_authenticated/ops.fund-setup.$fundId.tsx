@@ -1,75 +1,9 @@
-import { FundSignoffQueue } from "@/components/signoff-board";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { FundWorkspace, FUND_TABS } from "@/components/fund-workspace";
-import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
-import { FundSetupCanonical } from "@/components/fund-setup-canonical";
-import { getStaffFundSetup } from "@/lib/staff-funds.functions";
-import { Button } from "@/components/ui/button";
-import { OperationsSs4, OperationsTaxDocuments } from "@/components/operations-board";
-import { FundSetupChecklist, SetupRequirementsProvider } from "@/components/fund-setup-checklist";
-import { fundSetupSummary } from "@/lib/fund-launch-summary";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
+/** Old Fund Setup URL — the fund now has one page. */
 export const Route = createFileRoute("/_authenticated/ops/fund-setup/$fundId")({
-  head: () => ({ meta: [
-    { title: "Fund Setup Detail - Harmonious" },
-    { name: "description", content: "Fund formation and launch readiness for Harmonious staff." },
-    { property: "og:title", content: "Fund Setup Detail - Harmonious" },
-    { property: "og:description", content: "Fund formation and launch readiness for Harmonious staff." },
-    { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" },
-  ] }),
-  validateSearch: (s: Record<string, unknown>): { tab?: string | undefined } => ({
-    tab: typeof s["tab"] === "string" && (s["tab"] === "setup" || (FUND_TABS as readonly string[]).includes(s["tab"])) ? (s["tab"] as string) : undefined,
-  }),
-  component: FundSetupDetail,
+  validateSearch: (s: Record<string, unknown>): { tab?: string | undefined } => ({ tab: typeof s["tab"] === "string" ? s["tab"] : undefined }),
+  beforeLoad: ({ params, search }) => {
+    throw redirect({ to: "/ops/fund/$fundId", params: { fundId: params.fundId }, search: { tab: search.tab ?? "setup" }, replace: true });
+  },
 });
-
-function FundSetupDetail() {
-  const { fundId } = Route.useParams();
-  const { tab = "setup" } = Route.useSearch();
-  const navigate = useNavigate({ from: Route.fullPath });
-  const get = useServerFn(getStaffFundSetup);
-  const q = useQuery({ queryKey: ["staff-fund-setup", fundId], queryFn: () => get({ data: { offeringId: fundId } }), retry: false });
-  if (q.isPending) return <main className="p-6">Loading setup…</main>;
-  if (q.isError) return <main className="p-6" role="alert">{(q.error as Error).message}</main>;
-  const d = q.data;
-  const setupBody = <>
-{d.retired ? <p>This Fund is retired. Its setup cannot be changed.</p> : d.canSeeOperations ? <>
-      <section className="space-y-3 border-t pt-6" aria-label="Entity formation and launch">
-        <h2 className="font-heading text-xl font-semibold">Entity formation &amp; launch</h2>
-        {!d.hasSetup ? <p className="text-sm">No setup record exists for this Fund. An administrator must review it before initialization.</p> : <>
-          {(() => { const s = fundSetupSummary(d); return <>
-          <p className="text-sm">Formation: {d.formationStep ?? "Not started"} · Setup {s.percent}% complete · Launch: <span className="capitalize">{s.launchLabel}</span></p>
-          <p className="text-sm text-muted-foreground">{s.openTasks} setup tasks and {s.openConditions} launch conditions still to complete. {d.approvalCount} launch approvals recorded.</p>
-          </>; })()}
-          <p className="text-sm"><Link className="underline" to="/ops/fund-setup/$fundId" params={{ fundId }} search={{ tab: "investors" }}>Investor readiness for each investor</Link></p>
-          {d.canUseCanonical
-            ? <p className="text-sm text-muted-foreground">Each required item is listed inside its Fund Setup section below.</p>
-            : <FundSetupChecklist tasks={d.tasks} conditions={d.conditions} evidence={d.evidence} canEdit={d.canUseOperations} canNavigate={false} onChanged={() => q.refetch()} />}
-        </>}
-      </section>
-      {d.canUseCanonical && (
-        <SetupRequirementsProvider value={{ tasks: d.tasks, conditions: d.conditions, evidence: d.evidence, canEdit: d.canUseOperations, approvalCount: d.approvalCount, setupId: d.setupId, isPreparer: d.isPreparer, approvals: d.approvals, onChanged: () => q.refetch() }}>
-          <FundSetupCanonical offeringId={fundId} />
-        </SetupRequirementsProvider>
-      )}
-      {d.canUseOperations && <section id="fund-operations" className="scroll-mt-6 space-y-4 border-t pt-6" aria-label="EIN, tax and sign-off">
-        <h2 className="font-heading text-xl font-semibold">EIN and Form SS-4</h2>
-        <OperationsSs4 fundId={fundId} />
-        <h2 className="font-heading text-xl font-semibold">Tax documents</h2>
-        <OperationsTaxDocuments fundId={fundId} />
-        <h2 className="font-heading text-xl font-semibold">Sign-off queue</h2>
-        <FundSignoffQueue fundId={fundId} />
-      </section>}
-    </> : <p>Fund details are available to the Operations team.</p>}
-  </>;
-  return <main className="mx-auto max-w-7xl space-y-6 px-4 py-8 sm:px-6">
-    <Button variant="ghost" size="sm" asChild><Link to="/ops/fund-setup">← Funds &amp; SPVs</Link></Button>
-    {(d.retired || !d.canSeeOperations) && <header><h1 className="font-heading text-2xl font-semibold">{d.name}</h1><p className="text-muted-foreground">{d.clientName ?? "Client not assigned"} · {d.fundType ?? "Fund"}</p><p className="text-xs text-muted-foreground">Fund ID: {fundId}</p></header>}
-    {d.retired || !d.canSeeOperations ? setupBody : <FundWorkspace fundId={fundId} mode="harmonious" tab={tab} onTab={(v) => navigate({ search: { tab: v }, replace: true })}
-      headerExtra={<>
-        <Button size="sm" variant="outline" asChild><Link to="/admin/fund-payments/$fundId" params={{ fundId }}>Payments</Link></Button>
-      </>}
-      extraTabs={[{ value: "setup", label: "Setup", content: <div className="space-y-6">{setupBody}</div> }]} />}
-  </main>;
-}

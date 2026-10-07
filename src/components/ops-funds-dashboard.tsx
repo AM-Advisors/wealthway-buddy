@@ -30,7 +30,7 @@ function RowActions({ f }: { f: any }) {
       <DropdownMenuTrigger asChild><Button size="icon" variant="ghost" aria-label={`Actions for ${f.name}`}><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem asChild><Link to="/ops/fund/$fundId" params={{ fundId: f.id }} search={{ tab: undefined }}>Open fund</Link></DropdownMenuItem>
-        <DropdownMenuItem asChild><Link to="/ops/fund-setup/$fundId" params={{ fundId: f.id }} search={{ tab: undefined }}>Setup checklist</Link></DropdownMenuItem>
+        <DropdownMenuItem asChild><Link to="/ops/fund/$fundId" params={{ fundId: f.id }} search={{ tab: undefined }}>Setup checklist</Link></DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild><Link to="/manager/fund/$fundId/investors" params={{ fundId: f.id }} search={{ add: "existing" } as never}>Add investor</Link></DropdownMenuItem>
         <DropdownMenuItem onClick={copy}>Copy Investor Onboarding Link</DropdownMenuItem>

@@ -16,7 +16,7 @@ function Drill({ s, onClose }: { s: any; onClose: () => void }) {
           {s.items.map((it: any, i: number) => (
             <li key={i} className="flex items-center justify-between gap-3 py-2">
               <div className="min-w-0"><div className="truncate font-medium text-foreground">{it.label}</div>{it.sub && <div className="text-xs text-muted-foreground">{it.sub}</div>}</div>
-              {it.fundId && <Link to="/ops/fund-setup/$fundId" params={{ fundId: it.fundId }} className="shrink-0 text-primary underline">Open</Link>}
+              {it.fundId && <Link to="/ops/fund/$fundId" params={{ fundId: it.fundId }} className="shrink-0 text-primary underline">Open</Link>}
             </li>
           ))}
           {s.value > s.items.length && <li className="py-2 text-xs text-muted-foreground">Showing the first {s.items.length}. Open the full list for the rest.</li>}

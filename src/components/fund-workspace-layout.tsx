@@ -31,7 +31,6 @@ const groups = [
   { label: "Investors", items: [
     { slug: "investors", label: "Investors", icon: Users },
     { slug: "cap-table", label: "Cap Table", icon: Activity },
-    { slug: "readiness", label: "Readiness", icon: ListChecks },
     { slug: "onboarding-link", label: "Onboarding Link", icon: Link2 },
   ] },
   { label: "Operations", items: [

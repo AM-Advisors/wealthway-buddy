@@ -181,7 +181,7 @@ export function OperationsHome() {
                   <p className="text-xs text-muted-foreground">Waiting since {when(row.at)}</p>
                 </div>
                 <Button asChild size="sm" variant="outline">
-                  <Link to="/ops/fund-setup/$fundId" params={{ fundId: row.to }} hash="fund-operations">Open in Fund</Link>
+                  <Link to="/ops/fund/$fundId" params={{ fundId: row.to }} hash="fund-operations">Open in Fund</Link>
                 </Button>
               </div>
             ))}
@@ -207,7 +207,7 @@ function Stat({ label, value, to }: { label: string; value: string; to: string }
 
 function FundLink({ id, name, show }: { id: string; name: string; show: boolean }) {
   if (!show) return <>{name}</>;
-  return <Link to="/ops/fund-setup/$fundId" params={{ fundId: id }} hash="fund-operations" className="hover:underline">{name}</Link>;
+  return <Link to="/ops/fund/$fundId" params={{ fundId: id }} hash="fund-operations" className="hover:underline">{name}</Link>;
 }
 
 export function OperationsBanking({ fundId }: { fundId?: string }) {
