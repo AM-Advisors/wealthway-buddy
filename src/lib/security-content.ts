@@ -86,6 +86,17 @@ export const SECURITY_STATEMENT: SecurityStatement = {
       ],
     },
     {
+      heading: "Cookies and your consent",
+      intro:
+        "Our public pages ask before using any optional cookies. You can change your choice at any time with the Cookie settings button below or in the footer.",
+      bullets: [
+        "Strictly necessary cookies keep the site working and secure and are always on.",
+        "Preferences, Analytics and Marketing cookies stay off until you turn them on.",
+        "Rejecting optional cookies is as easy as accepting them, and your choice is saved only in your browser.",
+        "We do not currently run analytics or advertising trackers on our public pages.",
+      ],
+    },
+    {
       heading: "What we are working toward",
       intro:
         "We keep a running record of the evidence an outside review would need, and we publish results only once they exist.",
