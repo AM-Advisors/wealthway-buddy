@@ -1,3 +1,4 @@
+import { ReadinessQueue } from "@/components/investment-readiness";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -193,7 +194,7 @@ export function FundWorkspace({ fundId, tab, onTab, mode = "client", extraTabs =
           </Card>
         </TabsContent>
 
-        <TabsContent value="investors" className="space-y-4"><InvestorsTab fundId={fundId} /><CapitalTieReport offeringId={fundId} /><FundUpdatesPanel fundId={fundId} /></TabsContent>
+        <TabsContent value="investors" className="space-y-4">{staff && <ReadinessQueue offeringId={fundId} initialTab="all" />}<InvestorsTab fundId={fundId} /><CapitalTieReport offeringId={fundId} /><FundUpdatesPanel fundId={fundId} /></TabsContent>
 
         <TabsContent value="banking" className="space-y-5">
           {!!td?.banks.length && (

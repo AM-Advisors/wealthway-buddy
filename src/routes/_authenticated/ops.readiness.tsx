@@ -1,25 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
-import { ReadinessQueue } from "@/components/investment-readiness";
-
+/** Old cross-fund Readiness queue — investor work now lives on each fund's Investors tab, reached from the Funds list. */
 export const Route = createFileRoute("/_authenticated/ops/readiness")({
-  head: () => ({
-    meta: [
-      { title: "Investment readiness queue - Harmonious Operations" },
-      { name: "description", content: "Open investment readiness work, by owner and age." },
-      { property: "og:title", content: "Investment readiness queue - Harmonious Operations" },
-      { property: "og:description", content: "What each investment is waiting on, and who owns it." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-    ],
-  }),
-  validateSearch: (s: Record<string, unknown>): { owner?: "harmonious" | "investor" | "fund_manager" | "all" | undefined } => ({
-    owner: ["harmonious", "investor", "fund_manager", "all"].includes(String(s["owner"])) ? (s["owner"] as any) : undefined,
-  }),
-  component: Page,
+  beforeLoad: () => {
+    throw redirect({ to: "/ops/funds", replace: true });
+  },
 });
-
-function Page() {
-  const { owner } = Route.useSearch();
-  return <div className="p-6"><ReadinessQueue key={owner ?? "harmonious"} initialTab={owner} /></div>;
-}

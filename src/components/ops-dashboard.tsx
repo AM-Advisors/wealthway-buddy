@@ -25,7 +25,7 @@ export function OpsDashboard() {
   const q = useQuery({ queryKey: ["ops-dashboard", filters], queryFn: () => load({ data: filters }), retry: false });
 
   const toFunds = (filter: string) => navigate({ to: "/ops/funds", search: { filter: filter as any } });
-  const toQueue = (owner: string) => navigate({ to: "/ops/readiness", search: { owner: owner as any } });
+  const toQueue = (owner: string) => (void owner, navigate({ to: "/ops/funds" }));
 
   const d = q.data;
   const attention = d ? [
