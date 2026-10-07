@@ -1,7 +1,7 @@
 import { CtaLink } from "@/components/marketing/cta-link";
 import { useQuery } from "@tanstack/react-query";
 import { getPublicServicePricing } from "@/lib/service-engagements.functions";
-import { ADMINISTRATION_TIERS, annualSavings, tierByKey } from "@/lib/administration-tiers";
+import { type AdministrationTier, ADMINISTRATION_TIERS, annualSavings, tierByKey } from "@/lib/administration-tiers";
 
 const usd = (n: number) => `$${n.toLocaleString("en-US")}`;
 
@@ -10,10 +10,10 @@ const LEVEL: Record<string, string> = { core: "CORE", fund_admin: "FUND_ADMINIST
 export function AdministrationTiers() {
   // Live prices come from the pricing configuration; the built-in list is the fallback.
   const q = useQuery({ queryKey: ["public-service-pricing"], queryFn: () => getPublicServicePricing(), staleTime: 300_000 });
-  const tiers = ADMINISTRATION_TIERS.map((t) => {
+  const tiers: AdministrationTier[] = ADMINISTRATION_TIERS.map((t) => {
     const p = q.data?.find((x) => x.service_level === LEVEL[t.key]);
     if (!p || t.key === "core") return t;
-    if (t.key === "institutional") return { ...t, startingAnnual: p.starting_price ?? t.startingAnnual };
+    if (t.key === "institutional") return { ...t, startingAnnual: Number(p.starting_price ?? t.startingAnnual ?? 60000) };
     return p.annual_price ? { ...t, prices: { annual: Number(p.annual_price), quarterly: Number(p.quarterly_price), monthly: Number(p.monthly_price) } } : t;
   });
   return (
