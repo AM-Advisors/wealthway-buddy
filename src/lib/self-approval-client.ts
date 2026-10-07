@@ -1,36 +1,16 @@
 import { createMiddleware } from "@tanstack/react-start";
-import { SELF_APPROVAL_EVENT, SELF_APPROVAL_HEADER, SELF_APPROVAL_MARKER } from "@/lib/self-approval-shared";
+import { SELF_APPROVAL_EVENT, SELF_APPROVAL_MARKER } from "@/lib/self-approval-shared";
+import { recordSelfApprovalFn } from "@/lib/self-approval.functions";
 
-const KEY = "harmonious-self-approval-reasons";
-const TTL = 10 * 60 * 1000;
-type Store = Record<string, { reason: string; at: number }>;
-
-function read(): Store {
-  if (typeof window === "undefined") return {};
-  try {
-    const s = JSON.parse(window.sessionStorage.getItem(KEY) ?? "{}") as Store;
-    const now = Date.now();
-    return Object.fromEntries(Object.entries(s).filter(([, v]) => now - v.at < TTL));
-  } catch {
-    return {};
-  }
+/** Saves the reason on the server (append-only) before the approval is retried. */
+export async function saveSelfApprovalReason(key: string, reason: string) {
+  await recordSelfApprovalFn({ data: { key, reason } });
 }
 
-export function saveSelfApprovalReason(key: string, reason: string) {
-  const s = read();
-  s[key] = { reason, at: Date.now() };
-  window.sessionStorage.setItem(KEY, JSON.stringify(s));
-}
-
-/** Sends any recent Super Admin self-approval reasons, and opens the reason box when the server asks for one. */
+/** Opens the reason box when the server asks for a Super Admin self-approval reason. */
 export const selfApprovalMiddleware = createMiddleware({ type: "function" }).client(async ({ next }) => {
-  const s = read();
-  const entries = Object.entries(s);
-  const headers = entries.length
-    ? { [SELF_APPROVAL_HEADER]: encodeURIComponent(JSON.stringify(Object.fromEntries(entries.map(([k, v]) => [k, v.reason])))) }
-    : undefined;
   try {
-    return await next(headers ? { headers } : undefined);
+    return await next();
   } catch (e) {
     const msg = e instanceof Error ? e.message : "";
     const i = msg.indexOf(SELF_APPROVAL_MARKER);
