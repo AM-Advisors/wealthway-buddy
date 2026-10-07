@@ -157,6 +157,52 @@ export const addManualEvidence = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+const EVIDENCE_FRAMEWORKS = ["SOC 2", "ISO 27001", "GDPR", "Other"] as const;
+
+/**
+ * Registers a real evidence document already uploaded to the private
+ * compliance-evidence bucket (client-side storage upload, staff-only policy).
+ * The file itself is never served publicly; downloads go through signed URLs.
+ */
+export const registerEvidenceDocument = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({
+    control_key: z.string(), framework: z.enum(EVIDENCE_FRAMEWORKS),
+    evidence_type: z.string().trim().min(2).max(100), source: z.string().trim().min(2).max(200),
+    period_start: z.string().date().nullable(), period_end: z.string().date().nullable(),
+    file_path: z.string().trim().min(10).max(500), note: z.string().max(1000),
+  }).parse(d))
+  .handler(async ({ data, context }) => {
+    const c = await ctxFor(context);
+    need(c, "administration.evidence.collect");
+    if (!data.file_path.startsWith("evidence/")) throw new Error("File must be uploaded through the evidence uploader.");
+    const { data: obj } = await c.db.storage.from("compliance-evidence").list(data.file_path.split("/").slice(0, -1).join("/"), { search: data.file_path.split("/").at(-1) });
+    if (!obj?.length) throw new Error("File not found in storage. Upload it first.");
+    const summary = { note: data.note, framework: data.framework, file_name: data.file_path.split("/").at(-1) };
+    unwrap(await c.db.from("compliance_evidence").insert({
+      control_key: data.control_key, evidence_type: data.evidence_type, source: data.source,
+      period_start: data.period_start, period_end: data.period_end,
+      artifact_reference: `${data.framework}: ${summary.file_name}`, file_path: data.file_path,
+      summary, system_generated: false, collected_by: c.userId,
+      fingerprint: await sha256(stableJson({ ...data, summary })),
+    }));
+    return { ok: true };
+  });
+
+/** Short-lived signed download link; staff with evidence view permission only. */
+export const downloadEvidenceDocument = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ evidence_id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const c = await ctxFor(context);
+    need(c, "administration.evidence.view");
+    const ev = (await c.db.from("compliance_evidence").select("id, file_path").eq("id", data.evidence_id).single()).data;
+    if (!ev?.file_path) throw new Error("No document attached to this evidence record.");
+    const { data: signed, error } = await c.db.storage.from("compliance-evidence").createSignedUrl(ev.file_path, 300);
+    if (error || !signed?.signedUrl) throw new Error("Could not create a download link.");
+    return { url: signed.signedUrl as string };
+  });
+
 /** Reads access state only; it never changes it. */
 export const collectRbacEvidence = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
