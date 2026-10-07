@@ -274,9 +274,9 @@ export interface PricingSection {
 export const PRICING: PricingSection[] = [
   { id: "spvs", title: "SPVs", items: [
     { name: "New fund or SPV setup", description: "One-time setup fee, paid when the request is sent. Investor Onboarding included for SPVs.", kind: "fixed", amountUsd: 2500, unit: "one-time", approved: true },
-    { name: "SPV raising under $250,000", description: "Formation and administration for the life of the SPV.", kind: "fixed", amountUsd: 5000, unit: "per SPV", approved: true },
-    { name: "SPV raising $250,000 to $1,000,000", description: "Formation and administration for the life of the SPV.", kind: "fixed", amountUsd: 7500, unit: "per SPV", approved: true },
-    { name: "SPV raising over $1,000,000", description: "Formation and administration for the life of the SPV.", kind: "fixed", amountUsd: 10000, unit: "per SPV", approved: true },
+    { name: "SPV raising under $250,000", description: "SPV fee based on the amount raised.", kind: "fixed", amountUsd: 5000, unit: "per SPV", approved: true },
+    { name: "SPV raising $250,000 to $1,000,000", description: "SPV fee based on the amount raised.", kind: "fixed", amountUsd: 7500, unit: "per SPV", approved: true },
+    { name: "SPV raising over $1,000,000", description: "SPV fee based on the amount raised.", kind: "fixed", amountUsd: 10000, unit: "per SPV", approved: true },
   ] },
   { id: "fund_administration", title: "Fund Administration", items: [
     { name: "Fund administration", description: "Capital accounts, statements, wire-instruction management and deadline tracking included. Priced from your statement of work.", kind: "custom", approved: true },
