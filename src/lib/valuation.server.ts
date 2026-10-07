@@ -725,7 +725,9 @@ export async function prepareValuationJournal(userId: string, valuationId: strin
     return { journalEntryId: valuation.journal_entry_id as string, created: false };
   }
   const policy = await policyFor(asset.offering_id, asset.asset_class);
-  const recognized = await lastRecognizedValue(asset.id);
+  // The first mark is measured against cost: cost already sits in investments at
+  // cost, so only appreciation above it is unrealised.
+  const recognized = (await lastRecognizedValue(asset.id)) ?? Number(asset.cost_basis_cents ?? 0);
   const journal = unrealizedJournal(
     recognized,
     Number(valuation.value_cents),
