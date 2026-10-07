@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { FundServicesTab } from "@/components/fund-services-tab";
 import { updateSetupTaskFn } from "@/lib/fund-setup.functions";
 import { Link } from "@tanstack/react-router";
 import { CloseRequestReview } from "@/components/close-request-review";
@@ -143,6 +144,7 @@ export function FundWorkspace({ fundId, tab, onTab, mode = "client", extraTabs =
           <TabsTrigger value="closes">Closes</TabsTrigger>
           <TabsTrigger value="regulatory">Regulatory</TabsTrigger>
           <TabsTrigger value="distributions">Distributions</TabsTrigger>
+          <TabsTrigger value="services">Services</TabsTrigger>
         </TabsList>
 
         {extraTabs.map((x) => <TabsContent key={x.value} value={x.value}>{x.content}</TabsContent>)}
@@ -152,6 +154,7 @@ export function FundWorkspace({ fundId, tab, onTab, mode = "client", extraTabs =
           <TodosTab fundId={fundId} steps={steps.filter((s) => s.owner === "You" && !s.done) as any} />
         </TabsContent>
         <TabsContent value="team"><TeamTab fundId={fundId} /></TabsContent>
+        <TabsContent value="services"><FundServicesTab fundId={fundId} /></TabsContent>
         <TabsContent value="documents"><DocumentsTab fundId={fundId} /></TabsContent>
         <TabsContent value="regulatory"><RegulatoryTab fundId={fundId} /></TabsContent>
 
