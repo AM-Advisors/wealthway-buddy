@@ -36,6 +36,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useClientWorkspace } from "@/components/client-workspace";
+import { canSee } from "@/lib/staff-nav";
 import { SidebarAccountFooter } from "@/components/sidebar-account-footer";
 import { getNavigation, operationsNavItemIsActive } from "@/lib/navigation";
 import { opsSearchIndex, searchOpsIndex } from "@/lib/ops-search";
@@ -72,10 +73,6 @@ const OPS_SUB: Record<string, { title: string; url: string; always?: boolean }[]
   accounting: [{ title: "NAV", url: "/ops/nav" }, { title: "Financial reviews", url: "/ops/financial-reviews" }, { title: "Financials", url: "/ops/financials" }],
 };
 
-const SALES_ROLES = ["sales", "account_executive", "bdr", "sales_management", "cro", "executive", "super_admin"];
-const AM_ROLES = ["account_manager", "client_success", "executive", "super_admin", "cro", "sales_management"];
-const MK_ROLES = ["marketing_manager", "marketing_specialist", "executive", "super_admin", "admin"];
-const LEADER_ROLES = ["cro", "sales_management", "executive", "super_admin"];
 const FINANCE_IDS = ["capital", "accounting", "tax"];
 
 function useSectionOpen(id: string, containsActive: boolean) {
@@ -124,7 +121,7 @@ function NavSection({ id, label, items, pathname, collapsed, onNavigate, isActiv
                     {!collapsed && item.sub && item.sub.length > 0 && (active || item.sub.some((s) => pathname.startsWith(s.url))) && (
                       <div className="ml-6 border-l border-sidebar-border pl-3">
                         {item.sub.map((s) => (
-                          <Link key={s.url} to={s.url as never} onClick={onNavigate} aria-current={pathname.startsWith(s.url) ? "page" : undefined}
+                          <Link key={s.url} to={s.url.split("?")[0] as never} search={(s.url.includes("?") ? Object.fromEntries(new URLSearchParams(s.url.split("?")[1])) : undefined) as never} onClick={onNavigate} aria-current={pathname.startsWith(s.url.split("?")[0]!) && !s.url.includes("?") ? "page" : undefined}
                             className="block py-1.5 text-xs text-sidebar-foreground/80 hover:text-sidebar-foreground aria-[current=page]:font-medium aria-[current=page]:text-sidebar-foreground">{s.title}</Link>
                         ))}
                       </div>
@@ -154,7 +151,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
   const sections = getNavigation(session as never, "operations", pathname).operations;
   const salesOnly = !session?.operations;
   const staffRoles = session?.staffRoles ?? [];
-  const isSalesLeader = staffRoles.some((r) => LEADER_ROLES.includes(r));
+  const isSalesLeader = canSee("salesLeader", staffRoles);
   const capabilities = ((session as { operationsCapabilities?: OpsCapability[] } | null)?.operationsCapabilities ?? []);
   const [query, setQuery] = useState("");
   const index = useMemo(() => opsSearchIndex(capabilities), [capabilities]);
@@ -185,21 +182,20 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
     const ok = sub.filter((x) => allowed(x.url));
     return ok.length ? [{ id, title, url: ok[0]!.url, icon, sub: ok }] : [];
   };
+  const peopleSub = [
+    ...(canSee("peopleEmployees", staffRoles) ? [{ title: "Employees", url: "/ops/people-access?tab=employees" }] : []),
+    ...(canSee("peopleOthers", staffRoles) ? [{ title: "Everyone else", url: "/ops/people-access?tab=others" }] : []),
+    ...(canSee("peopleEmployees", staffRoles) ? [{ title: "Roles", url: "/ops/people-access?tab=roles" }, { title: "Invites & access", url: "/ops/people-access?tab=access" }] : []),
+  ];
   const teamItems: NavItem[] = salesOnly ? [] : [
     { id: "tasks", title: "Tasks", url: "/ops/tasks", icon: "document" },
-    { id: "employees", title: "Employees & activity", url: "/ops/employees", icon: "people" },
-    { id: "mailboxes", title: "Mailboxes", url: "/ops/mailboxes", icon: "document" },
+    ...(peopleSub.length ? [{ id: "people-access", title: "People & Access", url: "/ops/people-access", icon: "people", sub: peopleSub }] : []),
+    ...(canSee("mailboxes", staffRoles) ? [{ id: "mailboxes", title: "Mailboxes", url: "/ops/mailboxes", icon: "document" }] : []),
     { id: "mail", title: "Mail", url: "/ops/mail", icon: "document" },
   ];
   const leadershipItems: NavItem[] = salesOnly || !(viewLeader || adminSection) ? [] : [
     ...(viewLeader ? [{ id: "dash-leadership", title: "Leadership dashboard", url: "/ops/dashboards/leadership", icon: "report" }] : []),
-    ...(viewLeader ? grp("lead-people", "People", "people", [
-      { title: "All users", url: "/ops/people" }, { title: "Test & Demo users", url: "/ops/people/test-demo" }, { title: "Employees & activity", url: "/ops/employees" },
-    ]) : []),
-    ...grp("lead-access", "Access", "shield", [
-      ...(viewLeader ? [{ title: "Invites & access", url: "/ops/access-control" }, { title: "Roles", url: "/ops/roles" }] : []),
-      { title: "Legacy permission settings", url: "/admin/permissions" },
-    ]),
+    ...grp("lead-access", "Access", "shield", [{ title: "Legacy permission settings", url: "/admin/permissions" }]),
     ...grp("lead-oversight", "Oversight", "check", [
       { title: "Audit log", url: "/admin/audit" }, { title: "Activity log", url: "/admin/activity" },
       { title: "Timeline", url: "/admin/timeline" }, { title: "Compliance & Controls", url: "/ops/compliance" },
@@ -211,7 +207,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
     ]),
   ];
 
-  const showSales = salesOnly || staffRoles.some((r) => SALES_ROLES.includes(r));
+  const showSales = salesOnly || canSee("sales", staffRoles);
   const salesItems: NavItem[] = showSales ? [
     ...(isSalesLeader ? [{ id: "sales-cro", title: "CRO dashboard", url: "/sales/cro", icon: "report" }] : []),
     { id: "sales-dashboard", title: "Sales dashboard", url: "/sales/dashboard", icon: "report" },
@@ -226,7 +222,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
     { id: "sales-crm", title: "Contacts & deals", url: "/sales/crm", icon: "people" },
     { id: "sales-team", title: "Sales team", url: "/sales/team", icon: "people" },
   ] : [];
-  const showAm = staffRoles.some((r) => AM_ROLES.includes(r));
+  const showAm = canSee("accountManagement", staffRoles);
   const amItems: NavItem[] = showAm ? [
     { id: "am-dashboard", title: "AM dashboard", url: "/account-manager", icon: "report" },
     { id: "am-clients", title: "My clients", url: "/account-manager/clients", icon: "briefcase" },
@@ -240,7 +236,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
     ] : []),
   ] : [];
 
-  const showMk = staffRoles.some((r) => MK_ROLES.includes(r));
+  const showMk = canSee("marketing", staffRoles);
   const mkItems: NavItem[] = showMk ? [
     { id: "mk-dashboard", title: "Marketing dashboard", url: "/marketing", icon: "report" },
     { id: "mk-campaigns", title: "Campaigns", url: "/marketing/campaigns", icon: "report" },
@@ -336,7 +332,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
             <NavSection id="sales" label="Sales" items={salesItems} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={exact} />
             <NavSection id="account-management" label="Account Management" items={amItems} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={exact} />
             <NavSection id="marketing" label="Marketing" items={mkItems} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={(i) => i.url === "/marketing" ? pathname === i.url : pathname.startsWith(i.url)} />
-            <NavSection id="team" label="Team" items={teamItems} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={(i) => i.id === "employees" ? pathname.startsWith(i.url) && !pathname.startsWith("/ops/people") : pathname === i.url} />
+            <NavSection id="team" label="Team" items={teamItems} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={(i) => i.id === "people-access" ? pathname.startsWith("/ops/people-access") || pathname.startsWith("/ops/employees") : pathname === i.url} />
             <NavSection id="leadership" label="Leadership" items={leadershipItems} pathname={pathname} collapsed={collapsed} onNavigate={close}
               isActive={(i) => i.sub ? i.sub.some((x) => pathname === x.url) : pathname === i.url} />
             <SidebarSeparator />

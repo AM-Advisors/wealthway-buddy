@@ -1,9 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { PeopleDirectory } from "@/components/people-directory";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
-const T = "All users - Harmonious operations";
-const D = "Every account and open invitation, with revoke, archive, restore and test/demo controls.";
+// Combined into People & Access; kept so saved links keep working.
 export const Route = createFileRoute("/_authenticated/ops/people")({
-  head: () => ({ meta: [{ title: T }, { name: "description", content: D }, { property: "og:title", content: T }, { property: "og:description", content: D }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" }] }),
-  component: () => <PeopleDirectory />,
+  beforeLoad: () => { throw redirect({ to: "/ops/people-access", search: { tab: "others" }, replace: true }); },
 });

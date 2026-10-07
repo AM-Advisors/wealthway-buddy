@@ -243,6 +243,7 @@ import { Route as AuthenticatedOpsMailboxesRouteImport } from './routes/_authent
 import { Route as AuthenticatedOpsMessagesRouteImport } from './routes/_authenticated/ops.messages'
 import { Route as AuthenticatedOpsNavRouteImport } from './routes/_authenticated/ops.nav'
 import { Route as AuthenticatedOpsPeopleRouteImport } from './routes/_authenticated/ops.people'
+import { Route as AuthenticatedOpsPeopleAccessRouteImport } from './routes/_authenticated/ops.people-access'
 import { Route as AuthenticatedOpsPerformanceRouteImport } from './routes/_authenticated/ops.performance'
 import { Route as AuthenticatedOpsQueueRouteImport } from './routes/_authenticated/ops.queue'
 import { Route as AuthenticatedOpsReadinessRouteImport } from './routes/_authenticated/ops.readiness'
@@ -1720,6 +1721,12 @@ const AuthenticatedOpsPeopleRoute = AuthenticatedOpsPeopleRouteImport.update({
   path: '/ops/people',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedOpsPeopleAccessRoute =
+  AuthenticatedOpsPeopleAccessRouteImport.update({
+    id: '/ops/people-access',
+    path: '/ops/people-access',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOpsPerformanceRoute =
   AuthenticatedOpsPerformanceRouteImport.update({
     id: '/ops/performance',
@@ -2886,6 +2893,7 @@ export interface FileRoutesByFullPath {
   '/ops/messages': typeof AuthenticatedOpsMessagesRoute
   '/ops/nav': typeof AuthenticatedOpsNavRoute
   '/ops/people': typeof AuthenticatedOpsPeopleRoute
+  '/ops/people-access': typeof AuthenticatedOpsPeopleAccessRoute
   '/ops/performance': typeof AuthenticatedOpsPerformanceRoute
   '/ops/queue': typeof AuthenticatedOpsQueueRoute
   '/ops/readiness': typeof AuthenticatedOpsReadinessRoute
@@ -3275,6 +3283,7 @@ export interface FileRoutesByTo {
   '/ops/messages': typeof AuthenticatedOpsMessagesRoute
   '/ops/nav': typeof AuthenticatedOpsNavRoute
   '/ops/people': typeof AuthenticatedOpsPeopleRoute
+  '/ops/people-access': typeof AuthenticatedOpsPeopleAccessRoute
   '/ops/performance': typeof AuthenticatedOpsPerformanceRoute
   '/ops/queue': typeof AuthenticatedOpsQueueRoute
   '/ops/readiness': typeof AuthenticatedOpsReadinessRoute
@@ -3672,6 +3681,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/messages': typeof AuthenticatedOpsMessagesRoute
   '/_authenticated/ops/nav': typeof AuthenticatedOpsNavRoute
   '/_authenticated/ops/people': typeof AuthenticatedOpsPeopleRoute
+  '/_authenticated/ops/people-access': typeof AuthenticatedOpsPeopleAccessRoute
   '/_authenticated/ops/performance': typeof AuthenticatedOpsPerformanceRoute
   '/_authenticated/ops/queue': typeof AuthenticatedOpsQueueRoute
   '/_authenticated/ops/readiness': typeof AuthenticatedOpsReadinessRoute
@@ -4070,6 +4080,7 @@ export interface FileRouteTypes {
     | '/ops/messages'
     | '/ops/nav'
     | '/ops/people'
+    | '/ops/people-access'
     | '/ops/performance'
     | '/ops/queue'
     | '/ops/readiness'
@@ -4459,6 +4470,7 @@ export interface FileRouteTypes {
     | '/ops/messages'
     | '/ops/nav'
     | '/ops/people'
+    | '/ops/people-access'
     | '/ops/performance'
     | '/ops/queue'
     | '/ops/readiness'
@@ -4855,6 +4867,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/messages'
     | '/_authenticated/ops/nav'
     | '/_authenticated/ops/people'
+    | '/_authenticated/ops/people-access'
     | '/_authenticated/ops/performance'
     | '/_authenticated/ops/queue'
     | '/_authenticated/ops/readiness'
@@ -6733,6 +6746,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsPeopleRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ops/people-access': {
+      id: '/_authenticated/ops/people-access'
+      path: '/ops/people-access'
+      fullPath: '/ops/people-access'
+      preLoaderRoute: typeof AuthenticatedOpsPeopleAccessRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ops/performance': {
       id: '/_authenticated/ops/performance'
       path: '/ops/performance'
@@ -8297,6 +8317,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsMessagesRoute: typeof AuthenticatedOpsMessagesRoute
   AuthenticatedOpsNavRoute: typeof AuthenticatedOpsNavRoute
   AuthenticatedOpsPeopleRoute: typeof AuthenticatedOpsPeopleRoute
+  AuthenticatedOpsPeopleAccessRoute: typeof AuthenticatedOpsPeopleAccessRoute
   AuthenticatedOpsPerformanceRoute: typeof AuthenticatedOpsPerformanceRoute
   AuthenticatedOpsQueueRoute: typeof AuthenticatedOpsQueueRoute
   AuthenticatedOpsReadinessRoute: typeof AuthenticatedOpsReadinessRoute
@@ -8581,6 +8602,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsMessagesRoute: AuthenticatedOpsMessagesRoute,
   AuthenticatedOpsNavRoute: AuthenticatedOpsNavRoute,
   AuthenticatedOpsPeopleRoute: AuthenticatedOpsPeopleRoute,
+  AuthenticatedOpsPeopleAccessRoute: AuthenticatedOpsPeopleAccessRoute,
   AuthenticatedOpsPerformanceRoute: AuthenticatedOpsPerformanceRoute,
   AuthenticatedOpsQueueRoute: AuthenticatedOpsQueueRoute,
   AuthenticatedOpsReadinessRoute: AuthenticatedOpsReadinessRoute,
