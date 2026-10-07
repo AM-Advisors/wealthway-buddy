@@ -96,7 +96,7 @@ const tables: Record<string, any[]> = {
       offering_id: FUND_A,
       version: 1,
       status: "effective",
-      value_cents: 1_000_000,
+      value_cents: 1_250_000, // above the 1,000,000 cost basis, so a mark-up is booked
       effective_date: "2026-03-31",
       valuation_date: "2026-03-31",
       methodology: "cost",

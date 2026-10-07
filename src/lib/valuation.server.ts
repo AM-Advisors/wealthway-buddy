@@ -614,6 +614,9 @@ export async function decideValuation(
   if ((input.action === "return" || input.action === "reject") && (input.reason ?? "").trim().length < 4) {
     fail("Say why this valuation is being returned or rejected.");
   }
+  if (to === "approved" && String(valuation.prepared_by ?? "") === userId) {
+    fail("Maker/checker: the person who prepared a valuation cannot approve it.");
+  }
 
   const now = new Date().toISOString();
   const patch: Record<string, unknown> = { status: to, updated_at: now };
@@ -722,7 +725,9 @@ export async function prepareValuationJournal(userId: string, valuationId: strin
     return { journalEntryId: valuation.journal_entry_id as string, created: false };
   }
   const policy = await policyFor(asset.offering_id, asset.asset_class);
-  const recognized = await lastRecognizedValue(asset.id);
+  // The first mark is measured against cost: cost already sits in investments at
+  // cost, so only appreciation above it is unrealised.
+  const recognized = (await lastRecognizedValue(asset.id)) ?? Number(asset.cost_basis_cents ?? 0);
   const journal = unrealizedJournal(
     recognized,
     Number(valuation.value_cents),

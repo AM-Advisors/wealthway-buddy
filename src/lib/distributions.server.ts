@@ -1259,6 +1259,12 @@ export async function reviewDistribution(userId: string, batchId: string) {
   const batch = await batchRow(batchId);
   const { actor } = await assertCan(userId, String(batch.offering_id), "review");
   if (!batch.balances) fail("This distribution does not balance to the cent and cannot be reviewed.");
+  // A review is recorded once and never by the person who prepared or requested it.
+  if (String(batch.status) !== "proposed" || batch.reviewed_by) {
+    fail("This distribution has already been reviewed.");
+  }
+  const chainError = await chainCheck(approvalChain(batch), "reviewed", actor.userId, [batch.id]);
+  if (chainError) fail(chainError);
   return moveBatch(
     batch,
     "harmonious_review",

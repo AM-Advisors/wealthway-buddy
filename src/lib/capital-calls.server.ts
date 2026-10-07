@@ -1245,8 +1245,22 @@ export async function postFundingMatch(userId: string, matchId: string) {
     fail("Maker/checker: the person who approved the match cannot post it to the ledger.");
   }
 
-  await advanceReconciliationJournal(actor.userId, String(match.reconciliation_id), "reviewed");
-  await advanceReconciliationJournal(actor.userId, String(match.reconciliation_id), "approved");
+  // The journal engine requires approver != poster, so this is a two-person step:
+  // the first Harmonious caller reviews and approves the journal; a different
+  // person then posts it, and only posting moves the contribution.
+  const { data: journal } = match.journal_entry_id
+    ? await db().from("journal_entries").select("status, approved_by").eq("id", match.journal_entry_id).maybeSingle()
+    : { data: null };
+  const journalStatus = String(journal?.status ?? "draft");
+  if (journalStatus === "draft" || journalStatus === "reviewed") {
+    if (journalStatus === "draft") await advanceReconciliationJournal(actor.userId, String(match.reconciliation_id), "reviewed");
+    await advanceReconciliationJournal(actor.userId, String(match.reconciliation_id), "approved");
+    return { posted: false, awaitingPostingBy: "a different Harmonious approver", commitmentEventId: null };
+  }
+  if (journalStatus !== "approved") fail(`The contribution journal is ${journalStatus}; it cannot be posted.`);
+  if (String(journal?.approved_by ?? "") === actor.userId) {
+    fail("Maker/checker: the person who approved the contribution journal cannot also post it.");
+  }
   await advanceReconciliationJournal(actor.userId, String(match.reconciliation_id), "posted");
 
   const { data: expected } = await db()
@@ -1254,6 +1268,12 @@ export async function postFundingMatch(userId: string, matchId: string) {
     .select("*")
     .eq("id", match.expected_funding_id)
     .maybeSingle();
+
+  // A contribution is effective when the money arrived, not when it was posted.
+  const { data: receipt } = match.bank_transaction_id
+    ? await db().from("bank_transactions").select("posted_on").eq("id", match.bank_transaction_id).maybeSingle()
+    : { data: null };
+  const receivedOn = receipt?.posted_on ? String(receipt.posted_on) : today();
 
   let commitmentEventId: string | null = null;
   if (expected?.position_id) {
@@ -1264,7 +1284,7 @@ export async function postFundingMatch(userId: string, matchId: string) {
         offering_id: match.offering_id,
         event_type: "contribution",
         amount_cents: Number(match.proposed_amount_cents),
-        effective_date: today(),
+        effective_date: receivedOn,
         source: "funding_match",
         source_ref: String(match.id),
         journal_entry_id: match.journal_entry_id,
