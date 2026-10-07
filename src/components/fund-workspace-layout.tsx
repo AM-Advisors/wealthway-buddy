@@ -6,7 +6,6 @@ import {
   ArrowLeft,
   Building2,
   FileText,
-  ListChecks,
   Settings,
   Link2,
   UserCog,
