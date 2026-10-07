@@ -15,7 +15,7 @@ import { CHANNELS, CHANNEL_LABEL, CHANNEL_LIMIT, UNAVAILABLE_CHANNELS, postProbl
 import { PostBrandLayout } from "@/components/marketing/post-brand-layout";
 import { MarketingDrivePicker } from "@/components/marketing-drive-picker";
 import { useMarketingDriveImage } from "@/lib/marketing-drive.functions";
-import { decideMarketingPost, getMarketingPost, marketingDraftCopy, marketingGenerateImage, saveMarketingPost, uploadMarketingAsset } from "@/lib/marketing.functions";
+import { decideMarketingPost, getMarketingPost, marketingDraftCopy, marketingGenerateImage, retryMarketingPost, saveMarketingPost, uploadMarketingAsset } from "@/lib/marketing.functions";
 
 export const Route = createFileRoute("/_authenticated/marketing_/posts_/$id")({
   head: mkHead("Post editor", "Design a social post for LinkedIn, Facebook and Instagram."),
@@ -30,6 +30,7 @@ function PostEditor() {
   const load = useServerFn(getMarketingPost);
   const save = useServerFn(saveMarketingPost);
   const decide = useServerFn(decideMarketingPost);
+  const retry = useServerFn(retryMarketingPost);
   const upload = useServerFn(uploadMarketingAsset);
   const fromDrive = useServerFn(useMarketingDriveImage);
   const draft = useServerFn(marketingDraftCopy);
