@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useClientWorkspace } from "@/hooks/use-client-workspace";
+import { useClientWorkspace } from "@/components/client-workspace";
 import { EmployeesPage } from "@/components/employees-panel";
 import { RolesPage } from "@/components/roles-panel";
 import { PeopleDirectory } from "@/components/people-directory";
