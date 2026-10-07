@@ -215,6 +215,7 @@ export const OPS_WORK_AREAS: OpsWorkArea[] = [
       { title: "Investor reporting", url: "/ops/reporting", description: "Investor report packages", cap: "reports", step: "Track" },
       { title: "Fund financial records", url: "/ops/financials", description: "Posted fund financial statements", cap: "reports", step: "Reference" },
       { title: "Performance reporting", url: "/ops/performance", description: "Performance metrics", cap: "reports", step: "Reference" },
+      { title: "Financial pilot readiness", url: "/ops/financial-pilot", description: "Evaluate one fund for a parallel accounting pilot", cap: "reports", step: "Prepare" },
     ],
   },
   {
