@@ -30,3 +30,22 @@ export const getTaskHistory = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => (await import("@/lib/staff-tasks.server")).taskHistory(context.userId, data.id));
+
+const resp = z.enum(["HARMONIOUS_HANDLING", "CLIENT_APPROVAL_REQUIRED", "CLIENT_INFORMATION_REQUIRED", "WAITING_ON_INVESTOR", "WAITING_ON_THIRD_PARTY", "COMPLETED"]);
+
+export const setTaskResponsibility = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({
+    id: z.string().uuid(), status: resp, reason: z.string().trim().min(5).max(1000),
+    responsibleUserId: z.string().uuid().nullable().optional(), responsibleTeam: z.string().max(40).nullable().optional(),
+    waitingOnType: z.string().max(40).nullable().optional(), waitingOnName: z.string().max(200).nullable().optional(),
+    relatedInvestorId: z.string().uuid().nullable().optional(),
+    noteInternal: z.string().max(2000).nullable().optional(), noteClient: z.string().max(2000).nullable().optional(),
+    clientVisible: z.boolean().optional(), slaDueDate: date,
+  }).parse(d))
+  .handler(async ({ context, data }) => (await import("@/lib/staff-tasks.server")).setResponsibility(context.userId, data));
+
+export const getClientFundTasks = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ fundId: z.string().uuid() }).parse(d))
+  .handler(async ({ context, data }) => (await import("@/lib/staff-tasks.server")).listClientFundTasks(context.userId, data.fundId));
