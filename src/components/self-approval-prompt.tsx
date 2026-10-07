@@ -9,6 +9,7 @@ import { saveSelfApprovalReason } from "@/lib/self-approval-client";
 export function SelfApprovalPrompt() {
   const [key, setKey] = useState<string | null>(null);
   const [reason, setReason] = useState("");
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     const on = (e: Event) => { setKey((e as CustomEvent<{ key: string }>).detail.key); setReason(""); };
