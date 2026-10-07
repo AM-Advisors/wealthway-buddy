@@ -42,7 +42,8 @@ function ChannelCard({ c, canEdit }: { c: any; canEdit: boolean }) {
       <p className="mb-3 text-xs text-muted-foreground">
         {c.credential ? "Account access is set up." : c.channel === "linkedin" ? "LinkedIn company page token hasn't been added yet." : "Meta (Facebook/Instagram) access token hasn't been added yet."}
       </p>
-      {c.channel === "linkedin" && <p className="mb-3 text-xs text-muted-foreground">Posts always go out as the Harmonious company page, never as a person. The LinkedIn token expires about every 60 days.</p>}
+      {c.channel === "linkedin" && <p className="mb-3 text-xs text-muted-foreground">Posts always go out as the Harmonious company page, never as a person.</p>}
+      {c.channel === "linkedin" && <LinkedInConnect canEdit={canEdit} onPick={(id, name) => { setRef(id); setLabel(name); }} />}
       <label className="text-xs font-medium">{c.refHint}</label>
       <Input value={ref} onChange={(e) => setRef(e.target.value)} disabled={!canEdit} className="mb-2" />
       <label className="text-xs font-medium">Display name</label>

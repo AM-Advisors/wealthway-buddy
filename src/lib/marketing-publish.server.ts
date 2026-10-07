@@ -13,12 +13,22 @@ async function fail(res: Response, what: string): Promise<never> {
 }
 
 function liToken() { return process.env["LINKEDIN_ORG_ACCESS_TOKEN"]?.trim().replace(/^["']|["']$/g, ""); }
-export async function linkedinConfigured() { return !!liToken(); }
+export async function linkedinConfigured() {
+  if (process.env["LINKEDIN_CLIENT_ID"] && process.env["LINKEDIN_CLIENT_SECRET"]) {
+    const s = await (await import("@/lib/linkedin-direct.server")).directStatus().catch(() => null) as any;
+    if (s?.connected) return true;
+  }
+  return !!liToken();
+}
+/** Company-page token: the in-app LinkedIn connection (auto-refreshing) first, then a manually saved token. */
+async function liBearer(): Promise<string> {
+  try { return await (await import("@/lib/linkedin-direct.server")).accessToken(); }
+  catch (e) { const t = liToken(); if (t) return t; throw e; }
+}
 
 /** Direct LinkedIn API with the Harmonious company-page token (Community Management API). */
-function liFetch(path: string, init: RequestInit = {}) {
-  const token = liToken();
-  if (!token) throw new Error("LinkedIn isn't connected yet.");
+async function liFetch(path: string, init: RequestInit = {}) {
+  const token = await liBearer();
   return fetch(`https://api.linkedin.com${path}`, {
     ...init,
     headers: { ...(init.headers as Record<string, string>), Authorization: `Bearer ${token}`,
@@ -35,7 +45,7 @@ async function linkedinImage(owner: string, imageUrl: string): Promise<string | 
     if (!init.ok) { console.error(`LinkedIn image init failed [${init.status}]: ${await init.text()}`); return null; }
     const v = (await init.json())?.value;
     const bytes = await (await fetch(imageUrl)).arrayBuffer();
-    const put = await fetch(v.uploadUrl, { method: "PUT", body: bytes, headers: { Authorization: `Bearer ${liToken()}` } });
+    const put = await fetch(v.uploadUrl, { method: "PUT", body: bytes, headers: { Authorization: `Bearer ${await liBearer()}` } });
     return put.ok ? String(v.image) : null;
   } catch (e) { console.error("LinkedIn image upload skipped", e); return null; }
 }
