@@ -31435,6 +31435,39 @@ export type Database = {
           },
         ]
       }
+      privacy_requests: {
+        Row: {
+          created_at: string
+          details: string
+          due_at: string
+          email: string
+          id: string
+          kind: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          details?: string
+          due_at?: string
+          email: string
+          id?: string
+          kind: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          details?: string
+          due_at?: string
+          email?: string
+          id?: string
+          kind?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       professional_credentials: {
         Row: {
           created_at: string
