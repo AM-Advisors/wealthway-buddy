@@ -73,6 +73,19 @@ export const SECURITY_STATEMENT: SecurityStatement = {
       ],
     },
     {
+      heading: "How long we keep records",
+      intro:
+        "Every record family has a written retention rule in our Compliance & Controls register. Nothing is deleted automatically - a person reviews each disposition, and a legal or regulatory hold blocks it.",
+      bullets: [
+        "Tax records (K-1s, filings, workpapers): 7 years after the return is filed.",
+        "Fund formation and offering documents (PPM, operating agreement, subscriptions): the life of the fund plus 7 years after dissolution.",
+        "Investor identity and verification data: 7 years after the investor relationship ends.",
+        "Fund books and accounting records: 7 years after the period they cover.",
+        "Signed agreements: 7 years after the agreement ends; the append-only activity history is kept for the life of the platform.",
+        "Marketing contacts: until consent is withdrawn, then 3 years as proof of consent.",
+      ],
+    },
+    {
       heading: "What we are working toward",
       intro:
         "We keep a running record of the evidence an outside review would need, and we publish results only once they exist.",
