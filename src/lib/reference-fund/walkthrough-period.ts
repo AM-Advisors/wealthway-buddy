@@ -58,7 +58,7 @@ export const CHART: (TbAccount & { subtype?: string })[] = [
 ];
 
 // ---------------------------------------------------------------- journals
-export type JLine = { account: string; debit?: number; credit?: number; positionId?: string };
+export type JLine = { account: string; debit?: number | undefined; credit?: number | undefined; positionId?: string };
 export type Journal = { id: string; date: string; memo: string; source: string; sourceRef: string; preparedBy: string; postedBy: string; lines: JLine[] };
 
 export function journalError(j: Journal, ctx: { lockedThrough?: string | null; plugAccounts?: string[] } = {}): string | null {
@@ -99,7 +99,7 @@ export function capitalCall(totalCents = CALL_TOTAL) {
 }
 
 // ------------------------------------------------------------------- banking
-export type BankLine = { id: string; postedOn: string | null; bookedOn: string; amountCents: number; description: string; kind: "deposit" | "payment" | "bank_fee" | "interest" | "opening_check"; positionId?: string; reference?: string | null };
+export type BankLine = { id: string; postedOn: string | null; bookedOn: string; amountCents: number; description: string; kind: "deposit" | "payment" | "bank_fee" | "interest" | "opening_check"; positionId?: string | undefined; reference?: string | null };
 
 const DUE = "2026-02-15";
 /** Synthetic investor deposits. One arrives with no reference (initially unmatched). */
