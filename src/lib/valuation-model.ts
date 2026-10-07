@@ -298,6 +298,25 @@ export const VALUATION_EXCEPTION_KINDS = [
 ] as const;
 export type ValuationExceptionKind = (typeof VALUATION_EXCEPTION_KINDS)[number];
 
+/** Pilot M9: one evidence verdict shared by submit, approval and exception checks. */
+export type EvidenceStatus = "evidence_required" | "evidence_provided" | "evidence_waived" | "evidence_not_required";
+export function valuationEvidenceStatus(input: { policyRequired: boolean; evidenceCount: number; waived: boolean }): EvidenceStatus {
+  if (input.evidenceCount > 0) return "evidence_provided";
+  if (!input.policyRequired) return "evidence_not_required";
+  if (input.waived) return "evidence_waived";
+  return "evidence_required";
+}
+export function evidenceGateError(status: EvidenceStatus): string | null {
+  return status === "evidence_required"
+    ? "Valuation evidence is required: attach evidence or have an authorised reviewer waive it with a reason."
+    : null;
+}
+export function evidenceWaiverError(input: { reason: string; waiverUserId: string; preparedBy: string | null }): string | null {
+  if (input.reason.trim().length < 10) return "Give a reason of at least 10 characters for waiving valuation evidence.";
+  if (input.preparedBy && input.preparedBy === input.waiverUserId) return "The preparer cannot waive evidence on their own valuation.";
+  return null;
+}
+
 export type ValuationCandidate = {
   valueCents: number;
   priorValueCents: number | null;
@@ -310,6 +329,8 @@ export type ValuationCandidate = {
   valuationDate: string;
   inputs?: Record<string, unknown> | null;
   evidenceCount?: number;
+  /** When set, the shared verdict decides whether evidence is missing. */
+  evidenceStatus?: EvidenceStatus;
   conflicts?: string[];
   assetClass?: PortfolioAssetClass;
 };
@@ -338,7 +359,8 @@ export function valuationExceptions(
   if (candidate.costBasisCents === null || candidate.costBasisCents === undefined) {
     found.push("missing_cost_basis");
   }
-  if (policy.evidenceRequired && (candidate.evidenceCount ?? 0) === 0) {
+  const evStatus = candidate.evidenceStatus ?? valuationEvidenceStatus({ policyRequired: policy.evidenceRequired, evidenceCount: candidate.evidenceCount ?? 0, waived: false });
+  if (evStatus === "evidence_required") {
     found.push("missing_valuation_evidence");
   }
   if ((candidate.conflicts ?? []).length > 0) found.push("conflicting_valuation_sources");

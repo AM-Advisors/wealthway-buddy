@@ -109,11 +109,12 @@ export function periodBounds(
 
 // ------------------------------------------------------------- fund types
 
-export const FUND_TYPES = ["spv", "venture", "private_equity", "hedge", "custom"] as const;
+export const FUND_TYPES = ["spv", "lp_fund", "venture", "private_equity", "hedge", "custom"] as const;
 export type FundType = (typeof FUND_TYPES)[number];
 
 export const FUND_TYPE_LABELS: Record<FundType, string> = {
   spv: "SPV / SPE",
+  lp_fund: "LP fund (commitment-based)",
   venture: "Venture capital",
   private_equity: "Private equity",
   hedge: "Hedge / liquid strategy",
@@ -164,6 +165,19 @@ const COMMON: MetricKey[] = [
 
 /** Which measures a fund type is normally reported on. Configuration, not law. */
 export const FUND_TYPE_METRICS: Record<FundType, MetricKey[]> = {
+  lp_fund: [
+    ...COMMON,
+    "paid_in_capital",
+    "unfunded_commitment",
+    "realized_gain",
+    "unrealized_gain",
+    "irr",
+    "moic",
+    "dpi",
+    "rvpi",
+    "tvpi",
+    "carried_interest",
+  ],
   spv: [
     ...COMMON,
     "paid_in_capital",
@@ -276,6 +290,48 @@ export const DEFAULT_METHODOLOGY: PerformanceMethodology = {
   benchmark: null,
   effectiveFrom: "2026-01-01",
 };
+
+/**
+ * Pilot M5: fund type comes from the structured classification on the Fund
+ * (offerings.fund_type, then entity_type). Ambiguous or missing values are
+ * "custom" and flagged; we never default an unknown vehicle to SPV.
+ */
+export function classifyFundType(input: { fundType?: string | null; fundTypeOther?: string | null; entityType?: string | null }): { fundType: FundType; source: string; ambiguous: boolean } {
+  const norm = (v?: string | null) => String(v ?? "").toLowerCase().replace(/[^a-z ]/g, " ").replace(/\s+/g, " ").trim();
+  const t = norm(input.fundType) || norm(input.fundTypeOther);
+  if (t) {
+    if (/\b(spv|spe|single asset|special purpose)\b/.test(t)) return { fundType: "spv", source: "fund_type", ambiguous: false };
+    if (/\bhedge\b/.test(t)) return { fundType: "hedge", source: "fund_type", ambiguous: false };
+    if (/\b(private equity|pe fund|buyout)\b/.test(t) || t === "pe") return { fundType: "private_equity", source: "fund_type", ambiguous: false };
+    if (/\b(venture|vc)\b/.test(t)) return { fundType: "venture", source: "fund_type", ambiguous: false };
+    if (/\b(lp fund|limited partnership|fund of funds|fund)\b/.test(t)) return { fundType: "lp_fund", source: "fund_type", ambiguous: false };
+  }
+  const e = norm(input.entityType);
+  if (/^(lp|limited partnership)$/.test(e)) return { fundType: "lp_fund", source: "entity_type", ambiguous: false };
+  return { fundType: "custom", source: t ? "fund_type_unrecognised" : "unclassified", ambiguous: true };
+}
+
+/**
+ * Pilot M6: IRR is always annualized. Under the threshold (default 12 months
+ * since the first cash flow) it is labelled and kept out of headline summaries.
+ * The calculation itself is unchanged.
+ */
+export function irrPresentation(input: { firstCashFlowDate: string | null; asOf: string; thresholdDays?: number }) {
+  const threshold = input.thresholdDays ?? 365;
+  const days = input.firstCashFlowDate
+    ? Math.max(0, Math.round((Date.parse(input.asOf) - Date.parse(input.firstCashFlowDate)) / 86_400_000))
+    : null;
+  const shortPeriod = days !== null && days < threshold;
+  return {
+    label: "Annualized IRR",
+    days,
+    thresholdDays: threshold,
+    shortPeriod,
+    suppressFromSummary: shortPeriod,
+    note: shortPeriod ? "Period is less than 12 months; annualized IRR may not be meaningful." : null,
+  };
+}
+export type IrrPresentation = ReturnType<typeof irrPresentation>;
 
 export function methodologyForFundType(
   fundType: FundType,
@@ -744,6 +800,7 @@ export const PERFORMANCE_EXCEPTION_KINDS = [
   "investor_totals_mismatch",
   "large_performance_movement",
   "benchmark_unavailable",
+  "short_period_irr",
 ] as const;
 export type PerformanceExceptionKind = (typeof PERFORMANCE_EXCEPTION_KINDS)[number];
 

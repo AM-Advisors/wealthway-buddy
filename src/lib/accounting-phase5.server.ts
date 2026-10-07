@@ -175,10 +175,11 @@ export async function advanceEntry(userId: string, i: { offeringId: string; entr
   return advanceJournalEntry(userId, i.entryId, i.to, i.reason);
 }
 
-export async function reverseEntry(userId: string, i: { offeringId: string; entryId: string; reason: string }) {
+export async function reverseEntry(userId: string, i: { offeringId: string; entryId: string; reason: string; dateOption?: "current_date" | "next_open_period" | "specified" | undefined; reversalDate?: string | undefined }) {
   await staff(userId);
   await entryInScope(i.entryId, i.offeringId);
-  return reverseJournalEntry(userId, i.entryId, i.reason);
+  const opt = i.dateOption === "specified" ? { kind: "specified" as const, date: String(i.reversalDate ?? "") } : { kind: (i.dateOption ?? "current_date") as "current_date" | "next_open_period" };
+  return reverseJournalEntry(userId, i.entryId, i.reason, opt);
 }
 
 // ------------------------------------------------------------ QuickBooks
@@ -496,13 +497,25 @@ export async function runBankAlertScan(userId: string, offeringId: string) {
   return scanBankAlerts(offeringId);
 }
 
-export async function recordManualBalance(userId: string, i: { offeringId: string; asOf: string; balanceCents: number; bankAccountId?: string | undefined | null | undefined }) {
+export async function recordManualBalance(userId: string, i: { offeringId: string; asOf: string; balanceCents: number; bankAccountId?: string | undefined | null | undefined; statementPeriodStart?: string | null | undefined; statementEndDate?: string | null | undefined; sourceKind?: "manual" | "imported" | undefined }) {
   await staff(userId);
   await fundName(i.offeringId);
   if (!Number.isFinite(i.balanceCents)) fail("Enter the balance.");
-  const { error } = await db().from("bank_balance_snapshots").insert({ offering_id: i.offeringId, bank_account_id: i.bankAccountId ?? null, as_of: i.asOf, balance_cents: Math.round(i.balanceCents), source: "manual", recorded_by: userId });
+  const { error } = await db().from("bank_balance_snapshots").insert({ offering_id: i.offeringId, bank_account_id: i.bankAccountId ?? null, as_of: i.asOf, balance_cents: Math.round(i.balanceCents), source: "manual", recorded_by: userId, statement_period_start: i.statementPeriodStart ?? null, statement_end_date: i.statementEndDate ?? null, source_kind: i.sourceKind ?? "manual" });
   if (error) fail(error.message);
   return scanBankAlerts(i.offeringId);
+}
+
+/** Pilot M8: a second person reviews a period-end statement balance before it can satisfy close. */
+export async function reviewBankStatementBalance(userId: string, snapshotId: string) {
+  await staff(userId);
+  const { data: s } = await db().from("bank_balance_snapshots").select("id, recorded_by, reviewed_by").eq("id", snapshotId).maybeSingle();
+  if (!s) fail("That bank balance was not found.");
+  if (s.reviewed_by) fail("This balance has already been reviewed.");
+  if (s.recorded_by === userId) fail("The person who recorded a bank balance cannot review it.");
+  const { error } = await db().from("bank_balance_snapshots").update({ reviewed_by: userId, reviewed_at: new Date().toISOString() }).eq("id", snapshotId);
+  if (error) fail(error.message);
+  return { ok: true };
 }
 
 export async function listBankAlerts(userId: string, i: { offeringId?: string | undefined | null | undefined; includeResolved?: boolean | undefined }) {
@@ -585,7 +598,37 @@ async function monthEndFacts(offeringId: string, month: string) {
   }
   const openAlerts = ((alerts ?? []) as any[]).filter((a) => alertState(a.bank_alert_events ?? []).state !== "resolved").length;
   const d = (drift ?? [])[0];
+  // Pilot M8: only a statement balance ending on the period end satisfies close.
+  const { data: snap } = await db().from("bank_balance_snapshots").select("id, as_of, statement_end_date, balance_cents, reviewed_by").eq("offering_id", offeringId).or(`statement_end_date.eq.${end},as_of.eq.${end}`).order("created_at", { ascending: false }).limit(1);
+  const s0 = ((snap ?? []) as any[])[0];
+  let periodEndBalance: { present: boolean; reviewed: boolean; diffCents: number | null; asOf: string | null } = { present: false, reviewed: false, diffCents: null, asOf: null };
+  if (s0) {
+    let diff: number | null = null;
+    if (book) {
+      const accts = await accountsFor(book.id);
+      const tbE = trialBalance(accts, await postedLines(book.id, end));
+      const sub = new Map(accts.map((a) => [a.id, a.subtype]));
+      diff = Number(s0.balance_cents) - ledgerCashCents(tbE.rows.map((r) => ({ ...r, subtype: sub.get(r.id) })));
+    }
+    periodEndBalance = { present: true, reviewed: Boolean(s0.reviewed_by), diffCents: diff, asOf: String(s0.statement_end_date ?? s0.as_of) };
+  }
+  // Pilot M7: NAV and allocation controls, where this period has them.
+  const [{ data: navs }, { data: runs }, { data: exc }] = await Promise.all([
+    (async () => {
+      if (!book) return { data: [] };
+      const { data: per } = await db().from("accounting_periods").select("id").eq("book_id", book.id).eq("period_end", end).maybeSingle();
+      return per ? db().from("nav_versions").select("status").eq("period_id", per.id) : { data: [] };
+    })(),
+    db().from("allocation_runs").select("status").eq("offering_id", offeringId).eq("period_end", end),
+    db().from("accounting_exceptions").select("id").eq("offering_id", offeringId).in("status", ["open", "investigating"]).limit(200),
+  ]);
+  const navRows = ((navs ?? []) as any[]).filter((n) => n.status !== "superseded");
+  const runRows = ((runs ?? []) as any[]).filter((r) => !["superseded", "cancelled"].includes(String(r.status)));
   return monthEndChecklist({
+    periodEndBalance,
+    navPublished: navRows.length ? navRows.some((n) => n.status === "published") : null,
+    allocationsFinalized: runRows.length ? runRows.some((r) => r.status === "finalized") : null,
+    openAccountingExceptions: ((exc ?? []) as any[]).length,
     hasBook: Boolean(book),
     unreconciledBankItems: unreconciledCount,
     openBankAlerts: openAlerts,
@@ -644,7 +687,7 @@ export async function decideCloseSheet(userId: string, i: { versionId: string; d
     if (!period) periodNote = "No accounting period is set up for this month, so there was nothing to lock.";
     else if (period.status === "closed") { await transitionPeriod(userId, period.id, "locked", "Month-end close sheet approved"); periodNote = "The period is now locked."; }
     else if (period.status === "locked") periodNote = "The period was already locked.";
-    else periodNote = `The period is ${period.status.replace(/_/g, " ")}; close it first, then lock it.`;
+    else periodNote = `Close controls approved. The period is ${period.status.replace(/_/g, " ")}; it can now be closed, then locked.`;
   }
   return { ok: true, periodNote };
 }

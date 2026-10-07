@@ -87,11 +87,13 @@ export function InvestorPerformancePanel() {
                     <Figure title="Total value" value={money(period.yourInvestment.totalValueCents)} />
                     <Figure title="Gain / loss" value={money(period.yourInvestment.gainCents)} />
                     <Figure
-                      title="Your IRR"
+                      title="Your annualized IRR"
                       value={
-                        period.yourInvestment.irrStatus === "solved"
-                          ? pct(period.yourInvestment.irrBps)
-                          : "Not available"
+                        period.yourInvestment.irrStatus !== "solved"
+                          ? "Not available"
+                          : period.irrPresentation?.shortPeriod
+                            ? "Not meaningful yet"
+                            : pct(period.yourInvestment.irrBps)
                       }
                     />
                     <Figure title="Your MOIC" value={times(period.yourInvestment.moic)} />
@@ -107,13 +109,22 @@ export function InvestorPerformancePanel() {
                     <Figure title="Fund net assets" value={money(period.fundLevel.netAssetsCents)} />
                     <Figure title="Fund return" value={pct(period.fundLevel.netReturnBps)} />
                     <Figure
-                      title="Fund IRR"
+                      title="Fund annualized IRR"
                       value={
-                        period.fundLevel.irrStatus === "solved" ? pct(period.fundLevel.irrBps) : "Not available"
+                        period.fundLevel.irrStatus !== "solved"
+                          ? "Not available"
+                          : period.irrPresentation?.shortPeriod
+                            ? "Not meaningful yet"
+                            : pct(period.fundLevel.irrBps)
                       }
                     />
                     <Figure title="Fund MOIC" value={times(period.fundLevel.moic)} />
                   </div>
+                  {period.irrPresentation?.shortPeriod ? (
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Period is less than 12 months; annualized IRR may not be meaningful.
+                    </p>
+                  ) : null}
                 </div>
               </div>
             ))}

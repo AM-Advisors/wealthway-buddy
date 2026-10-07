@@ -16,6 +16,8 @@
  * confirmation correlates, the bank activity reconciles and the journal posts.
  * Not when a screen says so, and never on a provider callback alone.
  */
+import { basisStaleness, staleBasisOverrideError } from "@/lib/distributions-model";
+import { evaluateWithholding, withholdingDecisionError, type PolicyRule } from "@/lib/withholding-policy";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { onboardingActor, type OnboardingActor } from "@/lib/investor-onboarding.server";
 import { commitmentAsOf, type CommitmentEvent } from "@/lib/allocation-model";
@@ -740,6 +742,65 @@ async function taxFactsFor(offeringId: string) {
   return byKey;
 }
 
+/** Approved, adviser-owned withholding rules (fund overrides + defaults). */
+async function loadWithholdingRules(offeringId: string): Promise<PolicyRule[]> {
+  const { data } = await db()
+    .from("tax_withholding_rules")
+    .select("*")
+    .eq("status", "approved")
+    .or(`offering_id.is.null,offering_id.eq.${offeringId}`);
+  return ((data ?? []) as any[]).map((r) => ({
+    id: String(r.id), ruleName: String(r.rule_name), offeringId: r.offering_id ?? null,
+    investorTaxStatus: r.investor_tax_status, distributionCharacter: r.distribution_character,
+    withholdingType: r.withholding_type, rateBps: Number(r.rate_bps), jurisdiction: r.jurisdiction ?? null,
+    effectiveFrom: String(r.effective_from), effectiveTo: r.effective_to ?? null,
+    documentationRequired: Boolean(r.documentation_required), manualReviewRequired: Boolean(r.manual_review_required),
+    status: r.status, approvedBy: r.approved_by ?? null, policySource: r.policy_source ?? null,
+  }));
+}
+
+/**
+ * Pilot M2: an authorised reviewer (never the preparer) records the final
+ * withholding for a review-required line, with a reason. Totals are re-derived.
+ */
+export async function decideLineWithholding(userId: string, input: { lineId: string; amountCents: number; reason: string }) {
+  const actor = await assertStaff(userId, "review_withholding");
+  const { data: line } = await db().from("distribution_lines").select("*").eq("id", input.lineId).maybeSingle();
+  if (!line) fail("That distribution line was not found.");
+  const batch = await batchRow(String(line.batch_id));
+  if (["approved", "executing", "completed", "superseded", "cancelled"].includes(String(batch.status))) {
+    fail("Withholding on an approved distribution is frozen.");
+  }
+  const err = withholdingDecisionError({
+    amountCents: input.amountCents, grossCents: Number(line.gross_cents), reason: input.reason,
+    deciderUserId: actor.userId, preparedBy: batch.prepared_by ? String(batch.prepared_by) : null,
+  });
+  if (err) fail(err);
+  const net = Number(line.gross_cents) - input.amountCents - Number(line.fee_cents ?? 0);
+  await db().from("distribution_lines").update({
+    withholding_cents: input.amountCents, net_cents: net, withholding_status: "reviewer_set",
+    withholding_decided_by: actor.userId, withholding_decided_at: nowIso(), withholding_decision_reason: input.reason.trim(),
+  }).eq("id", line.id);
+  if (input.amountCents > 0) {
+    await db().from("distribution_withholdings").insert({
+      distribution_line_id: line.id, offering_id: batch.offering_id, withholding_type: "other",
+      basis_cents: Number(line.gross_cents), rate_bps: Math.round((input.amountCents * 10000) / Math.max(1, Number(line.gross_cents))),
+      amount_cents: input.amountCents, determination_reason: `Reviewer decision: ${input.reason.trim()}`, determined_by: actor.userId,
+    });
+  }
+  // Any earlier batch-level withholding sign-off no longer covers these numbers.
+  await db().from("distribution_batches").update({ withholding_reviewed_by: null, withholding_reviewed_at: null }).eq("id", batch.id);
+  await refreshBatchTotals(String(batch.id));
+  await recordEvent({
+    offeringId: batch.offering_id, batchId: String(batch.id), distributionLineId: String(line.id),
+    event: "distribution_withholding_decided",
+    detail: { policy: line.withholding_policy, suggestedCents: line.withholding_suggested_cents, finalCents: input.amountCents, reason: input.reason.trim() },
+    actorUserId: actor.userId, actorRole: "harmonious",
+  });
+  return { ok: true, netCents: net };
+}
+
+/** @deprecated Calculation aid only; distributions use approved tax_withholding_rules (pilot M2). */
 export const DEFAULT_WITHHOLDING_RULES: WithholdingRule[] = [
   {
     type: "foreign_person",
@@ -816,7 +877,36 @@ export async function proposeDistribution(
         Number(l.ending_capital_cents ?? 0),
       ]),
     );
+    // Pilot M11: ownership comes from the selected run's capital accounts, not "latest".
+    const { data: runAccounts } = await db()
+      .from("capital_accounts")
+      .select("position_id, ending_capital_cents, ownership_pct, period_end, finalized_at, class_id")
+      .eq("allocation_run_id", input.allocationRunId);
+    if ((runAccounts ?? []).length) {
+      capitalAccounts.clear();
+      for (const a of (runAccounts ?? []) as any[]) if (a.position_id) capitalAccounts.set(String(a.position_id), a);
+    }
   }
+  const basisAsOf = [...capitalAccounts.values()].map((a: any) => String(a.period_end ?? "")).filter(Boolean).sort().at(-1) ?? null;
+  const { data: activityRows } = await db()
+    .from("commitment_events")
+    .select("event_type, amount_cents, effective_date")
+    .eq("offering_id", input.offeringId)
+    .gt("effective_date", basisAsOf ?? "1900-01-01");
+  const { data: priorDists } = await db()
+    .from("distribution_batches")
+    .select("effective_date, total_gross_cents, status")
+    .eq("offering_id", input.offeringId)
+    .in("status", ["approved", "executing", "completed"])
+    .gt("effective_date", basisAsOf ?? "1900-01-01");
+  const staleness = basisStaleness({
+    basisAsOf,
+    effectiveDate: input.effectiveDate ?? today(),
+    activity: [
+      ...((activityRows ?? []) as any[]).map((r) => ({ date: String(r.effective_date), type: String(r.event_type), amountCents: Number(r.amount_cents ?? 0) })),
+      ...((priorDists ?? []) as any[]).map((r) => ({ date: String(r.effective_date), type: "distribution", amountCents: Number(r.total_gross_cents ?? 0) })),
+    ],
+  });
 
   const entitlementInput: EntitlementInput[] = rows.map((r) => {
     const account = capitalAccounts.get(String(r.id));
@@ -862,6 +952,10 @@ export async function proposeDistribution(
       purpose: input.purpose ?? null,
       distribution_type: input.distributionType,
       allocation_run_id: input.allocationRunId ?? null,
+      basis_source: input.allocationRunId ? `allocation_run:${input.allocationRunId}` : "latest_capital_accounts",
+      basis_as_of: basisAsOf,
+      basis_stale: staleness.stale,
+      basis_stale_detail: { reason: staleness.reason, laterActivity: staleness.laterActivity },
       source_proceeds: input.sourceProceeds ?? null,
       record_date: input.recordDate ?? null,
       effective_date: input.effectiveDate ?? today(),
@@ -877,7 +971,8 @@ export async function proposeDistribution(
     .single();
   if (error) fail(error.message);
 
-  const rules = input.withholdingRules ?? DEFAULT_WITHHOLDING_RULES;
+  void input.withholdingRules; // Pilot M2: rates come only from approved policy rules.
+  const policyRules = await loadWithholdingRules(input.offeringId);
   const treatment = DISTRIBUTION_TREATMENT[input.distributionType];
 
   let totalGross = 0;
@@ -887,11 +982,11 @@ export async function proposeDistribution(
   for (const line of entitlement.lines) {
     const taxKey = `${line.investorUserId ?? ""}:${line.investmentProfileId ?? ""}`;
     const tax = taxProfiles.get(taxKey);
-    const withholding = calculateWithholding({
+    const policy = evaluateWithholding({
       grossCents: line.grossCents,
-      distributionType: input.distributionType,
-      rules,
-      tax: {
+      distributionCharacter: input.distributionType,
+      offeringId: input.offeringId,
+      facts: {
         documentationForm: tax?.documentation_form ?? null,
         isForeignPerson:
           tax?.tax_residency_country && String(tax.tax_residency_country).toUpperCase() !== "US"
@@ -899,13 +994,18 @@ export async function proposeDistribution(
             : tax
               ? false
               : null,
-        backupWithholdingFlag: tax ? tax.tin_on_file === false : true,
-        treatyRateBps: tax?.treaty_rate_bps ?? null,
-        stateCode: null,
         tinOnFile: Boolean(tax?.tin_on_file),
       },
+      rules: policyRules,
+      asOf: input.effectiveDate ?? today(),
     });
-
+    const withholding = {
+      totalCents: policy.amountCents,
+      lines: policy.status === "determined" && policy.rule && policy.amountCents > 0
+        ? [{ type: policy.rule.type, jurisdiction: null, basisCents: line.grossCents, rateBps: policy.rule.rateBps, amountCents: policy.amountCents, reason: `Policy rule: ${policy.rule.name}${policy.rule.source ? ` (${policy.rule.source})` : ""}` }]
+        : [],
+      notes: policy.status === "review_required" ? ["Withholding review required.", ...policy.reasons] : [],
+    };
     const netCents = line.grossCents - withholding.totalCents;
 
     const instruction = line.investorUserId
@@ -942,6 +1042,9 @@ export async function proposeDistribution(
         capital_account_cents: line.capitalAccountCents,
         gross_cents: line.grossCents,
         withholding_cents: withholding.totalCents,
+        withholding_status: policy.status,
+        withholding_suggested_cents: policy.suggestedCents,
+        withholding_policy: { taxStatus: policy.taxStatus, rule: policy.rule, reasons: policy.reasons, character: input.distributionType },
         fee_cents: 0,
         net_cents: netCents,
         characterization: {
@@ -981,7 +1084,7 @@ export async function proposeDistribution(
         offeringId: input.offeringId,
         batchId: String(batch.id),
         distributionLineId: String(created.id),
-        kind: "withholding_missing_documentation",
+        kind: policy.status === "review_required" ? "withholding_review_required" : "withholding_missing_documentation",
         severity: "warning",
         detail: withholding.notes.join(" "),
         raisedBy: actor.userId,
@@ -1149,9 +1252,11 @@ export async function reviewDistributionWithholding(userId: string, batchId: str
     preparedBy: batch.prepared_by ? String(batch.prepared_by) : null,
     lines: evidence.map((e) => ({ taxDocument: e.taxDocument, taxDocumentRequired: true })),
   });
+  const pending = ((lines ?? []) as any[]).filter((l) => l.withholding_status === "review_required");
+  if (pending.length) blockers.push(`Withholding review required for ${pending.length} investor line(s): record a reviewer decision first.`);
   if (blockers.length > 0) fail(blockers.join(" "));
   const basis = {
-    ruleSource: "default_calculation_aid",
+    ruleSource: "tax_withholding_policy",
     authoritative: false,
     reviewedAs: "reviewed_input",
     lines: ((lines ?? []) as any[]).map((l) => ({
@@ -1442,8 +1547,24 @@ async function refreshBatchTotals(batchId: string) {
 }
 
 /** Second authorised Harmonious human. This is the gate before any money moves. */
+/** Pilot M11: an independent reviewer approves using an older basis, with a reason. */
+export async function approveStaleBasis(userId: string, batchId: string, reason: string) {
+  const actor = await assertStaff(userId, "review");
+  const batch = await batchRow(batchId);
+  if (!batch.basis_stale) fail("This distribution's basis is current; no override is needed.");
+  if (["approved", "executing", "completed", "superseded", "cancelled"].includes(String(batch.status))) fail("This distribution is no longer open for changes.");
+  const err = staleBasisOverrideError({ reason, userId: actor.userId, preparedBy: batch.prepared_by ? String(batch.prepared_by) : null });
+  if (err) fail(err);
+  await db().from("distribution_batches").update({ basis_override_by: actor.userId, basis_override_at: nowIso(), basis_override_reason: reason.trim() }).eq("id", batchId);
+  await recordEvent({ offeringId: batch.offering_id, batchId, event: "distribution_stale_basis_approved", reason: reason.trim(), detail: batch.basis_stale_detail, actorUserId: actor.userId, actorRole: "harmonious" });
+  return { ok: true };
+}
+
 export async function finalApproveDistribution(userId: string, batchId: string) {
   const batch = await batchRow(batchId);
+  if (batch.basis_stale && !batch.basis_override_by) {
+    fail(`STALE ALLOCATION BASIS: ${(batch.basis_stale_detail as any)?.reason ?? "capital activity exists after the basis date."} Select a newer basis or have a reviewer approve the older one with a reason.`);
+  }
   const { actor } = await assertCan(userId, String(batch.offering_id), "final_approve");
   if (String(batch.distribution_kind ?? "cash") !== "cash" && !batch.fee_approved_at) {
     fail("The Harmonious fee quote for this share distribution must be approved by the CEO or CRO first.");
@@ -1460,6 +1581,9 @@ export async function finalApproveDistribution(userId: string, batchId: string) 
   // D1: withholding must be a reviewed input, and identity/tax evidence must be current.
   if (!batch.withholding_reviewed_by) fail("Withholding has not been reviewed by Harmonious tax.");
   const { data: approvalLines } = await db().from("distribution_lines").select("*").eq("batch_id", batch.id);
+  if (((approvalLines ?? []) as any[]).some((l) => l.withholding_status === "review_required")) {
+    fail("WITHHOLDING REVIEW REQUIRED: at least one investor line has no withholding decision.");
+  }
   const identityBlockers: string[] = [];
   for (const l of (approvalLines ?? []) as any[]) {
     const ev = await identityEvidenceForLine(l, batch);

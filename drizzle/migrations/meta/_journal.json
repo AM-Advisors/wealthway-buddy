@@ -1282,6 +1282,41 @@
       "when": 1791346940523,
       "tag": "0182_ops_command_center_foundation",
       "breakpoints": true
+    },
+    {
+      "idx": 183,
+      "version": "7",
+      "when": 1791352183973,
+      "tag": "0183_capital_call_amount_semantics",
+      "breakpoints": true
+    },
+    {
+      "idx": 184,
+      "version": "7",
+      "when": 1791352333063,
+      "tag": "0184_withholding_policy_rules",
+      "breakpoints": true
+    },
+    {
+      "idx": 185,
+      "version": "7",
+      "when": 1791352538423,
+      "tag": "0185_bank_statement_period_balance",
+      "breakpoints": true
+    },
+    {
+      "idx": 186,
+      "version": "7",
+      "when": 1791353065932,
+      "tag": "0186_valuation_evidence_status",
+      "breakpoints": true
+    },
+    {
+      "idx": 187,
+      "version": "7",
+      "when": 1791353446377,
+      "tag": "0187_distribution_basis_staleness",
+      "breakpoints": true
     }
   ]
 }

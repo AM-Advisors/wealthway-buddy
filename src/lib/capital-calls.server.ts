@@ -255,6 +255,9 @@ export async function prepareCapitalCall(
     basis: CallBasis;
     percentageBps?: number | null;
     fixedAmountCents?: number | null;
+    totalAmountCents?: number | null;
+    allocationBasis?: "commitment_pro_rata" | "remaining_commitment_pro_rata" | null;
+    confirmedAggregateCents?: number | null;
     noticeDate?: string | null;
     dueDate?: string | null;
     purpose?: string | null;
@@ -272,6 +275,9 @@ export async function prepareCapitalCall(
     callType: input.callType,
     percentageBps: input.percentageBps ?? null,
     fixedAmountCents: input.fixedAmountCents ?? null,
+    totalAmountCents: input.totalAmountCents ?? null,
+    allocationBasis: input.allocationBasis ?? null,
+    confirmedAggregateCents: input.confirmedAggregateCents ?? null,
     snapshot,
     includeOnly: input.includeOnly ?? null,
   });
@@ -303,6 +309,11 @@ export async function prepareCapitalCall(
       status: "draft",
       commitment_snapshot: { takenAt: nowIso(), lines: snapshot },
       total_called_cents: computed.totalCalledCents,
+      allocation_basis: computed.allocationBasis,
+      requested_total_cents: computed.requestedTotalCents,
+      allocation_variance_cents: computed.varianceCents,
+      aggregate_confirmed_by: input.basis === "fixed_amount_per_investor" ? actor.userId : null,
+      aggregate_confirmed_at: input.basis === "fixed_amount_per_investor" ? nowIso() : null,
       prepared_by: actor.userId,
     })
     .select("*")
@@ -330,7 +341,7 @@ export async function prepareCapitalCall(
     capitalCallId: call.id,
     event: "capital_call_prepared",
     toStatus: "draft",
-    detail: { totalCalledCents: computed.totalCalledCents, investors: lineRows.length },
+    detail: { totalCalledCents: computed.totalCalledCents, investors: lineRows.length, basis: input.basis, allocationBasis: computed.allocationBasis, requestedTotalCents: computed.requestedTotalCents, varianceCents: computed.varianceCents },
     actorUserId: actor.userId,
     actorRole: role,
   });
@@ -377,7 +388,23 @@ async function moveCall(
   return call;
 }
 
+/** Pilot M1: a call can only advance when its lines add up to its totals. */
+async function assertCallTotals(callId: string) {
+  const call = await callRow(callId);
+  const { data: lines } = await db().from("capital_call_lines").select("called_cents").eq("capital_call_id", callId);
+  const sum = ((lines ?? []) as any[]).reduce((t, l) => t + Number(l.called_cents ?? 0), 0);
+  if (sum !== Number(call.total_called_cents ?? 0)) {
+    fail(`Investor allocations ($${(sum / 100).toFixed(2)}) do not equal the call total ($${(Number(call.total_called_cents) / 100).toFixed(2)}).`);
+  }
+  if (call.basis === "fund_total" && Number(call.requested_total_cents ?? -1) !== sum) {
+    fail("Investor allocations do not equal the requested fund total. The variance must be $0.");
+  }
+  if (call.basis === "fund_total" && !call.allocation_basis) fail("This call has no allocation basis.");
+  if (call.basis === "fixed_amount_per_investor" && !call.aggregate_confirmed_by) fail("The per-investor aggregate was never confirmed.");
+}
+
 export async function requestCapitalCall(userId: string, callId: string) {
+  await assertCallTotals(callId);
   await moveCall(userId, callId, "requested", "request", {
     requested_by: userId,
     requested_at: nowIso(),
@@ -399,6 +426,7 @@ export async function reviewCapitalCall(userId: string, callId: string) {
  * writes the call into the authoritative commitment ledger.
  */
 export async function publishCapitalCall(userId: string, callId: string) {
+  await assertCallTotals(callId);
   const actor = await assertStaff(userId);
   const call = await callRow(callId);
   if (String(call.prepared_by ?? "") === actor.userId) {
@@ -480,6 +508,8 @@ export async function superseteCapitalCall(userId: string, callId: string, reaso
       basis: call.basis,
       percentage_bps: call.percentage_bps,
       fixed_amount_cents: call.fixed_amount_cents,
+      allocation_basis: call.allocation_basis ?? null,
+      requested_total_cents: call.requested_total_cents ?? null,
       notice_date: call.notice_date,
       due_date: call.due_date,
       status: "draft",

@@ -11,6 +11,7 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { reviewerScope, assertScopeAllows, type ReviewerScope } from "@/lib/reviewer-authz.server";
 import { draftJournalEntry, ledgerBookForOffering } from "@/lib/accounting.server";
 import { raiseException } from "@/lib/reconciliation.server";
+import { valuationEvidenceStatus, evidenceGateError, evidenceWaiverError } from "@/lib/valuation-model";
 import {
   DEFAULT_VALUATION_POLICY,
   canTransitionValuation,
@@ -521,12 +522,36 @@ async function evidenceCount(valuationId: string) {
 }
 
 /** Run every configured check and open exceptions for what is wrong. */
+async function evidenceVerdict(valuation: any, policy: { evidenceRequired: boolean }) {
+  const count = await evidenceCount(valuation.id);
+  const status = valuationEvidenceStatus({ policyRequired: policy.evidenceRequired, evidenceCount: count, waived: Boolean(valuation.evidence_waived_by) });
+  if (status !== valuation.evidence_status) {
+    await db().from("portfolio_valuations").update({ evidence_status: status }).eq("id", valuation.id);
+  }
+  return { status, count };
+}
+
+/** Pilot M9: an authorised reviewer (not the preparer) waives required evidence, with a reason. */
+export async function waiveValuationEvidence(userId: string, input: { valuationId: string; reason: string }) {
+  const { scope, valuation, asset } = await authorizeValuation(userId, input.valuationId);
+  if (!scope.isAdmin) fail("Forbidden: only Harmonious can waive valuation evidence.");
+  if (["effective", "superseded", "rejected"].includes(String(valuation.status))) fail("That valuation is complete; its evidence status is frozen.");
+  const err = evidenceWaiverError({ reason: input.reason, waiverUserId: userId, preparedBy: valuation.prepared_by ? String(valuation.prepared_by) : null });
+  if (err) fail(err);
+  const now = new Date().toISOString();
+  await db().from("portfolio_valuations").update({ evidence_status: "evidence_waived", evidence_waiver_reason: input.reason.trim(), evidence_waived_by: userId, evidence_waived_at: now }).eq("id", valuation.id);
+  await recordEvent({ valuationId: valuation.id, assetId: asset.id, offeringId: asset.offering_id, actorUserId: userId, actorRole: "harmonious", action: "evidence_waived", fromStatus: valuation.status, toStatus: valuation.status, reason: input.reason.trim() });
+  return { ok: true };
+}
+
 export async function checkValuation(userId: string, valuationId: string) {
   const { valuation, asset } = await authorizeValuation(userId, valuationId);
   const policy = await policyFor(asset.offering_id, asset.asset_class);
   const prior = await currentEffective(asset.id);
+  const verdict = await evidenceVerdict(valuation, policy);
   const kinds = valuationExceptions(
     {
+      evidenceStatus: verdict.status,
       valueCents: Number(valuation.value_cents),
       priorValueCents: prior ? Number(prior.value_cents) : null,
       quantity: valuation.quantity,
@@ -554,13 +579,18 @@ export async function checkValuation(userId: string, valuationId: string) {
       openedBy: userId,
     });
   }
-  return { exceptions: kinds };
+  return { exceptions: kinds, evidenceStatus: verdict.status };
 }
 
 export async function submitValuation(userId: string, valuationId: string) {
   const { scope, valuation, asset } = await authorizeValuation(userId, valuationId);
   if (!canTransitionValuation(valuation.status as ValuationStatus, "review")) {
     fail("That valuation cannot be sent for review from its current state.");
+  }
+  {
+    const pol = await policyFor(asset.offering_id, asset.asset_class);
+    const gate = evidenceGateError((await evidenceVerdict(valuation, pol)).status);
+    if (gate) fail(gate);
   }
   await db()
     .from("portfolio_valuations")
@@ -616,6 +646,10 @@ export async function decideValuation(
   }
   if (to === "approved" && String(valuation.prepared_by ?? "") === userId) {
     fail("Maker/checker: the person who prepared a valuation cannot approve it.");
+  }
+  if (to === "approved" || to === "effective") {
+    const gate = evidenceGateError((await evidenceVerdict(valuation, policy)).status);
+    if (gate) fail(gate);
   }
 
   const now = new Date().toISOString();

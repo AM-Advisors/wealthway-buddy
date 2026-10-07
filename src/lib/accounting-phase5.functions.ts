@@ -34,7 +34,7 @@ export const advanceEntryFn = createServerFn({ method: "POST" })
 
 export const reverseEntryFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => fund.extend({ entryId: uuid, reason: z.string().trim().min(1).max(1000) }).parse(d))
+  .inputValidator((d: unknown) => fund.extend({ entryId: uuid, reason: z.string().trim().min(1).max(1000), dateOption: z.enum(["current_date", "next_open_period", "specified"]).optional(), reversalDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional() }).parse(d))
   .handler(async ({ data, context }) => (await S()).reverseEntry(context.userId, data));
 
 export const qboViewFn = createServerFn({ method: "POST" })

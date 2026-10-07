@@ -1576,3 +1576,35 @@ export function reversalRequestError(input: {
   }
   return null;
 }
+
+
+// ------------------------------------------------- basis staleness (pilot M11)
+
+export type CapitalActivity = { date: string; type: string; amountCents: number };
+
+/**
+ * A distribution's ownership basis is stale when material capital activity
+ * (contributions, calls, distributions, commitment changes) happened after the
+ * basis as-of date and on or before the distribution's effective date.
+ */
+export function basisStaleness(input: { basisAsOf: string | null; effectiveDate: string; activity: readonly CapitalActivity[] }) {
+  if (!input.basisAsOf) {
+    return { stale: true, reason: "No allocation basis date is known.", laterActivity: [] as CapitalActivity[] };
+  }
+  const later = input.activity.filter(
+    (a) => a.type !== "original_commitment" && a.date > input.basisAsOf! && a.date <= input.effectiveDate && a.amountCents !== 0,
+  );
+  return {
+    stale: later.length > 0,
+    reason: later.length
+      ? `STALE ALLOCATION BASIS: ${later.length} capital movement(s) after ${input.basisAsOf}.`
+      : null,
+    laterActivity: later,
+  };
+}
+
+export function staleBasisOverrideError(input: { reason: string; userId: string; preparedBy: string | null }): string | null {
+  if (input.reason.trim().length < 10) return "Give a reason of at least 10 characters for using the older basis.";
+  if (input.preparedBy && input.userId === input.preparedBy) return "The preparer cannot approve use of a stale basis on their own distribution.";
+  return null;
+}

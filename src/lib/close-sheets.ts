@@ -35,6 +35,12 @@ export type MonthEndFacts = {
   latestDriftMaxCents: number | null;
   driftExplained: boolean;
   qboLinked: boolean;
+  /** Pilot M8: reviewed bank statement balance ending on the period end, vs ledger cash. */
+  periodEndBalance?: { present: boolean; reviewed: boolean; diffCents: number | null; asOf: string | null } | null;
+  /** Pilot M7: null = not applicable this period. */
+  navPublished?: boolean | null;
+  allocationsFinalized?: boolean | null;
+  openAccountingExceptions?: number;
 };
 
 export type ChecklistItem = { key: string; label: string; ok: boolean; detail: string };
@@ -47,6 +53,25 @@ export function monthEndChecklist(f: MonthEndFacts): { items: ChecklistItem[]; r
     { key: "entries", label: "Entries approved and recorded", ok: f.unpostedEntries === 0, detail: f.unpostedEntries ? `${f.unpostedEntries} entry(ies) not yet recorded` : "All recorded" },
     { key: "tb", label: "Trial balance ties", ok: f.trialBalanceTies, detail: f.trialBalanceTies ? "Debits equal credits" : "Debits and credits differ" },
   ];
+  if (f.periodEndBalance !== undefined) {
+    const b = f.periodEndBalance;
+    const ok = Boolean(b?.present && b.reviewed && b.diffCents === 0);
+    items.push({
+      key: "bank_balance",
+      label: "Period-end bank balance reviewed and ties to ledger cash",
+      ok,
+      detail: !b?.present
+        ? "Record the bank statement balance as of the period end date"
+        : !b.reviewed
+          ? "A second person must review the period-end statement balance"
+          : b.diffCents === 0
+            ? `Ties as of ${b.asOf}`
+            : `Differs from ledger cash by ${((b.diffCents ?? 0) / 100).toFixed(2)}`,
+    });
+  }
+  if (f.navPublished != null) items.push({ key: "nav", label: "NAV published for the period", ok: f.navPublished, detail: f.navPublished ? "Published" : "A NAV for this period is not yet published" });
+  if (f.allocationsFinalized != null) items.push({ key: "allocations", label: "Investor allocations finalized", ok: f.allocationsFinalized, detail: f.allocationsFinalized ? "Finalized" : "An allocation run for this period is not finalized" });
+  if (f.openAccountingExceptions !== undefined) items.push({ key: "exceptions", label: "Accounting exceptions resolved or waived", ok: f.openAccountingExceptions === 0, detail: f.openAccountingExceptions ? `${f.openAccountingExceptions} open exception(s)` : "None open" });
   if (f.qboLinked) {
     const clear = f.latestDriftMaxCents === 0 || f.driftExplained;
     items.push({

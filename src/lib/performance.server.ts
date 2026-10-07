@@ -14,6 +14,7 @@
  *  - investor performance uses that investor's own capital and cash flows;
  *  - a later NAV or valuation can never contaminate an earlier period.
  */
+import { classifyFundType, irrPresentation } from "@/lib/performance-model";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { reviewerScope, assertScopeAllows, type ReviewerScope } from "@/lib/reviewer-authz.server";
 import { ledgerBookForOffering, registerReport } from "@/lib/accounting.server";
@@ -96,10 +97,14 @@ export async function fundPerformanceConfig(offeringId: string, bookId: string |
 
   const { data: offering } = await db()
     .from("offerings")
-    .select("id, reg_type, offering_kind")
+    .select("id, reg_type, fund_type, fund_type_other, entity_type")
     .eq("id", offeringId)
     .maybeSingle();
-  const fundType: FundType = offering?.offering_kind === "fund" ? "venture" : "spv";
+  const fundType: FundType = classifyFundType({
+    fundType: offering?.fund_type ?? null,
+    fundTypeOther: offering?.fund_type_other ?? null,
+    entityType: offering?.entity_type ?? null,
+  }).fundType;
 
   const { data, error } = await db()
     .from("performance_configs")
@@ -168,10 +173,10 @@ function rowToMethodology(row: any): PerformanceMethodology {
   return {
     version: `${row.fund_type ?? "spv"}-v${row.version ?? 1}`,
     label: row.label ?? DEFAULT_METHODOLOGY.label,
-    fundType: isFundType(String(row.fund_type)) ? row.fund_type : "spv",
+    fundType: isFundType(String(row.fund_type)) ? row.fund_type : "custom",
     calculationMethod: row.calculation_method ?? "capital_flows",
     metrics: metricsForFund(
-      isFundType(String(row.fund_type)) ? row.fund_type : "spv",
+      isFundType(String(row.fund_type)) ? row.fund_type : "custom",
       row.metrics ?? [],
     ),
     fees: {
@@ -327,6 +332,48 @@ async function allocationLinesFor(runId: string) {
   return (data ?? []) as any[];
 }
 
+/**
+ * Pilot M4: formally called capital as of a date, by position. Uncalled =
+ * commitment - called (not cash received). Draft, cancelled and superseded
+ * calls never count.
+ */
+async function calledCapital(offeringId: string, asOf: string) {
+  const { commitmentSnapshot } = await import("@/lib/capital-calls.server");
+  const snap = await commitmentSnapshot(offeringId);
+  const { data: calls } = await db()
+    .from("capital_calls")
+    .select("id, status, notice_date")
+    .eq("offering_id", offeringId)
+    .in("status", ["published", "closed", "partially_funded", "funded"])
+    .lte("notice_date", asOf);
+  const ids = ((calls ?? []) as any[]).map((c) => c.id);
+  const { data: lines } = ids.length
+    ? await db().from("capital_call_lines").select("position_id, called_cents, received_cents").in("capital_call_id", ids)
+    : { data: [] };
+  const byPosition = new Map<string, { commitmentCents: number; calledCents: number; receivedCents: number; uncalledCents: number }>();
+  for (const l of snap) {
+    if (!l.positionId) continue;
+    byPosition.set(l.positionId, { commitmentCents: Number(l.commitmentCents), calledCents: 0, receivedCents: 0, uncalledCents: Number(l.commitmentCents) });
+  }
+  for (const l of (lines ?? []) as any[]) {
+    const r = byPosition.get(String(l.position_id));
+    if (!r) continue;
+    r.calledCents += Number(l.called_cents ?? 0);
+    r.receivedCents += Number(l.received_cents ?? 0);
+    r.uncalledCents = Math.max(0, r.commitmentCents - r.calledCents);
+  }
+  const all = [...byPosition.values()];
+  const sum = (k: "commitmentCents" | "calledCents" | "receivedCents" | "uncalledCents") => all.reduce((t, r) => t + r[k], 0);
+  return {
+    commitmentCents: sum("commitmentCents"),
+    calledCents: sum("calledCents"),
+    receivedCents: sum("receivedCents"),
+    calledUnpaidCents: Math.max(0, sum("calledCents") - sum("receivedCents")),
+    uncalledCents: sum("uncalledCents"),
+    byPosition,
+  };
+}
+
 async function positionsFor(offeringId: string) {
   const { data } = await db()
     .from("investor_positions")
@@ -394,6 +441,8 @@ interface InputsSnapshot {
 export interface PerformanceCalculation {
   offeringId: string;
   bookId: string;
+  commitments: Awaited<ReturnType<typeof calledCapital>>;
+  irrPresentation: ReturnType<typeof irrPresentation>;
   fundType: FundType;
   periodKind: PeriodKind;
   periodStart: string;
@@ -436,7 +485,7 @@ export async function calculatePerformance(
   if (!isPeriodKind(input.periodKind)) fail("Unknown reporting period.");
   const book = await ledgerBookForOffering(userId, input.offeringId);
   const config = await fundPerformanceConfig(input.offeringId, book.id);
-  const fundType: FundType = isFundType(String(config.fund_type)) ? config.fund_type : "spv";
+  const fundType: FundType = isFundType(String(config.fund_type)) ? config.fund_type : "custom";
 
   const { data: firstEvent } = await db()
     .from("commitment_events")
@@ -678,6 +727,11 @@ export async function calculatePerformance(
     }),
     ...investors.flatMap((i) => i.exceptions),
   ];
+  {
+    const first = allFlows.filter((f: any) => f.direction === "contribution").map((f: any) => String(f.date)).sort()[0] ?? null;
+    const ip = irrPresentation({ firstCashFlowDate: first, asOf: bounds.periodEnd, thresholdDays: Number((config as any).short_period_irr_days ?? 365) });
+    if (ip.shortPeriod) exceptions.push({ kind: "short_period_irr", severity: "warning", detail: `${ip.note} (${ip.days} days of cash flows)`, context: { days: ip.days } } as any);
+  }
 
   return {
     offeringId: input.offeringId,
@@ -693,6 +747,12 @@ export async function calculatePerformance(
     navVersionId: endingNav?.id ?? null,
     beginningNavVersionId: beginningNav?.id ?? null,
     allocationRunId: allocationRun?.id ?? null,
+    commitments: await calledCapital(input.offeringId, bounds.periodEnd),
+    irrPresentation: irrPresentation({
+      firstCashFlowDate: allFlows.filter((f: any) => f.direction === "contribution").map((f: any) => String(f.date)).sort()[0] ?? null,
+      asOf: bounds.periodEnd,
+      thresholdDays: Number((config as any).short_period_irr_days ?? 365),
+    }),
     fund,
     bridge,
     returns,
@@ -779,6 +839,7 @@ export async function preparePerformance(
     management_fees_cents: calc.fund.managementFeesCents,
     carried_interest_cents: calc.fund.carriedInterestCents,
     paid_in_capital_cents: calc.multiples.investedCapitalCents,
+    unfunded_commitment_cents: calc.commitments.uncalledCents,
     realized_value_cents: calc.multiples.realizedValueCents,
     remaining_value_cents: calc.multiples.remainingValueCents,
     total_value_cents: calc.multiples.totalValueCents,
@@ -796,7 +857,7 @@ export async function preparePerformance(
     bridge: calc.bridge as unknown as Record<string, unknown>,
     cash_flows: calc.cashFlows,
     subperiods: calc.twr.subperiods,
-    metrics: { enabled: calc.metrics, returns: calc.returns },
+    metrics: { enabled: calc.metrics, returns: calc.returns, irrPresentation: calc.irrPresentation, commitments: { commitmentCents: calc.commitments.commitmentCents, calledCents: calc.commitments.calledCents, receivedCents: calc.commitments.receivedCents, calledUnpaidCents: calc.commitments.calledUnpaidCents, uncalledCents: calc.commitments.uncalledCents } },
     inputs_snapshot: calc.inputsSnapshot,
     exceptions: calc.exceptions,
     benchmarks: calc.benchmarks,
@@ -853,8 +914,8 @@ export async function preparePerformance(
         carry_cents: num(line.carried_interest_cents),
         ending_capital_cents: num(line.ending_capital_cents),
         paid_in_capital_cents: investor.multiples.investedCapitalCents,
-        commitment_cents: num(line.commitment_cents),
-        unfunded_commitment_cents: num(line.unfunded_commitment_cents),
+        commitment_cents: calc.commitments.byPosition.get(String(investor.positionId))?.commitmentCents ?? num(line.commitment_cents),
+        unfunded_commitment_cents: calc.commitments.byPosition.get(String(investor.positionId))?.uncalledCents ?? num(line.unfunded_commitment_cents),
         realized_value_cents: investor.multiples.realizedValueCents,
         remaining_value_cents: investor.multiples.remainingValueCents,
         total_value_cents: investor.multiples.totalValueCents,
@@ -1196,7 +1257,7 @@ export async function investorPerformanceView(userId: string) {
   const { data: runs } = await db()
     .from("performance_runs")
     .select(
-      "id, offering_id, period_kind, period_start, period_end, period_label, status, version, investor_visible, methodology_version, fund_type, net_return_bps, gross_return_bps, irr_bps, irr_status, moic, dpi, rvpi, tvpi, ending_value_cents, published_at",
+      "id, offering_id, period_kind, period_start, period_end, period_label, status, version, investor_visible, methodology_version, fund_type, metrics, net_return_bps, gross_return_bps, irr_bps, irr_status, moic, dpi, rvpi, tvpi, ending_value_cents, published_at",
     )
     .in("id", [...new Set(rows.map((r) => r.run_id))]);
   const runById = new Map(
@@ -1236,6 +1297,7 @@ export async function investorPerformanceView(userId: string) {
       periodEnd: run.period_end,
       periodKind: run.period_kind,
       methodologyVersion: run.methodology_version,
+      irrPresentation: (run as any).metrics?.irrPresentation ?? null,
       yourInvestment: {
         contributedCents: line.paid_in_capital_cents,
         currentValueCents: line.ending_capital_cents,

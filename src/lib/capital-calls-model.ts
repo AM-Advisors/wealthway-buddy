@@ -167,7 +167,37 @@ export function canActOnCapitalCall(
   return { allowed: false, reason: "You are not permitted to act on capital calls." };
 }
 
-export type CallBasis = "percentage_of_commitment" | "fixed_amount";
+/**
+ * How a call amount is entered.
+ * - fund_total: one amount for the whole fund, split across investors by the allocation basis.
+ * - percentage_of_commitment: a percent of each investor's commitment.
+ * - fixed_amount_per_investor: the same amount from each investor (needs an explicit aggregate confirmation).
+ * - fixed_amount: legacy name for per-investor; kept so historical calls still read, never accepted for new calls.
+ */
+export type CallBasis = "percentage_of_commitment" | "fund_total" | "fixed_amount_per_investor" | "fixed_amount";
+export type CallAllocationBasis = "commitment_pro_rata" | "remaining_commitment_pro_rata";
+export const CALL_BASIS_LABELS: Record<CallBasis, string> = {
+  fund_total: "Total fund amount",
+  percentage_of_commitment: "Percent of commitment",
+  fixed_amount_per_investor: "Fixed amount per investor",
+  fixed_amount: "Fixed amount per investor (legacy)",
+};
+export const CALL_ALLOCATION_BASIS_LABELS: Record<CallAllocationBasis, string> = {
+  commitment_pro_rata: "Commitment pro rata",
+  remaining_commitment_pro_rata: "Remaining (unfunded) commitment pro rata",
+};
+
+/** Largest-remainder split of a total across weights, to the cent. */
+export function splitProRata(totalCents: number, weights: number[]): number[] {
+  const sum = weights.reduce((a, b) => a + Math.max(0, b), 0);
+  if (sum <= 0 || totalCents <= 0) return weights.map(() => 0);
+  const raw = weights.map((w) => (Math.max(0, w) * totalCents) / sum);
+  const out = raw.map((r) => Math.floor(r));
+  let left = totalCents - out.reduce((a, b) => a + b, 0);
+  const order = raw.map((r, i) => ({ i, f: r - Math.floor(r) })).sort((a, b) => b.f - a.f || a.i - b.i);
+  for (let k = 0; left > 0 && k < order.length; k++, left--) out[order[k]!.i]! += 1;
+  return out;
+}
 export type CallType = "whole_fund" | "investor_specific";
 
 export type CommitmentSnapshotLine = {
@@ -192,18 +222,41 @@ export function computeCallLines(input: {
   callType: CallType;
   percentageBps?: number | null;
   fixedAmountCents?: number | null;
+  /** Required for fund_total. */
+  totalAmountCents?: number | null;
+  allocationBasis?: CallAllocationBasis | null;
+  /** Required for fixed_amount_per_investor: the aggregate the preparer confirmed. */
+  confirmedAggregateCents?: number | null;
   snapshot: CommitmentSnapshotLine[];
   includeOnly?: string[] | null;
-}): { lines: CallLineDraft[]; totalCalledCents: number; problems: string[] } {
+  /** Historical reads may compute legacy calls; new calls never may. */
+  allowLegacy?: boolean;
+}): {
+  lines: CallLineDraft[];
+  totalCalledCents: number;
+  requestedTotalCents: number | null;
+  varianceCents: number;
+  allocationBasis: CallAllocationBasis | null;
+  problems: string[];
+} {
   const problems: string[] = [];
   const include = input.includeOnly?.length ? new Set(input.includeOnly) : null;
   if (input.callType === "investor_specific" && !include) {
     problems.push("An investor-specific call must name the investors it applies to.");
   }
+  if (input.basis === "fixed_amount" && !input.allowLegacy) {
+    problems.push('"Fixed amount" is ambiguous. Choose "Total fund amount" or "Fixed amount per investor".');
+  }
+  const allocationBasis: CallAllocationBasis | null =
+    input.basis === "fund_total" ? (input.allocationBasis ?? null) : null;
   if (input.basis === "percentage_of_commitment") {
     const bps = Number(input.percentageBps ?? 0);
     if (!Number.isFinite(bps) || bps <= 0) problems.push("Set a percentage greater than zero.");
     if (bps > 10000) problems.push("A single call cannot exceed 100% of commitment.");
+  } else if (input.basis === "fund_total") {
+    const t = Number(input.totalAmountCents ?? 0);
+    if (!Number.isFinite(t) || t <= 0) problems.push("Set a total fund amount greater than zero.");
+    if (!allocationBasis) problems.push("Choose how the total is allocated across investors.");
   } else {
     const fixed = Number(input.fixedAmountCents ?? 0);
     if (!Number.isFinite(fixed) || fixed <= 0) problems.push("Set an amount greater than zero.");
@@ -215,12 +268,23 @@ export function computeCallLines(input: {
     return include.has(key);
   });
 
-  const lines: CallLineDraft[] = scoped.map((line) => {
-    const raw =
+  let raws: number[];
+  if (input.basis === "fund_total") {
+    const weights = scoped.map((l) =>
+      allocationBasis === "remaining_commitment_pro_rata"
+        ? Math.max(0, Number(l.unfundedCommitmentCents))
+        : Number(l.commitmentCents),
+    );
+    raws = splitProRata(Math.round(Number(input.totalAmountCents ?? 0)), weights);
+  } else {
+    raws = scoped.map((line) =>
       input.basis === "percentage_of_commitment"
         ? Math.round((Number(line.commitmentCents) * Number(input.percentageBps ?? 0)) / 10000)
-        : Number(input.fixedAmountCents ?? 0);
-    const capped = Math.max(0, Math.min(raw, Math.max(0, Number(line.unfundedCommitmentCents))));
+        : Number(input.fixedAmountCents ?? 0),
+    );
+  }
+  const lines: CallLineDraft[] = scoped.map((line, i) => {
+    const capped = Math.max(0, Math.min(raws[i] ?? 0, Math.max(0, Number(line.unfundedCommitmentCents))));
     return { ...line, calledCents: capped };
   });
 
@@ -228,9 +292,27 @@ export function computeCallLines(input: {
   if (problems.length === 0 && payable.length === 0) {
     problems.push("This call would not ask any investor for money.");
   }
+  const totalCalledCents = payable.reduce((sum, l) => sum + l.calledCents, 0);
+  let requestedTotalCents: number | null = null;
+  if (input.basis === "fund_total") requestedTotalCents = Math.round(Number(input.totalAmountCents ?? 0));
+  if (input.basis === "fixed_amount_per_investor") {
+    requestedTotalCents = Math.round(Number(input.fixedAmountCents ?? 0)) * scoped.length;
+    if (input.confirmedAggregateCents == null) {
+      problems.push(`Confirm the expected aggregate (${scoped.length} investors x amount per investor) before preparing this call.`);
+    } else if (Math.round(Number(input.confirmedAggregateCents)) !== totalCalledCents) {
+      problems.push("The confirmed aggregate does not match the investor allocations. Review the preview and confirm again.");
+    }
+  }
+  const varianceCents = requestedTotalCents == null ? 0 : totalCalledCents - requestedTotalCents;
+  if (input.basis === "fund_total" && varianceCents !== 0 && problems.length === 0) {
+    problems.push("Investor allocations do not add up to the requested fund total (some investors have too little unfunded commitment). Adjust the amount or basis.");
+  }
   return {
     lines: payable,
-    totalCalledCents: payable.reduce((sum, l) => sum + l.calledCents, 0),
+    totalCalledCents,
+    requestedTotalCents,
+    varianceCents,
+    allocationBasis,
     problems,
   };
 }

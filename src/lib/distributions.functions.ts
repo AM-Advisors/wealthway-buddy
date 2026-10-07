@@ -132,6 +132,13 @@ export const adjustDistributionLineFn = authed()
     return adjustDistributionLine(context.userId, data);
   });
 
+export const approveStaleBasisFn = authed()
+  .inputValidator((input: { batchId: string; reason: string }) => ({ batchId: String(input.batchId), reason: String(input.reason ?? "").slice(0, 1000) }))
+  .handler(async ({ data, context }) => {
+    const { approveStaleBasis } = await import("@/lib/distributions.server");
+    return approveStaleBasis(context.userId, data.batchId, data.reason);
+  });
+
 export const finalApproveDistributionFn = authed()
   .inputValidator((input: { batchId: string }) => input)
   .handler(async ({ data, context }) => {
