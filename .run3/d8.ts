@@ -14,7 +14,6 @@ for (const l of lines ?? []) {
   if (!tx) tx = (await d.from("bank_transactions").insert({ offering_id: N, bank_account_id: BA, plaid_transaction_id: `qa3-${ref}`, dedupe_key: `qa3-${ref}`, posted_on: "2026-08-28", amount_cents: -Number(l.net_cents), name: `[QA] Distribution wire to ${nm}`, description: ref, reference: ref, direction: "outbound", currency: "USD" }).select("id").single()).data;
   const rc = (await d.from("distribution_payments").select("reconciled_at,posted_at").eq("id", p.id).single()).data as any;
   if (!rc.reconciled_at) await step(`${nm}: reconcile payment to bank line (approver)`, () => ds.reconcileDistributionPayment(U.appr, { paymentId: p.id, bankTransactionId: tx.id }));
-  const rc = (await d.from("distribution_payments").select("reconciled_at,posted_at").eq("id", p.id).single()).data as any;
   if (!rc.reconciled_at) await step(`${nm}: reconciler cannot approve own reconciliation`, () => ds.approveDistributionReconciliation(U.appr, p.id), true);
   if (!rc.reconciled_at) await step(`${nm}: approve reconciliation (preparer)`, () => ds.approveDistributionReconciliation(U.prep, p.id));
   await step(`${nm}: post payment to books (reviewer)`, () => ds.postDistributionPayment(U.rev, p.id));
