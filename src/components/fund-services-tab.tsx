@@ -1,6 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getFundServices } from "@/lib/service-engagements.functions";
+import { getClientFundTasks } from "@/lib/staff-tasks.functions";
+import { ResponsibilityBadge } from "@/components/responsibility-badge";
+import { RESPONSIBILITY_CLIENT_EXPLANATION, asResponsibility, daysOverdue, waitingOnDetail } from "@/lib/responsibility";
 import { serviceLevelLabel, titleCase, usd, fmtDate } from "@/lib/service-engagement-labels";
 
 export function FundServicesTab({ fundId }: { fundId: string }) {
@@ -12,6 +15,7 @@ export function FundServicesTab({ fundId }: { fundId: string }) {
   if (!rows.length) return <p className="text-sm text-muted-foreground">No administration service is on file for this fund yet. Your Harmonious team will set it up.</p>;
   return (
     <div className="space-y-5">
+      <FundOpenItems fundId={fundId} />
       {rows.map((r) => {
         const lvl = serviceLevelLabel(r.service_level, r.service_product);
         return (
@@ -44,4 +48,30 @@ export function FundServicesTab({ fundId }: { fundId: string }) {
 
 function Item({ k, v }: { k: string; v: string }) {
   return <div><dt className="text-xs text-muted-foreground">{k}</dt><dd>{v}</dd></div>;
+}
+
+/** Client-safe open items for one fund: plain-language responsibility, no internal notes or third-party names. */
+export function FundOpenItems({ fundId }: { fundId: string }) {
+  const fetch = useServerFn(getClientFundTasks);
+  const q = useQuery({ queryKey: ["client-fund-tasks", fundId], queryFn: () => fetch({ data: { fundId } }) });
+  const rows = (q.data ?? []) as any[];
+  if (q.isLoading || q.error || !rows.length) return null;
+  return (
+    <section className="rounded-xl border bg-card p-5">
+      <h3 className="text-lg">Open items</h3>
+      <ul className="mt-3 divide-y">
+        {rows.map((t) => {
+          const s = asResponsibility(t.responsibility_status);
+          const od = daysOverdue(t); const w = waitingOnDetail(t, "client", t.investorName);
+          return (
+            <li key={t.id} className="py-3">
+              <div className="flex flex-wrap items-center gap-2"><span className="font-medium">{t.title}</span><ResponsibilityBadge status={s} />{od > 0 && <span className="text-xs text-destructive">Overdue {od}d</span>}</div>
+              {w && <p className="text-sm">{w}</p>}
+              <p className="text-xs text-muted-foreground">{t.responsibility_note_client || RESPONSIBILITY_CLIENT_EXPLANATION[s]}{t.due_date ? ` · Due ${fmtDate(t.due_date)}` : ""}</p>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
 }
