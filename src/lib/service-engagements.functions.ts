@@ -183,8 +183,8 @@ export const getFundServices = createServerFn({ method: "GET" })
       .eq("fund_id", data.fundId).not("service_status", "in", "(CANCELLED,EXPIRED)").order("created_at");
     const list = (rows ?? []) as any[];
     const ids = [...new Set(list.flatMap((r) => [r.primary_administrator_user_id, r.relationship_lead_user_id]).filter(Boolean))];
-    const { data: profs } = ids.length ? await d.from("profiles").select("id, full_name, email").in("id", ids) : { data: [] };
-    const names = new Map(((profs ?? []) as any[]).map((p) => [p.id, p.full_name || p.email]));
+    const { data: profs } = ids.length ? await d.from("profiles").select("user_id, legal_name, email").in("user_id", ids) : { data: [] };
+    const names = new Map(((profs ?? []) as any[]).map((p) => [p.user_id, p.legal_name || p.email]));
     const out = [];
     for (const r of list) {
       const [{ data: defs }, { data: ov }] = await Promise.all([
