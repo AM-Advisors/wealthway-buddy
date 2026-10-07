@@ -112,10 +112,31 @@ export const approveStarAnswer = createServerFn({ method: "POST" }).middleware([
   });
 
 export const recordStarEvent = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ action: z.enum(["owner_set", "submitted", "registry_url"]), value: z.string().trim().min(1).max(500) }).parse(d))
+  .inputValidator((d) => z.object({ action: z.enum(["owner_set", "submitted", "registry_url", "path_chosen", "gdpr_done", "quality_result"]), value: z.string().trim().min(1).max(500) }).parse(d))
   .handler(async ({ data, context }) => {
     const c = await ctxFor(context); need(c, EDIT);
     if (data.action === "registry_url" && !/^https:\/\/cloudsecurityalliance\.org\//.test(data.value)) throw new Error("Use the cloudsecurityalliance.org registry link.");
-    await c.db.from("star_assessment_events").insert({ ...data, actor_id: c.userId });
+    const { error } = await c.db.from("star_assessment_events").insert({ ...data, actor_id: c.userId });
+    if (error) throw new Error("Could not record that step.");
     return { ok: true };
+  });
+
+/** CSA STAR Prep Kit guides: reference only, never evidence, never public. */
+export const listStarReferences = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const c = await ctxFor(context); need(c, VIEW);
+    const { data } = await c.db.from("star_reference_documents").select("id, title, size_bytes, created_at").order("title");
+    return (data ?? []) as { id: string; title: string; size_bytes: number; created_at: string }[];
+  });
+
+export const openStarReference = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const c = await ctxFor(context); need(c, VIEW);
+    const { data: r } = await c.db.from("star_reference_documents").select("storage_path").eq("id", data.id).maybeSingle();
+    if (!r) throw new Error("Document not found.");
+    const { data: s, error } = await c.db.storage.from("compliance-evidence").createSignedUrl(r.storage_path, 120);
+    if (error || !s) throw new Error("Could not open the document.");
+    await c.db.from("compliance_evidence_access_log").insert({ evidence_id: data.id, user_id: c.userId, action: "star_reference_open" });
+    return { url: s.signedUrl as string };
   });
