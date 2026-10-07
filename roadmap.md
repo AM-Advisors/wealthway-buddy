@@ -1,16 +1,8 @@
 # Roadmap
-- [ ] My Funds follows chosen account
-- [ ] Invite existing login to second account
-- [ ] Fund health summary
-- [ ] Investor reminders
-- [ ] Ops work queue
-- [ ] Manager account map
-- [ ] Stuck-fund alerts
-- [ ] Client 360 timeline
-- [x] Finance dashboard: revenue by client/month, invoices, payments, pending quotes, team activity
-- [x] Full per-employee inbox: threads, read, reply, compose, drafts, trash, archive
-- [x] Group inbox ticketing: assign employees, auto-assign client's assigned staff, track progress
-
-- [ ] Slack: notify #team-marketing on post submit + reaction approvals (needs publish + Slack app provisioning)
-- [x] SPV & Fund of Funds solutions/resources pages with downloadable guides (brand: navy #002856, cyan #5dc6d1, no pricing/offshore)
-- [x] Collateral Studio + brand rules for AI marketing images/copy
+## Phase 1 (fund admin tiers)
+- [x] Tiers, prices, entitlements + pricing page
+- [ ] Fund tier/billing cadence/administrators on Operations fund Setup (needs table)
+- [ ] Ownership lanes on tasks & requests
+- [ ] Fund Manager Command Center + Operating Calendar
+- [ ] Approval Center + Service Request Center
+- [ ] Internal Operations dashboard by tier
