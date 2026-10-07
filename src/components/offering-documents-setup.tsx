@@ -1,3 +1,4 @@
+import { invalidateFund } from "@/lib/fund-query-keys";
 import { useState, type ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -52,6 +53,7 @@ export function OfferingDocumentsSetup({ offeringId, onChanged }: { offeringId: 
   const q = useQuery({ queryKey: ["offering-docs-setup", offeringId], queryFn: () => load({ data: { offeringId } }) });
   const refresh = () => {
     qc.invalidateQueries({ queryKey: ["offering-docs-setup", offeringId] });
+    void invalidateFund(qc, offeringId);
     onChanged?.();
   };
   const [otherName, setOtherName] = useState("");

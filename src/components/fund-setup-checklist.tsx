@@ -37,6 +37,27 @@ const SECTION: Record<string, [string, string]> = {
   reporting_configuration: ["setup-admin", "Administration & Regulatory"],
 };
 
+/** What completes each step automatically on save (shown while the step is open). */
+const COMPLETES_WHEN: Record<string, string> = {
+  fund_information: "legal name and fund type saved",
+  entity_registered_agent: "registered agent saved",
+  entity_formation: "formation document and certificate of formation uploaded",
+  entity_ein: "IRS EIN letter or signed W-9 uploaded",
+  offering_config: "offering type and minimum investment saved",
+  investment_target: "target raise saved",
+  economics_terms: "fees approved",
+  client_signatories: "a signer added",
+  client_profile: "a team member added",
+  client_service_providers: "service providers saved",
+  docs_subscription: "subscription agreement added",
+  docs_operating_agreement: "operating agreement added",
+  docs_ppm: "PPM added",
+  banking_account: "bank instructions verified (or banking marked not required)",
+  investor_eligibility: "eligibility rules approved",
+  investor_onboarding_steps: "onboarding steps saved",
+  compliance_config: "regulatory configuration reviewed",
+};
+
 const STATUSES = [
   ["not_started", "Not started"],
   ["in_progress", "In progress"],
@@ -168,7 +189,7 @@ export function RequiredHere({ section }: { section: string }) {
         {conds.map((c) => <li key={c.id} className="flex items-start gap-2">{icon(c.satisfied)}<span>{c.label} <span className="text-xs text-muted-foreground">(launch condition)</span></span></li>)}
         {tasks.map((t) => (
           <li key={t.id} className="flex flex-wrap items-center justify-between gap-2">
-            <span className="flex items-start gap-2">{icon(t.status === "complete")}{t.label}</span>
+            <span className="flex items-start gap-2">{icon(t.status === "complete")}<span>{t.label}{t.status !== "complete" && COMPLETES_WHEN[t.key] && <span className="block text-xs text-muted-foreground">Ticks when {COMPLETES_WHEN[t.key]}</span>}</span></span>
             {r.canEdit ? (
               <select aria-label={`Status for ${t.label}`} className="h-7 rounded-md border bg-background px-2 text-xs" value={t.status} onChange={(e) => setStatus(t.id, e.target.value)}>
                 {STATUSES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
