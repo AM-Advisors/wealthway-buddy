@@ -5,6 +5,7 @@
  * segregation-of-duties triggers honour a matching override for 5 minutes.
  * Everyone else keeps the second-person rule.
  */
+import { getRequestHeader } from "@tanstack/react-start/server";
 import { SELF_APPROVAL_HEADER, SELF_APPROVAL_MARKER } from "@/lib/self-approval-shared";
 
 const admin = async () => (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
@@ -16,7 +17,6 @@ export async function isSuperAdmin(userId: string): Promise<boolean> {
 
 async function reasonFor(key: string): Promise<string | null> {
   try {
-    const { getRequestHeader } = await import("@tanstack/react-start/server");
     const raw = getRequestHeader(SELF_APPROVAL_HEADER);
     if (!raw) return null;
     const map = JSON.parse(decodeURIComponent(raw)) as Record<string, string>;
