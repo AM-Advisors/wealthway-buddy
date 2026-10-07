@@ -111,10 +111,10 @@ export const managerApproveDistributionFn = authed()
   });
 
 export const investorConfirmDistributionFn = authed()
-  .inputValidator((input: { lineId: string }) => input)
+  .inputValidator((input: { lineId: string; shareDestination?: string | null }) => ({ lineId: String(input.lineId), shareDestination: input.shareDestination == null ? null : String(input.shareDestination).slice(0, 200) }))
   .handler(async ({ data, context }) => {
     const { investorConfirmDistribution } = await import("@/lib/distributions.server");
-    return investorConfirmDistribution(context.userId, data.lineId);
+    return investorConfirmDistribution(context.userId, data.lineId, data.shareDestination);
   });
 
 export const adjustDistributionLineFn = authed()

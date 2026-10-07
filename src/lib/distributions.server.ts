@@ -1287,17 +1287,42 @@ export async function managerApproveDistribution(userId: string, batchId: string
 }
 
 /** The investor confirms their own details where the workflow requires it. */
-export async function investorConfirmDistribution(userId: string, lineId: string) {
+/**
+ * The investor confirms their own payout details for one distribution line: the bank account on file
+ * (for cash) and the brokerage/custodian account (for shares). This completes Verify for that line.
+ * Bank-detail changes still go through the payout-instruction controls (step-up, cooling-off); approvals are unchanged.
+ */
+export async function investorConfirmDistribution(userId: string, lineId: string, shareDestination?: string | null) {
   const actor = await actorFor(userId);
   const { data: line } = await db().from("distribution_lines").select("*").eq("id", lineId).maybeSingle();
   if (!line) fail("That distribution was not found.");
   if (String(line.investor_user_id ?? "") !== actor.userId) {
     forbid("that distribution belongs to another investor.");
   }
-  await db()
-    .from("distribution_lines")
-    .update({ investor_confirmed_at: nowIso() })
-    .eq("id", lineId);
+  const batch = await batchRow(String(line.batch_id));
+  if (["approved", "executing", "completed", "superseded", "cancelled"].includes(String(batch.status))) {
+    fail("This distribution is already approved; your details can no longer be changed here.");
+  }
+  const kind = String(batch.distribution_kind ?? "cash");
+  const needsCash = kind !== "shares" && Number(line.cash_cents ?? line.net_cents ?? 0) > 0;
+  const needsShares = kind !== "cash" && Number(line.shares_allocated ?? 0) > 0;
+  const patch: Record<string, unknown> = { investor_confirmed_at: nowIso() };
+  if (needsCash) {
+    const { data: instr } = await db().from("investor_payment_instructions").select("id, version, method, status, cooling_off_until")
+      .eq("investor_user_id", actor.userId).eq("offering_id", line.offering_id)
+      .in("status", ["active", "approved", "verified"]).is("revoked_at", null).is("superseded_at", null)
+      .order("version", { ascending: false }).limit(1);
+    const i = (instr ?? [])[0] as any;
+    if (!i) fail("Add your payout bank account below first. It becomes usable once its safety checks finish.");
+    if (i.cooling_off_until && new Date(i.cooling_off_until) > new Date()) fail("Your new bank account is still in its safety waiting period. Try again after it ends.");
+    Object.assign(patch, { payment_instruction_id: i.id, payment_instruction_version: i.version, payment_method: i.method, destination_verified: true });
+  }
+  if (needsShares) {
+    const d = String(shareDestination ?? "").trim();
+    if (d.length < 4) fail("Enter the brokerage or custodian account where your shares should go.");
+    patch["share_destination"] = d.slice(0, 200);
+  }
+  await db().from("distribution_lines").update(patch).eq("id", lineId);
   await recordEvent({
     offeringId: line.offering_id,
     batchId: line.batch_id,
@@ -2634,7 +2659,11 @@ export async function myDistributions(userId: string, filter?: { investmentProfi
         })(),
         notice: noticeByLine.get(String(l.id)) ?? null,
         confirmationRequired:
-          Boolean(l.investor_confirmation_required) && !l.investor_confirmed_at,
+          !l.investor_confirmed_at && !["approved", "executing", "completed", "superseded", "cancelled"].includes(String(batch?.status ?? "")),
+        kind: String(batch?.distribution_kind ?? "cash"),
+        shares: l.shares_allocated == null ? null : Number(l.shares_allocated),
+        shareIssuer: batch?.share_issuer ?? null,
+        shareDestination: l.share_destination ?? null,
       };
     }),
   };
