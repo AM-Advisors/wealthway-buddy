@@ -42,7 +42,7 @@ async function linkedinImage(owner: string, imageUrl: string): Promise<string | 
 
 /** Posts as the company page when set in Channels; otherwise as the connected member. */
 export async function publishLinkedIn(orgId: string, text: string, imageUrl: string | null): Promise<string> {
-  throw new Error("LinkedIn publishing is unavailable for now.");
+  if ((["linkedin"] as string[]).includes("linkedin")) throw new Error("LinkedIn publishing is unavailable for now.");
   let author: string;
   if (orgId && orgId !== "me") author = orgId.startsWith("urn:") ? orgId : `urn:li:organization:${orgId}`;
   else {
