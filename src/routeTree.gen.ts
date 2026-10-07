@@ -239,6 +239,7 @@ import { Route as AuthenticatedOpsDocumentTemplatesRouteImport } from './routes/
 import { Route as AuthenticatedOpsDocumentsRouteImport } from './routes/_authenticated/ops.documents'
 import { Route as AuthenticatedOpsEmailHealthRouteImport } from './routes/_authenticated/ops.email-health'
 import { Route as AuthenticatedOpsEmployeesRouteImport } from './routes/_authenticated/ops.employees'
+import { Route as AuthenticatedOpsFinancialPilotRouteImport } from './routes/_authenticated/ops.financial-pilot'
 import { Route as AuthenticatedOpsFinancialReviewsRouteImport } from './routes/_authenticated/ops.financial-reviews'
 import { Route as AuthenticatedOpsFinancialsRouteImport } from './routes/_authenticated/ops.financials'
 import { Route as AuthenticatedOpsFormationReferenceRouteImport } from './routes/_authenticated/ops.formation-reference'
@@ -1710,6 +1711,12 @@ const AuthenticatedOpsEmployeesRoute =
     path: '/ops/employees',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOpsFinancialPilotRoute =
+  AuthenticatedOpsFinancialPilotRouteImport.update({
+    id: '/ops/financial-pilot',
+    path: '/ops/financial-pilot',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOpsFinancialReviewsRoute =
   AuthenticatedOpsFinancialReviewsRouteImport.update({
     id: '/ops/financial-reviews',
@@ -2971,6 +2978,7 @@ export interface FileRoutesByFullPath {
   '/ops/documents': typeof AuthenticatedOpsDocumentsRoute
   '/ops/email-health': typeof AuthenticatedOpsEmailHealthRoute
   '/ops/employees': typeof AuthenticatedOpsEmployeesRoute
+  '/ops/financial-pilot': typeof AuthenticatedOpsFinancialPilotRoute
   '/ops/financial-reviews': typeof AuthenticatedOpsFinancialReviewsRoute
   '/ops/financials': typeof AuthenticatedOpsFinancialsRoute
   '/ops/formation-reference': typeof AuthenticatedOpsFormationReferenceRoute
@@ -3373,6 +3381,7 @@ export interface FileRoutesByTo {
   '/ops/documents': typeof AuthenticatedOpsDocumentsRoute
   '/ops/email-health': typeof AuthenticatedOpsEmailHealthRoute
   '/ops/employees': typeof AuthenticatedOpsEmployeesRoute
+  '/ops/financial-pilot': typeof AuthenticatedOpsFinancialPilotRoute
   '/ops/financial-reviews': typeof AuthenticatedOpsFinancialReviewsRoute
   '/ops/financials': typeof AuthenticatedOpsFinancialsRoute
   '/ops/formation-reference': typeof AuthenticatedOpsFormationReferenceRoute
@@ -3783,6 +3792,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/documents': typeof AuthenticatedOpsDocumentsRoute
   '/_authenticated/ops/email-health': typeof AuthenticatedOpsEmailHealthRoute
   '/_authenticated/ops/employees': typeof AuthenticatedOpsEmployeesRoute
+  '/_authenticated/ops/financial-pilot': typeof AuthenticatedOpsFinancialPilotRoute
   '/_authenticated/ops/financial-reviews': typeof AuthenticatedOpsFinancialReviewsRoute
   '/_authenticated/ops/financials': typeof AuthenticatedOpsFinancialsRoute
   '/_authenticated/ops/formation-reference': typeof AuthenticatedOpsFormationReferenceRoute
@@ -4194,6 +4204,7 @@ export interface FileRouteTypes {
     | '/ops/documents'
     | '/ops/email-health'
     | '/ops/employees'
+    | '/ops/financial-pilot'
     | '/ops/financial-reviews'
     | '/ops/financials'
     | '/ops/formation-reference'
@@ -4596,6 +4607,7 @@ export interface FileRouteTypes {
     | '/ops/documents'
     | '/ops/email-health'
     | '/ops/employees'
+    | '/ops/financial-pilot'
     | '/ops/financial-reviews'
     | '/ops/financials'
     | '/ops/formation-reference'
@@ -5005,6 +5017,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/documents'
     | '/_authenticated/ops/email-health'
     | '/_authenticated/ops/employees'
+    | '/_authenticated/ops/financial-pilot'
     | '/_authenticated/ops/financial-reviews'
     | '/_authenticated/ops/financials'
     | '/_authenticated/ops/formation-reference'
@@ -6874,6 +6887,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsEmployeesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ops/financial-pilot': {
+      id: '/_authenticated/ops/financial-pilot'
+      path: '/ops/financial-pilot'
+      fullPath: '/ops/financial-pilot'
+      preLoaderRoute: typeof AuthenticatedOpsFinancialPilotRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ops/financial-reviews': {
       id: '/_authenticated/ops/financial-reviews'
       path: '/ops/financial-reviews'
@@ -8560,6 +8580,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsDocumentsRoute: typeof AuthenticatedOpsDocumentsRoute
   AuthenticatedOpsEmailHealthRoute: typeof AuthenticatedOpsEmailHealthRoute
   AuthenticatedOpsEmployeesRoute: typeof AuthenticatedOpsEmployeesRoute
+  AuthenticatedOpsFinancialPilotRoute: typeof AuthenticatedOpsFinancialPilotRoute
   AuthenticatedOpsFinancialReviewsRoute: typeof AuthenticatedOpsFinancialReviewsRoute
   AuthenticatedOpsFinancialsRoute: typeof AuthenticatedOpsFinancialsRoute
   AuthenticatedOpsFormationReferenceRoute: typeof AuthenticatedOpsFormationReferenceRoute
@@ -8851,6 +8872,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsDocumentsRoute: AuthenticatedOpsDocumentsRoute,
   AuthenticatedOpsEmailHealthRoute: AuthenticatedOpsEmailHealthRoute,
   AuthenticatedOpsEmployeesRoute: AuthenticatedOpsEmployeesRoute,
+  AuthenticatedOpsFinancialPilotRoute: AuthenticatedOpsFinancialPilotRoute,
   AuthenticatedOpsFinancialReviewsRoute: AuthenticatedOpsFinancialReviewsRoute,
   AuthenticatedOpsFinancialsRoute: AuthenticatedOpsFinancialsRoute,
   AuthenticatedOpsFormationReferenceRoute:

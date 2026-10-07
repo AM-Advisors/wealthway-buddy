@@ -1324,6 +1324,13 @@
       "when": 1791355632672,
       "tag": "0188_bank_balance_one_time_review",
       "breakpoints": true
+    },
+    {
+      "idx": 189,
+      "version": "7",
+      "when": 1791374696956,
+      "tag": "0189_payout_sent_date_and_financial_pilot",
+      "breakpoints": true
     }
   ]
 }

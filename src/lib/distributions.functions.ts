@@ -171,8 +171,9 @@ export const distributionExecutionCheckFn = authed()
 
 export const executeDistributionPaymentFn = authed()
   .inputValidator(
-    (input: { lineId: string; externalReference: string; providerPaymentId?: string | null }) => ({
+    (input: { lineId: string; externalReference: string; providerPaymentId?: string | null; sentOn?: string | null }) => ({
       lineId: String(input.lineId),
+      sentOn: input.sentOn && /^\d{4}-\d{2}-\d{2}$/.test(String(input.sentOn)) ? String(input.sentOn) : null,
       externalReference: String(input.externalReference ?? ""),
       providerPaymentId: input.providerPaymentId ?? null,
       // Recording only: the application never initiates a transfer.
@@ -303,4 +304,15 @@ export const distributionAuditTrailFn = authed()
   .handler(async ({ data, context }) => {
     const { distributionAuditTrail } = await import("@/lib/distributions.server");
     return distributionAuditTrail(context.userId, data.batchId);
+  });
+
+export const setDistributionPaymentSentDateFn = authed()
+  .inputValidator((input: { paymentId: string; sentOn: string; reason: string }) => ({
+    paymentId: String(input.paymentId),
+    sentOn: String(input.sentOn),
+    reason: String(input.reason ?? "").slice(0, 1000),
+  }))
+  .handler(async ({ data, context }) => {
+    const { setDistributionPaymentSentDate } = await import("@/lib/distributions.server");
+    return setDistributionPaymentSentDate(context.userId, data);
   });

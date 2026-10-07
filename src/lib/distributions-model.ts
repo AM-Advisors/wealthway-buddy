@@ -1608,3 +1608,20 @@ export function staleBasisOverrideError(input: { reason: string; userId: string;
   if (input.preparedBy && input.userId === input.preparedBy) return "The preparer cannot approve use of a stale basis on their own distribution.";
   return null;
 }
+
+
+/**
+ * Payout economic (sent/effective) date. Pure check; the server also refuses
+ * dates in closed or locked accounting periods.
+ */
+export function payoutSentDateError(sentOn: string | null | undefined, todayIso: string): string | null {
+  if (!sentOn) return "Enter the date the payment was actually sent.";
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(sentOn) || Number.isNaN(Date.parse(`${sentOn}T00:00:00Z`))) return "The sent date must be a valid date (YYYY-MM-DD).";
+  if (sentOn > todayIso.slice(0, 10)) return "The sent date cannot be in the future.";
+  return null;
+}
+
+/** Which period statuses refuse new economic activity. */
+export function periodRefusesDate(status: string | null | undefined): boolean {
+  return status === "closed" || status === "locked";
+}

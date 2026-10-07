@@ -13627,6 +13627,44 @@ export type Database = {
           },
         ]
       }
+      distribution_payment_date_changes: {
+        Row: {
+          changed_at: string
+          changed_by: string
+          id: string
+          new_sent_on: string
+          payment_id: string
+          previous_sent_on: string | null
+          reason: string
+        }
+        Insert: {
+          changed_at?: string
+          changed_by: string
+          id?: string
+          new_sent_on: string
+          payment_id: string
+          previous_sent_on?: string | null
+          reason: string
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string
+          id?: string
+          new_sent_on?: string
+          payment_id?: string
+          previous_sent_on?: string | null
+          reason?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "distribution_payment_date_changes_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "distribution_payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       distribution_payments: {
         Row: {
           approval_chain: Json
@@ -13664,6 +13702,7 @@ export type Database = {
           reversal_reason: string | null
           reversal_requested_at: string | null
           reversal_requested_by: string | null
+          sent_on: string | null
           settled_at: string | null
           status: string
           submitted_amount_cents: number
@@ -13711,6 +13750,7 @@ export type Database = {
           reversal_reason?: string | null
           reversal_requested_at?: string | null
           reversal_requested_by?: string | null
+          sent_on?: string | null
           settled_at?: string | null
           status?: string
           submitted_amount_cents?: number
@@ -13758,6 +13798,7 @@ export type Database = {
           reversal_reason?: string | null
           reversal_requested_at?: string | null
           reversal_requested_by?: string | null
+          sent_on?: string | null
           settled_at?: string | null
           status?: string
           submitted_amount_cents?: number
@@ -16300,6 +16341,411 @@ export type Database = {
             columns: ["term_id"]
             isOneToOne: false
             referencedRelation: "management_fee_terms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      financial_pilot_candidate_scores: {
+        Row: {
+          created_at: string
+          disqualifiers: string[]
+          factors: Json
+          id: string
+          note: string | null
+          offering_id: string
+          scored_by: string
+          total_score: number
+        }
+        Insert: {
+          created_at?: string
+          disqualifiers?: string[]
+          factors: Json
+          id?: string
+          note?: string | null
+          offering_id: string
+          scored_by: string
+          total_score: number
+        }
+        Update: {
+          created_at?: string
+          disqualifiers?: string[]
+          factors?: Json
+          id?: string
+          note?: string | null
+          offering_id?: string
+          scored_by?: string
+          total_score?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_pilot_candidate_scores_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      financial_pilot_decisions: {
+        Row: {
+          created_at: string
+          decided_by: string
+          decision: string
+          id: string
+          pilot_id: string
+          reason: string
+        }
+        Insert: {
+          created_at?: string
+          decided_by: string
+          decision: string
+          id?: string
+          pilot_id: string
+          reason: string
+        }
+        Update: {
+          created_at?: string
+          decided_by?: string
+          decision?: string
+          id?: string
+          pilot_id?: string
+          reason?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_pilot_decisions_pilot_id_fkey"
+            columns: ["pilot_id"]
+            isOneToOne: false
+            referencedRelation: "financial_pilots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      financial_pilot_events: {
+        Row: {
+          actor_user_id: string
+          created_at: string
+          detail: Json
+          event: string
+          from_status: string | null
+          id: string
+          offering_id: string
+          pilot_id: string | null
+          to_status: string | null
+        }
+        Insert: {
+          actor_user_id: string
+          created_at?: string
+          detail?: Json
+          event: string
+          from_status?: string | null
+          id?: string
+          offering_id: string
+          pilot_id?: string | null
+          to_status?: string | null
+        }
+        Update: {
+          actor_user_id?: string
+          created_at?: string
+          detail?: Json
+          event?: string
+          from_status?: string | null
+          id?: string
+          offering_id?: string
+          pilot_id?: string | null
+          to_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_pilot_events_pilot_id_fkey"
+            columns: ["pilot_id"]
+            isOneToOne: false
+            referencedRelation: "financial_pilots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      financial_pilot_materiality: {
+        Row: {
+          created_at: string
+          id: string
+          metric: string
+          pilot_id: string
+          set_by: string
+          tolerance_cents: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          metric: string
+          pilot_id: string
+          set_by: string
+          tolerance_cents: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          metric?: string
+          pilot_id?: string
+          set_by?: string
+          tolerance_cents?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_pilot_materiality_pilot_id_fkey"
+            columns: ["pilot_id"]
+            isOneToOne: false
+            referencedRelation: "financial_pilots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      financial_pilot_opening_balances: {
+        Row: {
+          category: string
+          created_at: string
+          entered_by: string
+          id: string
+          label: string | null
+          official_cents: number
+          pilot_id: string
+          position_id: string | null
+          source_document: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          entered_by: string
+          id?: string
+          label?: string | null
+          official_cents: number
+          pilot_id: string
+          position_id?: string | null
+          source_document: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          entered_by?: string
+          id?: string
+          label?: string | null
+          official_cents?: number
+          pilot_id?: string
+          position_id?: string | null
+          source_document?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_pilot_opening_balances_pilot_id_fkey"
+            columns: ["pilot_id"]
+            isOneToOne: false
+            referencedRelation: "financial_pilots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      financial_pilot_signoffs: {
+        Row: {
+          confirmations: Json
+          created_at: string
+          id: string
+          note: string | null
+          pilot_id: string
+          role_key: string
+          user_id: string
+        }
+        Insert: {
+          confirmations: Json
+          created_at?: string
+          id?: string
+          note?: string | null
+          pilot_id: string
+          role_key: string
+          user_id: string
+        }
+        Update: {
+          confirmations?: Json
+          created_at?: string
+          id?: string
+          note?: string | null
+          pilot_id?: string
+          role_key?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_pilot_signoffs_pilot_id_fkey"
+            columns: ["pilot_id"]
+            isOneToOne: false
+            referencedRelation: "financial_pilots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      financial_pilot_staff: {
+        Row: {
+          assigned_by: string
+          created_at: string
+          id: string
+          pilot_id: string
+          role_key: string
+          user_id: string
+        }
+        Insert: {
+          assigned_by: string
+          created_at?: string
+          id?: string
+          pilot_id: string
+          role_key: string
+          user_id: string
+        }
+        Update: {
+          assigned_by?: string
+          created_at?: string
+          id?: string
+          pilot_id?: string
+          role_key?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_pilot_staff_pilot_id_fkey"
+            columns: ["pilot_id"]
+            isOneToOne: false
+            referencedRelation: "financial_pilots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      financial_pilot_variances: {
+        Row: {
+          cause: string | null
+          classification: string
+          component: string | null
+          created_at: string
+          harmonious_cents: number
+          id: string
+          kind: string
+          materiality_cents: number
+          metric: string
+          official_cents: number
+          owner_user_id: string | null
+          period_label: string
+          pilot_id: string
+          position_id: string | null
+          raised_by: string
+          resolution: string | null
+          resolved_at: string | null
+          reviewer_user_id: string | null
+          source: string
+          status: string
+          structural: boolean
+          variance_cents: number | null
+        }
+        Insert: {
+          cause?: string | null
+          classification?: string
+          component?: string | null
+          created_at?: string
+          harmonious_cents: number
+          id?: string
+          kind?: string
+          materiality_cents?: number
+          metric: string
+          official_cents: number
+          owner_user_id?: string | null
+          period_label: string
+          pilot_id: string
+          position_id?: string | null
+          raised_by: string
+          resolution?: string | null
+          resolved_at?: string | null
+          reviewer_user_id?: string | null
+          source: string
+          status?: string
+          structural?: boolean
+          variance_cents?: number | null
+        }
+        Update: {
+          cause?: string | null
+          classification?: string
+          component?: string | null
+          created_at?: string
+          harmonious_cents?: number
+          id?: string
+          kind?: string
+          materiality_cents?: number
+          metric?: string
+          official_cents?: number
+          owner_user_id?: string | null
+          period_label?: string
+          pilot_id?: string
+          position_id?: string | null
+          raised_by?: string
+          resolution?: string | null
+          resolved_at?: string | null
+          reviewer_user_id?: string | null
+          source?: string
+          status?: string
+          structural?: boolean
+          variance_cents?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_pilot_variances_pilot_id_fkey"
+            columns: ["pilot_id"]
+            isOneToOne: false
+            referencedRelation: "financial_pilots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      financial_pilots: {
+        Row: {
+          authoritative_source: string
+          created_at: string
+          created_by: string
+          id: string
+          mode: string
+          offering_id: string
+          period_end: string | null
+          period_label: string | null
+          period_start: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          authoritative_source?: string
+          created_at?: string
+          created_by: string
+          id?: string
+          mode?: string
+          offering_id: string
+          period_end?: string | null
+          period_label?: string | null
+          period_start?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          authoritative_source?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          mode?: string
+          offering_id?: string
+          period_end?: string | null
+          period_label?: string | null
+          period_start?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_pilots_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
             referencedColumns: ["id"]
           },
         ]

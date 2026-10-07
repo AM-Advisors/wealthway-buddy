@@ -16,7 +16,7 @@
  * confirmation correlates, the bank activity reconciles and the journal posts.
  * Not when a screen says so, and never on a provider callback alone.
  */
-import { basisStaleness, staleBasisOverrideError } from "@/lib/distributions-model";
+import { basisStaleness, staleBasisOverrideError, payoutSentDateError, periodRefusesDate } from "@/lib/distributions-model";
 import { evaluateWithholding, withholdingDecisionError, type PolicyRule } from "@/lib/withholding-policy";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { onboardingActor, type OnboardingActor } from "@/lib/investor-onboarding.server";
@@ -1794,7 +1794,7 @@ export async function distributionExecutionCheck(userId: string, lineId: string)
  */
 export async function executeDistributionPayment(
   userId: string,
-  input: { lineId: string; provider?: string; providerPaymentId?: string | null; externalReference?: string | null },
+  input: { lineId: string; provider?: string; providerPaymentId?: string | null; externalReference?: string | null; sentOn?: string | null },
 ) {
   // D1: this records a bank transfer a person already initiated outside the
   // application. The application never sends money.
@@ -1813,6 +1813,10 @@ export async function executeDistributionPayment(
   if (!line) fail("That distribution line was not found.");
   const batch = await batchRow(String(line.batch_id));
   const { actor } = await assertCan(userId, String(batch.offering_id), "execute");
+  await assertNotParallelPilot(String(batch.offering_id));
+  // Economic sent date: defaults to today for a real-time entry; staff may choose the actual date.
+  const sentOn = input.sentOn ?? today();
+  await assertPayoutDateOpen(String(batch.offering_id), sentOn);
 
   await assertNoHold(db(), "distributions", {
     offeringId: String(batch.offering_id),
@@ -1903,6 +1907,7 @@ export async function executeDistributionPayment(
       approval_chain: [...chain, { step: "executed", userId: actor.userId, at: nowIso() }],
       status: "submitted",
       submitted_by: actor.userId,
+      sent_on: sentOn,
     })
     .select("*")
     .single();
@@ -2163,7 +2168,7 @@ export async function reconcileDistributionPayment(
       currency: String(payment.submitted_currency ?? "USD"),
       destinationFingerprint: (payment.submitted_destination ?? {})['fingerprint'] ?? null,
       providerReference: payment.external_reference ?? payment.provider_payment_id ?? null,
-      recordedAtIso: String(payment.submitted_at ?? payment.created_at ?? nowIso()),
+      recordedAtIso: payment.sent_on ? `${payment.sent_on}T12:00:00Z` : String(payment.submitted_at ?? payment.created_at ?? nowIso()),
     },
     String(selected.id),
     [...pool.values()],
@@ -2360,6 +2365,9 @@ export async function postDistributionPayment(userId: string, paymentId: string)
   if (!payment) fail("That payment was not found.");
   if (!payment.reconciliation_id) fail("This payment has not been reconciled.");
   if (payment.posted_at) fail("This payment is already posted.");
+  // The payout's economic date is required before it reaches the ledger.
+  if (!payment.sent_on) fail("Record the payment's sent date before posting it.");
+  await assertPayoutDateOpen(String(payment.offering_id), String(payment.sent_on));
   const postError = await chainCheck(paymentChain(payment), "posted", actor.userId, [payment.id, payment.batch_id]);
   if (postError) fail(postError);
 
@@ -2406,7 +2414,7 @@ export async function postDistributionPayment(userId: string, paymentId: string)
         offering_id: payment.offering_id,
         event_type: eventType,
         amount_cents: effect.reduceCapitalCents,
-        effective_date: line.effective_date ?? today(),
+        effective_date: String(payment.sent_on),
         source: "distribution_payment",
         source_ref: String(payment.id),
         journal_entry_id: payment.journal_entry_id,
@@ -2429,7 +2437,7 @@ export async function postDistributionPayment(userId: string, paymentId: string)
   await db().from("fund_distributions").insert({
     offering_id: payment.offering_id,
     // Run 3 fix: the payout date, not the day someone clicked Post.
-    paid_on: String(payment.submitted_at ?? "").slice(0, 10) || line?.effective_date || today(),
+    paid_on: String(payment.sent_on),
     amount_cents: Number(line?.gross_cents ?? payment.submitted_amount_cents),
     kind: String(line?.distribution_type) === "return_of_capital" ? "return_of_capital" : "distribution",
     note: `Distribution payment ${payment.id}`,
@@ -3071,3 +3079,65 @@ export async function assertStaffForProviderIntake(userId: string) {
 
 // Shared with distributions-inkind.server.ts (same authority, same destination reading).
 export { assertCan as distributionAuthority, roleForOffering as distributionRole, destinationFromRow, batchRow as distributionBatchRow };
+
+
+/** Refuse an economic date that falls in a closed or locked accounting period of this fund's book. */
+async function assertPayoutDateOpen(offeringId: string, sentOn: string) {
+  const err = payoutSentDateError(sentOn, today());
+  if (err) fail(err);
+  const { data: book } = await db().from("ledger_books").select("id").eq("offering_id", offeringId).maybeSingle();
+  if (!book) return;
+  const { data: periods } = await db()
+    .from("accounting_periods")
+    .select("label, status")
+    .eq("book_id", book.id)
+    .lte("period_start", sentOn)
+    .gte("period_end", sentOn);
+  const shut = ((periods ?? []) as any[]).find((p) => periodRefusesDate(String(p.status)));
+  if (shut) fail(`The sent date ${sentOn} falls in ${shut.label ?? "an accounting period"}, which is ${shut.status}. Choose a date in an open period.`);
+}
+
+/** Pilot parallel mode: Harmonious never records payouts for a fund whose official process is elsewhere. */
+async function assertNotParallelPilot(offeringId: string) {
+  const { data } = await db()
+    .from("financial_pilots")
+    .select("status")
+    .eq("offering_id", offeringId)
+    .neq("status", "withdrawn")
+    .maybeSingle();
+  if (data && !["evaluating", "withdrawn"].includes(String(data.status))) {
+    fail("PARALLEL PILOT: this fund's official payment process remains authoritative. Harmonious may calculate and prepare the payout for comparison but cannot record it as sent.");
+  }
+}
+
+/**
+ * Change a payout's economic sent date before it is posted. Logged append-only.
+ */
+export async function setDistributionPaymentSentDate(userId: string, input: { paymentId: string; sentOn: string; reason: string }) {
+  const { data: payment } = await db().from("distribution_payments").select("*").eq("id", input.paymentId).maybeSingle();
+  if (!payment) fail("That payment was not found.");
+  const { actor } = await assertCan(userId, String(payment.offering_id), "execute");
+  if (payment.posted_at) fail("This payment is already posted; correct the date with a reviewed reversal instead.");
+  if (!input.reason || input.reason.trim().length < 5) fail("Say why the sent date is changing.");
+  await assertPayoutDateOpen(String(payment.offering_id), input.sentOn);
+  if (payment.sent_on === input.sentOn) return { ok: true, unchanged: true };
+  await db().from("distribution_payment_date_changes").insert({
+    payment_id: payment.id,
+    previous_sent_on: payment.sent_on ?? null,
+    new_sent_on: input.sentOn,
+    reason: input.reason.trim(),
+    changed_by: actor.userId,
+  });
+  await db().from("distribution_payments").update({ sent_on: input.sentOn }).eq("id", payment.id);
+  await recordEvent({
+    offeringId: payment.offering_id,
+    batchId: payment.batch_id,
+    distributionLineId: payment.distribution_line_id,
+    paymentId: String(payment.id),
+    event: "distribution_payment_sent_date_changed",
+    detail: { from: payment.sent_on ?? null, to: input.sentOn },
+    actorUserId: actor.userId,
+    actorRole: "harmonious",
+  });
+  return { ok: true };
+}
