@@ -16,7 +16,21 @@ export async function quoteCatalog(userId: string, clientId: string | null) {
   const { versionId, lines } = await loadBaseline(clientId);
   const db = await admin();
   const { data: clients } = await db.from("clients").select("id, legal_name").order("legal_name");
-  return { versionId, lines: lines.map((l: any) => ({ serviceKey: l.serviceKey, label: l.label, baselineCents: l.baselineCents, source: l.baselineSource, pricingModel: l.pricingModel })), clients: (clients ?? []) as any[] };
+  const adminLevels = await adminCatalog();
+  return { versionId, adminLevels, lines: [...adminLevels, ...lines].map((l: any) => ({ serviceKey: l.serviceKey, label: l.label, baselineCents: l.baselineCents, source: l.baselineSource, pricingModel: l.pricingModel })), clients: (clients ?? []) as any[] };
+}
+
+/** Administration levels as quote lines, keyed by product + level, from current pricing versions. */
+async function adminCatalog() {
+  const { SERVICE_LADDERS, adminQuoteKey, isLadderProduct } = await import("@/lib/service-ladders");
+  const db = await admin();
+  const { data } = await db.from("service_pricing_versions").select("service_product, service_level, annual_price, starting_price").eq("is_current", true);
+  return ((data ?? []) as any[]).filter((p) => isLadderProduct(p.service_product)).flatMap((p) => {
+    const lv = SERVICE_LADDERS[p.service_product as "SPV_ADMINISTRATION"].levels.find((l) => l.level === p.service_level);
+    if (!lv) return [];
+    const cents = Math.round(Number(p.annual_price ?? p.starting_price ?? 0) * 100);
+    return [{ serviceKey: adminQuoteKey(p.service_product, p.service_level), label: `${lv.name} (annual)`, baselineCents: cents, baselineSource: "service_pricing", pricingModel: "annual", product: p.service_product, level: p.service_level }];
+  });
 }
 
 /** Called after a client signs an SOW: mark its sent quote signed and hand off. */
@@ -91,7 +105,7 @@ export async function saveQuote(userId: string, d: { id?: string | null | undefi
   if (!d.lines.length) throw new Error("Add at least one service.");
   const { loadBaseline } = await import("@/lib/commercial-pricing.server");
   const base = await loadBaseline(d.clientId ?? null);
-  const card = new Map(base.lines.map((l: any) => [l.serviceKey, l]));
+  const card = new Map([...base.lines, ...(await adminCatalog())].map((l: any) => [l.serviceKey, l]));
   const unknown = d.lines.find((l) => !card.has(l.serviceKey));
   if (unknown) throw new Error(`"${unknown.label || unknown.serviceKey}" isn't on the current rate card.`);
   // Baseline and label always come from the live rate card, never from the browser.

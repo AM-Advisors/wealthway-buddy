@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SERVICE_LADDERS, adminQuoteKey, ADMIN_QUOTE_KEY_PREFIX, type LadderProduct } from "@/lib/service-ladders";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { draftQuoteFromSow, getQuoteCatalog, listSalesQuotes, listSowsForQuote, saveSalesQuote } from "@/lib/sales-hub.functions";
@@ -91,6 +92,26 @@ function FromSow() {
 
 type Line = { serviceKey: string; label: string; quantity: number; unitCents: number; baselineUnitCents: number };
 
+/** Product first, then only the levels valid for that product. */
+function AdminLevelPicker({ onAdd, lines }: { onAdd: (key: string) => void; lines: any[] }) {
+  const [product, setProduct] = useState<LadderProduct | "">("");
+  return (
+    <div className="mt-4 flex flex-wrap items-center gap-2">
+      <Select value={product} onValueChange={(v) => setProduct(v as LadderProduct)}>
+        <SelectTrigger className="w-56"><SelectValue placeholder="Administration product" /></SelectTrigger>
+        <SelectContent>{(Object.keys(SERVICE_LADDERS) as LadderProduct[]).map((p) => <SelectItem key={p} value={p}>{SERVICE_LADDERS[p].label}</SelectItem>)}</SelectContent>
+      </Select>
+      <Select value="" onValueChange={onAdd} disabled={!product}>
+        <SelectTrigger className="w-72"><SelectValue placeholder="Service level" /></SelectTrigger>
+        <SelectContent>{product ? SERVICE_LADDERS[product].levels.map((l) => {
+          const line = lines.find((x) => x.serviceKey === adminQuoteKey(product, l.level));
+          return line ? <SelectItem key={l.level} value={line.serviceKey}>{l.name} · {line.baselineCents ? `$${(line.baselineCents / 100).toLocaleString("en-US")}` : "Included"}</SelectItem> : null;
+        }) : null}</SelectContent>
+      </Select>
+    </div>
+  );
+}
+
 export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; initial?: { id: string; title: string; clientId: string | null; validUntil: string | null; notes: string | null; lines: Line[] } }) {
   const nav = useNavigate();
   const [clientId, setClientId] = useState<string | null>(initial?.clientId ?? null);
@@ -122,9 +143,10 @@ export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; init
         </Select>
         <Input type="date" aria-label="Valid until" value={validUntil} onChange={(e) => setValidUntil(e.target.value)} />
       </div>
+      <AdminLevelPicker onAdd={add} lines={c.data?.lines ?? []} />
       <div className="mt-4">
         <Select value="" onValueChange={add}><SelectTrigger className="w-72"><SelectValue placeholder="Add a service from the rate card" /></SelectTrigger>
-          <SelectContent>{(c.data?.lines ?? []).map((l: any) => <SelectItem key={l.serviceKey} value={l.serviceKey}>{l.label} · {money(l.baselineCents)}</SelectItem>)}</SelectContent></Select>
+          <SelectContent>{(c.data?.lines ?? []).filter((l: any) => !String(l.serviceKey).startsWith(ADMIN_QUOTE_KEY_PREFIX)).map((l: any) => <SelectItem key={l.serviceKey} value={l.serviceKey}>{l.label} · {money(l.baselineCents)}</SelectItem>)}</SelectContent></Select>
       </div>
       <Table className="mt-3">
         <TableHeader><TableRow><TableHead>Service</TableHead><TableHead className="w-24">Qty</TableHead><TableHead className="w-36">Price ($)</TableHead><TableHead className="text-right">Rate card</TableHead><TableHead className="text-right">Line</TableHead><TableHead /></TableRow></TableHeader>
