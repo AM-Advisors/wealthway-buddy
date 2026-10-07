@@ -105,6 +105,11 @@ function PostEditor() {
     onSuccess: (_r, a) => { toast.success(a === "submit" ? "Sent for approval" : a === "approve" ? "Approved and scheduled" : "Sent back to the author"); setNote(""); q.refetch(); qc.invalidateQueries({ queryKey: ["mk-posts"] }); },
     onError: (e) => toast.error((e as Error).message),
   });
+  const retryM = useMutation({
+    mutationFn: () => retry({ data: { id } }),
+    onSuccess: () => { toast.success("Retrying — the original approval still stands"); q.refetch(); qc.invalidateQueries({ queryKey: ["mk-posts"] }); },
+    onError: (e) => toast.error((e as Error).message),
+  });
   const draftM = useMutation({
     mutationFn: () => draft({ data: { kind: preview, brief: brief || title, current: body || null } }),
     onSuccess: (r) => setBody(r.text), onError: (e) => toast.error((e as Error).message),
