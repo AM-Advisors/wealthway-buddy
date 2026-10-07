@@ -182,7 +182,7 @@ function Frameworks({ d }: { d: Data }) {
               <p className="text-xs text-muted-foreground">{f.total} requirements · {f.mapped} mapped · {f.gaps} gaps · {f.operating} effective · {f.audits} assessment(s){f.assessment_start ? ` · period ${f.assessment_start} to ${f.assessment_end ?? "?"}` : ""}</p>
               {f.total === 0 ? <p className="text-xs text-muted-foreground">No requirement identifiers loaded yet{f.key === "csa_ccm" ? " — load the CAIQ in Privacy → CSA STAR." : "."}</p> : null}
               <details><summary className="cursor-pointer text-xs">Requirements and mapped controls</summary>
-                <ul className="mt-1 space-y-1 text-xs">{f.requirements.map((r) => <li key={r.id}><span className="font-medium">{r.code}</span> {r.title} — {r.controls.length ? r.controls.join(", ") : <span className="text-destructive">gap</span>}</li>)}</ul></details>
+                <ul className="mt-1 space-y-1 text-xs">{f.requirements.map((r: any) => <li key={r.id}><span className="font-medium">{r.code}</span> {r.title} — {r.controls.length ? r.controls.join(", ") : <span className="text-destructive">gap</span>}</li>)}</ul></details>
               {canEdit ? <Button size="sm" variant="outline" onClick={() => setEdit({ ...f })}>Edit</Button> : null}
             </CardContent>
           </Card>
