@@ -450,7 +450,7 @@ export const countersignSow = createServerFn({ method: "POST" })
       .eq("sow_id", data.sowId);
     const clientSignature = ((signatures ?? []) as any[]).find((s) => s.side === "client");
     if (!clientSignature) throw new Error("The client has not signed this agreement yet.");
-    if ((sow as any).created_by && (sow as any).created_by === who.userId) throw new Error("Someone other than the person who drafted this agreement must countersign it.");
+    if ((sow as any).created_by && (sow as any).created_by === who.userId && !(await (await import("@/lib/self-approval.server")).selfApprove(who.userId, "agreement_countersign", [data.sowId]))) throw new Error("Someone other than the person who drafted this agreement must countersign it.");
 
     const now = new Date().toISOString();
     await context.supabase.from("agreement_signatures").insert({

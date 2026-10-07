@@ -537,7 +537,7 @@ export async function reviewPaymentInstruction(userId: string, changeId: string)
     .eq("id", changeId)
     .maybeSingle();
   if (!change) fail("That change request was not found.");
-  if (String(change.requested_by ?? "") === actor.userId && change.risk_level === "high") {
+  if (String(change.requested_by ?? "") === actor.userId && change.risk_level === "high" && !(await (await import("@/lib/self-approval.server")).selfApprove(actor.userId, "payment_instruction_review", [changeId]))) {
     fail("The person who requested this change cannot also review it.");
   }
   await db()

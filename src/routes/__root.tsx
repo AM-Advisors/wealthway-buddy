@@ -12,6 +12,7 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { Toaster } from "@/components/ui/sonner";
+import { SelfApprovalPrompt } from "@/components/self-approval-prompt";
 import { THEME_BOOT_SCRIPT } from "@/lib/theme-mode";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
@@ -132,6 +133,7 @@ function RootComponent() {
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
       <Toaster richColors position="top-center" />
+      <SelfApprovalPrompt />
     </QueryClientProvider>
   );
 }

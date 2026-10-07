@@ -442,7 +442,7 @@ export const decideFundReassignment = createServerFn({ method: "POST" })
     const { db, userId } = await clientGate(context, "link_funds");
     const { data: r } = await db.from("fund_client_reassignments").select("*").eq("id", data.id).maybeSingle();
     if (!r || r.status !== "pending") throw new Error("That reassignment is not waiting for review.");
-    if (r.requested_by === userId) throw new Error("Someone other than the requester must review this reassignment.");
+    if (r.requested_by === userId && !(await (await import("@/lib/self-approval.server")).selfApprove(userId, "fund_reassignment", [r.id]))) throw new Error("Someone other than the requester must review this reassignment.");
     if (data.approve) {
       const { error } = await db.from("offerings").update({ client_id: r.to_client_id }).eq("id", r.offering_id).eq("client_id", r.from_client_id);
       if (error) throw new Error(error.message);
@@ -577,7 +577,7 @@ export const decideServicePrice = createServerFn({ method: "POST" })
     const { db, userId } = await clientGate(context, "approve_pricing");
     const { data: s } = await db.from("client_service_selections").select("*").eq("id", data.selectionId).maybeSingle();
     if (!s || s.client_id !== data.clientId || s.override_status !== "pending_approval") throw new Error("No custom price is waiting for approval.");
-    if (s.override_by === userId) throw new Error("Someone other than the person who proposed it must approve custom pricing.");
+    if (s.override_by === userId && !(await (await import("@/lib/self-approval.server")).selfApprove(userId, "custom_pricing", [s.id]))) throw new Error("Someone other than the person who proposed it must approve custom pricing.");
     await db.from("client_service_selections").update({ override_status: data.approve ? "approved" : "rejected", override_approved_by: data.approve ? userId : null, override_approved_at: new Date().toISOString() }).eq("id", s.id);
     await audit(db, { actor: userId, clientId: data.clientId, offeringId: s.offering_id, action: data.approve ? "pricing_override_approved" : "pricing_override_rejected", target: s.id, after: { cents: s.custom_price_cents } });
     return { ok: true };
@@ -649,7 +649,7 @@ export const setSowTemplateStatus = createServerFn({ method: "POST" })
     if (!t) throw new Error("Template not found.");
     if (data.status === "approved") {
       if (t.status !== "draft") throw new Error("Only a draft template can be approved.");
-      if (t.created_by === userId) throw new Error("Someone other than the person who drafted it must approve the template.");
+      if (t.created_by === userId && !(await (await import("@/lib/self-approval.server")).selfApprove(userId, "sow_template", [t.id]))) throw new Error("Someone other than the person who drafted it must approve the template.");
     }
     const patch = data.status === "approved" ? { status: "approved", approved_by: userId, approved_at: new Date().toISOString() } : { status: "retired", retired_at: new Date().toISOString() };
     const { error } = await db.from("sow_templates").update(patch).eq("id", data.id);

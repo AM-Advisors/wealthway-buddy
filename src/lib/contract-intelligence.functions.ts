@@ -378,7 +378,7 @@ export const approveStandardAgreementPreview = createServerFn({ method: "POST" }
     const { data: d } = await db.from("client_governing_documents").select("*").eq("id", data.draftId).eq("source", "standard_template").maybeSingle();
     if (!d) throw new Error("Not found.");
     if (d.standard_status !== "draft") throw new Error("Only a draft can be reviewed.");
-    if (d.standard_prepared_by === context.userId) throw new Error("The reviewer must be a different person from the preparer.");
+    if (d.standard_prepared_by === context.userId && !(await (await import("@/lib/self-approval.server")).selfApprove(context.userId, "standard_document", [d.id]))) throw new Error("The reviewer must be a different person from the preparer.");
     const { data: sections } = await db.from("msa_sections").select("section_no, title, body, sort_order").eq("msa_version_id", d.msa_version_id);
     const r = renderStandardAgreement((sections ?? []) as any[], d.standard_fields ?? {});
     if (r.missing.length) throw new Error(`Missing: ${r.missing.join(", ")}.`);

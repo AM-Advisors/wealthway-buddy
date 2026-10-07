@@ -29,7 +29,7 @@ export const approveFundCloseRequest = createServerFn({ method: "POST" })
     const { data: cur } = await db.from("fund_close_requests").select("status, requested_by").eq("id", data.id).maybeSingle();
     if (!cur) throw new Error("Close request not found.");
     if (cur.status !== "in_review") throw new Error("Start the review before approving.");
-    if (cur.requested_by === context.userId) throw new Error("The person who submitted this close can't approve it.");
+    if (cur.requested_by === context.userId && !(await (await import("@/lib/self-approval.server")).selfApprove(context.userId, "fund_close", [data.id]))) throw new Error("The person who submitted this close can't approve it.");
     const now = new Date().toISOString();
     const note = data.note.trim() || null;
     const { data: upd } = await db.from("fund_close_requests")
@@ -113,7 +113,7 @@ export const recordCloseFiling = createServerFn({ method: "POST" })
     const { data: f } = await db.from("fund_close_filings").select("id, status, prepared_by, close_request_id, filing_type, jurisdiction, fee_needs_review").eq("id", data.id).maybeSingle();
     if (!f) throw new Error("Filing not found.");
     if (f.status !== "prepared") throw new Error("This filing is already recorded.");
-    if (f.prepared_by === context.userId) throw new Error("Someone other than the preparer must record this filing.");
+    if (f.prepared_by === context.userId && !(await (await import("@/lib/self-approval.server")).selfApprove(context.userId, "close_filing", [f.id]))) throw new Error("Someone other than the preparer must record this filing.");
     if (data.outcome === "filed" && (!data.confirmationNumber || !data.filedOn)) throw new Error("Enter the confirmation number and filing date.");
     if (data.outcome === "not_required" && data.note.length < 3) throw new Error("Explain why this filing isn't required.");
     if (data.outcome === "filed" && f.fee_needs_review && data.feeCents === undefined) throw new Error("Enter the state fee that was actually paid.");

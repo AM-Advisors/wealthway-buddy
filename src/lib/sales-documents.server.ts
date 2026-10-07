@@ -279,7 +279,7 @@ export async function submitForApproval(userId: string, id: string) {
 export async function decide(userId: string, id: string, approve: boolean, note: string | null) {
   const a = await access(userId, id);
   if (!a.canApprove) throw new Error("Only a Sales Manager or the CRO can approve.");
-  if (a.doc.owner_user_id === userId) throw new Error("You can't approve your own document.");
+  if (a.doc.owner_user_id === userId && approve && !(await (await import("@/lib/self-approval.server")).selfApprove(userId, "sales_document", [id]))) throw new Error("You can't approve your own document.");
   const { data: authored } = await a.db.from("sales_document_versions").select("id").eq("document_id", id).eq("created_by", userId).neq("source", "created").limit(1);
   if ((authored ?? []).length) throw new Error("You edited this document, so someone else has to approve it.");
   await a.db.from("sales_documents").update(approve

@@ -121,7 +121,7 @@ export async function decidePrior(userId: string, input: { offeringId: string; p
   if (!p || p.offering_id !== input.offeringId) throw new Error("That record wasn't found.");
   const latest = (await latestPriors([p.onboarding_id])).get(p.onboarding_id);
   if (latest?.id !== p.id) throw new Error("A newer version exists. Review that one.");
-  if (input.confirm && p.recorded_by === userId) throw new Error("Someone other than the person who recorded it must confirm.");
+  if (input.confirm && p.recorded_by === userId && !(await (await import("@/lib/self-approval.server")).selfApprove(userId, "prior_subscription", [p.id]))) throw new Error("Someone other than the person who recorded it must confirm.");
   const { error } = await db.from("prior_subscription_decisions").insert({ prior_subscription_id: p.id, decision: input.confirm ? "confirmed" : "rejected", decided_by: userId, note: input.note ?? null });
   if (error) throw new Error(error.code === "23505" ? "Already decided." : error.message);
   await reconcile(p.onboarding_id, userId);

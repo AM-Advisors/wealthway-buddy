@@ -374,7 +374,7 @@ export async function decideChangeRequest(userId: string, input: { id: string; d
   if (!r) throw new Error("That request was not found.");
   await assertStaff(userId, r.offering_id);
   if (r.status !== "pending") throw new Error("That request was already decided.");
-  if (r.requested_by === userId) throw new Error("A different Harmonious team member must decide this request.");
+  if (r.requested_by === userId && !(await (await import("@/lib/self-approval.server")).selfApprove(userId, "document_change", [r.id]))) throw new Error("A different Harmonious team member must decide this request.");
   if (input.decision === "decline" && !input.note?.trim()) throw new Error("Give a reason for declining.");
   let createdVersion: number | null = null;
   if (input.decision === "accept") {

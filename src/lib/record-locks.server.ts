@@ -78,7 +78,7 @@ export async function decideLockedEdit(ctx: Ctx, input: { requestId: string; dec
   const db = await admin();
   const { data: req } = await db.from("locked_edit_requests").select("*").eq("id", input.requestId).maybeSingle();
   if (!req || req.status !== "pending") throw new Error("This request is no longer pending.");
-  if (req.requested_by === ctx.userId) throw new Error("Someone other than the requester must approve this change.");
+  if (req.requested_by === ctx.userId && !(await (await import("@/lib/self-approval.server")).selfApprove(ctx.userId, "locked_edit", [req.id]))) throw new Error("Someone other than the requester must approve this change.");
   const now = new Date().toISOString();
   if (input.decision === "reject") {
     await db.from("locked_edit_requests").update({ status: "rejected", decided_by: ctx.userId, decided_at: now, note: input.note ?? null }).eq("id", req.id).eq("status", "pending");

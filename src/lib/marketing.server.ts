@@ -114,7 +114,7 @@ export async function decidePost(userId: string, id: string, action: "submit" | 
   } else {
     if (p.status !== "submitted") throw new Error("Only submitted posts can be approved or sent back.");
     if (!canApprove) throw new Error("Only a Marketing Manager or leadership can approve.");
-    if (p.author_id === userId) throw new Error("Someone other than the author must approve.");
+    if (p.author_id === userId && !(await (await import("@/lib/self-approval.server")).selfApprove(userId, "marketing_post", [id]))) throw new Error("Someone other than the author must approve.");
     if (action === "approve") {
       const scheduled_at = p.scheduled_at ?? new Date().toISOString();
       await db.from("marketing_posts").update({ status: "scheduled", scheduled_at, approved_by: userId, approved_at: new Date().toISOString() }).eq("id", id);
@@ -282,7 +282,7 @@ export async function decideEmail(userId: string, id: string, action: "submit" |
   } else {
     if (e.status !== "submitted") throw new Error("Only submitted emails can be approved or sent back.");
     if (!canApprove) throw new Error("Only a Marketing Manager or leadership can approve.");
-    if (e.author_id === userId) throw new Error("Someone other than the author must approve.");
+    if (e.author_id === userId && !(await (await import("@/lib/self-approval.server")).selfApprove(userId, "marketing_email", [id]))) throw new Error("Someone other than the author must approve.");
     if (action === "approve") await db.from("marketing_emails").update({ status: "scheduled", scheduled_at: e.scheduled_at ?? new Date().toISOString(), approved_by: userId, approved_at: new Date().toISOString() }).eq("id", id);
     else await db.from("marketing_emails").update({ status: "rejected" }).eq("id", id);
   }

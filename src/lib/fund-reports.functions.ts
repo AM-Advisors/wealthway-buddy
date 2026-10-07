@@ -78,7 +78,7 @@ export const decideReportFn = createServerFn({ method: "POST" }).middleware([req
     const d = await s.db();
     const { data: r } = await d.from("fund_report_drafts").select("id, status, submitted_by").eq("id", data.id).in("kind", ["nav", "financial_review"]).maybeSingle();
     if (!r || (r as any).status !== "submitted") throw new Error("This report isn't waiting for review.");
-    if ((r as any).submitted_by === context.userId) throw new Error("A different person must review figures you entered.");
+    if ((r as any).submitted_by === context.userId && !(await (await import("@/lib/self-approval.server")).selfApprove(context.userId, "fund_report", [data.id]))) throw new Error("A different person must review figures you entered.");
     if (!data.approve && !data.note?.trim()) throw new Error("Add a note explaining what to fix.");
     const { error } = await d.from("fund_report_drafts").update({ status: data.approve ? "approved" : "returned", decided_by: context.userId, decided_at: new Date().toISOString(), decision_note: data.note?.trim() || null }).eq("id", data.id).eq("status", "submitted");
     if (error) throw new Error("Couldn't save the decision.");
