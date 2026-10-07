@@ -5,6 +5,7 @@ import {
   Activity,
   ArrowLeft,
   Building2,
+  CalendarDays,
   FileText,
   Settings,
   Link2,
@@ -23,7 +24,8 @@ import { cn } from "@/lib/utils";
 
 const groups = [
   { label: "Fund", items: [
-    { slug: "", label: "Overview", icon: Building2 },
+    { slug: "", label: "Command Center", icon: Building2 },
+    { slug: "calendar", label: "Calendar", icon: CalendarDays },
     { slug: "settings", label: "Setup & Settings", icon: Settings },
     { slug: "team", label: "Team", icon: UserCog },
   ] },
