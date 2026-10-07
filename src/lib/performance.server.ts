@@ -441,6 +441,8 @@ interface InputsSnapshot {
 export interface PerformanceCalculation {
   offeringId: string;
   bookId: string;
+  commitments: Awaited<ReturnType<typeof calledCapital>>;
+  irrPresentation: ReturnType<typeof irrPresentation>;
   fundType: FundType;
   periodKind: PeriodKind;
   periodStart: string;
