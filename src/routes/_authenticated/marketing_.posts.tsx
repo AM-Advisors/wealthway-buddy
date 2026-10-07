@@ -12,16 +12,18 @@ export const Route = createFileRoute("/_authenticated/marketing_/posts")({
   component: Posts,
 });
 
-const FILTERS = [["all", "All"], ["draft", "Drafts"], ["submitted", "Waiting"], ["scheduled", "Scheduled"], ["published", "Published"], ["failed", "Failed"]] as const;
+const FILTERS = [["all", "All"], ["draft", "Drafts"], ["submitted", "Awaiting approval"], ["scheduled", "Scheduled"], ["published", "Published"], ["failed", "Failed"]] as const;
 
 function Posts() {
   const load = useServerFn(getMarketingPosts);
   const q = useQuery({ queryKey: ["mk-posts"], queryFn: () => load(), retry: false });
   const [f, setF] = useState<string>("all");
-  const rows = (q.data ?? []).filter((p: any) => f === "all" || p.status === f || (f === "draft" && p.status === "rejected"));
+  const posts = q.data ?? [];
+  const rows = posts.filter((p: any) => f === "all" || p.status === f || (f === "draft" && p.status === "rejected"));
+  const countFor = (k: string) => k === "all" ? posts.length : posts.filter((p: any) => p.status === k || (k === "draft" && p.status === "rejected")).length;
   return (
     <MkPage title="Social posts" intro="Write once, pick the channels, add images, submit for approval." actions={<Button asChild><Link to="/marketing/posts/$id" params={{ id: "new" }}>New post</Link></Button>}>
-      <div className="flex flex-wrap gap-2">{FILTERS.map(([k, l]) => <Button key={k} size="sm" variant={f === k ? "default" : "outline"} onClick={() => setF(k)}>{l}</Button>)}</div>
+      <div className="flex flex-wrap gap-2">{FILTERS.map(([k, l]) => <Button key={k} size="sm" variant={f === k ? "default" : "outline"} onClick={() => setF(k)}>{l}<span className="ml-1.5 rounded-full bg-muted px-1.5 text-xs">{countFor(k)}</span></Button>)}</div>
       {q.isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
       {q.error && <p className="text-sm text-destructive">{(q.error as Error).message}</p>}
       {q.data && (rows.length === 0 ? <p className="text-sm text-muted-foreground">No posts here yet.</p> : (
