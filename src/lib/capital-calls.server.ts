@@ -1245,8 +1245,22 @@ export async function postFundingMatch(userId: string, matchId: string) {
     fail("Maker/checker: the person who approved the match cannot post it to the ledger.");
   }
 
-  await advanceReconciliationJournal(actor.userId, String(match.reconciliation_id), "reviewed");
-  await advanceReconciliationJournal(actor.userId, String(match.reconciliation_id), "approved");
+  // The journal engine requires approver != poster, so this is a two-person step:
+  // the first Harmonious caller reviews and approves the journal; a different
+  // person then posts it, and only posting moves the contribution.
+  const { data: journal } = match.journal_entry_id
+    ? await db().from("journal_entries").select("status, approved_by").eq("id", match.journal_entry_id).maybeSingle()
+    : { data: null };
+  const journalStatus = String(journal?.status ?? "draft");
+  if (journalStatus === "draft" || journalStatus === "reviewed") {
+    if (journalStatus === "draft") await advanceReconciliationJournal(actor.userId, String(match.reconciliation_id), "reviewed");
+    await advanceReconciliationJournal(actor.userId, String(match.reconciliation_id), "approved");
+    return { posted: false, awaitingPostingBy: "a different Harmonious approver", commitmentEventId: null };
+  }
+  if (journalStatus !== "approved") fail(`The contribution journal is ${journalStatus}; it cannot be posted.`);
+  if (String(journal?.approved_by ?? "") === actor.userId) {
+    fail("Maker/checker: the person who approved the contribution journal cannot also post it.");
+  }
   await advanceReconciliationJournal(actor.userId, String(match.reconciliation_id), "posted");
 
   const { data: expected } = await db()
