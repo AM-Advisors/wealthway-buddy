@@ -118,7 +118,7 @@ describe("fee reconciliation and allocation", () => {
         managementFeesCents: run.totalNetCents, fundExpensesCents: 0, carriedInterestCents: 0,
         contributionsCents: 0, distributionsCents: 0, endingNetAssetsCents: 0,
       },
-      basis: "commitment" as any,
+      basis: "committed_capital",
       period: Q1,
       timeWeighted: false,
       perPositionFees,
