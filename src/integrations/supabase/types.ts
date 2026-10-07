@@ -36112,6 +36112,116 @@ export type Database = {
         }
         Relationships: []
       }
+      star_answers: {
+        Row: {
+          answer: string | null
+          approves_id: string | null
+          control_keys: string[]
+          created_at: string
+          created_by: string
+          evidence_ids: string[]
+          explanation: string | null
+          id: string
+          question_id: string
+          responsibility: string | null
+          self_approved: boolean
+          status: string
+        }
+        Insert: {
+          answer?: string | null
+          approves_id?: string | null
+          control_keys?: string[]
+          created_at?: string
+          created_by: string
+          evidence_ids?: string[]
+          explanation?: string | null
+          id?: string
+          question_id: string
+          responsibility?: string | null
+          self_approved?: boolean
+          status: string
+        }
+        Update: {
+          answer?: string | null
+          approves_id?: string | null
+          control_keys?: string[]
+          created_at?: string
+          created_by?: string
+          evidence_ids?: string[]
+          explanation?: string | null
+          id?: string
+          question_id?: string
+          responsibility?: string | null
+          self_approved?: boolean
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "star_answers_approves_id_fkey"
+            columns: ["approves_id"]
+            isOneToOne: false
+            referencedRelation: "star_answers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      star_assessment_events: {
+        Row: {
+          action: string
+          actor_id: string
+          created_at: string
+          id: string
+          value: string | null
+        }
+        Insert: {
+          action: string
+          actor_id: string
+          created_at?: string
+          id?: string
+          value?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string
+          created_at?: string
+          id?: string
+          value?: string | null
+        }
+        Relationships: []
+      }
+      star_questions: {
+        Row: {
+          ccm_control_id: string | null
+          created_at: string
+          domain_code: string
+          id: string
+          imported_by: string | null
+          question: string
+          question_id: string
+          sort: number
+        }
+        Insert: {
+          ccm_control_id?: string | null
+          created_at?: string
+          domain_code: string
+          id?: string
+          imported_by?: string | null
+          question: string
+          question_id: string
+          sort?: number
+        }
+        Update: {
+          ccm_control_id?: string | null
+          created_at?: string
+          domain_code?: string
+          id?: string
+          imported_by?: string | null
+          question?: string
+          question_id?: string
+          sort?: number
+        }
+        Relationships: []
+      }
       state_tax_returns: {
         Row: {
           created_at: string
