@@ -1,30 +1,37 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
+import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
-import { ARTICLES, articlesInCategory } from "@/lib/marketing/articles";
+import { listPublishedClassroom } from "@/lib/classroom-public.functions";
 import { marketingHead } from "@/lib/marketing/seo";
 import { RESOURCE_CATEGORIES } from "@/lib/marketing/site-config";
 
+const publishedQuery = queryOptions({ queryKey: ["classroom-published"], queryFn: () => listPublishedClassroom() });
+
 export const Route = createFileRoute("/harmoniousclassroom")({
-  head: () =>
+  loader: ({ context }) => context.queryClient.ensureQueryData(publishedQuery),
+  head: ({ loaderData }) =>
     marketingHead({
       path: "/harmoniousclassroom",
       title: "Harmonious Classroom - Guides on SPVs, Funds & Cap Tables",
       description:
         "Guides on SPVs, fund administration, investor onboarding, cap tables, compliance and private markets from the Harmonious team.",
-      // Not indexed here until the Wix articles are imported; the live Wix page keeps ranking meanwhile.
-      noindex: ARTICLES.length === 0,
+      // Indexed only once at least one article is published here.
+      noindex: !loaderData || loaderData.length === 0,
       breadcrumbs: [
         { name: "Home", path: "/" },
         { name: "Resources", path: "/harmoniousclassroom" },
       ],
     }),
+  errorComponent: () => <p className="p-10 text-center">The Classroom couldn't load. Please refresh.</p>,
+  notFoundComponent: () => <p className="p-10 text-center">Not found.</p>,
   component: ClassroomPage,
 });
 
 function ClassroomPage() {
-  const cats = RESOURCE_CATEGORIES.map((c) => ({ ...c, articles: articlesInCategory(c.slug) })).filter(
+  const { data: articles } = useSuspenseQuery(publishedQuery);
+  const cats = RESOURCE_CATEGORIES.map((c) => ({ ...c, articles: articles.filter((a) => a.category === c.slug) })).filter(
     (c) => c.articles.length > 0,
   );
   return (
@@ -43,10 +50,13 @@ function ClassroomPage() {
               <h2 className="text-xl">{c.label}</h2>
               <ul className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {c.articles.map((a) => (
-                  <li key={a.slug} className="rounded-xl border bg-card p-5">
-                    <Link to="/post/$slug" params={{ slug: a.slug }} className="font-medium hover:underline">
-                      {a.title}
-                    </Link>
+                  <li key={a.slug} className="overflow-hidden rounded-xl border bg-card">
+                    {a.heroImage && <img src={a.heroImage.src} alt={a.heroImage.alt} className="aspect-video w-full object-cover" loading="lazy" />}
+                    <div className="p-5">
+                      <Link to="/post/$slug" params={{ slug: a.slug }} className="font-medium hover:underline">
+                        {a.title}
+                      </Link>
+                    </div>
                   </li>
                 ))}
               </ul>

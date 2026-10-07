@@ -80,6 +80,7 @@ import { Route as AuthIndexRouteImport } from './routes/auth.index'
 import { Route as AuthForgotRouteImport } from './routes/auth.forgot'
 import { Route as AuthRegisterRouteImport } from './routes/auth.register'
 import { Route as CapClaimTokenRouteImport } from './routes/cap-claim.$token'
+import { Route as ClassroomImgSplatRouteImport } from './routes/classroom-img.$'
 import { Route as FundSlugRouteImport } from './routes/fund.$slug'
 import { Route as InvestSlugRouteImport } from './routes/invest.$slug'
 import { Route as InvestorIndexRouteImport } from './routes/investor.index'
@@ -207,6 +208,7 @@ import { Route as AuthenticatedMarketingAudiencesRouteImport } from './routes/_a
 import { Route as AuthenticatedMarketingCalendarRouteImport } from './routes/_authenticated/marketing_.calendar'
 import { Route as AuthenticatedMarketingCampaignsRouteImport } from './routes/_authenticated/marketing_.campaigns'
 import { Route as AuthenticatedMarketingChannelsRouteImport } from './routes/_authenticated/marketing_.channels'
+import { Route as AuthenticatedMarketingClassroomRouteImport } from './routes/_authenticated/marketing_.classroom'
 import { Route as AuthenticatedMarketingCollateralRouteImport } from './routes/_authenticated/marketing_.collateral'
 import { Route as AuthenticatedMarketingDriveRouteImport } from './routes/_authenticated/marketing_.drive'
 import { Route as AuthenticatedMarketingEmailsRouteImport } from './routes/_authenticated/marketing_.emails'
@@ -339,6 +341,7 @@ import { Route as AuthenticatedManagerFundBankingFundIdRouteImport } from './rou
 import { Route as AuthenticatedManagerFundSetupRequestIdRouteImport } from './routes/_authenticated/manager.fund-setup.$requestId'
 import { Route as AuthenticatedManagerFundFundIdRouteImport } from './routes/_authenticated/manager.fund.$fundId'
 import { Route as AuthenticatedMarketingCampaignsIdRouteImport } from './routes/_authenticated/marketing_.campaigns_.$id'
+import { Route as AuthenticatedMarketingClassroomIdRouteImport } from './routes/_authenticated/marketing_.classroom_.$id'
 import { Route as AuthenticatedMarketingEmailsIdRouteImport } from './routes/_authenticated/marketing_.emails_.$id'
 import { Route as AuthenticatedMarketingFlowsIdRouteImport } from './routes/_authenticated/marketing_.flows_.$id'
 import { Route as AuthenticatedMarketingPostsIdRouteImport } from './routes/_authenticated/marketing_.posts_.$id'
@@ -772,6 +775,11 @@ const AuthRegisterRoute = AuthRegisterRouteImport.update({
 const CapClaimTokenRoute = CapClaimTokenRouteImport.update({
   id: '/cap-claim/$token',
   path: '/cap-claim/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClassroomImgSplatRoute = ClassroomImgSplatRouteImport.update({
+  id: '/classroom-img/$',
+  path: '/classroom-img/$',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FundSlugRoute = FundSlugRouteImport.update({
@@ -1509,6 +1517,12 @@ const AuthenticatedMarketingChannelsRoute =
   AuthenticatedMarketingChannelsRouteImport.update({
     id: '/marketing_/channels',
     path: '/marketing/channels',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedMarketingClassroomRoute =
+  AuthenticatedMarketingClassroomRouteImport.update({
+    id: '/marketing_/classroom',
+    path: '/marketing/classroom',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedMarketingCollateralRoute =
@@ -2280,6 +2294,12 @@ const AuthenticatedMarketingCampaignsIdRoute =
     path: '/marketing/campaigns/$id',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedMarketingClassroomIdRoute =
+  AuthenticatedMarketingClassroomIdRouteImport.update({
+    id: '/marketing_/classroom_/$id',
+    path: '/marketing/classroom/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedMarketingEmailsIdRoute =
   AuthenticatedMarketingEmailsIdRouteImport.update({
     id: '/marketing_/emails_/$id',
@@ -2748,6 +2768,7 @@ export interface FileRoutesByFullPath {
   '/auth/forgot': typeof AuthForgotRoute
   '/auth/register': typeof AuthRegisterRoute
   '/cap-claim/$token': typeof CapClaimTokenRoute
+  '/classroom-img/$': typeof ClassroomImgSplatRoute
   '/fund/$slug': typeof FundSlugRoute
   '/invest/$slug': typeof InvestSlugRoute
   '/join/$token': typeof JoinTokenRoute
@@ -2872,6 +2893,7 @@ export interface FileRoutesByFullPath {
   '/marketing/calendar': typeof AuthenticatedMarketingCalendarRoute
   '/marketing/campaigns': typeof AuthenticatedMarketingCampaignsRoute
   '/marketing/channels': typeof AuthenticatedMarketingChannelsRoute
+  '/marketing/classroom': typeof AuthenticatedMarketingClassroomRoute
   '/marketing/collateral': typeof AuthenticatedMarketingCollateralRoute
   '/marketing/drive': typeof AuthenticatedMarketingDriveRoute
   '/marketing/emails': typeof AuthenticatedMarketingEmailsRoute
@@ -3002,6 +3024,7 @@ export interface FileRoutesByFullPath {
   '/manager/fund-setup/$requestId': typeof AuthenticatedManagerFundSetupRequestIdRoute
   '/manager/fund/$fundId': typeof AuthenticatedManagerFundFundIdRouteWithChildren
   '/marketing/campaigns/$id': typeof AuthenticatedMarketingCampaignsIdRoute
+  '/marketing/classroom/$id': typeof AuthenticatedMarketingClassroomIdRoute
   '/marketing/emails/$id': typeof AuthenticatedMarketingEmailsIdRoute
   '/marketing/flows/$id': typeof AuthenticatedMarketingFlowsIdRoute
   '/marketing/posts/$id': typeof AuthenticatedMarketingPostsIdRoute
@@ -3143,6 +3166,7 @@ export interface FileRoutesByTo {
   '/auth/forgot': typeof AuthForgotRoute
   '/auth/register': typeof AuthRegisterRoute
   '/cap-claim/$token': typeof CapClaimTokenRoute
+  '/classroom-img/$': typeof ClassroomImgSplatRoute
   '/fund/$slug': typeof FundSlugRoute
   '/invest/$slug': typeof InvestSlugRoute
   '/join/$token': typeof JoinTokenRoute
@@ -3264,6 +3288,7 @@ export interface FileRoutesByTo {
   '/marketing/calendar': typeof AuthenticatedMarketingCalendarRoute
   '/marketing/campaigns': typeof AuthenticatedMarketingCampaignsRoute
   '/marketing/channels': typeof AuthenticatedMarketingChannelsRoute
+  '/marketing/classroom': typeof AuthenticatedMarketingClassroomRoute
   '/marketing/collateral': typeof AuthenticatedMarketingCollateralRoute
   '/marketing/drive': typeof AuthenticatedMarketingDriveRoute
   '/marketing/emails': typeof AuthenticatedMarketingEmailsRoute
@@ -3393,6 +3418,7 @@ export interface FileRoutesByTo {
   '/manager/fund-banking/$fundId': typeof AuthenticatedManagerFundBankingFundIdRoute
   '/manager/fund-setup/$requestId': typeof AuthenticatedManagerFundSetupRequestIdRoute
   '/marketing/campaigns/$id': typeof AuthenticatedMarketingCampaignsIdRoute
+  '/marketing/classroom/$id': typeof AuthenticatedMarketingClassroomIdRoute
   '/marketing/emails/$id': typeof AuthenticatedMarketingEmailsIdRoute
   '/marketing/flows/$id': typeof AuthenticatedMarketingFlowsIdRoute
   '/marketing/posts/$id': typeof AuthenticatedMarketingPostsIdRoute
@@ -3540,6 +3566,7 @@ export interface FileRoutesById {
   '/auth/forgot': typeof AuthForgotRoute
   '/auth/register': typeof AuthRegisterRoute
   '/cap-claim/$token': typeof CapClaimTokenRoute
+  '/classroom-img/$': typeof ClassroomImgSplatRoute
   '/fund/$slug': typeof FundSlugRoute
   '/invest/$slug': typeof InvestSlugRoute
   '/join/$token': typeof JoinTokenRoute
@@ -3664,6 +3691,7 @@ export interface FileRoutesById {
   '/_authenticated/marketing_/calendar': typeof AuthenticatedMarketingCalendarRoute
   '/_authenticated/marketing_/campaigns': typeof AuthenticatedMarketingCampaignsRoute
   '/_authenticated/marketing_/channels': typeof AuthenticatedMarketingChannelsRoute
+  '/_authenticated/marketing_/classroom': typeof AuthenticatedMarketingClassroomRoute
   '/_authenticated/marketing_/collateral': typeof AuthenticatedMarketingCollateralRoute
   '/_authenticated/marketing_/drive': typeof AuthenticatedMarketingDriveRoute
   '/_authenticated/marketing_/emails': typeof AuthenticatedMarketingEmailsRoute
@@ -3794,6 +3822,7 @@ export interface FileRoutesById {
   '/_authenticated/manager/fund-setup/$requestId': typeof AuthenticatedManagerFundSetupRequestIdRoute
   '/_authenticated/manager/fund/$fundId': typeof AuthenticatedManagerFundFundIdRouteWithChildren
   '/_authenticated/marketing_/campaigns_/$id': typeof AuthenticatedMarketingCampaignsIdRoute
+  '/_authenticated/marketing_/classroom_/$id': typeof AuthenticatedMarketingClassroomIdRoute
   '/_authenticated/marketing_/emails_/$id': typeof AuthenticatedMarketingEmailsIdRoute
   '/_authenticated/marketing_/flows_/$id': typeof AuthenticatedMarketingFlowsIdRoute
   '/_authenticated/marketing_/posts_/$id': typeof AuthenticatedMarketingPostsIdRoute
@@ -3941,6 +3970,7 @@ export interface FileRouteTypes {
     | '/auth/forgot'
     | '/auth/register'
     | '/cap-claim/$token'
+    | '/classroom-img/$'
     | '/fund/$slug'
     | '/invest/$slug'
     | '/join/$token'
@@ -4065,6 +4095,7 @@ export interface FileRouteTypes {
     | '/marketing/calendar'
     | '/marketing/campaigns'
     | '/marketing/channels'
+    | '/marketing/classroom'
     | '/marketing/collateral'
     | '/marketing/drive'
     | '/marketing/emails'
@@ -4195,6 +4226,7 @@ export interface FileRouteTypes {
     | '/manager/fund-setup/$requestId'
     | '/manager/fund/$fundId'
     | '/marketing/campaigns/$id'
+    | '/marketing/classroom/$id'
     | '/marketing/emails/$id'
     | '/marketing/flows/$id'
     | '/marketing/posts/$id'
@@ -4336,6 +4368,7 @@ export interface FileRouteTypes {
     | '/auth/forgot'
     | '/auth/register'
     | '/cap-claim/$token'
+    | '/classroom-img/$'
     | '/fund/$slug'
     | '/invest/$slug'
     | '/join/$token'
@@ -4457,6 +4490,7 @@ export interface FileRouteTypes {
     | '/marketing/calendar'
     | '/marketing/campaigns'
     | '/marketing/channels'
+    | '/marketing/classroom'
     | '/marketing/collateral'
     | '/marketing/drive'
     | '/marketing/emails'
@@ -4586,6 +4620,7 @@ export interface FileRouteTypes {
     | '/manager/fund-banking/$fundId'
     | '/manager/fund-setup/$requestId'
     | '/marketing/campaigns/$id'
+    | '/marketing/classroom/$id'
     | '/marketing/emails/$id'
     | '/marketing/flows/$id'
     | '/marketing/posts/$id'
@@ -4732,6 +4767,7 @@ export interface FileRouteTypes {
     | '/auth/forgot'
     | '/auth/register'
     | '/cap-claim/$token'
+    | '/classroom-img/$'
     | '/fund/$slug'
     | '/invest/$slug'
     | '/join/$token'
@@ -4856,6 +4892,7 @@ export interface FileRouteTypes {
     | '/_authenticated/marketing_/calendar'
     | '/_authenticated/marketing_/campaigns'
     | '/_authenticated/marketing_/channels'
+    | '/_authenticated/marketing_/classroom'
     | '/_authenticated/marketing_/collateral'
     | '/_authenticated/marketing_/drive'
     | '/_authenticated/marketing_/emails'
@@ -4986,6 +5023,7 @@ export interface FileRouteTypes {
     | '/_authenticated/manager/fund-setup/$requestId'
     | '/_authenticated/manager/fund/$fundId'
     | '/_authenticated/marketing_/campaigns_/$id'
+    | '/_authenticated/marketing_/classroom_/$id'
     | '/_authenticated/marketing_/emails_/$id'
     | '/_authenticated/marketing_/flows_/$id'
     | '/_authenticated/marketing_/posts_/$id'
@@ -5089,6 +5127,7 @@ export interface RootRouteChildren {
   SpvsRoute: typeof SpvsRoute
   TermsRoute: typeof TermsRoute
   CapClaimTokenRoute: typeof CapClaimTokenRoute
+  ClassroomImgSplatRoute: typeof ClassroomImgSplatRoute
   FundSlugRoute: typeof FundSlugRoute
   InvestSlugRoute: typeof InvestSlugRoute
   JoinTokenRoute: typeof JoinTokenRoute
@@ -5629,6 +5668,13 @@ declare module '@tanstack/react-router' {
       path: '/cap-claim/$token'
       fullPath: '/cap-claim/$token'
       preLoaderRoute: typeof CapClaimTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/classroom-img/$': {
+      id: '/classroom-img/$'
+      path: '/classroom-img/$'
+      fullPath: '/classroom-img/$'
+      preLoaderRoute: typeof ClassroomImgSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/fund/$slug': {
@@ -6518,6 +6564,13 @@ declare module '@tanstack/react-router' {
       path: '/marketing/channels'
       fullPath: '/marketing/channels'
       preLoaderRoute: typeof AuthenticatedMarketingChannelsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/marketing_/classroom': {
+      id: '/_authenticated/marketing_/classroom'
+      path: '/marketing/classroom'
+      fullPath: '/marketing/classroom'
+      preLoaderRoute: typeof AuthenticatedMarketingClassroomRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/marketing_/collateral': {
@@ -7444,6 +7497,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMarketingCampaignsIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/marketing_/classroom_/$id': {
+      id: '/_authenticated/marketing_/classroom_/$id'
+      path: '/marketing/classroom/$id'
+      fullPath: '/marketing/classroom/$id'
+      preLoaderRoute: typeof AuthenticatedMarketingClassroomIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/marketing_/emails_/$id': {
       id: '/_authenticated/marketing_/emails_/$id'
       path: '/marketing/emails/$id'
@@ -8322,6 +8382,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMarketingCalendarRoute: typeof AuthenticatedMarketingCalendarRoute
   AuthenticatedMarketingCampaignsRoute: typeof AuthenticatedMarketingCampaignsRoute
   AuthenticatedMarketingChannelsRoute: typeof AuthenticatedMarketingChannelsRoute
+  AuthenticatedMarketingClassroomRoute: typeof AuthenticatedMarketingClassroomRoute
   AuthenticatedMarketingCollateralRoute: typeof AuthenticatedMarketingCollateralRoute
   AuthenticatedMarketingDriveRoute: typeof AuthenticatedMarketingDriveRoute
   AuthenticatedMarketingEmailsRoute: typeof AuthenticatedMarketingEmailsRoute
@@ -8405,6 +8466,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedManagerFundSetupRequestIdRoute: typeof AuthenticatedManagerFundSetupRequestIdRoute
   AuthenticatedManagerFundFundIdRoute: typeof AuthenticatedManagerFundFundIdRouteWithChildren
   AuthenticatedMarketingCampaignsIdRoute: typeof AuthenticatedMarketingCampaignsIdRoute
+  AuthenticatedMarketingClassroomIdRoute: typeof AuthenticatedMarketingClassroomIdRoute
   AuthenticatedMarketingEmailsIdRoute: typeof AuthenticatedMarketingEmailsIdRoute
   AuthenticatedMarketingFlowsIdRoute: typeof AuthenticatedMarketingFlowsIdRoute
   AuthenticatedMarketingPostsIdRoute: typeof AuthenticatedMarketingPostsIdRoute
@@ -8603,6 +8665,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMarketingCalendarRoute: AuthenticatedMarketingCalendarRoute,
   AuthenticatedMarketingCampaignsRoute: AuthenticatedMarketingCampaignsRoute,
   AuthenticatedMarketingChannelsRoute: AuthenticatedMarketingChannelsRoute,
+  AuthenticatedMarketingClassroomRoute: AuthenticatedMarketingClassroomRoute,
   AuthenticatedMarketingCollateralRoute: AuthenticatedMarketingCollateralRoute,
   AuthenticatedMarketingDriveRoute: AuthenticatedMarketingDriveRoute,
   AuthenticatedMarketingEmailsRoute: AuthenticatedMarketingEmailsRoute,
@@ -8705,6 +8768,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedManagerFundFundIdRouteWithChildren,
   AuthenticatedMarketingCampaignsIdRoute:
     AuthenticatedMarketingCampaignsIdRoute,
+  AuthenticatedMarketingClassroomIdRoute:
+    AuthenticatedMarketingClassroomIdRoute,
   AuthenticatedMarketingEmailsIdRoute: AuthenticatedMarketingEmailsIdRoute,
   AuthenticatedMarketingFlowsIdRoute: AuthenticatedMarketingFlowsIdRoute,
   AuthenticatedMarketingPostsIdRoute: AuthenticatedMarketingPostsIdRoute,
@@ -8810,6 +8875,7 @@ const rootRouteChildren: RootRouteChildren = {
   SpvsRoute: SpvsRoute,
   TermsRoute: TermsRoute,
   CapClaimTokenRoute: CapClaimTokenRoute,
+  ClassroomImgSplatRoute: ClassroomImgSplatRoute,
   FundSlugRoute: FundSlugRoute,
   InvestSlugRoute: InvestSlugRoute,
   JoinTokenRoute: JoinTokenRoute,

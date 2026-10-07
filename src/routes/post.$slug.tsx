@@ -3,17 +3,18 @@ import { Link, createFileRoute, notFound } from "@tanstack/react-router";
 import { Breadcrumbs } from "@/components/marketing/marketing-blocks";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
-import { getArticle } from "@/lib/marketing/articles";
+import { getPublishedClassroomArticle } from "@/lib/classroom-public.functions";
 import { marketingHead } from "@/lib/marketing/seo";
 import { EDUCATIONAL_DISCLOSURE, RESOURCE_CATEGORIES } from "@/lib/marketing/site-config";
 
-/** Preserves the Wix article URL shape: /post/<original-slug>. */
+/** Preserves the Wix article URL shape: /post/<original-slug>. Only published articles render. */
 export const Route = createFileRoute("/post/$slug")({
-  loader: ({ params }) => {
-    const article = getArticle(params.slug);
+  loader: async ({ params }) => {
+    const article = await getPublishedClassroomArticle({ data: { slug: params.slug } });
     if (!article) throw notFound();
     return { article };
   },
+  errorComponent: () => <p className="p-10 text-center">This article couldn't load. Please refresh.</p>,
   head: ({ loaderData, params }) => {
     if (!loaderData) return { meta: [{ title: "Article not found - Harmonious" }, { name: "robots", content: "noindex" }] };
     const a = loaderData.article;

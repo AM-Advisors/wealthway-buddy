@@ -4916,6 +4916,154 @@ export type Database = {
           },
         ]
       }
+      classroom_article_events: {
+        Row: {
+          action: string
+          actor_id: string | null
+          article_id: string
+          created_at: string
+          id: string
+          note: string | null
+          version_id: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          article_id: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          version_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          article_id?: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          version_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "classroom_article_events_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "classroom_articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      classroom_article_versions: {
+        Row: {
+          article_id: string
+          content_html: string
+          created_at: string
+          created_by: string | null
+          hero_image_alt: string | null
+          hero_image_url: string | null
+          id: string
+          meta_description: string | null
+          meta_title: string | null
+          note: string | null
+          source: string
+          title: string
+          version: number
+        }
+        Insert: {
+          article_id: string
+          content_html: string
+          created_at?: string
+          created_by?: string | null
+          hero_image_alt?: string | null
+          hero_image_url?: string | null
+          id?: string
+          meta_description?: string | null
+          meta_title?: string | null
+          note?: string | null
+          source: string
+          title: string
+          version: number
+        }
+        Update: {
+          article_id?: string
+          content_html?: string
+          created_at?: string
+          created_by?: string | null
+          hero_image_alt?: string | null
+          hero_image_url?: string | null
+          id?: string
+          meta_description?: string | null
+          meta_title?: string | null
+          note?: string | null
+          source?: string
+          title?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "classroom_article_versions_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "classroom_articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      classroom_articles: {
+        Row: {
+          author_name: string | null
+          category: string
+          created_at: string
+          created_by: string | null
+          current_version_id: string | null
+          id: string
+          original_path: string | null
+          original_published_at: string | null
+          published_at: string | null
+          published_by: string | null
+          published_version_id: string | null
+          slug: string
+          source: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          author_name?: string | null
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          current_version_id?: string | null
+          id?: string
+          original_path?: string | null
+          original_published_at?: string | null
+          published_at?: string | null
+          published_by?: string | null
+          published_version_id?: string | null
+          slug: string
+          source?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          author_name?: string | null
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          current_version_id?: string | null
+          id?: string
+          original_path?: string | null
+          original_published_at?: string | null
+          published_at?: string | null
+          published_by?: string | null
+          published_version_id?: string | null
+          slug?: string
+          source?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       client_assignments: {
         Row: {
           assigned_by: string | null
