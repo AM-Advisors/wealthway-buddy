@@ -80,6 +80,7 @@ import { Route as AuthIndexRouteImport } from './routes/auth.index'
 import { Route as AuthForgotRouteImport } from './routes/auth.forgot'
 import { Route as AuthRegisterRouteImport } from './routes/auth.register'
 import { Route as CapClaimTokenRouteImport } from './routes/cap-claim.$token'
+import { Route as ClassroomImgSplatRouteImport } from './routes/classroom-img.$'
 import { Route as FundSlugRouteImport } from './routes/fund.$slug'
 import { Route as InvestSlugRouteImport } from './routes/invest.$slug'
 import { Route as InvestorIndexRouteImport } from './routes/investor.index'
@@ -772,6 +773,11 @@ const AuthRegisterRoute = AuthRegisterRouteImport.update({
 const CapClaimTokenRoute = CapClaimTokenRouteImport.update({
   id: '/cap-claim/$token',
   path: '/cap-claim/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClassroomImgSplatRoute = ClassroomImgSplatRouteImport.update({
+  id: '/classroom-img/$',
+  path: '/classroom-img/$',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FundSlugRoute = FundSlugRouteImport.update({
@@ -2748,6 +2754,7 @@ export interface FileRoutesByFullPath {
   '/auth/forgot': typeof AuthForgotRoute
   '/auth/register': typeof AuthRegisterRoute
   '/cap-claim/$token': typeof CapClaimTokenRoute
+  '/classroom-img/$': typeof ClassroomImgSplatRoute
   '/fund/$slug': typeof FundSlugRoute
   '/invest/$slug': typeof InvestSlugRoute
   '/join/$token': typeof JoinTokenRoute
@@ -3143,6 +3150,7 @@ export interface FileRoutesByTo {
   '/auth/forgot': typeof AuthForgotRoute
   '/auth/register': typeof AuthRegisterRoute
   '/cap-claim/$token': typeof CapClaimTokenRoute
+  '/classroom-img/$': typeof ClassroomImgSplatRoute
   '/fund/$slug': typeof FundSlugRoute
   '/invest/$slug': typeof InvestSlugRoute
   '/join/$token': typeof JoinTokenRoute
@@ -3540,6 +3548,7 @@ export interface FileRoutesById {
   '/auth/forgot': typeof AuthForgotRoute
   '/auth/register': typeof AuthRegisterRoute
   '/cap-claim/$token': typeof CapClaimTokenRoute
+  '/classroom-img/$': typeof ClassroomImgSplatRoute
   '/fund/$slug': typeof FundSlugRoute
   '/invest/$slug': typeof InvestSlugRoute
   '/join/$token': typeof JoinTokenRoute
@@ -3941,6 +3950,7 @@ export interface FileRouteTypes {
     | '/auth/forgot'
     | '/auth/register'
     | '/cap-claim/$token'
+    | '/classroom-img/$'
     | '/fund/$slug'
     | '/invest/$slug'
     | '/join/$token'
@@ -4336,6 +4346,7 @@ export interface FileRouteTypes {
     | '/auth/forgot'
     | '/auth/register'
     | '/cap-claim/$token'
+    | '/classroom-img/$'
     | '/fund/$slug'
     | '/invest/$slug'
     | '/join/$token'
@@ -4732,6 +4743,7 @@ export interface FileRouteTypes {
     | '/auth/forgot'
     | '/auth/register'
     | '/cap-claim/$token'
+    | '/classroom-img/$'
     | '/fund/$slug'
     | '/invest/$slug'
     | '/join/$token'
@@ -5089,6 +5101,7 @@ export interface RootRouteChildren {
   SpvsRoute: typeof SpvsRoute
   TermsRoute: typeof TermsRoute
   CapClaimTokenRoute: typeof CapClaimTokenRoute
+  ClassroomImgSplatRoute: typeof ClassroomImgSplatRoute
   FundSlugRoute: typeof FundSlugRoute
   InvestSlugRoute: typeof InvestSlugRoute
   JoinTokenRoute: typeof JoinTokenRoute
@@ -5629,6 +5642,13 @@ declare module '@tanstack/react-router' {
       path: '/cap-claim/$token'
       fullPath: '/cap-claim/$token'
       preLoaderRoute: typeof CapClaimTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/classroom-img/$': {
+      id: '/classroom-img/$'
+      path: '/classroom-img/$'
+      fullPath: '/classroom-img/$'
+      preLoaderRoute: typeof ClassroomImgSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/fund/$slug': {
@@ -8810,6 +8830,7 @@ const rootRouteChildren: RootRouteChildren = {
   SpvsRoute: SpvsRoute,
   TermsRoute: TermsRoute,
   CapClaimTokenRoute: CapClaimTokenRoute,
+  ClassroomImgSplatRoute: ClassroomImgSplatRoute,
   FundSlugRoute: FundSlugRoute,
   InvestSlugRoute: InvestSlugRoute,
   JoinTokenRoute: JoinTokenRoute,
