@@ -26,7 +26,7 @@ const GOOD = ["implemented", "operating", "tested"];
 export const getStar = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const c = await ctxFor(context); need(c, VIEW);
-    const [qs, ans, ev, reqs, maps, st, evid, events] = await Promise.all([
+    const [qs, ans, ev, reqs, maps, st, evid] = await Promise.all([
       c.db.from("star_questions").select("*").order("sort").limit(2000),
       c.db.from("star_answers").select("*").order("created_at", { ascending: false }).limit(10000),
       c.db.from("star_assessment_events").select("*").order("created_at", { ascending: false }).limit(200),
@@ -34,9 +34,7 @@ export const getStar = createServerFn({ method: "GET" }).middleware([requireSupa
       c.db.from("compliance_control_mappings").select("control_key, requirement_id"),
       c.db.from("compliance_control_status_events").select("control_key, status, created_at").order("created_at", { ascending: false }).limit(5000),
       c.db.from("compliance_evidence").select("id, control_key, summary").limit(5000),
-      null,
     ]);
-    void events;
     const reqRows = (reqs.data ?? []) as any[];
     const reqById = new Map(reqRows.map((r) => [r.id, r.code]));
     const domainControls: Record<string, string[]> = {};
@@ -57,7 +55,7 @@ export const getStar = createServerFn({ method: "GET" }).middleware([requireSupa
         ? { answer: "yes", control_keys: proven, evidence_ids: proven.flatMap((k) => evByControl[k]!.map((e) => e.id)).slice(0, 10), note: `Supported by ${proven.join(", ")} with recorded evidence. Confirm it fully answers this question.` }
         : { answer: "no", control_keys: ctrls, evidence_ids: [], note: ctrls.length ? `Related controls (${ctrls.join(", ")}) lack implemented status with evidence.` : "No Harmonious control covers this area yet." };
       const l = latest.get(q.question_id), ap = approved.get(q.question_id);
-      return { ...q, latest: l ?? null, approved: ap ?? null, approvedIsLatest: !!ap && l?.id === ap.id || (!!ap && l?.approves_id != null && l.id === ap.id), suggestion };
+      return { ...q, latest: l ?? null, approved: ap ?? null, suggestion };
     });
     const ev0 = (ev.data ?? []) as any[];
     const pick = (a: string) => ev0.find((e) => e.action === a)?.value ?? null;
