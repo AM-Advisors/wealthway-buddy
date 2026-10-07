@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
-import { MkPage, mkHead } from "@/components/marketing-ui";
+import { MkPage, MkLibraryTabs, mkHead } from "@/components/marketing-ui";
 import {
   addClickupImport, browseClickup, completeHubspotConnect, disconnectHubspot, getHubspotStatus,
   getImportSources, rerunClickupImport, runHubspotImport, startHubspotConnect, updateClickupImport,
@@ -188,6 +188,7 @@ function ClickupCard() {
 function ImportsPage() {
   return (
     <MkPage title="Imports" intro="Bring your existing ClickUp marketing plan and HubSpot history into Harmonious.">
+      <MkLibraryTabs />
       <ClickupCard />
       <HubspotCard />
     </MkPage>

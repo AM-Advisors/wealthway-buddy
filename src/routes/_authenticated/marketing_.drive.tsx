@@ -1,3 +1,4 @@
+import { MkLibraryTabs } from "@/components/marketing-ui";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -28,6 +29,7 @@ function Page() {
   const [tab, setTab] = useState<"library" | "sheets" | "links">("library");
   return (
     <main className="mx-auto w-full max-w-6xl space-y-5 p-6">
+      <MkLibraryTabs />
       <header className="space-y-1">
         <h1 className="text-3xl">Drive library &amp; marketing sheets</h1>
         <p className="text-sm text-muted-foreground">Synced from the shared Marketing Google Drive folder about every hour (read-only - nothing in Drive changes). Contact lists, signatures, fonts and working folders are skipped.</p>

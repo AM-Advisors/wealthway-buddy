@@ -55,3 +55,17 @@ export async function fileToBase64(f: File): Promise<string> {
   for (let i = 0; i < buf.length; i += 0x8000) s += String.fromCharCode(...buf.subarray(i, i + 0x8000));
   return btoa(s);
 }
+
+/** Tabs joining Drive & sheets, Collateral Studio and Imports into one Content library. */
+export function MkLibraryTabs() {
+  const tabs = [["/marketing/drive", "Drive & sheets"], ["/marketing/collateral", "Collateral Studio"], ["/marketing/imports", "Imports"]] as const;
+  const path = typeof window === "undefined" ? "" : window.location.pathname;
+  return (
+    <nav aria-label="Content library" className="flex flex-wrap gap-1 border-b pb-2">
+      <span className="mr-2 self-center font-heading text-xs uppercase tracking-[0.16em] text-muted-foreground">Content library</span>
+      {tabs.map(([to, label]) => (
+        <a key={to} href={to} className={`rounded-md px-3 py-1.5 text-sm ${path.startsWith(to) ? "bg-primary text-primary-foreground" : "text-foreground hover:bg-muted"}`}>{label}</a>
+      ))}
+    </nav>
+  );
+}
