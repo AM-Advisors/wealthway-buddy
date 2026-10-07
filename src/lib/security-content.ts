@@ -7,6 +7,8 @@
 
 export interface SecuritySection {
   heading: string;
+  /** Trust Center section key; published Trust Center items with this key are appended. */
+  key: string;
   intro?: string;
   bullets: string[];
 }
@@ -30,7 +32,7 @@ export const SECURITY_STATEMENT: SecurityStatement = {
     "A plain-language account of the controls built into Harmonious, written and maintained by Harmonious. It is our own description of how the product behaves - not a certification, an audit opinion or a legal notice.",
   sections: [
     {
-      heading: "Who can get in",
+      heading: "Identity & Access", key: "identity_access",
       intro:
         "Nobody reaches fund or investor data on a password alone, and nobody gets broad access by default.",
       bullets: [
@@ -42,7 +44,7 @@ export const SECURITY_STATEMENT: SecurityStatement = {
       ],
     },
     {
-      heading: "How records are protected from silent change",
+      heading: "Data Protection", key: "data_protection",
       intro:
         "Fund and investor records are treated as official once saved - not as a draft anyone can quietly overwrite.",
       bullets: [
@@ -53,7 +55,7 @@ export const SECURITY_STATEMENT: SecurityStatement = {
       ],
     },
     {
-      heading: "Money never moves on its own",
+      heading: "Money Movement Controls", key: "money_movement",
       intro: "Harmonious prepares payment work; people release it.",
       bullets: [
         "Harmonious does not automatically initiate a bank debit, wire, ACH transfer, tax payment or refund.",
@@ -62,7 +64,7 @@ export const SECURITY_STATEMENT: SecurityStatement = {
       ],
     },
     {
-      heading: "Your information and your choices",
+      heading: "Privacy", key: "privacy",
       intro: "You can ask us what we hold about you, ask us to fix it, or ask us to remove it.",
       bullets: [
         "From Account -> Privacy you can request a copy of your data, a correction, or deletion.",
@@ -73,7 +75,7 @@ export const SECURITY_STATEMENT: SecurityStatement = {
       ],
     },
     {
-      heading: "How long we keep records",
+      heading: "How long we keep records", key: "retention",
       intro:
         "Every record family has a written retention rule in our Compliance & Controls register. Nothing is deleted automatically - a person reviews each disposition, and a legal or regulatory hold blocks it.",
       bullets: [
@@ -86,7 +88,7 @@ export const SECURITY_STATEMENT: SecurityStatement = {
       ],
     },
     {
-      heading: "Cookies and your consent",
+      heading: "Cookies and your consent", key: "cookies",
       intro:
         "Our public pages ask before using any optional cookies. You can change your choice at any time with the Cookie settings button below or in the footer.",
       bullets: [
@@ -94,16 +96,6 @@ export const SECURITY_STATEMENT: SecurityStatement = {
         "Preferences, Analytics and Marketing cookies stay off until you turn them on.",
         "Rejecting optional cookies is as easy as accepting them, and your choice is saved only in your browser.",
         "We do not currently run analytics or advertising trackers on our public pages.",
-      ],
-    },
-    {
-      heading: "What we are working toward",
-      intro:
-        "We keep a running record of the evidence an outside review would need, and we publish results only once they exist.",
-      bullets: [
-        "We are preparing for an independent SOC 2 Type I review; no audit report exists yet, so we make no SOC 2 claim.",
-        "We have not been assessed against ISO 27001 and make no ISO claim.",
-        "GDPR work is tracked as named responsibilities - privacy requests, retention rules, staff training, vendor agreements - with proof attached to each.",
       ],
     },
   ],
@@ -114,3 +106,22 @@ export const SECURITY_STATEMENT: SecurityStatement = {
   ],
   contact: "support@harmonious.co",
 };
+
+/**
+ * Trust Center architecture. Sections without built-in copy appear only once
+ * Harmonious publishes an approved item for them in the internal center.
+ */
+export const TRUST_SECTIONS: { key: string; heading: string }[] = [
+  { key: "overview", heading: "Overview" },
+  { key: "data_protection", heading: "Data Protection" },
+  { key: "infrastructure", heading: "Infrastructure & Cloud Security" },
+  { key: "identity_access", heading: "Identity & Access" },
+  { key: "application_security", heading: "Application Security" },
+  { key: "money_movement", heading: "Money Movement Controls" },
+  { key: "encryption", heading: "Encryption" },
+  { key: "business_continuity", heading: "Business Continuity" },
+  { key: "privacy", heading: "Privacy" },
+  { key: "retention", heading: "How long we keep records" },
+  { key: "cookies", heading: "Cookies and your consent" },
+  { key: "vendor_risk", heading: "Vendor Risk" },
+];

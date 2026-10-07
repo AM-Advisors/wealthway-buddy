@@ -253,6 +253,7 @@ import { Route as AuthenticatedOpsQueueRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedOpsReadinessRouteImport } from './routes/_authenticated/ops.readiness'
 import { Route as AuthenticatedOpsReportingRouteImport } from './routes/_authenticated/ops.reporting'
 import { Route as AuthenticatedOpsRolesRouteImport } from './routes/_authenticated/ops.roles'
+import { Route as AuthenticatedOpsSecurityComplianceRouteImport } from './routes/_authenticated/ops.security-compliance'
 import { Route as AuthenticatedOpsSs4RouteImport } from './routes/_authenticated/ops.ss4'
 import { Route as AuthenticatedOpsStatementsRouteImport } from './routes/_authenticated/ops.statements'
 import { Route as AuthenticatedOpsSystemStatusRouteImport } from './routes/_authenticated/ops.system-status'
@@ -1782,6 +1783,12 @@ const AuthenticatedOpsRolesRoute = AuthenticatedOpsRolesRouteImport.update({
   path: '/ops/roles',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedOpsSecurityComplianceRoute =
+  AuthenticatedOpsSecurityComplianceRouteImport.update({
+    id: '/ops/security-compliance',
+    path: '/ops/security-compliance',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOpsSs4Route = AuthenticatedOpsSs4RouteImport.update({
   id: '/ops/ss4',
   path: '/ops/ss4',
@@ -2936,6 +2943,7 @@ export interface FileRoutesByFullPath {
   '/ops/readiness': typeof AuthenticatedOpsReadinessRoute
   '/ops/reporting': typeof AuthenticatedOpsReportingRoute
   '/ops/roles': typeof AuthenticatedOpsRolesRoute
+  '/ops/security-compliance': typeof AuthenticatedOpsSecurityComplianceRoute
   '/ops/ss4': typeof AuthenticatedOpsSs4Route
   '/ops/statements': typeof AuthenticatedOpsStatementsRoute
   '/ops/system-status': typeof AuthenticatedOpsSystemStatusRoute
@@ -3331,6 +3339,7 @@ export interface FileRoutesByTo {
   '/ops/readiness': typeof AuthenticatedOpsReadinessRoute
   '/ops/reporting': typeof AuthenticatedOpsReportingRoute
   '/ops/roles': typeof AuthenticatedOpsRolesRoute
+  '/ops/security-compliance': typeof AuthenticatedOpsSecurityComplianceRoute
   '/ops/ss4': typeof AuthenticatedOpsSs4Route
   '/ops/statements': typeof AuthenticatedOpsStatementsRoute
   '/ops/system-status': typeof AuthenticatedOpsSystemStatusRoute
@@ -3734,6 +3743,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/readiness': typeof AuthenticatedOpsReadinessRoute
   '/_authenticated/ops/reporting': typeof AuthenticatedOpsReportingRoute
   '/_authenticated/ops/roles': typeof AuthenticatedOpsRolesRoute
+  '/_authenticated/ops/security-compliance': typeof AuthenticatedOpsSecurityComplianceRoute
   '/_authenticated/ops/ss4': typeof AuthenticatedOpsSs4Route
   '/_authenticated/ops/statements': typeof AuthenticatedOpsStatementsRoute
   '/_authenticated/ops/system-status': typeof AuthenticatedOpsSystemStatusRoute
@@ -4138,6 +4148,7 @@ export interface FileRouteTypes {
     | '/ops/readiness'
     | '/ops/reporting'
     | '/ops/roles'
+    | '/ops/security-compliance'
     | '/ops/ss4'
     | '/ops/statements'
     | '/ops/system-status'
@@ -4533,6 +4544,7 @@ export interface FileRouteTypes {
     | '/ops/readiness'
     | '/ops/reporting'
     | '/ops/roles'
+    | '/ops/security-compliance'
     | '/ops/ss4'
     | '/ops/statements'
     | '/ops/system-status'
@@ -4935,6 +4947,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/readiness'
     | '/_authenticated/ops/reporting'
     | '/_authenticated/ops/roles'
+    | '/_authenticated/ops/security-compliance'
     | '/_authenticated/ops/ss4'
     | '/_authenticated/ops/statements'
     | '/_authenticated/ops/system-status'
@@ -6881,6 +6894,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsRolesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ops/security-compliance': {
+      id: '/_authenticated/ops/security-compliance'
+      path: '/ops/security-compliance'
+      fullPath: '/ops/security-compliance'
+      preLoaderRoute: typeof AuthenticatedOpsSecurityComplianceRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ops/ss4': {
       id: '/_authenticated/ops/ss4'
       path: '/ops/ss4'
@@ -8425,6 +8445,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsReadinessRoute: typeof AuthenticatedOpsReadinessRoute
   AuthenticatedOpsReportingRoute: typeof AuthenticatedOpsReportingRoute
   AuthenticatedOpsRolesRoute: typeof AuthenticatedOpsRolesRoute
+  AuthenticatedOpsSecurityComplianceRoute: typeof AuthenticatedOpsSecurityComplianceRoute
   AuthenticatedOpsSs4Route: typeof AuthenticatedOpsSs4Route
   AuthenticatedOpsStatementsRoute: typeof AuthenticatedOpsStatementsRoute
   AuthenticatedOpsSystemStatusRoute: typeof AuthenticatedOpsSystemStatusRoute
@@ -8713,6 +8734,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsReadinessRoute: AuthenticatedOpsReadinessRoute,
   AuthenticatedOpsReportingRoute: AuthenticatedOpsReportingRoute,
   AuthenticatedOpsRolesRoute: AuthenticatedOpsRolesRoute,
+  AuthenticatedOpsSecurityComplianceRoute:
+    AuthenticatedOpsSecurityComplianceRoute,
   AuthenticatedOpsSs4Route: AuthenticatedOpsSs4Route,
   AuthenticatedOpsStatementsRoute: AuthenticatedOpsStatementsRoute,
   AuthenticatedOpsSystemStatusRoute: AuthenticatedOpsSystemStatusRoute,
