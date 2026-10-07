@@ -39,6 +39,10 @@ export const decideMarketingPost = createServerFn({ method: "POST" }).middleware
   .inputValidator((d) => decision.parse(d))
   .handler(async ({ data, context }) => (await srv()).decidePost(context.userId, data.id, data.action, data.note));
 
+export const retryMarketingPost = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator((d) => id.parse(d))
+  .handler(async ({ data, context }) => (await srv()).retryPost(context.userId, data.id));
+
 export const uploadMarketingAsset = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ fileName: z.string().max(200), contentType: z.string().max(100), base64: z.string().max(21_000_000) }).parse(d))
   .handler(async ({ data, context }) => (await srv()).uploadAsset(context.userId, data.fileName, data.contentType, data.base64));
