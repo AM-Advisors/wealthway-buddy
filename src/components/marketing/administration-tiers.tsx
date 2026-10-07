@@ -10,8 +10,8 @@ interface Card { key: string; level: string; name: string; positioning: string; 
 
 const SPV_CORE_ITEMS = ["Investor roster & portal", "KYC/KYB/AML & accreditation", "Subscription & commitment tracking", "Funding status", "Document storage", "Basic GL & bank reconciliation", "Contributions, distributions & expenses", "Investor capital balances", "Basic investor communications", "Tax document delivery"];
 const SPV_CARDS: Card[] = [
-  { key: "spv-core", level: "CORE", name: "SPV Core", positioning: "Essential SPV Infrastructure", priceText: "Included with SPV", items: SPV_CORE_ITEMS },
-  { key: "spv-plus", level: "PLUS", name: "SPV Plus", positioning: "Enhanced SPV Administration", starting: 2500, startingSuffix: "/year · configurable", plus: "SPV Core", note: "Or included in certain SPV packages.",
+  { key: "spv-core", level: "CORE", name: "SPV Core", positioning: "Essential SPV Infrastructure", priceText: "Included with the SPV fee", items: SPV_CORE_ITEMS },
+  { key: "spv-plus", level: "PLUS", name: "SPV Plus", positioning: "Enhanced SPV Administration", starting: 2500, startingSuffix: "/year added · configurable", plus: "SPV Core", note: "Or included in certain SPV packages.",
     items: ["Enhanced reconciliation", "Investor statements", "Enhanced capital reporting", "Annual financial package", "Investment value tracking", "Enhanced distribution calculations", "Tax preparer coordination", "Enhanced close support", "Additional reporting"] },
   { key: "spv-wg", level: "WHITE_GLOVE", name: "SPV White Glove", positioning: "Managed SPV Operations", starting: 7500, startingSuffix: "/year additional", plus: "SPV Plus", note: "Configured by SPV complexity.",
     items: ["Dedicated administrator", "Priority support", "Proactive investor follow-up", "KYC exception management", "Treasury coordination", "Distribution management", "Investor inquiry management", "Transfer administration", "Tax coordination", "Regulatory & operating calendars"] },
@@ -51,7 +51,7 @@ function CardView({ c }: { c: Card }) {
             <p className="mt-1 text-xs text-muted-foreground">or {usd(c.prices.quarterly!)}/quarter · {usd(c.prices.monthly!)}/month</p>
           </>
         ) : c.starting ? (
-          <p className="text-2xl font-semibold">From {usd(c.starting)}<span className="text-sm font-normal text-muted-foreground">{c.startingSuffix}</span></p>
+          <p className="text-2xl font-semibold">From {c.level !== "INSTITUTIONAL" && c.key.startsWith("spv") ? "+" : ""}{usd(c.starting)}<span className="text-sm font-normal text-muted-foreground">{c.startingSuffix}</span></p>
         ) : <p className="text-base font-medium">{c.priceText}</p>}
         {c.note ? <p className="mt-1 text-xs text-muted-foreground">{c.note}</p> : null}
       </div>
@@ -70,7 +70,8 @@ export function AdministrationTiers() {
     <section className="mt-12 space-y-10">
       <div>
         <h2 className="text-2xl">SPV Administration</h2>
-        <p className="mt-2 max-w-2xl text-muted-foreground">Service levels for Harmonious-administered SPVs.</p>
+        <p className="mt-2 max-w-2xl text-muted-foreground">Every SPV pays a one-time administration fee based on capital raised (above). Then choose a service level — Plus and White Glove are added on top of that fee, not instead of it.</p>
+        <h3 className="mt-6 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Service level</h3>
         <div className="mt-6 grid gap-4 md:grid-cols-3">{withLive(SPV_CARDS, "SPV_ADMINISTRATION", q.data).map((c) => <CardView key={c.key} c={c} />)}</div>
       </div>
       <div>
