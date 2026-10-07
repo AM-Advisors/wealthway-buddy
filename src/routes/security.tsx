@@ -23,5 +23,3 @@ export const Route = createFileRoute("/security")({
   }),
   component: () => <SecurityCenterPage />,
 });
-
-export const SECURITY_UPDATED = SECURITY_STATEMENT.updated;
