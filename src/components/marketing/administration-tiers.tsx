@@ -1,3 +1,4 @@
+import { CtaLink } from "@/components/marketing/cta-link";
 import { ADMINISTRATION_TIERS, annualSavings, tierByKey } from "@/lib/administration-tiers";
 
 const usd = (n: number) => `$${n.toLocaleString("en-US")}`;
@@ -37,7 +38,7 @@ export function AdministrationTiers() {
               </ul>
               <p className="mt-4 text-xs text-muted-foreground">{t.operatingModel}</p>
               {t.key === "institutional" ? (
-                <a href="/contact" className="mt-4 inline-flex justify-center rounded-md bg-primary px-3 py-2 text-sm text-primary-foreground">Request Institutional Pricing</a>
+                <div className="mt-4"><CtaLink cta="talk_to_administrator" /></div>
               ) : null}
             </article>
           );
