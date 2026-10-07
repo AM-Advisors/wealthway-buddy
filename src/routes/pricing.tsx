@@ -7,6 +7,8 @@ import { OfferingSection } from "@/components/marketing/offering-section";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { marketingHead } from "@/lib/marketing/seo";
+import { useQuery } from "@tanstack/react-query";
+import { getPublicSpvTransactionPricing } from "@/lib/service-engagements.functions";
 import { PRICING, formatPrice, hasPublishedPricing } from "@/lib/marketing/site-config";
 
 export const Route = createFileRoute("/pricing")({
@@ -24,6 +26,21 @@ export const Route = createFileRoute("/pricing")({
     }),
   component: PricingPage,
 });
+
+function SpvBands() {
+  const q = useQuery({ queryKey: ["public-spv-transaction-pricing"], queryFn: () => getPublicSpvTransactionPricing(), staleTime: 300_000 });
+  if (!q.data?.length) return null;
+  return (
+    <>
+      {q.data.map((b) => (
+        <li key={b.id} className="flex items-start justify-between gap-4">
+          <div><h3 className="text-base">SPV raising {b.label.charAt(0).toLowerCase() + b.label.slice(1)}</h3><p className="text-sm text-muted-foreground">One-time SPV administration fee based on capital raised.</p></div>
+          <span className="shrink-0 text-sm font-medium">{b.fee_usd == null ? "Custom pricing" : `$${b.fee_usd.toLocaleString("en-US")} per SPV`}</span>
+        </li>
+      ))}
+    </>
+  );
+}
 
 function PricingPage() {
   return (
@@ -52,6 +69,7 @@ function PricingPage() {
                       <span className="shrink-0 text-sm font-medium">{formatPrice(i)}</span>
                     </li>
                   ))}
+                  {section.id === "spvs" ? <SpvBands /> : null}
                 </ul>
               )}
             </section>

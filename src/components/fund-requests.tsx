@@ -200,7 +200,7 @@ function StaffControls({ r, stages, onSaved }: { r: any; stages: string[]; onSav
     <section className="space-y-2 rounded-xl border bg-card p-4 text-sm">
       <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Harmonious</h3>
       <p className="text-xs text-muted-foreground">{TEAM_ROUTING[r.assigned_team]?.label ?? r.assigned_team} · {r.assignedName ?? "Unassigned"} · Priority {r.priority}{r.urgent_reason ? ` (${r.urgent_reason})` : ""} · {ENT[r.entitlement_status]}
-        {r.sla ? ` · SLA ${r.sla.paused ? "paused" : r.sla.breached ? "breached" : `${r.sla.hoursLeft}h left`}` : ""}</p>
+        {` · Response SLA ${r.sla_hours != null ? `${r.sla_hours} hours` : "Not configured"} (Source: ${r.sla_source ?? "—"})`}{r.sla ? ` · ${r.sla.paused ? "paused" : r.sla.breached ? "breached" : `${r.sla.hoursLeft}h left`}` : ""}</p>
       <div className="flex flex-wrap gap-2">
         <select aria-label="Status" value={v.status} onChange={(e) => setV({ ...v, status: e.target.value })} className={sel}>{REQUEST_STATUSES.map((s) => <option key={s} value={s}>{REQUEST_STATUS_LABEL[s]}</option>)}</select>
         <select aria-label="Stage" value={v.stage} onChange={(e) => setV({ ...v, stage: Number(e.target.value) })} className={sel}>{stages.map((s, i) => <option key={s} value={i}>{s}</option>)}</select>

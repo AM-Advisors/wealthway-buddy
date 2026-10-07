@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SPV_TXN_KEY_PREFIX, feeGroup, FEE_GROUP_LABEL, type FeeGroup } from "@/lib/spv-transaction-pricing";
 import { SERVICE_LADDERS, adminQuoteKey, ADMIN_QUOTE_KEY_PREFIX, type LadderProduct } from "@/lib/service-ladders";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -97,6 +98,10 @@ function AdminLevelPicker({ onAdd, lines }: { onAdd: (key: string) => void; line
   const [product, setProduct] = useState<LadderProduct | "">("");
   return (
     <div className="mt-4 flex flex-wrap items-center gap-2">
+      <Select value="" onValueChange={onAdd}>
+        <SelectTrigger className="w-72"><SelectValue placeholder="SPV Administration (by raise)" /></SelectTrigger>
+        <SelectContent>{lines.filter((l) => String(l.serviceKey).startsWith(SPV_TXN_KEY_PREFIX)).map((l) => <SelectItem key={l.serviceKey} value={l.serviceKey}>{l.label} · ${(l.baselineCents / 100).toLocaleString("en-US")}</SelectItem>)}</SelectContent>
+      </Select>
       <Select value={product} onValueChange={(v) => setProduct(v as LadderProduct)}>
         <SelectTrigger className="w-56"><SelectValue placeholder="Administration product" /></SelectTrigger>
         <SelectContent>{(Object.keys(SERVICE_LADDERS) as LadderProduct[]).map((p) => <SelectItem key={p} value={p}>{SERVICE_LADDERS[p].label}</SelectItem>)}</SelectContent>
@@ -146,12 +151,18 @@ export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; init
       <AdminLevelPicker onAdd={add} lines={c.data?.lines ?? []} />
       <div className="mt-4">
         <Select value="" onValueChange={add}><SelectTrigger className="w-72"><SelectValue placeholder="Add a service from the rate card" /></SelectTrigger>
-          <SelectContent>{(c.data?.lines ?? []).filter((l: any) => !String(l.serviceKey).startsWith(ADMIN_QUOTE_KEY_PREFIX)).map((l: any) => <SelectItem key={l.serviceKey} value={l.serviceKey}>{l.label} · {money(l.baselineCents)}</SelectItem>)}</SelectContent></Select>
+          <SelectContent>{(c.data?.lines ?? []).filter((l: any) => !String(l.serviceKey).startsWith(ADMIN_QUOTE_KEY_PREFIX) && !String(l.serviceKey).startsWith(SPV_TXN_KEY_PREFIX)).map((l: any) => <SelectItem key={l.serviceKey} value={l.serviceKey}>{l.label} · {money(l.baselineCents)}</SelectItem>)}</SelectContent></Select>
       </div>
       <Table className="mt-3">
         <TableHeader><TableRow><TableHead>Service</TableHead><TableHead className="w-24">Qty</TableHead><TableHead className="w-36">Price ($)</TableHead><TableHead className="text-right">Rate card</TableHead><TableHead className="text-right">Line</TableHead><TableHead /></TableRow></TableHeader>
         <TableBody>
-          {lines.map((l, i) => (
+          {(["one_time", "annual", "event"] as FeeGroup[]).flatMap((g) => {
+            const model = (k: string) => (c.data?.lines ?? []).find((x: any) => x.serviceKey === k)?.pricingModel;
+            const rows = lines.map((l, i) => ({ l, i })).filter(({ l }) => feeGroup(l.serviceKey, model(l.serviceKey)) === g);
+            if (!rows.length) return [];
+            const sub = rows.reduce((s, { l }) => s + l.quantity * l.unitCents, 0);
+            return [<TableRow key={`h-${g}`}><TableCell colSpan={4} className="bg-muted/40 text-xs font-semibold uppercase tracking-wide">{FEE_GROUP_LABEL[g]}</TableCell><TableCell className="bg-muted/40 text-right text-xs font-semibold">{money(sub)}{g === "annual" ? "/yr" : ""}</TableCell><TableCell className="bg-muted/40" /></TableRow>,
+              ...rows.map(({ l, i }) => (
             <TableRow key={i}>
               <TableCell>{l.label}</TableCell>
               <TableCell><Input inputMode="decimal" value={l.quantity} onChange={(e) => setLines(lines.map((x, j) => (j === i ? { ...x, quantity: Number(e.target.value) || 0 } : x)))} /></TableCell>
@@ -160,7 +171,8 @@ export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; init
               <TableCell className="text-right">{money(l.quantity * l.unitCents)}</TableCell>
               <TableCell><Button size="sm" variant="ghost" onClick={() => setLines(lines.filter((_, j) => j !== i))}>Remove</Button></TableCell>
             </TableRow>
-          ))}
+          ))];
+          })}
         </TableBody>
       </Table>
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm">

@@ -4,7 +4,7 @@
  * runs an SLA clock that pauses while the client/investor/third party is blocking, and keeps client-visible vs
  * internal messages, files and events separate. Distinct from the commercial service_requests (scope amendments).
  */
-import { requestType, requestResponsibility, SLA_PAUSED, slaHours, entitlementFor, missingFields, isOpenRequest, TEAM_ROUTING, REQUEST_STATUS_LABEL, type RequestStatus } from "@/lib/service-request-types";
+import { requestType, requestResponsibility, SLA_PAUSED, entitlementFor, missingFields, isOpenRequest, TEAM_ROUTING, REQUEST_STATUS_LABEL, type RequestStatus } from "@/lib/service-request-types";
 import { staffWriter, entitledFeatures } from "@/lib/fund-calendar.server";
 import { notifyFundManagers } from "@/lib/client-work-notify.server";
 
@@ -115,9 +115,12 @@ export async function createRequest(uid: string, d: {
   }
   const { features, engagements } = await entitledFeatures(db, d.fundId);
   const eng = engagements[0] ?? null;
-  const { data: engFull } = eng ? await db.from("service_engagements").select("id, service_level, response_sla").eq("id", eng.id).maybeSingle() : { data: null };
+  const { data: engFull } = eng ? await db.from("service_engagements").select("id, service_product, service_level, response_sla, sla_initial_response_hours, sla_resolution_target_hours").eq("id", eng.id).maybeSingle() : { data: null };
+  const { data: policies } = await db.from("service_sla_policies").select("*").eq("active", true);
+  const { resolveSla } = await import("@/lib/sla-policy");
+  const sla = resolveSla(engFull as any, (policies ?? []) as any, d.type);
   const entitlement = entitlementFor(d.type, features);
-  const hours = slaHours(engFull?.service_level, engFull?.response_sla);
+  const hours = sla.hours;
   const now = new Date();
   const subject = d.details["subject"] || d.details["purpose"] || d.details["issuer"] || d.details["name"] || d.details["report"] || d.details["filing"] || d.details["document"] || "";
   const title = `${def.label.replace(/^Request an? /, "")}${subject ? `: ${String(subject).slice(0, 120)}` : ""}`;
@@ -127,15 +130,15 @@ export async function createRequest(uid: string, d: {
     fund_id: d.fundId, service_engagement_id: eng?.id ?? null, request_type: d.type, title, description: d.details["notes"] || d.details["description"] || null,
     details: d.details, status: "SUBMITTED", responsibility_status: "HARMONIOUS_HANDLING", priority: d.priority, urgent_reason: d.urgentReason || null,
     entitlement_status: entitlement, requested_by: uid, assigned_team: def.team, submitted_at: now.toISOString(),
-    due_date: dueDate && /^\d{4}-\d{2}-\d{2}$/.test(String(dueDate)) ? dueDate : null, sla_hours: hours,
-    sla_due_at: new Date(now.getTime() + hours * 3_600_000).toISOString(), irreversible: def.irreversible,
+    due_date: dueDate && /^\d{4}-\d{2}-\d{2}$/.test(String(dueDate)) ? dueDate : null, sla_hours: hours, sla_source: sla.source, sla_policy_id: sla.policyId,
+    sla_due_at: hours == null ? null : new Date(now.getTime() + hours * 3_600_000).toISOString(), irreversible: def.irreversible,
   }).select("*").single();
   if (error) throw new Error(error.message);
   const { data: task } = await db.from("staff_tasks").insert({
     title: `Client request: ${title}`, description: `${def.label} submitted by the fund manager. Open it in the fund's Requests tab.`,
     priority: d.priority === "normal" ? "normal" : d.priority, status: "open", team: route.taskTeam, offering_id: d.fundId, due_date: r.due_date,
     created_by: uid, source: "workflow", source_ref: `fund_request:${r.id}`, responsibility_status: "HARMONIOUS_HANDLING", client_visibility: false,
-    related_workflow_type: "fund_service_request", related_workflow_id: r.id, sla_due_date: r.sla_due_at.slice(0, 10), service_engagement_id: eng?.id ?? null,
+    related_workflow_type: "fund_service_request", related_workflow_id: r.id, sla_due_date: r.sla_due_at ? r.sla_due_at.slice(0, 10) : null, service_engagement_id: eng?.id ?? null,
   }).select("id").single();
   let reviewTask: any = null;
   if (entitlement !== "INCLUDED") {

@@ -88,7 +88,7 @@ function EngagementForm({ initial, data, onClose }: { initial: any; data: any; o
   async function submit() {
     setBusy(true);
     try {
-      const keys = ["id", "fund_id", "service_product", "service_level", "service_status", "billing_frequency", "contracted_annual_value", "recurring_invoice_amount", "pricing_type", "pricing_override_reason", "grandfathered", "effective_date", "contract_start_date", "contract_end_date", "renewal_date", "renewal_type", "reporting_frequency", "nav_frequency", "response_sla", "investor_limit", "investment_limit", "entity_limit", "notes_internal", ...TEAM.map((t) => t[0])];
+      const keys = ["id", "fund_id", "service_product", "service_level", "service_status", "billing_frequency", "contracted_annual_value", "recurring_invoice_amount", "pricing_type", "pricing_override_reason", "grandfathered", "effective_date", "contract_start_date", "contract_end_date", "renewal_date", "renewal_type", "reporting_frequency", "nav_frequency", "response_sla", "sla_initial_response_hours", "sla_resolution_target_hours", "investor_limit", "investment_limit", "entity_limit", "notes_internal", ...TEAM.map((t) => t[0])];
       const payload: any = {};
       for (const k of keys) if (f[k] !== undefined) payload[k] = f[k] === "" ? null : f[k];
       await save({ data: payload });
@@ -118,7 +118,9 @@ function EngagementForm({ initial, data, onClose }: { initial: any; data: any; o
         <Sel label="Renewal type" value={f.renewal_type} options={RENEWAL} onChange={(v) => set("renewal_type", v)} />
         <Sel label="Reporting frequency" value={f.reporting_frequency} options={FREQ} onChange={(v) => set("reporting_frequency", v)} />
         <Sel label="NAV frequency" value={f.nav_frequency} options={FREQ} onChange={(v) => set("nav_frequency", v)} />
-        <Field label="Response SLA"><Input value={f.response_sla ?? ""} onChange={(e) => set("response_sla", e.target.value)} placeholder="e.g. 1 business day" /></Field>
+        <Field label="Response SLA"><Input value={f.response_sla ?? ""} onChange={(e) => set("response_sla", e.target.value)} placeholder="e.g. 8 business hours (Institutional)" /></Field>
+        <Field label="SLA override: response hours"><Input type="number" value={f.sla_initial_response_hours ?? ""} onChange={(e) => set("sla_initial_response_hours", num(e.target.value))} placeholder="Blank = product + level default" /></Field>
+        <Field label="SLA override: resolution hours"><Input type="number" value={f.sla_resolution_target_hours ?? ""} onChange={(e) => set("sla_resolution_target_hours", num(e.target.value))} /></Field>
         <Field label="Investor limit"><Input type="number" value={f.investor_limit ?? ""} onChange={(e) => set("investor_limit", num(e.target.value))} /></Field>
         <Field label="Investment limit"><Input type="number" value={f.investment_limit ?? ""} onChange={(e) => set("investment_limit", num(e.target.value))} /></Field>
         <Field label="Entity limit"><Input type="number" value={f.entity_limit ?? ""} onChange={(e) => set("entity_limit", num(e.target.value))} /></Field>
