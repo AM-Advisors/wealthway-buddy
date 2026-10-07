@@ -20567,6 +20567,8 @@ export type Database = {
           sla_hours: number | null
           sla_paused_at: string | null
           sla_paused_minutes: number
+          sla_policy_id: string | null
+          sla_source: string | null
           stage: number
           status: string
           submitted_at: string | null
@@ -20603,6 +20605,8 @@ export type Database = {
           sla_hours?: number | null
           sla_paused_at?: string | null
           sla_paused_minutes?: number
+          sla_policy_id?: string | null
+          sla_source?: string | null
           stage?: number
           status?: string
           submitted_at?: string | null
@@ -20639,6 +20643,8 @@ export type Database = {
           sla_hours?: number | null
           sla_paused_at?: string | null
           sla_paused_minutes?: number
+          sla_policy_id?: string | null
+          sla_source?: string | null
           stage?: number
           status?: string
           submitted_at?: string | null
@@ -20667,6 +20673,13 @@ export type Database = {
             columns: ["service_engagement_id"]
             isOneToOne: false
             referencedRelation: "service_engagements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fund_service_requests_sla_policy_id_fkey"
+            columns: ["sla_policy_id"]
+            isOneToOne: false
+            referencedRelation: "service_sla_policies"
             referencedColumns: ["id"]
           },
           {
@@ -36081,6 +36094,8 @@ export type Database = {
           service_level: string
           service_product: string
           service_status: string
+          sla_initial_response_hours: number | null
+          sla_resolution_target_hours: number | null
           tax_coordinator_user_id: string | null
           updated_at: string
           updated_by: string | null
@@ -36121,6 +36136,8 @@ export type Database = {
           service_level: string
           service_product: string
           service_status?: string
+          sla_initial_response_hours?: number | null
+          sla_resolution_target_hours?: number | null
           tax_coordinator_user_id?: string | null
           updated_at?: string
           updated_by?: string | null
@@ -36161,6 +36178,8 @@ export type Database = {
           service_level?: string
           service_product?: string
           service_status?: string
+          sla_initial_response_hours?: number | null
+          sla_resolution_target_hours?: number | null
           tax_coordinator_user_id?: string | null
           updated_at?: string
           updated_by?: string | null
@@ -36652,6 +36671,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      service_sla_policies: {
+        Row: {
+          active: boolean
+          created_at: string
+          created_by: string | null
+          effective_from: string
+          effective_to: string | null
+          id: string
+          initial_response_hours: number | null
+          is_global_fallback: boolean
+          request_type: string | null
+          resolution_target_hours: number | null
+          service_level: string | null
+          service_product: string | null
+          use_contract_sla: boolean
+          warning_threshold_percentage: number
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string
+          effective_to?: string | null
+          id?: string
+          initial_response_hours?: number | null
+          is_global_fallback?: boolean
+          request_type?: string | null
+          resolution_target_hours?: number | null
+          service_level?: string | null
+          service_product?: string | null
+          use_contract_sla?: boolean
+          warning_threshold_percentage?: number
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string
+          effective_to?: string | null
+          id?: string
+          initial_response_hours?: number | null
+          is_global_fallback?: boolean
+          request_type?: string | null
+          resolution_target_hours?: number | null
+          service_level?: string | null
+          service_product?: string | null
+          use_contract_sla?: boolean
+          warning_threshold_percentage?: number
+        }
+        Relationships: []
       }
       side_letter_change_requests: {
         Row: {
@@ -37432,6 +37502,51 @@ export type Database = {
           status?: string
           updated_at?: string
           version?: number
+        }
+        Relationships: []
+      }
+      spv_transaction_pricing: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          effective_from: string
+          effective_to: string | null
+          fee_usd: number | null
+          id: string
+          is_current: boolean
+          label: string
+          max_raise_usd: number | null
+          min_raise_usd: number
+          sort_order: number
+          version_name: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string
+          effective_to?: string | null
+          fee_usd?: number | null
+          id?: string
+          is_current?: boolean
+          label: string
+          max_raise_usd?: number | null
+          min_raise_usd: number
+          sort_order?: number
+          version_name: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string
+          effective_to?: string | null
+          fee_usd?: number | null
+          id?: string
+          is_current?: boolean
+          label?: string
+          max_raise_usd?: number | null
+          min_raise_usd?: number
+          sort_order?: number
+          version_name?: string
         }
         Relationships: []
       }
