@@ -161,6 +161,7 @@ export async function phase3Overview(sb: any, userId: string, offeringId: string
       hasEin,
       einMasked: hasEin ? `••-•••${String((detail as any).ein).replace(/\D/g, "").slice(-4)}` : "",
       letters: einLetters.map((d) => ({ id: d.id, version: d.version, current: d.is_current, uploadedAt: d.created_at })),
+      w9OnFile: (await controlledDocs(offeringId, "signed_w9")).some((d) => d.is_current),
       responsiblePersonId: o.ss4_responsible_person_id as string | null,
       ss4Prefilled: Object.keys(prefill),
       ss4Missing: missing,
@@ -307,7 +308,7 @@ export async function recordEin(sb: any, userId: string, input: { offeringId: st
     if (sid) await extras.linkEvidence(userId, sid, "ein_letter", null, letterId);
   } else {
     // No IRS letter: a signed W-9 is the substitute evidence. Create one open follow-up task (idempotent by title).
-    const title = "Upload signed W-9 (no EIN letter on file)";
+    const title = W9_TASK;
     const { data: existing } = await db().from("staff_tasks").select("id").eq("offering_id", input.offeringId).eq("title", title).neq("status", "done").limit(1);
     if (!existing?.length) {
       await db().from("staff_tasks").insert({
@@ -320,6 +321,18 @@ export async function recordEin(sb: any, userId: string, input: { offeringId: st
   await activity(input.offeringId, userId, input.received ? "ein_received" : "ein_recorded", input.letterPath ? (input.received ? "EIN received from the IRS and recorded" : "Existing EIN recorded with IRS letter") : "EIN recorded without IRS letter; signed W-9 requested", o.ein_workflow_status, input.received ? "ein_received" : o.ein_workflow_status);
   await extras.autoCompleteTasks(input.offeringId);
   return { ok: true, w9Requested: !input.letterPath };
+}
+
+const W9_TASK = "Upload signed W-9 (no EIN letter on file)";
+
+/** Stores the fund's signed W-9 (Harmonious only) and closes the open W-9 follow-up task. */
+export async function uploadSignedW9(userId: string, input: { offeringId: string; path: string }) {
+  await assertStaff(userId, input.offeringId);
+  if (!input.path.startsWith(`fund-setup-restricted/${input.offeringId}/`)) throw new Error("That file does not belong to this fund.");
+  await addControlledDoc(userId, input.offeringId, "signed_w9", "Signed W-9", input.path);
+  await db().from("staff_tasks").update({ status: "done" } as any).eq("offering_id", input.offeringId).eq("title", W9_TASK).neq("status", "done");
+  await activity(input.offeringId, userId, "w9_uploaded", "Signed W-9 uploaded; W-9 task closed");
+  return { ok: true };
 }
 
 export async function saveSs4(sb: any, userId: string, input: { offeringId: string; answers: Record<string, unknown>; responsiblePersonId?: string | null | undefined; responsiblePartyTin?: string | null | undefined }) {

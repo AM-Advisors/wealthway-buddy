@@ -10,7 +10,7 @@ import {
   classAssignmentsFn,
   phase3OverviewFn,
   previewClassChangeFn,
-  recordEinFn,
+  recordEinFn, uploadSignedW9Fn,
   reviewBankVersionFn,
   saveAdministrationFn,
   saveBankDetailsFn,
@@ -260,6 +260,7 @@ const SS4_QUESTIONS: { key: string; label: string; when?: (a: any) => boolean }[
 function EntityEinCard({ d, offeringId, onChanged }: { d: D; offeringId: string; onChanged: () => void }) {
   const setPath = useServerFn(setEinPathFn);
   const record = useServerFn(recordEinFn);
+  const uploadW9 = useServerFn(uploadSignedW9Fn);
   const saveSs4 = useServerFn(saveSs4Fn);
   const setStatus = useServerFn(setEinStatusFn);
   const { busy, run } = useRun(onChanged);
@@ -303,6 +304,18 @@ function EntityEinCard({ d, offeringId, onChanged }: { d: D; offeringId: string;
           <p className="text-xs text-muted-foreground">
             IRS EIN letter: {e.letters.map((l) => `v${l.version}${l.current ? " (current)" : " (superseded)"}`).join(", ")} · Harmonious only, never shown to investors.
           </p>
+        )}
+
+        {e.hasEin && !e.letters.some((l) => l.current) && (
+          e.w9OnFile
+            ? <p className="text-sm"><Badge variant="outline">W-9 on file</Badge> <span className="text-xs text-muted-foreground">Signed W-9 stands in for the IRS letter · Harmonious only.</span></p>
+            : <div className="flex flex-wrap items-center gap-2 rounded-md border border-dashed p-3">
+                <p className="text-sm">No IRS EIN letter on file. Upload the fund's signed W-9.</p>
+                {d.canEdit && <Label className="inline-flex cursor-pointer items-center rounded-md border px-3 py-2 text-sm">
+                  {busy ? "Uploading…" : "Upload signed W-9"}
+                  <input type="file" accept="application/pdf,image/*" className="sr-only" disabled={busy} onChange={(x) => { const f = x.target.files?.[0]; x.target.value = ""; if (f) run(async () => { await uploadW9({ data: { offeringId, path: await uploadRestricted(offeringId, "signed-w9", f) } }); }, "W-9 on file — task closed"); }} />
+                </Label>}
+              </div>
         )}
 
         {d.canEdit && (e.path === "existing" || (e.path === "harmonious" && e.status === "submitted")) && (
