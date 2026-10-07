@@ -153,7 +153,23 @@ export async function autoCompleteTasks(offeringId: string) {
       offering_config: !!(o?.reg_type && o?.min_investment_cents != null),
       investment_target: !!o?.target_raise_cents,
     };
-    const { data: tasks } = await db().from("fund_setup_tasks").select("id, task_key, status, dependencies").eq("setup_id", s.id);
+    // More steps that close themselves from data already recorded elsewhere (forward-only).
+    const [{ data: w9 }, { data: fees }, { data: sigs }, { data: team }, { data: docs }] = await Promise.all([
+      db().from("fund_setup_documents").select("id").eq("setup_id", s.id).in("doc_type", ["signed_w9", "ein_letter"]).eq("is_current", true).limit(1),
+      db().from("fund_fee_terms").select("id").eq("offering_id", offeringId).eq("status", "active").limit(1),
+      db().from("fund_signatories").select("id").eq("offering_id", offeringId).eq("status", "active").limit(1),
+      db().from("fund_team_members").select("id").eq("offering_id", offeringId).is("removed_at", null).limit(1),
+      db().from("offering_documents").select("doc_type, document_category").eq("offering_id", offeringId),
+    ]);
+    const docKinds = new Set(((docs ?? []) as any[]).flatMap((d) => [d.doc_type, d.document_category]).filter(Boolean));
+    done["entity_ein"] = done["entity_ein"] || !!w9?.length;
+    done["economics_terms"] = !!fees?.length;
+    done["client_signatories"] = !!sigs?.length;
+    done["client_profile"] = !!team?.length;
+    done["docs_subscription"] = ["subscription_agreement", "subscription"].some((k) => docKinds.has(k));
+    done["docs_operating_agreement"] = ["operating_agreement", "lpa"].some((k) => docKinds.has(k));
+    done["docs_ppm"] = docKinds.has("ppm");
+    const { data: tasks } = await db().from("fund_setup_tasks").select("id, task_key, status, dependencies, blocking").eq("setup_id", s.id);
     const status = new Map<string, string>(((tasks ?? []) as any[]).map((t) => [t.task_key, t.status]));
     let changed = true;
     while (changed) {
@@ -169,9 +185,36 @@ export async function autoCompleteTasks(offeringId: string) {
         }
       }
     }
+    // Launch conditions follow their underlying steps. Harmonious approval is never inferred.
+    const isDone = (...keys: string[]) => keys.every((k) => status.get(k) === "complete");
+    const blockingAll = ((tasks ?? []) as any[]).every((t) => t.blocking === false || status.get(t.task_key) === "complete");
+    const condMet: Record<string, boolean> = {
+      entity_active: isDone("entity_formation", "entity_ein"),
+      documents_current: isDone("docs_subscription", "docs_operating_agreement"),
+      banking_active: isDone("banking_account"),
+      economics_approved: isDone("economics_terms"),
+      eligibility_approved: isDone("investor_eligibility"),
+      onboarding_configured: isDone("investor_onboarding_steps"),
+      regulatory_reviewed: isDone("compliance_config"),
+      blocking_tasks_complete: blockingAll,
+    };
+    const { data: conds } = await db().from("fund_launch_conditions").select("id, condition_key, satisfied").eq("setup_id", s.id).eq("satisfied", false);
+    for (const c of (conds ?? []) as any[]) {
+      if (c.condition_key === "harmonious_approval" || !condMet[c.condition_key]) continue;
+      const { error } = await db().from("fund_launch_conditions").update({ satisfied: true, satisfied_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("id", c.id).eq("satisfied", false);
+      if (!error) await event(s.id, offeringId, null, "condition_auto_satisfied", `${c.condition_key.replaceAll("_", " ")} met automatically from completed steps`);
+    }
   } catch {
     // Auto-completion is a convenience; it must never fail the save that triggered it.
   }
   // Fund managers hear about completed steps (and service moves) straight away.
   await (await import("@/lib/fund-alerts-kick.server")).kickFundAlerts();
+}
+
+/** Re-run setup auto-completion after a save, resolving the fund from a fee row or offering document when needed. */
+export async function autoCompleteAfterSave(ref: { offeringId?: string; feeId?: string; documentId?: string }) {
+  let id = ref.offeringId ?? null;
+  if (!id && ref.feeId) id = ((await db().from("fund_fee_terms").select("offering_id").eq("id", ref.feeId).maybeSingle()).data as any)?.offering_id ?? null;
+  if (!id && ref.documentId) id = ((await db().from("offering_documents").select("offering_id").eq("id", ref.documentId).maybeSingle()).data as any)?.offering_id ?? null;
+  if (id) await autoCompleteTasks(id);
 }
