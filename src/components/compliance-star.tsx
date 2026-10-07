@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { approveStarAnswer, getStar, importStarQuestions, recordStarEvent, saveStarAnswer } from "@/lib/compliance-star.functions";
+import { StarChecklist, StarReferenceLibrary } from "@/components/compliance-star-kit";
 
 const ANS: Record<string, string> = { yes: "Yes", no: "No", na: "Not applicable" };
 const RESP: Record<string, string> = { csp: "Harmonious", csc: "Customer", shared: "Shared" };
@@ -115,6 +116,9 @@ export function StarPanel() {
           </div>
         </CardContent>
       </Card>
+
+      <StarChecklist d={d} />
+      <StarReferenceLibrary />
 
       <Card>
         <CardHeader><CardTitle>Areas (CCM v4)</CardTitle></CardHeader>

@@ -1226,6 +1226,13 @@
       "when": 1791339264053,
       "tag": "0174_security_compliance_foundation",
       "breakpoints": true
+    },
+    {
+      "idx": 175,
+      "version": "7",
+      "when": 1791340846394,
+      "tag": "0175_star_reference_documents",
+      "breakpoints": true
     }
   ]
 }
