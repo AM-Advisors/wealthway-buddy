@@ -15,7 +15,7 @@ import { CHANNELS, CHANNEL_LABEL, CHANNEL_LIMIT, UNAVAILABLE_CHANNELS, postProbl
 import { PostBrandLayout } from "@/components/marketing/post-brand-layout";
 import { MarketingDrivePicker } from "@/components/marketing-drive-picker";
 import { useMarketingDriveImage } from "@/lib/marketing-drive.functions";
-import { decideMarketingPost, getMarketingPost, marketingDraftCopy, marketingGenerateImage, saveMarketingPost, uploadMarketingAsset } from "@/lib/marketing.functions";
+import { decideMarketingPost, getMarketingPost, marketingDraftCopy, marketingGenerateImage, retryMarketingPost, saveMarketingPost, uploadMarketingAsset } from "@/lib/marketing.functions";
 
 export const Route = createFileRoute("/_authenticated/marketing_/posts_/$id")({
   head: mkHead("Post editor", "Design a social post for LinkedIn, Facebook and Instagram."),
@@ -30,6 +30,7 @@ function PostEditor() {
   const load = useServerFn(getMarketingPost);
   const save = useServerFn(saveMarketingPost);
   const decide = useServerFn(decideMarketingPost);
+  const retry = useServerFn(retryMarketingPost);
   const upload = useServerFn(uploadMarketingAsset);
   const fromDrive = useServerFn(useMarketingDriveImage);
   const draft = useServerFn(marketingDraftCopy);
@@ -104,6 +105,11 @@ function PostEditor() {
     onSuccess: (_r, a) => { toast.success(a === "submit" ? "Sent for approval" : a === "approve" ? "Approved and scheduled" : "Sent back to the author"); setNote(""); q.refetch(); qc.invalidateQueries({ queryKey: ["mk-posts"] }); },
     onError: (e) => toast.error((e as Error).message),
   });
+  const retryM = useMutation({
+    mutationFn: () => retry({ data: { id } }),
+    onSuccess: () => { toast.success("Retrying — the original approval still stands"); q.refetch(); qc.invalidateQueries({ queryKey: ["mk-posts"] }); },
+    onError: (e) => toast.error((e as Error).message),
+  });
   const draftM = useMutation({
     mutationFn: () => draft({ data: { kind: preview, brief: brief || title, current: body || null } }),
     onSuccess: (r) => setBody(r.text), onError: (e) => toast.error((e as Error).message),
@@ -175,6 +181,13 @@ function PostEditor() {
             </Panel>
           )}
           {status === "submitted" && q.data?.isAuthor && <p className="text-sm text-muted-foreground">Waiting for a Marketing Manager to approve. Editing sends it back to draft.</p>}
+
+          {status === "failed" && (
+            <Panel title="Publishing failed">
+              <p className="text-sm text-muted-foreground">This post was already approved — retrying sends it straight back out, no new approval needed. Only the channels that failed are tried again.</p>
+              <div className="mt-2"><Button onClick={() => retryM.mutate()} disabled={retryM.isPending}>{retryM.isPending ? "Retrying…" : "Retry publishing"}</Button></div>
+            </Panel>
+          )}
 
           {!!q.data?.targets.length && (
             <Panel title="Publishing results">
