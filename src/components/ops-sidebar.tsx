@@ -121,7 +121,7 @@ function NavSection({ id, label, items, pathname, collapsed, onNavigate, isActiv
                     {!collapsed && item.sub && item.sub.length > 0 && (active || item.sub.some((s) => pathname.startsWith(s.url))) && (
                       <div className="ml-6 border-l border-sidebar-border pl-3">
                         {item.sub.map((s) => (
-                          <Link key={s.url} to={s.url as never} onClick={onNavigate} aria-current={pathname.startsWith(s.url) ? "page" : undefined}
+                          <Link key={s.url} to={s.url.split("?")[0] as never} search={(s.url.includes("?") ? Object.fromEntries(new URLSearchParams(s.url.split("?")[1])) : undefined) as never} onClick={onNavigate} aria-current={pathname.startsWith(s.url.split("?")[0]!) && !s.url.includes("?") ? "page" : undefined}
                             className="block py-1.5 text-xs text-sidebar-foreground/80 hover:text-sidebar-foreground aria-[current=page]:font-medium aria-[current=page]:text-sidebar-foreground">{s.title}</Link>
                         ))}
                       </div>
