@@ -2885,7 +2885,12 @@ export type Database = {
           id: string
           offering_id: string
           recorded_by: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
           source: string
+          source_kind: string
+          statement_end_date: string | null
+          statement_period_start: string | null
         }
         Insert: {
           as_of: string
@@ -2895,7 +2900,12 @@ export type Database = {
           id?: string
           offering_id: string
           recorded_by?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           source: string
+          source_kind?: string
+          statement_end_date?: string | null
+          statement_period_start?: string | null
         }
         Update: {
           as_of?: string
@@ -2905,7 +2915,12 @@ export type Database = {
           id?: string
           offering_id?: string
           recorded_by?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           source?: string
+          source_kind?: string
+          statement_end_date?: string | null
+          statement_period_start?: string | null
         }
         Relationships: [
           {
@@ -4869,6 +4884,10 @@ export type Database = {
       }
       capital_calls: {
         Row: {
+          aggregate_confirmed_at: string | null
+          aggregate_confirmed_by: string | null
+          allocation_basis: string | null
+          allocation_variance_cents: number
           basis: string
           call_number: number
           call_type: string
@@ -4890,6 +4909,7 @@ export type Database = {
           purpose: string | null
           requested_at: string | null
           requested_by: string | null
+          requested_total_cents: number | null
           reviewed_at: string | null
           reviewed_by: string | null
           status: string
@@ -4902,6 +4922,10 @@ export type Database = {
           version: number
         }
         Insert: {
+          aggregate_confirmed_at?: string | null
+          aggregate_confirmed_by?: string | null
+          allocation_basis?: string | null
+          allocation_variance_cents?: number
           basis?: string
           call_number: number
           call_type?: string
@@ -4923,6 +4947,7 @@ export type Database = {
           purpose?: string | null
           requested_at?: string | null
           requested_by?: string | null
+          requested_total_cents?: number | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           status?: string
@@ -4935,6 +4960,10 @@ export type Database = {
           version?: number
         }
         Update: {
+          aggregate_confirmed_at?: string | null
+          aggregate_confirmed_by?: string | null
+          allocation_basis?: string | null
+          allocation_variance_cents?: number
           basis?: string
           call_number?: number
           call_type?: string
@@ -4956,6 +4985,7 @@ export type Database = {
           purpose?: string | null
           requested_at?: string | null
           requested_by?: string | null
+          requested_total_cents?: number | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           status?: string
@@ -12793,6 +12823,13 @@ export type Database = {
           allocation_run_id: string | null
           balance_detail: Json
           balances: boolean
+          basis_as_of: string | null
+          basis_override_at: string | null
+          basis_override_by: string | null
+          basis_override_reason: string | null
+          basis_source: string | null
+          basis_stale: boolean
+          basis_stale_detail: Json | null
           batch_number: number
           cancel_reason: string | null
           cancelled_at: string | null
@@ -12861,6 +12898,13 @@ export type Database = {
           allocation_run_id?: string | null
           balance_detail?: Json
           balances?: boolean
+          basis_as_of?: string | null
+          basis_override_at?: string | null
+          basis_override_by?: string | null
+          basis_override_reason?: string | null
+          basis_source?: string | null
+          basis_stale?: boolean
+          basis_stale_detail?: Json | null
           batch_number: number
           cancel_reason?: string | null
           cancelled_at?: string | null
@@ -12929,6 +12973,13 @@ export type Database = {
           allocation_run_id?: string | null
           balance_detail?: Json
           balances?: boolean
+          basis_as_of?: string | null
+          basis_override_at?: string | null
+          basis_override_by?: string | null
+          basis_override_reason?: string | null
+          basis_source?: string | null
+          basis_stale?: boolean
+          basis_stale_detail?: Json | null
           batch_number?: number
           cancel_reason?: string | null
           cancelled_at?: string | null
@@ -13316,6 +13367,12 @@ export type Database = {
           shares_allocated: number | null
           updated_at: string
           withholding_cents: number
+          withholding_decided_at: string | null
+          withholding_decided_by: string | null
+          withholding_decision_reason: string | null
+          withholding_policy: Json | null
+          withholding_status: string
+          withholding_suggested_cents: number | null
         }
         Insert: {
           accounting_state?: string
@@ -13361,6 +13418,12 @@ export type Database = {
           shares_allocated?: number | null
           updated_at?: string
           withholding_cents?: number
+          withholding_decided_at?: string | null
+          withholding_decided_by?: string | null
+          withholding_decision_reason?: string | null
+          withholding_policy?: Json | null
+          withholding_status?: string
+          withholding_suggested_cents?: number | null
         }
         Update: {
           accounting_state?: string
@@ -13406,6 +13469,12 @@ export type Database = {
           shares_allocated?: number | null
           updated_at?: string
           withholding_cents?: number
+          withholding_decided_at?: string | null
+          withholding_decided_by?: string | null
+          withholding_decision_reason?: string | null
+          withholding_policy?: Json | null
+          withholding_status?: string
+          withholding_suggested_cents?: number | null
         }
         Relationships: [
           {
@@ -32630,6 +32699,10 @@ export type Database = {
           decision_reason: string | null
           effective_at: string | null
           effective_date: string
+          evidence_status: string
+          evidence_waived_at: string | null
+          evidence_waived_by: string | null
+          evidence_waiver_reason: string | null
           id: string
           inputs: Json
           journal_entry_id: string | null
@@ -32674,6 +32747,10 @@ export type Database = {
           decision_reason?: string | null
           effective_at?: string | null
           effective_date: string
+          evidence_status?: string
+          evidence_waived_at?: string | null
+          evidence_waived_by?: string | null
+          evidence_waiver_reason?: string | null
           id?: string
           inputs?: Json
           journal_entry_id?: string | null
@@ -32718,6 +32795,10 @@ export type Database = {
           decision_reason?: string | null
           effective_at?: string | null
           effective_date?: string
+          evidence_status?: string
+          evidence_waived_at?: string | null
+          evidence_waived_by?: string | null
+          evidence_waiver_reason?: string | null
           id?: string
           inputs?: Json
           journal_entry_id?: string | null
@@ -39864,6 +39945,80 @@ export type Database = {
             columns: ["return_id"]
             isOneToOne: false
             referencedRelation: "individual_tax_returns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tax_withholding_rules: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          created_by: string | null
+          distribution_character: string
+          documentation_required: boolean
+          effective_from: string
+          effective_to: string | null
+          id: string
+          investor_tax_status: string
+          jurisdiction: string | null
+          manual_review_required: boolean
+          offering_id: string | null
+          policy_source: string | null
+          rate_bps: number
+          rule_name: string
+          status: string
+          updated_at: string
+          withholding_type: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          distribution_character?: string
+          documentation_required?: boolean
+          effective_from?: string
+          effective_to?: string | null
+          id?: string
+          investor_tax_status?: string
+          jurisdiction?: string | null
+          manual_review_required?: boolean
+          offering_id?: string | null
+          policy_source?: string | null
+          rate_bps?: number
+          rule_name: string
+          status?: string
+          updated_at?: string
+          withholding_type?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          distribution_character?: string
+          documentation_required?: boolean
+          effective_from?: string
+          effective_to?: string | null
+          id?: string
+          investor_tax_status?: string
+          jurisdiction?: string | null
+          manual_review_required?: boolean
+          offering_id?: string | null
+          policy_source?: string | null
+          rate_bps?: number
+          rule_name?: string
+          status?: string
+          updated_at?: string
+          withholding_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tax_withholding_rules_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
             referencedColumns: ["id"]
           },
         ]

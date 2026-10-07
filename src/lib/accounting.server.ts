@@ -177,6 +177,22 @@ export async function openPeriod(
   return data;
 }
 
+async function approvedCloseSheetGate(bookId: string, periodId: string): Promise<string | null> {
+  const [{ data: book }, { data: per }] = await Promise.all([
+    db().from("ledger_books").select("offering_id").eq("id", bookId).maybeSingle(),
+    db().from("accounting_periods").select("period_end").eq("id", periodId).maybeSingle(),
+  ]);
+  if (!book?.offering_id || !per?.period_end) return null; // Non-fund books keep the existing period policy.
+  const key = String(per.period_end).slice(0, 7);
+  const { data: sheet } = await db().from("close_sheets").select("id").eq("offering_id", book.offering_id).eq("kind", "month_end").eq("sheet_key", key).maybeSingle();
+  if (!sheet) return "CLOSE BLOCKED: prepare the month-end close sheet for this period first.";
+  const { data: v } = await db().from("close_sheet_versions").select("id, snapshot, prepared_by, close_sheet_decisions(decision, decided_by)").eq("sheet_id", sheet.id).order("version", { ascending: false }).limit(1).maybeSingle();
+  const d = Array.isArray(v?.close_sheet_decisions) ? v.close_sheet_decisions[0] : v?.close_sheet_decisions;
+  if (!v || d?.decision !== "approved") return "CLOSE BLOCKED: the latest month-end close sheet has not been approved by a second person.";
+  if (!(v.snapshot as any)?.ready) return "CLOSE BLOCKED: the approved close sheet has checklist items that did not pass.";
+  return null;
+}
+
 export async function transitionPeriod(
   userId: string,
   periodId: string,
@@ -199,6 +215,12 @@ export async function transitionPeriod(
   }
   if (reopenRequiresReason(from, to) && !reason?.trim()) {
     fail("Reopening a closed period requires a stated reason.");
+  }
+  // Pilot M7: Close (and Lock) require an approved month-end close sheet whose
+  // checklist passed, decided by someone other than its preparer.
+  if (to === "closed" || to === "locked") {
+    const gate = await approvedCloseSheetGate(period.book_id, periodId);
+    if (gate) fail(gate);
   }
 
   const now = new Date().toISOString();
@@ -393,7 +415,33 @@ export async function advanceJournalEntry(
 }
 
 /** Corrections never rewrite history: they post an opposite entry. */
-export async function reverseJournalEntry(userId: string, entryId: string, reason: string) {
+export type ReversalDateOption =
+  | { kind: "current_date" }
+  | { kind: "next_open_period" }
+  | { kind: "specified"; date: string };
+
+/** Pilot M10: resolve a reversal date; never into a closed or locked period. */
+async function resolveReversalDate(bookId: string, originalDate: string, option: ReversalDateOption): Promise<string> {
+  let date: string;
+  if (option.kind === "specified") {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(option.date)) fail("Choose a reversal date (YYYY-MM-DD).");
+    if (option.date < originalDate) fail("A reversal cannot be dated before the entry it reverses.");
+    date = option.date;
+  } else if (option.kind === "next_open_period") {
+    const { data } = await db().from("accounting_periods").select("period_start, status").eq("book_id", bookId).eq("status", "open").gt("period_start", originalDate).order("period_start", { ascending: true }).limit(1).maybeSingle();
+    if (!data) fail("There is no open accounting period after this entry. Open one first.");
+    date = String(data.period_start);
+  } else {
+    date = new Date().toISOString().slice(0, 10);
+  }
+  const period = await periodFor(bookId, date);
+  if (period && ["closed", "locked"].includes(String(period.status))) {
+    fail(`The ${date} reversal date falls in a ${period.status} period. Choose a date in an open period.`);
+  }
+  return date;
+}
+
+export async function reverseJournalEntry(userId: string, entryId: string, reason: string, dateOption: ReversalDateOption = { kind: "current_date" }) {
   await assertAdmin(userId);
   if (!reason?.trim()) fail("A reversal requires a stated reason.");
   const { data: entry } = await db()
@@ -418,9 +466,10 @@ export async function reverseJournalEntry(userId: string, entryId: string, reaso
     memo: l.memo,
   }));
 
+  const reversalDate = await resolveReversalDate(entry.book_id, String(entry.entry_date), dateOption);
   const reversal = await draftJournalEntry(userId, {
     bookId: entry.book_id,
-    entryDate: new Date().toISOString().slice(0, 10),
+    entryDate: reversalDate,
     memo: `Reversal of ${entry.memo ?? entryId}: ${reason}`,
     source: "reversal",
     reversesEntryId: entryId,
@@ -432,7 +481,7 @@ export async function reverseJournalEntry(userId: string, entryId: string, reaso
     actor_user_id: userId,
     from_status: "posted",
     to_status: "posted",
-    reason: `Reversal drafted as ${reversal.id}: ${reason}`,
+    reason: `Reversal drafted as ${reversal.id} dated ${reversalDate} (${dateOption.kind}): ${reason}`,
   });
   return reversal;
 }

@@ -120,9 +120,10 @@ describe("capital call computation", () => {
 
   it("never calls more than the remaining unfunded commitment", () => {
     const result = computeCallLines({
-      basis: "fixed_amount",
+      basis: "fixed_amount_per_investor",
       callType: "whole_fund",
       fixedAmountCents: 500_000_00,
+      confirmedAggregateCents: 190_000_00,
       snapshot,
     });
     expect(result.lines[0]!.calledCents).toBe(190_000_00);
@@ -130,7 +131,7 @@ describe("capital call computation", () => {
 
   it("requires an investor-specific call to name its investors", () => {
     const result = computeCallLines({
-      basis: "fixed_amount",
+      basis: "fixed_amount_per_investor",
       callType: "investor_specific",
       fixedAmountCents: 10_000_00,
       snapshot,
@@ -140,14 +141,52 @@ describe("capital call computation", () => {
 
   it("scopes an investor-specific call to the named investor only", () => {
     const result = computeCallLines({
-      basis: "fixed_amount",
+      basis: "fixed_amount_per_investor",
       callType: "investor_specific",
       fixedAmountCents: 10_000_00,
+      confirmedAggregateCents: 10_000_00,
       snapshot,
       includeOnly: ["pos-1"],
     });
     expect(result.lines).toHaveLength(1);
     expect(result.totalCalledCents).toBe(10_000_00);
+  });
+});
+
+describe("fund-total call semantics (pilot M1)", () => {
+  const four = [4, 3, 2, 1].map((m, i) => ({
+    positionId: `p${i}`, onboardingId: null, investorUserId: `u${i}`, investmentProfileId: null,
+    displayName: `Investor ${i}`, commitmentCents: m * 1_000_000_00, contributedCents: m * 250_000_00,
+    unfundedCommitmentCents: m * 750_000_00,
+  }));
+  it("splits a $1M fund total 40/30/20/10 and never calls $1M per investor", () => {
+    const r = computeCallLines({ basis: "fund_total", callType: "whole_fund", totalAmountCents: 1_000_000_00, allocationBasis: "commitment_pro_rata", snapshot: four });
+    expect(r.problems).toEqual([]);
+    expect(r.lines.map((l) => l.calledCents)).toEqual([400_000_00, 300_000_00, 200_000_00, 100_000_00]);
+    expect(r.totalCalledCents).toBe(1_000_000_00);
+    expect(r.varianceCents).toBe(0);
+  });
+  it("splits to the cent with no rounding variance", () => {
+    const r = computeCallLines({ basis: "fund_total", callType: "whole_fund", totalAmountCents: 100_001, allocationBasis: "commitment_pro_rata", snapshot: four });
+    expect(r.totalCalledCents).toBe(100_001);
+  });
+  it("rejects the ambiguous legacy fixed_amount basis for new calls", () => {
+    const r = computeCallLines({ basis: "fixed_amount", callType: "whole_fund", fixedAmountCents: 1_000_000_00, snapshot: four });
+    expect(r.problems[0]).toMatch(/ambiguous/i);
+  });
+  it("requires an allocation basis for a fund total", () => {
+    const r = computeCallLines({ basis: "fund_total", callType: "whole_fund", totalAmountCents: 1_000_000_00, snapshot: four });
+    expect(r.problems.join(" ")).toMatch(/allocated/i);
+  });
+  it("requires per-investor calls to confirm the aggregate", () => {
+    const r = computeCallLines({ basis: "fixed_amount_per_investor", callType: "whole_fund", fixedAmountCents: 100_000_00, snapshot: four });
+    expect(r.problems[0]).toMatch(/Confirm the expected aggregate/);
+    const ok = computeCallLines({ basis: "fixed_amount_per_investor", callType: "whole_fund", fixedAmountCents: 100_000_00, confirmedAggregateCents: 400_000_00, snapshot: four });
+    expect(ok.problems).toEqual([]);
+  });
+  it("blocks a fund total that cannot be fully allocated", () => {
+    const r = computeCallLines({ basis: "fund_total", callType: "whole_fund", totalAmountCents: 9_000_000_00, allocationBasis: "commitment_pro_rata", snapshot: four });
+    expect(r.problems.join(" ")).toMatch(/do not add up/);
   });
 });
 

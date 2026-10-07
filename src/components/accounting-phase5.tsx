@@ -90,7 +90,7 @@ export function GeneralLedgerPanel() {
   const keys = [["acct5-ledger", fundId, asOf]];
   const open = useAct(() => openBook({ data: { offeringId: fundId } }), keys, "Ledger opened");
   const adv = useAct((v: { entryId: string; to: "reviewed" | "approved" | "posted" }) => advance({ data: { offeringId: fundId, ...v } }), keys, "Entry updated");
-  const rev = useAct((v: { entryId: string; reason: string }) => reverse({ data: { offeringId: fundId, ...v } }), keys, "Reversal drafted");
+  const rev = useAct((v: { entryId: string; reason: string; dateOption: "current_date" | "next_open_period" | "specified"; reversalDate?: string }) => reverse({ data: { offeringId: fundId, ...v } }), keys, "Reversal drafted");
   const d = q.data;
   return (
     <div className="space-y-4">
@@ -132,7 +132,7 @@ export function GeneralLedgerPanel() {
                     {e.status === "draft" && <Button size="sm" variant="outline" onClick={() => adv.mutate({ entryId: e.id, to: "reviewed" })}>Mark reviewed</Button>}
                     {e.status === "reviewed" && <Button size="sm" variant="outline" onClick={() => adv.mutate({ entryId: e.id, to: "approved" })}>Approve</Button>}
                     {e.status === "approved" && <Button size="sm" onClick={() => adv.mutate({ entryId: e.id, to: "posted" })}>Record in ledger</Button>}
-                    {e.status === "posted" && !e.reversesEntryId && <Button size="sm" variant="ghost" onClick={() => { const reason = window.prompt("Why is this entry being reversed?"); if (reason?.trim()) rev.mutate({ entryId: e.id, reason }); }}>Reverse…</Button>}
+                    {e.status === "posted" && !e.reversesEntryId && <Button size="sm" variant="ghost" onClick={() => { const reason = window.prompt("Why is this entry being reversed?"); if (!reason?.trim()) return; const when = window.prompt("Reversal date: type a date in an open period (YYYY-MM-DD), \"today\", or leave blank for the first day of the next open period.", "")?.trim() ?? null; if (when === null) return; const dateOption = !when ? "next_open_period" : when.toLowerCase() === "today" ? "current_date" : "specified"; rev.mutate({ entryId: e.id, reason, dateOption, ...(dateOption === "specified" ? { reversalDate: when } : {}) }); }}>Reverse…</Button>}
                   </div>
                 </div>
               ))}

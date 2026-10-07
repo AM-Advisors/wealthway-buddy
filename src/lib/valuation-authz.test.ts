@@ -125,7 +125,10 @@ const tables: Record<string, any[]> = {
       change_cents: 200_000,
     },
   ],
-  valuation_evidence: [],
+  valuation_evidence: [
+    { id: "ev-a", valuation_id: VAL_A, kind: "other", title: "Term sheet" },
+    { id: "ev-a-eff", valuation_id: VAL_A_EFFECTIVE, kind: "other", title: "Term sheet" },
+  ],
   valuation_events: [],
   portfolio_realizations: [],
   chart_of_accounts: [
@@ -284,7 +287,7 @@ describe("who may decide", () => {
     await expect(
       decideValuation(ADMIN, { valuationId: VAL_A, action: "approve" }),
     ).resolves.toMatchObject({ status: "approved" });
-    const update = writes.find((w) => w.table === "portfolio_valuations" && w.op === "update");
+    const update = writes.find((w) => w.table === "portfolio_valuations" && w.op === "update" && "approved_by" in (w.payload ?? {}));
     expect(update?.payload.approved_by).toBe(ADMIN);
     const event = writes.find((w) => w.table === "valuation_events");
     expect(event?.payload.actor_user_id).toBe(ADMIN);

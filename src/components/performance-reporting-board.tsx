@@ -68,8 +68,12 @@ function RunRow({
           {run.fundName ?? "Fund"} · {run.period_label || `${run.period_start} to ${run.period_end}`}
         </p>
         <p className="text-xs text-muted-foreground">
-          v{run.version} · {label(run.period_kind)} · net {pct(run.net_return_bps)} · IRR{" "}
-          {run.irr_status === "solved" ? pct(run.irr_bps) : label(run.irr_status)}
+          v{run.version} · {label(run.period_kind)} · net {pct(run.net_return_bps)} · Annualized IRR{" "}
+          {run.irr_status !== "solved"
+            ? label(run.irr_status)
+            : run.metrics?.irrPresentation?.shortPeriod
+              ? "not meaningful (< 12 months)"
+              : pct(run.irr_bps)}
         </p>
       </button>
       <div className="flex items-center gap-2">
@@ -217,9 +221,15 @@ export function PerformanceReportingBoard({ role }: { role: "harmonious" | "mana
           <Metric title="Gross return" value={pct(run.gross_return_bps)} note="Before fees and carry" />
           <Metric title="Net return" value={pct(run.net_return_bps)} note="After configured deductions" />
           <Metric
-            title="IRR"
+            title="Annualized IRR"
             value={run.irr_status === "solved" ? pct(run.irr_bps) : "-"}
-            note={run.irr_status === "solved" ? "Dated cash flows" : label(run.irr_status)}
+            note={
+              run.irr_status !== "solved"
+                ? label(run.irr_status)
+                : run.metrics?.irrPresentation?.shortPeriod
+                  ? "Period is less than 12 months; annualized IRR may not be meaningful."
+                  : "Dated cash flows"
+            }
           />
           <Metric title="MOIC" value={times(run.moic)} note="Total value / paid-in" />
           <Metric title="TVPI" value={times(run.tvpi)} />
