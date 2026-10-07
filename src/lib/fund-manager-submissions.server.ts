@@ -51,7 +51,7 @@ export async function submit(userId: string, input: { offeringId: string; sectio
   await db().from("staff_tasks").insert({
     title: `Review fund manager submission: ${label(input.section, input.docKind)}`,
     description: "A fund manager submitted setup information. Review it on the fund's Setup tab.",
-    offering_id: input.offeringId, priority: "high", status: "open",
+    offering_id: input.offeringId, priority: "high", status: "open", created_by: userId, team: "operations",
   } as any).then(() => null, () => null);
   return { id: data.id };
 }
