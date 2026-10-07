@@ -14,6 +14,7 @@ import {
   recordControlStatus, registerEvidenceDocument, reviewEvidence, saveControlVersion, saveRecord,
 } from "@/lib/compliance-controls.functions";
 import { supabase } from "@/integrations/supabase/client";
+import { StarPanel } from "@/components/compliance-star";
 import { CONTROL_STATUSES, CONTROL_TYPES, EVIDENCE_QUERIES, FREQUENCIES, PRIVACY_KINDS, REGISTERS, registerPermissions, STATUS_LABEL } from "@/lib/compliance-model";
 
 type Data = { perms: string[]; me: string; staff: { id: string; label: string }[]; dashboard: any; controls: any[]; evidence: any[]; requirements: any[]; reviews: any[]; records: any[]; recordHistory: any[]; providers: any[]; report: any[] };
@@ -48,6 +49,7 @@ export function ComplianceCenter() {
           <TabsTrigger value="controls">Control Library</TabsTrigger>
           {can("administration.evidence.view") && <TabsTrigger value="evidence">Evidence</TabsTrigger>}
           <TabsTrigger value="policies">Policies</TabsTrigger>
+          {can("administration.controls.view") && <TabsTrigger value="star">CSA STAR</TabsTrigger>}
           <TabsTrigger value="reviews">Access Reviews</TabsTrigger>
           {can("administration.privacy.view") && <TabsTrigger value="privacy">Privacy</TabsTrigger>}
           {can("administration.vendors.view") && <TabsTrigger value="vendors">Vendors</TabsTrigger>}
@@ -59,6 +61,7 @@ export function ComplianceCenter() {
         <TabsContent value="controls"><Controls d={d} /></TabsContent>
         <TabsContent value="evidence"><Evidence d={d} /></TabsContent>
         <TabsContent value="policies"><Register d={d} kind="policy" /></TabsContent>
+        <TabsContent value="star"><StarPanel /></TabsContent>
         <TabsContent value="reviews"><Reviews d={d} /></TabsContent>
         <TabsContent value="privacy">
           <Tabs defaultValue="data_map">
