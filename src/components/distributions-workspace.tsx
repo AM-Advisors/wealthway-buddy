@@ -266,7 +266,12 @@ export function DistributionsWorkspace() {
                       const ref = window.prompt(
                         "You made this transfer at the bank yourself. Enter the bank's reference for it:",
                       );
-                      if (ref) executeM.run({ lineId: l.id, externalReference: ref });
+                      if (!ref) return;
+                      const sentOn = window.prompt(
+                        "Date the payment was actually sent (YYYY-MM-DD). It cannot be in the future or in a closed period:",
+                        new Date().toISOString().slice(0, 10),
+                      );
+                      if (sentOn) executeM.run({ lineId: l.id, externalReference: ref, sentOn });
                     }}
                   >
                     Record bank transfer made outside Harmonious
