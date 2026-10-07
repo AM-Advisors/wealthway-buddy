@@ -24,6 +24,8 @@ export type ImportedDoc = {
   document_date?: string | null;
   imported_at: string;
   imported_by: string;
+  /** Investment Profile a Super Admin explicitly filed this document to (latest document details). */
+  shared_profile_id?: string | null;
 };
 
 export type Viewer = {
@@ -68,6 +70,8 @@ export function audienceFor(v: Viewer, doc: ImportedDoc): Audience | null {
   if (isStaff(v)) return "staff";
   const c = doc.classification;
   if (c === "harmonious_restricted") return null;
+  // Explicitly filed into this investor's files (e.g. their K-1 or signed subscription agreement).
+  if (doc.shared_profile_id && v.ownInvestments.some((i) => i.profileId === doc.shared_profile_id && i.offeringId === doc.offering_id)) return "investor";
 
   const manages = v.managedOfferingIds.includes(doc.offering_id);
   if (c === "fund_general") {

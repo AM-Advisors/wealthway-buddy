@@ -8,6 +8,15 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/lib/require-auth";
 
+async function withShares(db: any, docs: any[]) {
+  const ids = docs.map((d) => d.id);
+  if (!ids.length) return docs;
+  const { data } = await db.from("drive_document_details").select("document_id, shared_profile_id, created_at").in("document_id", ids).order("created_at", { ascending: false });
+  const m = new Map<string, string | null>();
+  for (const x of (data ?? []) as any[]) if (!m.has(x.document_id)) m.set(x.document_id, x.shared_profile_id);
+  return docs.map((d) => ({ ...d, shared_profile_id: m.get(d.id) ?? null }));
+}
+
 async function viewerFor(context: any) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const db = supabaseAdmin as any;
@@ -39,7 +48,7 @@ export const listVisibleImportedDocuments = createServerFn({ method: "POST" })
     let q = db.from("drive_imported_documents").select("*").eq("environment", "production").order("imported_at", { ascending: false }).limit(500);
     if (data.offeringId) q = q.eq("offering_id", data.offeringId);
     const { data: docs } = await q;
-    const all = (docs ?? []) as any[];
+    const all = (await withShares(db, (docs ?? []) as any[])) as any[];
     const visible = visibleImports(viewer, all, data);
     const importers = [...new Set(visible.filter((v) => v.audience === "staff").map((v) => v.doc.imported_by))];
     const { data: people } = importers.length
@@ -59,7 +68,8 @@ export const openVisibleImportedDocument = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { audienceFor } = await import("@/lib/drive-import-visibility");
     const { db, viewer } = await viewerFor(context);
-    const { data: doc } = await db.from("drive_imported_documents").select("*").eq("id", data.id).maybeSingle();
+    const { data: raw } = await db.from("drive_imported_documents").select("*").eq("id", data.id).maybeSingle();
+    const doc = raw ? (await withShares(db, [raw]))[0] : null;
     if (!doc || !audienceFor(viewer, doc)) throw new Error("Document not found.");
     const { BUCKET } = await import("@/lib/drive-intake.server");
     const { data: signed, error } = await db.storage.from(BUCKET).createSignedUrl(doc.storage_path, 300);

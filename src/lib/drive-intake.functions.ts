@@ -183,6 +183,9 @@ export const listDriveImports = createServerFn({ method: "POST" })
     const { data: asg } = docIds.length ? await client.from("drive_document_requirement_assignments").select("document_id, requirement_key, created_at").in("document_id", docIds).order("created_at", { ascending: false }) : { data: [] as any[] };
     const reqByDoc = new Map<string, string>();
     for (const a of (asg ?? []) as any[]) if (!reqByDoc.has(a.document_id)) reqByDoc.set(a.document_id, a.requirement_key);
+    const { data: det } = docIds.length ? await client.from("drive_document_details").select("*").in("document_id", docIds).order("created_at", { ascending: false }) : { data: [] as any[] };
+    const detByDoc = new Map<string, any>();
+    for (const x of (det ?? []) as any[]) if (!detByDoc.has(x.document_id)) detByDoc.set(x.document_id, x);
     const users = [...new Set((docs ?? []).map((d: any) => d.imported_by))];
     const oIds = [...new Set((docs ?? []).map((d: any) => d.offering_id))];
     const pIds = [...new Set((docs ?? []).map((d: any) => d.investment_profile_id).filter(Boolean))];
@@ -211,6 +214,8 @@ export const listDriveImports = createServerFn({ method: "POST" })
           importedAt: d.imported_at,
           importedBy: who?.legal_name ?? who?.email ?? "Super Administrator",
           driveModifiedAt: d.drive_modified_at,
+          offeringId: d.offering_id,
+          details: detByDoc.has(d.id) ? (() => { const x = detByDoc.get(d.id); return { group: x.doc_group, kind: x.doc_kind, otherName: x.other_name, signatureStatus: x.signature_status, signatureBoxes: x.signature_boxes ?? [], sharedProfileId: x.shared_profile_id }; })() : null,
           requirement: reqByDoc.get(d.id) && reqByDoc.get(d.id) !== "none" ? reqByDoc.get(d.id)! : null,
         };
       }),
