@@ -1156,6 +1156,13 @@
       "when": 1791332793178,
       "tag": "0164_fund_manager_setup_submissions",
       "breakpoints": true
+    },
+    {
+      "idx": 165,
+      "version": "7",
+      "when": 1791333584838,
+      "tag": "0165_user_favorites",
+      "breakpoints": true
     }
   ]
 }

@@ -37,6 +37,7 @@ import {
 } from "@/components/ui/sidebar";
 import { useClientWorkspace } from "@/components/client-workspace";
 import { canSee } from "@/lib/staff-nav";
+import { SidebarFavorites, FavoriteStar } from "@/components/sidebar-favorites";
 import { SidebarAccountFooter } from "@/components/sidebar-account-footer";
 import { getNavigation, operationsNavItemIsActive } from "@/lib/navigation";
 import { opsSearchIndex, searchOpsIndex } from "@/lib/ops-search";
@@ -111,13 +112,14 @@ function NavSection({ id, label, items, pathname, collapsed, onNavigate, isActiv
                 const Icon = ICONS[item.icon] ?? Briefcase;
                 const active = isActive(item);
                 return (
-                  <SidebarMenuItem key={item.id}>
+                  <SidebarMenuItem key={item.id} className="group/item">
                     <SidebarMenuButton asChild isActive={active} tooltip={item.title} className={ACTIVE_CLS}>
                       <Link to={item.url as never} aria-current={active ? "page" : undefined} onClick={onNavigate} className="flex items-center gap-2">
                         <Icon className="h-4 w-4 shrink-0" />
                         <span className="truncate">{item.title}</span>
                       </Link>
                     </SidebarMenuButton>
+                    {!collapsed && <FavoriteStar url={item.url} label={item.title} className="absolute right-1 top-1 hidden group-hover/item:block" />}
                     {!collapsed && item.sub && item.sub.length > 0 && (active || item.sub.some((s) => pathname.startsWith(s.url))) && (
                       <div className="ml-6 border-l border-sidebar-border pl-3">
                         {item.sub.map((s) => (
@@ -327,6 +329,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
                 </SidebarGroupContent>
               </SidebarGroup>
             )}
+            <SidebarFavorites collapsed={collapsed} onNavigate={close} />
             <NavSection id="operations" label="Operations" items={opsItems} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={opsActive} />
             <NavSection id="finance" label="Accounting & Finance" items={financeItems} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={opsActive} />
             <NavSection id="sales" label="Sales" items={salesItems} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={exact} />

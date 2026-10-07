@@ -1,3 +1,4 @@
+import { SidebarFavorites, FavoriteStar } from "@/components/sidebar-favorites";
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
   Bell,
@@ -131,7 +132,7 @@ export function ClientSidebar({ onSignOut }: { onSignOut: () => void }) {
               {items.map((item) => {
                 const Icon = ICONS[item.icon ?? "home"] ?? Home;
                 return (
-                  <SidebarMenuItem key={item.url}>
+                  <SidebarMenuItem key={item.url} className="group/item">
                     <SidebarMenuButton
                       asChild
                       isActive={isActive(item.url)}
@@ -143,12 +144,14 @@ export function ClientSidebar({ onSignOut }: { onSignOut: () => void }) {
                         {!collapsed && <span className="truncate">{item.title}</span>}
                       </Link>
                     </SidebarMenuButton>
+                    {!collapsed && <FavoriteStar url={item.url} label={item.title} className="absolute right-1 top-1/2 hidden -translate-y-1/2 group-hover/item:block" />}
                   </SidebarMenuItem>
                 );
               })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+        <SidebarFavorites collapsed={collapsed} allowed={(u) => !/^\/(ops|admin|sales|marketing|account-manager)(\/|$)/.test(u)} />
 
         <SidebarGroup>
           <SidebarGroupContent>
