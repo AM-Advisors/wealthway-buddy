@@ -16,6 +16,7 @@ for (const l of lines ?? []) {
   if (!rc.reconciled_at) await step(`${nm}: reconcile payment to bank line (approver)`, () => ds.reconcileDistributionPayment(U.appr, { paymentId: p.id, bankTransactionId: tx.id }));
   if (!rc.reconciled_at) await step(`${nm}: reconciler cannot approve own reconciliation`, () => ds.approveDistributionReconciliation(U.appr, p.id), true);
   if (!rc.reconciled_at) await step(`${nm}: approve reconciliation (preparer)`, () => ds.approveDistributionReconciliation(U.prep, p.id));
-  await step(`${nm}: post payment to books (approver)`, () => ds.postDistributionPayment(U.appr, p.id));
+  await step(`${nm}: approve payment journal (approver)`, () => ds.postDistributionPayment(U.appr, p.id));
+  await step(`${nm}: post payment journal (preparer)`, () => ds.postDistributionPayment(U.prep, p.id));
 }
 console.log("BATCH", JSON.stringify((await d.from("distribution_batches").select("status").eq("id", B).single()).data));
