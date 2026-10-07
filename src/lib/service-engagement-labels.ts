@@ -1,8 +1,11 @@
+import { ladderLevel } from "@/lib/service-ladders";
 import { tierByKey, type TierKey } from "@/lib/administration-tiers";
 
 const LEVEL_TO_TIER: Record<string, TierKey> = { CORE: "core", FUND_ADMINISTRATION: "fund_admin", WHITE_GLOVE: "white_glove", INSTITUTIONAL: "institutional" };
 
 export function serviceLevelLabel(level: string, product?: string) {
+  const ladder = ladderLevel(product, level);
+  if (ladder) return { name: ladder.name, positioning: ladder.positioning };
   const t = LEVEL_TO_TIER[level];
   if (!t) return { name: titleCase(level), positioning: titleCase(product) };
   const tier = tierByKey(t);

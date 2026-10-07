@@ -53,7 +53,7 @@ export function FundCommandCenter({ fundId, onNavigate }: { fundId: string; onNa
   ] as const;
   const filtered = filter ? d.tasks.filter((t) => t.status !== "done" && t.status !== "cancelled" && asResponsibility(t.responsibility_status) === filter) : [];
   const handling = showAllHandling ? d.handling : d.handling.slice(0, 6);
-  const isCore = d.engagement?.level === "CORE";
+  const isCore = d.engagement?.level === "CORE" && d.engagement?.product === "SPV_ADMINISTRATION";
 
   return (
     <div className="space-y-4">
