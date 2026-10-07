@@ -23,7 +23,7 @@ function Posts() {
   const countFor = (k: string) => k === "all" ? posts.length : posts.filter((p: any) => p.status === k || (k === "draft" && p.status === "rejected")).length;
   return (
     <MkPage title="Social posts" intro="Write once, pick the channels, add images, submit for approval." actions={<Button asChild><Link to="/marketing/posts/$id" params={{ id: "new" }}>New post</Link></Button>}>
-      <div className="flex flex-wrap gap-2">{FILTERS.map(([k, l]) => <Button key={k} size="sm" variant={f === k ? "default" : "outline"} onClick={() => setF(k)}>{l}</Button>)}</div>
+      <div className="flex flex-wrap gap-2">{FILTERS.map(([k, l]) => <Button key={k} size="sm" variant={f === k ? "default" : "outline"} onClick={() => setF(k)}>{l}<span className="ml-1.5 rounded-full bg-muted px-1.5 text-xs">{countFor(k)}</span></Button>)}</div>
       {q.isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
       {q.error && <p className="text-sm text-destructive">{(q.error as Error).message}</p>}
       {q.data && (rows.length === 0 ? <p className="text-sm text-muted-foreground">No posts here yet.</p> : (
