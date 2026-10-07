@@ -18,7 +18,9 @@ function Posts() {
   const load = useServerFn(getMarketingPosts);
   const q = useQuery({ queryKey: ["mk-posts"], queryFn: () => load(), retry: false });
   const [f, setF] = useState<string>("all");
-  const rows = (q.data ?? []).filter((p: any) => f === "all" || p.status === f || (f === "draft" && p.status === "rejected"));
+  const posts = q.data ?? [];
+  const rows = posts.filter((p: any) => f === "all" || p.status === f || (f === "draft" && p.status === "rejected"));
+  const countFor = (k: string) => k === "all" ? posts.length : posts.filter((p: any) => p.status === k || (k === "draft" && p.status === "rejected")).length;
   return (
     <MkPage title="Social posts" intro="Write once, pick the channels, add images, submit for approval." actions={<Button asChild><Link to="/marketing/posts/$id" params={{ id: "new" }}>New post</Link></Button>}>
       <div className="flex flex-wrap gap-2">{FILTERS.map(([k, l]) => <Button key={k} size="sm" variant={f === k ? "default" : "outline"} onClick={() => setF(k)}>{l}</Button>)}</div>
