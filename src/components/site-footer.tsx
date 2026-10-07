@@ -1,4 +1,6 @@
 import { Link } from "@tanstack/react-router";
+import { CookieConsentBanner } from "@/components/cookie-consent-banner";
+import { openCookieSettings } from "@/lib/cookie-consent";
 
 import { Logo } from "@/components/Logo";
 import { DisclosureText } from "@/components/marketing/marketing-blocks";
@@ -56,6 +58,9 @@ export function SiteFooter() {
             <li>
               <a href="/.well-known/trust.html" className="hover:text-brand-white">Platform trust center</a>
             </li>
+            <li>
+              <button type="button" onClick={openCookieSettings} className="hover:text-brand-white">Cookie settings</button>
+            </li>
           </ul>
         </div>
       </div>
@@ -66,6 +71,7 @@ export function SiteFooter() {
           <p>© {new Date().getFullYear()} {ORGANIZATION.legalName}.</p>
         </div>
       </div>
+      <CookieConsentBanner />
     </footer>
   );
 }
