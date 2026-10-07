@@ -170,7 +170,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
     ...(allowedUrls.has("/ops/queue") ? [{ id: "queue", title: "Work queue", url: "/ops/queue", icon: "tasks" }] : []),
     ...sections.filter((s) => !["home", "administration", ...FINANCE_IDS].includes(s.id)).map(toItem),
   ];
-  const regulatorySub = [{ title: "Close requests", url: "/ops/close-requests" }, { title: "Compliance & Controls", url: "/ops/compliance" }].filter((x) => allowedUrls.has(x.url));
+  const regulatorySub = [{ title: "Close requests", url: "/ops/close-requests" }, { title: "Security & Compliance", url: "/ops/security-compliance" }].filter((x) => allowedUrls.has(x.url));
   if (leader || has("compliance", "legal")) regulatorySub.unshift({ title: "Compliance dashboard", url: "/ops/dashboards/compliance" });
   if (!salesOnly) opsItems.push({ id: "ops-agreements", title: "My agreements", url: "/ops/agreements", icon: "document" });
   if (regulatorySub.length) opsItems.push({ id: "regulatory", title: "Regulatory & filings", url: regulatorySub[0]!.url, icon: "shield", sub: regulatorySub });
@@ -200,7 +200,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
     ...grp("lead-access", "Access", "shield", [{ title: "Legacy permission settings", url: "/admin/permissions" }]),
     ...grp("lead-oversight", "Oversight", "check", [
       { title: "Audit log", url: "/admin/audit" }, { title: "Activity log", url: "/admin/activity" },
-      { title: "Timeline", url: "/admin/timeline" }, { title: "Compliance & Controls", url: "/ops/compliance" },
+      { title: "Timeline", url: "/admin/timeline" }, { title: "Security & Compliance", url: "/ops/security-compliance" },
     ]),
     ...grp("lead-platform", "Platform", "settings", [
       { title: "Client setup options", url: "/admin/client-setup" }, { title: "Security", url: "/admin/security" },

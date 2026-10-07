@@ -7309,6 +7309,187 @@ export type Database = {
         }
         Relationships: []
       }
+      compliance_audit_log: {
+        Row: {
+          action: string
+          actor: string
+          after: Json | null
+          before: Json | null
+          created_at: string
+          id: string
+          reason: string
+          record_id: string
+          record_type: string
+        }
+        Insert: {
+          action: string
+          actor: string
+          after?: Json | null
+          before?: Json | null
+          created_at?: string
+          id?: string
+          reason?: string
+          record_id: string
+          record_type: string
+        }
+        Update: {
+          action?: string
+          actor?: string
+          after?: Json | null
+          before?: Json | null
+          created_at?: string
+          id?: string
+          reason?: string
+          record_id?: string
+          record_type?: string
+        }
+        Relationships: []
+      }
+      compliance_audits: {
+        Row: {
+          assessor: string
+          audit_type: string
+          created_at: string
+          created_by: string | null
+          framework_key: string
+          id: string
+          notes: string
+          period_end: string | null
+          period_start: string | null
+          report_evidence_id: string | null
+          result: string
+          result_recorded_at: string | null
+          result_recorded_by: string | null
+          scope_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          assessor?: string
+          audit_type: string
+          created_at?: string
+          created_by?: string | null
+          framework_key: string
+          id?: string
+          notes?: string
+          period_end?: string | null
+          period_start?: string | null
+          report_evidence_id?: string | null
+          result?: string
+          result_recorded_at?: string | null
+          result_recorded_by?: string | null
+          scope_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          assessor?: string
+          audit_type?: string
+          created_at?: string
+          created_by?: string | null
+          framework_key?: string
+          id?: string
+          notes?: string
+          period_end?: string | null
+          period_start?: string | null
+          report_evidence_id?: string | null
+          result?: string
+          result_recorded_at?: string | null
+          result_recorded_by?: string | null
+          scope_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compliance_audits_framework_key_fkey"
+            columns: ["framework_key"]
+            isOneToOne: false
+            referencedRelation: "compliance_frameworks"
+            referencedColumns: ["key"]
+          },
+          {
+            foreignKeyName: "compliance_audits_report_evidence_id_fkey"
+            columns: ["report_evidence_id"]
+            isOneToOne: false
+            referencedRelation: "compliance_evidence"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "compliance_audits_scope_id_fkey"
+            columns: ["scope_id"]
+            isOneToOne: false
+            referencedRelation: "compliance_scopes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      compliance_control_details: {
+        Row: {
+          audit_id: string | null
+          auditor_notes: string
+          automation: string | null
+          canonical_id: string
+          change_reason: string
+          control_key: string
+          created_at: string
+          created_by: string | null
+          data_classifications: string[]
+          domain: string
+          executive_owner: string
+          id: string
+          internal_notes: string
+          last_tested: string | null
+          lifecycle_status: string
+          nature: string | null
+          next_test: string | null
+          systems_in_scope: string[]
+          version: number
+        }
+        Insert: {
+          audit_id?: string | null
+          auditor_notes?: string
+          automation?: string | null
+          canonical_id: string
+          change_reason: string
+          control_key: string
+          created_at?: string
+          created_by?: string | null
+          data_classifications?: string[]
+          domain: string
+          executive_owner?: string
+          id?: string
+          internal_notes?: string
+          last_tested?: string | null
+          lifecycle_status?: string
+          nature?: string | null
+          next_test?: string | null
+          systems_in_scope?: string[]
+          version: number
+        }
+        Update: {
+          audit_id?: string | null
+          auditor_notes?: string
+          automation?: string | null
+          canonical_id?: string
+          change_reason?: string
+          control_key?: string
+          created_at?: string
+          created_by?: string | null
+          data_classifications?: string[]
+          domain?: string
+          executive_owner?: string
+          id?: string
+          internal_notes?: string
+          last_tested?: string | null
+          lifecycle_status?: string
+          nature?: string | null
+          next_test?: string | null
+          systems_in_scope?: string[]
+          version?: number
+        }
+        Relationships: []
+      }
       compliance_control_mappings: {
         Row: {
           control_key: string
@@ -7505,6 +7686,80 @@ export type Database = {
           },
         ]
       }
+      compliance_evidence_access_log: {
+        Row: {
+          action: string
+          created_at: string
+          evidence_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          evidence_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          evidence_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      compliance_evidence_details: {
+        Row: {
+          collection_method: string
+          control_keys: string[]
+          created_at: string
+          created_by: string | null
+          evidence_id: string
+          expires_on: string | null
+          file_sha256: string | null
+          id: string
+          requirement_ids: string[]
+          sensitivity: string
+          systems: string[]
+        }
+        Insert: {
+          collection_method?: string
+          control_keys?: string[]
+          created_at?: string
+          created_by?: string | null
+          evidence_id: string
+          expires_on?: string | null
+          file_sha256?: string | null
+          id?: string
+          requirement_ids?: string[]
+          sensitivity?: string
+          systems?: string[]
+        }
+        Update: {
+          collection_method?: string
+          control_keys?: string[]
+          created_at?: string
+          created_by?: string | null
+          evidence_id?: string
+          expires_on?: string | null
+          file_sha256?: string | null
+          id?: string
+          requirement_ids?: string[]
+          sensitivity?: string
+          systems?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compliance_evidence_details_evidence_id_fkey"
+            columns: ["evidence_id"]
+            isOneToOne: false
+            referencedRelation: "compliance_evidence"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       compliance_evidence_reviews: {
         Row: {
           created_at: string
@@ -7536,6 +7791,68 @@ export type Database = {
             columns: ["evidence_id"]
             isOneToOne: false
             referencedRelation: "compliance_evidence"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      compliance_frameworks: {
+        Row: {
+          applicability: string
+          assessment_end: string | null
+          assessment_start: string | null
+          assessor: string
+          created_at: string
+          id: string
+          key: string
+          name: string
+          notes: string
+          program_status: string
+          requirement_framework: string | null
+          scope_id: string | null
+          sort: number
+          updated_at: string
+          version: string
+        }
+        Insert: {
+          applicability?: string
+          assessment_end?: string | null
+          assessment_start?: string | null
+          assessor?: string
+          created_at?: string
+          id?: string
+          key: string
+          name: string
+          notes?: string
+          program_status?: string
+          requirement_framework?: string | null
+          scope_id?: string | null
+          sort?: number
+          updated_at?: string
+          version?: string
+        }
+        Update: {
+          applicability?: string
+          assessment_end?: string | null
+          assessment_start?: string | null
+          assessor?: string
+          created_at?: string
+          id?: string
+          key?: string
+          name?: string
+          notes?: string
+          program_status?: string
+          requirement_framework?: string | null
+          scope_id?: string | null
+          sort?: number
+          updated_at?: string
+          version?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compliance_frameworks_scope_id_fkey"
+            columns: ["scope_id"]
+            isOneToOne: false
+            referencedRelation: "compliance_scopes"
             referencedColumns: ["id"]
           },
         ]
@@ -7615,6 +7932,30 @@ export type Database = {
           },
         ]
       }
+      compliance_policy_acknowledgments: {
+        Row: {
+          acknowledged_at: string
+          id: string
+          policy_ref: string
+          user_id: string
+          version: number
+        }
+        Insert: {
+          acknowledged_at?: string
+          id?: string
+          policy_ref: string
+          user_id: string
+          version: number
+        }
+        Update: {
+          acknowledged_at?: string
+          id?: string
+          policy_ref?: string
+          user_id?: string
+          version?: number
+        }
+        Relationships: []
+      }
       compliance_policy_entries: {
         Row: {
           approved_at: string | null
@@ -7692,6 +8033,66 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      compliance_policy_versions: {
+        Row: {
+          approved_by: string | null
+          body: string
+          category: string
+          change_reason: string
+          control_keys: string[]
+          created_at: string
+          created_by: string | null
+          effective_date: string | null
+          id: string
+          legacy_record_id: string | null
+          next_review: string | null
+          owner: string
+          policy_ref: string
+          requires_acknowledgment: boolean
+          status: string
+          title: string
+          version: number
+        }
+        Insert: {
+          approved_by?: string | null
+          body?: string
+          category: string
+          change_reason: string
+          control_keys?: string[]
+          created_at?: string
+          created_by?: string | null
+          effective_date?: string | null
+          id?: string
+          legacy_record_id?: string | null
+          next_review?: string | null
+          owner?: string
+          policy_ref: string
+          requires_acknowledgment?: boolean
+          status: string
+          title: string
+          version: number
+        }
+        Update: {
+          approved_by?: string | null
+          body?: string
+          category?: string
+          change_reason?: string
+          control_keys?: string[]
+          created_at?: string
+          created_by?: string | null
+          effective_date?: string | null
+          id?: string
+          legacy_record_id?: string | null
+          next_review?: string | null
+          owner?: string
+          policy_ref?: string
+          requires_acknowledgment?: boolean
+          status?: string
+          title?: string
+          version?: number
+        }
+        Relationships: []
       }
       compliance_questionnaire_responses: {
         Row: {
@@ -7899,6 +8300,170 @@ export type Database = {
           framework?: string
           id?: string
           title?: string
+        }
+        Relationships: []
+      }
+      compliance_risk_assessments: {
+        Row: {
+          acceptance_expires: string | null
+          acceptance_reason: string | null
+          acceptance_requested_by: string | null
+          accepted_by: string | null
+          affected_data: string
+          affected_systems: string
+          category: string
+          change_reason: string
+          control_keys: string[]
+          created_at: string
+          created_by: string | null
+          description: string
+          id: string
+          inherent_impact: number
+          inherent_likelihood: number
+          owner: string
+          residual_assessed_by: string | null
+          residual_impact: number | null
+          residual_likelihood: number | null
+          review_date: string | null
+          risk_ref: string
+          status: string
+          target_date: string | null
+          threat: string
+          title: string
+          treatment: string | null
+          version: number
+          vulnerability: string
+        }
+        Insert: {
+          acceptance_expires?: string | null
+          acceptance_reason?: string | null
+          acceptance_requested_by?: string | null
+          accepted_by?: string | null
+          affected_data?: string
+          affected_systems?: string
+          category?: string
+          change_reason: string
+          control_keys?: string[]
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          id?: string
+          inherent_impact: number
+          inherent_likelihood: number
+          owner?: string
+          residual_assessed_by?: string | null
+          residual_impact?: number | null
+          residual_likelihood?: number | null
+          review_date?: string | null
+          risk_ref: string
+          status?: string
+          target_date?: string | null
+          threat?: string
+          title: string
+          treatment?: string | null
+          version: number
+          vulnerability?: string
+        }
+        Update: {
+          acceptance_expires?: string | null
+          acceptance_reason?: string | null
+          acceptance_requested_by?: string | null
+          accepted_by?: string | null
+          affected_data?: string
+          affected_systems?: string
+          category?: string
+          change_reason?: string
+          control_keys?: string[]
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          id?: string
+          inherent_impact?: number
+          inherent_likelihood?: number
+          owner?: string
+          residual_assessed_by?: string | null
+          residual_impact?: number | null
+          residual_likelihood?: number | null
+          review_date?: string | null
+          risk_ref?: string
+          status?: string
+          target_date?: string | null
+          threat?: string
+          title?: string
+          treatment?: string | null
+          version?: number
+          vulnerability?: string
+        }
+        Relationships: []
+      }
+      compliance_scope_items: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          in_scope: boolean
+          item_type: string
+          name: string
+          notes: string
+          scope_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          in_scope?: boolean
+          item_type: string
+          name: string
+          notes?: string
+          scope_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          in_scope?: boolean
+          item_type?: string
+          name?: string
+          notes?: string
+          scope_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compliance_scope_items_scope_id_fkey"
+            columns: ["scope_id"]
+            isOneToOne: false
+            referencedRelation: "compliance_scopes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      compliance_scopes: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          id?: string
+          name?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -37903,6 +38468,166 @@ export type Database = {
         }
         Relationships: []
       }
+      trust_document_requests: {
+        Row: {
+          company: string
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          id: string
+          publication_id: string
+          reason: string
+          requester_email: string
+          requester_name: string
+          status: string
+        }
+        Insert: {
+          company?: string
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          id?: string
+          publication_id: string
+          reason?: string
+          requester_email: string
+          requester_name: string
+          status?: string
+        }
+        Update: {
+          company?: string
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          id?: string
+          publication_id?: string
+          reason?: string
+          requester_email?: string
+          requester_name?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trust_document_requests_publication_id_fkey"
+            columns: ["publication_id"]
+            isOneToOne: false
+            referencedRelation: "trust_publications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trust_publication_events: {
+        Row: {
+          actor: string
+          created_at: string
+          from_state: string | null
+          id: string
+          publication_id: string
+          reason: string
+          snapshot: Json
+          to_state: string
+        }
+        Insert: {
+          actor: string
+          created_at?: string
+          from_state?: string | null
+          id?: string
+          publication_id: string
+          reason?: string
+          snapshot: Json
+          to_state: string
+        }
+        Update: {
+          actor?: string
+          created_at?: string
+          from_state?: string | null
+          id?: string
+          publication_id?: string
+          reason?: string
+          snapshot?: Json
+          to_state?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trust_publication_events_publication_id_fkey"
+            columns: ["publication_id"]
+            isOneToOne: false
+            referencedRelation: "trust_publications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trust_publications: {
+        Row: {
+          access_level: string
+          approved_by: string | null
+          assurance_status: string | null
+          audit_id: string | null
+          body: string
+          created_at: string
+          created_by: string | null
+          framework_key: string | null
+          id: string
+          item_key: string
+          item_type: string
+          published_at: string | null
+          sort: number
+          state: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          access_level?: string
+          approved_by?: string | null
+          assurance_status?: string | null
+          audit_id?: string | null
+          body?: string
+          created_at?: string
+          created_by?: string | null
+          framework_key?: string | null
+          id?: string
+          item_key: string
+          item_type: string
+          published_at?: string | null
+          sort?: number
+          state?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          access_level?: string
+          approved_by?: string | null
+          assurance_status?: string | null
+          audit_id?: string | null
+          body?: string
+          created_at?: string
+          created_by?: string | null
+          framework_key?: string | null
+          id?: string
+          item_key?: string
+          item_type?: string
+          published_at?: string | null
+          sort?: number
+          state?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trust_publications_audit_id_fkey"
+            columns: ["audit_id"]
+            isOneToOne: false
+            referencedRelation: "compliance_audits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trust_publications_framework_key_fkey"
+            columns: ["framework_key"]
+            isOneToOne: false
+            referencedRelation: "compliance_frameworks"
+            referencedColumns: ["key"]
+          },
+        ]
+      }
       user_access_events: {
         Row: {
           action: string
@@ -39247,6 +39972,8 @@ export type Database = {
         | "marketing_manager"
         | "marketing_specialist"
         | "leadership"
+        | "security_compliance_manager"
+        | "security_compliance_viewer"
       assisted_draft_status:
         | "awaiting_client_review"
         | "approved"
@@ -39736,6 +40463,8 @@ export const Constants = {
         "marketing_manager",
         "marketing_specialist",
         "leadership",
+        "security_compliance_manager",
+        "security_compliance_viewer",
       ],
       assisted_draft_status: [
         "awaiting_client_review",

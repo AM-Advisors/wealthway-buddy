@@ -30,7 +30,7 @@ function useAct() {
   };
 }
 
-export function ComplianceCenter() {
+export function ComplianceCenter({ initialTab }: { initialTab?: string } = {}) {
   const load = useServerFn(getCompliance);
   const q = useQuery({ queryKey: ["compliance"], queryFn: () => load() });
   if (q.isLoading) return <div className="p-6 text-sm text-muted-foreground">Loading…</div>;
@@ -43,7 +43,7 @@ export function ComplianceCenter() {
         <h1 className="text-2xl font-semibold">Compliance & Controls</h1>
         <p className="text-sm text-muted-foreground">How Harmonious controls are designed, operated and evidenced. This supports SOC 2 readiness and privacy governance - it does not certify compliance.</p>
       </div>
-      <Tabs defaultValue="home">
+      <Tabs defaultValue={initialTab ?? "home"}>
         <TabsList className="flex-wrap h-auto">
           <TabsTrigger value="home">Home</TabsTrigger>
           <TabsTrigger value="controls">Control Library</TabsTrigger>

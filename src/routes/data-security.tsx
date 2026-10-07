@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { SecurityCenterPage } from "@/components/security-center-page";
 import { seoLinks, seoMeta } from "@/lib/seo";
+import { getPublishedTrustItems } from "@/lib/trust-center-public.functions";
 
 const TITLE = "Data Security & Privacy - Harmonious";
 const DESCRIPTION =
@@ -20,5 +21,13 @@ export const Route = createFileRoute("/data-security")({
     ],
     links: seoLinks("/data-security"),
   }),
-  component: () => <SecurityCenterPage />,
+  loader: () => getPublishedTrustItems(),
+  errorComponent: () => <SecurityCenterPage items={[]} />,
+  notFoundComponent: () => <SecurityCenterPage items={[]} />,
+  component: Page,
 });
+
+function Page() {
+  const { items } = Route.useLoaderData();
+  return <SecurityCenterPage items={items} />;
+}

@@ -1219,6 +1219,13 @@
       "when": 1791338474431,
       "tag": "0173_drive_document_details",
       "breakpoints": true
+    },
+    {
+      "idx": 174,
+      "version": "7",
+      "when": 1791339264053,
+      "tag": "0174_security_compliance_foundation",
+      "breakpoints": true
     }
   ]
 }

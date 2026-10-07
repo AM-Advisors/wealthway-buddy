@@ -200,6 +200,7 @@ export const downloadEvidenceDocument = createServerFn({ method: "POST" })
     if (!ev?.file_path) throw new Error("No document attached to this evidence record.");
     const { data: signed, error } = await c.db.storage.from("compliance-evidence").createSignedUrl(ev.file_path, 300);
     if (error || !signed?.signedUrl) throw new Error("Could not create a download link.");
+    await c.db.from("compliance_evidence_access_log").insert({ evidence_id: ev.id, user_id: c.userId, action: "download" });
     return { url: signed.signedUrl as string };
   });
 
