@@ -3,6 +3,7 @@ import { AlertTriangle, ShieldCheck } from "lucide-react";
 
 import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { SECURITY_STATEMENT } from "@/lib/security-content";
+import { OPEN_SETTINGS_EVENT } from "@/lib/cookie-consent";
 
 /**
  * Harmonious-owned security statement. Deliberately plain and text-first: it
@@ -42,6 +43,15 @@ export function SecurityCenterPage() {
                 </li>
               ))}
             </ul>
+            {section.heading === "Cookies and your consent" ? (
+              <button
+                type="button"
+                className="mt-4 rounded-md border border-border px-4 py-2 text-sm font-medium hover:bg-muted"
+                onClick={() => window.dispatchEvent(new Event(OPEN_SETTINGS_EVENT))}
+              >
+                Cookie settings
+              </button>
+            ) : null}
           </section>
         ))}
 
