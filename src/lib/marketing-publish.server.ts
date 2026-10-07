@@ -12,16 +12,16 @@ async function fail(res: Response, what: string): Promise<never> {
   throw new Error(`${what} failed [${res.status}]: ${body.slice(0, 400)}`);
 }
 
-function liKey() { return process.env["LINKEDIN_API_KEY_1"] || process.env["LINKEDIN_API_KEY"]; }
-export async function linkedinConfigured() { return !!(liKey() && process.env["LOVABLE_API_KEY"]); }
+function liToken() { return process.env["LINKEDIN_ORG_ACCESS_TOKEN"]?.trim().replace(/^["']|["']$/g, ""); }
+export async function linkedinConfigured() { return !!liToken(); }
 
-/** Backend LinkedIn connection via the connector gateway (no browser sign-in). */
+/** Direct LinkedIn API with the Harmonious company-page token (Community Management API). */
 function liFetch(path: string, init: RequestInit = {}) {
-  const key = liKey(), lov = process.env["LOVABLE_API_KEY"];
-  if (!key || !lov) throw new Error("LinkedIn isn't connected yet.");
-  return fetch(`${GATEWAY}/linkedin${path}`, {
+  const token = liToken();
+  if (!token) throw new Error("LinkedIn isn't connected yet.");
+  return fetch(`https://api.linkedin.com${path}`, {
     ...init,
-    headers: { ...(init.headers as Record<string, string>), Authorization: `Bearer ${lov}`, "X-Connection-Api-Key": key,
+    headers: { ...(init.headers as Record<string, string>), Authorization: `Bearer ${token}`,
       "LinkedIn-Version": "202504", "X-Restli-Protocol-Version": "2.0.0" },
   });
 }
@@ -35,21 +35,15 @@ async function linkedinImage(owner: string, imageUrl: string): Promise<string | 
     if (!init.ok) { console.error(`LinkedIn image init failed [${init.status}]: ${await init.text()}`); return null; }
     const v = (await init.json())?.value;
     const bytes = await (await fetch(imageUrl)).arrayBuffer();
-    const put = await fetch(v.uploadUrl, { method: "PUT", body: bytes });
+    const put = await fetch(v.uploadUrl, { method: "PUT", body: bytes, headers: { Authorization: `Bearer ${liToken()}` } });
     return put.ok ? String(v.image) : null;
   } catch (e) { console.error("LinkedIn image upload skipped", e); return null; }
 }
 
-/** Posts as the company page when set in Channels; otherwise as the connected member. */
+/** Always posts as the company page set in Channels; never as a person. */
 export async function publishLinkedIn(orgId: string, text: string, imageUrl: string | null): Promise<string> {
-  if ((["linkedin"] as string[]).includes("linkedin")) throw new Error("LinkedIn publishing is unavailable for now.");
-  let author: string;
-  if (orgId && orgId !== "me") author = orgId.startsWith("urn:") ? orgId : `urn:li:organization:${orgId}`;
-  else {
-    const me = await liFetch(`/v2/userinfo`);
-    if (!me.ok) await fail(me, "LinkedIn profile");
-    author = `urn:li:person:${(await me.json()).sub}`;
-  }
+  if (!orgId || orgId === "me") throw new Error("Set the Harmonious company page in Marketing → Channels first.");
+  const author = orgId.startsWith("urn:") ? orgId : `urn:li:organization:${orgId}`;
   const image = imageUrl ? await linkedinImage(author, imageUrl) : null;
   const res = await liFetch(`/rest/posts`, {
     method: "POST", headers: { "Content-Type": "application/json" },

@@ -38,11 +38,11 @@ function ChannelCard({ c, canEdit }: { c: any; canEdit: boolean }) {
     onError: (e) => toast.error((e as Error).message),
   });
   return (
-    <Panel title={c.label} action={<Badge variant={c.channel === "linkedin" ? "outline" : c.ready ? "default" : "secondary"}>{c.channel === "linkedin" ? "Unavailable" : c.ready ? "Connected" : "Not connected"}</Badge>}>
+    <Panel title={c.label} action={<Badge variant={c.ready ? "default" : "secondary"}>{c.ready ? "Connected" : "Not connected"}</Badge>}>
       <p className="mb-3 text-xs text-muted-foreground">
-        {c.channel === "linkedin" ? null : c.credential ? "Account access is set up." : c.channel === "linkedin" ? "LinkedIn access hasn't been connected yet." : "Meta (Facebook/Instagram) access token hasn't been added yet."}
+        {c.credential ? "Account access is set up." : c.channel === "linkedin" ? "LinkedIn company page token hasn't been added yet." : "Meta (Facebook/Instagram) access token hasn't been added yet."}
       </p>
-      {c.channel === "linkedin" && <p className="mb-3 text-xs text-muted-foreground">LinkedIn posting is unavailable on the platform for now, while the Harmonious company page access is approved.</p>}
+      {c.channel === "linkedin" && <p className="mb-3 text-xs text-muted-foreground">Posts always go out as the Harmonious company page, never as a person. The LinkedIn token expires about every 60 days.</p>}
       <label className="text-xs font-medium">{c.refHint}</label>
       <Input value={ref} onChange={(e) => setRef(e.target.value)} disabled={!canEdit} className="mb-2" />
       <label className="text-xs font-medium">Display name</label>

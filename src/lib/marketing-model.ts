@@ -10,8 +10,8 @@ export type Channel = (typeof CHANNELS)[number];
 export const CHANNEL_LABEL: Record<Channel, string> = { linkedin: "LinkedIn", facebook: "Facebook", instagram: "Instagram" };
 export const CHANNEL_LIMIT: Record<Channel, number> = { linkedin: 3000, facebook: 63206, instagram: 2200 };
 
-/** Channels switched off platform-wide (LinkedIn awaits the company-page API approval). */
-export const UNAVAILABLE_CHANNELS: readonly Channel[] = ["linkedin"];
+/** Channels switched off platform-wide. */
+export const UNAVAILABLE_CHANNELS: readonly Channel[] = [];
 
 export const AUDIENCE_SOURCES = ["sales", "clients", "investors", "csv"] as const;
 export type AudienceSource = (typeof AUDIENCE_SOURCES)[number];
