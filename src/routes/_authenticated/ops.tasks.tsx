@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { getTasks, createTask, updateTask, getTaskHistory, setTaskResponsibility } from "@/lib/staff-tasks.functions";
 import { ResponsibilityBadge, ResponsibilityFilter } from "@/components/responsibility-badge";
 import { RESPONSIBILITY_LABEL, RESPONSIBILITY_STATUSES, THIRD_PARTY_TYPES, asResponsibility, daysOverdue, responsibilityCounts, waitingOnDetail, type ResponsibilityStatus } from "@/lib/responsibility";
-import { SERVICE_LEVEL_LABEL } from "@/lib/service-engagement-labels";
+import { titleCase } from "@/lib/service-engagement-labels";
 import { AmPage } from "@/components/account-management-ui";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -93,7 +93,7 @@ function TasksPage() {
         <ResponsibilityFilter value={resp} onChange={setResp} counts={counts} />
         <div className="flex flex-wrap gap-2">
           <FilterSelect label="Fund" value={f.fund} onChange={(v) => setF({ ...f, fund: v })} options={opt("offering_id").map((id) => [id, d.rows.find((t: any) => t.offering_id === id)?.fundName ?? "Fund"])} />
-          <FilterSelect label="Service level" value={f.level} onChange={(v) => setF({ ...f, level: v })} options={opt("serviceLevel").map((l) => [l, (SERVICE_LEVEL_LABEL as any)[l] ?? l])} />
+          <FilterSelect label="Service level" value={f.level} onChange={(v) => setF({ ...f, level: v })} options={opt("serviceLevel").map((l) => [l, titleCase(l)])} />
           <FilterSelect label="Primary administrator" value={f.admin} onChange={(v) => setF({ ...f, admin: v })} options={opt("primaryAdministratorId").map((id) => [id, nameOf(id)])} />
           <FilterSelect label="Relationship lead" value={f.lead} onChange={(v) => setF({ ...f, lead: v })} options={opt("relationshipLeadId").map((id) => [id, nameOf(id)])} />
           <FilterSelect label="Team" value={f.team} onChange={(v) => setF({ ...f, team: v })} options={Object.entries(TEAMS)} />
