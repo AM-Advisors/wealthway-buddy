@@ -84,6 +84,16 @@ const today = () => nowIso().slice(0, 10);
 function forbid(message: string): never {
   throw new Error(`Forbidden: ${message}`);
 }
+/** Maker-checker check; a Super Admin may waive only a self-involvement conflict, with a recorded reason. */
+async function chainCheck(chain: any[], step: any, userId: string, ids: Array<string | null | undefined>): Promise<string | null> {
+  const err = makerCheckerError(chain, { step, actor: { userId, role: "harmonious" } });
+  if (!err) return null;
+  const masked = chain.map((c: any) => (c.userId === userId ? { ...c, userId: "__other__" } : c));
+  if (makerCheckerError(masked, { step, actor: { userId, role: "harmonious" } })) return err;
+  const { selfApprove } = await import("@/lib/self-approval.server");
+  return (await selfApprove(userId, `distribution_${step}`, ids.map((x) => (x ? String(x) : null)))) ? null : err;
+}
+
 function fail(message: string): never {
   throw new Error(message);
 }
@@ -1438,10 +1448,7 @@ export async function finalApproveDistribution(userId: string, batchId: string) 
     fail(`This distribution does not balance: ${balance.problems.join(" ")}`);
   }
 
-  const chainError = makerCheckerError(approvalChain(batch), {
-    step: "final_approved",
-    actor: { userId: actor.userId, role: "harmonious" },
-  });
+  const chainError = await chainCheck(approvalChain(batch), "final_approved", actor.userId, [batch.id]);
   if (chainError) fail(chainError);
 
   // D1: withholding must be a reviewed input, and identity/tax evidence must be current.
@@ -1710,10 +1717,7 @@ export async function executeDistributionPayment(
   }
 
   const chain = approvalChain(batch);
-  const chainError = makerCheckerError(chain, {
-    step: "executed",
-    actor: { userId: actor.userId, role: "harmonious" },
-  });
+  const chainError = await chainCheck(chain, "executed", actor.userId, [batch.id, line.id]);
   if (chainError) fail(chainError);
 
   const transitionError = paymentTransitionError(String(line.payment_state) as any, "submitted");
@@ -1967,10 +1971,7 @@ export async function reconcileDistributionPayment(
   }
   if (payment.reconciliation_id) fail("This payment already has a reconciliation.");
 
-  const chainError = makerCheckerError(paymentChain(payment), {
-    step: "reconciled",
-    actor: { userId: actor.userId, role: "harmonious" },
-  });
+  const chainError = await chainCheck(paymentChain(payment), "reconciled", actor.userId, [payment.id, payment.batch_id]);
   if (chainError) fail(chainError);
 
   const { data: selected } = await db()
@@ -2145,10 +2146,7 @@ export async function approveDistributionReconciliation(userId: string, paymentI
   if (!matchAdvancesSettlement(String(payment.match_outcome ?? "UNMATCHED") as any)) {
     fail("Only an EXACT or STRONG match can be approved.");
   }
-  const chainError = makerCheckerError(paymentChain(payment), {
-    step: "reconciliation_approved",
-    actor: { userId: actor.userId, role: "harmonious" },
-  });
+  const chainError = await chainCheck(paymentChain(payment), "reconciliation_approved", actor.userId, [payment.id, payment.batch_id]);
   if (chainError) fail(chainError);
 
   await db()
@@ -2224,10 +2222,7 @@ export async function postDistributionPayment(userId: string, paymentId: string)
   if (!payment) fail("That payment was not found.");
   if (!payment.reconciliation_id) fail("This payment has not been reconciled.");
   if (payment.posted_at) fail("This payment is already posted.");
-  const postError = makerCheckerError(paymentChain(payment), {
-    step: "posted",
-    actor: { userId: actor.userId, role: "harmonious" },
-  });
+  const postError = await chainCheck(paymentChain(payment), "posted", actor.userId, [payment.id, payment.batch_id]);
   if (postError) fail(postError);
 
   await advanceReconciliationJournal(actor.userId, String(payment.reconciliation_id), "reviewed");
@@ -2373,10 +2368,7 @@ export async function approveDistributionReversal(userId: string, paymentId: str
   if (!payment) fail("That payment was not found.");
   if (!payment.reversal_requested_by) fail("No reversal has been requested.");
   if (payment.reversal_approved_by) fail("This reversal is already approved.");
-  const chainError = makerCheckerError(paymentChain(payment), {
-    step: "reversal_approved",
-    actor: { userId: actor.userId, role: "harmonious" },
-  });
+  const chainError = await chainCheck(paymentChain(payment), "reversal_approved", actor.userId, [payment.id, payment.batch_id]);
   if (chainError) fail(chainError);
   const reason = String(payment.reversal_reason ?? "Reversal");
 
