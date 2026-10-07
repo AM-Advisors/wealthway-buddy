@@ -11,7 +11,6 @@ import { requireSupabaseAuth } from "@/lib/require-auth";
 import {
   EDITABLE_CLIENT_FIELDS,
   RELATIONSHIP_ROLE_VALUES,
-  diffClient,
   groupServices,
   planFundLink,
   portalFundAccess,
