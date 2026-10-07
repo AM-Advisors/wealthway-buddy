@@ -182,6 +182,13 @@ function PostEditor() {
           )}
           {status === "submitted" && q.data?.isAuthor && <p className="text-sm text-muted-foreground">Waiting for a Marketing Manager to approve. Editing sends it back to draft.</p>}
 
+          {status === "failed" && (
+            <Panel title="Publishing failed">
+              <p className="text-sm text-muted-foreground">This post was already approved — retrying sends it straight back out, no new approval needed. Only the channels that failed are tried again.</p>
+              <div className="mt-2"><Button onClick={() => retryM.mutate()} disabled={retryM.isPending}>{retryM.isPending ? "Retrying…" : "Retry publishing"}</Button></div>
+            </Panel>
+          )}
+
           {!!q.data?.targets.length && (
             <Panel title="Publishing results">
               <ul className="space-y-1 text-sm">{q.data.targets.map((t: any) => <li key={t.id}><strong>{CHANNEL_LABEL[t.channel as Channel]}</strong>: {t.status}{t.published_at ? ` · ${fmt(t.published_at)}` : ""}{t.error ? <span className="block text-xs text-destructive">{t.error}</span> : null}</li>)}</ul>
