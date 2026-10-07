@@ -36928,6 +36928,12 @@ export type Database = {
       }
       staff_tasks: {
         Row: {
+          approval_amount: number | null
+          approval_due_date: string | null
+          approval_record_id: string | null
+          approval_required: boolean
+          approval_status: string | null
+          approval_type: string | null
           assignee_user_id: string | null
           client_id: string | null
           client_visibility: boolean
@@ -36937,20 +36943,48 @@ export type Database = {
           description: string | null
           due_date: string | null
           id: string
+          information_request_type: string | null
+          information_required: boolean
           offering_id: string | null
+          prepared_by: string | null
           priority: string
+          related_entity_id: string | null
+          related_investor_id: string | null
+          related_workflow_id: string | null
+          related_workflow_type: string | null
+          requested_date: string | null
+          requested_information: string | null
+          required_documents: Json
+          responsibility_manual: boolean
+          responsibility_note_client: string | null
+          responsibility_note_internal: string | null
+          responsibility_status: string
           responsible_party_type: string | null
           responsible_team: string | null
           responsible_user_id: string | null
+          reviewed_by: string | null
           service_engagement_id: string | null
+          sla_due_date: string | null
           source: string
           source_ref: string | null
           status: string
+          submitted_by: string | null
+          submitted_date: string | null
+          supporting_documents: Json
           team: string | null
           title: string
           updated_at: string
+          waiting_on_entity_id: string | null
+          waiting_on_name: string | null
+          waiting_on_type: string | null
         }
         Insert: {
+          approval_amount?: number | null
+          approval_due_date?: string | null
+          approval_record_id?: string | null
+          approval_required?: boolean
+          approval_status?: string | null
+          approval_type?: string | null
           assignee_user_id?: string | null
           client_id?: string | null
           client_visibility?: boolean
@@ -36960,20 +36994,48 @@ export type Database = {
           description?: string | null
           due_date?: string | null
           id?: string
+          information_request_type?: string | null
+          information_required?: boolean
           offering_id?: string | null
+          prepared_by?: string | null
           priority?: string
+          related_entity_id?: string | null
+          related_investor_id?: string | null
+          related_workflow_id?: string | null
+          related_workflow_type?: string | null
+          requested_date?: string | null
+          requested_information?: string | null
+          required_documents?: Json
+          responsibility_manual?: boolean
+          responsibility_note_client?: string | null
+          responsibility_note_internal?: string | null
+          responsibility_status?: string
           responsible_party_type?: string | null
           responsible_team?: string | null
           responsible_user_id?: string | null
+          reviewed_by?: string | null
           service_engagement_id?: string | null
+          sla_due_date?: string | null
           source?: string
           source_ref?: string | null
           status?: string
+          submitted_by?: string | null
+          submitted_date?: string | null
+          supporting_documents?: Json
           team?: string | null
           title: string
           updated_at?: string
+          waiting_on_entity_id?: string | null
+          waiting_on_name?: string | null
+          waiting_on_type?: string | null
         }
         Update: {
+          approval_amount?: number | null
+          approval_due_date?: string | null
+          approval_record_id?: string | null
+          approval_required?: boolean
+          approval_status?: string | null
+          approval_type?: string | null
           assignee_user_id?: string | null
           client_id?: string | null
           client_visibility?: boolean
@@ -36983,18 +37045,40 @@ export type Database = {
           description?: string | null
           due_date?: string | null
           id?: string
+          information_request_type?: string | null
+          information_required?: boolean
           offering_id?: string | null
+          prepared_by?: string | null
           priority?: string
+          related_entity_id?: string | null
+          related_investor_id?: string | null
+          related_workflow_id?: string | null
+          related_workflow_type?: string | null
+          requested_date?: string | null
+          requested_information?: string | null
+          required_documents?: Json
+          responsibility_manual?: boolean
+          responsibility_note_client?: string | null
+          responsibility_note_internal?: string | null
+          responsibility_status?: string
           responsible_party_type?: string | null
           responsible_team?: string | null
           responsible_user_id?: string | null
+          reviewed_by?: string | null
           service_engagement_id?: string | null
+          sla_due_date?: string | null
           source?: string
           source_ref?: string | null
           status?: string
+          submitted_by?: string | null
+          submitted_date?: string | null
+          supporting_documents?: Json
           team?: string | null
           title?: string
           updated_at?: string
+          waiting_on_entity_id?: string | null
+          waiting_on_name?: string | null
+          waiting_on_type?: string | null
         }
         Relationships: [
           {

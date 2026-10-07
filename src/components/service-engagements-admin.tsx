@@ -141,33 +141,67 @@ function EngagementDetail({ id, features }: { id: string; features: any[] }) {
   const get = useServerFn(getServiceEngagementDetail);
   const setEnt = useServerFn(setEngagementEntitlement);
   const q = useQuery({ queryKey: ["service-engagement", id], queryFn: () => get({ data: { id } }) });
+  const [search, setSearch] = useState("");
+  const [cat, setCat] = useState("ALL");
+  const [show, setShow] = useState<"all" | "on" | "changed">("all");
   if (!q.data) return null;
   const { defaults, overrides, events } = q.data;
   const ov = new Map((overrides as any[]).map((o) => [o.feature_key, o.mode]));
   async function change(key: string, mode: "ADD" | "REMOVE" | "DEFAULT") {
     try { await setEnt({ data: { engagement_id: id, feature_key: key, mode } }); await q.refetch(); } catch (e) { toast.error((e as Error).message); }
   }
+  const cats = [...new Set(features.map((f) => f.category || "Other"))].sort();
+  const term = search.toLowerCase();
+  const visible = features.filter((ft) => {
+    const mode = ov.get(ft.feature_key); const on = mode === "ADD" || (defaults.includes(ft.feature_key) && mode !== "REMOVE");
+    if (cat !== "ALL" && (ft.category || "Other") !== cat) return false;
+    if (show === "on" && !on) return false;
+    if (show === "changed" && !mode) return false;
+    return !term || `${ft.name} ${ft.category ?? ""}`.toLowerCase().includes(term);
+  });
   return (
     <div className="grid gap-5 lg:grid-cols-2">
       <div>
         <h3 className="text-sm font-medium">Entitlements</h3>
-        <ul className="mt-2 max-h-96 space-y-1 overflow-y-auto text-sm">
-          {features.map((ft) => {
-            const isDefault = defaults.includes(ft.feature_key);
-            const mode = ov.get(ft.feature_key);
-            const on = mode === "ADD" || (isDefault && mode !== "REMOVE");
-            return (
-              <li key={ft.feature_key} className="flex items-center justify-between gap-2">
-                <span className={on ? "" : "text-muted-foreground line-through"}>{ft.name}{mode ? <span className="ml-1 text-xs text-muted-foreground">({mode === "ADD" ? "added" : "removed"})</span> : null}</span>
-                <span className="flex gap-1">
-                  {mode ? <Button size="sm" variant="ghost" onClick={() => change(ft.feature_key, "DEFAULT")}>Reset</Button>
-                    : on ? <Button size="sm" variant="ghost" onClick={() => change(ft.feature_key, "REMOVE")}>Remove</Button>
-                    : <Button size="sm" variant="ghost" onClick={() => change(ft.feature_key, "ADD")}>Add</Button>}
-                </span>
-              </li>
-            );
-          })}
-        </ul>
+        <div className="mt-2 flex flex-wrap gap-2">
+          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search services" aria-label="Search services" className="h-8 w-44" />
+          <select value={cat} onChange={(e) => setCat(e.target.value)} aria-label="Category" className="h-8 rounded-md border bg-background px-2 text-sm">
+            <option value="ALL">All categories</option>{cats.map((c) => <option key={c} value={c}>{c}</option>)}
+          </select>
+          <select value={show} onChange={(e) => setShow(e.target.value as any)} aria-label="Show" className="h-8 rounded-md border bg-background px-2 text-sm">
+            <option value="all">All services</option><option value="on">Included only</option><option value="changed">Changed for this fund</option>
+          </select>
+        </div>
+        <div className="mt-2 max-h-[28rem] space-y-3 overflow-y-auto text-sm">
+          {cats.filter((c) => visible.some((ft) => (ft.category || "Other") === c)).map((c) => (
+            <div key={c}>
+              <div className="sticky top-0 bg-card py-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">{c}</div>
+              <ul className="space-y-1">
+                {visible.filter((ft) => (ft.category || "Other") === c).map((ft) => {
+                  const isDefault = defaults.includes(ft.feature_key);
+                  const mode = ov.get(ft.feature_key);
+                  const on = mode === "ADD" || (isDefault && mode !== "REMOVE");
+                  return (
+                    <li key={ft.feature_key} className="flex items-center justify-between gap-2">
+                      <span className={on ? "" : "text-muted-foreground"}>
+                        {ft.name}
+                        {mode === "ADD" ? <Badge variant="outline" className="ml-2">Added for this fund</Badge>
+                          : mode === "REMOVE" ? <Badge variant="outline" className="ml-2">Removed from default</Badge>
+                          : isDefault ? <Badge variant="secondary" className="ml-2">Included</Badge> : null}
+                      </span>
+                      <span className="flex gap-1">
+                        {mode ? <Button size="sm" variant="ghost" onClick={() => change(ft.feature_key, "DEFAULT")}>Reset</Button>
+                          : on ? <Button size="sm" variant="ghost" onClick={() => change(ft.feature_key, "REMOVE")}>Remove</Button>
+                          : <Button size="sm" variant="ghost" onClick={() => change(ft.feature_key, "ADD")}>Add</Button>}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
+          {!visible.length && <p className="text-xs text-muted-foreground">No services match.</p>}
+        </div>
       </div>
       <div>
         <h3 className="text-sm font-medium">Change history</h3>
