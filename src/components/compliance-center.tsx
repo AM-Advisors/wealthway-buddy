@@ -268,6 +268,8 @@ function Evidence({ d }: { d: Data }) {
             <div className="flex flex-wrap items-center gap-2">
               <button className="font-medium" onClick={() => setOpen(open === e.id ? null : e.id)}>{e.control_key} · {e.evidence_type}</button>
               <Badge variant="outline">{e.system_generated ? "System generated" : "Manual"}</Badge>
+              {e.summary?.framework && <Badge variant="secondary">{e.summary.framework}</Badge>}
+              {e.file_path && <Button size="sm" variant="outline" className="h-7 px-2" onClick={() => download(e.id)}>Download document</Button>}
               {e.record_count != null && <Badge variant="outline">{e.record_count} records</Badge>}
               {e.superseded && <Badge variant="secondary">Superseded (retained)</Badge>}
               {e.reviews.map((r: any) => <Badge key={r.id} variant={r.decision === "accepted" ? "default" : "destructive"}>{r.decision} by {name(r.reviewer_user_id)}</Badge>)}
