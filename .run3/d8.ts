@@ -6,7 +6,7 @@ const BA = (await d.from("bank_accounts").select("id").eq("offering_id", N).sing
 const { data: lines } = await d.from("distribution_lines").select("id,display_name,net_cents").eq("batch_id", B);
 for (const l of lines ?? []) {
   const nm = l.display_name; const ref = `QA3-DIST1-${nm.slice(-1)}`;
-  let p = (await d.from("distribution_payments").select("id").eq("line_id", l.id).maybeSingle()).data as any;
+  let p = (await d.from("distribution_payments").select("id").eq("distribution_line_id", l.id).maybeSingle()).data as any;
   if (!p) { const r: any = await step(`${nm}: record manually initiated transfer (reviewer w/ finance; app sends no money)`, () => ds.executeDistributionPayment(U.rev, { lineId: l.id, provider: "manual_bank", externalReference: ref })); p = { id: r.paymentId }; }
   // QA time compression only: scenario send date is 2026-08-28; the run happens later.
   await d.from("distribution_payments").update({ submitted_at: "2026-08-28T15:00:00Z" }).eq("id", p.id);
