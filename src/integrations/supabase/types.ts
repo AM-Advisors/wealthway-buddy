@@ -27358,6 +27358,9 @@ export type Database = {
       }
       management_fee_terms: {
         Row: {
+          approval_status: string
+          approved_at: string | null
+          approved_by: string | null
           basis: string
           class_id: string | null
           created_at: string
@@ -27371,6 +27374,8 @@ export type Database = {
           offset_pct: number
           position_id: string | null
           rate_bps: number
+          side_letter_id: string | null
+          source_document: string | null
           starts_on: string
           step_downs: Json
           updated_at: string
@@ -27378,6 +27383,9 @@ export type Database = {
           waiver_bps: number
         }
         Insert: {
+          approval_status?: string
+          approved_at?: string | null
+          approved_by?: string | null
           basis?: string
           class_id?: string | null
           created_at?: string
@@ -27391,6 +27399,8 @@ export type Database = {
           offset_pct?: number
           position_id?: string | null
           rate_bps?: number
+          side_letter_id?: string | null
+          source_document?: string | null
           starts_on: string
           step_downs?: Json
           updated_at?: string
@@ -27398,6 +27408,9 @@ export type Database = {
           waiver_bps?: number
         }
         Update: {
+          approval_status?: string
+          approved_at?: string | null
+          approved_by?: string | null
           basis?: string
           class_id?: string | null
           created_at?: string
@@ -27411,6 +27424,8 @@ export type Database = {
           offset_pct?: number
           position_id?: string | null
           rate_bps?: number
+          side_letter_id?: string | null
+          source_document?: string | null
           starts_on?: string
           step_downs?: Json
           updated_at?: string
