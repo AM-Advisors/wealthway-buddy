@@ -74,7 +74,6 @@ export function OpsFundsDashboard({ initialFilter }: { initialFilter?: FundFilte
           <p className="text-sm text-muted-foreground">Every fund in one place — setup progress, investors and the next step.</p>
         </div>
         <div className="flex gap-2">
-          <Button asChild variant="outline" size="sm"><Link to="/ops/readiness">Investor work queue</Link></Button>
           <Button asChild size="sm"><Link to="/ops/fund-setup">Set up new fund</Link></Button>
         </div>
       </div>
@@ -114,7 +113,7 @@ export function OpsFundsDashboard({ initialFilter }: { initialFilter?: FundFilte
             return (
               <div key={f.id} className="grid grid-cols-2 gap-x-3 gap-y-1 border-b px-4 py-3 text-sm last:border-b-0 hover:bg-muted/30 lg:grid-cols-[2fr_1.2fr_1fr_0.9fr_1.6fr_1fr_6rem] lg:items-center">
                 <div className="col-span-2 min-w-0 lg:col-span-1">
-                  <Link to="/ops/fund/$fundId" params={{ fundId: f.id }} search={{ tab: undefined }} className="font-medium hover:underline">{f.name}</Link>
+                  <Link to="/ops/fund/$fundId" params={{ fundId: f.id }} search={{ tab: f.metrics.blocked + f.metrics.needsHarmonious > 0 ? "investors" : undefined }} className="font-medium hover:underline">{f.name}</Link>
                   <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">{stage}</span>
                 </div>
                 <span className="text-muted-foreground">{f.clientName ?? "-"}</span>

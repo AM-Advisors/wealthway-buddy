@@ -426,21 +426,22 @@ export function QueueAge({ days }: { days: number }) {
 }
 
 /** Operations → readiness queue: an inbox of open work items, oldest first. */
-export function ReadinessQueue({ initialTab }: { initialTab?: QTab | undefined } = {}) {
+export function ReadinessQueue({ initialTab, offeringId }: { initialTab?: QTab | undefined; offeringId?: string } = {}) {
   const load = useServerFn(readinessQueueFn);
   const q = useQuery({ queryKey: ["readiness-queue"], queryFn: () => load(), retry: false });
   const [tab, setTab] = useState<QTab>(initialTab ?? "harmonious");
   const [sel, setSel] = useState<any | null>(null);
   if (q.isPending) return <Skeleton className="h-64 w-full rounded-xl" />;
   if (q.isError) return <p className="text-sm text-muted-foreground">Harmonious operations access is required.</p>;
-  const all = (q.data ?? []) as any[];
+  const all = ((q.data ?? []) as any[]).filter((r) => !offeringId || r.offeringId === offeringId);
+  if (offeringId && !all.length) return null;
   const counts = { harmonious: 0, investor: 0, fund_manager: 0, all: all.length } as Record<QTab, number>;
   for (const r of all) if (r.owner in counts) counts[r.owner as QTab]++;
   const rows = all.filter((r) => tab === "all" || r.owner === tab);
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="font-heading text-xl font-semibold">Investment readiness</h2>
+        <h2 className="font-heading text-xl font-semibold">{offeringId ? "Open investor work" : "Investment readiness"}</h2>
         <p className="text-sm text-muted-foreground">What needs Harmonious attention now.</p>
       </div>
       <FilterChips value={tab} options={Object.keys(QTAB_LABEL) as QTab[]} labels={QTAB_LABEL} counts={counts} onChange={setTab} />

@@ -180,7 +180,7 @@ export const OPS_WORK_AREAS: OpsWorkArea[] = [
   {
     id: "investors", title: "Investors", url: "/ops/investors", icon: "people", group: "records", queues: ["investors", "onboarding"],
     screens: [
-      { title: "Investment readiness queue", url: "/ops/readiness", description: "What each investment is waiting on, who owns it, and how long", cap: "onboarding", step: "Start" },
+      { title: "Investor work by fund", url: "/ops/funds", description: "What each investment is waiting on, who owns it, and how long", cap: "onboarding", step: "Start" },
       { title: "Close requests", url: "/ops/close-requests", description: "Fund close requests from fund managers, reviewed by Harmonious", cap: "onboarding", step: "Start" },
       { title: "Investor onboarding", url: "/admin/investor-onboarding", description: "Investments in progress, KYC/KYB and accreditation", cap: "onboarding", step: "Review" },
       { title: "Applications", url: "/admin", description: "Fund applications waiting for review", cap: "onboarding", step: "Review" },
