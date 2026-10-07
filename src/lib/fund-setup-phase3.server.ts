@@ -314,6 +314,8 @@ export async function recordEin(sb: any, userId: string, input: { offeringId: st
       await db().from("staff_tasks").insert({
         title, description: "The EIN was saved without the IRS EIN letter. Have the fund sign a W-9 and upload it to the fund's documents (or upload the EIN letter when available).",
         priority: "high", status: "open", created_by: userId, team: "operations", offering_id: input.offeringId,
+        responsibility_status: "CLIENT_INFORMATION_REQUIRED", client_visibility: true, information_request_type: "signed_w9",
+        requested_information: "A signed IRS Form W-9 for the fund (or the IRS EIN letter).", related_workflow_type: "ein_without_letter",
       } as any).then(() => undefined, () => undefined);
     }
   }

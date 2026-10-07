@@ -23,7 +23,7 @@ export const Route = createFileRoute("/_authenticated/client/funds/$fundId")({
 
 function ClientFundPage() {
   const { fundId } = Route.useParams();
-  const { tab = "todos" } = Route.useSearch();
+  const { tab = "overview" } = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
   return <FundWorkspace fundId={fundId} tab={tab} onTab={(v) => navigate({ search: { tab: v as Tab }, replace: true })} />;
 }

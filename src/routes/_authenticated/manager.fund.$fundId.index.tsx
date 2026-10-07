@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { FundCommandCenter } from "@/components/fund-command-center";
 
 import { ManagerFundHome } from "@/components/manager-fund-home";
 import { ManagerFundDashboard } from "@/components/manager-fund-dashboard";
@@ -19,5 +20,7 @@ export const Route = createFileRoute("/_authenticated/manager/fund/$fundId/")({
 
 function Overview() {
   const { fundId } = Route.useParams();
-  return <div className="space-y-6"><ManagerFundDashboard fundId={fundId} /><FundUpdatesFeed offeringId={fundId} limit={6} /><FormationRecordCard offeringId={fundId} /><ManagerCloseSheets offeringId={fundId} /><ManagerFundHome offeringId={fundId} embedded /></div>;
+  const navigate = useNavigate();
+  const go = (t: "calendar" | "investors" | "capital") => navigate({ to: t === "calendar" ? "/manager/fund/$fundId/calendar" : t === "investors" ? "/manager/fund/$fundId/investors" : "/manager/fund/$fundId/transactions", params: { fundId } });
+  return <div className="space-y-6"><FundCommandCenter fundId={fundId} onNavigate={go} /><ManagerFundDashboard fundId={fundId} /><FundUpdatesFeed offeringId={fundId} limit={6} /><FormationRecordCard offeringId={fundId} /><ManagerCloseSheets offeringId={fundId} /><ManagerFundHome offeringId={fundId} embedded /></div>;
 }

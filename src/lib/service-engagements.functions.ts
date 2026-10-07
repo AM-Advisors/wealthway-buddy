@@ -112,6 +112,11 @@ export const saveServiceEngagement = createServerFn({ method: "POST" })
     const tierChanged = !prior || prior.service_level !== fields.service_level || prior.service_product !== fields.service_product;
     if (tierChanged && price) row.pricing_version_id = price.id;
     const pv = tierChanged ? price : prior ? (await d.from("service_pricing_versions").select("*").eq("id", prior.pricing_version_id).maybeSingle()).data : null;
+    // A tier change at list pricing always re-snapshots the new list price (the form may still carry the old value).
+    if (tierChanged && prior && pv && (fields.pricing_type ?? "CURRENT") === "CURRENT" && !fields.grandfathered && fields.service_level !== "INSTITUTIONAL") {
+      row.contracted_annual_value = pv.annual_price ?? null;
+      row.recurring_invoice_amount = cadencePrice(pv, fields.billing_frequency);
+    }
     if (row.contracted_annual_value == null && pv && (!prior || tierChanged)) {
       row.contracted_annual_value = pv.annual_price ?? pv.starting_price ?? null;
     }
@@ -125,7 +130,8 @@ export const saveServiceEngagement = createServerFn({ method: "POST" })
       if (!isAdmin) throw new Error("Only a Harmonious Admin can apply negotiated, grandfathered or custom pricing.");
       if (!fields.pricing_override_reason || fields.pricing_override_reason.trim().length < 10) throw new Error("Give a reason (10+ characters) for the pricing override.");
     }
-    if (fields.service_level === "CORE") row.included_at_no_charge = true;
+    // Core is included with SPV pricing; every other level is billed (fixes Core → paid upgrades staying "included").
+    row.included_at_no_charge = fields.service_level === "CORE";
 
     if (prior) {
       const { error } = await d.from("service_engagements").update(row).eq("id", id);

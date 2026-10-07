@@ -22,6 +22,10 @@ export const submitPrivacyRequest = createServerFn({ method: "POST" })
       description: `Data-subject request ${row.id}. Respond by ${row.due_at.slice(0, 10)}. Keep records under legal or tax hold and tell the person why.\n\n${data.details}`,
       priority: "high",
       team: "operations",
+      responsibility_status: "HARMONIOUS_HANDLING",
+      related_workflow_type: "privacy_request",
+      related_workflow_id: row.id,
+      source: "workflow",
       due_date: row.due_at.slice(0, 10),
     });
     return { ok: true };
