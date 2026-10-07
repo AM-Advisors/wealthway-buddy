@@ -1,9 +1,21 @@
 import { CtaLink } from "@/components/marketing/cta-link";
+import { useQuery } from "@tanstack/react-query";
+import { getPublicServicePricing } from "@/lib/service-engagements.functions";
 import { ADMINISTRATION_TIERS, annualSavings, tierByKey } from "@/lib/administration-tiers";
 
 const usd = (n: number) => `$${n.toLocaleString("en-US")}`;
 
+const LEVEL: Record<string, string> = { core: "CORE", fund_admin: "FUND_ADMINISTRATION", white_glove: "WHITE_GLOVE", institutional: "INSTITUTIONAL" };
+
 export function AdministrationTiers() {
+  // Live prices come from the pricing configuration; the built-in list is the fallback.
+  const q = useQuery({ queryKey: ["public-service-pricing"], queryFn: () => getPublicServicePricing(), staleTime: 300_000 });
+  const tiers = ADMINISTRATION_TIERS.map((t) => {
+    const p = q.data?.find((x) => x.service_level === LEVEL[t.key]);
+    if (!p || t.key === "core") return t;
+    if (t.key === "institutional") return { ...t, startingAnnual: p.starting_price ?? t.startingAnnual };
+    return p.annual_price ? { ...t, prices: { annual: Number(p.annual_price), quarterly: Number(p.quarterly_price), monthly: Number(p.monthly_price) } } : t;
+  });
   return (
     <section className="mt-12">
       <h2 className="text-2xl">Fund administration levels</h2>
@@ -11,7 +23,7 @@ export function AdministrationTiers() {
         Software, people and execution — know exactly what is being handled without having to manage your administrator.
       </p>
       <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {ADMINISTRATION_TIERS.map((t) => {
+        {tiers.map((t) => {
           const save = annualSavings(t);
           return (
             <article key={t.key} className="flex flex-col rounded-xl border bg-card p-5">
