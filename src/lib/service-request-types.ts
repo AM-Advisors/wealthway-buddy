@@ -86,13 +86,6 @@ export function requestResponsibility(s: string): ResponsibilityStatus {
 /** SLA clock pauses while someone other than Harmonious is blocking. */
 export const SLA_PAUSED = new Set(["WAITING_ON_CLIENT", "WAITING_ON_INVESTOR", "WAITING_ON_THIRD_PARTY", "READY_FOR_APPROVAL"]);
 
-/** Response SLA (hours) by service level; Institutional reads the contract's response_sla when it states hours. */
-export function slaHours(level: string | null | undefined, contractSla?: string | null): number {
-  const m = contractSla?.match(/(\d+)\s*(h|hour|business hour)/i);
-  if (m) return Number(m[1]);
-  return ({ CORE: 72, FUND_ADMINISTRATION: 48, WHITE_GLOVE: 24, INSTITUTIONAL: 24 } as Record<string, number>)[level ?? ""] ?? 72;
-}
-
 /** Entitlement status from the fund's entitled feature keys. Never blocks a request. */
 export function entitlementFor(type: string, entitled: Set<string>): "INCLUDED" | "REVIEW_REQUIRED" {
   const f = requestType(type).features;
