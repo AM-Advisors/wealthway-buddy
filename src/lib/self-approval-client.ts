@@ -1,6 +1,6 @@
 import { createMiddleware } from "@tanstack/react-start";
 import { SELF_APPROVAL_EVENT, SELF_APPROVAL_MARKER } from "@/lib/self-approval-shared";
-import { recordSelfApprovalFn } from "@/lib/self-approval-functions.client";
+import { recordSelfApprovalFn } from "@/lib/self-approval.functions";
 
 /** Saves the reason on the server (append-only) before the approval is retried. */
 export async function saveSelfApprovalReason(key: string, reason: string) {

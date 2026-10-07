@@ -30,11 +30,15 @@ export function SelfApprovalPrompt() {
         <p className="text-xs text-muted-foreground">At least 10 characters.</p>
         <DialogFooter>
           <Button variant="outline" onClick={() => setKey(null)}>Cancel</Button>
-          <Button disabled={!ok} onClick={() => {
-            saveSelfApprovalReason(key!, reason.trim());
-            setKey(null);
-            toast.success("Reason saved. Click approve again to finish.");
-          }}>Save reason</Button>
+          <Button disabled={!ok || busy} onClick={async () => {
+            setBusy(true);
+            try {
+              await saveSelfApprovalReason(key!, reason.trim());
+              setKey(null);
+              toast.success("Reason saved. Click approve again to finish.");
+            } catch (e) { toast.error(e instanceof Error ? e.message : "Could not save the reason."); }
+            finally { setBusy(false); }
+          }}>{busy ? "Saving…" : "Save reason"}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
