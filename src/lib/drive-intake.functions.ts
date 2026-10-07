@@ -314,3 +314,64 @@ export const linkDriveDocsToPacket = createServerFn({ method: "POST" })
     await s.logIntake(userId, "link_to_packet", "ok", { offering_id: data.offeringId, linked: linked.length, skipped: skipped.length });
     return { linked, skipped };
   });
+
+const signatureBoxSchema = z.object({
+  role: z.enum(["investor", "manager", "harmonious"]),
+  label: z.string().trim().min(1).max(80),
+  page: z.number().int().min(1).max(500),
+  dateField: z.boolean(),
+});
+
+/** Investors in a fund (Investment Profiles) a document can be filed to. Super Admin only. */
+export const listDriveDocumentInvestors = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ offeringId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const s = await import("@/lib/drive-intake.server");
+    await s.requireSuperAdmin(context, "list_document_investors");
+    const client = await db();
+    const { data: obs } = await client.from("investor_onboardings").select("investment_profile_id").eq("offering_id", data.offeringId);
+    const ids = [...new Set((obs ?? []).map((o: any) => o.investment_profile_id).filter(Boolean))];
+    if (!ids.length) return { investors: [] as { id: string; label: string }[] };
+    const { data: profiles } = await client.from("investment_profiles").select("id,display_label,legal_name").in("id", ids);
+    return { investors: (profiles ?? []).map((p: any) => ({ id: p.id as string, label: String(p.display_label ?? p.legal_name ?? "Investor") })) };
+  });
+
+/** Record specific document details (append-only; newest row wins). */
+export const setDriveDocumentDetails = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({
+    documentId: z.string().uuid(),
+    group: z.enum(["fund_document", "tax_deliverable"]),
+    kind: z.string().max(40),
+    otherName: z.string().trim().max(120).nullable(),
+    signatureStatus: z.enum(["signed_by_investor", "signed_all_parties", "no_signature", "template"]).nullable(),
+    signatureBoxes: z.array(signatureBoxSchema).max(20),
+    sharedProfileId: z.string().uuid().nullable(),
+  }).parse(d))
+  .handler(async ({ data, context }) => {
+    const s = await import("@/lib/drive-intake.server");
+    const userId = await s.requireSuperAdmin(context, "set_document_details");
+    const { detailsProblems } = await import("@/lib/drive-document-details");
+    const problems = detailsProblems(data as any);
+    if (problems.length) throw new Error(problems[0]);
+    const client = await db();
+    const { data: doc } = await client.from("drive_imported_documents").select("id, offering_id, classification").eq("id", data.documentId).maybeSingle();
+    if (!doc) throw new Error("Document not found.");
+    if (data.sharedProfileId) {
+      if (doc.classification === "harmonious_restricted") throw new Error("Harmonious Restricted files can't be shared with an investor.");
+      const { data: ob } = await client.from("investor_onboardings").select("id").eq("offering_id", doc.offering_id).eq("investment_profile_id", data.sharedProfileId).limit(1);
+      if (!ob?.length) throw new Error("That investor is not in this fund.");
+    }
+    const isSub = data.group === "fund_document" && data.kind === "subscription_agreement";
+    const { error } = await client.from("drive_document_details").insert({
+      document_id: doc.id, offering_id: doc.offering_id, doc_group: data.group, doc_kind: data.kind,
+      other_name: data.kind === "other" ? data.otherName : null,
+      signature_status: isSub ? data.signatureStatus : null,
+      signature_boxes: isSub && data.signatureStatus === "template" ? data.signatureBoxes : [],
+      shared_profile_id: data.sharedProfileId, created_by: userId,
+    });
+    if (error) throw new Error(error.message);
+    await s.logIntake(userId, "set_document_details", "ok", { document_id: doc.id, group: data.group, kind: data.kind, shared_profile_id: data.sharedProfileId });
+    return { ok: true };
+  });
