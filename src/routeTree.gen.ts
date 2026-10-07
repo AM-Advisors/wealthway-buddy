@@ -19,6 +19,7 @@ import { Route as CapTablePrivacyRouteImport } from './routes/cap-table-privacy'
 import { Route as CapTableTermsRouteImport } from './routes/cap-table-terms'
 import { Route as ClientLoginRouteImport } from './routes/client-login'
 import { Route as ContactusRouteImport } from './routes/contactus'
+import { Route as DataDeletionRouteImport } from './routes/data-deletion'
 import { Route as DataSecurityRouteImport } from './routes/data-security'
 import { Route as FundAdministrationRouteImport } from './routes/fund-administration'
 import { Route as HarmoniousclassroomRouteImport } from './routes/harmoniousclassroom'
@@ -466,6 +467,11 @@ const ClientLoginRoute = ClientLoginRouteImport.update({
 const ContactusRoute = ContactusRouteImport.update({
   id: '/contactus',
   path: '/contactus',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DataDeletionRoute = DataDeletionRouteImport.update({
+  id: '/data-deletion',
+  path: '/data-deletion',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DataSecurityRoute = DataSecurityRouteImport.update({
@@ -2764,6 +2770,7 @@ export interface FileRoutesByFullPath {
   '/cap-table-terms': typeof CapTableTermsRoute
   '/client-login': typeof ClientLoginRoute
   '/contactus': typeof ContactusRoute
+  '/data-deletion': typeof DataDeletionRoute
   '/data-security': typeof DataSecurityRoute
   '/fund-administration': typeof FundAdministrationRoute
   '/harmoniousclassroom': typeof HarmoniousclassroomRoute
@@ -3173,6 +3180,7 @@ export interface FileRoutesByTo {
   '/cap-table-terms': typeof CapTableTermsRoute
   '/client-login': typeof ClientLoginRoute
   '/contactus': typeof ContactusRoute
+  '/data-deletion': typeof DataDeletionRoute
   '/data-security': typeof DataSecurityRoute
   '/fund-administration': typeof FundAdministrationRoute
   '/harmoniousclassroom': typeof HarmoniousclassroomRoute
@@ -3578,6 +3586,7 @@ export interface FileRoutesById {
   '/cap-table-terms': typeof CapTableTermsRoute
   '/client-login': typeof ClientLoginRoute
   '/contactus': typeof ContactusRoute
+  '/data-deletion': typeof DataDeletionRoute
   '/data-security': typeof DataSecurityRoute
   '/fund-administration': typeof FundAdministrationRoute
   '/harmoniousclassroom': typeof HarmoniousclassroomRoute
@@ -3990,6 +3999,7 @@ export interface FileRouteTypes {
     | '/cap-table-terms'
     | '/client-login'
     | '/contactus'
+    | '/data-deletion'
     | '/data-security'
     | '/fund-administration'
     | '/harmoniousclassroom'
@@ -4399,6 +4409,7 @@ export interface FileRouteTypes {
     | '/cap-table-terms'
     | '/client-login'
     | '/contactus'
+    | '/data-deletion'
     | '/data-security'
     | '/fund-administration'
     | '/harmoniousclassroom'
@@ -4803,6 +4814,7 @@ export interface FileRouteTypes {
     | '/cap-table-terms'
     | '/client-login'
     | '/contactus'
+    | '/data-deletion'
     | '/data-security'
     | '/fund-administration'
     | '/harmoniousclassroom'
@@ -5215,6 +5227,7 @@ export interface RootRouteChildren {
   CapTableTermsRoute: typeof CapTableTermsRoute
   ClientLoginRoute: typeof ClientLoginRoute
   ContactusRoute: typeof ContactusRoute
+  DataDeletionRoute: typeof DataDeletionRoute
   DataSecurityRoute: typeof DataSecurityRoute
   FundAdministrationRoute: typeof FundAdministrationRoute
   HarmoniousclassroomRoute: typeof HarmoniousclassroomRoute
@@ -5345,6 +5358,13 @@ declare module '@tanstack/react-router' {
       path: '/contactus'
       fullPath: '/contactus'
       preLoaderRoute: typeof ContactusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/data-deletion': {
+      id: '/data-deletion'
+      path: '/data-deletion'
+      fullPath: '/data-deletion'
+      preLoaderRoute: typeof DataDeletionRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/data-security': {
@@ -9040,6 +9060,7 @@ const rootRouteChildren: RootRouteChildren = {
   CapTableTermsRoute: CapTableTermsRoute,
   ClientLoginRoute: ClientLoginRoute,
   ContactusRoute: ContactusRoute,
+  DataDeletionRoute: DataDeletionRoute,
   DataSecurityRoute: DataSecurityRoute,
   FundAdministrationRoute: FundAdministrationRoute,
   HarmoniousclassroomRoute: HarmoniousclassroomRoute,
