@@ -1254,6 +1254,13 @@
       "when": 1791343169013,
       "tag": "0178_fund_operating_calendar",
       "breakpoints": true
+    },
+    {
+      "idx": 179,
+      "version": "7",
+      "when": 1791344607675,
+      "tag": "0179_approvals_fund_requests_auto_calendar",
+      "breakpoints": true
     }
   ]
 }
