@@ -62,6 +62,7 @@ export async function publishLinkedIn(orgId: string, text: string, imageUrl: str
   return res.headers.get("x-restli-id") || res.headers.get("x-linkedin-id") || "posted";
 }
 
+export function metaConfigured() { return !!process.env["META_PAGE_ACCESS_TOKEN"]; }
 function metaToken() {
   const t = process.env["META_PAGE_ACCESS_TOKEN"];
   if (!t) throw new Error("Facebook/Instagram isn't connected yet.");
