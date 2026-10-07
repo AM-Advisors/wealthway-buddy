@@ -63,6 +63,7 @@ export const getStar = createServerFn({ method: "GET" }).middleware([requireSupa
       canEdit: c.perms.includes(EDIT), me: c.userId, questions,
       domains: reqRows.map((r) => ({ code: r.code, title: r.title, controls: domainControls[r.code] ?? [] })),
       owner: pick("owner_set"), submittedOn: pick("submitted"), registryUrl: pick("registry_url"),
+      manualSteps: Object.fromEntries(["path_chosen", "gdpr_done", "quality_result"].map((a) => { const e = ev0.find((x) => x.action === a); return [a, e ? { value: e.value, at: e.created_at, by: e.actor_id } : null]; })),
       history: ev0.slice(0, 50),
     };
   });
