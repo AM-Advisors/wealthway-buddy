@@ -251,7 +251,7 @@ describe("REGRESSION B - payout bank-detail prerequisite", () => {
 // ------------------------------------------------------------------ C
 describe("REGRESSION C - payout posting segregation and atomicity", () => {
   it("a draft journal is only reviewed and approved by the first caller; it is never posted by them", async () => {
-    const result = await postDistributionPayment(APPROVER, "pay-draft-journal");
+    const result = await postDistributionPayment(PREPARER, "pay-draft-journal");
     expect(result).toMatchObject({ posted: false });
     expect(advanceReconciliationJournal.mock.calls.map((c: any[]) => c[2])).toEqual(["reviewed", "approved"]);
     expect(rpcCalls).toHaveLength(0);
