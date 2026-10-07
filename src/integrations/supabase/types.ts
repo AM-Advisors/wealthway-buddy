@@ -13534,6 +13534,56 @@ export type Database = {
         }
         Relationships: []
       }
+      drive_document_details: {
+        Row: {
+          created_at: string
+          created_by: string
+          doc_group: string
+          doc_kind: string
+          document_id: string
+          id: string
+          offering_id: string | null
+          other_name: string | null
+          shared_profile_id: string | null
+          signature_boxes: Json
+          signature_status: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          doc_group: string
+          doc_kind: string
+          document_id: string
+          id?: string
+          offering_id?: string | null
+          other_name?: string | null
+          shared_profile_id?: string | null
+          signature_boxes?: Json
+          signature_status?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          doc_group?: string
+          doc_kind?: string
+          document_id?: string
+          id?: string
+          offering_id?: string | null
+          other_name?: string | null
+          shared_profile_id?: string | null
+          signature_boxes?: Json
+          signature_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "drive_document_details_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "drive_imported_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       drive_document_requirement_assignments: {
         Row: {
           assigned_by: string

@@ -1212,6 +1212,13 @@
       "when": 1791338177523,
       "tag": "0172_csa_star",
       "breakpoints": true
+    },
+    {
+      "idx": 173,
+      "version": "7",
+      "when": 1791338474431,
+      "tag": "0173_drive_document_details",
+      "breakpoints": true
     }
   ]
 }
