@@ -110,7 +110,7 @@ function Row({ r, canManage, clients }: { r: any; canManage: boolean; clients: {
         </div>
         <div className="flex items-center gap-2">
           <Badge variant={r.status === "needs_review" ? "destructive" : "secondary"}>{STATUS[r.status] ?? r.status}</Badge>
-          {r.offering_id && <Link to="/ops/fund-setup/$fundId" params={{ fundId: r.offering_id }} className="text-xs underline">Open {r.fund_name ?? "fund"}</Link>}
+          {r.offering_id && <Link to="/ops/fund/$fundId" params={{ fundId: r.offering_id }} className="text-xs underline">Open {r.fund_name ?? "fund"}</Link>}
           {canManage && r.status === "needs_review" && <Button size="sm" variant="outline" onClick={() => setOpen(!open)}>Resolve</Button>}
         </div>
       </div>

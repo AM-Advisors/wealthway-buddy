@@ -51,7 +51,7 @@ function MigratePage() {
   return (
     <main className="mx-auto w-full max-w-6xl space-y-5 p-6">
       <header className="space-y-1">
-        <Link to="/ops/fund-setup/$fundId" params={{ fundId }} className="text-sm text-primary underline">← Back to Fund Setup</Link>
+        <Link to="/ops/fund/$fundId" params={{ fundId }} className="text-sm text-primary underline">← Back to Fund Setup</Link>
         <h1 className="text-3xl">Migrate {d?.fund?.name ?? "fund"} from Google Drive</h1>
         <p className="text-sm text-muted-foreground">Sort the fund's existing files into place and use what's in them to fill in Fund Setup. Nothing moves or changes until you accept it.</p>
       </header>

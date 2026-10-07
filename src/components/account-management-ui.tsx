@@ -34,7 +34,7 @@ export function HandoffList({ rows }: { rows: Handoff[] }) {
         <div className="flex gap-2">
           <Badge variant={h.handedOff ? "secondary" : "outline"}>{h.handedOff ? "Draft fund created" : "Hand-off pending"}</Badge>
           <Badge variant={h.setupStarted ? "secondary" : "outline"}>{h.setupStarted ? "Setup started" : "Setup not started"}</Badge>
-          {h.fundId && <Link to="/ops/fund-setup/$fundId" params={{ fundId: h.fundId }} className="text-xs text-primary hover:underline">Open fund setup</Link>}
+          {h.fundId && <Link to="/ops/fund/$fundId" params={{ fundId: h.fundId }} className="text-xs text-primary hover:underline">Open fund setup</Link>}
         </div>
       </li>))}
     </ul>

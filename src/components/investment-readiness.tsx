@@ -268,7 +268,7 @@ function FundLaunchCard({ fundId, readyCount, total }: { fundId: string; readyCo
           <p className="font-heading text-lg font-semibold capitalize">{s.launchLabel}</p>
           <p className="text-sm text-muted-foreground">Setup {s.percent}% complete · {s.openTasks} setup tasks and {s.openConditions} launch conditions open · {readyCount} of {total} investors ready</p>
         </div>
-        {d.isStaff && <Link className="text-sm underline" to="/ops/fund-setup/$fundId" params={{ fundId }} search={{ tab: "setup" }}>Open Fund Setup</Link>}
+        {d.isStaff && <Link className="text-sm underline" to="/ops/fund/$fundId" params={{ fundId }} search={{ tab: "setup" }}>Open Fund Setup</Link>}
       </div>
       {steps.length > 0 && (
         <ul className="mt-3 grid gap-1 sm:grid-cols-2">
@@ -406,7 +406,7 @@ function TriageDrawer({ item, onClose }: { item: any | null; onClose: () => void
             <div className="space-y-4">
               {item.onboardingId ? <InvestmentChecklist onboardingId={item.onboardingId} /> : null}
               <div className="flex flex-wrap gap-3">
-                {item.offeringId ? <Button asChild size="sm"><Link to="/manager/fund/$fundId/readiness" params={{ fundId: item.offeringId }}>Open Investment</Link></Button> : null}
+                {item.offeringId ? <Button asChild size="sm"><Link to="/manager/fund/$fundId/investors" params={{ fundId: item.offeringId }}>Open Investment</Link></Button> : null}
               </div>
             </div>
           </>

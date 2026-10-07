@@ -1,26 +1,28 @@
-import { createFileRoute, useParams } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
-import { OpsRecordPage } from "@/components/ops-record";
+import { OpsFundPage } from "@/components/ops-fund-page";
 
 export const Route = createFileRoute("/_authenticated/ops/fund/$fundId")({
-  validateSearch: (search: Record<string, unknown>) => ({
+  validateSearch: (search: Record<string, unknown>): { tab?: string | undefined } => ({
     tab: typeof search["tab"] === "string" ? (search["tab"] as string) : undefined,
   }),
   head: () => ({
     meta: [
-      { title: "Fund 360 - Harmonious operations" },
-      { name: "description", content: "One fund or SPV: investors, capital, banking, accounting, tax, regulatory and documents." },
-      { property: "og:title", content: "Fund 360 - Harmonious operations" },
-      { property: "og:description", content: "One fund or SPV: investors, capital, banking, accounting, tax, regulatory and documents." },
+      { title: "Fund - Harmonious operations" },
+      { name: "description", content: "One page per fund: setup and launch readiness, investors, banking, documents and more." },
+      { property: "og:title", content: "Fund - Harmonious operations" },
+      { property: "og:description", content: "One page per fund: setup and launch readiness, investors, banking, documents and more." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex" },
     ],
   }),
-  component: RecordRoute,
+  component: FundRoute,
 });
 
-function RecordRoute() {
-  const { fundId } = useParams({ from: "/_authenticated/ops/fund/$fundId" });
-  return <OpsRecordPage type="fund" id={fundId} />;
+function FundRoute() {
+  const { fundId } = Route.useParams();
+  const { tab } = Route.useSearch();
+  const navigate = useNavigate({ from: Route.fullPath });
+  return <OpsFundPage fundId={fundId} tab={tab ?? "setup"} onTab={(v) => navigate({ search: { tab: v }, replace: true })} />;
 }

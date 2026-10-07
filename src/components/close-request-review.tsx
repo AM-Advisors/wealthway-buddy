@@ -42,7 +42,7 @@ export function CloseRequestReview({ r }: { r: any }) {
       <CardHeader className="flex-row items-start justify-between space-y-0">
         <div>
           <CardTitle className="text-base">
-            <Link to="/ops/fund-setup/$fundId" params={{ fundId: r.offering_id }} search={{ tab: "closes" }} className="hover:underline">{r.offerings?.name ?? "Fund"}</Link>
+            <Link to="/ops/fund/$fundId" params={{ fundId: r.offering_id }} search={{ tab: "closes" }} className="hover:underline">{r.offerings?.name ?? "Fund"}</Link>
           </CardTitle>
           <CardDescription>
             {new Date(r.created_at).toLocaleDateString()} · {r.onboarding_ids.length} investor{r.onboarding_ids.length === 1 ? "" : "s"} · target {r.target_date ?? "not set"}

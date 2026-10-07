@@ -1,22 +1,8 @@
-import { createFileRoute, useParams } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
-import { FundReadiness } from "@/components/investment-readiness";
-
+/** Old Readiness URL — readiness now lives on the fund's Investors tab. */
 export const Route = createFileRoute("/_authenticated/manager/fund/$fundId/readiness")({
-  head: () => ({
-    meta: [
-      { title: "Investor readiness - Harmonious" },
-      { name: "description", content: "Progress, next action and close readiness for every investment in this fund." },
-      { property: "og:title", content: "Investor readiness - Harmonious" },
-      { property: "og:description", content: "One canonical checklist per investment." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-    ],
-  }),
-  component: Page,
+  beforeLoad: ({ params }) => {
+    throw redirect({ to: "/manager/fund/$fundId/investors", params: { fundId: params.fundId }, replace: true });
+  },
 });
-
-function Page() {
-  const { fundId } = useParams({ from: "/_authenticated/manager/fund/$fundId/readiness" });
-  return <FundReadiness fundId={fundId} />;
-}
