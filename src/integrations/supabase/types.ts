@@ -42074,6 +42074,16 @@ export type Database = {
           on_file: boolean
         }[]
       }
+      post_distribution_payment_atomic: {
+        Args: {
+          _actor: string
+          _apply_capital: boolean
+          _gross_cents: number
+          _payment_id: string
+          _reduce_capital_cents: number
+        }
+        Returns: Json
+      }
       purge_security_events: { Args: never; Returns: number }
       read_offering_rp_identifier: {
         Args: { _offering: string }

@@ -19,6 +19,8 @@ const RUN_DRAFT = "aaaa1111-1111-4111-8111-111111111111";
 const RUN_REVIEWED = "aaaa1111-2222-4222-8222-222222222222";
 const RUN_APPROVED_OFF = "aaaa1111-3333-4333-8333-333333333333";
 const RUN_FINALIZED = "aaaa1111-4444-4444-8444-444444444444";
+const RUN_SUBMITTED = "aaaa1111-5555-4555-8555-555555555555";
+const RUN_APPROVE_WF = "aaaa1111-6666-4666-8666-666666666666";
 const RUN_B = "aaaa2222-1111-4111-8111-111111111111";
 const POSITION_A = "cccc1111-1111-4111-8111-111111111111";
 const POSITION_B = "cccc2222-1111-4111-8111-111111111111";
@@ -127,6 +129,12 @@ const tables: Record<string, any[]> = {
       finalized_by: APPROVER,
     }),
     run({ id: RUN_B, offering_id: FUND_B, status: "review" }),
+    run({ id: RUN_SUBMITTED, status: "review" }),
+    run({
+      id: RUN_APPROVE_WF,
+      status: "review",
+      policy_snapshot: { methodology: "allocation-v1", managerWorkflow: "approve" },
+    }),
   ],
   allocation_lines: [],
   allocation_events: [],
@@ -428,5 +436,50 @@ describe("statements", () => {
     await expect(myStatementDetail(INVESTOR, STATEMENT_PUBLISHED)).resolves.toMatchObject({
       id: STATEMENT_PUBLISHED,
     });
+  });
+});
+
+describe("REGRESSION A - allocation independent review", () => {
+  it("refuses the preparer acting as independent reviewer", async () => {
+    await expect(decideAllocationRun(PREPARER, RUN_SUBMITTED, "review")).rejects.toThrow(/someone other than/i);
+    expect(writes.filter((w) => w.table === "allocation_runs")).toHaveLength(0);
+  });
+
+  it("requires the reviewer to be an authorized Harmonious user", async () => {
+    await expect(decideAllocationRun(MANAGER_A, RUN_SUBMITTED, "review")).rejects.toThrow(/Harmonious/i);
+    await expect(decideAllocationRun(INVESTOR, RUN_SUBMITTED, "review")).rejects.toThrow(/Harmonious|forbidden/i);
+    expect(writes).toHaveLength(0);
+  });
+
+  it("permanently records the reviewer identity on the run and in the append-only event", async () => {
+    await decideAllocationRun(REVIEWER, RUN_SUBMITTED, "review");
+    const update = writes.find((w) => w.table === "allocation_runs" && w.op === "update");
+    expect(update?.payload).toMatchObject({ status: "manager_review", reviewed_by: REVIEWER });
+    const event = writes.find((w) => w.table === "allocation_events" && w.op === "insert");
+    expect(event?.payload).toMatchObject({ actor_user_id: REVIEWER, run_id: RUN_SUBMITTED, action: "allocation_manager_review" });
+    expect(writes.some((w) => w.table === "allocation_events" && w.op !== "insert")).toBe(false);
+  });
+
+  it("refuses a later reviewer overwriting the recorded reviewer", async () => {
+    await expect(decideAllocationRun(APPROVER, RUN_REVIEWED, "review")).rejects.toThrow(/already has a recorded independent reviewer/i);
+    expect(writes.filter((w) => w.table === "allocation_runs")).toHaveLength(0);
+  });
+
+  it("refuses manager review or approval before the independent review", async () => {
+    await expect(decideAllocationRun(APPROVER, RUN_SUBMITTED, "manager_review")).rejects.toThrow(/independent Harmonious reviewer/i);
+    await expect(decideAllocationRun(APPROVER, RUN_SUBMITTED, "approve")).rejects.toThrow(/reviewed before/i);
+    expect(writes.filter((w) => w.table === "allocation_runs")).toHaveLength(0);
+  });
+
+  it("a manager approval never approves, finalizes or substitutes for the independent review", async () => {
+    await managerRespondToAllocations(MANAGER_A, RUN_APPROVE_WF, "approve");
+    const update = writes.find((w) => w.table === "allocation_runs" && w.op === "update");
+    expect(update?.payload).toMatchObject({ manager_response: "approve", manager_responded_by: MANAGER_A });
+    expect(update?.payload).not.toHaveProperty("status");
+    expect(update?.payload).not.toHaveProperty("approved_by");
+    expect(update?.payload).not.toHaveProperty("reviewed_by");
+    writes = [];
+    await expect(finalizeAllocationRun(APPROVER, RUN_APPROVE_WF)).rejects.toThrow(/approved/i);
+    expect(writes.filter((w) => w.table === "capital_accounts")).toHaveLength(0);
   });
 });

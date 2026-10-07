@@ -16,7 +16,7 @@
  * confirmation correlates, the bank activity reconciles and the journal posts.
  * Not when a screen says so, and never on a provider callback alone.
  */
-import { basisStaleness, staleBasisOverrideError, payoutSentDateError, periodRefusesDate } from "@/lib/distributions-model";
+import { basisStaleness, staleBasisOverrideError, payoutSentDateError, periodRefusesDate, payoutDestinationBlockers } from "@/lib/distributions-model";
 import { evaluateWithholding, withholdingDecisionError, type PolicyRule } from "@/lib/withholding-policy";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { onboardingActor, type OnboardingActor } from "@/lib/investor-onboarding.server";
@@ -1429,12 +1429,14 @@ export async function investorConfirmDistribution(userId: string, lineId: string
   const needsShares = kind !== "cash" && Number(line.shares_allocated ?? 0) > 0;
   const patch: Record<string, unknown> = { investor_confirmed_at: nowIso() };
   if (needsCash) {
-    const { data: instr } = await db().from("investor_payment_instructions").select("id, version, method, status, cooling_off_until")
+    const { data: instr } = await db().from("investor_payment_instructions").select("id, version, method, status, verification_status, cooling_off_until")
       .eq("investor_user_id", actor.userId).eq("offering_id", line.offering_id)
       .in("status", ["active", "approved", "verified"]).is("revoked_at", null).is("superseded_at", null)
       .order("version", { ascending: false }).limit(1);
     const i = (instr ?? [])[0] as any;
     if (!i) fail("Add your payout bank account below first. It becomes usable once its safety checks finish.");
+    // Pilot-readiness fix: only an independently verified destination may be bound to a payout line.
+    if (String(i.verification_status ?? "") !== "verified") fail("Your payout bank account has not been verified by Harmonious yet. It can be used once verification finishes.");
     if (i.cooling_off_until && new Date(i.cooling_off_until) > new Date()) fail("Your new bank account is still in its safety waiting period. Try again after it ends.");
     Object.assign(patch, { payment_instruction_id: i.id, payment_instruction_version: i.version, payment_method: i.method, destination_verified: true });
   }
@@ -1603,9 +1605,7 @@ export async function finalApproveDistribution(userId: string, batchId: string) 
   if (identityBlockers.length > 0) fail(identityBlockers.join(" "));
   // Run 3: every cash payee must have an approved, verified destination bound to
   // their line before final approval; afterwards destinations are frozen.
-  const noDestination = ((approvalLines ?? []) as any[]).filter(
-    (l) => Number(l.net_cents ?? 0) > 0 && String(batch.distribution_kind ?? "cash") !== "shares" && (!l.payment_instruction_id || !l.destination_verified),
-  );
+  const noDestination = payoutDestinationBlockers(String(batch.distribution_kind ?? "cash"), (approvalLines ?? []) as any[]);
   if (noDestination.length > 0) {
     fail(`PAYMENT DESTINATION REQUIRED: ${noDestination.map((l) => l.display_name ?? "Investor").join(", ")} must confirm an approved, verified payout destination before final approval.`);
   }
@@ -2386,7 +2386,6 @@ export async function postDistributionPayment(userId: string, paymentId: string)
   }
   if (journalStatus !== "approved") fail(`The payment journal is ${journalStatus}; it cannot be posted.`);
   if (String(journal?.approved_by ?? "") === actor.userId) fail("Maker/checker: the person who approved the payment journal cannot also post it.");
-  await advanceReconciliationJournal(actor.userId, String(payment.reconciliation_id), "posted");
 
   const { data: line } = await db()
     .from("distribution_lines")
@@ -2403,63 +2402,18 @@ export async function postDistributionPayment(userId: string, paymentId: string)
     distributionType: String(line?.distribution_type ?? "ordinary") as DistributionType,
   });
 
-  let commitmentEventId: string | null = null;
-  if (effect.applies && line?.position_id) {
-    const eventType =
-      String(line.distribution_type) === "return_of_capital" ? "return_of_capital" : "distribution";
-    const { data: event } = await db()
-      .from("commitment_events")
-      .insert({
-        position_id: line.position_id,
-        offering_id: payment.offering_id,
-        event_type: eventType,
-        amount_cents: effect.reduceCapitalCents,
-        effective_date: String(payment.sent_on),
-        source: "distribution_payment",
-        source_ref: String(payment.id),
-        journal_entry_id: payment.journal_entry_id,
-        dedupe_key: `distribution_payment:${payment.id}`,
-        recorded_by: actor.userId,
-      })
-      .select("id")
-      .maybeSingle();
-    commitmentEventId = event?.id ? String(event.id) : null;
-  }
-
-  await db()
-    .from("distribution_payments")
-    .update({ posted_at: nowIso(), posted_by: actor.userId, commitment_event_id: commitmentEventId })
-    .eq("id", payment.id);
-  // Settlement: only now - bank transaction, approved reconciliation, posted journal.
-  // The database refuses settled_at unless the journal is actually posted.
-  await db().from("distribution_payments").update({ settled_at: nowIso() }).eq("id", payment.id);
-  // Compatibility read projection consumed by capital statements and reports.
-  await db().from("fund_distributions").insert({
-    offering_id: payment.offering_id,
-    // Run 3 fix: the payout date, not the day someone clicked Post.
-    paid_on: String(payment.sent_on),
-    amount_cents: Number(line?.gross_cents ?? payment.submitted_amount_cents),
-    kind: String(line?.distribution_type) === "return_of_capital" ? "return_of_capital" : "distribution",
-    note: `Distribution payment ${payment.id}`,
-    created_by: actor.userId,
-    distribution_payment_id: payment.id,
+  // Pilot-readiness fix: posting is one database transaction. The journal post,
+  // reconciliation status, capital-account event, payment settlement, read
+  // projection, line state and batch completion either all commit or none do.
+  const { data: posted, error: postFailure } = await (db() as any).rpc("post_distribution_payment_atomic", {
+    _payment_id: payment.id,
+    _actor: actor.userId,
+    _apply_capital: Boolean(effect.applies),
+    _reduce_capital_cents: effect.reduceCapitalCents,
+    _gross_cents: Number(line?.gross_cents ?? payment.submitted_amount_cents),
   });
-  await db()
-    .from("distribution_lines")
-    .update({ accounting_state: "posted" })
-    .eq("id", payment.distribution_line_id);
-
-  const { data: siblings } = await db()
-    .from("distribution_lines")
-    .select("accounting_state")
-    .eq("batch_id", payment.batch_id);
-  if (((siblings ?? []) as any[]).every((s) => String(s.accounting_state) === "posted")) {
-    await db()
-      .from("distribution_batches")
-      .update({ status: "completed", payment_status: "confirmed", completed_at: nowIso() })
-      .eq("id", payment.batch_id);
-  }
-
+  if (postFailure) fail(`Posting failed and nothing was changed: ${postFailure.message}`);
+  const commitmentEventId: string | null = (posted as any)?.commitmentEventId ? String((posted as any).commitmentEventId) : null;
   await recordEvent({
     offeringId: payment.offering_id,
     batchId: payment.batch_id,
