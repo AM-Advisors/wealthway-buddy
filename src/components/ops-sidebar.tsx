@@ -165,7 +165,9 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
   const has = (...r: string[]) => staffRoles.some((x) => r.includes(x));
   const leader = has("super_admin", "executive", "admin");
   const toItem = (s: (typeof sections)[number]) => ({ ...s, sub: (OPS_SUB[s.id] ?? []).filter((x) => x.always || allowedUrls.has(x.url)) });
+  const commandSub = [["My Work", "my-work"], ["Funds & SPVs", "portfolio"], ["SLA", "sla"], ["Client Actions", "client-actions"], ["Investor Exceptions", "investors"], ["Third-Party Blockers", "third-party"], ["Approvals", "approvals"], ["Requests", "requests"], ["Calendar", "calendar"], ["Reporting", "reporting"], ["Capital Activity", "capital"], ["Exceptions", "exceptions"], ["Service Limits", "limits"], ["Service Reviews", "reviews"], ["Team Capacity", "capacity"], ["Leadership", "leadership"], ...(leader || has("finance") ? [["Service Economics", "economics"]] : [])].map(([title, v]) => ({ title: title!, url: `/ops/command-center?view=${v}` }));
   const opsItems: NavItem[] = salesOnly ? [] : [
+    { id: "ops-command", title: "Command Center", url: "/ops/command-center", icon: "report", sub: [{ title: "Overview", url: "/ops/command-center" }, ...commandSub] },
     ...(leader || has("operations", "fund_administration") ? [{ id: "dash-ops", title: "Operations dashboard", url: "/ops/dashboards/operations", icon: "report" }] : []),
     ...(allowedUrls.has("/ops/queue") ? [{ id: "queue", title: "Work queue", url: "/ops/queue", icon: "tasks" }] : []),
     ...sections.filter((s) => !["home", "administration", ...FINANCE_IDS].includes(s.id)).map(toItem),

@@ -45,6 +45,22 @@ export function requiredApprovers(type: string, amount: number | null | undefine
   return t === 0 || (amount != null && Number(amount) >= t) ? 2 : 1;
 }
 
+export interface ApprovalPolicy { approval_type: string; threshold_amount: number | null; second_approver_required: boolean; step_up_required: boolean; authorized_signer_required: boolean; client_id: string | null; active: boolean; effective_from: string; effective_to: string | null; }
+
+/** Client-specific policy first, then global. */
+export function policyFor(type: string, policies: ApprovalPolicy[], clientId?: string | null, today = new Date().toISOString().slice(0, 10)) {
+  const live = policies.filter((p) => p.active && p.approval_type === type && p.effective_from <= today && (!p.effective_to || p.effective_to >= today));
+  return live.find((p) => clientId && p.client_id === clientId) ?? live.find((p) => !p.client_id) ?? null;
+}
+/** Policy-driven approver count; built-in defaults only when no policy rows exist at all. */
+export function requiredApproversByPolicy(type: string, amount: number | null | undefined, policies: ApprovalPolicy[] | null, clientId?: string | null) {
+  if (!policies || !policies.length) return { approvers: requiredApprovers(type, amount), stepUp: false, signer: false };
+  const p = policyFor(type, policies, clientId);
+  if (!p || !p.second_approver_required) return { approvers: 1, stepUp: !!p?.step_up_required, signer: !!p?.authorized_signer_required };
+  const meets = p.threshold_amount == null || (amount != null && Number(amount) >= Number(p.threshold_amount));
+  return { approvers: meets ? 2 : 1, stepUp: meets && p.step_up_required, signer: meets && p.authorized_signer_required };
+}
+
 /** Client filter buckets. */
 export const CLIENT_APPROVAL_FILTERS = {
   needs: ["AWAITING_APPROVAL"], review: ["INTERNAL_REVIEW"], approved: ["APPROVED"], changes: ["CHANGES_REQUESTED"], completed: ["COMPLETED"],

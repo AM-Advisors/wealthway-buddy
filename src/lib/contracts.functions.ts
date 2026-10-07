@@ -726,6 +726,7 @@ async function decorateRequests(context: any, requests: RequestRow[]) {
       .from("pricing_items")
       .select("service_key, amount_cents, pricing_model")
       .eq("version_id", published.id)
+      .eq("available_for_new_quotes", true)
       .not("service_key", "is", null);
     for (const i of items ?? []) {
       rateCard[(i as any).service_key] = {

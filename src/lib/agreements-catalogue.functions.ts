@@ -31,6 +31,7 @@ export const listPricingCatalogue = createServerFn({ method: "GET" })
       .from("pricing_items")
       .select("service_key, label, amount_cents, pricing_model, pass_through, unit, category")
       .eq("version_id", (version as any).id)
+      .eq("available_for_new_quotes", true)
       .order("sort_order");
 
     const seen = new Set<string>();

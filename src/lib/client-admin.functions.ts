@@ -391,7 +391,7 @@ export const createClientFund = createServerFn({ method: "POST" })
         if (cur) {
           const { fundSubset, priceConfig } = await import("@/lib/service-packages");
           const sub = fundSubset(cur.config, data.packageKeys);
-          const { data: rateRows } = await db.from("pricing_items").select("service_key, label, amount_cents, pricing_model, pass_through, pricing_versions!inner(status)").eq("pricing_versions.status", "published");
+          const { data: rateRows } = await db.from("pricing_items").select("service_key, label, amount_cents, pricing_model, pass_through, pricing_versions!inner(status)").eq("pricing_versions.status", "published").eq("available_for_new_quotes", true);
           const rate = ((rateRows ?? []) as any[]).map((r) => ({ serviceKey: r.service_key || null, label: r.label, amountCents: r.amount_cents == null ? null : Number(r.amount_cents), pricingModel: r.pricing_model, passThrough: Boolean(r.pass_through) }));
           serviceConfig = { fromClientConfigVersion: cur.version, packages: data.packageKeys, config: sub, pricing: priceConfig(sub, rate) };
         }

@@ -492,6 +492,7 @@ export const requestNewFund = createServerFn({ method: "POST" })
       .from("pricing_items")
       .select("*")
       .eq("version_id", pricingVersion.id)
+      .eq("available_for_new_quotes", true)
       .order("sort_order");
 
     const chosen = data.services;
