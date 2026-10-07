@@ -89,7 +89,7 @@ export const saveFundSetupFieldsFn = createServerFn({ method: "POST" })
         .optional(),
     }).parse,
   )
-  .handler(async ({ data, context }) => (await engine()).saveFundSetupFields(context.userId, data));
+  .handler(async ({ data, context }) => __auto(await (await engine()).saveFundSetupFields(context.userId, data), { offeringId: (data as any).offeringId, documentId: (data as any).documentId }));
 
 export const previewLegalNameChangeFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -108,14 +108,14 @@ export const changeLegalNameFn = createServerFn({ method: "POST" })
       reason: z.string().max(500).nullish(),
     }).parse,
   )
-  .handler(async ({ data, context }) => (await engine()).changeLegalName(context.userId, data));
+  .handler(async ({ data, context }) => __auto(await (await engine()).changeLegalName(context.userId, data), { offeringId: (data as any).offeringId, documentId: (data as any).documentId }));
 
 export const saveFundEconomicsFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
     z.object({ offeringId: uuid, terms, classes: z.array(fundClass).max(20), changeReason: z.string().max(500).nullish() }).parse,
   )
-  .handler(async ({ data, context }) => (await engine()).saveFundEconomics(context.userId, data as any));
+  .handler(async ({ data, context }) => __auto(await (await engine()).saveFundEconomics(context.userId, data as any), { offeringId: (data as any).offeringId, documentId: (data as any).documentId }));
 
 export const assignInvestmentClassFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -150,22 +150,22 @@ export const createSetupDocumentFn = createServerFn({ method: "POST" })
 export const uploadDocumentVersionFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ documentId: uuid, filePath: z.string().min(3).max(400), fileName: z.string().trim().min(1).max(200), fileSizeBytes: z.number().int().min(0).max(60 * 1024 * 1024), effectiveDate: z.string().max(20).nullish() }).parse)
-  .handler(async ({ data, context }) => (await docs()).uploadDocumentVersion(context.userId, data));
+  .handler(async ({ data, context }) => __auto(await (await docs()).uploadDocumentVersion(context.userId, data), { offeringId: (data as any).offeringId, documentId: (data as any).documentId }));
 
 export const approveDocumentVersionFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ documentId: uuid, version: z.number().int().min(1) }).parse)
-  .handler(async ({ data, context }) => (await docs()).approveDocumentVersion(context.userId, data));
+  .handler(async ({ data, context }) => __auto(await (await docs()).approveDocumentVersion(context.userId, data), { offeringId: (data as any).offeringId, documentId: (data as any).documentId }));
 
 export const setDocumentUsageFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ documentId: uuid, usage: z.enum(["reference", "acknowledgment", "signature"]), applicability }).parse)
-  .handler(async ({ data, context }) => (await docs()).setDocumentUsage(context.userId, data));
+  .handler(async ({ data, context }) => __auto(await (await docs()).setDocumentUsage(context.userId, data), { offeringId: (data as any).offeringId, documentId: (data as any).documentId }));
 
 export const saveSigningConfigFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ documentId: uuid, version: z.number().int().min(1), config: signingConfig, confirm: z.boolean() }).parse)
-  .handler(async ({ data, context }) => (await docs()).saveSigningConfig(context.userId, data));
+  .handler(async ({ data, context }) => __auto(await (await docs()).saveSigningConfig(context.userId, data), { offeringId: (data as any).offeringId, documentId: (data as any).documentId }));
 
 export const previewVersionImpactFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -185,7 +185,7 @@ export const rolloutPreviewFn = createServerFn({ method: "POST" })
 export const resolveResignItemFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ id: uuid, status: z.enum(["sent", "signed", "waived"]) }).parse)
-  .handler(async ({ data, context }) => (await docs()).resolveResignItem(context.userId, data));
+  .handler(async ({ data, context }) => __auto(await (await docs()).resolveResignItem(context.userId, data), { offeringId: (data as any).offeringId, documentId: (data as any).documentId }));
 
 export const requestDocumentChangeFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -195,7 +195,7 @@ export const requestDocumentChangeFn = createServerFn({ method: "POST" })
 export const decideChangeRequestFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ id: uuid, decision: z.enum(["accept", "decline"]), note: z.string().trim().max(1000).nullish() }).parse)
-  .handler(async ({ data, context }) => (await docs()).decideChangeRequest(context.userId, data));
+  .handler(async ({ data, context }) => __auto(await (await docs()).decideChangeRequest(context.userId, data), { offeringId: (data as any).offeringId, documentId: (data as any).documentId }));
 
 export const investorDocumentsFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -229,37 +229,37 @@ export const phase3OverviewFn = createServerFn({ method: "POST" })
 export const setBankingPathFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ offeringId: uuid, path: z.enum(["harmonious", "client", "not_required"]), reason: z.string().trim().max(500).nullish() }).parse)
-  .handler(async ({ data, context }) => (await p3()).setBankingPath(context.userId, data));
+  .handler(async ({ data, context }) => __auto(await (await p3()).setBankingPath(context.userId, data), { offeringId: (data as any).offeringId, documentId: (data as any).documentId }));
 
 export const setHarmoniousBankStatusFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ offeringId: uuid, status: z.enum(["not_started", "information_needed", "in_progress", "account_opened", "wire_pending_verification", "funding_instructions_ready"]) }).parse)
-  .handler(async ({ data, context }) => (await p3()).setHarmoniousBankStatus(context.supabase, context.userId, data));
+  .handler(async ({ data, context }) => __auto(await (await p3()).setHarmoniousBankStatus(context.supabase, context.userId, data), { offeringId: (data as any).offeringId, documentId: (data as any).documentId }));
 
 export const saveBankDetailsFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ offeringId: uuid, details: bankDetails }).parse)
-  .handler(async ({ data, context }) => (await p3()).saveBankDetails(context.supabase, context.userId, data));
+  .handler(async ({ data, context }) => __auto(await (await p3()).saveBankDetails(context.supabase, context.userId, data), { offeringId: (data as any).offeringId, documentId: (data as any).documentId }));
 
 export const attachWireDocumentFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ offeringId: uuid, version: z.number().int().min(1), filePath: z.string().min(3).max(400) }).parse)
-  .handler(async ({ data, context }) => (await p3()).attachWireDocument(context.supabase, context.userId, data));
+  .handler(async ({ data, context }) => __auto(await (await p3()).attachWireDocument(context.supabase, context.userId, data), { offeringId: (data as any).offeringId, documentId: (data as any).documentId }));
 
 export const reviewBankVersionFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ offeringId: uuid, version: z.number().int().min(1), decision: z.enum(["verify", "reject", "accept_ownership"]), method: z.string().trim().max(200).nullish(), note: z.string().trim().max(1000).nullish() }).parse)
-  .handler(async ({ data, context }) => (await p3()).reviewBankVersion(context.supabase, context.userId, data));
+  .handler(async ({ data, context }) => __auto(await (await p3()).reviewBankVersion(context.supabase, context.userId, data), { offeringId: (data as any).offeringId, documentId: (data as any).documentId }));
 
 export const setEinPathFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ offeringId: uuid, path: z.enum(["existing", "harmonious"]) }).parse)
-  .handler(async ({ data, context }) => (await p3()).setEinPath(context.userId, data));
+  .handler(async ({ data, context }) => __auto(await (await p3()).setEinPath(context.userId, data), { offeringId: (data as any).offeringId, documentId: (data as any).documentId }));
 
 export const recordEinFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ offeringId: uuid, ein: z.string().trim().max(12), letterPath: z.string().min(3).max(400).nullish(), received: z.boolean() }).parse)
-  .handler(async ({ data, context }) => (await p3()).recordEin(context.supabase, context.userId, data));
+  .handler(async ({ data, context }) => __auto(await (await p3()).recordEin(context.supabase, context.userId, data), { offeringId: (data as any).offeringId, documentId: (data as any).documentId }));
 
 export const uploadSignedW9Fn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -278,13 +278,13 @@ export const saveSs4Fn = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { responsible_party_tin: _drop, ...answers } = data.answers as Record<string, unknown>;
-    return (await p3()).saveSs4(context.supabase, context.userId, { ...data, answers });
+    return __auto(await (await p3()).saveSs4(context.supabase, context.userId, { ...data, answers }), { offeringId: data.offeringId });
   });
 
 export const setEinStatusFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ offeringId: uuid, status: einStatus }).parse)
-  .handler(async ({ data, context }) => (await p3()).setEinStatus(context.supabase, context.userId, data));
+  .handler(async ({ data, context }) => __auto(await (await p3()).setEinStatus(context.supabase, context.userId, data), { offeringId: (data as any).offeringId, documentId: (data as any).documentId }));
 
 export const saveAdministrationFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -296,7 +296,7 @@ export const saveAdministrationFn = createServerFn({ method: "POST" })
       blueSky: filing,
     }).parse,
   )
-  .handler(async ({ data, context }) => (await p3()).saveAdministration(context.userId, data as any));
+  .handler(async ({ data, context }) => __auto(await (await p3()).saveAdministration(context.userId, data as any), { offeringId: (data as any).offeringId, documentId: (data as any).documentId }));
 
 export const classAssignmentsFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
