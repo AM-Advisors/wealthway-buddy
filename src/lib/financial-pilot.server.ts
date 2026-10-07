@@ -216,6 +216,10 @@ async function readinessFacts(offeringId: string, pilotId: string | null): Promi
   ]);
   const pos = (positions.data ?? []) as any[];
   const users = pos.map((p) => p.investor_user_id).filter(Boolean);
+  // Same person resolution the distribution identity gate uses: the position's person, else the investor's onboarding person.
+  const { data: onb } = users.length ? await db().from("investor_onboardings").select("investor_user_id, person_id").eq("offering_id", offeringId).in("investor_user_id", users) : { data: [] };
+  const onbPerson = new Map(((onb ?? []) as any[]).filter((o) => o.person_id).map((o) => [o.investor_user_id, o.person_id]));
+  for (const p of pos) if (!p.person_id && p.investor_user_id) p.person_id = onbPerson.get(p.investor_user_id) ?? null;
   const persons = pos.map((p) => p.person_id).filter(Boolean);
   const [taxP, idc, instr] = await Promise.all([
     users.length ? db().from("investor_tax_profiles").select("investor_user_id, documentation_form, documentation_status").in("investor_user_id", users) : { data: [] },
