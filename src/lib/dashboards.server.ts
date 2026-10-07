@@ -46,6 +46,13 @@ export async function opsDashboard(userId: string, filters: { clientId?: string 
   if (filters.fundId) offQ = offQ.eq("id", filters.fundId);
   const [{ data: offs }, { data: managers }] = await Promise.all([offQ, db().from("fund_managers").select("offering_id, user_id").limit(5000)]);
   let offerings = (offs ?? []) as any[];
+  // Test/demo funds (e.g. the Walkthrough reference fund) never count toward
+  // production totals, unless a staff member explicitly opens that one fund.
+  if (!filters.fundId) {
+    const { data: demoClients } = await db().from("clients").select("id").eq("is_test_demo", true).limit(5000);
+    const demo = new Set(((demoClients ?? []) as any[]).map((c) => c.id));
+    offerings = offerings.filter((o) => !demo.has(o.client_id));
+  }
   if (filters.managerId) {
     const ids = new Set(((managers ?? []) as any[]).filter((m) => m.user_id === filters.managerId).map((m) => m.offering_id));
     offerings = offerings.filter((o) => ids.has(o.id));
