@@ -19,6 +19,7 @@ import { Route as CapTablePrivacyRouteImport } from './routes/cap-table-privacy'
 import { Route as CapTableTermsRouteImport } from './routes/cap-table-terms'
 import { Route as ClientLoginRouteImport } from './routes/client-login'
 import { Route as ContactusRouteImport } from './routes/contactus'
+import { Route as DataSecurityRouteImport } from './routes/data-security'
 import { Route as FundAdministrationRouteImport } from './routes/fund-administration'
 import { Route as HarmoniousclassroomRouteImport } from './routes/harmoniousclassroom'
 import { Route as InvestorRouteImport } from './routes/investor'
@@ -454,6 +455,11 @@ const ClientLoginRoute = ClientLoginRouteImport.update({
 const ContactusRoute = ContactusRouteImport.update({
   id: '/contactus',
   path: '/contactus',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DataSecurityRoute = DataSecurityRouteImport.update({
+  id: '/data-security',
+  path: '/data-security',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FundAdministrationRoute = FundAdministrationRouteImport.update({
@@ -2682,6 +2688,7 @@ export interface FileRoutesByFullPath {
   '/cap-table-terms': typeof CapTableTermsRoute
   '/client-login': typeof ClientLoginRoute
   '/contactus': typeof ContactusRoute
+  '/data-security': typeof DataSecurityRoute
   '/fund-administration': typeof FundAdministrationRoute
   '/harmoniousclassroom': typeof HarmoniousclassroomRoute
   '/investor': typeof InvestorRouteWithChildren
@@ -3079,6 +3086,7 @@ export interface FileRoutesByTo {
   '/cap-table-terms': typeof CapTableTermsRoute
   '/client-login': typeof ClientLoginRoute
   '/contactus': typeof ContactusRoute
+  '/data-security': typeof DataSecurityRoute
   '/fund-administration': typeof FundAdministrationRoute
   '/harmoniousclassroom': typeof HarmoniousclassroomRoute
   '/investor-login': typeof InvestorLoginRoute
@@ -3472,6 +3480,7 @@ export interface FileRoutesById {
   '/cap-table-terms': typeof CapTableTermsRoute
   '/client-login': typeof ClientLoginRoute
   '/contactus': typeof ContactusRoute
+  '/data-security': typeof DataSecurityRoute
   '/fund-administration': typeof FundAdministrationRoute
   '/harmoniousclassroom': typeof HarmoniousclassroomRoute
   '/investor': typeof InvestorRouteWithChildren
@@ -3872,6 +3881,7 @@ export interface FileRouteTypes {
     | '/cap-table-terms'
     | '/client-login'
     | '/contactus'
+    | '/data-security'
     | '/fund-administration'
     | '/harmoniousclassroom'
     | '/investor'
@@ -4269,6 +4279,7 @@ export interface FileRouteTypes {
     | '/cap-table-terms'
     | '/client-login'
     | '/contactus'
+    | '/data-security'
     | '/fund-administration'
     | '/harmoniousclassroom'
     | '/investor-login'
@@ -4661,6 +4672,7 @@ export interface FileRouteTypes {
     | '/cap-table-terms'
     | '/client-login'
     | '/contactus'
+    | '/data-security'
     | '/fund-administration'
     | '/harmoniousclassroom'
     | '/investor'
@@ -5061,6 +5073,7 @@ export interface RootRouteChildren {
   CapTableTermsRoute: typeof CapTableTermsRoute
   ClientLoginRoute: typeof ClientLoginRoute
   ContactusRoute: typeof ContactusRoute
+  DataSecurityRoute: typeof DataSecurityRoute
   FundAdministrationRoute: typeof FundAdministrationRoute
   HarmoniousclassroomRoute: typeof HarmoniousclassroomRoute
   InvestorRoute: typeof InvestorRouteWithChildren
@@ -5189,6 +5202,13 @@ declare module '@tanstack/react-router' {
       path: '/contactus'
       fullPath: '/contactus'
       preLoaderRoute: typeof ContactusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/data-security': {
+      id: '/data-security'
+      path: '/data-security'
+      fullPath: '/data-security'
+      preLoaderRoute: typeof DataSecurityRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/fund-administration': {
@@ -8774,6 +8794,7 @@ const rootRouteChildren: RootRouteChildren = {
   CapTableTermsRoute: CapTableTermsRoute,
   ClientLoginRoute: ClientLoginRoute,
   ContactusRoute: ContactusRoute,
+  DataSecurityRoute: DataSecurityRoute,
   FundAdministrationRoute: FundAdministrationRoute,
   HarmoniousclassroomRoute: HarmoniousclassroomRoute,
   InvestorRoute: InvestorRouteWithChildren,
