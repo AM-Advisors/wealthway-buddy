@@ -614,7 +614,7 @@ export async function decideCloseSheet(userId: string, i: { versionId: string; d
   if (!v) fail("Close sheet version not found.");
   const { data: newer } = await db().from("close_sheet_versions").select("id").eq("sheet_id", v.sheet_id).gt("version", v.version).limit(1);
   if ((newer ?? []).length) fail("A newer version exists. Review that one instead.");
-  const why = canDecideCloseSheet(v.prepared_by, userId, i.decision, i.reason);
+  const why = canDecideCloseSheet(v.prepared_by === userId && !canDecideCloseSheet(null, userId, i.decision, i.reason) && (await (await import("@/lib/self-approval.server")).selfApprove(userId, "close_sheet", [v.id])) ? null : v.prepared_by, userId, i.decision, i.reason);
   if (why) fail(why);
   if (i.decision === "approved" && v.close_sheets.kind === "month_end" && !v.snapshot?.ready) {
     fail("Every checklist item must pass before the month can be signed off.");
