@@ -36837,6 +36837,36 @@ export type Database = {
         }
         Relationships: []
       }
+      star_reference_documents: {
+        Row: {
+          created_at: string
+          id: string
+          sha256: string
+          size_bytes: number
+          storage_path: string
+          title: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          sha256: string
+          size_bytes: number
+          storage_path: string
+          title: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          sha256?: string
+          size_bytes?: number
+          storage_path?: string
+          title?: string
+          uploaded_by?: string | null
+        }
+        Relationships: []
+      }
       state_tax_returns: {
         Row: {
           created_at: string
