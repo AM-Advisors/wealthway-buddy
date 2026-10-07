@@ -347,7 +347,7 @@ export const CALCULATOR_ITEMS: CalcItem[] = [
   { key: "de_master_llc", name: "Delaware Master LLC", kind: "toggle", amountUsd: 2500, unit: "year" },
   { key: "k1_tax", name: "K-1 / 1065 tax after the first tax year", kind: "toggle", amountUsd: 2500, unit: "year" },
   { key: "white_label", name: "White-label portal", kind: "toggle", amountUsd: 100, unit: "month" },
-  { key: "white_glove", name: "White glove service", kind: "custom" },
+  { key: "white_glove", name: "White Glove Fund Administration (from $36,000/yr)", kind: "custom" },
   { key: "state_tax", name: "State returns and 1042-S", kind: "custom" },
   { key: "audit_support", name: "Audit, valuation or other services", kind: "custom" },
 ];
