@@ -164,7 +164,7 @@ function Queue({ rows, title }: { rows: D["queue"]; title: string }) {
             <td className="p-2 text-xs"><Badge variant={r.rank <= 4 ? "destructive" : "outline"}>{r.rank}</Badge> {r.reason}</td>
             <td className="p-2"><a href={r.href} className="underline">{r.title}</a><div className="text-xs text-muted-foreground">{titleCase(r.kind)}{r.highRisk ? " · high risk" : ""}</div></td>
             <Veh r={r} /><Pkg r={r} />
-            <td className="p-2"><ResponsibilityBadge value={r.responsibility as any} /></td>
+            <td className="p-2"><ResponsibilityBadge status={r.responsibility} /></td>
             <td className="p-2">{r.assignedName ?? (r.team ? titleCase(r.team) : <span className="text-destructive">Unassigned</span>)}</td>
             <td className="p-2 whitespace-nowrap">{r.due ? fmtDate(r.due) : "—"}</td>
             <td className="p-2">{r.sla ? <Badge variant={slaTone(r.sla)}>{SLA_STATUS_LABEL[r.sla]}</Badge> : "—"}</td>
@@ -242,7 +242,7 @@ function ClientActions({ rows }: { rows: any[] }) {
   return (
     <Table head={["Client / Vehicle", "Item", "Waiting on", "Requested", "Due", "Days waiting", "Last reminder", "Priority", "Harmonious owner", "Actions"]} empty={!rows.length}>
       {rows.map((r) => (
-        <tr key={r.id} className="border-t"><Veh r={r} /><td className="p-2"><a href={r.href} className="underline">{r.title}</a></td><td className="p-2"><ResponsibilityBadge value={r.responsibility} /></td>
+        <tr key={r.id} className="border-t"><Veh r={r} /><td className="p-2"><a href={r.href} className="underline">{r.title}</a></td><td className="p-2"><ResponsibilityBadge status={r.responsibility} /></td>
           <td className="p-2">{r.requestedDate ? fmtDate(r.requestedDate) : "—"}</td><td className="p-2">{r.due ? fmtDate(r.due) : "—"}</td><td className="p-2">{r.daysWaiting ?? "—"}</td>
           <td className="p-2">{r.lastReminder ? fmtDate(r.lastReminder) : "—"}</td><td className="p-2">{r.priority}</td><td className="p-2">{r.assignedName ?? "—"}</td>
           <td className="p-2 whitespace-nowrap"><a href={r.href} className="mr-2 underline">Open</a><button className="mr-2 underline" onClick={() => go(r, "reminder")}>Log reminder</button><button className="mr-2 underline" onClick={() => go(r, "follow_up")}>Follow-up</button><button className="underline" onClick={() => go(r, "escalate")}>Escalate</button></td></tr>
@@ -318,7 +318,7 @@ function RequestsOps({ rows }: { rows: any[] }) {
       <Table head={["Request", "Vehicle", "Package", "Type", "Responsibility", "Status", "Team", "Assigned", "Priority", "SLA", "Due", "Submitted", "Entitlement"]} empty={!list.length}>
         {list.map((r) => (
           <tr key={r.id} className="border-t"><td className="p-2"><a href={`/manager/fund/${r.fund_id}/requests?request=${r.id}`} className="underline">{r.title}</a></td><Veh r={r} /><Pkg r={r} /><td className="p-2">{titleCase(r.request_type)}</td>
-            <td className="p-2"><ResponsibilityBadge value={r.responsibility} /></td><td className="p-2">{titleCase(r.status)}</td><td className="p-2">{titleCase(r.assigned_team)}</td><td className="p-2">{r.assignedName ?? "—"}</td><td className="p-2">{r.priority}</td>
+            <td className="p-2"><ResponsibilityBadge status={r.responsibility} /></td><td className="p-2">{titleCase(r.status)}</td><td className="p-2">{titleCase(r.assigned_team)}</td><td className="p-2">{r.assignedName ?? "—"}</td><td className="p-2">{r.priority}</td>
             <td className="p-2">{r.slaStatus ? <Badge variant={slaTone(r.slaStatus)}>{SLA_STATUS_LABEL[r.slaStatus as SlaStatus]}</Badge> : "—"}</td><td className="p-2">{r.due_date ? fmtDate(r.due_date) : "—"}</td><td className="p-2">{r.submitted_at ? fmtDate(r.submitted_at) : "—"}</td>
             <td className="p-2">{r.entitlement_status === "REVIEW_REQUIRED" ? <Badge variant="secondary">Review required</Badge> : "Included"}</td></tr>
         ))}
