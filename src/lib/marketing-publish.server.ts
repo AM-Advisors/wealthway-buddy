@@ -12,38 +12,46 @@ async function fail(res: Response, what: string): Promise<never> {
   throw new Error(`${what} failed [${res.status}]: ${body.slice(0, 400)}`);
 }
 
-export async function linkedinConfigured() {
-  const { directStatus } = await import("@/lib/linkedin-direct.server");
-  return (await directStatus()).connected;
+function liKey() { return process.env["LINKEDIN_API_KEY_1"] || process.env["LINKEDIN_API_KEY"]; }
+export async function linkedinConfigured() { return !!(liKey() && process.env["LOVABLE_API_KEY"]); }
+
+/** Backend LinkedIn connection via the connector gateway (no browser sign-in). */
+function liFetch(path: string, init: RequestInit = {}) {
+  const key = liKey(), lov = process.env["LOVABLE_API_KEY"];
+  if (!key || !lov) throw new Error("LinkedIn isn't connected yet.");
+  return fetch(`${GATEWAY}/linkedin${path}`, {
+    ...init,
+    headers: { ...(init.headers as Record<string, string>), Authorization: `Bearer ${lov}`, "X-Connection-Api-Key": key,
+      "LinkedIn-Version": "202504", "X-Restli-Protocol-Version": "2.0.0" },
+  });
 }
-export function metaConfigured() { return !!process.env["META_PAGE_ACCESS_TOKEN"]; }
 
-const LI = "https://api.linkedin.com";
-
-async function linkedinImage(token: string, orgUrn: string, imageUrl: string): Promise<string | null> {
-  const { liHeaders } = await import("@/lib/linkedin-direct.server");
+async function linkedinImage(owner: string, imageUrl: string): Promise<string | null> {
   try {
-    const init = await fetch(`${LI}/rest/images?action=initializeUpload`, {
-      method: "POST", headers: liHeaders(token, { "Content-Type": "application/json" }),
-      body: JSON.stringify({ initializeUploadRequest: { owner: orgUrn } }),
+    const init = await liFetch(`/rest/images?action=initializeUpload`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ initializeUploadRequest: { owner } }),
     });
     if (!init.ok) { console.error(`LinkedIn image init failed [${init.status}]: ${await init.text()}`); return null; }
     const v = (await init.json())?.value;
     const bytes = await (await fetch(imageUrl)).arrayBuffer();
-    const put = await fetch(v.uploadUrl, { method: "PUT", headers: { Authorization: `Bearer ${token}` }, body: bytes });
+    const put = await fetch(v.uploadUrl, { method: "PUT", body: bytes });
     return put.ok ? String(v.image) : null;
   } catch (e) { console.error("LinkedIn image upload skipped", e); return null; }
 }
 
-/** Posts only as the Harmonious company page (never a personal profile). */
+/** Posts as the company page when set in Channels; otherwise as the connected member. */
 export async function publishLinkedIn(orgId: string, text: string, imageUrl: string | null): Promise<string> {
-  if (!orgId || orgId === "me") throw new Error("Set the LinkedIn company page in Marketing → Channels.");
-  const { accessToken, liHeaders } = await import("@/lib/linkedin-direct.server");
-  const token = await accessToken();
-  const author = orgId.startsWith("urn:") ? orgId : `urn:li:organization:${orgId}`;
-  const image = imageUrl ? await linkedinImage(token, author, imageUrl) : null;
-  const res = await fetch(`${LI}/rest/posts`, {
-    method: "POST", headers: liHeaders(token, { "Content-Type": "application/json" }),
+  let author: string;
+  if (orgId && orgId !== "me") author = orgId.startsWith("urn:") ? orgId : `urn:li:organization:${orgId}`;
+  else {
+    const me = await liFetch(`/v2/userinfo`);
+    if (!me.ok) await fail(me, "LinkedIn profile");
+    author = `urn:li:person:${(await me.json()).sub}`;
+  }
+  const image = imageUrl ? await linkedinImage(author, imageUrl) : null;
+  const res = await liFetch(`/rest/posts`, {
+    method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       author, commentary: text, visibility: "PUBLIC", lifecycleState: "PUBLISHED", isReshareDisabledByAuthor: false,
       distribution: { feedDistribution: "MAIN_FEED", targetEntities: [], thirdPartyDistributionChannels: [] },
@@ -54,6 +62,7 @@ export async function publishLinkedIn(orgId: string, text: string, imageUrl: str
   return res.headers.get("x-restli-id") || res.headers.get("x-linkedin-id") || "posted";
 }
 
+export function metaConfigured() { return !!process.env["META_PAGE_ACCESS_TOKEN"]; }
 function metaToken() {
   const t = process.env["META_PAGE_ACCESS_TOKEN"];
   if (!t) throw new Error("Facebook/Instagram isn't connected yet.");
