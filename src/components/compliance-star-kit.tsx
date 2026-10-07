@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { listStarReferences, openStarReference, recordStarEvent } from "@/lib/compliance-star.functions";
 
-type Step = { n: number; label: string; done: boolean; detail?: string; manual?: "path_chosen" | "gdpr_done" | "quality_result"; optional?: boolean };
+type Step = { n: number; label: string; done: boolean; detail?: string | undefined; manual?: "path_chosen" | "gdpr_done" | "quality_result"; optional?: boolean };
 
 /** Level 1 checklist from the CSA STAR Prep Kit. Data-backed steps tick themselves; manual steps are logged with person and date. */
 export function StarChecklist({ d }: { d: any }) {
