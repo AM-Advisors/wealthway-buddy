@@ -8,6 +8,7 @@ import { CTAS, CTA_DESTINATION, ORGANIZATION, visibleNav } from "@/lib/marketing
 
 const LEGAL = [
   { href: "/privacy", label: "Privacy Policy" },
+  { href: "/data-deletion", label: "User Data Deletion" },
   { href: "/terms", label: "Terms of Service" },
   { href: "/cap-table-privacy", label: "CapTable Privacy Notice" },
   { href: "/cap-table-terms", label: "CapTable Terms of Service" },
