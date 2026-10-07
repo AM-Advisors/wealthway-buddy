@@ -47,6 +47,7 @@ export function ComplianceCenter() {
           <TabsTrigger value="home">Home</TabsTrigger>
           <TabsTrigger value="controls">Control Library</TabsTrigger>
           {can("administration.evidence.view") && <TabsTrigger value="evidence">Evidence</TabsTrigger>}
+          <TabsTrigger value="policies">Policies</TabsTrigger>
           <TabsTrigger value="reviews">Access Reviews</TabsTrigger>
           {can("administration.privacy.view") && <TabsTrigger value="privacy">Privacy</TabsTrigger>}
           {can("administration.vendors.view") && <TabsTrigger value="vendors">Vendors</TabsTrigger>}
@@ -57,6 +58,7 @@ export function ComplianceCenter() {
         <TabsContent value="home"><Home d={d} /></TabsContent>
         <TabsContent value="controls"><Controls d={d} /></TabsContent>
         <TabsContent value="evidence"><Evidence d={d} /></TabsContent>
+        <TabsContent value="policies"><Register d={d} kind="policy" /></TabsContent>
         <TabsContent value="reviews"><Reviews d={d} /></TabsContent>
         <TabsContent value="privacy">
           <Tabs defaultValue="data_map">

@@ -268,6 +268,15 @@ export const REGISTERS: Record<string, RegisterSpec> = {
       { key: "dpia", label: "DPIA review indicated? (human judgment)", type: "select", options: ["Not assessed", "Indicated", "Not indicated"], humanOnly: true },
       { key: "controls", label: "Applicable controls/evidence" }, { key: "findings", label: "Unresolved findings", type: "long" },
     ] },
+  policy: { kind: "policy", label: "Policies", prefix: "POL", statuses: opt("draft", "in_review", "approved", "retired"),
+    note: "Starter drafts are not in force until a Harmonious owner reviews the text and marks the policy approved.",
+    fields: [
+      { key: "owner", label: "Policy owner", type: "person" }, { key: "scope", label: "Scope", required: true },
+      { key: "text", label: "Policy text", type: "long", required: true },
+      { key: "frameworks", label: "Supports (SOC 2 / ISO 27001 / GDPR)" },
+      { key: "approved_by", label: "Approved by", type: "person", humanOnly: true },
+      { key: "last_reviewed", label: "Last reviewed", type: "date" }, { key: "next_review", label: "Next review", type: "date" },
+    ] },
 };
 export const PRIVACY_KINDS = ["data_map", "processing", "retention", "rights_request", "dpia", "transfer"];
 
