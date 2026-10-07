@@ -73,7 +73,7 @@ export async function listLockedEdits(userId: string) {
   return ((data ?? []) as any[]).map((r) => ({ ...r, label: LOCKED_ACTIONS[r.action]?.label ?? r.action, requester: names.get(r.requested_by) ?? "Unknown", mine: r.requested_by === userId, payload: undefined, details: r.summary }));
 }
 
-export async function decideLockedEdit(ctx: Ctx, input: { requestId: string; decision: "approve" | "reject"; note?: string | null }) {
+export async function decideLockedEdit(ctx: Ctx, input: { requestId: string; decision: "approve" | "reject"; note?: string | null | undefined }) {
   await assertApprover(ctx.userId);
   const db = await admin();
   const { data: req } = await db.from("locked_edit_requests").select("*").eq("id", input.requestId).maybeSingle();
