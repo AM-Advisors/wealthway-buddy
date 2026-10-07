@@ -154,12 +154,17 @@ export async function autoCompleteTasks(offeringId: string) {
       investment_target: !!o?.target_raise_cents,
     };
     // More steps that close themselves from data already recorded elsewhere (forward-only).
-    const [{ data: w9 }, { data: fees }, { data: sigs }, { data: team }, { data: docs }] = await Promise.all([
+    const [{ data: w9 }, { data: fees }, { data: sigs }, { data: team }, { data: docs }, { data: bank }, { data: elig }, { data: onb }, { data: reg }, { data: bp }] = await Promise.all([
       db().from("fund_setup_documents").select("id").eq("setup_id", s.id).in("doc_type", ["signed_w9", "ein_letter"]).eq("is_current", true).limit(1),
       db().from("fund_fee_terms").select("id").eq("offering_id", offeringId).eq("status", "active").limit(1),
       db().from("fund_signatories").select("id").eq("offering_id", offeringId).eq("status", "active").limit(1),
       db().from("fund_team_members").select("id").eq("offering_id", offeringId).is("removed_at", null).limit(1),
       db().from("offering_documents").select("doc_type, document_category").eq("offering_id", offeringId),
+      db().from("funding_instruction_versions").select("id").eq("offering_id", offeringId).not("approved_at", "is", null).is("revoked_at", null).limit(1),
+      db().from("fund_eligibility_configs").select("id").eq("setup_id", s.id).not("approved_at", "is", null).limit(1),
+      db().from("fund_onboarding_requirements").select("id").eq("setup_id", s.id).eq("required", true).limit(1),
+      db().from("fund_regulatory_configs").select("id").eq("setup_id", s.id).not("reviewed_at", "is", null).limit(1),
+      db().from("offerings").select("banking_path").eq("id", offeringId).maybeSingle(),
     ]);
     const docKinds = new Set(((docs ?? []) as any[]).flatMap((d) => [d.doc_type, d.document_category]).filter(Boolean));
     done["entity_ein"] = done["entity_ein"] || !!w9?.length;
@@ -169,6 +174,10 @@ export async function autoCompleteTasks(offeringId: string) {
     done["docs_subscription"] = ["subscription_agreement", "subscription"].some((k) => docKinds.has(k));
     done["docs_operating_agreement"] = ["operating_agreement", "lpa"].some((k) => docKinds.has(k));
     done["docs_ppm"] = docKinds.has("ppm");
+    done["banking_account"] = !!bank?.length || (bp as any)?.banking_path === "not_required";
+    done["investor_eligibility"] = !!elig?.length;
+    done["investor_onboarding_steps"] = !!onb?.length;
+    done["compliance_config"] = !!reg?.length;
     const { data: tasks } = await db().from("fund_setup_tasks").select("id, task_key, status, dependencies, blocking").eq("setup_id", s.id);
     const status = new Map<string, string>(((tasks ?? []) as any[]).map((t) => [t.task_key, t.status]));
     let changed = true;
@@ -176,7 +185,7 @@ export async function autoCompleteTasks(offeringId: string) {
       changed = false;
       for (const t of (tasks ?? []) as any[]) {
         if (status.get(t.task_key) === "complete" || !done[t.task_key]) continue;
-        if ((t.dependencies ?? []).some((dep: string) => status.get(dep) !== "complete")) continue;
+        // A step whose own information is recorded completes now, regardless of step order.
         const { error } = await db().from("fund_setup_tasks").update({ status: "complete", completed_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("id", t.id);
         if (!error) {
           status.set(t.task_key, "complete");
