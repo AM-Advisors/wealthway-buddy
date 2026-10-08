@@ -21,7 +21,14 @@ export const Route = createFileRoute("/api/public/marketing/run")({
           const { syncMarketingDrive } = await import("@/lib/marketing-drive.server");
           drive = await syncMarketingDrive(null).catch((e) => { console.error("marketing drive sync", e); return { error: true }; });
         }
-        return Response.json({ ...result, clickup, drive });
+        // Research engine: ingest + enrich hourly; refresh series ideas once a day (~6am Denver). Never publishes.
+        let research: unknown = null;
+        const now = new Date();
+        if (now.getUTCMinutes() >= 30 && now.getUTCMinutes() < 35) {
+          const { runResearch } = await import("@/lib/marketing-research.server");
+          research = await runResearch({ ideas: now.getUTCHours() === 12 }).catch((e) => { console.error("marketing research", e); return { error: true }; });
+        }
+        return Response.json({ ...result, clickup, drive, research });
       },
     },
   },

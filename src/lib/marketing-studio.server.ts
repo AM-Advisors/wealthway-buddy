@@ -87,7 +87,7 @@ export async function moveItem(userId: string, id: string, to: string, note?: st
   const { db, roles } = await ctx(userId);
   const { data: cur } = await db.from("marketing_content_items").select("*").eq("id", id).single();
   if (!cur) throw new Error("Not found.");
-  const problem = moveProblem({ from: cur.status, to, roles, actorId: userId, authorId: cur.author_id, publishAt: cur.publish_at, note });
+  const problem = moveProblem({ from: cur.status, to, roles, actorId: userId, authorId: cur.author_id, publishAt: cur.publish_at, note, unverifiedClaims: cur.unverified_claims ?? 0 });
   if (problem) throw new Error(problem);
   const now = new Date().toISOString();
   const patch: any = { status: to, version: cur.version + 1, updated_at: now };

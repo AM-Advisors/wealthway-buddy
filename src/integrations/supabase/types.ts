@@ -28569,6 +28569,57 @@ export type Database = {
           },
         ]
       }
+      marketing_content_citations: {
+        Row: {
+          claim: string
+          claim_kind: string
+          created_at: string
+          created_by: string
+          id: string
+          item_id: string
+          source_url: string | null
+          story_id: string | null
+          verification: string
+        }
+        Insert: {
+          claim: string
+          claim_kind: string
+          created_at?: string
+          created_by: string
+          id?: string
+          item_id: string
+          source_url?: string | null
+          story_id?: string | null
+          verification: string
+        }
+        Update: {
+          claim?: string
+          claim_kind?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          item_id?: string
+          source_url?: string | null
+          story_id?: string | null
+          verification?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_content_citations_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_content_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketing_content_citations_story_id_fkey"
+            columns: ["story_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_research_stories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marketing_content_comments: {
         Row: {
           author_id: string
@@ -28702,12 +28753,14 @@ export type Database = {
           post_id: string | null
           proposed_slot: boolean
           publish_at: string | null
+          research_idea_id: string | null
           reviewer_id: string | null
           series_key: string
           social_headline: string
           source_urls: string[]
           status: string
           topic: string
+          unverified_claims: number
           updated_at: string
           version: number
           week_start: string | null
@@ -28736,12 +28789,14 @@ export type Database = {
           post_id?: string | null
           proposed_slot?: boolean
           publish_at?: string | null
+          research_idea_id?: string | null
           reviewer_id?: string | null
           series_key: string
           social_headline?: string
           source_urls?: string[]
           status?: string
           topic?: string
+          unverified_claims?: number
           updated_at?: string
           version?: number
           week_start?: string | null
@@ -28770,17 +28825,26 @@ export type Database = {
           post_id?: string | null
           proposed_slot?: boolean
           publish_at?: string | null
+          research_idea_id?: string | null
           reviewer_id?: string | null
           series_key?: string
           social_headline?: string
           source_urls?: string[]
           status?: string
           topic?: string
+          unverified_claims?: number
           updated_at?: string
           version?: number
           week_start?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "marketing_content_items_research_idea_id_fkey"
+            columns: ["research_idea_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_research_ideas"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "marketing_content_items_series_key_fkey"
             columns: ["series_key"]
@@ -29272,6 +29336,313 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "clients"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketing_research_alerts: {
+        Row: {
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          created_at: string
+          id: string
+          reason: string
+          story_id: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          created_at?: string
+          id?: string
+          reason: string
+          story_id: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          created_at?: string
+          id?: string
+          reason?: string
+          story_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_research_alerts_story_id_fkey"
+            columns: ["story_id"]
+            isOneToOne: true
+            referencedRelation: "marketing_research_stories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketing_research_ideas: {
+        Row: {
+          angle: string
+          audience: string
+          claims: Json
+          converted_at: string | null
+          converted_by: string | null
+          converted_item_id: string | null
+          created_at: string
+          id: string
+          idea_date: string
+          keywords: string[]
+          series_key: string
+          social_headline: string
+          story_ids: string[]
+          title: string
+          unverified_claims: number
+        }
+        Insert: {
+          angle?: string
+          audience?: string
+          claims?: Json
+          converted_at?: string | null
+          converted_by?: string | null
+          converted_item_id?: string | null
+          created_at?: string
+          id?: string
+          idea_date: string
+          keywords?: string[]
+          series_key: string
+          social_headline?: string
+          story_ids?: string[]
+          title: string
+          unverified_claims?: number
+        }
+        Update: {
+          angle?: string
+          audience?: string
+          claims?: Json
+          converted_at?: string | null
+          converted_by?: string | null
+          converted_item_id?: string | null
+          created_at?: string
+          id?: string
+          idea_date?: string
+          keywords?: string[]
+          series_key?: string
+          social_headline?: string
+          story_ids?: string[]
+          title?: string
+          unverified_claims?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_research_ideas_converted_item_id_fkey"
+            columns: ["converted_item_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_content_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketing_research_ideas_series_key_fkey"
+            columns: ["series_key"]
+            isOneToOne: false
+            referencedRelation: "marketing_series"
+            referencedColumns: ["key"]
+          },
+        ]
+      }
+      marketing_research_runs: {
+        Row: {
+          error: string | null
+          finished_at: string | null
+          id: string
+          job: string
+          lease_until: string
+          result: Json
+          started_at: string
+          status: string
+        }
+        Insert: {
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          job: string
+          lease_until: string
+          result?: Json
+          started_at?: string
+          status?: string
+        }
+        Update: {
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          job?: string
+          lease_until?: string
+          result?: Json
+          started_at?: string
+          status?: string
+        }
+        Relationships: []
+      }
+      marketing_research_sources: {
+        Row: {
+          access_note: string | null
+          active: boolean
+          credibility: number
+          is_primary: boolean
+          key: string
+          kind: string
+          last_error: string | null
+          last_fetched_at: string | null
+          name: string
+          publisher: string
+          url: string | null
+        }
+        Insert: {
+          access_note?: string | null
+          active?: boolean
+          credibility?: number
+          is_primary?: boolean
+          key: string
+          kind: string
+          last_error?: string | null
+          last_fetched_at?: string | null
+          name: string
+          publisher: string
+          url?: string | null
+        }
+        Update: {
+          access_note?: string | null
+          active?: boolean
+          credibility?: number
+          is_primary?: boolean
+          key?: string
+          kind?: string
+          last_error?: string | null
+          last_fetched_at?: string | null
+          name?: string
+          publisher?: string
+          url?: string | null
+        }
+        Relationships: []
+      }
+      marketing_research_state: {
+        Row: {
+          job: string
+          paused_at: string | null
+          paused_reason: string | null
+          updated_at: string
+        }
+        Insert: {
+          job: string
+          paused_at?: string | null
+          paused_reason?: string | null
+          updated_at?: string
+        }
+        Update: {
+          job?: string
+          paused_at?: string | null
+          paused_reason?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      marketing_research_stories: {
+        Row: {
+          angle: string
+          audience: string
+          commercial: number
+          confidence: string
+          created_by: string | null
+          credibility: number
+          dedupe_key: string
+          dismissed_at: string | null
+          dismissed_by: string | null
+          engagement: number
+          enriched_at: string | null
+          facts: Json
+          headline: string
+          id: string
+          keywords: string[]
+          numbers: Json
+          primary_source_urls: string[]
+          published_at: string | null
+          publisher: string
+          regulatory_sensitivity: string
+          relevance: number
+          retrieved_at: string
+          score: number
+          seo: number
+          source_key: string
+          suggested_series: string | null
+          summary: string
+          timeliness: number
+          url: string
+          verification_status: string
+        }
+        Insert: {
+          angle?: string
+          audience?: string
+          commercial?: number
+          confidence?: string
+          created_by?: string | null
+          credibility?: number
+          dedupe_key: string
+          dismissed_at?: string | null
+          dismissed_by?: string | null
+          engagement?: number
+          enriched_at?: string | null
+          facts?: Json
+          headline: string
+          id?: string
+          keywords?: string[]
+          numbers?: Json
+          primary_source_urls?: string[]
+          published_at?: string | null
+          publisher: string
+          regulatory_sensitivity?: string
+          relevance?: number
+          retrieved_at?: string
+          score?: number
+          seo?: number
+          source_key: string
+          suggested_series?: string | null
+          summary?: string
+          timeliness?: number
+          url: string
+          verification_status?: string
+        }
+        Update: {
+          angle?: string
+          audience?: string
+          commercial?: number
+          confidence?: string
+          created_by?: string | null
+          credibility?: number
+          dedupe_key?: string
+          dismissed_at?: string | null
+          dismissed_by?: string | null
+          engagement?: number
+          enriched_at?: string | null
+          facts?: Json
+          headline?: string
+          id?: string
+          keywords?: string[]
+          numbers?: Json
+          primary_source_urls?: string[]
+          published_at?: string | null
+          publisher?: string
+          regulatory_sensitivity?: string
+          relevance?: number
+          retrieved_at?: string
+          score?: number
+          seo?: number
+          source_key?: string
+          suggested_series?: string | null
+          summary?: string
+          timeliness?: number
+          url?: string
+          verification_status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_research_stories_source_key_fkey"
+            columns: ["source_key"]
+            isOneToOne: false
+            referencedRelation: "marketing_research_sources"
+            referencedColumns: ["key"]
           },
         ]
       }

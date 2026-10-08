@@ -25,6 +25,9 @@ describe("marketing studio workflow", () => {
     expect(isLocked("approved")).toBe(true);
     expect(isLocked("design")).toBe(false);
   });
+  it("unverified claims block approval", () => {
+    expect(moveProblem({ ...base, from: "ceo_approval", to: "approved", roles: ["executive"], unverifiedClaims: 1 })).toMatch(/primary source/);
+  });
   it("week starts on Monday", () => {
     expect(weekStart(new Date("2026-10-08T12:00:00Z"))).toBe("2026-10-05");
     expect(weekStart(new Date("2026-10-11T12:00:00Z"))).toBe("2026-10-05");
