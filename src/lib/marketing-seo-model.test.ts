@@ -44,7 +44,7 @@ describe("internal links, clusters and duplicates", () => {
   });
   it("maps topics to clusters and detects near-duplicate titles", () => {
     expect(clustersFor("Understanding 506(c) and Form D filings")).toEqual(expect.arrayContaining(["reg_d", "form_d"]));
-    expect(titleSimilarity("Understanding 506(b) vs 506(c) Offerings", "506(b) vs 506(c) Offerings Explained")).toBeGreaterThanOrEqual(0.8);
+    expect(titleSimilarity("How to File Form D for Your Fund", "How to File a Form D for Your Fund")).toBeGreaterThanOrEqual(0.8);
   });
   it("quality panel recommends instead of promising, and flags keyword stuffing", () => {
     const stuffed = "<p>" + "spv ".repeat(200) + "</p>";

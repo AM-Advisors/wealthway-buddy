@@ -76,7 +76,7 @@ export async function workspace(userId: string, itemId: string) {
   ]);
   const existingTitles = [...((others ?? []) as any[]).map((o) => o.article_title as string), ...pages.filter((p) => p.kind === "article").map((p) => p.title)];
   const analytics = {
-    search_console: gscSet?.site_url ? `Connected (${gscSet.site_url})` : process.env.GOOGLE_SEARCH_CONSOLE_API_KEY ? "Connected — harmonious.co property not verified" : "Not connected",
+    search_console: gscSet?.site_url ? `Connected (${gscSet.site_url})` : process.env['GOOGLE_SEARCH_CONSOLE_API_KEY'] ? "Connected — harmonious.co property not verified" : "Not connected",
     ga4: "Not connected", bing: "Not connected",
   };
   return { pages, existingTitles, analytics, measured: gsc ?? [], canonicalLive: false,
