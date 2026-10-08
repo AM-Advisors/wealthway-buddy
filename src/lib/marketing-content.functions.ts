@@ -36,3 +36,15 @@ export const contentToArticle = createServerFn({ method: "POST" }).middleware([r
   .handler(async ({ data, context }) => (await srv()).toArticle(context.userId, data.id, data.category));
 export const contentToPosts = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((d) => id.parse(d)).handler(async ({ data, context }) => (await srv()).toPosts(context.userId, data.id));
+
+export const getContentStudioSources = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => (await srv()).studioSources(context.userId));
+const g = z.string().max(1000).nullable();
+export const startContentPackage = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.discriminatedUnion("kind", [
+    z.object({ kind: z.literal("stories"), story_ids: z.array(z.string().uuid()).min(1).max(8), series_key: z.string().max(60), guidance: g }),
+    z.object({ kind: z.literal("idea"), idea_id: z.string().uuid(), guidance: g }),
+    z.object({ kind: z.literal("item"), item_id: z.string().uuid(), guidance: g }),
+    z.object({ kind: z.literal("manual"), series_key: z.string().max(60), title: z.string().min(3).max(300), topic: z.string().max(500), source_urls: z.array(z.string().url().max(2000)).min(1).max(10), guidance: g }),
+  ]).parse(d))
+  .handler(async ({ data, context }) => (await srv()).startPackage(context.userId, data as any));
