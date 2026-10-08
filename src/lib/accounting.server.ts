@@ -359,6 +359,9 @@ export async function advanceJournalEntry(
   const from = entry.status as JournalStatus;
   if (!canTransitionJournal(from, to)) fail(`A ${from} entry cannot move to ${to}.`);
 
+  if (to === "reviewed" && entry.prepared_by === userId) {
+    fail("An entry must be reviewed by someone other than the person who prepared it.");
+  }
   if (to === "approved" && entry.prepared_by === userId) {
     fail("An entry must be approved by someone other than the person who prepared it.");
   }
