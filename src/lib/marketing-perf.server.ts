@@ -9,6 +9,8 @@ export async function dashboard(userId: string, days: number) {
   const { data: r } = await db.from("user_roles").select("role").eq("user_id", userId);
   if (!((r ?? []) as any[]).some((x) => MARKETING_ACCESS.includes(x.role))) throw new Error("Marketing access required.");
   const since = new Date(Date.now() - days * 864e5).toISOString();
+  const { data: org } = await db.from("marketing_org_settings").select("timezone").eq("id", 1).maybeSingle();
+  const orgTz: string = org?.timezone ?? "America/Chicago";
   const [{ data: targets }, { data: settings }, { data: attempts }, { data: leads }, queue] = await Promise.all([
     db.from("marketing_post_targets").select("id, post_id, channel, status, permalink, published_at, confirmed_at, error, attempts").gte("created_at", new Date(Date.now() - Math.max(days, 30) * 864e5).toISOString()).limit(1000),
     db.from("marketing_search_settings").select("*").eq("id", 1).single(),
