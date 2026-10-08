@@ -1,0 +1,1 @@
+UPDATE public.marketing_research_sources SET last_success_at = last_fetched_at WHERE last_success_at IS NULL AND last_error IS NULL AND last_fetched_at IS NOT NULL;
