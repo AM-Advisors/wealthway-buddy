@@ -219,6 +219,7 @@ import { Route as AuthenticatedMarketingImportsRouteImport } from './routes/_aut
 import { Route as AuthenticatedMarketingLinkedinRouteImport } from './routes/_authenticated/marketing_.linkedin'
 import { Route as AuthenticatedMarketingPerformanceRouteImport } from './routes/_authenticated/marketing_.performance'
 import { Route as AuthenticatedMarketingPostsRouteImport } from './routes/_authenticated/marketing_.posts'
+import { Route as AuthenticatedMarketingSeoClustersRouteImport } from './routes/_authenticated/marketing_.seo-clusters'
 import { Route as AuthenticatedMarketingStudioRouteImport } from './routes/_authenticated/marketing_.studio'
 import { Route as AuthenticatedMyFundsIndexRouteImport } from './routes/_authenticated/my-funds.index'
 import { Route as AuthenticatedMyFundsFundIdRouteImport } from './routes/_authenticated/my-funds.$fundId'
@@ -1600,6 +1601,12 @@ const AuthenticatedMarketingPostsRoute =
   AuthenticatedMarketingPostsRouteImport.update({
     id: '/marketing_/posts',
     path: '/marketing/posts',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedMarketingSeoClustersRoute =
+  AuthenticatedMarketingSeoClustersRouteImport.update({
+    id: '/marketing_/seo-clusters',
+    path: '/marketing/seo-clusters',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedMarketingStudioRoute =
@@ -3029,6 +3036,7 @@ export interface FileRoutesByFullPath {
   '/marketing/linkedin': typeof AuthenticatedMarketingLinkedinRoute
   '/marketing/performance': typeof AuthenticatedMarketingPerformanceRoute
   '/marketing/posts': typeof AuthenticatedMarketingPostsRoute
+  '/marketing/seo-clusters': typeof AuthenticatedMarketingSeoClustersRoute
   '/marketing/studio': typeof AuthenticatedMarketingStudioRoute
   '/my-funds/$fundId': typeof AuthenticatedMyFundsFundIdRoute
   '/my-portfolio/$offeringId': typeof AuthenticatedMyPortfolioOfferingIdRoute
@@ -3442,6 +3450,7 @@ export interface FileRoutesByTo {
   '/marketing/linkedin': typeof AuthenticatedMarketingLinkedinRoute
   '/marketing/performance': typeof AuthenticatedMarketingPerformanceRoute
   '/marketing/posts': typeof AuthenticatedMarketingPostsRoute
+  '/marketing/seo-clusters': typeof AuthenticatedMarketingSeoClustersRoute
   '/marketing/studio': typeof AuthenticatedMarketingStudioRoute
   '/my-funds/$fundId': typeof AuthenticatedMyFundsFundIdRoute
   '/my-portfolio/$offeringId': typeof AuthenticatedMyPortfolioOfferingIdRoute
@@ -3863,6 +3872,7 @@ export interface FileRoutesById {
   '/_authenticated/marketing_/linkedin': typeof AuthenticatedMarketingLinkedinRoute
   '/_authenticated/marketing_/performance': typeof AuthenticatedMarketingPerformanceRoute
   '/_authenticated/marketing_/posts': typeof AuthenticatedMarketingPostsRoute
+  '/_authenticated/marketing_/seo-clusters': typeof AuthenticatedMarketingSeoClustersRoute
   '/_authenticated/marketing_/studio': typeof AuthenticatedMarketingStudioRoute
   '/_authenticated/my-funds/$fundId': typeof AuthenticatedMyFundsFundIdRoute
   '/_authenticated/my-portfolio_/$offeringId': typeof AuthenticatedMyPortfolioOfferingIdRoute
@@ -4285,6 +4295,7 @@ export interface FileRouteTypes {
     | '/marketing/linkedin'
     | '/marketing/performance'
     | '/marketing/posts'
+    | '/marketing/seo-clusters'
     | '/marketing/studio'
     | '/my-funds/$fundId'
     | '/my-portfolio/$offeringId'
@@ -4698,6 +4709,7 @@ export interface FileRouteTypes {
     | '/marketing/linkedin'
     | '/marketing/performance'
     | '/marketing/posts'
+    | '/marketing/seo-clusters'
     | '/marketing/studio'
     | '/my-funds/$fundId'
     | '/my-portfolio/$offeringId'
@@ -5118,6 +5130,7 @@ export interface FileRouteTypes {
     | '/_authenticated/marketing_/linkedin'
     | '/_authenticated/marketing_/performance'
     | '/_authenticated/marketing_/posts'
+    | '/_authenticated/marketing_/seo-clusters'
     | '/_authenticated/marketing_/studio'
     | '/_authenticated/my-funds/$fundId'
     | '/_authenticated/my-portfolio_/$offeringId'
@@ -6875,6 +6888,13 @@ declare module '@tanstack/react-router' {
       path: '/marketing/posts'
       fullPath: '/marketing/posts'
       preLoaderRoute: typeof AuthenticatedMarketingPostsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/marketing_/seo-clusters': {
+      id: '/_authenticated/marketing_/seo-clusters'
+      path: '/marketing/seo-clusters'
+      fullPath: '/marketing/seo-clusters'
+      preLoaderRoute: typeof AuthenticatedMarketingSeoClustersRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/marketing_/studio': {
@@ -8761,6 +8781,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMarketingLinkedinRoute: typeof AuthenticatedMarketingLinkedinRoute
   AuthenticatedMarketingPerformanceRoute: typeof AuthenticatedMarketingPerformanceRoute
   AuthenticatedMarketingPostsRoute: typeof AuthenticatedMarketingPostsRoute
+  AuthenticatedMarketingSeoClustersRoute: typeof AuthenticatedMarketingSeoClustersRoute
   AuthenticatedMarketingStudioRoute: typeof AuthenticatedMarketingStudioRoute
   AuthenticatedMyFundsFundIdRoute: typeof AuthenticatedMyFundsFundIdRoute
   AuthenticatedMyPortfolioOfferingIdRoute: typeof AuthenticatedMyPortfolioOfferingIdRoute
@@ -9060,6 +9081,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMarketingPerformanceRoute:
     AuthenticatedMarketingPerformanceRoute,
   AuthenticatedMarketingPostsRoute: AuthenticatedMarketingPostsRoute,
+  AuthenticatedMarketingSeoClustersRoute:
+    AuthenticatedMarketingSeoClustersRoute,
   AuthenticatedMarketingStudioRoute: AuthenticatedMarketingStudioRoute,
   AuthenticatedMyFundsFundIdRoute: AuthenticatedMyFundsFundIdRoute,
   AuthenticatedMyPortfolioOfferingIdRoute:
