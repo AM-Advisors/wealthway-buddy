@@ -43,7 +43,9 @@ export async function decideOpeningPosition(userId: string, id: string, approve:
     await db().from("portfolio_opening_positions").update({ status: "rejected", decided_by: userId, decided_at: new Date().toISOString(), decision_reason: reason }).eq("id", id);
     return { status: "rejected" };
   }
-  const { data: asset, error: ae } = await db().from("portfolio_assets").insert({
+  // Resume safely if a prior attempt created the asset but not the valuation.
+  const { data: prior } = await db().from("portfolio_assets").select("id").eq("original_transaction_table", "portfolio_opening_positions").eq("original_transaction_id", p.id).maybeSingle();
+  const { data: asset, error: ae } = prior ? { data: prior, error: null } : await db().from("portfolio_assets").insert({
     book_id: p.book_id, offering_id: p.offering_id, issuer_name: p.issuer_name, asset_name: p.asset_name, asset_class: p.asset_class,
     cost_basis_cents: p.cost_basis_cents, currency: "USD", status: "active",
     original_transaction_table: "portfolio_opening_positions", original_transaction_id: p.id,
@@ -58,7 +60,7 @@ export async function decideOpeningPosition(userId: string, id: string, approve:
     change_cents: p.opening_fair_value_cents - p.cost_basis_cents, prepared_by: p.prepared_by, prepared_by_role: "harmonious",
     reviewed_by: userId, reviewed_at: now, approved_by: userId, approved_at: now, effective_at: now,
     // Recognised by the posted opening journal: Q1 movement is measured from this value, never from cost.
-    journal_entry_id: p.opening_journal_id,
+    recognized_by_journal_id: p.opening_journal_id,
     evidence_status: p.evidence_status === "present" ? "present" : "missing",
     note: p.evidence_status === "missing_in_source" ? "Opening valuation evidence MISSING IN SOURCE - follow-up open; does not satisfy any later valuation" : null,
   }).select("id").single();
