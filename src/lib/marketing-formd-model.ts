@@ -75,16 +75,17 @@ export function weeklyDigest(rows: FormD[]) {
     return [...m.entries()].map(([key, v]) => ({ key, ...v })).sort((a, b) => b.count - a.count);
   };
   const newOnes = rows.filter((f) => !f.is_amendment);
-  const disclosedOffer = rows.filter((f) => f.total_offering != null);
-  const disclosedSold = rows.filter((f) => f.total_sold != null);
+  const disclosedOffer = newOnes.filter((f) => f.total_offering != null);
+  // Amendments restate cumulative totals, so sums use new filings only to avoid double counting.
+  const disclosedSold = newOnes.filter((f) => f.total_sold != null);
   const funds = rows.filter((f) => f.industry === "Pooled Investment Fund");
   const issuers = new Set(rows.map((f) => f.cik)).size;
   const patterns: string[] = [];
   if (rows.length) {
     patterns.push(`${rows.length} Form D filings from ${issuers} issuers: ${newOnes.length} new notices and ${rows.length - newOnes.length} amendments.`);
     patterns.push(`${funds.length} (${Math.round((funds.length / rows.length) * 100)}%) were pooled investment funds.`);
-    if (disclosedOffer.length) patterns.push(`Reported total offering amounts sum to ${usd(disclosedOffer.reduce((s, f) => s + (f.total_offering ?? 0), 0))} across ${disclosedOffer.length} filings that disclosed one (offering amounts are targets, not capital raised).`);
-    if (disclosedSold.length) patterns.push(`Reported amounts sold sum to ${usd(disclosedSold.reduce((s, f) => s + (f.total_sold ?? 0), 0))} across ${disclosedSold.length} filings, as disclosed by the issuers.`);
+    if (disclosedOffer.length) patterns.push(`Reported total offering amounts sum to ${usd(disclosedOffer.reduce((s, f) => s + (f.total_offering ?? 0), 0))} across ${disclosedOffer.length} new filings that disclosed one (offering amounts are targets, not capital raised).`);
+    if (disclosedSold.length) patterns.push(`Reported amounts sold sum to ${usd(disclosedSold.reduce((s, f) => s + (f.total_sold ?? 0), 0))} across ${disclosedSold.length} new filings, as disclosed by the issuers (amendments excluded to avoid double counting).`);
     const ex = group((f) => (f.exemptions.includes("06c") ? "Rule 506(c)" : f.exemptions.includes("06b") ? "Rule 506(b)" : "Other/none"))[0];
     if (ex) patterns.push(`Most common exemption: ${ex.key} (${ex.count} filings).`);
   }
