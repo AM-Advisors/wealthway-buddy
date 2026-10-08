@@ -13,6 +13,8 @@ export const Route = createFileRoute("/api/public/marketing/run")({
         }
         const { runDue } = await import("@/lib/marketing.server");
         const result = await runDue();
+        // Personal LinkedIn: scheduled posts recheck ownership, delegation and approval right before posting.
+        const linkedinPersonal = await (await import("@/lib/linkedin-personal.server")).runDuePersonal().catch((e) => { console.error("linkedin personal", e); return { error: true }; });
         const { syncDueClickup } = await import("@/lib/marketing-imports.server");
         const clickup = await syncDueClickup().catch((e) => { console.error("clickup sync", e); return { synced: 0 }; });
         // Marketing Drive library: refresh about hourly.

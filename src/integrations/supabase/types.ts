@@ -27858,6 +27858,65 @@ export type Database = {
         }
         Relationships: []
       }
+      linkedin_delegates: {
+        Row: {
+          delegate_user_id: string
+          direct_publish_authorized_at: string | null
+          expires_at: string | null
+          hours_end: number | null
+          hours_start: number | null
+          id: string
+          max_posts_per_day: number | null
+          owner_user_id: string
+          perms: Json
+          revoked_at: string | null
+          series: string[] | null
+          suspended: boolean
+          updated_at: string
+          updated_by: string
+        }
+        Insert: {
+          delegate_user_id: string
+          direct_publish_authorized_at?: string | null
+          expires_at?: string | null
+          hours_end?: number | null
+          hours_start?: number | null
+          id?: string
+          max_posts_per_day?: number | null
+          owner_user_id: string
+          perms?: Json
+          revoked_at?: string | null
+          series?: string[] | null
+          suspended?: boolean
+          updated_at?: string
+          updated_by: string
+        }
+        Update: {
+          delegate_user_id?: string
+          direct_publish_authorized_at?: string | null
+          expires_at?: string | null
+          hours_end?: number | null
+          hours_start?: number | null
+          id?: string
+          max_posts_per_day?: number | null
+          owner_user_id?: string
+          perms?: Json
+          revoked_at?: string | null
+          series?: string[] | null
+          suspended?: boolean
+          updated_at?: string
+          updated_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "linkedin_delegates_owner_user_id_fkey"
+            columns: ["owner_user_id"]
+            isOneToOne: false
+            referencedRelation: "linkedin_personal_accounts"
+            referencedColumns: ["owner_user_id"]
+          },
+        ]
+      }
       linkedin_oauth: {
         Row: {
           access_token: string
@@ -27893,6 +27952,167 @@ export type Database = {
           scopes?: string | null
         }
         Relationships: []
+      }
+      linkedin_personal_accounts: {
+        Row: {
+          connected_at: string | null
+          expires_at: string | null
+          last_authorized_at: string | null
+          last_error: string | null
+          member_sub: string | null
+          name: string | null
+          owner_user_id: string
+          picture_url: string | null
+          profile_url: string | null
+          scopes: string | null
+          status: string
+          token_ciphertext: string | null
+          updated_at: string
+        }
+        Insert: {
+          connected_at?: string | null
+          expires_at?: string | null
+          last_authorized_at?: string | null
+          last_error?: string | null
+          member_sub?: string | null
+          name?: string | null
+          owner_user_id: string
+          picture_url?: string | null
+          profile_url?: string | null
+          scopes?: string | null
+          status?: string
+          token_ciphertext?: string | null
+          updated_at?: string
+        }
+        Update: {
+          connected_at?: string | null
+          expires_at?: string | null
+          last_authorized_at?: string | null
+          last_error?: string | null
+          member_sub?: string | null
+          name?: string | null
+          owner_user_id?: string
+          picture_url?: string | null
+          profile_url?: string | null
+          scopes?: string | null
+          status?: string
+          token_ciphertext?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      linkedin_personal_events: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          delegate_user_id: string | null
+          detail: Json
+          id: string
+          owner_user_id: string
+          post_id: string | null
+          version: number | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          delegate_user_id?: string | null
+          detail?: Json
+          id?: string
+          owner_user_id: string
+          post_id?: string | null
+          version?: number | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          delegate_user_id?: string | null
+          detail?: Json
+          id?: string
+          owner_user_id?: string
+          post_id?: string | null
+          version?: number | null
+        }
+        Relationships: []
+      }
+      linkedin_personal_posts: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          approved_version: number | null
+          author_id: string
+          body: string
+          created_at: string
+          error: string | null
+          id: string
+          idempotency_key: string | null
+          linkedin_post_id: string | null
+          owner_user_id: string
+          publish_initiated_by: string | null
+          published_at: string | null
+          scheduled_at: string | null
+          scheduled_by: string | null
+          series_key: string | null
+          status: string
+          submitted_by: string | null
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          approved_version?: number | null
+          author_id: string
+          body: string
+          created_at?: string
+          error?: string | null
+          id?: string
+          idempotency_key?: string | null
+          linkedin_post_id?: string | null
+          owner_user_id: string
+          publish_initiated_by?: string | null
+          published_at?: string | null
+          scheduled_at?: string | null
+          scheduled_by?: string | null
+          series_key?: string | null
+          status?: string
+          submitted_by?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          approved_version?: number | null
+          author_id?: string
+          body?: string
+          created_at?: string
+          error?: string | null
+          id?: string
+          idempotency_key?: string | null
+          linkedin_post_id?: string | null
+          owner_user_id?: string
+          publish_initiated_by?: string | null
+          published_at?: string | null
+          scheduled_at?: string | null
+          scheduled_by?: string | null
+          series_key?: string | null
+          status?: string
+          submitted_by?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "linkedin_personal_posts_owner_user_id_fkey"
+            columns: ["owner_user_id"]
+            isOneToOne: false
+            referencedRelation: "linkedin_personal_accounts"
+            referencedColumns: ["owner_user_id"]
+          },
+        ]
       }
       locked_edit_requests: {
         Row: {
