@@ -26,7 +26,7 @@ const has = (roles: string[], set: string[]) => roles.some((r) => set.includes(r
 
 export type MoveInput = {
   from: string; to: string; roles: string[]; actorId: string; authorId: string | null;
-  publishAt: string | null; note?: string | null | undefined;
+  publishAt: string | null; note?: string | null | undefined; unverifiedClaims?: number | undefined;
 };
 
 /** Returns null when the move is allowed, otherwise the reason it is refused. Server re-checks. */
@@ -49,6 +49,7 @@ export function moveProblem(m: MoveInput): string | null {
     if (superSelf && !note) return "Super Admin self-review needs a reason.";
   }
   if (m.to === "approved") {
+    if ((m.unverifiedClaims ?? 0) > 0) return "Some factual claims have no primary source. Verify or remove them before approval.";
     if (!has(m.roles, STUDIO_EXECUTIVES)) return "Only an executive approver can approve.";
     if (self && !superSelf) return "Someone other than the author must approve this.";
     if (superSelf && !note) return "Super Admin self-approval needs a reason.";

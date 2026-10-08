@@ -1394,6 +1394,13 @@
       "when": 1791480891244,
       "tag": "0198_marketing_studio_phase1",
       "breakpoints": true
+    },
+    {
+      "idx": 199,
+      "version": "7",
+      "when": 1791481589204,
+      "tag": "0199_marketing_research_engine",
+      "breakpoints": true
     }
   ]
 }

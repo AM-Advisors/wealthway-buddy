@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { STUDIO_STATUSES, STUDIO_STATUS_LABEL, isLocked, type StudioStatus } from "@/lib/marketing-studio-model";
+import { getItemCitations } from "@/lib/marketing-research.functions";
 import { commentStudioItem, duplicateStudioItem, getStudio, getStudioItem, moveStudioItem, saveStudioItem } from "@/lib/marketing-studio.functions";
 
 export type Series = { key: string; name: string; weekday: number; intention: string; purpose: string; voice: string; outputs: string[]; sources: string[]; color: string; guardrail: string | null };
@@ -46,6 +47,8 @@ export function ItemDrawer({ id, series, people, open, onClose, draft }: {
   const loadItem = useServerFn(getStudioItem), save = useServerFn(saveStudioItem), move = useServerFn(moveStudioItem);
   const dup = useServerFn(duplicateStudioItem), addComment = useServerFn(commentStudioItem);
   const q = useQuery({ queryKey: ["studio-item", id], queryFn: () => loadItem({ data: { id: id! } }), enabled: !!id && open });
+  const loadCites = useServerFn(getItemCitations);
+  const cq = useQuery({ queryKey: ["studio-cites", id], queryFn: () => loadCites({ data: { id: id! } }), enabled: !!id && open });
   const [f, setF] = useState<Item>({});
   const [note, setNote] = useState("");
   const [msg, setMsg] = useState("");
@@ -124,6 +127,16 @@ export function ItemDrawer({ id, series, people, open, onClose, draft }: {
                 )}
               </div>
               <p className="text-[11px] text-muted-foreground">Approval here plans the content; the linked post or article still needs its own publishing approval. Nothing goes public automatically.</p>
+            </section>
+          )}
+
+          {!!cq.data?.length && (
+            <section className="space-y-1 rounded-md border border-border p-3">
+              <h3 className="text-sm font-semibold">Sources and claims</h3>
+              {item?.unverified_claims > 0 && <p className="text-xs text-destructive">{item.unverified_claims} factual claim(s) have no primary source. Approval is blocked until they're verified or removed.</p>}
+              {cq.data.map((c: any) => (
+                <div key={c.id} className="text-xs"><b className="capitalize">{c.claim_kind}</b>{c.verification !== "not_applicable" ? ` · ${c.verification.replace("_", " ")}` : ""} — {c.claim}{c.source_url && <> · <a className="underline" href={c.source_url} target="_blank" rel="noreferrer">source</a></>}</div>
+              ))}
             </section>
           )}
 
