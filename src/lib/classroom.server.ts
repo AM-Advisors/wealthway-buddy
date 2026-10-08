@@ -123,6 +123,9 @@ export async function setPublished(userId: string, id: string, publish: boolean,
   const { data: a } = await db.from("classroom_articles").select("*").eq("id", id).maybeSingle();
   if (!a) throw new Error("Article not found.");
   if (publish) {
+    const { data: linked } = await db.from("marketing_content_items").select("status").eq("article_id", id);
+    const LOCKED = ["approved", "scheduled", "published", "performance_review"];
+    if ((linked ?? []).some((i: any) => !LOCKED.includes(i.status))) throw new Error("This article belongs to a Marketing Studio item that isn't approved yet.");
     const vid = versionId ?? a.current_version_id;
     const { data: v } = await db.from("classroom_article_versions").select("id, title, content_html").eq("id", vid).eq("article_id", id).maybeSingle();
     if (!v || !v.title.trim() || !v.content_html.trim()) throw new Error("This version has no title or text yet.");
@@ -212,4 +215,18 @@ export async function newImage(userId: string, id: string, theme: string) {
   const v = await addVersion(db, id, userId, { ...cur, hero_image_url: hero, hero_image_alt: cur.title, source: "edit", note: "New AI image" });
   await event(db, id, "new_image", userId, v.id);
   return v;
+}
+
+/** Studio content workspace: create a Classroom draft (never published here). */
+export async function draftFromStudio(userId: string, d: { slug: string; title: string; html: string; metaTitle: string; metaDescription: string; category: string }) {
+  const { db } = await requireMarketing(userId);
+  const category = CATS.includes(d.category) ? d.category : CATS[0]!;
+  if (!/^[a-z0-9-]{3,120}$/.test(d.slug)) throw new Error("Web address must be lowercase letters, numbers and hyphens.");
+  const { data: clash } = await db.from("classroom_articles").select("id").eq("slug", d.slug).maybeSingle();
+  if (clash || (WIX_ARTICLE_SLUGS as readonly string[]).includes(d.slug)) throw new Error("That web address is already used by another article.");
+  const { data: art, error } = await db.from("classroom_articles").insert({ slug: d.slug, source: "new", category, status: "draft", created_by: userId, original_path: `/post/${d.slug}` }).select("id").single();
+  if (error) throw new Error(error.message);
+  const v = await addVersion(db, art.id, userId, { title: d.title, content_html: d.html, meta_title: d.metaTitle, meta_description: d.metaDescription, source: "studio", note: "From Marketing Studio" });
+  await event(db, art.id, "studio_draft", userId, v.id);
+  return { id: art.id as string, slug: d.slug };
 }
