@@ -8,3 +8,10 @@
 | G-4 | Late payment is visible only as received date vs due date; no late status/history field. | Product gap | LOW | No | No | Open |
 | G-5 | Detection proposes a match for a no-reference deposit on amount alone (medium confidence); a person still decides. | Control observation | LOW | No | Review | Open |
 | G-6 | No staff/investor screen for investor credits yet (investor receipt data returns the credit balance; no UI). | Product gap | MEDIUM | Yes (staff visibility) | Yes | Open |
+
+## Checkpoint: Q1 investments/expenses/fee (2026-10-08) — BLOCKED, nothing written
+- Lumen opening valuation keeps legacy `journal_entry_id` link; Gridwise/Parcel use `recognized_by_journal_id`. Readers accept both (valuation.server.ts). Not rewritten. Lumen 12/31/2025 evidence remains MISSING IN SOURCE (open).
+- HIGH: no live investment-purchase workflow (asset + cash outflow + journal + preparer/reviewer). `addAsset` only inserts a holding, no journal, no review, no idempotency.
+- HIGH: no live fund-expense workflow posting paid (cash) vs accrued (payable) journals with review; only fund liabilities add/settle.
+- HIGH: live fee engine reads `management_fee_terms`; Walkthrough has none, so it yields no fee.
+- DATA CONFLICT: live Northwind side letter is 1.50% and status "proposed"; validated Phase 2B used 1.25% executed. Independent Q1 fee on committed capital: $106,062.50 (validated terms), $109,187.50 (live 1.50%), $115,437.50 (side letter not effective). Not changed to hit benchmark.

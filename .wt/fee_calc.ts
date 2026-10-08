@@ -1,0 +1,16 @@
+import { guard, N } from "./lib";
+import { POSITIONS, FEE_TERMS, PERIOD } from "@/lib/reference-fund/walkthrough-period";
+import { computeFeeRun } from "@/lib/economic-terms";
+const d = await guard();
+const { data: pos } = await d.from("investor_positions").select("id,display_name,class_id,person_id,status").eq("offering_id", N);
+const { data: cls } = await d.from("investor_classes").select("id,code,management_fee_bps").eq("offering_id", N);
+const code = Object.fromEntries(cls.map((c:any)=>[c.id,c.code]));
+const fp = (cid:(p:any)=>string|null)=>POSITIONS.map((p:any)=>({positionId:p.positionId,classId:cid(p),commitmentCents:p.commitmentCents,contributedToDateCents:p.previouslyCalledCents,beginningCapitalCents:p.openingCapitalCents}));
+console.log("2B positions", JSON.stringify(POSITIONS.map((p:any)=>[p.positionId,p.name??p.displayName,p.classId,p.commitmentCents/100])));
+console.log("LIVE positions", JSON.stringify(pos.map((p:any)=>[p.display_name,code[p.class_id],p.status])));
+const run = computeFeeRun(FEE_TERMS, fp((p)=>p.classId), PERIOD);
+console.log("2B total", run.totalNetCents/100, "period", JSON.stringify(PERIOD));
+console.log("2B lines", JSON.stringify(run.lines.map((l:any)=>[l.positionId,l.basisAmountCents/100,l.effectiveRateBps,l.appliedLevel,l.netFeeCents/100])));
+const live = FEE_TERMS.map((t:any)=>t.id==="sl-northwind"?{...t,rateBps:150}:t);
+console.log("if live side-letter 150bps:", computeFeeRun(live, fp((p)=>p.classId), PERIOD).totalNetCents/100);
+console.log("if side letter not effective (proposed):", computeFeeRun(FEE_TERMS.filter((t:any)=>t.id!=="sl-northwind"), fp((p)=>p.classId), PERIOD).totalNetCents/100);
