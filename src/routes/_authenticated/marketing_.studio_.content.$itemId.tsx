@@ -13,13 +13,14 @@ import {
 } from "@/lib/marketing-content.functions";
 import { CLAIM_KINDS, CLAIM_LABEL, GRAPHIC_SIZES, GRAPHIC_TEMPLATES, REVIEW_KINDS, REVIEW_LABEL, SOCIAL_CHANNELS, approvalGaps, type ContentPackage, type ReviewKind } from "@/lib/marketing-content-model";
 import { RESOURCE_CATEGORIES } from "@/lib/marketing/site-config";
+import { CLUSTERS, canonicalFor, linkIssues, recommendLinks, seoQuality, titleSimilarity, validateSchema } from "@/lib/marketing-seo-model";
 
 export const Route = createFileRoute("/_authenticated/marketing_/studio_/content/$itemId")({
   head: mkHead("Content workspace", "Build and review a source-backed article, SEO, social and design package for a Studio item."),
   component: Workspace,
 });
 
-const TABS = ["Article", "SEO & GEO", "Social", "Design", "Reviews", "History"] as const;
+const TABS = ["Article", "SEO & AI Search", "Social", "Design", "Reviews", "History"] as const;
 const inp = "w-full rounded-md border border-input bg-background px-2 py-1.5 text-sm";
 
 function Workspace() {
@@ -76,7 +77,7 @@ function Workspace() {
           <div className="flex flex-wrap gap-1 border-b border-border">{TABS.map((t) => <button key={t} onClick={() => setTab(t)} className={`px-3 py-2 text-sm ${tab === t ? "border-b-2 border-primary font-semibold" : "text-muted-foreground"}`}>{t}</button>)}</div>
           <fieldset disabled={locked} className="space-y-3">
             {tab === "Article" && <ArticleTab p={p} set={set} sources={d.sources} />}
-            {tab === "SEO & GEO" && <SeoTab p={p} set={set} />}
+            {tab === "SEO & AI Search" && <SeoTab p={p} set={set} d={d} />}
             {tab === "Social" && <SocialTab p={p} set={set} />}
             {tab === "Design" && <DesignTab p={p} set={set} sources={d.sources} />}
           </fieldset>
@@ -134,18 +135,58 @@ function ArticleTab({ p, set, sources }: TP & { sources: string[] }) {
   </div>;
 }
 
-function SeoTab({ p, set }: TP) {
-  return <div className="grid gap-3 md:grid-cols-2">
-    <F label="URL slug"><input className={inp} value={p.slug} onChange={(e) => set({ slug: e.target.value })} /><span className="text-[11px] text-muted-foreground">Canonical: https://harmonious.co/post/{p.slug}</span></F>
-    <F label="Primary keyword"><input className={inp} value={p.primary_keyword} onChange={(e) => set({ primary_keyword: e.target.value })} /></F>
-    <F label={`Meta title (${p.meta_title.length}/60)`}><input className={inp} value={p.meta_title} onChange={(e) => set({ meta_title: e.target.value })} /></F>
-    <F label="Search intent"><input className={inp} value={p.search_intent} onChange={(e) => set({ search_intent: e.target.value })} /></F>
-    <div className="md:col-span-2"><F label={`Meta description (${p.meta_description.length}/155)`}><textarea className={inp} rows={2} value={p.meta_description} onChange={(e) => set({ meta_description: e.target.value })} /></F></div>
-    <div className="md:col-span-2"><F label="Secondary keywords (comma separated)"><input className={inp} value={p.secondary_keywords.join(", ")} onChange={(e) => set({ secondary_keywords: e.target.value.split(",").map((x) => x.trim()).filter(Boolean) })} /></F></div>
-    <div className="md:col-span-2"><F label="Internal links (label | url; only existing Harmonious pages are kept)"><textarea className={inp} rows={4} value={p.internal_links.map((c) => `${c.label} | ${c.url}`).join("\n")}
-      onChange={(e) => set({ internal_links: e.target.value.split("\n").filter(Boolean).map((l) => { const [a, b] = l.split(" | "); return { label: a ?? "", url: (b ?? "").trim() }; }) })} /></F></div>
-    <div className="md:col-span-2"><F label="Structured data (built automatically from the visible title, description, author, dates and FAQ — rebuilt on save)"><pre className="max-h-64 overflow-auto rounded-md bg-muted p-2 text-[11px]">{p.schema_jsonld}</pre></F></div>
-    <p className="text-[11px] text-muted-foreground md:col-span-2">Optimizes for search and AI answers with question headings, direct answers, definitions, FAQ and citations. No ranking or AI-citation outcome is guaranteed.</p>
+function SeoTab({ p, set, d }: TP & { d: any }) {
+  const self = canonicalFor(p.slug);
+  const li = linkIssues(p.internal_links, d.pages, self, p.primary_keyword);
+  const si = validateSchema(p.schema_jsonld, { title: p.h1 || p.seo_title, description: p.meta_description, slug: p.slug, faq: p.faq, bodyHtml: p.body_html });
+  const dup = (d.existingTitles as string[]).filter((t) => titleSimilarity(t, p.seo_title) >= 0.8);
+  const dims = seoQuality(p, { linkIssues: li, schemaIssues: si, duplicateTitles: dup, canonicalLive: d.canonicalLive });
+  const recs = recommendLinks(`${p.seo_title} ${p.body_html}`, [p.primary_keyword, ...p.secondary_keywords], d.pages, self);
+  const lines = (v: string[] | undefined) => (v ?? []).join("\n");
+  const unl = (x: string) => x.split("\n").map((y) => y.trim()).filter(Boolean);
+  const pub = (d.pages as any[]).filter((x) => x.published);
+  return <div className="space-y-4">
+    <p className="rounded-md bg-muted px-3 py-2 text-[11px]">Built for Google, Bing and answer engines (ChatGPT search, Perplexity, Gemini) using standard technical SEO, clear structure and credible sources. No indexing, ranking or AI-citation outcome is promised. Every field can be overridden.</p>
+    <div className="grid gap-3 md:grid-cols-2">
+      <F label="H1 (visible page title)"><input className={inp} value={p.h1 ?? p.seo_title} onChange={(e) => set({ h1: e.target.value })} /></F>
+      <F label="URL slug"><input className={inp} value={p.slug} onChange={(e) => set({ slug: e.target.value })} /><span className="text-[11px] text-muted-foreground">Canonical: {self}</span></F>
+      <F label={`Meta title (${p.meta_title.length}/60)`}><input className={inp} value={p.meta_title} onChange={(e) => set({ meta_title: e.target.value })} /></F>
+      <F label="Primary keyword"><input className={inp} value={p.primary_keyword} onChange={(e) => set({ primary_keyword: e.target.value })} /></F>
+      <div className="md:col-span-2"><F label={`Meta description (${p.meta_description.length}/155)`}><textarea className={inp} rows={2} value={p.meta_description} onChange={(e) => set({ meta_description: e.target.value })} /></F></div>
+      <F label="Secondary keywords (comma separated)"><input className={inp} value={p.secondary_keywords.join(", ")} onChange={(e) => set({ secondary_keywords: e.target.value.split(",").map((x) => x.trim()).filter(Boolean) })} /></F>
+      <F label="Search intent"><input className={inp} value={p.search_intent} onChange={(e) => set({ search_intent: e.target.value })} /></F>
+      <F label="Target audience"><input className={inp} value={p.audience ?? ""} onChange={(e) => set({ audience: e.target.value })} /></F>
+      <F label="Topic cluster"><select className={inp} value={p.topic_cluster ?? ""} onChange={(e) => set({ topic_cluster: e.target.value })}><option value="">—</option>{CLUSTERS.map((c) => <option key={c.key} value={c.label}>{c.label}</option>)}</select></F>
+      <div className="md:col-span-2"><F label="Opening answer (direct 1–2 sentence answer)"><textarea className={inp} rows={2} value={p.opening_answer ?? ""} onChange={(e) => set({ opening_answer: e.target.value })} /></F></div>
+      <F label="Related questions (one per line)"><textarea className={inp} rows={4} value={lines(p.related_questions)} onChange={(e) => set({ related_questions: unl(e.target.value) })} /></F>
+      <F label="Suggested pillar page"><select className={inp} value={p.pillar_page ?? ""} onChange={(e) => set({ pillar_page: e.target.value })}><option value="">None</option>{pub.map((x: any) => <option key={x.url} value={x.url}>{x.title}</option>)}</select></F>
+      <F label="Supporting articles (published URLs, one per line)"><textarea className={inp} rows={3} value={lines(p.supporting_articles)} onChange={(e) => set({ supporting_articles: unl(e.target.value) })} /></F>
+      <F label="Relevant service pages (one per line)"><textarea className={inp} rows={3} value={lines(p.service_pages)} onChange={(e) => set({ service_pages: unl(e.target.value) })} /></F>
+      <div className="md:col-span-2"><F label="Internal links (label | url; only published Harmonious pages are kept)"><textarea className={inp} rows={4} value={p.internal_links.map((c) => `${c.label} | ${c.url}`).join("\n")}
+        onChange={(e) => set({ internal_links: e.target.value.split("\n").filter(Boolean).map((l) => { const [a, b] = l.split(" | "); return { label: a ?? "", url: (b ?? "").trim() }; }) })} /></F>
+        {li.length > 0 && <ul className="mt-1 list-disc pl-4 text-[11px] text-destructive">{li.map((x) => <li key={x}>{x}</li>)}</ul>}
+        <div className="mt-2 text-[11px]"><b>Suggested links</b> (published pages by topic): {recs.length ? recs.map((r) => <button key={r.url} type="button" className="mr-2 underline" onClick={() => !p.internal_links.some((l) => l.url === r.url) && set({ internal_links: [...p.internal_links, { label: r.title, url: r.url }] })}>{r.title}</button>) : "none yet — no published articles match."}</div></div>
+      <F label="Author"><input className={inp} disabled value={d.item.series_key === "founders_friday" ? "Alyssa Pettit (proposed draft)" : "Harmonious"} /></F>
+      <F label="Last reviewed date"><input type="date" className={inp} value={(p.last_reviewed_at ?? "").slice(0, 10)} onChange={(e) => set({ last_reviewed_at: e.target.value || null })} /></F>
+    </div>
+
+    <div className="rounded-md border border-border p-3">
+      <p className="mb-2 text-sm font-semibold">SEO quality panel</p>
+      <p className="mb-2 text-[11px] text-muted-foreground">An editorial self-check. A high score isn't proof of accuracy and doesn't guarantee rankings, clicks or AI citations. Human review is still required.</p>
+      <div className="grid gap-2 md:grid-cols-3">{dims.map((x) => <div key={x.key} className="rounded border border-border p-2 text-xs">
+        <div className="flex justify-between"><b>{x.label}</b><span className={x.score < 60 ? "text-destructive" : ""}>{x.score}</span></div>
+        {x.recs.length > 0 && <ul className="mt-1 list-disc pl-4 text-[11px] text-muted-foreground">{x.recs.map((r) => <li key={r}>{r}</li>)}</ul>}</div>)}</div>
+    </div>
+
+    <F label="Structured data (Article/BlogPosting, Person or Organization, BreadcrumbList; FAQPage only when the questions are visible — rebuilt on save)"><pre className="max-h-64 overflow-auto rounded-md bg-muted p-2 text-[11px]">{p.schema_jsonld}</pre></F>
+    {si.length > 0 && <ul className="list-disc pl-4 text-[11px] text-destructive">{si.map((x) => <li key={x}>{x}</li>)}</ul>}
+
+    <div className="rounded-md border border-border p-3 text-xs">
+      <p className="mb-1 font-semibold">Measured search data</p>
+      <div>Google Search Console: {d.analytics.search_console}</div><div>Google Analytics 4: {d.analytics.ga4}</div><div>Bing Webmaster Tools: {d.analytics.bing}</div>
+      {d.measured.length ? <ul className="mt-1">{d.measured.slice(0, 10).map((r: any) => <li key={r.query}>{r.query}: {r.clicks} clicks, {r.impressions} impressions, avg position {Number(r.position).toFixed(1)}</li>)}</ul>
+        : <p className="mt-1 text-muted-foreground">No data. Search volume, difficulty and rankings are only shown when they come from a connected service.</p>}
+    </div>
   </div>;
 }
 
