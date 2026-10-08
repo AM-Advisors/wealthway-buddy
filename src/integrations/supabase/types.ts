@@ -29953,6 +29953,66 @@ export type Database = {
           },
         ]
       }
+      marketing_research_health_alerts: {
+        Row: {
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          auto_resolved: boolean
+          escalated_at: string | null
+          escalated_by: string | null
+          first_seen_at: string
+          id: string
+          kind: string
+          last_seen_at: string
+          message: string
+          notified_at: string | null
+          occurrences: number
+          resolution_note: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
+          subject_key: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          auto_resolved?: boolean
+          escalated_at?: string | null
+          escalated_by?: string | null
+          first_seen_at?: string
+          id?: string
+          kind: string
+          last_seen_at?: string
+          message: string
+          notified_at?: string | null
+          occurrences?: number
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          subject_key: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          auto_resolved?: boolean
+          escalated_at?: string | null
+          escalated_by?: string | null
+          first_seen_at?: string
+          id?: string
+          kind?: string
+          last_seen_at?: string
+          message?: string
+          notified_at?: string | null
+          occurrences?: number
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          subject_key?: string
+        }
+        Relationships: []
+      }
       marketing_research_ideas: {
         Row: {
           angle: string
@@ -30059,12 +30119,18 @@ export type Database = {
         Row: {
           access_note: string | null
           active: boolean
+          consecutive_failures: number
           credibility: number
+          expected_interval_minutes: number
           is_primary: boolean
           key: string
           kind: string
+          last_duration_ms: number | null
           last_error: string | null
           last_fetched_at: string | null
+          last_invalid_dates: number
+          last_item_count: number | null
+          last_success_at: string | null
           name: string
           publisher: string
           url: string | null
@@ -30072,12 +30138,18 @@ export type Database = {
         Insert: {
           access_note?: string | null
           active?: boolean
+          consecutive_failures?: number
           credibility?: number
+          expected_interval_minutes?: number
           is_primary?: boolean
           key: string
           kind: string
+          last_duration_ms?: number | null
           last_error?: string | null
           last_fetched_at?: string | null
+          last_invalid_dates?: number
+          last_item_count?: number | null
+          last_success_at?: string | null
           name: string
           publisher: string
           url?: string | null
@@ -30085,12 +30157,18 @@ export type Database = {
         Update: {
           access_note?: string | null
           active?: boolean
+          consecutive_failures?: number
           credibility?: number
+          expected_interval_minutes?: number
           is_primary?: boolean
           key?: string
           kind?: string
+          last_duration_ms?: number | null
           last_error?: string | null
           last_fetched_at?: string | null
+          last_invalid_dates?: number
+          last_item_count?: number | null
+          last_success_at?: string | null
           name?: string
           publisher?: string
           url?: string | null
