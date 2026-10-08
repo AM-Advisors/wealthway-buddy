@@ -1,3 +1,5 @@
+import { useOrgTz } from "@/components/marketing/use-org-tz";
+import { fmtInTz } from "@/lib/org-timezone";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
@@ -20,6 +22,7 @@ const VERIFY: Record<string, string> = { verified_primary: "Primary source", rep
 const vTone = (v: string) => v === "verified_primary" ? "bg-primary text-primary-foreground" : v === "unverified" ? "bg-destructive text-destructive-foreground" : "bg-muted text-muted-foreground";
 
 function ResearchPage() {
+  const tz = useOrgTz();
   const [days, setDays] = useState(3);
   const [tab, setTab] = useState<"feed" | "formd" | "ideas" | "sources">("feed");
   const [cat, setCat] = useState<Category | "all">("all");
@@ -160,13 +163,13 @@ function ResearchPage() {
                   <td className="p-2">{s.name}{s.is_primary && <span className="ml-1 text-[10px] text-primary">primary</span>}</td>
                   <td className="p-2 text-xs">{s.kind}</td><td className="p-2 tabular-nums">{s.credibility}</td>
                   <td className="p-2 text-xs">{s.active ? (s.last_error ? <span className="text-destructive">{s.last_error}</span> : "Automatic") : s.access_note}</td>
-                  <td className="p-2 text-xs">{s.last_fetched_at ? new Date(s.last_fetched_at).toLocaleString() : "—"}</td>
+                  <td className="p-2 text-xs">{s.last_fetched_at ? fmtInTz(s.last_fetched_at, tz) : "—"}</td>
                 </tr>
               ))}</tbody>
             </table>
           </div>
           <ManualStory sources={(d?.sources ?? []) as any[]} busy={busy} onAdd={(v) => act(() => add({ data: v }), "Story added")} />
-          <div className="text-xs text-muted-foreground">Recent runs: {(d?.runs ?? []).map((r: any) => `${new Date(r.started_at).toLocaleString()} ${r.status}`).join(" · ") || "none yet"}</div>
+          <div className="text-xs text-muted-foreground">Recent runs: {(d?.runs ?? []).map((r: any) => `${fmtInTz(r.started_at, tz)} ${r.status}`).join(" · ") || "none yet"}</div>
         </div>
       )}
     </MkPage>

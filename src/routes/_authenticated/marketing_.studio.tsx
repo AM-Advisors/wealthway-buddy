@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { MkPage, mkHead } from "@/components/marketing-ui";
 import { ItemDrawer, SampleTag, SeriesChip, StatusPill, useStudio, type Series } from "@/components/marketing/studio";
 import { planStudioWeek } from "@/lib/marketing-studio.functions";
-import { weekStart } from "@/lib/marketing-studio-model";
+import { useOrgTz } from "@/components/marketing/use-org-tz";
+import { addYmd, mondayOf, ymdIn, ymdStartUtc } from "@/lib/org-timezone";
 
 export const Route = createFileRoute("/_authenticated/marketing_/studio")({
   head: mkHead("Marketing Studio", "Editorial command center for the five weekly Harmonious content series."),
@@ -35,6 +36,7 @@ function Panel({ title, sample, children, action }: { title: string; sample?: bo
 }
 
 function StudioDashboard() {
+  const tz = useOrgTz();
   const { from, to } = useMemo(() => {
     const now = new Date();
     return { from: new Date(now.getFullYear(), now.getMonth() - 1, 1), to: new Date(now.getFullYear(), now.getMonth() + 2, 1) };
@@ -46,21 +48,21 @@ function StudioDashboard() {
   const series = (q.data?.series ?? []) as Series[];
   const byKey = Object.fromEntries(series.map((s) => [s.key, s]));
   const items = (q.data?.items ?? []) as any[];
-  const wk = weekStart(new Date());
-  const weekEnd = new Date(`${wk}T00:00:00Z`); weekEnd.setUTCDate(weekEnd.getUTCDate() + 7);
-  const thisWeek = items.filter((i) => i.publish_at && new Date(i.publish_at) >= new Date(`${wk}T00:00:00Z`) && new Date(i.publish_at) < weekEnd);
-  const today = new Date().toDateString();
-  const todays = items.filter((i) => i.publish_at && new Date(i.publish_at).toDateString() === today);
+  // Week/today/month boundaries use the organization time zone.
+  const todayYmd = ymdIn(new Date(), tz);
+  const wkFrom = ymdStartUtc(mondayOf(todayYmd), tz), weekEnd = ymdStartUtc(addYmd(mondayOf(todayYmd), 7), tz);
+  const thisWeek = items.filter((i) => i.publish_at && new Date(i.publish_at) >= wkFrom && new Date(i.publish_at) < weekEnd);
+  const todays = items.filter((i) => i.publish_at && ymdIn(i.publish_at, tz) === todayYmd);
   const awaiting = items.filter((i) => ["internal_review", "ceo_approval"].includes(i.status));
   const scheduled = items.filter((i) => i.status === "scheduled");
   const published = items.filter((i) => ["published", "performance_review"].includes(i.status));
-  const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+  const monthStart = ymdStartUtc(todayYmd.slice(0, 8) + "01", tz);
   const monthItems = items.filter((i) => i.publish_at && new Date(i.publish_at) >= monthStart);
 
   const Row = ({ i }: { i: any }) => (
     <button onClick={() => setOpen(i.id)} className="flex w-full items-center gap-2 border-l-2 py-1.5 pl-2 text-left text-sm hover:bg-muted" style={{ borderColor: byKey[i.series_key]?.color }}>
       <span className="min-w-0 flex-1 truncate">{i.article_title || i.topic || "Untitled"}</span>
-      {i.publish_at && <span className="text-[11px] text-muted-foreground tabular-nums">{new Date(i.publish_at).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", timeZone: "America/Chicago" })}</span>}
+      {i.publish_at && <span className="text-[11px] text-muted-foreground tabular-nums">{new Date(i.publish_at).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", timeZone: tz })}</span>}
       <StatusPill status={i.status} />
     </button>
   );
