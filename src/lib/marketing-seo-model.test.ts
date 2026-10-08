@@ -11,7 +11,8 @@ describe("claim classification", () => {
   });
   it("press releases are attributed to the publisher unless corroborated", () => {
     expect(classifyClaim({ text: "Acme raised", kind: "primary_fact", source_url: PR }, allowed).kind).toBe("reported");
-    expect(classifyClaim({ text: "Acme raised", kind: "corroborated", source_url: PR, corroborating_url: WSJ }, allowed).kind).toBe("corroborated");
+    // Stage C correction: a press release plus an outlet repeating it is not independent corroboration.
+    expect(classifyClaim({ text: "Acme raised", kind: "corroborated", source_url: PR, corroborating_url: WSJ }, allowed).kind).toBe("reported");
     expect(classifyClaim({ text: "Acme raised", kind: "corroborated", source_url: PR, corroborating_url: PR }, allowed).kind).toBe("reported");
   });
   it("unsourced factual assertions become unverified; regulator text stays primary", () => {

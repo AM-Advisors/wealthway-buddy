@@ -212,6 +212,7 @@ import { Route as AuthenticatedMarketingChannelsRouteImport } from './routes/_au
 import { Route as AuthenticatedMarketingClassroomRouteImport } from './routes/_authenticated/marketing_.classroom'
 import { Route as AuthenticatedMarketingCollateralRouteImport } from './routes/_authenticated/marketing_.collateral'
 import { Route as AuthenticatedMarketingContentStudioRouteImport } from './routes/_authenticated/marketing_.content-studio'
+import { Route as AuthenticatedMarketingDesignStudioRouteImport } from './routes/_authenticated/marketing_.design-studio'
 import { Route as AuthenticatedMarketingDriveRouteImport } from './routes/_authenticated/marketing_.drive'
 import { Route as AuthenticatedMarketingEmailsRouteImport } from './routes/_authenticated/marketing_.emails'
 import { Route as AuthenticatedMarketingFlowsRouteImport } from './routes/_authenticated/marketing_.flows'
@@ -353,6 +354,7 @@ import { Route as AuthenticatedManagerFundSetupRequestIdRouteImport } from './ro
 import { Route as AuthenticatedManagerFundFundIdRouteImport } from './routes/_authenticated/manager.fund.$fundId'
 import { Route as AuthenticatedMarketingCampaignsIdRouteImport } from './routes/_authenticated/marketing_.campaigns_.$id'
 import { Route as AuthenticatedMarketingClassroomIdRouteImport } from './routes/_authenticated/marketing_.classroom_.$id'
+import { Route as AuthenticatedMarketingDesignStudioDesignIdRouteImport } from './routes/_authenticated/marketing_.design-studio_.$designId'
 import { Route as AuthenticatedMarketingEmailsIdRouteImport } from './routes/_authenticated/marketing_.emails_.$id'
 import { Route as AuthenticatedMarketingFlowsIdRouteImport } from './routes/_authenticated/marketing_.flows_.$id'
 import { Route as AuthenticatedMarketingPostsIdRouteImport } from './routes/_authenticated/marketing_.posts_.$id'
@@ -1561,6 +1563,12 @@ const AuthenticatedMarketingContentStudioRoute =
     path: '/marketing/content-studio',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedMarketingDesignStudioRoute =
+  AuthenticatedMarketingDesignStudioRouteImport.update({
+    id: '/marketing_/design-studio',
+    path: '/marketing/design-studio',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedMarketingDriveRoute =
   AuthenticatedMarketingDriveRouteImport.update({
     id: '/marketing_/drive',
@@ -2384,6 +2392,12 @@ const AuthenticatedMarketingClassroomIdRoute =
     path: '/marketing/classroom/$id',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedMarketingDesignStudioDesignIdRoute =
+  AuthenticatedMarketingDesignStudioDesignIdRouteImport.update({
+    id: '/marketing_/design-studio_/$designId',
+    path: '/marketing/design-studio/$designId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedMarketingEmailsIdRoute =
   AuthenticatedMarketingEmailsIdRouteImport.update({
     id: '/marketing_/emails_/$id',
@@ -3029,6 +3043,7 @@ export interface FileRoutesByFullPath {
   '/marketing/classroom': typeof AuthenticatedMarketingClassroomRoute
   '/marketing/collateral': typeof AuthenticatedMarketingCollateralRoute
   '/marketing/content-studio': typeof AuthenticatedMarketingContentStudioRoute
+  '/marketing/design-studio': typeof AuthenticatedMarketingDesignStudioRoute
   '/marketing/drive': typeof AuthenticatedMarketingDriveRoute
   '/marketing/emails': typeof AuthenticatedMarketingEmailsRoute
   '/marketing/flows': typeof AuthenticatedMarketingFlowsRoute
@@ -3168,6 +3183,7 @@ export interface FileRoutesByFullPath {
   '/manager/fund/$fundId': typeof AuthenticatedManagerFundFundIdRouteWithChildren
   '/marketing/campaigns/$id': typeof AuthenticatedMarketingCampaignsIdRoute
   '/marketing/classroom/$id': typeof AuthenticatedMarketingClassroomIdRoute
+  '/marketing/design-studio/$designId': typeof AuthenticatedMarketingDesignStudioDesignIdRoute
   '/marketing/emails/$id': typeof AuthenticatedMarketingEmailsIdRoute
   '/marketing/flows/$id': typeof AuthenticatedMarketingFlowsIdRoute
   '/marketing/posts/$id': typeof AuthenticatedMarketingPostsIdRoute
@@ -3443,6 +3459,7 @@ export interface FileRoutesByTo {
   '/marketing/classroom': typeof AuthenticatedMarketingClassroomRoute
   '/marketing/collateral': typeof AuthenticatedMarketingCollateralRoute
   '/marketing/content-studio': typeof AuthenticatedMarketingContentStudioRoute
+  '/marketing/design-studio': typeof AuthenticatedMarketingDesignStudioRoute
   '/marketing/drive': typeof AuthenticatedMarketingDriveRoute
   '/marketing/emails': typeof AuthenticatedMarketingEmailsRoute
   '/marketing/flows': typeof AuthenticatedMarketingFlowsRoute
@@ -3581,6 +3598,7 @@ export interface FileRoutesByTo {
   '/manager/fund-setup/$requestId': typeof AuthenticatedManagerFundSetupRequestIdRoute
   '/marketing/campaigns/$id': typeof AuthenticatedMarketingCampaignsIdRoute
   '/marketing/classroom/$id': typeof AuthenticatedMarketingClassroomIdRoute
+  '/marketing/design-studio/$designId': typeof AuthenticatedMarketingDesignStudioDesignIdRoute
   '/marketing/emails/$id': typeof AuthenticatedMarketingEmailsIdRoute
   '/marketing/flows/$id': typeof AuthenticatedMarketingFlowsIdRoute
   '/marketing/posts/$id': typeof AuthenticatedMarketingPostsIdRoute
@@ -3865,6 +3883,7 @@ export interface FileRoutesById {
   '/_authenticated/marketing_/classroom': typeof AuthenticatedMarketingClassroomRoute
   '/_authenticated/marketing_/collateral': typeof AuthenticatedMarketingCollateralRoute
   '/_authenticated/marketing_/content-studio': typeof AuthenticatedMarketingContentStudioRoute
+  '/_authenticated/marketing_/design-studio': typeof AuthenticatedMarketingDesignStudioRoute
   '/_authenticated/marketing_/drive': typeof AuthenticatedMarketingDriveRoute
   '/_authenticated/marketing_/emails': typeof AuthenticatedMarketingEmailsRoute
   '/_authenticated/marketing_/flows': typeof AuthenticatedMarketingFlowsRoute
@@ -4004,6 +4023,7 @@ export interface FileRoutesById {
   '/_authenticated/manager/fund/$fundId': typeof AuthenticatedManagerFundFundIdRouteWithChildren
   '/_authenticated/marketing_/campaigns_/$id': typeof AuthenticatedMarketingCampaignsIdRoute
   '/_authenticated/marketing_/classroom_/$id': typeof AuthenticatedMarketingClassroomIdRoute
+  '/_authenticated/marketing_/design-studio_/$designId': typeof AuthenticatedMarketingDesignStudioDesignIdRoute
   '/_authenticated/marketing_/emails_/$id': typeof AuthenticatedMarketingEmailsIdRoute
   '/_authenticated/marketing_/flows_/$id': typeof AuthenticatedMarketingFlowsIdRoute
   '/_authenticated/marketing_/posts_/$id': typeof AuthenticatedMarketingPostsIdRoute
@@ -4288,6 +4308,7 @@ export interface FileRouteTypes {
     | '/marketing/classroom'
     | '/marketing/collateral'
     | '/marketing/content-studio'
+    | '/marketing/design-studio'
     | '/marketing/drive'
     | '/marketing/emails'
     | '/marketing/flows'
@@ -4427,6 +4448,7 @@ export interface FileRouteTypes {
     | '/manager/fund/$fundId'
     | '/marketing/campaigns/$id'
     | '/marketing/classroom/$id'
+    | '/marketing/design-studio/$designId'
     | '/marketing/emails/$id'
     | '/marketing/flows/$id'
     | '/marketing/posts/$id'
@@ -4702,6 +4724,7 @@ export interface FileRouteTypes {
     | '/marketing/classroom'
     | '/marketing/collateral'
     | '/marketing/content-studio'
+    | '/marketing/design-studio'
     | '/marketing/drive'
     | '/marketing/emails'
     | '/marketing/flows'
@@ -4840,6 +4863,7 @@ export interface FileRouteTypes {
     | '/manager/fund-setup/$requestId'
     | '/marketing/campaigns/$id'
     | '/marketing/classroom/$id'
+    | '/marketing/design-studio/$designId'
     | '/marketing/emails/$id'
     | '/marketing/flows/$id'
     | '/marketing/posts/$id'
@@ -5123,6 +5147,7 @@ export interface FileRouteTypes {
     | '/_authenticated/marketing_/classroom'
     | '/_authenticated/marketing_/collateral'
     | '/_authenticated/marketing_/content-studio'
+    | '/_authenticated/marketing_/design-studio'
     | '/_authenticated/marketing_/drive'
     | '/_authenticated/marketing_/emails'
     | '/_authenticated/marketing_/flows'
@@ -5262,6 +5287,7 @@ export interface FileRouteTypes {
     | '/_authenticated/manager/fund/$fundId'
     | '/_authenticated/marketing_/campaigns_/$id'
     | '/_authenticated/marketing_/classroom_/$id'
+    | '/_authenticated/marketing_/design-studio_/$designId'
     | '/_authenticated/marketing_/emails_/$id'
     | '/_authenticated/marketing_/flows_/$id'
     | '/_authenticated/marketing_/posts_/$id'
@@ -6841,6 +6867,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMarketingContentStudioRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/marketing_/design-studio': {
+      id: '/_authenticated/marketing_/design-studio'
+      path: '/marketing/design-studio'
+      fullPath: '/marketing/design-studio'
+      preLoaderRoute: typeof AuthenticatedMarketingDesignStudioRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/marketing_/drive': {
       id: '/_authenticated/marketing_/drive'
       path: '/marketing/drive'
@@ -7828,6 +7861,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMarketingClassroomIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/marketing_/design-studio_/$designId': {
+      id: '/_authenticated/marketing_/design-studio_/$designId'
+      path: '/marketing/design-studio/$designId'
+      fullPath: '/marketing/design-studio/$designId'
+      preLoaderRoute: typeof AuthenticatedMarketingDesignStudioDesignIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/marketing_/emails_/$id': {
       id: '/_authenticated/marketing_/emails_/$id'
       path: '/marketing/emails/$id'
@@ -8774,6 +8814,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMarketingClassroomRoute: typeof AuthenticatedMarketingClassroomRoute
   AuthenticatedMarketingCollateralRoute: typeof AuthenticatedMarketingCollateralRoute
   AuthenticatedMarketingContentStudioRoute: typeof AuthenticatedMarketingContentStudioRoute
+  AuthenticatedMarketingDesignStudioRoute: typeof AuthenticatedMarketingDesignStudioRoute
   AuthenticatedMarketingDriveRoute: typeof AuthenticatedMarketingDriveRoute
   AuthenticatedMarketingEmailsRoute: typeof AuthenticatedMarketingEmailsRoute
   AuthenticatedMarketingFlowsRoute: typeof AuthenticatedMarketingFlowsRoute
@@ -8866,6 +8907,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedManagerFundFundIdRoute: typeof AuthenticatedManagerFundFundIdRouteWithChildren
   AuthenticatedMarketingCampaignsIdRoute: typeof AuthenticatedMarketingCampaignsIdRoute
   AuthenticatedMarketingClassroomIdRoute: typeof AuthenticatedMarketingClassroomIdRoute
+  AuthenticatedMarketingDesignStudioDesignIdRoute: typeof AuthenticatedMarketingDesignStudioDesignIdRoute
   AuthenticatedMarketingEmailsIdRoute: typeof AuthenticatedMarketingEmailsIdRoute
   AuthenticatedMarketingFlowsIdRoute: typeof AuthenticatedMarketingFlowsIdRoute
   AuthenticatedMarketingPostsIdRoute: typeof AuthenticatedMarketingPostsIdRoute
@@ -9073,6 +9115,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMarketingCollateralRoute: AuthenticatedMarketingCollateralRoute,
   AuthenticatedMarketingContentStudioRoute:
     AuthenticatedMarketingContentStudioRoute,
+  AuthenticatedMarketingDesignStudioRoute:
+    AuthenticatedMarketingDesignStudioRoute,
   AuthenticatedMarketingDriveRoute: AuthenticatedMarketingDriveRoute,
   AuthenticatedMarketingEmailsRoute: AuthenticatedMarketingEmailsRoute,
   AuthenticatedMarketingFlowsRoute: AuthenticatedMarketingFlowsRoute,
@@ -9189,6 +9233,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedMarketingCampaignsIdRoute,
   AuthenticatedMarketingClassroomIdRoute:
     AuthenticatedMarketingClassroomIdRoute,
+  AuthenticatedMarketingDesignStudioDesignIdRoute:
+    AuthenticatedMarketingDesignStudioDesignIdRoute,
   AuthenticatedMarketingEmailsIdRoute: AuthenticatedMarketingEmailsIdRoute,
   AuthenticatedMarketingFlowsIdRoute: AuthenticatedMarketingFlowsIdRoute,
   AuthenticatedMarketingPostsIdRoute: AuthenticatedMarketingPostsIdRoute,
