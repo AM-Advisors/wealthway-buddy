@@ -1,0 +1,1 @@
+ALTER TABLE public.marketing_form_d_filings ADD COLUMN IF NOT EXISTS total_remaining numeric, ADD COLUMN IF NOT EXISTS remaining_indefinite boolean NOT NULL DEFAULT false;
