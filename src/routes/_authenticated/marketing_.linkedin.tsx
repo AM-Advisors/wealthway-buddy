@@ -120,7 +120,7 @@ function DelegateRow({ d, r, name, onDone }: { d: any; r: any; name: string; onD
   const refresh = () => qc.invalidateQueries({ queryKey: ["li-personal"] });
   const submit = async () => {
     let authorizeDirect = false;
-    if (perms.publish_direct && !r.direct_publish_authorized_at) {
+    if (perms["publish_direct"] && !r.direct_publish_authorized_at) {
       authorizeDirect = confirm(`Authorize ${name} to publish on your personal LinkedIn WITHOUT your approval of each post? You can revoke this at any time.`);
       if (!authorizeDirect) return;
     }

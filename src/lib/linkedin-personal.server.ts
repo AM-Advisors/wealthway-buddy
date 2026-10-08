@@ -55,7 +55,7 @@ async function postsToday(db: any, ownerId: string, actorId: string) {
 }
 async function must(db: any, userId: string, perm: LiPerm, series?: string | null) {
   const a = await account(db);
-  const v = allowed({ actorId: userId, ownerId: a.owner_user_id, grant: a.owner_user_id === userId ? null : await grantOf(db, a.owner_user_id, userId), now: new Date(), series }, perm);
+  const v = allowed({ actorId: userId, ownerId: a.owner_user_id, grant: a.owner_user_id === userId ? null : await grantOf(db, a.owner_user_id, userId), now: new Date(), series: series ?? null }, perm);
   if (!v.ok) throw new Error(v.reason);
   return a;
 }
@@ -76,7 +76,7 @@ export function isPersonalState(state: string) { return Buffer.from(state, "base
 
 export async function completeConnect(code: string, state: string) {
   const raw = Buffer.from(state, "base64url").toString();
-  const [, userId, ts, sig] = raw.split(".");
+  const [, userId = "", ts = "", sig = ""] = raw.split(".");
   const exp = sign(`personal.${userId}.${ts}`);
   if (!sig || sig.length !== exp.length || !timingSafeEqual(Buffer.from(sig), Buffer.from(exp))) throw new Error("Bad state");
   if (Date.now() - Number(ts) > 15 * 60_000) throw new Error("This sign-in link expired. Start again.");
@@ -158,7 +158,7 @@ export async function setDelegate(userId: string, input: { delegateId: string; p
   const prev = await grantOf(db, a.owner_user_id, input.delegateId);
   const perms = Object.fromEntries(LI_PERMS.map((p) => [p.key, !!input.perms[p.key]]));
   let direct = prev?.direct_publish_authorized_at ?? null;
-  if (!perms.publish_direct) direct = null;
+  if (!perms["publish_direct"]) direct = null;
   else if (!direct) {
     if (!input.authorizeDirect) throw new Error("Publishing without approval needs your separate explicit authorization.");
     direct = new Date().toISOString();
@@ -167,7 +167,7 @@ export async function setDelegate(userId: string, input: { delegateId: string; p
   const { error } = await db.from("linkedin_delegates").upsert(row, { onConflict: "owner_user_id,delegate_user_id" });
   if (error) throw error;
   await event(db, { owner_user_id: a.owner_user_id, action: prev ? (input.suspended && !prev.suspended ? "access_suspended" : "permissions_changed") : "access_granted", actor_id: userId, delegate_user_id: input.delegateId, detail: { before: prev?.perms ?? null, after: perms, direct_authorized: !!direct, limits: { expires_at: row.expires_at, max_posts_per_day: row.max_posts_per_day, series: row.series, hours: [row.hours_start, row.hours_end] } } });
-  if (row.suspended || !perms.publish_approved) await unscheduleBy(db, a.owner_user_id, input.delegateId, userId, "Delegate access changed");
+  if (row.suspended || !perms["publish_approved"]) await unscheduleBy(db, a.owner_user_id, input.delegateId, userId, "Delegate access changed");
 }
 export async function revokeDelegate(userId: string, delegateId: string) {
   const db = await admin();
@@ -213,7 +213,7 @@ export async function postAction(userId: string, id: string, action: "submit" | 
   const p = await loadPost(db, id);
   const a = await account(db);
   const isOwner = a.owner_user_id === userId;
-  const upd = async (patch: any, act = action) => {
+  const upd = async (patch: any, act: string = action) => {
     await db.from("linkedin_personal_posts").update({ ...patch, updated_at: new Date().toISOString() }).eq("id", id);
     await event(db, { owner_user_id: p.owner_user_id, action: act, actor_id: userId, post_id: id, version: p.version, detail: note || at ? { note, at } : {} });
   };
