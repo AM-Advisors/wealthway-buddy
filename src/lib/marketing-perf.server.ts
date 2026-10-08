@@ -30,7 +30,7 @@ export async function dashboard(userId: string, days: number) {
     const p = postMap.get(t.post_id) ?? {}; const it = itemFor(t.post_id); const m = latest.get(t.id);
     const n = (p.image_paths ?? []).length;
     return { id: t.id, title: p.title ?? "Post", series: it?.series_key ?? null, topic: it?.topic ?? it?.article_title ?? null,
-      format: n > 1 ? "carousel" : n === 1 ? "image" : "text", channel: t.channel, day: new Date(t.published_at).toLocaleDateString("en-US", { weekday: "long", timeZone: "America/Denver" }),
+      format: n > 1 ? "carousel" : n === 1 ? "image" : "text", channel: t.channel, day: new Date(t.published_at).toLocaleDateString("en-US", { weekday: "long", timeZone: orgTz }),
       ageDays: Math.floor((Date.now() - new Date(t.published_at).getTime()) / 864e5), rows: m ? [{ metrics: m.metrics, unavailable: m.unavailable }] : [] };
   });
   const { data: srows } = settings?.site_url ? await db.from("marketing_search_rows").select("page, query, day, clicks, impressions, position").eq("site_url", settings.site_url).gte("day", since.slice(0, 10)).limit(20000) : { data: [] };

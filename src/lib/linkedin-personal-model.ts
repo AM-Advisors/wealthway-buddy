@@ -22,15 +22,15 @@ export type LiGrant = {
   revoked_at?: string | null;
   max_posts_per_day?: number | null;
   series?: string[] | null;
-  hours_start?: number | null; // Denver local hour, inclusive
+  hours_start?: number | null; // local hour in the account (or organization) time zone, inclusive
   hours_end?: number | null; // exclusive
 };
-export type LiCtx = { actorId: string; ownerId: string; grant: LiGrant | null; now: Date; postsToday?: number; series?: string | null };
+export type LiCtx = { actorId: string; ownerId: string; grant: LiGrant | null; now: Date; postsToday?: number; series?: string | null; tz?: string };
 export type Verdict = { ok: true } | { ok: false; reason: string };
 const no = (reason: string): Verdict => ({ ok: false, reason });
 
-export function denverHour(d: Date) {
-  return Number(new Intl.DateTimeFormat("en-US", { timeZone: "America/Denver", hour: "numeric", hourCycle: "h23" }).format(d));
+export function hourInTz(d: Date, tz = "America/Chicago") {
+  return Number(new Intl.DateTimeFormat("en-US", { timeZone: tz, hour: "numeric", hourCycle: "h23" }).format(d)) % 24;
 }
 
 export function grantActive(g: LiGrant | null, now: Date): Verdict {
@@ -55,9 +55,9 @@ export function allowed(ctx: LiCtx, perm: LiPerm): Verdict {
   if (perm === "publish_approved" || perm === "publish_direct") {
     if (g.max_posts_per_day != null && (ctx.postsToday ?? 0) >= g.max_posts_per_day) return no("Daily post limit reached.");
     if (g.hours_start != null && g.hours_end != null) {
-      const h = denverHour(ctx.now);
+      const h = hourInTz(ctx.now, ctx.tz);
       const inside = g.hours_start <= g.hours_end ? h >= g.hours_start && h < g.hours_end : h >= g.hours_start || h < g.hours_end;
-      if (!inside) return no(`Publishing is only allowed between ${g.hours_start}:00 and ${g.hours_end}:00 Denver time.`);
+      if (!inside) return no(`Publishing is only allowed between ${g.hours_start}:00 and ${g.hours_end}:00 ${ctx.tz ?? "America/Chicago"} time.`);
     }
   }
   return { ok: true };
@@ -68,12 +68,13 @@ export function canManageDelegates(actorId: string, ownerId: string): Verdict {
   return actorId === ownerId ? { ok: true } : no("Only the account owner can manage access.");
 }
 
-export type LiAccount = { owner_user_id: string; status: string; member_sub: string | null; expires_at: string | null; has_token: boolean };
+export type LiAccount = { owner_user_id: string; status: string; member_sub: string | null; expires_at: string | null; has_token: boolean; paused_at?: string | null };
 export type LiPost = { owner_user_id: string; status: string; version: number; approved_version: number | null; series_key?: string | null };
 
 /** Full pre-publish check, run again by the scheduler immediately before posting. */
 export function publishCheck(acct: LiAccount, post: LiPost, ctx: LiCtx): Verdict {
   if (post.owner_user_id !== acct.owner_user_id || acct.owner_user_id !== ctx.ownerId) return no("Destination account doesn't match this post.");
+  if (acct.paused_at) return no("Publishing is paused for this account. Only the owner can reactivate it.");
   if (acct.status !== "connected" || !acct.has_token || !acct.member_sub) return no("The LinkedIn account isn't connected. The owner needs to reconnect it.");
   if (acct.expires_at && new Date(acct.expires_at) <= ctx.now) return no("LinkedIn authorization expired. The owner needs to reconnect.");
   if (["published", "publishing", "cancelled", "rejected"].includes(post.status)) return no(`This post is ${post.status}.`);
