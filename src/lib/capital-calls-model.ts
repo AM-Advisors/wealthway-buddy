@@ -834,7 +834,7 @@ export function fundingAcceptanceError(i: {
   if (i.conflictingReference) return `This deposit carries another investor's reference (${i.conflictingReference}); it cannot be applied here.`;
   if (i.appliedCents !== i.transactionCents) return "The applied amount must equal the bank deposit; split deposits are not supported.";
   if (i.appliedCents > i.outstandingCents && i.holdExcessAsCredit) return i.outstandingCents > 0 ? null : "Nothing is owed on this obligation; unknown cash cannot become an investor credit here.";
-  if (i.appliedCents > i.outstandingCents) return `This deposit exceeds the amount owed by ${((i.appliedCents - i.outstandingCents) / 100).toFixed(2)}. Overpayments cannot be held as investor credit yet, so it stays unapplied.`;
+  if (i.appliedCents > i.outstandingCents) return `This deposit exceeds the amount owed by ${((i.appliedCents - i.outstandingCents) / 100).toFixed(2)}. Overpayment detected: choose an explicit disposition (hold as investor credit) or it stays unapplied.`;
   return null;
 }
 
