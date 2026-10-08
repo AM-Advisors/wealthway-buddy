@@ -1,3 +1,3 @@
-import { guard, N, U } from "/dev-server/.wt/lib";
+import { guard } from "/dev-server/.wt/lib";
 const d = await guard();
-const r = await d.from("bank_accounts").insert({ offering_id: N, institution_name: "DEMO Synthetic Bank (not real)", account_name: "Walkthrough DEMO operating", account_mask: "DEMO", status: "active", created_by: U.prep }).select("id"); console.log(JSON.stringify(r));
+const { data } = await d.from("chart_of_accounts").select("code,name,account_type").eq("book_id","d1fd4e89-8028-4aec-b0a6-9901e48efe03").order("code"); console.log(data.map((a:any)=>a.code+" "+a.name+" "+a.account_type).join("\n"));
