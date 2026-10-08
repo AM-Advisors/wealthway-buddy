@@ -5,6 +5,7 @@
  */
 import { STUDIO_ACCESS, STUDIO_MANAGERS, weekStart } from "@/lib/marketing-studio-model";
 import { categorize, newsworthiness, parseAtomTitle, parseFormDXml, weeklyDigest } from "@/lib/marketing-formd-model";
+import { evaluate, formatChanged, headlineKey, invalidDate, shouldNotify, sourceHealth, ALERT_LABEL } from "@/lib/marketing-research-health";
 import { checkClaims, dedupeKey, heuristicRelevance, opportunityScore, shouldAlert, timelinessScore, type KnownStory } from "@/lib/marketing-research-model";
 
 const admin = async () => (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
@@ -104,12 +105,20 @@ function baseScores(src: any, raw: Raw) {
 }
 
 /* ---------- Ingestion ---------- */
-async function ingest(db: any) {
-  const { data: sources } = await db.from("marketing_research_sources").select("*").eq("active", true).in("kind", ["rss", "atom", "federal_register"]);
+async function ingest(db: any, onlyKey?: string) {
+  let sq = db.from("marketing_research_sources").select("*").eq("active", true).in("kind", ["rss", "atom", "federal_register"]);
+  if (onlyKey) sq = sq.eq("key", onlyKey);
+  const { data: sources } = await sq;
   let added = 0; const errors: string[] = [];
   for (const src of (sources ?? []) as any[]) {
+    const t0 = Date.now();
     try {
-      const items = (await fetchSource(src)).filter((r) => r.headline && /^https?:\/\//.test(r.url));
+      const fetched = await fetchSource(src);
+      const items = fetched.filter((r) => r.headline && /^https?:\/\//.test(r.url));
+      // Stories with unusable dates are kept but never treated as current (timeliness 0); counted for monitoring.
+      const badDates = items.filter((r) => invalidDate(r.published_at)).length;
+      for (const r of items) if (invalidDate(r.published_at)) r.published_at = null;
+      if (formatChanged(items.length, src.last_item_count)) throw new Error(`Format changed: response OK but 0 stories readable (previously ${src.last_item_count}).`);
       const rows = items.map((r) => {
         const s = baseScores(src, r);
         return {
@@ -126,10 +135,11 @@ async function ingest(db: any) {
         added += (data ?? []).length;
       }
       if (src.key === "sec_form_d") await formDDetails(db);
-      await db.from("marketing_research_sources").update({ last_fetched_at: new Date().toISOString(), last_error: null }).eq("key", src.key);
+      const at = new Date().toISOString();
+      await db.from("marketing_research_sources").update({ last_fetched_at: at, last_success_at: at, last_error: null, consecutive_failures: 0, last_item_count: items.length, last_invalid_dates: badDates, last_duration_ms: Date.now() - t0 }).eq("key", src.key);
     } catch (e: any) {
       errors.push(`${src.key}: ${e.message}`);
-      await db.from("marketing_research_sources").update({ last_fetched_at: new Date().toISOString(), last_error: String(e.message).slice(0, 300) }).eq("key", src.key);
+      await db.from("marketing_research_sources").update({ last_fetched_at: new Date().toISOString(), last_error: String(e.message).slice(0, 300), consecutive_failures: (src.consecutive_failures ?? 0) + 1, last_duration_ms: Date.now() - t0 }).eq("key", src.key);
     }
   }
   return { added, errors };
@@ -254,7 +264,7 @@ Every idea is a suggestion that needs human approval before becoming content. Fo
 }
 
 /* ---------- Run (scheduler + manual) ---------- */
-export async function runResearch(opts: { ideas?: boolean; manualBy?: string } = {}) {
+export async function runResearch(opts: { ideas?: boolean; manualBy?: string; onlySource?: string } = {}) {
   const db = await admin();
   const paused = await pausedReason(db);
   if (paused && !opts.manualBy) return { skipped: "paused", reason: paused };
@@ -264,16 +274,21 @@ export async function runResearch(opts: { ideas?: boolean; manualBy?: string } =
   const { data: run } = await db.from("marketing_research_runs").insert({ job: JOB, lease_until: new Date(now.getTime() + 10 * 60000).toISOString() }).select().single();
   const result: any = {};
   try {
-    result.ingest = await ingest(db);
-    result.enriched = await enrich(db);
-    if (opts.ideas) result.ideas = await makeIdeas(db);
+    result.ingest = await ingest(db, opts.onlySource);
+    if (!opts.onlySource) {
+      result.enriched = await enrich(db);
+      // Idea failures are recorded for monitoring; they never fall back to unsourced content.
+      if (opts.ideas) { try { result.ideas = await makeIdeas(db); } catch (e: any) { if (e instanceof AiStop && [401, 402, 403].includes(e.status)) throw e; result.ideasError = String(e.message).slice(0, 300); } }
+    }
     if (paused && opts.manualBy) await db.from("marketing_research_state").update({ paused_reason: null, paused_at: null, updated_at: new Date().toISOString() }).eq("job", JOB);
     await db.from("marketing_research_runs").update({ status: "done", finished_at: new Date().toISOString(), result }).eq("id", run.id);
+    await checkHealth(db).catch((e) => console.error("research health", e));
     return result;
   } catch (e: any) {
     const status = e instanceof AiStop ? e.status : 0;
     if (status === 402 || status === 403 || status === 401) await pause(db, `AI unavailable [${status}]: ${e.message}`);
     await db.from("marketing_research_runs").update({ status: status === 429 ? "rate_limited" : "failed", finished_at: new Date().toISOString(), result, error: String(e.message).slice(0, 500) }).eq("id", run.id);
+    await checkHealth(db).catch((err) => console.error("research health", err));
     if (opts.manualBy) throw new Error(status === 429 ? "The AI is busy right now. Try again in a few minutes." : e.message);
     return { ...result, error: e.message };
   }
@@ -352,4 +367,102 @@ export async function citations(userId: string, itemId: string) {
   const { db } = await ctx(userId);
   const { data } = await db.from("marketing_content_citations").select("*").eq("item_id", itemId).order("created_at");
   return data ?? [];
+}
+
+/* ---------- Monitoring ---------- */
+const OPEN_REVIEW = ["fact_check", "design", "internal_review", "ceo_approval", "approved", "scheduled"];
+async function healthInputs(db: any) {
+  const now = new Date(), wk = new Date(now.getTime() - 7 * 864e5).toISOString();
+  const [src, state, runs, items, stories, fd] = await Promise.all([
+    db.from("marketing_research_sources").select("*").order("name"),
+    db.from("marketing_research_state").select("paused_reason").eq("job", JOB).maybeSingle(),
+    db.from("marketing_research_runs").select("id, status, started_at, finished_at, error, result").eq("job", JOB).order("started_at", { ascending: false }).limit(30),
+    db.from("marketing_content_items").select("id, article_title, topic, status").in("status", OPEN_REVIEW).limit(300),
+    db.from("marketing_research_stories").select("headline, dedupe_key").gte("retrieved_at", wk).limit(2000),
+    db.from("marketing_form_d_filings").select("parse_error").gte("filed_at", wk).limit(2000),
+  ]);
+  const ids = ((items.data ?? []) as any[]).map((i) => i.id);
+  const { data: cites } = ids.length ? await db.from("marketing_content_citations").select("item_id").in("item_id", ids) : { data: [] };
+  const cited = new Set(((cites ?? []) as any[]).map((c) => c.item_id));
+  const groups = new Map<string, Set<string>>();
+  for (const s of (stories.data ?? []) as any[]) { const k = headlineKey(s.headline); groups.set(k, (groups.get(k) ?? new Set()).add(s.dedupe_key)); }
+  const fds = (fd.data ?? []) as any[];
+  return {
+    sources: (src.data ?? []) as any[], aiPaused: state.data?.paused_reason ?? null, recentRuns: (runs.data ?? []) as any[],
+    itemsMissingCitations: ((items.data ?? []) as any[]).filter((i) => !cited.has(i.id)).map((i) => ({ id: i.id, title: i.article_title || i.topic || "Untitled" })),
+    duplicateGroups: [...groups.values()].filter((g) => g.size > 1).length,
+    formDParseErrorsThisWeek: fds.filter((f) => f.parse_error).length, formDFilingsThisWeek: fds.length,
+  };
+}
+
+/** Upserts one open alert per condition, auto-resolves cleared ones, emails marketing managers on new/escalated alerts. */
+export async function checkHealth(db?: any) {
+  db = db ?? (await admin());
+  const input = await healthInputs(db), now = new Date();
+  const specs = evaluate({ ...input, now });
+  const { data: open } = await db.from("marketing_research_health_alerts").select("*").is("resolved_at", null);
+  const openMap = new Map(((open ?? []) as any[]).map((a) => [`${a.kind}|${a.subject_key}`, a]));
+  const seen = new Set<string>();
+  for (const s of specs) {
+    const k = `${s.kind}|${s.subject_key}`; seen.add(k);
+    const cur = openMap.get(k);
+    if (cur) await db.from("marketing_research_health_alerts").update({ last_seen_at: now.toISOString(), occurrences: cur.occurrences + 1, message: s.message, severity: s.severity }).eq("id", cur.id);
+    else await db.from("marketing_research_health_alerts").insert({ ...s });
+  }
+  for (const [k, a] of openMap) if (!seen.has(k)) await db.from("marketing_research_health_alerts").update({ resolved_at: now.toISOString(), auto_resolved: true, resolution_note: "Condition cleared on a later check." }).eq("id", a.id);
+  await notifyHealth(db, now);
+  return { open: specs.length };
+}
+
+async function notifyHealth(db: any, now: Date) {
+  const { data: open } = await db.from("marketing_research_health_alerts").select("*").is("resolved_at", null).neq("severity", "info");
+  const due = ((open ?? []) as any[]).filter((a) => shouldNotify(a, now));
+  if (!due.length) return;
+  const { data: roles } = await db.from("user_roles").select("user_id, role").in("role", STUDIO_MANAGERS);
+  const ids = [...new Set(((roles ?? []) as any[]).map((r) => r.user_id))];
+  const { data: people } = ids.length ? await db.from("profiles").select("email").in("user_id", ids) : { data: [] };
+  const esc = (x: string) => x.replace(/</g, "&lt;");
+  const list = due.map((a) => `<li><b>${esc(ALERT_LABEL[a.kind] ?? a.kind)}</b>${a.notified_at ? " (still open — escalated)" : ""}: ${esc(a.message)}</li>`).join("");
+  try {
+    const pub = await import("@/lib/marketing-publish.server");
+    for (const p of (people ?? []) as any[]) if (p.email) await pub.sendMarketingEmail(p.email, `Research monitoring: ${due.length} alert${due.length > 1 ? "s" : ""}`,
+      `<p>Research monitoring found:</p><ul>${list}</ul><p>Open Marketing → Studio → Research → Monitoring to acknowledge, retry or resolve. Nothing was published.</p>`,
+      due.map((a) => `${ALERT_LABEL[a.kind] ?? a.kind}: ${a.message}`).join("\n"), "https://app.harmonious.co/marketing/studio/research/monitoring", `rh:${now.toISOString().slice(0, 13)}`);
+  } catch (e) { console.error("research health email", e); }
+  for (const a of due) await db.from("marketing_research_health_alerts").update({ notified_at: now.toISOString(), ...(a.notified_at ? { escalated_at: now.toISOString() } : {}) }).eq("id", a.id);
+}
+
+export async function healthDashboard(userId: string) {
+  const { db, roles } = await ctx(userId);
+  const input = await healthInputs(db);
+  const { data: alerts } = await db.from("marketing_research_health_alerts").select("*").order("last_seen_at", { ascending: false }).limit(100);
+  const last = input.recentRuns[0];
+  const done = input.recentRuns.filter((r: any) => r.finished_at);
+  return {
+    canManage: roles.some((r) => STUDIO_MANAGERS.includes(r)),
+    sources: input.sources.map((s: any) => ({ key: s.key, name: s.name, kind: s.kind, active: s.active, last_success_at: s.last_success_at, last_fetched_at: s.last_fetched_at, last_error: s.last_error, consecutive_failures: s.consecutive_failures, last_item_count: s.last_item_count, last_invalid_dates: s.last_invalid_dates, last_duration_ms: s.last_duration_ms, ...sourceHealth(s) })),
+    runs: input.recentRuns.map((r: any) => ({ id: r.id, status: r.status, started_at: r.started_at, finished_at: r.finished_at, error: r.error, duration_ms: r.finished_at ? new Date(r.finished_at).getTime() - new Date(r.started_at).getTime() : null, added: r.result?.ingest?.added ?? null, ideasError: r.result?.ideasError ?? null })),
+    lastSuccess: done.find((r: any) => r.status === "done")?.finished_at ?? null,
+    lastRun: last ?? null, aiPaused: input.aiPaused, missingCitations: input.itemsMissingCitations, duplicateGroups: input.duplicateGroups,
+    formD: { filings: input.formDFilingsThisWeek, parseErrors: input.formDParseErrorsThisWeek },
+    alerts: alerts ?? [],
+  };
+}
+
+export async function alertAction(userId: string, id: string, action: "acknowledge" | "resolve" | "escalate", note: string | null) {
+  const { db } = await ctx(userId, action !== "acknowledge");
+  const now = new Date().toISOString();
+  const patch = action === "acknowledge" ? { acknowledged_at: now, acknowledged_by: userId }
+    : action === "escalate" ? { escalated_at: now, escalated_by: userId, severity: "critical", notified_at: null }
+    : { resolved_at: now, resolved_by: userId, resolution_note: note };
+  if (action === "resolve" && !note?.trim()) throw new Error("Say how it was resolved.");
+  const { data } = await db.from("marketing_research_health_alerts").update(patch).eq("id", id).is("resolved_at", null).select("id");
+  if (!(data ?? []).length) throw new Error("That alert is already resolved.");
+  if (action === "escalate") await notifyHealth(db, new Date());
+}
+
+/** Manager retry: re-runs ingestion (one source or all) through the same lease, so jobs never overlap. */
+export async function retryIngestion(userId: string, sourceKey: string | null) {
+  await ctx(userId, true);
+  return runResearch({ manualBy: userId, ...(sourceKey ? { onlySource: sourceKey } : {}) });
 }
