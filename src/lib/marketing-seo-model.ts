@@ -6,6 +6,34 @@ import { MARKETING_ORIGIN, ORGANIZATION } from "@/lib/marketing/site-config";
 
 export const canonicalFor = (slug: string) => `${MARKETING_ORIGIN}/post/${slug}`;
 
+/**
+ * Three separate addresses per article. Wix stays the live site: the live URL is only what is actually live there,
+ * the future canonical is an intention (never emitted to Wix or changed by the app), and draft previews are noindex.
+ */
+export function articleUrls(slug: string, o: { liveOnWix: boolean; previewOrigin: string }) {
+  return {
+    live_publication_url: o.liveOnWix ? `${MARKETING_ORIGIN}/post/${slug}` : null,
+    intended_canonical_url: canonicalFor(slug),
+    draft_preview_url: `${o.previewOrigin.replace(/\/$/, "")}/marketing/classroom?preview=${encodeURIComponent(slug)}`,
+    draft_preview_indexable: false as const,
+  };
+}
+
+/** Press-release wires and syndication hosts republish the same underlying text. */
+const SYNDICATION = ["prnewswire.com", "businesswire.com", "globenewswire.com", "accesswire.com", "einpresswire.com", "newswire.com", "finance.yahoo.com", "marketwatch.com/press-release", "apnews.com/press-release", "msn.com"];
+const registrable = (u: string) => { const p = host(u).split("."); return p.length <= 2 ? p.join(".") : p.slice(-2).join("."); };
+const isSyndicated = (u: string) => { const h = host(u), full = `${h}${(() => { try { return new URL(u).pathname; } catch { return ""; } })()}`; return SYNDICATION.some((s) => full === s || full.startsWith(s) || h.endsWith(`.${s.split("/")[0]}`) && !s.includes("/")); };
+/**
+ * Two sources are independent only if they are different organizations (registrable domain), neither is a
+ * syndicated press release, and the reviewer hasn't marked them as repeating the same underlying source.
+ */
+export function independentSources(a: string, b: string, sharedUnderlying?: boolean): boolean {
+  if (!a || !b || sharedUnderlying) return false;
+  if (registrable(a) === registrable(b)) return false;
+  if (isSyndicated(a) || isSyndicated(b)) return false;
+  return true;
+}
+
 /* ---------- Claim classes ---------- */
 export const CLAIM_CLASSES = [
   "primary_fact", "reported", "corroborated", "regulatory_text", "regulatory_interpretation",
@@ -44,11 +72,11 @@ export type ClassifiedClaim = {
  * Applies the attribution rules: Form D → issuer-reported; non-regulator sources → attributed to the publisher
  * unless a second independent source corroborates; facts without a stored source become unverified.
  */
-export function classifyClaim(c: { text: string; kind: string; source_url?: string; corroborating_url?: string }, allowed: string[]): ClassifiedClaim {
+export function classifyClaim(c: { text: string; kind: string; source_url?: string; corroborating_url?: string; shared_underlying_source?: boolean }, allowed: string[]): ClassifiedClaim {
   const src = new Set(allowed);
   let kind = normalizeClass(c.kind);
   const url = c.source_url && src.has(c.source_url) ? c.source_url : "";
-  const corr = c.corroborating_url && src.has(c.corroborating_url) && host(c.corroborating_url) !== host(url) ? c.corroborating_url : "";
+  const corr = c.corroborating_url && src.has(c.corroborating_url) && independentSources(url, c.corroborating_url, c.shared_underlying_source) ? c.corroborating_url : "";
   const text = c.text.trim();
   if (!SOURCED_CLASSES.includes(kind)) return { text, kind, source_url: url, attribution: kind === "analysis" ? "Harmonious" : "", verification: kind === "unverified" ? "unverified" : "not_applicable" };
   if (!url) return { text, kind: "unverified", source_url: "", attribution: "", verification: "unverified", note: "No stored source — can't pass approval." };
