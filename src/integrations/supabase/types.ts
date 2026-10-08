@@ -28613,6 +28613,33 @@ export type Database = {
         }
         Relationships: []
       }
+      marketing_brand_kit_versions: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          id: string
+          kit: Json
+          note: string | null
+          version: number
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          kit: Json
+          note?: string | null
+          version: number
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          kit?: Json
+          note?: string | null
+          version?: number
+        }
+        Relationships: []
+      }
       marketing_campaign_assets: {
         Row: {
           added_by: string
@@ -29176,6 +29203,133 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      marketing_design_events: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          design_id: string
+          id: string
+          note: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          design_id: string
+          id?: string
+          note?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          design_id?: string
+          id?: string
+          note?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_design_events_design_id_fkey"
+            columns: ["design_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_designs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketing_design_versions: {
+        Row: {
+          actor_id: string | null
+          change_kind: string
+          created_at: string
+          design_id: string
+          doc: Json
+          id: string
+          version: number
+        }
+        Insert: {
+          actor_id?: string | null
+          change_kind?: string
+          created_at?: string
+          design_id: string
+          doc: Json
+          id?: string
+          version: number
+        }
+        Update: {
+          actor_id?: string | null
+          change_kind?: string
+          created_at?: string
+          design_id?: string
+          doc?: Json
+          id?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_design_versions_design_id_fkey"
+            columns: ["design_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_designs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketing_designs: {
+        Row: {
+          created_at: string
+          designer_id: string | null
+          doc: Json
+          format: string
+          id: string
+          series_key: string | null
+          source_item_id: string | null
+          source_kind: string
+          source_story_id: string | null
+          source_template_design_id: string | null
+          status: string
+          template_key: string | null
+          title: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          designer_id?: string | null
+          doc: Json
+          format: string
+          id?: string
+          series_key?: string | null
+          source_item_id?: string | null
+          source_kind?: string
+          source_story_id?: string | null
+          source_template_design_id?: string | null
+          status?: string
+          template_key?: string | null
+          title: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          designer_id?: string | null
+          doc?: Json
+          format?: string
+          id?: string
+          series_key?: string | null
+          source_item_id?: string | null
+          source_kind?: string
+          source_story_id?: string | null
+          source_template_design_id?: string | null
+          status?: string
+          template_key?: string | null
+          title?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: []
       }
       marketing_drive_assets: {
         Row: {
