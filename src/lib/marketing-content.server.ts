@@ -4,13 +4,15 @@
  * Nothing here publishes or schedules; the Studio approval gate and each channel's own approval still apply.
  */
 import { STUDIO_ACCESS, STUDIO_REVIEWERS, isLocked } from "@/lib/marketing-studio-model";
-import { FOUNDER_REVIEW_ROLE, seriesTemplate, buildSchema, overlapPercent, sanitizePackage, type ContentPackage } from "@/lib/marketing-content-model";
+import { FOUNDER_REVIEW_ROLE, seriesTemplate, overlapPercent, sanitizePackage, type ContentPackage } from "@/lib/marketing-content-model";
 import { aiJson } from "@/lib/marketing-research.server";
 import { COPY_RULES } from "@/lib/marketing-brand";
+import { CLAIM_CLASSES, REG_INTERPRETATION_REVIEWERS, SERVICE_PAGES, buildArticleSchema, canonicalFor, normalizeClass, type SitePage } from "@/lib/marketing-seo-model";
+import { MARKETING_ORIGIN } from "@/lib/marketing/site-config";
 
 const admin = async () => (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
 const MODEL = "openai/gpt-6-astra";
-const SITE = "https://harmonious.co";
+const SITE = MARKETING_ORIGIN;
 
 async function ctx(userId: string) {
   const db = await admin();
@@ -38,10 +40,17 @@ async function sourceMaterial(db: any, item: any) {
   return { cites: cites ?? [], stories: stories ?? [], allowed, factText };
 }
 
+/** Published Classroom articles plus service pages. Drafts are listed but marked unpublished so they're never suggested. */
+async function sitePages(db: any): Promise<SitePage[]> {
+  const { data } = await db.from("classroom_articles").select("slug, status, current_version_id, published_version_id").limit(200);
+  const ids = ((data ?? []) as any[]).map((a) => a.published_version_id ?? a.current_version_id).filter(Boolean);
+  const { data: vers } = ids.length ? await db.from("classroom_article_versions").select("id, title").in("id", ids) : { data: [] };
+  const title = Object.fromEntries(((vers ?? []) as any[]).map((v) => [v.id, v.title]));
+  const arts: SitePage[] = ((data ?? []) as any[]).map((a) => ({ url: canonicalFor(a.slug), title: title[a.published_version_id ?? a.current_version_id] ?? a.slug, kind: "article", published: a.status === "published" }));
+  return [...SERVICE_PAGES, ...arts];
+}
 async function internalPages(db: any) {
-  const { data } = await db.from("classroom_articles").select("slug, current_version_id").eq("status", "published").limit(60);
-  const slugs = ((data ?? []) as any[]).map((a) => `${SITE}/post/${a.slug}`);
-  return [...slugs, `${SITE}/fund-administration`, `${SITE}/spvs`, `${SITE}/platform`, `${SITE}/pricing`, `${SITE}/data-security`];
+  return (await sitePages(db)).filter((p) => p.published).map((p) => p.url);
 }
 
 export async function workspace(userId: string, itemId: string) {
@@ -59,7 +68,19 @@ export async function workspace(userId: string, itemId: string) {
   const ids = [...new Set([...(pkgs ?? []), ...(reviews ?? [])].map((r: any) => r.created_by ?? r.actor_id))];
   const { data: profs } = ids.length ? await db.from("profiles").select("user_id, legal_name, email").in("user_id", ids) : { data: [] };
   const people = Object.fromEntries(((profs ?? []) as any[]).map((p) => [p.user_id, p.legal_name || p.email || "Team member"]));
-  return { item, series, packages: pkgs ?? [], reviews: reviews ?? [], sources: src.allowed, stories: src.stories, citations: src.cites, posts: posts ?? [], article, people, roles, me: userId };
+  const pages = await sitePages(db);
+  const [{ data: others }, { data: gsc }, { data: gscSet }] = await Promise.all([
+    db.from("marketing_content_items").select("id, article_title").neq("id", itemId).not("article_title", "is", null).limit(300),
+    db.from("marketing_search_rows").select("query, clicks, impressions, position, page").ilike("page", `%/post/${(pkgs ?? [])[0]?.package?.slug ?? "__none__"}%`).limit(50),
+    db.from("marketing_search_settings").select("site_url, last_refresh_at").eq("id", 1).maybeSingle(),
+  ]);
+  const existingTitles = [...((others ?? []) as any[]).map((o) => o.article_title as string), ...pages.filter((p) => p.kind === "article").map((p) => p.title)];
+  const analytics = {
+    search_console: gscSet?.site_url ? `Connected (${gscSet.site_url})` : process.env.GOOGLE_SEARCH_CONSOLE_API_KEY ? "Connected — harmonious.co property not verified" : "Not connected",
+    ga4: "Not connected", bing: "Not connected",
+  };
+  return { pages, existingTitles, analytics, measured: gsc ?? [], canonicalLive: false,
+    item, series, packages: pkgs ?? [], reviews: reviews ?? [], sources: src.allowed, stories: src.stories, citations: src.cites, posts: posts ?? [], article, people, roles, me: userId };
 }
 
 const S = { type: "string" } as const;
@@ -71,7 +92,8 @@ const SCHEMA = obj({
   faq: { type: "array", items: obj({ q: S, a: S }) },
   internal_links: { type: "array", items: obj({ label: S, url: S }) },
   citations: { type: "array", items: obj({ label: S, url: S }) }, cta: S, cta_options: SA,
-  claims: { type: "array", items: obj({ text: S, kind: { type: "string", enum: ["fact", "analysis", "opinion", "projection", "hypothetical"] }, source_url: S }) },
+  claims: { type: "array", items: obj({ text: S, kind: { type: "string", enum: [...CLAIM_CLASSES] }, source_url: S, corroborating_url: S }) },
+  h1: S, opening_answer: S, related_questions: SA, audience: S, topic_cluster: S, pillar_page: S, supporting_articles: SA, service_pages: SA,
   social: obj({ linkedin_company: S, linkedin_executive: S, facebook: S, instagram: S, x: S, email_subject: S, email_body: S }),
   graphics: { type: "array", items: obj({ template: { type: "string", enum: ["breaking", "regulatory", "stat", "quote", "carousel", "comparison", "academy", "poll"] }, size: { type: "string", enum: ["square", "portrait", "landscape", "story"] }, headline: S, subhead: S, stat: S, stat_source_url: S, bullets: SA }) },
 });
@@ -82,8 +104,8 @@ async function nextVersion(db: any, itemId: string) {
 }
 async function store(db: any, item: any, userId: string, p: ContentPackage, ai: boolean, note: string | null) {
   const version = await nextVersion(db, item.id);
-  const url = `${SITE}/post/${p.slug}`;
-  const final = { ...p, schema_jsonld: buildSchema(p, url, item.series_key === "founders_friday" ? "Alyssa Pettit" : "Harmonious", item.publish_at, new Date().toISOString()) };
+  const founders = item.series_key === "founders_friday";
+  const final = { ...p, h1: p.h1 || p.seo_title, schema_jsonld: buildArticleSchema({ slug: p.slug, title: p.h1 || p.seo_title, description: p.meta_description, author: founders ? "Alyssa Pettit" : "Harmonious", authorIsPerson: founders, published: item.publish_at, modified: new Date().toISOString(), faq: p.faq, bodyHtml: p.body_html, blog: founders }) };
   const { error } = await db.from("marketing_content_packages").insert({ item_id: item.id, version, package: final, ai_generated: ai, model: ai ? MODEL : null, note, created_by: userId });
   if (error) throw new Error(error.message);
   // Unverified facts (research citations + package claims) block Studio approval.
@@ -115,6 +137,9 @@ export async function generate(userId: string, itemId: string, guidance: string 
     "meta_title ≤ 60 chars, meta_description ≤ 155 chars. FAQ 3–5 items when useful, answers must match the article.",
     "Social: write different text per platform. linkedin_company (professional, 120–200 words, 3 hashtags), linkedin_executive (first person ONLY as framing questions/placeholders for the executive; never invent their opinions), facebook (conversational, 60–120 words), instagram (hook line, short lines, 5–8 hashtags, 'link in bio'), x (≤ 270 chars incl. 1–2 hashtags), email_subject (≤ 60 chars) and email_body (short newsletter blurb with CTA).",
     "Graphics: 2–4 specs using fitting templates and sizes. stat must be copied verbatim from SOURCE MATERIAL with its stat_source_url from SOURCES, or empty string.",
+    "SEO & AI search: h1 = the visible page title (no H1 in body_html). opening_answer = a direct 1–2 sentence answer to the main question, also used as the first paragraph. related_questions = 3–6 questions readers ask. Name entities explicitly (Harmonious, SEC, IRS). Use a comparison table where it helps, practical examples (label hypothetical ones), and plain definitions. Never stuff keywords, never write hidden text, never claim how any search or AI engine ranks or cites content, never state search volume, difficulty or rankings.",
+    "topic_cluster: one of fund administration, SPV administration, cap table management, investor onboarding, KYC/KYB/AML, accredited investor verification, Rule 506(b) and 506(c), Form D and Blue Sky filings, fund accounting and NAV, K-1s and partnership taxes, startup fundraising and dilution, private-market liquidity and secondaries. pillar_page, supporting_articles and service_pages: only URLs from INTERNAL PAGES (or empty).",
+    "claim kinds: primary_fact (stated in a regulator or primary document), reported (a third party or company said it — e.g. a press release is attributed to the company), corroborated (two independent SOURCES; set corroborating_url), regulatory_text (quotes or paraphrases rule text), regulatory_interpretation (what a rule means for readers), analysis (Harmonious analysis or opinion), projection, hypothetical, unverified. Form D amounts are issuer-reported, never verified proceeds. corroborating_url is empty unless corroborated.",
     "claims: list every factual statement, analysis, opinion, projection and hypothetical example the article relies on, with kind set honestly. A fact needs source_url copied from SOURCES; non-facts use an empty source_url unless they build on one source. Never present analysis, opinion or projection as fact.",
     "Never write quotation marks around words unless they are copied verbatim from SOURCE MATERIAL. Never invent quotes, statistics, regulatory requirements or personal experiences.",
     "cta: the main call to action. cta_options: 2–3 alternative CTAs suited to this series.",
@@ -163,6 +188,11 @@ export async function review(userId: string, itemId: string, kind: string, resul
     if (!roles.includes(FOUNDER_REVIEW_ROLE)) throw new Error("Only Alyssa (CEO) can record this review.");
   } else {
     if (!roles.some((r) => STUDIO_REVIEWERS.includes(r))) throw new Error("Only a reviewer can record this.");
+    if (kind === "compliance" && result === "pass") {
+      const { data: pk } = await db.from("marketing_content_packages").select("package").eq("item_id", itemId).eq("version", item.package_version).maybeSingle();
+      const interp = ((pk?.package?.claims ?? []) as any[]).some((c) => normalizeClass(c.kind) === "regulatory_interpretation");
+      if (interp && !roles.some((r) => REG_INTERPRETATION_REVIEWERS.includes(r))) throw new Error("This package interprets regulations, so compliance must be passed by a compliance reviewer or executive.");
+    }
     const self = item.author_id === userId || (await db.from("marketing_content_packages").select("id").eq("item_id", itemId).eq("version", item.package_version).eq("created_by", userId).maybeSingle()).data;
     if (self && !roles.includes("super_admin")) throw new Error("Someone other than the author must review this.");
     if (self && !n) throw new Error("Super Admin self-review needs a reason.");
@@ -273,4 +303,20 @@ export async function startPackage(userId: string, s: Start) {
   }
   const r = await generate(userId, itemId, s.guidance);
   return { itemId, existing: false, version: r.version };
+}
+
+/* ---------- Topical authority dashboard ---------- */
+export async function clusterDashboard(userId: string) {
+  const { db } = await ctx(userId);
+  const { CLUSTERS, clustersFor } = await import("@/lib/marketing-seo-model");
+  const pages = (await sitePages(db)).filter((p) => p.kind === "article");
+  const { data: items } = await db.from("marketing_content_items").select("id, article_title, topic, status, series_key, keywords").limit(500);
+  const { data: ideas } = await db.from("marketing_research_ideas").select("title, angle, series_key").is("converted_item_id", null).limit(200);
+  return CLUSTERS.map((c) => ({
+    key: c.key, label: c.label,
+    published: pages.filter((p) => p.published && clustersFor(p.title).includes(c.key)).map((p) => ({ title: p.title, url: p.url })),
+    unpublished: pages.filter((p) => !p.published && clustersFor(p.title).includes(c.key)).map((p) => ({ title: p.title, url: p.url })),
+    drafts: ((items ?? []) as any[]).filter((i) => clustersFor(`${i.article_title ?? ""} ${i.topic ?? ""} ${(i.keywords ?? []).join(" ")}`).includes(c.key)).map((i) => ({ id: i.id, title: i.article_title || i.topic, status: i.status })),
+    suggestions: ((ideas ?? []) as any[]).filter((i) => clustersFor(`${i.title} ${i.angle}`).includes(c.key)).slice(0, 5).map((i) => i.title),
+  }));
 }
