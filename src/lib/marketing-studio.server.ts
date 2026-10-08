@@ -152,3 +152,30 @@ export async function planWeek(userId: string, week: string) {
   }
   return { created, week: monday };
 }
+
+/** Live dashboard signals from existing records. Never invents numbers: each panel reports no_data / not_connected / not_measured. */
+export async function dashboardSignals(userId: string) {
+  const { db } = await ctx(userId);
+  const since = new Date(Date.now() - 14 * 864e5).toISOString();
+  const [stories, regs, ideas, search, metrics, jobs] = await Promise.all([
+    db.from("marketing_research_stories").select("id, headline, publisher, url, published_at, verification_status").is("dismissed_at", null).or("category.is.null,promoted.eq.true").gte("retrieved_at", since).order("score", { ascending: false, nullsFirst: false }).limit(5),
+    db.from("marketing_research_stories").select("id, headline, publisher, url, published_at, verification_status").is("dismissed_at", null).eq("category", "regulatory").gte("retrieved_at", since).order("published_at", { ascending: false }).limit(5),
+    db.from("marketing_research_ideas").select("id, title, series_key, idea_date, converted_item_id").is("converted_item_id", null).order("idea_date", { ascending: false }).limit(5),
+    db.from("marketing_search_rows").select("query, clicks, impressions").gte("day", since.slice(0, 10)).limit(5000),
+    db.from("marketing_post_metrics").select("metrics, captured_on").gte("captured_on", since.slice(0, 10)).limit(2000),
+    (await import("@/lib/marketing-jobs.server")).jobHealth().catch(() => []),
+  ]);
+  const q = new Map<string, { clicks: number; impressions: number }>();
+  for (const r of (search.data ?? []) as any[]) { const c = q.get(r.query) ?? { clicks: 0, impressions: 0 }; c.clicks += r.clicks ?? 0; c.impressions += r.impressions ?? 0; q.set(r.query, c); }
+  const { data: ss } = await db.from("marketing_search_settings").select("site_url").eq("id", 1).maybeSingle();
+  let engagement: number | null = null;
+  for (const m of (metrics.data ?? []) as any[]) for (const k of ["likes", "comments", "shares", "saves", "reactions"]) if (typeof m.metrics?.[k] === "number") engagement = (engagement ?? 0) + m.metrics[k];
+  return {
+    stories: stories.data ?? [], regulatory: regs.data ?? [], ideas: ideas.data ?? [],
+    seo: ss?.site_url ? { state: q.size ? "ok" : "no_data", site: ss.site_url, rows: [...q].sort((a, b) => b[1].impressions - a[1].impressions).slice(0, 5).map(([query, v]) => ({ query, ...v })) } : { state: "not_connected", site: null, rows: [] },
+    social: (metrics.data ?? []).length ? { state: engagement == null ? "no_data" : "ok", engagement, snapshots: (metrics.data ?? []).length } : { state: "not_measured", engagement: null, snapshots: 0 },
+    traffic: { state: "not_connected" as const },
+    leads: { state: "not_measured" as const },
+    jobs,
+  };
+}

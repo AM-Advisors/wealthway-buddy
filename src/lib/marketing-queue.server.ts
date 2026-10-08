@@ -8,6 +8,7 @@
  */
 import { MARKETING_ACCESS, MARKETING_APPROVERS } from "@/lib/marketing-model";
 import { withUtm } from "@/lib/marketing-perf-model";
+import { LINKEDIN_COMPANY_AVAILABLE, LINKEDIN_COMPANY_BLOCKED_MSG, postStatusAfter } from "@/lib/marketing-jobs-model";
 
 const admin = async () => (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
 const LIVE_APPROVERS = ["executive", "executive_approver", "super_admin", "admin"];
@@ -87,9 +88,16 @@ export async function processPost(db: any, p: any, imgs: string[], channels: Map
     const ref = channels.get(t.channel)?.account_ref || null;
     const text = withUtm(p.body, { platform: t.channel, ...utm });
     const base = { post_id: p.id, target_id: t.id, channel: t.channel, mode };
+    if (t.channel === "linkedin" && !LINKEDIN_COMPANY_AVAILABLE) {
+      // Known blocked integration: no attempt, no failure alert, never "published". Stays blocked until a person releases it.
+      if (t.status !== "blocked") {
+        await db.from("marketing_post_targets").update({ status: "blocked", error: LINKEDIN_COMPANY_BLOCKED_MSG }).eq("id", t.id);
+        await log(db, { ...base, action: "blocked", result: "blocked", error: LINKEDIN_COMPANY_BLOCKED_MSG });
+      }
+      continue;
+    }
     try {
       if (!ref) throw new Error("Channel not connected.");
-      if (t.channel === "linkedin") throw new Error("LinkedIn company posting isn't available yet.");
       if (mode === "test") {
         const ext = t.channel === "facebook" ? await pub.testFacebook(ref, text, imgs) : await pub.validateInstagram(ref, text, imgs);
         await db.from("marketing_post_targets").update({ status: "test_passed", external_id: null, error: null, mode, attempts: t.attempts + 1 }).eq("id", t.id);
@@ -120,11 +128,7 @@ export async function processPost(db: any, p: any, imgs: string[], channels: Map
   }
   const { data: after } = await db.from("marketing_post_targets").select("status").eq("post_id", p.id);
   const st = ((after ?? []) as any[]).map((x) => x.status);
-  let status: string;
-  if (st.includes("failed")) status = "failed";
-  else if (mode === "test") status = "approved";
-  else if (st.every((s) => s === "published")) status = "published";
-  else status = "publishing";
+  const status = postStatusAfter(mode, st);
   await db.from("marketing_posts").update({
     status, published_at: status === "published" ? new Date().toISOString() : null,
     ...(mode === "test" ? { scheduled_at: null } : {}),
