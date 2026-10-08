@@ -15,3 +15,8 @@
 - HIGH: no live fund-expense workflow posting paid (cash) vs accrued (payable) journals with review; only fund liabilities add/settle.
 - HIGH: live fee engine reads `management_fee_terms`; Walkthrough has none, so it yields no fee.
 - DATA CONFLICT: live Northwind side letter is 1.50% and status "proposed"; validated Phase 2B used 1.25% executed. Independent Q1 fee on committed capital: $106,062.50 (validated terms), $109,187.50 (live 1.50%), $115,437.50 (side letter not effective). Not changed to hit benchmark.
+
+## Prerequisites brief, Part A (2026-10-08) — SOURCE-OF-TRUTH CONFLICT, nothing written
+- Inspected: migration source (walkthrough-source.ts: class A/B only, no side-letter rate), live side_letters (Northwind 1.50%, PROPOSED, effective 2025-03-31, current_version 0, "DEMO / SYNTHETIC side letter"), side_letter_versions/events (none), management_fee_terms (none), fund_fee_terms (2% committed, fund-wide).
+- 1.25% exists only as a hard-coded value in the Phase 2B regression fixture (walkthrough-period.ts, "DEMO Northwind side letter v1", added 2026-10-07). No document, version, approval or audit event backs it.
+- Evidence required to support 1.25%: an existing synthetic Northwind side-letter document/version stating 1.25% for Q1 2026 with effective date, plus a recorded approval by someone other than the preparer. None exists; none was created.
