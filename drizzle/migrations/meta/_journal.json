@@ -1359,6 +1359,13 @@
       "when": 1791418809379,
       "tag": "0193_investor_compliance_resolutions",
       "breakpoints": true
+    },
+    {
+      "idx": 194,
+      "version": "7",
+      "when": 1791419348477,
+      "tag": "0194_investor_credits",
+      "breakpoints": true
     }
   ]
 }

@@ -24026,6 +24026,125 @@ export type Database = {
         }
         Relationships: []
       }
+      investor_credit_events: {
+        Row: {
+          actor_user_id: string
+          amount_cents: number | null
+          created_at: string
+          credit_id: string
+          event: string
+          from_status: string | null
+          id: string
+          reason: string | null
+          to_status: string | null
+        }
+        Insert: {
+          actor_user_id: string
+          amount_cents?: number | null
+          created_at?: string
+          credit_id: string
+          event: string
+          from_status?: string | null
+          id?: string
+          reason?: string | null
+          to_status?: string | null
+        }
+        Update: {
+          actor_user_id?: string
+          amount_cents?: number | null
+          created_at?: string
+          credit_id?: string
+          event?: string
+          from_status?: string | null
+          id?: string
+          reason?: string | null
+          to_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investor_credit_events_credit_id_fkey"
+            columns: ["credit_id"]
+            isOneToOne: false
+            referencedRelation: "investor_credits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      investor_credits: {
+        Row: {
+          applied_cents: number
+          balance_cents: number
+          bank_transaction_id: string
+          capital_call_line_id: string | null
+          created_at: string
+          created_by: string
+          excess_cents: number
+          expected_funding_id: string | null
+          funding_match_id: string | null
+          id: string
+          investment_profile_id: string | null
+          investor_user_id: string | null
+          journal_entry_id: string | null
+          offering_id: string
+          position_id: string
+          reason: string
+          received_cents: number
+          received_on: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          source_reference: string | null
+          status: string
+        }
+        Insert: {
+          applied_cents: number
+          balance_cents: number
+          bank_transaction_id: string
+          capital_call_line_id?: string | null
+          created_at?: string
+          created_by: string
+          excess_cents: number
+          expected_funding_id?: string | null
+          funding_match_id?: string | null
+          id?: string
+          investment_profile_id?: string | null
+          investor_user_id?: string | null
+          journal_entry_id?: string | null
+          offering_id: string
+          position_id: string
+          reason: string
+          received_cents: number
+          received_on: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_reference?: string | null
+          status?: string
+        }
+        Update: {
+          applied_cents?: number
+          balance_cents?: number
+          bank_transaction_id?: string
+          capital_call_line_id?: string | null
+          created_at?: string
+          created_by?: string
+          excess_cents?: number
+          expected_funding_id?: string | null
+          funding_match_id?: string | null
+          id?: string
+          investment_profile_id?: string | null
+          investor_user_id?: string | null
+          journal_entry_id?: string | null
+          offering_id?: string
+          position_id?: string
+          reason?: string
+          received_cents?: number
+          received_on?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_reference?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       investor_document_approvals: {
         Row: {
           decided_at: string
