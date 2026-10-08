@@ -2,9 +2,9 @@ import { guard, step, U, N, BATCH } from "./lib";
 const d = await guard();
 const cc = await import("@/lib/capital-calls.server");
 // 1. Temporary minimum QA access (operations only), recorded.
-for (const [k, uid] of Object.entries(U)) {
-  const { error } = await d.from("user_roles").upsert({ user_id: uid, role: "operations" }, { onConflict: "user_id,role", ignoreDuplicates: true });
-  console.log("grant operations", k, error?.message ?? "ok");
+for (const [k, uid] of Object.entries(U)) for (const role of ["operations","admin"]) {
+  const { error } = await d.from("user_roles").upsert({ user_id: uid, role }, { onConflict: "user_id,role", ignoreDuplicates: true });
+  console.log("grant", role, k, error?.message ?? "ok");
 }
 const { data: existing } = await d.from("capital_calls").select("id,status,call_number").eq("offering_id", N).order("call_number");
 console.log("existing calls", JSON.stringify(existing));
