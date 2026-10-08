@@ -23,7 +23,7 @@ import {
   advanceReconciliationJournal,
   prepareReconciliationJournal,
 } from "@/lib/reconciliation.server";
-import { ledgerBookForOffering } from "@/lib/accounting.server";
+import { ledgerBookForOffering, seedChartOfAccounts } from "@/lib/accounting.server";
 import {
   callLineStatus,
   callLineSummary,
