@@ -25,8 +25,8 @@ async function ctx(userId: string, manager = false) {
 }
 
 /* ---------- AI (streamed Responses call, strict JSON) ---------- */
-class AiStop extends Error { constructor(public status: number, msg: string) { super(msg); } }
-async function aiJson(instructions: string, input: string, name: string, schema: any): Promise<any> {
+export class AiStop extends Error { constructor(public status: number, msg: string) { super(msg); } }
+export async function aiJson(instructions: string, input: string, name: string, schema: any): Promise<any> {
   const key = process.env["LOVABLE_API_KEY"];
   if (!key) throw new AiStop(401, "AI isn't configured.");
   const res = await fetch("https://ai.gateway.lovable.dev/v1/responses", {
