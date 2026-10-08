@@ -26,7 +26,7 @@ const has = (roles: string[], set: string[]) => roles.some((r) => set.includes(r
 
 export type MoveInput = {
   from: string; to: string; roles: string[]; actorId: string; authorId: string | null;
-  publishAt: string | null; note?: string | null;
+  publishAt: string | null; note?: string | null | undefined;
 };
 
 /** Returns null when the move is allowed, otherwise the reason it is refused. Server re-checks. */

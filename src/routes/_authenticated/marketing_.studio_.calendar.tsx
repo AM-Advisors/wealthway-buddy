@@ -108,9 +108,9 @@ function EditorialCalendar() {
       )}
 
       {view === "day" && (
-        <div {...drop(days[0])} className="space-y-2 rounded-lg border border-border p-3">
-          {items.filter((i) => i.publish_at && same(new Date(i.publish_at), days[0])).map((i) => <Card key={i.id} i={i} />)}
-          <Button size="sm" variant="outline" onClick={() => newOn(days[0])}>Add item for this day</Button>
+        <div {...drop(days[0]!)} className="space-y-2 rounded-lg border border-border p-3">
+          {items.filter((i) => i.publish_at && same(new Date(i.publish_at), days[0]!)).map((i) => <Card key={i.id} i={i} />)}
+          <Button size="sm" variant="outline" onClick={() => newOn(days[0]!)}>Add item for this day</Button>
         </div>
       )}
 

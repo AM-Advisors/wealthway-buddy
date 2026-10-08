@@ -15,7 +15,7 @@ export function useStudio(from: Date, to: Date) {
   return useQuery({ queryKey: ["studio", from.toISOString(), to.toISOString()], queryFn: () => load({ data: { from: from.toISOString(), to: to.toISOString() } }) });
 }
 
-export function SeriesChip({ s, short }: { s?: Series; short?: boolean }) {
+export function SeriesChip({ s, short }: { s?: Series | undefined; short?: boolean }) {
   if (!s) return null;
   return (
     <span className="inline-flex items-center gap-1.5 rounded-sm border border-border bg-card px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider">
