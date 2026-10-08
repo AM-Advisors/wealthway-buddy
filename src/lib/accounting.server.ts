@@ -18,6 +18,7 @@ import {
   DEFAULT_FUND_CHART,
   assertBalanced,
   canTransitionJournal,
+  journalActorError,
   canTransitionPeriod,
   canTransitionReport,
   domainForReport,
@@ -359,17 +360,10 @@ export async function advanceJournalEntry(
   const from = entry.status as JournalStatus;
   if (!canTransitionJournal(from, to)) fail(`A ${from} entry cannot move to ${to}.`);
 
-  if (to === "reviewed" && entry.prepared_by === userId) {
-    fail("An entry must be reviewed by someone other than the person who prepared it.");
-  }
-  if (to === "approved" && entry.prepared_by === userId) {
-    fail("An entry must be approved by someone other than the person who prepared it.");
-  }
+  const actorErr = journalActorError(to, { preparedBy: entry.prepared_by, approvedBy: entry.approved_by }, userId);
+  if (actorErr) fail(actorErr);
   if (to === "posted") {
     await assertAdmin(userId);
-    if (entry.approved_by === userId) {
-      fail("An entry must be posted by someone other than its approver.");
-    }
     const { data: lines } = await db()
       .from("journal_lines")
       .select("debit_cents, credit_cents")

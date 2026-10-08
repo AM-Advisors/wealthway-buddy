@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { FundMigrationBoard } from "@/components/fund-migration-board";
+import { TakeoverAdmissionsPanel } from "@/components/takeover-admissions-panel";
 
 export const Route = createFileRoute("/_authenticated/admin/fund-migration/$fundId")({
   component: FundMigrationPage,
@@ -35,6 +36,7 @@ function FundMigrationPage() {
         </p>
       </header>
       <FundMigrationBoard offeringId={fundId} />
+      <div className="mt-10"><TakeoverAdmissionsPanel offeringId={fundId} /></div>
     </main>
   );
 }

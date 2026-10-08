@@ -208,3 +208,13 @@ describe("tax", () => {
     expect(k1Ready({ status: "locked" }, { allocations_status: "complete" })).toBe(true);
   });
 });
+
+describe("journal separation of duties (permanent)", () => {
+  it("preparer cannot review or approve; approver cannot post", async () => {
+    const { journalActorError } = await import("@/lib/accounting-model");
+    expect(journalActorError("reviewed", { preparedBy: "p", approvedBy: null }, "p")).toMatch(/reviewed by someone other/);
+    expect(journalActorError("approved", { preparedBy: "p", approvedBy: null }, "p")).toMatch(/approved by someone other/);
+    expect(journalActorError("posted", { preparedBy: "p", approvedBy: "a" }, "a")).toMatch(/posted by someone other/);
+    expect(journalActorError("reviewed", { preparedBy: "p", approvedBy: null }, "r")).toBeNull();
+  });
+});

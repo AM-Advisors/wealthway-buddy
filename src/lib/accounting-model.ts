@@ -108,6 +108,14 @@ export function canTransitionJournal(from: JournalStatus, to: JournalStatus) {
   return JOURNAL_TRANSITIONS[from].includes(to);
 }
 
+/** Separation of duties on journal workflow steps. */
+export function journalActorError(to: JournalStatus, e: { preparedBy: string | null; approvedBy: string | null }, actor: string): string | null {
+  if (to === "reviewed" && e.preparedBy === actor) return "An entry must be reviewed by someone other than the person who prepared it.";
+  if (to === "approved" && e.preparedBy === actor) return "An entry must be approved by someone other than the person who prepared it.";
+  if (to === "posted" && e.approvedBy === actor) return "An entry must be posted by someone other than its approver.";
+  return null;
+}
+
 export type DraftLine = {
   accountId: string;
   debitCents?: number;
