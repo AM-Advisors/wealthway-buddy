@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
+import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -129,6 +130,8 @@ export function ItemDrawer({ id, series, people, open, onClose, draft }: {
               <p className="text-[11px] text-muted-foreground">Approval here plans the content; the linked post or article still needs its own publishing approval. Nothing goes public automatically.</p>
             </section>
           )}
+
+          {id && <Button asChild size="sm" className="w-full"><Link to="/marketing/studio/content/$itemId" params={{ itemId: id }}>Open content workspace (article, SEO, social, design, reviews)</Link></Button>}
 
           {!!cq.data?.length && (
             <section className="space-y-1 rounded-md border border-border p-3">
