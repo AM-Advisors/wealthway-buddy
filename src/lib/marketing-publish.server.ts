@@ -121,7 +121,11 @@ export async function publishFacebook(pageId: string, text: string, images: stri
   const p = new URLSearchParams({ access_token: token });
   let url: string;
   if (urls[0]) { p.set("url", urls[0]); p.set("caption", text); url = `${base}/photos`; }
-  else { p.set("message", text); url = `${base}/feed`; }
+  else {
+    p.set("message", text); url = `${base}/feed`;
+    const link = text.match(/https?:\/\/[^\s)<>"']+/)?.[0]; // link preview card
+    if (link) p.set("link", link.replace(/[.,!?;:]+$/, ""));
+  }
   const res = await fetch(url, { method: "POST", body: p });
   if (!res.ok) await fail(res, "Facebook post");
   const j: any = await res.json();
@@ -172,4 +176,69 @@ export async function sendMarketingEmail(to: string, subject: string, html: stri
     }),
   });
   if (!res.ok) await fail(res, "Email send");
+}
+
+/* ---------- Confirmation, test mode and insights (Meta Graph, supported endpoints only) ---------- */
+/** A submission only counts once the platform returns the object with a permalink. */
+export async function confirmMeta(channel: "facebook" | "instagram", ref: string, externalId: string): Promise<{ confirmed: boolean; permalink: string | null; error?: string }> {
+  const { token } = await metaTarget(ref);
+  const fields = channel === "facebook" ? "id,permalink_url,is_published" : "id,permalink";
+  const r = await fetch(`${GRAPH}/${encodeURIComponent(externalId)}?${new URLSearchParams({ fields, access_token: token })}`);
+  const body = await r.text();
+  if (!r.ok) return { confirmed: false, permalink: null, error: `[${r.status}] ${body.slice(0, 300)}` };
+  const j: any = JSON.parse(body);
+  const permalink = j.permalink_url ?? j.permalink ?? null;
+  if (channel === "facebook" && j.is_published === false) return { confirmed: false, permalink, error: "Facebook reports the post as unpublished." };
+  return { confirmed: !!j.id && !!permalink, permalink, error: permalink ? undefined : "No permalink returned yet." };
+}
+
+/** Test mode: Facebook gets a nonpublic (unpublished) Page post; Instagram has no private destination, so it is validated only. */
+export async function testFacebook(pageId: string, text: string, images: string[]): Promise<string> {
+  const { token } = await metaTarget(pageId);
+  const p = new URLSearchParams({ message: `[TEST — not public] ${text}`, published: "false", access_token: token });
+  if (images[0]) p.set("link", images[0]);
+  const res = await fetch(`${GRAPH}/${encodeURIComponent(pageId)}/feed`, { method: "POST", body: p });
+  if (!res.ok) await fail(res, "Facebook test post");
+  return String((await res.json()).id);
+}
+export async function validateInstagram(ref: string, text: string, images: string[]) {
+  if (!images.length) throw new Error("Instagram needs at least one image.");
+  if (text.length > 2200) throw new Error("Instagram captions are limited to 2,200 characters.");
+  if ((text.match(/#/g) ?? []).length > 30) throw new Error("Instagram allows at most 30 hashtags.");
+  const { token, id } = await metaTarget(ref);
+  const r = await fetch(`${GRAPH}/${encodeURIComponent(id)}?${new URLSearchParams({ fields: "id,username", access_token: token })}`);
+  if (!r.ok) await fail(r, "Instagram account check");
+  for (const u of images) { const h = await fetch(u, { method: "HEAD" }); if (!h.ok) throw new Error(`An image couldn't be reached [${h.status}].`); }
+  return "validated";
+}
+
+/** Post-level metrics. Any metric the API doesn't return is reported as unavailable (never zero). */
+export async function metaInsights(channel: "facebook" | "instagram", ref: string, externalId: string) {
+  const { token } = await metaTarget(ref);
+  const out: Record<string, number> = {}; const unavailable: string[] = [];
+  const get = async (path: string, q: Record<string, string>) => {
+    const r = await fetch(`${GRAPH}/${path}?${new URLSearchParams({ ...q, access_token: token })}`);
+    return r.ok ? r.json() : null;
+  };
+  if (channel === "facebook") {
+    const base: any = await get(encodeURIComponent(externalId), { fields: "shares,comments.summary(true).limit(0),reactions.summary(true).limit(0)" });
+    if (base) { out.shares = base.shares?.count ?? 0; out.comments = base.comments?.summary?.total_count ?? 0; out.reactions = base.reactions?.summary?.total_count ?? 0; }
+    else unavailable.push("shares", "comments", "reactions");
+    const ins: any = await get(`${encodeURIComponent(externalId)}/insights`, { metric: "post_impressions,post_impressions_unique,post_clicks" });
+    const val = (n: string) => ins?.data?.find((d: any) => d.name === n)?.values?.[0]?.value;
+    for (const [k, n] of [["impressions", "post_impressions"], ["reach", "post_impressions_unique"], ["link_clicks", "post_clicks"]] as const) {
+      const v = val(n); if (typeof v === "number") out[k] = v; else unavailable.push(k);
+    }
+    unavailable.push("saves");
+  } else {
+    const base: any = await get(encodeURIComponent(externalId), { fields: "like_count,comments_count" });
+    if (base) { out.reactions = base.like_count ?? 0; out.comments = base.comments_count ?? 0; } else unavailable.push("reactions", "comments");
+    const ins: any = await get(`${encodeURIComponent(externalId)}/insights`, { metric: "reach,saved,shares,views" });
+    const val = (n: string) => ins?.data?.find((d: any) => d.name === n)?.values?.[0]?.value;
+    for (const [k, n] of [["reach", "reach"], ["saves", "saved"], ["shares", "shares"], ["impressions", "views"]] as const) {
+      const v = val(n); if (typeof v === "number") out[k] = v; else unavailable.push(k);
+    }
+    unavailable.push("link_clicks");
+  }
+  return { metrics: out, unavailable };
 }

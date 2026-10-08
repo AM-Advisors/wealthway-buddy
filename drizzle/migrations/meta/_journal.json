@@ -1408,6 +1408,13 @@
       "when": 1791482258144,
       "tag": "0200_marketing_content_workspace",
       "breakpoints": true
+    },
+    {
+      "idx": 201,
+      "version": "7",
+      "when": 1791482829158,
+      "tag": "0201_marketing_publishing_analytics",
+      "breakpoints": true
     }
   ]
 }

@@ -29265,33 +29265,83 @@ export type Database = {
         }
         Relationships: []
       }
+      marketing_post_metrics: {
+        Row: {
+          captured_on: string
+          created_at: string
+          id: string
+          metrics: Json
+          source: string
+          target_id: string
+          unavailable: string[]
+        }
+        Insert: {
+          captured_on: string
+          created_at?: string
+          id?: string
+          metrics: Json
+          source: string
+          target_id: string
+          unavailable?: string[]
+        }
+        Update: {
+          captured_on?: string
+          created_at?: string
+          id?: string
+          metrics?: Json
+          source?: string
+          target_id?: string
+          unavailable?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_post_metrics_target_id_fkey"
+            columns: ["target_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_post_targets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marketing_post_targets: {
         Row: {
+          attempts: number
           channel: string
+          confirmed_at: string | null
           created_at: string
           error: string | null
           external_id: string | null
           id: string
+          mode: string | null
+          permalink: string | null
           post_id: string
           published_at: string | null
           status: string
         }
         Insert: {
+          attempts?: number
           channel: string
+          confirmed_at?: string | null
           created_at?: string
           error?: string | null
           external_id?: string | null
           id?: string
+          mode?: string | null
+          permalink?: string | null
           post_id: string
           published_at?: string | null
           status?: string
         }
         Update: {
+          attempts?: number
           channel?: string
+          confirmed_at?: string | null
           created_at?: string
           error?: string | null
           external_id?: string | null
           id?: string
+          mode?: string | null
+          permalink?: string | null
           post_id?: string
           published_at?: string | null
           status?: string
@@ -29373,6 +29423,102 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      marketing_publish_attempts: {
+        Row: {
+          action: string
+          actor_id: string | null
+          channel: string
+          created_at: string
+          error: string | null
+          external_id: string | null
+          id: string
+          mode: string
+          permalink: string | null
+          post_id: string
+          result: string
+          target_id: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          channel: string
+          created_at?: string
+          error?: string | null
+          external_id?: string | null
+          id?: string
+          mode: string
+          permalink?: string | null
+          post_id: string
+          result: string
+          target_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          channel?: string
+          created_at?: string
+          error?: string | null
+          external_id?: string | null
+          id?: string
+          mode?: string
+          permalink?: string | null
+          post_id?: string
+          result?: string
+          target_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_publish_attempts_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketing_publish_attempts_target_id_fkey"
+            columns: ["target_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_post_targets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketing_publishing_mode: {
+        Row: {
+          approval_reason: string | null
+          approved_at: string | null
+          approved_by: string | null
+          id: number
+          mode: string
+          request_reason: string | null
+          requested_at: string | null
+          requested_by: string | null
+          updated_at: string
+        }
+        Insert: {
+          approval_reason?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          id?: number
+          mode?: string
+          request_reason?: string | null
+          requested_at?: string | null
+          requested_by?: string | null
+          updated_at?: string
+        }
+        Update: {
+          approval_reason?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          id?: number
+          mode?: string
+          request_reason?: string | null
+          requested_at?: string | null
+          requested_by?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       marketing_releases: {
         Row: {
@@ -29736,6 +29882,69 @@ export type Database = {
             referencedColumns: ["key"]
           },
         ]
+      }
+      marketing_search_rows: {
+        Row: {
+          clicks: number
+          ctr: number
+          day: string
+          id: string
+          impressions: number
+          page: string
+          position: number
+          query: string
+          site_url: string
+        }
+        Insert: {
+          clicks: number
+          ctr: number
+          day: string
+          id?: string
+          impressions: number
+          page: string
+          position: number
+          query: string
+          site_url: string
+        }
+        Update: {
+          clicks?: number
+          ctr?: number
+          day?: string
+          id?: string
+          impressions?: number
+          page?: string
+          position?: number
+          query?: string
+          site_url?: string
+        }
+        Relationships: []
+      }
+      marketing_search_settings: {
+        Row: {
+          chosen_at: string | null
+          chosen_by: string | null
+          id: number
+          last_error: string | null
+          last_refresh_at: string | null
+          site_url: string | null
+        }
+        Insert: {
+          chosen_at?: string | null
+          chosen_by?: string | null
+          id?: number
+          last_error?: string | null
+          last_refresh_at?: string | null
+          site_url?: string | null
+        }
+        Update: {
+          chosen_at?: string | null
+          chosen_by?: string | null
+          id?: number
+          last_error?: string | null
+          last_refresh_at?: string | null
+          site_url?: string | null
+        }
+        Relationships: []
       }
       marketing_series: {
         Row: {

@@ -28,7 +28,13 @@ export const Route = createFileRoute("/api/public/marketing/run")({
           const { runResearch } = await import("@/lib/marketing-research.server");
           research = await runResearch({ ideas: now.getUTCHours() === 12 }).catch((e) => { console.error("marketing research", e); return { error: true }; });
         }
-        return Response.json({ ...result, clickup, drive, research });
+        // Performance: platform metrics + Search Console once a day (~7am Denver). Read-only.
+        let perf: unknown = null;
+        if (now.getUTCHours() === 13 && now.getUTCMinutes() >= 40 && now.getUTCMinutes() < 45) {
+          const q = await import("@/lib/marketing-queue.server");
+          perf = { metrics: await q.refreshMetrics().catch((e) => ({ error: String(e) })), search: await q.refreshSearch().catch((e) => ({ error: String(e) })) };
+        }
+        return Response.json({ ...result, clickup, drive, research, perf });
       },
     },
   },

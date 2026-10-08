@@ -215,6 +215,7 @@ import { Route as AuthenticatedMarketingDriveRouteImport } from './routes/_authe
 import { Route as AuthenticatedMarketingEmailsRouteImport } from './routes/_authenticated/marketing_.emails'
 import { Route as AuthenticatedMarketingFlowsRouteImport } from './routes/_authenticated/marketing_.flows'
 import { Route as AuthenticatedMarketingImportsRouteImport } from './routes/_authenticated/marketing_.imports'
+import { Route as AuthenticatedMarketingPerformanceRouteImport } from './routes/_authenticated/marketing_.performance'
 import { Route as AuthenticatedMarketingPostsRouteImport } from './routes/_authenticated/marketing_.posts'
 import { Route as AuthenticatedMarketingStudioRouteImport } from './routes/_authenticated/marketing_.studio'
 import { Route as AuthenticatedMyFundsIndexRouteImport } from './routes/_authenticated/my-funds.index'
@@ -1572,6 +1573,12 @@ const AuthenticatedMarketingImportsRoute =
   AuthenticatedMarketingImportsRouteImport.update({
     id: '/marketing_/imports',
     path: '/marketing/imports',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedMarketingPerformanceRoute =
+  AuthenticatedMarketingPerformanceRouteImport.update({
+    id: '/marketing_/performance',
+    path: '/marketing/performance',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedMarketingPostsRoute =
@@ -2997,6 +3004,7 @@ export interface FileRoutesByFullPath {
   '/marketing/emails': typeof AuthenticatedMarketingEmailsRoute
   '/marketing/flows': typeof AuthenticatedMarketingFlowsRoute
   '/marketing/imports': typeof AuthenticatedMarketingImportsRoute
+  '/marketing/performance': typeof AuthenticatedMarketingPerformanceRoute
   '/marketing/posts': typeof AuthenticatedMarketingPostsRoute
   '/marketing/studio': typeof AuthenticatedMarketingStudioRoute
   '/my-funds/$fundId': typeof AuthenticatedMyFundsFundIdRoute
@@ -3406,6 +3414,7 @@ export interface FileRoutesByTo {
   '/marketing/emails': typeof AuthenticatedMarketingEmailsRoute
   '/marketing/flows': typeof AuthenticatedMarketingFlowsRoute
   '/marketing/imports': typeof AuthenticatedMarketingImportsRoute
+  '/marketing/performance': typeof AuthenticatedMarketingPerformanceRoute
   '/marketing/posts': typeof AuthenticatedMarketingPostsRoute
   '/marketing/studio': typeof AuthenticatedMarketingStudioRoute
   '/my-funds/$fundId': typeof AuthenticatedMyFundsFundIdRoute
@@ -3823,6 +3832,7 @@ export interface FileRoutesById {
   '/_authenticated/marketing_/emails': typeof AuthenticatedMarketingEmailsRoute
   '/_authenticated/marketing_/flows': typeof AuthenticatedMarketingFlowsRoute
   '/_authenticated/marketing_/imports': typeof AuthenticatedMarketingImportsRoute
+  '/_authenticated/marketing_/performance': typeof AuthenticatedMarketingPerformanceRoute
   '/_authenticated/marketing_/posts': typeof AuthenticatedMarketingPostsRoute
   '/_authenticated/marketing_/studio': typeof AuthenticatedMarketingStudioRoute
   '/_authenticated/my-funds/$fundId': typeof AuthenticatedMyFundsFundIdRoute
@@ -4241,6 +4251,7 @@ export interface FileRouteTypes {
     | '/marketing/emails'
     | '/marketing/flows'
     | '/marketing/imports'
+    | '/marketing/performance'
     | '/marketing/posts'
     | '/marketing/studio'
     | '/my-funds/$fundId'
@@ -4650,6 +4661,7 @@ export interface FileRouteTypes {
     | '/marketing/emails'
     | '/marketing/flows'
     | '/marketing/imports'
+    | '/marketing/performance'
     | '/marketing/posts'
     | '/marketing/studio'
     | '/my-funds/$fundId'
@@ -5066,6 +5078,7 @@ export interface FileRouteTypes {
     | '/_authenticated/marketing_/emails'
     | '/_authenticated/marketing_/flows'
     | '/_authenticated/marketing_/imports'
+    | '/_authenticated/marketing_/performance'
     | '/_authenticated/marketing_/posts'
     | '/_authenticated/marketing_/studio'
     | '/_authenticated/my-funds/$fundId'
@@ -6795,6 +6808,13 @@ declare module '@tanstack/react-router' {
       path: '/marketing/imports'
       fullPath: '/marketing/imports'
       preLoaderRoute: typeof AuthenticatedMarketingImportsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/marketing_/performance': {
+      id: '/_authenticated/marketing_/performance'
+      path: '/marketing/performance'
+      fullPath: '/marketing/performance'
+      preLoaderRoute: typeof AuthenticatedMarketingPerformanceRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/marketing_/posts': {
@@ -8677,6 +8697,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMarketingEmailsRoute: typeof AuthenticatedMarketingEmailsRoute
   AuthenticatedMarketingFlowsRoute: typeof AuthenticatedMarketingFlowsRoute
   AuthenticatedMarketingImportsRoute: typeof AuthenticatedMarketingImportsRoute
+  AuthenticatedMarketingPerformanceRoute: typeof AuthenticatedMarketingPerformanceRoute
   AuthenticatedMarketingPostsRoute: typeof AuthenticatedMarketingPostsRoute
   AuthenticatedMarketingStudioRoute: typeof AuthenticatedMarketingStudioRoute
   AuthenticatedMyFundsFundIdRoute: typeof AuthenticatedMyFundsFundIdRoute
@@ -8970,6 +8991,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMarketingEmailsRoute: AuthenticatedMarketingEmailsRoute,
   AuthenticatedMarketingFlowsRoute: AuthenticatedMarketingFlowsRoute,
   AuthenticatedMarketingImportsRoute: AuthenticatedMarketingImportsRoute,
+  AuthenticatedMarketingPerformanceRoute:
+    AuthenticatedMarketingPerformanceRoute,
   AuthenticatedMarketingPostsRoute: AuthenticatedMarketingPostsRoute,
   AuthenticatedMarketingStudioRoute: AuthenticatedMarketingStudioRoute,
   AuthenticatedMyFundsFundIdRoute: AuthenticatedMyFundsFundIdRoute,
