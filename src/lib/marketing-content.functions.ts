@@ -13,7 +13,8 @@ const pkg = z.object({
   body_html: s(100_000), faq: z.array(z.object({ q: s(500), a: s(2000) })).max(15),
   internal_links: z.array(z.object({ label: s(300), url: s(2000) })).max(20),
   citations: z.array(z.object({ label: s(300), url: s(2000) })).max(40),
-  schema_jsonld: s(20_000), cta: s(500),
+  schema_jsonld: s(20_000), cta: s(500), cta_options: z.array(s(500)).max(5).optional(),
+  claims: z.array(z.object({ text: s(2000), kind: z.enum(["fact", "analysis", "opinion", "projection", "hypothetical"]), source_url: s(2000), verification: z.enum(["sourced", "unverified", "not_applicable"]).optional() })).max(60).optional(),
   social: z.object({ linkedin_company: s(3000), linkedin_executive: s(3000), facebook: s(3000), instagram: s(2200), x: s(280), email_subject: s(200), email_body: s(5000) }),
   graphics: z.array(z.object({ template: s(40), size: s(20), headline: s(300), subhead: s(500), stat: s(120), stat_source_url: s(2000), bullets: z.array(s(300)).max(10), stat_unverified: z.boolean().optional() })).max(10),
 });
