@@ -64,10 +64,6 @@ export async function getPost(userId: string, id: string) {
   const { db, canApprove } = await requireMarketing(userId);
   const { data: p } = await db.from("marketing_posts").select("*").eq("id", id).maybeSingle();
   if (!p) throw new Error("Post not found.");
-  if (action === "approve") {
-    const { data: linked } = await db.from("marketing_content_items").select("status").contains("post_ids", [id]);
-    if ((linked ?? []).some((i: any) => !["approved", "scheduled", "published", "performance_review"].includes(i.status))) throw new Error("This post belongs to a Marketing Studio item that isn't approved yet.");
-  }
   const [{ data: targets }, { data: history }] = await Promise.all([
     db.from("marketing_post_targets").select("*").eq("post_id", id),
     db.from("marketing_approvals").select("*").eq("item_type", "post").eq("item_id", id).order("created_at", { ascending: false }),
@@ -106,6 +102,10 @@ export async function decidePost(userId: string, id: string, action: "submit" | 
   const { db, canApprove } = await requireMarketing(userId);
   const { data: p } = await db.from("marketing_posts").select("*").eq("id", id).maybeSingle();
   if (!p) throw new Error("Post not found.");
+  if (action === "approve") {
+    const { data: linked } = await db.from("marketing_content_items").select("status").contains("post_ids", [id]);
+    if ((linked ?? []).some((i: any) => !["approved", "scheduled", "published", "performance_review"].includes(i.status))) throw new Error("This post belongs to a Marketing Studio item that isn't approved yet.");
+  }
   if (action === "submit") {
     if (p.status !== "draft" && p.status !== "rejected") throw new Error("Only drafts can be submitted.");
     const probs = postProblems({ title: p.title, body: p.body, channels: p.channels, imageCount: (p.image_paths ?? []).length });

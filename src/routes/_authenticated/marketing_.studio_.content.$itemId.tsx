@@ -46,7 +46,7 @@ function Workspace() {
 
   return (
     <MkPage title={item.article_title || "Content workspace"} intro={`${d.series?.name ?? item.series_key} · package v${item.package_version || 0}`}
-      actions={<div className="flex flex-wrap items-center gap-2"><StatusPill s={item.status} /><Button variant="outline" asChild><Link to="/marketing/studio">Back to Studio</Link></Button></div>}>
+      actions={<div className="flex flex-wrap items-center gap-2"><StatusPill status={item.status} /><Button variant="outline" asChild><Link to="/marketing/studio">Back to Studio</Link></Button></div>}>
       <div className="space-y-4">
         {latest?.ai_generated && <p className="rounded-md bg-muted px-3 py-2 text-xs">Internal note: version {latest.version} is an AI draft{latest.model ? ` (${latest.model})` : ""}. Every fact must pass review before approval.</p>}
         {item.series_key === "founders_friday" && <p className="rounded-md border border-border px-3 py-2 text-xs">Founders Friday: the AI never writes Alyssa's experiences or opinions. Alyssa must record her own review before this can be approved.</p>}
