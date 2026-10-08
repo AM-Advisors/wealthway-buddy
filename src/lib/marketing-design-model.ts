@@ -192,9 +192,10 @@ export function buildTemplate(key: TemplateKey, format: DesignFormat, kit: Brand
   } else if (key === "wednesday_poll") {
     layers.push(T({ role: "headline", text: headline, y: m + Math.round(60 * u), h: Math.round(260 * u), font: "heading", weight: 700, size: Math.round(68 * u), align: "center" }));
     ["Option A", "Option B", "Option C"].forEach((o, i) => {
-      const y = Math.round(h * 0.45) + i * Math.round(120 * u);
-      layers.push({ id: uid(), type: "shape", shape: "rect", fill: colorHex(kit, "slate"), radius: Math.round(20 * u), opacity: 1, x: m, y, w: cw, h: Math.round(96 * u) });
-      layers.push(T({ text: o, x: m + Math.round(32 * u), w: cw - Math.round(64 * u), y: y + Math.round(26 * u), h: Math.round(50 * u), color: colorHex(kit, "navy"), weight: 600 }));
+      const top = Math.round(h * 0.42), step = Math.min(Math.round(120 * u), Math.floor((h - m - Math.round(80 * u) - top) / 3));
+      const y = top + i * step, bh = Math.round(step * 0.82);
+      layers.push({ id: uid(), type: "shape", shape: "rect", fill: colorHex(kit, "slate"), radius: Math.round(20 * u), opacity: 1, x: m, y, w: cw, h: bh });
+      layers.push(T({ text: o, x: m + Math.round(32 * u), w: cw - Math.round(64 * u), y: y + Math.round(bh * 0.2), h: Math.round(bh * 0.6), size: Math.max(Math.round(28 * u), Math.min(Math.round(34 * u), Math.round(bh * 0.45))), color: colorHex(kit, "navy"), weight: 600 }));
     });
   } else if (key === "academy_compare") {
     layers.push(T({ role: "headline", text: headline, y: m + Math.round(40 * u), h: Math.round(200 * u), font: "heading", weight: 700, size: Math.round(64 * u) }));
