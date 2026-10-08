@@ -37,6 +37,7 @@ export function postProblems(p: { title: string; body: string; channels: string[
   if (!p.channels.length) out.push("Pick at least one channel.");
   for (const c of p.channels) if ((UNAVAILABLE_CHANNELS as readonly string[]).includes(c)) out.push(`${CHANNEL_LABEL[c as Channel]} is unavailable for now. Untick it.`);
   if (p.channels.includes("instagram") && p.imageCount === 0) out.push("Instagram posts need an image. Add one and save the post.");
+  if (p.imageCount > 10) out.push("Posts can carry at most 10 images (Instagram carousel limit). Remove some.");
   for (const c of p.channels as Channel[]) if (CHANNEL_LIMIT[c] && p.body.length > CHANNEL_LIMIT[c]) out.push(`${CHANNEL_LABEL[c]} allows ${CHANNEL_LIMIT[c]} characters.`);
   return out;
 }

@@ -100,26 +100,58 @@ async function metaTarget(id: string): Promise<{ token: string; id: string }> {
   return { token: saved, id };
 }
 
-export async function publishFacebook(pageId: string, text: string, imageUrl: string | null): Promise<string> {
+/** Facebook: no image = text post, one image = photo post, 2-10 images = multi-photo post. */
+export async function publishFacebook(pageId: string, text: string, images: string | string[] | null): Promise<string> {
+  const urls = (Array.isArray(images) ? images : images ? [images] : []).slice(0, 10);
   const { token } = await metaTarget(pageId);
+  const base = `${GRAPH}/${encodeURIComponent(pageId)}`;
+  if (urls.length > 1) {
+    const ids: string[] = [];
+    for (const u of urls) {
+      const r = await fetch(`${base}/photos`, { method: "POST", body: new URLSearchParams({ url: u, published: "false", access_token: token }) });
+      if (!r.ok) await fail(r, "Facebook photo upload");
+      ids.push(String((await r.json()).id));
+    }
+    const p = new URLSearchParams({ message: text, access_token: token });
+    ids.forEach((id, i) => p.set(`attached_media[${i}]`, JSON.stringify({ media_fbid: id })));
+    const res = await fetch(`${base}/feed`, { method: "POST", body: p });
+    if (!res.ok) await fail(res, "Facebook post");
+    return String((await res.json()).id);
+  }
   const p = new URLSearchParams({ access_token: token });
   let url: string;
-  if (imageUrl) { p.set("url", imageUrl); p.set("caption", text); url = `${GRAPH}/${encodeURIComponent(pageId)}/photos`; }
-  else { p.set("message", text); url = `${GRAPH}/${encodeURIComponent(pageId)}/feed`; }
+  if (urls[0]) { p.set("url", urls[0]); p.set("caption", text); url = `${base}/photos`; }
+  else { p.set("message", text); url = `${base}/feed`; }
   const res = await fetch(url, { method: "POST", body: p });
   if (!res.ok) await fail(res, "Facebook post");
   const j: any = await res.json();
   return String(j.post_id ?? j.id);
 }
 
-export async function publishInstagram(configuredId: string, text: string, imageUrl: string | null): Promise<string> {
-  if (!imageUrl) throw new Error("Instagram posts need an image.");
+/** Instagram: one image = single post, 2-10 images = swipeable carousel. */
+export async function publishInstagram(configuredId: string, text: string, images: string | string[] | null): Promise<string> {
+  const urls = (Array.isArray(images) ? images : images ? [images] : []).slice(0, 10);
+  if (!urls.length) throw new Error("Instagram posts need an image.");
   const { token, id: igId } = await metaTarget(configuredId);
-  const c = await fetch(`${GRAPH}/${encodeURIComponent(igId)}/media`, { method: "POST", body: new URLSearchParams({ image_url: imageUrl, caption: text, access_token: token }) });
-  if (!c.ok) await fail(c, "Instagram media");
-  const creation = (await c.json()).id;
-  // Container processing is usually instant for images; give it a short moment.
-  await new Promise((r) => setTimeout(r, 3000));
+  const media = `${GRAPH}/${encodeURIComponent(igId)}/media`;
+  let creation: string;
+  if (urls.length > 1) {
+    const children: string[] = [];
+    for (const u of urls) {
+      const c = await fetch(media, { method: "POST", body: new URLSearchParams({ image_url: u, is_carousel_item: "true", access_token: token }) });
+      if (!c.ok) await fail(c, "Instagram carousel slide");
+      children.push(String((await c.json()).id));
+    }
+    const c = await fetch(media, { method: "POST", body: new URLSearchParams({ media_type: "CAROUSEL", children: children.join(","), caption: text, access_token: token }) });
+    if (!c.ok) await fail(c, "Instagram carousel");
+    creation = (await c.json()).id;
+  } else {
+    const c = await fetch(media, { method: "POST", body: new URLSearchParams({ image_url: urls[0]!, caption: text, access_token: token }) });
+    if (!c.ok) await fail(c, "Instagram media");
+    creation = (await c.json()).id;
+  }
+  // Container processing is usually quick for images; give it a short moment.
+  await new Promise((r) => setTimeout(r, urls.length > 1 ? 5000 : 3000));
   const p = await fetch(`${GRAPH}/${encodeURIComponent(igId)}/media_publish`, { method: "POST", body: new URLSearchParams({ creation_id: creation, access_token: token }) });
   if (!p.ok) await fail(p, "Instagram publish");
   return String((await p.json()).id);

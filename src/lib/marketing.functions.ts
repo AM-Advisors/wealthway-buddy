@@ -108,11 +108,11 @@ export const unsubscribeEmail = createServerFn({ method: "POST" })
   .handler(async ({ data }) => (await srv()).unsubscribeByToken(data.token));
 
 export const marketingSuggestPostLayout = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ title: z.string().max(300), body: z.string().trim().min(10).max(5000) }).parse(d))
+  .inputValidator((d) => z.object({ title: z.string().max(300), body: z.string().trim().min(10).max(5000), style: z.enum(["cards", "statement", "stat", "quote", "checklist", "photo", "event", "carousel"]).default("cards") }).parse(d))
   .handler(async ({ data, context }) => {
     await (await srv()).requireMarketing(context.userId);
     const { suggestPostLayout } = await import("@/lib/marketing-ai.server");
-    return suggestPostLayout(data.title, data.body);
+    return suggestPostLayout(data.title, data.body, data.style);
   });
 
 /** Returns a data URL (not stored) so the browser can render it under the layout. */
