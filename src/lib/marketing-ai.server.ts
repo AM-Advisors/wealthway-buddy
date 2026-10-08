@@ -66,18 +66,33 @@ export async function generateImage(prompt: string): Promise<{ base64: string; c
 }
 
 /** Collateral-style layout text for a post image: headline, subtitle, up to 3 value points. */
-export async function suggestPostLayout(title: string, body: string): Promise<{ headline: string; subtitle: string; points: string[] }> {
+export type LayoutStyle = "cards" | "statement" | "stat" | "quote" | "checklist" | "photo" | "event" | "carousel";
+export type LayoutSuggestion = { headline: string; subtitle: string; points: string[]; stat: string; attribution: string; cta: string; slides: { title: string; text: string }[] };
+const STYLE_GUIDE: Record<LayoutStyle, string> = {
+  cards: "headline at most 8 words; subtitle one sentence at most 18 words; points exactly 3 value points, at most 6 words each.",
+  statement: "headline: one bold statement at most 9 words; subtitle at most 14 words; points empty.",
+  stat: "stat: one short figure that appears in the post text (never invent numbers; if none, use an empty string); headline: label for it at most 8 words; subtitle at most 16 words; points empty.",
+  quote: "headline: a short quote taken from or faithful to the post, at most 25 words; attribution: name and role only if the post names one, otherwise empty; points empty.",
+  checklist: "headline at most 8 words; points 3 to 5 tips, at most 8 words each; subtitle optional short line.",
+  photo: "headline at most 7 words; subtitle at most 16 words; points empty.",
+  event: "headline: event title at most 8 words; subtitle: date and time only if in the post, else empty; cta: e.g. Register now; points empty.",
+  carousel: "headline: cover title at most 8 words; subtitle: cover hook at most 12 words; slides 3 to 8 content slides each with title at most 6 words and text at most 25 words; cta: closing call-to-action at most 6 words.",
+};
+
+export async function suggestPostLayout(title: string, body: string, style: LayoutStyle = "cards"): Promise<LayoutSuggestion> {
+  const str = { type: "string" };
   const res = await fetch(RESPONSES_URL, {
     method: "POST",
     headers: { Authorization: `Bearer ${key()}`, "Content-Type": "application/json" },
     body: JSON.stringify({
       model: TEXT_MODEL,
       reasoning: { effort: "low" },
-      instructions: `${VOICE}\nTurn this social post into text for a branded announcement graphic. headline: at most 8 words. subtitle: one sentence, at most 18 words. points: exactly 3 short value points, each at most 6 words. Plain text, no hashtags, no emojis.`,
+      instructions: `${VOICE}\nTurn this social post into text for a branded graphic. ${STYLE_GUIDE[style]} Unused fields are empty strings or empty arrays. Never state facts, figures or claims the post doesn't contain. Plain text, no hashtags, no emojis.`,
       input: `Post title: ${title}\n\nPost text:\n${body.slice(0, 3000)}`,
       text: { format: { type: "json_schema", name: "post_layout", strict: true, schema: {
-        type: "object", additionalProperties: false, required: ["headline", "subtitle", "points"],
-        properties: { headline: { type: "string" }, subtitle: { type: "string" }, points: { type: "array", items: { type: "string" } } },
+        type: "object", additionalProperties: false, required: ["headline", "subtitle", "points", "stat", "attribution", "cta", "slides"],
+        properties: { headline: str, subtitle: str, stat: str, attribution: str, cta: str, points: { type: "array", items: str },
+          slides: { type: "array", items: { type: "object", additionalProperties: false, required: ["title", "text"], properties: { title: str, text: str } } } },
       } } },
     }),
   });
@@ -86,7 +101,9 @@ export async function suggestPostLayout(title: string, body: string): Promise<{ 
   const raw = String(j?.output_text ?? (j?.output ?? []).flatMap((o: any) => o?.content ?? []).filter((c: any) => c?.type === "output_text").map((c: any) => c.text).join(""));
   try {
     const o = JSON.parse(raw);
-    return { headline: String(o.headline ?? ""), subtitle: String(o.subtitle ?? ""), points: (o.points ?? []).map(String).slice(0, 3) };
+    return { headline: String(o.headline ?? ""), subtitle: String(o.subtitle ?? ""), points: (o.points ?? []).map(String).slice(0, 5),
+      stat: String(o.stat ?? ""), attribution: String(o.attribution ?? ""), cta: String(o.cta ?? ""),
+      slides: (o.slides ?? []).slice(0, 8).map((x: any) => ({ title: String(x?.title ?? ""), text: String(x?.text ?? "") })) };
   } catch { throw new Error("The AI helper returned nothing usable for that post."); }
 }
 
