@@ -16,8 +16,8 @@ try {
   const ids: string[] = [];
   for (const p of P) { const r: any = await step(`prepare ${p.issuerName}`, () => op.prepareOpeningPosition(U.prep, { offeringId: N, batchRef: BATCH, sourceSystem: "DEMO prior administrator (synthetic)", sourceReference: src, asOfDate: "2025-12-31", ...p, openingJournalId: OJ })); ids.push(r.id); }
   await step("prepare Lumen again (idempotent)", () => op.prepareOpeningPosition(U.prep, { offeringId: N, batchRef: BATCH, sourceSystem: "x", sourceReference: src, asOfDate: "2025-12-31", ...P[0], openingJournalId: OJ }));
-  await step("preparer self-approve", () => op.decideOpeningPosition(U.prep, ids[0]!, true, "self"), true);
-  for (const id of ids) await step("approve", () => op.decideOpeningPosition(U.appr, id, true, "Ties to DEMO prior-administrator schedule and posted opening journal"));
+  await step("preparer self-approve", () => op.decideOpeningPosition(U.prep, ids[2]!, true, "self"), true);
+  for (const id of ids) if ((await d.from("portfolio_opening_positions").select("status").eq("id", id).single()).data.status === "prepared") await step("approve", () => op.decideOpeningPosition(U.appr, id, true, "Ties to DEMO prior-administrator schedule and posted opening journal"));
   await step("approve again", () => op.decideOpeningPosition(U.rev, ids[0]!, true, "dup"), true);
   const ed = await d.from("portfolio_opening_positions").update({ cost_basis_cents: 1 }).eq("id", ids[0]); console.log("edit approved position:", ed.error ? "REFUSED" : "UPDATED (BUG)");
   console.log("TIE", JSON.stringify(await op.openingSubledgerCheck(N, "2025-12-31")));
