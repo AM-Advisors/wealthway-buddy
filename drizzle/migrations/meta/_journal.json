@@ -1366,6 +1366,20 @@
       "when": 1791419348477,
       "tag": "0194_investor_credits",
       "breakpoints": true
+    },
+    {
+      "idx": 195,
+      "version": "7",
+      "when": 1791420139302,
+      "tag": "0195_portfolio_opening_positions",
+      "breakpoints": true
+    },
+    {
+      "idx": 196,
+      "version": "7",
+      "when": 1791420293293,
+      "tag": "0196_valuation_recognized_by_opening_journal",
+      "breakpoints": true
     }
   ]
 }

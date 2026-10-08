@@ -326,14 +326,13 @@ export async function listPortfolioAssets(userId: string, offeringId?: string) {
 async function lastRecognizedValue(assetId: string): Promise<number | null> {
   const { data } = await db()
     .from("portfolio_valuations")
-    .select("value_cents, effective_date, version")
+    .select("value_cents, effective_date, version, journal_entry_id, recognized_by_journal_id")
     .eq("asset_id", assetId)
     .in("status", ["effective", "superseded"])
-    .not("journal_entry_id", "is", null)
     .order("effective_date", { ascending: false })
-    .order("version", { ascending: false })
-    .limit(1);
-  const row = ((data ?? []) as any[])[0];
+    .order("version", { ascending: false });
+  // Recognised either by its own valuation journal or (takeover opening) by the posted opening journal.
+  const row = ((data ?? []) as any[]).find((r) => r.journal_entry_id || r.recognized_by_journal_id);
   return row ? Number(row.value_cents) : null;
 }
 
@@ -757,6 +756,9 @@ export async function prepareValuationJournal(userId: string, valuationId: strin
   }
   if (valuation.journal_entry_id) {
     return { journalEntryId: valuation.journal_entry_id as string, created: false };
+  }
+  if (valuation.recognized_by_journal_id) {
+    return { journalEntryId: null, created: false, reason: "recognized_by_opening_journal" as const };
   }
   const policy = await policyFor(asset.offering_id, asset.asset_class);
   // The first mark is measured against cost: cost already sits in investments at

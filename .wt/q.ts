@@ -1,6 +1,4 @@
-import { guard, N } from "/dev-server/.wt/lib";
+import { guard } from "/dev-server/.wt/lib";
 const d = await guard();
-for (const t of ["portfolio_assets","portfolio_positions","portfolio_investments","investments","portfolio_transactions","asset_valuations","fund_expenses","expenses"]) {
-  const r = await d.from(t).select("*", { count: "exact", head: true }).eq("offering_id", N);
-  console.log(t, r.error ? "ERR " + r.error.message.slice(0,60) : r.count);
-}
+const r = await d.from("portfolio_valuations").update({ recognized_by_journal_id: "503ad832-e33d-44d8-8d0b-5b20dbd51cb3", journal_entry_id: null }).eq("id", "08b80ce6-c45e-4215-bfbb-54b6964ee596").select("id,journal_entry_id,recognized_by_journal_id");
+console.log(JSON.stringify(r.error ?? r.data));
