@@ -19,7 +19,7 @@ describe("Form D intelligence", () => {
     expect(newsworthiness(f({ total_offering: 2e6 })).newsworthy).toBe(false);
   });
   it("digest never calls offering amounts capital raised", () => {
-    const d = weeklyDigest([f({}), f({ cik: "2", is_amendment: true, total_sold: 5e5 })]);
+    const d = weeklyDigest([f({ total_sold: 2e5 }), f({ cik: "2", is_amendment: true, total_sold: 5e5 })]);
     expect(d.total).toBe(2); expect(d.amendments).toBe(1);
     expect(d.patterns.join(" ")).toContain("not completed fundraising");
     expect(d.patterns.join(" ")).toContain("not independently verified");
