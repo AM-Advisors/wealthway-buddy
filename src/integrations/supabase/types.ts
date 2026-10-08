@@ -28749,8 +28749,10 @@ export type Database = {
           is_sample: boolean
           keywords: string[]
           metrics: Json
+          package_version: number
           platforms: string[]
           post_id: string | null
+          post_ids: string[]
           proposed_slot: boolean
           publish_at: string | null
           research_idea_id: string | null
@@ -28785,8 +28787,10 @@ export type Database = {
           is_sample?: boolean
           keywords?: string[]
           metrics?: Json
+          package_version?: number
           platforms?: string[]
           post_id?: string | null
+          post_ids?: string[]
           proposed_slot?: boolean
           publish_at?: string | null
           research_idea_id?: string | null
@@ -28821,8 +28825,10 @@ export type Database = {
           is_sample?: boolean
           keywords?: string[]
           metrics?: Json
+          package_version?: number
           platforms?: string[]
           post_id?: string | null
+          post_ids?: string[]
           proposed_slot?: boolean
           publish_at?: string | null
           research_idea_id?: string | null
@@ -28851,6 +28857,91 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "marketing_series"
             referencedColumns: ["key"]
+          },
+        ]
+      }
+      marketing_content_packages: {
+        Row: {
+          ai_generated: boolean
+          created_at: string
+          created_by: string
+          id: string
+          item_id: string
+          model: string | null
+          note: string | null
+          package: Json
+          version: number
+        }
+        Insert: {
+          ai_generated?: boolean
+          created_at?: string
+          created_by: string
+          id?: string
+          item_id: string
+          model?: string | null
+          note?: string | null
+          package: Json
+          version: number
+        }
+        Update: {
+          ai_generated?: boolean
+          created_at?: string
+          created_by?: string
+          id?: string
+          item_id?: string
+          model?: string | null
+          note?: string | null
+          package?: Json
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_content_packages_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_content_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketing_content_reviews: {
+        Row: {
+          actor_id: string
+          created_at: string
+          id: string
+          item_id: string
+          kind: string
+          note: string | null
+          package_version: number
+          result: string
+        }
+        Insert: {
+          actor_id: string
+          created_at?: string
+          id?: string
+          item_id: string
+          kind: string
+          note?: string | null
+          package_version: number
+          result: string
+        }
+        Update: {
+          actor_id?: string
+          created_at?: string
+          id?: string
+          item_id?: string
+          kind?: string
+          note?: string | null
+          package_version?: number
+          result?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_content_reviews_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_content_items"
+            referencedColumns: ["id"]
           },
         ]
       }

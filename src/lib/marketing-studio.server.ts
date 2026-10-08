@@ -89,6 +89,12 @@ export async function moveItem(userId: string, id: string, to: string, note?: st
   if (!cur) throw new Error("Not found.");
   const problem = moveProblem({ from: cur.status, to, roles, actorId: userId, authorId: cur.author_id, publishAt: cur.publish_at, note, unverifiedClaims: cur.unverified_claims ?? 0 });
   if (problem) throw new Error(problem);
+  if (to === "approved") {
+    const { approvalGaps } = await import("@/lib/marketing-content-model");
+    const { data: reviews } = await db.from("marketing_content_reviews").select("kind, result, package_version, created_at").eq("item_id", id);
+    const gaps = approvalGaps(cur.series_key, cur.package_version ?? 0, reviews ?? []);
+    if (gaps.length) throw new Error(gaps.join(" "));
+  }
   const now = new Date().toISOString();
   const patch: any = { status: to, version: cur.version + 1, updated_at: now };
   if (to === "ceo_approval") patch.reviewer_id = cur.reviewer_id ?? userId;
