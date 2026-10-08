@@ -14,7 +14,9 @@ const pkg = z.object({
   internal_links: z.array(z.object({ label: s(300), url: s(2000) })).max(20),
   citations: z.array(z.object({ label: s(300), url: s(2000) })).max(40),
   schema_jsonld: s(20_000), cta: s(500), cta_options: z.array(s(500)).max(5).optional(),
-  claims: z.array(z.object({ text: s(2000), kind: z.enum(["fact", "analysis", "opinion", "projection", "hypothetical"]), source_url: s(2000), verification: z.enum(["sourced", "unverified", "not_applicable"]).optional() })).max(60).optional(),
+  claims: z.array(z.object({ text: s(2000), kind: s(40), source_url: s(2000), corroborating_url: s(2000).optional(), attribution: s(300).optional(), note: s(300).optional(), verification: z.enum(["sourced", "unverified", "not_applicable"]).optional() })).max(60).optional(),
+  h1: s(300).optional(), opening_answer: s(1000).optional(), related_questions: z.array(s(300)).max(12).optional(), audience: s(300).optional(), topic_cluster: s(120).optional(),
+  pillar_page: s(2000).optional(), supporting_articles: z.array(s(2000)).max(10).optional(), service_pages: z.array(s(2000)).max(10).optional(), last_reviewed_at: s(40).nullable().optional(),
   social: z.object({ linkedin_company: s(3000), linkedin_executive: s(3000), facebook: s(3000), instagram: s(2200), x: s(280), email_subject: s(200), email_body: s(5000) }),
   graphics: z.array(z.object({ template: s(40), size: s(20), headline: s(300), subhead: s(500), stat: s(120), stat_source_url: s(2000), bullets: z.array(s(300)).max(10), stat_unverified: z.boolean().optional() })).max(10),
 });
@@ -49,3 +51,5 @@ export const startContentPackage = createServerFn({ method: "POST" }).middleware
     z.object({ kind: z.literal("manual"), series_key: z.string().max(60), title: z.string().min(3).max(300), topic: z.string().max(500), source_urls: z.array(z.string().url().max(2000)).min(1).max(10), guidance: g }),
   ]).parse(d))
   .handler(async ({ data, context }) => (await srv()).startPackage(context.userId, data as any));
+export const getSeoClusters = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => (await srv()).clusterDashboard(context.userId));

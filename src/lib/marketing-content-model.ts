@@ -41,13 +41,17 @@ export type ContentPackage = {
   claims?: PackageClaim[];
   /** Alternative calls to action for the editor to choose from. */
   cta_options?: string[];
+  /** SEO & AI search fields (Stage B). Editors may override every suggestion. */
+  h1?: string; opening_answer?: string; related_questions?: string[]; audience?: string; topic_cluster?: string;
+  pillar_page?: string; supporting_articles?: string[]; service_pages?: string[]; last_reviewed_at?: string | null;
   checks?: { dropped_citations: string[]; dropped_links: string[]; unverified_stats: number; ranking_claims: string[]; unverified_facts?: number; unsourced_quotes?: string[] };
 };
 
-export const CLAIM_KINDS = ["fact", "analysis", "opinion", "projection", "hypothetical"] as const;
-export type ClaimKind = (typeof CLAIM_KINDS)[number];
-export const CLAIM_LABEL: Record<ClaimKind, string> = { fact: "Verified fact", analysis: "Analysis", opinion: "Opinion", projection: "Projection", hypothetical: "Hypothetical example" };
-export type PackageClaim = { text: string; kind: ClaimKind; source_url: string; verification?: "sourced" | "unverified" | "not_applicable" };
+import { CLAIM_CLASSES, CLAIM_CLASS_LABEL, classifyClaim, type ClaimClass } from "@/lib/marketing-seo-model";
+export const CLAIM_KINDS = CLAIM_CLASSES;
+export type ClaimKind = ClaimClass;
+export const CLAIM_LABEL = CLAIM_CLASS_LABEL;
+export type PackageClaim = { text: string; kind: string; source_url: string; corroborating_url?: string; attribution?: string; note?: string; verification?: "sourced" | "unverified" | "not_applicable" };
 
 /** Generation template per editorial series. Server builds the prompt from these; editors see the summary. */
 export const SERIES_TEMPLATES: Record<string, { summary: string; rules: string[] }> = {
@@ -78,14 +82,9 @@ export function unsourcedQuotes(html: string, sourceText: string): string[] {
   for (const m of text.matchAll(/[“"]([^”"]{20,400})[”"]/g)) if (!src.includes(norm(m[1]!))) out.push(m[1]!.trim());
   return out;
 }
-/** Facts must point at one of the item's stored sources; anything else is unverified and blocks approval. */
+/** Facts must point at one of the item's stored sources; anything else is unverified and blocks approval. Attribution rules live in classifyClaim. */
 export function checkPackageClaims(claims: PackageClaim[], allowedSources: string[]): { claims: PackageClaim[]; unverified: number } {
-  const src = new Set(allowedSources);
-  const out = claims.filter((c) => c.text?.trim()).map((c) => {
-    const kind = (CLAIM_KINDS as readonly string[]).includes(c.kind) ? c.kind : "analysis";
-    if (kind !== "fact") return { text: c.text.trim(), kind, source_url: src.has(c.source_url) ? c.source_url : "", verification: "not_applicable" as const };
-    return { text: c.text.trim(), kind, source_url: src.has(c.source_url) ? c.source_url : "", verification: src.has(c.source_url) ? "sourced" as const : "unverified" as const };
-  });
+  const out = claims.filter((c) => c.text?.trim()).map((c) => classifyClaim(c, allowedSources) as PackageClaim);
   return { claims: out, unverified: out.filter((c) => c.verification === "unverified").length };
 }
 
@@ -116,7 +115,10 @@ export function sanitizePackage(p: ContentPackage, allowedSources: string[], all
     ...p, slug: slugify(p.slug || p.seo_title),
     citations: p.citations.filter((c) => src.has(c.url)),
     internal_links: p.internal_links.filter((l) => internal.has(l.url)),
-    graphics, claims: cl.claims, cta_options: (p.cta_options ?? []).filter((x) => x?.trim()).slice(0, 5),
+    graphics, claims: cl.claims,
+    pillar_page: p.pillar_page && internal.has(p.pillar_page) ? p.pillar_page : "",
+    supporting_articles: (p.supporting_articles ?? []).filter((u) => internal.has(u)),
+    service_pages: (p.service_pages ?? []).filter((u) => internal.has(u)), cta_options: (p.cta_options ?? []).filter((x) => x?.trim()).slice(0, 5),
     checks: { dropped_citations, dropped_links, unverified_stats: unverified, ranking_claims: rankingClaims(all), unverified_facts: cl.unverified, unsourced_quotes: unsourcedQuotes(p.body_html, factText) },
   };
 }
