@@ -37,3 +37,24 @@ export function fromZonedInput(v: string, tz: string) {
 export function fmtInTz(iso: string | null | undefined, tz: string, opts: Intl.DateTimeFormatOptions = { dateStyle: "medium", timeStyle: "short" }) {
   return iso ? new Date(iso).toLocaleString("en-US", { timeZone: tz, timeZoneName: opts.timeStyle ? "short" : undefined, ...opts }) : "—";
 }
+
+/* ---------- calendar-day math in a configured zone (never the viewer's clock) ---------- */
+/** Calendar date (YYYY-MM-DD) of an instant as seen in tz. */
+export function ymdIn(d: Date | string, tz: string) {
+  const p = parts(typeof d === "string" ? new Date(d) : d, tz);
+  return `${p.y}-${pad(p.m)}-${pad(p.d)}`;
+}
+const ymdUtc = (s: string) => { const [y, m, d] = s.split("-").map(Number); return new Date(Date.UTC(y!, m! - 1, d!, 12)); };
+export function addYmd(s: string, n: number) { const x = ymdUtc(s); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10); }
+/** 0 = Sunday … 6 = Saturday for a calendar date. */
+export const weekdayOf = (s: string) => ymdUtc(s).getUTCDay();
+export const mondayOf = (s: string) => addYmd(s, -((weekdayOf(s) + 6) % 7));
+/** UTC instant of local midnight starting that calendar day in tz. */
+export const ymdStartUtc = (s: string, tz: string) => { const [y, m, d] = s.split("-").map(Number); return zonedToUtc(y!, m!, d!, 0, 0, tz); };
+/** Label a calendar date without any zone shift. */
+export const fmtYmd = (s: string, o: Intl.DateTimeFormatOptions) => ymdUtc(s).toLocaleDateString("en-US", { ...o, timeZone: "UTC" });
+/** Move an instant to another calendar day, keeping its wall-clock time in tz. */
+export function moveToDay(iso: string | null, day: string, tz: string, defaultTime = "09:00") {
+  const t = iso ? toZonedInput(iso, tz).slice(11) : defaultTime;
+  return fromZonedInput(`${day}T${t}`, tz);
+}
