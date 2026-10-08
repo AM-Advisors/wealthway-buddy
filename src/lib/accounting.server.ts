@@ -18,6 +18,7 @@ import {
   DEFAULT_FUND_CHART,
   assertBalanced,
   canTransitionJournal,
+  journalActorError,
   canTransitionPeriod,
   canTransitionReport,
   domainForReport,
