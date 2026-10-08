@@ -60,7 +60,7 @@ function StudioDashboard() {
   const Row = ({ i }: { i: any }) => (
     <button onClick={() => setOpen(i.id)} className="flex w-full items-center gap-2 border-l-2 py-1.5 pl-2 text-left text-sm hover:bg-muted" style={{ borderColor: byKey[i.series_key]?.color }}>
       <span className="min-w-0 flex-1 truncate">{i.article_title || i.topic || "Untitled"}</span>
-      {i.publish_at && <span className="text-[11px] text-muted-foreground tabular-nums">{new Date(i.publish_at).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}</span>}
+      {i.publish_at && <span className="text-[11px] text-muted-foreground tabular-nums">{new Date(i.publish_at).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", timeZone: "America/Chicago" })}</span>}
       <StatusPill status={i.status} />
     </button>
   );

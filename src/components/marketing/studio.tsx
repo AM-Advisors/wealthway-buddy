@@ -46,6 +46,7 @@ export function ItemDrawer({ id, series, people, open, onClose, draft }: {
   id: string | null; series: Series[]; people: Record<string, string>; open: boolean; onClose: () => void; draft?: Partial<Item>;
 }) {
   const qc = useQueryClient();
+  const tz = useOrgTz();
   const loadItem = useServerFn(getStudioItem), save = useServerFn(saveStudioItem), move = useServerFn(moveStudioItem);
   const dup = useServerFn(duplicateStudioItem), addComment = useServerFn(commentStudioItem);
   const q = useQuery({ queryKey: ["studio-item", id], queryFn: () => loadItem({ data: { id: id! } }), enabled: !!id && open });
@@ -97,7 +98,7 @@ export function ItemDrawer({ id, series, people, open, onClose, draft }: {
           {locked && <p className="rounded-md bg-muted p-2 text-xs">Approved content is locked. You can still change the date, or send it back to edit.</p>}
           <div className="grid gap-3 sm:grid-cols-2">
             {field("Series", <select className={inp} disabled={locked} value={f.series_key ?? ""} onChange={(e) => setF({ ...f, series_key: e.target.value })}>{series.map((x) => <option key={x.key} value={x.key}>{x.name}</option>)}</select>)}
-            {field("Publish date and time", <input type="datetime-local" className={inp} disabled={item?.status === "published"} value={toZonedInput(f.publish_at, tz)} onChange={(e) => setF({ ...f, publish_at: e.target.value ? fromZonedInput(e.target.value, tz) : null })} />)}
+            {field(`Publish date and time (${tz})`, <input type="datetime-local" className={inp} disabled={item?.status === "published"} value={toZonedInput(f.publish_at, tz)} onChange={(e) => setF({ ...f, publish_at: e.target.value ? fromZonedInput(e.target.value, tz) : null })} />)}
           </div>
           {txt("article_title", "Article title")}
           {txt("social_headline", "Social headline")}
