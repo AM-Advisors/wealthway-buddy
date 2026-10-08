@@ -20,3 +20,10 @@
 - Inspected: migration source (walkthrough-source.ts: class A/B only, no side-letter rate), live side_letters (Northwind 1.50%, PROPOSED, effective 2025-03-31, current_version 0, "DEMO / SYNTHETIC side letter"), side_letter_versions/events (none), management_fee_terms (none), fund_fee_terms (2% committed, fund-wide).
 - 1.25% exists only as a hard-coded value in the Phase 2B regression fixture (walkthrough-period.ts, "DEMO Northwind side letter v1", added 2026-10-07). No document, version, approval or audit event backs it.
 - Evidence required to support 1.25%: an existing synthetic Northwind side-letter document/version stating 1.25% for Q1 2026 with effective date, plus a recorded approval by someone other than the preparer. None exists; none was created.
+
+## Prerequisites build (2026-10-08)
+- Decision: Northwind 1.50% (live, PROPOSED) is the intended term; the 1.25% v1 test input is UNSUPPORTED and kept as history. v2 benchmark: $115,437.50 (side letter excluded) / $109,187.50 (if 1.50% approved for Q1).
+- Live Walkthrough formal terms: fund 2.00%, Class A 2.00%, Class B 1.50% approved (preparer != approver); Northwind 1.50% term PENDING - blocked until the side letter itself is approved with execution evidence. Live read-only Q1 preview: $115,437.50.
+- OPEN: Walkthrough chart has no Legal, Accounting, Audit/tax, Professional, Administration or Bank-fee accounts; those mappings are blank, so those expenses are blocked until accounts are added and mapped.
+- OPEN: the opening $50,000 liability must be confirmed against account 2000 vs 2100 before settlement.
+- OPEN (HIGH, unchanged): fund accounting requires full Admin instead of a scoped role.
