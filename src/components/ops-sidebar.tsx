@@ -245,6 +245,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
   const mkItems: NavItem[] = showMk ? [
     { id: "mk-dashboard", title: "Marketing dashboard", url: "/marketing", icon: "report" },
     { id: "mk-studio", title: "Studio", url: "/marketing/studio", icon: "report" },
+    { id: "mk-design", title: "Design Studio", url: "/marketing/design-studio", icon: "report" },
     { id: "mk-research", title: "Research feed", url: "/marketing/studio/research", icon: "report" },
     { id: "mk-performance", title: "Publishing & performance", url: "/marketing/performance", icon: "report" },
     { id: "mk-linkedin", title: "LinkedIn accounts", url: "/marketing/linkedin", icon: "report" },
