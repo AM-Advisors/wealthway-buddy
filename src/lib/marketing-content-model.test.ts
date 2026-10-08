@@ -40,3 +40,31 @@ describe("content package rules", () => {
     expect(overlapPercent(t, "unrelated")).toBe(0);
   });
 });
+
+import { checkPackageClaims, seriesTemplate, unsourcedQuotes, sanitizePackage as sp2 } from "./marketing-content-model";
+describe("Phase 3 Stage A claims", () => {
+  it("keeps fact sources, flags unsourced facts, never needs sources for analysis", () => {
+    const r = checkPackageClaims([
+      { text: "SEC adopted rule X", kind: "fact", source_url: "https://sec.gov/a" },
+      { text: "Volume doubled", kind: "fact", source_url: "https://made-up.com" },
+      { text: "Managers should prepare", kind: "analysis", source_url: "" },
+    ], ["https://sec.gov/a"]);
+    expect(r.unverified).toBe(1);
+    expect(r.claims[1]!.source_url).toBe("");
+    expect(r.claims[2]!.verification).toBe("not_applicable");
+  });
+  it("flags quotations that aren't in the sources", () => {
+    expect(unsourcedQuotes("<p>He said “we will triple fund launches next year”.</p>", "nothing like that")).toHaveLength(1);
+    expect(unsourcedQuotes("<p>The rule says “issuers must file within fifteen days”.</p>", "Issuers must file within fifteen days of first sale")).toHaveLength(0);
+  });
+  it("has a distinct template per series and Founders Friday stays a proposed draft", () => {
+    const keys = ["market_monday", "thesis_tuesday", "whatever_wednesday", "fund_academy_thursday", "founders_friday"];
+    expect(new Set(keys.map((k) => seriesTemplate(k).summary)).size).toBe(5);
+    expect(seriesTemplate("founders_friday").rules.join(" ")).toMatch(/PROPOSED/);
+  });
+  it("sanitize counts unverified facts so approval stays blocked", () => {
+    const base: any = { seo_title: "t", social_headline: "", slug: "t", meta_title: "", meta_description: "", primary_keyword: "", secondary_keywords: [], search_intent: "", outline: [], body_html: "<p>x</p>", faq: [], internal_links: [], citations: [], schema_jsonld: "", cta: "", social: { linkedin_company: "", linkedin_executive: "", facebook: "", instagram: "", x: "", email_subject: "", email_body: "" }, graphics: [],
+      claims: [{ text: "A fact", kind: "fact", source_url: "https://nope" }] };
+    expect(sp2(base, ["https://sec.gov/a"], [], "").checks!.unverified_facts).toBe(1);
+  });
+});

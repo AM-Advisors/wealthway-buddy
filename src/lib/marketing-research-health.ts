@@ -64,7 +64,8 @@ export function evaluate(h: HealthInput): AlertSpec[] {
   }
   if (h.aiPaused) out.push({ kind: "ai_credits", subject_key: "ai", severity: "critical", message: h.aiPaused });
   const last = h.recentRuns[0];
-  if (last && (last.status === "failed" || last.status === "rate_limited")) out.push({ kind: "job_failed", subject_key: "research", severity: last.status === "failed" ? "critical" : "warning", message: `The last research run ${last.status === "failed" ? "failed" : "was rate limited"}: ${last.error ?? ""}`.trim() });
+  if (last && last.status === "partial") out.push({ kind: "job_failed", subject_key: "research", severity: "warning", message: `Sources were collected, but a later step failed: ${last.error ?? ""}`.trim() });
+  else if (last && (last.status === "failed" || last.status === "rate_limited")) out.push({ kind: "job_failed", subject_key: "research", severity: last.status === "failed" ? "critical" : "warning", message: `The last research run ${last.status === "failed" ? "failed" : "was rate limited"}: ${last.error ?? ""}`.trim() });
   if (last && last.status === "running" && now.getTime() - new Date(last.started_at).getTime() > 15 * 60000) out.push({ kind: "job_slow", subject_key: "research", severity: "warning", message: "A research run has been running for more than 15 minutes." });
   const ideasRun = h.recentRuns.find((r) => r.result?.ideasError || r.result?.ideas);
   if (ideasRun?.result?.ideasError) out.push({ kind: "ideas_failed", subject_key: "ideas", severity: "warning", message: `Daily idea generation failed: ${ideasRun.result.ideasError}` });

@@ -211,6 +211,7 @@ import { Route as AuthenticatedMarketingCampaignsRouteImport } from './routes/_a
 import { Route as AuthenticatedMarketingChannelsRouteImport } from './routes/_authenticated/marketing_.channels'
 import { Route as AuthenticatedMarketingClassroomRouteImport } from './routes/_authenticated/marketing_.classroom'
 import { Route as AuthenticatedMarketingCollateralRouteImport } from './routes/_authenticated/marketing_.collateral'
+import { Route as AuthenticatedMarketingContentStudioRouteImport } from './routes/_authenticated/marketing_.content-studio'
 import { Route as AuthenticatedMarketingDriveRouteImport } from './routes/_authenticated/marketing_.drive'
 import { Route as AuthenticatedMarketingEmailsRouteImport } from './routes/_authenticated/marketing_.emails'
 import { Route as AuthenticatedMarketingFlowsRouteImport } from './routes/_authenticated/marketing_.flows'
@@ -1551,6 +1552,12 @@ const AuthenticatedMarketingCollateralRoute =
   AuthenticatedMarketingCollateralRouteImport.update({
     id: '/marketing_/collateral',
     path: '/marketing/collateral',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedMarketingContentStudioRoute =
+  AuthenticatedMarketingContentStudioRouteImport.update({
+    id: '/marketing_/content-studio',
+    path: '/marketing/content-studio',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedMarketingDriveRoute =
@@ -3014,6 +3021,7 @@ export interface FileRoutesByFullPath {
   '/marketing/channels': typeof AuthenticatedMarketingChannelsRoute
   '/marketing/classroom': typeof AuthenticatedMarketingClassroomRoute
   '/marketing/collateral': typeof AuthenticatedMarketingCollateralRoute
+  '/marketing/content-studio': typeof AuthenticatedMarketingContentStudioRoute
   '/marketing/drive': typeof AuthenticatedMarketingDriveRoute
   '/marketing/emails': typeof AuthenticatedMarketingEmailsRoute
   '/marketing/flows': typeof AuthenticatedMarketingFlowsRoute
@@ -3426,6 +3434,7 @@ export interface FileRoutesByTo {
   '/marketing/channels': typeof AuthenticatedMarketingChannelsRoute
   '/marketing/classroom': typeof AuthenticatedMarketingClassroomRoute
   '/marketing/collateral': typeof AuthenticatedMarketingCollateralRoute
+  '/marketing/content-studio': typeof AuthenticatedMarketingContentStudioRoute
   '/marketing/drive': typeof AuthenticatedMarketingDriveRoute
   '/marketing/emails': typeof AuthenticatedMarketingEmailsRoute
   '/marketing/flows': typeof AuthenticatedMarketingFlowsRoute
@@ -3846,6 +3855,7 @@ export interface FileRoutesById {
   '/_authenticated/marketing_/channels': typeof AuthenticatedMarketingChannelsRoute
   '/_authenticated/marketing_/classroom': typeof AuthenticatedMarketingClassroomRoute
   '/_authenticated/marketing_/collateral': typeof AuthenticatedMarketingCollateralRoute
+  '/_authenticated/marketing_/content-studio': typeof AuthenticatedMarketingContentStudioRoute
   '/_authenticated/marketing_/drive': typeof AuthenticatedMarketingDriveRoute
   '/_authenticated/marketing_/emails': typeof AuthenticatedMarketingEmailsRoute
   '/_authenticated/marketing_/flows': typeof AuthenticatedMarketingFlowsRoute
@@ -4267,6 +4277,7 @@ export interface FileRouteTypes {
     | '/marketing/channels'
     | '/marketing/classroom'
     | '/marketing/collateral'
+    | '/marketing/content-studio'
     | '/marketing/drive'
     | '/marketing/emails'
     | '/marketing/flows'
@@ -4679,6 +4690,7 @@ export interface FileRouteTypes {
     | '/marketing/channels'
     | '/marketing/classroom'
     | '/marketing/collateral'
+    | '/marketing/content-studio'
     | '/marketing/drive'
     | '/marketing/emails'
     | '/marketing/flows'
@@ -5098,6 +5110,7 @@ export interface FileRouteTypes {
     | '/_authenticated/marketing_/channels'
     | '/_authenticated/marketing_/classroom'
     | '/_authenticated/marketing_/collateral'
+    | '/_authenticated/marketing_/content-studio'
     | '/_authenticated/marketing_/drive'
     | '/_authenticated/marketing_/emails'
     | '/_authenticated/marketing_/flows'
@@ -6806,6 +6819,13 @@ declare module '@tanstack/react-router' {
       path: '/marketing/collateral'
       fullPath: '/marketing/collateral'
       preLoaderRoute: typeof AuthenticatedMarketingCollateralRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/marketing_/content-studio': {
+      id: '/_authenticated/marketing_/content-studio'
+      path: '/marketing/content-studio'
+      fullPath: '/marketing/content-studio'
+      preLoaderRoute: typeof AuthenticatedMarketingContentStudioRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/marketing_/drive': {
@@ -8733,6 +8753,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMarketingChannelsRoute: typeof AuthenticatedMarketingChannelsRoute
   AuthenticatedMarketingClassroomRoute: typeof AuthenticatedMarketingClassroomRoute
   AuthenticatedMarketingCollateralRoute: typeof AuthenticatedMarketingCollateralRoute
+  AuthenticatedMarketingContentStudioRoute: typeof AuthenticatedMarketingContentStudioRoute
   AuthenticatedMarketingDriveRoute: typeof AuthenticatedMarketingDriveRoute
   AuthenticatedMarketingEmailsRoute: typeof AuthenticatedMarketingEmailsRoute
   AuthenticatedMarketingFlowsRoute: typeof AuthenticatedMarketingFlowsRoute
@@ -9029,6 +9050,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMarketingChannelsRoute: AuthenticatedMarketingChannelsRoute,
   AuthenticatedMarketingClassroomRoute: AuthenticatedMarketingClassroomRoute,
   AuthenticatedMarketingCollateralRoute: AuthenticatedMarketingCollateralRoute,
+  AuthenticatedMarketingContentStudioRoute:
+    AuthenticatedMarketingContentStudioRoute,
   AuthenticatedMarketingDriveRoute: AuthenticatedMarketingDriveRoute,
   AuthenticatedMarketingEmailsRoute: AuthenticatedMarketingEmailsRoute,
   AuthenticatedMarketingFlowsRoute: AuthenticatedMarketingFlowsRoute,

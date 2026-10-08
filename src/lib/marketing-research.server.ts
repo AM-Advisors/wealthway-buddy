@@ -264,6 +264,8 @@ Every idea is a suggestion that needs human approval before becoming content. Fo
 }
 
 /* ---------- Run (scheduler + manual) ---------- */
+const STAGE_LABEL: Record<string, string> = { ingest: "Source ingestion", enrich: "AI story analysis", ideas: "Idea generation" };
+
 export async function runResearch(opts: { ideas?: boolean; manualBy?: string; onlySource?: string } = {}) {
   const db = await admin();
   const paused = await pausedReason(db);
@@ -272,11 +274,17 @@ export async function runResearch(opts: { ideas?: boolean; manualBy?: string; on
   const { data: running } = await db.from("marketing_research_runs").select("id").eq("job", JOB).eq("status", "running").gt("lease_until", now.toISOString()).limit(1);
   if ((running ?? []).length) return { skipped: "already running" };
   const { data: run } = await db.from("marketing_research_runs").insert({ job: JOB, lease_until: new Date(now.getTime() + 10 * 60000).toISOString() }).select().single();
-  const result: any = {};
+  // Each stage records its own status so a late failure never hides successful source ingestion.
+  const result: any = { stages: {} };
+  let stage = "ingest";
   try {
     result.ingest = await ingest(db, opts.onlySource);
+    result.stages.ingest = "done";
     if (!opts.onlySource) {
+      stage = "enrich";
       result.enriched = await enrich(db);
+      result.stages.enrich = "done";
+      stage = "ideas";
       // Idea failures are recorded for monitoring; they never fall back to unsourced content.
       if (opts.ideas) { try { result.ideas = await makeIdeas(db); } catch (e: any) { if (e instanceof AiStop && [401, 402, 403].includes(e.status)) throw e; result.ideasError = String(e.message).slice(0, 300); } }
     }
@@ -287,7 +295,10 @@ export async function runResearch(opts: { ideas?: boolean; manualBy?: string; on
   } catch (e: any) {
     const status = e instanceof AiStop ? e.status : 0;
     if (status === 402 || status === 403 || status === 401) await pause(db, `AI unavailable [${status}]: ${e.message}`);
-    await db.from("marketing_research_runs").update({ status: status === 429 ? "rate_limited" : "failed", finished_at: new Date().toISOString(), result, error: String(e.message).slice(0, 500) }).eq("id", run.id);
+    result.stages[stage] = "failed"; result.failed_stage = stage;
+    // Ingestion already committed: the run is partial, not failed. Unenriched stories are picked up next run (no re-ingest).
+    const runStatus = status === 429 ? "rate_limited" : result.stages.ingest === "done" ? "partial" : "failed";
+    await db.from("marketing_research_runs").update({ status: runStatus, finished_at: new Date().toISOString(), result, error: `${STAGE_LABEL[stage] ?? stage}: ${String(e.message)}`.slice(0, 500) }).eq("id", run.id);
     await checkHealth(db).catch((err) => console.error("research health", err));
     if (opts.manualBy) throw new Error(status === 429 ? "The AI is busy right now. Try again in a few minutes." : e.message);
     return { ...result, error: e.message };

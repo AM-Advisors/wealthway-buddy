@@ -37,8 +37,57 @@ export type ContentPackage = {
   schema_jsonld: string; cta: string;
   social: Record<"linkedin_company" | "linkedin_executive" | "facebook" | "instagram" | "x" | "email_subject" | "email_body", string>;
   graphics: Graphic[];
-  checks?: { dropped_citations: string[]; dropped_links: string[]; unverified_stats: number; ranking_claims: string[] };
+  /** Every statement the package relies on, labelled by kind. Facts keep their source reference. */
+  claims?: PackageClaim[];
+  /** Alternative calls to action for the editor to choose from. */
+  cta_options?: string[];
+  checks?: { dropped_citations: string[]; dropped_links: string[]; unverified_stats: number; ranking_claims: string[]; unverified_facts?: number; unsourced_quotes?: string[] };
 };
+
+export const CLAIM_KINDS = ["fact", "analysis", "opinion", "projection", "hypothetical"] as const;
+export type ClaimKind = (typeof CLAIM_KINDS)[number];
+export const CLAIM_LABEL: Record<ClaimKind, string> = { fact: "Verified fact", analysis: "Analysis", opinion: "Opinion", projection: "Projection", hypothetical: "Hypothetical example" };
+export type PackageClaim = { text: string; kind: ClaimKind; source_url: string; verification?: "sourced" | "unverified" | "not_applicable" };
+
+/** Generation template per editorial series. Server builds the prompt from these; editors see the summary. */
+export const SERIES_TEMPLATES: Record<string, { summary: string; rules: string[] }> = {
+  market_monday: { summary: "Timely news analysis: verified facts, market implications, one clear takeaway.", rules: [
+    "Open with what happened, stated only from the source material, with its original publication date.",
+    "Then 'What it means' as clearly labelled analysis for fund managers and LPs.", "End with one practical takeaway."] },
+  thesis_tuesday: { summary: "Evidence-based Harmonious perspective on private-market infrastructure, technology and operations.", rules: [
+    "State the thesis as Harmonious analysis, not fact.", "Support it only with sourced facts; mark reasoning as analysis and any forecast as projection.",
+    "Acknowledge one counterpoint or limitation."] },
+  whatever_wednesday: { summary: "Engagement: polls, team stories, relatable observations.", rules: [
+    "Light, human tone. Include one poll question with 3–4 options in the social captions.",
+    "Never invent team members, anecdotes or client stories; use [TEAM STORY TO ADD] placeholders.", "Any factual hook must come from the sources."] },
+  fund_academy_thursday: { summary: "Evergreen education grounded in authoritative regulatory and tax sources.", rules: [
+    "Explain step by step with plain definitions.", "Cite the regulator or statute for every requirement; never state a requirement the sources don't contain.",
+    "Include a short 'This is general education, not legal or tax advice' line."] },
+  founders_friday: { summary: "Proposed first-person draft for Alyssa Pettit, grounded in public news — not her statement until she approves.", rules: [
+    "This is a PROPOSED draft for Alyssa, never an authenticated statement.",
+    "Never invent Alyssa's experiences, opinions, quotes or stories; write [ALYSSA TO ADD: …] placeholders and framing questions where her view belongs.",
+    "Public facts must come from the sources."] },
+};
+export const seriesTemplate = (key: string) => SERIES_TEMPLATES[key] ?? { summary: "General Harmonious content.", rules: [] };
+
+/** Quoted passages (≥ 20 chars) that don't appear in the source text — possible invented quotations. */
+export function unsourcedQuotes(html: string, sourceText: string): string[] {
+  const text = html.replace(/<[^>]+>/g, " ");
+  const src = norm(sourceText);
+  const out: string[] = [];
+  for (const m of text.matchAll(/[“"]([^”"]{20,400})[”"]/g)) if (!src.includes(norm(m[1]!))) out.push(m[1]!.trim());
+  return out;
+}
+/** Facts must point at one of the item's stored sources; anything else is unverified and blocks approval. */
+export function checkPackageClaims(claims: PackageClaim[], allowedSources: string[]): { claims: PackageClaim[]; unverified: number } {
+  const src = new Set(allowedSources);
+  const out = claims.filter((c) => c.text?.trim()).map((c) => {
+    const kind = (CLAIM_KINDS as readonly string[]).includes(c.kind) ? c.kind : "analysis";
+    if (kind !== "fact") return { text: c.text.trim(), kind, source_url: src.has(c.source_url) ? c.source_url : "", verification: "not_applicable" as const };
+    return { text: c.text.trim(), kind, source_url: src.has(c.source_url) ? c.source_url : "", verification: src.has(c.source_url) ? "sourced" as const : "unverified" as const };
+  });
+  return { claims: out, unverified: out.filter((c) => c.verification === "unverified").length };
+}
 
 const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9.%$]+/g, " ").trim();
 export const slugify = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 100);
@@ -62,12 +111,13 @@ export function sanitizePackage(p: ContentPackage, allowedSources: string[], all
     return { ...g, stat: ok ? g.stat : "", stat_source_url: ok ? g.stat_source_url : "", stat_unverified: !ok };
   });
   const all = [p.seo_title, p.meta_description, p.body_html, ...Object.values(p.social)].join(" ");
+  const cl = checkPackageClaims(p.claims ?? [], allowedSources);
   return {
     ...p, slug: slugify(p.slug || p.seo_title),
     citations: p.citations.filter((c) => src.has(c.url)),
     internal_links: p.internal_links.filter((l) => internal.has(l.url)),
-    graphics,
-    checks: { dropped_citations, dropped_links, unverified_stats: unverified, ranking_claims: rankingClaims(all) },
+    graphics, claims: cl.claims, cta_options: (p.cta_options ?? []).filter((x) => x?.trim()).slice(0, 5),
+    checks: { dropped_citations, dropped_links, unverified_stats: unverified, ranking_claims: rankingClaims(all), unverified_facts: cl.unverified, unsourced_quotes: unsourcedQuotes(p.body_html, factText) },
   };
 }
 

@@ -4,7 +4,7 @@
  * Nothing here publishes or schedules; the Studio approval gate and each channel's own approval still apply.
  */
 import { STUDIO_ACCESS, STUDIO_REVIEWERS, isLocked } from "@/lib/marketing-studio-model";
-import { FOUNDER_REVIEW_ROLE, buildSchema, overlapPercent, sanitizePackage, type ContentPackage } from "@/lib/marketing-content-model";
+import { FOUNDER_REVIEW_ROLE, seriesTemplate, buildSchema, overlapPercent, sanitizePackage, type ContentPackage } from "@/lib/marketing-content-model";
 import { aiJson } from "@/lib/marketing-research.server";
 import { COPY_RULES } from "@/lib/marketing-brand";
 
@@ -70,7 +70,8 @@ const SCHEMA = obj({
   outline: { type: "array", items: obj({ heading: S, points: SA }) }, body_html: S,
   faq: { type: "array", items: obj({ q: S, a: S }) },
   internal_links: { type: "array", items: obj({ label: S, url: S }) },
-  citations: { type: "array", items: obj({ label: S, url: S }) }, cta: S,
+  citations: { type: "array", items: obj({ label: S, url: S }) }, cta: S, cta_options: SA,
+  claims: { type: "array", items: obj({ text: S, kind: { type: "string", enum: ["fact", "analysis", "opinion", "projection", "hypothetical"] }, source_url: S }) },
   social: obj({ linkedin_company: S, linkedin_executive: S, facebook: S, instagram: S, x: S, email_subject: S, email_body: S }),
   graphics: { type: "array", items: obj({ template: { type: "string", enum: ["breaking", "regulatory", "stat", "quote", "carousel", "comparison", "academy", "poll"] }, size: { type: "string", enum: ["square", "portrait", "landscape", "story"] }, headline: S, subhead: S, stat: S, stat_source_url: S, bullets: SA }) },
 });
@@ -85,7 +86,10 @@ async function store(db: any, item: any, userId: string, p: ContentPackage, ai: 
   const final = { ...p, schema_jsonld: buildSchema(p, url, item.series_key === "founders_friday" ? "Alyssa Pettit" : "Harmonious", item.publish_at, new Date().toISOString()) };
   const { error } = await db.from("marketing_content_packages").insert({ item_id: item.id, version, package: final, ai_generated: ai, model: ai ? MODEL : null, note, created_by: userId });
   if (error) throw new Error(error.message);
-  await db.from("marketing_content_items").update({ package_version: version, updated_at: new Date().toISOString() }).eq("id", item.id);
+  // Unverified facts (research citations + package claims) block Studio approval.
+  const { count } = await db.from("marketing_content_citations").select("id", { count: "exact", head: true }).eq("item_id", item.id).eq("claim_kind", "fact").eq("verification", "unverified");
+  const unverified = (count ?? 0) + (final.checks?.unverified_facts ?? 0);
+  await db.from("marketing_content_items").update({ package_version: version, unverified_claims: unverified, updated_at: new Date().toISOString() }).eq("id", item.id);
   await logEvent(db, item.id, ai ? "package_ai_draft" : "package_edited", userId, `Package v${version}${ai ? " (AI draft — internal)" : ""}`);
   return { version, package: final };
 }
@@ -103,6 +107,7 @@ export async function generate(userId: string, itemId: string, guidance: string 
   const instructions = [
     "You draft a complete content package for Harmonious (harmonious.co), a fund administration platform for venture funds, SPVs and investors.",
     `Series: ${series?.name ?? item.series_key}. Voice: ${series?.voice ?? "clear, practical, professional"}. Purpose: ${series?.purpose ?? ""}.`,
+    `Series template: ${seriesTemplate(item.series_key).summary}`, ...seriesTemplate(item.series_key).rules,
     founders ? "FOUNDERS FRIDAY: never invent Alyssa's experiences, opinions, quotes or stories. Write questions and [ALYSSA TO ADD] placeholders where her perspective belongs." : "",
     "Use ONLY the facts and numbers in the SOURCE MATERIAL. Never invent statistics, quotes, SEC statements, laws, clients or current events. Label analysis as analysis. No investment, legal or tax advice.",
     "SEO/GEO: question-based H2/H3 headings, a direct factual answer in the first paragraph under each question, accurate definitions, semantic HTML (h2, h3, p, ul, ol, strong) with no scripts or inline styles. Original analysis. Never promise rankings or AI citations.",
@@ -110,6 +115,10 @@ export async function generate(userId: string, itemId: string, guidance: string 
     "meta_title ≤ 60 chars, meta_description ≤ 155 chars. FAQ 3–5 items when useful, answers must match the article.",
     "Social: write different text per platform. linkedin_company (professional, 120–200 words, 3 hashtags), linkedin_executive (first person ONLY as framing questions/placeholders for the executive; never invent their opinions), facebook (conversational, 60–120 words), instagram (hook line, short lines, 5–8 hashtags, 'link in bio'), x (≤ 270 chars incl. 1–2 hashtags), email_subject (≤ 60 chars) and email_body (short newsletter blurb with CTA).",
     "Graphics: 2–4 specs using fitting templates and sizes. stat must be copied verbatim from SOURCE MATERIAL with its stat_source_url from SOURCES, or empty string.",
+    "claims: list every factual statement, analysis, opinion, projection and hypothetical example the article relies on, with kind set honestly. A fact needs source_url copied from SOURCES; non-facts use an empty source_url unless they build on one source. Never present analysis, opinion or projection as fact.",
+    "Never write quotation marks around words unless they are copied verbatim from SOURCE MATERIAL. Never invent quotes, statistics, regulatory requirements or personal experiences.",
+    "cta: the main call to action. cta_options: 2–3 alternative CTAs suited to this series.",
+    "social.email_body: a complete short newsletter version (headline, 2–3 short paragraphs, CTA).",
     "schema_jsonld: return an empty string (built separately).", COPY_RULES,
   ].filter(Boolean).join("\n");
   const input = [
@@ -202,3 +211,66 @@ export async function toPosts(userId: string, itemId: string) {
 }
 
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
+
+/* ---------- Content Studio: start a package from research, an idea, a calendar item or a manual topic ---------- */
+const LOCKED = ["approved", "scheduled", "published", "performance_review"];
+
+export async function studioSources(userId: string) {
+  const { db, roles } = await ctx(userId);
+  const since = new Date(Date.now() - 30 * 864e5).toISOString();
+  const [stories, ideas, items, series] = await Promise.all([
+    db.from("marketing_research_stories").select("id, headline, publisher, url, published_at, score, verification_status, suggested_series, category")
+      .is("dismissed_at", null).eq("promoted", true).eq("verification_status", "verified_primary").gte("retrieved_at", since).order("score", { ascending: false }).limit(60),
+    db.from("marketing_research_ideas").select("id, series_key, title, angle, unverified_claims, idea_date").is("converted_item_id", null).gte("idea_date", since.slice(0, 10)).order("created_at", { ascending: false }).limit(40),
+    db.from("marketing_content_items").select("id, series_key, article_title, topic, status, publish_at, package_version").not("status", "in", `(${LOCKED.join(",")})`).order("updated_at", { ascending: false }).limit(40),
+    db.from("marketing_series").select("key, name, weekday").eq("active", true).order("weekday"),
+  ]);
+  const { STUDIO_MANAGERS } = await import("@/lib/marketing-studio-model");
+  return { stories: stories.data ?? [], ideas: ideas.data ?? [], items: items.data ?? [], series: series.data ?? [], canManualTopic: roles.some((r) => STUDIO_MANAGERS.includes(r)) };
+}
+
+type Start =
+  | { kind: "stories"; story_ids: string[]; series_key: string; guidance: string | null }
+  | { kind: "idea"; idea_id: string; guidance: string | null }
+  | { kind: "item"; item_id: string; guidance: string | null }
+  | { kind: "manual"; series_key: string; title: string; topic: string; source_urls: string[]; guidance: string | null };
+
+/** Returns the Studio item the draft package belongs to. Never approves, schedules or publishes. */
+export async function startPackage(userId: string, s: Start) {
+  const { db, roles } = await ctx(userId);
+  const studio = await import("@/lib/marketing-studio.server");
+  let itemId: string;
+  if (s.kind === "item") {
+    itemId = s.item_id;
+  } else if (s.kind === "idea") {
+    const { data: idea } = await db.from("marketing_research_ideas").select("converted_item_id").eq("id", s.idea_id).single();
+    if (!idea) throw new Error("Idea not found.");
+    itemId = idea.converted_item_id ?? (await (await import("@/lib/marketing-research.server")).convertIdea(userId, s.idea_id, null)).id;
+  } else if (s.kind === "stories") {
+    if (!s.story_ids.length) throw new Error("Pick at least one story.");
+    const { data: st } = await db.from("marketing_research_stories").select("id, headline, url, primary_source_urls, verification_status, keywords, angle, facts").in("id", s.story_ids);
+    const list = (st ?? []) as any[];
+    if (list.some((x) => x.verification_status !== "verified_primary")) throw new Error("Only stories verified against a primary source can start a package.");
+    const urls = [...new Set(list.flatMap((x) => [...(x.primary_source_urls ?? []), x.url]))].slice(0, 30) as string[];
+    // Duplicate prevention: an open item already built on exactly these stories is reused.
+    const { data: open } = await db.from("marketing_content_items").select("id, source_urls, status").eq("series_key", s.series_key).not("status", "in", `(${LOCKED.join(",")})`).overlaps("source_urls", list.map((x) => x.url));
+    const same = ((open ?? []) as any[]).find((o) => list.every((x) => (o.source_urls ?? []).includes(x.url)));
+    if (same) return { itemId: same.id, existing: true, version: null };
+    const item = await studio.saveItem(userId, {
+      series_key: s.series_key, article_title: list[0].headline, topic: list.length > 1 ? `Grouped stories: ${list.map((x) => x.headline).join(" · ")}`.slice(0, 500) : (list[0].angle ?? "").slice(0, 500),
+      keywords: [...new Set(list.flatMap((x) => x.keywords ?? []))].slice(0, 15), source_urls: urls, platforms: ["linkedin", "website"],
+    });
+    const cites = list.flatMap((x) => ((x.facts ?? []) as any[]).slice(0, 6).map((f) => ({ item_id: item.id, story_id: x.id, claim: typeof f === "string" ? f : JSON.stringify(f), claim_kind: "fact", source_url: (x.primary_source_urls ?? [])[0] ?? x.url, verification: "verified_primary", created_by: userId })));
+    if (cites.length) await db.from("marketing_content_citations").insert(cites);
+    itemId = item.id;
+  } else {
+    const { STUDIO_MANAGERS } = await import("@/lib/marketing-studio-model");
+    if (!roles.some((r) => STUDIO_MANAGERS.includes(r))) throw new Error("Only a marketing manager can approve a manual topic.");
+    if (!s.source_urls.length) throw new Error("Add at least one primary source link for a manual topic.");
+    const item = await studio.saveItem(userId, { series_key: s.series_key, article_title: s.title, topic: s.topic, source_urls: s.source_urls, platforms: ["linkedin", "website"] });
+    await logEvent(db, item.id, "manual_topic_approved", userId, "Topic entered and approved by a marketing manager");
+    itemId = item.id;
+  }
+  const r = await generate(userId, itemId, s.guidance);
+  return { itemId, existing: false, version: r.version };
+}

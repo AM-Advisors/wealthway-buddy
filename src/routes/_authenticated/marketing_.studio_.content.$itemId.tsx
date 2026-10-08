@@ -11,7 +11,7 @@ import { StatusPill } from "@/components/marketing/studio";
 import {
   checkOriginality, contentToArticle, contentToPosts, generateContentPackage, getContentWorkspace, recordContentReview, saveContentPackage,
 } from "@/lib/marketing-content.functions";
-import { GRAPHIC_SIZES, GRAPHIC_TEMPLATES, REVIEW_KINDS, REVIEW_LABEL, SOCIAL_CHANNELS, approvalGaps, type ContentPackage, type ReviewKind } from "@/lib/marketing-content-model";
+import { CLAIM_KINDS, CLAIM_LABEL, GRAPHIC_SIZES, GRAPHIC_TEMPLATES, REVIEW_KINDS, REVIEW_LABEL, SOCIAL_CHANNELS, approvalGaps, type ContentPackage, type ReviewKind } from "@/lib/marketing-content-model";
 import { RESOURCE_CATEGORIES } from "@/lib/marketing/site-config";
 
 export const Route = createFileRoute("/_authenticated/marketing_/studio_/content/$itemId")({
@@ -63,17 +63,19 @@ function Workspace() {
         )}
 
         {!p ? <p className="text-sm text-muted-foreground">No package yet. Add sources to the item, then generate.</p> : <>
-          {p.checks && (p.checks.dropped_citations.length + p.checks.dropped_links.length + p.checks.unverified_stats + p.checks.ranking_claims.length > 0) && (
+          {p.checks && (p.checks.dropped_citations.length + p.checks.dropped_links.length + p.checks.unverified_stats + p.checks.ranking_claims.length + (p.checks.unverified_facts ?? 0) + (p.checks.unsourced_quotes?.length ?? 0) > 0) && (
             <div className="rounded-md border border-destructive px-3 py-2 text-xs text-destructive">
               {p.checks.dropped_citations.length > 0 && <div>Removed {p.checks.dropped_citations.length} citation(s) not in this item's sources.</div>}
               {p.checks.dropped_links.length > 0 && <div>Removed {p.checks.dropped_links.length} internal link(s) to pages that don't exist.</div>}
               {p.checks.unverified_stats > 0 && <div>Cleared {p.checks.unverified_stats} graphic statistic(s) not found in the verified sources.</div>}
+              {(p.checks.unverified_facts ?? 0) > 0 && <div>{p.checks.unverified_facts} fact(s) have no stored source. They block approval until sourced or relabelled.</div>}
+              {(p.checks.unsourced_quotes?.length ?? 0) > 0 && <div>Quotation(s) not found in the sources — remove or verify: {p.checks.unsourced_quotes!.map((x) => `“${x.slice(0, 60)}…”`).join(", ")}</div>}
               {p.checks.ranking_claims.length > 0 && <div>Remove ranking promises: {p.checks.ranking_claims.join(", ")}</div>}
             </div>
           )}
           <div className="flex flex-wrap gap-1 border-b border-border">{TABS.map((t) => <button key={t} onClick={() => setTab(t)} className={`px-3 py-2 text-sm ${tab === t ? "border-b-2 border-primary font-semibold" : "text-muted-foreground"}`}>{t}</button>)}</div>
           <fieldset disabled={locked} className="space-y-3">
-            {tab === "Article" && <ArticleTab p={p} set={set} />}
+            {tab === "Article" && <ArticleTab p={p} set={set} sources={d.sources} />}
             {tab === "SEO & GEO" && <SeoTab p={p} set={set} />}
             {tab === "Social" && <SocialTab p={p} set={set} />}
             {tab === "Design" && <DesignTab p={p} set={set} sources={d.sources} />}
@@ -102,7 +104,9 @@ function Workspace() {
 function F({ label, children }: { label: string; children: React.ReactNode }) { return <label className="block space-y-1 text-xs font-medium">{label}{children}</label>; }
 type TP = { p: ContentPackage; set: (x: Partial<ContentPackage>) => void };
 
-function ArticleTab({ p, set }: TP) {
+function ArticleTab({ p, set, sources }: TP & { sources: string[] }) {
+  const claims = p.claims ?? [];
+  const upd = (i: number, patch: any) => set({ claims: claims.map((c, j) => (j === i ? { ...c, ...patch } : c)) });
   return <div className="grid gap-3">
     <F label="SEO article title"><input className={inp} value={p.seo_title} onChange={(e) => set({ seo_title: e.target.value })} /></F>
     <F label="Social headline"><input className={inp} value={p.social_headline} onChange={(e) => set({ social_headline: e.target.value })} /></F>
@@ -115,6 +119,18 @@ function ArticleTab({ p, set }: TP) {
     <F label="Primary-source citations (label | url per line; must be one of the item's sources)"><textarea className={inp} rows={4} value={p.citations.map((c) => `${c.label} | ${c.url}`).join("\n")}
       onChange={(e) => set({ citations: e.target.value.split("\n").filter(Boolean).map((l) => { const [a, b] = l.split(" | "); return { label: a ?? "", url: (b ?? "").trim() }; }) })} /></F>
     <F label="Call to action"><input className={inp} value={p.cta} onChange={(e) => set({ cta: e.target.value })} /></F>
+    {(p.cta_options ?? []).length > 0 && <div className="text-xs"><b>Other CTA ideas:</b> {(p.cta_options ?? []).map((c) => <button key={c} type="button" className="mr-2 underline" onClick={() => set({ cta: c })}>{c}</button>)}</div>}
+    <div className="space-y-2 rounded-md border border-border p-3">
+      <p className="text-xs font-semibold">Claims in this package</p>
+      <p className="text-[11px] text-muted-foreground">Every statement is labelled. Facts must point at one of this item's sources; a fact without one blocks approval. Analysis, opinion, projections and hypothetical examples must read as such in the article.</p>
+      {claims.map((c, i) => <div key={i} className="grid gap-2 md:grid-cols-[1fr_10rem_16rem_auto]">
+        <input className={inp} value={c.text} onChange={(e) => upd(i, { text: e.target.value })} />
+        <select className={inp} value={c.kind} onChange={(e) => upd(i, { kind: e.target.value })}>{CLAIM_KINDS.map((k) => <option key={k} value={k}>{CLAIM_LABEL[k]}</option>)}</select>
+        <select className={`${inp} ${c.kind === "fact" && !c.source_url ? "border-destructive" : ""}`} value={c.source_url} onChange={(e) => upd(i, { source_url: e.target.value })}><option value="">No source</option>{sources.map((x) => <option key={x} value={x}>{x}</option>)}</select>
+        <Button type="button" size="sm" variant="ghost" onClick={() => set({ claims: claims.filter((_, j) => j !== i) })}>Remove</Button>
+      </div>)}
+      <Button type="button" size="sm" variant="outline" onClick={() => set({ claims: [...claims, { text: "", kind: "analysis", source_url: "" }] })}>Add claim</Button>
+    </div>
   </div>;
 }
 

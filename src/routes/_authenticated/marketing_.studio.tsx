@@ -78,6 +78,7 @@ function StudioDashboard() {
       actions={
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" asChild><Link to="/marketing/studio/calendar">Editorial calendar</Link></Button>
+          <Button variant="outline" asChild><Link to="/marketing/content-studio">Content Studio</Link></Button>
           <Button variant="outline" onClick={() => setOpen(null)}>New item</Button>
           <Button onClick={async () => { try { const r = await plan({ data: { week: mondayOf(todayYmd) } }); toast.success(r.created ? `Added ${r.created} proposed slots` : "This week is already planned"); qc.invalidateQueries({ queryKey: ["studio"] }); } catch (e: any) { toast.error(e.message); } }}>Plan this week</Button>
         </div>
