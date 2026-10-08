@@ -1,3 +1,6 @@
-import { guard } from "/dev-server/.wt/lib";
+import { guard, N } from "/dev-server/.wt/lib";
 const d = await guard();
-const { data } = await d.from("chart_of_accounts").select("code,name,account_type").eq("book_id","d1fd4e89-8028-4aec-b0a6-9901e48efe03").order("code"); console.log(data.map((a:any)=>a.code+" "+a.name+" "+a.account_type).join("\n"));
+for (const t of ["portfolio_assets","portfolio_positions","portfolio_investments","investments","portfolio_transactions","asset_valuations","fund_expenses","expenses"]) {
+  const r = await d.from(t).select("*", { count: "exact", head: true }).eq("offering_id", N);
+  console.log(t, r.error ? "ERR " + r.error.message.slice(0,60) : r.count);
+}
