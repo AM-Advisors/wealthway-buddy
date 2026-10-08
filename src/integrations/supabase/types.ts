@@ -27962,10 +27962,14 @@ export type Database = {
           member_sub: string | null
           name: string | null
           owner_user_id: string
+          pause_reason: string | null
+          paused_at: string | null
+          paused_by: string | null
           picture_url: string | null
           profile_url: string | null
           scopes: string | null
           status: string
+          timezone: string | null
           token_ciphertext: string | null
           updated_at: string
         }
@@ -27977,10 +27981,14 @@ export type Database = {
           member_sub?: string | null
           name?: string | null
           owner_user_id: string
+          pause_reason?: string | null
+          paused_at?: string | null
+          paused_by?: string | null
           picture_url?: string | null
           profile_url?: string | null
           scopes?: string | null
           status?: string
+          timezone?: string | null
           token_ciphertext?: string | null
           updated_at?: string
         }
@@ -27992,10 +28000,14 @@ export type Database = {
           member_sub?: string | null
           name?: string | null
           owner_user_id?: string
+          pause_reason?: string | null
+          paused_at?: string | null
+          paused_by?: string | null
           picture_url?: string | null
           profile_url?: string | null
           scopes?: string | null
           status?: string
+          timezone?: string | null
           token_ciphertext?: string | null
           updated_at?: string
         }
@@ -29380,6 +29392,89 @@ export type Database = {
           },
         ]
       }
+      marketing_form_d_filings: {
+        Row: {
+          accession: string
+          cik: string
+          doc_url: string | null
+          exemptions: string[]
+          fetched_at: string
+          filed_at: string | null
+          first_sale: string | null
+          form_type: string
+          fund_type: string | null
+          index_url: string
+          industry: string | null
+          investors: number | null
+          is_amendment: boolean
+          issuer: string
+          newsworthy: boolean
+          newsworthy_reason: string | null
+          offering_indefinite: boolean
+          parse_error: string | null
+          state: string | null
+          story_id: string | null
+          total_offering: number | null
+          total_sold: number | null
+        }
+        Insert: {
+          accession: string
+          cik: string
+          doc_url?: string | null
+          exemptions?: string[]
+          fetched_at?: string
+          filed_at?: string | null
+          first_sale?: string | null
+          form_type: string
+          fund_type?: string | null
+          index_url: string
+          industry?: string | null
+          investors?: number | null
+          is_amendment: boolean
+          issuer: string
+          newsworthy?: boolean
+          newsworthy_reason?: string | null
+          offering_indefinite?: boolean
+          parse_error?: string | null
+          state?: string | null
+          story_id?: string | null
+          total_offering?: number | null
+          total_sold?: number | null
+        }
+        Update: {
+          accession?: string
+          cik?: string
+          doc_url?: string | null
+          exemptions?: string[]
+          fetched_at?: string
+          filed_at?: string | null
+          first_sale?: string | null
+          form_type?: string
+          fund_type?: string | null
+          index_url?: string
+          industry?: string | null
+          investors?: number | null
+          is_amendment?: boolean
+          issuer?: string
+          newsworthy?: boolean
+          newsworthy_reason?: string | null
+          offering_indefinite?: boolean
+          parse_error?: string | null
+          state?: string | null
+          story_id?: string | null
+          total_offering?: number | null
+          total_sold?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_form_d_filings_story_id_fkey"
+            columns: ["story_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_research_stories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marketing_import_sources: {
         Row: {
           created_at: string
@@ -29482,6 +29577,27 @@ export type Database = {
           utm_source?: string | null
           utm_term?: string | null
           work_email?: string
+        }
+        Relationships: []
+      }
+      marketing_org_settings: {
+        Row: {
+          id: number
+          timezone: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          id?: number
+          timezone?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          id?: number
+          timezone?: string
+          updated_at?: string
+          updated_by?: string | null
         }
         Relationships: []
       }
@@ -30000,6 +30116,7 @@ export type Database = {
         Row: {
           angle: string
           audience: string
+          category: string | null
           commercial: number
           confidence: string
           created_by: string | null
@@ -30015,6 +30132,7 @@ export type Database = {
           keywords: string[]
           numbers: Json
           primary_source_urls: string[]
+          promoted: boolean
           published_at: string | null
           publisher: string
           regulatory_sensitivity: string
@@ -30032,6 +30150,7 @@ export type Database = {
         Insert: {
           angle?: string
           audience?: string
+          category?: string | null
           commercial?: number
           confidence?: string
           created_by?: string | null
@@ -30047,6 +30166,7 @@ export type Database = {
           keywords?: string[]
           numbers?: Json
           primary_source_urls?: string[]
+          promoted?: boolean
           published_at?: string | null
           publisher: string
           regulatory_sensitivity?: string
@@ -30064,6 +30184,7 @@ export type Database = {
         Update: {
           angle?: string
           audience?: string
+          category?: string | null
           commercial?: number
           confidence?: string
           created_by?: string | null
@@ -30079,6 +30200,7 @@ export type Database = {
           keywords?: string[]
           numbers?: Json
           primary_source_urls?: string[]
+          promoted?: boolean
           published_at?: string | null
           publisher?: string
           regulatory_sensitivity?: string
