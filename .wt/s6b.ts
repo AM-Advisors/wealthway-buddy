@@ -15,7 +15,7 @@ const { data: jl } = await d.from("journal_lines").select("account_id,debit_cent
 const bal = (code: string) => { const id = coa.find((a: any) => a.code === code)?.id; return jl.filter((l: any) => l.account_id === id).reduce((s: number, l: any) => s + Number(l.debit_cents ?? 0) - Number(l.credit_cents ?? 0), 0) / 100; };
 const dr = jl.reduce((s: number, l: any) => s + Number(l.debit_cents ?? 0), 0), cr = jl.reduce((s: number, l: any) => s + Number(l.credit_cents ?? 0), 0);
 console.log("bank Q1 deposits", bank / 100, "unapplied", JSON.stringify(unapplied));
-console.log("GL cash 1000", bal("1000"), "contrib 3100", bal("3100"), "posted journals", postedIds.length, "TB", dr / 100, cr / 100);
+console.log("GL cash 1000", bal("1000"), "credits 2500", bal("2500"), "contrib 3100", bal("3100"), "posted journals", postedIds.length, "TB", dr / 100, cr / 100);
 const { data: ev } = await d.from("commitment_events").select("position_id,event_type,amount_cents").eq("offering_id", N);
 const { data: ef } = await d.from("expected_fundings").select("position_id,expected_amount_cents,received_amount_cents,status,expected_by").eq("offering_id", N);
 const { data: pos } = await d.from("investor_positions").select("id,display_name").eq("offering_id", N).order("display_name");

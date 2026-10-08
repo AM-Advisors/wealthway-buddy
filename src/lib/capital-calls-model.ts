@@ -827,10 +827,57 @@ export function fundingAcceptanceError(i: {
   outstandingCents: number;
   acceptFundsBlocks: string[];
   conflictingReference?: string | null;
+  /** Explicit staff disposition for cash above the obligation; never defaulted. */
+  holdExcessAsCredit?: boolean;
 }): string | null {
   if (i.acceptFundsBlocks.length) return `Accepting funds is blocked until resolved: ${i.acceptFundsBlocks.join(", ")}.`;
   if (i.conflictingReference) return `This deposit carries another investor's reference (${i.conflictingReference}); it cannot be applied here.`;
   if (i.appliedCents !== i.transactionCents) return "The applied amount must equal the bank deposit; split deposits are not supported.";
-  if (i.appliedCents > i.outstandingCents) return `This deposit exceeds the amount owed by ${((i.appliedCents - i.outstandingCents) / 100).toFixed(2)}. Overpayments cannot be held as investor credit yet, so it stays unapplied.`;
+  if (i.appliedCents > i.outstandingCents && i.holdExcessAsCredit) return i.outstandingCents > 0 ? null : "Nothing is owed on this obligation; unknown cash cannot become an investor credit here.";
+  if (i.appliedCents > i.outstandingCents) return `This deposit exceeds the amount owed by ${((i.appliedCents - i.outstandingCents) / 100).toFixed(2)}. Overpayment detected: choose an explicit disposition (hold as investor credit) or it stays unapplied.`;
+  return null;
+}
+
+/** Investor credit: excess investor cash is a liability owed to the investor, never capital. */
+export const INVESTOR_CREDIT_ACCOUNT_CODE = "2500";
+/** Credits above this need a second person before they become available. */
+export const LARGE_CREDIT_REVIEW_CENTS = 100_000;
+
+export function splitReceipt(receivedCents: number, outstandingCents: number) {
+  const contributionCents = Math.max(0, Math.min(receivedCents, outstandingCents));
+  const excessCents = receivedCents - contributionCents;
+  return {
+    contributionCents,
+    excessCents,
+    overpaymentDetected: excessCents > 0,
+    initialStatus: excessCents > LARGE_CREDIT_REVIEW_CENTS ? ("held_for_review" as const) : ("unapplied" as const),
+  };
+}
+
+export type CreditDisposition = "refund" | "apply_to_obligation" | "void";
+/** Guards every future disposition of an investor credit (refund / apply / void). */
+export function creditDispositionError(i: {
+  kind: CreditDisposition;
+  amountCents: number;
+  balanceCents: number;
+  creditOfferingId: string;
+  creditPositionId: string;
+  targetOfferingId: string;
+  targetPositionId: string;
+  obligationOutstandingCents?: number;
+  payoutDestinationVerified?: boolean;
+  preparedBy: string;
+  approvedBy?: string | null;
+  status: string;
+}): string | null {
+  if (!(i.amountCents > 0)) return "Amount must be positive.";
+  if (i.amountCents > i.balanceCents) return "This exceeds the available credit; a credit can never go negative.";
+  if (["refunded", "resolved", "voided"].includes(i.status)) return "This credit is already closed.";
+  if (i.status === "held_for_review") return "This credit is held for review.";
+  if (i.creditOfferingId !== i.targetOfferingId) return "A credit can only be used in the fund that received the cash.";
+  if (i.creditPositionId !== i.targetPositionId) return "A credit belongs to one investor and cannot be used for another.";
+  if (i.kind === "apply_to_obligation" && !((i.obligationOutstandingCents ?? 0) >= i.amountCents)) return "There is no existing obligation large enough to apply this credit to.";
+  if (i.kind === "refund" && !i.payoutDestinationVerified) return "A refund needs a verified payout destination.";
+  if (!i.approvedBy || i.approvedBy === i.preparedBy) return "A second person must approve this disposition.";
   return null;
 }

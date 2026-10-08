@@ -52,6 +52,7 @@ export const DEFAULT_FUND_CHART: ChartSeed[] = [
   { code: "2200", name: "Accrued management fee", account_type: "liability", subtype: "management_fee", normal_balance: "credit" },
   { code: "2300", name: "Accrued carried interest", account_type: "liability", subtype: "carried_interest", normal_balance: "credit" },
   { code: "2400", name: "Withholding payable", account_type: "liability", subtype: "withholding", normal_balance: "credit" },
+  { code: "2500", name: "Investor credits payable", account_type: "liability", subtype: "payable", normal_balance: "credit" },
   { code: "3000", name: "Partner capital", account_type: "equity", subtype: "partner_capital", normal_balance: "credit" },
   { code: "3100", name: "Capital contributions", account_type: "equity", subtype: "contribution", normal_balance: "credit" },
   { code: "3200", name: "Distributions", account_type: "equity", subtype: "distribution", normal_balance: "debit" },
