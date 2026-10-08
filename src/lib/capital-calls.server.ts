@@ -43,6 +43,8 @@ import {
   selfReportEffect,
   capitalCallSegregationError,
   fundingAcceptanceError,
+  splitReceipt,
+  INVESTOR_CREDIT_ACCOUNT_CODE,
   type CallActorRole,
   type CallBasis,
   type CallType,
@@ -1112,6 +1114,8 @@ export async function decideFundingMatch(
     expectedFundingId?: string | null;
     amountCents?: number | null;
     reason?: string | null;
+    /** Required, explicit choice when the deposit exceeds what is owed. */
+    overpaymentDisposition?: "hold_as_investor_credit" | null;
   },
 ) {
   const actor = await assertStaff(userId);
@@ -1175,11 +1179,14 @@ export async function decideFundingMatch(
   const text = `${txn?.reference ?? ""} ${txn?.description ?? ""}`;
   const { data: others } = await db().from("expected_fundings").select("id, reference_code").eq("offering_id", match.offering_id).neq("id", expectedFundingId);
   const conflict = ((others ?? []) as any[]).find((o) => o.reference_code && text.includes(String(o.reference_code)) && !text.includes(String(expected.reference_code)));
-  const acceptance = fundingAcceptanceError({ appliedCents: applied, transactionCents: Number(txn?.amount_cents ?? 0), outstandingCents: outstanding, acceptFundsBlocks, conflictingReference: conflict?.reference_code ?? null });
+  const acceptance = fundingAcceptanceError({ appliedCents: applied, transactionCents: Number(txn?.amount_cents ?? 0), outstandingCents: outstanding, acceptFundsBlocks, conflictingReference: conflict?.reference_code ?? null, holdExcessAsCredit: input.overpaymentDisposition === "hold_as_investor_credit" });
   if (acceptance) {
     await recordEvent({ offeringId: match.offering_id, fundingMatchId: match.id, expectedFundingId, bankTransactionId: match.bank_transaction_id, event: "funding_acceptance_blocked", fromStatus: match.status, toStatus: match.status, reason: acceptance, actorUserId: actor.userId, actorRole: "harmonious" });
     fail(acceptance);
   }
+
+  const split = splitReceipt(applied, outstanding);
+  if (split.overpaymentDetected && reason.length < 4) fail(`Overpayment detected: expected ${(outstanding / 100).toFixed(2)}, received ${(applied / 100).toFixed(2)}, excess ${(split.excessCents / 100).toFixed(2)}. Give a reason for holding it as investor credit.`);
 
   // 1. Reconciliation: classify the cash against this investor.
   const reconciliationId = await reconcileFundingCash(actor.userId, {
@@ -1190,7 +1197,44 @@ export async function decideFundingMatch(
   });
 
   // 2. Journal preparation - accounting review and posting stay separate acts.
-  const journal = await prepareReconciliationJournal(actor.userId, reconciliationId);
+  // An overpayment splits one receipt: contribution for what is owed, investor-credit liability for the rest.
+  let creditAccountId: string | null = null;
+  if (split.overpaymentDetected) {
+    const { data: rec } = await db().from("bank_reconciliations").select("book_id").eq("id", reconciliationId).single();
+    const { data: acct } = await db().from("chart_of_accounts").select("id").eq("book_id", rec.book_id).eq("code", INVESTOR_CREDIT_ACCOUNT_CODE).maybeSingle();
+    if (!acct) fail("This fund's chart has no investor-credit liability account.");
+    creditAccountId = String(acct.id);
+  }
+  const journal = await prepareReconciliationJournal(
+    actor.userId,
+    reconciliationId,
+    creditAccountId ? { accountId: creditAccountId, creditCents: split.excessCents, memo: "Investor credit (overpayment)" } : null,
+  );
+  if (split.overpaymentDetected) {
+    const { data: txnFull } = await db().from("bank_transactions").select("posted_on, reference").eq("id", match.bank_transaction_id).single();
+    const { data: credit, error: creditError } = await db().from("investor_credits").insert({
+      offering_id: match.offering_id,
+      position_id: expected.position_id,
+      investor_user_id: expected.investor_user_id,
+      investment_profile_id: expected.investment_profile_id,
+      bank_transaction_id: match.bank_transaction_id,
+      funding_match_id: match.id,
+      expected_funding_id: expectedFundingId,
+      capital_call_line_id: expected.capital_call_line_id,
+      received_cents: applied,
+      applied_cents: split.contributionCents,
+      excess_cents: split.excessCents,
+      balance_cents: split.excessCents,
+      received_on: txnFull.posted_on,
+      source_reference: txnFull.reference ?? expected.reference_code,
+      reason,
+      status: split.initialStatus,
+      journal_entry_id: journal.entryId,
+      created_by: actor.userId,
+    }).select("id").single();
+    if (creditError) fail(creditError.message);
+    await db().from("investor_credit_events").insert({ credit_id: credit.id, event: "credit_created", to_status: split.initialStatus, amount_cents: split.excessCents, reason, actor_user_id: actor.userId });
+  }
 
   await db()
     .from("funding_matches")
@@ -1199,8 +1243,8 @@ export async function decideFundingMatch(
       expected_funding_id: expectedFundingId,
       reconciliation_id: reconciliationId,
       journal_entry_id: journal.entryId,
-      proposed_amount_cents: applied,
-      variance_cents: variance,
+      proposed_amount_cents: split.contributionCents,
+      variance_cents: split.contributionCents - outstanding,
       decision_reason: reason || (input.decision === "correct" ? "Corrected by Harmonious" : "Approved"),
       decided_by: actor.userId,
       decided_at: nowIso(),
@@ -1223,7 +1267,7 @@ export async function decideFundingMatch(
     actorRole: "harmonious",
   });
 
-  if (variance !== 0) {
+  if (variance !== 0 && !split.overpaymentDetected) {
     await db().from("funding_exceptions").insert({
       offering_id: match.offering_id,
       expected_funding_id: expectedFundingId,
@@ -1249,6 +1293,7 @@ async function reconcileFundingCash(
   },
 ) {
   const book = await ledgerBookForOffering(userId, input.offeringId);
+  await seedChartOfAccounts(book.id);
   const { data: accounts } = await db()
     .from("chart_of_accounts")
     .select("id, code")

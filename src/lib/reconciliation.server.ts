@@ -669,7 +669,11 @@ export async function externalApproveReconciliation(
  * posting rule that was in force. Idempotent: the reconciliation can only ever
  * carry one journal entry.
  */
-export async function prepareReconciliationJournal(userId: string, reconciliationId: string) {
+export async function prepareReconciliationJournal(
+  userId: string,
+  reconciliationId: string,
+  split?: { accountId: string; creditCents: number; memo: string } | null,
+) {
   await assertHarmonious(userId);
   const { data: rec } = await db()
     .from("bank_reconciliations")
@@ -704,12 +708,22 @@ export async function prepareReconciliationJournal(userId: string, reconciliatio
     },
     {
       accountId: rec.suggested_credit_account_id,
-      creditCents: amount,
+      creditCents: amount - (split?.creditCents ?? 0),
       applicationId: rec.matched_application_id,
       investorUserId: rec.investor_user_id,
       investmentProfileId: rec.investment_profile_id,
     },
   ];
+  if (split) {
+    if (!(split.creditCents > 0 && split.creditCents < amount)) fail("The split must leave a positive amount on both sides.");
+    lines.push({
+      accountId: split.accountId,
+      creditCents: split.creditCents,
+      applicationId: rec.matched_application_id,
+      investorUserId: rec.investor_user_id,
+      investmentProfileId: rec.investment_profile_id,
+    });
+  }
 
   let entry: any;
   try {
