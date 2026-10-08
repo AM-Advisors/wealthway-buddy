@@ -7,6 +7,9 @@ import {
 import { computeFeeRun } from "@/lib/economic-terms";
 
 // DEMO / SYNTHETIC Walkthrough Q1 2026. Permanent regression for the first operating period.
+// VERSION 1 - HISTORICAL. Its Northwind 1.25% input (and the $106,062.50 fee) is UNSUPPORTED by any
+// source record (live side letter: 1.50%, proposed). Kept unchanged as audit evidence of the engine;
+// the contractual benchmark is v2 in fund-accounting-model.test.ts.
 const r = runPeriod();
 const $ = (d: number) => Math.round(d * 100);
 const line = (id: string) => r.feeRun.lines.find((l) => l.positionId === id)!;
