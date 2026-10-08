@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { MkPage, mkHead } from "@/components/marketing-ui";
 import { SeriesChip, useStudio, type Series } from "@/components/marketing/studio";
 import { ackResearchAlert, addResearchStory, convertResearchIdea, dismissResearchStory, getResearchFeed, runResearchNow } from "@/lib/marketing-research.functions";
+import { CATEGORIES, categorize, freshnessWarning, usd, EXEMPTION_LABEL, issuerCategory, type Category } from "@/lib/marketing-formd-model";
+import { getFormDIntel } from "@/lib/marketing-research.functions";
 import { CLAIM_LABEL, SCORE_WEIGHTS, type ClaimKind } from "@/lib/marketing-research-model";
 
 export const Route = createFileRoute("/_authenticated/marketing_/studio_/research")({
@@ -19,7 +21,8 @@ const vTone = (v: string) => v === "verified_primary" ? "bg-primary text-primary
 
 function ResearchPage() {
   const [days, setDays] = useState(3);
-  const [tab, setTab] = useState<"feed" | "ideas" | "sources">("feed");
+  const [tab, setTab] = useState<"feed" | "formd" | "ideas" | "sources">("feed");
+  const [cat, setCat] = useState<Category | "all">("all");
   const [open, setOpen] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const load = useServerFn(getResearchFeed), run = useServerFn(runResearchNow), dismiss = useServerFn(dismissResearchStory);
@@ -57,15 +60,18 @@ function ResearchPage() {
       )}
 
       <div className="flex flex-wrap items-center gap-2">
-        <div className="flex rounded-md border border-border">{(["feed", "ideas", "sources"] as const).map((t) => <button key={t} onClick={() => setTab(t)} className={`px-3 py-1 text-xs capitalize ${tab === t ? "bg-primary text-primary-foreground" : ""}`}>{t === "feed" ? "Daily feed" : t}</button>)}</div>
+        <div className="flex rounded-md border border-border">{(["feed", "formd", "ideas", "sources"] as const).map((t) => <button key={t} onClick={() => setTab(t)} className={`px-3 py-1 text-xs capitalize ${tab === t ? "bg-primary text-primary-foreground" : ""}`}>{t === "feed" ? "Daily feed" : t === "formd" ? "Form D intelligence" : t}</button>)}</div>
         <select className={sel} value={days} onChange={(e) => setDays(Number(e.target.value))}>{[1, 3, 7, 14, 30].map((n) => <option key={n} value={n}>Last {n} day{n > 1 ? "s" : ""}</option>)}</select>
         <span className="text-[11px] text-muted-foreground">Score = relevance 25% · timeliness 20% · search 20% · engagement 15% · credibility 15% · commercial 5%</span>
       </div>
 
+      {tab === "formd" && <FormDTab tz={d?.timezone} />}
       {tab === "feed" && (
         <div className="space-y-2">
+          <div className="flex flex-wrap gap-1">{(["all", ...Object.keys(CATEGORIES)] as const).map((c) => <button key={c} onClick={() => setCat(c as any)} className={`rounded-full border px-2 py-0.5 text-xs ${cat === c ? "bg-primary text-primary-foreground" : "border-border"}`}>{c === "all" ? "All" : CATEGORIES[c as Category]} ({(d?.stories ?? []).filter((x: any) => c === "all" || categorize(x) === c).length})</button>)}</div>
+          <p className="text-[11px] text-muted-foreground">Routine Form D filings appear here only when they cross the newsworthiness threshold; the rest are in Form D intelligence.</p>
           {!d?.stories.length && <p className="text-sm text-muted-foreground">No stories yet. Press Refresh feeds.</p>}
-          {d?.stories.map((s: any, i: number) => (
+          {(d?.stories ?? []).filter((x: any) => cat === "all" || categorize(x) === cat).map((s: any, i: number) => (
             <article key={s.id} className="rounded-lg border border-border bg-card p-3">
               <div className="flex flex-wrap items-start gap-3">
                 <div className="w-12 shrink-0 text-center"><div className="font-heading text-xl font-semibold tabular-nums">{Math.round(s.score)}</div><div className="text-[10px] text-muted-foreground">#{i + 1}</div></div>
@@ -73,8 +79,10 @@ function ResearchPage() {
                   <a href={s.url} target="_blank" rel="noreferrer" className="font-medium hover:underline">{s.headline}</a>
                   <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
                     <span>{s.publisher}</span>
-                    {s.published_at && <span>Published {new Date(s.published_at).toLocaleDateString()}</span>}
-                    <span>Retrieved {new Date(s.retrieved_at).toLocaleDateString()}</span>
+                    <span className="rounded-sm bg-muted px-1.5 py-0.5">{CATEGORIES[categorize(s)]}</span>
+                    {s.published_at && <span>Published {fmtDate(s.published_at, d?.timezone)}</span>}
+                    <span>Retrieved {fmtDate(s.retrieved_at, d?.timezone)}</span>
+                    {freshnessWarning(s.published_at) && <span className="rounded-sm border border-destructive/50 px-1.5 py-0.5 text-destructive">{freshnessWarning(s.published_at)}</span>}
                     <span className={`rounded-sm px-1.5 py-0.5 ${vTone(s.verification_status)}`}>{VERIFY[s.verification_status]}</span>
                     <span>Confidence {s.confidence}</span>
                     {s.regulatory_sensitivity !== "low" && <span className="rounded-sm border border-destructive/50 px-1.5 py-0.5">Regulatory: {s.regulatory_sensitivity}</span>}
@@ -193,5 +201,52 @@ function ManualStory({ sources, busy, onAdd }: { sources: any[]; busy: boolean; 
       <textarea className={inp} rows={2} placeholder="Short summary in your own words" value={v.summary} onChange={(e) => setV({ ...v, summary: e.target.value })} />
       <Button size="sm" disabled={busy || !v.headline || !v.url} onClick={() => onAdd({ ...v, published_at: v.published_at ? `${v.published_at}T12:00:00.000Z` : null, primary_source_url: v.primary_source_url || null })}>Add story</Button>
     </section>
+  );
+}
+
+const fmtDate = (iso: string, tz?: string) => new Date(iso).toLocaleDateString("en-US", { timeZone: tz || "America/Chicago", month: "short", day: "numeric", year: "numeric" });
+
+function FormDTab({ tz }: { tz?: string }) {
+  const [week, setWeek] = useState(""), [q, setQ] = useState("");
+  const load = useServerFn(getFormDIntel);
+  const r = useQuery({ queryKey: ["formd", week, q], queryFn: () => load({ data: { weekOf: week || null, q } }) });
+  const d: any = r.data;
+  const Group = ({ title, rows }: { title: string; rows: any[] }) => (
+    <div className="rounded-md border border-border p-2"><div className="mb-1 text-[11px] font-semibold uppercase text-muted-foreground">{title}</div>
+      {rows.slice(0, 8).map((g) => <div key={g.key} className="flex justify-between gap-2 text-xs"><span className="truncate">{g.key}</span><span className="tabular-nums">{g.count}</span></div>)}</div>
+  );
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center gap-2 text-xs">
+        <label>Week starting <input type="date" className="rounded-md border border-input bg-background px-2 py-1" value={week} onChange={(e) => setWeek(e.target.value)} /></label>
+        {week && <Button size="sm" variant="ghost" onClick={() => setWeek("")}>Last 7 days</Button>}
+        <input className="rounded-md border border-input bg-background px-2 py-1" placeholder="Search issuer" value={q} onChange={(e) => setQ(e.target.value)} />
+      </div>
+      {!d ? <p className="text-sm text-muted-foreground">{r.error ? (r.error as Error).message : "Loading…"}</p> : <>
+        <section className="rounded-lg border border-border bg-card p-3 space-y-2">
+          <h2 className="font-heading text-lg">Weekly Form D Intelligence Digest</h2>
+          <p className="text-xs text-muted-foreground">{fmtDate(d.from, tz)} – {fmtDate(d.to, tz)} · computed from the official EDGAR filings below. Offering amounts are what issuers say they intend to sell, not capital raised.</p>
+          {d.digest.patterns.length ? <ul className="list-disc pl-5 text-sm">{d.digest.patterns.map((p: string) => <li key={p}>{p}</li>)}</ul> : <p className="text-sm text-muted-foreground">No filings in this period.</p>}
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+            <Group title="Filing date" rows={d.digest.byDate} /><Group title="Industry" rows={d.digest.byIndustry} /><Group title="Fund / issuer category" rows={d.digest.byCategory} /><Group title="Geography" rows={d.digest.byState} />
+            <Group title="Exemption" rows={d.digest.byExemption} /><Group title="Total offering amount" rows={d.digest.bySize} /><Group title="New vs amendment" rows={d.digest.byType} />
+          </div>
+        </section>
+        <div className="overflow-x-auto"><table className="w-full text-xs">
+          <thead><tr className="text-left text-muted-foreground"><th className="py-1">Filed</th><th>Issuer</th><th>Type</th><th>Category</th><th>State</th><th>Exemption</th><th>Total offering</th><th>Amount sold</th><th>History</th></tr></thead>
+          <tbody>{d.filings.map((f: any) => {
+            const hist = d.history.filter((h: any) => h.cik === f.cik && h.accession !== f.accession);
+            return <tr key={f.accession} className="border-t border-border align-top">
+              <td className="py-1">{f.filed_at ? fmtDate(f.filed_at, tz) : "—"}</td>
+              <td><a className="underline" href={f.index_url} target="_blank" rel="noreferrer">{f.issuer}</a>{f.newsworthy && <span className="ml-1 rounded-sm bg-accent/30 px-1">In daily feed</span>}{f.parse_error && <span className="ml-1 text-destructive">details unavailable</span>}</td>
+              <td>{f.is_amendment ? "Amendment" : "New"}</td><td>{issuerCategory(f)}</td><td>{f.state ?? "—"}</td>
+              <td>{f.exemptions.map((e: string) => EXEMPTION_LABEL[e]).filter(Boolean).join(", ") || "—"}</td>
+              <td>{f.total_offering != null ? usd(f.total_offering) : f.offering_indefinite ? "Indefinite" : "Not disclosed"}</td>
+              <td>{f.total_sold != null ? usd(f.total_sold) : "Not disclosed"}</td>
+              <td>{hist.length ? `${hist.length} related filing${hist.length > 1 ? "s" : ""}` : "—"}</td>
+            </tr>;
+          })}</tbody></table></div>
+      </>}
+    </div>
   );
 }

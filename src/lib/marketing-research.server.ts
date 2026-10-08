@@ -291,7 +291,8 @@ export async function feed(userId: string, days: number) {
     db.from("marketing_research_state").select("*").eq("job", JOB).maybeSingle(),
     db.from("marketing_research_runs").select("started_at, finished_at, status, result, error").eq("job", JOB).order("started_at", { ascending: false }).limit(5),
   ]);
-  return { stories: stories.data ?? [], ideas: ideas.data ?? [], alerts: alerts.data ?? [], sources: sources.data ?? [], paused: state.data?.paused_reason ?? null, runs: runs.data ?? [] };
+  const { data: org } = await db.from("marketing_org_settings").select("timezone").eq("id", 1).maybeSingle();
+  return { timezone: org?.timezone ?? "America/Chicago", stories: stories.data ?? [], ideas: ideas.data ?? [], alerts: alerts.data ?? [], sources: sources.data ?? [], paused: state.data?.paused_reason ?? null, runs: runs.data ?? [] };
 }
 
 export async function runNow(userId: string, ideas: boolean) {
