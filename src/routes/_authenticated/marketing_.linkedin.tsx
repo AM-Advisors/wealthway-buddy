@@ -195,7 +195,7 @@ function PostCard({ d, p }: { d: any; p: any }) {
         {(own || g.schedule || g.propose_schedule) && ["approved", "in_review", "draft"].includes(p.status) && <><input type="datetime-local" className="rounded-md border border-input bg-background px-2 py-1 text-xs" value={at} onChange={(e) => setAt(e.target.value)} />
           {(own || (g.schedule && p.status === "approved")) && <Button size="sm" variant="outline" disabled={!at} onClick={() => run("schedule", { at: new Date(at).toISOString() })}>Schedule</Button>}
           {!own && g.propose_schedule && <Button size="sm" variant="outline" disabled={!at} onClick={() => run("propose_schedule", { at: new Date(at).toISOString() })}>Propose time</Button>}</>}
-        {p.status === "scheduled" && (own || p.scheduled_by === undefined) && <Button size="sm" variant="outline" onClick={() => run("cancel_schedule")}>Cancel schedule</Button>}
+        {p.status === "scheduled" && (own || g.schedule) && <Button size="sm" variant="outline" onClick={() => run("cancel_schedule")}>Cancel schedule</Button>}
         {(own || (g.publish_approved && approvedNow && ["approved", "scheduled", "failed"].includes(p.status)) || g.publish_direct) && <Button size="sm" onClick={() => { if (confirm("Publish to the personal LinkedIn profile now?")) run("publish_now"); }}>Publish now</Button>}
         {own && p.status !== "cancelled" && <Button size="sm" variant="ghost" onClick={() => run("cancel")}>Cancel post</Button>}
       </div>}
