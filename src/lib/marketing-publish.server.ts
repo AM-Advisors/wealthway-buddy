@@ -180,7 +180,7 @@ export async function sendMarketingEmail(to: string, subject: string, html: stri
 
 /* ---------- Confirmation, test mode and insights (Meta Graph, supported endpoints only) ---------- */
 /** A submission only counts once the platform returns the object with a permalink. */
-export async function confirmMeta(channel: "facebook" | "instagram", ref: string, externalId: string): Promise<{ confirmed: boolean; permalink: string | null; error?: string }> {
+export async function confirmMeta(channel: "facebook" | "instagram", ref: string, externalId: string): Promise<{ confirmed: boolean; permalink: string | null; error?: string | undefined }> {
   const { token } = await metaTarget(ref);
   const fields = channel === "facebook" ? "id,permalink_url,is_published" : "id,permalink";
   const r = await fetch(`${GRAPH}/${encodeURIComponent(externalId)}?${new URLSearchParams({ fields, access_token: token })}`);
@@ -215,7 +215,7 @@ export async function validateInstagram(ref: string, text: string, images: strin
 /** Post-level metrics. Any metric the API doesn't return is reported as unavailable (never zero). */
 export async function metaInsights(channel: "facebook" | "instagram", ref: string, externalId: string) {
   const { token } = await metaTarget(ref);
-  const out: Record<string, number> = {}; const unavailable: string[] = [];
+  const out: any = {}; const unavailable: string[] = [];
   const get = async (path: string, q: Record<string, string>) => {
     const r = await fetch(`${GRAPH}/${path}?${new URLSearchParams({ ...q, access_token: token })}`);
     return r.ok ? r.json() : null;
