@@ -26,3 +26,6 @@ export const convertResearchIdea = createServerFn({ method: "POST" }).middleware
   .handler(async ({ data, context }) => (await srv()).convertIdea(context.userId, data.id, data.publish_at));
 export const getItemCitations = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((d) => id.parse(d)).handler(async ({ data, context }) => (await srv()).citations(context.userId, data.id));
+export const getFormDIntel = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ weekOf: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable(), q: z.string().max(100) }).parse(d))
+  .handler(async ({ data, context }) => (await srv()).formD(context.userId, data.weekOf, data.q));
