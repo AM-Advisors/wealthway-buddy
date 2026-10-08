@@ -25240,6 +25240,7 @@ export type Database = {
           is_gp: boolean
           notes: string | null
           offering_id: string
+          origin: string
           person_id: string | null
           status: string
           transferred_to_id: string | null
@@ -25261,6 +25262,7 @@ export type Database = {
           is_gp?: boolean
           notes?: string | null
           offering_id: string
+          origin?: string
           person_id?: string | null
           status?: string
           transferred_to_id?: string | null
@@ -25282,6 +25284,7 @@ export type Database = {
           is_gp?: boolean
           notes?: string | null
           offering_id?: string
+          origin?: string
           person_id?: string | null
           status?: string
           transferred_to_id?: string | null
@@ -25838,6 +25841,145 @@ export type Database = {
             columns: ["supersedes_id"]
             isOneToOne: false
             referencedRelation: "investor_statements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      investor_takeover_admission_events: {
+        Row: {
+          action: string
+          actor_user_id: string
+          admission_id: string
+          created_at: string
+          id: string
+          offering_id: string
+          reason: string | null
+          snapshot: Json
+        }
+        Insert: {
+          action: string
+          actor_user_id: string
+          admission_id: string
+          created_at?: string
+          id?: string
+          offering_id: string
+          reason?: string | null
+          snapshot?: Json
+        }
+        Update: {
+          action?: string
+          actor_user_id?: string
+          admission_id?: string
+          created_at?: string
+          id?: string
+          offering_id?: string
+          reason?: string | null
+          snapshot?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investor_takeover_admission_events_admission_id_fkey"
+            columns: ["admission_id"]
+            isOneToOne: false
+            referencedRelation: "investor_takeover_admissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      investor_takeover_admissions: {
+        Row: {
+          as_of_date: string
+          batch_ref: string
+          called_cents: number
+          class_label: string | null
+          commitment_cents: number
+          compliance: Json
+          contributed_cents: number
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          decision_reason: string | null
+          evidence: Json
+          id: string
+          investor_name: string
+          investor_type: string | null
+          notes: string | null
+          offering_id: string
+          opening_capital_cents: number
+          origin: string
+          position_id: string
+          prepared_at: string
+          prepared_by: string
+          relationship_effective_date: string | null
+          remediation: Json
+          source_system: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          as_of_date: string
+          batch_ref: string
+          called_cents: number
+          class_label?: string | null
+          commitment_cents: number
+          compliance?: Json
+          contributed_cents: number
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_reason?: string | null
+          evidence?: Json
+          id?: string
+          investor_name: string
+          investor_type?: string | null
+          notes?: string | null
+          offering_id: string
+          opening_capital_cents: number
+          origin: string
+          position_id: string
+          prepared_at?: string
+          prepared_by: string
+          relationship_effective_date?: string | null
+          remediation?: Json
+          source_system: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          as_of_date?: string
+          batch_ref?: string
+          called_cents?: number
+          class_label?: string | null
+          commitment_cents?: number
+          compliance?: Json
+          contributed_cents?: number
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_reason?: string | null
+          evidence?: Json
+          id?: string
+          investor_name?: string
+          investor_type?: string | null
+          notes?: string | null
+          offering_id?: string
+          opening_capital_cents?: number
+          origin?: string
+          position_id?: string
+          prepared_at?: string
+          prepared_by?: string
+          relationship_effective_date?: string | null
+          remediation?: Json
+          source_system?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investor_takeover_admissions_position_id_fkey"
+            columns: ["position_id"]
+            isOneToOne: false
+            referencedRelation: "investor_positions"
             referencedColumns: ["id"]
           },
         ]
