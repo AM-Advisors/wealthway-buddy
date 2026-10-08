@@ -1,0 +1,2 @@
+ALTER TABLE public.portfolio_valuations ADD COLUMN recognized_by_journal_id uuid;
+COMMENT ON COLUMN public.portfolio_valuations.recognized_by_journal_id IS 'Set only for takeover opening valuations: the value was already recognised by this posted opening journal, so no valuation journal is created and later movement is measured from this value.';

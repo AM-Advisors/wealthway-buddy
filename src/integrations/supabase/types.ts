@@ -33555,6 +33555,7 @@ export type Database = {
           price_per_unit_cents: number | null
           prior_valuation_id: string | null
           quantity: number | null
+          recognized_by_journal_id: string | null
           reviewed_at: string | null
           reviewed_by: string | null
           source: string | null
@@ -33603,6 +33604,7 @@ export type Database = {
           price_per_unit_cents?: number | null
           prior_valuation_id?: string | null
           quantity?: number | null
+          recognized_by_journal_id?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           source?: string | null
@@ -33651,6 +33653,7 @@ export type Database = {
           price_per_unit_cents?: number | null
           prior_valuation_id?: string | null
           quantity?: number | null
+          recognized_by_journal_id?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           source?: string | null
