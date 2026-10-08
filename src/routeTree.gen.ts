@@ -420,6 +420,7 @@ import { Route as AuthenticatedManagerFundFundIdSettingsRouteImport } from './ro
 import { Route as AuthenticatedManagerFundFundIdSideLettersRouteImport } from './routes/_authenticated/manager.fund.$fundId.side-letters'
 import { Route as AuthenticatedManagerFundFundIdTeamRouteImport } from './routes/_authenticated/manager.fund.$fundId.team'
 import { Route as AuthenticatedManagerFundFundIdTransactionsRouteImport } from './routes/_authenticated/manager.fund.$fundId.transactions'
+import { Route as AuthenticatedMarketingStudioContentItemIdRouteImport } from './routes/_authenticated/marketing_.studio_.content.$itemId'
 import { Route as AuthenticatedOpsTaxKindIdRouteImport } from './routes/_authenticated/ops.tax_.$kind.$id'
 import { Route as AuthenticatedProfessionalTaxKindIdRouteImport } from './routes/_authenticated/professional.tax_.$kind.$id'
 import { Route as AuthenticatedManagerFundFundIdInvestorOnboardingIdRouteImport } from './routes/_authenticated/manager.fund.$fundId.investor.$onboardingId'
@@ -2769,6 +2770,12 @@ const AuthenticatedManagerFundFundIdTransactionsRoute =
     path: '/transactions',
     getParentRoute: () => AuthenticatedManagerFundFundIdRoute,
   } as any)
+const AuthenticatedMarketingStudioContentItemIdRoute =
+  AuthenticatedMarketingStudioContentItemIdRouteImport.update({
+    id: '/marketing_/studio_/content/$itemId',
+    path: '/marketing/studio/content/$itemId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOpsTaxKindIdRoute =
   AuthenticatedOpsTaxKindIdRouteImport.update({
     id: '/ops/tax_/$kind/$id',
@@ -3198,6 +3205,7 @@ export interface FileRoutesByFullPath {
   '/manager/fund/$fundId/side-letters': typeof AuthenticatedManagerFundFundIdSideLettersRoute
   '/manager/fund/$fundId/team': typeof AuthenticatedManagerFundFundIdTeamRoute
   '/manager/fund/$fundId/transactions': typeof AuthenticatedManagerFundFundIdTransactionsRoute
+  '/marketing/studio/content/$itemId': typeof AuthenticatedMarketingStudioContentItemIdRoute
   '/ops/tax/$kind/$id': typeof AuthenticatedOpsTaxKindIdRoute
   '/professional/tax/$kind/$id': typeof AuthenticatedProfessionalTaxKindIdRoute
   '/manager/fund/$fundId/': typeof AuthenticatedManagerFundFundIdIndexRoute
@@ -3605,6 +3613,7 @@ export interface FileRoutesByTo {
   '/manager/fund/$fundId/side-letters': typeof AuthenticatedManagerFundFundIdSideLettersRoute
   '/manager/fund/$fundId/team': typeof AuthenticatedManagerFundFundIdTeamRoute
   '/manager/fund/$fundId/transactions': typeof AuthenticatedManagerFundFundIdTransactionsRoute
+  '/marketing/studio/content/$itemId': typeof AuthenticatedMarketingStudioContentItemIdRoute
   '/ops/tax/$kind/$id': typeof AuthenticatedOpsTaxKindIdRoute
   '/professional/tax/$kind/$id': typeof AuthenticatedProfessionalTaxKindIdRoute
   '/manager/fund/$fundId': typeof AuthenticatedManagerFundFundIdIndexRoute
@@ -4022,6 +4031,7 @@ export interface FileRoutesById {
   '/_authenticated/manager/fund/$fundId/side-letters': typeof AuthenticatedManagerFundFundIdSideLettersRoute
   '/_authenticated/manager/fund/$fundId/team': typeof AuthenticatedManagerFundFundIdTeamRoute
   '/_authenticated/manager/fund/$fundId/transactions': typeof AuthenticatedManagerFundFundIdTransactionsRoute
+  '/_authenticated/marketing_/studio_/content/$itemId': typeof AuthenticatedMarketingStudioContentItemIdRoute
   '/_authenticated/ops/tax_/$kind/$id': typeof AuthenticatedOpsTaxKindIdRoute
   '/_authenticated/professional/tax_/$kind/$id': typeof AuthenticatedProfessionalTaxKindIdRoute
   '/_authenticated/manager/fund/$fundId/': typeof AuthenticatedManagerFundFundIdIndexRoute
@@ -4439,6 +4449,7 @@ export interface FileRouteTypes {
     | '/manager/fund/$fundId/side-letters'
     | '/manager/fund/$fundId/team'
     | '/manager/fund/$fundId/transactions'
+    | '/marketing/studio/content/$itemId'
     | '/ops/tax/$kind/$id'
     | '/professional/tax/$kind/$id'
     | '/manager/fund/$fundId/'
@@ -4846,6 +4857,7 @@ export interface FileRouteTypes {
     | '/manager/fund/$fundId/side-letters'
     | '/manager/fund/$fundId/team'
     | '/manager/fund/$fundId/transactions'
+    | '/marketing/studio/content/$itemId'
     | '/ops/tax/$kind/$id'
     | '/professional/tax/$kind/$id'
     | '/manager/fund/$fundId'
@@ -5262,6 +5274,7 @@ export interface FileRouteTypes {
     | '/_authenticated/manager/fund/$fundId/side-letters'
     | '/_authenticated/manager/fund/$fundId/team'
     | '/_authenticated/manager/fund/$fundId/transactions'
+    | '/_authenticated/marketing_/studio_/content/$itemId'
     | '/_authenticated/ops/tax_/$kind/$id'
     | '/_authenticated/professional/tax_/$kind/$id'
     | '/_authenticated/manager/fund/$fundId/'
@@ -8219,6 +8232,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedManagerFundFundIdTransactionsRouteImport
       parentRoute: typeof AuthenticatedManagerFundFundIdRoute
     }
+    '/_authenticated/marketing_/studio_/content/$itemId': {
+      id: '/_authenticated/marketing_/studio_/content/$itemId'
+      path: '/marketing/studio/content/$itemId'
+      fullPath: '/marketing/studio/content/$itemId'
+      preLoaderRoute: typeof AuthenticatedMarketingStudioContentItemIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ops/tax_/$kind/$id': {
       id: '/_authenticated/ops/tax_/$kind/$id'
       path: '/ops/tax/$kind/$id'
@@ -8779,6 +8799,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsFundsIndexRoute: typeof AuthenticatedOpsFundsIndexRoute
   AuthenticatedOpsInvestorsIndexRoute: typeof AuthenticatedOpsInvestorsIndexRoute
   AuthenticatedAdminClientsClientIdEntitiesRoute: typeof AuthenticatedAdminClientsClientIdEntitiesRoute
+  AuthenticatedMarketingStudioContentItemIdRoute: typeof AuthenticatedMarketingStudioContentItemIdRoute
   AuthenticatedOpsTaxKindIdRoute: typeof AuthenticatedOpsTaxKindIdRoute
 }
 
@@ -9106,6 +9127,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsInvestorsIndexRoute: AuthenticatedOpsInvestorsIndexRoute,
   AuthenticatedAdminClientsClientIdEntitiesRoute:
     AuthenticatedAdminClientsClientIdEntitiesRoute,
+  AuthenticatedMarketingStudioContentItemIdRoute:
+    AuthenticatedMarketingStudioContentItemIdRoute,
   AuthenticatedOpsTaxKindIdRoute: AuthenticatedOpsTaxKindIdRoute,
 }
 
