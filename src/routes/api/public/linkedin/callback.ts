@@ -11,6 +11,12 @@ export const Route = createFileRoute("/api/public/linkedin/callback")({
         const code = u.searchParams.get("code"), state = u.searchParams.get("state");
         if (!code || !state) return back("linkedin=error&msg=Missing%20code");
         try {
+          const personal = await import("@/lib/linkedin-personal.server");
+          if (personal.isPersonalState(state)) {
+            const go = (q: string) => new Response(null, { status: 302, headers: { Location: `/marketing/linkedin?${q}` } });
+            try { await personal.completeConnect(code, state); return go("linkedin=connected"); }
+            catch (e) { return go(`linkedin=error&msg=${encodeURIComponent((e as Error).message.slice(0, 200))}`); }
+          }
           const li = await import("@/lib/linkedin-direct.server");
           const userId = li.verifyState(state);
           const { requireMarketing } = await import("@/lib/marketing.server");
