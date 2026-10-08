@@ -4,14 +4,14 @@ import { categorize, dedupeByIssuer, freshnessWarning, mainFeed, newsworthiness,
 const xml = `<edgarSubmission><primaryIssuer><issuerAddress><stateOrCountry>DE</stateOrCountry></issuerAddress></primaryIssuer>
 <offeringData><industryGroup><industryGroupType>Pooled Investment Fund</industryGroupType><investmentFundInfo><investmentFundType>Private Equity Fund</investmentFundType></investmentFundInfo></industryGroup>
 <federalExemptionsExclusions><item>06b</item><item>3C.1</item></federalExemptionsExclusions><typeOfFiling><newOrAmendment><isAmendment>false</isAmendment></newOrAmendment></typeOfFiling>
-<offeringSalesAmounts><totalOfferingAmount>Indefinite</totalOfferingAmount><totalAmountSold>260000</totalAmountSold></offeringSalesAmounts><investors><totalNumberAlreadyInvested>9</totalNumberAlreadyInvested></investors></offeringData></edgarSubmission>`;
+<offeringSalesAmounts><totalOfferingAmount>Indefinite</totalOfferingAmount><totalAmountSold>260000</totalAmountSold><totalRemaining>Indefinite</totalRemaining></offeringSalesAmounts><investors><totalNumberAlreadyInvested>9</totalNumberAlreadyInvested></investors></offeringData></edgarSubmission>`;
 const f = (x: Partial<FormD>): FormD => ({ accession: "a", cik: "1", issuer: "X", form_type: "D", is_amendment: false, filed_at: "2026-10-08", industry: "Pooled Investment Fund", fund_type: "Venture Capital Fund", state: "DE", exemptions: ["06b"], total_offering: 1e6, offering_indefinite: false, total_sold: null, investors: 1, ...x });
 
 describe("Form D intelligence", () => {
   it("parses titles and official XML; indefinite offering is not a number", () => {
     expect(parseAtomTitle("D/A - Hit Studio Movie LLC (0002093244) (Filer)")).toEqual({ form_type: "D/A", issuer: "Hit Studio Movie LLC", cik: "0002093244" });
     const p = parseFormDXml(xml);
-    expect(p).toMatchObject({ industry: "Pooled Investment Fund", fund_type: "Private Equity Fund", state: "DE", exemptions: ["06b", "3C.1"], total_offering: null, offering_indefinite: true, total_sold: 260000, investors: 9, is_amendment: false });
+    expect(p).toMatchObject({ industry: "Pooled Investment Fund", fund_type: "Private Equity Fund", state: "DE", exemptions: ["06b", "3C.1"], total_offering: null, offering_indefinite: true, total_sold: 260000, investors: 9, is_amendment: false, total_remaining: null, remaining_indefinite: true });
   });
   it("only large new filings are newsworthy; amendments never", () => {
     expect(newsworthiness(f({ total_offering: 5e8 })).newsworthy).toBe(true);
@@ -21,7 +21,9 @@ describe("Form D intelligence", () => {
   it("digest never calls offering amounts capital raised", () => {
     const d = weeklyDigest([f({}), f({ cik: "2", is_amendment: true, total_sold: 5e5 })]);
     expect(d.total).toBe(2); expect(d.amendments).toBe(1);
-    expect(d.patterns.join(" ")).toContain("not capital raised");
+    expect(d.patterns.join(" ")).toContain("not completed fundraising");
+    expect(d.patterns.join(" ")).toContain("not independently verified");
+    expect(d.patterns.join(" ")).not.toMatch(/\btargets?\b/);
     expect(d.patterns.join(" ")).not.toMatch(/\braised \$/);
   });
   it("dedupes amendments by issuer while keeping history", () => {

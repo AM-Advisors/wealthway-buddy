@@ -3,6 +3,7 @@ export type FormD = {
   accession: string; cik: string; issuer: string; form_type: string; is_amendment: boolean; filed_at: string | null;
   industry: string | null; fund_type: string | null; state: string | null; exemptions: string[];
   total_offering: number | null; offering_indefinite: boolean; total_sold: number | null; investors: number | null;
+  total_remaining?: number | null; remaining_indefinite?: boolean;
 };
 
 const pick = (x: string, t: string) => x.match(new RegExp(`<${t}>\\s*([\\s\\S]*?)\\s*</${t}>`))?.[1]?.trim() ?? null;
@@ -27,6 +28,8 @@ export function parseFormDXml(xml: string) {
     total_offering: num(totalRaw),
     offering_indefinite: /indefinite/i.test(totalRaw ?? ""),
     total_sold: num(pick(sales, "totalAmountSold")),
+    total_remaining: num(pick(sales, "totalRemaining")),
+    remaining_indefinite: /indefinite/i.test(pick(sales, "totalRemaining") ?? ""),
     investors: num(pick(pick(xml, "investors") ?? "", "totalNumberAlreadyInvested")),
     is_amendment: pick(xml, "isAmendment") === "true",
   };
@@ -84,8 +87,8 @@ export function weeklyDigest(rows: FormD[]) {
   if (rows.length) {
     patterns.push(`${rows.length} Form D filings from ${issuers} issuers: ${newOnes.length} new notices and ${rows.length - newOnes.length} amendments.`);
     patterns.push(`${funds.length} (${Math.round((funds.length / rows.length) * 100)}%) were pooled investment funds.`);
-    if (disclosedOffer.length) patterns.push(`Reported total offering amounts sum to ${usd(disclosedOffer.reduce((s, f) => s + (f.total_offering ?? 0), 0))} across ${disclosedOffer.length} new filings that disclosed one (offering amounts are targets, not capital raised).`);
-    if (disclosedSold.length) patterns.push(`Reported amounts sold sum to ${usd(disclosedSold.reduce((s, f) => s + (f.total_sold ?? 0), 0))} across ${disclosedSold.length} new filings, as disclosed by the issuers (amendments excluded to avoid double counting).`);
+    if (disclosedOffer.length) patterns.push(`Reported total offering amounts sum to ${usd(disclosedOffer.reduce((s, f) => s + (f.total_offering ?? 0), 0))} across ${disclosedOffer.length} new filings that disclosed one (the size each issuer reported it is offering — not completed fundraising).`);
+    if (disclosedSold.length) patterns.push(`Reported amounts sold sum to ${usd(disclosedSold.reduce((s, f) => s + (f.total_sold ?? 0), 0))} across ${disclosedSold.length} new filings, as self-reported by the issuers on Form D — not independently verified cash proceeds (amendments excluded to avoid double counting).`);
     const ex = group((f) => (f.exemptions.includes("06c") ? "Rule 506(c)" : f.exemptions.includes("06b") ? "Rule 506(b)" : "Other/none"))[0];
     if (ex) patterns.push(`Most common exemption: ${ex.key} (${ex.count} filings).`);
   }
@@ -127,4 +130,14 @@ export function freshnessWarning(publishedAt: string | null, now = new Date()): 
 /** Keep routine filings from dominating: Form D stories only rank in the main feed when promoted. */
 export function mainFeed<T extends { category: string | null; promoted: boolean }>(rows: T[]) {
   return rows.filter((r) => r.category !== "form_d" || r.promoted);
+}
+
+/** SEC field meanings, used for every displayed amount. */
+export const FORMD_FIELD = {
+  total_offering: { label: "Total offering amount", note: "Issuer-reported size of the offering (Form D Item 13). Not completed fundraising." },
+  total_sold: { label: "Total amount sold", note: "Issuer-reported amount sold to date (Item 13). Not independently verified cash proceeds." },
+  total_remaining: { label: "Total remaining to be sold", note: "Issuer-reported remainder of the offering (Item 13)." },
+} as const;
+export function fmtFormDAmount(v: number | null | undefined, indefinite?: boolean) {
+  return v != null ? usd(v) : indefinite ? "Indefinite" : "Not disclosed";
 }
