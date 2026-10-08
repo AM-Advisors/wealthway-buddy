@@ -123,12 +123,14 @@ function ArticleTab({ p, set, sources }: TP & { sources: string[] }) {
     {(p.cta_options ?? []).length > 0 && <div className="text-xs"><b>Other CTA ideas:</b> {(p.cta_options ?? []).map((c) => <button key={c} type="button" className="mr-2 underline" onClick={() => set({ cta: c })}>{c}</button>)}</div>}
     <div className="space-y-2 rounded-md border border-border p-3">
       <p className="text-xs font-semibold">Claims in this package</p>
-      <p className="text-[11px] text-muted-foreground">Every statement is labelled. Facts must point at one of this item's sources; a fact without one blocks approval. Analysis, opinion, projections and hypothetical examples must read as such in the article.</p>
+      <p className="text-[11px] text-muted-foreground">Every statement is labelled. Factual claims must point at one of this item's sources; a claim without one becomes unverified and blocks approval. Form D figures are labelled issuer-reported; company or press claims are attributed to the publisher unless a second independent source corroborates them. Regulatory interpretations need a compliance reviewer. Analysis, opinion, projections and hypothetical examples must read as such in the article.</p>
       {claims.map((c, i) => <div key={i} className="grid gap-2 md:grid-cols-[1fr_10rem_16rem_auto]">
         <input className={inp} value={c.text} onChange={(e) => upd(i, { text: e.target.value })} />
         <select className={inp} value={c.kind} onChange={(e) => upd(i, { kind: e.target.value })}>{CLAIM_KINDS.map((k) => <option key={k} value={k}>{CLAIM_LABEL[k]}</option>)}</select>
         <select className={`${inp} ${c.kind === "fact" && !c.source_url ? "border-destructive" : ""}`} value={c.source_url} onChange={(e) => upd(i, { source_url: e.target.value })}><option value="">No source</option>{sources.map((x) => <option key={x} value={x}>{x}</option>)}</select>
         <Button type="button" size="sm" variant="ghost" onClick={() => set({ claims: claims.filter((_, j) => j !== i) })}>Remove</Button>
+        {c.kind === "corroborated" && <select className={`${inp} md:col-start-3`} value={c.corroborating_url ?? ""} onChange={(e) => upd(i, { corroborating_url: e.target.value })}><option value="">Second independent source…</option>{sources.map((x) => <option key={x} value={x}>{x}</option>)}</select>}
+        {(c.attribution || c.note) && <p className="text-[11px] text-muted-foreground md:col-span-4">{c.attribution}{c.note ? ` — ${c.note}` : ""}</p>}
       </div>)}
       <Button type="button" size="sm" variant="outline" onClick={() => set({ claims: [...claims, { text: "", kind: "analysis", source_url: "" }] })}>Add claim</Button>
     </div>

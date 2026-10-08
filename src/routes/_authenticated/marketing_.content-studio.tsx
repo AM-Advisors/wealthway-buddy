@@ -53,7 +53,7 @@ function ContentStudio() {
 
   return (
     <MkPage title="Content Studio" intro="Generate a complete, editable draft package from verified research. Drafts never approve or publish themselves."
-      actions={<Button variant="outline" asChild><Link to="/marketing/studio">Back to Studio</Link></Button>}>
+      actions={<div className="flex gap-2"><Button variant="outline" asChild><Link to="/marketing/seo-clusters">Topical authority</Link></Button><Button variant="outline" asChild><Link to="/marketing/studio">Back to Studio</Link></Button></div>}>
       <div className="space-y-4">
         <div className="flex flex-wrap gap-1 border-b border-border">{MODES.map((m) => <button key={m.key} onClick={() => { setMode(m.key); setPicked([]); }} className={`px-3 py-2 text-sm ${mode === m.key ? "border-b-2 border-primary font-semibold" : "text-muted-foreground"}`}>{m.label}</button>)}</div>
         {!d ? <p className="text-sm text-muted-foreground">Loading…</p> : <>
