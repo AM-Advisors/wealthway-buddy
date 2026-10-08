@@ -115,7 +115,10 @@ export function sanitizePackage(p: ContentPackage, allowedSources: string[], all
     ...p, slug: slugify(p.slug || p.seo_title),
     citations: p.citations.filter((c) => src.has(c.url)),
     internal_links: p.internal_links.filter((l) => internal.has(l.url)),
-    graphics, claims: cl.claims, cta_options: (p.cta_options ?? []).filter((x) => x?.trim()).slice(0, 5),
+    graphics, claims: cl.claims,
+    pillar_page: p.pillar_page && internal.has(p.pillar_page) ? p.pillar_page : "",
+    supporting_articles: (p.supporting_articles ?? []).filter((u) => internal.has(u)),
+    service_pages: (p.service_pages ?? []).filter((u) => internal.has(u)), cta_options: (p.cta_options ?? []).filter((x) => x?.trim()).slice(0, 5),
     checks: { dropped_citations, dropped_links, unverified_stats: unverified, ranking_claims: rankingClaims(all), unverified_facts: cl.unverified, unsourced_quotes: unsourcedQuotes(p.body_html, factText) },
   };
 }
