@@ -10,7 +10,7 @@ export const NAV_ROLES = {
   finance: ["finance", "tax", "fund_administration", "admin", ...LEADERS],
   sales: ["sales", "account_executive", "bdr", "sales_management", "cro", ...LEADERS],
   accountManagement: ["account_manager", "client_success", "cro", "sales_management", ...LEADERS],
-  marketing: ["marketing_manager", "marketing_specialist", "admin", ...LEADERS],
+  marketing: ["marketing_manager", "marketing_specialist", "marketing_contributor", "compliance_reviewer", "executive_approver", "admin", ...LEADERS],
   leadership: ["leadership", "admin", ...LEADERS],
   /** People & Access → Employees, Test & Demo, Roles, Invites & access. */
   peopleEmployees: ["leadership", "admin", "operations_lead", ...LEADERS],
