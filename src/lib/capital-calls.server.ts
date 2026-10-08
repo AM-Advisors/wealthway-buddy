@@ -418,7 +418,11 @@ export async function requestCapitalCall(userId: string, callId: string) {
 }
 
 export async function reviewCapitalCall(userId: string, callId: string) {
-  await assertStaff(userId);
+  const reviewer = await assertStaff(userId);
+  const toReview = await callRow(callId);
+  if (String(toReview.prepared_by ?? "") === reviewer.userId) {
+    fail("Maker/checker: the person who prepared a capital call cannot review it.");
+  }
   await moveCall(userId, callId, "in_review", "review", {
     reviewed_by: userId,
     reviewed_at: nowIso(),
