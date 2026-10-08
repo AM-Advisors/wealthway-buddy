@@ -377,7 +377,7 @@ async function healthInputs(db: any) {
     db.from("marketing_research_sources").select("*").order("name"),
     db.from("marketing_research_state").select("paused_reason").eq("job", JOB).maybeSingle(),
     db.from("marketing_research_runs").select("id, status, started_at, finished_at, error, result").eq("job", JOB).order("started_at", { ascending: false }).limit(30),
-    db.from("marketing_studio_items").select("id, article_title, topic, status").in("status", OPEN_REVIEW).limit(300),
+    db.from("marketing_content_items").select("id, article_title, topic, status").in("status", OPEN_REVIEW).limit(300),
     db.from("marketing_research_stories").select("headline, dedupe_key").gte("retrieved_at", wk).limit(2000),
     db.from("marketing_form_d_filings").select("parse_error").gte("filed_at", wk).limit(2000),
   ]);
