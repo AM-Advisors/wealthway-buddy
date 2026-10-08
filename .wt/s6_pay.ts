@@ -9,8 +9,7 @@ for (const [k, uid] of Object.entries(U)) for (const role of ["operations", "adm
   console.log("grant", k, role, error?.message ?? "ok");
 }
 try {
-  let { data: acct } = await d.from("bank_accounts").select("id").eq("offering_id", N).eq("account_mask", "DEMO").maybeSingle();
-  if (!acct) acct = (await d.from("bank_accounts").insert({ offering_id: N, institution_name: "DEMO Synthetic Bank (not real)", account_name: "Walkthrough DEMO operating", account_mask: "DEMO", status: "active", created_by: U.prep }).select("id").single()).data;
+  const acct = { id: null }; // bank_accounts requires a provider item; DEMO manual cash has no account row (gap)
   const { data: ef } = await d.from("expected_fundings").select("id,reference_code,expected_amount_cents,position_id,investor_positions(display_name)").eq("offering_id", N);
   const by = (p: string) => ef.find((e: any) => e.investor_positions.display_name.startsWith(p));
   const DEP: [string, string | null, string, number, string][] = [
