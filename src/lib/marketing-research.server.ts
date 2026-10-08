@@ -4,6 +4,7 @@
  * suggests ideas per series and raises alerts. Nothing here publishes anything.
  */
 import { STUDIO_ACCESS, STUDIO_MANAGERS, weekStart } from "@/lib/marketing-studio-model";
+import { categorize, newsworthiness, parseAtomTitle, parseFormDXml, weeklyDigest } from "@/lib/marketing-formd-model";
 import { checkClaims, dedupeKey, heuristicRelevance, opportunityScore, shouldAlert, timelinessScore, type KnownStory } from "@/lib/marketing-research-model";
 
 const admin = async () => (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
@@ -116,6 +117,7 @@ async function ingest(db: any) {
           published_at: r.published_at, summary: r.summary, primary_source_urls: src.is_primary ? [r.url] : [],
           verification_status: src.is_primary ? "verified_primary" : "reported", confidence: src.is_primary ? "high" : "medium",
           relevance: s.relevance, timeliness: s.timeliness, credibility: s.credibility, commercial: s.commercial, keywords: s.keywords, score: s.score,
+          category: categorize({ source_key: src.key, headline: r.headline, summary: r.summary, published_at: r.published_at }), promoted: src.key !== "sec_form_d",
         };
       });
       if (rows.length) {
@@ -123,6 +125,7 @@ async function ingest(db: any) {
         if (error) throw new Error(error.message);
         added += (data ?? []).length;
       }
+      if (src.key === "sec_form_d") await formDDetails(db);
       await db.from("marketing_research_sources").update({ last_fetched_at: new Date().toISOString(), last_error: null }).eq("key", src.key);
     } catch (e: any) {
       errors.push(`${src.key}: ${e.message}`);
@@ -130,6 +133,44 @@ async function ingest(db: any) {
     }
   }
   return { added, errors };
+}
+
+/* ---------- Form D details (official EDGAR primary_doc.xml, SEC fair-access UA, throttled) ---------- */
+async function formDDetails(db: any) {
+  const { data: stories } = await db.from("marketing_research_stories").select("id, headline, url, published_at").eq("source_key", "sec_form_d").order("retrieved_at", { ascending: false }).limit(60);
+  const { data: have } = await db.from("marketing_form_d_filings").select("story_id").in("story_id", ((stories ?? []) as any[]).map((s) => s.id));
+  const done = new Set(((have ?? []) as any[]).map((h) => h.story_id));
+  for (const s of ((stories ?? []) as any[]).filter((x) => !done.has(x.id)).slice(0, 25)) {
+    const t = parseAtomTitle(s.headline);
+    const acc = s.url.match(/(\d{10}-\d{2}-\d{6})-index/)?.[1];
+    if (!t || !acc) continue;
+    const doc = s.url.replace(/[^/]+-index\.htm$/, "primary_doc.xml");
+    let row: any = { accession: acc, story_id: s.id, cik: t.cik, issuer: t.issuer, form_type: t.form_type, is_amendment: t.form_type === "D/A", filed_at: s.published_at, index_url: s.url, doc_url: doc };
+    try {
+      const r = await fetch(doc, { headers: { "User-Agent": UA, Accept: "application/xml" } });
+      if (!r.ok) throw new Error(`EDGAR ${r.status}`);
+      const p = parseFormDXml(await r.text());
+      row = { ...row, ...p, is_amendment: p.is_amendment || row.is_amendment };
+      const n = newsworthiness(row);
+      row.newsworthy = n.newsworthy; row.newsworthy_reason = n.reason;
+      if (n.newsworthy) await db.from("marketing_research_stories").update({ promoted: true }).eq("id", s.id);
+    } catch (e: any) { row.parse_error = String(e.message).slice(0, 200); }
+    await db.from("marketing_form_d_filings").upsert(row, { onConflict: "accession" });
+    await new Promise((res) => setTimeout(res, 150)); // stay well under SEC's 10 req/s limit
+  }
+}
+
+export async function formD(userId: string, weekOf: string | null, q: string) {
+  const { db } = await ctx(userId);
+  const start = weekOf ? new Date(`${weekOf}T00:00:00Z`) : new Date(Date.now() - 7 * 86400000);
+  const end = weekOf ? new Date(start.getTime() + 7 * 86400000) : new Date();
+  let query = db.from("marketing_form_d_filings").select("*").gte("filed_at", start.toISOString()).lt("filed_at", end.toISOString()).order("filed_at", { ascending: false }).limit(1000);
+  if (q.trim()) query = query.ilike("issuer", `%${q.trim().replace(/[%_]/g, "")}%`);
+  const { data } = await query;
+  const rows = ((data ?? []) as any[]).map((r) => ({ ...r, total_offering: r.total_offering == null ? null : Number(r.total_offering), total_sold: r.total_sold == null ? null : Number(r.total_sold) }));
+  const ciks = [...new Set(rows.map((r) => r.cik))];
+  const { data: hist } = ciks.length ? await db.from("marketing_form_d_filings").select("accession, cik, form_type, filed_at, total_offering, total_sold").in("cik", ciks).order("filed_at", { ascending: false }) : { data: [] };
+  return { from: start.toISOString(), to: end.toISOString(), filings: rows, history: hist ?? [], digest: weeklyDigest(rows) };
 }
 
 /* ---------- Enrichment ---------- */
@@ -150,7 +191,7 @@ angle: one sentence on why it matters to fund managers (analysis, not fact). Pic
 
 async function enrich(db: any, limit = ENRICH_PER_RUN) {
   const { data: todo } = await db.from("marketing_research_stories").select("id, source_key, headline, summary, published_at, credibility")
-    .is("enriched_at", null).is("dismissed_at", null).order("score", { ascending: false }).limit(limit);
+    .is("enriched_at", null).is("dismissed_at", null).eq("promoted", true).order("score", { ascending: false }).limit(limit);
   let done = 0;
   const list = (todo ?? []) as any[];
   for (let i = 0; i < list.length; i += ENRICH_BATCH) {
@@ -187,7 +228,7 @@ async function makeIdeas(db: any) {
   const since = new Date(Date.now() - 14 * 86400000).toISOString();
   const [{ data: stories }, { data: series }] = await Promise.all([
     db.from("marketing_research_stories").select("id, headline, publisher, url, summary, facts, angle, suggested_series, primary_source_urls, verification_status, score")
-      .is("dismissed_at", null).gte("retrieved_at", since).order("score", { ascending: false }).limit(30),
+      .is("dismissed_at", null).eq("promoted", true).gte("published_at", since).order("score", { ascending: false }).limit(30),
     db.from("marketing_series").select("*").eq("active", true).order("weekday"),
   ]);
   const st = (stories ?? []) as any[];
@@ -197,7 +238,8 @@ async function makeIdeas(db: any) {
   const out = await aiJson(
     `You plan content for Harmonious's five weekly series:\n${guide}\nReturn 3 to 5 ideas for EACH series (15-25 total) grounded in the stories provided.
 Each idea lists the story_ids it draws on and its key claims. Label every claim: fact (must be stated in a cited story, give its story_id), analysis, opinion (Harmonious's view), projection, or hypothetical (clearly an example).
-Never invent sources, statistics, quotes, regulator statements or current events. Founders Friday: never invent personal experiences or attribute opinions to Alyssa Pettit — frame as questions or topics for her to speak to. Whatever Wednesday ideas may be community/engagement prompts with no facts.`,
+Never invent sources, statistics, quotes, regulator statements or current events. Series purpose: market_monday = recent external developments only (published in the last 7 days); thesis_tuesday = evidence-backed Harmonious perspectives tied to cited facts; whatever_wednesday = community engagement and personality; fund_academy_thursday = searchable educational topics grounded in authoritative (official) sources; founders_friday = publicly reported startup developments and founder lessons.
+Every idea is a suggestion that needs human approval before becoming content. Founders Friday: never invent personal experiences or attribute opinions to Alyssa Pettit — frame as questions or topics for her to speak to. Whatever Wednesday ideas may be community/engagement prompts with no facts.`,
     input, "series_ideas", IDEA_SCHEMA);
   const known: KnownStory[] = st.map((s) => ({ id: s.id, url: s.url, primary_source_urls: s.primary_source_urls ?? [], verification_status: s.verification_status }));
   const ids = new Set(st.map((s) => s.id));
@@ -242,14 +284,15 @@ export async function feed(userId: string, days: number) {
   const { db } = await ctx(userId);
   const since = new Date(Date.now() - days * 86400000).toISOString();
   const [stories, ideas, alerts, sources, state, runs] = await Promise.all([
-    db.from("marketing_research_stories").select("*").is("dismissed_at", null).gte("retrieved_at", since).order("score", { ascending: false }).limit(150),
+    db.from("marketing_research_stories").select("*").is("dismissed_at", null).eq("promoted", true).gte("retrieved_at", since).order("score", { ascending: false }).limit(150),
     db.from("marketing_research_ideas").select("*").gte("idea_date", since.slice(0, 10)).order("created_at", { ascending: false }).limit(150),
     db.from("marketing_research_alerts").select("*, story:marketing_research_stories(headline, url, publisher, score)").is("acknowledged_at", null).order("created_at", { ascending: false }).limit(20),
     db.from("marketing_research_sources").select("*").order("active", { ascending: false }).order("name"),
     db.from("marketing_research_state").select("*").eq("job", JOB).maybeSingle(),
     db.from("marketing_research_runs").select("started_at, finished_at, status, result, error").eq("job", JOB).order("started_at", { ascending: false }).limit(5),
   ]);
-  return { stories: stories.data ?? [], ideas: ideas.data ?? [], alerts: alerts.data ?? [], sources: sources.data ?? [], paused: state.data?.paused_reason ?? null, runs: runs.data ?? [] };
+  const { data: org } = await db.from("marketing_org_settings").select("timezone").eq("id", 1).maybeSingle();
+  return { timezone: org?.timezone ?? "America/Chicago", stories: stories.data ?? [], ideas: ideas.data ?? [], alerts: alerts.data ?? [], sources: sources.data ?? [], paused: state.data?.paused_reason ?? null, runs: runs.data ?? [] };
 }
 
 export async function runNow(userId: string, ideas: boolean) {

@@ -7,8 +7,9 @@ import { Button } from "@/components/ui/button";
 import { MkPage, mkHead } from "@/components/marketing-ui";
 import {
   createLinkedInPersonalPost, disconnectLinkedInPersonal, editLinkedInPersonalPost, getLinkedInPersonal,
-  linkedInPersonalPostAction, revokeLinkedInDelegate, setLinkedInDelegate, startLinkedInPersonalConnect,
+  linkedInPersonalPostAction, revokeLinkedInDelegate, setLinkedInDelegate, setLinkedInPersonalPaused, setLinkedInPersonalTimezone, startLinkedInPersonalConnect,
 } from "@/lib/linkedin-personal.functions";
+import { TZ_CHOICES, fmtInTz, fromZonedInput } from "@/lib/org-timezone";
 
 export const Route = createFileRoute("/_authenticated/marketing_/linkedin")({
   head: mkHead("LinkedIn accounts", "Connect a personal LinkedIn profile and manage who may draft, schedule and publish on it."),
@@ -17,7 +18,8 @@ export const Route = createFileRoute("/_authenticated/marketing_/linkedin")({
 
 const TABS = { accounts: "Connected accounts", access: "Authorized team & permissions", pending: "Pending my approval", posts: "Posts", activity: "Account activity" } as const;
 const STATUS: Record<string, string> = { draft: "Draft", in_review: "In review", changes_requested: "Changes requested", approved: "Approved", scheduled: "Scheduled", publishing: "Publishing", published: "Published", failed: "Failed", cancelled: "Cancelled", rejected: "Rejected" };
-const dt = (s?: string | null) => (s ? new Date(s).toLocaleString() : "—");
+let TZ = "America/Chicago";
+const dt = (s?: string | null) => fmtInTz(s, TZ);
 
 function Page() {
   const load = useServerFn(getLinkedInPersonal);
@@ -30,10 +32,12 @@ function Page() {
     if (s === "error") toast.error(u.searchParams.get("msg") ?? "LinkedIn connection failed.");
   }, []);
   const d: any = q.data;
+  if (d?.effectiveTimezone) TZ = d.effectiveTimezone;
   return (
     <MkPage title="LinkedIn accounts" intro="Personal profile posts are separate from Harmonious company-page posts. Only the profile owner can connect it or decide who may use it.">
       {!d ? <p className="text-sm text-muted-foreground">{q.error ? (q.error as Error).message : "Loading…"}</p> : (
         <div className="space-y-4">
+          <PauseBar d={d} />
           <div className="flex flex-wrap gap-1 border-b border-border">
             {(Object.keys(TABS) as (keyof typeof TABS)[]).filter((t) => d.isOwner || !["access", "pending"].includes(t)).map((t) => (
               <button key={t} onClick={() => setTab(t)} className={`px-3 py-2 text-sm ${tab === t ? "border-b-2 border-primary font-semibold" : "text-muted-foreground"}`}>{TABS[t]}</button>
@@ -69,6 +73,7 @@ function Accounts({ d }: { d: any }) {
         ) : <p className="text-sm text-muted-foreground">No LinkedIn profile connected.</p>}
         <dl className="grid grid-cols-2 gap-1 text-xs">
           <dt className="text-muted-foreground">Connection health</dt><dd>{health}</dd>
+          <dt className="text-muted-foreground">Time zone</dt><dd>{d.effectiveTimezone}{a.timezone ? " (account setting)" : " (organization default)"}</dd>
           <dt className="text-muted-foreground">Last authorized</dt><dd>{dt(a.last_authorized_at)}</dd>
           <dt className="text-muted-foreground">Authorization expires</dt><dd>{dt(a.expires_at)}</dd>
           <dt className="text-muted-foreground">Permissions granted</dt><dd>{a.scopes || "—"}</dd>
@@ -78,6 +83,7 @@ function Accounts({ d }: { d: any }) {
         {d.isOwner ? (
           <div className="flex gap-2">
             <Button onClick={async () => { try { window.location.href = (await start()).url; } catch (e) { toast.error((e as Error).message); } }}>{a.has_token ? "Reconnect" : "Connect Personal LinkedIn"}</Button>
+            <TzPicker d={d} />
             {a.has_token && <Button variant="outline" onClick={async () => { if (!confirm("Disconnect your LinkedIn profile? Scheduled posts will be unscheduled.")) return; await disc(); qc.invalidateQueries({ queryKey: ["li-personal"] }); }}>Disconnect</Button>}
           </div>
         ) : <p className="text-xs text-muted-foreground">Only {d.ownerName} can connect, reconnect or disconnect this profile.</p>}
@@ -125,7 +131,7 @@ function DelegateRow({ d, r, name, onDone }: { d: any; r: any; name: string; onD
       if (!authorizeDirect) return;
     }
     try {
-      await save({ data: { delegateId: r.delegate_user_id, perms, authorizeDirect, expires_at: lim.expires_at ? new Date(lim.expires_at).toISOString() : null, max_posts_per_day: lim.max === "" ? null : Number(lim.max), series: lim.series ? lim.series.split(",").map((x: string) => x.trim()).filter(Boolean) : null, hours_start: lim.hs === "" ? null : Number(lim.hs), hours_end: lim.he === "" ? null : Number(lim.he), suspended: lim.suspended } });
+      await save({ data: { delegateId: r.delegate_user_id, perms, authorizeDirect, expires_at: lim.expires_at ? fromZonedInput(`${lim.expires_at}T23:59`, TZ) : null, max_posts_per_day: lim.max === "" ? null : Number(lim.max), series: lim.series ? lim.series.split(",").map((x: string) => x.trim()).filter(Boolean) : null, hours_start: lim.hs === "" ? null : Number(lim.hs), hours_end: lim.he === "" ? null : Number(lim.he), suspended: lim.suspended } });
       toast.success("Access saved."); onDone(); refresh();
     } catch (e) { toast.error((e as Error).message); }
   };
@@ -143,7 +149,7 @@ function DelegateRow({ d, r, name, onDone }: { d: any; r: any; name: string; onD
         <label>Expires <input type="date" className={inp} value={lim.expires_at} onChange={(e) => setLim({ ...lim, expires_at: e.target.value })} /></label>
         <label>Max posts/day <input type="number" min={1} className={`${inp} w-16`} value={lim.max} onChange={(e) => setLim({ ...lim, max: e.target.value })} /></label>
         <label>Series <input className={inp} placeholder="any" value={lim.series} onChange={(e) => setLim({ ...lim, series: e.target.value })} /></label>
-        <label>Hours (Denver) <input type="number" min={0} max={23} className={`${inp} w-14`} value={lim.hs} onChange={(e) => setLim({ ...lim, hs: e.target.value })} />–<input type="number" min={0} max={24} className={`${inp} w-14`} value={lim.he} onChange={(e) => setLim({ ...lim, he: e.target.value })} /></label>
+        <label>Hours ({TZ}) <input type="number" min={0} max={23} className={`${inp} w-14`} value={lim.hs} onChange={(e) => setLim({ ...lim, hs: e.target.value })} />–<input type="number" min={0} max={24} className={`${inp} w-14`} value={lim.he} onChange={(e) => setLim({ ...lim, he: e.target.value })} /></label>
         <label className="flex items-center gap-1"><input type="checkbox" checked={lim.suspended} onChange={(e) => setLim({ ...lim, suspended: e.target.checked })} />Suspend</label>
         <Button size="sm" onClick={submit}>Save</Button>
       </div>
@@ -193,8 +199,8 @@ function PostCard({ d, p }: { d: any; p: any }) {
         {["draft", "changes_requested"].includes(p.status) && (own || g.submit) && <Button size="sm" variant="outline" onClick={() => run("submit")}>Submit for approval</Button>}
         {own && p.status === "in_review" && <><Button size="sm" onClick={() => run("approve")}>Approve</Button><Button size="sm" variant="outline" onClick={() => run("request_changes", { note: prompt("What should change?") })}>Request edits</Button><Button size="sm" variant="outline" onClick={() => run("reject")}>Reject</Button></>}
         {(own || g.schedule || g.propose_schedule) && ["approved", "in_review", "draft"].includes(p.status) && <><input type="datetime-local" className="rounded-md border border-input bg-background px-2 py-1 text-xs" value={at} onChange={(e) => setAt(e.target.value)} />
-          {(own || (g.schedule && p.status === "approved")) && <Button size="sm" variant="outline" disabled={!at} onClick={() => run("schedule", { at: new Date(at).toISOString() })}>Schedule</Button>}
-          {!own && g.propose_schedule && <Button size="sm" variant="outline" disabled={!at} onClick={() => run("propose_schedule", { at: new Date(at).toISOString() })}>Propose time</Button>}</>}
+          {(own || (g.schedule && p.status === "approved")) && <Button size="sm" variant="outline" disabled={!at} onClick={() => run("schedule", { at: fromZonedInput(at, TZ) })}>Schedule</Button>}
+          {!own && g.propose_schedule && <Button size="sm" variant="outline" disabled={!at} onClick={() => run("propose_schedule", { at: fromZonedInput(at, TZ) })}>Propose time</Button>}</>}
         {p.status === "scheduled" && (own || g.schedule) && <Button size="sm" variant="outline" onClick={() => run("cancel_schedule")}>Cancel schedule</Button>}
         {(own || (g.publish_approved && approvedNow && ["approved", "scheduled", "failed"].includes(p.status)) || g.publish_direct) && <Button size="sm" onClick={() => { if (confirm("Publish to the personal LinkedIn profile now?")) run("publish_now"); }}>Publish now</Button>}
         {own && p.status !== "cancelled" && <Button size="sm" variant="ghost" onClick={() => run("cancel")}>Cancel post</Button>}
@@ -208,5 +214,39 @@ function Activity({ d }: { d: any }) {
   return (
     <table className="w-full text-xs"><thead><tr className="text-left text-muted-foreground"><th className="py-1">When</th><th>Who</th><th>What</th><th>Details</th></tr></thead>
       <tbody>{d.events.map((e: any) => <tr key={e.id} className="border-t border-border"><td className="py-1">{dt(e.created_at)}</td><td>{d.names[e.actor_id] ?? "Scheduler"}</td><td>{e.action.replace(/_/g, " ")}{e.delegate_user_id ? ` · ${d.names[e.delegate_user_id] ?? ""}` : ""}{e.version ? ` · v${e.version}` : ""}</td><td className="text-muted-foreground">{e.detail?.reason ?? e.detail?.error ?? e.detail?.linkedin_post_id ?? e.detail?.note ?? ""}</td></tr>)}</tbody></table>
+  );
+}
+
+function PauseBar({ d }: { d: any }) {
+  const qc = useQueryClient();
+  const set = useServerFn(setLinkedInPersonalPaused);
+  const a = d.account;
+  const go = async (paused: boolean) => {
+    const reason = paused ? prompt("Why are you pausing publishing? (optional)") : null;
+    if (!paused && !confirm("Reactivate publishing on your personal LinkedIn? Posts unscheduled by the pause stay unscheduled until someone reschedules them.")) return;
+    try { await set({ data: { paused, reason } }); qc.invalidateQueries({ queryKey: ["li-personal"] }); toast.success(paused ? "Publishing paused." : "Publishing reactivated."); } catch (e) { toast.error((e as Error).message); }
+  };
+  if (a.paused_at) return (
+    <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border-2 border-destructive bg-destructive/10 p-3 text-sm">
+      <span><b>Publishing paused</b> since {dt(a.paused_at)}{a.pause_reason ? ` — ${a.pause_reason}` : ""}. Nothing can post to this personal profile.</span>
+      {d.isOwner ? <Button size="sm" onClick={() => go(false)}>Reactivate publishing</Button> : <span className="text-xs">Only {d.ownerName} can reactivate.</span>}
+    </div>
+  );
+  return d.isOwner ? (
+    <div className="flex items-center justify-between gap-2 rounded-lg border border-destructive/40 p-3 text-sm">
+      <span>Emergency stop: blocks every pending and scheduled post on your personal profile until you reactivate it.</span>
+      <Button size="sm" variant="destructive" onClick={() => go(true)}>Pause publishing</Button>
+    </div>
+  ) : null;
+}
+
+function TzPicker({ d }: { d: any }) {
+  const qc = useQueryClient();
+  const set = useServerFn(setLinkedInPersonalTimezone);
+  return (
+    <select className="rounded-md border border-input bg-background px-2 py-1 text-xs" value={d.account.timezone ?? ""} onChange={async (e) => { try { await set({ data: { timezone: e.target.value || null } }); qc.invalidateQueries({ queryKey: ["li-personal"] }); } catch (err) { toast.error((err as Error).message); } }}>
+      <option value="">Organization time zone ({d.orgTimezone})</option>
+      {TZ_CHOICES.map((t) => <option key={t} value={t}>{t}</option>)}
+    </select>
   );
 }

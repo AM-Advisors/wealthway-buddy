@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { afterEdit, allowed, canManageDelegates, publishCheck, type LiAccount, type LiGrant } from "./linkedin-personal-model";
 
 const OWNER = "alyssa", EMP = "emp", SUPER = "super-admin";
-const now = new Date("2026-10-08T18:00:00Z"); // noon Denver
+const now = new Date("2026-10-08T18:00:00Z"); // 1pm Chicago
 const acct: LiAccount = { owner_user_id: OWNER, status: "connected", member_sub: "abc", expires_at: "2026-12-01T00:00:00Z", has_token: true };
 const approved = { owner_user_id: OWNER, status: "approved", version: 2, approved_version: 2 };
 const g = (perms: LiGrant["perms"], x: Partial<LiGrant> = {}): LiGrant => ({ perms, ...x });
@@ -29,6 +29,8 @@ describe("personal LinkedIn delegation", () => {
     expect(publishCheck(acct, draft, ctx(EMP, gr, { postsToday: 1 })).ok).toBe(true);
     expect(publishCheck(acct, draft, ctx(EMP, gr, { postsToday: 2 })).ok).toBe(false);
     expect(publishCheck(acct, draft, { ...ctx(EMP, gr), now: new Date("2026-10-09T04:00:00Z") }).ok).toBe(false);
+    // Account time zone applies: 18:00Z is 9pm in London, outside 9–17.
+    expect(publishCheck(acct, draft, { ...ctx(EMP, gr, { postsToday: 0 }), tz: "Europe/London" }).ok).toBe(false);
   });
   it("revoked, suspended or expired delegate cannot publish", () => {
     for (const x of [{ revoked_at: "2026-10-01" }, { suspended: true }, { expires_at: "2026-10-01" }])
@@ -50,6 +52,10 @@ describe("personal LinkedIn delegation", () => {
   it("company-page access grants nothing on the personal profile", () => {
     // Company-page rights live in marketing roles; the personal check only reads the owner's explicit grant.
     expect(publishCheck(acct, approved, ctx("marketing-manager", null)).ok).toBe(false);
+  });
+  it("emergency pause blocks everyone, including the owner", () => {
+    expect(publishCheck({ ...acct, paused_at: "2026-10-08T00:00:00Z" }, approved, ctx(OWNER, null)).ok).toBe(false);
+    expect(publishCheck({ ...acct, paused_at: "2026-10-08T00:00:00Z" }, approved, ctx(EMP, g({ publish_approved: true }))).ok).toBe(false);
   });
   it("destination must match the owner", () => {
     expect(publishCheck(acct, { ...approved, owner_user_id: "someone-else" }, ctx(OWNER, null)).ok).toBe(false);

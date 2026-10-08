@@ -38,13 +38,15 @@ export function SampleTag() {
 }
 
 const list = (s: string) => s.split(",").map((x) => x.trim()).filter(Boolean);
-const toLocal = (iso: string | null) => (iso ? new Date(new Date(iso).getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16) : "");
+import { toZonedInput, fromZonedInput, fmtInTz } from "@/lib/org-timezone";
+import { useOrgTz } from "@/components/marketing/use-org-tz";
 
 /** Item editor: all planning fields, workflow buttons, comments and history. Server enforces every rule. */
 export function ItemDrawer({ id, series, people, open, onClose, draft }: {
   id: string | null; series: Series[]; people: Record<string, string>; open: boolean; onClose: () => void; draft?: Partial<Item>;
 }) {
   const qc = useQueryClient();
+  const tz = useOrgTz();
   const loadItem = useServerFn(getStudioItem), save = useServerFn(saveStudioItem), move = useServerFn(moveStudioItem);
   const dup = useServerFn(duplicateStudioItem), addComment = useServerFn(commentStudioItem);
   const q = useQuery({ queryKey: ["studio-item", id], queryFn: () => loadItem({ data: { id: id! } }), enabled: !!id && open });
@@ -96,7 +98,7 @@ export function ItemDrawer({ id, series, people, open, onClose, draft }: {
           {locked && <p className="rounded-md bg-muted p-2 text-xs">Approved content is locked. You can still change the date, or send it back to edit.</p>}
           <div className="grid gap-3 sm:grid-cols-2">
             {field("Series", <select className={inp} disabled={locked} value={f.series_key ?? ""} onChange={(e) => setF({ ...f, series_key: e.target.value })}>{series.map((x) => <option key={x.key} value={x.key}>{x.name}</option>)}</select>)}
-            {field("Publish date and time", <input type="datetime-local" className={inp} disabled={item?.status === "published"} value={toLocal(f.publish_at)} onChange={(e) => setF({ ...f, publish_at: e.target.value ? new Date(e.target.value).toISOString() : null })} />)}
+            {field(`Publish date and time (${tz})`, <input type="datetime-local" className={inp} disabled={item?.status === "published"} value={toZonedInput(f.publish_at, tz)} onChange={(e) => setF({ ...f, publish_at: e.target.value ? fromZonedInput(e.target.value, tz) : null })} />)}
           </div>
           {txt("article_title", "Article title")}
           {txt("social_headline", "Social headline")}
@@ -146,11 +148,11 @@ export function ItemDrawer({ id, series, people, open, onClose, draft }: {
           {item && (
             <section className="space-y-2">
               <h3 className="text-sm font-semibold">Comments</h3>
-              {q.data!.comments.map((c: any) => <div key={c.id} className="rounded-md bg-muted p-2 text-xs"><b>{q.data!.people[c.author_id] ?? "Team member"}</b> · {new Date(c.created_at).toLocaleString()}<p className="mt-1 whitespace-pre-wrap">{c.body}</p></div>)}
+              {q.data!.comments.map((c: any) => <div key={c.id} className="rounded-md bg-muted p-2 text-xs"><b>{q.data!.people[c.author_id] ?? "Team member"}</b> · {fmtInTz(c.created_at, tz)}<p className="mt-1 whitespace-pre-wrap">{c.body}</p></div>)}
               <div className="flex gap-2"><input className={inp} value={msg} onChange={(e) => setMsg(e.target.value)} placeholder="Add a comment" /><Button size="sm" variant="outline" disabled={!msg.trim() || busy} onClick={() => run(() => addComment({ data: { id: item.id, body: msg } }).then(() => setMsg("")), "Comment added")}>Post</Button></div>
               <h3 className="pt-2 text-sm font-semibold">History</h3>
               <ul className="space-y-1 text-xs text-muted-foreground">
-                {q.data!.events.map((e: any) => <li key={e.id}>{new Date(e.created_at).toLocaleString()} · {q.data!.people[e.actor_id] ?? "Team member"} · {e.action}{e.to_status ? ` → ${STUDIO_STATUS_LABEL[e.to_status as StudioStatus] ?? e.to_status}` : ""}{e.note ? ` — “${e.note}”` : ""}</li>)}
+                {q.data!.events.map((e: any) => <li key={e.id}>{fmtInTz(e.created_at, tz)} · {q.data!.people[e.actor_id] ?? "Team member"} · {e.action}{e.to_status ? ` → ${STUDIO_STATUS_LABEL[e.to_status as StudioStatus] ?? e.to_status}` : ""}{e.note ? ` — “${e.note}”` : ""}</li>)}
               </ul>
             </section>
           )}

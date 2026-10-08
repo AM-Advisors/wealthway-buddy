@@ -36,3 +36,9 @@ export const linkedInPersonalPostAction = createServerFn({ method: "POST" }).mid
     at: z.string().nullable().optional(), note: z.string().max(1000).nullable().optional(),
   }).parse(d))
   .handler(async ({ data, context }) => (await s()).postAction(context.userId, data.id, data.action, data.at, data.note));
+export const setLinkedInPersonalPaused = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ paused: z.boolean(), reason: z.string().max(500).nullable() }).parse(d))
+  .handler(async ({ data, context }) => (await s()).setPaused(context.userId, data.paused, data.reason));
+export const setLinkedInPersonalTimezone = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ timezone: z.string().max(60).nullable() }).parse(d))
+  .handler(async ({ data, context }) => (await s()).setAccountTimezone(context.userId, data.timezone));

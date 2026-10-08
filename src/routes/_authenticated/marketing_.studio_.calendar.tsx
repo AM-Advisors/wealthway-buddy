@@ -68,7 +68,7 @@ function EditorialCalendar() {
   const Card = ({ i }: { i: any }) => (
     <div draggable onDragStart={(e) => e.dataTransfer.setData("text/plain", i.id)} onClick={(e) => { e.stopPropagation(); setOpen(i.id); }}
       className="cursor-pointer rounded-sm border-l-2 bg-card px-1.5 py-1 text-[11px] shadow-sm hover:bg-muted" style={{ borderColor: byKey[i.series_key]?.color }}>
-      <div className="flex items-center gap-1"><SeriesChip s={byKey[i.series_key]} short />{i.publish_at && <span className="text-muted-foreground tabular-nums">{new Date(i.publish_at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</span>}</div>
+      <div className="flex items-center gap-1"><SeriesChip s={byKey[i.series_key]} short />{i.publish_at && <span className="text-muted-foreground tabular-nums">{new Date(i.publish_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "America/Chicago" })}</span>}</div>
       <div className="mt-0.5 line-clamp-2 font-medium">{i.article_title || i.topic || "Untitled"}</div>
       <StatusPill status={i.status} />
     </div>

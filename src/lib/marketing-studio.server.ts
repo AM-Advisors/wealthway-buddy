@@ -133,10 +133,14 @@ export async function planWeek(userId: string, week: string) {
   const { data: existing } = await db.from("marketing_content_items").select("series_key").eq("week_start", monday);
   const have = new Set(((existing ?? []) as any[]).map((e) => e.series_key));
   let created = 0;
+  const { data: org } = await db.from("marketing_org_settings").select("timezone").eq("id", 1).maybeSingle();
+  const { zonedToUtc } = await import("@/lib/org-timezone");
+  const tz = org?.timezone ?? "America/Chicago";
   for (const s of (series ?? []) as any[]) {
     if (have.has(s.key)) continue;
-    const d = new Date(`${monday}T15:00:00Z`); // 9am Denver
-    d.setUTCDate(d.getUTCDate() + (s.weekday - 1));
+    const [yy, mm, dd] = monday.split("-").map(Number) as [number, number, number];
+    const day = new Date(Date.UTC(yy, mm - 1, dd + (s.weekday - 1)));
+    const d = zonedToUtc(day.getUTCFullYear(), day.getUTCMonth() + 1, day.getUTCDate(), 9, 0, tz); // 9am organization time
     const { data, error } = await db.from("marketing_content_items").insert({
       series_key: s.key, week_start: monday, publish_at: d.toISOString(), proposed_slot: true,
       topic: `Proposed ${s.name} topic — replace me`, platforms: ["linkedin"], created_by: userId, author_id: null,

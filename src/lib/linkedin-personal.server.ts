@@ -53,13 +53,18 @@ async function postsToday(db: any, ownerId: string, actorId: string) {
   const { count } = await db.from("linkedin_personal_posts").select("id", { count: "exact", head: true }).eq("owner_user_id", ownerId).eq("publish_initiated_by", actorId).eq("status", "published").gte("published_at", since);
   return count ?? 0;
 }
+async function tzOf(db: any, a: any): Promise<string> {
+  if (a.timezone) return a.timezone;
+  const { data } = await db.from("marketing_org_settings").select("timezone").eq("id", 1).maybeSingle();
+  return data?.timezone ?? "America/Chicago";
+}
 async function must(db: any, userId: string, perm: LiPerm, series?: string | null) {
   const a = await account(db);
-  const v = allowed({ actorId: userId, ownerId: a.owner_user_id, grant: a.owner_user_id === userId ? null : await grantOf(db, a.owner_user_id, userId), now: new Date(), series: series ?? null }, perm);
+  const v = allowed({ actorId: userId, ownerId: a.owner_user_id, grant: a.owner_user_id === userId ? null : await grantOf(db, a.owner_user_id, userId), now: new Date(), series: series ?? null, tz: await tzOf(db, a) }, perm);
   if (!v.ok) throw new Error(v.reason);
   return a;
 }
-const safeAcct = (a: any) => ({ name: a.name, picture_url: a.picture_url, profile_url: a.profile_url, status: a.status, expires_at: a.expires_at, scopes: a.scopes, connected_at: a.connected_at, last_authorized_at: a.last_authorized_at, last_error: a.last_error, has_token: !!a.token_ciphertext });
+const safeAcct = (a: any) => ({ name: a.name, picture_url: a.picture_url, profile_url: a.profile_url, status: a.status, expires_at: a.expires_at, scopes: a.scopes, connected_at: a.connected_at, last_authorized_at: a.last_authorized_at, last_error: a.last_error, has_token: !!a.token_ciphertext, paused_at: a.paused_at, pause_reason: a.pause_reason, timezone: a.timezone });
 
 /* ---------- connection ---------- */
 export async function connectUrl(userId: string) {
@@ -123,7 +128,8 @@ export async function overview(userId: string) {
   const grant = isOwner ? null : await grantOf(db, a.owner_user_id, userId);
   const v = allowed({ actorId: userId, ownerId: a.owner_user_id, grant, now: new Date() }, "view");
   const { data: ownerP } = await db.from("profiles").select("legal_name").eq("user_id", a.owner_user_id).maybeSingle();
-  const base = { isOwner, ownerName: ownerP?.legal_name ?? "Account owner", account: safeAcct(a), perms: LI_PERMS, myGrant: grant ? { ...grant } : null, appConfigured: !!process.env["LINKEDIN_CLIENT_ID"] && !!process.env["LINKEDIN_CLIENT_SECRET"] };
+  const { data: org } = await db.from("marketing_org_settings").select("timezone").eq("id", 1).maybeSingle();
+  const base = { orgTimezone: org?.timezone ?? "America/Chicago", effectiveTimezone: a.timezone ?? org?.timezone ?? "America/Chicago", isOwner, ownerName: ownerP?.legal_name ?? "Account owner", account: safeAcct(a), perms: LI_PERMS, myGrant: grant ? { ...grant } : null, appConfigured: !!process.env["LINKEDIN_CLIENT_ID"] && !!process.env["LINKEDIN_CLIENT_SECRET"] };
   if (!v.ok) return { ...base, access: false, reason: v.reason, posts: [], delegates: [], events: [], staff: [], names: {} };
   const { data: posts } = await db.from("linkedin_personal_posts").select("*").eq("owner_user_id", a.owner_user_id).order("updated_at", { ascending: false }).limit(200);
   let delegates: any[] = [], staff: any[] = [];
@@ -143,6 +149,33 @@ export async function overview(userId: string) {
   const { data: ps } = await db.from("profiles").select("user_id, legal_name, email").in("user_id", [...ids]);
   const names = Object.fromEntries(((ps ?? []) as any[]).map((p) => [p.user_id, p.legal_name || p.email || "Team member"]));
   return { ...base, access: true, posts: posts ?? [], delegates, events, staff, names };
+}
+
+/* ---------- emergency pause (owner only) ---------- */
+export async function setPaused(userId: string, paused: boolean, reason: string | null) {
+  const db = await admin();
+  const a = await account(db);
+  if (a.owner_user_id !== userId) throw new Error("Only the account owner can pause or reactivate publishing.");
+  const now = new Date().toISOString();
+  if (paused) {
+    await db.from("linkedin_personal_accounts").update({ paused_at: now, paused_by: userId, pause_reason: reason, updated_at: now }).eq("owner_user_id", userId);
+    const { data } = await db.from("linkedin_personal_posts").update({ status: "approved", scheduled_at: null, error: "Unscheduled: publishing paused by the owner" }).eq("owner_user_id", userId).eq("status", "scheduled").select("id");
+    for (const p of data ?? []) await event(db, { owner_user_id: userId, action: "schedule_cancelled", actor_id: userId, post_id: p.id, detail: { why: "publishing paused" } });
+    await event(db, { owner_user_id: userId, action: "publishing_paused", actor_id: userId, detail: { reason, unscheduled: (data ?? []).length } });
+  } else {
+    if (!a.paused_at) return;
+    await db.from("linkedin_personal_accounts").update({ paused_at: null, paused_by: null, pause_reason: null, updated_at: now }).eq("owner_user_id", userId);
+    await event(db, { owner_user_id: userId, action: "publishing_reactivated", actor_id: userId, detail: { note: "Previously scheduled posts stay unscheduled; reschedule them deliberately." } });
+  }
+}
+export async function setAccountTimezone(userId: string, tz: string | null) {
+  const db = await admin();
+  const a = await account(db);
+  if (a.owner_user_id !== userId) throw new Error("Only the account owner can change this account's time zone.");
+  const { isValidTz } = await import("@/lib/org-timezone");
+  if (tz && !isValidTz(tz)) throw new Error("Unknown time zone.");
+  await db.from("linkedin_personal_accounts").update({ timezone: tz, updated_at: new Date().toISOString() }).eq("owner_user_id", userId);
+  await event(db, { owner_user_id: userId, action: "timezone_changed", actor_id: userId, detail: { timezone: tz ?? "organization default" } });
 }
 
 /* ---------- delegation (owner only) ---------- */
@@ -255,7 +288,7 @@ async function publish(db: any, p: any, actorId: string, trigger: "manual" | "sc
   const a = await account(db);
   const isOwner = actorId === a.owner_user_id;
   const grant = isOwner ? null : await grantOf(db, a.owner_user_id, actorId);
-  const v = publishCheck({ owner_user_id: a.owner_user_id, status: a.status, member_sub: a.member_sub, expires_at: a.expires_at, has_token: !!a.token_ciphertext }, p, { actorId, ownerId: a.owner_user_id, grant, now: new Date(), postsToday: isOwner ? 0 : await postsToday(db, a.owner_user_id, actorId) });
+  const v = publishCheck({ owner_user_id: a.owner_user_id, status: a.status, member_sub: a.member_sub, expires_at: a.expires_at, has_token: !!a.token_ciphertext, paused_at: a.paused_at }, p, { actorId, ownerId: a.owner_user_id, grant, now: new Date(), tz: await tzOf(db, a), postsToday: isOwner ? 0 : await postsToday(db, a.owner_user_id, actorId) });
   if (!v.ok) {
     await event(db, { owner_user_id: a.owner_user_id, action: "publish_blocked", actor_id: actorId, post_id: p.id, version: p.version, detail: { trigger, reason: v.reason } });
     if (trigger === "scheduler") await db.from("linkedin_personal_posts").update({ status: p.approved_version === p.version ? "approved" : "draft", scheduled_at: null, error: v.reason }).eq("id", p.id);
@@ -293,6 +326,8 @@ async function publish(db: any, p: any, actorId: string, trigger: "manual" | "sc
 
 export async function runDuePersonal() {
   const db = await admin();
+  const a = await account(db);
+  if (a.paused_at) return { ok: 0, blocked: 0, paused: true };
   const { data } = await db.from("linkedin_personal_posts").select("*").eq("status", "scheduled").lte("scheduled_at", new Date().toISOString()).limit(10);
   let ok = 0, blocked = 0;
   for (const p of data ?? []) { try { await publish(db, p, p.scheduled_by, "scheduler"); ok++; } catch { blocked++; } }
