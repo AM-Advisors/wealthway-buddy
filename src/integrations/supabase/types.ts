@@ -29674,6 +29674,48 @@ export type Database = {
         }
         Relationships: []
       }
+      marketing_job_runs: {
+        Row: {
+          catch_up: boolean
+          created_at: string
+          error: string | null
+          failed_stage: string | null
+          finished_at: string | null
+          id: string
+          job_key: string
+          result: Json | null
+          slot_key: string
+          started_at: string | null
+          status: string
+        }
+        Insert: {
+          catch_up?: boolean
+          created_at?: string
+          error?: string | null
+          failed_stage?: string | null
+          finished_at?: string | null
+          id?: string
+          job_key: string
+          result?: Json | null
+          slot_key: string
+          started_at?: string | null
+          status?: string
+        }
+        Update: {
+          catch_up?: boolean
+          created_at?: string
+          error?: string | null
+          failed_stage?: string | null
+          finished_at?: string | null
+          id?: string
+          job_key?: string
+          result?: Json | null
+          slot_key?: string
+          started_at?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       marketing_leads: {
         Row: {
           company: string

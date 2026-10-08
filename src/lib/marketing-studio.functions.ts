@@ -44,3 +44,5 @@ export const commentStudioItem = createServerFn({ method: "POST" }).middleware([
 export const planStudioWeek = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ week: z.string().regex(/^\d{4}-\d{2}-\d{2}$/) }).parse(d))
   .handler(async ({ data, context }) => (await srv()).planWeek(context.userId, data.week));
+export const getStudioSignals = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => (await srv()).dashboardSignals(context.userId));

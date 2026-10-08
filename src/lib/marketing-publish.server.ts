@@ -12,18 +12,15 @@ async function fail(res: Response, what: string): Promise<never> {
   throw new Error(`${what} failed [${res.status}]: ${body.slice(0, 400)}`);
 }
 
-function liToken() { return process.env["LINKEDIN_ORG_ACCESS_TOKEN"]?.trim().replace(/^["']|["']$/g, ""); }
+// The pasted company-token fallback (LINKEDIN_ORG_ACCESS_TOKEN) is retired: no active caller used it, and
+// company access now comes only from LinkedIn's official sign-in (encrypted at rest in linkedin_oauth).
 export async function linkedinConfigured() {
-  if (process.env["LINKEDIN_CLIENT_ID"] && process.env["LINKEDIN_CLIENT_SECRET"]) {
-    const s = await (await import("@/lib/linkedin-direct.server")).directStatus().catch(() => null) as any;
-    if (s?.connected) return true;
-  }
-  return !!liToken();
+  if (!process.env["LINKEDIN_CLIENT_ID"] || !process.env["LINKEDIN_CLIENT_SECRET"]) return false;
+  const s = await (await import("@/lib/linkedin-direct.server")).directStatus().catch(() => null) as any;
+  return !!s?.connected;
 }
-/** Company-page token: the in-app LinkedIn connection (auto-refreshing) first, then a manually saved token. */
 async function liBearer(): Promise<string> {
-  try { return await (await import("@/lib/linkedin-direct.server")).accessToken(); }
-  catch (e) { const t = liToken(); if (t) return t; throw e; }
+  return (await import("@/lib/linkedin-direct.server")).accessToken();
 }
 
 /** Direct LinkedIn API with the Harmonious company-page token (Community Management API). */

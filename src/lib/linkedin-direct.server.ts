@@ -45,11 +45,16 @@ async function tokenRequest(body: Record<string, string>) {
   return JSON.parse(text);
 }
 
-function tokenRow(t: any) {
+/** Tokens are stored encrypted ("enc:v1:" + AES-256-GCM). Legacy plaintext rows still read, and are re-encrypted on refresh. */
+const ENC = "enc:v1:";
+async function enc(v: string | null) { if (!v) return null; const { encryptConnectionKey } = await import("@/lib/connection-key-crypto.server"); return ENC + encryptConnectionKey(v); }
+async function dec(v: string | null) { if (!v) return null; if (!v.startsWith(ENC)) return v; const { decryptConnectionKey } = await import("@/lib/connection-key-crypto.server"); return decryptConnectionKey(v.slice(ENC.length)); }
+
+async function tokenRow(t: any) {
   const now = Date.now();
   return {
-    access_token: t.access_token,
-    refresh_token: t.refresh_token ?? null,
+    access_token: await enc(t.access_token),
+    refresh_token: await enc(t.refresh_token ?? null),
     expires_at: t.expires_in ? new Date(now + t.expires_in * 1000).toISOString() : null,
     refresh_expires_at: t.refresh_token_expires_in ? new Date(now + t.refresh_token_expires_in * 1000).toISOString() : null,
     scopes: t.scope ?? null,
@@ -76,7 +81,7 @@ export async function completeAuth(code: string, userId: string) {
   const t = await tokenRequest({ grant_type: "authorization_code", code, redirect_uri: LINKEDIN_REDIRECT_URI });
   const orgs = await adminOrgs(t.access_token);
   const db = await admin();
-  await db.from("linkedin_oauth").upsert({ id: true, ...tokenRow(t), organizations: orgs, connected_by: userId, connected_at: new Date().toISOString() });
+  await db.from("linkedin_oauth").upsert({ id: true, ...(await tokenRow(t)), organizations: orgs, connected_by: userId, connected_at: new Date().toISOString() });
   // Pick the Harmonious page automatically when it's clear which one.
   const pick = orgs.find((o) => /harmonious/i.test(o.name)) ?? (orgs.length === 1 ? orgs[0] : null);
   if (pick) await db.from("marketing_channels").upsert({ channel: "linkedin", account_ref: pick.id, display_name: pick.name, updated_by: userId, updated_at: new Date().toISOString() });
@@ -96,10 +101,10 @@ export async function accessToken(): Promise<string> {
   const { data } = await db.from("linkedin_oauth").select("*").maybeSingle();
   if (!data) throw new Error("LinkedIn company page isn't connected yet.");
   const exp = data.expires_at ? new Date(data.expires_at).getTime() : Infinity;
-  if (exp - Date.now() > 5 * 60_000) return data.access_token;
+  if (exp - Date.now() > 5 * 60_000) return (await dec(data.access_token))!;
   if (!data.refresh_token) throw new Error("LinkedIn access expired. A Marketing Manager needs to reconnect LinkedIn in Marketing → Channels.");
-  const t = await tokenRequest({ grant_type: "refresh_token", refresh_token: data.refresh_token });
-  const row = tokenRow(t);
-  await db.from("linkedin_oauth").update({ ...row, refresh_token: row.refresh_token ?? data.refresh_token }).eq("id", true);
-  return row.access_token;
+  const t = await tokenRequest({ grant_type: "refresh_token", refresh_token: (await dec(data.refresh_token))! });
+  const row = await tokenRow(t);
+  await db.from("linkedin_oauth").update({ ...row, refresh_token: row.refresh_token ?? (await enc(await dec(data.refresh_token))) }).eq("id", true);
+  return t.access_token as string;
 }

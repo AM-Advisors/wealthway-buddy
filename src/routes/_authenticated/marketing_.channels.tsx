@@ -38,10 +38,11 @@ function ChannelCard({ c, canEdit }: { c: any; canEdit: boolean }) {
     onError: (e) => toast.error((e as Error).message),
   });
   return (
-    <Panel title={c.label} action={<Badge variant={c.ready ? "default" : "secondary"}>{c.ready ? "Connected" : "Not connected"}</Badge>}>
+    <Panel title={c.label} action={<Badge variant={c.ready ? "default" : "secondary"}>{c.blocked ? "Unavailable" : c.ready ? "Connected" : "Not connected"}</Badge>}>
       <p className="mb-3 text-xs text-muted-foreground">
         {c.credential ? "Account access is set up." : c.channel === "linkedin" ? "LinkedIn company page token hasn't been added yet." : "Meta (Facebook/Instagram) access token hasn't been added yet."}
       </p>
+      {c.blocked && <p className="mb-3 rounded-md border border-destructive/40 bg-destructive/5 p-2 text-xs font-medium text-destructive">{c.blocked}</p>}
       {c.channel === "linkedin" && <p className="mb-3 text-xs text-muted-foreground">Posts always go out as the Harmonious company page, never as a person.</p>}
       {c.channel === "linkedin" && <LinkedInConnect canEdit={canEdit} onPick={(id, name) => { setRef(id); setLabel(name); }} />}
       <label className="text-xs font-medium">{c.refHint}</label>

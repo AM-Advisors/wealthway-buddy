@@ -160,7 +160,7 @@ async function channelStatusInner(db: any) {
   const rows = await channelRows(db);
   const li = await linkedinConfigured(), meta = metaConfigured();
   return [
-    { channel: "linkedin", label: "LinkedIn", credential: li, accountRef: rows.get("linkedin")?.account_ref ?? null, displayName: rows.get("linkedin")?.display_name ?? null, ready: li && !!rows.get("linkedin")?.account_ref, refHint: "LinkedIn company page (organization) ID" },
+    { channel: "linkedin", label: "LinkedIn", credential: li, accountRef: rows.get("linkedin")?.account_ref ?? null, displayName: rows.get("linkedin")?.display_name ?? null, ready: false, blocked: "Company LinkedIn publishing unavailable — LinkedIn approval required.", refHint: "LinkedIn company page (organization) ID" },
     { channel: "facebook", label: "Facebook", credential: meta, accountRef: rows.get("facebook")?.account_ref ?? null, displayName: rows.get("facebook")?.display_name ?? null, ready: meta && !!rows.get("facebook")?.account_ref, refHint: "Facebook Page ID" },
     { channel: "instagram", label: "Instagram", credential: meta, accountRef: rows.get("instagram")?.account_ref ?? null, displayName: rows.get("instagram")?.display_name ?? null, ready: meta && !!rows.get("instagram")?.account_ref, refHint: "Instagram Business account ID" },
   ];
@@ -346,10 +346,15 @@ export async function runDue() {
   const db = await admin();
   const now = new Date().toISOString();
   const pub = await import("@/lib/marketing-publish.server");
-  const result = { posts: 0, emails: 0 };
+  const { isStale, LINKEDIN_COMPANY_AVAILABLE } = await import("@/lib/marketing-jobs-model");
+  const result: { posts: number; emails: number; staleHeld: number; failedStage?: string } = { posts: 0, emails: 0, staleHeld: 0 };
 
   const { data: posts } = await db.from("marketing_posts").select("*").in("status", ["scheduled", "approved"]).lte("scheduled_at", now).limit(20);
   for (const p of (posts ?? []) as any[]) {
+    // No replay after an outage: long-overdue items wait for an explicit release (reschedule) by a person.
+    if (isStale(p.scheduled_at, new Date())) { result.staleHeld++; continue; }
+    // Company LinkedIn is blocked: a LinkedIn-only post never enters execution; it keeps its draft, approval and intended time.
+    if (!LINKEDIN_COMPANY_AVAILABLE && (p.channels ?? []).length && (p.channels as string[]).every((c) => c === "linkedin")) continue;
     const { data: claimed } = await db.from("marketing_posts").update({ status: "publishing" }).eq("id", p.id).in("status", ["scheduled", "approved"]).select("id");
     if (!claimed?.length) continue;
     const ch = await channelRows(db);
@@ -358,10 +363,11 @@ export async function runDue() {
     result.posts++;
   }
 
-  await (await import("@/lib/marketing-queue.server")).reconfirm(db, (paths) => signed(db, paths.slice(0, 10), 86400), await channelRows(db)).catch((e) => console.error("reconfirm", e));
+  await (await import("@/lib/marketing-queue.server")).reconfirm(db, (paths) => signed(db, paths.slice(0, 10), 86400), await channelRows(db)).catch((e) => { console.error("reconfirm", e); result.failedStage = "reconfirm"; });
 
   const { data: emails } = await db.from("marketing_emails").select("*").in("status", ["scheduled", "approved"]).lte("scheduled_at", now).limit(5);
   for (const e of (emails ?? []) as any[]) {
+    if (isStale(e.scheduled_at, new Date())) { result.staleHeld++; continue; }
     const { data: claimed } = await db.from("marketing_emails").update({ status: "sending" }).eq("id", e.id).in("status", ["scheduled", "approved"]).select("id");
     if (!claimed?.length) continue;
     const { data: members } = await db.from("marketing_audience_members").select("email").eq("audience_id", e.audience_id).limit(20000);

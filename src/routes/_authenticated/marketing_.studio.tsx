@@ -6,7 +6,8 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { MkPage, mkHead } from "@/components/marketing-ui";
 import { ItemDrawer, SampleTag, SeriesChip, StatusPill, useStudio, type Series } from "@/components/marketing/studio";
-import { planStudioWeek } from "@/lib/marketing-studio.functions";
+import { getStudioSignals, planStudioWeek } from "@/lib/marketing-studio.functions";
+import { useQuery } from "@tanstack/react-query";
 import { useOrgTz } from "@/components/marketing/use-org-tz";
 import { addYmd, mondayOf, ymdIn, ymdStartUtc } from "@/lib/org-timezone";
 
@@ -15,13 +16,8 @@ export const Route = createFileRoute("/_authenticated/marketing_/studio")({
   component: StudioDashboard,
 });
 
-/** Clearly labeled placeholder panels until live sources are connected in later phases. */
-const SAMPLE = {
-  stories: ["Secondary volumes hit a record quarter (sample headline)", "Late-stage rounds return with structured terms (sample)", "Two venture-backed IPOs price above range (sample)"],
-  regulatory: ["SEC: sample Form D guidance update", "IRS: sample partnership audit notice", "FinCEN: sample beneficial ownership reminder"],
-  opportunities: ["Explain what a record secondary market means for LPs", "Fund Academy: Form D timelines, step by step", "Founders Friday: dilution lessons from recent rounds"],
-  seo: ["“how to start an SPV” — rising (sample)", "“Form D filing deadline” — steady (sample)"],
-};
+const STATE_LABEL: Record<string, string> = { no_data: "No data", not_connected: "Not connected", not_measured: "Not yet measured" };
+const JOB_LABEL: Record<string, string> = { completed: "Completed", partial: "Partial", failed: "Failed", missed: "Missed", skipped: "Skipped", blocked: "Blocked", running: "Running", scheduled: "Scheduled" };
 
 function Panel({ title, sample, children, action }: { title: string; sample?: boolean; children: React.ReactNode; action?: React.ReactNode }) {
   return (
@@ -43,6 +39,9 @@ function StudioDashboard() {
   }, []);
   const q = useStudio(from, to);
   const plan = useServerFn(planStudioWeek);
+  const loadSignals = useServerFn(getStudioSignals);
+  const sig = useQuery({ queryKey: ["studio-signals"], queryFn: () => loadSignals(), retry: false, refetchInterval: 60000 });
+  const S = sig.data as any;
   const qc = useQueryClient();
   const [open, setOpen] = useState<string | null | undefined>(undefined);
   const series = (q.data?.series ?? []) as Series[];
@@ -107,20 +106,35 @@ function StudioDashboard() {
           <Panel title="Published">{published.length ? published.slice(0, 8).map((i) => <Row key={i.id} i={i} />) : <Empty t="Nothing published yet." />}</Panel>
         </div>
         <div className="space-y-4">
-          <Panel title="Trending market stories" sample><ul className="space-y-1 text-sm">{SAMPLE.stories.map((t) => <li key={t}>{t}</li>)}</ul></Panel>
-          <Panel title="SEC and IRS updates" sample><ul className="space-y-1 text-sm">{SAMPLE.regulatory.map((t) => <li key={t}>{t}</li>)}</ul></Panel>
-          <Panel title="Suggested opportunities" sample><ul className="space-y-1 text-sm">{SAMPLE.opportunities.map((t) => <li key={t}>{t}</li>)}</ul></Panel>
-          <Panel title="SEO opportunities" sample><ul className="space-y-1 text-sm">{SAMPLE.seo.map((t) => <li key={t}>{t}</li>)}</ul></Panel>
+          <Panel title="Trending market stories"><StoryList rows={S?.stories} loading={sig.isLoading} /></Panel>
+          <Panel title="SEC and IRS updates"><StoryList rows={S?.regulatory} loading={sig.isLoading} /></Panel>
+          <Panel title="Suggested opportunities">{S?.ideas?.length ? <ul className="space-y-1 text-sm">{S.ideas.map((i: any) => <li key={i.id}>{i.title} <span className="text-[11px] text-muted-foreground">{byKey[i.series_key]?.name ?? ""}</span></li>)}</ul> : <Empty t={sig.isLoading ? "Loading…" : "No data"} />}</Panel>
+          <Panel title="SEO opportunities">{S?.seo?.rows?.length ? <ul className="space-y-1 text-sm">{S.seo.rows.map((r: any) => <li key={r.query}>“{r.query}” <span className="text-[11px] text-muted-foreground tabular-nums">{r.impressions} impressions · {r.clicks} clicks</span></li>)}</ul> : <Empty t={sig.isLoading ? "Loading…" : STATE_LABEL[S?.seo?.state] ?? "No data"} />}</Panel>
         </div>
       </div>
 
       <div className="grid gap-3 md:grid-cols-3">
-        <Panel title="Social engagement" sample><p className="text-sm text-muted-foreground">Connects to post results in a later phase.</p></Panel>
-        <Panel title="Website traffic" sample><p className="text-sm text-muted-foreground">Connects to site analytics in a later phase.</p></Panel>
-        <Panel title="Lead conversions" sample><p className="text-sm text-muted-foreground">Connects to Sales leads in a later phase.</p></Panel>
+        <Panel title="Social engagement">{S?.social?.state === "ok" ? <p className="font-heading text-2xl font-semibold tabular-nums">{S.social.engagement}<span className="ml-2 text-xs font-normal text-muted-foreground">interactions, last 14 days</span></p> : <Empty t={STATE_LABEL[S?.social?.state] ?? "No data"} />}</Panel>
+        <Panel title="Website traffic"><Empty t={STATE_LABEL[S?.traffic?.state] ?? "Not connected"} /></Panel>
+        <Panel title="Lead conversions"><Empty t={STATE_LABEL[S?.leads?.state] ?? "Not yet measured"} /></Panel>
       </div>
+
+      <Panel title="Scheduled jobs (last 48 hours)">
+        {S?.jobs?.length ? <ul className="divide-y text-sm">{S.jobs.map((j: any) => (
+          <li key={j.key} className="flex flex-wrap items-center gap-2 py-1.5">
+            <span className="min-w-0 flex-1">{j.label}</span>
+            <span className="text-xs">{j.last ? `${JOB_LABEL[j.last.status] ?? j.last.status}${j.last.catch_up ? " (catch-up)" : ""}${j.last.failed_stage ? ` at ${j.last.failed_stage}` : ""} · ${new Date(j.last.started_at ?? j.last.slot_key).toLocaleString("en-US", { timeZone: tz })}` : "No runs recorded yet"}</span>
+            {j.missed > 0 && <span className="rounded bg-destructive/10 px-1.5 text-xs text-destructive">{j.missed} missed</span>}
+            {j.failed > 0 && <span className="rounded bg-destructive/10 px-1.5 text-xs text-destructive">{j.failed} failed/partial</span>}
+          </li>))}</ul> : <Empty t={sig.isLoading ? "Loading…" : "No runs recorded yet"} />}
+      </Panel>
 
       {open !== undefined && <ItemDrawer id={open} open series={series} people={q.data?.people ?? {}} onClose={() => setOpen(undefined)} />}
     </MkPage>
   );
+}
+
+function StoryList({ rows, loading }: { rows?: any[]; loading: boolean }) {
+  if (!rows?.length) return <p className="text-sm text-muted-foreground">{loading ? "Loading…" : "No data"}</p>;
+  return <ul className="space-y-1 text-sm">{rows.map((r) => <li key={r.id}><a href={r.url} target="_blank" rel="noreferrer" className="hover:underline">{r.headline}</a> <span className="text-[11px] text-muted-foreground">{r.publisher}{r.verification_status ? ` · ${r.verification_status}` : ""}</span></li>)}</ul>;
 }
