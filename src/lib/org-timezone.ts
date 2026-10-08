@@ -7,7 +7,7 @@ export function isValidTz(tz: string) {
 }
 function parts(d: Date, tz: string) {
   const p = Object.fromEntries(new Intl.DateTimeFormat("en-US", { timeZone: tz, hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" }).formatToParts(d).map((x) => [x.type, x.value]));
-  return { y: +p.year!, m: +p.month!, d: +p.day!, h: +p.hour! % 24, min: +p.minute!, s: +p.second! };
+  return { y: +p["year"]!, m: +p["month"]!, d: +p["day"]!, h: +p["hour"]! % 24, min: +p["minute"]!, s: +p["second"]! };
 }
 export function hourIn(d: Date, tz: string) { return parts(d, tz).h; }
 
