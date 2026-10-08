@@ -1352,6 +1352,13 @@
       "when": 1791417958246,
       "tag": "0192_takeover_admissions",
       "breakpoints": true
+    },
+    {
+      "idx": 193,
+      "version": "7",
+      "when": 1791418809379,
+      "tag": "0193_investor_compliance_resolutions",
+      "breakpoints": true
     }
   ]
 }
