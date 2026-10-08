@@ -28569,6 +28569,227 @@ export type Database = {
           },
         ]
       }
+      marketing_content_comments: {
+        Row: {
+          author_id: string
+          body: string
+          created_at: string
+          id: string
+          item_id: string
+        }
+        Insert: {
+          author_id: string
+          body: string
+          created_at?: string
+          id?: string
+          item_id: string
+        }
+        Update: {
+          author_id?: string
+          body?: string
+          created_at?: string
+          id?: string
+          item_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_content_comments_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_content_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketing_content_item_events: {
+        Row: {
+          action: string
+          actor_id: string
+          created_at: string
+          from_status: string | null
+          id: string
+          item_id: string
+          note: string | null
+          to_status: string | null
+        }
+        Insert: {
+          action: string
+          actor_id: string
+          created_at?: string
+          from_status?: string | null
+          id?: string
+          item_id: string
+          note?: string | null
+          to_status?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string
+          created_at?: string
+          from_status?: string | null
+          id?: string
+          item_id?: string
+          note?: string | null
+          to_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_content_item_events_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_content_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketing_content_item_versions: {
+        Row: {
+          actor_id: string
+          created_at: string
+          id: string
+          item_id: string
+          snapshot: Json
+          version: number
+        }
+        Insert: {
+          actor_id: string
+          created_at?: string
+          id?: string
+          item_id: string
+          snapshot: Json
+          version: number
+        }
+        Update: {
+          actor_id?: string
+          created_at?: string
+          id?: string
+          item_id?: string
+          snapshot?: Json
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_content_item_versions_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_content_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketing_content_items: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          article_id: string | null
+          article_title: string
+          article_url: string
+          audience: string
+          author_id: string | null
+          campaign_id: string | null
+          ceo_approved_at: string | null
+          ceo_approved_by: string | null
+          created_at: string
+          created_by: string
+          cta: string
+          email_id: string | null
+          graphic_requirements: string
+          id: string
+          is_sample: boolean
+          keywords: string[]
+          metrics: Json
+          platforms: string[]
+          post_id: string | null
+          proposed_slot: boolean
+          publish_at: string | null
+          reviewer_id: string | null
+          series_key: string
+          social_headline: string
+          source_urls: string[]
+          status: string
+          topic: string
+          updated_at: string
+          version: number
+          week_start: string | null
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          article_id?: string | null
+          article_title?: string
+          article_url?: string
+          audience?: string
+          author_id?: string | null
+          campaign_id?: string | null
+          ceo_approved_at?: string | null
+          ceo_approved_by?: string | null
+          created_at?: string
+          created_by: string
+          cta?: string
+          email_id?: string | null
+          graphic_requirements?: string
+          id?: string
+          is_sample?: boolean
+          keywords?: string[]
+          metrics?: Json
+          platforms?: string[]
+          post_id?: string | null
+          proposed_slot?: boolean
+          publish_at?: string | null
+          reviewer_id?: string | null
+          series_key: string
+          social_headline?: string
+          source_urls?: string[]
+          status?: string
+          topic?: string
+          updated_at?: string
+          version?: number
+          week_start?: string | null
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          article_id?: string | null
+          article_title?: string
+          article_url?: string
+          audience?: string
+          author_id?: string | null
+          campaign_id?: string | null
+          ceo_approved_at?: string | null
+          ceo_approved_by?: string | null
+          created_at?: string
+          created_by?: string
+          cta?: string
+          email_id?: string | null
+          graphic_requirements?: string
+          id?: string
+          is_sample?: boolean
+          keywords?: string[]
+          metrics?: Json
+          platforms?: string[]
+          post_id?: string | null
+          proposed_slot?: boolean
+          publish_at?: string | null
+          reviewer_id?: string | null
+          series_key?: string
+          social_headline?: string
+          source_urls?: string[]
+          status?: string
+          topic?: string
+          updated_at?: string
+          version?: number
+          week_start?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_content_items_series_key_fkey"
+            columns: ["series_key"]
+            isOneToOne: false
+            referencedRelation: "marketing_series"
+            referencedColumns: ["key"]
+          },
+        ]
+      }
       marketing_drive_assets: {
         Row: {
           cached_modified_at: string | null
@@ -29053,6 +29274,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      marketing_series: {
+        Row: {
+          active: boolean
+          color: string
+          guardrail: string | null
+          intention: string
+          key: string
+          name: string
+          outputs: string[]
+          purpose: string
+          sources: string[]
+          voice: string
+          weekday: number
+        }
+        Insert: {
+          active?: boolean
+          color: string
+          guardrail?: string | null
+          intention: string
+          key: string
+          name: string
+          outputs?: string[]
+          purpose: string
+          sources?: string[]
+          voice: string
+          weekday: number
+        }
+        Update: {
+          active?: boolean
+          color?: string
+          guardrail?: string | null
+          intention?: string
+          key?: string
+          name?: string
+          outputs?: string[]
+          purpose?: string
+          sources?: string[]
+          voice?: string
+          weekday?: number
+        }
+        Relationships: []
       }
       marketing_share_links: {
         Row: {
@@ -43182,6 +43445,9 @@ export type Database = {
         | "leadership"
         | "security_compliance_manager"
         | "security_compliance_viewer"
+        | "marketing_contributor"
+        | "compliance_reviewer"
+        | "executive_approver"
       assisted_draft_status:
         | "awaiting_client_review"
         | "approved"
@@ -43674,6 +43940,9 @@ export const Constants = {
         "leadership",
         "security_compliance_manager",
         "security_compliance_viewer",
+        "marketing_contributor",
+        "compliance_reviewer",
+        "executive_approver",
       ],
       assisted_draft_status: [
         "awaiting_client_review",

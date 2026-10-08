@@ -216,6 +216,7 @@ import { Route as AuthenticatedMarketingEmailsRouteImport } from './routes/_auth
 import { Route as AuthenticatedMarketingFlowsRouteImport } from './routes/_authenticated/marketing_.flows'
 import { Route as AuthenticatedMarketingImportsRouteImport } from './routes/_authenticated/marketing_.imports'
 import { Route as AuthenticatedMarketingPostsRouteImport } from './routes/_authenticated/marketing_.posts'
+import { Route as AuthenticatedMarketingStudioRouteImport } from './routes/_authenticated/marketing_.studio'
 import { Route as AuthenticatedMyFundsIndexRouteImport } from './routes/_authenticated/my-funds.index'
 import { Route as AuthenticatedMyFundsFundIdRouteImport } from './routes/_authenticated/my-funds.$fundId'
 import { Route as AuthenticatedMyPortfolioOfferingIdRouteImport } from './routes/_authenticated/my-portfolio_.$offeringId'
@@ -351,6 +352,7 @@ import { Route as AuthenticatedMarketingClassroomIdRouteImport } from './routes/
 import { Route as AuthenticatedMarketingEmailsIdRouteImport } from './routes/_authenticated/marketing_.emails_.$id'
 import { Route as AuthenticatedMarketingFlowsIdRouteImport } from './routes/_authenticated/marketing_.flows_.$id'
 import { Route as AuthenticatedMarketingPostsIdRouteImport } from './routes/_authenticated/marketing_.posts_.$id'
+import { Route as AuthenticatedMarketingStudioCalendarRouteImport } from './routes/_authenticated/marketing_.studio_.calendar'
 import { Route as AuthenticatedOpsAreasAreaRouteImport } from './routes/_authenticated/ops.areas.$area'
 import { Route as AuthenticatedOpsClientsIndexRouteImport } from './routes/_authenticated/ops.clients.index'
 import { Route as AuthenticatedOpsClientsClientIdRouteImport } from './routes/_authenticated/ops.clients.$clientId'
@@ -1576,6 +1578,12 @@ const AuthenticatedMarketingPostsRoute =
     path: '/marketing/posts',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedMarketingStudioRoute =
+  AuthenticatedMarketingStudioRouteImport.update({
+    id: '/marketing_/studio',
+    path: '/marketing/studio',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedMyFundsIndexRoute =
   AuthenticatedMyFundsIndexRouteImport.update({
     id: '/my-funds/',
@@ -2363,6 +2371,12 @@ const AuthenticatedMarketingPostsIdRoute =
     path: '/marketing/posts/$id',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedMarketingStudioCalendarRoute =
+  AuthenticatedMarketingStudioCalendarRouteImport.update({
+    id: '/marketing_/studio_/calendar',
+    path: '/marketing/studio/calendar',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOpsAreasAreaRoute =
   AuthenticatedOpsAreasAreaRouteImport.update({
     id: '/ops/areas/$area',
@@ -2970,6 +2984,7 @@ export interface FileRoutesByFullPath {
   '/marketing/flows': typeof AuthenticatedMarketingFlowsRoute
   '/marketing/imports': typeof AuthenticatedMarketingImportsRoute
   '/marketing/posts': typeof AuthenticatedMarketingPostsRoute
+  '/marketing/studio': typeof AuthenticatedMarketingStudioRoute
   '/my-funds/$fundId': typeof AuthenticatedMyFundsFundIdRoute
   '/my-portfolio/$offeringId': typeof AuthenticatedMyPortfolioOfferingIdRoute
   '/onboarding/accreditation': typeof AuthenticatedOnboardingAccreditationRoute
@@ -3103,6 +3118,7 @@ export interface FileRoutesByFullPath {
   '/marketing/emails/$id': typeof AuthenticatedMarketingEmailsIdRoute
   '/marketing/flows/$id': typeof AuthenticatedMarketingFlowsIdRoute
   '/marketing/posts/$id': typeof AuthenticatedMarketingPostsIdRoute
+  '/marketing/studio/calendar': typeof AuthenticatedMarketingStudioCalendarRoute
   '/ops/areas/$area': typeof AuthenticatedOpsAreasAreaRoute
   '/ops/clients/$clientId': typeof AuthenticatedOpsClientsClientIdRoute
   '/ops/clients/founders': typeof AuthenticatedOpsClientsFoundersRoute
@@ -3375,6 +3391,7 @@ export interface FileRoutesByTo {
   '/marketing/flows': typeof AuthenticatedMarketingFlowsRoute
   '/marketing/imports': typeof AuthenticatedMarketingImportsRoute
   '/marketing/posts': typeof AuthenticatedMarketingPostsRoute
+  '/marketing/studio': typeof AuthenticatedMarketingStudioRoute
   '/my-funds/$fundId': typeof AuthenticatedMyFundsFundIdRoute
   '/my-portfolio/$offeringId': typeof AuthenticatedMyPortfolioOfferingIdRoute
   '/onboarding/accreditation': typeof AuthenticatedOnboardingAccreditationRoute
@@ -3507,6 +3524,7 @@ export interface FileRoutesByTo {
   '/marketing/emails/$id': typeof AuthenticatedMarketingEmailsIdRoute
   '/marketing/flows/$id': typeof AuthenticatedMarketingFlowsIdRoute
   '/marketing/posts/$id': typeof AuthenticatedMarketingPostsIdRoute
+  '/marketing/studio/calendar': typeof AuthenticatedMarketingStudioCalendarRoute
   '/ops/areas/$area': typeof AuthenticatedOpsAreasAreaRoute
   '/ops/clients/$clientId': typeof AuthenticatedOpsClientsClientIdRoute
   '/ops/clients/founders': typeof AuthenticatedOpsClientsFoundersRoute
@@ -3788,6 +3806,7 @@ export interface FileRoutesById {
   '/_authenticated/marketing_/flows': typeof AuthenticatedMarketingFlowsRoute
   '/_authenticated/marketing_/imports': typeof AuthenticatedMarketingImportsRoute
   '/_authenticated/marketing_/posts': typeof AuthenticatedMarketingPostsRoute
+  '/_authenticated/marketing_/studio': typeof AuthenticatedMarketingStudioRoute
   '/_authenticated/my-funds/$fundId': typeof AuthenticatedMyFundsFundIdRoute
   '/_authenticated/my-portfolio_/$offeringId': typeof AuthenticatedMyPortfolioOfferingIdRoute
   '/_authenticated/onboarding/accreditation': typeof AuthenticatedOnboardingAccreditationRoute
@@ -3921,6 +3940,7 @@ export interface FileRoutesById {
   '/_authenticated/marketing_/emails_/$id': typeof AuthenticatedMarketingEmailsIdRoute
   '/_authenticated/marketing_/flows_/$id': typeof AuthenticatedMarketingFlowsIdRoute
   '/_authenticated/marketing_/posts_/$id': typeof AuthenticatedMarketingPostsIdRoute
+  '/_authenticated/marketing_/studio_/calendar': typeof AuthenticatedMarketingStudioCalendarRoute
   '/_authenticated/ops/areas/$area': typeof AuthenticatedOpsAreasAreaRoute
   '/_authenticated/ops/clients/$clientId': typeof AuthenticatedOpsClientsClientIdRoute
   '/_authenticated/ops/clients/founders': typeof AuthenticatedOpsClientsFoundersRoute
@@ -4202,6 +4222,7 @@ export interface FileRouteTypes {
     | '/marketing/flows'
     | '/marketing/imports'
     | '/marketing/posts'
+    | '/marketing/studio'
     | '/my-funds/$fundId'
     | '/my-portfolio/$offeringId'
     | '/onboarding/accreditation'
@@ -4335,6 +4356,7 @@ export interface FileRouteTypes {
     | '/marketing/emails/$id'
     | '/marketing/flows/$id'
     | '/marketing/posts/$id'
+    | '/marketing/studio/calendar'
     | '/ops/areas/$area'
     | '/ops/clients/$clientId'
     | '/ops/clients/founders'
@@ -4607,6 +4629,7 @@ export interface FileRouteTypes {
     | '/marketing/flows'
     | '/marketing/imports'
     | '/marketing/posts'
+    | '/marketing/studio'
     | '/my-funds/$fundId'
     | '/my-portfolio/$offeringId'
     | '/onboarding/accreditation'
@@ -4739,6 +4762,7 @@ export interface FileRouteTypes {
     | '/marketing/emails/$id'
     | '/marketing/flows/$id'
     | '/marketing/posts/$id'
+    | '/marketing/studio/calendar'
     | '/ops/areas/$area'
     | '/ops/clients/$clientId'
     | '/ops/clients/founders'
@@ -5019,6 +5043,7 @@ export interface FileRouteTypes {
     | '/_authenticated/marketing_/flows'
     | '/_authenticated/marketing_/imports'
     | '/_authenticated/marketing_/posts'
+    | '/_authenticated/marketing_/studio'
     | '/_authenticated/my-funds/$fundId'
     | '/_authenticated/my-portfolio_/$offeringId'
     | '/_authenticated/onboarding/accreditation'
@@ -5152,6 +5177,7 @@ export interface FileRouteTypes {
     | '/_authenticated/marketing_/emails_/$id'
     | '/_authenticated/marketing_/flows_/$id'
     | '/_authenticated/marketing_/posts_/$id'
+    | '/_authenticated/marketing_/studio_/calendar'
     | '/_authenticated/ops/areas/$area'
     | '/_authenticated/ops/clients/$clientId'
     | '/_authenticated/ops/clients/founders'
@@ -6752,6 +6778,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMarketingPostsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/marketing_/studio': {
+      id: '/_authenticated/marketing_/studio'
+      path: '/marketing/studio'
+      fullPath: '/marketing/studio'
+      preLoaderRoute: typeof AuthenticatedMarketingStudioRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/my-funds/': {
       id: '/_authenticated/my-funds/'
       path: '/my-funds'
@@ -7697,6 +7730,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMarketingPostsIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/marketing_/studio_/calendar': {
+      id: '/_authenticated/marketing_/studio_/calendar'
+      path: '/marketing/studio/calendar'
+      fullPath: '/marketing/studio/calendar'
+      preLoaderRoute: typeof AuthenticatedMarketingStudioCalendarRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ops/areas/$area': {
       id: '/_authenticated/ops/areas/$area'
       path: '/ops/areas/$area'
@@ -8598,6 +8638,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMarketingFlowsRoute: typeof AuthenticatedMarketingFlowsRoute
   AuthenticatedMarketingImportsRoute: typeof AuthenticatedMarketingImportsRoute
   AuthenticatedMarketingPostsRoute: typeof AuthenticatedMarketingPostsRoute
+  AuthenticatedMarketingStudioRoute: typeof AuthenticatedMarketingStudioRoute
   AuthenticatedMyFundsFundIdRoute: typeof AuthenticatedMyFundsFundIdRoute
   AuthenticatedMyPortfolioOfferingIdRoute: typeof AuthenticatedMyPortfolioOfferingIdRoute
   AuthenticatedOnboardingAccreditationRoute: typeof AuthenticatedOnboardingAccreditationRoute
@@ -8684,6 +8725,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMarketingEmailsIdRoute: typeof AuthenticatedMarketingEmailsIdRoute
   AuthenticatedMarketingFlowsIdRoute: typeof AuthenticatedMarketingFlowsIdRoute
   AuthenticatedMarketingPostsIdRoute: typeof AuthenticatedMarketingPostsIdRoute
+  AuthenticatedMarketingStudioCalendarRoute: typeof AuthenticatedMarketingStudioCalendarRoute
   AuthenticatedOpsAreasAreaRoute: typeof AuthenticatedOpsAreasAreaRoute
   AuthenticatedOpsClientsClientIdRoute: typeof AuthenticatedOpsClientsClientIdRoute
   AuthenticatedOpsClientsFoundersRoute: typeof AuthenticatedOpsClientsFoundersRoute
@@ -8887,6 +8929,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMarketingFlowsRoute: AuthenticatedMarketingFlowsRoute,
   AuthenticatedMarketingImportsRoute: AuthenticatedMarketingImportsRoute,
   AuthenticatedMarketingPostsRoute: AuthenticatedMarketingPostsRoute,
+  AuthenticatedMarketingStudioRoute: AuthenticatedMarketingStudioRoute,
   AuthenticatedMyFundsFundIdRoute: AuthenticatedMyFundsFundIdRoute,
   AuthenticatedMyPortfolioOfferingIdRoute:
     AuthenticatedMyPortfolioOfferingIdRoute,
@@ -8995,6 +9038,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMarketingEmailsIdRoute: AuthenticatedMarketingEmailsIdRoute,
   AuthenticatedMarketingFlowsIdRoute: AuthenticatedMarketingFlowsIdRoute,
   AuthenticatedMarketingPostsIdRoute: AuthenticatedMarketingPostsIdRoute,
+  AuthenticatedMarketingStudioCalendarRoute:
+    AuthenticatedMarketingStudioCalendarRoute,
   AuthenticatedOpsAreasAreaRoute: AuthenticatedOpsAreasAreaRoute,
   AuthenticatedOpsClientsClientIdRoute: AuthenticatedOpsClientsClientIdRoute,
   AuthenticatedOpsClientsFoundersRoute: AuthenticatedOpsClientsFoundersRoute,

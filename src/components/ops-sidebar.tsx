@@ -244,6 +244,8 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
   const showMk = canSee("marketing", staffRoles);
   const mkItems: NavItem[] = showMk ? [
     { id: "mk-dashboard", title: "Marketing dashboard", url: "/marketing", icon: "report" },
+    { id: "mk-studio", title: "Studio", url: "/marketing/studio", icon: "report" },
+    { id: "mk-editorial", title: "Editorial calendar", url: "/marketing/studio/calendar", icon: "tasks" },
     { id: "mk-campaigns", title: "Campaigns", url: "/marketing/campaigns", icon: "report" },
     { id: "mk-calendar", title: "Calendar", url: "/marketing/calendar", icon: "tasks" },
     { id: "mk-posts", title: "Social posts", url: "/marketing/posts", icon: "document" },

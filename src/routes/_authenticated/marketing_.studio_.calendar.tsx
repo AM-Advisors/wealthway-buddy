@@ -1,0 +1,148 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { useQueryClient } from "@tanstack/react-query";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { MkPage, mkHead } from "@/components/marketing-ui";
+import { ItemDrawer, SeriesChip, StatusPill, useStudio, type Series } from "@/components/marketing/studio";
+import { moveStudioItem, saveStudioItem } from "@/lib/marketing-studio.functions";
+import { STUDIO_STATUSES, STUDIO_STATUS_LABEL } from "@/lib/marketing-studio-model";
+
+export const Route = createFileRoute("/_authenticated/marketing_/studio_/calendar")({
+  head: mkHead("Editorial calendar", "Month, week, day, kanban and campaign timeline for the Harmonious editorial series."),
+  component: EditorialCalendar,
+});
+
+const VIEWS = ["month", "week", "day", "kanban", "timeline"] as const;
+type View = (typeof VIEWS)[number];
+const sod = (d: Date) => { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; };
+const addDays = (d: Date, n: number) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+const monday = (d: Date) => addDays(sod(d), -(((d.getDay() + 6) % 7)));
+const same = (a: Date, b: Date) => a.toDateString() === b.toDateString();
+
+function EditorialCalendar() {
+  const [view, setView] = useState<View>("month");
+  const [anchor, setAnchor] = useState(() => new Date());
+  const [fSeries, setFSeries] = useState("all");
+  const [fStatus, setFStatus] = useState("all");
+  const [fPlatform, setFPlatform] = useState("all");
+  const [fOwner, setFOwner] = useState("all");
+  const [open, setOpen] = useState<string | null | undefined>(undefined);
+  const [draft, setDraft] = useState<any>(undefined);
+  const save = useServerFn(saveStudioItem), move = useServerFn(moveStudioItem);
+  const qc = useQueryClient();
+
+  const { from, to, days } = useMemo(() => {
+    if (view === "day") { const f = sod(anchor); return { from: f, to: addDays(f, 1), days: [f] }; }
+    if (view === "week") { const f = monday(anchor); return { from: f, to: addDays(f, 7), days: Array.from({ length: 7 }, (_, i) => addDays(f, i)) }; }
+    if (view === "timeline") { const f = monday(anchor); return { from: f, to: addDays(f, 56), days: [] }; }
+    const first = new Date(anchor.getFullYear(), anchor.getMonth(), 1);
+    const f = monday(first);
+    return { from: f, to: addDays(f, 42), days: Array.from({ length: 42 }, (_, i) => addDays(f, i)) };
+  }, [view, anchor]);
+  const q = useStudio(from, to);
+  const series = (q.data?.series ?? []) as Series[];
+  const byKey = Object.fromEntries(series.map((s) => [s.key, s]));
+  const people = q.data?.people ?? {};
+  const items = ((q.data?.items ?? []) as any[]).filter((i) =>
+    (fSeries === "all" || i.series_key === fSeries) && (fStatus === "all" || i.status === fStatus) &&
+    (fPlatform === "all" || (i.platforms ?? []).includes(fPlatform)) && (fOwner === "all" || i.author_id === fOwner || i.reviewer_id === fOwner));
+  const refresh = () => qc.invalidateQueries({ queryKey: ["studio"] });
+
+  const reschedule = async (id: string, day: Date) => {
+    const cur = items.find((i) => i.id === id); if (!cur) return;
+    const old = cur.publish_at ? new Date(cur.publish_at) : new Date(day.getFullYear(), day.getMonth(), day.getDate(), 9);
+    const next = new Date(day.getFullYear(), day.getMonth(), day.getDate(), old.getHours(), old.getMinutes());
+    try { await save({ data: { id, publish_at: next.toISOString() } }); toast.success("Rescheduled"); refresh(); } catch (e: any) { toast.error(e.message); }
+  };
+  const restep = async (id: string, to: string) => {
+    const cur = items.find((i) => i.id === id); if (!cur || cur.status === to) return;
+    const back = STUDIO_STATUSES.indexOf(to as any) < STUDIO_STATUSES.indexOf(cur.status);
+    const note = back ? window.prompt("Why are you sending it back?") : null;
+    if (back && !note) return;
+    try { await move({ data: { id, to: to as any, note } }); toast.success(`Moved to ${STUDIO_STATUS_LABEL[to as keyof typeof STUDIO_STATUS_LABEL]}`); refresh(); } catch (e: any) { toast.error(e.message); }
+  };
+
+  const Card = ({ i }: { i: any }) => (
+    <div draggable onDragStart={(e) => e.dataTransfer.setData("text/plain", i.id)} onClick={(e) => { e.stopPropagation(); setOpen(i.id); }}
+      className="cursor-pointer rounded-sm border-l-2 bg-card px-1.5 py-1 text-[11px] shadow-sm hover:bg-muted" style={{ borderColor: byKey[i.series_key]?.color }}>
+      <div className="flex items-center gap-1"><SeriesChip s={byKey[i.series_key]} short />{i.publish_at && <span className="text-muted-foreground tabular-nums">{new Date(i.publish_at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</span>}</div>
+      <div className="mt-0.5 line-clamp-2 font-medium">{i.article_title || i.topic || "Untitled"}</div>
+      <StatusPill status={i.status} />
+    </div>
+  );
+  const drop = (day: Date) => ({ onDragOver: (e: React.DragEvent) => e.preventDefault(), onDrop: (e: React.DragEvent) => { e.preventDefault(); reschedule(e.dataTransfer.getData("text/plain"), day); } });
+  const newOn = (day: Date) => { setDraft({ publish_at: new Date(day.getFullYear(), day.getMonth(), day.getDate(), 9).toISOString(), series_key: series.find((s) => s.weekday === ((day.getDay() + 6) % 7) + 1)?.key ?? series[0]?.key }); setOpen(null); };
+  const step = (n: number) => setAnchor((a) => view === "month" ? new Date(a.getFullYear(), a.getMonth() + n, 1) : addDays(a, n * (view === "day" ? 1 : view === "timeline" ? 28 : 7)));
+  const sel = "rounded-md border border-input bg-background px-2 py-1 text-xs";
+
+  return (
+    <MkPage title="Editorial calendar" intro="Drag to reschedule or move between steps. Click a day to add an item." actions={<Button variant="outline" asChild><Link to="/marketing/studio">Studio dashboard</Link></Button>}>
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="flex rounded-md border border-border">{VIEWS.map((v) => <button key={v} onClick={() => setView(v)} className={`px-3 py-1 text-xs capitalize ${view === v ? "bg-primary text-primary-foreground" : ""}`}>{v}</button>)}</div>
+        {view !== "kanban" && <><Button size="icon" variant="ghost" onClick={() => step(-1)} aria-label="Previous"><ChevronLeft className="h-4 w-4" /></Button><Button size="sm" variant="ghost" onClick={() => setAnchor(new Date())}>Today</Button><Button size="icon" variant="ghost" onClick={() => step(1)} aria-label="Next"><ChevronRight className="h-4 w-4" /></Button></>}
+        <span className="font-heading text-sm font-semibold">{view === "month" ? anchor.toLocaleDateString(undefined, { month: "long", year: "numeric" }) : view === "day" ? anchor.toDateString() : `${from.toLocaleDateString()} – ${addDays(to, -1).toLocaleDateString()}`}</span>
+        <div className="ml-auto flex flex-wrap gap-2">
+          <select className={sel} value={fSeries} onChange={(e) => setFSeries(e.target.value)}><option value="all">All series</option>{series.map((s) => <option key={s.key} value={s.key}>{s.name}</option>)}</select>
+          <select className={sel} value={fStatus} onChange={(e) => setFStatus(e.target.value)}><option value="all">All steps</option>{STUDIO_STATUSES.map((s) => <option key={s} value={s}>{STUDIO_STATUS_LABEL[s]}</option>)}</select>
+          <select className={sel} value={fPlatform} onChange={(e) => setFPlatform(e.target.value)}><option value="all">All platforms</option>{["linkedin", "facebook", "instagram", "website", "email"].map((p) => <option key={p} value={p}>{p}</option>)}</select>
+          <select className={sel} value={fOwner} onChange={(e) => setFOwner(e.target.value)}><option value="all">Everyone</option>{Object.entries(people).map(([id, n]) => <option key={id} value={id}>{n as string}</option>)}</select>
+        </div>
+      </div>
+
+      {(view === "month" || view === "week") && (
+        <div className="overflow-x-auto"><div className="grid min-w-[700px] grid-cols-7 gap-px rounded-lg border border-border bg-border">
+          {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => <div key={d} className="bg-muted px-2 py-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{d}</div>)}
+          {days.map((d) => {
+            const its = items.filter((i) => i.publish_at && same(new Date(i.publish_at), d));
+            return (
+              <div key={d.toISOString()} {...drop(d)} onClick={() => newOn(d)} className={`space-y-1 bg-background p-1 ${view === "week" ? "min-h-64" : "min-h-28"} ${view === "month" && d.getMonth() !== anchor.getMonth() ? "opacity-50" : ""}`}>
+                <div className={`text-[11px] tabular-nums ${same(d, new Date()) ? "font-bold text-primary" : "text-muted-foreground"}`}>{d.getDate()}</div>
+                {its.map((i) => <Card key={i.id} i={i} />)}
+              </div>
+            );
+          })}
+        </div></div>
+      )}
+
+      {view === "day" && (
+        <div {...drop(days[0]!)} className="space-y-2 rounded-lg border border-border p-3">
+          {items.filter((i) => i.publish_at && same(new Date(i.publish_at), days[0]!)).map((i) => <Card key={i.id} i={i} />)}
+          <Button size="sm" variant="outline" onClick={() => newOn(days[0]!)}>Add item for this day</Button>
+        </div>
+      )}
+
+      {view === "kanban" && (
+        <div className="flex gap-2 overflow-x-auto pb-2">
+          {STUDIO_STATUSES.map((st) => (
+            <div key={st} onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); restep(e.dataTransfer.getData("text/plain"), st); }} className="w-56 shrink-0 space-y-1 rounded-lg border border-border bg-muted/40 p-2">
+              <div className="flex justify-between text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"><span>{STUDIO_STATUS_LABEL[st]}</span><span>{items.filter((i) => i.status === st).length}</span></div>
+              {items.filter((i) => i.status === st).map((i) => <Card key={i.id} i={i} />)}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {view === "timeline" && (
+        <div className="space-y-2 overflow-x-auto">
+          {series.map((s) => (
+            <div key={s.key} className="flex min-w-[800px] items-center gap-2">
+              <div className="w-44 shrink-0 text-xs font-semibold" style={{ color: s.color }}>{s.name}</div>
+              <div className="relative h-10 flex-1 rounded bg-muted">
+                {items.filter((i) => i.series_key === s.key && i.publish_at).map((i) => {
+                  const pct = ((new Date(i.publish_at).getTime() - from.getTime()) / (to.getTime() - from.getTime())) * 100;
+                  return pct >= 0 && pct <= 100 ? <button key={i.id} title={i.article_title || i.topic} onClick={() => setOpen(i.id)} className="absolute top-1 h-8 w-2 rounded-sm" style={{ left: `${pct}%`, background: s.color }} /> : null;
+                })}
+              </div>
+            </div>
+          ))}
+          <p className="text-[11px] text-muted-foreground">Eight weeks from {from.toLocaleDateString()}. Each mark is one planned item.</p>
+        </div>
+      )}
+
+      {open !== undefined && <ItemDrawer id={open} open draft={draft} series={series} people={people} onClose={() => { setOpen(undefined); setDraft(undefined); }} />}
+    </MkPage>
+  );
+}
