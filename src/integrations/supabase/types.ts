@@ -17816,6 +17816,89 @@ export type Database = {
           },
         ]
       }
+      fund_account_mappings: {
+        Row: {
+          account_id: string
+          active: boolean
+          book_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          note: string | null
+          purpose: string
+          retired_at: string | null
+          retired_by: string | null
+        }
+        Insert: {
+          account_id: string
+          active?: boolean
+          book_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          note?: string | null
+          purpose: string
+          retired_at?: string | null
+          retired_by?: string | null
+        }
+        Update: {
+          account_id?: string
+          active?: boolean
+          book_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          note?: string | null
+          purpose?: string
+          retired_at?: string | null
+          retired_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_account_mappings_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "chart_of_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fund_accounting_events: {
+        Row: {
+          action: string
+          actor_user_id: string | null
+          created_at: string
+          id: string
+          offering_id: string
+          payload: Json
+          reason: string | null
+          record_id: string
+          record_table: string
+        }
+        Insert: {
+          action: string
+          actor_user_id?: string | null
+          created_at?: string
+          id?: string
+          offering_id: string
+          payload?: Json
+          reason?: string | null
+          record_id: string
+          record_table: string
+        }
+        Update: {
+          action?: string
+          actor_user_id?: string | null
+          created_at?: string
+          id?: string
+          offering_id?: string
+          payload?: Json
+          reason?: string | null
+          record_id?: string
+          record_table?: string
+        }
+        Relationships: []
+      }
       fund_aliases: {
         Row: {
           canonical_offering_id: string
@@ -19025,6 +19108,118 @@ export type Database = {
           },
         ]
       }
+      fund_expense_records: {
+        Row: {
+          amount_cents: number
+          bank_line_id: string | null
+          book_id: string
+          category: string
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          decision_reason: string | null
+          description: string
+          evidence_reference: string | null
+          expense_date: string
+          fingerprint: string
+          id: string
+          invoice_date: string | null
+          invoice_number: string | null
+          journal_entry_id: string | null
+          offering_id: string
+          paid_on: string | null
+          payment_mode: string
+          prepared_at: string
+          prepared_by: string
+          reversal_journal_id: string | null
+          service_end: string | null
+          service_start: string | null
+          source_reference: string
+          status: string
+          vendor: string
+        }
+        Insert: {
+          amount_cents: number
+          bank_line_id?: string | null
+          book_id: string
+          category: string
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_reason?: string | null
+          description: string
+          evidence_reference?: string | null
+          expense_date: string
+          fingerprint: string
+          id?: string
+          invoice_date?: string | null
+          invoice_number?: string | null
+          journal_entry_id?: string | null
+          offering_id: string
+          paid_on?: string | null
+          payment_mode: string
+          prepared_at?: string
+          prepared_by: string
+          reversal_journal_id?: string | null
+          service_end?: string | null
+          service_start?: string | null
+          source_reference: string
+          status?: string
+          vendor: string
+        }
+        Update: {
+          amount_cents?: number
+          bank_line_id?: string | null
+          book_id?: string
+          category?: string
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_reason?: string | null
+          description?: string
+          evidence_reference?: string | null
+          expense_date?: string
+          fingerprint?: string
+          id?: string
+          invoice_date?: string | null
+          invoice_number?: string | null
+          journal_entry_id?: string | null
+          offering_id?: string
+          paid_on?: string | null
+          payment_mode?: string
+          prepared_at?: string
+          prepared_by?: string
+          reversal_journal_id?: string | null
+          service_end?: string | null
+          service_start?: string | null
+          source_reference?: string
+          status?: string
+          vendor?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_expense_records_bank_line_id_fkey"
+            columns: ["bank_line_id"]
+            isOneToOne: false
+            referencedRelation: "bank_statement_lines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fund_expense_records_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fund_expense_records_reversal_journal_id_fkey"
+            columns: ["reversal_journal_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fund_fee_terms: {
         Row: {
           carry_pct: number | null
@@ -19345,6 +19540,134 @@ export type Database = {
           state?: string
         }
         Relationships: []
+      }
+      fund_investment_transactions: {
+        Row: {
+          asset_id: string | null
+          bank_line_id: string | null
+          book_id: string
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          decision_reason: string | null
+          evidence_reference: string | null
+          id: string
+          idempotency_key: string
+          instrument: string | null
+          journal_entry_id: string | null
+          kind: string
+          new_asset_class: string | null
+          new_asset_name: string | null
+          new_issuer_name: string | null
+          offering_id: string
+          prepared_at: string
+          prepared_by: string
+          principal_cents: number
+          quantity: number | null
+          reversal_journal_id: string | null
+          reversal_reason: string | null
+          settlement_date: string | null
+          source_reference: string
+          status: string
+          total_cost_cents: number | null
+          trade_date: string
+          transaction_cost_cents: number
+          unit_price_cents: number | null
+        }
+        Insert: {
+          asset_id?: string | null
+          bank_line_id?: string | null
+          book_id: string
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_reason?: string | null
+          evidence_reference?: string | null
+          id?: string
+          idempotency_key: string
+          instrument?: string | null
+          journal_entry_id?: string | null
+          kind: string
+          new_asset_class?: string | null
+          new_asset_name?: string | null
+          new_issuer_name?: string | null
+          offering_id: string
+          prepared_at?: string
+          prepared_by: string
+          principal_cents: number
+          quantity?: number | null
+          reversal_journal_id?: string | null
+          reversal_reason?: string | null
+          settlement_date?: string | null
+          source_reference: string
+          status?: string
+          total_cost_cents?: number | null
+          trade_date: string
+          transaction_cost_cents?: number
+          unit_price_cents?: number | null
+        }
+        Update: {
+          asset_id?: string | null
+          bank_line_id?: string | null
+          book_id?: string
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_reason?: string | null
+          evidence_reference?: string | null
+          id?: string
+          idempotency_key?: string
+          instrument?: string | null
+          journal_entry_id?: string | null
+          kind?: string
+          new_asset_class?: string | null
+          new_asset_name?: string | null
+          new_issuer_name?: string | null
+          offering_id?: string
+          prepared_at?: string
+          prepared_by?: string
+          principal_cents?: number
+          quantity?: number | null
+          reversal_journal_id?: string | null
+          reversal_reason?: string | null
+          settlement_date?: string | null
+          source_reference?: string
+          status?: string
+          total_cost_cents?: number | null
+          trade_date?: string
+          transaction_cost_cents?: number
+          unit_price_cents?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_investment_transactions_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "portfolio_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fund_investment_transactions_bank_line_id_fkey"
+            columns: ["bank_line_id"]
+            isOneToOne: false
+            referencedRelation: "bank_statement_lines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fund_investment_transactions_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fund_investment_transactions_reversal_journal_id_fkey"
+            columns: ["reversal_journal_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       fund_investor_updates: {
         Row: {
@@ -20087,6 +20410,94 @@ export type Database = {
             columns: ["setup_id"]
             isOneToOne: false
             referencedRelation: "fund_setups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fund_payable_settlements: {
+        Row: {
+          amount_cents: number
+          bank_line_id: string | null
+          book_id: string
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          decision_reason: string | null
+          expense_id: string | null
+          id: string
+          idempotency_key: string
+          journal_entry_id: string | null
+          liability_purpose: string
+          offering_id: string
+          opening_liability_reference: string | null
+          paid_on: string
+          prepared_at: string
+          prepared_by: string
+          source_reference: string
+          status: string
+        }
+        Insert: {
+          amount_cents: number
+          bank_line_id?: string | null
+          book_id: string
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_reason?: string | null
+          expense_id?: string | null
+          id?: string
+          idempotency_key: string
+          journal_entry_id?: string | null
+          liability_purpose: string
+          offering_id: string
+          opening_liability_reference?: string | null
+          paid_on: string
+          prepared_at?: string
+          prepared_by: string
+          source_reference: string
+          status?: string
+        }
+        Update: {
+          amount_cents?: number
+          bank_line_id?: string | null
+          book_id?: string
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_reason?: string | null
+          expense_id?: string | null
+          id?: string
+          idempotency_key?: string
+          journal_entry_id?: string | null
+          liability_purpose?: string
+          offering_id?: string
+          opening_liability_reference?: string | null
+          paid_on?: string
+          prepared_at?: string
+          prepared_by?: string
+          source_reference?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_payable_settlements_bank_line_id_fkey"
+            columns: ["bank_line_id"]
+            isOneToOne: false
+            referencedRelation: "bank_statement_lines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fund_payable_settlements_expense_id_fkey"
+            columns: ["expense_id"]
+            isOneToOne: false
+            referencedRelation: "fund_expense_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fund_payable_settlements_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
             referencedColumns: ["id"]
           },
         ]
@@ -27656,6 +28067,47 @@ export type Database = {
           },
         ]
       }
+      management_fee_term_events: {
+        Row: {
+          action: string
+          actor_user_id: string | null
+          created_at: string
+          id: string
+          offering_id: string
+          payload: Json
+          reason: string | null
+          term_id: string
+        }
+        Insert: {
+          action: string
+          actor_user_id?: string | null
+          created_at?: string
+          id?: string
+          offering_id: string
+          payload?: Json
+          reason?: string | null
+          term_id: string
+        }
+        Update: {
+          action?: string
+          actor_user_id?: string | null
+          created_at?: string
+          id?: string
+          offering_id?: string
+          payload?: Json
+          reason?: string | null
+          term_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "management_fee_term_events_term_id_fkey"
+            columns: ["term_id"]
+            isOneToOne: false
+            referencedRelation: "management_fee_terms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       management_fee_terms: {
         Row: {
           approval_status: string
@@ -27665,6 +28117,7 @@ export type Database = {
           class_id: string | null
           created_at: string
           created_by: string | null
+          decision_reason: string | null
           ends_on: string | null
           flat_amount_cents: number
           frequency: string
@@ -27673,11 +28126,14 @@ export type Database = {
           offering_id: string
           offset_pct: number
           position_id: string | null
+          prepared_by: string | null
           rate_bps: number
           side_letter_id: string | null
           source_document: string | null
           starts_on: string
           step_downs: Json
+          superseded_at: string | null
+          supersedes_term_id: string | null
           updated_at: string
           version: number
           waiver_bps: number
@@ -27690,6 +28146,7 @@ export type Database = {
           class_id?: string | null
           created_at?: string
           created_by?: string | null
+          decision_reason?: string | null
           ends_on?: string | null
           flat_amount_cents?: number
           frequency?: string
@@ -27698,11 +28155,14 @@ export type Database = {
           offering_id: string
           offset_pct?: number
           position_id?: string | null
+          prepared_by?: string | null
           rate_bps?: number
           side_letter_id?: string | null
           source_document?: string | null
           starts_on: string
           step_downs?: Json
+          superseded_at?: string | null
+          supersedes_term_id?: string | null
           updated_at?: string
           version?: number
           waiver_bps?: number
@@ -27715,6 +28175,7 @@ export type Database = {
           class_id?: string | null
           created_at?: string
           created_by?: string | null
+          decision_reason?: string | null
           ends_on?: string | null
           flat_amount_cents?: number
           frequency?: string
@@ -27723,11 +28184,14 @@ export type Database = {
           offering_id?: string
           offset_pct?: number
           position_id?: string | null
+          prepared_by?: string | null
           rate_bps?: number
           side_letter_id?: string | null
           source_document?: string | null
           starts_on?: string
           step_downs?: Json
+          superseded_at?: string | null
+          supersedes_term_id?: string | null
           updated_at?: string
           version?: number
           waiver_bps?: number
@@ -27752,6 +28216,13 @@ export type Database = {
             columns: ["position_id"]
             isOneToOne: false
             referencedRelation: "investor_positions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "management_fee_terms_supersedes_term_id_fkey"
+            columns: ["supersedes_term_id"]
+            isOneToOne: false
+            referencedRelation: "management_fee_terms"
             referencedColumns: ["id"]
           },
         ]
@@ -42834,6 +43305,7 @@ export type Database = {
         | "reversal"
         | "migration"
         | "quickbooks"
+        | "investment"
       journal_status: "draft" | "reviewed" | "approved" | "posted" | "reversed"
       ledger_account_type:
         | "asset"
@@ -43336,6 +43808,7 @@ export const Constants = {
         "reversal",
         "migration",
         "quickbooks",
+        "investment",
       ],
       journal_status: ["draft", "reviewed", "approved", "posted", "reversed"],
       ledger_account_type: [

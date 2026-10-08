@@ -1380,6 +1380,13 @@
       "when": 1791420293293,
       "tag": "0196_valuation_recognized_by_opening_journal",
       "breakpoints": true
+    },
+    {
+      "idx": 197,
+      "version": "7",
+      "when": 1791478877243,
+      "tag": "0197_fund_accounting_prerequisites",
+      "breakpoints": true
     }
   ]
 }
