@@ -226,7 +226,7 @@ export async function draftFromStudio(userId: string, d: { slug: string; title: 
   if (clash || (WIX_ARTICLE_SLUGS as readonly string[]).includes(d.slug)) throw new Error("That web address is already used by another article.");
   const { data: art, error } = await db.from("classroom_articles").insert({ slug: d.slug, source: "new", category, status: "draft", created_by: userId, original_path: `/post/${d.slug}` }).select("id").single();
   if (error) throw new Error(error.message);
-  const v = await addVersion(db, art.id, userId, { title: d.title, content_html: d.html, meta_title: d.metaTitle, meta_description: d.metaDescription, source: "studio", note: "From Marketing Studio" });
+  const v = await addVersion(db, art.id, userId, { title: d.title, content_html: d.html, meta_title: d.metaTitle, meta_description: d.metaDescription, source: "edit", note: "From Marketing Studio" });
   await event(db, art.id, "studio_draft", userId, v.id);
   return { id: art.id as string, slug: d.slug };
 }
