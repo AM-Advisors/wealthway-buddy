@@ -43,7 +43,7 @@ function ResearchPage() {
   return (
     <MkPage title="Research feed" intro="Ranked stories from official sources and suggested ideas per series. Nothing here is ever published automatically."
       actions={<div className="flex flex-wrap gap-2">
-        <Button variant="outline" asChild><Link to="/marketing/studio">Studio</Link></Button>
+        <Button variant="outline" asChild><Link to="/marketing/studio">Studio</Link></Button><Button variant="outline" asChild><Link to="/marketing/studio/research/monitoring">Monitoring</Link></Button>
         <Button variant="outline" disabled={busy} onClick={() => act(() => run({ data: { ideas: false } }), "Feeds refreshed")}>Refresh feeds</Button>
         <Button disabled={busy} onClick={() => act(() => run({ data: { ideas: true } }), "Feeds refreshed and ideas suggested")}>Suggest ideas</Button>
       </div>}>
