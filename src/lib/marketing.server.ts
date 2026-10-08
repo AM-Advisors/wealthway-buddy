@@ -354,26 +354,11 @@ export async function runDue() {
     if (!claimed?.length) continue;
     const ch = await channelRows(db);
     const imgs = await signed(db, (p.image_paths ?? []).slice(0, 10), 86400);
-    const img = imgs[0];
-    let ok = 0;
-    const { data: targets } = await db.from("marketing_post_targets").select("*").eq("post_id", p.id).neq("status", "published");
-    for (const t of (targets ?? []) as any[]) {
-      const ref = ch.get(t.channel)?.account_ref || null;
-      try {
-        if (!ref) throw new Error("Channel not connected.");
-        const ext = t.channel === "linkedin" ? await pub.publishLinkedIn(ref, p.body, img ?? null)
-          : t.channel === "facebook" ? await pub.publishFacebook(ref, p.body, imgs)
-          : await pub.publishInstagram(ref, p.body, imgs);
-        await db.from("marketing_post_targets").update({ status: "published", external_id: ext, error: null, published_at: new Date().toISOString() }).eq("id", t.id);
-        ok++;
-      } catch (e) {
-        await db.from("marketing_post_targets").update({ status: "failed", error: String((e as Error).message).slice(0, 500) }).eq("id", t.id);
-      }
-    }
-    const allDone = ok === (targets ?? []).length;
-    await db.from("marketing_posts").update({ status: allDone ? "published" : "failed", published_at: allDone ? new Date().toISOString() : null }).eq("id", p.id);
+    await (await import("@/lib/marketing-queue.server")).processPost(db, p, imgs, ch);
     result.posts++;
   }
+
+  await (await import("@/lib/marketing-queue.server")).reconfirm(db, (paths) => signed(db, paths.slice(0, 10), 86400), await channelRows(db)).catch((e) => console.error("reconfirm", e));
 
   const { data: emails } = await db.from("marketing_emails").select("*").in("status", ["scheduled", "approved"]).lte("scheduled_at", now).limit(5);
   for (const e of (emails ?? []) as any[]) {
