@@ -1,3 +1,5 @@
+import { useOrgTz } from "@/components/marketing/use-org-tz";
+import { fmtInTz } from "@/lib/org-timezone";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
@@ -7,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { MkPage, mkHead } from "@/components/marketing-ui";
 import { SeriesChip, useStudio, type Series } from "@/components/marketing/studio";
 import { ackResearchAlert, addResearchStory, convertResearchIdea, dismissResearchStory, getResearchFeed, runResearchNow } from "@/lib/marketing-research.functions";
-import { CATEGORIES, categorize, freshnessWarning, usd, EXEMPTION_LABEL, issuerCategory, type Category } from "@/lib/marketing-formd-model";
+import { CATEGORIES, categorize, freshnessWarning, usd, EXEMPTION_LABEL, issuerCategory, type Category, FORMD_FIELD, fmtFormDAmount } from "@/lib/marketing-formd-model";
 import { getFormDIntel } from "@/lib/marketing-research.functions";
 import { CLAIM_LABEL, SCORE_WEIGHTS, type ClaimKind } from "@/lib/marketing-research-model";
 
@@ -20,6 +22,7 @@ const VERIFY: Record<string, string> = { verified_primary: "Primary source", rep
 const vTone = (v: string) => v === "verified_primary" ? "bg-primary text-primary-foreground" : v === "unverified" ? "bg-destructive text-destructive-foreground" : "bg-muted text-muted-foreground";
 
 function ResearchPage() {
+  const tz = useOrgTz();
   const [days, setDays] = useState(3);
   const [tab, setTab] = useState<"feed" | "formd" | "ideas" | "sources">("feed");
   const [cat, setCat] = useState<Category | "all">("all");
@@ -160,13 +163,13 @@ function ResearchPage() {
                   <td className="p-2">{s.name}{s.is_primary && <span className="ml-1 text-[10px] text-primary">primary</span>}</td>
                   <td className="p-2 text-xs">{s.kind}</td><td className="p-2 tabular-nums">{s.credibility}</td>
                   <td className="p-2 text-xs">{s.active ? (s.last_error ? <span className="text-destructive">{s.last_error}</span> : "Automatic") : s.access_note}</td>
-                  <td className="p-2 text-xs">{s.last_fetched_at ? new Date(s.last_fetched_at).toLocaleString() : "—"}</td>
+                  <td className="p-2 text-xs">{s.last_fetched_at ? fmtInTz(s.last_fetched_at, tz) : "—"}</td>
                 </tr>
               ))}</tbody>
             </table>
           </div>
           <ManualStory sources={(d?.sources ?? []) as any[]} busy={busy} onAdd={(v) => act(() => add({ data: v }), "Story added")} />
-          <div className="text-xs text-muted-foreground">Recent runs: {(d?.runs ?? []).map((r: any) => `${new Date(r.started_at).toLocaleString()} ${r.status}`).join(" · ") || "none yet"}</div>
+          <div className="text-xs text-muted-foreground">Recent runs: {(d?.runs ?? []).map((r: any) => `${fmtInTz(r.started_at, tz)} ${r.status}`).join(" · ") || "none yet"}</div>
         </div>
       )}
     </MkPage>
@@ -225,7 +228,7 @@ function FormDTab({ tz }: { tz?: string }) {
       {!d ? <p className="text-sm text-muted-foreground">{r.error ? (r.error as Error).message : "Loading…"}</p> : <>
         <section className="rounded-lg border border-border bg-card p-3 space-y-2">
           <h2 className="font-heading text-lg">Weekly Form D Intelligence Digest</h2>
-          <p className="text-xs text-muted-foreground">{fmtDate(d.from, tz)} – {fmtDate(d.to, tz)} · computed from the official EDGAR filings below. Offering amounts are what issuers say they intend to sell, not capital raised.</p>
+          <p className="text-xs text-muted-foreground">{fmtDate(d.from, tz)} – {fmtDate(d.to, tz)} · computed from the official EDGAR filings below. All amounts are self-reported by issuers on Form D and link to the original filing. Total offering amount is not completed fundraising; amount sold is not independently verified.</p>
           {d.digest.patterns.length ? <ul className="list-disc pl-5 text-sm">{d.digest.patterns.map((p: string) => <li key={p}>{p}</li>)}</ul> : <p className="text-sm text-muted-foreground">No filings in this period.</p>}
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
             <Group title="Filing date" rows={d.digest.byDate} /><Group title="Industry" rows={d.digest.byIndustry} /><Group title="Fund / issuer category" rows={d.digest.byCategory} /><Group title="Geography" rows={d.digest.byState} />
@@ -233,17 +236,18 @@ function FormDTab({ tz }: { tz?: string }) {
           </div>
         </section>
         <div className="overflow-x-auto"><table className="w-full text-xs">
-          <thead><tr className="text-left text-muted-foreground"><th className="py-1">Filed</th><th>Issuer</th><th>Type</th><th>Category</th><th>State</th><th>Exemption</th><th>Total offering</th><th>Amount sold</th><th>History</th></tr></thead>
+          <thead><tr className="text-left text-muted-foreground"><th className="py-1">Filed</th><th>Issuer</th><th>Type</th><th>Category</th><th>State</th><th>Exemption</th><th title={FORMD_FIELD.total_offering.note}>Total offering amount</th><th title={FORMD_FIELD.total_sold.note}>Total amount sold (reported)</th><th title={FORMD_FIELD.total_remaining.note}>Remaining to be sold</th><th>History</th></tr></thead>
           <tbody>{d.filings.map((f: any) => {
             const hist = d.history.filter((h: any) => h.cik === f.cik && h.accession !== f.accession);
             return <tr key={f.accession} className="border-t border-border align-top">
               <td className="py-1">{f.filed_at ? fmtDate(f.filed_at, tz) : "—"}</td>
               <td><a className="underline" href={f.index_url} target="_blank" rel="noreferrer">{f.issuer}</a>{f.newsworthy && <span className="ml-1 rounded-sm bg-accent/30 px-1">In daily feed</span>}{f.parse_error && <span className="ml-1 text-destructive">details unavailable</span>}</td>
-              <td>{f.is_amendment ? "Amendment" : "New"}</td><td>{issuerCategory(f)}</td><td>{f.state ?? "—"}</td>
+              <td>{f.is_amendment ? `Amendment${f.filed_at ? ` · amended ${fmtDate(f.filed_at, tz)}` : ""}` : "New"}</td><td>{issuerCategory(f)}</td><td>{f.state ?? "—"}</td>
               <td>{f.exemptions.map((e: string) => EXEMPTION_LABEL[e]).filter(Boolean).join(", ") || "—"}</td>
-              <td>{f.total_offering != null ? usd(f.total_offering) : f.offering_indefinite ? "Indefinite" : "Not disclosed"}</td>
-              <td>{f.total_sold != null ? usd(f.total_sold) : "Not disclosed"}</td>
-              <td>{hist.length ? `${hist.length} related filing${hist.length > 1 ? "s" : ""}` : "—"}</td>
+              <td>{fmtFormDAmount(f.total_offering, f.offering_indefinite)}</td>
+              <td>{fmtFormDAmount(f.total_sold)}</td>
+              <td>{fmtFormDAmount(f.total_remaining == null ? null : Number(f.total_remaining), f.remaining_indefinite)}</td>
+              <td>{hist.length ? hist.map((h: any) => `${h.form_type} ${h.filed_at ? fmtDate(h.filed_at, tz) : ""}`).join("; ") : "—"}{f.doc_url && <> · <a className="underline" href={f.doc_url} target="_blank" rel="noreferrer">SEC filing</a></>}</td>
             </tr>;
           })}</tbody></table></div>
       </>}

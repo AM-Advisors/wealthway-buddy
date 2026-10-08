@@ -9,6 +9,8 @@ import { MkPage, mkHead } from "@/components/marketing-ui";
 import { ItemDrawer, SeriesChip, StatusPill, useStudio, type Series } from "@/components/marketing/studio";
 import { moveStudioItem, saveStudioItem } from "@/lib/marketing-studio.functions";
 import { STUDIO_STATUSES, STUDIO_STATUS_LABEL } from "@/lib/marketing-studio-model";
+import { useOrgTz } from "@/components/marketing/use-org-tz";
+import { addYmd, fmtYmd, mondayOf, moveToDay, weekdayOf, ymdIn, ymdStartUtc } from "@/lib/org-timezone";
 
 export const Route = createFileRoute("/_authenticated/marketing_/studio_/calendar")({
   head: mkHead("Editorial calendar", "Month, week, day, kanban and campaign timeline for the Harmonious editorial series."),
@@ -17,14 +19,13 @@ export const Route = createFileRoute("/_authenticated/marketing_/studio_/calenda
 
 const VIEWS = ["month", "week", "day", "kanban", "timeline"] as const;
 type View = (typeof VIEWS)[number];
-const sod = (d: Date) => { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; };
-const addDays = (d: Date, n: number) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
-const monday = (d: Date) => addDays(sod(d), -(((d.getDay() + 6) % 7)));
-const same = (a: Date, b: Date) => a.toDateString() === b.toDateString();
 
 function EditorialCalendar() {
   const [view, setView] = useState<View>("month");
-  const [anchor, setAnchor] = useState(() => new Date());
+  const tz = useOrgTz();
+  const [anchorRaw, setAnchor] = useState<string | null>(null);
+  const today = ymdIn(new Date(), tz);
+  const anchor = anchorRaw ?? today;
   const [fSeries, setFSeries] = useState("all");
   const [fStatus, setFStatus] = useState("all");
   const [fPlatform, setFPlatform] = useState("all");
@@ -34,14 +35,15 @@ function EditorialCalendar() {
   const save = useServerFn(saveStudioItem), move = useServerFn(moveStudioItem);
   const qc = useQueryClient();
 
-  const { from, to, days } = useMemo(() => {
-    if (view === "day") { const f = sod(anchor); return { from: f, to: addDays(f, 1), days: [f] }; }
-    if (view === "week") { const f = monday(anchor); return { from: f, to: addDays(f, 7), days: Array.from({ length: 7 }, (_, i) => addDays(f, i)) }; }
-    if (view === "timeline") { const f = monday(anchor); return { from: f, to: addDays(f, 56), days: [] }; }
-    const first = new Date(anchor.getFullYear(), anchor.getMonth(), 1);
-    const f = monday(first);
-    return { from: f, to: addDays(f, 42), days: Array.from({ length: 42 }, (_, i) => addDays(f, i)) };
-  }, [view, anchor]);
+  // Day boundaries come from the organization time zone, not the viewer's device clock.
+  const { from, to, days, firstDay, lastDay } = useMemo(() => {
+    const span = (f: string, n: number, list: boolean) => ({ firstDay: f, lastDay: addYmd(f, n - 1), from: ymdStartUtc(f, tz), to: ymdStartUtc(addYmd(f, n), tz), days: list ? Array.from({ length: n }, (_, i) => addYmd(f, i)) : [] });
+    if (view === "day") return span(anchor, 1, true);
+    if (view === "week") return span(mondayOf(anchor), 7, true);
+    if (view === "timeline") return span(mondayOf(anchor), 56, false);
+    return span(mondayOf(anchor.slice(0, 8) + "01"), 42, true);
+  }, [view, anchor, tz]);
+  const onDay = (i: any, d: string) => !!i.publish_at && ymdIn(i.publish_at, tz) === d;
   const q = useStudio(from, to);
   const series = (q.data?.series ?? []) as Series[];
   const byKey = Object.fromEntries(series.map((s) => [s.key, s]));
@@ -51,11 +53,9 @@ function EditorialCalendar() {
     (fPlatform === "all" || (i.platforms ?? []).includes(fPlatform)) && (fOwner === "all" || i.author_id === fOwner || i.reviewer_id === fOwner));
   const refresh = () => qc.invalidateQueries({ queryKey: ["studio"] });
 
-  const reschedule = async (id: string, day: Date) => {
+  const reschedule = async (id: string, day: string) => {
     const cur = items.find((i) => i.id === id); if (!cur) return;
-    const old = cur.publish_at ? new Date(cur.publish_at) : new Date(day.getFullYear(), day.getMonth(), day.getDate(), 9);
-    const next = new Date(day.getFullYear(), day.getMonth(), day.getDate(), old.getHours(), old.getMinutes());
-    try { await save({ data: { id, publish_at: next.toISOString() } }); toast.success("Rescheduled"); refresh(); } catch (e: any) { toast.error(e.message); }
+    try { await save({ data: { id, publish_at: moveToDay(cur.publish_at, day, tz) } }); toast.success("Rescheduled"); refresh(); } catch (e: any) { toast.error(e.message); }
   };
   const restep = async (id: string, to: string) => {
     const cur = items.find((i) => i.id === id); if (!cur || cur.status === to) return;
@@ -68,22 +68,23 @@ function EditorialCalendar() {
   const Card = ({ i }: { i: any }) => (
     <div draggable onDragStart={(e) => e.dataTransfer.setData("text/plain", i.id)} onClick={(e) => { e.stopPropagation(); setOpen(i.id); }}
       className="cursor-pointer rounded-sm border-l-2 bg-card px-1.5 py-1 text-[11px] shadow-sm hover:bg-muted" style={{ borderColor: byKey[i.series_key]?.color }}>
-      <div className="flex items-center gap-1"><SeriesChip s={byKey[i.series_key]} short />{i.publish_at && <span className="text-muted-foreground tabular-nums">{new Date(i.publish_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "America/Chicago" })}</span>}</div>
+      <div className="flex items-center gap-1"><SeriesChip s={byKey[i.series_key]} short />{i.publish_at && <span className="text-muted-foreground tabular-nums">{new Date(i.publish_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: tz })}</span>}</div>
       <div className="mt-0.5 line-clamp-2 font-medium">{i.article_title || i.topic || "Untitled"}</div>
       <StatusPill status={i.status} />
     </div>
   );
-  const drop = (day: Date) => ({ onDragOver: (e: React.DragEvent) => e.preventDefault(), onDrop: (e: React.DragEvent) => { e.preventDefault(); reschedule(e.dataTransfer.getData("text/plain"), day); } });
-  const newOn = (day: Date) => { setDraft({ publish_at: new Date(day.getFullYear(), day.getMonth(), day.getDate(), 9).toISOString(), series_key: series.find((s) => s.weekday === ((day.getDay() + 6) % 7) + 1)?.key ?? series[0]?.key }); setOpen(null); };
-  const step = (n: number) => setAnchor((a) => view === "month" ? new Date(a.getFullYear(), a.getMonth() + n, 1) : addDays(a, n * (view === "day" ? 1 : view === "timeline" ? 28 : 7)));
+  const drop = (day: string) => ({ onDragOver: (e: React.DragEvent) => e.preventDefault(), onDrop: (e: React.DragEvent) => { e.preventDefault(); reschedule(e.dataTransfer.getData("text/plain"), day); } });
+  const newOn = (day: string) => { setDraft({ publish_at: moveToDay(null, day, tz), series_key: series.find((s) => s.weekday === ((weekdayOf(day) + 6) % 7) + 1)?.key ?? series[0]?.key }); setOpen(null); };
+  const step = (n: number) => setAnchor(() => { if (view !== "month") return addYmd(anchor, n * (view === "day" ? 1 : view === "timeline" ? 28 : 7)); const [y, m] = anchor.split("-").map(Number); const t = new Date(Date.UTC(y!, m! - 1 + n, 1)); return t.toISOString().slice(0, 10); });
   const sel = "rounded-md border border-input bg-background px-2 py-1 text-xs";
 
   return (
     <MkPage title="Editorial calendar" intro="Drag to reschedule or move between steps. Click a day to add an item." actions={<Button variant="outline" asChild><Link to="/marketing/studio">Studio dashboard</Link></Button>}>
       <div className="flex flex-wrap items-center gap-2">
         <div className="flex rounded-md border border-border">{VIEWS.map((v) => <button key={v} onClick={() => setView(v)} className={`px-3 py-1 text-xs capitalize ${view === v ? "bg-primary text-primary-foreground" : ""}`}>{v}</button>)}</div>
-        {view !== "kanban" && <><Button size="icon" variant="ghost" onClick={() => step(-1)} aria-label="Previous"><ChevronLeft className="h-4 w-4" /></Button><Button size="sm" variant="ghost" onClick={() => setAnchor(new Date())}>Today</Button><Button size="icon" variant="ghost" onClick={() => step(1)} aria-label="Next"><ChevronRight className="h-4 w-4" /></Button></>}
-        <span className="font-heading text-sm font-semibold">{view === "month" ? anchor.toLocaleDateString(undefined, { month: "long", year: "numeric" }) : view === "day" ? anchor.toDateString() : `${from.toLocaleDateString()} – ${addDays(to, -1).toLocaleDateString()}`}</span>
+        {view !== "kanban" && <><Button size="icon" variant="ghost" onClick={() => step(-1)} aria-label="Previous"><ChevronLeft className="h-4 w-4" /></Button><Button size="sm" variant="ghost" onClick={() => setAnchor(null)}>Today</Button><Button size="icon" variant="ghost" onClick={() => step(1)} aria-label="Next"><ChevronRight className="h-4 w-4" /></Button></>}
+        <span className="font-heading text-sm font-semibold">{view === "month" ? fmtYmd(anchor, { month: "long", year: "numeric" }) : view === "day" ? fmtYmd(anchor, { weekday: "short", month: "short", day: "numeric", year: "numeric" }) : `${fmtYmd(firstDay, { month: "short", day: "numeric" })} – ${fmtYmd(lastDay, { month: "short", day: "numeric", year: "numeric" })}`}</span>
+        <span className="text-[11px] text-muted-foreground">Times in {tz}</span>
         <div className="ml-auto flex flex-wrap gap-2">
           <select className={sel} value={fSeries} onChange={(e) => setFSeries(e.target.value)}><option value="all">All series</option>{series.map((s) => <option key={s.key} value={s.key}>{s.name}</option>)}</select>
           <select className={sel} value={fStatus} onChange={(e) => setFStatus(e.target.value)}><option value="all">All steps</option>{STUDIO_STATUSES.map((s) => <option key={s} value={s}>{STUDIO_STATUS_LABEL[s]}</option>)}</select>
@@ -96,10 +97,10 @@ function EditorialCalendar() {
         <div className="overflow-x-auto"><div className="grid min-w-[700px] grid-cols-7 gap-px rounded-lg border border-border bg-border">
           {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => <div key={d} className="bg-muted px-2 py-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{d}</div>)}
           {days.map((d) => {
-            const its = items.filter((i) => i.publish_at && same(new Date(i.publish_at), d));
+            const its = items.filter((i) => onDay(i, d));
             return (
-              <div key={d.toISOString()} {...drop(d)} onClick={() => newOn(d)} className={`space-y-1 bg-background p-1 ${view === "week" ? "min-h-64" : "min-h-28"} ${view === "month" && d.getMonth() !== anchor.getMonth() ? "opacity-50" : ""}`}>
-                <div className={`text-[11px] tabular-nums ${same(d, new Date()) ? "font-bold text-primary" : "text-muted-foreground"}`}>{d.getDate()}</div>
+              <div key={d} {...drop(d)} onClick={() => newOn(d)} className={`space-y-1 bg-background p-1 ${view === "week" ? "min-h-64" : "min-h-28"} ${view === "month" && d.slice(0, 7) !== anchor.slice(0, 7) ? "opacity-50" : ""}`}>
+                <div className={`text-[11px] tabular-nums ${d === today ? "font-bold text-primary" : "text-muted-foreground"}`}>{Number(d.slice(8))}</div>
                 {its.map((i) => <Card key={i.id} i={i} />)}
               </div>
             );
@@ -109,7 +110,7 @@ function EditorialCalendar() {
 
       {view === "day" && (
         <div {...drop(days[0]!)} className="space-y-2 rounded-lg border border-border p-3">
-          {items.filter((i) => i.publish_at && same(new Date(i.publish_at), days[0]!)).map((i) => <Card key={i.id} i={i} />)}
+          {items.filter((i) => onDay(i, days[0]!)).map((i) => <Card key={i.id} i={i} />)}
           <Button size="sm" variant="outline" onClick={() => newOn(days[0]!)}>Add item for this day</Button>
         </div>
       )}
@@ -138,7 +139,7 @@ function EditorialCalendar() {
               </div>
             </div>
           ))}
-          <p className="text-[11px] text-muted-foreground">Eight weeks from {from.toLocaleDateString()}. Each mark is one planned item.</p>
+          <p className="text-[11px] text-muted-foreground">Eight weeks from {fmtYmd(firstDay, { month: "short", day: "numeric", year: "numeric" })} ({tz}). Each mark is one planned item.</p>
         </div>
       )}
 

@@ -1,3 +1,5 @@
+import { useOrgTz } from "@/components/marketing/use-org-tz";
+import { fmtInTz } from "@/lib/org-timezone";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
@@ -43,6 +45,7 @@ function Page() {
 }
 
 function ModePanel({ m }: { m: any }) {
+  const tz = useOrgTz();
   const qc = useQueryClient();
   const [reason, setReason] = useState("");
   const req = useServerFn(requestLivePublishing), ok = useServerFn(approveLivePublishing), back = useServerFn(returnToTestPublishing);
@@ -56,12 +59,12 @@ function ModePanel({ m }: { m: any }) {
         {live && m.canRequest && <Button size="sm" variant="outline" onClick={() => act(() => back(), "Back in test mode")}>Return to test mode</Button>}
       </div>
       <p className="text-xs text-muted-foreground">{live
-        ? `Approved by ${m.approved_by === m.me ? "you" : "an executive approver"} on ${new Date(m.approved_at).toLocaleString()}: ${m.approval_reason}`
+        ? `Approved by ${m.approved_by === m.me ? "you" : "an executive approver"} on ${fmtInTz(m.approved_at, tz)}: ${m.approval_reason}`
         : "In test mode, Facebook receives a hidden (unpublished) Page post and Instagram content is checked without posting. Live publishing needs a request and a second person's approval."}</p>
       {!live && <div className="flex flex-wrap gap-2">
         <input className="min-w-64 flex-1 rounded-md border border-input bg-background px-2 py-1 text-sm" placeholder="Reason" value={reason} onChange={(e) => setReason(e.target.value)} />
         {!m.requested_by && m.canRequest && <Button size="sm" onClick={() => act(() => req({ data: { reason } }), "Live publishing requested")}>Request live publishing</Button>}
-        {m.requested_by && <span className="self-center text-xs">Requested {new Date(m.requested_at).toLocaleString()}: {m.request_reason}</span>}
+        {m.requested_by && <span className="self-center text-xs">Requested {fmtInTz(m.requested_at, tz)}: {m.request_reason}</span>}
         {m.requested_by && m.canApprove && <Button size="sm" onClick={() => act(() => ok({ data: { reason } }), "Live publishing is on")}>Approve live publishing</Button>}
       </div>}
     </div>
@@ -69,20 +72,21 @@ function ModePanel({ m }: { m: any }) {
 }
 
 function Queue({ d }: { d: any }) {
+  const tz = useOrgTz();
   const byPost = new Map<string, any[]>(); for (const t of d.targets) byPost.set(t.post_id, [...(byPost.get(t.post_id) ?? []), t]);
   return <div className="space-y-4">
     <section className="space-y-2">
       <h3 className="text-sm font-semibold">Queue</h3>
       {!d.queue.length && <p className="text-xs text-muted-foreground">Nothing approved or waiting.</p>}
       {d.queue.map((p: any) => <div key={p.id} className="rounded-md border border-border p-2 text-xs">
-        <div className="flex flex-wrap justify-between gap-2"><b>{p.title}</b><span>{p.status}{p.scheduled_at ? ` · ${new Date(p.scheduled_at).toLocaleString()}` : ""} · {(p.image_paths ?? []).length} media</span></div>
+        <div className="flex flex-wrap justify-between gap-2"><b>{p.title}</b><span>{p.status}{p.scheduled_at ? ` · ${fmtInTz(p.scheduled_at, tz)}` : ""} · {(p.image_paths ?? []).length} media</span></div>
         {(byPost.get(p.id) ?? []).map((t) => <div key={t.id} className={t.status === "failed" ? "text-destructive" : ""}>{t.channel}: {STATUS[t.status] ?? t.status}{t.attempts ? ` · ${t.attempts} attempt(s)` : ""}{t.error ? ` · ${t.error}` : ""}</div>)}
         {p.status === "failed" && <div className="text-muted-foreground">Use Retry publishing on the post (Marketing → Social posts). Only failed channels re-publish; confirmed ones are never reposted.</div>}
       </div>)}
     </section>
     <section className="space-y-1">
       <h3 className="text-sm font-semibold">Publishing log (append-only)</h3>
-      {d.attempts.map((a: any) => <div key={a.id} className="text-xs">{new Date(a.created_at).toLocaleString()} · {a.mode.toUpperCase()} · {a.channel} · {a.action} → <b>{a.result}</b>{a.permalink && <> · <a className="underline" href={a.permalink} target="_blank" rel="noreferrer">view</a></>}{a.error ? ` · ${a.error}` : ""}</div>)}
+      {d.attempts.map((a: any) => <div key={a.id} className="text-xs">{fmtInTz(a.created_at, tz)} · {a.mode.toUpperCase()} · {a.channel} · {a.action} → <b>{a.result}</b>{a.permalink && <> · <a className="underline" href={a.permalink} target="_blank" rel="noreferrer">view</a></>}{a.error ? ` · ${a.error}` : ""}</div>)}
       {!d.attempts.length && <p className="text-xs text-muted-foreground">No attempts yet.</p>}
     </section>
   </div>;
@@ -108,6 +112,7 @@ function Social({ perf }: { perf: PostPerf[] }) {
 }
 
 function Search({ d }: { d: any }) {
+  const tz = useOrgTz();
   const qc = useQueryClient(); const choose = useServerFn(chooseSearchProperty);
   const [pick, setPick] = useState("");
   const rows = d.search as any[];
@@ -119,7 +124,7 @@ function Search({ d }: { d: any }) {
     <section className="space-y-2 rounded-md border border-border p-3">
       <h3 className="text-sm font-semibold">Google Search Console</h3>
       {d.propError ? <p className="text-xs text-destructive">{d.propError}</p> : <>
-        <p className="text-xs">Property: <b>{d.settings?.site_url ?? "none chosen"}</b>{d.settings?.last_refresh_at ? ` · refreshed ${new Date(d.settings.last_refresh_at).toLocaleString()}` : ""}{d.settings?.last_error ? ` · last error: ${d.settings.last_error}` : ""}</p>
+        <p className="text-xs">Property: <b>{d.settings?.site_url ?? "none chosen"}</b>{d.settings?.last_refresh_at ? ` · refreshed ${fmtInTz(d.settings.last_refresh_at, tz)}` : ""}{d.settings?.last_error ? ` · last error: ${d.settings.last_error}` : ""}</p>
         <div className="flex gap-2"><select className="rounded-md border border-input bg-background px-2 py-1 text-xs" value={pick} onChange={(e) => setPick(e.target.value)}><option value="">Choose a verified property…</option>{d.properties.map((p: string) => <option key={p}>{p}</option>)}</select>
           <Button size="sm" variant="outline" disabled={!pick} onClick={async () => { try { await choose({ data: { siteUrl: pick } }); toast.success("Property saved and refreshed"); qc.invalidateQueries({ queryKey: ["perf"] }); } catch (e: any) { toast.error(e.message); } }}>Use this property</Button></div>
         {!d.properties.some((p: string) => p.includes("harmonious.co") && !p.includes("onboard")) && <p className="text-[11px] text-muted-foreground">harmonious.co itself isn't a verified property on this Google account, so article search data for the main site is Not available until it's verified.</p>}

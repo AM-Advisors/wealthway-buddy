@@ -29412,9 +29412,11 @@ export type Database = {
           newsworthy_reason: string | null
           offering_indefinite: boolean
           parse_error: string | null
+          remaining_indefinite: boolean
           state: string | null
           story_id: string | null
           total_offering: number | null
+          total_remaining: number | null
           total_sold: number | null
         }
         Insert: {
@@ -29436,9 +29438,11 @@ export type Database = {
           newsworthy_reason?: string | null
           offering_indefinite?: boolean
           parse_error?: string | null
+          remaining_indefinite?: boolean
           state?: string | null
           story_id?: string | null
           total_offering?: number | null
+          total_remaining?: number | null
           total_sold?: number | null
         }
         Update: {
@@ -29460,9 +29464,11 @@ export type Database = {
           newsworthy_reason?: string | null
           offering_indefinite?: boolean
           parse_error?: string | null
+          remaining_indefinite?: boolean
           state?: string | null
           story_id?: string | null
           total_offering?: number | null
+          total_remaining?: number | null
           total_sold?: number | null
         }
         Relationships: [

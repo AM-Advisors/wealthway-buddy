@@ -1,3 +1,5 @@
+import { useOrgTz } from "@/components/marketing/use-org-tz";
+import { fmtInTz } from "@/lib/org-timezone";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
@@ -162,6 +164,7 @@ function DesignTab({ p, set, sources }: TP & { sources: string[] }) {
 }
 
 function ReviewsTab({ d, gaps, busy, onReview, onOriginality }: any) {
+  const tz = useOrgTz();
   const [notes, setNotes] = useState<Record<string, string>>({});
   const kinds = REVIEW_KINDS.filter((k) => k !== "founder_review" || d.item.series_key === "founders_friday");
   const v = d.item.package_version;
@@ -175,7 +178,7 @@ function ReviewsTab({ d, gaps, busy, onReview, onOriginality }: any) {
       return <div key={k} className="space-y-2 rounded-md border border-border p-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <b className="text-sm">{REVIEW_LABEL[k as ReviewKind]}</b>
-          {last ? <span className="text-xs">{last.result === "pass" ? "Passed" : "Failed"} by {d.people[last.actor_id] ?? "reviewer"} · {new Date(last.created_at).toLocaleString()}</span> : <span className="text-xs text-muted-foreground">Not reviewed for v{v}</span>}
+          {last ? <span className="text-xs">{last.result === "pass" ? "Passed" : "Failed"} by {d.people[last.actor_id] ?? "reviewer"} · {fmtInTz(last.created_at, tz)}</span> : <span className="text-xs text-muted-foreground">Not reviewed for v{v}</span>}
         </div>
         {k === "originality" && <Button size="sm" variant="outline" onClick={onOriginality}>Check overlap with sources</Button>}
         <input className={inp} placeholder="Note (required for a fail or a Super Admin self-review)" value={notes[k] ?? ""} onChange={(e) => setNotes({ ...notes, [k]: e.target.value })} />
@@ -186,11 +189,12 @@ function ReviewsTab({ d, gaps, busy, onReview, onOriginality }: any) {
 }
 
 function HistoryTab({ d }: any) {
+  const tz = useOrgTz();
   return <div className="space-y-1 text-xs">
     <b className="text-sm">Package versions</b>
-    {d.packages.map((x: any) => <div key={x.id}>v{x.version} · {x.ai_generated ? "AI draft" : "Edited"} by {d.people[x.created_by] ?? "team member"} · {new Date(x.created_at).toLocaleString()}{x.note ? ` · ${x.note}` : ""}</div>)}
+    {d.packages.map((x: any) => <div key={x.id}>v{x.version} · {x.ai_generated ? "AI draft" : "Edited"} by {d.people[x.created_by] ?? "team member"} · {fmtInTz(x.created_at, tz)}{x.note ? ` · ${x.note}` : ""}</div>)}
     <b className="mt-3 block text-sm">Reviews</b>
-    {d.reviews.map((r: any) => <div key={r.id}>v{r.package_version} · {REVIEW_LABEL[r.kind as ReviewKind]} · {r.result} · {d.people[r.actor_id] ?? "reviewer"} · {new Date(r.created_at).toLocaleString()}{r.note ? ` · ${r.note}` : ""}</div>)}
+    {d.reviews.map((r: any) => <div key={r.id}>v{r.package_version} · {REVIEW_LABEL[r.kind as ReviewKind]} · {r.result} · {d.people[r.actor_id] ?? "reviewer"} · {fmtInTz(r.created_at, tz)}{r.note ? ` · ${r.note}` : ""}</div>)}
   </div>;
 }
 
