@@ -118,7 +118,7 @@ export function designProblems(d: DesignDoc): string[] {
       if (l.hidden) continue;
       if (l.type === "text" && (l.x < m - 1 || l.y < m - 1 || l.x + l.w > w - m + 1 || l.y + l.h > h - m + 1)) out.push(`Page ${i + 1}: "${(l.text || "").slice(0, 30)}" sits outside the safe margin.`);
       if (l.type === "chart") for (const pr of chartProblems(l)) out.push(`Page ${i + 1}: ${pr}`);
-      if (l.type === "text" && l.size < Math.round(w * 0.026)) out.push(`Page ${i + 1}: text "${l.text.slice(0, 20)}" may be too small to read on mobile.`);
+      if (l.type === "text" && l.size < Math.floor(w * 0.026)) out.push(`Page ${i + 1}: text "${l.text.slice(0, 20)}" may be too small to read on mobile.`);
     }
   });
   return out;
@@ -167,7 +167,7 @@ export const TEMPLATES: { key: TemplateKey; label: string; series: string | null
   { key: "blank", label: "Blank", series: null },
 ];
 
-export type TemplateInput = { headline?: string; body?: string; publisher?: string; source_url?: string; claims?: { text: string; source_url: string }[] };
+export type TemplateInput = { headline?: string | undefined; body?: string | undefined; publisher?: string | undefined; source_url?: string | undefined; claims?: { text: string; source_url: string }[] | undefined };
 
 export function buildTemplate(key: TemplateKey, format: DesignFormat, kit: BrandKit, input: TemplateInput = {}): DesignDoc {
   const t = TEMPLATES.find((x) => x.key === key) ?? TEMPLATES[TEMPLATES.length - 1]!;
