@@ -4,6 +4,8 @@ export const BRAND = {
   midnight: "#001433",
   cyan: "#5dc6d1",
   slate: "#e2e8f0",
+  headingFont: "Rubik, sans-serif",
+  bodyFont: "Poppins, sans-serif",
   proof: "$24B+ AUA · 750+ Fund Managers · Your Funds On Easy Mode",
 };
 

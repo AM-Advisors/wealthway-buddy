@@ -33,7 +33,7 @@ const STYLES: { id: Style; label: string; hint: string }[] = [
   { id: "event", label: "Event", hint: "Title, date, register" },
   { id: "carousel", label: "Carousel", hint: "3-10 swipe slides" },
 ];
-const H = { fontFamily: "Rubik, sans-serif", fontWeight: 700 } as const;
+const H = { fontFamily: BRAND.headingFont, fontWeight: 700, letterSpacing: 0 } as const;
 const wrap = { hyphens: "none", overflowWrap: "normal", wordBreak: "keep-all" } as const;
 
 /** Render the headline with one chosen word in cyan. */
@@ -92,10 +92,21 @@ export function PostBrandLayout({ title, body, onAdd }: { title: string; body: s
     if (style === "photo" && !bg) p.push("Add a photo (background art) for the photo split style.");
     setProblems([...new Set(p)]);
     if (p.length || !nodes.length) return;
+    // Explicitly load the actual brand faces before capture: fallback fonts must never be exported.
+    const faces = await Promise.all([
+      document.fonts.load('700 76px "Rubik"'),
+      document.fonts.load('400 32px "Poppins"'),
+    ]);
+    await document.fonts.ready;
+    if (faces.some((face) => face.length === 0)) throw new Error("The Harmonious fonts could not load. Please try again before saving.");
     const { toPng } = await import("html-to-image");
     for (let i = 0; i < nodes.length; i++) {
-      const url = await toPng(nodes[i]!.firstElementChild as HTMLElement, { pixelRatio: 1, cacheBust: true, width: w, height: h, style: { transform: "none" } });
-      const r = await upload({ data: { fileName: carousel ? `carousel-${i + 1}.png` : "brand-layout.png", contentType: "image/png", base64: url.split(",")[1]! } });
+      const page = nodes[i]?.firstElementChild;
+      if (!(page instanceof HTMLElement)) throw new Error("The post preview is not ready. Please try again.");
+      const url = await toPng(page, { pixelRatio: 1, cacheBust: true, preferredFontFormat: "woff2", width: w, height: h, style: { transform: "none" } });
+      const base64 = url.split(",")[1];
+      if (!base64) throw new Error("The post image could not be saved. Please try again.");
+      const r = await upload({ data: { fileName: carousel ? `carousel-${i + 1}.png` : "brand-layout.png", contentType: "image/png", base64 } });
       onAdd(r);
     }
     toast.success(carousel ? `${nodes.length} carousel slides added in order` : "Brand image added");
@@ -108,9 +119,10 @@ export function PostBrandLayout({ title, body, onAdd }: { title: string; body: s
     return `${artLayer}${glow}linear-gradient(180deg, ${BRAND.navy} 0%, ${BRAND.midnight} 100%)`;
   };
   const logo = light ? logoNavy.url : logoWhite.url;
-  const Logo = ({ s = 1 }: { s?: number }) => <img src={logo} alt="Harmonious" crossOrigin="anonymous" style={{ height: (land ? 40 : 50) * s }} />;
+  // Original lighthouse + wordmark artwork; never redraw or squeeze the logo to fit the footer.
+  const Logo = () => <img src={logo} alt="Harmonious" crossOrigin="anonymous" width={1917} height={449} style={{ width: land ? 200 : 220, height: "auto", aspectRatio: "1917 / 449", objectFit: "contain", flexShrink: 0 }} />;
   const Footer = ({ withLogo = true }: { withLogo?: boolean }) => <div style={{ marginTop: "auto", borderTop: `2px solid ${BRAND.cyan}`, paddingTop: 18, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 24 }}>
-    <div style={{ fontSize: land ? 18 : 22 }}>{BRAND.proof}</div>{withLogo && <Logo />}
+    <div style={{ fontSize: land ? 18 : 22, lineHeight: 1.5, minWidth: 0 }}><div>$24B+ AUA · 750+ Fund Managers</div><div>Your Funds On Easy Mode</div></div>{withLogo && <Logo />}
   </div>;
   const Cta = () => cta.trim() ? <div style={{ alignSelf: "flex-start", marginTop: 32, background: BRAND.cyan, color: BRAND.navy, ...H, fontSize: land ? 22 : 28, padding: "14px 28px", borderRadius: 999 }}>{cta}</div> : null;
 
@@ -118,7 +130,7 @@ export function PostBrandLayout({ title, body, onAdd }: { title: string; body: s
   const Page = ({ i, children, logoHere = true, artOk = true, padOverride, pageNo }: { i: number; children: ReactNode; logoHere?: boolean; artOk?: boolean; padOverride?: CSSProperties; pageNo?: string }) => (
     <div className="shrink-0 overflow-hidden rounded" style={{ width: w * scale, height: h * scale }}>
       <div ref={(el) => { refs.current[i] = el; }} style={{ transform: `scale(${scale})`, transformOrigin: "top left", width: w, height: h }}>
-        <div data-collateral-page style={{ ...wrap, fontFamily: "Poppins, sans-serif", width: w, height: h, position: "relative", overflow: "hidden", color: ink, boxSizing: "border-box", padding: pad, display: "flex", flexDirection: "column", background: background(artOk), ...padOverride }}>
+        <div data-collateral-page style={{ ...wrap, fontFamily: BRAND.bodyFont, fontWeight: 400, letterSpacing: 0, width: w, height: h, position: "relative", overflow: "hidden", color: ink, boxSizing: "border-box", padding: pad, display: "flex", flexDirection: "column", background: background(artOk), ...padOverride }}>
           {logoHere && !footer && <div style={{ position: "absolute", top: pad, right: pad }}><Logo /></div>}
           {pageNo && <div style={{ position: "absolute", top: pad, left: pad, fontSize: 22, color: BRAND.cyan, letterSpacing: 1 }}>{pageNo}</div>}
           {children}
@@ -165,7 +177,7 @@ export function PostBrandLayout({ title, body, onAdd }: { title: string; body: s
   const deck = () => <div className="flex gap-2 overflow-x-auto pb-2">
     <Page i={0} pageNo={`1/${total}`}><div style={{ margin: "auto 0" }}>{head(92)}{sub}
       <div style={{ marginTop: 40, fontSize: land ? 22 : 28, color: BRAND.cyan }}>Swipe →</div></div></Page>
-    {slides.map((s, k) => <Page key={k} i={k + 1} logoHere={false} pageNo={`${k + 2}/${total}`}><div style={{ margin: "auto 0" }}>
+    {slides.map((s, k) => <Page key={k} i={k + 1} pageNo={`${k + 2}/${total}`}><div style={{ margin: "auto 0" }}>
       <div style={{ ...H, fontSize: land ? 44 : 64, lineHeight: 1.1 }}>{s.title}</div>
       <div style={{ fontSize: land ? 24 : 34, marginTop: 24, opacity: 0.9, lineHeight: 1.4 }}>{s.text}</div></div></Page>)}
     <Page i={slides.length + 1} pageNo={`${total}/${total}`}><div style={{ margin: "auto 0" }}>
@@ -173,7 +185,7 @@ export function PostBrandLayout({ title, body, onAdd }: { title: string; body: s
       <div style={{ fontSize: land ? 24 : 30, marginTop: 20, opacity: 0.9 }}>harmonious.co</div></div></Page>
   </div>;
 
-  const moveSlide = (k: number, d: number) => setSlides((x) => { const y = [...x]; const t = y[k + d]; if (!t) return x; y[k + d] = y[k]!; y[k] = t; return y; });
+  const moveSlide = (k: number, d: number) => setSlides((x) => { const y = [...x]; const t = y[k + d]; const current = y[k]; if (!t || !current) return x; y[k + d] = current; y[k] = t; return y; });
 
   return (
     <div className="space-y-3 rounded-md border p-3">
