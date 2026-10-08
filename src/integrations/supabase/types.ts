@@ -33342,6 +33342,81 @@ export type Database = {
           },
         ]
       }
+      portfolio_opening_positions: {
+        Row: {
+          as_of_date: string
+          asset_class: Database["public"]["Enums"]["portfolio_asset_class"]
+          asset_id: string | null
+          asset_name: string
+          batch_ref: string
+          book_id: string
+          cost_basis_cents: number
+          decided_at: string | null
+          decided_by: string | null
+          decision_reason: string | null
+          evidence_status: string
+          id: string
+          issuer_name: string
+          offering_id: string
+          opening_fair_value_cents: number
+          opening_journal_id: string
+          opening_valuation_id: string | null
+          prepared_at: string
+          prepared_by: string
+          source_reference: string
+          source_system: string
+          status: string
+        }
+        Insert: {
+          as_of_date: string
+          asset_class: Database["public"]["Enums"]["portfolio_asset_class"]
+          asset_id?: string | null
+          asset_name: string
+          batch_ref: string
+          book_id: string
+          cost_basis_cents: number
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_reason?: string | null
+          evidence_status: string
+          id?: string
+          issuer_name: string
+          offering_id: string
+          opening_fair_value_cents: number
+          opening_journal_id: string
+          opening_valuation_id?: string | null
+          prepared_at?: string
+          prepared_by: string
+          source_reference: string
+          source_system: string
+          status?: string
+        }
+        Update: {
+          as_of_date?: string
+          asset_class?: Database["public"]["Enums"]["portfolio_asset_class"]
+          asset_id?: string | null
+          asset_name?: string
+          batch_ref?: string
+          book_id?: string
+          cost_basis_cents?: number
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_reason?: string | null
+          evidence_status?: string
+          id?: string
+          issuer_name?: string
+          offering_id?: string
+          opening_fair_value_cents?: number
+          opening_journal_id?: string
+          opening_valuation_id?: string | null
+          prepared_at?: string
+          prepared_by?: string
+          source_reference?: string
+          source_system?: string
+          status?: string
+        }
+        Relationships: []
+      }
       portfolio_realizations: {
         Row: {
           asset_id: string
