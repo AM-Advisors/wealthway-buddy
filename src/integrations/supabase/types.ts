@@ -23987,6 +23987,45 @@ export type Database = {
           },
         ]
       }
+      investor_compliance_resolutions: {
+        Row: {
+          id: string
+          item_key: string
+          method: string
+          offering_id: string
+          position_id: string
+          prepared_at: string
+          prepared_by: string
+          reason: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+        }
+        Insert: {
+          id?: string
+          item_key: string
+          method: string
+          offering_id: string
+          position_id: string
+          prepared_at?: string
+          prepared_by: string
+          reason: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+        }
+        Update: {
+          id?: string
+          item_key?: string
+          method?: string
+          offering_id?: string
+          position_id?: string
+          prepared_at?: string
+          prepared_by?: string
+          reason?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+        }
+        Relationships: []
+      }
       investor_document_approvals: {
         Row: {
           decided_at: string

@@ -41,6 +41,8 @@ import {
   managerSafeFunding,
   proposeFundingMatch,
   selfReportEffect,
+  capitalCallSegregationError,
+  fundingAcceptanceError,
   type CallActorRole,
   type CallBasis,
   type CallType,
@@ -420,9 +422,8 @@ export async function requestCapitalCall(userId: string, callId: string) {
 export async function reviewCapitalCall(userId: string, callId: string) {
   const reviewer = await assertStaff(userId);
   const toReview = await callRow(callId);
-  if (String(toReview.prepared_by ?? "") === reviewer.userId) {
-    fail("Maker/checker: the person who prepared a capital call cannot review it.");
-  }
+  const segregation = capitalCallSegregationError(toReview.prepared_by, reviewer.userId, "review");
+  if (segregation) fail(segregation);
   await moveCall(userId, callId, "in_review", "review", {
     reviewed_by: userId,
     reviewed_at: nowIso(),
@@ -438,9 +439,8 @@ export async function publishCapitalCall(userId: string, callId: string) {
   await assertCallTotals(callId);
   const actor = await assertStaff(userId);
   const call = await callRow(callId);
-  if (String(call.prepared_by ?? "") === actor.userId) {
-    fail("Maker/checker: the person who prepared a capital call cannot publish it.");
-  }
+  const publishSegregation = capitalCallSegregationError(call.prepared_by, actor.userId, "publish");
+  if (publishSegregation) fail(publishSegregation);
   if (!call.due_date) fail("A published capital call needs a due date.");
 
   const released = await currentReleasedInstruction(call.offering_id);
@@ -1163,6 +1163,23 @@ export async function decideFundingMatch(
   const applied = Number(input.amountCents ?? match.proposed_amount_cents);
   const outstanding = Number(expected.expected_amount_cents) - Number(expected.received_amount_cents ?? 0);
   const variance = applied - outstanding;
+
+  const { data: txn } = await db().from("bank_transactions").select("amount_cents, description, reference").eq("id", match.bank_transaction_id).maybeSingle();
+  const acceptFundsBlocks: string[] = [];
+  if (expected.position_id) {
+    const { data: adm } = await db().from("investor_takeover_admissions").select("remediation").eq("position_id", expected.position_id).eq("status", "admitted").maybeSingle();
+    const { data: cleared } = await db().from("investor_compliance_resolutions").select("item_key").eq("position_id", expected.position_id).not("reviewed_by", "is", null);
+    const done = new Set(((cleared ?? []) as any[]).map((r) => String(r.item_key)));
+    for (const r of ((adm?.remediation ?? []) as any[])) if ((r.blocks ?? []).includes("accept_funds") && !done.has(String(r.key))) acceptFundsBlocks.push(String(r.label));
+  }
+  const text = `${txn?.reference ?? ""} ${txn?.description ?? ""}`;
+  const { data: others } = await db().from("expected_fundings").select("id, reference_code").eq("offering_id", match.offering_id).neq("id", expectedFundingId);
+  const conflict = ((others ?? []) as any[]).find((o) => o.reference_code && text.includes(String(o.reference_code)) && !text.includes(String(expected.reference_code)));
+  const acceptance = fundingAcceptanceError({ appliedCents: applied, transactionCents: Number(txn?.amount_cents ?? 0), outstandingCents: outstanding, acceptFundsBlocks, conflictingReference: conflict?.reference_code ?? null });
+  if (acceptance) {
+    await recordEvent({ offeringId: match.offering_id, fundingMatchId: match.id, expectedFundingId, bankTransactionId: match.bank_transaction_id, event: "funding_acceptance_blocked", fromStatus: match.status, toStatus: match.status, reason: acceptance, actorUserId: actor.userId, actorRole: "harmonious" });
+    fail(acceptance);
+  }
 
   // 1. Reconciliation: classify the cash against this investor.
   const reconciliationId = await reconcileFundingCash(actor.userId, {

@@ -1,0 +1,30 @@
+import { guard, N, BATCH } from "./lib";
+const d = await guard();
+const dup = await d.from("bank_transactions").insert({ offering_id: N, plaid_transaction_id: `${BATCH}:dep:northwind`, dedupe_key: `${BATCH}:dep:northwind`, posted_on: "2026-02-10", amount_cents: 100_000_000, name: "dup", direction: "inflow" });
+console.log("duplicate deposit:", dup.error ? "REFUSED " + dup.error.message : "INSERTED (BUG)");
+const { data: tx } = await d.from("bank_transactions").select("id,amount_cents,dedupe_key").eq("offering_id", N).like("dedupe_key", `${BATCH}%`);
+const bank = tx.reduce((s: number, t: any) => s + Number(t.amount_cents), 0);
+const { data: fm } = await d.from("funding_matches").select("bank_transaction_id,status").eq("offering_id", N);
+const posted = new Set(fm.filter((m: any) => m.status === "posted").map((m: any) => m.bank_transaction_id));
+const unapplied = tx.filter((t: any) => !posted.has(t.id)).map((t: any) => [t.dedupe_key.split(":").pop(), t.amount_cents / 100]);
+const { data: book } = await d.from("ledger_books").select("id").eq("offering_id", N).maybeSingle();
+const { data: coa } = await d.from("chart_of_accounts").select("id,code").eq("book_id", book?.id ?? "d1fd4e89-8028-4aec-b0a6-9901e48efe03");
+const { data: je } = await d.from("journal_entries").select("id,status").eq("book_id", book?.id ?? "d1fd4e89-8028-4aec-b0a6-9901e48efe03");
+const postedIds = je.filter((j: any) => j.status === "posted").map((j: any) => j.id);
+const { data: jl } = await d.from("journal_lines").select("account_id,debit_cents,credit_cents,entry_id").in("entry_id", postedIds);
+const bal = (code: string) => { const id = coa.find((a: any) => a.code === code)?.id; return jl.filter((l: any) => l.account_id === id).reduce((s: number, l: any) => s + Number(l.debit_cents ?? 0) - Number(l.credit_cents ?? 0), 0) / 100; };
+const dr = jl.reduce((s: number, l: any) => s + Number(l.debit_cents ?? 0), 0), cr = jl.reduce((s: number, l: any) => s + Number(l.credit_cents ?? 0), 0);
+console.log("bank Q1 deposits", bank / 100, "unapplied", JSON.stringify(unapplied));
+console.log("GL cash 1000", bal("1000"), "contrib 3100", bal("3100"), "posted journals", postedIds.length, "TB", dr / 100, cr / 100);
+const { data: ev } = await d.from("commitment_events").select("position_id,event_type,amount_cents").eq("offering_id", N);
+const { data: ef } = await d.from("expected_fundings").select("position_id,expected_amount_cents,received_amount_cents,status,expected_by").eq("offering_id", N);
+const { data: pos } = await d.from("investor_positions").select("id,display_name").eq("offering_id", N).order("display_name");
+let T = { c: 0, called: 0, paid: 0, q1: 0, out: 0 };
+for (const p of pos) {
+  const s = (t: string) => ev.filter((e: any) => e.position_id === p.id && e.event_type === t).reduce((a: number, e: any) => a + Number(e.amount_cents), 0);
+  const e = ef.find((x: any) => x.position_id === p.id);
+  const c = s("original_commitment"), called = s("capital_call"), paid = s("contribution");
+  T.c += c; T.called += called; T.paid += paid; T.q1 += Number(e.received_amount_cents ?? 0); T.out += Number(e.expected_amount_cents) - Number(e.received_amount_cents ?? 0);
+  console.log([p.display_name.slice(0, 26).padEnd(26), c / 100, called / 100, paid / 100, "Q1 due", e.expected_amount_cents / 100, "rcvd", (e.received_amount_cents ?? 0) / 100, e.status, "uncalled", (c - called) / 100].join(" | "));
+}
+console.log("TOTAL commit", T.c / 100, "called", T.called / 100, "paid", T.paid / 100, "Q1 applied", T.q1 / 100, "Q1 outstanding", T.out / 100, "uncalled", (T.c - T.called) / 100);
