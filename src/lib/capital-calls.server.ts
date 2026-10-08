@@ -980,6 +980,11 @@ export async function fundingReceipt(userId: string, lineId: string) {
     contributedToDateCents: postedTotal,
     unfundedCommitmentCents: Math.max(0, commitment - postedTotal),
     journalEntryId: journal?.journal_entry_id ?? null,
+    // Cash received above this call is held as a credit for the investor, never capital.
+    creditBalanceCents: await (async () => {
+      const { data: credits } = await db().from("investor_credits").select("balance_cents").eq("capital_call_line_id", line.id).neq("status", "voided");
+      return ((credits ?? []) as any[]).reduce((t, c) => t + Number(c.balance_cents), 0);
+    })(),
     basis: "Derived from posted general-ledger records.",
   };
 }
