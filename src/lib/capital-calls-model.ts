@@ -807,3 +807,30 @@ export function managerSafeFunding<T extends Record<string, any>>(view: T): T {
   }
   return clone as T;
 }
+
+/** Capital-call segregation: the preparer may never review or publish their own call. */
+export function capitalCallSegregationError(preparedBy: string | null | undefined, actorId: string, act: "review" | "publish"): string | null {
+  if (preparedBy && String(preparedBy) === String(actorId)) return `Maker/checker: the person who prepared a capital call cannot ${act} it.`;
+  return null;
+}
+
+/**
+ * Gate before investor cash is accepted against an expected funding.
+ * - Compliance items that block "accept_funds" (e.g. open AML) stop acceptance.
+ * - The whole bank amount becomes investor contribution, so it must not exceed what is owed:
+ *   there is no overpayment / investor-credit holding account yet, so excess is refused, never absorbed.
+ * - A deposit carrying another investor's reference can never be re-pointed silently.
+ */
+export function fundingAcceptanceError(i: {
+  appliedCents: number;
+  transactionCents: number;
+  outstandingCents: number;
+  acceptFundsBlocks: string[];
+  conflictingReference?: string | null;
+}): string | null {
+  if (i.acceptFundsBlocks.length) return `Accepting funds is blocked until resolved: ${i.acceptFundsBlocks.join(", ")}.`;
+  if (i.conflictingReference) return `This deposit carries another investor's reference (${i.conflictingReference}); it cannot be applied here.`;
+  if (i.appliedCents !== i.transactionCents) return "The applied amount must equal the bank deposit; split deposits are not supported.";
+  if (i.appliedCents > i.outstandingCents) return `This deposit exceeds the amount owed by ${((i.appliedCents - i.outstandingCents) / 100).toFixed(2)}. Overpayments cannot be held as investor credit yet, so it stays unapplied.`;
+  return null;
+}
