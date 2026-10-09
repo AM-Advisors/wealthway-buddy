@@ -1520,6 +1520,13 @@
       "when": 1791567743785,
       "tag": "0216_journal_period_linking",
       "breakpoints": true
+    },
+    {
+      "idx": 217,
+      "version": "7",
+      "when": 1791568716569,
+      "tag": "0217_period_link_two_person_policy",
+      "breakpoints": true
     }
   ]
 }
