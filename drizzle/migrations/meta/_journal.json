@@ -1485,6 +1485,13 @@
       "when": 1791562338712,
       "tag": "0211_valuation_synthetic_assumption_basis",
       "breakpoints": true
+    },
+    {
+      "idx": 212,
+      "version": "7",
+      "when": 1791562975533,
+      "tag": "0212_nav_synthetic_controls",
+      "breakpoints": true
     }
   ]
 }

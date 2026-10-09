@@ -31103,6 +31103,7 @@ export type Database = {
         Row: {
           accrued_expenses_cents: number
           accrued_income_cents: number
+          approval_scope: string | null
           approved_at: string | null
           approved_by: string | null
           as_of_date: string
@@ -31163,6 +31164,7 @@ export type Database = {
           status: Database["public"]["Enums"]["nav_status"]
           superseded_by_id: string | null
           supersedes_id: string | null
+          synthetic_classification: string | null
           tax_liabilities_cents: number
           total_liabilities_cents: number
           unit_accounting: boolean
@@ -31178,6 +31180,7 @@ export type Database = {
         Insert: {
           accrued_expenses_cents?: number
           accrued_income_cents?: number
+          approval_scope?: string | null
           approved_at?: string | null
           approved_by?: string | null
           as_of_date: string
@@ -31238,6 +31241,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["nav_status"]
           superseded_by_id?: string | null
           supersedes_id?: string | null
+          synthetic_classification?: string | null
           tax_liabilities_cents?: number
           total_liabilities_cents?: number
           unit_accounting?: boolean
@@ -31253,6 +31257,7 @@ export type Database = {
         Update: {
           accrued_expenses_cents?: number
           accrued_income_cents?: number
+          approval_scope?: string | null
           approved_at?: string | null
           approved_by?: string | null
           as_of_date?: string
@@ -31313,6 +31318,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["nav_status"]
           superseded_by_id?: string | null
           supersedes_id?: string | null
+          synthetic_classification?: string | null
           tax_liabilities_cents?: number
           total_liabilities_cents?: number
           unit_accounting?: boolean
