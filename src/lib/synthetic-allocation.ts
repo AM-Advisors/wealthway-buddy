@@ -231,13 +231,14 @@ export type JournalForLink = { id: string; entryDate: string; status: string; pe
  * reported, not moved. Applying the plan requires a separately approved action.
  */
 export function planPeriodLink(journals: JournalForLink[], period: { id: string; start: string; end: string }) {
-  const link: string[] = [], outOfPeriod: string[] = [], linkedElsewhere: string[] = [], alreadyLinked: string[] = [], notPosted: string[] = [];
+  const link: string[] = [], outOfPeriod: string[] = [], linkedElsewhere: string[] = [], alreadyLinked: string[] = [], notPosted: string[] = [], voided: string[] = [];
   for (const j of journals) {
-    if (j.periodId === period.id) alreadyLinked.push(j.id);
+    if (j.status === "voided" || j.status === "reversed") voided.push(j.id);
+    else if (j.periodId === period.id) alreadyLinked.push(j.id);
     else if (j.periodId) linkedElsewhere.push(j.id);
     else if (t(j.entryDate) < t(period.start) || t(j.entryDate) > t(period.end)) outOfPeriod.push(j.id);
     else if (j.status !== "posted") notPosted.push(j.id);
     else link.push(j.id);
   }
-  return { link, outOfPeriod, linkedElsewhere, alreadyLinked, notPosted, rewritesDatesOrAmounts: false as const };
+  return { link, voided, outOfPeriod, linkedElsewhere, alreadyLinked, notPosted, rewritesDatesOrAmounts: false as const };
 }

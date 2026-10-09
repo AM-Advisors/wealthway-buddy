@@ -42102,6 +42102,194 @@ export type Database = {
           },
         ]
       }
+      synthetic_capital_accounts: {
+        Row: {
+          admission_status: string
+          allocation_line_id: string
+          allocation_run_id: string
+          approved_at: string | null
+          approved_by: string | null
+          class_label: string
+          classification: string
+          contribution_refs: Json
+          contributions_cents: number
+          correction_reason: string | null
+          created_at: string
+          credits_liability_cents: number
+          ending_capital_cents: number
+          id: string
+          interest_cents: number
+          investor_name: string
+          management_fee_cents: number
+          offering_id: string
+          opening_capital_cents: number
+          opening_capital_source: string
+          operating_expense_cents: number
+          period_end: string
+          period_start: string
+          policy_id: string
+          policy_version: number
+          position_id: string
+          prepared_at: string
+          prepared_by: string
+          restrictions: Json
+          supersedes_id: string | null
+          unpaid_call_cents: number
+          unrealized_gain_cents: number
+          version: number
+        }
+        Insert: {
+          admission_status: string
+          allocation_line_id: string
+          allocation_run_id: string
+          approved_at?: string | null
+          approved_by?: string | null
+          class_label: string
+          classification?: string
+          contribution_refs?: Json
+          contributions_cents: number
+          correction_reason?: string | null
+          created_at?: string
+          credits_liability_cents?: number
+          ending_capital_cents: number
+          id?: string
+          interest_cents: number
+          investor_name: string
+          management_fee_cents: number
+          offering_id: string
+          opening_capital_cents: number
+          opening_capital_source: string
+          operating_expense_cents: number
+          period_end: string
+          period_start: string
+          policy_id: string
+          policy_version: number
+          position_id: string
+          prepared_at?: string
+          prepared_by: string
+          restrictions?: Json
+          supersedes_id?: string | null
+          unpaid_call_cents?: number
+          unrealized_gain_cents: number
+          version?: number
+        }
+        Update: {
+          admission_status?: string
+          allocation_line_id?: string
+          allocation_run_id?: string
+          approved_at?: string | null
+          approved_by?: string | null
+          class_label?: string
+          classification?: string
+          contribution_refs?: Json
+          contributions_cents?: number
+          correction_reason?: string | null
+          created_at?: string
+          credits_liability_cents?: number
+          ending_capital_cents?: number
+          id?: string
+          interest_cents?: number
+          investor_name?: string
+          management_fee_cents?: number
+          offering_id?: string
+          opening_capital_cents?: number
+          opening_capital_source?: string
+          operating_expense_cents?: number
+          period_end?: string
+          period_start?: string
+          policy_id?: string
+          policy_version?: number
+          position_id?: string
+          prepared_at?: string
+          prepared_by?: string
+          restrictions?: Json
+          supersedes_id?: string | null
+          unpaid_call_cents?: number
+          unrealized_gain_cents?: number
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "synthetic_capital_accounts_allocation_line_id_fkey"
+            columns: ["allocation_line_id"]
+            isOneToOne: false
+            referencedRelation: "synthetic_allocation_lines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "synthetic_capital_accounts_allocation_run_id_fkey"
+            columns: ["allocation_run_id"]
+            isOneToOne: false
+            referencedRelation: "synthetic_allocation_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "synthetic_capital_accounts_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "synthetic_capital_accounts_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: false
+            referencedRelation: "synthetic_allocation_policies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "synthetic_capital_accounts_supersedes_id_fkey"
+            columns: ["supersedes_id"]
+            isOneToOne: false
+            referencedRelation: "synthetic_capital_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      synthetic_capital_movements: {
+        Row: {
+          account_id: string
+          amount_cents: number
+          classification: string
+          created_at: string
+          effective_date: string
+          id: string
+          kind: string
+          offering_id: string
+          source_ref: string
+        }
+        Insert: {
+          account_id: string
+          amount_cents: number
+          classification?: string
+          created_at?: string
+          effective_date: string
+          id?: string
+          kind: string
+          offering_id: string
+          source_ref: string
+        }
+        Update: {
+          account_id?: string
+          amount_cents?: number
+          classification?: string
+          created_at?: string
+          effective_date?: string
+          id?: string
+          kind?: string
+          offering_id?: string
+          source_ref?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "synthetic_capital_movements_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "synthetic_capital_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       synthetic_participants: {
         Row: {
           admission_status: string

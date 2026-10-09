@@ -1499,6 +1499,13 @@
       "when": 1791564144930,
       "tag": "0213_synthetic_allocation_sandbox",
       "breakpoints": true
+    },
+    {
+      "idx": 214,
+      "version": "7",
+      "when": 1791565000569,
+      "tag": "0214_synthetic_capital_ledger",
+      "breakpoints": true
     }
   ]
 }
