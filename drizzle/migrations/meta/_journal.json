@@ -1492,6 +1492,13 @@
       "when": 1791562975533,
       "tag": "0212_nav_synthetic_controls",
       "breakpoints": true
+    },
+    {
+      "idx": 213,
+      "version": "7",
+      "when": 1791564144930,
+      "tag": "0213_synthetic_allocation_sandbox",
+      "breakpoints": true
     }
   ]
 }

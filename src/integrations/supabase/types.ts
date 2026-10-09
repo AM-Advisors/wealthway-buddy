@@ -41911,6 +41911,265 @@ export type Database = {
           },
         ]
       }
+      synthetic_allocation_lines: {
+        Row: {
+          class_label: string
+          created_at: string
+          detail: Json
+          ending_capital_cents: number
+          flags: Json
+          id: string
+          investor_name: string
+          offering_id: string
+          position_id: string
+          run_id: string
+        }
+        Insert: {
+          class_label: string
+          created_at?: string
+          detail: Json
+          ending_capital_cents: number
+          flags?: Json
+          id?: string
+          investor_name: string
+          offering_id: string
+          position_id: string
+          run_id: string
+        }
+        Update: {
+          class_label?: string
+          created_at?: string
+          detail?: Json
+          ending_capital_cents?: number
+          flags?: Json
+          id?: string
+          investor_name?: string
+          offering_id?: string
+          position_id?: string
+          run_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "synthetic_allocation_lines_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "synthetic_allocation_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      synthetic_allocation_policies: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          classification: string
+          created_at: string
+          decision_reason: string | null
+          id: string
+          offering_id: string
+          prepared_at: string
+          prepared_by: string
+          rationale: string
+          rules: Json
+          status: string
+          version: number
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          classification?: string
+          created_at?: string
+          decision_reason?: string | null
+          id?: string
+          offering_id: string
+          prepared_at?: string
+          prepared_by: string
+          rationale: string
+          rules: Json
+          status?: string
+          version: number
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          classification?: string
+          created_at?: string
+          decision_reason?: string | null
+          id?: string
+          offering_id?: string
+          prepared_at?: string
+          prepared_by?: string
+          rationale?: string
+          rules?: Json
+          status?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "synthetic_allocation_policies_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      synthetic_allocation_runs: {
+        Row: {
+          classification: string
+          created_at: string
+          difference_cents: number
+          id: string
+          lineage: Json
+          nav_version_id: string
+          offering_id: string
+          period_end: string
+          period_start: string
+          policy_id: string
+          prepared_at: string
+          prepared_by: string
+          residuals: Json
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          totals: Json
+          version: number
+        }
+        Insert: {
+          classification?: string
+          created_at?: string
+          difference_cents: number
+          id?: string
+          lineage?: Json
+          nav_version_id: string
+          offering_id: string
+          period_end: string
+          period_start: string
+          policy_id: string
+          prepared_at?: string
+          prepared_by: string
+          residuals: Json
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          totals: Json
+          version?: number
+        }
+        Update: {
+          classification?: string
+          created_at?: string
+          difference_cents?: number
+          id?: string
+          lineage?: Json
+          nav_version_id?: string
+          offering_id?: string
+          period_end?: string
+          period_start?: string
+          policy_id?: string
+          prepared_at?: string
+          prepared_by?: string
+          residuals?: Json
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          totals?: Json
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "synthetic_allocation_runs_nav_version_id_fkey"
+            columns: ["nav_version_id"]
+            isOneToOne: false
+            referencedRelation: "nav_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "synthetic_allocation_runs_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "synthetic_allocation_runs_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: false
+            referencedRelation: "synthetic_allocation_policies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      synthetic_participants: {
+        Row: {
+          admission_status: string
+          class_label: string
+          commitment_cents: number
+          created_at: string
+          decision_reason: string | null
+          flags: Json
+          id: string
+          investor_name: string
+          offering_id: string
+          opening_capital_cents: number
+          position_id: string
+          prepared_at: string
+          prepared_by: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          source_ref: string
+          status: string
+        }
+        Insert: {
+          admission_status?: string
+          class_label: string
+          commitment_cents: number
+          created_at?: string
+          decision_reason?: string | null
+          flags?: Json
+          id?: string
+          investor_name: string
+          offering_id: string
+          opening_capital_cents: number
+          position_id: string
+          prepared_at?: string
+          prepared_by: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_ref: string
+          status?: string
+        }
+        Update: {
+          admission_status?: string
+          class_label?: string
+          commitment_cents?: number
+          created_at?: string
+          decision_reason?: string | null
+          flags?: Json
+          id?: string
+          investor_name?: string
+          offering_id?: string
+          opening_capital_cents?: number
+          position_id?: string
+          prepared_at?: string
+          prepared_by?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_ref?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "synthetic_participants_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tax_access_events: {
         Row: {
           action: string
@@ -44279,6 +44538,7 @@ export type Database = {
         Args: { _key: string; _token: string }
         Returns: boolean
       }
+      assert_demo_offering: { Args: { _offering: string }; Returns: undefined }
       can_manage_diligence: { Args: { _offering_id: string }; Returns: boolean }
       can_prepare_investor: { Args: { _offering_id: string }; Returns: boolean }
       can_read_wire_instructions: {
