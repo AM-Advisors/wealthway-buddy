@@ -20,4 +20,4 @@
 - Social post artwork uses shared marketing brand font definitions and original logo asset pointers, and export waits for brand font loading — why: saved artwork must match the preview without fallback typography or distorted logos.
 - Marketing menu groups are display-only shortcuts to existing pages; post design options use global brand tokens and count cover/closing slides within the selected total, retaining hidden drafts — why: simplify navigation without changing authority or losing authored content.
 
-- Marketing, email-flow and CSA STAR rules live in src/lib/AGENTS.md - why: keeps this file within budget.
+- Marketing, email-flow and CSA STAR rules live in src/lib/AGENTS.md - why: keeps this file within budget.- Legacy archive uploads go only through src/lib/legacy-archive-multipart.server.ts (dedicated bucket + prefix guard, signed SHA-256 per request, 5 MiB parts, no delete/retention headers) - why: Object Lock needs signed checksums and the gateway caps requests near 6 MiB.
