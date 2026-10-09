@@ -35,7 +35,6 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SpvRouteImport } from './routes/spv'
 import { Route as SpvsRouteImport } from './routes/spvs'
 import { Route as TermsRouteImport } from './routes/terms'
-import { Route as ZzPostCaptureTestRouteImport } from './routes/zz-post-capture-test'
 import { Route as AuthenticatedAccessRouteImport } from './routes/_authenticated/access'
 import { Route as AuthenticatedAccountManagerRouteImport } from './routes/_authenticated/account-manager'
 import { Route as AuthenticatedAccountsRouteImport } from './routes/_authenticated/accounts'
@@ -562,11 +561,6 @@ const SpvsRoute = SpvsRouteImport.update({
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ZzPostCaptureTestRoute = ZzPostCaptureTestRouteImport.update({
-  id: '/zz-post-capture-test',
-  path: '/zz-post-capture-test',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAccessRoute = AuthenticatedAccessRouteImport.update({
@@ -2890,7 +2884,6 @@ export interface FileRoutesByFullPath {
   '/spv': typeof SpvRoute
   '/spvs': typeof SpvsRoute
   '/terms': typeof TermsRoute
-  '/zz-post-capture-test': typeof ZzPostCaptureTestRoute
   '/access': typeof AuthenticatedAccessRoute
   '/account-manager': typeof AuthenticatedAccountManagerRoute
   '/accounts': typeof AuthenticatedAccountsRoute
@@ -3314,7 +3307,6 @@ export interface FileRoutesByTo {
   '/spv': typeof SpvRoute
   '/spvs': typeof SpvsRoute
   '/terms': typeof TermsRoute
-  '/zz-post-capture-test': typeof ZzPostCaptureTestRoute
   '/access': typeof AuthenticatedAccessRoute
   '/account-manager': typeof AuthenticatedAccountManagerRoute
   '/accounts': typeof AuthenticatedAccountsRoute
@@ -3736,7 +3728,6 @@ export interface FileRoutesById {
   '/spv': typeof SpvRoute
   '/spvs': typeof SpvsRoute
   '/terms': typeof TermsRoute
-  '/zz-post-capture-test': typeof ZzPostCaptureTestRoute
   '/_authenticated/access': typeof AuthenticatedAccessRoute
   '/_authenticated/account-manager': typeof AuthenticatedAccountManagerRoute
   '/_authenticated/accounts': typeof AuthenticatedAccountsRoute
@@ -4164,7 +4155,6 @@ export interface FileRouteTypes {
     | '/spv'
     | '/spvs'
     | '/terms'
-    | '/zz-post-capture-test'
     | '/access'
     | '/account-manager'
     | '/accounts'
@@ -4588,7 +4578,6 @@ export interface FileRouteTypes {
     | '/spv'
     | '/spvs'
     | '/terms'
-    | '/zz-post-capture-test'
     | '/access'
     | '/account-manager'
     | '/accounts'
@@ -5009,7 +4998,6 @@ export interface FileRouteTypes {
     | '/spv'
     | '/spvs'
     | '/terms'
-    | '/zz-post-capture-test'
     | '/_authenticated/access'
     | '/_authenticated/account-manager'
     | '/_authenticated/accounts'
@@ -5437,7 +5425,6 @@ export interface RootRouteChildren {
   SpvRoute: typeof SpvRoute
   SpvsRoute: typeof SpvsRoute
   TermsRoute: typeof TermsRoute
-  ZzPostCaptureTestRoute: typeof ZzPostCaptureTestRoute
   CapClaimTokenRoute: typeof CapClaimTokenRoute
   ClassroomImgSplatRoute: typeof ClassroomImgSplatRoute
   FundSlugRoute: typeof FundSlugRoute
@@ -5665,13 +5652,6 @@ declare module '@tanstack/react-router' {
       path: '/terms'
       fullPath: '/terms'
       preLoaderRoute: typeof TermsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/zz-post-capture-test': {
-      id: '/zz-post-capture-test'
-      path: '/zz-post-capture-test'
-      fullPath: '/zz-post-capture-test'
-      preLoaderRoute: typeof ZzPostCaptureTestRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/access': {
@@ -9416,7 +9396,6 @@ const rootRouteChildren: RootRouteChildren = {
   SpvRoute: SpvRoute,
   SpvsRoute: SpvsRoute,
   TermsRoute: TermsRoute,
-  ZzPostCaptureTestRoute: ZzPostCaptureTestRoute,
   CapClaimTokenRoute: CapClaimTokenRoute,
   ClassroomImgSplatRoute: ClassroomImgSplatRoute,
   FundSlugRoute: FundSlugRoute,
