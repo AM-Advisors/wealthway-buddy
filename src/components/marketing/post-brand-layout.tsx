@@ -1,4 +1,4 @@
-/** Branded post designer: several styles plus carousels. Colors come from BRAND (fixed export look), not theme tokens. Exactly one logo per image. */
+/** Branded post designer: several styles plus carousels. Artwork colors use stable global brand tokens. Exactly one logo per image. */
 import { useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -129,10 +129,10 @@ export function PostBrandLayout({ title, body, onAdd }: { title: string; body: s
   const logo = light ? logoNavy.url : logoWhite.url;
   // Original lighthouse + wordmark artwork; never redraw or squeeze the logo to fit the footer.
   const Logo = () => <img src={logo} alt="Harmonious" crossOrigin="anonymous" width={1917} height={449} style={{ width: land ? 200 : 220, height: "auto", aspectRatio: "1917 / 449", objectFit: "contain", flexShrink: 0 }} />;
-  const Footer = ({ withLogo = true }: { withLogo?: boolean }) => <div style={{ marginTop: "auto", borderTop: `2px solid ${BRAND.cyan}`, paddingTop: 18, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 24 }}>
+  const Footer = ({ withLogo = true }: { withLogo?: boolean }) => <div style={{ marginTop: "auto", borderTop: `2px solid ${accent}`, paddingTop: 18, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 24 }}>
     <div style={{ fontSize: land ? 18 : 22, lineHeight: 1.5, minWidth: 0 }}><div>$24B+ AUA · 750+ Fund Managers</div><div>Your Funds On Easy Mode</div></div>{withLogo && <Logo />}
   </div>;
-  const Cta = () => cta.trim() ? <div style={{ alignSelf: "flex-start", marginTop: 32, background: BRAND.cyan, color: BRAND.navy, ...H, fontSize: land ? 22 : 28, padding: "14px 28px", borderRadius: 999 }}>{cta}</div> : null;
+  const Cta = () => cta.trim() ? <div style={{ alignSelf: "flex-start", marginTop: 32, background: accent, color: "var(--brand-navy)", ...H, fontSize: land ? 22 : 28, padding: "14px 28px", borderRadius: 999 }}>{cta}</div> : null;
 
   /** One canvas page. Logo appears once: in the footer, or top-right when the footer is off. */
   const Page = ({ i, children, logoHere = true, artOk = true, padOverride, pageNo }: { i: number; children: ReactNode; logoHere?: boolean; artOk?: boolean; padOverride?: CSSProperties; pageNo?: string }) => (
@@ -140,7 +140,7 @@ export function PostBrandLayout({ title, body, onAdd }: { title: string; body: s
       <div ref={(el) => { refs.current[i] = el; }} style={{ transform: `scale(${scale})`, transformOrigin: "top left", width: w, height: h }}>
         <div data-collateral-page style={{ ...wrap, fontFamily: BRAND.bodyFont, fontWeight: 400, letterSpacing: 0, width: w, height: h, position: "relative", overflow: "hidden", color: ink, boxSizing: "border-box", padding: pad, display: "flex", flexDirection: "column", background: background(artOk), ...padOverride }}>
           {logoHere && !footer && <div style={{ position: "absolute", top: pad, right: pad }}><Logo /></div>}
-          {pageNo && <div style={{ position: "absolute", top: pad, left: pad, fontSize: 22, color: BRAND.cyan, letterSpacing: 1 }}>{pageNo}</div>}
+          {pageNo && <div style={{ position: "absolute", top: pad, left: pad, fontSize: 22, color: accent, letterSpacing: 1 }}>{pageNo}</div>}
           {children}
           {footer && <Footer withLogo={logoHere} />}
         </div>
@@ -148,7 +148,7 @@ export function PostBrandLayout({ title, body, onAdd }: { title: string; body: s
     </div>
   );
 
-  const head = (fs: number) => <div style={{ ...H, fontSize: land ? fs * 0.72 : fs, lineHeight: 1.05 }}><Hl text={headline || "Your headline"} word={highlight} /></div>;
+  const head = (fs: number) => <div style={{ ...H, fontSize: land ? fs * 0.72 : fs, lineHeight: 1.05 }}><Hl text={headline || "Your headline"} word={highlight} accent={accent} /></div>;
   const sub = subtitle && <div style={{ fontSize: land ? 24 : 32, marginTop: 18, opacity: 0.9, maxWidth: w - 200 }}>{subtitle}</div>;
   const topGap = land ? 24 : footer ? 90 : 140;
   const scale = (carousel ? 260 : 340) / w;
@@ -157,34 +157,34 @@ export function PostBrandLayout({ title, body, onAdd }: { title: string; body: s
     switch (style) {
       case "statement": return <Page i={0}><div style={{ margin: "auto 0" }}>{head(104)}{sub}<Cta /></div></Page>;
       case "stat": return <Page i={0}><div style={{ margin: "auto 0" }}>
-        <div style={{ ...H, fontSize: land ? 140 : 220, lineHeight: 1, color: BRAND.cyan }}>{stat || "$24B+"}</div>
+        <div style={{ ...H, fontSize: land ? 140 : 220, lineHeight: 1, color: accent }}>{stat || "$24B+"}</div>
         <div style={{ marginTop: 24 }}>{head(60)}</div>{sub}</div></Page>;
       case "quote": return <Page i={0}><div style={{ margin: "auto 0" }}>
-        <div style={{ ...H, fontSize: land ? 120 : 200, lineHeight: 0.6, color: BRAND.cyan }}>“</div>
-        <div style={{ ...H, fontSize: land ? 40 : 58, lineHeight: 1.2, marginTop: 20 }}><Hl text={headline || "Your quote"} word={highlight} /></div>
+        <div style={{ ...H, fontSize: land ? 120 : 200, lineHeight: 0.6, color: accent }}>“</div>
+        <div style={{ ...H, fontSize: land ? 40 : 58, lineHeight: 1.2, marginTop: 20 }}><Hl text={headline || "Your quote"} word={highlight} accent={accent} /></div>
         {attribution && <div style={{ fontSize: land ? 22 : 28, marginTop: 28, opacity: 0.85 }}>— {attribution}</div>}</div></Page>;
       case "checklist": return <Page i={0}><div style={{ marginTop: topGap }}>{head(68)}{sub}</div>
         <div style={{ display: "flex", flexDirection: "column", gap: land ? 12 : 20, marginTop: land ? 24 : 48 }}>
           {pts.map((p, k) => <div key={k} style={{ display: "flex", alignItems: "center", gap: 20 }}>
-            <div style={{ ...H, flexShrink: 0, width: land ? 40 : 56, height: land ? 40 : 56, borderRadius: 999, background: BRAND.cyan, color: BRAND.navy, display: "flex", alignItems: "center", justifyContent: "center", fontSize: land ? 20 : 26 }}>{k + 1}</div>
+            <div style={{ ...H, flexShrink: 0, width: land ? 40 : 56, height: land ? 40 : 56, borderRadius: 999, background: accent, color: "var(--brand-navy)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: land ? 20 : 26 }}>{k + 1}</div>
             <div style={{ fontSize: land ? 24 : 34 }}>{p}</div></div>)}
         </div></Page>;
       case "photo": return <Page i={0} artOk={false} padOverride={{ paddingLeft: w * 0.5 + pad / 2 }}>
-        <div style={{ position: "absolute", inset: 0, right: "50%", background: bg ? `url(${bg}) center/cover` : BRAND.slate }} />
+        <div style={{ position: "absolute", inset: 0, right: "50%", background: bg ? `url(${bg}) center/cover` : "var(--post-border)" }} />
         <div style={{ margin: "auto 0" }}>{head(64)}{sub}<Cta /></div></Page>;
       case "event": return <Page i={0}><div style={{ marginTop: topGap }}>
-        <div style={{ color: BRAND.cyan, fontSize: land ? 20 : 26, letterSpacing: 2, textTransform: "uppercase" }}>Live event</div>
+        <div style={{ color: accent, fontSize: land ? 20 : 26, letterSpacing: 2, textTransform: "uppercase" }}>Live event</div>
         <div style={{ marginTop: 16 }}>{head(80)}</div>{sub}<Cta /></div></Page>;
       default: return <Page i={0}><div style={{ marginTop: topGap }}>{head(76)}{sub}</div>
         {pts.length > 0 && <div style={{ display: "grid", gridTemplateColumns: `repeat(${pts.length},1fr)`, gap: 20, marginTop: land ? 28 : 64 }}>
-          {pts.map((p, k) => <div key={k} style={{ background: "#fff", border: `1px solid ${BRAND.slate}`, borderRadius: 18, padding: land ? 20 : 28, borderTop: `4px solid ${BRAND.cyan}` }}><div style={{ ...H, fontSize: land ? 22 : 26, color: BRAND.navy }}>{p}</div></div>)}
+          {pts.map((p, k) => <div key={k} style={{ background: "var(--brand-white)", border: `1px solid ${"var(--post-border)"}`, borderRadius: 18, padding: land ? 20 : 28, borderTop: `4px solid ${accent}` }}><div style={{ ...H, fontSize: land ? 22 : 26, color: "var(--brand-navy)" }}>{p}</div></div>)}
         </div>}<Cta /></Page>;
     }
   };
 
   const deck = () => <div className="flex gap-2 overflow-x-auto pb-2">
     <Page i={0} pageNo={`1/${total}`}><div style={{ margin: "auto 0" }}>{head(92)}{sub}
-      <div style={{ marginTop: 40, fontSize: land ? 22 : 28, color: BRAND.cyan }}>Swipe →</div></div></Page>
+      <div style={{ marginTop: 40, fontSize: land ? 22 : 28, color: accent }}>Swipe →</div></div></Page>
     {slides.map((s, k) => <Page key={k} i={k + 1} pageNo={`${k + 2}/${total}`}><div style={{ margin: "auto 0" }}>
       <div style={{ ...H, fontSize: land ? 44 : 64, lineHeight: 1.1 }}>{s.title}</div>
       <div style={{ fontSize: land ? 24 : 34, marginTop: 24, opacity: 0.9, lineHeight: 1.4 }}>{s.text}</div></div></Page>)}
