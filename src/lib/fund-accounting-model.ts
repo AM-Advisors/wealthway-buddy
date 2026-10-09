@@ -138,8 +138,13 @@ export function feeTermDecisionError(t: { approvalStatus: string; preparedBy: st
 /** Statement lines store a positive amount plus a direction; cash movements are signed. */
 export const signedBankCents = (l: { amount_cents: number | string; direction?: string | null }) =>
   l.direction === "out" ? -Math.abs(Number(l.amount_cents)) : Number(l.amount_cents);
-/** Plaid/bank transactions store outflows as positive (Plaid convention). */
-export const signedBankTxCents = (t: { amount_cents: number | string }) => -Number(t.amount_cents);
+/** Bank transactions: direction is authoritative (feeds store magnitudes); without it, positive = inflow. */
+export const signedBankTxCents = (t: { amount_cents: number | string; direction?: string | null }) => {
+  const a = Math.abs(Number(t.amount_cents));
+  if (["out", "outbound", "outflow", "debit"].includes(String(t.direction ?? ""))) return -a;
+  if (["in", "inbound", "inflow", "credit"].includes(String(t.direction ?? ""))) return a;
+  return Number(t.amount_cents);
+};
 /** One bank movement may evidence exactly one accounting record, at exactly its cash amount. */
 export function bankLinkError(i: { cashCents: number; bankSignedCents: number; alreadyLinkedTo: string | null }): string | null {
   if (i.alreadyLinkedTo) return `That bank activity is already linked to ${i.alreadyLinkedTo}.`;

@@ -285,6 +285,18 @@ export async function classifyFundCash(userId: string, offeringId: string, limit
       siblings,
     });
 
+    // Cash already carried by an investment/expense/settlement record is explained by it:
+    // no "unmatched" exception, and its journal is reused at reconciliation (never a second cash entry).
+    const { linkedAccountingRecord } = await import("@/lib/fund-accounting.server");
+    const linked = await linkedAccountingRecord(txn.id);
+    if (linked && linked.status !== "reversed") {
+      proposal.transactionType = linked.table === "fund_investment_transactions" ? "portfolio_investment" : linked.table === "fund_expense_records" ? "fund_expense" : "payable_settlement";
+      proposal.confidence = "high";
+      proposal.reasons = [`Linked to ${linked.table.replace(/^fund_/, "").replace(/_/g, " ")} ${linked.id} (${linked.status}).`];
+      proposal.exceptions = [];
+      proposal.conflicts = [];
+    }
+
     const rule = selectPostingRule(rules, {
       transactionType: proposal.transactionType,
       inflow: txn.amountCents >= 0,
@@ -294,7 +306,7 @@ export async function classifyFundCash(userId: string, offeringId: string, limit
       counterparty: `${txn.name ?? ""} ${txn.description ?? ""}`,
     });
     const accounts = rule && bookId ? await accountIdsForRule(bookId, rule) : { debitId: null, creditId: null };
-    if (!rule || !accounts.debitId || !accounts.creditId) {
+    if ((!rule || !accounts.debitId || !accounts.creditId) && !(linked && linked.status !== "reversed")) {
       proposal.exceptions.push("missing_accounting_mapping");
     }
 
@@ -686,7 +698,9 @@ export async function prepareReconciliationJournal(
     fail("Only a fully approved reconciliation can become a journal.");
   }
   if (!rec.book_id) fail("This fund's accounting book has not been opened yet.");
-  if (!rec.suggested_debit_account_id || !rec.suggested_credit_account_id) {
+  const { linkedAccountingRecord: linkedFor } = await import("@/lib/fund-accounting.server");
+  const preLinked = await linkedFor(String(rec.bank_transaction_id));
+  if (!preLinked && (!rec.suggested_debit_account_id || !rec.suggested_credit_account_id)) {
     fail("No accounting mapping is attached to this item.");
   }
 

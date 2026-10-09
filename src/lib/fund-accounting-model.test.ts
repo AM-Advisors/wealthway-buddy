@@ -102,7 +102,10 @@ import { bankLinkError, newAccountError, reconciliationJournalDecision, signedBa
 describe("investment cash controls", () => {
   it("statement outflows are signed so a matching purchase links", () => {
     expect(signedBankCents({ amount_cents: 105_00, direction: "out" })).toBe(-105_00);
-    expect(signedBankTxCents({ amount_cents: 105_00 })).toBe(-105_00);
+    expect(signedBankTxCents({ amount_cents: 105_00, direction: "outbound" })).toBe(-105_00);
+    expect(signedBankTxCents({ amount_cents: -105_00, direction: "outbound" })).toBe(-105_00);
+    expect(signedBankTxCents({ amount_cents: 105_00, direction: "inflow" })).toBe(105_00);
+    expect(signedBankTxCents({ amount_cents: -105_00 })).toBe(-105_00);
     expect(bankLinkError({ cashCents: -105_00, bankSignedCents: -105_00, alreadyLinkedTo: null })).toBeNull();
   });
   it("a mismatched bank amount is never silently accepted", () => {
