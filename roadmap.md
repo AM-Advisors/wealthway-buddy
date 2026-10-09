@@ -16,3 +16,5 @@
 - [x] Group Marketing links into a smaller, expandable menu without removing pages or changing access.
 - [x] Add a total carousel slide selector (3–10, including cover and closing) and additional brand color choices.
 - [x] Verify the changed controls and regression checks; 13 tests passed, isolated synthetic browser controls passed, latest build OK. Publishing settings unchanged.
+
+- [ ] Legacy archive checksum upload: blocked on user choice (generic AWS connection vs server-side signer); no exports
