@@ -299,17 +299,41 @@ export const VALUATION_EXCEPTION_KINDS = [
 export type ValuationExceptionKind = (typeof VALUATION_EXCEPTION_KINDS)[number];
 
 /** Pilot M9: one evidence verdict shared by submit, approval and exception checks. */
-export type EvidenceStatus = "evidence_required" | "evidence_provided" | "evidence_waived" | "evidence_not_required";
-export function valuationEvidenceStatus(input: { policyRequired: boolean; evidenceCount: number; waived: boolean }): EvidenceStatus {
+export type EvidenceStatus =
+  | "evidence_required"
+  | "evidence_provided"
+  | "evidence_waived"
+  | "evidence_not_required"
+  /** DEMO / SYNTHETIC ASSUMPTION: never supporting evidence; only valid on isolated test/demo funds. */
+  | "synthetic_assumption";
+export type EvidenceBasis = "supporting_evidence" | "synthetic_assumption";
+export const SYNTHETIC_ASSUMPTION_LABEL = "DEMO / SYNTHETIC ASSUMPTION";
+export function valuationEvidenceStatus(input: { policyRequired: boolean; evidenceCount: number; waived: boolean; evidenceBasis?: EvidenceBasis }): EvidenceStatus {
+  // A synthetic assumption is its own classification - it never counts as evidence.
+  if (input.evidenceBasis === "synthetic_assumption") return "synthetic_assumption";
   if (input.evidenceCount > 0) return "evidence_provided";
   if (!input.policyRequired) return "evidence_not_required";
   if (input.waived) return "evidence_waived";
   return "evidence_required";
 }
-export function evidenceGateError(status: EvidenceStatus): string | null {
+/**
+ * Gate for submit/approve/effective. A synthetic assumption passes only on an
+ * isolated synthetic (test/demo) fund; on any real fund it is refused.
+ */
+export function evidenceGateError(status: EvidenceStatus, ctx: { syntheticFund?: boolean } = {}): string | null {
+  if (status === "synthetic_assumption") {
+    return ctx.syntheticFund
+      ? null
+      : "Synthetic valuation assumptions are allowed only on isolated TEST/DEMO funds; real funds need supporting evidence.";
+  }
   return status === "evidence_required"
     ? "Valuation evidence is required: attach evidence or have an authorised reviewer waive it with a reason."
     : null;
+}
+/** The value already recognised plus cost added by purchases after that mark. */
+export function movementBasisCents(input: { lastRecognizedCents: number | null; costBasisCents: number; costAddedSinceRecognizedCents: number }) {
+  if (input.lastRecognizedCents === null) return input.costBasisCents;
+  return input.lastRecognizedCents + input.costAddedSinceRecognizedCents;
 }
 export function evidenceWaiverError(input: { reason: string; waiverUserId: string; preparedBy: string | null }): string | null {
   if (input.reason.trim().length < 10) return "Give a reason of at least 10 characters for waiving valuation evidence.";

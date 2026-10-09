@@ -35598,6 +35598,7 @@ export type Database = {
           decision_reason: string | null
           effective_at: string | null
           effective_date: string
+          evidence_basis: string
           evidence_status: string
           evidence_waived_at: string | null
           evidence_waived_by: string | null
@@ -35627,6 +35628,7 @@ export type Database = {
           status: Database["public"]["Enums"]["portfolio_valuation_status"]
           superseded_by_id: string | null
           supersedes_id: string | null
+          synthetic_assumption_reference: string | null
           updated_at: string
           valuation_date: string
           value_cents: number
@@ -35647,6 +35649,7 @@ export type Database = {
           decision_reason?: string | null
           effective_at?: string | null
           effective_date: string
+          evidence_basis?: string
           evidence_status?: string
           evidence_waived_at?: string | null
           evidence_waived_by?: string | null
@@ -35676,6 +35679,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["portfolio_valuation_status"]
           superseded_by_id?: string | null
           supersedes_id?: string | null
+          synthetic_assumption_reference?: string | null
           updated_at?: string
           valuation_date: string
           value_cents: number
@@ -35696,6 +35700,7 @@ export type Database = {
           decision_reason?: string | null
           effective_at?: string | null
           effective_date?: string
+          evidence_basis?: string
           evidence_status?: string
           evidence_waived_at?: string | null
           evidence_waived_by?: string | null
@@ -35725,6 +35730,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["portfolio_valuation_status"]
           superseded_by_id?: string | null
           supersedes_id?: string | null
+          synthetic_assumption_reference?: string | null
           updated_at?: string
           valuation_date?: string
           value_cents?: number

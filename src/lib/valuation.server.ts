@@ -11,7 +11,7 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { reviewerScope, assertScopeAllows, type ReviewerScope } from "@/lib/reviewer-authz.server";
 import { draftJournalEntry, ledgerBookForOffering } from "@/lib/accounting.server";
 import { raiseException } from "@/lib/reconciliation.server";
-import { valuationEvidenceStatus, evidenceGateError, evidenceWaiverError } from "@/lib/valuation-model";
+import { valuationEvidenceStatus, evidenceGateError, evidenceWaiverError, movementBasisCents, SYNTHETIC_ASSUMPTION_LABEL, type EvidenceBasis } from "@/lib/valuation-model";
 import {
   DEFAULT_VALUATION_POLICY,
   canTransitionValuation,
@@ -323,7 +323,15 @@ export async function listPortfolioAssets(userId: string, offeringId?: string) {
 // -------------------------------------------------------------- valuations
 
 /** The last valuation whose movement has already been recognised in the GL. */
-async function lastRecognizedValue(assetId: string): Promise<number | null> {
+/** True only for an isolated TEST/DEMO fund (its client is flagged is_test_demo). */
+export async function isSyntheticFund(offeringId: string): Promise<boolean> {
+  const { data: o } = await db().from("offerings").select("client_id").eq("id", offeringId).maybeSingle();
+  if (!o?.client_id) return false;
+  const { data: c } = await db().from("clients").select("is_test_demo").eq("id", o.client_id).maybeSingle();
+  return c?.is_test_demo === true;
+}
+
+async function lastRecognizedRow(assetId: string): Promise<{ value: number; effectiveDate: string } | null> {
   const { data } = await db()
     .from("portfolio_valuations")
     .select("value_cents, effective_date, version, journal_entry_id, recognized_by_journal_id")
@@ -331,10 +339,23 @@ async function lastRecognizedValue(assetId: string): Promise<number | null> {
     .in("status", ["effective", "superseded"])
     .order("effective_date", { ascending: false })
     .order("version", { ascending: false });
-  // Recognised either by its own valuation journal or (takeover opening) by the posted opening journal.
   const row = ((data ?? []) as any[]).find((r) => r.journal_entry_id || r.recognized_by_journal_id);
-  return row ? Number(row.value_cents) : null;
+  return row ? { value: Number(row.value_cents), effectiveDate: String(row.effective_date) } : null;
 }
+
+/** Posted purchase cost added to a holding after `afterDate`, up to and including `uptoDate`. */
+async function costAddedBetween(assetId: string, afterDate: string, uptoDate: string): Promise<number> {
+  const { data } = await db()
+    .from("fund_investment_transactions")
+    .select("total_cost_cents, trade_date, kind, status")
+    .eq("asset_id", assetId)
+    .eq("status", "posted")
+    .in("kind", ["purchase", "additional_purchase"])
+    .gt("trade_date", afterDate)
+    .lte("trade_date", uptoDate);
+  return ((data ?? []) as any[]).reduce((sum, r) => sum + Number(r.total_cost_cents ?? 0), 0);
+}
+
 
 async function currentEffective(assetId: string) {
   const { data } = await db()
@@ -381,10 +402,18 @@ export async function proposeValuation(
     assumptions?: string | null;
     note?: string | null;
     otherSources?: { sourceType: ValuationSourceType; valueCents: number; sourceDate?: string }[];
+    /** Defaults to supporting_evidence. synthetic_assumption is test/demo-fund only. */
+    evidenceBasis?: EvidenceBasis;
+    syntheticAssumptionReference?: string | null;
   },
 ) {
   const { scope, asset } = await authorizeAsset(userId, input.assetId);
   if (asset.status === "realized") fail("This position is fully realised and cannot be re-marked.");
+  const evidenceBasis: EvidenceBasis = input.evidenceBasis ?? "supporting_evidence";
+  if (evidenceBasis === "synthetic_assumption") {
+    if (!(await isSyntheticFund(String(asset.offering_id)))) fail("Synthetic valuation assumptions are allowed only on isolated TEST/DEMO funds.");
+    if ((input.syntheticAssumptionReference ?? "").trim().length < 10) fail("Name the synthetic scenario assumption this value comes from.");
+  }
   const policy = await policyFor(asset.offering_id, asset.asset_class);
   const prior = await currentEffective(asset.id);
   const priorValue = prior ? Number(prior.value_cents) : null;
@@ -425,6 +454,9 @@ export async function proposeValuation(
       prepared_by: userId,
       prepared_by_role: scope.isAdmin ? "harmonious" : "fund_manager",
       note: input.note ?? null,
+      evidence_basis: evidenceBasis,
+      synthetic_assumption_reference: evidenceBasis === "synthetic_assumption" ? input.syntheticAssumptionReference!.trim() : null,
+      evidence_status: evidenceBasis === "synthetic_assumption" ? "synthetic_assumption" : undefined,
     })
     .select()
     .single();
@@ -457,6 +489,9 @@ export async function addValuationEvidence(
   const { valuation, asset } = await authorizeValuation(userId, input.valuationId);
   if (isImmutable(valuation.status as ValuationStatus)) {
     fail("That valuation is complete; record a new version to attach new evidence.");
+  }
+  if (valuation.evidence_basis === "synthetic_assumption") {
+    fail("Supporting evidence cannot be attached to a synthetic-assumption valuation; propose a new evidence-backed version.");
   }
   const { data, error } = await db()
     .from("valuation_evidence")
@@ -523,17 +558,19 @@ async function evidenceCount(valuationId: string) {
 /** Run every configured check and open exceptions for what is wrong. */
 async function evidenceVerdict(valuation: any, policy: { evidenceRequired: boolean }) {
   const count = await evidenceCount(valuation.id);
-  const status = valuationEvidenceStatus({ policyRequired: policy.evidenceRequired, evidenceCount: count, waived: Boolean(valuation.evidence_waived_by) });
+  const status = valuationEvidenceStatus({ policyRequired: policy.evidenceRequired, evidenceCount: count, waived: Boolean(valuation.evidence_waived_by), evidenceBasis: valuation.evidence_basis as EvidenceBasis });
+  const syntheticFund = status === "synthetic_assumption" ? await isSyntheticFund(valuation.offering_id) : false;
   if (status !== valuation.evidence_status) {
     await db().from("portfolio_valuations").update({ evidence_status: status }).eq("id", valuation.id);
   }
-  return { status, count };
+  return { status, count, syntheticFund };
 }
 
 /** Pilot M9: an authorised reviewer (not the preparer) waives required evidence, with a reason. */
 export async function waiveValuationEvidence(userId: string, input: { valuationId: string; reason: string }) {
   const { scope, valuation, asset } = await authorizeValuation(userId, input.valuationId);
   if (!scope.isAdmin) fail("Forbidden: only Harmonious can waive valuation evidence.");
+  if (valuation.evidence_basis === "synthetic_assumption") fail("A synthetic assumption is not waivable evidence; it stays labelled as a synthetic assumption.");
   if (["effective", "superseded", "rejected"].includes(String(valuation.status))) fail("That valuation is complete; its evidence status is frozen.");
   const err = evidenceWaiverError({ reason: input.reason, waiverUserId: userId, preparedBy: valuation.prepared_by ? String(valuation.prepared_by) : null });
   if (err) fail(err);
@@ -588,7 +625,8 @@ export async function submitValuation(userId: string, valuationId: string) {
   }
   {
     const pol = await policyFor(asset.offering_id, asset.asset_class);
-    const gate = evidenceGateError((await evidenceVerdict(valuation, pol)).status);
+    const v = await evidenceVerdict(valuation, pol);
+    const gate = evidenceGateError(v.status, { syntheticFund: v.syntheticFund });
     if (gate) fail(gate);
   }
   await db()
@@ -647,7 +685,8 @@ export async function decideValuation(
     fail("Maker/checker: the person who prepared a valuation cannot approve it.");
   }
   if (to === "approved" || to === "effective") {
-    const gate = evidenceGateError((await evidenceVerdict(valuation, policy)).status);
+    const v = await evidenceVerdict(valuation, policy);
+    const gate = evidenceGateError(v.status, { syntheticFund: v.syntheticFund });
     if (gate) fail(gate);
   }
 
@@ -763,12 +802,21 @@ export async function prepareValuationJournal(userId: string, valuationId: strin
   const policy = await policyFor(asset.offering_id, asset.asset_class);
   // The first mark is measured against cost: cost already sits in investments at
   // cost, so only appreciation above it is unrealised.
-  const recognized = (await lastRecognizedValue(asset.id)) ?? Number(asset.cost_basis_cents ?? 0);
+  // Later purchases add cost at cost, so they join the recognised basis rather
+  // than being measured as gain.
+  const last = await lastRecognizedRow(asset.id);
+  const recognized = movementBasisCents({
+    lastRecognizedCents: last ? last.value : null,
+    costBasisCents: Number(asset.cost_basis_cents ?? 0),
+    costAddedSinceRecognizedCents: last ? await costAddedBetween(asset.id, last.effectiveDate, String(valuation.effective_date)) : 0,
+  });
+  const synthetic = valuation.evidence_basis === "synthetic_assumption";
+  if (synthetic && !(await isSyntheticFund(String(asset.offering_id)))) fail("Synthetic valuation assumptions are allowed only on isolated TEST/DEMO funds.");
   const journal = unrealizedJournal(
     recognized,
     Number(valuation.value_cents),
     policy,
-    `Unrealised movement - ${asset.issuer_name} ${asset.asset_name}`,
+    `${synthetic ? `[${SYNTHETIC_ASSUMPTION_LABEL}] ` : ""}Unrealised movement - ${asset.issuer_name} ${asset.asset_name}${synthetic ? " (not independently verified)" : ""}`,
   );
   if (!journal) return { journalEntryId: null, created: false, reason: "no_movement" as const };
 
