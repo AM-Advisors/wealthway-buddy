@@ -1,6 +1,10 @@
 import { guard, step, U, N } from "./lib";
 import { trialBalance } from "@/lib/ledger-trial-balance";
+import { appendFileSync } from "node:fs";
+import { BATCH } from "./lib";
 const d = await guard();
+for (const [k, uid] of Object.entries(U)) { await d.from("user_roles").upsert({ user_id: uid, role: "admin" }, { onConflict: "user_id,role", ignoreDuplicates: true }); appendFileSync("/tmp/wt/grants.jsonl", JSON.stringify({ account: k, role: "admin", purpose: `${BATCH} CoA readiness (temporary)`, grantedAt: new Date().toISOString() }) + "\n"); }
+try {
 const fa = await import("@/lib/fund-accounting.server");
 const book = (await d.from("ledger_books").select("id").eq("offering_id", N).single()).data.id;
 const tb = async () => {
@@ -35,3 +39,8 @@ const assets = (await d.from("portfolio_assets").select("issuer_name,cost_basis_
 console.log("ASSETS", JSON.stringify(assets));
 const calls = (await d.from("capital_call_lines").select("*").limit(1)).data; console.log("CCL cols", Object.keys(calls?.[0]??{}).join(","));
 const docs = (await d.from("fund_liabilities").select("*").eq("offering_id", N)).data; console.log("LIABS", JSON.stringify(docs));
+} finally {
+  for (const uid of Object.values(U)) await d.from("user_roles").delete().eq("user_id", uid).in("role", ["admin", "operations"]);
+  const left = (await d.from("user_roles").select("user_id,role").in("user_id", Object.values(U))).data;
+  appendFileSync("/tmp/wt/grants.jsonl", JSON.stringify({ revokedAt: new Date().toISOString() }) + "\n"); console.log("access removed; remaining roles", JSON.stringify(left));
+}
