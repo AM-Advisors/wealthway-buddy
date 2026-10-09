@@ -18,5 +18,6 @@
 - Fund setup % and launch label come only from src/lib/fund-launch-summary.ts (tasks + launch conditions) on Fund Setup and Readiness - why: the same fund must show one number everywhere.
 - Classroom articles live in classroom_articles + append-only classroom_article_versions/events (src/lib/classroom.server.ts); public pages read only published versions via src/lib/classroom-public.functions.ts, and /post/<slug> addresses never change - why: keeps Wix URLs and rankings while allowing versioned AI drafts.
 - Social post artwork uses shared marketing brand font definitions and original logo asset pointers, and export waits for brand font loading — why: saved artwork must match the preview without fallback typography or distorted logos.
+- Marketing menu groups are display-only shortcuts to existing pages; post design options use global brand tokens and count cover/closing slides within the selected total, retaining hidden drafts — why: simplify navigation without changing authority or losing authored content.
 
 - Marketing, email-flow and CSA STAR rules live in src/lib/AGENTS.md - why: keeps this file within budget.

@@ -10,6 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { carouselContentCount, POST_PALETTES, resizeCarouselDrafts } from "./post-design-options";
 import { BRAND, brandProblems } from "@/lib/marketing-brand";
 import { overflowProblems } from "@/components/marketing/collateral-canvas";
 import { marketingBackgroundArt, marketingSuggestPostLayout, uploadMarketingAsset } from "@/lib/marketing.functions";
@@ -37,10 +39,10 @@ const H = { fontFamily: BRAND.headingFont, fontWeight: 700, letterSpacing: 0 } a
 const wrap = { hyphens: "none", overflowWrap: "normal", wordBreak: "keep-all" } as const;
 
 /** Render the headline with one chosen word in cyan. */
-function Hl({ text, word }: { text: string; word: string }) {
+function Hl({ text, word, accent }: { text: string; word: string; accent: string }) {
   const w = word.trim().toLowerCase();
   if (!w) return <>{text}</>;
-  return <>{text.split(/(\s+)/).map((t, i) => t.replace(/[^\w$%+]/g, "").toLowerCase() === w ? <span key={i} style={{ color: BRAND.cyan }}>{t}</span> : t)}</>;
+  return <>{text.split(/(\s+)/).map((t, i) => t.replace(/[^\w$%+]/g, "").toLowerCase() === w ? <span key={i} style={{ color: accent }}>{t}</span> : t)}</>;
 }
 
 export function PostBrandLayout({ title, body, onAdd }: { title: string; body: string; onAdd: (img: { path: string; url: string }) => void }) {
@@ -55,7 +57,11 @@ export function PostBrandLayout({ title, body, onAdd }: { title: string; body: s
   const [attribution, setAttribution] = useState("");
   const [cta, setCta] = useState("");
   const [highlight, setHighlight] = useState("");
-  const [slides, setSlides] = useState<Slide[]>([{ title: "", text: "" }, { title: "", text: "" }]);
+  const [slideDrafts, setSlides] = useState<Slide[]>([{ title: "", text: "" }, { title: "", text: "" }]);
+  const [slideCount, setSlideCount] = useState(4);
+  const [paletteId, setPaletteId] = useState<string>("navy");
+  const slides = slideDrafts.slice(0, carouselContentCount(slideCount));
+  const chooseSlideCount = (count: number) => { setSlideCount(count); setSlides((x) => resizeCarouselDrafts(x, count)); };
   const [size, setSize] = useState<Size>("square");
   const [bgMode, setBgMode] = useState<Bg>("glow");
   const [footer, setFooter] = useState(true);
@@ -68,17 +74,19 @@ export function PostBrandLayout({ title, body, onAdd }: { title: string; body: s
   const nPoints = style === "checklist" ? 5 : style === "cards" ? 3 : 0;
   const run = async (k: typeof busy, f: () => Promise<void>) => { setBusy(k); try { await f(); } catch (e) { toast.error((e as Error).message); } finally { setBusy(""); } };
   const fill = () => run("suggest", async () => {
-    const r = await suggest({ data: { title, body, style } });
+    const r = await suggest({ data: { title, body: carousel ? `${body}\n\nCarousel layout request: ${slideCount} total slides, including one cover and one closing slide; ${carouselContentCount(slideCount)} content slides.` : body, style } });
     setHeadline(r.headline); setSubtitle(r.subtitle); setStat(r.stat); setAttribution(r.attribution); setCta(r.cta);
     setPoints([0, 1, 2, 3, 4].map((i) => r.points[i] ?? ""));
-    if (carousel && r.slides.length) setSlides(r.slides.slice(0, 8));
+    if (carousel && r.slides.length) setSlides(resizeCarouselDrafts(r.slides.slice(0, carouselContentCount(slideCount)), slideCount));
   });
   const paint = () => run("art", async () => { setBg((await art({ data: { theme: `${title}. ${body.slice(0, 300)}` } })).dataUrl); if (bgMode !== "art" && style !== "photo") setBgMode("art"); });
 
   const { w, h } = DIM[size];
   const land = size === "landscape";
   const light = bgMode === "light";
-  const ink = light ? BRAND.navy : "#fff";
+  const palette = POST_PALETTES.find((p) => p.id === paletteId) ?? POST_PALETTES[0];
+  const accent = light ? palette.lightAccent : palette.accent;
+  const ink = light ? "var(--brand-navy)" : "var(--brand-white)";
   const pad = land ? 56 : 80;
   const pts = points.slice(0, nPoints).filter((x) => x.trim());
   const total = carousel ? slides.length + 2 : 1;
@@ -113,10 +121,10 @@ export function PostBrandLayout({ title, body, onAdd }: { title: string; body: s
   });
 
   const background = (allowArt: boolean) => {
-    if (light) return `radial-gradient(circle at 92% 4%, rgba(93,198,209,0.18), transparent 32%), #ffffff`;
-    const glow = bgMode === "navy" ? "" : "radial-gradient(circle at 92% 4%, rgba(93,198,209,0.18), transparent 32%), ";
-    const artLayer = allowArt && bgMode === "art" && bg ? `linear-gradient(180deg, rgba(0,40,86,0.55) 0%, rgba(0,20,51,0.92) 70%), url(${bg}) center/cover, ` : "";
-    return `${artLayer}${glow}linear-gradient(180deg, ${BRAND.navy} 0%, ${BRAND.midnight} 100%)`;
+    if (light) return `linear-gradient(135deg, color-mix(in srgb, ${palette.accent} 12%, var(--brand-white)), var(--brand-white) 60%)`;
+    const glow = bgMode === "navy" ? "" : `linear-gradient(135deg, color-mix(in srgb, ${palette.accent} 18%, transparent), transparent 60%), `;
+    const artLayer = allowArt && bgMode === "art" && bg ? `var(--post-art-overlay), url(${bg}) center/cover, ` : "";
+    return `${artLayer}${glow}linear-gradient(180deg, ${palette.surface} 0%, var(--post-midnight) 100%)`;
   };
   const logo = light ? logoNavy.url : logoWhite.url;
   // Original lighthouse + wordmark artwork; never redraw or squeeze the logo to fit the footer.
@@ -192,9 +200,9 @@ export function PostBrandLayout({ title, body, onAdd }: { title: string; body: s
       <div>
         <Label>Style</Label>
         <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
-          {STYLES.map((s) => <button key={s.id} type="button" onClick={() => setStyle(s.id)}
-            className={`rounded-md border p-2 text-left text-xs transition-colors ${style === s.id ? "border-primary bg-primary/10" : "hover:bg-muted"}`}>
-            <div className="font-medium text-foreground">{s.label}</div><div className="text-muted-foreground">{s.hint}</div></button>)}
+           {STYLES.map((s) => <Button key={s.id} type="button" variant="outline" aria-pressed={style === s.id} onClick={() => setStyle(s.id)}
+            className={`h-auto flex-col items-start whitespace-normal p-2 text-left text-xs ${style === s.id ? "border-primary bg-primary/10" : "hover:bg-muted"}`}>
+            <span className="font-medium text-foreground">{s.label}</span><span className="text-muted-foreground">{s.hint}</span></Button>)}
         </div>
       </div>
       <div className="flex flex-wrap items-center gap-2">
@@ -207,12 +215,12 @@ export function PostBrandLayout({ title, body, onAdd }: { title: string; body: s
         {style !== "quote" && <div><Label>{carousel ? "Cover hook" : style === "event" ? "Date and time" : "Subtitle"}</Label><Input value={subtitle} maxLength={160} onChange={(e) => setSubtitle(e.target.value)} /></div>}
         {style === "quote" && <div><Label>Name and role</Label><Input value={attribution} maxLength={80} onChange={(e) => setAttribution(e.target.value)} /></div>}
         {style === "stat" && <div><Label>Big number</Label><Input value={stat} maxLength={12} placeholder="$24B+" onChange={(e) => setStat(e.target.value)} /></div>}
-        <div><Label>Highlight word (cyan)</Label><Input value={highlight} maxLength={30} placeholder="e.g. Complexity" onChange={(e) => setHighlight(e.target.value)} /></div>
+        <div><Label>Highlight word</Label><Input value={highlight} maxLength={30} placeholder="e.g. Complexity" onChange={(e) => setHighlight(e.target.value)} /></div>
         {["cards", "statement", "photo", "event", "carousel"].includes(style) && <div><Label>{carousel ? "Closing call-to-action" : "Call-to-action button (optional)"}</Label><Input value={cta} maxLength={50} placeholder={carousel ? "Book a demo" : "Learn more at harmonious.co"} onChange={(e) => setCta(e.target.value)} /></div>}
         {points.slice(0, nPoints).map((p, i) => <div key={i}><Label>{style === "checklist" ? `Tip ${i + 1}` : `Value point ${i + 1}`}</Label><Input value={p} maxLength={style === "checklist" ? 70 : 60} onChange={(e) => setPoints((x) => x.map((y, j) => j === i ? e.target.value : y))} /></div>)}
       </div>
       {carousel && <div className="space-y-2">
-        <Label>Content slides ({slides.length}; cover and closing slide added automatically, 10 max)</Label>
+        <div className="flex flex-wrap items-center gap-3"><Label htmlFor="carousel-count">Total slides</Label><Select value={String(slideCount)} onValueChange={(v) => chooseSlideCount(Number(v))} disabled={!!busy}><SelectTrigger id="carousel-count" className="w-32"><SelectValue /></SelectTrigger><SelectContent>{Array.from({ length: 8 }, (_, i) => i + 3).map((n) => <SelectItem key={n} value={String(n)}>{n} slides</SelectItem>)}</SelectContent></Select><span className="text-xs text-muted-foreground">1 cover · {slides.length} content · 1 closing</span></div>
         {slides.map((s, k) => <div key={k} className="flex gap-2 rounded-md border p-2">
           <div className="flex-1 space-y-1">
             <Input value={s.title} maxLength={60} placeholder={`Slide ${k + 2} title`} onChange={(e) => setSlides((x) => x.map((y, j) => j === k ? { ...y, title: e.target.value } : y))} />
@@ -221,15 +229,16 @@ export function PostBrandLayout({ title, body, onAdd }: { title: string; body: s
           <div className="flex flex-col gap-1">
             <Button size="icon" variant="ghost" aria-label="Move up" disabled={k === 0} onClick={() => moveSlide(k, -1)}><ArrowUp className="h-4 w-4" /></Button>
             <Button size="icon" variant="ghost" aria-label="Move down" disabled={k === slides.length - 1} onClick={() => moveSlide(k, 1)}><ArrowDown className="h-4 w-4" /></Button>
-            <Button size="icon" variant="ghost" aria-label="Remove slide" disabled={slides.length <= 1} onClick={() => setSlides((x) => x.filter((_, j) => j !== k))}><Trash2 className="h-4 w-4" /></Button>
+            <Button size="icon" variant="ghost" aria-label="Remove slide" disabled={slides.length <= 1 || !!busy} onClick={() => { setSlides((x) => x.filter((_, j) => j !== k)); setSlideCount((n) => n - 1); }}><Trash2 className="h-4 w-4" /></Button>
           </div>
         </div>)}
-        <Button size="sm" variant="outline" disabled={slides.length >= 8} onClick={() => setSlides((x) => [...x, { title: "", text: "" }])}><Plus className="mr-1 h-4 w-4" />Add slide</Button>
+        <Button size="sm" variant="outline" disabled={slides.length >= 8 || !!busy} onClick={() => chooseSlideCount(slideCount + 1)}><Plus className="mr-1 h-4 w-4" />Add slide</Button>
       </div>}
       <div className="grid gap-2 sm:grid-cols-2">
         <div><Label>Size</Label><div className="mt-2 flex flex-wrap gap-2">{(Object.keys(DIM) as Size[]).map((s) => <Button key={s} size="sm" variant={size === s ? "default" : "outline"} onClick={() => setSize(s)}>{DIM[s].label}</Button>)}</div></div>
-        <div><Label>Background</Label><div className="mt-2 flex flex-wrap gap-2">{([["navy", "Navy"], ["glow", "Navy + glow"], ["light", "Light"], ["art", "AI art"]] as [Bg, string][]).map(([k, l]) => <Button key={k} size="sm" variant={bgMode === k ? "default" : "outline"} disabled={k === "art" && !bg} onClick={() => setBgMode(k)}>{l}</Button>)}</div></div>
+        <div><Label>Background</Label><div className="mt-2 flex flex-wrap gap-2">{([["navy", "Dark"], ["glow", "Color wash"], ["light", "Light"], ["art", "AI art"]] as [Bg, string][]).map(([k, l]) => <Button key={k} size="sm" variant={bgMode === k ? "default" : "outline"} disabled={k === "art" && !bg} onClick={() => setBgMode(k)}>{l}</Button>)}</div></div>
       </div>
+      <div><Label>Colors · {palette.label}</Label><div className="mt-2 flex flex-wrap gap-2">{POST_PALETTES.map((p) => <Button key={p.id} size="icon" variant="outline" title={p.label} aria-label={p.label} aria-pressed={paletteId === p.id} onClick={() => setPaletteId(p.id)} className={`h-9 w-9 ${paletteId === p.id ? "border-primary ring-2 ring-ring ring-offset-2 ring-offset-background" : ""}`}><span className={`h-5 w-5 rounded-full ${p.swatch}`} /></Button>)}</div></div>
       <label className="flex items-center gap-2 text-sm"><Checkbox checked={footer} onCheckedChange={(v) => setFooter(!!v)} />Proof-point footer (logo moves to the top corner when off)</label>
 
       {carousel ? deck() : single()}
