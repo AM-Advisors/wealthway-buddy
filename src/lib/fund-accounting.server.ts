@@ -63,7 +63,7 @@ async function assertBankLine(offeringId: string, link: BankLink | string | null
     if (!txId && line.applied_tx_id) txId = String(line.applied_tx_id);
   }
   if (txId) {
-    const { data: tx } = await db().from("bank_transactions").select("id, offering_id, amount_cents, plaid_transaction_id").eq("id", txId).maybeSingle();
+    const { data: tx } = await db().from("bank_transactions").select("id, offering_id, amount_cents, direction, plaid_transaction_id").eq("id", txId).maybeSingle();
     if (!tx || tx.offering_id !== offeringId) fail("That bank transaction does not belong to this fund.");
     const s = signedBankTxCents(tx);
     if (bankSigned != null && s !== bankSigned) fail("The bank line and bank transaction disagree.");
