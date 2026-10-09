@@ -306,7 +306,11 @@ export function activityFromBalances(periodBalances: LedgerBalance[]): NavActivi
     unrealizedGainCents: Math.max(unrealized, 0),
     unrealizedLossCents: Math.max(-unrealized, 0),
     managementFeesCents: debit("expense", ["management_fee"]),
-    fundExpensesCents: debit("expense", ["organizational_expense", "other"]),
+    // Every operating-expense subtype (legal, audit, admin, bank fees...) - only
+    // management fees and tax adjustments have their own bridge lines.
+    fundExpensesCents: periodBalances
+      .filter((b) => b.accountType === "expense" && b.subtype !== "management_fee" && b.subtype !== "tax_adjustment")
+      .reduce((t, b) => t + (b.debitCents - b.creditCents), 0),
     otherCents: debit("expense", ["tax_adjustment"]) * -1,
   };
 }
@@ -700,4 +704,21 @@ export function capitalHandoff(
     distributionsCents: activity.distributionsCents,
     endingNetAssetsCents: pkg.netAssetValueCents,
   };
+}
+
+// ------------------------------------------------------------ synthetic NAV
+
+export const SYNTHETIC_NAV_LABEL = "DEMO / SYNTHETIC — UNAUDITED — VALUATIONS NOT INDEPENDENTLY VERIFIED";
+export const SYNTHETIC_APPROVAL_SCOPE = "internal_synthetic_only";
+
+/** A NAV that used any synthetic-assumption valuation is synthetic, whatever the fund. */
+export function isSyntheticNav(valuations: { evidenceBasis?: string | null }[]): boolean {
+  return valuations.some((v) => v.evidenceBasis === "synthetic_assumption");
+}
+
+/** Synthetic NAV can never be published, distributed or used for regulatory reporting. */
+export function syntheticPublicationError(syntheticClassification: string | null | undefined): string | null {
+  return syntheticClassification
+    ? `Synthetic NAV cannot be published, distributed or used for regulatory reporting (${SYNTHETIC_NAV_LABEL}).`
+    : null;
 }

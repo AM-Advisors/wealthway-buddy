@@ -35,6 +35,10 @@ import {
   publicationBlockers,
   revisionImpact,
   segregationError,
+  isSyntheticNav,
+  syntheticPublicationError,
+  SYNTHETIC_NAV_LABEL,
+  SYNTHETIC_APPROVAL_SCOPE,
   type LedgerBalance,
   type ManagerWorkflow,
   type NavCheck,
@@ -298,7 +302,7 @@ export async function calculateNAV(
 
   const { data: valuationRows } = await db()
     .from("portfolio_valuations")
-    .select("id, asset_id, effective_date, version, status, value_cents")
+    .select("id, asset_id, effective_date, version, status, value_cents, evidence_basis, synthetic_assumption_reference")
     .eq("book_id", book.id)
     .in("status", ["effective", "superseded"]);
   const versions: (ValuationRecord & { valuationId: string })[] = ((valuationRows ?? []) as any[]).map(
@@ -310,6 +314,8 @@ export async function calculateNAV(
       version: Number(v.version),
       status: v.status,
       valueCents: Number(v.value_cents),
+      evidenceBasis: v.evidence_basis ?? "supporting_evidence",
+      syntheticReference: v.synthetic_assumption_reference ?? null,
     }),
   );
 
@@ -320,6 +326,8 @@ export async function calculateNAV(
     version: number | null;
     effectiveDate: string | null;
     valueCents: number;
+    evidenceBasis?: string | null;
+    syntheticReference?: string | null;
   }[] = [];
   const missing: string[] = [];
   const stale: { assetName: string; days: number }[] = [];
@@ -353,6 +361,8 @@ export async function calculateNAV(
       version: match.version,
       effectiveDate: match.effectiveDate,
       valueCents: match.valueCents,
+      evidenceBasis: (match as any).evidenceBasis ?? "supporting_evidence",
+      syntheticReference: (match as any).syntheticReference ?? null,
     });
   }
 
@@ -376,7 +386,19 @@ export async function calculateNAV(
     .order("version", { ascending: false })
     .limit(1);
   const prior = ((priorRows ?? []) as any[])[0] ?? null;
-  const priorNavCents = prior ? Number(prior.net_asset_value_cents) : 0;
+  // First NAV after a takeover: the opening is the posted ledger's net assets
+  // the day before the period starts (no published NAV exists to bridge from).
+  let openingSource: "prior_published_nav" | "ledger_opening" | "none" = prior ? "prior_published_nav" : "none";
+  let priorNavCents = prior ? Number(prior.net_asset_value_cents) : 0;
+  if (!prior) {
+    const openingDate = new Date(Date.parse(`${period.start}T00:00:00Z`) - 86_400_000).toISOString().slice(0, 10);
+    const openingLines = cumulative.filter((l) => l.entryDate <= openingDate);
+    if (openingLines.length > 0) {
+      priorNavCents = navPackage({ balances: toBalances(openingLines, chart), investmentsFairValueCents: null, unitAccounting: false, unitsOutstanding: null }).netAssetValueCents;
+      openingSource = "ledger_opening";
+    }
+  }
+  const synthetic = isSyntheticNav(used);
 
   const bridge = navBridge(priorNavCents, activity, pkg.netAssetValueCents);
   const { changeCents, changePct } = navChange(priorNavCents, pkg.netAssetValueCents);
@@ -478,6 +500,9 @@ export async function calculateNAV(
     valuations: used,
     policy,
     ledger_totals: { debitCents: ledgerDebitCents, creditCents: ledgerCreditCents },
+    opening_source: openingSource,
+    synthetic_classification: synthetic ? SYNTHETIC_NAV_LABEL : null,
+    synthetic_valuations: used.filter((u) => u.evidenceBasis === "synthetic_assumption"),
   };
 
   // ---- persist as the working draft for this book and date
@@ -538,6 +563,7 @@ export async function calculateNAV(
     prepared_by: userId,
     prepared_at: nowIso(),
     updated_at: nowIso(),
+    synthetic_classification: synthetic ? SYNTHETIC_NAV_LABEL : null,
   };
 
   let nav: any;
@@ -585,7 +611,7 @@ export async function calculateNAV(
     payload: { asOfDate: input.asOfDate, netAssetValueCents: pkg.netAssetValueCents },
   });
 
-  return { nav, checks, bridge, package: pkg, activity, valuations: used, period, policy };
+  return { nav, checks, bridge, package: pkg, activity, valuations: used, period, policy, synthetic, openingSource };
 }
 
 // -------------------------------------------------------------------- reads
@@ -785,6 +811,8 @@ export async function approveNav(userId: string, navVersionId: string) {
   return moveNav(userId, navVersionId, "approved", {
     approved_by: userId,
     approved_at: nowIso(),
+    // A synthetic NAV is only ever approved for internal demo use.
+    approval_scope: nav.synthetic_classification ? SYNTHETIC_APPROVAL_SCOPE : "production",
   });
 }
 
@@ -834,6 +862,8 @@ export async function overrideNavCheck(
 export async function publishNav(userId: string, navVersionId: string) {
   await assertHarmonious(userId);
   const { nav } = await authorizeNav(userId, navVersionId);
+  const syntheticErr = syntheticPublicationError(nav.synthetic_classification);
+  if (syntheticErr) fail(syntheticErr);
   const problem = segregationError(
     { preparedBy: nav.prepared_by, reviewedBy: nav.reviewed_by },
     userId,
@@ -990,5 +1020,7 @@ export async function managerRespondToNav(
 export async function navCapitalHandoff(userId: string, navVersionId: string) {
   const { nav } = await authorizeNav(userId, navVersionId);
   if (nav.status !== "published") fail("Only a published NAV hands off to capital accounts.");
+  const syntheticErr = syntheticPublicationError(nav.synthetic_classification);
+  if (syntheticErr) fail(syntheticErr);
   return nav.capital_handoff ?? {};
 }
