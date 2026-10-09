@@ -85,7 +85,7 @@ export async function uploadStatement(uid: string, fundId: string, f: { fileName
   // Existing bank lines for duplicate detection (Plaid or earlier statements).
   const { data: existing } = await d.from("bank_transactions").select("id, posted_on, amount_cents, direction, name").eq("offering_id", fundId).limit(5000);
   const seen = new Map(((existing ?? []) as any[]).map((t) => {
-    const dir = t.direction ?? (Number(t.amount_cents) < 0 ? "in" : "out");
+    const dir = t.direction === "inflow" || t.direction === "in" ? "in" : t.direction ? "out" : Number(t.amount_cents) >= 0 ? "in" : "out";
     return [dedupeKey(String(t.posted_on), Math.abs(Number(t.amount_cents)), dir, String(t.name ?? "")), String(t.id)];
   }));
   const seenLoose = new Map(((existing ?? []) as any[]).map((t) => [`${t.posted_on}|${Math.abs(Number(t.amount_cents))}`, String(t.id)]));
@@ -146,7 +146,7 @@ export async function applyStatement(uid: string, fundId: string, uploadId: stri
   for (const l of todo) {
     const category = l.confirmed_category ?? l.suggested_category;
     const { data: tx, error } = await d.from("bank_transactions").insert({
-      offering_id: fundId, plaid_transaction_id: `stmt:${l.id}`, posted_on: l.posted_on, amount_cents: l.direction === "in" ? -Number(l.amount_cents) : Number(l.amount_cents),
+      offering_id: fundId, plaid_transaction_id: `stmt:${l.id}`, posted_on: l.posted_on, amount_cents: l.direction === "in" ? Math.abs(Number(l.amount_cents)) : -Math.abs(Number(l.amount_cents)), // platform convention: inflow positive
       name: l.description, description: `From statement ${(u as any).file_name}`, direction: l.direction, currency: "USD",
       dedupe_key: dedupeKey(l.posted_on, Number(l.amount_cents), l.direction, l.description), reference: `statement:${uploadId}`,
     }).select("id").single();
