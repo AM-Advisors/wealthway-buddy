@@ -30,7 +30,7 @@ export const prepareInvestmentFn = createServerFn({ method: "POST" })
     newAssetName: z.string().max(200).nullable(), newAssetClass: z.string().max(60).nullable(), instrument: z.string().max(200).nullable(),
     tradeDate: date, settlementDate: date.nullable(), quantity: z.number().nullable(), unitPriceCents: cents.nullable(), principalCents: cents,
     transactionCostCents: cents, sourceReference: z.string().min(1).max(500), evidenceReference: z.string().max(500).nullable(),
-    idempotencyKey: z.string().min(1).max(200), bankLineId: uuid.nullable(),
+    idempotencyKey: z.string().min(1).max(200), bankLineId: uuid.nullable(), bankTransactionId: uuid.nullable().optional(),
   }).parse)
   .handler(async ({ data, context }) => (await srv()).prepareInvestment(context.userId, data));
 
@@ -51,7 +51,7 @@ export const prepareExpenseFn = createServerFn({ method: "POST" })
     offeringId: uuid, category: z.string().max(60), vendor: z.string().min(1).max(200), description: z.string().min(1).max(500),
     invoiceNumber: z.string().max(100).nullable(), invoiceDate: date.nullable(), serviceStart: date.nullable(), serviceEnd: date.nullable(),
     expenseDate: date, amountCents: cents, paymentMode: z.enum(["paid", "accrued"]), paidOn: date.nullable(),
-    sourceReference: z.string().min(1).max(500), evidenceReference: z.string().max(500).nullable(), bankLineId: uuid.nullable(),
+    sourceReference: z.string().min(1).max(500), evidenceReference: z.string().max(500).nullable(), bankLineId: uuid.nullable(), bankTransactionId: uuid.nullable().optional(),
   }).parse)
   .handler(async ({ data, context }) => (await srv()).prepareExpense(context.userId, data));
 export const decideExpenseFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator(decision.parse)
@@ -64,7 +64,7 @@ export const prepareSettlementFn = createServerFn({ method: "POST" })
   .inputValidator(z.object({
     offeringId: uuid, expenseId: uuid.nullable(), liabilityPurpose: z.enum(["accounts_payable", "accrued_expenses"]),
     openingLiabilityReference: z.string().max(500).nullable(), amountCents: cents, paidOn: date, sourceReference: z.string().min(1).max(500),
-    idempotencyKey: z.string().min(1).max(200), bankLineId: uuid.nullable(),
+    idempotencyKey: z.string().min(1).max(200), bankLineId: uuid.nullable(), bankTransactionId: uuid.nullable().optional(),
   }).parse)
   .handler(async ({ data, context }) => (await srv()).prepareSettlement(context.userId, data));
 export const decideSettlementFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator(decision.parse)

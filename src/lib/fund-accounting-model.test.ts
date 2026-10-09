@@ -97,3 +97,40 @@ describe("Walkthrough Q1 fee benchmark v2", () => {
     expect(computeFeeRun([...base, sl150("superseded"), sl150("rejected")], positions, PERIOD).totalNetCents).toBe(11_543_750);
   });
 });
+
+import { bankLinkError, newAccountError, reconciliationJournalDecision, signedBankCents, signedBankTxCents, settlementLines as sl2, purchaseLines as pl2 } from "./fund-accounting-model";
+describe("investment cash controls", () => {
+  it("statement outflows are signed so a matching purchase links", () => {
+    expect(signedBankCents({ amount_cents: 105_00, direction: "out" })).toBe(-105_00);
+    expect(signedBankTxCents({ amount_cents: 105_00 })).toBe(-105_00);
+    expect(bankLinkError({ cashCents: -105_00, bankSignedCents: -105_00, alreadyLinkedTo: null })).toBeNull();
+  });
+  it("a mismatched bank amount is never silently accepted", () => {
+    expect(bankLinkError({ cashCents: -105_00, bankSignedCents: -100_00, alreadyLinkedTo: null })).toMatch(/MISMATCH/);
+  });
+  it("one bank movement cannot fund two records", () => {
+    expect(bankLinkError({ cashCents: -1, bankSignedCents: -1, alreadyLinkedTo: "investment transactions" })).toMatch(/already linked/);
+  });
+  it("reconciling linked activity reuses the record's journal - no second cash entry", () => {
+    expect(reconciliationJournalDecision({ status: "posted", journalEntryId: "J1" })).toEqual({ action: "reuse", entryId: "J1" });
+    expect(reconciliationJournalDecision({ status: "approved", journalEntryId: "J1" }).action).toBe("wait");
+    expect(reconciliationJournalDecision({ status: "reversed", journalEntryId: "J1" }).action).toBe("wait");
+    expect(reconciliationJournalDecision(null).action).toBe("draft");
+  });
+  it("one purchase has exactly one cash credit", () => {
+    expect(pl2(100, 5).filter((l) => l.purpose === "cash" && l.creditCents)).toHaveLength(1);
+  });
+  it("opening liability settlement: Dr accrued expenses / Cr cash, no expense", () => {
+    expect(sl2("accrued_expenses", 50_000_00)).toEqual([{ purpose: "accrued_expenses", debitCents: 50_000_00 }, { purpose: "cash", creditCents: 50_000_00 }]);
+  });
+});
+describe("chart of accounts additions", () => {
+  const ex = [{ code: "5200", name: "Fund operating expenses" }, { code: "5210", name: "Legal" }];
+  it("refuses duplicates, non-expense types and out-of-range codes", () => {
+    expect(newAccountError({ code: "5210", name: "X", accountType: "expense", parentCode: "5200" }, ex)).toMatch(/DUPLICATE/);
+    expect(newAccountError({ code: "5220", name: "legal", accountType: "expense", parentCode: "5200" }, ex)).toMatch(/DUPLICATE/);
+    expect(newAccountError({ code: "5220", name: "Accounting", accountType: "liability", parentCode: "5200" }, ex)).toMatch(/expense/);
+    expect(newAccountError({ code: "5320", name: "Accounting", accountType: "expense", parentCode: "5200" }, ex)).toMatch(/range/);
+    expect(newAccountError({ code: "5220", name: "Accounting", accountType: "expense", parentCode: "5200" }, ex)).toBeNull();
+  });
+});
