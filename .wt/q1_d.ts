@@ -1,0 +1,17 @@
+import { N, BATCH } from "./lib";
+import { d, BOOK, tb, bal, jeCount } from "./q1lib";
+const t = await tb();
+console.log("TB", t.totalDebitCents, t.totalCreditCents, t.ties, "JE", await jeCount());
+console.log("ROWS", JSON.stringify(t.rows.map((r: any) => [r.code, r.balanceCents])));
+const a = (await d.from("portfolio_assets").select("issuer_name,asset_name,cost_basis_cents").eq("offering_id", N)).data;
+console.log("ASSETS", JSON.stringify(a), "sum", a.reduce((s: number, x: any) => s + Number(x.cost_basis_cents), 0));
+const inv = (await d.from("fund_investment_transactions").select("kind,new_issuer_name,trade_date,total_cost_cents,status,journal_entry_id,bank_transaction_id").eq("offering_id", N)).data;
+console.log("INV", JSON.stringify(inv));
+const ex = (await d.from("fund_expense_records").select("category,vendor,expense_date,amount_cents,payment_mode,status,journal_entry_id,bank_transaction_id,bank_line_id").eq("offering_id", N)).data;
+console.log("EXP", JSON.stringify(ex));
+const je = (await d.from("journal_entries").select("status").eq("book_id", BOOK)).data; const c: any = {}; je.forEach((x: any) => c[x.status] = (c[x.status] ?? 0) + 1); console.log("JE status", JSON.stringify(c));
+const cashLines = (await d.from("journal_lines").select("credit_cents,debit_cents,entry_id,journal_entries!inner(status,source,book_id,entry_date)").eq("journal_entries.book_id", BOOK).eq("journal_entries.status", "posted").eq("account_id", t.rows.find((r: any) => r.code === "1000").id)).data;
+const per: any = {}; for (const l of cashLines) { per[l.entry_id] = (per[l.entry_id] ?? 0) + 1; } console.log("max cash lines per entry", Math.max(...Object.values(per) as number[]));
+const out = (await d.from("bank_transactions").select("amount_cents").eq("offering_id", N).eq("direction", "outbound")).data;
+console.log("BANK outflows", out.reduce((s: number, x: any) => s + Number(x.amount_cents), 0));
+const recs = (await d.from("bank_reconciliations").select("status").eq("offering_id", N)).data; const rs: any = {}; recs.forEach((x: any) => rs[x.status] = (rs[x.status] ?? 0) + 1); console.log("RECS", JSON.stringify(rs));
