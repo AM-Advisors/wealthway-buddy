@@ -10,4 +10,9 @@
 - Deferred (state in report): request upload → Fund Documents linking, staff alerts delivery, saved views persistence, default landing
 
 ## Legacy archive S3 connection
-- [ ] Investigate why the dedicated exporter S3 connection fails validation (prefix-scoped IAM policy)
+- [x] Investigate exporter validation; verification stopped with upload failure (Object Lock checksum/signing limitation), as recorded in Harmonious_Legacy_Archive_Verification_Report.md. No migration authorized.
+
+## Marketing menu and post options
+- [x] Group Marketing links into a smaller, expandable menu without removing pages or changing access.
+- [x] Add a total carousel slide selector (3–10, including cover and closing) and additional brand color choices.
+- [x] Verify the changed controls and regression checks; 13 tests passed, isolated synthetic browser controls passed, latest build OK. Publishing settings unchanged.

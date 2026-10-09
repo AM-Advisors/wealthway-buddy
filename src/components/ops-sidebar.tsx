@@ -23,6 +23,7 @@ import { useInboxUnread } from "@/components/unified-inbox";
 
 import { Logo, LogoIcon } from "@/components/Logo";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   Sidebar,
   SidebarContent,
@@ -88,9 +89,16 @@ function useSectionOpen(id: string, containsActive: boolean) {
 
 const ACTIVE_CLS = "data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[active=true]:shadow-[inset_2px_0_0_var(--color-sidebar-primary)]";
 
-function NavSection({ id, label, items, pathname, collapsed, onNavigate, isActive }: {
-  id: string; label: string; items: NavItem[]; pathname: string; collapsed: boolean; onNavigate: () => void; isActive: (item: NavItem) => boolean;
+function NavSection({ id, label, items, pathname, collapsed, onNavigate, isActive, compactGroups = false }: {
+  id: string; label: string; items: NavItem[]; pathname: string; collapsed: boolean; onNavigate: () => void; isActive: (item: NavItem) => boolean; compactGroups?: boolean;
 }) {
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  useEffect(() => {
+    if (compactGroups) setExpanded((x) => {
+      const current = items.find((item) => isActive(item));
+      return current?.sub?.length ? { ...x, [current.id]: true } : x;
+    });
+  }, [pathname, compactGroups]);
   const containsActive = items.some((i) => isActive(i) || i.sub?.some((s) => pathname.startsWith(s.url)));
   const [open, toggle] = useSectionOpen(id, containsActive);
   if (!items.length) return null;
@@ -113,17 +121,18 @@ function NavSection({ id, label, items, pathname, collapsed, onNavigate, isActiv
                 const active = isActive(item);
                 return (
                   <SidebarMenuItem key={item.id} className="group/item">
-                    <SidebarMenuButton asChild isActive={active} tooltip={item.title} className={ACTIVE_CLS}>
+                    <SidebarMenuButton asChild isActive={active} tooltip={item.title} className={`${ACTIVE_CLS} ${compactGroups && item.sub?.length ? "pr-9" : ""}`}>
                       <Link to={item.url as never} aria-current={active ? "page" : undefined} onClick={onNavigate} className="flex items-center gap-2">
                         <Icon className="h-4 w-4 shrink-0" />
                         <span className="truncate">{item.title}</span>
                       </Link>
                     </SidebarMenuButton>
-                    {!collapsed && <FavoriteStar url={item.url} label={item.title} className="absolute right-1 top-1 hidden group-hover/item:block" />}
-                    {!collapsed && item.sub && item.sub.length > 0 && (active || item.sub.some((s) => pathname.startsWith(s.url))) && (
+                    {!collapsed && !compactGroups && <FavoriteStar url={item.url} label={item.title} className="absolute right-1 top-1 hidden group-hover/item:block" />}
+                    {!collapsed && compactGroups && !!item.sub?.length && <Button size="icon" variant="ghost" className="absolute right-1 top-0 h-8 w-7 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" aria-label={`Toggle ${item.title} menu`} aria-expanded={expanded[item.id] ?? active} onClick={() => setExpanded((x) => ({ ...x, [item.id]: !(x[item.id] ?? active) }))}><ChevronDown className={`h-3.5 w-3.5 ${(expanded[item.id] ?? active) ? "" : "-rotate-90"}`} /></Button>}
+                    {!collapsed && item.sub && item.sub.length > 0 && (compactGroups ? (expanded[item.id] ?? active) : (active || item.sub.some((s) => pathname.startsWith(s.url)))) && (
                       <div className="ml-6 border-l border-sidebar-border pl-3">
                         {item.sub.map((s) => (
-                          <Link key={s.url} to={s.url.split("?")[0] as never} search={(s.url.includes("?") ? Object.fromEntries(new URLSearchParams(s.url.split("?")[1])) : undefined) as never} onClick={onNavigate} aria-current={pathname.startsWith(s.url.split("?")[0]!) && !s.url.includes("?") ? "page" : undefined}
+                          <Link key={s.url} to={s.url.split("?")[0] as never} search={(s.url.includes("?") ? Object.fromEntries(new URLSearchParams(s.url.split("?")[1])) : undefined) as never} onClick={onNavigate} aria-current={(compactGroups ? pathname === s.url || (s.url !== "/marketing/studio" && pathname.startsWith(`${s.url}/`)) : pathname.startsWith(s.url.split("?")[0] ?? s.url) && !s.url.includes("?")) ? "page" : undefined}
                             className="block py-1.5 text-xs text-sidebar-foreground/80 hover:text-sidebar-foreground aria-[current=page]:font-medium aria-[current=page]:text-sidebar-foreground">{s.title}</Link>
                         ))}
                       </div>
@@ -243,23 +252,25 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
 
   const showMk = canSee("marketing", staffRoles);
   const mkItems: NavItem[] = showMk ? [
-    { id: "mk-dashboard", title: "Marketing dashboard", url: "/marketing", icon: "report" },
-    { id: "mk-studio", title: "Studio", url: "/marketing/studio", icon: "report" },
-    { id: "mk-design", title: "Design Studio", url: "/marketing/design-studio", icon: "report" },
-    { id: "mk-research", title: "Research feed", url: "/marketing/studio/research", icon: "report" },
-    { id: "mk-performance", title: "Publishing & performance", url: "/marketing/performance", icon: "report" },
-    { id: "mk-linkedin", title: "LinkedIn accounts", url: "/marketing/linkedin", icon: "report" },
-    { id: "mk-editorial", title: "Editorial calendar", url: "/marketing/studio/calendar", icon: "tasks" },
-    { id: "mk-campaigns", title: "Campaigns", url: "/marketing/campaigns", icon: "report" },
-    { id: "mk-calendar", title: "Calendar", url: "/marketing/calendar", icon: "tasks" },
+    { id: "mk-dashboard", title: "Overview", url: "/marketing", icon: "report" },
     { id: "mk-posts", title: "Social posts", url: "/marketing/posts", icon: "document" },
-    { id: "mk-emails", title: "Emails", url: "/marketing/emails", icon: "document" },
-    { id: "mk-flows", title: "Follow-up flows", url: "/marketing/flows", icon: "tasks" },
-    { id: "mk-assists", title: "Sales requests", url: "/marketing/assists", icon: "tasks" },
-    { id: "mk-audiences", title: "Audiences", url: "/marketing/audiences", icon: "people" },
-    { id: "mk-channels", title: "Channels", url: "/marketing/channels", icon: "check" },
-    { id: "mk-library", title: "Content library", url: "/marketing/drive", icon: "document" },
-    { id: "mk-classroom", title: "Classroom", url: "/marketing/classroom", icon: "document" },
+    { id: "mk-content", title: "Content & design", url: "/marketing/studio", icon: "document", sub: [
+      { title: "Editorial studio", url: "/marketing/studio" }, { title: "AI content studio", url: "/marketing/content-studio" },
+      { title: "Design Studio", url: "/marketing/design-studio" }, { title: "Research feed", url: "/marketing/studio/research" },
+      { title: "Content library", url: "/marketing/drive" }, { title: "Collateral Studio", url: "/marketing/collateral" },
+      { title: "Imports", url: "/marketing/imports" }, { title: "Classroom", url: "/marketing/classroom" },
+      { title: "Sales requests", url: "/marketing/assists" },
+    ] },
+    { id: "mk-emails", title: "Email & audiences", url: "/marketing/emails", icon: "people", sub: [
+      { title: "Emails", url: "/marketing/emails" }, { title: "Follow-up flows", url: "/marketing/flows" }, { title: "Audiences", url: "/marketing/audiences" },
+    ] },
+    { id: "mk-calendar", title: "Planning", url: "/marketing/calendar", icon: "tasks", sub: [
+      { title: "Publishing calendar", url: "/marketing/calendar" }, { title: "Editorial calendar", url: "/marketing/studio/calendar" }, { title: "Campaigns", url: "/marketing/campaigns" },
+    ] },
+    { id: "mk-performance", title: "Publishing & performance", url: "/marketing/performance", icon: "report" },
+    { id: "mk-channels", title: "Accounts & channels", url: "/marketing/channels", icon: "settings", sub: [
+      { title: "Channels", url: "/marketing/channels" }, { title: "LinkedIn accounts", url: "/marketing/linkedin" },
+    ] },
   ] : [];
 
   const exact = (i: NavItem) => pathname === i.url;
@@ -342,7 +353,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
             <NavSection id="finance" label="Accounting & Finance" items={financeItems} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={opsActive} />
             <NavSection id="sales" label="Sales" items={salesItems} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={exact} />
             <NavSection id="account-management" label="Account Management" items={amItems} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={exact} />
-            <NavSection id="marketing" label="Marketing" items={mkItems} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={(i) => i.url === "/marketing" ? pathname === i.url : i.id === "mk-library" ? ["/marketing/drive", "/marketing/collateral", "/marketing/imports"].some((u) => pathname.startsWith(u)) : pathname.startsWith(i.url)} />
+            <NavSection id="marketing" label="Marketing" items={mkItems} pathname={pathname} collapsed={collapsed} onNavigate={close} compactGroups isActive={(i) => i.url === "/marketing" ? pathname === i.url : i.sub ? i.sub.some((s) => s.url === "/marketing/studio" ? pathname === s.url || pathname.startsWith("/marketing/studio/content/") : pathname === s.url || pathname.startsWith(`${s.url}/`)) : pathname === i.url || pathname.startsWith(`${i.url}/`)} />
             <NavSection id="team" label="Team" items={teamItems} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={(i) => i.id === "people-access" ? pathname.startsWith("/ops/people-access") || pathname.startsWith("/ops/employees") : pathname === i.url} />
             <NavSection id="leadership" label="Leadership" items={leadershipItems} pathname={pathname} collapsed={collapsed} onNavigate={close}
               isActive={(i) => i.sub ? i.sub.some((x) => pathname === x.url) : pathname === i.url} />

@@ -94,6 +94,9 @@
   --brand-mint: #32dbb4;
   --brand-violet: #3b32db;
   --brand-lightblue: #7cb3db;
+  --post-midnight: #001433;
+  --post-border: #e2e8f0;
+  --post-art-overlay: linear-gradient(180deg, color-mix(in srgb, var(--brand-navy) 55%, transparent) 0%, color-mix(in srgb, var(--post-midnight) 92%, transparent) 70%);
   --background: oklch(1 0 0);
   --foreground: var(--brand-ink);
   --card: oklch(1 0 0);
