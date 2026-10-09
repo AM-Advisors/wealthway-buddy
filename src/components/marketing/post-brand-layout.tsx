@@ -132,7 +132,7 @@ export function PostBrandLayout({ title, body, onAdd }: { title: string; body: s
   const Footer = ({ withLogo = true }: { withLogo?: boolean }) => <div style={{ marginTop: "auto", borderTop: `2px solid ${accent}`, paddingTop: 18, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 24 }}>
     <div style={{ fontSize: land ? 18 : 22, lineHeight: 1.5, minWidth: 0 }}><div>$24B+ AUA · 750+ Fund Managers</div><div>Your Funds On Easy Mode</div></div>{withLogo && <Logo />}
   </div>;
-  const Cta = () => cta.trim() ? <div style={{ alignSelf: "flex-start", marginTop: 32, background: accent, color: "var(--brand-navy)", ...H, fontSize: land ? 22 : 28, padding: "14px 28px", borderRadius: 999 }}>{cta}</div> : null;
+  const Cta = () => cta.trim() ? <div style={{ alignSelf: "flex-start", marginTop: 32, background: accent, color: light ? "var(--brand-white)" : "var(--brand-navy)", ...H, fontSize: land ? 22 : 28, padding: "14px 28px", borderRadius: 999 }}>{cta}</div> : null;
 
   /** One canvas page. Logo appears once: in the footer, or top-right when the footer is off. */
   const Page = ({ i, children, logoHere = true, artOk = true, padOverride, pageNo }: { i: number; children: ReactNode; logoHere?: boolean; artOk?: boolean; padOverride?: CSSProperties; pageNo?: string }) => (
@@ -166,7 +166,7 @@ export function PostBrandLayout({ title, body, onAdd }: { title: string; body: s
       case "checklist": return <Page i={0}><div style={{ marginTop: topGap }}>{head(68)}{sub}</div>
         <div style={{ display: "flex", flexDirection: "column", gap: land ? 12 : 20, marginTop: land ? 24 : 48 }}>
           {pts.map((p, k) => <div key={k} style={{ display: "flex", alignItems: "center", gap: 20 }}>
-            <div style={{ ...H, flexShrink: 0, width: land ? 40 : 56, height: land ? 40 : 56, borderRadius: 999, background: accent, color: "var(--brand-navy)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: land ? 20 : 26 }}>{k + 1}</div>
+            <div style={{ ...H, flexShrink: 0, width: land ? 40 : 56, height: land ? 40 : 56, borderRadius: 999, background: accent, color: light ? "var(--brand-white)" : "var(--brand-navy)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: land ? 20 : 26 }}>{k + 1}</div>
             <div style={{ fontSize: land ? 24 : 34 }}>{p}</div></div>)}
         </div></Page>;
       case "photo": return <Page i={0} artOk={false} padOverride={{ paddingLeft: w * 0.5 + pad / 2 }}>

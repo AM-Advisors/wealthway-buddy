@@ -93,6 +93,12 @@ function NavSection({ id, label, items, pathname, collapsed, onNavigate, isActiv
   id: string; label: string; items: NavItem[]; pathname: string; collapsed: boolean; onNavigate: () => void; isActive: (item: NavItem) => boolean; compactGroups?: boolean;
 }) {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  useEffect(() => {
+    if (compactGroups) setExpanded((x) => {
+      const current = items.find((item) => isActive(item));
+      return current?.sub?.length ? { ...x, [current.id]: true } : x;
+    });
+  }, [pathname, compactGroups]);
   const containsActive = items.some((i) => isActive(i) || i.sub?.some((s) => pathname.startsWith(s.url)));
   const [open, toggle] = useSectionOpen(id, containsActive);
   if (!items.length) return null;
@@ -115,7 +121,7 @@ function NavSection({ id, label, items, pathname, collapsed, onNavigate, isActiv
                 const active = isActive(item);
                 return (
                   <SidebarMenuItem key={item.id} className="group/item">
-                    <SidebarMenuButton asChild isActive={active} tooltip={item.title} className={ACTIVE_CLS}>
+                    <SidebarMenuButton asChild isActive={active} tooltip={item.title} className={`${ACTIVE_CLS} ${compactGroups && item.sub?.length ? "pr-9" : ""}`}>
                       <Link to={item.url as never} aria-current={active ? "page" : undefined} onClick={onNavigate} className="flex items-center gap-2">
                         <Icon className="h-4 w-4 shrink-0" />
                         <span className="truncate">{item.title}</span>
@@ -126,7 +132,7 @@ function NavSection({ id, label, items, pathname, collapsed, onNavigate, isActiv
                     {!collapsed && item.sub && item.sub.length > 0 && (compactGroups ? (expanded[item.id] ?? active) : (active || item.sub.some((s) => pathname.startsWith(s.url)))) && (
                       <div className="ml-6 border-l border-sidebar-border pl-3">
                         {item.sub.map((s) => (
-                          <Link key={s.url} to={s.url.split("?")[0] as never} search={(s.url.includes("?") ? Object.fromEntries(new URLSearchParams(s.url.split("?")[1])) : undefined) as never} onClick={onNavigate} aria-current={pathname.startsWith(s.url.split("?")[0]!) && !s.url.includes("?") ? "page" : undefined}
+                          <Link key={s.url} to={s.url.split("?")[0] as never} search={(s.url.includes("?") ? Object.fromEntries(new URLSearchParams(s.url.split("?")[1])) : undefined) as never} onClick={onNavigate} aria-current={(compactGroups ? pathname === s.url || (s.url !== "/marketing/studio" && pathname.startsWith(`${s.url}/`)) : pathname.startsWith(s.url.split("?")[0] ?? s.url) && !s.url.includes("?")) ? "page" : undefined}
                             className="block py-1.5 text-xs text-sidebar-foreground/80 hover:text-sidebar-foreground aria-[current=page]:font-medium aria-[current=page]:text-sidebar-foreground">{s.title}</Link>
                         ))}
                       </div>
