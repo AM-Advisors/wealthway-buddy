@@ -109,7 +109,8 @@ export function PostBrandLayout({ title, body, onAdd }: { title: string; body: s
     if (faces.some((face) => face.length === 0)) throw new Error("The Harmonious fonts could not load. Please try again before saving.");
     const { domToPng } = await import("modern-screenshot");
     for (let i = 0; i < nodes.length; i++) {
-      const page = nodes[i]?.firstElementChild;
+      // Re-read the live page: the preview re-renders while saving, which detaches earlier nodes.
+      const page = refs.current[i]?.firstElementChild;
       if (page instanceof HTMLElement && !page.isConnected) throw new Error("The post preview changed. Please try again.");
       if (!(page instanceof HTMLElement)) throw new Error("The post preview is not ready. Please try again.");
       // Freeze resolved colors/fonts inline so the export never depends on theme variables or stylesheets.
