@@ -19138,6 +19138,8 @@ export type Database = {
           source_reference: string
           status: string
           vendor: string
+          vendor_note: string | null
+          vendor_status: string
         }
         Insert: {
           amount_cents: number
@@ -19168,6 +19170,8 @@ export type Database = {
           source_reference: string
           status?: string
           vendor: string
+          vendor_note?: string | null
+          vendor_status?: string
         }
         Update: {
           amount_cents?: number
@@ -19198,6 +19202,8 @@ export type Database = {
           source_reference?: string
           status?: string
           vendor?: string
+          vendor_note?: string | null
+          vendor_status?: string
         }
         Relationships: [
           {
@@ -44895,7 +44901,13 @@ export type Database = {
         | "migration"
         | "quickbooks"
         | "investment"
-      journal_status: "draft" | "reviewed" | "approved" | "posted" | "reversed"
+      journal_status:
+        | "draft"
+        | "reviewed"
+        | "approved"
+        | "posted"
+        | "reversed"
+        | "voided"
       ledger_account_type:
         | "asset"
         | "liability"
@@ -45402,7 +45414,14 @@ export const Constants = {
         "quickbooks",
         "investment",
       ],
-      journal_status: ["draft", "reviewed", "approved", "posted", "reversed"],
+      journal_status: [
+        "draft",
+        "reviewed",
+        "approved",
+        "posted",
+        "reversed",
+        "voided",
+      ],
       ledger_account_type: [
         "asset",
         "liability",

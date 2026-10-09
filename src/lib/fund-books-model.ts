@@ -114,3 +114,9 @@ export function buildStatements(entries: Entry[], start: string, end: string, as
     changesInCapital: { openingCents: openingCapital, contributionsCents: contributions, distributionsCents: distributions, netIncomeCents: netIncome, unrealizedCents: unrealized, closingCents: openingCapital + contributions - distributions + netIncome + unrealized },
   };
 }
+
+/** A statement line already carried by a fund accounting record must not book a second (simplified-ledger) entry. */
+export function statementLineBooksAction(i: { category: string; alreadyBooked: boolean }): "ledger" | "skip" {
+  if (i.alreadyBooked) return "skip";
+  return i.category === "Transfer (not income)" ? "skip" : "ledger";
+}

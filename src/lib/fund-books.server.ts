@@ -1,7 +1,7 @@
 // Server-only: bank statement ingestion, asset marks, and books-derived figures for one fund.
 // Records history only - never moves money, never files anything.
 import { assertFund, db, isStaff } from "@/lib/fund-tabs.server";
-import { STATEMENT_CATEGORIES, balanceTie, dedupeKey, ruleCategory, type Entry } from "@/lib/fund-books-model";
+import { STATEMENT_CATEGORIES, statementLineBooksAction, balanceTie, dedupeKey, ruleCategory, type Entry } from "@/lib/fund-books-model";
 
 const BUCKET = "manager-uploads";
 const MODEL = "google/gemini-2.5-flash";
@@ -85,7 +85,7 @@ export async function uploadStatement(uid: string, fundId: string, f: { fileName
   // Existing bank lines for duplicate detection (Plaid or earlier statements).
   const { data: existing } = await d.from("bank_transactions").select("id, posted_on, amount_cents, direction, name").eq("offering_id", fundId).limit(5000);
   const seen = new Map(((existing ?? []) as any[]).map((t) => {
-    const dir = t.direction ?? (Number(t.amount_cents) < 0 ? "in" : "out");
+    const dir = t.direction === "inflow" || t.direction === "in" ? "in" : t.direction ? "out" : Number(t.amount_cents) >= 0 ? "in" : "out";
     return [dedupeKey(String(t.posted_on), Math.abs(Number(t.amount_cents)), dir, String(t.name ?? "")), String(t.id)];
   }));
   const seenLoose = new Map(((existing ?? []) as any[]).map((t) => [`${t.posted_on}|${Math.abs(Number(t.amount_cents))}`, String(t.id)]));
@@ -146,13 +146,17 @@ export async function applyStatement(uid: string, fundId: string, uploadId: stri
   for (const l of todo) {
     const category = l.confirmed_category ?? l.suggested_category;
     const { data: tx, error } = await d.from("bank_transactions").insert({
-      offering_id: fundId, plaid_transaction_id: `stmt:${l.id}`, posted_on: l.posted_on, amount_cents: l.direction === "in" ? -Number(l.amount_cents) : Number(l.amount_cents),
+      offering_id: fundId, plaid_transaction_id: `stmt:${l.id}`, posted_on: l.posted_on, amount_cents: l.direction === "in" ? Math.abs(Number(l.amount_cents)) : -Math.abs(Number(l.amount_cents)), // platform convention: inflow positive
       name: l.description, description: `From statement ${(u as any).file_name}`, direction: l.direction, currency: "USD",
       dedupe_key: dedupeKey(l.posted_on, Number(l.amount_cents), l.direction, l.description), reference: `statement:${uploadId}`,
     }).select("id").single();
     if (error) throw new Error("Couldn't record a bank line.");
     if (l.matched_onboarding_id) await d.from("fund_transaction_tags").upsert({ bank_transaction_id: tx.id, offering_id: fundId, onboarding_id: l.matched_onboarding_id, asset_label: null, tagged_by: uid, updated_at: new Date().toISOString() });
-    if (category !== "Transfer (not income)") {
+    const { data: linkedRows } = await d.from("fund_expense_records").select("id").eq("bank_line_id", l.id).neq("status", "rejected").limit(1);
+    const { data: linkedInv } = await d.from("fund_investment_transactions").select("id").eq("bank_line_id", l.id).neq("status", "rejected").limit(1);
+    const { data: linkedSet } = await d.from("fund_payable_settlements").select("id").eq("bank_line_id", l.id).neq("status", "rejected").limit(1);
+    const alreadyBooked = [...(linkedRows ?? []), ...(linkedInv ?? []), ...(linkedSet ?? [])].length > 0;
+    if (statementLineBooksAction({ category, alreadyBooked }) === "ledger") {
       const e = await d.from("fund_ledger_entries").insert({ offering_id: fundId, entry_date: l.posted_on, description: l.description, category, direction: l.direction, amount_cents: Number(l.amount_cents), bank_transaction_id: tx.id, created_by: uid });
       if (e.error) throw new Error("Couldn't record a books entry.");
     }

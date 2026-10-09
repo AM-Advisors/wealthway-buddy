@@ -94,15 +94,17 @@ export function reopenRequiresReason(from: PeriodStatus, to: PeriodStatus) {
 
 // ------------------------------------------------------------------ journals
 
-export const JOURNAL_STATUSES = ["draft", "reviewed", "approved", "posted", "reversed"] as const;
+export const JOURNAL_STATUSES = ["draft", "reviewed", "approved", "posted", "reversed", "voided"] as const;
 export type JournalStatus = (typeof JOURNAL_STATUSES)[number];
 
 const JOURNAL_TRANSITIONS: Record<JournalStatus, JournalStatus[]> = {
-  draft: ["reviewed"],
-  reviewed: ["approved", "draft"],
+  draft: ["reviewed", "voided"],
+  reviewed: ["approved", "draft", "voided"],
   approved: ["posted", "reviewed"],
   posted: ["reversed"],
   reversed: [],
+  // Voiding retires an unposted draft (kept, with history); posted entries are only ever reversed.
+  voided: [],
 };
 
 export function canTransitionJournal(from: JournalStatus, to: JournalStatus) {
