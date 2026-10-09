@@ -146,7 +146,7 @@ export async function setMapping(userId: string, i: { offeringId: string; purpos
 // --------------------------------------------------------- investments
 export async function prepareInvestment(userId: string, i: PurchaseInput & {
   offeringId: string; newAssetClass: string | null; instrument: string | null; quantity: number | null; unitPriceCents: number | null;
-  evidenceReference: string | null; idempotencyKey: string; bankLineId: string | null; bankTransactionId?: string | null;
+  evidenceReference: string | null; idempotencyKey: string; bankLineId: string | null; bankTransactionId?: string | null | undefined;
 }) {
   const { bookId } = await authorizeFund(userId, i.offeringId);
   const err = purchaseError(i);
@@ -260,7 +260,7 @@ export async function reverseInvestment(userId: string, id: string, reason: stri
 export async function prepareExpense(userId: string, i: {
   offeringId: string; category: string; vendor: string; description: string; invoiceNumber: string | null; invoiceDate: string | null;
   serviceStart: string | null; serviceEnd: string | null; expenseDate: string; amountCents: number; paymentMode: "paid" | "accrued";
-  paidOn: string | null; sourceReference: string; evidenceReference: string | null; bankLineId: string | null; bankTransactionId?: string | null;
+  paidOn: string | null; sourceReference: string; evidenceReference: string | null; bankLineId: string | null; bankTransactionId?: string | null | undefined;
 }) {
   const { bookId } = await authorizeFund(userId, i.offeringId);
   const err = expenseError(i);
@@ -296,7 +296,7 @@ export async function postExpense(userId: string, id: string) {
 /** Pay an accrued expense or an opening liability. Never re-expenses anything. */
 export async function prepareSettlement(userId: string, i: {
   offeringId: string; expenseId: string | null; liabilityPurpose: "accounts_payable" | "accrued_expenses"; openingLiabilityReference: string | null;
-  amountCents: number; paidOn: string; sourceReference: string; idempotencyKey: string; bankLineId: string | null; bankTransactionId?: string | null;
+  amountCents: number; paidOn: string; sourceReference: string; idempotencyKey: string; bankLineId: string | null; bankTransactionId?: string | null | undefined;
 }) {
   const { bookId } = await authorizeFund(userId, i.offeringId);
   if (!i.expenseId && !i.openingLiabilityReference?.trim()) fail("Name the accrued expense or the opening liability being settled.");
