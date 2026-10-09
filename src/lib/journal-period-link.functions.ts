@@ -25,7 +25,7 @@ export const previewPeriodLinks = createServerFn({ method: "GET" })
     const db = await adminOnly(context.userId);
     const { data: rows, error } = await db.rpc("evaluate_journal_period_links", { _period: data.periodId });
     if (error) throw new Error(error.message);
-    return rows as unknown[];
+    return rows as Array<Record<string, string | number | boolean | null>>;
   });
 
 export const preparePeriodLinkBatch = createServerFn({ method: "POST" })
