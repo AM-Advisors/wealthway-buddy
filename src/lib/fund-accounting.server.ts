@@ -37,6 +37,12 @@ async function mappingsFor(bookId: string) {
   return ((data ?? []) as any[]).map((m) => ({ purpose: String(m.purpose), accountId: String(m.account_id) }));
 }
 
+/** Refuse before any record exists when the entry date falls in a sealed period. */
+async function assertOpenPeriod(bookId: string, date: string) {
+  const { data } = await db().from("accounting_periods").select("status").eq("book_id", bookId).lte("period_start", date).gte("period_end", date).maybeSingle();
+  if (data && ["closed", "locked"].includes(String(data.status))) fail("That accounting period is closed. Reopen it with an authorised adjustment first.");
+}
+
 async function draftFrom(userId: string, offeringId: string, bookId: string, lines: Line[], meta: { date: string; memo: string; source: string; table: string; id: string }) {
   const r = resolveLines(lines, await mappingsFor(bookId));
   if (!r.ok) fail(missingMappingMessage(r.missing));
@@ -153,9 +159,14 @@ export async function prepareInvestment(userId: string, i: PurchaseInput & {
   } else {
     const { data: same } = await db().from("portfolio_assets").select("id").eq("offering_id", i.offeringId).ilike("issuer_name", i.newIssuerName!.trim()).ilike("asset_name", i.newAssetName!.trim()).limit(1);
     if ((same ?? []).length) fail("This security is already held - record an additional purchase instead.");
+    // A purchase only creates the holding when posted, so an open purchase of the same security is also a duplicate.
+    const { data: open } = await db().from("fund_investment_transactions").select("id, status").eq("offering_id", i.offeringId).eq("kind", "purchase")
+      .ilike("new_issuer_name", i.newIssuerName!.trim()).ilike("new_asset_name", i.newAssetName!.trim()).in("status", ["prepared", "approved", "posted"]).limit(1);
+    if ((open ?? []).length) fail(`DUPLICATE - REVIEW REQUIRED: a purchase of this security is already ${open[0].status}.`);
   }
   const bank = await assertBankLine(i.offeringId, { lineId: i.bankLineId, txId: i.bankTransactionId }, purchaseCashOutflow(i.principalCents, i.transactionCostCents), "fund_investment_transactions");
   // Fail early on a missing mapping, before any record exists.
+  await assertOpenPeriod(bookId, i.settlementDate ?? i.tradeDate);
   const probe = resolveLines(purchaseLines(i.principalCents, i.transactionCostCents), await mappingsFor(bookId));
   if (!probe.ok) fail(missingMappingMessage(probe.missing));
   const { data, error } = await db().from("fund_investment_transactions").insert({
@@ -259,6 +270,7 @@ export async function prepareExpense(userId: string, i: {
   const { data: dup } = await db().from("fund_expense_records").select("id, status").eq("offering_id", i.offeringId).eq("fingerprint", fingerprint).maybeSingle();
   if (dup) fail(`DUPLICATE - REVIEW REQUIRED: this expense is already recorded (${dup.status}).`);
   const bank = i.paymentMode === "paid" ? await assertBankLine(i.offeringId, { lineId: i.bankLineId, txId: i.bankTransactionId }, -i.amountCents, "fund_expense_records") : { lineId: null, txId: null };
+  await assertOpenPeriod(bookId, i.paidOn ?? i.expenseDate);
   const lines = expenseLines(i.category as ExpenseCategory, i.amountCents, i.paymentMode);
   const probe = resolveLines(lines, await mappingsFor(bookId));
   if (!probe.ok) fail(missingMappingMessage(probe.missing));
@@ -311,6 +323,7 @@ export async function prepareSettlement(userId: string, i: {
   const err = settlementError({ amountCents: i.amountCents, outstandingCents: outstanding });
   if (err) fail(err);
   const bank = await assertBankLine(i.offeringId, { lineId: i.bankLineId, txId: i.bankTransactionId }, -i.amountCents, "fund_payable_settlements");
+  await assertOpenPeriod(bookId, i.paidOn);
   const lines = settlementLines(i.liabilityPurpose, i.amountCents);
   const probe = resolveLines(lines, await mappingsFor(bookId));
   if (!probe.ok) fail(missingMappingMessage(probe.missing));
