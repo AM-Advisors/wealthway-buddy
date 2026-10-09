@@ -52,7 +52,6 @@
         "docx": "^9.8.1",
         "embla-carousel-react": "^8.6.0",
         "fflate": "^0.8.3",
-        "html-to-image": "1.11.11",
         "input-otp": "^1.4.2",
         "jspdf": "^4.2.1",
         "lucide-react": "^0.575.0",
@@ -958,8 +957,6 @@
     "hash.js": ["hash.js@1.1.7", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/hash.js/-/hash.js-1.1.7.tgz", { "dependencies": { "inherits": "^2.0.3", "minimalistic-assert": "^1.0.1" } }, "sha512-taOaskGt4z4SOANNseOviYDvjEJinIkRgmp7LbKP2YTTmVxWBl87s/uzK9r+44BclBSp2X7K1hqeNfz9JbBeXA=="],
 
     "hookable": ["hookable@6.1.1", "", {}, "sha512-U9LYDy1CwhMCnprUfeAZWZGByVbhd54hwepegYTK7Pi5NvqEj63ifz5z+xukznehT7i6NIZRu89Ay1AZmRsLEQ=="],
-
-    "html-to-image": ["html-to-image@1.11.11", "https://europe-west4-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/html-to-image/-/html-to-image-1.11.11.tgz", {}, "sha512-9gux8QhvjRO/erSnDPv28noDZcPZmYE7e1vFsBLKLlRlKDSqNJYebj6Qz1TGd5lsRV+X+xYyjCKjuZdABinWjA=="],
 
     "html-to-text": ["html-to-text@9.0.5", "https://europe-west4-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/html-to-text/-/html-to-text-9.0.5.tgz", { "dependencies": { "@selderee/plugin-htmlparser2": "^0.11.0", "deepmerge": "^4.3.1", "dom-serializer": "^2.0.0", "htmlparser2": "^8.0.2", "selderee": "^0.11.0" } }, "sha512-qY60FjREgVZL03vJU6IfMV4GDjGBIoOyvuFdpBDIX9yTlDw0TjxVBQp+P8NvpdIXNJvfWBTNul7fsAQJq2FNpg=="],
 
