@@ -111,7 +111,21 @@ export function PostBrandLayout({ title, body, onAdd }: { title: string; body: s
     for (let i = 0; i < nodes.length; i++) {
       const page = nodes[i]?.firstElementChild;
       if (!(page instanceof HTMLElement)) throw new Error("The post preview is not ready. Please try again.");
-      const url = await toPng(page, { pixelRatio: 1, cacheBust: true, preferredFontFormat: "woff2", width: w, height: h, style: { transform: "none" } });
+      // Freeze resolved colors/fonts inline so the export never depends on theme variables or stylesheets.
+      const els = [page, ...Array.from(page.querySelectorAll<HTMLElement>("*"))];
+      const saved = els.map((el) => el.style.cssText);
+      els.forEach((el) => {
+        const cs = getComputedStyle(el);
+        for (const prop of ["color", "background-color", "background-image", "border-top-color", "border-right-color", "border-bottom-color", "border-left-color", "font-family", "font-weight"]) {
+          el.style.setProperty(prop, cs.getPropertyValue(prop));
+        }
+      });
+      let url: string;
+      try {
+        url = await toPng(page, { pixelRatio: 1, cacheBust: true, width: w, height: h, style: { transform: "none" } });
+      } finally {
+        els.forEach((el, k) => { el.style.cssText = saved[k] ?? ""; });
+      }
       const base64 = url.split(",")[1];
       if (!base64) throw new Error("The post image could not be saved. Please try again.");
       const r = await upload({ data: { fileName: carousel ? `carousel-${i + 1}.png` : "brand-layout.png", contentType: "image/png", base64 } });
