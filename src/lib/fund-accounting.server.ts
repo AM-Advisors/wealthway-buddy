@@ -12,7 +12,7 @@ import { computeFeeRun, type StructuredFeeTerm } from "@/lib/economic-terms";
 import {
   ALL_PURPOSES, PURPOSE_ACCOUNT_TYPE, decisionError, expenseError, expenseFingerprint, expenseLines,
   feeTermDecisionError, missingMappingMessage, postError, purchaseCashOutflow, purchaseError, purchaseLines,
-  resolveLines, settlementError, signedBankCents, signedBankTxCents, bankLinkError, newAccountError, settlementLines, type ExpenseCategory, type Line, type PurchaseInput,
+  resolveLines, feeAccrualLines, feeAccrualError, settlementError, signedBankCents, signedBankTxCents, bankLinkError, newAccountError, settlementLines, type ExpenseCategory, type Line, type PurchaseInput,
 } from "@/lib/fund-accounting-model";
 
 const db = () => supabaseAdmin as any;
@@ -464,4 +464,24 @@ export async function linkClearingBankMovement(userId: string, i: { table: (type
   await db().from(i.table).update({ bank_line_id: bank.lineId, bank_transaction_id: bank.txId }).eq("id", i.id);
   await event(r.offering_id, i.table, i.id, "bank_cleared", userId, null, bank);
   return bank;
+}
+
+/** Prepare the period's management-fee accrual from approved terms only (draft; reviewed/approved/posted via the journal workflow). */
+export async function prepareFeeAccrual(userId: string, i: { offeringId: string; start: string; end: string; benchmarkCents: number }) {
+  const { bookId } = await authorizeFund(userId, i.offeringId);
+  const memo = `Management fee accrual ${i.start}..${i.end}`;
+  const { data: prior } = await db().from("journal_entries").select("id, status").eq("book_id", bookId).eq("source", "fee_accrual").eq("memo", memo).not("status", "in", "(voided,reversed)");
+  const pv: any = await feePreview(userId, i.offeringId, { start: i.start, end: i.end });
+  const err = feeAccrualError({ blocked: !!pv.blocked, engineCents: Number(pv.totalNetCents), benchmarkCents: i.benchmarkCents, alreadyAccrued: (prior ?? []).length > 0 });
+  if (err) fail(err);
+  await assertOpenPeriod(bookId, i.end);
+  const r = resolveLines(feeAccrualLines(pv.totalNetCents), await mappingsFor(bookId));
+  if (!r.ok) fail(missingMappingMessage(r.missing));
+  const entry: any = await draftJournalEntry(userId, { bookId, entryDate: i.end, memo, source: "fee_accrual", lines: r.lines.map((l) => ({ ...l, offeringId: i.offeringId })) });
+  await event(i.offeringId, "journal_entries", String(entry.id), "fee_accrual_prepared", userId, null, {
+    period: { start: i.start, end: i.end }, totalNetCents: pv.totalNetCents, benchmarkCents: i.benchmarkCents,
+    lines: pv.lines.map((l: any) => ({ positionId: l.positionId, name: l.name, appliedLevel: l.appliedLevel, rateBps: l.effectiveRateBps, termId: l.termId ?? null, netFeeCents: l.netFeeCents })),
+    excludedTerms: pv.terms.filter((t: any) => t.status !== "approved").map((t: any) => ({ id: t.id, status: t.status, rateBps: t.rateBps })),
+  });
+  return { entryId: String(entry.id), totalNetCents: pv.totalNetCents, lines: pv.lines };
 }

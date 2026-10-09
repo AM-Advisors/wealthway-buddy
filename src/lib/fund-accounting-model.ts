@@ -19,11 +19,12 @@ export const EXPENSE_CATEGORIES = [
 export type ExpenseCategory = (typeof EXPENSE_CATEGORIES)[number]["key"];
 export const isExpenseCategory = (c: string): c is ExpenseCategory => EXPENSE_CATEGORIES.some((e) => e.key === c);
 
-export const CORE_PURPOSES = ["cash", "investment_cost", "accounts_payable", "accrued_expenses"] as const;
+export const CORE_PURPOSES = ["cash", "investment_cost", "accounts_payable", "accrued_expenses", "management_fee_expense", "management_fee_payable"] as const;
 export type MappingPurpose = (typeof CORE_PURPOSES)[number] | `expense:${ExpenseCategory}`;
 export const ALL_PURPOSES: MappingPurpose[] = [...CORE_PURPOSES, ...EXPENSE_CATEGORIES.map((c) => `expense:${c.key}` as const)];
 export const PURPOSE_ACCOUNT_TYPE: Record<string, "asset" | "liability" | "expense"> = {
   cash: "asset", investment_cost: "asset", accounts_payable: "liability", accrued_expenses: "liability",
+  management_fee_expense: "expense", management_fee_payable: "liability",
   ...Object.fromEntries(EXPENSE_CATEGORIES.map((c) => [`expense:${c.key}`, "expense"])),
 };
 
@@ -168,5 +169,19 @@ export function newAccountError(i: { code: string; name: string; accountType: st
   const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
   if (existing.some((a) => a.code === i.code)) return "DUPLICATE - that account code already exists.";
   if (existing.some((a) => norm(a.name) === norm(i.name))) return "DUPLICATE - an account with that name already exists.";
+  return null;
+}
+
+// ------------------------------------------------------------ fee accrual
+/** Accrue = Dr management fee expense / Cr management fee payable. Never touches cash. */
+export function feeAccrualLines(totalCents: number): Line[] {
+  return [{ purpose: "management_fee_expense", debitCents: totalCents }, { purpose: "management_fee_payable", creditCents: totalCents }];
+}
+/** The engine result must equal the preparer's independently stated benchmark, to the cent. */
+export function feeAccrualError(i: { blocked: boolean; engineCents: number; benchmarkCents: number; alreadyAccrued: boolean }): string | null {
+  if (i.alreadyAccrued) return "DUPLICATE - this period's management fee is already accrued.";
+  if (i.blocked) return "The fee engine is blocked for this period - resolve the fee-term exception first.";
+  if (!Number.isInteger(i.benchmarkCents) || i.benchmarkCents <= 0) return "State the independently calculated benchmark.";
+  if (i.engineCents !== i.benchmarkCents) return `FEE MISMATCH - engine ${i.engineCents} vs benchmark ${i.benchmarkCents} cents; stop and review.`;
   return null;
 }
