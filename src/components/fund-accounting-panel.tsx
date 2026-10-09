@@ -161,7 +161,7 @@ function Expenses({ offeringId, d }: { offeringId: string; d: any }) {
       {d.expenses.map((r: any) => (
         <Card key={r.id}><CardContent className="space-y-2 p-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="font-medium">{r.vendor} · {EXPENSE_CATEGORIES.find((c) => c.key === r.category)?.label ?? r.category} · {money(r.amount_cents)} · {r.payment_mode}</p>
+            <p className="font-medium">{r.vendor_status === "unknown" ? `Vendor unknown (source: ${r.vendor})` : r.vendor} · {EXPENSE_CATEGORIES.find((c) => c.key === r.category)?.label ?? r.category} · {money(r.amount_cents)} · {r.payment_mode}</p>
             <Badge variant="outline">{r.status}</Badge>
           </div>
           <p className="text-sm text-muted-foreground">{r.description}{r.invoice_number ? ` · Invoice ${r.invoice_number}` : ""} · {r.expense_date}{r.paid_on ? ` · Paid ${r.paid_on}` : ""}</p>
