@@ -8,3 +8,6 @@
 - [x] Sidebar navigation
 - [x] Tests, AGENTS.md, manual QA checklist, report
 - Deferred (state in report): request upload → Fund Documents linking, staff alerts delivery, saved views persistence, default landing
+
+## Legacy archive S3 connection
+- [ ] Investigate why the dedicated exporter S3 connection fails validation (prefix-scoped IAM policy)
