@@ -386,6 +386,7 @@ import { Route as AuthenticatedOpsFundsFundIdRouteImport } from './routes/_authe
 import { Route as AuthenticatedOpsInvestorsIndexRouteImport } from './routes/_authenticated/ops.investors.index'
 import { Route as AuthenticatedOpsInvestorsInvestorIdRouteImport } from './routes/_authenticated/ops.investors.$investorId'
 import { Route as AuthenticatedOpsPeopleTestDemoRouteImport } from './routes/_authenticated/ops.people_.test-demo'
+import { Route as AuthenticatedOpsPeriodLinksBatchIdRouteImport } from './routes/_authenticated/ops.period-links.$batchId'
 import { Route as AuthenticatedOpsSyntheticStatementsFundIdRouteImport } from './routes/_authenticated/ops.synthetic-statements.$fundId'
 import { Route as AuthenticatedProfessionalActingDelegationIdRouteImport } from './routes/_authenticated/professional.acting.$delegationId'
 import { Route as AuthenticatedSalesDocumentsIdRouteImport } from './routes/_authenticated/sales_.documents_.$id'
@@ -2585,6 +2586,12 @@ const AuthenticatedOpsPeopleTestDemoRoute =
     path: '/ops/people/test-demo',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOpsPeriodLinksBatchIdRoute =
+  AuthenticatedOpsPeriodLinksBatchIdRouteImport.update({
+    id: '/ops/period-links/$batchId',
+    path: '/ops/period-links/$batchId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOpsSyntheticStatementsFundIdRoute =
   AuthenticatedOpsSyntheticStatementsFundIdRouteImport.update({
     id: '/ops/synthetic-statements/$fundId',
@@ -3217,6 +3224,7 @@ export interface FileRoutesByFullPath {
   '/ops/funds/$fundId': typeof AuthenticatedOpsFundsFundIdRoute
   '/ops/investors/$investorId': typeof AuthenticatedOpsInvestorsInvestorIdRoute
   '/ops/people/test-demo': typeof AuthenticatedOpsPeopleTestDemoRoute
+  '/ops/period-links/$batchId': typeof AuthenticatedOpsPeriodLinksBatchIdRoute
   '/ops/synthetic-statements/$fundId': typeof AuthenticatedOpsSyntheticStatementsFundIdRoute
   '/professional/acting/$delegationId': typeof AuthenticatedProfessionalActingDelegationIdRoute
   '/sales/documents/$id': typeof AuthenticatedSalesDocumentsIdRoute
@@ -3633,6 +3641,7 @@ export interface FileRoutesByTo {
   '/ops/funds/$fundId': typeof AuthenticatedOpsFundsFundIdRoute
   '/ops/investors/$investorId': typeof AuthenticatedOpsInvestorsInvestorIdRoute
   '/ops/people/test-demo': typeof AuthenticatedOpsPeopleTestDemoRoute
+  '/ops/period-links/$batchId': typeof AuthenticatedOpsPeriodLinksBatchIdRoute
   '/ops/synthetic-statements/$fundId': typeof AuthenticatedOpsSyntheticStatementsFundIdRoute
   '/professional/acting/$delegationId': typeof AuthenticatedProfessionalActingDelegationIdRoute
   '/sales/documents/$id': typeof AuthenticatedSalesDocumentsIdRoute
@@ -4059,6 +4068,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/funds/$fundId': typeof AuthenticatedOpsFundsFundIdRoute
   '/_authenticated/ops/investors/$investorId': typeof AuthenticatedOpsInvestorsInvestorIdRoute
   '/_authenticated/ops/people_/test-demo': typeof AuthenticatedOpsPeopleTestDemoRoute
+  '/_authenticated/ops/period-links/$batchId': typeof AuthenticatedOpsPeriodLinksBatchIdRoute
   '/_authenticated/ops/synthetic-statements/$fundId': typeof AuthenticatedOpsSyntheticStatementsFundIdRoute
   '/_authenticated/professional/acting/$delegationId': typeof AuthenticatedProfessionalActingDelegationIdRoute
   '/_authenticated/sales_/documents_/$id': typeof AuthenticatedSalesDocumentsIdRoute
@@ -4485,6 +4495,7 @@ export interface FileRouteTypes {
     | '/ops/funds/$fundId'
     | '/ops/investors/$investorId'
     | '/ops/people/test-demo'
+    | '/ops/period-links/$batchId'
     | '/ops/synthetic-statements/$fundId'
     | '/professional/acting/$delegationId'
     | '/sales/documents/$id'
@@ -4901,6 +4912,7 @@ export interface FileRouteTypes {
     | '/ops/funds/$fundId'
     | '/ops/investors/$investorId'
     | '/ops/people/test-demo'
+    | '/ops/period-links/$batchId'
     | '/ops/synthetic-statements/$fundId'
     | '/professional/acting/$delegationId'
     | '/sales/documents/$id'
@@ -5326,6 +5338,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/funds/$fundId'
     | '/_authenticated/ops/investors/$investorId'
     | '/_authenticated/ops/people_/test-demo'
+    | '/_authenticated/ops/period-links/$batchId'
     | '/_authenticated/ops/synthetic-statements/$fundId'
     | '/_authenticated/professional/acting/$delegationId'
     | '/_authenticated/sales_/documents_/$id'
@@ -8098,6 +8111,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsPeopleTestDemoRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ops/period-links/$batchId': {
+      id: '/_authenticated/ops/period-links/$batchId'
+      path: '/ops/period-links/$batchId'
+      fullPath: '/ops/period-links/$batchId'
+      preLoaderRoute: typeof AuthenticatedOpsPeriodLinksBatchIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ops/synthetic-statements/$fundId': {
       id: '/_authenticated/ops/synthetic-statements/$fundId'
       path: '/ops/synthetic-statements/$fundId'
@@ -8954,6 +8974,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsFundsFundIdRoute: typeof AuthenticatedOpsFundsFundIdRoute
   AuthenticatedOpsInvestorsInvestorIdRoute: typeof AuthenticatedOpsInvestorsInvestorIdRoute
   AuthenticatedOpsPeopleTestDemoRoute: typeof AuthenticatedOpsPeopleTestDemoRoute
+  AuthenticatedOpsPeriodLinksBatchIdRoute: typeof AuthenticatedOpsPeriodLinksBatchIdRoute
   AuthenticatedOpsSyntheticStatementsFundIdRoute: typeof AuthenticatedOpsSyntheticStatementsFundIdRoute
   AuthenticatedSalesDocumentsIdRoute: typeof AuthenticatedSalesDocumentsIdRoute
   AuthenticatedSalesQuotesIdRoute: typeof AuthenticatedSalesQuotesIdRoute
@@ -9294,6 +9315,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsInvestorsInvestorIdRoute:
     AuthenticatedOpsInvestorsInvestorIdRoute,
   AuthenticatedOpsPeopleTestDemoRoute: AuthenticatedOpsPeopleTestDemoRoute,
+  AuthenticatedOpsPeriodLinksBatchIdRoute:
+    AuthenticatedOpsPeriodLinksBatchIdRoute,
   AuthenticatedOpsSyntheticStatementsFundIdRoute:
     AuthenticatedOpsSyntheticStatementsFundIdRoute,
   AuthenticatedSalesDocumentsIdRoute: AuthenticatedSalesDocumentsIdRoute,

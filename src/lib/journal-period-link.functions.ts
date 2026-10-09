@@ -63,3 +63,27 @@ export const applyPeriodLinkBatch = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return res as { applied: number; idempotent: boolean };
   });
+
+export const getPeriodLinkBatch = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ batchId: id }).parse(d))
+  .handler(async ({ data, context }) => {
+    const db = await adminOnly(context.userId);
+    const { data: b, error } = await db
+      .from("journal_period_link_batches")
+      .select("id, status, reason, source, proposal_hash, entry_count, prepared_by, prepared_at, reviewed_by, reviewed_at, review_note, applied_by, applied_at, proposal, excluded, accounting_periods(label, period_start, period_end, status)")
+      .eq("id", data.batchId)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!b) throw new Error("Batch not found.");
+    return JSON.parse(JSON.stringify({ ...b, me: context.userId })) as PeriodLinkBatch;
+  });
+
+export type PeriodLinkBatch = {
+  id: string; status: string; reason: string; source: string; proposal_hash: string; entry_count: number;
+  prepared_by: string; prepared_at: string; reviewed_by: string | null; reviewed_at: string | null; review_note: string | null;
+  applied_by: string | null; applied_at: string | null; me: string;
+  proposal: Array<{ entry_id: string; entry_no: number; entry_date: string; debit_cents: number; credit_cents: number }>;
+  excluded: Array<{ entry_id: string; entry_no: number; entry_date: string; status: string; reason: string }>;
+  accounting_periods: { label: string; period_start: string; period_end: string; status: string } | null;
+};
