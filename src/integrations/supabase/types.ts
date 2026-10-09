@@ -27426,6 +27426,128 @@ export type Database = {
           },
         ]
       }
+      journal_period_link_batches: {
+        Row: {
+          applied_at: string | null
+          applied_by: string | null
+          book_id: string
+          created_at: string
+          entry_count: number
+          excluded: Json
+          id: string
+          period_id: string
+          prepared_at: string
+          prepared_by: string
+          proposal: Json
+          proposal_hash: string
+          reason: string
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          source: string
+          status: string
+        }
+        Insert: {
+          applied_at?: string | null
+          applied_by?: string | null
+          book_id: string
+          created_at?: string
+          entry_count: number
+          excluded?: Json
+          id?: string
+          period_id: string
+          prepared_at?: string
+          prepared_by: string
+          proposal: Json
+          proposal_hash: string
+          reason: string
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source: string
+          status?: string
+        }
+        Update: {
+          applied_at?: string | null
+          applied_by?: string | null
+          book_id?: string
+          created_at?: string
+          entry_count?: number
+          excluded?: Json
+          id?: string
+          period_id?: string
+          prepared_at?: string
+          prepared_by?: string
+          proposal?: Json
+          proposal_hash?: string
+          reason?: string
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journal_period_link_batches_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_period_link_batches_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "accounting_periods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      journal_period_link_events: {
+        Row: {
+          actor_user_id: string
+          batch_id: string
+          created_at: string
+          detail: Json
+          entry_id: string | null
+          event: string
+          from_period_id: string | null
+          id: string
+          to_period_id: string | null
+        }
+        Insert: {
+          actor_user_id: string
+          batch_id: string
+          created_at?: string
+          detail?: Json
+          entry_id?: string | null
+          event: string
+          from_period_id?: string | null
+          id?: string
+          to_period_id?: string | null
+        }
+        Update: {
+          actor_user_id?: string
+          batch_id?: string
+          created_at?: string
+          detail?: Json
+          entry_id?: string | null
+          event?: string
+          from_period_id?: string | null
+          id?: string
+          to_period_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journal_period_link_events_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "journal_period_link_batches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       k1_forms: {
         Row: {
           amendment_reason: string | null
@@ -44777,6 +44899,10 @@ export type Database = {
         Args: { _key: string; _token: string }
         Returns: boolean
       }
+      apply_journal_period_link_batch: {
+        Args: { _actor: string; _batch: string; _expected_hash: string }
+        Returns: Json
+      }
       assert_demo_offering: { Args: { _offering: string }; Returns: undefined }
       can_manage_diligence: { Args: { _offering_id: string }; Returns: boolean }
       can_prepare_investor: { Args: { _offering_id: string }; Returns: boolean }
@@ -44897,6 +45023,28 @@ export type Database = {
       diligence_doc_allowed: {
         Args: { _document_id: string }
         Returns: boolean
+      }
+      evaluate_journal_period_links: {
+        Args: { _period: string }
+        Returns: {
+          approved_by: string
+          credit_cents: number
+          current_period: string
+          debit_cents: number
+          eligible: boolean
+          entry_date: string
+          entry_id: string
+          entry_no: number
+          posted_at: string
+          posted_by: string
+          prepared_by: string
+          reason: string
+          reviewed_by: string
+          source: string
+          source_id: string
+          source_table: string
+          status: string
+        }[]
       }
       fund_condition_context: { Args: { p_offering_id: string }; Returns: Json }
       fund_deletion_impact: { Args: { p_offering_id: string }; Returns: Json }
@@ -45051,6 +45199,15 @@ export type Database = {
         }
         Returns: Json
       }
+      prepare_journal_period_link_batch: {
+        Args: {
+          _actor: string
+          _period: string
+          _reason: string
+          _source: string
+        }
+        Returns: string
+      }
       purge_security_events: { Args: never; Returns: number }
       read_offering_rp_identifier: {
         Args: { _offering: string }
@@ -45111,6 +45268,15 @@ export type Database = {
           p_offering_id: string
           p_version: number
           p_wire_document_id: string
+        }
+        Returns: undefined
+      }
+      review_journal_period_link_batch: {
+        Args: {
+          _actor: string
+          _batch: string
+          _decision: string
+          _note: string
         }
         Returns: undefined
       }
