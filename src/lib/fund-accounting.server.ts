@@ -12,7 +12,7 @@ import { computeFeeRun, type StructuredFeeTerm } from "@/lib/economic-terms";
 import {
   ALL_PURPOSES, PURPOSE_ACCOUNT_TYPE, decisionError, expenseError, expenseFingerprint, expenseLines,
   feeTermDecisionError, missingMappingMessage, postError, purchaseCashOutflow, purchaseError, purchaseLines,
-  resolveLines, settlementError, settlementLines, type ExpenseCategory, type Line, type PurchaseInput,
+  resolveLines, settlementError, signedBankCents, signedBankTxCents, bankLinkError, newAccountError, settlementLines, type ExpenseCategory, type Line, type PurchaseInput,
 } from "@/lib/fund-accounting-model";
 
 const db = () => supabaseAdmin as any;
@@ -47,15 +47,71 @@ async function draftFrom(userId: string, offeringId: string, bookId: string, lin
   return String((entry as any).id);
 }
 
-async function assertBankLine(offeringId: string, lineId: string | null | undefined, cashCents: number, table: string) {
-  if (!lineId) return;
-  const { data: line } = await db().from("bank_statement_lines").select("id, offering_id, amount_cents").eq("id", lineId).maybeSingle();
-  if (!line || line.offering_id !== offeringId) fail("That bank line does not belong to this fund.");
-  if (Number(line.amount_cents) !== cashCents) fail("The bank line amount does not match the cash movement.");
-  for (const t of ["fund_investment_transactions", "fund_expense_records", "fund_payable_settlements"]) {
-    const { data } = await db().from(t).select("id").eq("bank_line_id", lineId).neq("status", "rejected").limit(1);
-    if ((data ?? []).length) fail(`That bank line is already linked${t === table ? "" : " to another record"}.`);
+export type BankLink = { lineId?: string | null; txId?: string | null };
+const LINK_TABLES = ["fund_investment_transactions", "fund_expense_records", "fund_payable_settlements"] as const;
+
+/** Resolve a statement line and/or bank transaction to one movement, then refuse mismatches and second links. */
+async function assertBankLine(offeringId: string, link: BankLink | string | null | undefined, cashCents: number, _table: string) {
+  const l: BankLink = typeof link === "string" ? { lineId: link } : link ?? {};
+  let { lineId, txId } = l;
+  if (!lineId && !txId) return { lineId: null, txId: null };
+  let bankSigned: number | null = null;
+  if (lineId) {
+    const { data: line } = await db().from("bank_statement_lines").select("id, offering_id, amount_cents, direction, applied_tx_id").eq("id", lineId).maybeSingle();
+    if (!line || line.offering_id !== offeringId) fail("That bank line does not belong to this fund.");
+    bankSigned = signedBankCents(line);
+    if (!txId && line.applied_tx_id) txId = String(line.applied_tx_id);
   }
+  if (txId) {
+    const { data: tx } = await db().from("bank_transactions").select("id, offering_id, amount_cents, plaid_transaction_id").eq("id", txId).maybeSingle();
+    if (!tx || tx.offering_id !== offeringId) fail("That bank transaction does not belong to this fund.");
+    const s = signedBankTxCents(tx);
+    if (bankSigned != null && s !== bankSigned) fail("The bank line and bank transaction disagree.");
+    bankSigned = s;
+    const m = /^stmt:(.+)$/.exec(String(tx.plaid_transaction_id ?? ""));
+    if (!lineId && m) lineId = m[1];
+  }
+  let linked: string | null = null;
+  for (const t of LINK_TABLES) {
+    for (const [col, v] of [["bank_line_id", lineId], ["bank_transaction_id", txId]] as const) {
+      if (!v || linked) continue;
+      const { data } = await db().from(t).select("id").eq(col, v).neq("status", "rejected").limit(1);
+      if ((data ?? []).length) linked = t.replace(/^fund_/, "").replace(/_/g, " ");
+    }
+  }
+  const err = bankLinkError({ cashCents, bankSignedCents: bankSigned!, alreadyLinkedTo: linked });
+  if (err) fail(err);
+  return { lineId: lineId ?? null, txId: txId ?? null };
+}
+
+/** Used by bank reconciliation: the accounting record (if any) that already carries this movement's cash. */
+export async function linkedAccountingRecord(bankTransactionId: string) {
+  const { data: tx } = await db().from("bank_transactions").select("plaid_transaction_id").eq("id", bankTransactionId).maybeSingle();
+  const lineId = /^stmt:(.+)$/.exec(String(tx?.plaid_transaction_id ?? ""))?.[1] ?? null;
+  for (const t of LINK_TABLES) {
+    let q = db().from(t).select("id, status, journal_entry_id").neq("status", "rejected");
+    q = lineId ? q.or(`bank_transaction_id.eq.${bankTransactionId},bank_line_id.eq.${lineId}`) : q.eq("bank_transaction_id", bankTransactionId);
+    const { data } = await q.limit(1);
+    const r = (data ?? [])[0];
+    if (r) return { table: t, id: String(r.id), status: String(r.status), journalEntryId: r.journal_entry_id ? String(r.journal_entry_id) : null };
+  }
+  return null;
+}
+
+/** Add a missing expense account (no opening balance) - duplicates and non-expense types refused. */
+export async function addExpenseAccount(userId: string, i: { offeringId: string; code: string; name: string; subtype: string; parentCode: string | null; reason: string }) {
+  const { bookId } = await authorizeFund(userId, i.offeringId);
+  if (!i.reason.trim()) fail("A reason is required.");
+  const { data: accts } = await db().from("chart_of_accounts").select("id, code, name").eq("book_id", bookId);
+  const existing = (accts ?? []) as any[];
+  const err = newAccountError({ code: i.code, name: i.name, accountType: "expense", parentCode: i.parentCode }, existing);
+  if (err) fail(err);
+  const parent = i.parentCode ? existing.find((a) => a.code === i.parentCode) : null;
+  if (i.parentCode && !parent) fail("Parent account not found.");
+  const { data, error } = await db().from("chart_of_accounts").insert({ book_id: bookId, code: i.code, name: i.name, account_type: "expense", subtype: i.subtype, normal_balance: "debit", parent_account_id: parent?.id ?? null }).select("id").single();
+  if (error) fail(error.code === "23505" ? "DUPLICATE - that account code already exists." : error.message);
+  await event(i.offeringId, "chart_of_accounts", data.id, "account_added", userId, i.reason, { code: i.code, name: i.name, parentCode: i.parentCode });
+  return { id: String(data.id) };
 }
 
 // ------------------------------------------------------------ mappings
