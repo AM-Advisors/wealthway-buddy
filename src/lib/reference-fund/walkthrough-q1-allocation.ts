@@ -35,6 +35,7 @@ const RECEIPTS: [string, string, number][] = [
 export function walkthroughQ1AllocationInput(opts: { sourceOnlyApproved: boolean }): SyntheticAllocationInput {
   const participants: SyntheticParticipant[] = WALKTHROUGH_INVESTORS.map((inv) => {
     const p = P[inv.key];
+    if (!p) throw new Error(`Walkthrough position missing for ${inv.key}`);
     const so = SOURCE_ONLY.has(p.slug);
     const restrictions: string[] = [];
     if (p.slug === "erik") restrictions.push("AML hold: funding acceptance blocked (economic participation retained)");
