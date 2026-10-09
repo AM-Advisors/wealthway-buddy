@@ -85,11 +85,11 @@ function Page() {
         <CardContent>
           <table className="w-full text-sm">
             <thead><tr className="text-left text-muted-foreground"><th>#</th><th>Date</th><th className="text-right">Debits</th><th className="text-right">Credits</th></tr></thead>
-            <tbody>{(b.proposal as any[]).map((x) => (
+            <tbody>{b.proposal.map((x) => (
               <tr key={x.entry_id} className="border-t"><td>{x.entry_no}</td><td>{x.entry_date}</td><td className="text-right">{usd(x.debit_cents)}</td><td className="text-right">{usd(x.credit_cents)}</td></tr>
             ))}</tbody>
           </table>
-          <p className="mt-3 text-sm text-muted-foreground">Excluded: {(b.excluded as any[]).map((x) => `#${x.entry_no} (${x.reason})`).join("; ")}</p>
+          <p className="mt-3 text-sm text-muted-foreground">Excluded: {b.excluded.map((x) => `#${x.entry_no} (${x.reason})`).join("; ")}</p>
         </CardContent>
       </Card>
     </div>
