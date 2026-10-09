@@ -1,0 +1,10 @@
+import { guard, N } from "./lib";
+const d = await guard();
+const b = (await d.from("ledger_books").select("id").eq("offering_id", N)).data;
+console.log("books", JSON.stringify(b));
+const a = await d.from("chart_of_accounts").select("id,code,name,account_type,subtype,normal_balance,is_active").eq("book_id", b[0].id).order("code");
+console.log("coa", a.error?.message, JSON.stringify(a.data));
+const m = await d.from("fund_account_mappings").select("*").eq("book_id", b[0].id);
+console.log("maps", m.error?.message, JSON.stringify(m.data));
+const je = await d.from("journal_entries").select("id,entry_date,status,source,memo").eq("book_id", b[0].id).order("entry_date");
+console.log("je", je.data?.length, JSON.stringify(je.data?.map((x:any)=>[x.entry_date,x.status,x.source,x.memo?.slice(0,80)])));

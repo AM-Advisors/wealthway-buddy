@@ -12,7 +12,7 @@ import { computeFeeRun, type StructuredFeeTerm } from "@/lib/economic-terms";
 import {
   ALL_PURPOSES, PURPOSE_ACCOUNT_TYPE, decisionError, expenseError, expenseFingerprint, expenseLines,
   feeTermDecisionError, missingMappingMessage, postError, purchaseCashOutflow, purchaseError, purchaseLines,
-  resolveLines, settlementError, settlementLines, type ExpenseCategory, type Line, type PurchaseInput,
+  resolveLines, settlementError, signedBankCents, signedBankTxCents, bankLinkError, newAccountError, settlementLines, type ExpenseCategory, type Line, type PurchaseInput,
 } from "@/lib/fund-accounting-model";
 
 const db = () => supabaseAdmin as any;
@@ -47,15 +47,71 @@ async function draftFrom(userId: string, offeringId: string, bookId: string, lin
   return String((entry as any).id);
 }
 
-async function assertBankLine(offeringId: string, lineId: string | null | undefined, cashCents: number, table: string) {
-  if (!lineId) return;
-  const { data: line } = await db().from("bank_statement_lines").select("id, offering_id, amount_cents").eq("id", lineId).maybeSingle();
-  if (!line || line.offering_id !== offeringId) fail("That bank line does not belong to this fund.");
-  if (Number(line.amount_cents) !== cashCents) fail("The bank line amount does not match the cash movement.");
-  for (const t of ["fund_investment_transactions", "fund_expense_records", "fund_payable_settlements"]) {
-    const { data } = await db().from(t).select("id").eq("bank_line_id", lineId).neq("status", "rejected").limit(1);
-    if ((data ?? []).length) fail(`That bank line is already linked${t === table ? "" : " to another record"}.`);
+export type BankLink = { lineId?: string | null; txId?: string | null };
+const LINK_TABLES = ["fund_investment_transactions", "fund_expense_records", "fund_payable_settlements"] as const;
+
+/** Resolve a statement line and/or bank transaction to one movement, then refuse mismatches and second links. */
+async function assertBankLine(offeringId: string, link: BankLink | string | null | undefined, cashCents: number, _table: string) {
+  const l: BankLink = typeof link === "string" ? { lineId: link } : link ?? {};
+  let { lineId, txId } = l;
+  if (!lineId && !txId) return { lineId: null, txId: null };
+  let bankSigned: number | null = null;
+  if (lineId) {
+    const { data: line } = await db().from("bank_statement_lines").select("id, offering_id, amount_cents, direction, applied_tx_id").eq("id", lineId).maybeSingle();
+    if (!line || line.offering_id !== offeringId) fail("That bank line does not belong to this fund.");
+    bankSigned = signedBankCents(line);
+    if (!txId && line.applied_tx_id) txId = String(line.applied_tx_id);
   }
+  if (txId) {
+    const { data: tx } = await db().from("bank_transactions").select("id, offering_id, amount_cents, plaid_transaction_id").eq("id", txId).maybeSingle();
+    if (!tx || tx.offering_id !== offeringId) fail("That bank transaction does not belong to this fund.");
+    const s = signedBankTxCents(tx);
+    if (bankSigned != null && s !== bankSigned) fail("The bank line and bank transaction disagree.");
+    bankSigned = s;
+    const m = /^stmt:(.+)$/.exec(String(tx.plaid_transaction_id ?? ""));
+    if (!lineId && m) lineId = m[1];
+  }
+  let linked: string | null = null;
+  for (const t of LINK_TABLES) {
+    for (const [col, v] of [["bank_line_id", lineId], ["bank_transaction_id", txId]] as const) {
+      if (!v || linked) continue;
+      const { data } = await db().from(t).select("id").eq(col, v).neq("status", "rejected").limit(1);
+      if ((data ?? []).length) linked = t.replace(/^fund_/, "").replace(/_/g, " ");
+    }
+  }
+  const err = bankLinkError({ cashCents, bankSignedCents: bankSigned!, alreadyLinkedTo: linked });
+  if (err) fail(err);
+  return { lineId: lineId ?? null, txId: txId ?? null };
+}
+
+/** Used by bank reconciliation: the accounting record (if any) that already carries this movement's cash. */
+export async function linkedAccountingRecord(bankTransactionId: string) {
+  const { data: tx } = await db().from("bank_transactions").select("plaid_transaction_id").eq("id", bankTransactionId).maybeSingle();
+  const lineId = /^stmt:(.+)$/.exec(String(tx?.plaid_transaction_id ?? ""))?.[1] ?? null;
+  for (const t of LINK_TABLES) {
+    let q = db().from(t).select("id, status, journal_entry_id").neq("status", "rejected");
+    q = lineId ? q.or(`bank_transaction_id.eq.${bankTransactionId},bank_line_id.eq.${lineId}`) : q.eq("bank_transaction_id", bankTransactionId);
+    const { data } = await q.limit(1);
+    const r = (data ?? [])[0];
+    if (r) return { table: t, id: String(r.id), status: String(r.status), journalEntryId: r.journal_entry_id ? String(r.journal_entry_id) : null };
+  }
+  return null;
+}
+
+/** Add a missing expense account (no opening balance) - duplicates and non-expense types refused. */
+export async function addExpenseAccount(userId: string, i: { offeringId: string; code: string; name: string; subtype: string; parentCode: string | null; reason: string }) {
+  const { bookId } = await authorizeFund(userId, i.offeringId);
+  if (!i.reason.trim()) fail("A reason is required.");
+  const { data: accts } = await db().from("chart_of_accounts").select("id, code, name").eq("book_id", bookId);
+  const existing = (accts ?? []) as any[];
+  const err = newAccountError({ code: i.code, name: i.name, accountType: "expense", parentCode: i.parentCode }, existing);
+  if (err) fail(err);
+  const parent = i.parentCode ? existing.find((a) => a.code === i.parentCode) : null;
+  if (i.parentCode && !parent) fail("Parent account not found.");
+  const { data, error } = await db().from("chart_of_accounts").insert({ book_id: bookId, code: i.code, name: i.name, account_type: "expense", subtype: i.subtype, normal_balance: "debit", parent_account_id: parent?.id ?? null }).select("id").single();
+  if (error) fail(error.code === "23505" ? "DUPLICATE - that account code already exists." : error.message);
+  await event(i.offeringId, "chart_of_accounts", data.id, "account_added", userId, i.reason, { code: i.code, name: i.name, parentCode: i.parentCode });
+  return { id: String(data.id) };
 }
 
 // ------------------------------------------------------------ mappings
@@ -84,7 +140,7 @@ export async function setMapping(userId: string, i: { offeringId: string; purpos
 // --------------------------------------------------------- investments
 export async function prepareInvestment(userId: string, i: PurchaseInput & {
   offeringId: string; newAssetClass: string | null; instrument: string | null; quantity: number | null; unitPriceCents: number | null;
-  evidenceReference: string | null; idempotencyKey: string; bankLineId: string | null;
+  evidenceReference: string | null; idempotencyKey: string; bankLineId: string | null; bankTransactionId?: string | null;
 }) {
   const { bookId } = await authorizeFund(userId, i.offeringId);
   const err = purchaseError(i);
@@ -98,7 +154,7 @@ export async function prepareInvestment(userId: string, i: PurchaseInput & {
     const { data: same } = await db().from("portfolio_assets").select("id").eq("offering_id", i.offeringId).ilike("issuer_name", i.newIssuerName!.trim()).ilike("asset_name", i.newAssetName!.trim()).limit(1);
     if ((same ?? []).length) fail("This security is already held - record an additional purchase instead.");
   }
-  await assertBankLine(i.offeringId, i.bankLineId, purchaseCashOutflow(i.principalCents, i.transactionCostCents), "fund_investment_transactions");
+  const bank = await assertBankLine(i.offeringId, { lineId: i.bankLineId, txId: i.bankTransactionId }, purchaseCashOutflow(i.principalCents, i.transactionCostCents), "fund_investment_transactions");
   // Fail early on a missing mapping, before any record exists.
   const probe = resolveLines(purchaseLines(i.principalCents, i.transactionCostCents), await mappingsFor(bookId));
   if (!probe.ok) fail(missingMappingMessage(probe.missing));
@@ -106,7 +162,7 @@ export async function prepareInvestment(userId: string, i: PurchaseInput & {
     offering_id: i.offeringId, book_id: bookId, kind: i.kind, asset_id: i.assetId, new_issuer_name: i.newIssuerName, new_asset_name: i.newAssetName,
     new_asset_class: i.newAssetClass, instrument: i.instrument, trade_date: i.tradeDate, settlement_date: i.settlementDate, quantity: i.quantity,
     unit_price_cents: i.unitPriceCents, principal_cents: i.principalCents, transaction_cost_cents: i.transactionCostCents,
-    source_reference: i.sourceReference, evidence_reference: i.evidenceReference, idempotency_key: i.idempotencyKey, bank_line_id: i.bankLineId, prepared_by: userId,
+    source_reference: i.sourceReference, evidence_reference: i.evidenceReference, idempotency_key: i.idempotencyKey, bank_line_id: bank.lineId, bank_transaction_id: bank.txId, prepared_by: userId,
   }).select("id").single();
   if (error) fail(error.code === "23505" ? "This transaction was already recorded." : error.message);
   const jid = await draftFrom(userId, i.offeringId, bookId, purchaseLines(i.principalCents, i.transactionCostCents), {
@@ -193,16 +249,16 @@ export async function reverseInvestment(userId: string, id: string, reason: stri
 export async function prepareExpense(userId: string, i: {
   offeringId: string; category: string; vendor: string; description: string; invoiceNumber: string | null; invoiceDate: string | null;
   serviceStart: string | null; serviceEnd: string | null; expenseDate: string; amountCents: number; paymentMode: "paid" | "accrued";
-  paidOn: string | null; sourceReference: string; evidenceReference: string | null; bankLineId: string | null;
+  paidOn: string | null; sourceReference: string; evidenceReference: string | null; bankLineId: string | null; bankTransactionId?: string | null;
 }) {
   const { bookId } = await authorizeFund(userId, i.offeringId);
   const err = expenseError(i);
   if (err) fail(err);
-  if (i.paymentMode === "accrued" && i.bankLineId) fail("An accrued expense has no cash movement.");
+  if (i.paymentMode === "accrued" && (i.bankLineId || i.bankTransactionId)) fail("An accrued expense has no cash movement.");
   const fingerprint = expenseFingerprint(i);
   const { data: dup } = await db().from("fund_expense_records").select("id, status").eq("offering_id", i.offeringId).eq("fingerprint", fingerprint).maybeSingle();
   if (dup) fail(`DUPLICATE - REVIEW REQUIRED: this expense is already recorded (${dup.status}).`);
-  if (i.paymentMode === "paid") await assertBankLine(i.offeringId, i.bankLineId, -i.amountCents, "fund_expense_records");
+  const bank = i.paymentMode === "paid" ? await assertBankLine(i.offeringId, { lineId: i.bankLineId, txId: i.bankTransactionId }, -i.amountCents, "fund_expense_records") : { lineId: null, txId: null };
   const lines = expenseLines(i.category as ExpenseCategory, i.amountCents, i.paymentMode);
   const probe = resolveLines(lines, await mappingsFor(bookId));
   if (!probe.ok) fail(missingMappingMessage(probe.missing));
@@ -210,7 +266,7 @@ export async function prepareExpense(userId: string, i: {
     offering_id: i.offeringId, book_id: bookId, category: i.category, vendor: i.vendor, description: i.description, invoice_number: i.invoiceNumber,
     invoice_date: i.invoiceDate, service_start: i.serviceStart, service_end: i.serviceEnd, expense_date: i.expenseDate, amount_cents: i.amountCents,
     payment_mode: i.paymentMode, paid_on: i.paidOn, source_reference: i.sourceReference, evidence_reference: i.evidenceReference, fingerprint,
-    bank_line_id: i.bankLineId, prepared_by: userId,
+    bank_line_id: bank.lineId, bank_transaction_id: bank.txId, prepared_by: userId,
   }).select("id").single();
   if (error) fail(error.code === "23505" ? "DUPLICATE - REVIEW REQUIRED: this expense is already recorded." : error.message);
   const jid = await draftFrom(userId, i.offeringId, bookId, lines, { date: i.paidOn ?? i.expenseDate, memo: `${i.vendor} - ${i.description}`, source: "expense", table: "fund_expense_records", id: data.id });
@@ -228,7 +284,7 @@ export async function postExpense(userId: string, id: string) {
 /** Pay an accrued expense or an opening liability. Never re-expenses anything. */
 export async function prepareSettlement(userId: string, i: {
   offeringId: string; expenseId: string | null; liabilityPurpose: "accounts_payable" | "accrued_expenses"; openingLiabilityReference: string | null;
-  amountCents: number; paidOn: string; sourceReference: string; idempotencyKey: string; bankLineId: string | null;
+  amountCents: number; paidOn: string; sourceReference: string; idempotencyKey: string; bankLineId: string | null; bankTransactionId?: string | null;
 }) {
   const { bookId } = await authorizeFund(userId, i.offeringId);
   if (!i.expenseId && !i.openingLiabilityReference?.trim()) fail("Name the accrued expense or the opening liability being settled.");
@@ -254,13 +310,13 @@ export async function prepareSettlement(userId: string, i: {
   }
   const err = settlementError({ amountCents: i.amountCents, outstandingCents: outstanding });
   if (err) fail(err);
-  await assertBankLine(i.offeringId, i.bankLineId, -i.amountCents, "fund_payable_settlements");
+  const bank = await assertBankLine(i.offeringId, { lineId: i.bankLineId, txId: i.bankTransactionId }, -i.amountCents, "fund_payable_settlements");
   const lines = settlementLines(i.liabilityPurpose, i.amountCents);
   const probe = resolveLines(lines, await mappingsFor(bookId));
   if (!probe.ok) fail(missingMappingMessage(probe.missing));
   const { data, error } = await db().from("fund_payable_settlements").insert({
     offering_id: i.offeringId, book_id: bookId, expense_id: i.expenseId, liability_purpose: i.liabilityPurpose, opening_liability_reference: i.openingLiabilityReference,
-    amount_cents: i.amountCents, paid_on: i.paidOn, source_reference: i.sourceReference, idempotency_key: i.idempotencyKey, bank_line_id: i.bankLineId, prepared_by: userId,
+    amount_cents: i.amountCents, paid_on: i.paidOn, source_reference: i.sourceReference, idempotency_key: i.idempotencyKey, bank_line_id: bank.lineId, bank_transaction_id: bank.txId, prepared_by: userId,
   }).select("id").single();
   if (error) fail(error.message);
   const jid = await draftFrom(userId, i.offeringId, bookId, lines, { date: i.paidOn, memo: `Payable settlement - ${i.sourceReference}`, source: "payment", table: "fund_payable_settlements", id: data.id });

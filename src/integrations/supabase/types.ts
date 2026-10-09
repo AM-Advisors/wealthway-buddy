@@ -19112,6 +19112,7 @@ export type Database = {
         Row: {
           amount_cents: number
           bank_line_id: string | null
+          bank_transaction_id: string | null
           book_id: string
           category: string
           created_at: string
@@ -19141,6 +19142,7 @@ export type Database = {
         Insert: {
           amount_cents: number
           bank_line_id?: string | null
+          bank_transaction_id?: string | null
           book_id: string
           category: string
           created_at?: string
@@ -19170,6 +19172,7 @@ export type Database = {
         Update: {
           amount_cents?: number
           bank_line_id?: string | null
+          bank_transaction_id?: string | null
           book_id?: string
           category?: string
           created_at?: string
@@ -19202,6 +19205,13 @@ export type Database = {
             columns: ["bank_line_id"]
             isOneToOne: false
             referencedRelation: "bank_statement_lines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fund_expense_records_bank_transaction_id_fkey"
+            columns: ["bank_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "bank_transactions"
             referencedColumns: ["id"]
           },
           {
@@ -19545,6 +19555,7 @@ export type Database = {
         Row: {
           asset_id: string | null
           bank_line_id: string | null
+          bank_transaction_id: string | null
           book_id: string
           created_at: string
           decided_at: string | null
@@ -19577,6 +19588,7 @@ export type Database = {
         Insert: {
           asset_id?: string | null
           bank_line_id?: string | null
+          bank_transaction_id?: string | null
           book_id: string
           created_at?: string
           decided_at?: string | null
@@ -19609,6 +19621,7 @@ export type Database = {
         Update: {
           asset_id?: string | null
           bank_line_id?: string | null
+          bank_transaction_id?: string | null
           book_id?: string
           created_at?: string
           decided_at?: string | null
@@ -19651,6 +19664,13 @@ export type Database = {
             columns: ["bank_line_id"]
             isOneToOne: false
             referencedRelation: "bank_statement_lines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fund_investment_transactions_bank_transaction_id_fkey"
+            columns: ["bank_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "bank_transactions"
             referencedColumns: ["id"]
           },
           {
@@ -20418,6 +20438,7 @@ export type Database = {
         Row: {
           amount_cents: number
           bank_line_id: string | null
+          bank_transaction_id: string | null
           book_id: string
           created_at: string
           decided_at: string | null
@@ -20439,6 +20460,7 @@ export type Database = {
         Insert: {
           amount_cents: number
           bank_line_id?: string | null
+          bank_transaction_id?: string | null
           book_id: string
           created_at?: string
           decided_at?: string | null
@@ -20460,6 +20482,7 @@ export type Database = {
         Update: {
           amount_cents?: number
           bank_line_id?: string | null
+          bank_transaction_id?: string | null
           book_id?: string
           created_at?: string
           decided_at?: string | null
@@ -20484,6 +20507,13 @@ export type Database = {
             columns: ["bank_line_id"]
             isOneToOne: false
             referencedRelation: "bank_statement_lines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fund_payable_settlements_bank_transaction_id_fkey"
+            columns: ["bank_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "bank_transactions"
             referencedColumns: ["id"]
           },
           {
