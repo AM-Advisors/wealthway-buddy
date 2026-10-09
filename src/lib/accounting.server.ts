@@ -438,6 +438,21 @@ async function resolveReversalDate(bookId: string, originalDate: string, option:
   return date;
 }
 
+/** Void an unposted draft/reviewed entry: kept with its lines and history, never deleted, never posted. */
+export async function voidJournalEntry(userId: string, entryId: string, reason: string) {
+  if (!reason || reason.trim().length < 4) fail("Say why this draft is being voided.");
+  const { data: entry } = await db().from("journal_entries").select("id, book_id, status").eq("id", entryId).maybeSingle();
+  if (!entry) fail("Journal entry not found.");
+  await authorizeBook(userId, entry.book_id, { write: true });
+  await assertAdmin(userId);
+  const from = entry.status as JournalStatus;
+  if (!canTransitionJournal(from, "voided")) fail(from === "posted" ? "A posted entry cannot be voided - reverse it instead." : `A ${from} entry cannot be voided.`);
+  const { data: upd } = await db().from("journal_entries").update({ status: "voided", updated_at: new Date().toISOString() }).eq("id", entryId).eq("status", from).select("id");
+  if (!(upd ?? []).length) fail("This entry changed while you were voiding it.");
+  await db().from("journal_entry_events").insert({ entry_id: entryId, actor_user_id: userId, from_status: from, to_status: "voided", reason });
+  return { ok: true };
+}
+
 export async function reverseJournalEntry(userId: string, entryId: string, reason: string, dateOption: ReversalDateOption = { kind: "current_date" }) {
   await assertAdmin(userId);
   if (!reason?.trim()) fail("A reversal requires a stated reason.");

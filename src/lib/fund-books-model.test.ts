@@ -30,3 +30,20 @@ it("liabilities reduce partners' capital and drop once settled", () => {
   const s = bs2([{ entry_date: "2025-01-05", category: "Capital contribution", direction: "in", amount_cents: 10000 }], "2025-01-01", "2025-12-31", [], 200);
   expect(s.balanceSheet.partnersCapitalCents).toBe(9800);
 });
+
+import { statementLineBooksAction } from "./fund-books-model";
+import { canTransitionJournal } from "./accounting-model";
+describe("statement application never double-books", () => {
+  it("a line already linked to a posted bank fee books nothing new", () => {
+    expect(statementLineBooksAction({ category: "Bank fees", alreadyBooked: true })).toBe("skip");
+    expect(statementLineBooksAction({ category: "Bank fees", alreadyBooked: false })).toBe("ledger");
+    expect(statementLineBooksAction({ category: "Transfer (not income)", alreadyBooked: false })).toBe("skip");
+  });
+  it("drafts can be voided; posted entries cannot", () => {
+    expect(canTransitionJournal("draft", "voided")).toBe(true);
+    expect(canTransitionJournal("reviewed", "voided")).toBe(true);
+    expect(canTransitionJournal("approved", "voided")).toBe(false);
+    expect(canTransitionJournal("posted", "voided")).toBe(false);
+    expect(canTransitionJournal("voided", "posted")).toBe(false);
+  });
+});

@@ -6,7 +6,7 @@
  */
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { reviewerScope, assertScopeAllows } from "@/lib/reviewer-authz.server";
-import { draftJournalEntry, advanceJournalEntry, reverseJournalEntry } from "@/lib/accounting.server";
+import { draftJournalEntry, advanceJournalEntry, reverseJournalEntry, voidJournalEntry } from "@/lib/accounting.server";
 import { commitmentAsOf, type CommitmentEvent } from "@/lib/allocation-model";
 import { computeFeeRun, type StructuredFeeTerm } from "@/lib/economic-terms";
 import {
@@ -195,6 +195,11 @@ async function decide(table: string, userId: string, id: string, approve: boolea
   if (approve) {
     await advanceJournalEntry(userId, r.journal_entry_id, "reviewed");
     await advanceJournalEntry(userId, r.journal_entry_id, "approved");
+  }
+  // A rejected record's unposted draft is voided so it can never be posted or block a close.
+  if (!approve && r.journal_entry_id) {
+    const { data: je } = await db().from("journal_entries").select("status").eq("id", r.journal_entry_id).maybeSingle();
+    if (je && ["draft", "reviewed"].includes(String(je.status))) await voidJournalEntry(userId, r.journal_entry_id, `Source record rejected: ${reason}`);
   }
   const { data: upd } = await db().from(table).update({ status: approve ? "approved" : "rejected", decided_by: userId, decided_at: new Date().toISOString(), decision_reason: reason }).eq("id", id).eq("status", "prepared").select("id");
   if (!(upd ?? []).length) fail("This record was decided by someone else first.");
@@ -421,4 +426,42 @@ export async function accountingOverview(userId: string, offeringId: string) {
   ]);
   const maps = await mappingsFor(bookId);
   return { investments: inv.data ?? [], expenses: exp.data ?? [], settlements: set.data ?? [], events: ev.data ?? [], assets: assets.data ?? [], mappedPurposes: maps.map((m) => m.purpose) };
+}
+
+/** Void the orphan draft of an already-rejected record (records rejected before auto-voiding existed). */
+export async function voidRejectedRecordDraft(userId: string, table: (typeof LINK_TABLES)[number], id: string, reason: string) {
+  const { data: r } = await db().from(table).select("offering_id, status, journal_entry_id").eq("id", id).maybeSingle();
+  if (!r) fail("Record not found.");
+  await authorizeFund(userId, r.offering_id);
+  if (r.status !== "rejected") fail("Only a rejected record's draft can be voided this way.");
+  if (!r.journal_entry_id) fail("This record has no journal.");
+  await voidJournalEntry(userId, r.journal_entry_id, reason);
+  await event(r.offering_id, table, id, "draft_voided", userId, reason, { journalEntryId: r.journal_entry_id });
+  return { ok: true };
+}
+
+/** Mark an expense's counterparty as unknown/verified without touching amounts or entries. */
+export async function setVendorProvenance(userId: string, i: { expenseId: string; status: "unknown" | "verified" | "stated"; note: string }) {
+  const { data: r } = await db().from("fund_expense_records").select("offering_id, vendor, vendor_status").eq("id", i.expenseId).maybeSingle();
+  if (!r) fail("Record not found.");
+  await authorizeFund(userId, r.offering_id);
+  if (!i.note.trim()) fail("A note is required.");
+  await db().from("fund_expense_records").update({ vendor_status: i.status, vendor_note: i.note }).eq("id", i.expenseId);
+  await event(r.offering_id, "fund_expense_records", i.expenseId, "vendor_provenance", userId, i.note, { from: r.vendor_status, to: i.status, vendorText: r.vendor });
+  return { ok: true };
+}
+
+/** Link a later-clearing bank movement (e.g. a check) to an already-posted paid record - evidence only, no new cash entry. */
+export async function linkClearingBankMovement(userId: string, i: { table: (typeof LINK_TABLES)[number]; id: string; bankLineId?: string | null | undefined; bankTransactionId?: string | null | undefined }) {
+  const { data: r } = await db().from(i.table).select("*").eq("id", i.id).maybeSingle();
+  if (!r) fail("Record not found.");
+  await authorizeFund(userId, r.offering_id);
+  if (r.status !== "posted") fail("Only a posted record can be matched to a clearing bank movement.");
+  if (r.bank_line_id || r.bank_transaction_id) fail("This record is already matched to a bank movement.");
+  if (i.table === "fund_expense_records" && r.payment_mode !== "paid") fail("An accrued expense has no cash movement.");
+  const cash = i.table === "fund_investment_transactions" ? -(Number(r.principal_cents) + Number(r.transaction_cost_cents)) : -Number(r.amount_cents);
+  const bank = await assertBankLine(r.offering_id, { lineId: i.bankLineId, txId: i.bankTransactionId }, cash, i.table);
+  await db().from(i.table).update({ bank_line_id: bank.lineId, bank_transaction_id: bank.txId }).eq("id", i.id);
+  await event(r.offering_id, i.table, i.id, "bank_cleared", userId, null, bank);
+  return bank;
 }

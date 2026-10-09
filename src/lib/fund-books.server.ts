@@ -1,7 +1,7 @@
 // Server-only: bank statement ingestion, asset marks, and books-derived figures for one fund.
 // Records history only - never moves money, never files anything.
 import { assertFund, db, isStaff } from "@/lib/fund-tabs.server";
-import { STATEMENT_CATEGORIES, balanceTie, dedupeKey, ruleCategory, type Entry } from "@/lib/fund-books-model";
+import { STATEMENT_CATEGORIES, statementLineBooksAction, balanceTie, dedupeKey, ruleCategory, type Entry } from "@/lib/fund-books-model";
 
 const BUCKET = "manager-uploads";
 const MODEL = "google/gemini-2.5-flash";
@@ -152,7 +152,11 @@ export async function applyStatement(uid: string, fundId: string, uploadId: stri
     }).select("id").single();
     if (error) throw new Error("Couldn't record a bank line.");
     if (l.matched_onboarding_id) await d.from("fund_transaction_tags").upsert({ bank_transaction_id: tx.id, offering_id: fundId, onboarding_id: l.matched_onboarding_id, asset_label: null, tagged_by: uid, updated_at: new Date().toISOString() });
-    if (category !== "Transfer (not income)") {
+    const { data: linkedRows } = await d.from("fund_expense_records").select("id").eq("bank_line_id", l.id).neq("status", "rejected").limit(1);
+    const { data: linkedInv } = await d.from("fund_investment_transactions").select("id").eq("bank_line_id", l.id).neq("status", "rejected").limit(1);
+    const { data: linkedSet } = await d.from("fund_payable_settlements").select("id").eq("bank_line_id", l.id).neq("status", "rejected").limit(1);
+    const alreadyBooked = [...(linkedRows ?? []), ...(linkedInv ?? []), ...(linkedSet ?? [])].length > 0;
+    if (statementLineBooksAction({ category, alreadyBooked }) === "ledger") {
       const e = await d.from("fund_ledger_entries").insert({ offering_id: fundId, entry_date: l.posted_on, description: l.description, category, direction: l.direction, amount_cents: Number(l.amount_cents), bank_transaction_id: tx.id, created_by: uid });
       if (e.error) throw new Error("Couldn't record a books entry.");
     }
