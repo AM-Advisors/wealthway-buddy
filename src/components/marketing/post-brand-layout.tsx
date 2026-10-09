@@ -93,7 +93,7 @@ export function PostBrandLayout({ title, body, onAdd }: { title: string; body: s
 
   const save = () => run("save", async () => {
     const text = [headline, subtitle, stat, attribution, cta, ...pts, ...(carousel ? slides.flatMap((s) => [s.title, s.text]) : [])].join("\n");
-    const nodes = refs.current.slice(0, total).filter(Boolean) as HTMLDivElement[];
+    const nodes = (refs.current.slice(0, total).filter((n) => n?.isConnected) as HTMLDivElement[]);
     const p = [...brandProblems(text), ...nodes.flatMap((n) => overflowProblems(n))];
     if (!headline.trim()) p.unshift("Add a headline.");
     if (carousel && slides.some((s) => !s.title.trim() && !s.text.trim())) p.push("Fill or remove empty slides.");
@@ -107,11 +107,39 @@ export function PostBrandLayout({ title, body, onAdd }: { title: string; body: s
     ]);
     await document.fonts.ready;
     if (faces.some((face) => face.length === 0)) throw new Error("The Harmonious fonts could not load. Please try again before saving.");
-    const { toPng } = await import("html-to-image");
+    const { domToPng } = await import("modern-screenshot");
+    // Brand fonts come from a cross-origin stylesheet the capture can't read; fetch and embed it explicitly.
+    const fontHref = Array.from(document.querySelectorAll<HTMLLinkElement>('link[rel="stylesheet"]')).map((l) => l.href).find((href) => href.includes("fonts.googleapis.com"));
+    let fontCss = fontHref ? await fetch(fontHref).then((r) => (r.ok ? r.text() : "")).catch(() => "") : "";
+    // Keep only Latin faces and inline each font file so the saved image renders Rubik/Poppins, never a fallback.
+    fontCss = fontCss.split("/*").filter((b) => !b.trim() || b.startsWith(" latin */")).map((b, k) => (k ? "/*" + b : b)).join("");
+    const urls = [...new Set([...fontCss.matchAll(/url\((https:[^)]+)\)/g)].map((m) => m[1]!))];
+    for (const u of urls) {
+      const blob = await fetch(u).then((r) => (r.ok ? r.blob() : null)).catch(() => null);
+      if (!blob) continue;
+      const data = await new Promise<string>((res) => { const fr = new FileReader(); fr.onload = () => res(String(fr.result)); fr.readAsDataURL(blob); });
+      fontCss = fontCss.split(u).join(data);
+    }
     for (let i = 0; i < nodes.length; i++) {
-      const page = nodes[i]?.firstElementChild;
+      // Re-read the live page: the preview re-renders while saving, which detaches earlier nodes.
+      const page = refs.current[i]?.firstElementChild;
+      if (page instanceof HTMLElement && !page.isConnected) throw new Error("The post preview changed. Please try again.");
       if (!(page instanceof HTMLElement)) throw new Error("The post preview is not ready. Please try again.");
-      const url = await toPng(page, { pixelRatio: 1, cacheBust: true, preferredFontFormat: "woff2", width: w, height: h, style: { transform: "none" } });
+      // Freeze resolved colors/fonts inline so the export never depends on theme variables or stylesheets.
+      const els = [page, ...Array.from(page.querySelectorAll<HTMLElement>("*"))];
+      const saved = els.map((el) => el.style.cssText);
+      els.forEach((el) => {
+        const cs = getComputedStyle(el);
+        for (const prop of ["color", "background-color", "background-image", "border-top-color", "border-right-color", "border-bottom-color", "border-left-color", "font-family", "font-weight"]) {
+          el.style.setProperty(prop, cs.getPropertyValue(prop));
+        }
+      });
+      let url: string;
+      try {
+        url = await domToPng(page, { scale: 1, width: w, height: h, style: { transform: "none" }, fetch: { bypassingCache: true }, ...(fontCss ? { font: { cssText: fontCss } } : {}) });
+      } finally {
+        els.forEach((el, k) => { el.style.cssText = saved[k] ?? ""; });
+      }
       const base64 = url.split(",")[1];
       if (!base64) throw new Error("The post image could not be saved. Please try again.");
       const r = await upload({ data: { fileName: carousel ? `carousel-${i + 1}.png` : "brand-layout.png", contentType: "image/png", base64 } });
@@ -137,7 +165,7 @@ export function PostBrandLayout({ title, body, onAdd }: { title: string; body: s
   /** One canvas page. Logo appears once: in the footer, or top-right when the footer is off. */
   const Page = ({ i, children, logoHere = true, artOk = true, padOverride, pageNo }: { i: number; children: ReactNode; logoHere?: boolean; artOk?: boolean; padOverride?: CSSProperties; pageNo?: string }) => (
     <div className="shrink-0 overflow-hidden rounded" style={{ width: w * scale, height: h * scale }}>
-      <div ref={(el) => { refs.current[i] = el; }} style={{ transform: `scale(${scale})`, transformOrigin: "top left", width: w, height: h }}>
+      <div ref={(el) => { if (el) refs.current[i] = el; }} style={{ transform: `scale(${scale})`, transformOrigin: "top left", width: w, height: h }}>
         <div data-collateral-page style={{ ...wrap, fontFamily: BRAND.bodyFont, fontWeight: 400, letterSpacing: 0, width: w, height: h, position: "relative", overflow: "hidden", color: ink, boxSizing: "border-box", padding: pad, display: "flex", flexDirection: "column", background: background(artOk), ...padOverride }}>
           {logoHere && !footer && <div style={{ position: "absolute", top: pad, right: pad }}><Logo /></div>}
           {pageNo && <div style={{ position: "absolute", top: pad, left: pad, fontSize: 22, color: accent, letterSpacing: 1 }}>{pageNo}</div>}
