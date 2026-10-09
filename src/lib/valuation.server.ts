@@ -411,7 +411,7 @@ export async function proposeValuation(
   if (asset.status === "realized") fail("This position is fully realised and cannot be re-marked.");
   const evidenceBasis: EvidenceBasis = input.evidenceBasis ?? "supporting_evidence";
   if (evidenceBasis === "synthetic_assumption") {
-    if (!(await isSyntheticFund(asset.offering_id))) fail("Synthetic valuation assumptions are allowed only on isolated TEST/DEMO funds.");
+    if (!(await isSyntheticFund(String(asset.offering_id)))) fail("Synthetic valuation assumptions are allowed only on isolated TEST/DEMO funds.");
     if ((input.syntheticAssumptionReference ?? "").trim().length < 10) fail("Name the synthetic scenario assumption this value comes from.");
   }
   const policy = await policyFor(asset.offering_id, asset.asset_class);
@@ -811,7 +811,7 @@ export async function prepareValuationJournal(userId: string, valuationId: strin
     costAddedSinceRecognizedCents: last ? await costAddedBetween(asset.id, last.effectiveDate, String(valuation.effective_date)) : 0,
   });
   const synthetic = valuation.evidence_basis === "synthetic_assumption";
-  if (synthetic && !(await isSyntheticFund(asset.offering_id))) fail("Synthetic valuation assumptions are allowed only on isolated TEST/DEMO funds.");
+  if (synthetic && !(await isSyntheticFund(String(asset.offering_id)))) fail("Synthetic valuation assumptions are allowed only on isolated TEST/DEMO funds.");
   const journal = unrealizedJournal(
     recognized,
     Number(valuation.value_cents),

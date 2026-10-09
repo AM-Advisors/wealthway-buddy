@@ -31,7 +31,7 @@ describe("movement basis", () => {
   it("never re-recognises opening appreciation (Lumen +$500k, Parcel -$400k)", () => {
     const lumen = unrealizedJournal(350_000_000, 400_000_000, DEFAULT_VALUATION_POLICY)!;
     const parcel = unrealizedJournal(200_000_000, 160_000_000, DEFAULT_VALUATION_POLICY)!;
-    expect(lumen.lines[0].debitCents).toBe(50_000_000);
-    expect(parcel.lines[0].debitCents).toBe(40_000_000);
+    expect(lumen.lines[0]?.debitCents).toBe(50_000_000);
+    expect(parcel.lines[0]?.debitCents).toBe(40_000_000);
   });
 });
