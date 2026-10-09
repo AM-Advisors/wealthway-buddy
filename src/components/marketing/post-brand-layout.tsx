@@ -110,7 +110,16 @@ export function PostBrandLayout({ title, body, onAdd }: { title: string; body: s
     const { domToPng } = await import("modern-screenshot");
     // Brand fonts come from a cross-origin stylesheet the capture can't read; fetch and embed it explicitly.
     const fontHref = Array.from(document.querySelectorAll<HTMLLinkElement>('link[rel="stylesheet"]')).map((l) => l.href).find((href) => href.includes("fonts.googleapis.com"));
-    const fontCss = fontHref ? await fetch(fontHref).then((r) => (r.ok ? r.text() : "")).catch(() => "") : "";
+    let fontCss = fontHref ? await fetch(fontHref).then((r) => (r.ok ? r.text() : "")).catch(() => "") : "";
+    // Keep only Latin faces and inline each font file so the saved image renders Rubik/Poppins, never a fallback.
+    fontCss = fontCss.split("/*").filter((b) => !b.trim() || b.startsWith(" latin */")).map((b, k) => (k ? "/*" + b : b)).join("");
+    const urls = [...new Set([...fontCss.matchAll(/url\((https:[^)]+)\)/g)].map((m) => m[1]!))];
+    for (const u of urls) {
+      const blob = await fetch(u).then((r) => (r.ok ? r.blob() : null)).catch(() => null);
+      if (!blob) continue;
+      const data = await new Promise<string>((res) => { const fr = new FileReader(); fr.onload = () => res(String(fr.result)); fr.readAsDataURL(blob); });
+      fontCss = fontCss.split(u).join(data);
+    }
     for (let i = 0; i < nodes.length; i++) {
       // Re-read the live page: the preview re-renders while saving, which detaches earlier nodes.
       const page = refs.current[i]?.firstElementChild;
