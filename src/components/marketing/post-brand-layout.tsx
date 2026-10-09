@@ -93,7 +93,7 @@ export function PostBrandLayout({ title, body, onAdd }: { title: string; body: s
 
   const save = () => run("save", async () => {
     const text = [headline, subtitle, stat, attribution, cta, ...pts, ...(carousel ? slides.flatMap((s) => [s.title, s.text]) : [])].join("\n");
-    const nodes = refs.current.slice(0, total).filter(Boolean) as HTMLDivElement[];
+    const nodes = (refs.current.slice(0, total).filter((n) => n?.isConnected) as HTMLDivElement[]);
     const p = [...brandProblems(text), ...nodes.flatMap((n) => overflowProblems(n))];
     if (!headline.trim()) p.unshift("Add a headline.");
     if (carousel && slides.some((s) => !s.title.trim() && !s.text.trim())) p.push("Fill or remove empty slides.");
@@ -110,6 +110,7 @@ export function PostBrandLayout({ title, body, onAdd }: { title: string; body: s
     const { domToPng } = await import("modern-screenshot");
     for (let i = 0; i < nodes.length; i++) {
       const page = nodes[i]?.firstElementChild;
+      if (page instanceof HTMLElement && !page.isConnected) throw new Error("The post preview changed. Please try again.");
       if (!(page instanceof HTMLElement)) throw new Error("The post preview is not ready. Please try again.");
       // Freeze resolved colors/fonts inline so the export never depends on theme variables or stylesheets.
       const els = [page, ...Array.from(page.querySelectorAll<HTMLElement>("*"))];
@@ -151,7 +152,7 @@ export function PostBrandLayout({ title, body, onAdd }: { title: string; body: s
   /** One canvas page. Logo appears once: in the footer, or top-right when the footer is off. */
   const Page = ({ i, children, logoHere = true, artOk = true, padOverride, pageNo }: { i: number; children: ReactNode; logoHere?: boolean; artOk?: boolean; padOverride?: CSSProperties; pageNo?: string }) => (
     <div className="shrink-0 overflow-hidden rounded" style={{ width: w * scale, height: h * scale }}>
-      <div ref={(el) => { refs.current[i] = el; }} style={{ transform: `scale(${scale})`, transformOrigin: "top left", width: w, height: h }}>
+      <div ref={(el) => { if (el) refs.current[i] = el; }} style={{ transform: `scale(${scale})`, transformOrigin: "top left", width: w, height: h }}>
         <div data-collateral-page style={{ ...wrap, fontFamily: BRAND.bodyFont, fontWeight: 400, letterSpacing: 0, width: w, height: h, position: "relative", overflow: "hidden", color: ink, boxSizing: "border-box", padding: pad, display: "flex", flexDirection: "column", background: background(artOk), ...padOverride }}>
           {logoHere && !footer && <div style={{ position: "absolute", top: pad, right: pad }}><Logo /></div>}
           {pageNo && <div style={{ position: "absolute", top: pad, left: pad, fontSize: 22, color: accent, letterSpacing: 1 }}>{pageNo}</div>}
