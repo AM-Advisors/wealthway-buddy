@@ -1,4 +1,5 @@
-import { appendFileSync } from "node:fs";
+import { appendFileSync, mkdirSync } from "node:fs";
+mkdirSync("/tmp/wt", { recursive: true });
 import { guard, U, N, BATCH } from "./lib";
 import { trialBalance } from "@/lib/ledger-trial-balance";
 export const d = await guard();
