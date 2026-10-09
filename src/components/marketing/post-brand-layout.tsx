@@ -108,6 +108,9 @@ export function PostBrandLayout({ title, body, onAdd }: { title: string; body: s
     await document.fonts.ready;
     if (faces.some((face) => face.length === 0)) throw new Error("The Harmonious fonts could not load. Please try again before saving.");
     const { domToPng } = await import("modern-screenshot");
+    // Brand fonts come from a cross-origin stylesheet the capture can't read; fetch and embed it explicitly.
+    const fontHref = Array.from(document.querySelectorAll<HTMLLinkElement>('link[rel="stylesheet"]')).map((l) => l.href).find((href) => href.includes("fonts.googleapis.com"));
+    const fontCss = fontHref ? await fetch(fontHref).then((r) => (r.ok ? r.text() : "")).catch(() => "") : "";
     for (let i = 0; i < nodes.length; i++) {
       // Re-read the live page: the preview re-renders while saving, which detaches earlier nodes.
       const page = refs.current[i]?.firstElementChild;
@@ -124,7 +127,7 @@ export function PostBrandLayout({ title, body, onAdd }: { title: string; body: s
       });
       let url: string;
       try {
-        url = await domToPng(page, { scale: 1, width: w, height: h, style: { transform: "none" }, fetch: { bypassingCache: true } });
+        url = await domToPng(page, { scale: 1, width: w, height: h, style: { transform: "none" }, fetch: { bypassingCache: true }, ...(fontCss ? { font: { cssText: fontCss } } : {}) });
       } finally {
         els.forEach((el, k) => { el.style.cssText = saved[k] ?? ""; });
       }
