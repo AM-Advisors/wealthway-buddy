@@ -158,7 +158,7 @@ export async function renderPdf(spec: PdfDocSpec): Promise<Uint8Array> {
   // Title block
   if (spec.kicker) {
     text(spec.kicker.toUpperCase(), { size: 8.5, font: bold, color: TEAL });
-    y -= 14;
+    y -= 22;
   }
   text(spec.title, { size: 19, font: bold, color: NAVY });
   if (spec.badge) {
@@ -256,7 +256,7 @@ export async function renderPdf(spec: PdfDocSpec): Promise<Uint8Array> {
       const mark = sanitize(spec.watermark);
       p.drawRectangle({ x: 0, y: PAGE_H - 22, width: PAGE_W, height: 22, color: rgb(0.75, 0.1, 0.1) });
       p.drawText(mark, { x: MARGIN, y: PAGE_H - 15, size: 8, font: bold, color: rgb(1, 1, 1) });
-      p.drawText(mark, { x: 70, y: 220, size: 15, font: bold, color: rgb(0.75, 0.1, 0.1), opacity: 0.14, rotate: degrees(40) });
+      p.drawText(mark, { x: 75, y: 170, size: 13, font: bold, color: rgb(0.75, 0.1, 0.1), opacity: 0.14, rotate: degrees(40) });
     }
     const label = `${COMPANY.legalName} · ${COMPANY.website} · page ${i + 1} of ${pages.length}`;
     p.drawText(sanitize(label), {
