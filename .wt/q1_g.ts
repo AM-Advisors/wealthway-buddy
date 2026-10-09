@@ -5,8 +5,8 @@ try {
   const fa = await import("@/lib/fund-accounting.server");
   const { advanceJournalEntry } = await import("@/lib/accounting.server");
   // Blake facts
-  const pos = (await d.from("investor_positions").select("id,display_name,status,onboarding_id").ilike("display_name", "Blake%").eq("offering_id", N).single()).data;
-  const ob = pos.onboarding_id ? (await d.from("investor_onboardings").select("*").eq("id", pos.onboarding_id).maybeSingle()).data : null;
+  const pos = (await d.from("investor_positions").select("id,display_name,status,person_id,notes").ilike("display_name", "Blake%").eq("offering_id", N).single()).data;
+  const ob = (await d.from("investor_onboardings").select("*").eq("offering_id", N).eq("person_id", pos.person_id).maybeSingle()).data;
   const blakeTx = (await d.from("bank_transactions").select("id").eq("offering_id", N).ilike("name", "%BLAKE%")).data;
   const fm = (await d.from("funding_matches").select("status").eq("offering_id", N).eq("position_id", pos.id)).data;
   console.log("BLAKE", JSON.stringify({ pos: [pos.status], ob: ob ? Object.fromEntries(Object.entries(ob).filter(([k]) => /state|status|kyc|aml|hold|block/i.test(k))) : null, bankTx: blakeTx.length, matches: fm }));
