@@ -53,7 +53,7 @@ async function draftFrom(userId: string, offeringId: string, bookId: string, lin
   return String((entry as any).id);
 }
 
-export type BankLink = { lineId?: string | null; txId?: string | null };
+export type BankLink = { lineId?: string | null | undefined; txId?: string | null | undefined };
 const LINK_TABLES = ["fund_investment_transactions", "fund_expense_records", "fund_payable_settlements"] as const;
 
 /** Resolve a statement line and/or bank transaction to one movement, then refuse mismatches and second links. */
