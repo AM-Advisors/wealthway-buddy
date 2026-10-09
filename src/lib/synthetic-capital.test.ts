@@ -16,7 +16,7 @@ describe("synthetic capital rollforward", () => {
     expect(ada.contributionsCents).toBe(30_000_000);
     expect(ada.creditsCents).toBe(5_000);
     for (const n of ["Juniper", "Erik", "Blake"]) expect(r.lines.find((l) => l.name.startsWith(n))!.contributionsCents).toBe(0);
-    expect(r.totals.contributionsCents).toBe(410_000_000);
+    expect(r.totals["contributionsCents"]).toBe(410_000_000);
   });
   it("19 residual cents are preserved", () => expect(r.residuals).toHaveLength(19));
 });

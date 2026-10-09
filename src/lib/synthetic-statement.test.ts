@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { computeSyntheticAllocation } from "./synthetic-allocation";
 import { walkthroughQ1AllocationInput } from "./reference-fund/walkthrough-q1-allocation";
-import { buildSyntheticStatement, channelError, SYNTHETIC_STATEMENT_LABEL as L, syntheticStatementPdfSpec, type SynAccount, type SynMovement } from "./synthetic-statement";
+import { buildSyntheticStatement, channelError, SYNTHETIC_STATEMENT_LABEL as L, syntheticStatementPdfSpec, type Channel, type SynAccount, type SynMovement } from "./synthetic-statement";
 
 const input = walkthroughQ1AllocationInput({ sourceOnlyApproved: true });
 const r = computeSyntheticAllocation(input);
@@ -23,7 +23,7 @@ const movements: SynMovement[] = accounts.flatMap((a) => [
   mv(a, "operating_expense", a.operating_expense_cents), mv(a, "management_fee", a.management_fee_cents),
   ...input.contributions.filter((c) => c.positionId === a.position_id).map((c) => mv(a, "contribution", c.amountCents, `${c.sourceRef}@${c.receivedOn}`, c.receivedOn)),
 ]);
-const opts = { channel: "internal_preview" as const, navCents: 1_392_991_250, fundIsTestDemo: true, residualCents: 0 };
+const opts: { channel: Channel; navCents: number; fundIsTestDemo: boolean; residualCents: number } = { channel: "internal_preview", navCents: 1_392_991_250, fundIsTestDemo: true, residualCents: 0 };
 const build = (a: SynAccount, m = movements, o = opts) => buildSyntheticStatement(a, m, o);
 const find = (n: string) => accounts.find((a) => a.investor_name.startsWith(n))!;
 
@@ -44,9 +44,9 @@ describe("synthetic statement previews", () => {
     expect(s("Erik").restrictions.join()).toMatch(/AML/);
     expect(s("Erik").endingCapitalCents).toBeGreaterThan(0);
     expect(s("Ada").creditsCents).toBe(5_000);
-    expect(s("Ada").lines[1].cents).toBe(30_000_000);
+    expect(s("Ada").lines[1]!.cents).toBe(30_000_000);
     expect(s("Blake").contributions).toHaveLength(0);
-    expect(s("Northwind").lines[5].cents).toBe(-2_500_000);
+    expect(s("Northwind").lines[5]!.cents).toBe(-2_500_000);
   });
   it("PDF spec carries the watermark on every page and all disclosures", () => {
     const x = build(find("Northwind")); if (!x.ok) throw 0;

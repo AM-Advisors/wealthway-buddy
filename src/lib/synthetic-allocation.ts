@@ -195,14 +195,14 @@ export function computeSyntheticAllocation(i: SyntheticAllocationInput): Synthet
   const lines: SyntheticLine[] = i.participants.map((p, k) => {
     const cs = contribs(p.positionId);
     const c = cs.reduce((s, x) => s + x.amountCents, 0);
-    const parts = [interest.out.get(p.positionId)!, gain.out.get(p.positionId)!, exp.out.get(p.positionId)!, fee.get(p.positionId) ?? 0];
+    const parts: [number, number, number, number] = [interest.out.get(p.positionId) ?? 0, gain.out.get(p.positionId) ?? 0, exp.out.get(p.positionId) ?? 0, fee.get(p.positionId) ?? 0];
     const net = parts.reduce((s, x) => s + x, 0);
     const flags = ["DEMO / SYNTHETIC", "UNREALIZED GAIN IS A SYNTHETIC ASSUMPTION", "HISTORICAL CLASS-FEE TREATMENT UNVERIFIED (39.8% register)"];
     if (p.admissionStatus === "source_only_not_formally_admitted") flags.push("SOURCE-ONLY / NOT FORMALLY ADMITTED");
     return {
       positionId: p.positionId, name: p.name, classLabel: p.classLabel,
       openingCapitalCents: p.openingCapitalCents!, contributionsCents: c, contributionDates: cs.map((x) => x.receivedOn),
-      weightDollarDays: weights[k].w.toString(),
+      weightDollarDays: weights[k]!.w.toString(),
       interestCents: parts[0], unrealizedGainCents: parts[1], operatingExpenseCents: parts[2], managementFeeCents: parts[3],
       netPnlCents: net, endingCapitalCents: p.openingCapitalCents! + c + net,
       unpaidCallCents: p.unpaidCallCents, creditsCents: p.creditsCents, restrictions: p.restrictions, flags,
