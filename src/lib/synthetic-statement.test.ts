@@ -21,7 +21,7 @@ const mv = (a: SynAccount, kind: string, amount: number, ref = kind, date = "202
 const movements: SynMovement[] = accounts.flatMap((a) => [
   mv(a, "opening", a.opening_capital_cents), mv(a, "interest_income", a.interest_cents), mv(a, "unrealized_gain_synthetic", a.unrealized_gain_cents),
   mv(a, "operating_expense", a.operating_expense_cents), mv(a, "management_fee", a.management_fee_cents),
-  ...input.contributions.filter((c) => c.positionId === a.position_id).map((c) => mv(a, "contribution", c.amountCents, c.sourceRef, c.receivedOn)),
+  ...input.contributions.filter((c) => c.positionId === a.position_id).map((c) => mv(a, "contribution", c.amountCents, `${c.sourceRef}@${c.receivedOn}`, c.receivedOn)),
 ]);
 const opts = { channel: "internal_preview" as const, navCents: 1_392_991_250, fundIsTestDemo: true, residualCents: 0 };
 const build = (a: SynAccount, m = movements, o = opts) => buildSyntheticStatement(a, m, o);
