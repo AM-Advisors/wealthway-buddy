@@ -11,3 +11,8 @@
 
 ## Legacy archive S3 connection
 - [ ] Investigate why the dedicated exporter S3 connection fails validation (prefix-scoped IAM policy)
+
+## Marketing menu and post options
+- [ ] Group Marketing links into a smaller, expandable menu without removing pages or changing access.
+- [ ] Add a total carousel slide selector (3–10, including cover and closing) and additional brand color choices.
+- [ ] Verify the changed controls and regression checks; leave publishing settings unchanged.
