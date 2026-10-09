@@ -133,3 +133,35 @@ export function feeTermDecisionError(t: { approvalStatus: string; preparedBy: st
   if (approve && !t.sourceDocument?.trim()) return "A fee term needs its contractual source before approval.";
   return null;
 }
+
+// ------------------------------------------------------- bank cash links
+/** Statement lines store a positive amount plus a direction; cash movements are signed. */
+export const signedBankCents = (l: { amount_cents: number | string; direction?: string | null }) =>
+  l.direction === "out" ? -Math.abs(Number(l.amount_cents)) : Number(l.amount_cents);
+/** Plaid/bank transactions store outflows as positive (Plaid convention). */
+export const signedBankTxCents = (t: { amount_cents: number | string }) => -Number(t.amount_cents);
+/** One bank movement may evidence exactly one accounting record, at exactly its cash amount. */
+export function bankLinkError(i: { cashCents: number; bankSignedCents: number; alreadyLinkedTo: string | null }): string | null {
+  if (i.alreadyLinkedTo) return `That bank activity is already linked to ${i.alreadyLinkedTo}.`;
+  if (i.bankSignedCents !== i.cashCents) return `BANK AMOUNT MISMATCH - review required: bank ${i.bankSignedCents} vs record ${i.cashCents} cents.`;
+  return null;
+}
+/** A bank reconciliation for activity already accounted for reuses that record's journal - never a second cash entry. */
+export function reconciliationJournalDecision(linked: { status: string; journalEntryId: string | null } | null):
+  { action: "draft" } | { action: "reuse"; entryId: string } | { action: "wait"; reason: string } {
+  if (!linked) return { action: "draft" };
+  if (linked.status === "posted" && linked.journalEntryId) return { action: "reuse", entryId: linked.journalEntryId };
+  if (linked.status === "reversed") return { action: "wait", reason: "The linked accounting record was reversed - resolve the bank exception before reconciling." };
+  return { action: "wait", reason: "This bank activity belongs to an accounting record that is not posted yet - post it first; no second cash entry is created." };
+}
+/** New chart accounts: expense type, unique code/name, numbered inside the parent's range. */
+export function newAccountError(i: { code: string; name: string; accountType: string; parentCode: string | null }, existing: { code: string; name: string }[]): string | null {
+  if (!/^\d{4}$/.test(i.code)) return "Account code must be four digits.";
+  if (i.accountType !== "expense") return "Only expense accounts can be added here.";
+  if (!i.code.startsWith("5")) return "Expense accounts use the 5000 range.";
+  if (i.parentCode && i.code.slice(0, 2) !== i.parentCode.slice(0, 2)) return "The code must sit inside the parent account's range.";
+  const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  if (existing.some((a) => a.code === i.code)) return "DUPLICATE - that account code already exists.";
+  if (existing.some((a) => norm(a.name) === norm(i.name))) return "DUPLICATE - an account with that name already exists.";
+  return null;
+}
