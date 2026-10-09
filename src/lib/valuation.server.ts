@@ -356,18 +356,6 @@ async function costAddedBetween(assetId: string, afterDate: string, uptoDate: st
   return ((data ?? []) as any[]).reduce((sum, r) => sum + Number(r.total_cost_cents ?? 0), 0);
 }
 
-async function lastRecognizedValue(assetId: string): Promise<number | null> {
-  const { data } = await db()
-    .from("portfolio_valuations")
-    .select("value_cents, effective_date, version, journal_entry_id, recognized_by_journal_id")
-    .eq("asset_id", assetId)
-    .in("status", ["effective", "superseded"])
-    .order("effective_date", { ascending: false })
-    .order("version", { ascending: false });
-  // Recognised either by its own valuation journal or (takeover opening) by the posted opening journal.
-  const row = ((data ?? []) as any[]).find((r) => r.journal_entry_id || r.recognized_by_journal_id);
-  return row ? Number(row.value_cents) : null;
-}
 
 async function currentEffective(assetId: string) {
   const { data } = await db()
