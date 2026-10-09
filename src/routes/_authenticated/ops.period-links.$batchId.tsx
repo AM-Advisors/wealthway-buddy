@@ -48,15 +48,14 @@ function Page() {
   if (q.isLoading) return <p className="p-6 text-muted-foreground">Loading…</p>;
   if (q.error || !b) return <p className="p-6 text-destructive">{(q.error as Error)?.message ?? "Not found"}</p>;
   const isPreparer = b.me === b.prepared_by;
-  const isReviewer = b.me === b.reviewed_by;
-
+  
   return (
     <div className="mx-auto max-w-5xl space-y-4 p-6">
       <Card>
         <CardHeader>
           <CardTitle>Journal period linking — {b.accounting_periods?.label}</CardTitle>
           <CardDescription>
-            Adds a period reference only. Dates, amounts, lines and approvals never change. Preparer, reviewer and applier must be three different people.
+            Adds a period reference only. Dates, amounts, lines and approvals never change. Two-person control: the preparer can never approve or apply; the independent reviewer approves and may then apply.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-2 text-sm">
@@ -75,7 +74,7 @@ function Page() {
             )
           )}
           {b.status === "approved" && (
-            isPreparer || isReviewer ? <p className="text-muted-foreground">A third person must apply this batch.</p> :
+            isPreparer ? <p className="text-muted-foreground">You prepared this batch, so you cannot apply it.</p> :
               <Button disabled={busy} onClick={() => run(() => apply({ data: { batchId, expectedHash: b.proposal_hash } }), "Applied")}>Apply all {b.entry_count} links</Button>
           )}
         </CardContent>
