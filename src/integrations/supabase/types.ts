@@ -27430,6 +27430,7 @@ export type Database = {
         Row: {
           applied_at: string | null
           applied_by: string | null
+          applied_policy_version: number | null
           book_id: string
           created_at: string
           entry_count: number
@@ -27450,6 +27451,7 @@ export type Database = {
         Insert: {
           applied_at?: string | null
           applied_by?: string | null
+          applied_policy_version?: number | null
           book_id: string
           created_at?: string
           entry_count: number
@@ -27470,6 +27472,7 @@ export type Database = {
         Update: {
           applied_at?: string | null
           applied_by?: string | null
+          applied_policy_version?: number | null
           book_id?: string
           created_at?: string
           entry_count?: number
@@ -27547,6 +27550,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      journal_period_link_policy_versions: {
+        Row: {
+          authorized_by: string
+          created_at: string
+          effective_at: string
+          reason: string
+          required_people: number
+          reviewer_may_apply: boolean
+          version: number
+        }
+        Insert: {
+          authorized_by: string
+          created_at?: string
+          effective_at?: string
+          reason: string
+          required_people: number
+          reviewer_may_apply: boolean
+          version: number
+        }
+        Update: {
+          authorized_by?: string
+          created_at?: string
+          effective_at?: string
+          reason?: string
+          required_people?: number
+          reviewer_may_apply?: boolean
+          version?: number
+        }
+        Relationships: []
       }
       k1_forms: {
         Row: {
