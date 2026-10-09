@@ -406,10 +406,19 @@ export async function calculateNAV(
   // ---- pre-NAV checks
   const { data: unreconciled } = await db()
     .from("bank_reconciliations")
-    .select("id, status, bank_transactions(amount_cents, posted_on)")
+    .select("id, status, journal_entry_id, bank_transactions(amount_cents, posted_on)")
     .eq("offering_id", input.offeringId)
     .not("status", "in", "(posted,rejected)");
+  // A movement reconciled to an existing posted journal (purchase, expense,
+  // settlement) is already in the ledger - it is not unreconciled cash.
+  const linkedIds = ((unreconciled ?? []) as any[]).filter((r) => r.status === "reconciled" && r.journal_entry_id).map((r) => r.journal_entry_id);
+  const postedLinked = new Set<string>();
+  if (linkedIds.length > 0) {
+    const { data: je } = await db().from("journal_entries").select("id").in("id", linkedIds).eq("status", "posted");
+    for (const e of (je ?? []) as any[]) postedLinked.add(e.id);
+  }
   const unreconciledCashCents = ((unreconciled ?? []) as any[]).reduce((total, r) => {
+    if (r.status === "reconciled" && r.journal_entry_id && postedLinked.has(r.journal_entry_id)) return total;
     const tx = r.bank_transactions ?? {};
     if (tx.posted_on && tx.posted_on > input.asOfDate) return total;
     return total + Math.abs(Number(tx.amount_cents ?? 0));
