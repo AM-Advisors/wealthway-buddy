@@ -137,3 +137,16 @@ describe("chart of accounts additions", () => {
     expect(newAccountError({ code: "5220", name: "Accounting", accountType: "expense", parentCode: "5200" }, ex)).toBeNull();
   });
 });
+
+import { feeAccrualError, feeAccrualLines } from "./fund-accounting-model";
+describe("management fee accrual", () => {
+  it("expense and payable only - never cash", () => {
+    expect(feeAccrualLines(11_543_750).map((l) => l.purpose)).toEqual(["management_fee_expense", "management_fee_payable"]);
+  });
+  it("stops on mismatch, block or duplicate", () => {
+    expect(feeAccrualError({ blocked: false, engineCents: 11_543_750, benchmarkCents: 11_543_750, alreadyAccrued: false })).toBeNull();
+    expect(feeAccrualError({ blocked: false, engineCents: 10_918_750, benchmarkCents: 11_543_750, alreadyAccrued: false })).toMatch(/MISMATCH/);
+    expect(feeAccrualError({ blocked: true, engineCents: 1, benchmarkCents: 1, alreadyAccrued: false })).toMatch(/blocked/);
+    expect(feeAccrualError({ blocked: false, engineCents: 1, benchmarkCents: 1, alreadyAccrued: true })).toMatch(/DUPLICATE/);
+  });
+});
