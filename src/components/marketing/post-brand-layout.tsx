@@ -107,7 +107,7 @@ export function PostBrandLayout({ title, body, onAdd }: { title: string; body: s
     ]);
     await document.fonts.ready;
     if (faces.some((face) => face.length === 0)) throw new Error("The Harmonious fonts could not load. Please try again before saving.");
-    const { toPng } = await import("html-to-image");
+    const { domToPng } = await import("modern-screenshot");
     for (let i = 0; i < nodes.length; i++) {
       const page = nodes[i]?.firstElementChild;
       if (!(page instanceof HTMLElement)) throw new Error("The post preview is not ready. Please try again.");
@@ -122,7 +122,7 @@ export function PostBrandLayout({ title, body, onAdd }: { title: string; body: s
       });
       let url: string;
       try {
-        url = await toPng(page, { pixelRatio: 1, cacheBust: true, width: w, height: h, style: { transform: "none" } });
+        url = await domToPng(page, { scale: 1, width: w, height: h, style: { transform: "none" }, fetch: { bypassingCache: true } });
       } finally {
         els.forEach((el, k) => { el.style.cssText = saved[k] ?? ""; });
       }
