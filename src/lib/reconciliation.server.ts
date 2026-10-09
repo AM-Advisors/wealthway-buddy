@@ -697,6 +697,18 @@ export async function prepareReconciliationJournal(
     .maybeSingle();
   if (!txn) fail("Bank transaction not found.");
 
+  // Activity already carried by an investment/expense/settlement record reuses that journal - never a second cash entry.
+  const { linkedAccountingRecord } = await import("@/lib/fund-accounting.server");
+  const { reconciliationJournalDecision } = await import("@/lib/fund-accounting-model");
+  const linked = await linkedAccountingRecord(String(txn.id));
+  const decision = reconciliationJournalDecision(linked);
+  if (decision.action === "wait") fail(decision.reason);
+  if (decision.action === "reuse") {
+    const { error: le } = await db().from("bank_reconciliations").update({ journal_entry_id: decision.entryId, updated_at: new Date().toISOString() }).eq("id", rec.id).is("journal_entry_id", null);
+    if (le) fail("A journal has already been prepared for this transaction.");
+    return { entryId: decision.entryId, alreadyPrepared: true, linkedRecord: linked };
+  }
+
   const amount = Math.abs(Number(txn.amount_cents));
   const lines: DraftLine[] = [
     {

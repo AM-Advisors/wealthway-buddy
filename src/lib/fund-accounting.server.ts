@@ -140,7 +140,7 @@ export async function setMapping(userId: string, i: { offeringId: string; purpos
 // --------------------------------------------------------- investments
 export async function prepareInvestment(userId: string, i: PurchaseInput & {
   offeringId: string; newAssetClass: string | null; instrument: string | null; quantity: number | null; unitPriceCents: number | null;
-  evidenceReference: string | null; idempotencyKey: string; bankLineId: string | null;
+  evidenceReference: string | null; idempotencyKey: string; bankLineId: string | null; bankTransactionId?: string | null;
 }) {
   const { bookId } = await authorizeFund(userId, i.offeringId);
   const err = purchaseError(i);
@@ -154,7 +154,7 @@ export async function prepareInvestment(userId: string, i: PurchaseInput & {
     const { data: same } = await db().from("portfolio_assets").select("id").eq("offering_id", i.offeringId).ilike("issuer_name", i.newIssuerName!.trim()).ilike("asset_name", i.newAssetName!.trim()).limit(1);
     if ((same ?? []).length) fail("This security is already held - record an additional purchase instead.");
   }
-  await assertBankLine(i.offeringId, i.bankLineId, purchaseCashOutflow(i.principalCents, i.transactionCostCents), "fund_investment_transactions");
+  const bank = await assertBankLine(i.offeringId, { lineId: i.bankLineId, txId: i.bankTransactionId }, purchaseCashOutflow(i.principalCents, i.transactionCostCents), "fund_investment_transactions");
   // Fail early on a missing mapping, before any record exists.
   const probe = resolveLines(purchaseLines(i.principalCents, i.transactionCostCents), await mappingsFor(bookId));
   if (!probe.ok) fail(missingMappingMessage(probe.missing));
@@ -162,7 +162,7 @@ export async function prepareInvestment(userId: string, i: PurchaseInput & {
     offering_id: i.offeringId, book_id: bookId, kind: i.kind, asset_id: i.assetId, new_issuer_name: i.newIssuerName, new_asset_name: i.newAssetName,
     new_asset_class: i.newAssetClass, instrument: i.instrument, trade_date: i.tradeDate, settlement_date: i.settlementDate, quantity: i.quantity,
     unit_price_cents: i.unitPriceCents, principal_cents: i.principalCents, transaction_cost_cents: i.transactionCostCents,
-    source_reference: i.sourceReference, evidence_reference: i.evidenceReference, idempotency_key: i.idempotencyKey, bank_line_id: i.bankLineId, prepared_by: userId,
+    source_reference: i.sourceReference, evidence_reference: i.evidenceReference, idempotency_key: i.idempotencyKey, bank_line_id: bank.lineId, bank_transaction_id: bank.txId, prepared_by: userId,
   }).select("id").single();
   if (error) fail(error.code === "23505" ? "This transaction was already recorded." : error.message);
   const jid = await draftFrom(userId, i.offeringId, bookId, purchaseLines(i.principalCents, i.transactionCostCents), {
@@ -249,16 +249,16 @@ export async function reverseInvestment(userId: string, id: string, reason: stri
 export async function prepareExpense(userId: string, i: {
   offeringId: string; category: string; vendor: string; description: string; invoiceNumber: string | null; invoiceDate: string | null;
   serviceStart: string | null; serviceEnd: string | null; expenseDate: string; amountCents: number; paymentMode: "paid" | "accrued";
-  paidOn: string | null; sourceReference: string; evidenceReference: string | null; bankLineId: string | null;
+  paidOn: string | null; sourceReference: string; evidenceReference: string | null; bankLineId: string | null; bankTransactionId?: string | null;
 }) {
   const { bookId } = await authorizeFund(userId, i.offeringId);
   const err = expenseError(i);
   if (err) fail(err);
-  if (i.paymentMode === "accrued" && i.bankLineId) fail("An accrued expense has no cash movement.");
+  if (i.paymentMode === "accrued" && (i.bankLineId || i.bankTransactionId)) fail("An accrued expense has no cash movement.");
   const fingerprint = expenseFingerprint(i);
   const { data: dup } = await db().from("fund_expense_records").select("id, status").eq("offering_id", i.offeringId).eq("fingerprint", fingerprint).maybeSingle();
   if (dup) fail(`DUPLICATE - REVIEW REQUIRED: this expense is already recorded (${dup.status}).`);
-  if (i.paymentMode === "paid") await assertBankLine(i.offeringId, i.bankLineId, -i.amountCents, "fund_expense_records");
+  const bank = i.paymentMode === "paid" ? await assertBankLine(i.offeringId, { lineId: i.bankLineId, txId: i.bankTransactionId }, -i.amountCents, "fund_expense_records") : { lineId: null, txId: null };
   const lines = expenseLines(i.category as ExpenseCategory, i.amountCents, i.paymentMode);
   const probe = resolveLines(lines, await mappingsFor(bookId));
   if (!probe.ok) fail(missingMappingMessage(probe.missing));
@@ -266,7 +266,7 @@ export async function prepareExpense(userId: string, i: {
     offering_id: i.offeringId, book_id: bookId, category: i.category, vendor: i.vendor, description: i.description, invoice_number: i.invoiceNumber,
     invoice_date: i.invoiceDate, service_start: i.serviceStart, service_end: i.serviceEnd, expense_date: i.expenseDate, amount_cents: i.amountCents,
     payment_mode: i.paymentMode, paid_on: i.paidOn, source_reference: i.sourceReference, evidence_reference: i.evidenceReference, fingerprint,
-    bank_line_id: i.bankLineId, prepared_by: userId,
+    bank_line_id: bank.lineId, bank_transaction_id: bank.txId, prepared_by: userId,
   }).select("id").single();
   if (error) fail(error.code === "23505" ? "DUPLICATE - REVIEW REQUIRED: this expense is already recorded." : error.message);
   const jid = await draftFrom(userId, i.offeringId, bookId, lines, { date: i.paidOn ?? i.expenseDate, memo: `${i.vendor} - ${i.description}`, source: "expense", table: "fund_expense_records", id: data.id });
@@ -284,7 +284,7 @@ export async function postExpense(userId: string, id: string) {
 /** Pay an accrued expense or an opening liability. Never re-expenses anything. */
 export async function prepareSettlement(userId: string, i: {
   offeringId: string; expenseId: string | null; liabilityPurpose: "accounts_payable" | "accrued_expenses"; openingLiabilityReference: string | null;
-  amountCents: number; paidOn: string; sourceReference: string; idempotencyKey: string; bankLineId: string | null;
+  amountCents: number; paidOn: string; sourceReference: string; idempotencyKey: string; bankLineId: string | null; bankTransactionId?: string | null;
 }) {
   const { bookId } = await authorizeFund(userId, i.offeringId);
   if (!i.expenseId && !i.openingLiabilityReference?.trim()) fail("Name the accrued expense or the opening liability being settled.");
@@ -310,13 +310,13 @@ export async function prepareSettlement(userId: string, i: {
   }
   const err = settlementError({ amountCents: i.amountCents, outstandingCents: outstanding });
   if (err) fail(err);
-  await assertBankLine(i.offeringId, i.bankLineId, -i.amountCents, "fund_payable_settlements");
+  const bank = await assertBankLine(i.offeringId, { lineId: i.bankLineId, txId: i.bankTransactionId }, -i.amountCents, "fund_payable_settlements");
   const lines = settlementLines(i.liabilityPurpose, i.amountCents);
   const probe = resolveLines(lines, await mappingsFor(bookId));
   if (!probe.ok) fail(missingMappingMessage(probe.missing));
   const { data, error } = await db().from("fund_payable_settlements").insert({
     offering_id: i.offeringId, book_id: bookId, expense_id: i.expenseId, liability_purpose: i.liabilityPurpose, opening_liability_reference: i.openingLiabilityReference,
-    amount_cents: i.amountCents, paid_on: i.paidOn, source_reference: i.sourceReference, idempotency_key: i.idempotencyKey, bank_line_id: i.bankLineId, prepared_by: userId,
+    amount_cents: i.amountCents, paid_on: i.paidOn, source_reference: i.sourceReference, idempotency_key: i.idempotencyKey, bank_line_id: bank.lineId, bank_transaction_id: bank.txId, prepared_by: userId,
   }).select("id").single();
   if (error) fail(error.message);
   const jid = await draftFrom(userId, i.offeringId, bookId, lines, { date: i.paidOn, memo: `Payable settlement - ${i.sourceReference}`, source: "payment", table: "fund_payable_settlements", id: data.id });
