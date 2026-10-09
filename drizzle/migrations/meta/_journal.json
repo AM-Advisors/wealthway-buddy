@@ -1506,6 +1506,13 @@
       "when": 1791565000569,
       "tag": "0214_synthetic_capital_ledger",
       "breakpoints": true
+    },
+    {
+      "idx": 215,
+      "version": "7",
+      "when": 1791566961628,
+      "tag": "0215_synthetic_statement_previews",
+      "breakpoints": true
     }
   ]
 }

@@ -42358,6 +42358,57 @@ export type Database = {
           },
         ]
       }
+      synthetic_statement_previews: {
+        Row: {
+          account_id: string
+          channel: string
+          classification: string
+          content_hash: string
+          created_at: string
+          ending_capital_cents: number
+          generated_by: string
+          id: string
+          offering_id: string
+        }
+        Insert: {
+          account_id: string
+          channel: string
+          classification?: string
+          content_hash: string
+          created_at?: string
+          ending_capital_cents: number
+          generated_by: string
+          id?: string
+          offering_id: string
+        }
+        Update: {
+          account_id?: string
+          channel?: string
+          classification?: string
+          content_hash?: string
+          created_at?: string
+          ending_capital_cents?: number
+          generated_by?: string
+          id?: string
+          offering_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "synthetic_statement_previews_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "synthetic_capital_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "synthetic_statement_previews_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tax_access_events: {
         Row: {
           action: string

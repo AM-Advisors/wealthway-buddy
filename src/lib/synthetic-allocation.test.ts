@@ -45,14 +45,14 @@ describe("Walkthrough Q1 synthetic allocation", () => {
 });
 
 describe("refusals", () => {
-  it("missing opening capital", () => { const i = base(); i.participants[0].openingCapitalCents = null; expect(blockers(i).join()).toMatch(/missing opening/); });
+  it("missing opening capital", () => { const i = base(); i.participants[0]!.openingCapitalCents = null; expect(blockers(i).join()).toMatch(/missing opening/); });
   it("missing policy", () => { const i = base(); i.policy = null; expect(blockers(i).join()).toMatch(/No approved synthetic allocation policy/); });
   it("synthetic NAV into production capital accounts", () => { const i = base(); i.target = "production_capital_accounts"; expect(blockers(i).join()).toMatch(/production investor capital/); });
   it("publication", () => { const i = base(); i.target = "publication"; expect(blockers(i).join()).toMatch(/cannot be published/); });
   it("unapproved carry", () => { const i = base(); i.carryRequested = true; expect(blockers(i).join()).toMatch(/Carried interest/); });
-  it("proposed side letter changing fees", () => { const i = base(); i.feeLines[0] = { ...i.feeLines[0], termStatus: "proposed", netFeeCents: 1_875_000 }; expect(blockers(i).join()).toMatch(/proposed/); });
-  it("duplicate investor fee charges", () => { const i = base(); i.feeLines.push(i.feeLines[0]); expect(blockers(i).join()).toMatch(/Duplicate management-fee/); });
-  it("cross-fund", () => { const i = base(); i.participants[1].offeringId = "other"; i.nav.offeringId = "other"; const b = blockers(i).join(); expect(b).toMatch(/different fund/); });
+  it("proposed side letter changing fees", () => { const i = base(); i.feeLines[0] = { ...i.feeLines[0]!, termStatus: "proposed", netFeeCents: 1_875_000 }; expect(blockers(i).join()).toMatch(/proposed/); });
+  it("duplicate investor fee charges", () => { const i = base(); i.feeLines.push(i.feeLines[0]!); expect(blockers(i).join()).toMatch(/Duplicate management-fee/); });
+  it("cross-fund", () => { const i = base(); i.participants[1]!.offeringId = "other"; i.nav.offeringId = "other"; const b = blockers(i).join(); expect(b).toMatch(/different fund/); });
   it("unapproved source-only participant", () => { expect(blockers(walkthroughQ1AllocationInput({ sourceOnlyApproved: false })).length).toBe(3); });
   it("real (non-demo) fund", () => { const i = base(); i.fundIsTestDemo = false; expect(blockers(i).join()).toMatch(/TEST\/DEMO/); });
   it("totals differing from NAV, with no plug", () => { const i = base(); i.nav.navCents += 1; expect(blockers(i).join()).toMatch(/differs from synthetic NAV by -1/); });
