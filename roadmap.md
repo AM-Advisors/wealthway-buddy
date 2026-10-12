@@ -19,3 +19,4 @@
 
 - [x] Legacy archive checksum upload via general AWS connection; new fixed-retention bucket verified
 - [x] Multipart archive uploads (5 MiB SHA-256 parts, resume, abort) tested at 10 MiB and 150 MiB; no exports
+- [ ] HubSpot retirement: confirm McKay Super Admin + 2FA (manual), D5 inventory incl. 2026-09-23 Salesforce-linked users, Oct 19 2026 cutoff pending approval
