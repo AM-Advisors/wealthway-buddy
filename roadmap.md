@@ -19,4 +19,4 @@
 
 - [x] Legacy archive checksum upload via general AWS connection; new fixed-retention bucket verified
 - [x] Multipart archive uploads (5 MiB SHA-256 parts, resume, abort) tested at 10 MiB and 150 MiB; no exports
-- [ ] HubSpot cutoff go/no-go (Harmonious_HubSpot_Cutoff_Go_No_Go_Checklist.md): admin checks A1–A5, integration audit B1–B7 incl. Salesforce-linked users, replacements C1–C9, Alyssa sign-off — blocked on manual HubSpot evidence and approval
+- [ ] HubSpot cutoff go/no-go (Harmonious_HubSpot_Cutoff_Go_No_Go_Checklist.md): admin checks A1–A5, integration audit B1–B7 incl. Salesforce-linked users, replacements C1–C9, Alyssa sign-off — user indicated "good on HubSpot" (Oct 12, 2026); confirm whether this closes the go/no-go or wraps only the migration-prep phase
