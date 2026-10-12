@@ -25,13 +25,13 @@ export class ExportPolicyError extends Error {}
 
 export function assertAllowed(method: string, path: string) {
   if (method.toUpperCase() !== "GET") throw new ExportPolicyError(`Refused ${method}: export is GET-only`);
-  const bare = path.split("?")[0];
+  const bare = path.split("?")[0] ?? "";
   if (!HUBSPOT_EXPORT_ALLOWLIST.some((r) => r.test(bare))) throw new ExportPolicyError(`Refused path not on allowlist: ${bare}`);
 }
 
 export async function exportGet(keyEnv: string, path: string): Promise<Response> {
   assertAllowed("GET", path);
-  const l = process.env.LOVABLE_API_KEY, k = process.env[keyEnv];
+  const l = process.env['LOVABLE_API_KEY'], k = process.env[keyEnv];
   if (!l || !k) throw new Error(`Export credential ${keyEnv} is not configured`);
   return fetch(GATEWAY + path, { method: "GET", headers: { Authorization: `Bearer ${l}`, "X-Connection-Api-Key": k } });
 }

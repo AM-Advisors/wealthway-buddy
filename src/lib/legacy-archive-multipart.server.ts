@@ -12,13 +12,13 @@ const GATEWAY = `https://connector-gateway.lovable.dev/aws/s3/${ARCHIVE_BUCKET}`
 
 export interface PartRecord { partNumber: number; etag: string; checksumSha256: string; size: number }
 export interface UploadManifest {
-  key: string; size: number; sha256Hex: string; uploadId?: string;
-  parts: PartRecord[]; versionId?: string; status: "pending" | "uploading" | "complete" | "aborted" | "failed";
-  error?: string;
+  key: string; size: number; sha256Hex: string; uploadId?: string | undefined;
+  parts: PartRecord[]; versionId?: string | undefined; status: "pending" | "uploading" | "complete" | "aborted" | "failed";
+  error?: string | undefined;
 }
 
 function headers(extra: Record<string, string> = {}) {
-  const l = process.env.LOVABLE_API_KEY, a = process.env.AWS_API_KEY;
+  const l = process.env['LOVABLE_API_KEY'], a = process.env['AWS_API_KEY'];
   if (!l || !a) throw new Error("Archive connection is not configured");
   return { Authorization: `Bearer ${l}`, "X-Connection-Api-Key": a, ...extra };
 }
@@ -41,7 +41,7 @@ export class AwsError extends Error {
 
 async function call(method: string, path: string, init: { body?: Uint8Array | string; headers?: Record<string, string> } = {}) {
   for (let attempt = 1; ; attempt++) {
-    const r = await fetch(`${GATEWAY}/${path}`, { method, headers: headers(init.headers), body: init.body as BodyInit | undefined });
+    const r = await fetch(`${GATEWAY}/${path}`, { method, headers: headers(init.headers), body: (init.body ?? null) as BodyInit | null });
     if (r.ok) return r;
     const text = await r.text();
     const code = /<Code>([^<]+)<\/Code>/.exec(text)?.[1] ?? "Unknown";
@@ -70,7 +70,7 @@ export async function uploadMultipart(
   try {
     if (!m.uploadId) {
       const r = await call("POST", `${enc(key)}?uploads`, { headers: { "x-amz-checksum-algorithm": "SHA256", "Content-Type": "application/octet-stream" } });
-      m.uploadId = /<UploadId>([^<]+)<\/UploadId>/.exec(await r.text())?.[1];
+      m.uploadId = /<UploadId>([^<]+)<\/UploadId>/.exec(await r.text())?.[1] ?? "";
       if (!m.uploadId) throw new Error("No UploadId returned");
       m.status = "uploading"; await onProgress(m);
     }
