@@ -177,7 +177,7 @@ export function suggestRecipient(fileName: string, candidates: string[], names: 
     const nt = tokens(names[id] ?? "");
     return nt.length > 0 && nt.every((t) => ft.has(t));
   });
-  return hits.length === 1 ? hits[0] : null;
+  return hits.length === 1 ? (hits[0] ?? null) : null;
 }
 
 export function matchDocument(file: SourceFile, ctx: MatchContext): MatchResult {
