@@ -55,7 +55,7 @@ export async function history(userId: string, key: string) {
   return (data ?? []) as Decision[];
 }
 
-export async function decide(userId: string, input: { key: string; decision: DecisionKind; reason: string; parentKey?: string | null }) {
+export async function decide(userId: string, input: { key: string; decision: DecisionKind; reason: string; parentKey?: string | null | undefined }) {
   await staff(userId);
   const entry = ENTRIES.find((e) => e.key === input.key);
   if (!entry) throw new Error("That registry record was not found.");
