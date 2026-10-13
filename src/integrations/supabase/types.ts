@@ -20640,6 +20640,39 @@ export type Database = {
           },
         ]
       }
+      fund_migration_decisions: {
+        Row: {
+          actor_user_id: string
+          created_at: string
+          decision: string
+          id: string
+          offering_id: string | null
+          parent_key: string | null
+          reason: string
+          registry_key: string
+        }
+        Insert: {
+          actor_user_id: string
+          created_at?: string
+          decision: string
+          id?: string
+          offering_id?: string | null
+          parent_key?: string | null
+          reason: string
+          registry_key: string
+        }
+        Update: {
+          actor_user_id?: string
+          created_at?: string
+          decision?: string
+          id?: string
+          offering_id?: string | null
+          parent_key?: string | null
+          reason?: string
+          registry_key?: string
+        }
+        Relationships: []
+      }
       fund_migration_rows: {
         Row: {
           accreditation_status: string | null
