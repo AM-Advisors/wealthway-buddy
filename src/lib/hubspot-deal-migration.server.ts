@@ -330,9 +330,9 @@ export async function reconcile(userId: string) {
     do {
       const j = await hs(P.list(archived, after, "amount").replace(`limit=${BATCH}`, "limit=100"));
       for (const d of j.results ?? []) {
-        const a = d.associations ?? {};
-        const n = (t: string) => a[t]?.paging?.next ? -1 : new Set((a[t]?.results ?? []).map((r: any) => String(r.id))).size;
-        hsDeals.set(String(d.id), { amount: parseAmount(d.properties?.amount).cents ?? 0, contacts: n("contacts"), companies: n("companies"), history: ENGAGEMENT_TYPES.reduce((s, t) => s + Math.max(0, n(t)), 0), archived });
+        const counts: Record<string, number> = {};
+        for (const t of ["contacts", "companies", ...ENGAGEMENT_TYPES]) counts[t] = (await fullAssoc(d, t)).length;
+        hsDeals.set(String(d.id), { amount: parseAmount(d.properties?.amount).cents ?? 0, contacts: counts["contacts"]!, companies: counts["companies"]!, history: ENGAGEMENT_TYPES.reduce((s, t) => s + counts[t]!, 0), archived });
       }
       after = j.paging?.next?.after;
     } while (after);
@@ -344,14 +344,15 @@ export async function reconcile(userId: string) {
     if (!data || data.length < 1000) break;
   }
   const ids = rows.map((r) => r.id);
-  const assoc: any[] = [], hist: any[] = [];
-  for (let i = 0; i < ids.length; i += 200) {
-    const slice = ids.slice(i, i + 200);
-    const [{ data: a }, { data: h }] = await Promise.all([
-      db.from("crm_deal_associations").select("deal_id, object_type").in("deal_id", slice).limit(10000),
-      db.from("crm_deal_history").select("deal_id").in("deal_id", slice).limit(50000),
+  let contactLinks = 0, companyLinks = 0, historyItems = 0;
+  for (let i = 0; i < ids.length; i += 150) {
+    const slice = ids.slice(i, i + 150);
+    const [c1, c2, c3] = await Promise.all([
+      db.from("crm_deal_associations").select("id", { count: "exact", head: true }).in("deal_id", slice).eq("object_type", "contact"),
+      db.from("crm_deal_associations").select("id", { count: "exact", head: true }).in("deal_id", slice).eq("object_type", "company"),
+      db.from("crm_deal_history").select("id", { count: "exact", head: true }).in("deal_id", slice),
     ]);
-    assoc.push(...(a ?? [])); hist.push(...(h ?? []));
+    contactLinks += c1.count ?? 0; companyLinks += c2.count ?? 0; historyItems += c3.count ?? 0;
   }
   const vals = [...hsDeals.values()];
   const sum = (f: (v: any) => number, xs: any[]) => xs.reduce((s, x) => s + f(x), 0);
@@ -359,14 +360,13 @@ export async function reconcile(userId: string) {
     reconcileLine("Deals (active)", vals.filter((v) => !v.archived).length, rows.filter((r) => !r.hs_archived).length),
     reconcileLine("Deals (deleted in HubSpot, kept archived)", vals.filter((v) => v.archived).length, rows.filter((r) => r.hs_archived).length),
     reconcileLine("Total amount (cents)", sum((v) => v.amount, vals), sum((r) => r.amount_cents ?? 0, rows)),
-    reconcileLine("Linked contacts", sum((v) => Math.max(0, v.contacts), vals), assoc.filter((a) => a.object_type === "contact").length),
-    reconcileLine("Linked companies", sum((v) => Math.max(0, v.companies), vals), assoc.filter((a) => a.object_type === "company").length),
-    reconcileLine("Activity history items", sum((v) => v.history, vals), hist.length),
+    reconcileLine("Linked contacts", sum((v) => v.contacts, vals), contactLinks),
+    reconcileLine("Linked companies", sum((v) => v.companies, vals), companyLinks),
+    reconcileLine("Activity history items", sum((v) => v.history, vals), historyItems),
   ];
   const missingInHarmonious = [...hsDeals.keys()].filter((k) => !rows.some((r) => r.external_id === k));
   const amountMismatches = rows.filter((r) => hsDeals.has(r.external_id) && (hsDeals.get(r.external_id)!.amount !== (r.amount_cents ?? 0))).map((r) => r.external_id);
-  const truncated = vals.some((v) => v.contacts < 0 || v.companies < 0);
-  const result = { at: new Date().toISOString(), lines, ok: reconciled(lines) && !missingInHarmonious.length, missingInHarmonious, amountMismatches, note: truncated ? "Some deals have more than 100 links of one type; counted as zero on the HubSpot side — check manually." : null };
+  const result = { at: new Date().toISOString(), lines, ok: reconciled(lines) && !missingInHarmonious.length, missingInHarmonious, amountMismatches, note: null };
   await db.from("import_runs").insert({ provider: "hubspot_deal_reconciliation", actor_id: userId, result });
   return result;
 }
