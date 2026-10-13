@@ -9719,6 +9719,7 @@ export type Database = {
           hs_stage_id: string | null
           hs_stage_label: string | null
           id: string
+          last_imported_at: string | null
           lost_reason: string | null
           offering_id: string | null
           owner_user_id: string
@@ -9758,6 +9759,7 @@ export type Database = {
           hs_stage_id?: string | null
           hs_stage_label?: string | null
           id?: string
+          last_imported_at?: string | null
           lost_reason?: string | null
           offering_id?: string | null
           owner_user_id: string
@@ -9797,6 +9799,7 @@ export type Database = {
           hs_stage_id?: string | null
           hs_stage_label?: string | null
           id?: string
+          last_imported_at?: string | null
           lost_reason?: string | null
           offering_id?: string | null
           owner_user_id?: string

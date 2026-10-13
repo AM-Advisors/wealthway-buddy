@@ -1,0 +1,1 @@
+ALTER TABLE public.crm_deals ADD COLUMN IF NOT EXISTS last_imported_at timestamptz;
