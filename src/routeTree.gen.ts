@@ -85,6 +85,7 @@ import { Route as ClassroomImgSplatRouteImport } from './routes/classroom-img.$'
 import { Route as FundSlugRouteImport } from './routes/fund.$slug'
 import { Route as InvestSlugRouteImport } from './routes/invest.$slug'
 import { Route as InvestorIndexRouteImport } from './routes/investor.index'
+import { Route as InvestorTaxRouteImport } from './routes/investor.tax'
 import { Route as JoinTokenRouteImport } from './routes/join.$token'
 import { Route as OnboardRefRouteImport } from './routes/onboard.$ref'
 import { Route as PostSlugRouteImport } from './routes/post.$slug'
@@ -200,6 +201,7 @@ import { Route as AuthenticatedManagerReportingRouteImport } from './routes/_aut
 import { Route as AuthenticatedManagerRequestFundRouteImport } from './routes/_authenticated/manager.request-fund'
 import { Route as AuthenticatedManagerRequestsRouteImport } from './routes/_authenticated/manager.requests'
 import { Route as AuthenticatedManagerTaxRouteImport } from './routes/_authenticated/manager.tax'
+import { Route as AuthenticatedManagerTaxDeliveryRouteImport } from './routes/_authenticated/manager.tax-delivery'
 import { Route as AuthenticatedManagerTimelineRouteImport } from './routes/_authenticated/manager.timeline'
 import { Route as AuthenticatedManagerUpdatesRouteImport } from './routes/_authenticated/manager.updates'
 import { Route as AuthenticatedManagerValuationsRouteImport } from './routes/_authenticated/manager.valuations'
@@ -238,6 +240,7 @@ import { Route as AuthenticatedOpsAgreementsRouteImport } from './routes/_authen
 import { Route as AuthenticatedOpsAllocationsRouteImport } from './routes/_authenticated/ops.allocations'
 import { Route as AuthenticatedOpsBankingRouteImport } from './routes/_authenticated/ops.banking'
 import { Route as AuthenticatedOpsClientApprovalsRouteImport } from './routes/_authenticated/ops.client-approvals'
+import { Route as AuthenticatedOpsClientPortalLaunchRouteImport } from './routes/_authenticated/ops.client-portal-launch'
 import { Route as AuthenticatedOpsCloseRequestsRouteImport } from './routes/_authenticated/ops.close-requests'
 import { Route as AuthenticatedOpsCommandCenterRouteImport } from './routes/_authenticated/ops.command-center'
 import { Route as AuthenticatedOpsComplianceRouteImport } from './routes/_authenticated/ops.compliance'
@@ -824,6 +827,11 @@ const InvestSlugRoute = InvestSlugRouteImport.update({
 const InvestorIndexRoute = InvestorIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => InvestorRoute,
+} as any)
+const InvestorTaxRoute = InvestorTaxRouteImport.update({
+  id: '/tax',
+  path: '/tax',
   getParentRoute: () => InvestorRoute,
 } as any)
 const JoinTokenRoute = JoinTokenRouteImport.update({
@@ -1494,6 +1502,12 @@ const AuthenticatedManagerTaxRoute = AuthenticatedManagerTaxRouteImport.update({
   path: '/manager/tax',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedManagerTaxDeliveryRoute =
+  AuthenticatedManagerTaxDeliveryRouteImport.update({
+    id: '/manager/tax-delivery',
+    path: '/manager/tax-delivery',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedManagerTimelineRoute =
   AuthenticatedManagerTimelineRouteImport.update({
     id: '/manager/timeline',
@@ -1718,6 +1732,12 @@ const AuthenticatedOpsClientApprovalsRoute =
   AuthenticatedOpsClientApprovalsRouteImport.update({
     id: '/ops/client-approvals',
     path: '/ops/client-approvals',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedOpsClientPortalLaunchRoute =
+  AuthenticatedOpsClientPortalLaunchRouteImport.update({
+    id: '/ops/client-portal-launch',
+    path: '/ops/client-portal-launch',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedOpsCloseRequestsRoute =
@@ -2939,6 +2959,7 @@ export interface FileRoutesByFullPath {
   '/classroom-img/$': typeof ClassroomImgSplatRoute
   '/fund/$slug': typeof FundSlugRoute
   '/invest/$slug': typeof InvestSlugRoute
+  '/investor/tax': typeof InvestorTaxRoute
   '/join/$token': typeof JoinTokenRoute
   '/onboard/$ref': typeof OnboardRefRoute
   '/post/$slug': typeof PostSlugRoute
@@ -3052,6 +3073,7 @@ export interface FileRoutesByFullPath {
   '/manager/request-fund': typeof AuthenticatedManagerRequestFundRoute
   '/manager/requests': typeof AuthenticatedManagerRequestsRoute
   '/manager/tax': typeof AuthenticatedManagerTaxRoute
+  '/manager/tax-delivery': typeof AuthenticatedManagerTaxDeliveryRoute
   '/manager/timeline': typeof AuthenticatedManagerTimelineRoute
   '/manager/updates': typeof AuthenticatedManagerUpdatesRoute
   '/manager/valuations': typeof AuthenticatedManagerValuationsRoute
@@ -3088,6 +3110,7 @@ export interface FileRoutesByFullPath {
   '/ops/allocations': typeof AuthenticatedOpsAllocationsRoute
   '/ops/banking': typeof AuthenticatedOpsBankingRoute
   '/ops/client-approvals': typeof AuthenticatedOpsClientApprovalsRoute
+  '/ops/client-portal-launch': typeof AuthenticatedOpsClientPortalLaunchRoute
   '/ops/close-requests': typeof AuthenticatedOpsCloseRequestsRoute
   '/ops/command-center': typeof AuthenticatedOpsCommandCenterRoute
   '/ops/compliance': typeof AuthenticatedOpsComplianceRoute
@@ -3361,6 +3384,7 @@ export interface FileRoutesByTo {
   '/classroom-img/$': typeof ClassroomImgSplatRoute
   '/fund/$slug': typeof FundSlugRoute
   '/invest/$slug': typeof InvestSlugRoute
+  '/investor/tax': typeof InvestorTaxRoute
   '/join/$token': typeof JoinTokenRoute
   '/onboard/$ref': typeof OnboardRefRoute
   '/post/$slug': typeof PostSlugRoute
@@ -3471,6 +3495,7 @@ export interface FileRoutesByTo {
   '/manager/request-fund': typeof AuthenticatedManagerRequestFundRoute
   '/manager/requests': typeof AuthenticatedManagerRequestsRoute
   '/manager/tax': typeof AuthenticatedManagerTaxRoute
+  '/manager/tax-delivery': typeof AuthenticatedManagerTaxDeliveryRoute
   '/manager/timeline': typeof AuthenticatedManagerTimelineRoute
   '/manager/updates': typeof AuthenticatedManagerUpdatesRoute
   '/manager/valuations': typeof AuthenticatedManagerValuationsRoute
@@ -3507,6 +3532,7 @@ export interface FileRoutesByTo {
   '/ops/allocations': typeof AuthenticatedOpsAllocationsRoute
   '/ops/banking': typeof AuthenticatedOpsBankingRoute
   '/ops/client-approvals': typeof AuthenticatedOpsClientApprovalsRoute
+  '/ops/client-portal-launch': typeof AuthenticatedOpsClientPortalLaunchRoute
   '/ops/close-requests': typeof AuthenticatedOpsCloseRequestsRoute
   '/ops/command-center': typeof AuthenticatedOpsCommandCenterRoute
   '/ops/compliance': typeof AuthenticatedOpsComplianceRoute
@@ -3785,6 +3811,7 @@ export interface FileRoutesById {
   '/classroom-img/$': typeof ClassroomImgSplatRoute
   '/fund/$slug': typeof FundSlugRoute
   '/invest/$slug': typeof InvestSlugRoute
+  '/investor/tax': typeof InvestorTaxRoute
   '/join/$token': typeof JoinTokenRoute
   '/onboard/$ref': typeof OnboardRefRoute
   '/post/$slug': typeof PostSlugRoute
@@ -3898,6 +3925,7 @@ export interface FileRoutesById {
   '/_authenticated/manager/request-fund': typeof AuthenticatedManagerRequestFundRoute
   '/_authenticated/manager/requests': typeof AuthenticatedManagerRequestsRoute
   '/_authenticated/manager/tax': typeof AuthenticatedManagerTaxRoute
+  '/_authenticated/manager/tax-delivery': typeof AuthenticatedManagerTaxDeliveryRoute
   '/_authenticated/manager/timeline': typeof AuthenticatedManagerTimelineRoute
   '/_authenticated/manager/updates': typeof AuthenticatedManagerUpdatesRoute
   '/_authenticated/manager/valuations': typeof AuthenticatedManagerValuationsRoute
@@ -3934,6 +3962,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/allocations': typeof AuthenticatedOpsAllocationsRoute
   '/_authenticated/ops/banking': typeof AuthenticatedOpsBankingRoute
   '/_authenticated/ops/client-approvals': typeof AuthenticatedOpsClientApprovalsRoute
+  '/_authenticated/ops/client-portal-launch': typeof AuthenticatedOpsClientPortalLaunchRoute
   '/_authenticated/ops/close-requests': typeof AuthenticatedOpsCloseRequestsRoute
   '/_authenticated/ops/command-center': typeof AuthenticatedOpsCommandCenterRoute
   '/_authenticated/ops/compliance': typeof AuthenticatedOpsComplianceRoute
@@ -4213,6 +4242,7 @@ export interface FileRouteTypes {
     | '/classroom-img/$'
     | '/fund/$slug'
     | '/invest/$slug'
+    | '/investor/tax'
     | '/join/$token'
     | '/onboard/$ref'
     | '/post/$slug'
@@ -4326,6 +4356,7 @@ export interface FileRouteTypes {
     | '/manager/request-fund'
     | '/manager/requests'
     | '/manager/tax'
+    | '/manager/tax-delivery'
     | '/manager/timeline'
     | '/manager/updates'
     | '/manager/valuations'
@@ -4362,6 +4393,7 @@ export interface FileRouteTypes {
     | '/ops/allocations'
     | '/ops/banking'
     | '/ops/client-approvals'
+    | '/ops/client-portal-launch'
     | '/ops/close-requests'
     | '/ops/command-center'
     | '/ops/compliance'
@@ -4635,6 +4667,7 @@ export interface FileRouteTypes {
     | '/classroom-img/$'
     | '/fund/$slug'
     | '/invest/$slug'
+    | '/investor/tax'
     | '/join/$token'
     | '/onboard/$ref'
     | '/post/$slug'
@@ -4745,6 +4778,7 @@ export interface FileRouteTypes {
     | '/manager/request-fund'
     | '/manager/requests'
     | '/manager/tax'
+    | '/manager/tax-delivery'
     | '/manager/timeline'
     | '/manager/updates'
     | '/manager/valuations'
@@ -4781,6 +4815,7 @@ export interface FileRouteTypes {
     | '/ops/allocations'
     | '/ops/banking'
     | '/ops/client-approvals'
+    | '/ops/client-portal-launch'
     | '/ops/close-requests'
     | '/ops/command-center'
     | '/ops/compliance'
@@ -5058,6 +5093,7 @@ export interface FileRouteTypes {
     | '/classroom-img/$'
     | '/fund/$slug'
     | '/invest/$slug'
+    | '/investor/tax'
     | '/join/$token'
     | '/onboard/$ref'
     | '/post/$slug'
@@ -5171,6 +5207,7 @@ export interface FileRouteTypes {
     | '/_authenticated/manager/request-fund'
     | '/_authenticated/manager/requests'
     | '/_authenticated/manager/tax'
+    | '/_authenticated/manager/tax-delivery'
     | '/_authenticated/manager/timeline'
     | '/_authenticated/manager/updates'
     | '/_authenticated/manager/valuations'
@@ -5207,6 +5244,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/allocations'
     | '/_authenticated/ops/banking'
     | '/_authenticated/ops/client-approvals'
+    | '/_authenticated/ops/client-portal-launch'
     | '/_authenticated/ops/close-requests'
     | '/_authenticated/ops/command-center'
     | '/_authenticated/ops/compliance'
@@ -6017,6 +6055,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InvestorIndexRouteImport
       parentRoute: typeof InvestorRoute
     }
+    '/investor/tax': {
+      id: '/investor/tax'
+      path: '/tax'
+      fullPath: '/investor/tax'
+      preLoaderRoute: typeof InvestorTaxRouteImport
+      parentRoute: typeof InvestorRoute
+    }
     '/join/$token': {
       id: '/join/$token'
       path: '/join/$token'
@@ -6822,6 +6867,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedManagerTaxRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/manager/tax-delivery': {
+      id: '/_authenticated/manager/tax-delivery'
+      path: '/manager/tax-delivery'
+      fullPath: '/manager/tax-delivery'
+      preLoaderRoute: typeof AuthenticatedManagerTaxDeliveryRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/manager/timeline': {
       id: '/_authenticated/manager/timeline'
       path: '/manager/timeline'
@@ -7086,6 +7138,13 @@ declare module '@tanstack/react-router' {
       path: '/ops/client-approvals'
       fullPath: '/ops/client-approvals'
       preLoaderRoute: typeof AuthenticatedOpsClientApprovalsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ops/client-portal-launch': {
+      id: '/_authenticated/ops/client-portal-launch'
+      path: '/ops/client-portal-launch'
+      fullPath: '/ops/client-portal-launch'
+      preLoaderRoute: typeof AuthenticatedOpsClientPortalLaunchRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/ops/close-requests': {
@@ -8862,6 +8921,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedManagerRequestFundRoute: typeof AuthenticatedManagerRequestFundRoute
   AuthenticatedManagerRequestsRoute: typeof AuthenticatedManagerRequestsRoute
   AuthenticatedManagerTaxRoute: typeof AuthenticatedManagerTaxRoute
+  AuthenticatedManagerTaxDeliveryRoute: typeof AuthenticatedManagerTaxDeliveryRoute
   AuthenticatedManagerTimelineRoute: typeof AuthenticatedManagerTimelineRoute
   AuthenticatedManagerUpdatesRoute: typeof AuthenticatedManagerUpdatesRoute
   AuthenticatedManagerValuationsRoute: typeof AuthenticatedManagerValuationsRoute
@@ -8898,6 +8958,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsAllocationsRoute: typeof AuthenticatedOpsAllocationsRoute
   AuthenticatedOpsBankingRoute: typeof AuthenticatedOpsBankingRoute
   AuthenticatedOpsClientApprovalsRoute: typeof AuthenticatedOpsClientApprovalsRoute
+  AuthenticatedOpsClientPortalLaunchRoute: typeof AuthenticatedOpsClientPortalLaunchRoute
   AuthenticatedOpsCloseRequestsRoute: typeof AuthenticatedOpsCloseRequestsRoute
   AuthenticatedOpsCommandCenterRoute: typeof AuthenticatedOpsCommandCenterRoute
   AuthenticatedOpsComplianceRoute: typeof AuthenticatedOpsComplianceRoute
@@ -9165,6 +9226,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedManagerRequestFundRoute: AuthenticatedManagerRequestFundRoute,
   AuthenticatedManagerRequestsRoute: AuthenticatedManagerRequestsRoute,
   AuthenticatedManagerTaxRoute: AuthenticatedManagerTaxRoute,
+  AuthenticatedManagerTaxDeliveryRoute: AuthenticatedManagerTaxDeliveryRoute,
   AuthenticatedManagerTimelineRoute: AuthenticatedManagerTimelineRoute,
   AuthenticatedManagerUpdatesRoute: AuthenticatedManagerUpdatesRoute,
   AuthenticatedManagerValuationsRoute: AuthenticatedManagerValuationsRoute,
@@ -9208,6 +9270,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsAllocationsRoute: AuthenticatedOpsAllocationsRoute,
   AuthenticatedOpsBankingRoute: AuthenticatedOpsBankingRoute,
   AuthenticatedOpsClientApprovalsRoute: AuthenticatedOpsClientApprovalsRoute,
+  AuthenticatedOpsClientPortalLaunchRoute:
+    AuthenticatedOpsClientPortalLaunchRoute,
   AuthenticatedOpsCloseRequestsRoute: AuthenticatedOpsCloseRequestsRoute,
   AuthenticatedOpsCommandCenterRoute: AuthenticatedOpsCommandCenterRoute,
   AuthenticatedOpsComplianceRoute: AuthenticatedOpsComplianceRoute,
@@ -9378,11 +9442,13 @@ const AuthRouteChildren: AuthRouteChildren = {
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 
 interface InvestorRouteChildren {
+  InvestorTaxRoute: typeof InvestorTaxRoute
   InvestorIndexRoute: typeof InvestorIndexRoute
   InvestorFundOfferingIdRoute: typeof InvestorFundOfferingIdRoute
 }
 
 const InvestorRouteChildren: InvestorRouteChildren = {
+  InvestorTaxRoute: InvestorTaxRoute,
   InvestorIndexRoute: InvestorIndexRoute,
   InvestorFundOfferingIdRoute: InvestorFundOfferingIdRoute,
 }

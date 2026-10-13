@@ -8835,6 +8835,56 @@ export type Database = {
           },
         ]
       }
+      connector_sync_runs: {
+        Row: {
+          discovered_count: number
+          error_count: number
+          error_detail: string | null
+          finished_at: string | null
+          id: string
+          missing_count: number
+          source_id: string
+          started_at: string
+          status: string
+          triggered_by: string | null
+          updated_count: number
+        }
+        Insert: {
+          discovered_count?: number
+          error_count?: number
+          error_detail?: string | null
+          finished_at?: string | null
+          id?: string
+          missing_count?: number
+          source_id: string
+          started_at?: string
+          status?: string
+          triggered_by?: string | null
+          updated_count?: number
+        }
+        Update: {
+          discovered_count?: number
+          error_count?: number
+          error_detail?: string | null
+          finished_at?: string | null
+          id?: string
+          missing_count?: number
+          source_id?: string
+          started_at?: string
+          status?: string
+          triggered_by?: string | null
+          updated_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "connector_sync_runs_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "document_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contract_audit_events: {
         Row: {
           action: string
@@ -14205,6 +14255,287 @@ export type Database = {
           },
         ]
       }
+      document_access_events: {
+        Row: {
+          action: string
+          actor_user_id: string | null
+          created_at: string
+          decision: string
+          document_id: string | null
+          id: string
+          reason_code: string
+          request_id: string | null
+        }
+        Insert: {
+          action: string
+          actor_user_id?: string | null
+          created_at?: string
+          decision: string
+          document_id?: string | null
+          id?: string
+          reason_code: string
+          request_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor_user_id?: string | null
+          created_at?: string
+          decision?: string
+          document_id?: string | null
+          id?: string
+          reason_code?: string
+          request_id?: string | null
+        }
+        Relationships: []
+      }
+      document_access_freezes: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          lift_reason: string | null
+          lifted_at: string | null
+          lifted_by: string | null
+          reason: string
+          scope: string
+          scope_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          lift_reason?: string | null
+          lifted_at?: string | null
+          lifted_by?: string | null
+          reason: string
+          scope: string
+          scope_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          lift_reason?: string | null
+          lifted_at?: string | null
+          lifted_by?: string | null
+          reason?: string
+          scope?: string
+          scope_id?: string | null
+        }
+        Relationships: []
+      }
+      document_catalog: {
+        Row: {
+          checksum: string | null
+          discovered_at: string
+          document_type: string
+          duplicate_of: string | null
+          external_file_id: string
+          external_revision: string | null
+          file_name: string
+          id: string
+          is_test_demo: boolean
+          last_seen_at: string
+          mime_type: string | null
+          offering_id: string | null
+          parent_folder_id: string | null
+          published_at: string | null
+          published_by: string | null
+          recipient_profile_id: string | null
+          size_bytes: number | null
+          source_id: string
+          source_modified_at: string | null
+          status: string
+          status_reason: string | null
+          tax_year: number | null
+        }
+        Insert: {
+          checksum?: string | null
+          discovered_at?: string
+          document_type?: string
+          duplicate_of?: string | null
+          external_file_id: string
+          external_revision?: string | null
+          file_name: string
+          id?: string
+          is_test_demo?: boolean
+          last_seen_at?: string
+          mime_type?: string | null
+          offering_id?: string | null
+          parent_folder_id?: string | null
+          published_at?: string | null
+          published_by?: string | null
+          recipient_profile_id?: string | null
+          size_bytes?: number | null
+          source_id: string
+          source_modified_at?: string | null
+          status?: string
+          status_reason?: string | null
+          tax_year?: number | null
+        }
+        Update: {
+          checksum?: string | null
+          discovered_at?: string
+          document_type?: string
+          duplicate_of?: string | null
+          external_file_id?: string
+          external_revision?: string | null
+          file_name?: string
+          id?: string
+          is_test_demo?: boolean
+          last_seen_at?: string
+          mime_type?: string | null
+          offering_id?: string | null
+          parent_folder_id?: string | null
+          published_at?: string | null
+          published_by?: string | null
+          recipient_profile_id?: string | null
+          size_bytes?: number | null
+          source_id?: string
+          source_modified_at?: string | null
+          status?: string
+          status_reason?: string | null
+          tax_year?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_catalog_duplicate_of_fkey"
+            columns: ["duplicate_of"]
+            isOneToOne: false
+            referencedRelation: "document_catalog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_catalog_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_catalog_recipient_profile_id_fkey"
+            columns: ["recipient_profile_id"]
+            isOneToOne: false
+            referencedRelation: "investment_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_catalog_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "document_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_entitlements: {
+        Row: {
+          access_level: string
+          action: string
+          created_at: string
+          decided_by: string
+          document_id: string
+          id: string
+          principal_id: string
+          principal_type: string
+          reason: string
+        }
+        Insert: {
+          access_level?: string
+          action: string
+          created_at?: string
+          decided_by: string
+          document_id: string
+          id?: string
+          principal_id: string
+          principal_type: string
+          reason: string
+        }
+        Update: {
+          access_level?: string
+          action?: string
+          created_at?: string
+          decided_by?: string
+          document_id?: string
+          id?: string
+          principal_id?: string
+          principal_type?: string
+          reason?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_entitlements_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "document_catalog"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_match_reviews: {
+        Row: {
+          candidate_offering_id: string | null
+          candidate_profile_id: string | null
+          created_at: string
+          document_id: string
+          evidence: Json
+          id: string
+          reason: string
+          review_note: string | null
+          review_status: string
+          reviewed_at: string | null
+          reviewer_id: string | null
+        }
+        Insert: {
+          candidate_offering_id?: string | null
+          candidate_profile_id?: string | null
+          created_at?: string
+          document_id: string
+          evidence?: Json
+          id?: string
+          reason: string
+          review_note?: string | null
+          review_status?: string
+          reviewed_at?: string | null
+          reviewer_id?: string | null
+        }
+        Update: {
+          candidate_offering_id?: string | null
+          candidate_profile_id?: string | null
+          created_at?: string
+          document_id?: string
+          evidence?: Json
+          id?: string
+          reason?: string
+          review_note?: string | null
+          review_status?: string
+          reviewed_at?: string | null
+          reviewer_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_match_reviews_candidate_offering_id_fkey"
+            columns: ["candidate_offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_match_reviews_candidate_profile_id_fkey"
+            columns: ["candidate_profile_id"]
+            isOneToOne: false
+            referencedRelation: "investment_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_match_reviews_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "document_catalog"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_signature_signers: {
         Row: {
           application_id: string
@@ -14468,6 +14799,60 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      document_sources: {
+        Row: {
+          allowed_root_ids: string[]
+          approved_at: string | null
+          approved_by: string | null
+          connection_reference: string
+          created_at: string
+          created_by: string | null
+          folder_mappings: Json
+          id: string
+          is_test_demo: boolean
+          label: string
+          last_sync_at: string | null
+          provider: string
+          purpose: string
+          read_only: boolean
+          status: string
+        }
+        Insert: {
+          allowed_root_ids?: string[]
+          approved_at?: string | null
+          approved_by?: string | null
+          connection_reference: string
+          created_at?: string
+          created_by?: string | null
+          folder_mappings?: Json
+          id?: string
+          is_test_demo?: boolean
+          label: string
+          last_sync_at?: string | null
+          provider: string
+          purpose?: string
+          read_only?: boolean
+          status?: string
+        }
+        Update: {
+          allowed_root_ids?: string[]
+          approved_at?: string | null
+          approved_by?: string | null
+          connection_reference?: string
+          created_at?: string
+          created_by?: string | null
+          folder_mappings?: Json
+          id?: string
+          is_test_demo?: boolean
+          label?: string
+          last_sync_at?: string | null
+          provider?: string
+          purpose?: string
+          read_only?: boolean
+          status?: string
+        }
+        Relationships: []
       }
       document_template_uses: {
         Row: {
