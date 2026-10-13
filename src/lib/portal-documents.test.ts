@@ -41,7 +41,7 @@ describe("authorizedProfiles", () => {
   ];
   it("individual via person, entity only via owner or verified signer", () => {
     const rels = [
-      { profile_id: "llc2", person_id: "per1", status: "active", verification_status: "verified", is_authorized_signer: true },
+      { profile_id: "llc2", person_id: "per1", status: "active", verification_status: "approved", is_authorized_signer: true },
       { profile_id: "llc", person_id: "per1", status: "active", verification_status: "not_started", is_authorized_signer: false },
     ];
     expect(authorizedProfiles("u1", ["per1"], profiles, rels).sort()).toEqual(["ind", "llc2", "own"]);
