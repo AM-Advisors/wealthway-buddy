@@ -85,6 +85,7 @@ import { Route as ClassroomImgSplatRouteImport } from './routes/classroom-img.$'
 import { Route as FundSlugRouteImport } from './routes/fund.$slug'
 import { Route as InvestSlugRouteImport } from './routes/invest.$slug'
 import { Route as InvestorIndexRouteImport } from './routes/investor.index'
+import { Route as InvestorTaxRouteImport } from './routes/investor.tax'
 import { Route as JoinTokenRouteImport } from './routes/join.$token'
 import { Route as OnboardRefRouteImport } from './routes/onboard.$ref'
 import { Route as PostSlugRouteImport } from './routes/post.$slug'
@@ -200,6 +201,7 @@ import { Route as AuthenticatedManagerReportingRouteImport } from './routes/_aut
 import { Route as AuthenticatedManagerRequestFundRouteImport } from './routes/_authenticated/manager.request-fund'
 import { Route as AuthenticatedManagerRequestsRouteImport } from './routes/_authenticated/manager.requests'
 import { Route as AuthenticatedManagerTaxRouteImport } from './routes/_authenticated/manager.tax'
+import { Route as AuthenticatedManagerTaxDeliveryRouteImport } from './routes/_authenticated/manager.tax-delivery'
 import { Route as AuthenticatedManagerTimelineRouteImport } from './routes/_authenticated/manager.timeline'
 import { Route as AuthenticatedManagerUpdatesRouteImport } from './routes/_authenticated/manager.updates'
 import { Route as AuthenticatedManagerValuationsRouteImport } from './routes/_authenticated/manager.valuations'
@@ -824,6 +826,11 @@ const InvestSlugRoute = InvestSlugRouteImport.update({
 const InvestorIndexRoute = InvestorIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => InvestorRoute,
+} as any)
+const InvestorTaxRoute = InvestorTaxRouteImport.update({
+  id: '/tax',
+  path: '/tax',
   getParentRoute: () => InvestorRoute,
 } as any)
 const JoinTokenRoute = JoinTokenRouteImport.update({
@@ -1494,6 +1501,12 @@ const AuthenticatedManagerTaxRoute = AuthenticatedManagerTaxRouteImport.update({
   path: '/manager/tax',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedManagerTaxDeliveryRoute =
+  AuthenticatedManagerTaxDeliveryRouteImport.update({
+    id: '/manager/tax-delivery',
+    path: '/manager/tax-delivery',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedManagerTimelineRoute =
   AuthenticatedManagerTimelineRouteImport.update({
     id: '/manager/timeline',
@@ -2939,6 +2952,7 @@ export interface FileRoutesByFullPath {
   '/classroom-img/$': typeof ClassroomImgSplatRoute
   '/fund/$slug': typeof FundSlugRoute
   '/invest/$slug': typeof InvestSlugRoute
+  '/investor/tax': typeof InvestorTaxRoute
   '/join/$token': typeof JoinTokenRoute
   '/onboard/$ref': typeof OnboardRefRoute
   '/post/$slug': typeof PostSlugRoute
@@ -3052,6 +3066,7 @@ export interface FileRoutesByFullPath {
   '/manager/request-fund': typeof AuthenticatedManagerRequestFundRoute
   '/manager/requests': typeof AuthenticatedManagerRequestsRoute
   '/manager/tax': typeof AuthenticatedManagerTaxRoute
+  '/manager/tax-delivery': typeof AuthenticatedManagerTaxDeliveryRoute
   '/manager/timeline': typeof AuthenticatedManagerTimelineRoute
   '/manager/updates': typeof AuthenticatedManagerUpdatesRoute
   '/manager/valuations': typeof AuthenticatedManagerValuationsRoute
@@ -3361,6 +3376,7 @@ export interface FileRoutesByTo {
   '/classroom-img/$': typeof ClassroomImgSplatRoute
   '/fund/$slug': typeof FundSlugRoute
   '/invest/$slug': typeof InvestSlugRoute
+  '/investor/tax': typeof InvestorTaxRoute
   '/join/$token': typeof JoinTokenRoute
   '/onboard/$ref': typeof OnboardRefRoute
   '/post/$slug': typeof PostSlugRoute
@@ -3471,6 +3487,7 @@ export interface FileRoutesByTo {
   '/manager/request-fund': typeof AuthenticatedManagerRequestFundRoute
   '/manager/requests': typeof AuthenticatedManagerRequestsRoute
   '/manager/tax': typeof AuthenticatedManagerTaxRoute
+  '/manager/tax-delivery': typeof AuthenticatedManagerTaxDeliveryRoute
   '/manager/timeline': typeof AuthenticatedManagerTimelineRoute
   '/manager/updates': typeof AuthenticatedManagerUpdatesRoute
   '/manager/valuations': typeof AuthenticatedManagerValuationsRoute
@@ -3785,6 +3802,7 @@ export interface FileRoutesById {
   '/classroom-img/$': typeof ClassroomImgSplatRoute
   '/fund/$slug': typeof FundSlugRoute
   '/invest/$slug': typeof InvestSlugRoute
+  '/investor/tax': typeof InvestorTaxRoute
   '/join/$token': typeof JoinTokenRoute
   '/onboard/$ref': typeof OnboardRefRoute
   '/post/$slug': typeof PostSlugRoute
@@ -3898,6 +3916,7 @@ export interface FileRoutesById {
   '/_authenticated/manager/request-fund': typeof AuthenticatedManagerRequestFundRoute
   '/_authenticated/manager/requests': typeof AuthenticatedManagerRequestsRoute
   '/_authenticated/manager/tax': typeof AuthenticatedManagerTaxRoute
+  '/_authenticated/manager/tax-delivery': typeof AuthenticatedManagerTaxDeliveryRoute
   '/_authenticated/manager/timeline': typeof AuthenticatedManagerTimelineRoute
   '/_authenticated/manager/updates': typeof AuthenticatedManagerUpdatesRoute
   '/_authenticated/manager/valuations': typeof AuthenticatedManagerValuationsRoute
@@ -4213,6 +4232,7 @@ export interface FileRouteTypes {
     | '/classroom-img/$'
     | '/fund/$slug'
     | '/invest/$slug'
+    | '/investor/tax'
     | '/join/$token'
     | '/onboard/$ref'
     | '/post/$slug'
@@ -4326,6 +4346,7 @@ export interface FileRouteTypes {
     | '/manager/request-fund'
     | '/manager/requests'
     | '/manager/tax'
+    | '/manager/tax-delivery'
     | '/manager/timeline'
     | '/manager/updates'
     | '/manager/valuations'
@@ -4635,6 +4656,7 @@ export interface FileRouteTypes {
     | '/classroom-img/$'
     | '/fund/$slug'
     | '/invest/$slug'
+    | '/investor/tax'
     | '/join/$token'
     | '/onboard/$ref'
     | '/post/$slug'
@@ -4745,6 +4767,7 @@ export interface FileRouteTypes {
     | '/manager/request-fund'
     | '/manager/requests'
     | '/manager/tax'
+    | '/manager/tax-delivery'
     | '/manager/timeline'
     | '/manager/updates'
     | '/manager/valuations'
@@ -5058,6 +5081,7 @@ export interface FileRouteTypes {
     | '/classroom-img/$'
     | '/fund/$slug'
     | '/invest/$slug'
+    | '/investor/tax'
     | '/join/$token'
     | '/onboard/$ref'
     | '/post/$slug'
@@ -5171,6 +5195,7 @@ export interface FileRouteTypes {
     | '/_authenticated/manager/request-fund'
     | '/_authenticated/manager/requests'
     | '/_authenticated/manager/tax'
+    | '/_authenticated/manager/tax-delivery'
     | '/_authenticated/manager/timeline'
     | '/_authenticated/manager/updates'
     | '/_authenticated/manager/valuations'
@@ -6017,6 +6042,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InvestorIndexRouteImport
       parentRoute: typeof InvestorRoute
     }
+    '/investor/tax': {
+      id: '/investor/tax'
+      path: '/tax'
+      fullPath: '/investor/tax'
+      preLoaderRoute: typeof InvestorTaxRouteImport
+      parentRoute: typeof InvestorRoute
+    }
     '/join/$token': {
       id: '/join/$token'
       path: '/join/$token'
@@ -6820,6 +6852,13 @@ declare module '@tanstack/react-router' {
       path: '/manager/tax'
       fullPath: '/manager/tax'
       preLoaderRoute: typeof AuthenticatedManagerTaxRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/manager/tax-delivery': {
+      id: '/_authenticated/manager/tax-delivery'
+      path: '/manager/tax-delivery'
+      fullPath: '/manager/tax-delivery'
+      preLoaderRoute: typeof AuthenticatedManagerTaxDeliveryRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/manager/timeline': {
@@ -8862,6 +8901,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedManagerRequestFundRoute: typeof AuthenticatedManagerRequestFundRoute
   AuthenticatedManagerRequestsRoute: typeof AuthenticatedManagerRequestsRoute
   AuthenticatedManagerTaxRoute: typeof AuthenticatedManagerTaxRoute
+  AuthenticatedManagerTaxDeliveryRoute: typeof AuthenticatedManagerTaxDeliveryRoute
   AuthenticatedManagerTimelineRoute: typeof AuthenticatedManagerTimelineRoute
   AuthenticatedManagerUpdatesRoute: typeof AuthenticatedManagerUpdatesRoute
   AuthenticatedManagerValuationsRoute: typeof AuthenticatedManagerValuationsRoute
@@ -9165,6 +9205,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedManagerRequestFundRoute: AuthenticatedManagerRequestFundRoute,
   AuthenticatedManagerRequestsRoute: AuthenticatedManagerRequestsRoute,
   AuthenticatedManagerTaxRoute: AuthenticatedManagerTaxRoute,
+  AuthenticatedManagerTaxDeliveryRoute: AuthenticatedManagerTaxDeliveryRoute,
   AuthenticatedManagerTimelineRoute: AuthenticatedManagerTimelineRoute,
   AuthenticatedManagerUpdatesRoute: AuthenticatedManagerUpdatesRoute,
   AuthenticatedManagerValuationsRoute: AuthenticatedManagerValuationsRoute,
@@ -9378,11 +9419,13 @@ const AuthRouteChildren: AuthRouteChildren = {
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 
 interface InvestorRouteChildren {
+  InvestorTaxRoute: typeof InvestorTaxRoute
   InvestorIndexRoute: typeof InvestorIndexRoute
   InvestorFundOfferingIdRoute: typeof InvestorFundOfferingIdRoute
 }
 
 const InvestorRouteChildren: InvestorRouteChildren = {
+  InvestorTaxRoute: InvestorTaxRoute,
   InvestorIndexRoute: InvestorIndexRoute,
   InvestorFundOfferingIdRoute: InvestorFundOfferingIdRoute,
 }
