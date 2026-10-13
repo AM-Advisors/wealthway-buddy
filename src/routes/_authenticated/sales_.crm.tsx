@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { CrmWorkspace } from "@/components/crm-workspace";
+import { GmailConnectCard } from "@/components/gmail-connect";
 
 export const Route = createFileRoute("/_authenticated/sales_/crm")({
   head: () => ({
@@ -14,6 +15,9 @@ export const Route = createFileRoute("/_authenticated/sales_/crm")({
     ],
   }),
   component: () => (
-    <CrmWorkspace scope="harmonious" title="Contacts, deals & campaigns" description="Your prospective clients and deals. Super Administrators, and people they authorize, see everyone's." />
+    <div className="space-y-4">
+      <div className="mx-auto max-w-6xl px-4 pt-4"><GmailConnectCard /></div>
+      <CrmWorkspace scope="harmonious" title="Contacts, deals & campaigns" description="Your prospective clients and deals. Super Administrators, and people they authorize, see everyone's." />
+    </div>
   ),
 });
