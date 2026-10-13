@@ -274,3 +274,54 @@ export async function listGroupMailboxThreads(userId: string, mailboxId: string)
   }
   return rows;
 }
+
+// --- Log the employee's Gmail to CRM contacts ---------------------------------
+
+const addrs = (v: string | undefined) => (v ?? "").match(/[^\s<>,"']+@[^\s<>,"']+/g)?.map((x) => x.toLowerCase()) ?? [];
+
+/**
+ * Copies subject/snippet of the signed-in employee's recent emails onto the
+ * Harmonious contacts they were exchanged with. Only emails with a known
+ * CRM contact are logged; nothing else is stored. Idempotent per message.
+ */
+export async function logMyGmailToCrm(userId: string, days = 14): Promise<{ scanned: number; logged: number; connected: boolean }> {
+  await requireStaff(userId);
+  const key = await getConnectionKeyForUser(userId, GMAIL_CONNECTOR_ID);
+  if (!key) return { scanned: 0, logged: 0, connected: false };
+  const call = (path: string) => callAsAppUser({ gatewayBaseUrl: GATEWAY_BASE_URL, connectionAPIKey: key, connectorId: GMAIL_CONNECTOR_ID, path, requiredScopes: GOOGLE_MAIL_SCOPES });
+  const prof = await call("/gmail/v1/users/me/profile");
+  if (!prof.ok) return { scanned: 0, logged: 0, connected: false };
+  const me = String(((await prof.json()) as any).emailAddress ?? "").toLowerCase();
+  const list = await call(`/gmail/v1/users/me/messages?maxResults=100&q=${encodeURIComponent(`newer_than:${days}d -in:chats`)}`);
+  if (!list.ok) throw new Error(`Gmail list failed [${list.status}]: ${(await list.text()).slice(0, 200)}`);
+  const ids = (((await list.json()) as any).messages ?? []).map((m: any) => m.id as string);
+  const msgs: { id: string; from: string[]; to: string[]; subject: string; snippet: string; date: string }[] = [];
+  for (const id of ids) {
+    const r = await call(`/gmail/v1/users/me/messages/${id}?format=metadata&metadataHeaders=From&metadataHeaders=To&metadataHeaders=Cc&metadataHeaders=Subject&metadataHeaders=Date`);
+    if (!r.ok) continue;
+    const m = (await r.json()) as any;
+    const h = new Map<string, string>((m.payload?.headers ?? []).map((x: any) => [String(x.name).toLowerCase(), String(x.value)]));
+    msgs.push({ id, from: addrs(h.get("from")), to: [...addrs(h.get("to")), ...addrs(h.get("cc"))], subject: h.get("subject") ?? "", snippet: m.snippet ?? "", date: m.internalDate ? new Date(Number(m.internalDate)).toISOString() : new Date().toISOString() });
+  }
+  const others = [...new Set(msgs.flatMap((m) => [...m.from, ...m.to]).filter((a) => a !== me))];
+  if (!others.length) return { scanned: msgs.length, logged: 0, connected: true };
+  const db = await admin();
+  const contacts: any[] = [];
+  for (let i = 0; i < others.length; i += 100) {
+    const { data } = await db.from("crm_contacts").select("id, email").in("email", others.slice(i, i + 100)).is("archived_at", null);
+    contacts.push(...(data ?? []));
+  }
+  const byEmail = new Map<string, string[]>();
+  for (const c of contacts) { const e = String(c.email).toLowerCase(); byEmail.set(e, [...(byEmail.get(e) ?? []), c.id]); }
+  const rows: any[] = [];
+  for (const m of msgs) {
+    const outgoing = m.from.includes(me);
+    const parties = (outgoing ? m.to : m.from).filter((a) => a !== me);
+    for (const a of parties) for (const cid of byEmail.get(a) ?? []) rows.push({ contact_id: cid, external_source: "gmail", external_id: m.id, direction: outgoing ? "outgoing" : "incoming", subject: m.subject.slice(0, 300), snippet: m.snippet.slice(0, 500), sent_at: m.date, imported_by: userId });
+  }
+  if (rows.length) {
+    const { error } = await db.from("crm_email_history").upsert(rows, { onConflict: "external_source,external_id,contact_id", ignoreDuplicates: true });
+    if (error) throw error;
+  }
+  return { scanned: msgs.length, logged: rows.length, connected: true };
+}

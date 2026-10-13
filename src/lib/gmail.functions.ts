@@ -134,3 +134,10 @@ export const getGroupMailboxThreads = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     return { threads: await listGroupMailboxThreads(context.userId, data.mailboxId) };
   });
+
+export const logMyGmailToContacts = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { logMyGmailToCrm } = await import("@/lib/gmail.server");
+    return logMyGmailToCrm(context.userId);
+  });
