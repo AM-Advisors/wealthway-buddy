@@ -128,7 +128,7 @@ export function authorizedProfiles(userId: string, myPersonIds: string[], profil
     else if (SELF_PROFILE_TYPES.has(p.profile_type) && p.person_id && persons.has(p.person_id)) out.add(p.id);
   }
   for (const r of rels) {
-    if (persons.has(r.person_id) && r.status === "active" && r.verification_status === "verified" && r.is_authorized_signer) out.add(r.profile_id);
+    if (persons.has(r.person_id) && r.status === "active" && r.verification_status === "approved" && r.is_authorized_signer) out.add(r.profile_id);
   }
   return [...out];
 }
