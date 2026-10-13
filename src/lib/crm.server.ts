@@ -185,11 +185,34 @@ export async function logNote(userId: string, d: { contactId: string; dealId?: s
 
 // ------------------------------------------------------------ deals
 
-export async function saveDeal(userId: string, d: { id?: string | undefined; contactId: string; title: string; stage: DealStage; amount_cents?: number | null | undefined; expected_close?: string | null | undefined; lost_reason?: string | null | undefined }) {
+/** Imported history (HubSpot emails, notes, meetings, calls, tasks), links and original HubSpot details for one deal. */
+export async function dealDetail(userId: string, dealId: string) {
   const a = await crmActor(userId);
   const db = await admin();
-  const { data: c } = await db.from("crm_contacts").select("*").eq("id", d.contactId).maybeSingle();
-  if (!c || !canEdit(a, c)) throw new Error("Contact not found.");
+  const { data: deal } = await db.from("crm_deals").select("id, scope, offering_id, owner_user_id, hs_pipeline_label, hs_stage_label, hs_owner_name, hs_owner_email, source_created_at, source_closed_at, company_names, external_source").eq("id", dealId).maybeSingle();
+  if (!deal || !canSee(a, deal)) throw new Error("Deal not found.");
+  const [{ data: history }, { data: links }, { data: act }] = await Promise.all([
+    db.from("crm_deal_history").select("id, kind, occurred_at, subject, snippet").eq("deal_id", dealId).order("occurred_at", { ascending: false }).limit(500),
+    db.from("crm_deal_associations").select("object_type, display_name, crm_contact_id, external_id").eq("deal_id", dealId),
+    db.from("crm_activity").select("id, kind, summary, actor_user_id, created_at").eq("deal_id", dealId).order("created_at", { ascending: false }).limit(200),
+  ]);
+  const ppl = await names(((act ?? []) as any[]).map((x) => x.actor_user_id));
+  const contactIds = ((links ?? []) as any[]).map((l) => l.crm_contact_id).filter(Boolean);
+  const { data: cs } = contactIds.length ? await db.from("crm_contacts").select("id, full_name").in("id", contactIds) : { data: [] };
+  const cn = new Map(((cs ?? []) as any[]).map((c) => [c.id, c.full_name]));
+  return {
+    deal, history: history ?? [],
+    links: ((links ?? []) as any[]).map((l) => ({ ...l, display_name: l.display_name ?? cn.get(l.crm_contact_id) ?? null })),
+    activity: ((act ?? []) as any[]).map((x) => ({ ...x, actor_name: ppl.get(x.actor_user_id) ?? "System" })),
+  };
+}
+
+export async function saveDeal(userId: string, d: { id?: string | undefined; contactId?: string | undefined; title: string; stage: DealStage; amount_cents?: number | null | undefined; expected_close?: string | null | undefined; lost_reason?: string | null | undefined }) {
+  const a = await crmActor(userId);
+  const db = await admin();
+  // Editing an existing deal is authorized by the deal itself (its owner may differ from the contact's owner).
+  const { data: c } = d.id || !d.contactId ? { data: null } : await db.from("crm_contacts").select("*").eq("id", d.contactId).maybeSingle();
+  if (!d.id && (!c || !canEdit(a, c))) throw new Error("Contact not found.");
   if (d.stage === "lost" && !d.lost_reason?.trim()) throw new Error("Say why the deal was lost.");
   const fields = { title: d.title, stage: d.stage, amount_cents: d.amount_cents ?? null, expected_close: d.expected_close || null, lost_reason: d.stage === "lost" ? d.lost_reason : null };
   if (d.id) {
@@ -203,6 +226,7 @@ export async function saveDeal(userId: string, d: { id?: string | undefined; con
     }
     return { id: d.id };
   }
+  if (!c) throw new Error("Pick a contact.");
   const { data: row, error } = await db.from("crm_deals").insert({ ...fields, scope: c.scope, offering_id: c.offering_id, contact_id: c.id, owner_user_id: userId, created_by: userId }).select("id").single();
   if (error) throw new Error("Could not add the deal.");
   await logActivity({ scope: c.scope, offering_id: c.offering_id, contact_id: c.id, deal_id: row.id, actor_user_id: userId, kind: "created", summary: `Deal opened: ${d.title} (${DEAL_STAGE_LABELS[d.stage]})` });

@@ -54,10 +54,15 @@ export const logCrmNote = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ contactId: uuid, dealId: uuid.optional(), kind: z.enum(["note", "call", "meeting", "email_logged"]), summary: z.string().trim().min(1).max(2000) }).parse(d))
   .handler(async ({ data, context }) => (await srv()).logNote(ctx(context), data));
 
+export const getCrmDealDetail = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: uuid }).parse(d))
+  .handler(async ({ data, context }) => (await srv()).dealDetail(ctx(context), data.id));
+
 export const saveCrmDeal = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({
-    id: uuid.optional(), contactId: uuid, title: z.string().trim().min(1).max(200), stage: z.enum(DEAL_STAGES),
+    id: uuid.optional(), contactId: uuid.optional(), title: z.string().trim().min(1).max(200), stage: z.enum(DEAL_STAGES),
     amount_cents: z.number().int().min(0).nullable().optional(), expected_close: opt(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)), lost_reason: opt(z.string().max(500)),
   }).parse(d))
   .handler(async ({ data, context }) => (await srv()).saveDeal(ctx(context), data));

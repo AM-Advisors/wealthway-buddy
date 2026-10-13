@@ -22,7 +22,7 @@
 - [x] Oct 19 cutoff readiness assessment (read-only): currently NO-GO
 - [ ] Manual HubSpot audit + MFA screenshots — blocked on Alyssa
 - [x] Import HubSpot deals into Harmonious (300 deals, reconciled) + change tracking + Gmail email logging
-- [ ] Owner matching for HubSpot owners without a Harmonious login — blocked on Alyssa's decision
+- [x] 204 unmatched-owner deals reassigned to McKay; reconciled; authorized reassignment + deal history view tested
 - [ ] Staff connect Gmail and run live email logging test — blocked on staff
 - [ ] Final catch-up import at cutoff — runs at cutoff
 - [ ] Shared inbox/chat replacement decision; forms/meeting links moves — blocked on audit + approval

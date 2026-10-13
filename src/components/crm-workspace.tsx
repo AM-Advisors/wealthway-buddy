@@ -16,7 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { DEAL_STAGES, DEAL_STAGE_LABELS, type DealStage } from "@/lib/crm-model";
 import {
-  archiveCrmContact, decideCrmCampaign, getContactDetail, getCrmWorkspace, listCrmOwners, logCrmNote, previewCrmAudience,
+  archiveCrmContact, decideCrmCampaign, getContactDetail, getCrmDealDetail, getCrmWorkspace, listCrmOwners, logCrmNote, previewCrmAudience,
   reassignCrmOwner, saveCrmCampaign, saveCrmContact, saveCrmDeal, sendCrmCampaign, setCrmConsent, submitCrmCampaign,
 } from "@/lib/crm.functions";
 
@@ -190,13 +190,13 @@ function DealDialog({ init, contacts, onClose, onSaved }: { init: any; contacts:
   async function submit() {
     setBusy(true);
     try {
-      await save({ data: { id: init.id, contactId: f.contactId, title: f.title, stage: f.stage, amount_cents: f.amount ? Math.round(Number(f.amount) * 100) : null, expected_close: f.expected_close || null, lost_reason: f.lost_reason || null } });
+      await save({ data: { id: init.id, contactId: f.contactId || undefined, title: f.title, stage: f.stage, amount_cents: f.amount ? Math.round(Number(f.amount) * 100) : null, expected_close: f.expected_close || null, lost_reason: f.lost_reason || null } });
       toast.success("Deal saved"); onSaved(); onClose();
     } catch (e) { err(e); } finally { setBusy(false); }
   }
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent>
+      <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle>{init.id ? "Edit deal" : "Add deal"}</DialogTitle></DialogHeader>
         <div className="grid gap-3">
           <div><Label>Contact</Label>
@@ -219,7 +219,8 @@ function DealDialog({ init, contacts, onClose, onSaved }: { init: any; contacts:
           {f.stage === "lost" && <div><Label>Why was it lost?</Label><Input value={f.lost_reason} onChange={(e) => setF({ ...f, lost_reason: e.target.value })} /></div>}
           <p className="text-xs text-muted-foreground">A deal is a pipeline note only. Marking it Committed or Won does not create an investment or count as funded.</p>
         </div>
-        <DialogFooter><Button variant="outline" onClick={onClose}>Cancel</Button><Button disabled={busy || !f.contactId || !f.title.trim()} onClick={submit}>Save</Button></DialogFooter>
+        <DialogFooter><Button variant="outline" onClick={onClose}>Cancel</Button><Button disabled={busy || (!init.id && !f.contactId) || !f.title.trim()} onClick={submit}>Save</Button></DialogFooter>
+        {init.id && <DealHistory id={init.id} />}
       </DialogContent>
     </Dialog>
   );
@@ -411,5 +412,48 @@ function ContactSheet({ id, canAssign, onClose, onEdit, onChange }: { id: string
         )}
       </SheetContent>
     </Sheet>
+  );
+}
+
+const KIND_LABEL: Record<string, string> = { email: "Email", note: "Note", meeting: "Meeting", call: "Call", task: "Task" };
+
+function DealHistory({ id }: { id: string }) {
+  const load = useServerFn(getCrmDealDetail);
+  const q = useQuery({ queryKey: ["crm-deal", id], queryFn: () => load({ data: { id } }) });
+  const [kind, setKind] = useState<string>("all");
+  if (q.isLoading) return <p className="text-xs text-muted-foreground">Loading history…</p>;
+  if (q.error) return <p className="text-xs text-destructive">{(q.error as Error).message}</p>;
+  const d: any = q.data;
+  const items = (d.history as any[]).filter((h) => kind === "all" || h.kind === kind);
+  return (
+    <div className="space-y-3 border-t pt-3 text-sm">
+      {d.deal.external_source === "hubspot" && (
+        <div className="text-xs text-muted-foreground">
+          From HubSpot: {d.deal.hs_pipeline_label ?? "—"} · {d.deal.hs_stage_label ?? "—"} · original owner {d.deal.hs_owner_name ?? "none"}
+          {d.deal.source_created_at ? ` · created ${new Date(d.deal.source_created_at).toLocaleDateString()}` : ""}
+        </div>
+      )}
+      {d.links.length > 0 && (
+        <div className="flex flex-wrap gap-1">{d.links.map((l: any) => <span key={l.object_type + l.external_id} className="rounded bg-muted px-2 py-0.5 text-xs">{l.object_type === "company" ? "Company" : "Contact"}: {l.display_name ?? l.external_id}</span>)}</div>
+      )}
+      <div className="flex items-center justify-between">
+        <h4 className="font-medium">History ({d.history.length})</h4>
+        <Select value={kind} onValueChange={setKind}>
+          <SelectTrigger className="h-8 w-32"><SelectValue /></SelectTrigger>
+          <SelectContent><SelectItem value="all">All</SelectItem>{Object.entries(KIND_LABEL).map(([k, v]) => <SelectItem key={k} value={k}>{v}s</SelectItem>)}</SelectContent>
+        </Select>
+      </div>
+      {d.activity.length > 0 && (
+        <ul className="divide-y">{d.activity.map((a: any) => <li key={a.id} className="py-1 text-xs">{a.summary} <span className="text-muted-foreground">· {a.actor_name} · {new Date(a.created_at).toLocaleString()}</span></li>)}</ul>
+      )}
+      {items.length === 0 ? <p className="text-xs text-muted-foreground">No history.</p> : (
+        <ul className="max-h-80 divide-y overflow-y-auto">{items.map((h: any) => (
+          <li key={h.id} className="py-2">
+            <div className="text-xs text-muted-foreground">{KIND_LABEL[h.kind] ?? h.kind}{h.occurred_at ? ` · ${new Date(h.occurred_at).toLocaleString()}` : ""}</div>
+            {h.subject && <div className="font-medium">{h.subject}</div>}
+            {h.snippet && <div className="line-clamp-3 text-xs">{h.snippet}</div>}
+          </li>))}</ul>
+      )}
+    </div>
   );
 }
