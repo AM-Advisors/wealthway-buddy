@@ -26,3 +26,6 @@
 - [ ] Staff connect Gmail and run live email logging test — blocked on staff
 - [ ] Final catch-up import at cutoff — runs at cutoff
 - [ ] Shared inbox/chat replacement decision; forms/meeting links moves — blocked on audit + approval
+
+- [x] Portal Phase B (synthetic only): catalog, matching, entitlements, step-up K-1 download, manager Tax Delivery, Ops Client Portal Launch, emergency freeze
+- [ ] Portal Phase C: live Box/Drive config, folder discovery, scopes — waiting on Alyssa's approval
