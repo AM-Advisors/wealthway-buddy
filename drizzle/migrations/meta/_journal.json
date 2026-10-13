@@ -1527,6 +1527,13 @@
       "when": 1791568716569,
       "tag": "0217_period_link_two_person_policy",
       "breakpoints": true
+    },
+    {
+      "idx": 218,
+      "version": "7",
+      "when": 1791851250380,
+      "tag": "0218_hubspot_deal_migration",
+      "breakpoints": true
     }
   ]
 }

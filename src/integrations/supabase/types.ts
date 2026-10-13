@@ -9599,19 +9599,125 @@ export type Database = {
           },
         ]
       }
+      crm_deal_associations: {
+        Row: {
+          association_types: string[]
+          created_at: string
+          crm_contact_id: string | null
+          deal_id: string
+          display_name: string | null
+          external_id: string
+          id: string
+          object_type: string
+        }
+        Insert: {
+          association_types?: string[]
+          created_at?: string
+          crm_contact_id?: string | null
+          deal_id: string
+          display_name?: string | null
+          external_id: string
+          id?: string
+          object_type: string
+        }
+        Update: {
+          association_types?: string[]
+          created_at?: string
+          crm_contact_id?: string | null
+          deal_id?: string
+          display_name?: string | null
+          external_id?: string
+          id?: string
+          object_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_deal_associations_crm_contact_id_fkey"
+            columns: ["crm_contact_id"]
+            isOneToOne: false
+            referencedRelation: "crm_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_deal_associations_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "crm_deals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_deal_history: {
+        Row: {
+          deal_id: string
+          external_id: string
+          external_source: string
+          id: string
+          imported_at: string
+          kind: string
+          occurred_at: string | null
+          properties: Json | null
+          snippet: string | null
+          subject: string | null
+        }
+        Insert: {
+          deal_id: string
+          external_id: string
+          external_source: string
+          id?: string
+          imported_at?: string
+          kind: string
+          occurred_at?: string | null
+          properties?: Json | null
+          snippet?: string | null
+          subject?: string | null
+        }
+        Update: {
+          deal_id?: string
+          external_id?: string
+          external_source?: string
+          id?: string
+          imported_at?: string
+          kind?: string
+          occurred_at?: string | null
+          properties?: Json | null
+          snippet?: string | null
+          subject?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_deal_history_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "crm_deals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       crm_deals: {
         Row: {
           amount_cents: number | null
           archived_at: string | null
           client_id: string | null
+          company_names: string[] | null
           connected_via: string | null
-          contact_id: string
+          contact_id: string | null
           created_at: string
           created_by: string
           expected_close: string | null
           external_id: string | null
           external_source: string | null
           follow_up_at: string | null
+          hs_amount_raw: string | null
+          hs_archived: boolean
+          hs_currency: string | null
+          hs_owner_email: string | null
+          hs_owner_id: string | null
+          hs_owner_name: string | null
+          hs_pipeline_id: string | null
+          hs_pipeline_label: string | null
+          hs_stage_id: string | null
+          hs_stage_label: string | null
           id: string
           lost_reason: string | null
           offering_id: string | null
@@ -9619,6 +9725,10 @@ export type Database = {
           sales_stage: string | null
           scope: string
           service_key: string | null
+          source_closed_at: string | null
+          source_created_at: string | null
+          source_properties: Json | null
+          source_updated_at: string | null
           stage: string
           stage_changed_at: string | null
           title: string
@@ -9628,14 +9738,25 @@ export type Database = {
           amount_cents?: number | null
           archived_at?: string | null
           client_id?: string | null
+          company_names?: string[] | null
           connected_via?: string | null
-          contact_id: string
+          contact_id?: string | null
           created_at?: string
           created_by: string
           expected_close?: string | null
           external_id?: string | null
           external_source?: string | null
           follow_up_at?: string | null
+          hs_amount_raw?: string | null
+          hs_archived?: boolean
+          hs_currency?: string | null
+          hs_owner_email?: string | null
+          hs_owner_id?: string | null
+          hs_owner_name?: string | null
+          hs_pipeline_id?: string | null
+          hs_pipeline_label?: string | null
+          hs_stage_id?: string | null
+          hs_stage_label?: string | null
           id?: string
           lost_reason?: string | null
           offering_id?: string | null
@@ -9643,6 +9764,10 @@ export type Database = {
           sales_stage?: string | null
           scope: string
           service_key?: string | null
+          source_closed_at?: string | null
+          source_created_at?: string | null
+          source_properties?: Json | null
+          source_updated_at?: string | null
           stage?: string
           stage_changed_at?: string | null
           title: string
@@ -9652,14 +9777,25 @@ export type Database = {
           amount_cents?: number | null
           archived_at?: string | null
           client_id?: string | null
+          company_names?: string[] | null
           connected_via?: string | null
-          contact_id?: string
+          contact_id?: string | null
           created_at?: string
           created_by?: string
           expected_close?: string | null
           external_id?: string | null
           external_source?: string | null
           follow_up_at?: string | null
+          hs_amount_raw?: string | null
+          hs_archived?: boolean
+          hs_currency?: string | null
+          hs_owner_email?: string | null
+          hs_owner_id?: string | null
+          hs_owner_name?: string | null
+          hs_pipeline_id?: string | null
+          hs_pipeline_label?: string | null
+          hs_stage_id?: string | null
+          hs_stage_label?: string | null
           id?: string
           lost_reason?: string | null
           offering_id?: string | null
@@ -9667,6 +9803,10 @@ export type Database = {
           sales_stage?: string | null
           scope?: string
           service_key?: string | null
+          source_closed_at?: string | null
+          source_created_at?: string | null
+          source_properties?: Json | null
+          source_updated_at?: string | null
           stage?: string
           stage_changed_at?: string | null
           title?: string
@@ -23231,6 +23371,51 @@ export type Database = {
         }
         Relationships: []
       }
+      hubspot_deal_migration_runs: {
+        Row: {
+          batches: number
+          counts: Json
+          cursor: string | null
+          errors: Json
+          finished_at: string | null
+          id: string
+          kind: string
+          phase: string
+          since: string | null
+          started_at: string
+          started_by: string
+          status: string
+        }
+        Insert: {
+          batches?: number
+          counts?: Json
+          cursor?: string | null
+          errors?: Json
+          finished_at?: string | null
+          id?: string
+          kind: string
+          phase?: string
+          since?: string | null
+          started_at?: string
+          started_by: string
+          status?: string
+        }
+        Update: {
+          batches?: number
+          counts?: Json
+          cursor?: string | null
+          errors?: Json
+          finished_at?: string | null
+          id?: string
+          kind?: string
+          phase?: string
+          since?: string | null
+          started_at?: string
+          started_by?: string
+          status?: string
+        }
+        Relationships: []
+      }
       hubspot_ops_tickets: {
         Row: {
           client_id: string | null
@@ -23326,6 +23511,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      hubspot_stage_map: {
+        Row: {
+          display_order: number | null
+          harmonious_stage: string
+          hs_pipeline_id: string
+          hs_stage_id: string
+          is_closed: boolean | null
+          pipeline_label: string
+          probability: number | null
+          stage_label: string
+          updated_at: string
+        }
+        Insert: {
+          display_order?: number | null
+          harmonious_stage: string
+          hs_pipeline_id: string
+          hs_stage_id: string
+          is_closed?: boolean | null
+          pipeline_label: string
+          probability?: number | null
+          stage_label: string
+          updated_at?: string
+        }
+        Update: {
+          display_order?: number | null
+          harmonious_stage?: string
+          hs_pipeline_id?: string
+          hs_stage_id?: string
+          is_closed?: boolean | null
+          pipeline_label?: string
+          probability?: number | null
+          stage_label?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       identity_check_results: {
         Row: {
