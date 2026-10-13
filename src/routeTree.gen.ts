@@ -383,6 +383,7 @@ import { Route as AuthenticatedOpsEmployeesUserIdRouteImport } from './routes/_a
 import { Route as AuthenticatedOpsFundAccountingFundIdRouteImport } from './routes/_authenticated/ops.fund-accounting.$fundId'
 import { Route as AuthenticatedOpsFundManagerFundIdRouteImport } from './routes/_authenticated/ops.fund-manager.$fundId'
 import { Route as AuthenticatedOpsFundMigrateFundIdRouteImport } from './routes/_authenticated/ops.fund-migrate.$fundId'
+import { Route as AuthenticatedOpsFundMigrationSourcesRouteImport } from './routes/_authenticated/ops.fund-migration_.sources'
 import { Route as AuthenticatedOpsFundSetupIndexRouteImport } from './routes/_authenticated/ops.fund-setup.index'
 import { Route as AuthenticatedOpsFundSetupFundIdRouteImport } from './routes/_authenticated/ops.fund-setup.$fundId'
 import { Route as AuthenticatedOpsFundFundIdRouteImport } from './routes/_authenticated/ops.fund.$fundId'
@@ -2572,6 +2573,12 @@ const AuthenticatedOpsFundMigrateFundIdRoute =
     path: '/ops/fund-migrate/$fundId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOpsFundMigrationSourcesRoute =
+  AuthenticatedOpsFundMigrationSourcesRouteImport.update({
+    id: '/ops/fund-migration_/sources',
+    path: '/ops/fund-migration/sources',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOpsFundSetupIndexRoute =
   AuthenticatedOpsFundSetupIndexRouteImport.update({
     id: '/ops/fund-setup/',
@@ -3258,6 +3265,7 @@ export interface FileRoutesByFullPath {
   '/ops/fund-accounting/$fundId': typeof AuthenticatedOpsFundAccountingFundIdRoute
   '/ops/fund-manager/$fundId': typeof AuthenticatedOpsFundManagerFundIdRoute
   '/ops/fund-migrate/$fundId': typeof AuthenticatedOpsFundMigrateFundIdRoute
+  '/ops/fund-migration/sources': typeof AuthenticatedOpsFundMigrationSourcesRoute
   '/ops/fund-setup/$fundId': typeof AuthenticatedOpsFundSetupFundIdRoute
   '/ops/fund/$fundId': typeof AuthenticatedOpsFundFundIdRoute
   '/ops/funds/$fundId': typeof AuthenticatedOpsFundsFundIdRoute
@@ -3680,6 +3688,7 @@ export interface FileRoutesByTo {
   '/ops/fund-accounting/$fundId': typeof AuthenticatedOpsFundAccountingFundIdRoute
   '/ops/fund-manager/$fundId': typeof AuthenticatedOpsFundManagerFundIdRoute
   '/ops/fund-migrate/$fundId': typeof AuthenticatedOpsFundMigrateFundIdRoute
+  '/ops/fund-migration/sources': typeof AuthenticatedOpsFundMigrationSourcesRoute
   '/ops/fund-setup/$fundId': typeof AuthenticatedOpsFundSetupFundIdRoute
   '/ops/fund/$fundId': typeof AuthenticatedOpsFundFundIdRoute
   '/ops/funds/$fundId': typeof AuthenticatedOpsFundsFundIdRoute
@@ -4112,6 +4121,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/fund-accounting/$fundId': typeof AuthenticatedOpsFundAccountingFundIdRoute
   '/_authenticated/ops/fund-manager/$fundId': typeof AuthenticatedOpsFundManagerFundIdRoute
   '/_authenticated/ops/fund-migrate/$fundId': typeof AuthenticatedOpsFundMigrateFundIdRoute
+  '/_authenticated/ops/fund-migration_/sources': typeof AuthenticatedOpsFundMigrationSourcesRoute
   '/_authenticated/ops/fund-setup/$fundId': typeof AuthenticatedOpsFundSetupFundIdRoute
   '/_authenticated/ops/fund/$fundId': typeof AuthenticatedOpsFundFundIdRoute
   '/_authenticated/ops/funds/$fundId': typeof AuthenticatedOpsFundsFundIdRoute
@@ -4544,6 +4554,7 @@ export interface FileRouteTypes {
     | '/ops/fund-accounting/$fundId'
     | '/ops/fund-manager/$fundId'
     | '/ops/fund-migrate/$fundId'
+    | '/ops/fund-migration/sources'
     | '/ops/fund-setup/$fundId'
     | '/ops/fund/$fundId'
     | '/ops/funds/$fundId'
@@ -4966,6 +4977,7 @@ export interface FileRouteTypes {
     | '/ops/fund-accounting/$fundId'
     | '/ops/fund-manager/$fundId'
     | '/ops/fund-migrate/$fundId'
+    | '/ops/fund-migration/sources'
     | '/ops/fund-setup/$fundId'
     | '/ops/fund/$fundId'
     | '/ops/funds/$fundId'
@@ -5397,6 +5409,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/fund-accounting/$fundId'
     | '/_authenticated/ops/fund-manager/$fundId'
     | '/_authenticated/ops/fund-migrate/$fundId'
+    | '/_authenticated/ops/fund-migration_/sources'
     | '/_authenticated/ops/fund-setup/$fundId'
     | '/_authenticated/ops/fund/$fundId'
     | '/_authenticated/ops/funds/$fundId'
@@ -8154,6 +8167,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsFundMigrateFundIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ops/fund-migration_/sources': {
+      id: '/_authenticated/ops/fund-migration_/sources'
+      path: '/ops/fund-migration/sources'
+      fullPath: '/ops/fund-migration/sources'
+      preLoaderRoute: typeof AuthenticatedOpsFundMigrationSourcesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ops/fund-setup/': {
       id: '/_authenticated/ops/fund-setup/'
       path: '/ops/fund-setup'
@@ -9072,6 +9092,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsFundAccountingFundIdRoute: typeof AuthenticatedOpsFundAccountingFundIdRoute
   AuthenticatedOpsFundManagerFundIdRoute: typeof AuthenticatedOpsFundManagerFundIdRoute
   AuthenticatedOpsFundMigrateFundIdRoute: typeof AuthenticatedOpsFundMigrateFundIdRoute
+  AuthenticatedOpsFundMigrationSourcesRoute: typeof AuthenticatedOpsFundMigrationSourcesRoute
   AuthenticatedOpsFundSetupFundIdRoute: typeof AuthenticatedOpsFundSetupFundIdRoute
   AuthenticatedOpsFundFundIdRoute: typeof AuthenticatedOpsFundFundIdRoute
   AuthenticatedOpsFundsFundIdRoute: typeof AuthenticatedOpsFundsFundIdRoute
@@ -9417,6 +9438,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedOpsFundManagerFundIdRoute,
   AuthenticatedOpsFundMigrateFundIdRoute:
     AuthenticatedOpsFundMigrateFundIdRoute,
+  AuthenticatedOpsFundMigrationSourcesRoute:
+    AuthenticatedOpsFundMigrationSourcesRoute,
   AuthenticatedOpsFundSetupFundIdRoute: AuthenticatedOpsFundSetupFundIdRoute,
   AuthenticatedOpsFundFundIdRoute: AuthenticatedOpsFundFundIdRoute,
   AuthenticatedOpsFundsFundIdRoute: AuthenticatedOpsFundsFundIdRoute,

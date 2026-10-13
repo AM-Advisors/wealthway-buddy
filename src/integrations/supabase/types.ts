@@ -41300,6 +41300,42 @@ export type Database = {
           },
         ]
       }
+      source_reconciliation_decisions: {
+        Row: {
+          actor_user_id: string
+          created_at: string
+          decision: string
+          id: string
+          proposed_person_id: string | null
+          proposed_registry_key: string | null
+          reason: string
+          source: string
+          source_ref: string
+        }
+        Insert: {
+          actor_user_id: string
+          created_at?: string
+          decision: string
+          id?: string
+          proposed_person_id?: string | null
+          proposed_registry_key?: string | null
+          reason: string
+          source: string
+          source_ref: string
+        }
+        Update: {
+          actor_user_id?: string
+          created_at?: string
+          decision?: string
+          id?: string
+          proposed_person_id?: string | null
+          proposed_registry_key?: string | null
+          reason?: string
+          source?: string
+          source_ref?: string
+        }
+        Relationships: []
+      }
       sow_amendments: {
         Row: {
           amendment_no: number
