@@ -32,7 +32,7 @@ async function hs(path: string, init?: { method: "POST"; body: unknown }) {
   const res = await fetch(GATEWAY + path, {
     method: init?.method ?? "GET",
     headers: { Authorization: `Bearer ${lov}`, "X-Connection-Api-Key": key, "Content-Type": "application/json" },
-    body: init ? JSON.stringify(init.body) : undefined,
+    body: init ? JSON.stringify(init.body) : null,
   });
   if (!res.ok && res.status !== 207) {
     const t = await res.text();
