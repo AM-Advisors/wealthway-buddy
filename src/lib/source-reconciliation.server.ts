@@ -79,7 +79,7 @@ export async function overview(userId: string) {
   };
 }
 
-export async function decide(userId: string, input: { source: SourceId; sourceRef: string; decision: ReviewDecision; reason: string; personId?: string | null; registryKey?: string | null }) {
+export async function decide(userId: string, input: { source: SourceId; sourceRef: string; decision: ReviewDecision; reason: string; personId?: string | null | undefined; registryKey?: string | null | undefined }) {
   await staff(userId);
   if (input.source !== "didit") throw new Error("Only Didit records are available for review until other sources are connected.");
   const { rows } = await didit();
