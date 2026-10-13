@@ -12,11 +12,11 @@ export type ProviderItem = {
   name: string;
   kind: "folder" | "file";
   parentId: string;
-  mimeType?: string;
-  size?: number;
-  checksum?: string;
-  revision?: string;
-  modifiedAt?: string;
+  mimeType?: string | undefined;
+  size?: number | undefined;
+  checksum?: string | undefined;
+  revision?: string | undefined;
+  modifiedAt?: string | undefined;
 };
 
 export interface DocumentProvider {

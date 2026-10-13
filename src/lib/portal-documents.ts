@@ -135,8 +135,8 @@ export function authorizedProfiles(userId: string, myPersonIds: string[], profil
 
 // --------------------------------------------------------------- matching --
 
-export type FolderMapping = { folder_id: string; offering_id: string; profile_id?: string };
-export type SourceFile = { id: string; name: string; parent_folder_id: string; checksum?: string | null };
+export type FolderMapping = { folder_id: string; offering_id: string; profile_id?: string | undefined };
+export type SourceFile = { id: string; name: string; parent_folder_id: string; checksum?: string | null | undefined };
 export type MatchContext = {
   mappings: FolderMapping[];
   /** offering_id → investment profile ids that hold an investment there. */
