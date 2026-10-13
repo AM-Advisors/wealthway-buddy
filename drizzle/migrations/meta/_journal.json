@@ -1541,6 +1541,13 @@
       "when": 1791851318551,
       "tag": "0219_crm_deals_last_imported",
       "breakpoints": true
+    },
+    {
+      "idx": 220,
+      "version": "7",
+      "when": 1791864507003,
+      "tag": "0220_portal_document_catalog",
+      "breakpoints": true
     }
   ]
 }
