@@ -98,9 +98,12 @@ export async function contactDetail(userId: string, contactId: string) {
   const db = await admin();
   const { data: c } = await db.from("crm_contacts").select("*").eq("id", contactId).maybeSingle();
   if (!c || !canSee(a, c)) throw new Error("Contact not found.");
-  const { data: act } = await db.from("crm_activity").select("*").eq("contact_id", contactId).order("created_at", { ascending: false }).limit(200);
+  const [{ data: act }, { data: emails }] = await Promise.all([
+    db.from("crm_activity").select("*").eq("contact_id", contactId).order("created_at", { ascending: false }).limit(200),
+    db.from("crm_email_history").select("id, external_source, direction, subject, snippet, sent_at").eq("contact_id", contactId).order("sent_at", { ascending: false }).limit(100),
+  ]);
   const ppl = await names(((act ?? []) as any[]).map((x) => x.actor_user_id));
-  return { contact: c, activity: ((act ?? []) as any[]).map((x) => ({ ...x, actor_name: ppl.get(x.actor_user_id) ?? "System" })) };
+  return { contact: c, emails: emails ?? [], activity: ((act ?? []) as any[]).map((x) => ({ ...x, actor_name: ppl.get(x.actor_user_id) ?? "System" })) };
 }
 
 // ------------------------------------------------------------ contacts

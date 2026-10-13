@@ -394,6 +394,18 @@ function ContactSheet({ id, canAssign, onClose, onEdit, onChange }: { id: string
                 ))}
               </ul>
               <p className="text-xs text-muted-foreground">History is permanent; entries can't be edited or removed.</p>
+              <h4 className="pt-2 text-sm font-medium">Emails</h4>
+              {(q.data as any).emails?.length ? (
+                <ul className="divide-y">
+                  {(q.data as any).emails.map((e: any) => (
+                    <li key={e.id} className="py-2">
+                      <div className="font-medium">{e.subject || "(no subject)"}</div>
+                      {e.snippet && <div className="line-clamp-2 text-xs text-muted-foreground">{e.snippet}</div>}
+                      <div className="text-xs text-muted-foreground">{e.external_source === "gmail" ? "Gmail" : "HubSpot"} · {e.direction === "INCOMING_EMAIL" || e.direction === "incoming" ? "Received" : "Sent"}{e.sent_at ? ` · ${new Date(e.sent_at).toLocaleString()}` : ""}</div>
+                    </li>
+                  ))}
+                </ul>
+              ) : <p className="text-xs text-muted-foreground">No emails logged yet. Connect your Google inbox and use "Log my recent emails".</p>}
             </div>
           </div>
         )}
