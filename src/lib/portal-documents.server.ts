@@ -365,7 +365,7 @@ export async function publishMatched(userId: string, documentIds: string[], reas
   return { published };
 }
 
-export async function resolveReview(userId: string, input: { reviewId: string; approve: boolean; profileId?: string | null; note: string }) {
+export async function resolveReview(userId: string, input: { reviewId: string; approve: boolean; profileId?: string | null | undefined; note: string }) {
   await assertPortalStaff(userId);
   const { data: rv } = await db().from("document_match_reviews").select("*").eq("id", input.reviewId).maybeSingle();
   if (!rv || rv.review_status !== "open") throw new Error("This review is already closed.");
