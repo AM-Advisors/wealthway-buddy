@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
@@ -56,7 +56,7 @@ function FundMigrationPage() {
   return (
     <main className="mx-auto max-w-7xl space-y-6 px-4 py-8 sm:px-6">
       <header className="space-y-1">
-        <h1 className="font-heading text-2xl font-semibold">Fund Migration</h1>
+        <div className="flex flex-wrap items-center justify-between gap-2"><h1 className="font-heading text-2xl font-semibold">Fund Migration</h1><Button asChild size="sm" variant="outline"><Link to="/ops/fund-migration/sources">Source Reconciliation</Link></Button></div>
         <p className="text-sm text-muted-foreground">Every fund and company found in the Harmonious Google Drive folders. Reviewing here records decisions only. It never creates, changes, merges or deletes a fund, investor or investment.</p>
       </header>
       {q.isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
