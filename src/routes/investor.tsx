@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { clearStoredClientContext } from "@/lib/client-context-storage";
 import { PolicyGate } from "@/components/policy-gate";
 import { AccountKycGate } from "@/components/account-kyc-gate";
+import { SecurityGate } from "@/components/security-gate";
 import { Button } from "@/components/ui/button";
 
 /**
@@ -51,6 +52,9 @@ function InvestorLayout() {
                 My investments
               </Link>
             </Button>
+            <Button asChild variant="ghost" size="sm">
+              <Link to="/investor/tax" activeProps={{ className: "bg-accent" }}>Tax</Link>
+            </Button>
             <Button variant="outline" size="sm" onClick={signOut}>Sign out</Button>
           </nav>
         </div>
@@ -58,7 +62,9 @@ function InvestorLayout() {
       <main className="flex-1">
         <PolicyGate onSignOut={signOut}>
           <AccountKycGate onSignOut={signOut}>
-            <Outlet />
+            <SecurityGate onSignOut={signOut}>
+              <Outlet />
+            </SecurityGate>
           </AccountKycGate>
         </PolicyGate>
       </main>

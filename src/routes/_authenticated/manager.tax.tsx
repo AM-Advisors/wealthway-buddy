@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 
 import { FundTaxProfile } from "@/components/fund-tax-profile";
 import { ManagerTaxRecords } from "@/components/tax-phase4";
@@ -22,5 +22,5 @@ export const Route = createFileRoute("/_authenticated/manager/tax")({
       { name: "robots", content: "noindex" },
     ],
   }),
-  component: () => <div className="space-y-6"><FundTaxProfile /><div className="mx-auto max-w-5xl px-4 pb-8 sm:px-6"><ManagerTaxRecords /></div></div>,
+  component: () => <div className="space-y-6"><FundTaxProfile /><div className="mx-auto max-w-5xl px-4 pb-8 sm:px-6"><p className="mb-4 text-sm"><Link to="/manager/tax-delivery" className="underline">K-1 delivery status for your investors</Link></p><ManagerTaxRecords /></div></div>,
 });
