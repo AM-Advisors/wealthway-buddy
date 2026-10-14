@@ -97,7 +97,7 @@ export async function addTemplateVersion(userId: string, input: { templateId: st
   const version = await nextVersion(input.templateId);
   const bytes = Buffer.from(input.base64, "base64");
   const path = `templates/${input.templateId}/v${version}-${safe(input.fileName)}`;
-  const { error } = await supabaseAdmin.storage.from(BUCKET).upload(path, bytes, { contentType: "application/pdf", upsert: false });
+  const { error } = await supabaseAdmin.storage.from(BUCKET).upload(path, bytes, { contentType: /\.docx$/i.test(input.fileName) ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document" : "application/pdf", upsert: false });
   if (error) throw new Error(`Upload failed: ${error.message}`);
   const { error: e2 } = await db().from("document_template_versions").insert({ template_id: input.templateId, version, file_path: path, file_name: input.fileName, file_size_bytes: bytes.length, change_note: input.note || null, created_by: userId });
   if (e2) throw new Error(e2.message);
