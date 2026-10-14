@@ -35900,6 +35900,54 @@ export type Database = {
         }
         Relationships: []
       }
+      person_kyc_requests: {
+        Row: {
+          aml_status: string | null
+          created_at: string
+          created_by: string
+          document_type: string | null
+          id: string
+          id_status: string | null
+          mode: string
+          person_id: string
+          result_summary: Json
+          session_id: string | null
+          session_url: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          aml_status?: string | null
+          created_at?: string
+          created_by: string
+          document_type?: string | null
+          id?: string
+          id_status?: string | null
+          mode: string
+          person_id: string
+          result_summary?: Json
+          session_id?: string | null
+          session_url?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          aml_status?: string | null
+          created_at?: string
+          created_by?: string
+          document_type?: string | null
+          id?: string
+          id_status?: string | null
+          mode?: string
+          person_id?: string
+          result_summary?: Json
+          session_id?: string | null
+          session_url?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       person_onboarding_events: {
         Row: {
           actor_kind: string
