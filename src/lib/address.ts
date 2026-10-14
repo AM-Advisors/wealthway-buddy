@@ -24,7 +24,6 @@ export function parseAddressParts(addr: string | null | undefined): AddressParts
     const city = tokens.length >= 3 ? tokens[tokens.length - 2]! : "";
     if (street.length === 0 && !city) return { ...EMPTY, addressState: state, addressZip: zip };
     const [line1, line2] = street.length >= 2 ? [street[0]!, street.slice(1).join(", ")] : [street[0] ?? "", ""];
-    if (street.length === 0 && !city) return { ...EMPTY, addressState: state, addressZip: zip };
     return { addressLine1: line1, addressLine2: line2, addressCity: city, addressState: state, addressZip: zip };
   }
   if (tokens.length >= 2) return { ...EMPTY, addressLine1: tokens[0]!, addressLine2: tokens.slice(1).join(", ") };
