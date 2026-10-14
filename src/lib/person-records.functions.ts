@@ -29,8 +29,8 @@ function diditKey() {
   if (!k) throw new Error("Identity checks aren't configured yet.");
   return k;
 }
-async function logPerson(personId: string, uid: string, action: string, detail: Record<string, unknown>) {
-  try { await (await db()).from("person_kyc_requests").select("id").limit(0); console.info("[person-records]", action, personId, uid, JSON.stringify(detail).slice(0, 300)); } catch { /* best-effort */ }
+function logPerson(personId: string, uid: string, action: string, detail: Record<string, unknown>) {
+  console.info("[person-records]", action, personId, uid, JSON.stringify(detail).slice(0, 300));
 }
 const nm = (p: any) => p.preferred_name || [p.legal_first_name, p.legal_last_name].filter(Boolean).join(" ") || p.email || "Unnamed";
 
