@@ -4,12 +4,14 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Star, Trash2, UserPlus } from "lucide-react";
 
-import { listFundSignatoriesFn, addFundSignatoryFn, updateFundSignatoryFn } from "@/lib/fund-setup-canonical.functions";
+import { listFundSignatoriesFn, addFundSignatoryFn, updateFundSignatoryFn, inviteFundPersonFn } from "@/lib/fund-setup-canonical.functions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { FundPersonPicker, KycBadge } from "@/components/fund-person-picker";
 
 export function FundSignatoriesCard({ offeringId, onChanged }: { offeringId: string; onChanged?: () => void }) {
   const list = useServerFn(listFundSignatoriesFn);
@@ -23,6 +25,8 @@ export function FundSignatoriesCard({ offeringId, onChanged }: { offeringId: str
   const [capacity, setCapacity] = useState("");
   const [review, setReview] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [sendInvite, setSendInvite] = useState(false);
+  const invite = useServerFn(inviteFundPersonFn);
 
   const done = () => { q.refetch(); onChanged?.(); };
   const submit = async (confirmSeparate = false) => {
@@ -31,9 +35,10 @@ export function FundSignatoriesCard({ offeringId, onChanged }: { offeringId: str
       await add({ data: {
         offeringId, candidateKey: mode === "pick" ? key || null : null,
         newPerson: mode === "new" ? { fullName: np.fullName, email: np.email || null, title: np.title || null } : null,
-        title: title || np.title || null, capacity: capacity || null, confirmSeparate,
+        title: title || np.title || null, capacity: capacity || null, confirmSeparate, sendInvite,
       } });
-      toast.success("Signatory added");
+      toast.success(sendInvite ? "Signatory added and invitation sent" : "Signatory added");
+      setSendInvite(false);
       setKey(""); setNp({ fullName: "", email: "", title: "" }); setTitle(""); setCapacity(""); setReview(null);
       done();
     } catch (e: any) {
@@ -62,6 +67,7 @@ export function FundSignatoriesCard({ offeringId, onChanged }: { offeringId: str
                   <div className="flex items-center gap-2">
                     <span className="font-medium">{s.name}</span>
                     {s.isPrimary && <Badge>Primary</Badge>}
+                    <KycBadge kyc={s.kyc} />
                   </div>
                   {s.preferredName && s.legalName ? <p className="text-xs text-muted-foreground">Legal name: {s.legalName}</p> : null}
                   <p className="text-xs text-muted-foreground">{[s.title, s.capacity, s.email].filter(Boolean).join(" · ") || "No title yet"}</p>
@@ -79,6 +85,7 @@ export function FundSignatoriesCard({ offeringId, onChanged }: { offeringId: str
                 </div>
                 {d.canEdit && (
                   <div className="flex gap-1">
+                    {s.kyc !== "verified" && s.contactId && <Button size="sm" variant="ghost" onClick={async () => { try { await invite({ data: { offeringId, contactKey: `contact:${s.contactId}` } }); toast.success("Identity check and onboarding invitation sent"); } catch (e: any) { toast.error(e.message); } }}>Send ID check</Button>}
                     <Button size="sm" variant="ghost" onClick={() => setEdit({ id: s.id, preferredName: s.preferredName ?? "", title: s.title ?? "", email: s.email ?? "" })}>Edit</Button>
                     {!s.isPrimary && <Button size="sm" variant="ghost" onClick={() => act(s.id, { makePrimary: true })}><Star className="mr-1 h-3.5 w-3.5" />Make primary</Button>}
                     <Button size="sm" variant="ghost" aria-label={`Remove ${s.name}`} onClick={() => act(s.id, { remove: true })}><Trash2 className="h-3.5 w-3.5" /></Button>
@@ -99,25 +106,27 @@ export function FundSignatoriesCard({ offeringId, onChanged }: { offeringId: str
             </div>
             {mode === "pick" ? (
               <div className="space-y-1">
-                <Label className="text-xs">Person on the Client account or Fund team</Label>
-                <select className="h-9 w-full rounded-md border bg-background px-2 text-sm" value={key} onChange={(e) => setKey(e.target.value)}>
-                  <option value="">Choose…</option>
-                  {d.candidates.map((c) => <option key={c.key} value={c.key}>{c.name} - {c.source}{c.detail ? ` (${c.detail})` : ""}</option>)}
-                </select>
-                {d.candidates.length === 0 && <p className="text-xs text-muted-foreground">Everyone listed is already a signatory. Add a new person instead.</p>}
+                <Label className="text-xs">Tap a person on the Client account or Fund team</Label>
+                <FundPersonPicker people={d.candidates} value={key} onChange={setKey} empty="Everyone listed is already a signatory. Add a new person instead." />
               </div>
             ) : (
               <div className="grid gap-3 sm:grid-cols-3">
                 <div className="space-y-1"><Label className="text-xs">Full name</Label><Input value={np.fullName} onChange={(e) => setNp({ ...np, fullName: e.target.value })} /></div>
                 <div className="space-y-1"><Label className="text-xs">Email</Label><Input type="email" value={np.email} onChange={(e) => setNp({ ...np, email: e.target.value })} /></div>
                 <div className="space-y-1"><Label className="text-xs">Job title</Label><Input value={np.title} onChange={(e) => setNp({ ...np, title: e.target.value })} /></div>
-                <p className="text-xs text-muted-foreground sm:col-span-3">They'll also be added to the Client's contacts. No sign-in invitation is sent.</p>
+                <p className="text-xs text-muted-foreground sm:col-span-3">They'll also be added to the Client's contacts.</p>
               </div>
             )}
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1"><Label className="text-xs">Signatory title</Label><Input placeholder="e.g. Managing Member" value={title} onChange={(e) => setTitle(e.target.value)} /></div>
               <div className="space-y-1"><Label className="text-xs">Capacity</Label><Input placeholder="e.g. Managing Member of the GP" value={capacity} onChange={(e) => setCapacity(e.target.value)} /></div>
             </div>
+            {(mode === "new" ? np.email.trim() : d.candidates.find((c) => c.key === key && c.kyc !== "verified" && c.key.startsWith("contact:"))) ? (
+              <label className="flex items-start gap-2 text-sm">
+                <Checkbox checked={sendInvite} onCheckedChange={(v) => setSendInvite(v === true)} />
+                <span>Send identity check and onboarding invitation<span className="block text-xs text-muted-foreground">Emails them a sign-in link. They complete their own ID check (Didit) when they sign in.</span></span>
+              </label>
+            ) : null}
             {review && (
               <div className="space-y-2 rounded-md border border-destructive/40 p-3 text-sm">
                 <p>{review}</p>

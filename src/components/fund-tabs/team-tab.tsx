@@ -15,6 +15,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { TEAM_PERMISSIONS, TEAM_ROLES } from "@/lib/fund-doc-templates";
 import { decideFeesFn, fundTeamFn, removeTeamMemberFn, saveTeamMemberFn, setFeesFn } from "@/lib/fund-tabs.functions";
 import { fmtDate, toPct } from "./shared";
+import { FundPersonPicker } from "@/components/fund-person-picker";
+import { inviteFundPersonFn, listFundPeopleFn } from "@/lib/fund-setup-canonical.functions";
 
 const roleLabel = (v: string) => TEAM_ROLES.find((r) => r.value === v)?.label ?? v;
 const permLabel = (v: string) => TEAM_PERMISSIONS.find((r) => r.value === v)?.label ?? v;
@@ -93,17 +95,38 @@ function MemberEditor({ fundId, member, onClose }: { fundId: string; member: any
   const qc = useQueryClient();
   const save = useServerFn(saveTeamMemberFn);
   const remove = useServerFn(removeTeamMemberFn);
+  const loadPeople = useServerFn(listFundPeopleFn);
+  const invite = useServerFn(inviteFundPersonFn);
+  const pq = useQuery({ queryKey: ["fund-people", fundId], queryFn: () => loadPeople({ data: { offeringId: fundId } }), enabled: !member.id });
+  const [pick, setPick] = useState("");
+  const [sendInvite, setSendInvite] = useState(false);
   const [f, setF] = useState({ fullName: member.full_name ?? "", email: member.email ?? "", phone: member.phone ?? "", company: member.company ?? "", teamRole: member.team_role, permissions: new Set<string>(member.permissions ?? []) });
   const done = () => { invalidateFund(qc, fundId); onClose(); };
   const m = useMutation({
     mutationFn: () => save({ data: { fundId, id: member.id ?? null, fullName: f.fullName, email: f.email, phone: f.phone, company: f.company, teamRole: f.teamRole, permissions: [...f.permissions] as any } }),
-    onSuccess: () => { toast.success("Saved"); done(); }, onError: (e: Error) => toast.error(e.message),
+    onSuccess: async () => {
+      if (sendInvite) {
+        try { await invite({ data: { offeringId: fundId, contactKey: pick.startsWith("contact:") ? pick : null, fullName: f.fullName, email: f.email } }); toast.success("Saved and invitation sent"); }
+        catch (e: any) { toast.error(`Saved, but the invitation wasn't sent: ${e.message}`); }
+      } else toast.success("Saved");
+      done();
+    }, onError: (e: Error) => toast.error(e.message),
   });
   const r = useMutation({ mutationFn: () => remove({ data: { fundId, id: member.id } }), onSuccess: () => { toast.success("Removed"); done(); }, onError: (e: Error) => toast.error(e.message) });
   return (
     <Card className="border-primary/40">
       <CardHeader><CardTitle className="text-base">{member.id ? "Edit" : "Add"} person</CardTitle></CardHeader>
       <CardContent className="space-y-3">
+        {!member.id && (pq.data?.people.length ?? 0) > 0 && (
+          <div className="space-y-1">
+            <Label>Choose someone already on file, or fill in a new person below</Label>
+            <FundPersonPicker people={pq.data!.people.map((p) => ({ ...p, detail: p.title ?? p.email }))} value={pick} empty="" onChange={(k) => {
+              setPick(k);
+              const p = pq.data!.people.find((x) => x.key === k);
+              if (p) setF({ ...f, fullName: p.name, email: p.email ?? "" });
+            }} />
+          </div>
+        )}
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="space-y-1"><Label>Name</Label><Input value={f.fullName} onChange={(e) => setF({ ...f, fullName: e.target.value })} /></div>
           <div className="space-y-1"><Label>Role</Label>
@@ -128,6 +151,12 @@ function MemberEditor({ fundId, member, onClose }: { fundId: string; member: any
           </div>
           <p className="text-xs text-muted-foreground">These record who does what on the fund. Portal sign-in access is still granted separately.</p>
         </div>
+        {f.email.trim() && pq.data?.people.find((p) => p.key === pick)?.kyc !== "verified" && (
+          <label className="flex items-start gap-2 text-sm">
+            <Checkbox checked={sendInvite} onCheckedChange={(v) => setSendInvite(v === true)} />
+            <span>Send identity check and onboarding invitation<span className="block text-xs text-muted-foreground">Harmonious staff only. Emails a sign-in link; they complete their own ID check when they sign in.</span></span>
+          </label>
+        )}
         <div className="flex flex-wrap gap-2">
           <Button disabled={m.isPending || f.fullName.trim().length < 2} onClick={() => m.mutate()}>Save</Button>
           <Button variant="outline" onClick={onClose}>Cancel</Button>

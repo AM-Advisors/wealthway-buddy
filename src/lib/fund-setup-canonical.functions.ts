@@ -337,6 +337,7 @@ export const addFundSignatoryFn = createServerFn({ method: "POST" })
       capacity: opt,
       makePrimary: z.boolean().optional(),
       confirmSeparate: z.boolean().optional(),
+      sendInvite: z.boolean().optional(),
     }).parse,
   )
   .handler(async ({ data, context }) => __auto(await (await signatories()).addFundSignatory(context.userId, data), { offeringId: data.offeringId }));
@@ -345,3 +346,13 @@ export const updateFundSignatoryFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ offeringId: uuid, id: uuid, title: opt, capacity: opt, preferredName: opt, email: opt, makePrimary: z.boolean().optional(), remove: z.boolean().optional() }).parse)
   .handler(async ({ data, context }) => __auto(await (await signatories()).updateFundSignatory(context.userId, data), { offeringId: data.offeringId }));
+
+export const listFundPeopleFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ offeringId: uuid }).parse)
+  .handler(async ({ data, context }) => (await signatories()).listFundPeople(context.userId, data.offeringId));
+
+export const inviteFundPersonFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ offeringId: uuid, contactKey: z.string().max(80).nullish(), fullName: opt, email: z.string().trim().max(254).nullish() }).parse)
+  .handler(async ({ data, context }) => (await signatories()).inviteFundPerson(context.userId, data));
