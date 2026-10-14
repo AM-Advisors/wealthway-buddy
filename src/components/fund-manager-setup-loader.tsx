@@ -39,7 +39,7 @@ const FIELDS: Record<Exclude<Section, "document">, [string, string, string?][]> 
   bank: [["bankName", "Bank name"], ["accountLast4", "Account number — last 4 only"], ["notes", "Notes"]],
 };
 
-export function FundManagerSetupLoader({ offeringId }: { offeringId: string }) {
+export function FundManagerSetupLoader({ offeringId, compact = false }: { offeringId: string; compact?: boolean }) {
   const qc = useQueryClient();
   const list = useServerFn(listFundSubmissionsFn);
   const q = useQuery({ queryKey: ["fund-submissions", offeringId], queryFn: () => list({ data: { offeringId } }) });
@@ -49,18 +49,29 @@ export function FundManagerSetupLoader({ offeringId }: { offeringId: string }) {
   const latest = (s: Section) => items.find((i: any) => i.section === s && i.status !== "withdrawn");
 
   const isStaff = !!q.data?.isStaff;
+  const onFile = ((q.data as any)?.onFile ?? null) as null | (Record<string, Record<string, string>> & { documents: string[] });
+  const known = (sec: Section): Record<string, string> => {
+    if (sec === "document") return {};
+    const base = { ...(onFile?.[sec] ?? {}) } as Record<string, string>;
+    const l = latest(sec);
+    for (const [k, v] of Object.entries((l?.payload ?? {}) as Record<string, unknown>)) if (v != null && String(v).trim()) base[k] = String(v);
+    return base;
+  };
+  const missing = (sec: Section): string[] => sec === "document" ? (onFile?.documents?.length ? [] : ["at least one document"]) : sec === "bank" ? [] : FIELDS[sec].filter(([k]) => !known(sec)[k]?.trim()).map(([, l]) => l.replace(/ \(.*\)$/, ""));
   const order = Object.keys(SECTION_LABEL) as Section[];
   const done = order.filter((s) => latest(s)?.status === "approved").length;
   const firstOpen = order.find((s) => latest(s)?.status !== "approved") ?? null;
   const [expanded, setExpanded] = useState<Section | null | undefined>(undefined);
   const current = expanded === undefined ? firstOpen : expanded;
-  const waitingOn = (st?: string) => (st === "submitted" ? "Waiting on Harmonious" : st === "returned" || !st ? "Waiting on fund manager" : "Complete");
+  const waitingOn = (st?: string) => (st === "submitted" ? "Waiting for Harmonious review" : st === "returned" ? "Needs changes" : st === "approved" ? "Approved" : "Waiting on fund manager");
+  if (q.isPending) return <Card><CardContent className="p-4 text-sm text-muted-foreground">Loading fund setup…</CardContent></Card>;
+  if (compact && done === order.length) return <p className="rounded-lg border bg-card px-4 py-3 text-sm"><Check className="mr-2 inline h-4 w-4 text-primary" />Fund setup complete.</p>;
 
   return (
     <Card>
       <CardHeader className="space-y-3">
         <div>
-          <CardTitle>Load your fund information</CardTitle>
+          <CardTitle>{compact ? "Finish your fund setup" : "Load your fund information"}</CardTitle>
           <CardDescription>Add what Harmonious needs to get your fund going. Each item is reviewed by Harmonious before it counts toward setup.</CardDescription>
         </div>
         <div className="space-y-1">
@@ -84,17 +95,19 @@ export function FundManagerSetupLoader({ offeringId }: { offeringId: string }) {
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block font-medium">{s === "document" ? "Documents" : SECTION_LABEL[s]}</span>
-                    <span className="block text-xs text-muted-foreground">{waitingOn(l?.status)}</span>
+                    <span className="block text-xs text-muted-foreground">{!l && missing(s).length && Object.values(known(s)).some(Boolean) ? "Missing info" : waitingOn(l?.status)}</span>
                   </span>
-                  {l ? <StatusBadge status={l.status} /> : <Badge variant="outline">Not started</Badge>}
+                  {l ? <StatusBadge status={l.status} /> : <Badge variant="outline">{Object.values(known(s)).some(Boolean) ? "Missing info" : "Not started"}</Badge>}
                   <ChevronDown className={cn("h-4 w-4 shrink-0 text-muted-foreground transition-transform", isOpen && "rotate-180")} />
                 </button>
                 {isOpen && (
                   <div className="space-y-3 border-t px-3 pb-3 pt-3">
                     {l?.status === "returned" && l.review_note && <p className="text-sm text-destructive">Harmonious asked: {l.review_note}</p>}
+                    <OnFile section={s} values={known(s)} docs={onFile?.documents ?? []} />
+                    {!isDone && missing(s).length > 0 && <p className="text-xs text-muted-foreground">Missing: {missing(s).join(", ")}</p>}
                     {!reviewNow && (open === s
-                      ? <SubmitForm offeringId={offeringId} section={s} prior={l?.payload} onDone={() => { setOpen(null); refresh(); }} />
-                      : <Button size="sm" variant={isDone ? "outline" : "default"} onClick={() => setOpen(s)}>{l ? "Update" : "Add"}</Button>)}
+                      ? <SubmitForm offeringId={offeringId} section={s} prior={known(s)} onDone={() => { setOpen(null); refresh(); }} />
+                      : <Button size="sm" variant={isDone ? "outline" : "default"} onClick={() => setOpen(s)}>{isDone || Object.values(known(s)).some(Boolean) && !missing(s).length ? "Suggest a change" : "Complete this step"}</Button>)}
                     <History items={sectionItems} isStaff={isStaff} onChange={refresh} />
                   </div>
                 )}
@@ -104,6 +117,19 @@ export function FundManagerSetupLoader({ offeringId }: { offeringId: string }) {
         </ol>
       </CardContent>
     </Card>
+  );
+}
+
+function OnFile({ section, values, docs }: { section: Section; values: Record<string, string>; docs: string[] }) {
+  if (section === "document") return docs.length ? <div className="text-sm"><p className="text-xs font-medium text-muted-foreground">On file</p><ul className="mt-1 list-disc pl-5">{docs.map((d, i) => <li key={i}>{d}</li>)}</ul></div> : null;
+  if (section === "bank") return <p className="text-xs text-muted-foreground">Upload your bank's wire instructions letter. Harmonious enters and verifies the full details.</p>;
+  const rows = FIELDS[section].filter(([k]) => values[k]?.trim());
+  if (!rows.length) return null;
+  return (
+    <div>
+      <p className="text-xs font-medium text-muted-foreground">On file</p>
+      <dl className="mt-1 grid gap-x-4 gap-y-1 text-sm sm:grid-cols-2">{rows.map(([k, l]) => <div key={k} className="min-w-0"><dt className="text-xs text-muted-foreground">{l}</dt><dd className="truncate">{values[k]}</dd></div>)}</dl>
+    </div>
   );
 }
 
