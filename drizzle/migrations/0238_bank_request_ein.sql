@@ -1,0 +1,1 @@
+ALTER TABLE public.offering_bank_setup_requests ADD COLUMN IF NOT EXISTS ein_last4 text, ADD COLUMN IF NOT EXISTS ein_attached_at timestamptz;

@@ -32519,6 +32519,8 @@ export type Database = {
         Row: {
           bank: string
           created_at: string
+          ein_attached_at: string | null
+          ein_last4: string | null
           id: string
           note: string | null
           notified_at: string | null
@@ -32539,6 +32541,8 @@ export type Database = {
         Insert: {
           bank: string
           created_at?: string
+          ein_attached_at?: string | null
+          ein_last4?: string | null
           id?: string
           note?: string | null
           notified_at?: string | null
@@ -32559,6 +32563,8 @@ export type Database = {
         Update: {
           bank?: string
           created_at?: string
+          ein_attached_at?: string | null
+          ein_last4?: string | null
           id?: string
           note?: string | null
           notified_at?: string | null
