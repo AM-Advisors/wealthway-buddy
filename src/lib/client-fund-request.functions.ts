@@ -25,8 +25,15 @@ async function memberships(context: any) {
 }
 
 async function requireMember(context: any, clientId: string, needSubmit = false) {
-  const m = (await memberships(context)).find((r) => String(r.client_id) === clientId);
-  if (!m) throw new Error("You aren't a member of this organisation.");
+  const m = (await memberships(context)).find((r) => String(r.client_id) === clientId) as ({ client_id: string; client_role: string | null; can_approve: boolean | null; staff?: boolean } | undefined);
+  if (!m) {
+    // Operations staff and Account Managers use the same setup engine on a client's behalf.
+    try {
+      const { requireOperations } = await import("@/lib/ops-access.functions");
+      await requireOperations(context, "funds", "prepare");
+    } catch { throw new Error("You aren't a member of this organisation."); }
+    return { client_id: clientId, client_role: "harmonious_staff", can_approve: true, staff: true };
+  }
   if (needSubmit && !(m.can_approve || MAIN_CONTACT_ROLES.includes(String(m.client_role)))) {
     throw new Error("Only this organisation's main contacts can send a new fund request.");
   }
@@ -115,7 +122,8 @@ export const submitFundRequest = createServerFn({ method: "POST" })
     const { fundAddOnKeys } = await import("@/lib/fund-request-model");
     const pay = await import("@/lib/fund-payments.server");
     const quote = await pay.buildQuote(db, { clientId: data.clientId, kind: "new_fund_request", addOnKeys: fundAddOnKeys(r) });
-    const payment = await pay.verifyPayment(db, { paymentId: data.paymentId, clientId: data.clientId, kind: "new_fund_request", expected: quote.items, usedFor: null, actorId: context.userId });
+    // Harmonious staff setting up a fund for a client are not charged here; billing follows the client's SOW.
+    const payment = member.staff ? null : await pay.verifyPayment(db, { paymentId: data.paymentId, clientId: data.clientId, kind: "new_fund_request", expected: quote.items, usedFor: null, actorId: context.userId });
 
     // Create the closed Fund. A likely duplicate name becomes a Harmonious review item instead.
     let offeringId: string | null = null;

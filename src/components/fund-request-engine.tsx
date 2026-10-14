@@ -1,0 +1,529 @@
+// Shared fund/SPV setup engine (moved from the client "Launch a new fund" page).
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { format, parseISO } from "date-fns";
+import { CalendarIcon, Check, Plus, Trash2, Upload } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
+import { z } from "zod";
+
+import { Badge } from "@/components/ui/badge";
+import { FundPaymentDialog, PaymentSummary, useFundPayment } from "@/components/fund-payment-checkout";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
+import {
+  EXEMPTIONS, INVESTMENT_ASSET_TYPES, JURISDICTIONS, VEHICLE_STRUCTURES, defaultVehicle, eligibilityFor,
+} from "@/lib/client-portal-model";
+import {
+  getFundRequestDraft, saveFundRequestDraft, submitFundRequest, uploadFundRequestFile,
+} from "@/lib/client-fund-request.functions";
+import {
+  CLASS_TERM_OPTIONS, FUND_KIND_TYPES, SERIES_HOMES, SERIES_NEW_ANNUAL_FEE, SS4_FIELDS, autoServices, HIDDEN_FUND_SERVICE_KEYS, SERVICE_BUNDLES, emptyRequest, entityDocKinds, isSeries, isSpv, visibleSteps, missingFields, needsSs4, seriesJurisdiction, seriesLegalName,
+  type FundRequest, type RequestStepKey,
+} from "@/lib/fund-request-model";
+import { categoryLabel, listServiceCatalog } from "@/lib/service-catalog.functions";
+
+const DOC_KINDS = ["Subscription agreement", "Operating agreement / LPA", "PPM", "Side letter", "Other"];
+
+export type FundRequestEngineMode = "client" | "staff";
+/**
+ * The single "Add Fund or SPV" setup engine. Clients, fund managers, Operations and Account Managers
+ * all fill in the same steps; staff mode skips the client payment (server re-checks who may skip).
+ */
+export function FundRequestEngine({ clientId: id, draft, mode = "client", clientPicker, backTo }: { clientId: string | null; draft?: string | undefined; mode?: FundRequestEngineMode; clientPicker?: React.ReactNode; backTo?: { to: string; label: string } }) {
+  const navigate = useNavigate();
+  const staffMode = mode === "staff";
+  const [r, setR] = useState<FundRequest>(emptyRequest());
+  const [step, setStep] = useState<RequestStepKey>("details");
+  const [draftId, setDraftId] = useState<string | null>(draft ?? null);
+
+  const loadDraft = useServerFn(getFundRequestDraft);
+  const save = useServerFn(saveFundRequestDraft);
+  const submit = useServerFn(submitFundRequest);
+  const catalogueFn = useServerFn(listServiceCatalog);
+  const catalogue = useQuery({ queryKey: ["service-catalogue"], queryFn: () => catalogueFn({ data: {} }) });
+
+  const dq = useQuery({ queryKey: ["fund-request-draft", draft], enabled: !!draft, queryFn: () => loadDraft({ data: { draftId: draft! } }) });
+  useEffect(() => {
+    if (dq.data?.request) setR({ ...emptyRequest(), ...dq.data.request });
+  }, [dq.data]);
+
+  const set = <K extends keyof FundRequest>(k: K, v: FundRequest[K]) => setR((p) => ({ ...p, [k]: v }));
+  const setKind = (kind: string) =>
+    setR((p) => {
+      const vehicle = defaultVehicle(kind === "spv" ? "launch_spv" : "launch_fund", kind);
+      const next = { ...p, kind, vehicle_structure: vehicle };
+      return { ...next, service_keys: Array.from(new Set([...p.service_keys.filter((k) => !autoServices(p).includes(k)), ...autoServices(next)])) };
+    });
+  const setStructureOrExemption = (k: "vehicle_structure" | "offering_exemption", v: string) =>
+    setR((p) => {
+      const leavingSeries = k === "vehicle_structure" && p.vehicle_structure === "Series LLC" && v !== "Series LLC";
+      const next = {
+        ...p, [k]: v, ...(k === "offering_exemption" ? { investor_eligibility: eligibilityFor(v) } : {}),
+        ...(leavingSeries ? { series_home: "", series_fee_ack: false, ss4: {}, jurisdiction: seriesJurisdiction(p.series_home) ? "" : p.jurisdiction } : {}),
+      };
+      return { ...next, service_keys: Array.from(new Set([...p.service_keys.filter((x) => !autoServices(p).includes(x)), ...autoServices(next)])) };
+    });
+
+  const seriesKey = r.series_home === "own" ? "series_existing" : "series_new";
+  const seriesInfo = r[seriesKey] ?? { legal_name: "", jurisdiction: "", date_formed: "", contact_name: "", contact_email: "", notes: "" };
+  const setSeriesInfo = (k: keyof typeof seriesInfo, v: string) => setR((p) => ({ ...p, [seriesKey]: { ...seriesInfo, [k]: v } }));
+  const setSeriesHome = (home: string) => setR((p) => {
+    const j = seriesJurisdiction(home);
+    const withHome = { ...p, series_home: home, jurisdiction: j ?? (seriesJurisdiction(p.series_home) ? "" : p.jurisdiction) };
+    // Auto-name the series legal name under a Harmonious master; keep any custom edit otherwise.
+    const wasGenerated = seriesLegalName(p) && p.legal_name === seriesLegalName(p);
+    const generated = seriesLegalName(withHome);
+    const next = generated && (wasGenerated || !p.legal_name.trim()) ? { ...withHome, legal_name: generated } : withHome;
+    return { ...next, service_keys: Array.from(new Set([...p.service_keys.filter((x) => !autoServices(p).includes(x)), ...autoServices(next)])) };
+  });
+  const setFundName = (name: string) => setR((p) => {
+    const wasGenerated = seriesLegalName(p) && p.legal_name === seriesLegalName(p);
+    const withName = { ...p, fund_name: name };
+    const generated = seriesLegalName(withName);
+    return generated && (wasGenerated || !p.legal_name.trim()) ? { ...withName, legal_name: generated } : withName;
+  });
+  // Prefill SS-4 lines we already know when the section first appears.
+  useEffect(() => {
+    if (!needsSs4(r)) return;
+    const known: Record<string, string> = { legal_name: r.legal_name, state_incorporated: r.jurisdiction, date_started: r.date_formed, entity_detail: "Series LLC (partnership)", applicant_name_title: [r.signatory.name, r.signatory.title].filter(Boolean).join(", ") };
+    const fill = Object.fromEntries(Object.entries(known).filter(([k, v]) => v && !r.ss4?.[k]));
+    if (Object.keys(fill).length) setR((p) => ({ ...p, ss4: { ...fill, ...p.ss4 } }));
+  }, [needsSs4(r)]);
+
+  const saveDraft = useMutation({
+    mutationFn: async () => {
+      if (!id) throw new Error("No client account selected.");
+      const res = await save({ data: { clientId: id, draftId, request: r as any } });
+      setDraftId(res.id);
+      return res;
+    },
+    onSuccess: () => toast.success("Draft saved."),
+    onError: (e: any) => toast.error(e?.message ?? "Could not save."),
+  });
+  const [payOpen, setPayOpen] = useState(false);
+  const quote = useFundPayment(!staffMode && step === "review" && id ? { kind: "new_fund_request", clientId: id, request: r as any } : null);
+  const send = useMutation({
+    mutationFn: async (paymentId?: string) => {
+      if (!id) throw new Error("No client account selected.");
+      return submit({ data: { clientId: id, draftId, request: r as any, paymentId: paymentId ?? null } });
+    },
+    onSuccess: (res) => {
+      toast.success(res.duplicate
+        ? "Sent. Harmonious will check whether this matches a fund you already have."
+        : "Sent to Harmonious. Your new fund is now in Funds while we set it up.");
+      if (res.offeringId) void navigate(staffMode ? { to: "/ops/fund/$fundId", params: { fundId: res.offeringId }, search: { tab: "setup" } as any } : { to: "/client/funds/$fundId", params: { fundId: res.offeringId } });
+      else void navigate({ to: staffMode ? "/ops/fund-setup" : "/client/home" });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Could not send."),
+  });
+
+  const missing = missingFields(r);
+  const steps = visibleSteps(r);
+  const idx = Math.max(0, steps.findIndex((s) => s.key === step));
+  const go = (d: number) => setStep(steps[Math.min(steps.length - 1, Math.max(0, idx + d))]!.key);
+  const spv = isSpv(r);
+
+  return (
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <Link to={(backTo?.to ?? "/client/funds") as any} className="text-xs text-muted-foreground hover:underline">← {backTo?.label ?? "Funds"}</Link>
+          <h2 className="text-xl font-semibold tracking-tight">Launch a new fund or SPV</h2>
+          <p className="text-sm text-muted-foreground">Follows the same steps Harmonious uses for Fund Setup. Save and come back any time.</p>
+        </div>
+        <Button size="sm" variant="outline" disabled={saveDraft.isPending || !id} onClick={() => saveDraft.mutate()}>Save draft</Button>
+      </div>
+      {clientPicker}
+
+      <div className="flex flex-col gap-5 md:flex-row">
+        <nav aria-label="Steps" className="flex gap-1 overflow-x-auto md:w-52 md:shrink-0 md:flex-col">
+          {steps.map((s, i) => (
+            <button
+              key={s.key}
+              type="button"
+              onClick={() => setStep(s.key)}
+              className={cn(
+                "flex items-center gap-2 whitespace-nowrap rounded-md px-3 py-2 text-left text-sm text-muted-foreground hover:bg-muted",
+                step === s.key && "bg-primary text-primary-foreground hover:bg-primary",
+              )}
+            >
+              <span className="flex size-5 items-center justify-center rounded-full border text-xs">{i + 1}</span>
+              {s.label}
+              {missing[s.key] ? <span className="ml-auto size-2 rounded-full bg-destructive" aria-label="Needs answers" /> : null}
+            </button>
+          ))}
+        </nav>
+
+        <Card className="min-w-0 flex-1">
+          <CardHeader>
+            <CardTitle className="text-base">{steps[idx]!.label}</CardTitle>
+            {missing[step] && <CardDescription className="text-destructive">Still needed: {missing[step]!.join(", ")}</CardDescription>}
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {step === "details" && spv && (
+              <label className="flex items-start gap-3 rounded-md border bg-muted/40 p-3 text-sm">
+                <Checkbox checked={!!r.simplified} onCheckedChange={(c) => set("simplified", c === true)} className="mt-0.5" />
+                <span><span className="font-medium">Simplified SPV onboarding</span><br /><span className="text-muted-foreground">Skip Classes, Banking and Services. Harmonious applies its standard SPV setup (one class, Harmonious banking and the core SPV services) and confirms everything with you before launch.</span></span>
+              </label>
+            )}
+            {step === "details" && (
+              <Grid>
+                <F label="Fund or SPV type *">
+                  <Pick value={r.kind} onChange={setKind} options={FUND_KIND_TYPES.map((k) => ({ value: k.value, label: k.label }))} />
+                </F>
+                <F label={`${spv ? "SPV" : "Fund"} name *`}><Input value={r.fund_name} onChange={(e) => setFundName(e.target.value)} /></F>
+                <F label="Investment / asset type"><Pick value={r.investment_asset} onChange={(v) => set("investment_asset", v)} options={INVESTMENT_ASSET_TYPES} /></F>
+                <F label={spv ? "Target raise" : "Target fund size"}><Money value={r.target_raise} onChange={(v) => set("target_raise", v)} /></F>
+                <F label="Minimum investment"><Money value={r.minimum_investment} onChange={(v) => set("minimum_investment", v)} /></F>
+                <F label="Expected close"><DatePick value={r.expected_close} onChange={(v) => set("expected_close", v)} /></F>
+                <F label="Bank or custodian"><Input value={r.bank_or_custodian} onChange={(e) => set("bank_or_custodian", e.target.value)} placeholder="Name, if known" /></F>
+                <F label="Counsel"><Input value={r.counsel} onChange={(e) => set("counsel", e.target.value)} placeholder="Law firm, if known" /></F>
+                <F label="Auditor"><Input value={r.auditor} onChange={(e) => set("auditor", e.target.value)} placeholder="If applicable" /></F>
+                <F label="Tax preparer">
+                  <Pick value={r.tax_preparer === "Harmonious" ? "Harmonious" : "Someone else"} onChange={(v) => set("tax_preparer", v === "Harmonious" ? "Harmonious" : "")} options={["Harmonious", "Someone else"]} />
+                  {r.tax_preparer !== "Harmonious" && <Input className="mt-2" placeholder="Tax preparer name" value={r.tax_preparer} onChange={(e) => set("tax_preparer", e.target.value)} />}
+                </F>
+              </Grid>
+            )}
+
+            {step === "entity" && (
+              <>
+                <Grid>
+                  <F label="Legal name">
+                    <Input value={r.legal_name} onChange={(e) => set("legal_name", e.target.value)} placeholder="e.g. Acme Ventures I, LP" />
+                    {seriesLegalName(r) && r.legal_name === seriesLegalName(r) && (
+                      <p className="mt-1 text-xs text-muted-foreground">Generated from the fund name and Master LLC - edit if needed.</p>
+                    )}
+                  </F>
+                  <F label="Vehicle / entity structure *"><Pick value={r.vehicle_structure} onChange={(v) => setStructureOrExemption("vehicle_structure", v)} options={VEHICLE_STRUCTURES} /></F>
+                  {isSeries(r) && (
+                    <F label="Master LLC *"><Pick value={r.series_home} onChange={setSeriesHome} options={SERIES_HOMES.map((h) => ({ value: h.value, label: h.label }))} /></F>
+                  )}
+                  <F label="Jurisdiction *">
+                    {seriesJurisdiction(r.series_home) && isSeries(r)
+                      ? <Input value={r.jurisdiction} disabled aria-label="Jurisdiction (set by Master LLC)" />
+                      : <Pick value={r.jurisdiction} onChange={(v) => set("jurisdiction", v)} options={JURISDICTIONS} />}
+                  </F>
+                  <F label="Already formed?"><Pick value={r.already_formed} onChange={(v) => set("already_formed", v as any)} options={[{ value: "yes", label: "Yes" }, { value: "no", label: "No - Harmonious to form" }]} /></F>
+                  {r.already_formed === "yes" && <F label="Date formed"><DatePick value={r.date_formed} onChange={(v) => set("date_formed", v)} /></F>}
+                  {r.already_formed === "no" && <F label="Who will obtain the EIN? *"><Pick value={r.ein_obtained_by} onChange={(v) => set("ein_obtained_by", v as any)} options={[{ value: "harmonious", label: "Harmonious" }, { value: "client", label: "We will" }]} /></F>}
+                  {r.already_formed === "yes" && <F label="Has an EIN? *"><Pick value={r.has_ein} onChange={(v) => set("has_ein", v as any)} options={[{ value: "yes", label: "Yes" }, { value: "no", label: "No" }]} /></F>}
+                </Grid>
+                <p className="text-xs text-muted-foreground">Don't type the EIN here - upload the IRS letter instead.{isSeries(r) ? " A series doesn't have its own certificate of formation - it's created under the Master LLC, so no formation document is needed." : ""}</p>
+                {isSeries(r) && (r.series_home === "own" || r.series_home === "new") && (
+                  <div className="space-y-3 rounded-md border p-3">
+                    <p className="text-sm font-medium">{r.series_home === "own" ? "Your existing Series LLC" : "New Series LLC to set up"}</p>
+                    {r.series_home === "new" && (
+                      <div role="alert" className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm">
+                        <p className="font-medium">Harmonious charges {SERIES_NEW_ANNUAL_FEE} to manage a new Series LLC.</p>
+                        <label className="mt-2 flex items-center gap-2"><Checkbox checked={r.series_fee_ack} onCheckedChange={(c) => set("series_fee_ack", c === true)} /> I understand and agree to this annual fee.</label>
+                      </div>
+                    )}
+                    <Grid>
+                      <F label={r.series_home === "own" ? "Legal name *" : "Proposed master LLC name *"}><Input value={seriesInfo.legal_name} onChange={(e) => setSeriesInfo("legal_name", e.target.value)} /></F>
+                      <F label="Jurisdiction *"><Pick value={seriesInfo.jurisdiction} onChange={(v) => setSeriesInfo("jurisdiction", v)} options={JURISDICTIONS} /></F>
+                      {r.series_home === "own" && <F label="Formation date"><DatePick value={seriesInfo.date_formed} onChange={(v) => setSeriesInfo("date_formed", v)} /></F>}
+                      <F label="Manager / contact name *"><Input value={seriesInfo.contact_name} onChange={(e) => setSeriesInfo("contact_name", e.target.value)} /></F>
+                      <F label="Manager / contact email *"><Input type="email" value={seriesInfo.contact_email} onChange={(e) => setSeriesInfo("contact_email", e.target.value)} /></F>
+                    </Grid>
+                    <F label="Notes"><Textarea value={seriesInfo.notes} onChange={(e) => setSeriesInfo("notes", e.target.value)} placeholder={r.series_home === "own" ? "EIN status, registered agent, anything we should know" : "Anything we should know"} /></F>
+                  </div>
+                )}
+                {needsSs4(r) && (
+                  <div className="space-y-3 rounded-md border p-3">
+                    <p className="text-sm font-medium">IRS Form SS-4 - EIN application</p>
+                    <p className="text-xs text-muted-foreground">Harmonious reviews this before anything is submitted to the IRS. Don't enter a Social Security number here - we'll collect it securely.</p>
+                    <Grid>
+                      {SS4_FIELDS.filter((f) => !f.long).map((f) => (
+                        <F key={f.key} label={`${f.label}${f.required ? " *" : ""}`}><Input value={r.ss4?.[f.key] ?? ""} onChange={(e) => set("ss4", { ...r.ss4, [f.key]: e.target.value })} /></F>
+                      ))}
+                    </Grid>
+                    {SS4_FIELDS.filter((f) => f.long).map((f) => (
+                      <F key={f.key} label={f.label}><Textarea value={r.ss4?.[f.key] ?? ""} onChange={(e) => set("ss4", { ...r.ss4, [f.key]: e.target.value })} /></F>
+                    ))}
+                  </div>
+                )}
+                <DocUploads clientId={id} kinds={entityDocKinds(r)} docs={r.documents} onChange={(d) => set("documents", d)} />
+              </>
+            )}
+
+            {step === "economics" && (
+              <Grid>
+                <F label="Offering exemption *">
+                  <Pick value={r.offering_exemption} onChange={(v) => setStructureOrExemption("offering_exemption", v)} options={EXEMPTIONS.map((e) => e.value)} />
+                  {r.offering_exemption && (
+                    <div className="mt-2 rounded-md border bg-muted p-3 text-xs">
+                      <p className="font-medium">Who can invest</p>
+                      <p className="mt-1 text-muted-foreground">{eligibilityFor(r.offering_exemption)}</p>
+                      <p className="mt-1 text-muted-foreground">General guidance - counsel confirms.</p>
+                    </div>
+                  )}
+                </F>
+                <F label="Management fee"><Fee value={r.management_fee} onChange={(v) => set("management_fee", v)} /></F>
+                <F label={r.kind === "real_estate" ? "Promote" : "Carried interest / promote"}><Fee value={r.carried_interest} onChange={(v) => set("carried_interest", v)} /></F>
+                <F label="Preferred return"><Pick value={r.preferred_return} onChange={(v) => set("preferred_return", v)} options={CLASS_TERM_OPTIONS.hurdle} /></F>
+                <F label="GP commitment"><Money value={r.gp_commitment} onChange={(v) => set("gp_commitment", v)} /></F>
+                {!spv && <F label="Fund term"><Input value={r.fund_term} onChange={(e) => set("fund_term", e.target.value)} placeholder="e.g. 10 years" /></F>}
+                {!spv && <F label="Investment period"><Input value={r.investment_period} onChange={(e) => set("investment_period", e.target.value)} placeholder="e.g. 3 years" /></F>}
+              </Grid>
+            )}
+
+            {step === "classes" && (
+              <div className="space-y-3">
+                {r.classes.map((c, i) => (
+                  <div key={i} className="grid gap-3 rounded-md border p-3 sm:grid-cols-5">
+                    <F label="Class name"><Input value={c.name} onChange={(e) => set("classes", r.classes.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))} /></F>
+                    <F label="Fee"><Pick value={c.fee} onChange={(v) => set("classes", r.classes.map((x, j) => (j === i ? { ...x, fee: v } : x)))} options={CLASS_TERM_OPTIONS.fee} /></F>
+                    <F label="Carry"><Pick value={c.carry} onChange={(v) => set("classes", r.classes.map((x, j) => (j === i ? { ...x, carry: v } : x)))} options={CLASS_TERM_OPTIONS.carry} /></F>
+                    <F label="Hurdle"><Pick value={c.hurdle} onChange={(v) => set("classes", r.classes.map((x, j) => (j === i ? { ...x, hurdle: v } : x)))} options={CLASS_TERM_OPTIONS.hurdle} /></F>
+                    <F label="Minimum">
+                      <div className="flex gap-1">
+                        <Money value={c.minimum} onChange={(v) => set("classes", r.classes.map((x, j) => (j === i ? { ...x, minimum: v } : x)))} />
+                        {r.classes.length > 1 && <Button size="icon" variant="ghost" aria-label="Remove class" onClick={() => set("classes", r.classes.filter((_, j) => j !== i))}><Trash2 className="size-4" /></Button>}
+                      </div>
+                    </F>
+                  </div>
+                ))}
+                <Button size="sm" variant="outline" onClick={() => set("classes", [...r.classes, { name: `Class ${String.fromCharCode(65 + r.classes.length)}`, fee: "", carry: "", hurdle: "", minimum: "" }])}><Plus className="mr-1 size-4" />Add class</Button>
+              </div>
+            )}
+
+            {step === "documents" && (
+              <div className="space-y-3">
+                <F label="Offering documents">
+                  <Pick value={r.documents_path} onChange={(v) => set("documents_path", v as any)} options={[{ value: "have", label: "I have documents to upload" }, { value: "prepare", label: "Harmonious to prepare from templates" }]} />
+                </F>
+                {r.documents_path === "have" && <DocUploads clientId={id} kinds={DOC_KINDS} docs={r.documents} onChange={(d) => set("documents", d)} />}
+                <p className="text-xs text-muted-foreground">Harmonious reviews every document and sets up signing before anything goes to investors.</p>
+              </div>
+            )}
+
+            {step === "banking" && (
+              <Grid>
+                <F label="Bank account">
+                  <Pick value={r.banking_path} onChange={(v) => set("banking_path", v as any)} options={[{ value: "harmonious", label: "Harmonious to coordinate bank setup" }, { value: "client", label: "We'll use our own bank" }]} />
+                </F>
+                {r.banking_path === "client" && <F label="Bank name"><Input value={r.bank_name} onChange={(e) => set("bank_name", e.target.value)} /></F>}
+                <p className="text-xs text-muted-foreground sm:col-span-2">Don't enter account or wire numbers here - Harmonious collects and verifies them separately.</p>
+              </Grid>
+            )}
+
+            {step === "people" && (
+              <div className="space-y-4">
+                <div>
+                  <p className="mb-2 text-sm font-medium">Signatory *</p>
+                  <Grid>
+                    <F label="Name"><Input value={r.signatory.name} onChange={(e) => set("signatory", { ...r.signatory, name: e.target.value })} /></F>
+                    <F label="Email"><Input type="email" value={r.signatory.email} onChange={(e) => set("signatory", { ...r.signatory, email: e.target.value })} /></F>
+                    <F label="Title"><Input value={r.signatory.title} onChange={(e) => set("signatory", { ...r.signatory, title: e.target.value })} placeholder="e.g. Managing Member" /></F>
+                  </Grid>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-sm font-medium">Fund managers</p>
+                  {r.managers.map((m, i) => (
+                    <div key={i} className="flex gap-2">
+                      <Input placeholder="Name" value={m.name} onChange={(e) => set("managers", r.managers.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))} />
+                      <Input placeholder="Email" value={m.email} onChange={(e) => set("managers", r.managers.map((x, j) => (j === i ? { ...x, email: e.target.value } : x)))} />
+                      <Button size="icon" variant="ghost" aria-label="Remove" onClick={() => set("managers", r.managers.filter((_, j) => j !== i))}><Trash2 className="size-4" /></Button>
+                    </div>
+                  ))}
+                  <Button size="sm" variant="outline" onClick={() => set("managers", [...r.managers, { name: "", email: "", title: "" }])}><Plus className="mr-1 size-4" />Add fund manager</Button>
+                  <p className="text-xs text-muted-foreground">Nobody is invited yet - Harmonious confirms access during setup.</p>
+                </div>
+              </div>
+            )}
+
+            {step === "services" && (
+              <div className="space-y-4">
+                {(["core", "addon"] as const).map((group) => {
+                  const core = autoServices(r);
+                  const list = (catalogue.data?.services ?? []).filter((s: any) =>
+                    !HIDDEN_FUND_SERVICE_KEYS.includes(s.key) && (group === "core" ? core.includes(s.key) : !core.includes(s.key)));
+                  if (!list.length) return null;
+                  return (
+                    <div key={group} className="space-y-2">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{group === "core" ? "Included with your setup" : "Add-ons (à la carte)"}</p>
+                      {list.map((s: any) => {
+                        const bundle = SERVICE_BUNDLES[s.key];
+                        const checked = r.service_keys.includes(s.key) || (group === "core");
+                        return (
+                          <div key={s.id} className="rounded-md border p-3">
+                            <label className="flex cursor-pointer items-start gap-3">
+                              <Checkbox checked={checked} disabled={group === "core"} onCheckedChange={() => {
+                                const on = r.service_keys.includes(s.key);
+                                set("service_keys", on ? r.service_keys.filter((k) => k !== s.key) : [...r.service_keys, s.key]);
+                                if (s.key === "management_llc" && on) set("management_llc_path", "");
+                              }} />
+                              <span className="text-sm">
+                                <span className="font-medium">{bundle?.label ?? s.name}</span>
+                                <span className="block text-xs text-muted-foreground">{bundle ? `Includes ${bundle.includes.join(", ")}` : categoryLabel(s.category)}</span>
+                              </span>
+                            </label>
+                            {s.key === "management_llc" && r.service_keys.includes("management_llc") && (
+                              <div className="mt-3 space-y-2 pl-7">
+                                <p className="text-xs font-medium">What do you need for the Management / Master LLC?</p>
+                                <div className="flex flex-wrap gap-2">
+                                  {([["setup", "Set up a new entity"], ["transfer", "Transfer an existing entity"]] as const).map(([v, l]) => (
+                                    <Button key={v} type="button" size="sm" variant={r.management_llc_path === v ? "default" : "outline"} onClick={() => set("management_llc_path", v)}>{l}</Button>
+                                  ))}
+                                </div>
+                                <p className="text-xs text-muted-foreground">Harmonious starts the entity {r.management_llc_path === "transfer" ? "transfer" : "setup"} with you after the request is received.</p>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })}
+                <p className="text-xs text-muted-foreground">Deadline tracking is included with every fund.</p>
+                <p className="text-xs text-muted-foreground">Harmonious confirms the final services and price before anything is agreed.</p>
+              </div>
+            )}
+
+            {step === "review" && (
+              <div className="space-y-4">
+                {steps.filter((s) => s.key !== "review").map((s) => (
+                  <div key={s.key} className="flex items-start justify-between gap-3 rounded-md border p-3 text-sm">
+                    <div>
+                      <p className="font-medium">{s.label}</p>
+                      <p className="text-xs text-muted-foreground">{missing[s.key] ? `Still needed: ${missing[s.key]!.join(", ")}` : "Ready"}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {!missing[s.key] && <Check className="size-4 text-primary" />}
+                      <Button size="sm" variant="ghost" onClick={() => setStep(s.key)}>Edit</Button>
+                    </div>
+                  </div>
+                ))}
+                <F label="Anything else Harmonious should know?"><Textarea rows={3} value={r.notes} onChange={(e) => set("notes", e.target.value)} /></F>
+                <div className="rounded-md border bg-muted p-3 text-xs text-muted-foreground">
+                  Sending creates your {spv ? "SPV" : "fund"} in Funds, closed to investors, and tells the Harmonious Operations team. Harmonious confirms every detail before launch. Nothing is filed or sent to investors automatically.
+                </div>
+                {quote.data && <PaymentSummary items={quote.data.items} total={quote.data.totalCents} />}
+                <p className="text-xs text-muted-foreground">The $2,500 setup fee and any add-ons are paid by card before the request is sent. Add-ons use your agreed SOW price where one is approved.</p>
+                {staffMode
+                  ? <Button disabled={send.isPending || !id || Object.keys(missing).length > 0} onClick={() => send.mutate(undefined)}>Create fund</Button>
+                  : <Button disabled={send.isPending || !quote.data || Object.keys(missing).length > 0} onClick={() => (quote.data!.totalCents > 0 ? setPayOpen(true) : send.mutate(undefined))}>Pay and send to Harmonious</Button>}
+                {id && payOpen && (
+                  <FundPaymentDialog open={payOpen} onOpenChange={setPayOpen} target={{ kind: "new_fund_request", clientId: id, request: r as any }}
+                    onPaid={(pid) => { setPayOpen(false); send.mutate(pid); }} />
+                )}
+              </div>
+            )}
+
+            {step !== "review" && (
+              <div className="flex justify-between pt-2">
+                <Button variant="ghost" disabled={idx === 0} onClick={() => go(-1)}>Back</Button>
+                <Button onClick={() => go(1)}>Next</Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+function Grid({ children }: { children: React.ReactNode }) {
+  return <div className="grid gap-3 sm:grid-cols-2">{children}</div>;
+}
+function F({ label, children }: { label: string; children: React.ReactNode }) {
+  return <div><Label className="text-xs">{label}</Label><div className="mt-1">{children}</div></div>;
+}
+function Pick({ value, onChange, options }: { value: string; onChange: (v: string) => void; options: (string | { value: string; label: string })[] }) {
+  const opts = options.map((o) => (typeof o === "string" ? { value: o, label: o } : o));
+  return (
+    <Select {...(value ? { value } : {})} onValueChange={onChange}>
+      <SelectTrigger><SelectValue placeholder="Choose…" /></SelectTrigger>
+      <SelectContent>{opts.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
+    </Select>
+  );
+}
+function Money({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  return (
+    <div className="relative">
+      <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">$</span>
+      <Input className="pl-6" inputMode="decimal" value={value} onChange={(e) => onChange(e.target.value.replace(/[^0-9.,]/g, ""))} />
+    </div>
+  );
+}
+function Fee({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const unit = value.startsWith("$") ? "$" : "%";
+  const num = value.replace(/[$%]/g, "");
+  const emit = (n: string, u: string) => onChange(n ? (u === "$" ? `$${n}` : `${n}%`) : "");
+  return (
+    <div className="flex gap-2">
+      <Select value={unit} onValueChange={(u) => emit(num, u)}>
+        <SelectTrigger className="w-20"><SelectValue /></SelectTrigger>
+        <SelectContent><SelectItem value="%">%</SelectItem><SelectItem value="$">$</SelectItem></SelectContent>
+      </Select>
+      <Input inputMode="decimal" value={num} placeholder={unit === "%" ? "e.g. 2" : "e.g. 25000"} onChange={(e) => emit(e.target.value.replace(/[^0-9.]/g, ""), unit)} />
+    </div>
+  );
+}
+function DatePick({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const d = value ? parseISO(value) : undefined;
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button variant="outline" className="w-full justify-start font-normal">
+          <CalendarIcon className="mr-2 size-4" />
+          {d ? format(d, "PPP") : <span className="text-muted-foreground">Pick a date</span>}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-0" align="start">
+        <Calendar mode="single" selected={d} onSelect={(x) => onChange(x ? format(x, "yyyy-MM-dd") : "")} initialFocus className="pointer-events-auto p-3" />
+      </PopoverContent>
+    </Popover>
+  );
+}
+function DocUploads({ clientId, kinds, docs, onChange }: { clientId: string | null; kinds: string[]; docs: FundRequest["documents"]; onChange: (d: FundRequest["documents"]) => void }) {
+  const upload = useServerFn(uploadFundRequestFile);
+  const ref = useRef<HTMLInputElement>(null);
+  const [kind, setKind] = useState(kinds[0]!);
+  const [busy, setBusy] = useState(false);
+  const pick = async (file: File | undefined) => {
+    if (!file || !clientId) return;
+    if (file.size > 10 * 1024 * 1024) { toast.error("Files must be 10 MB or smaller."); return; }
+    setBusy(true);
+    try {
+      const buf = new Uint8Array(await file.arrayBuffer());
+      let bin = "";
+      for (let i = 0; i < buf.length; i += 0x8000) bin += String.fromCharCode(...buf.subarray(i, i + 0x8000));
+      const res = await upload({ data: { clientId, kind, fileName: file.name, contentType: file.type || "application/pdf", base64: btoa(bin) } });
+      onChange([...docs, res]);
+      toast.success(`${file.name} uploaded.`);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Upload failed.");
+    } finally {
+      setBusy(false);
+      if (ref.current) ref.current.value = "";
+    }
+  };
+  const mine = docs.filter((d) => kinds.includes(d.kind));
+  return (
+    <div className="space-y-2 rounded-md border border-dashed p-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="w-56"><Pick value={kind} onChange={setKind} options={kinds} /></div>
+        <input ref={ref} type="file" className="hidden" accept=".pdf,.doc,.docx,image/*" onChange={(e) => void pick(e.target.files?.[0])} />
+        <Button size="sm" variant="outline" disabled={busy || !clientId} onClick={() => ref.current?.click()}><Upload className="mr-1 size-4" />{busy ? "Uploading…" : "Upload"}</Button>
+      </div>
+      {mine.map((d, i) => (
+        <div key={d.path} className="flex items-center justify-between text-sm">
+          <span><Badge variant="secondary" className="mr-2">{d.kind}</Badge>{d.fileName}</span>
+          <Button size="icon" variant="ghost" aria-label="Remove file" onClick={() => onChange(docs.filter((x) => x !== mine[i]))}><Trash2 className="size-4" /></Button>
+        </div>
+      ))}
+    </div>
+  );
+}

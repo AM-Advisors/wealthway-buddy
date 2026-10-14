@@ -73,7 +73,7 @@ function ManagerPortfolio() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div><h1 className="text-3xl">Your Funds</h1><p className="mt-2 text-sm text-muted-foreground">{all.length} {all.length === 1 ? "fund" : "funds"} · {money(totals.committed)} committed · {money(totals.received)} received</p></div>
         <div className="flex flex-col gap-2 sm:flex-row">
-          <Button asChild size="lg"><Link to="/manager/request-fund">+ Request New Fund / SPV</Link></Button>
+          <Button asChild size="lg"><Link to="/manager/request-fund">+ Add Fund or SPV</Link></Button>
           {addInvestorTarget
             ? <Button asChild size="lg" variant="outline"><Link to="/manager/fund/$fundId/investors" params={{ fundId: addInvestorTarget.id }}>+ Add Investor</Link></Button>
             : <Button asChild size="lg" variant="outline"><Link to="/manager/funds">+ Add Investor</Link></Button>}

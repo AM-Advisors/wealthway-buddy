@@ -80,7 +80,7 @@ export function OpsFundsDashboard({ initialFilter }: { initialFilter?: FundFilte
           <p className="text-sm text-muted-foreground">Every fund in one place — setup progress, investors and the next step.</p>
         </div>
         <div className="flex gap-2">
-          <Button asChild size="sm"><Link to="/ops/fund-setup/new">Set up new fund</Link></Button>
+          <Button asChild size="sm"><Link to="/ops/fund-setup/new">Add Fund or SPV</Link></Button>
         </div>
       </div>
       <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border bg-border sm:grid-cols-5">

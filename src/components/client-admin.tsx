@@ -592,7 +592,7 @@ export function ClientFundsPanel({ clientId }: { clientId: string }) {
           </div>
           {caps.includes("link_funds") ? (
             <div className="flex gap-2">
-              <Button size="sm" onClick={() => setMode("create")}>+ Add Fund</Button>
+              <Button size="sm" asChild><Link to="/ops/fund-setup/new" search={{ clientId }}>+ Add Fund or SPV</Link></Button>
               <Button size="sm" variant="outline" onClick={() => setMode("link")}>Link Existing Fund/SPV</Button>
             </div>
           ) : null}
