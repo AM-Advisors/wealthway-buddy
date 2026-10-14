@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DOC_TEMPLATES, STARTER_NOTICE } from "@/lib/fund-doc-templates";
 import { deleteFundFileFn, generateFundDocFn, listFundFilesFn, setSignatureBoxesFn, uploadFundFileFn } from "@/lib/fund-tabs.functions";
+import { listTemplatesFn, useTemplateInFundFn } from "@/lib/fund-doc-templates.functions";
 import { fileToBase64, fmtDate } from "./shared";
 import { StandardFormsCard } from "./standard-forms-card";
 
@@ -29,6 +30,16 @@ export function DocumentsTab({ fundId }: { fundId: string }) {
   const [boxes, setBoxes] = useState<any | null>(null);
   const [mode, setMode] = useState<"pick" | null>(null);
   const [preview, setPreview] = useState<{ title: string; body: string } | null>(null);
+  const listTpl = useServerFn(listTemplatesFn);
+  const applyTpl = useServerFn(useTemplateInFundFn);
+  const tpl = useQuery({ queryKey: ["harmonious-templates"], queryFn: () => listTpl() as Promise<any>, retry: false, enabled: mode === "pick" });
+  const [made, setMade] = useState<{ title: string; signing: any; autofill: any } | null>(null);
+  const useTpl = useMutation({
+    mutationFn: (t: any) => applyTpl({ data: { templateId: t.id, version: t.currentApproved, offeringId: fundId } }).then((r: any) => ({ ...r, title: t.title })),
+    onSuccess: (r: any) => { setMode(null); setMade({ title: r.title, signing: r.signing, autofill: r.autofill }); qc.invalidateQueries(); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  const ROLE: Record<string, string> = { investor: "Investor", fund_signatory: "Fund manager (fund signatory)" };
 
   const onUpload = async (file: File | undefined) => {
     if (!file) return;
@@ -102,6 +113,35 @@ export function DocumentsTab({ fundId }: { fundId: string }) {
                 </div>
               ))}
             </div>
+            {(tpl.data?.templates ?? []).some((t: any) => t.currentApproved) && (
+              <div className="space-y-2 border-t pt-4">
+                <p className="text-sm font-medium">Harmonious templates</p>
+                <p className="text-xs text-muted-foreground">Filled in from the fund's details, with the signature block set up for you.</p>
+                <div className="grid gap-2 sm:grid-cols-3">
+                  {(tpl.data?.templates ?? []).filter((t: any) => t.currentApproved).map((t: any) => (
+                    <Button key={t.id} variant="outline" size="sm" className="h-auto w-full justify-start whitespace-normal py-2 text-left" disabled={useTpl.isPending} onClick={() => useTpl.mutate(t)}>{useTpl.isPending && useTpl.variables?.id === t.id ? "Creating…" : t.title}</Button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+      )}
+      {made && (
+        <Dialog open onOpenChange={(o) => !o && setMade(null)}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader><DialogTitle>{made.title}</DialogTitle><DialogDescription>Added to the fund's offering documents as a new version for review.</DialogDescription></DialogHeader>
+            <div className="space-y-3 text-sm">
+              {made.signing?.roles?.length ? (
+                <div>
+                  <p className="font-medium">Signature block</p>
+                  <ol className="mt-1 list-decimal pl-5">{made.signing.roles.map((r: string) => <li key={r}>{ROLE[r] ?? r}</li>)}</ol>
+                  <p className="mt-1 text-xs text-muted-foreground">{made.signing.configured ? "Set up automatically. Confirm it under Offering documents before use." : `Not set up yet: ${made.signing.message ?? "check the signing setup."}`}</p>
+                </div>
+              ) : <p className="text-muted-foreground">No signatures needed for this document.</p>}
+              {made.autofill && <p className="text-xs text-muted-foreground">Filled {made.autofill.filled.length} field{made.autofill.filled.length === 1 ? "" : "s"} from the fund.{made.autofill.open.length ? ` Still blank: ${made.autofill.open.join(", ")}.` : ""}</p>}
+            </div>
+            <DialogFooter><Button onClick={() => setMade(null)}>Done</Button></DialogFooter>
           </DialogContent>
         </Dialog>
       )}
