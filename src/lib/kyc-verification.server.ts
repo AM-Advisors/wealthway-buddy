@@ -55,6 +55,15 @@ function diditKey(): string | null {
   return key && key.trim() ? key.trim() : null;
 }
 
+/** A fund may use its own Didit workflow; otherwise the platform default applies. */
+export async function fundWorkflowIdForApplication(applicationId: string): Promise<string | null> {
+  const { data: app } = await db().from("investor_applications").select("offering_id").eq("id", applicationId).maybeSingle();
+  if (!app?.offering_id) return null;
+  const { data: off } = await db().from("offerings").select("didit_workflow_id").eq("id", app.offering_id).maybeSingle();
+  const id = (off?.didit_workflow_id as string | null | undefined)?.trim();
+  return id ? id : null;
+}
+
 export function diditWorkflowId(): string | null {
   const id = process.env["DIDIT_WORKFLOW_ID"];
   return id && id.trim() ? id.trim() : null;
@@ -201,7 +210,7 @@ export async function startVerificationSession(input: {
   returnPath?: string;
 }): Promise<StartResult> {
   const key = diditKey();
-  const workflowId = diditWorkflowId();
+  const workflowId = (await fundWorkflowIdForApplication(input.applicationId)) ?? diditWorkflowId();
   if (!key || !workflowId) {
     throw new Error(
       "Identity verification is not configured yet. Please contact the fund administrator.",
