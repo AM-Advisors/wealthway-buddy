@@ -1667,6 +1667,13 @@
       "when": 1792016834805,
       "tag": "0237_regulatory_filings_irs_ein",
       "breakpoints": true
+    },
+    {
+      "idx": 238,
+      "version": "7",
+      "when": 1792016994386,
+      "tag": "0238_bank_request_ein",
+      "breakpoints": true
     }
   ]
 }
