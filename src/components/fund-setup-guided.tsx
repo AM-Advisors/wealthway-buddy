@@ -24,7 +24,7 @@ const FIELD_LABEL: Record<string, string> = {
 const TONE: Record<StepStatus, string> = { done: "border-primary bg-primary text-primary-foreground", waiting_harmonious: "border-primary text-primary", waiting_manager: "text-muted-foreground", needs_changes: "border-destructive text-destructive" };
 
 /** One guided setup page for Harmonious staff and fund managers (same steps, role-appropriate actions). */
-export function FundSetupGuided({ offeringId, compact = false }: { offeringId: string; compact?: boolean }) {
+export function FundSetupGuided({ offeringId, compact = false, onJump }: { offeringId: string; compact?: boolean; /** Overview mode: steps become a progress strip that jumps to the section where the work is done. */ onJump?: (step: SetupStep) => void }) {
   const qc = useQueryClient();
   const load = useServerFn(guidedSetupFn);
   const q = useQuery({ queryKey: ["guided-setup", offeringId], queryFn: () => load({ data: { offeringId } }), staleTime: 30_000 });
@@ -58,7 +58,20 @@ export function FundSetupGuided({ offeringId, compact = false }: { offeringId: s
         </div>
         {d.isStaff && d.proposals.length > 0 && <Proposals offeringId={offeringId} list={d.proposals} onDone={refresh} />}
       </CardHeader>
-      <CardContent>
+      {onJump ? (
+        <CardContent>
+          <ol className="grid gap-2 sm:grid-cols-3 lg:grid-cols-6">
+            {steps.map((s, idx) => (
+              <li key={s.step}>
+                <button type="button" onClick={() => onJump(s.step)} className={cn("flex h-full w-full items-start gap-2 rounded-lg border p-2.5 text-left transition-colors hover:border-primary", s.step === firstOpen && "border-primary/60 bg-accent/20")}>
+                  <span className={cn("flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-xs font-semibold", TONE[s.status])}>{s.status === "done" ? <Check className="h-3.5 w-3.5" /> : idx + 1}</span>
+                  <span className="min-w-0"><span className="block text-sm font-medium">{SETUP_STEP_LABEL[s.step]}</span><span className="block text-xs text-muted-foreground">{s.statusLabel}</span>{s.missing?.length ? <span className="block text-xs text-destructive">{s.missing.length} missing</span> : null}</span>
+                </button>
+              </li>
+            ))}
+          </ol>
+        </CardContent>
+      ) : <CardContent>
         <ol className="space-y-2">
           {steps.map((s, idx) => {
             const isOpen = current === s.step;
@@ -78,7 +91,7 @@ export function FundSetupGuided({ offeringId, compact = false }: { offeringId: s
             );
           })}
         </ol>
-      </CardContent>
+      </CardContent>}
     </Card>
   );
 }

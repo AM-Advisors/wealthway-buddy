@@ -12,6 +12,8 @@ import { OperationsSs4, OperationsTaxDocuments } from "@/components/operations-b
 import { FundSetupChecklist, SetupRequirementsProvider } from "@/components/fund-setup-checklist";
 import { fundSetupSummary } from "@/lib/fund-launch-summary";
 
+const JUMP: Record<string, string> = { fund_details: "setup-details", team: "fs-team", fees_team: "setup-economics", bank: "fs-banking", document: "setup-documents", launch: "fs-launch" };
+
 /** The single Operations fund page: Setup (incl. launch readiness), Investors and every client tab. */
 export function OpsFundPage({ fundId, tab = "setup", onTab }: { fundId: string; tab?: string; onTab: (v: string) => void }) {
   const get = useServerFn(getStaffFundSetup);
@@ -21,7 +23,7 @@ export function OpsFundPage({ fundId, tab = "setup", onTab }: { fundId: string; 
   const d = q.data;
   const setupBody = <>
 {d.retired ? <p>This Fund is retired. Its setup cannot be changed.</p> : d.canSeeOperations ? <>
-      <section className="space-y-3 border-t pt-6" aria-label="Entity formation and launch">
+      <section id="fs-launch" className="scroll-mt-4 space-y-3 border-t pt-6" aria-label="Entity formation and launch">
         <h2 className="font-heading text-xl font-semibold">Entity formation &amp; launch</h2>
         {!d.hasSetup ? <p className="text-sm">No setup record exists for this Fund. An administrator must review it before initialization.</p> : <>
           {(() => { const s = fundSetupSummary(d); return <>
@@ -67,6 +69,6 @@ export function OpsFundPage({ fundId, tab = "setup", onTab }: { fundId: string; 
       headerExtra={<>
         <Button size="sm" variant="outline" asChild><Link to="/admin/fund-payments/$fundId" params={{ fundId }}>Payments</Link></Button>
       </>}
-      extraTabs={[{ value: "setup", label: "Setup", content: <div className="space-y-6"><FundSetupGuided offeringId={fundId} />{setupBody}</div> }, { value: "record", label: "Activity & record", content: <OpsRecordPage type="fund" id={fundId} /> }]} />}
+      extraTabs={[{ value: "setup", label: "Setup", content: <div className="space-y-6"><FundSetupGuided offeringId={fundId} onJump={(st) => { const id = JUMP[st]; if (id) document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" }); }} />{setupBody}</div> }, { value: "record", label: "Activity & record", content: <OpsRecordPage type="fund" id={fundId} /> }]} />}
   </main>;
 }
