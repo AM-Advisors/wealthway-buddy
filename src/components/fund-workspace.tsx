@@ -103,7 +103,10 @@ const MORE: { value: string; label: string }[] = [
 
 function FundTabBar({ tab, onTab, extraTabs, todoCount }: { tab: string; onTab: (t: string) => void; extraTabs: ExtraTab[]; todoCount: number }) {
   const hasSetup = extraTabs.some((x) => x.value === "setup");
-  const primary = PRIMARY.map((p) => (p.value === "setup" && !hasSetup ? { ...p, value: "details", group: p.group.filter((g) => g !== "setup") } : p));
+  const primary = PRIMARY
+    .map((p) => (p.value === "setup" && !hasSetup ? { ...p, value: "details", group: p.group.filter((g) => g !== "setup") } : p))
+    .map((p) => (p.value === "setup" && hasSetup ? { ...p, group: [...p.group, "banking"] } : p))
+    .filter((p) => !(p.value === "banking" && hasSetup));
   const active = primary.find((p) => p.group.includes(tab));
   const more = [...MORE, ...extraTabs.filter((x) => x.value !== "setup").map((x) => ({ value: x.value, label: x.label }))];
   const moreActive = !active ? more.find((m) => m.value === tab) : undefined;
