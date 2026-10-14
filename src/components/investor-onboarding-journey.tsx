@@ -10,6 +10,7 @@ import {
   eligibleProfilesFn,
   fundingInstructionsFn,
   investorReportsFundsSentFn,
+  investorFundingLedgerFn,
   onboardingDetailFn,
   prepareSubscriptionDocumentsFn,
   recordSubscriptionSignatureFn,
@@ -470,12 +471,96 @@ function Fund({ d, onboardingId, done }: { d: any; onboardingId: string; done: (
                 {(f?.reasons ?? ["Funding is not open yet."]).map((r: string) => <li key={r}>{r}</li>)}
               </ul>
             )}
-            {!d.investorReportsSent ? (
-              <Button variant="outline" onClick={() => sent.mutate({ data: { onboardingId } } as any)}>I've Sent My Wire</Button>
-            ) : null}
+            <WireSentForm
+              defaultAmountCents={amount}
+              pending={sent.isPending}
+              already={!!d.investorReportsSent}
+              onSubmit={(v) => sent.mutate({ data: { onboardingId, ...v } } as any)}
+            />
           </>
         ) : null}
+        {d.approvedToFund ? <FundingLedger onboardingId={onboardingId} /> : null}
+        <p className="text-xs text-muted-foreground">
+          Harmonious never moves money for you. You send the wire from your own bank; your investment shows as funded only once we receive and match it.
+        </p>
       </CardContent>
     </Card>
+  );
+}
+
+function WireSentForm({ defaultAmountCents, pending, already, onSubmit }: {
+  defaultAmountCents: number | null;
+  pending: boolean;
+  already: boolean;
+  onSubmit: (v: { sentOn: string | null; amountCents: number | null; sendingBank: string | null; reference: string | null }) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [sentOn, setSentOn] = useState(new Date().toISOString().slice(0, 10));
+  const [amt, setAmt] = useState(defaultAmountCents ? String(defaultAmountCents / 100) : "");
+  const [bank, setBank] = useState("");
+  const [ref, setRef] = useState("");
+  if (!open) {
+    return (
+      <Button variant="outline" onClick={() => setOpen(true)}>
+        {already ? "Report Another Wire" : "I've Sent My Wire"}
+      </Button>
+    );
+  }
+  const cents = Math.round(Number(amt.replace(/[$,]/g, "")) * 100);
+  return (
+    <div className="space-y-3 rounded-md border p-4">
+      <p className="text-sm font-medium">Confirm your wire</p>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="space-y-1"><Label htmlFor="w-date">Date sent</Label><Input id="w-date" type="date" value={sentOn} onChange={(e) => setSentOn(e.target.value)} /></div>
+        <div className="space-y-1"><Label htmlFor="w-amt">Amount sent ($)</Label><Input id="w-amt" inputMode="decimal" value={amt} onChange={(e) => setAmt(e.target.value)} /></div>
+        <div className="space-y-1"><Label htmlFor="w-bank">Sending bank</Label><Input id="w-bank" value={bank} onChange={(e) => setBank(e.target.value)} placeholder="e.g. Chase" /></div>
+        <div className="space-y-1"><Label htmlFor="w-ref">Confirmation number (optional)</Label><Input id="w-ref" value={ref} onChange={(e) => setRef(e.target.value)} /></div>
+      </div>
+      <p className="text-xs text-muted-foreground">Don't enter account numbers.</p>
+      <div className="flex gap-2">
+        <Button
+          disabled={pending || !(cents > 0)}
+          onClick={() => onSubmit({ sentOn, amountCents: cents > 0 ? cents : null, sendingBank: bank || null, reference: ref || null })}
+        >
+          Confirm Wire Sent
+        </Button>
+        <Button variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
+      </div>
+    </div>
+  );
+}
+
+function FundingLedger({ onboardingId }: { onboardingId: string }) {
+  const ledgerFn = useServerFn(investorFundingLedgerFn);
+  const q = useQuery({ queryKey: ["onboarding-funding-ledger", onboardingId], queryFn: () => ledgerFn({ data: { onboardingId } }) });
+  const l: any = q.data;
+  if (!l) return null;
+  return (
+    <div className="space-y-3">
+      <p className="text-sm font-medium">Funding Ledger</p>
+      <div className="grid grid-cols-3 gap-2 text-sm">
+        <div className="rounded-md bg-muted p-2"><p className="text-xs text-muted-foreground">Expected</p><p className="font-medium">{money(l.expectedCents)}</p></div>
+        <div className="rounded-md bg-muted p-2"><p className="text-xs text-muted-foreground">Received</p><p className="font-medium">{money(l.receivedCents)}</p></div>
+        <div className="rounded-md bg-muted p-2"><p className="text-xs text-muted-foreground">Remaining</p><p className="font-medium">{money(l.remainingCents)}</p></div>
+      </div>
+      <ul className="divide-y rounded-md border text-sm">
+        {l.entries.length === 0 ? <li className="p-3 text-muted-foreground">No activity yet.</li> : null}
+        {l.entries.map((e: any) => (
+          <li key={e.id} className="flex items-start justify-between gap-3 p-3">
+            <div>
+              <p className={cn(e.kind === "received" && "font-medium")}>{e.label}</p>
+              <p className="text-xs text-muted-foreground">
+                {new Date(e.at).toLocaleDateString()}
+                {e.sentOn ? ` · sent ${e.sentOn}` : ""}
+                {e.sendingBank ? ` · ${e.sendingBank}` : ""}
+                {e.reference ? ` · ref ${e.reference}` : ""}
+                {e.kind === "reported" ? " · awaiting confirmation" : ""}
+              </p>
+            </div>
+            {e.amountCents ? <span className={cn("whitespace-nowrap", e.kind === "received" ? "font-medium" : "text-muted-foreground")}>{money(e.amountCents)}</span> : null}
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }

@@ -124,12 +124,24 @@ export const fundingInstructionsFn = createServerFn({ method: "POST" })
   .inputValidator(onboardingInput.parse)
   .handler(async ({ data, context }) => (await engine()).fundingInstructions(context.userId, data.onboardingId));
 
+const wireSentInput = onboardingInput.extend({
+  sentOn: z.string().max(10).nullish(),
+  amountCents: z.number().int().positive().max(1e13).nullish(),
+  sendingBank: z.string().max(120).nullish(),
+  reference: z.string().max(120).nullish(),
+});
+
 export const investorReportsFundsSentFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(onboardingInput.parse)
+  .inputValidator(wireSentInput.parse)
   .handler(async ({ data, context }) =>
-    reconciled(data.onboardingId, context.userId, "investorReportsFundsSent", (await engine()).investorReportsFundsSent(context.userId, data.onboardingId)),
+    reconciled(data.onboardingId, context.userId, "investorReportsFundsSent", (await engine()).investorReportsFundsSent(context.userId, data.onboardingId, data)),
   );
+
+export const investorFundingLedgerFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(onboardingInput.parse)
+  .handler(async ({ data, context }) => (await engine()).investorFundingLedger(context.userId, data.onboardingId));
 
 // ------------------------------------------------------ operations
 
