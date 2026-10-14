@@ -171,6 +171,13 @@ function InvestorSheet({ fundId, id, onClose }: { fundId: string; id: string | n
               </section>
             )}
 
+            {d.missing.length > 0 && (
+              <section className="rounded-lg border border-destructive/40 bg-destructive/5 p-3">
+                <h4 className="mb-1 font-medium">Missing info for the fund manager to obtain</h4>
+                <ul className="list-disc space-y-0.5 pl-5">{d.missing.map((t: string) => <li key={t}>{t}</li>)}</ul>
+              </section>
+            )}
+
             <section>
               <h4 className="mb-1 font-medium">Contact</h4>
               <dl className="divide-y">
@@ -181,7 +188,7 @@ function InvestorSheet({ fundId, id, onClose }: { fundId: string; id: string | n
             <section>
               <h4 className="mb-1 font-medium">Investment</h4>
               <dl className="divide-y">
-                <Row k="Class" v={d.classKey} /><Row k="Tax ID" v={d.taxIdLast4 ? `•••• ${d.taxIdLast4}` : null} />
+                <Row k="Class" v={d.classLabel} /><Row k="Investing as" v={d.assetLabel} /><Row k="Tax ID" v={d.taxIdLast4 ? `•••• ${d.taxIdLast4}` : null} />
                 <Row k="Investment date" v={d.investmentDate ? fmtDate(d.investmentDate) : null} />
                 <Row k="Stage" v={<span className="capitalize">{d.stage.replace(/_/g, " ")}</span>} />
                 <Row k="Latest activity" v={fmtDate(d.lastActivity)} />
