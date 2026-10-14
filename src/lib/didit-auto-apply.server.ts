@@ -31,7 +31,7 @@ export function extractDiditDetails(d: any) {
       region: s(addr?.region),
       postal_code: s(addr?.postal_code),
       country: s(addr?.country),
-    } as Record<string, string | null>,
+    } as any,
   };
 }
 
@@ -44,7 +44,7 @@ export async function autoApplyDiditForOnboarding(onboardingId: string, actorUse
   const decision = await fetchDiditSessionDecision(ob.questionnaire_didit_session_id);
   if (!decision) return { applied: false, reason: "Didit decision unavailable" };
   const x = extractDiditDetails(decision);
-  if (!x.sessionApproved) return { applied: false, reason: `Didit status ${decision.status ?? "unknown"}` };
+  if (!x.sessionApproved) return { applied: false, reason: `Didit status ${(decision as any).status ?? "unknown"}` };
 
   const { data: person } = await db().from("persons").select("*").eq("id", ob.person_id).maybeSingle();
   if (!person) return { applied: false, reason: "person not found" };
