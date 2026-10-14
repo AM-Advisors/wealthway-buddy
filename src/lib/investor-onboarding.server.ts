@@ -64,6 +64,8 @@ import {
 } from "@/lib/identity-model";
 import { isReconciledFunding } from "@/lib/funding-status";
 
+import standardQuestions from "@/lib/standard-investor-questionnaire.json";
+const STANDARD_QUESTIONNAIRE = { version: 1, status: "published", standard: true, questions: standardQuestions as Question[] };
 const db = () => supabaseAdmin as any;
 const nowIso = () => new Date().toISOString();
 
@@ -217,7 +219,8 @@ export async function offeringRequirements(offeringId: string): Promise<Offering
     kybRequired: Boolean(req?.requires_entity_kyb ?? true),
     amlRequired: Boolean(req?.requires_person_aml ?? true),
     taxDocumentRequired: Boolean(rules['taxDocumentRequired'] ?? true),
-    subscriptionQuestionnaireRequired: Boolean(rules['subscriptionQuestionnaireRequired'] ?? false),
+    // Platform rule: every investor on every fund completes the investor questionnaire.
+    subscriptionQuestionnaireRequired: true,
     minInvestmentCents: Number(setup?.min_investment_cents ?? offering?.min_investment_cents ?? 0) || null,
     maxInvestmentCents: (rules['maxInvestmentCents'] as number | undefined) ?? null,
     remainingCapacityCents: null,
@@ -631,7 +634,8 @@ export async function setInvestmentAmount(
   return { requestedAmountCents: input.amountCents };
 }
 
-async function publishedQuestionnaire(offeringId: string) {
+/** The fund's own published questionnaire, else the Harmonious standard questionnaire. */
+export async function publishedQuestionnaire(offeringId: string) {
   const { data } = await db()
     .from("offering_questionnaires")
     .select("*")
@@ -639,7 +643,7 @@ async function publishedQuestionnaire(offeringId: string) {
     .eq("status", "published")
     .order("version", { ascending: false })
     .limit(1);
-  return ((data ?? []) as any[])[0] ?? null;
+  return ((data ?? []) as any[])[0] ?? STANDARD_QUESTIONNAIRE;
 }
 
 /** The person's most recent Didit session: their own verification, else a staff-confirmed link. */

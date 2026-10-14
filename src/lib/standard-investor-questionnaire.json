@@ -1,0 +1,238 @@
+[
+    {
+        "key": "name_of_subscriber",
+        "type": "text",
+        "label": "Name of Subscriber",
+        "required": true
+    },
+    {
+        "key": "subscription_amount",
+        "type": "text",
+        "label": "Subscription Amount",
+        "required": true
+    },
+    {
+        "key": "email",
+        "type": "text",
+        "label": "Email",
+        "required": true
+    },
+    {
+        "key": "phone",
+        "type": "text",
+        "label": "Phone",
+        "required": true
+    },
+    {
+        "key": "subscriber_s_address_of_residence",
+        "type": "text",
+        "label": "Subscriber's Address of residence",
+        "required": true
+    },
+    {
+        "key": "address_for_delivery_and_notices_if_different_from_above",
+        "type": "text",
+        "label": "Address for Delivery and Notices (if different from above)",
+        "required": false
+    },
+    {
+        "key": "i_agree_to_electronic_delivery_of_disclosures_and_schedule_k",
+        "type": "select",
+        "label": "I agree to electronic delivery of disclosures and Schedule K-1 (Yes or No)",
+        "options": [
+            "Yes"
+        ],
+        "required": true
+    },
+    {
+        "key": "for_persons_individuals_and_business_type_check_one",
+        "type": "select",
+        "label": "For Persons/Individuals and Business Type (check one)",
+        "options": [
+            "Single Individual (one signatory required)",
+            "Joint Tenants with Right of Survivorship (each individual must sign)",
+            "Tenants-in-Common (each individual must sign)",
+            "Community Property (one signatory required)",
+            "Limited Partnership",
+            "Limited Liability Company",
+            "Corporation",
+            "Individual Retirement Account (custodian or trustee must sign)",
+            "Trust (other than IRA) (trustee must sign)",
+            "Qualified Plan (other than IRA)",
+            "Other (describe)"
+        ],
+        "required": true
+    },
+    {
+        "key": "which_of_the_following_irs_form_applies_to_the_subscriber",
+        "type": "select",
+        "label": "Which of the following IRS form applies to the subscriber",
+        "options": [
+            "W-9 (for Investors who are U.S. Persons)",
+            "W-8BEN (for Individual Investors who are not a U.S. Person)",
+            "W-8BENE"
+        ],
+        "required": true
+    },
+    {
+        "key": "is_the_subscriber_acting_on_behalf_of_an_entity_which_is_dee",
+        "type": "select",
+        "label": "Is the subscriber acting on behalf of an entity which is deemed to hold the assets of an \"Employee Benefit Plan\" (which is subject to the fiduciary rules of ERISA) or a \"Plan\" (e.g., an entity of which 25% or more of any class of equity securities is held by Employee Benefit Plans or Plans, or an insurance company separate account holding \"plan assets,\" etc.) (each, a \"Benefit Plan Investor\").",
+        "options": [
+            "Yes",
+            "No"
+        ],
+        "required": true
+    },
+    {
+        "key": "is_the_subscriber_a_life_insurance_company_using_the_assets_",
+        "type": "select",
+        "label": "Is the subscriber a life insurance company using the assets of its general account.",
+        "options": [
+            "Yes",
+            "No"
+        ],
+        "required": true
+    },
+    {
+        "key": "name_of_the_bank_from_which_the_subscriber_s_payment_to_the_",
+        "type": "text",
+        "label": "Name of the bank from which the Subscriber's payment to the Partnership is being sent(the \"Funding Bank\")",
+        "required": true
+    },
+    {
+        "key": "is_the_funding_bank_located_in_the_united_states_or_another_",
+        "type": "select",
+        "label": "Is the Funding Bank located in the United States or another \"FATF Country\"?",
+        "options": [
+            "Yes",
+            "No"
+        ],
+        "required": true
+    },
+    {
+        "key": "if_the_subscriber_answered_yes_is_the_subscriber_a_customer_",
+        "type": "select",
+        "label": "If the Subscriber answered \"Yes,\" is the Subscriber a customer of the Funding Bank?",
+        "options": [
+            "Yes",
+            "No"
+        ],
+        "required": true
+    },
+    {
+        "key": "is_the_jurisdiction_where_the_wiring_institution_is_located_",
+        "type": "select",
+        "label": "Is the jurisdiction where the Wiring Institution is located designated by the Financial Action Task Force (FATF) as being a \"High Risk Jurisdiction\" or \"Jurisdiction Under Increased Monitoring\"?",
+        "options": [
+            "Yes",
+            "No"
+        ],
+        "required": true
+    },
+    {
+        "key": "if_the_subscriber_answered_no_to_questions_2_or_3_above_the_",
+        "type": "text",
+        "label": "If the Subscriber answered \"No\" to questions 2 or 3 above, the Subscriber may be required, if the Subscriber is an individual, to produce a copy of a passport or identification card, together with any evidence of the Subscriber's address, such as a utility bill or bank statement, and date of birth. If the Subscriber is an entity, the Subscriber may be required to produce a certified copy of the Subscriber's certificate of incorporation, articles of association (or the equivalent) or certificate of formation or limited partnership (or the equivalent), and the names, occupations, dates of birth and residential and business addresses of all directors.",
+        "required": false
+    },
+    {
+        "key": "has_the_subscriber_been_convicted_within_the_past_ten_years_",
+        "type": "select",
+        "label": "Has the subscriber been convicted, within the past ten years, of a felony or misdemeanor, or is subject to an order, judgment or decree of any court of competent jurisdiction (including, without limitation, any temporary or preliminary order), entered within the past five years, which restrains or enjoins such person from engaging or continuing to engage in any conduct or practice (i) in connection with the purchase or sale of any security, (ii) involving the making of any false filing with the U.S. Securities and Exchange Commission (the \"SEC\"), or (iii) arising out of the conduct of the business of an underwriter, broker, dealer, municipal securities dealer, investment adviser or paid solicitor of purchasers of securities?",
+        "options": [
+            "Yes",
+            "No"
+        ],
+        "required": true
+    },
+    {
+        "key": "has_the_subscriber_been_subject_to_a_final_order_of_a_state_",
+        "type": "select",
+        "label": "Has the subscriber been subject to a final order of a state securities commission (or an agency or officer of a state performing like functions), a state authority that supervises or examines banks, savings associations, or credit unions, a state insurance commission (or an agency or officer of a state performing like functions), an appropriate federal banking agency, the U.S. Commodity Futures Trading Commission, or the U.S. National Credit Union Administration that (i) bars the Subscriber from (A) association with an entity regulated by such commission, authority, agency, or officer, (B) engaging in the business of securities, insurance or banking or (C) engaging in savings association or credit union activities, or (ii) constitutes a final order based on a violation of any law or regulation that prohibits fraudulent, manipulative, or deceptive conduct entered within ten years before such sale?",
+        "options": [
+            "Yes",
+            "No"
+        ],
+        "required": true
+    },
+    {
+        "key": "has_the_subscriber_been_subject_to_an_order_of_the_sec_enter",
+        "type": "select",
+        "label": "Has the subscriber been subject to an order of the SEC entered pursuant to Section 15(b) or 15B(c) of the Exchange Act, or Section 203(e) of the U.S. Investment Advisers Act of 1940, as amended (the \"Advisers Act\"), that (i) suspends or revokes such person's registration as a broker, dealer, municipal securities dealer or investment adviser, (ii) places limitations on the activities, functions or operations of such person, or (iii) bars such person from being associated with any entity or from participating in the offering of any penny stock?",
+        "options": [
+            "Yes",
+            "No"
+        ],
+        "required": true
+    },
+    {
+        "key": "has_the_subscriber_been_subject_to_any_order_of_the_sec_ente",
+        "type": "select",
+        "label": "Has the subscriber been subject to any order of the SEC entered within the past five years that orders such person to cease and desist from committing or causing a violation or future violation of (i) any scienter-based anti-fraud provision of the federal securities laws, including without limitation Section 17(a)(1) of the U.S. Securities Act of 1933, as amended (the \"Securities Act\"), Sections 10(b) and 15(c)(1) of the Exchange Act and SEC Rule 10b-5, and Section 206(1) of the Advisers Act, or any other rule or regulation thereunder, or (ii) Section 5 of the Securities Act?",
+        "options": [
+            "Yes",
+            "No"
+        ],
+        "required": true
+    },
+    {
+        "key": "has_the_subscriber_been_suspended_or_expelled_from_membershi",
+        "type": "select",
+        "label": "Has the subscriber been suspended or expelled from membership in, or suspended or barred from association with a member of, a registered national securities exchange or a registered national or affiliated securities association for any act or omission to act constituting conduct inconsistent with just and equitable principles of trade?",
+        "options": [
+            "Yes",
+            "No"
+        ],
+        "required": true
+    },
+    {
+        "key": "has_the_subscriber_filed_as_a_registrant_or_issuer_or_was_or",
+        "type": "select",
+        "label": "Has the subscriber filed (as a registrant or issuer), or was or was named as an underwriter in, any registration statement or Regulation A offering statement filed with the SEC that, within the past five years, was the subject of a refusal order, stop order, or order suspending the Regulation A exemption, or is now the subject of an investigation or proceeding to determine whether a stop order or suspension order should be issued?",
+        "options": [
+            "Yes",
+            "No"
+        ],
+        "required": true
+    },
+    {
+        "key": "has_the_subscriber_been_subject_to_a_u_s_postal_service_fals",
+        "type": "select",
+        "label": "Has the subscriber been subject to a U.S. Postal Service false representation order entered within the past five years, or is now subject to a temporary restraining order or preliminary injunction with respect to conduct alleged by the U.S. Postal Service to constitute a scheme or device for obtaining money or property through the mail by means of false representations?",
+        "options": [
+            "Yes",
+            "No"
+        ],
+        "required": true
+    },
+    {
+        "key": "has_the_subscriber_or_any_of_its_beneficial_owners1_been_sub",
+        "type": "select",
+        "label": "Has the Subscriber (or any of its Beneficial Owners1) been subject to a \"disqualifying event\"?",
+        "options": [
+            "Yes",
+            "No"
+        ],
+        "required": true
+    },
+    {
+        "key": "please_select_the_accreditation_that_applies_to_you",
+        "type": "select",
+        "label": "Please Select the Accreditation that applies to you",
+        "options": [
+            "Net worth over $1 million, excluding primary residence (individually or with spouse or partner)",
+            "Income over $200,000 (individually) or $300,000 (with spouse or partner) in each of the prior two years, and reasonably expects the same for the current year",
+            "Investment professionals in good standing holding the general securities representative license (Series 7), the investment adviser representative license (Series 65), or the private securities offerings representative license (Series 82)",
+            "Directors, executive officers, or general partners (GP) of the company selling the securities (or of a GP of that company)",
+            "Any “family client” of a “family office” that qualifies as an accredited investor",
+            "For investments in a private fund, “knowledgeable employees” of the fund",
+            "Entities owning investments in excess of $5 million",
+            "The following entities with assets in excess of $5 million: corporations, partnerships, LLCs, trusts, 501(c)(3) organizations, employee benefit plans, “family office” and any “family client” of that office",
+            "Entities where all equity owners are accredited investors",
+            "Investment advisers (SEC- or state-registered or exempt reporting advisers) and SEC-registered broker-dealers",
+            "A bank, savings and loan association, insurance company, registered investment company, business development company, or small business investment company or rural business investment company"
+        ],
+        "required": true
+    }
+]
