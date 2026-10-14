@@ -1,6 +1,9 @@
+import { setFundDemoFn } from "@/lib/staff-funds.functions";
+import { DeleteFundDialog } from "@/components/delete-fund-dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { MoreHorizontal, Search } from "lucide-react";
 import { toast } from "sonner";
@@ -19,8 +22,17 @@ import { cn } from "@/lib/utils";
 const FILTERS: [FundFilter, string][] = [["all", "All"], ["active", "Active"], ["onboarding", "Onboarding"], ["needs_harmonious", "Needs Harmonious"], ["blocked", "Blocked"], ["ready", "Ready to Close"], ["closing_soon", "Closing in 30 days"], ["agreement_follow_up", "Agreement Follow-Up"]];
 const fmt = (d: string | null) => (d ? new Date(d.length === 10 ? `${d}T12:00:00` : d).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "-");
 
-function RowActions({ f }: { f: any }) {
+function RowActions({ f, canDelete }: { f: any; canDelete?: boolean }) {
   const load = useServerFn(getFundLinkFn);
+  const setDemo = useServerFn(setFundDemoFn);
+  const qc = useQueryClient();
+  const refresh = () => qc.invalidateQueries({ queryKey: ["ops-funds-dashboard"] });
+  const toggleDemo = async () => {
+    const reason = window.prompt(f.isDemo ? "Why is this a real fund again?" : "Why is this a demo fund?");
+    if (!reason || reason.trim().length < 3) return;
+    try { await setDemo({ data: { fundId: f.id, isDemo: !f.isDemo, reason } }); toast.success(f.isDemo ? "Now shown as a real fund" : "Marked as demo fund"); refresh(); }
+    catch (e) { toast.error((e as Error).message); }
+  };
   const copy = async () => {
     try { const d = await load({ data: { offeringId: f.id } }); if (d.url) await copyText(d.url, "Onboarding link copied"); else toast.message("No active onboarding link. Open the fund's Onboarding Link tab to set one up."); }
     catch (e) { toast.error((e as Error).message); }
@@ -34,6 +46,8 @@ function RowActions({ f }: { f: any }) {
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild><Link to="/manager/fund/$fundId/investors" params={{ fundId: f.id }} search={{ add: "existing" } as never}>Add investor</Link></DropdownMenuItem>
         <DropdownMenuItem onClick={copy}>Copy Investor Onboarding Link</DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={toggleDemo}>{f.isDemo ? "Unmark demo fund" : "Mark as demo fund"}</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -48,6 +62,8 @@ export function OpsFundsDashboard({ initialFilter }: { initialFilter?: FundFilte
   const [client, setClient] = useState("any");
   const [owner, setOwner] = useState("any");
   const [manager, setManager] = useState("any");
+  const [showDemo, setShowDemo] = useState(false);
+  const qc = useQueryClient();
   const rows = ((q.data as any)?.rows ?? []) as any[];
   const opts = useMemo(() => {
     const c = new Map<string, string>(), o = new Map<string, string>(), m = new Map<string, string>();
@@ -65,6 +81,7 @@ export function OpsFundsDashboard({ initialFilter }: { initialFilter?: FundFilte
   if (q.isError) return <p className="text-sm text-muted-foreground">Harmonious operations access is required.</p>;
   const t = (q.data as any).totals;
   const shown = rows
+    .filter((r) => showDemo || !r.isDemo)
     .filter((r) => matchesFilter(r, filter))
     .filter((r) => !term || r.name.toLowerCase().includes(term.toLowerCase()))
     .filter((r) => client === "any" || r.clientId === client)
@@ -79,7 +96,8 @@ export function OpsFundsDashboard({ initialFilter }: { initialFilter?: FundFilte
           <h1 className="font-heading text-2xl font-semibold">Funds</h1>
           <p className="text-sm text-muted-foreground">Every fund in one place — setup progress, investors and the next step.</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-3">
+          <label className="flex items-center gap-2 text-sm"><Checkbox checked={showDemo} onCheckedChange={(v) => setShowDemo(!!v)} />Show demo funds ({rows.filter((r) => r.isDemo).length})</label>
           <Button asChild size="sm"><Link to="/ops/fund-setup/new">Add Fund or SPV</Link></Button>
         </div>
       </div>
@@ -121,6 +139,7 @@ export function OpsFundsDashboard({ initialFilter }: { initialFilter?: FundFilte
                 <div className="col-span-2 min-w-0 lg:col-span-1">
                   <Link to="/ops/fund/$fundId" params={{ fundId: f.id }} search={{ tab: f.metrics.blocked + f.metrics.needsHarmonious > 0 ? "investors" : undefined }} className="font-medium hover:underline">{f.name}</Link>
                   <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">{stage}</span>
+                  {f.isDemo ? <span className="ml-1 rounded-full border px-2 py-0.5 text-xs text-muted-foreground">Demo</span> : null}
                 </div>
                 <span className="text-muted-foreground">{f.clientName ?? "-"}</span>
                 <span className="flex items-center gap-2 text-right lg:text-left">
@@ -132,7 +151,8 @@ export function OpsFundsDashboard({ initialFilter }: { initialFilter?: FundFilte
                 <span className="text-xs text-muted-foreground lg:text-sm lg:text-foreground">{f.owner?.name ?? "Unassigned"}</span>
                 <span className="flex items-center justify-end gap-1">
                   <ViewAsPicker offeringId={f.id} label="Preview" />
-                  <RowActions f={f} />
+                  <RowActions f={f} canDelete={(q.data as any).canDelete} />
+                  {(q.data as any).canDelete ? <DeleteFundDialog fundId={f.id} fundName={f.name} onDeleted={() => qc.invalidateQueries({ queryKey: ["ops-funds-dashboard"] })} /> : null}
                 </span>
               </div>
             );

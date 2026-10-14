@@ -200,3 +200,25 @@ export const deleteFundPermanently = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+/** Display-only demo flag: hides a fund from the Operations Funds list and counts. Never changes access. */
+export const setFundDemoFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ fundId: z.string().uuid(), isDemo: z.boolean(), reason: z.string().trim().min(3).max(500) }).parse)
+  .handler(async ({ context, data }) => {
+    await staff(context);
+    const { requireOperations } = await import("@/lib/ops-access.functions");
+    await requireOperations(context, "funds", "prepare");
+    const db = (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
+    const { data: off } = await db.from("offerings").select("id, is_demo").eq("id", data.fundId).maybeSingle();
+    if (!off) throw new Error("Fund not found.");
+    if (!!off.is_demo === data.isDemo) return { ok: true };
+    const { error } = await db.from("offerings").update({ is_demo: data.isDemo, demo_marked_by: context.userId, demo_marked_at: new Date().toISOString() }).eq("id", data.fundId);
+    if (error) throw new Error("Could not update the demo setting.");
+    const { data: prof } = await db.from("profiles").select("legal_name").eq("user_id", context.userId).maybeSingle();
+    await db.from("offering_audit_events").insert({
+      offering_id: data.fundId, event_type: data.isDemo ? "marked_demo" : "unmarked_demo", actor_id: context.userId, actor_name: prof?.legal_name ?? null,
+      summary: data.isDemo ? "Marked as demo fund" : "No longer a demo fund", changes: { is_demo: { from: !!off.is_demo, to: data.isDemo }, reason: data.reason },
+    });
+    return { ok: true };
+  });
