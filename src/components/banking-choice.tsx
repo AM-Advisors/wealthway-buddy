@@ -56,7 +56,7 @@ export function BankingChoice({ offeringId, onChanged }: { offeringId: string; o
         <div className="space-y-3 rounded-xl border bg-background p-4">
           {open.length > 0 && (
             <ul className="space-y-1 text-sm">
-              {open.map((r) => <li key={r.id} className="flex justify-between gap-2"><span>{BANK_LABEL[r.bank] ?? r.bank}</span><span className="capitalize text-muted-foreground">{r.status.replace(/_/g, " ")}</span></li>)}
+              {open.map((r) => <li key={r.id} className="flex justify-between gap-2"><span>{BANK_LABEL[r.bank] ?? r.bank}</span><span className="text-right text-muted-foreground"><span className="capitalize">{r.status.replace(/_/g, " ")}</span>{r.bank !== "customers" && <span className="block text-xs">{r.einLast4 ? `EIN ••${r.einLast4} added · ready to open` : "Waiting on EIN"}</span>}</span></li>)}
             </ul>
           )}
           <p className="text-sm font-medium">{open.length ? "Request another bank" : "Choose a bank"}</p>

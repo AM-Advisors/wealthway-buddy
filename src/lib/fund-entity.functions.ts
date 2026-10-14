@@ -305,6 +305,24 @@ export const getSs4Url = createServerFn({ method: "POST" })
     return { url: signed?.signedUrl ?? null };
   });
 
+/** Attach the fund's EIN (last 4 shown; full EIN stays in entity details) to open Texas Capital/Mercury requests. */
+async function attachEinToBankRequests(offeringId: string, ein: string | null | undefined, userId: string) {
+  const digits = String(ein ?? "").replace(/\D/g, "");
+  if (digits.length !== 9) return 0;
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const db = supabaseAdmin as any;
+  const { data: rows } = await db.from("offering_bank_setup_requests").select("id").eq("offering_id", offeringId)
+    .in("bank", ["texas_capital", "mercury"]).neq("status", "cancelled").is("ein_attached_at", null);
+  const ids = ((rows ?? []) as any[]).map((r) => r.id);
+  if (!ids.length) return 0;
+  await db.from("offering_bank_setup_requests").update({ ein_last4: digits.slice(-4), ein_attached_at: new Date().toISOString() }).in("id", ids);
+  try {
+    const { logFundAudit } = await import("@/lib/fund-audit.server");
+    await logFundAudit(userId, { offeringId, eventType: "bank_request_ein_attached", summary: `EIN added to ${ids.length} bank account request${ids.length > 1 ? "s" : ""}`, values: { ein: digits } });
+  } catch { /* best-effort */ }
+  return ids.length;
+}
+
 export const requestBankSetup = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
@@ -376,6 +394,10 @@ export const requestBankSetup = createServerFn({ method: "POST" })
       console.error("bank setup email failed", err);
     }
 
+    try {
+      const { data: det } = await context.supabase.rpc("get_offering_entity_details", { p_offering_id: data.offering_id }).maybeSingle();
+      await attachEinToBankRequests(data.offering_id, (det as any)?.ein, context.userId);
+    } catch (e) { console.error("attach EIN failed", e); }
     return { id: requestId };
   });
 
@@ -459,11 +481,11 @@ export const getBankingChoiceFn = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const [{ data: o }, { data: reqs }] = await Promise.all([
       (supabaseAdmin as any).from("offerings").select("banking_setup_by").eq("id", data.offering_id).maybeSingle(),
-      context.supabase.from("offering_bank_setup_requests").select("id, bank, status, created_at").eq("offering_id", data.offering_id).order("created_at", { ascending: false }),
+      context.supabase.from("offering_bank_setup_requests").select("id, bank, status, created_at, ein_last4, ein_attached_at").eq("offering_id", data.offering_id).order("created_at", { ascending: false }),
     ]);
     return {
       setupBy: ((o as any)?.banking_setup_by ?? null) as "fund" | "harmonious" | null,
-      requests: ((reqs ?? []) as any[]).map((r) => ({ id: r.id as string, bank: r.bank as string, status: (r.status ?? "requested") as string, createdAt: r.created_at as string })),
+      requests: ((reqs ?? []) as any[]).map((r) => ({ id: r.id as string, bank: r.bank as string, status: (r.status ?? "requested") as string, createdAt: r.created_at as string, einLast4: (r.ein_last4 ?? null) as string | null })),
     };
   });
 
@@ -521,5 +543,6 @@ export const saveFundEinFn = createServerFn({ method: "POST" })
       const { logFundAudit } = await import("@/lib/fund-audit.server");
       await logFundAudit(context.userId, { offeringId: data.offering_id, eventType: "irs_ein_filing_recorded", summary: "IRS EIN filing recorded", values: { ein, filingType: "IRS EIN (Form SS-4 / online)", filingDate: new Date().toISOString().slice(0, 10) } });
     }
+    await attachEinToBankRequests(data.offering_id, ein, context.userId).catch((e) => console.error("attach EIN failed", e));
     return { ok: true, filingId };
   });
