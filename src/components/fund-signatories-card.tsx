@@ -41,8 +41,9 @@ export function FundSignatoriesCard({ offeringId, onChanged }: { offeringId: str
       if (/Review Required/i.test(msg)) setReview(msg); else toast.error(msg);
     } finally { setBusy(false); }
   };
-  const act = async (id: string, patch: { makePrimary?: boolean; remove?: boolean }) => {
-    try { await update({ data: { offeringId, id, ...patch } }); done(); } catch (e: any) { toast.error(e.message); }
+  const [edit, setEdit] = useState<{ id: string; preferredName: string; title: string; email: string } | null>(null);
+  const act = async (id: string, patch: { makePrimary?: boolean; remove?: boolean; preferredName?: string | null; title?: string | null; email?: string | null }) => {
+    try { await update({ data: { offeringId, id, ...patch } }); setEdit(null); done(); } catch (e: any) { toast.error(e.message); }
   };
 
   const d = q.data;
@@ -62,10 +63,23 @@ export function FundSignatoriesCard({ offeringId, onChanged }: { offeringId: str
                     <span className="font-medium">{s.name}</span>
                     {s.isPrimary && <Badge>Primary</Badge>}
                   </div>
+                  {s.preferredName && s.legalName ? <p className="text-xs text-muted-foreground">Legal name: {s.legalName}</p> : null}
                   <p className="text-xs text-muted-foreground">{[s.title, s.capacity, s.email].filter(Boolean).join(" · ") || "No title yet"}</p>
+                  {edit?.id === s.id && (
+                    <div className="mt-2 grid gap-2 sm:grid-cols-3">
+                      <div className="space-y-1"><Label className="text-xs">Goes by</Label><Input placeholder="e.g. middle name" value={edit.preferredName} onChange={(e) => setEdit({ ...edit, preferredName: e.target.value })} /></div>
+                      <div className="space-y-1"><Label className="text-xs">Signatory title</Label><Input value={edit.title} onChange={(e) => setEdit({ ...edit, title: e.target.value })} /></div>
+                      <div className="space-y-1"><Label className="text-xs">Email</Label><Input type="email" value={edit.email} onChange={(e) => setEdit({ ...edit, email: e.target.value })} /></div>
+                      <div className="flex gap-2 sm:col-span-3">
+                        <Button size="sm" onClick={() => act(s.id, { preferredName: edit.preferredName || null, title: edit.title || null, email: edit.email || null })}>Save</Button>
+                        <Button size="sm" variant="ghost" onClick={() => setEdit(null)}>Cancel</Button>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 {d.canEdit && (
                   <div className="flex gap-1">
+                    <Button size="sm" variant="ghost" onClick={() => setEdit({ id: s.id, preferredName: s.preferredName ?? "", title: s.title ?? "", email: s.email ?? "" })}>Edit</Button>
                     {!s.isPrimary && <Button size="sm" variant="ghost" onClick={() => act(s.id, { makePrimary: true })}><Star className="mr-1 h-3.5 w-3.5" />Make primary</Button>}
                     <Button size="sm" variant="ghost" aria-label={`Remove ${s.name}`} onClick={() => act(s.id, { remove: true })}><Trash2 className="h-3.5 w-3.5" /></Button>
                   </div>

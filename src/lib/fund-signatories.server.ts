@@ -12,7 +12,9 @@ import { resolvePersonServer, withPersonCreationLock } from "@/lib/person-resolu
 import { planContactSave } from "@/lib/client-contacts-model";
 
 const db = () => supabaseAdmin as any;
-const nameOf = (p: any) => [p?.legal_first_name, p?.legal_last_name].filter(Boolean).join(" ") || "Unnamed person";
+const legalOf = (p: any) => [p?.legal_first_name, p?.legal_middle_name, p?.legal_last_name].filter(Boolean).join(" ");
+/** Shows the name someone goes by (e.g. a middle name), keeping the legal name visible. */
+const nameOf = (p: any) => (p?.preferred_name ? `${p.preferred_name} ${p.legal_last_name ?? ""}`.trim() : [p?.legal_first_name, p?.legal_last_name].filter(Boolean).join(" ")) || "Unnamed person";
 const split = (n: string) => {
   const t = n.trim().replace(/\s+/g, " ");
   const i = t.indexOf(" ");
@@ -51,8 +53,8 @@ export async function listFundSignatories(userId: string, offeringId: string) {
   const personIds = [...new Set(((rows ?? []) as any[]).map((r) => r.person_id))];
   const managerIds = ((managers ?? []) as any[]).map((m) => m.user_id);
   const [{ data: people }, { data: managerPeople }] = await Promise.all([
-    personIds.length ? db().from("persons").select("id, legal_first_name, legal_last_name, email").in("id", personIds) : { data: [] },
-    managerIds.length ? db().from("persons").select("id, legal_first_name, legal_last_name, email").in("user_id", managerIds) : { data: [] },
+    personIds.length ? db().from("persons").select("id, legal_first_name, legal_middle_name, legal_last_name, preferred_name, email").in("id", personIds) : { data: [] },
+    managerIds.length ? db().from("persons").select("id, legal_first_name, legal_middle_name, legal_last_name, preferred_name, email").in("user_id", managerIds) : { data: [] },
   ]);
   const pMap = new Map(((people ?? []) as any[]).map((p) => [p.id, p]));
   const taken = new Set(personIds);
@@ -66,7 +68,7 @@ export async function listFundSignatories(userId: string, offeringId: string) {
     canEdit: actor.isStaff,
     hasClient: Boolean(o?.client_id),
     signatories: ((rows ?? []) as any[]).map((r) => ({
-      id: r.id as string, personId: r.person_id as string, name: nameOf(pMap.get(r.person_id)), email: (pMap.get(r.person_id)?.email ?? null) as string | null,
+      id: r.id as string, personId: r.person_id as string, name: nameOf(pMap.get(r.person_id)), legalName: legalOf(pMap.get(r.person_id)) || null, preferredName: (pMap.get(r.person_id)?.preferred_name ?? null) as string | null, email: (pMap.get(r.person_id)?.email ?? null) as string | null,
       title: r.title as string | null, capacity: r.capacity as string | null, isPrimary: Boolean(r.is_primary),
     })),
     candidates,
@@ -169,7 +171,7 @@ export async function addFundSignatory(userId: string, input: AddSignatoryInput)
   return { ok: true };
 }
 
-export async function updateFundSignatory(userId: string, input: { offeringId: string; id: string; title?: string | null | undefined; capacity?: string | null | undefined; makePrimary?: boolean | undefined; remove?: boolean | undefined }) {
+export async function updateFundSignatory(userId: string, input: { offeringId: string; id: string; title?: string | null | undefined; capacity?: string | null | undefined; preferredName?: string | null | undefined; email?: string | null | undefined; makePrimary?: boolean | undefined; remove?: boolean | undefined }) {
   const actor = await staffFor(userId, input.offeringId);
   if (!actor.isStaff) forbid("only Harmonious can change Fund signatories.");
   const { data: row } = await db().from("fund_signatories").select("*").eq("id", input.id).eq("offering_id", input.offeringId).eq("status", "active").maybeSingle();
@@ -183,6 +185,21 @@ export async function updateFundSignatory(userId: string, input: { offeringId: s
     }
     await audit(input.offeringId, userId, "fund_signatory_removed", "Fund signatory removed", { personId: row.person_id });
     return { ok: true };
+  }
+  if (input.preferredName !== undefined || input.email !== undefined) {
+    const { data: person } = await db().from("persons").select("id, user_id, preferred_name, email").eq("id", row.person_id).maybeSingle();
+    if (!person) throw new Error("Signatory person not found.");
+    const patch: Record<string, unknown> = {};
+    if (input.preferredName !== undefined) patch["preferred_name"] = input.preferredName?.trim() || null;
+    if (input.email !== undefined) {
+      if (person.user_id) throw new Error("This person has their own sign-in; their email can only change from their account.");
+      const e = input.email?.trim().toLowerCase() || null;
+      if (e && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)) throw new Error("Enter a valid email.");
+      patch["email"] = e;
+    }
+    await db().from("persons").update(patch).eq("id", person.id);
+    if (row.client_contact_id && patch["email"] !== undefined) await db().from("client_contacts").update({ email: patch["email"] }).eq("id", row.client_contact_id);
+    await audit(input.offeringId, userId, "fund_signatory_person_updated", "Signatory name/email updated", { personId: person.id, before: { preferredName: person.preferred_name, email: person.email }, after: patch });
   }
   if (input.makePrimary && !row.is_primary) {
     await db().from("fund_signatories").update({ is_primary: false }).eq("offering_id", input.offeringId).eq("status", "active");
