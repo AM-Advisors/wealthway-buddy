@@ -19,10 +19,6 @@ async function admin() {
   return supabaseAdmin as any;
 }
 
-async function requireStaff(userId: string) {
-  const { assertStaff } = await import("@/lib/fund-setup.server");
-  await assertStaff(userId);
-}
 
 function strip(ss4: Record<string, unknown>) {
   const { responsible_party_tin: _a, responsible_party_tin_last4: _b, ...rest } = (ss4 ?? {}) as any;
@@ -174,8 +170,10 @@ export const cancelSs4RequestFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ requestId: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
-    await requireStaff(context.userId);
     const db = await admin();
+    const { data: row } = await db.from("ss4_signature_requests").select("offering_id").eq("id", data.requestId).maybeSingle();
+    if (!row) throw new Error("Request not found.");
+    await requireStaffOrManager(context.userId, row.offering_id);
     const { error } = await db.from("ss4_signature_requests").update({ status: "cancelled", cancelled_at: new Date().toISOString(), cancelled_by: context.userId }).eq("id", data.requestId).eq("status", "requested");
     if (error) throw new Error(error.message);
     return { ok: true };
@@ -272,7 +270,7 @@ export const ss4SignedPdfUrlFn = createServerFn({ method: "POST" })
     const db = await admin();
     const { data: r } = await db.from("ss4_signature_requests").select("offering_id, signer_user_id, signed_pdf_path").eq("id", data.requestId).maybeSingle();
     if (!r?.signed_pdf_path) throw new Error("No signed form yet.");
-    if (r.signer_user_id !== context.userId) await requireStaff(context.userId);
+    if (r.signer_user_id !== context.userId) await requireStaffOrManager(context.userId, r.offering_id);
     const { data: signed, error } = await db.storage.from("fund-formation").createSignedUrl(r.signed_pdf_path, 300);
     if (error) throw new Error(error.message);
     return { url: signed?.signedUrl ?? null };
