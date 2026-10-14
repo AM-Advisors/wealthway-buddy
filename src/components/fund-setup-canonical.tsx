@@ -297,10 +297,10 @@ function DetailsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; onS
         </section>
         </EditableSection>
         <p className="text-xs text-muted-foreground">The exemption is chosen by you and counsel; it is never picked automatically from the fund type.</p>
-        {d.canEdit && editing.size > 0 && (
+        {d.canEdit && (
           <div className="flex gap-2">
             <Button onClick={submit}>Save</Button>
-            <Button variant="ghost" onClick={() => { setEditing(new Set()); onSaved(); }}>Cancel</Button>
+            {editing.size > 0 && <Button variant="ghost" onClick={() => { setEditing(new Set()); onSaved(); }}>Cancel</Button>}
           </div>
         )}
       </CardContent>
