@@ -82,29 +82,15 @@ export function FundSetupForm({ offeringId, mode, staffExtras }: { offeringId: s
     return <label className="relative block"><input className={cls} type={f.type ?? "text"} value={f.disabled ? f.fixed ?? "" : v(f.key)} disabled={locked || f.disabled} onChange={(e) => set(f.key, e.target.value)} />{label}</label>;
   };
 
-  const Section = ({ id, title, status, children }: { id: string; title: string; status?: React.ReactNode; children: React.ReactNode }): React.ReactElement => {
-    const isOpen = !!open[id];
-    return (
-      <section id={`setup-form-${id}`} className="scroll-mt-24 rounded-2xl border bg-card">
-        <button type="button" className="flex w-full items-center gap-3 px-5 py-4 text-left" aria-expanded={isOpen} onClick={() => setOpen((o) => ({ ...o, [id]: !isOpen }))}>
-          <span className="flex h-7 w-7 items-center justify-center rounded-md border">{isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}</span>
-          <h3 className="flex-1 font-heading text-base font-semibold text-primary">{title}</h3>
-          {status}
-        </button>
-        {isOpen && <div className="space-y-3 px-5 pb-5">{children}</div>}
-      </section>
-    );
-  };
-
   const fieldSection = (id: string) => {
     const s = FORM_SECTIONS.find((x) => x.id === id)!;
     const ret = returned("fund_details");
     return (
-      <Section id={s.id} title={s.title} status={statusFor(s.fields, s.fields[0]?.section)}>
+      <SetupSection open={open} setOpen={setOpen} id={s.id} title={s.title} status={statusFor(s.fields, s.fields[0]?.section)}>
         {id === "basic" && ret && <p className="rounded-lg bg-muted p-3 text-sm">Harmonious returned this: {ret.review_note ?? "please review and resubmit."}</p>}
         {id === "details" && <div className="rounded-xl border bg-background px-4 py-3 text-sm"><EinField fundId={offeringId} /></div>}
         <div className="space-y-3">{s.fields.map((f) => <div key={f.key}>{renderField(f)}</div>)}</div>
-      </Section>
+      </SetupSection>
     );
   };
 
@@ -126,36 +112,36 @@ export function FundSetupForm({ offeringId, mode, staffExtras }: { offeringId: s
       {fieldSection("offering")}
       {fieldSection("fees")}
 
-      <Section id="team" title="Team & Signatory" status={statusFor([], undefined) && <Chip tone={stepOf("team")?.status === "done" ? "done" : "miss"}>{stepOf("team")?.statusLabel ?? ""}</Chip>}>
+      <SetupSection open={open} setOpen={setOpen} id="team" title="Team & Signatory" status={<Chip tone={stepOf("team")?.status === "done" ? "done" : "miss"}>{stepOf("team")?.statusLabel ?? ""}</Chip>}>
         <ul className="grid gap-2 text-sm sm:grid-cols-2">
           <li className="rounded-xl border bg-background px-4 py-3"><span className="block text-xs text-muted-foreground">Fund manager</span>{d.managerName ?? "Not assigned"}</li>
           <li className="rounded-xl border bg-background px-4 py-3"><span className="block text-xs text-muted-foreground">Administrator</span>{d.administrator}</li>
           {(d.team as any[]).map((m, i) => <li key={i} className="rounded-xl border bg-background px-4 py-3"><span className="block text-xs capitalize text-muted-foreground">{String(m.role).replace(/_/g, " ")}</span>{m.name ?? "Not assigned"}</li>)}
         </ul>
         {isStaff ? <FundSignatoriesCard offeringId={offeringId} onChanged={refresh} /> : <p className="text-sm text-muted-foreground">Harmonious adds signers so each person completes an identity check. Signer on file: {prior.signers || "none yet"}.</p>}
-      </Section>
+      </SetupSection>
 
-      <Section id="bank" title="Banking" status={<Chip tone={stepOf("bank")?.status === "done" ? "done" : waiting("bank") ? "wait" : "miss"}>{stepOf("bank")?.statusLabel ?? ""}</Chip>}>
+      <SetupSection open={open} setOpen={setOpen} id="bank" title="Banking" status={<Chip tone={stepOf("bank")?.status === "done" ? "done" : waiting("bank") ? "wait" : "miss"}>{stepOf("bank")?.statusLabel ?? ""}</Chip>}>
         {isStaff
           ? <p className="text-sm text-muted-foreground">Enter and verify wire instructions on the Banking tab. Fund manager uploads appear below.</p>
           : <SubmitForm offeringId={offeringId} section="bank" onDone={refresh} />}
         <History items={(d.items as any[]).filter((i) => i.section === "bank")} isStaff={isStaff} onChange={refresh} />
-      </Section>
+      </SetupSection>
 
-      <Section id="documents" title="Documents" status={<Chip tone={stepOf("document")?.status === "done" ? "done" : "miss"}>{stepOf("document")?.statusLabel ?? ""}</Chip>}>
+      <SetupSection open={open} setOpen={setOpen} id="documents" title="Documents" status={<Chip tone={stepOf("document")?.status === "done" ? "done" : "miss"}>{stepOf("document")?.statusLabel ?? ""}</Chip>}>
         {isStaff ? <OfferingDocumentsSetup offeringId={offeringId} onChanged={refresh} /> : <SubmitForm offeringId={offeringId} section="document" onDone={refresh} />}
         <History items={(d.items as any[]).filter((i) => i.section === "document" || i.section === "fund_details" || i.section === "fees_team")} isStaff={isStaff} onChange={refresh} />
-      </Section>
+      </SetupSection>
 
-      <Section id="launch" title="Review & Launch" status={<Chip tone={d.launchPercent >= 100 ? "done" : "miss"}>{d.launchPercent}%</Chip>}>
+      <SetupSection open={open} setOpen={setOpen} id="launch" title="Review & Launch" status={<Chip tone={d.launchPercent >= 100 ? "done" : "miss"}>{d.launchPercent}%</Chip>}>
         <ul className="space-y-1 text-sm">
           {(d.steps as any[]).filter((s) => s.step !== "launch").map((s) => <li key={s.step} className="flex justify-between gap-3 border-b py-2 last:border-0"><span className="capitalize">{String(s.step).replace(/_/g, " ")}</span><span className="text-muted-foreground">{s.statusLabel}</span></li>)}
         </ul>
         <p className="text-sm text-muted-foreground">Harmonious launches the fund once every required item is in place.</p>
-      </Section>
+      </SetupSection>
 
       {isStaff && staffExtras && (
-        <Section id="staff" title="Harmonious only" status={<Chip tone="wait">Staff</Chip>}>{staffExtras}</Section>
+        <SetupSection open={open} setOpen={setOpen} id="staff" title="Harmonious only" status={<Chip tone="wait">Staff</Chip>}>{staffExtras}</SetupSection>
       )}
     </div>
   );
@@ -164,4 +150,18 @@ export function FundSetupForm({ offeringId, mode, staffExtras }: { offeringId: s
 function Chip({ tone, children }: { tone: "done" | "miss" | "wait"; children: React.ReactNode }) {
   const c = tone === "done" ? "bg-accent/15 text-foreground" : tone === "wait" ? "bg-muted text-muted-foreground" : "bg-destructive/10 text-destructive";
   return <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${c}`}>{children}</span>;
+}
+
+function SetupSection({ id, title, status, children, open, setOpen }: { id: string; title: string; status?: React.ReactNode; children: React.ReactNode; open: Record<string, boolean>; setOpen: React.Dispatch<React.SetStateAction<Record<string, boolean>>> }) {
+  const isOpen = !!open[id];
+  return (
+    <section id={`setup-form-${id}`} className="scroll-mt-24 rounded-2xl border bg-card">
+      <button type="button" className="flex w-full items-center gap-3 px-5 py-4 text-left" aria-expanded={isOpen} onClick={() => setOpen((o) => ({ ...o, [id]: !isOpen }))}>
+        <span className="flex h-7 w-7 items-center justify-center rounded-md border">{isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}</span>
+        <h3 className="flex-1 font-heading text-base font-semibold text-primary">{title}</h3>
+        {status}
+      </button>
+      {isOpen && <div className="space-y-3 px-5 pb-5">{children}</div>}
+    </section>
+  );
 }
