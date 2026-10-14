@@ -18,7 +18,6 @@ export const FORM_D_TYPES = [["506b", "Rule 506(b)"], ["506c", "Rule 506(c)"], [
 
 export const FORM_SECTIONS: { id: string; title: string; fields: FieldDef[] }[] = [
   { id: "basic", title: "Basic Details", fields: [
-    { key: "displayName", label: "Fund Nick Name", section: fd, required: true },
     { key: "legalName", label: "Fund Legal Name", section: fd, required: true },
     { key: "gpName", label: "Fund Manager (entity)", section: fd, required: true },
     { key: "fundType", label: "Fund Type", section: fd, required: true, options: [] },
@@ -26,6 +25,9 @@ export const FORM_SECTIONS: { id: string; title: string; fields: FieldDef[] }[] 
     { key: "regType", label: "Form D Type", section: fd, options: FORM_D_TYPES },
   ] },
   { id: "details", title: "Fund Details", fields: [
+    { key: "displayName", label: "Fund name", section: fd, required: true },
+    { key: "targetRaise", label: "Raise amount ($)", section: fd, type: "number" },
+    { key: "minInvestment", label: "Minimum commitment ($)", section: fd, type: "number", required: true },
     { key: "formationDate", label: "Formation date", section: fd, type: "date" },
     { key: "offeringOpenDate", label: "Open date", section: fd, type: "date" },
     { key: "offeringCloseDate", label: "Close Date", section: fd, type: "date" },
@@ -36,8 +38,6 @@ export const FORM_SECTIONS: { id: string; title: string; fields: FieldDef[] }[] 
     { key: "principalAddress", label: "Principal address", section: fd },
   ] },
   { id: "offering", title: "Offering", fields: [
-    { key: "targetRaise", label: "Target raise ($)", section: fd, type: "number" },
-    { key: "minInvestment", label: "Minimum investment ($)", section: fd, type: "number", required: true },
     { key: "rollingCloses", label: "Rolling closes", section: fd, options: [["yes", "Yes"], ["no", "No"]] },
   ] },
   { id: "fees", title: "Fees & Terms", fields: [

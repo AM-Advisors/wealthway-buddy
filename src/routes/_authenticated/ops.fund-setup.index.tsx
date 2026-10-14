@@ -48,15 +48,8 @@ function FundSetupRegister() {
   return <main className="mx-auto max-w-6xl space-y-6 px-4 py-8 sm:px-6">
     <header className="flex flex-wrap items-center justify-between gap-4">
       <div><h1 className="font-heading text-2xl font-semibold">Fund Setup</h1><p className="text-sm text-muted-foreground">Funds and SPVs by Client.</p></div>
-      {q.data?.canPrepare && <Button onClick={() => setAdding((v) => !v)}>Add Fund or SPV</Button>}
+      {q.data?.canPrepare && <Button asChild><Link to="/ops/fund-setup/new">Set up new fund</Link></Button>}
     </header>
-    {adding && <form className="grid max-w-xl gap-3 border-y py-4" onSubmit={async (e) => { e.preventDefault(); if (!regType) return; setBusy(true); try { await create({ data: { name: newName, clientId: newClient, fundType: newType, regType } }); toast.success("Fund added for setup"); setAdding(false); setNewName(""); await qc.invalidateQueries({ queryKey: ["staff-funds"] }); } catch (error) { toast.error((error as Error).message); } finally { setBusy(false); } }}>
-      <Label htmlFor="new-fund-name">Fund or SPV name</Label><Input id="new-fund-name" required maxLength={160} value={newName} onChange={(e) => setNewName(e.target.value)} />
-      <Label>Client</Label><Select required value={newClient} onValueChange={setNewClient}><SelectTrigger><SelectValue placeholder="Select a Client" /></SelectTrigger><SelectContent>{clients.data?.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent></Select>
-      <Label>Type</Label><Select value={newType} onValueChange={(v) => setNewType(v as typeof newType)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="SPV">SPV</SelectItem><SelectItem value="Venture Capital">Venture capital fund</SelectItem><SelectItem value="Private Equity">Private equity fund</SelectItem><SelectItem value="Hedge Fund">Hedge fund</SelectItem></SelectContent></Select>
-      <Label>Preliminary offering route</Label><Select value={regType} onValueChange={(v) => setRegType(v as RegTypeValue)}><SelectTrigger><SelectValue placeholder="Select offering route" /></SelectTrigger><SelectContent>{REG_TYPES.map((r) => <SelectItem key={r.value} value={r.value}>{r.short}</SelectItem>)}</SelectContent></Select>
-      <Button type="submit" disabled={busy || !newClient || !newName.trim() || !regType}>Create for setup</Button>
-    </form>}
     <Input value={search} onChange={(e) => setSearch(e.target.value)} aria-label="Search funds and SPVs" placeholder="Search funds, SPVs and clients" className="max-w-md" />
     {view && <div className="flex items-center gap-2 text-sm text-muted-foreground">Showing {view === "stuck" ? "funds in setup for over 21 days" : "funds still in setup"} <button className="underline" onClick={() => navigate({ search: {} })}>Show all</button></div>}
     {q.isPending ? <p>Loading funds…</p> : q.isError ? <p role="alert">{(q.error as Error).message}</p> : rows.length === 0 ? <p>No funds or SPVs match.</p> :
