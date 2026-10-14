@@ -806,21 +806,68 @@ async function syncInvitation(row: any) {
 }
 
 /** "I sent my funds" - informational only; it never makes an investment funded. */
-export async function investorReportsFundsSent(userId: string, onboardingId: string) {
+export type WireSentDetails = {
+  sentOn?: string | null | undefined;
+  amountCents?: number | null | undefined;
+  sendingBank?: string | null | undefined;
+  reference?: string | null | undefined;
+};
+
+/** Investor's own notice that they sent a wire. Never moves money and never
+ *  marks the investment funded - only a matched bank receipt does that. */
+export async function investorReportsFundsSent(userId: string, onboardingId: string, details: WireSentDetails = {}) {
   const { actor, row } = await assertInvestorOwns(userId, onboardingId);
   if (!row.approved_to_fund_at) forbid("funding has not been unlocked for this investment.");
+  const amount = details.amountCents == null ? null : Math.round(Number(details.amountCents));
+  if (amount != null && (!Number.isFinite(amount) || amount <= 0)) fail("Enter the amount you sent.");
+  const sentOn = details.sentOn && /^\d{4}-\d{2}-\d{2}$/.test(details.sentOn) ? details.sentOn : null;
+  // Free text is trimmed and long digit runs are masked so account numbers are never stored.
+  const clean = (v?: string | null) => (v ? v.trim().slice(0, 120).replace(/\d{5,}/g, (m) => `••••${m.slice(-4)}`) : null);
   await touch(row.id, {
-    investor_reports_sent_at: nowIso(),
+    investor_reports_sent_at: row.investor_reports_sent_at ?? nowIso(),
     funding_status: row.funding_status === "not_funded" ? "investor_reports_sent" : row.funding_status,
   });
   await recordEvent({
     onboardingId: row.id,
     offeringId: row.offering_id,
     event: "investor_reports_funds_sent",
+    detail: { sentOn, amountCents: amount, sendingBank: clean(details.sendingBank), reference: clean(details.reference) },
     actorUserId: actor.userId,
     actorRole: "investor",
   });
   return { acknowledged: true };
+}
+
+/** Read-only funding ledger for the investor: expected amount, their wire notices
+ *  and Harmonious-confirmed receipts, with a running received balance. */
+export async function investorFundingLedger(userId: string, onboardingId: string) {
+  const { row } = await assertInvestorOwns(userId, onboardingId);
+  const { data } = await db()
+    .from("investor_onboarding_events")
+    .select("id, event, detail, created_at")
+    .eq("onboarding_id", row.id)
+    .in("event", ["approved_to_fund", "investor_reports_funds_sent", "bank_transaction_matched"])
+    .order("created_at", { ascending: true });
+  let received = 0;
+  const entries = ((data ?? []) as any[]).map((e) => {
+    const d = (e.detail ?? {}) as any;
+    if (e.event === "bank_transaction_matched") {
+      received += Number(d.amountCents ?? 0);
+      return { id: e.id, at: e.created_at, kind: "received", label: "Wire received and confirmed", amountCents: Number(d.amountCents ?? 0), balanceCents: received };
+    }
+    if (e.event === "investor_reports_funds_sent") {
+      return { id: e.id, at: e.created_at, kind: "reported", label: "You reported a wire sent", amountCents: d.amountCents ?? null, sentOn: d.sentOn ?? null, sendingBank: d.sendingBank ?? null, reference: d.reference ?? null, balanceCents: received };
+    }
+    return { id: e.id, at: e.created_at, kind: "opened", label: "Funding opened", amountCents: null, balanceCents: received };
+  });
+  const expected = Number(row.accepted_amount_cents ?? row.requested_amount_cents ?? 0);
+  return {
+    expectedCents: expected,
+    receivedCents: Number(row.funded_amount_cents ?? received),
+    remainingCents: Math.max(0, expected - Number(row.funded_amount_cents ?? received)),
+    fundingStatus: row.funding_status as string,
+    entries: entries.reverse(),
+  };
 }
 
 // ------------------------------------------------------ investor views
