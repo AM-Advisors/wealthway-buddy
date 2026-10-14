@@ -1,50 +1,36 @@
-# Fund page redesign: 5 tabs + More, setup stepper, tappable numbers
+# Slack alert for every submission, tagging the assigned Operations person
 
-Applies to both the Operations fund page and the client fund page, since they share one fund view. Nothing changes about who can do what. Every action keeps its own server-side check.
+Whenever a client, fund manager or investor submits something, a message goes to **#operations** in Slack. It @-mentions the Operations team member assigned to that client or fund (for ROAS, Jenner Smith).
 
-## 1. Navigation: 5 main tabs + "More"
-Today there are 18 tabs across two rows. They become one row:
+## What triggers an alert
+- **Fund manager setup:** Fund details, Fees & team, Bank / wire, Documents (for example the Operating Agreement).
+- **Investor onboarding:** questionnaire submitted, subscription documents signed, "I've sent my wire" reported, identity check finished.
+- **Client requests:** new fund or SPV requests, service requests, close requests, change requests and messages to Operations.
+- **Internal work submitted for approval:** a staff member sends something for review, such as accounting batches, documents or fee changes. The alert tags the assigned Operations person, never the person who submitted it.
 
+## What the message looks like
 ```text
-[ Overview ] [ Setup ] [ Investors ] [ Accounting ] [ Documents ] [ More v ]
+@Jenner Smith  New submission - ROAS Hedge LP
+Fund manager submitted: Document - Operating Agreement
+Submitted by: Ross Mahoney · Oct 14, 12:06 pm
+[Open in Harmonious]
 ```
+- It shows only the item name, fund, who submitted it and a link.
+- It never includes amounts, tax IDs, bank details, ID documents or file contents.
+- If no Operations person is assigned, it tags the account manager instead. If neither is assigned, it says "No Operations owner assigned."
+- Alerts never block the submission. If Slack is down, the submission still saves and the failure is logged.
+- Repeat clicks within a few minutes send only one message.
 
-- **Overview:** today's Command Center.
-- **Setup:** the checklist (see section 2). Fund Details, Team and Banking become steps inside it.
-- **Investors:** today's Investors tab.
-- **Accounting:** today's Accounting tab, with Assets, Closes and Distributions as sub-sections inside it.
-- **Documents:** today's Documents tab.
-- **More** (a dropdown menu): To-dos (with count), Approvals, Requests, Calendar, Activity & record, Regulatory, Services, plus Fund Details, Team and Banking as direct shortcuts.
-- When a page under More is open, the More button shows its name (for example "More: Approvals"), so you can always see where you are.
-- Existing links and saved tab addresses keep working; each old tab name maps to its new home.
-- On a phone, the row scrolls sideways instead of wrapping onto a second line.
+## Who gets tagged
+- The Operations person comes from the fund's Harmonious Team, which can override the client's team.
+- Slack people are found by their Harmonious work email. If the Slack connection can't look up emails, an Operations Team page gets a "Slack member ID" field per staff member as the backup.
 
-## 2. Setup as a progress stepper
-"Load your fund information" becomes numbered steps with a progress bar:
-
-```text
-Setup  ███████░░░  3 of 6 complete
- 1  Fund details        ✓ Approved                   (collapsed)
- 2  Fees & team         ● Waiting for Harmonious review   [Review]
- 3  Bank / wire         ○ Not started                [Add]
- 4  Documents           ● Waiting for review (2)     (expanded)
- ...
-```
-
-- Finished steps collapse to one line with a check mark and can be tapped to reopen.
-- The first unfinished step opens by default and shows its form or submissions inline.
-- Each step shows its status, who it's waiting on (You, Harmonious or the fund manager) and one main button.
-- "Submissions to review" moves inside the step it belongs to. For example, the Operating Agreement sits under Documents rather than in a separate list underneath.
-- On the Operations page, steps waiting for review show **Review** instead of **Update**, so staff land directly on approve or return.
-- The percentage and progress bar keep coming from the one existing setup calculation, so the number matches everywhere.
-
-## 3. Top numbers: same six, now tappable
-- Setup goes to Setup, Investors to Investors, Committed and Funded to Investors (funding view), Open to-dos to To-dos, and Next deadline to Calendar.
-- Each tile shows a small arrow and highlights when touched or hovered.
-- **To investigate first:** the screenshot shows ROAS Hedge LP with 0 investors and $0 committed, although six investors were added. I'll check where these numbers are drawn from before changing the tiles, and report or fix the cause.
+## Then
+After this, I'll continue the approved fund page redesign: the 5 tabs + More, the setup stepper and the tappable numbers.
 
 ## Technical details
-- `src/components/fund-workspace.tsx`: replace the `TabsList` with 5 `TabsTrigger`s plus a `DropdownMenu` "More". Add a `TAB_ALIASES` map from old tab values to their new homes, applied in `onTab` and on load. Accounting gets inner sub-tabs for Assets, Closes and Distributions. KPI cards become buttons that call `onTab`.
-- `src/components/fund-manager-setup-loader.tsx` and the setup tab content: a new `SetupStepper` component using the existing step and status data from `fund-launch-summary.ts`, with collapsible sections (shadcn Collapsible) and submissions grouped by step.
-- Investor and committed totals: check the data behind the investor and committed totals (`cap.totals`) against ROAS onboardings before any UI change.
-- Styling uses existing design tokens only. A browser check runs on a phone-sized and a desktop view after the build.
+- New `src/lib/ops-slack-notify.server.ts`: `notifySubmission({ kind, offeringId?, clientId?, title, submittedBy, url })`. It resolves the owner through `loadFundTeam` / `loadClientTeam` (operations, then account_manager). It finds the Slack ID through the cached `users.lookupByEmail` call, with fallback to a new nullable `profiles.slack_user_id` column. It posts with `chat.postMessage` to the existing #operations channel through the current Slack connection. Repeats are blocked through a small append-only `ops_slack_notifications` table with a unique key per item and submission time bucket; the migration includes GRANTs and staff-only RLS.
+- Calls are added after the successful write in `fund-manager-submissions.server.ts` (submit), `investor-onboarding.server.ts` (questionnaire submit, signing complete, `investorReportsFundsSent`), the Didit webhook completion, `client-fund-request` / `fund-requests.server.ts`, close requests, and the shared approvals submit path.
+- `fund-request-notify.server.ts` reuses the same helper so there is one Slack sender.
+- If `users.lookupByEmail` returns `missing_scope`, I'll ask you to reconnect Slack with `users:read.email`. Until then, the fallback ID field is used.
+- Unit tests cover owner resolution, the fallback order, the content allow-list (no sensitive fields) and repeat suppression.
