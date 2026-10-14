@@ -27,7 +27,7 @@ import {
   getFundRequestDraft, saveFundRequestDraft, submitFundRequest, uploadFundRequestFile,
 } from "@/lib/client-fund-request.functions";
 import {
-  CLASS_TERM_OPTIONS, FUND_KIND_TYPES, REQUEST_STEPS, SERIES_HOMES, SERIES_NEW_ANNUAL_FEE, SS4_FIELDS, autoServices, HIDDEN_FUND_SERVICE_KEYS, SERVICE_BUNDLES, emptyRequest, isSeries, isSpv, missingFields, needsSs4, seriesJurisdiction, seriesLegalName,
+  CLASS_TERM_OPTIONS, FUND_KIND_TYPES, SERIES_HOMES, SERIES_NEW_ANNUAL_FEE, SS4_FIELDS, autoServices, HIDDEN_FUND_SERVICE_KEYS, SERVICE_BUNDLES, emptyRequest, entityDocKinds, isSeries, isSpv, visibleSteps, missingFields, needsSs4, seriesJurisdiction, seriesLegalName,
   type FundRequest, type RequestStepKey,
 } from "@/lib/fund-request-model";
 import { categoryLabel, listServiceCatalog } from "@/lib/service-catalog.functions";
@@ -48,7 +48,6 @@ export const Route = createFileRoute("/_authenticated/client/funds/new")({
 });
 
 const DOC_KINDS = ["Subscription agreement", "Operating agreement / LPA", "PPM", "Side letter", "Other"];
-const ENTITY_DOC_KINDS = ["Formation document", "Certificate of formation", "IRS EIN letter"];
 
 function NewFundRequest() {
   const { draft } = Route.useSearch();
@@ -141,8 +140,9 @@ function NewFundRequest() {
   });
 
   const missing = missingFields(r);
-  const idx = REQUEST_STEPS.findIndex((s) => s.key === step);
-  const go = (d: number) => setStep(REQUEST_STEPS[Math.min(REQUEST_STEPS.length - 1, Math.max(0, idx + d))]!.key);
+  const steps = visibleSteps(r);
+  const idx = Math.max(0, steps.findIndex((s) => s.key === step));
+  const go = (d: number) => setStep(steps[Math.min(steps.length - 1, Math.max(0, idx + d))]!.key);
   const spv = isSpv(r);
 
   return (
@@ -158,7 +158,7 @@ function NewFundRequest() {
 
       <div className="flex flex-col gap-5 md:flex-row">
         <nav aria-label="Steps" className="flex gap-1 overflow-x-auto md:w-52 md:shrink-0 md:flex-col">
-          {REQUEST_STEPS.map((s, i) => (
+          {steps.map((s, i) => (
             <button
               key={s.key}
               type="button"
@@ -177,10 +177,16 @@ function NewFundRequest() {
 
         <Card className="min-w-0 flex-1">
           <CardHeader>
-            <CardTitle className="text-base">{REQUEST_STEPS[idx]!.label}</CardTitle>
+            <CardTitle className="text-base">{steps[idx]!.label}</CardTitle>
             {missing[step] && <CardDescription className="text-destructive">Still needed: {missing[step]!.join(", ")}</CardDescription>}
           </CardHeader>
           <CardContent className="space-y-4">
+            {step === "details" && spv && (
+              <label className="flex items-start gap-3 rounded-md border bg-muted/40 p-3 text-sm">
+                <Checkbox checked={!!r.simplified} onCheckedChange={(c) => set("simplified", c === true)} className="mt-0.5" />
+                <span><span className="font-medium">Simplified SPV onboarding</span><br /><span className="text-muted-foreground">Skip Classes, Banking and Services. Harmonious applies its standard SPV setup (one class, Harmonious banking and the core SPV services) and confirms everything with you before launch.</span></span>
+              </label>
+            )}
             {step === "details" && (
               <Grid>
                 <F label="Fund or SPV type *">
@@ -224,7 +230,7 @@ function NewFundRequest() {
                   {r.already_formed === "no" && <F label="Who will obtain the EIN? *"><Pick value={r.ein_obtained_by} onChange={(v) => set("ein_obtained_by", v as any)} options={[{ value: "harmonious", label: "Harmonious" }, { value: "client", label: "We will" }]} /></F>}
                   {r.already_formed === "yes" && <F label="Has an EIN? *"><Pick value={r.has_ein} onChange={(v) => set("has_ein", v as any)} options={[{ value: "yes", label: "Yes" }, { value: "no", label: "No" }]} /></F>}
                 </Grid>
-                <p className="text-xs text-muted-foreground">Don't type the EIN here - upload the IRS letter instead.</p>
+                <p className="text-xs text-muted-foreground">Don't type the EIN here - upload the IRS letter instead.{isSeries(r) ? " A series doesn't have its own certificate of formation - it's created under the Master LLC, so no formation document is needed." : ""}</p>
                 {isSeries(r) && (r.series_home === "own" || r.series_home === "new") && (
                   <div className="space-y-3 rounded-md border p-3">
                     <p className="text-sm font-medium">{r.series_home === "own" ? "Your existing Series LLC" : "New Series LLC to set up"}</p>
@@ -258,7 +264,7 @@ function NewFundRequest() {
                     ))}
                   </div>
                 )}
-                <DocUploads clientId={id} kinds={ENTITY_DOC_KINDS} docs={r.documents} onChange={(d) => set("documents", d)} />
+                <DocUploads clientId={id} kinds={entityDocKinds(r)} docs={r.documents} onChange={(d) => set("documents", d)} />
               </>
             )}
 
@@ -398,7 +404,7 @@ function NewFundRequest() {
 
             {step === "review" && (
               <div className="space-y-4">
-                {REQUEST_STEPS.filter((s) => s.key !== "review").map((s) => (
+                {steps.filter((s) => s.key !== "review").map((s) => (
                   <div key={s.key} className="flex items-start justify-between gap-3 rounded-md border p-3 text-sm">
                     <div>
                       <p className="font-medium">{s.label}</p>

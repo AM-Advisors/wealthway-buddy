@@ -588,7 +588,9 @@ export async function advanceEntityFormation(
     certificateDocumentId: input.certificateDocumentId ?? record.certificate_document_id,
     einLetterDocumentId: input.einLetterDocumentId ?? record.ein_letter_document_id,
   };
-  const error = entityStepError(record.step as EntityStep, input.step, evidence);
+  const { data: setupRow } = await db().from("fund_setups").select("series_parent_id,series_designation,entity_type,legal_fund_name").eq("id", input.setupId).maybeSingle();
+  const isSeries = !!(setupRow?.series_parent_id || setupRow?.series_designation || /series/i.test(String(setupRow?.entity_type ?? "")) || /\ba series of\b/i.test(String(setupRow?.legal_fund_name ?? "")));
+  const error = entityStepError(record.step as EntityStep, input.step, evidence, { isSeries });
   if (error) fail(error);
 
   const stamp: Record<EntityStep, string | null> = {

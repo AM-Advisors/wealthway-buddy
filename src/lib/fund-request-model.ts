@@ -142,6 +142,8 @@ export type FundRequest = {
   /** Set when Management / Master LLC support is chosen: start setup of a new entity or transfer an existing one. */
   management_llc_path: "setup" | "transfer" | "";
   notes: string;
+  /** SPV only: skip Classes, Banking and Services; Harmonious standard SPV defaults apply. */
+  simplified?: boolean;
 };
 
 export function emptyRequest(kind = ""): FundRequest {
@@ -160,6 +162,16 @@ export function emptyRequest(kind = ""): FundRequest {
 }
 
 export const isSpv = (r: Pick<FundRequest, "kind">) => r.kind === "spv";
+
+/** Steps hidden by Simplified SPV onboarding (Harmonious standard defaults apply). */
+export const SIMPLIFIED_SPV_HIDDEN: RequestStepKey[] = ["classes", "banking", "services"];
+export const isSimplified = (r: Pick<FundRequest, "kind" | "simplified">) => isSpv(r) && !!r.simplified;
+export const visibleSteps = (r: Pick<FundRequest, "kind" | "simplified">) =>
+  REQUEST_STEPS.filter((s) => !(isSimplified(r) && SIMPLIFIED_SPV_HIDDEN.includes(s.key)));
+
+/** Entity documents to ask for: a series has no certificate of formation of its own. */
+export const entityDocKinds = (r: Pick<FundRequest, "vehicle_structure">) =>
+  r.vehicle_structure === "Series LLC" ? ["Series designation / joinder (if any)", "IRS EIN letter"] : ["Formation document", "Certificate of formation", "IRS EIN letter"];
 
 /** Missing required answers, per step. Empty object means ready to send. */
 export function missingFields(r: FundRequest): Partial<Record<RequestStepKey, string[]>> {
@@ -182,7 +194,7 @@ export function missingFields(r: FundRequest): Partial<Record<RequestStepKey, st
     if (miss.length) add("entity", `SS-4: ${miss.map((f) => f.label.replace(/^[\dab]+\.\s*/, "")).join(", ")}`);
   }
   if (!r.offering_exemption) add("economics", "Offering exemption");
-  if ((r.service_keys ?? []).includes("management_llc") && !r.management_llc_path) add("services", "Management / Master LLC: set up a new entity or transfer an existing one");
+  if (!isSimplified(r) && (r.service_keys ?? []).includes("management_llc") && !r.management_llc_path) add("services", "Management / Master LLC: set up a new entity or transfer an existing one");
   if (!r.signatory.name.trim() || !r.signatory.email.trim()) add("people", "Signatory name and email");
   return out;
 }
