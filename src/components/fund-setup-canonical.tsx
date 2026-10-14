@@ -74,7 +74,7 @@ export function FundSetupCanonical({ offeringId }: { offeringId: string }) {
             const r = (d.statuses as any)[s];
             const target = SECTION_ANCHOR[s];
             return (
-              <a key={s} href={`#${target}`} className="rounded-md border p-3 transition-colors hover:border-primary/50 hover:bg-muted/40">
+              <a key={s} href={`#${target}`} onClick={jump(target ?? "")} className="rounded-md border p-3 transition-colors hover:border-primary/50 hover:bg-muted/40">
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-sm font-medium">{CANONICAL_SECTION_LABELS[s]}</span>
                   <Badge variant={tone(r.status)}>{(SECTION_STATUS_LABELS as any)[r.status]}</Badge>
@@ -88,7 +88,7 @@ export function FundSetupCanonical({ offeringId }: { offeringId: string }) {
 
       <nav aria-label="Fund Setup sections" className="sticky top-16 z-20 -mx-1 flex gap-1 overflow-x-auto rounded-md border bg-background/95 p-1 backdrop-blur">
         {JUMP_LINKS.map(([id, label]) => (
-          <a key={id} href={`#${id}`} className="shrink-0 rounded px-2.5 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground">{label}</a>
+          <a key={id} href={`#${id}`} onClick={jump(id)} className="shrink-0 rounded px-2.5 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground">{label}</a>
         ))}
       </nav>
 
@@ -104,6 +104,11 @@ export function FundSetupCanonical({ offeringId }: { offeringId: string }) {
     </div>
   );
 }
+
+const jump = (id: string) => (e: React.MouseEvent) => {
+  e.preventDefault();
+  document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+};
 
 const SECTION_ANCHOR: Record<string, string> = {
   fund_details: "setup-details",
@@ -206,6 +211,7 @@ function DetailsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; onS
       driveFolderUrl: o.driveFolderUrl ?? "",
     });
   }, [d]);
+  const [editing, setEditing] = useState<Set<string>>(new Set());
   const bind = (k: string) => ({ value: f[k] ?? "", disabled: !d.canEdit, onChange: (e: any) => setF({ ...f, [k]: e.target.value }) });
   const sel = (k: string, opts: [string, string][]) => (
     <select className="h-9 w-full rounded-md border bg-background px-2 text-sm" {...bind(k)}>
@@ -238,6 +244,7 @@ function DetailsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; onS
         },
       });
       toast.success("Fund setup saved");
+      setEditing(new Set());
       onSaved();
     } catch (e: any) {
       toast.error(e.message);
@@ -248,6 +255,7 @@ function DetailsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; onS
     <Card>
       <CardHeader><CardTitle className="text-base">Fund Details, Entity & Offering</CardTitle></CardHeader>
       <CardContent className="space-y-6">
+        <EditableSection id="basics" title="Fund basics" keys={["displayName","fundType","gpName","signatoryEntityName","fiscalYearEnd","fundTermMonths","investmentPeriodMonths"]} f={f} labels={LABELS} editing={editing} setEditing={setEditing} canEdit={d.canEdit}>
         <section className="grid gap-3 sm:grid-cols-3">
           <Field label="Display name"><Input {...bind("displayName")} /></Field>
           <Field label="Fund Type">{sel("fundType", FUND_TYPES.map((t) => [t, t]))}</Field>
@@ -257,6 +265,8 @@ function DetailsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; onS
           {d.termApplies && <Field label="Fund term (months)"><Input inputMode="numeric" {...bind("fundTermMonths")} /></Field>}
           {d.termApplies && <Field label="Investment period (months)"><Input inputMode="numeric" {...bind("investmentPeriodMonths")} /></Field>}
         </section>
+        </EditableSection>
+        <EditableSection id="entity" title="Entity" keys={["entityType","jurisdiction","formationDate","registeredAgent","principalAddress","taxClassification"]} f={f} labels={LABELS} editing={editing} setEditing={setEditing} canEdit={d.canEdit}>
         <section className="grid gap-3 sm:grid-cols-3">
           <Field label="Entity type">{sel("entityType", ["LLC", "LP", "Series LLC", "Master LLC", "Corporation", "Trust", "Other"].map((t) => [t, t]))}</Field>
           <Field label="Jurisdiction of formation"><Input {...bind("jurisdiction")} /></Field>
@@ -265,12 +275,16 @@ function DetailsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; onS
           <Field label="Principal business address"><Input {...bind("principalAddress")} /></Field>
           <Field label="Tax classification"><Input placeholder="e.g. Partnership" {...bind("taxClassification")} /></Field>
         </section>
+        </EditableSection>
         <ServiceProvidersSection offeringId={offeringId} />
+        <EditableSection id="drive" title="Google Drive" keys={["driveFolderUrl"]} f={f} labels={LABELS} editing={editing} setEditing={setEditing} canEdit={d.canEdit}>
         <section className="grid gap-3 sm:grid-cols-3">
           <Field label="Google Drive folder link"><Input placeholder="https://drive.google.com/drive/folders/…" {...bind("driveFolderUrl")} /></Field>
         </section>
+        </EditableSection>
         <p className="text-xs text-muted-foreground">The Drive link is a reference for the team only; it never changes Drive permissions and is never shown to investors.</p>
         <p className="text-xs text-muted-foreground">The EIN and EIN letter stay in the locked Entity & EIN card; they are never shown to investors.</p>
+        <EditableSection id="offering" title="Offering" keys={["regType","targetRaise","maxOffering","minInvestment","maxInvestment","rollingCloses","offeringOpenDate","offeringCloseDate"]} f={f} labels={LABELS} editing={editing} setEditing={setEditing} canEdit={d.canEdit}>
         <section className="grid gap-3 sm:grid-cols-3">
           <Field label="Offering exemption">{sel("regType", [["506b", "Rule 506(b)"], ["506c", "Rule 506(c)"], ["regcf", "Reg CF"], ["rega", "Reg A"], ["regaplus", "Reg A+"]])}</Field>
           <Field label="Target raise ($)"><Input inputMode="decimal" {...bind("targetRaise")} /></Field>
@@ -281,10 +295,59 @@ function DetailsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; onS
           <Field label="Offering opens"><Input type="date" {...bind("offeringOpenDate")} /></Field>
           <Field label="Offering closes"><Input type="date" {...bind("offeringCloseDate")} /></Field>
         </section>
+        </EditableSection>
         <p className="text-xs text-muted-foreground">The exemption is chosen by you and counsel; it is never picked automatically from the fund type.</p>
-        {d.canEdit && <Button onClick={submit}>Save</Button>}
+        {d.canEdit && (
+          <div className="flex gap-2">
+            <Button onClick={submit}>Save</Button>
+            {editing.size > 0 && <Button variant="ghost" onClick={() => { setEditing(new Set()); onSaved(); }}>Cancel</Button>}
+          </div>
+        )}
       </CardContent>
     </Card>
+  );
+}
+
+const LABELS: Record<string, string> = {
+  displayName: "Display name", fundType: "Fund Type", gpName: "Fund Manager / GP", signatoryEntityName: "Signing entity",
+  fiscalYearEnd: "Fiscal year end", fundTermMonths: "Fund term (months)", investmentPeriodMonths: "Investment period (months)",
+  entityType: "Entity type", jurisdiction: "Jurisdiction", formationDate: "Formation date", registeredAgent: "Registered agent",
+  principalAddress: "Principal address", taxClassification: "Tax classification", driveFolderUrl: "Google Drive folder",
+  regType: "Offering exemption", targetRaise: "Target raise", maxOffering: "Maximum offering", minInvestment: "Minimum investment",
+  maxInvestment: "Maximum investment", rollingCloses: "Rolling closes", offeringOpenDate: "Offering opens", offeringCloseDate: "Offering closes",
+};
+const MONEY = new Set(["targetRaise", "maxOffering", "minInvestment", "maxInvestment"]);
+const REG: Record<string, string> = { "506b": "Rule 506(b)", "506c": "Rule 506(c)", regcf: "Reg CF", rega: "Reg A", regaplus: "Reg A+" };
+function show(k: string, v: string) {
+  if (MONEY.has(k)) return `$${Number(v).toLocaleString()}`;
+  if (k === "regType") return REG[v] ?? v;
+  if (k === "rollingCloses") return v === "yes" ? "Permitted" : "Not permitted";
+  return v;
+}
+
+/** Shows saved values as a summary; tap to switch that section into edit mode. Empty sections open in edit mode. */
+function EditableSection({ id, title, keys, f, labels, editing, setEditing, canEdit, children }: {
+  id: string; title: string; keys: string[]; f: Record<string, string>; labels: Record<string, string>;
+  editing: Set<string>; setEditing: (s: Set<string>) => void; canEdit: boolean; children: React.ReactNode;
+}) {
+  const filled = keys.filter((k) => (f[k] ?? "") !== "");
+  if (filled.length === 0 || editing.has(id)) return <>{children}</>;
+  const open = () => { if (canEdit) setEditing(new Set([...editing, id])); };
+  return (
+    <button type="button" onClick={open} disabled={!canEdit} className="block w-full rounded-md border p-3 text-left transition-colors hover:border-primary/50 hover:bg-muted/40 disabled:cursor-default">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <span className="text-sm font-medium">{title}</span>
+        {canEdit && <span className="text-xs text-primary">Edit</span>}
+      </div>
+      <dl className="grid gap-x-4 gap-y-2 sm:grid-cols-3">
+        {filled.map((k) => (
+          <div key={k} className="min-w-0">
+            <dt className="text-[11px] uppercase tracking-wide text-muted-foreground">{labels[k] ?? k}</dt>
+            <dd className="truncate text-sm">{show(k, f[k]!)}</dd>
+          </div>
+        ))}
+      </dl>
+    </button>
   );
 }
 
