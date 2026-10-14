@@ -9,6 +9,7 @@ import { guidedSetupFn, staffSaveSetupFn } from "@/lib/fund-setup-guided.functio
 import { submitFundInfoFn } from "@/lib/fund-manager-submissions.functions";
 import { FUND_TYPES } from "@/lib/fund-setup-canonical";
 import { EinChoice } from "@/components/ein-choice";
+import { fundEinFn } from "@/lib/fund-tabs.functions";
 import { SubmitForm, History } from "@/components/fund-manager-setup-loader";
 import { FundSignatoriesCard } from "@/components/fund-signatories-card";
 import { OfferingDocumentsSetup } from "@/components/offering-documents-setup";
@@ -128,7 +129,7 @@ export function FundSetupForm({ offeringId, mode, staffExtras }: { offeringId: s
       {fieldSection("basic")}
       {fieldSection("details")}
       {fieldSection("jurisdiction")}
-      <SetupSection open={open} setOpen={setOpen} id="ein" title="EIN" status={<Chip tone={d.hasEin ? "done" : "miss"}>{d.hasEin ? "Done" : "Needed"}</Chip>}>
+      <SetupSection open={open} setOpen={setOpen} id="ein" title="EIN" status={<EinStatus fundId={offeringId} />}>
         <EinChoice offeringId={offeringId} onChanged={refresh} />
       </SetupSection>
       {fieldSection("offering")}
@@ -190,4 +191,11 @@ function SetupSection({ id, title, status, action, children, open, setOpen }: { 
       {isOpen && <div className="space-y-3 px-5 pb-5">{children}</div>}
     </section>
   );
+}
+
+function EinStatus({ fundId }: { fundId: string }) {
+  const load = useServerFn(fundEinFn);
+  const q = useQuery({ queryKey: ["fund-ein", fundId, false], queryFn: () => load({ data: { fundId, reveal: false } }) });
+  const st = q.data?.status;
+  return st === "recorded" ? <Chip tone="done">Done</Chip> : st === "in_review" ? <Chip tone="wait">Waiting on review</Chip> : <Chip tone="miss">Needed</Chip>;
 }
