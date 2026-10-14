@@ -8,7 +8,7 @@ import { BankingChoice } from "@/components/banking-choice";
 import { guidedSetupFn, staffSaveSetupFn } from "@/lib/fund-setup-guided.functions";
 import { submitFundInfoFn } from "@/lib/fund-manager-submissions.functions";
 import { FUND_TYPES } from "@/lib/fund-setup-canonical";
-import { EinField } from "@/components/fund-workspace";
+import { EinChoice } from "@/components/ein-choice";
 import { SubmitForm, History } from "@/components/fund-manager-setup-loader";
 import { FundSignatoriesCard } from "@/components/fund-signatories-card";
 import { OfferingDocumentsSetup } from "@/components/offering-documents-setup";
@@ -98,7 +98,6 @@ export function FundSetupForm({ offeringId, mode, staffExtras }: { offeringId: s
         return <Button size="sm" variant={changed ? "default" : "outline"} disabled={!changed || busy} onClick={() => save(keys, s.title)}>{isStaff ? "Save" : "Submit"}</Button>;
       })()}>
         {id === "basic" && ret && <p className="rounded-lg bg-muted p-3 text-sm">Harmonious returned this: {ret.review_note ?? "please review and resubmit."}</p>}
-        {id === "details" && <div className="rounded-xl border bg-background px-4 py-3 text-sm"><EinField fundId={offeringId} /></div>}
         <div className="space-y-3">{s.fields.map((f) => <div key={f.key}>{renderField(f)}</div>)}</div>
         {(() => {
           const keys = s.fields.map((f) => f.key);
@@ -129,6 +128,9 @@ export function FundSetupForm({ offeringId, mode, staffExtras }: { offeringId: s
       {fieldSection("basic")}
       {fieldSection("details")}
       {fieldSection("jurisdiction")}
+      <SetupSection open={open} setOpen={setOpen} id="ein" title="EIN" status={<Chip tone={d.hasEin ? "done" : "miss"}>{d.hasEin ? "Done" : "Needed"}</Chip>}>
+        <EinChoice offeringId={offeringId} onChanged={refresh} />
+      </SetupSection>
       {fieldSection("offering")}
       {fieldSection("fees")}
 
