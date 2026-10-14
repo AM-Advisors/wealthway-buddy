@@ -156,6 +156,7 @@ function InvestorRecordPage() {
         </CardContent></Card> : null}
       </div> : null}
 
+      {tab === "onboarding" ? <QuestionnaireCard q={(data as any).questionnaire} /> : null}
       {tab === "onboarding" ? <Card><CardContent className="space-y-1 pt-6 text-sm"><p>Stage: {prettyStatus(data.overview.stage)}</p><p>{p?.hasAccount ? "The investor has signed in." : "The investor hasn't signed in yet. When they sign in with this email or use the Fund's onboarding link, they continue this same investment."}</p><p>{data.overview.investorConfirmedAt ? "The investor confirmed the prepared information." : "Investor confirmation of prepared information is pending."}</p></CardContent></Card> : null}
 
       {tab === "readiness" ? <Card><CardHeader><CardTitle className="text-base">{data.readiness.label}</CardTitle></CardHeader><CardContent><ul className="divide-y text-sm">{data.readiness.stages.map((s: any) => <li key={s.key} className="flex justify-between py-2"><span>{s.label}</span><span className="text-muted-foreground">{prettyStatus(s.status)}</span></li>)}</ul>
@@ -166,5 +167,34 @@ function InvestorRecordPage() {
 
       {tab === "activity" ? <Card><CardContent className="pt-6">{data.activity.length ? <ul className="divide-y text-sm">{data.activity.map((a: any, i: number) => <li key={i} className="py-2"><p>{a.label}</p><p className="text-xs text-muted-foreground">{new Date(a.at).toLocaleString()} · {a.source}{a.field ? ` · ${a.field}: ${JSON.stringify(a.from)} → ${JSON.stringify(a.to)}` : ""}</p></li>)}</ul> : <p className="text-sm text-muted-foreground">No activity yet.</p>}</CardContent></Card> : null}
     </section>
+  );
+}
+
+function QuestionnaireCard({ q }: { q: { items: { key: string; label: string; answer: string | null }[]; source: string | null; submittedAt: string | null; diditSession: string | null } | undefined }) {
+  if (!q || !q.items.length) return <Card><CardHeader><CardTitle className="text-base">Investor questionnaire</CardTitle></CardHeader><CardContent className="text-sm text-muted-foreground">This Fund has no questionnaire yet.</CardContent></Card>;
+  const answered = q.items.filter((i) => i.answer).length;
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">Investor questionnaire</CardTitle>
+        <p className="text-xs text-muted-foreground">
+          {answered} of {q.items.length} answered
+          {q.source ? ` · ${q.source === "didit" ? "Answered in Didit" : "Answered in Harmonious"}` : ""}
+          {q.submittedAt ? ` · ${new Date(q.submittedAt).toLocaleDateString()}` : ""}
+          {q.diditSession ? ` · Didit session ${q.diditSession}` : " · No Didit session linked"}
+        </p>
+      </CardHeader>
+      <CardContent>
+        <dl className="divide-y text-sm">
+          {q.items.map((i) => (
+            <div key={i.key} className="grid gap-1 py-2 sm:grid-cols-3">
+              <dt className="text-muted-foreground sm:col-span-2">{i.label}</dt>
+              <dd>{i.answer ?? <span className="text-muted-foreground">Not answered</span>}</dd>
+            </div>
+          ))}
+        </dl>
+        <p className="mt-3 text-xs text-muted-foreground">Tax IDs and bank account details are never shown here; they are kept in their own protected steps.</p>
+      </CardContent>
+    </Card>
   );
 }
