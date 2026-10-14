@@ -21,7 +21,9 @@ import { FundPayments } from "@/components/fund-payments";
 import { FundDistributions } from "@/components/fund-distributions";
 import { listAllCloseRequests } from "@/lib/fund-close-requests.functions";
 import { useServerFn } from "@tanstack/react-start";
-import { CheckCircle2, Clock } from "lucide-react";
+import { CheckCircle2, ChevronDown, ChevronRight, Clock } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -80,6 +82,56 @@ const CLOSE_STATUS: Record<string, string> = {
   approved: "Approved - filings in progress",
 };
 
+/** Primary tabs, each owning a group of the original tab values (old addresses keep working). */
+const PRIMARY: { value: string; label: string; group: string[] }[] = [
+  { value: "overview", label: "Overview", group: ["overview"] },
+  { value: "setup", label: "Setup", group: ["setup", "details", "team", "banking"] },
+  { value: "investors", label: "Investors", group: ["investors"] },
+  { value: "accounting", label: "Accounting", group: ["accounting", "assets", "closes", "distributions"] },
+  { value: "documents", label: "Documents", group: ["documents"] },
+];
+const SUB_LABEL: Record<string, string> = { setup: "Checklist", details: "Fund details", team: "Team", banking: "Banking", accounting: "Accounting", assets: "Assets", closes: "Closes", distributions: "Distributions" };
+const MORE: { value: string; label: string }[] = [
+  { value: "todos", label: "To dos" }, { value: "approvals", label: "Approvals" }, { value: "requests", label: "Requests" },
+  { value: "calendar", label: "Calendar" }, { value: "regulatory", label: "Regulatory" }, { value: "services", label: "Services" },
+];
+
+function FundTabBar({ tab, onTab, extraTabs, todoCount }: { tab: string; onTab: (t: string) => void; extraTabs: ExtraTab[]; todoCount: number }) {
+  const hasSetup = extraTabs.some((x) => x.value === "setup");
+  const primary = PRIMARY.map((p) => (p.value === "setup" && !hasSetup ? { ...p, value: "details", group: p.group.filter((g) => g !== "setup") } : p));
+  const active = primary.find((p) => p.group.includes(tab));
+  const more = [...MORE, ...extraTabs.filter((x) => x.value !== "setup").map((x) => ({ value: x.value, label: x.label }))];
+  const moreActive = !active ? more.find((m) => m.value === tab) : undefined;
+  const label = (m: { value: string; label: string }) => (m.value === "todos" && todoCount ? `${m.label} (${todoCount})` : m.label);
+  const pill = (on: boolean) => cn("shrink-0 rounded-md px-3 py-1.5 text-sm font-medium transition-colors", on ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground");
+  return (
+    <div className="space-y-2">
+      <div role="tablist" className="flex items-center gap-1 overflow-x-auto rounded-lg bg-muted p-1">
+        {primary.map((p) => (
+          <button key={p.label} type="button" role="tab" aria-selected={active?.label === p.label} className={pill(active?.label === p.label)} onClick={() => onTab(p.value)}>{p.label}</button>
+        ))}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button type="button" className={cn(pill(!!moreActive), "inline-flex items-center gap-1")}>{moreActive ? `More: ${label(moreActive)}` : todoCount ? `More (${todoCount})` : "More"}<ChevronDown className="h-3.5 w-3.5" /></button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            {more.map((m) => <DropdownMenuItem key={m.value} onSelect={() => onTab(m.value)}>{label(m)}</DropdownMenuItem>)}
+            <DropdownMenuSeparator />
+            {["details", "team", "banking"].map((v) => <DropdownMenuItem key={v} onSelect={() => onTab(v)}>{SUB_LABEL[v]}</DropdownMenuItem>)}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+      {active && active.group.length > 1 && (
+        <div className="flex gap-1 overflow-x-auto">
+          {active.group.map((g) => (
+            <button key={g} type="button" onClick={() => onTab(g)} className={cn("shrink-0 rounded-full border px-3 py-1 text-xs transition-colors", tab === g ? "border-primary bg-primary text-primary-foreground" : "text-muted-foreground hover:border-primary hover:text-foreground")}>{SUB_LABEL[g] ?? g}</button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function Empty({ text }: { text: string }) {
   return <p className="py-6 text-center text-sm text-muted-foreground">{text}</p>;
 }
@@ -123,37 +175,22 @@ export function FundWorkspace({ fundId, tab, onTab, mode = "client", extraTabs =
 
       <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {[
-          { l: "Setup complete", v: setup.percent == null ? "-" : `${setup.percent}%` },
-          { l: "Investors", v: cap ? String(cap.totals.investors) : "-" },
-          { l: "Committed", v: cap ? usd(cap.totals.commitCents) : "-" },
-          { l: "Funded (reconciled)", v: cap ? usd(cap.totals.fundedCents) : "-" },
-          { l: "Open to dos", v: String(steps.filter((s) => s.owner === "You" && !s.done && s.status !== "review").length) },
-          { l: "Next deadline", v: (() => { const n = nextDeadline((rq.data?.calendar ?? []) as any); return n ? `${n.date}` : "-"; })() },
+          { l: "Setup complete", t: extraTabs.some((x) => x.value === "setup") ? "setup" : "details", v: setup.percent == null ? "-" : `${setup.percent}%` },
+          { l: "Investors", t: "investors", v: cap ? String(cap.totals.investors) : "-" },
+          { l: "Committed", t: "investors", v: cap ? usd(cap.totals.commitCents) : "-" },
+          { l: "Funded (reconciled)", t: "investors", v: cap ? usd(cap.totals.fundedCents) : "-" },
+          { l: "Open to dos", t: "todos", v: String(steps.filter((s) => s.owner === "You" && !s.done && s.status !== "review").length) },
+          { l: "Next deadline", t: "calendar", v: (() => { const n = nextDeadline((rq.data?.calendar ?? []) as any); return n ? `${n.date}` : "-"; })() },
         ].map((k) => (
-          <Card key={k.l}><CardContent className="p-4"><p className="text-xs text-muted-foreground">{k.l}</p><p className="text-xl font-semibold">{k.v}</p></CardContent></Card>
+          <button key={k.l} type="button" onClick={() => onTab(k.t)} className="group rounded-lg border bg-card p-4 text-left transition-colors hover:border-primary hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            <p className="flex items-center justify-between text-xs text-muted-foreground">{k.l}<ChevronRight className="h-3.5 w-3.5 opacity-50 transition-transform group-hover:translate-x-0.5 group-hover:opacity-100" /></p>
+            <p className="text-xl font-semibold">{k.v}</p>
+          </button>
         ))}
       </div>
 
       <Tabs value={tab} onValueChange={onTab}>
-        <TabsList className="h-auto flex-wrap justify-start">
-          {extraTabs.map((x) => <TabsTrigger key={x.value} value={x.value}>{x.label}</TabsTrigger>)}
-          <TabsTrigger value="overview">Command Center</TabsTrigger>
-          <TabsTrigger value="approvals">Approvals</TabsTrigger>
-          <TabsTrigger value="requests">Requests</TabsTrigger>
-          <TabsTrigger value="calendar">Calendar</TabsTrigger>
-          <TabsTrigger value="todos">To dos{steps.filter((s) => s.owner === "You" && !s.done && s.status !== "review" && !s.answer?.trim()).length ? ` (${steps.filter((s) => s.owner === "You" && !s.done && s.status !== "review" && !s.answer?.trim()).length})` : ""}</TabsTrigger>
-          <TabsTrigger value="details">Fund Details</TabsTrigger>
-          <TabsTrigger value="team">Team</TabsTrigger>
-          <TabsTrigger value="investors">Investors</TabsTrigger>
-          <TabsTrigger value="documents">Documents</TabsTrigger>
-          <TabsTrigger value="banking">Banking</TabsTrigger>
-          <TabsTrigger value="accounting">Accounting</TabsTrigger>
-          <TabsTrigger value="assets">Assets</TabsTrigger>
-          <TabsTrigger value="closes">Closes</TabsTrigger>
-          <TabsTrigger value="regulatory">Regulatory</TabsTrigger>
-          <TabsTrigger value="distributions">Distributions</TabsTrigger>
-          <TabsTrigger value="services">Services</TabsTrigger>
-        </TabsList>
+        <FundTabBar tab={tab} onTab={onTab} extraTabs={extraTabs} todoCount={steps.filter((s) => s.owner === "You" && !s.done && s.status !== "review" && !s.answer?.trim()).length} />
 
         {extraTabs.map((x) => <TabsContent key={x.value} value={x.value}>{x.content}</TabsContent>)}
         <TabsContent value="distributions"><FundDistributions fundId={fundId} mode={mode} /></TabsContent>
