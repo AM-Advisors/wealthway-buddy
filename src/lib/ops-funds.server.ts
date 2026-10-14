@@ -8,7 +8,7 @@ const db = () => supabaseAdmin as any;
 export async function opsFundsDashboard(userId: string, supabase: any) {
   await assertStaff(userId);
   const [{ data: offs }, { data: onbs }, { data: tasks }, { data: setups }, { data: managers }, { data: links }] = await Promise.all([
-    db().from("offerings").select("id, name, client_id, is_open").order("name").limit(1000),
+    db().from("offerings").select("id, name, client_id, is_open, is_demo").order("name").limit(1000),
     db().from("investor_onboardings").select("*").not("stage", "in", "(declined,cancelled)").limit(5000),
     db().from("investment_readiness_tasks").select("offering_id, owner").eq("status", "open").limit(5000),
     db().from("fund_setups").select("offering_id, target_close, final_close").limit(1000),
@@ -62,6 +62,7 @@ export async function opsFundsDashboard(userId: string, supabase: any) {
       id: o.id as string,
       name: o.name as string,
       isOpen: !!o.is_open,
+      isDemo: !!o.is_demo,
       clientId: (o.client_id ?? null) as string | null,
       clientName: (clientName.get(o.client_id) ?? null) as string | null,
       owner: o.client_id ? owner.get(o.client_id) ?? null : null,
@@ -74,5 +75,6 @@ export async function opsFundsDashboard(userId: string, supabase: any) {
       agreement: (o.client_id && agreements.get(o.client_id)?.overall) || "needs_review",
     };
   });
-  return { rows, totals: totals(rows) };
+  // Demo funds are display-only: listed behind a toggle, never counted.
+  return { rows, totals: totals(rows.filter((r) => !r.isDemo)) };
 }
