@@ -42,7 +42,7 @@ function FundSetupRegister() {
   const [adding, setAdding] = useState(false);
   const [newName, setNewName] = useState("");
   const [newClient, setNewClient] = useState("");
-  const [newType, setNewType] = useState<"SPV" | "Venture Capital" | "Private Equity">("SPV");
+  const [newType, setNewType] = useState<"SPV" | "Venture Capital" | "Private Equity" | "Hedge Fund">("SPV");
   const [regType, setRegType] = useState<RegTypeValue | "">("");
   const rows = q.data?.rows.filter((f) => !view || (f.inSetup && (view === "setup" || (!!f.setupCreatedAt && Date.now() - Date.parse(f.setupCreatedAt) > 21 * 864e5)))).filter((f) => `${f.name} ${f.clientName ?? ""} ${f.fundType ?? ""}`.toLowerCase().includes(search.toLowerCase())) ?? [];
   return <main className="mx-auto max-w-6xl space-y-6 px-4 py-8 sm:px-6">
@@ -53,7 +53,7 @@ function FundSetupRegister() {
     {adding && <form className="grid max-w-xl gap-3 border-y py-4" onSubmit={async (e) => { e.preventDefault(); if (!regType) return; setBusy(true); try { await create({ data: { name: newName, clientId: newClient, fundType: newType, regType } }); toast.success("Fund added for setup"); setAdding(false); setNewName(""); await qc.invalidateQueries({ queryKey: ["staff-funds"] }); } catch (error) { toast.error((error as Error).message); } finally { setBusy(false); } }}>
       <Label htmlFor="new-fund-name">Fund or SPV name</Label><Input id="new-fund-name" required maxLength={160} value={newName} onChange={(e) => setNewName(e.target.value)} />
       <Label>Client</Label><Select required value={newClient} onValueChange={setNewClient}><SelectTrigger><SelectValue placeholder="Select a Client" /></SelectTrigger><SelectContent>{clients.data?.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent></Select>
-      <Label>Type</Label><Select value={newType} onValueChange={(v) => setNewType(v as typeof newType)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="SPV">SPV</SelectItem><SelectItem value="Venture Capital">Venture capital fund</SelectItem><SelectItem value="Private Equity">Private equity fund</SelectItem></SelectContent></Select>
+      <Label>Type</Label><Select value={newType} onValueChange={(v) => setNewType(v as typeof newType)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="SPV">SPV</SelectItem><SelectItem value="Venture Capital">Venture capital fund</SelectItem><SelectItem value="Private Equity">Private equity fund</SelectItem><SelectItem value="Hedge Fund">Hedge fund</SelectItem></SelectContent></Select>
       <Label>Preliminary offering route</Label><Select value={regType} onValueChange={(v) => setRegType(v as RegTypeValue)}><SelectTrigger><SelectValue placeholder="Select offering route" /></SelectTrigger><SelectContent>{REG_TYPES.map((r) => <SelectItem key={r.value} value={r.value}>{r.short}</SelectItem>)}</SelectContent></Select>
       <Button type="submit" disabled={busy || !newClient || !newName.trim() || !regType}>Create for setup</Button>
     </form>}

@@ -25,7 +25,7 @@ export const FUND_KIND_TYPES: { value: string; label: string; structure: FundStr
   { value: "private_equity", label: "Private equity fund", structure: "pe_fund", fundType: "Private equity" },
   { value: "real_estate", label: "Real estate fund", structure: "real_estate_fund", fundType: "Real estate" },
   { value: "private_credit", label: "Private credit fund", structure: "credit_fund", fundType: "Private credit" },
-  { value: "hedge", label: "Hedge fund", structure: "hedge_fund", fundType: "Other" },
+  { value: "hedge", label: "Hedge fund", structure: "hedge_fund", fundType: "Hedge Fund" },
   { value: "fund_of_funds", label: "Fund of funds", structure: "fund_of_funds", fundType: "Other" },
   { value: "other_private", label: "Other", structure: "other", fundType: "Other" },
 ];
