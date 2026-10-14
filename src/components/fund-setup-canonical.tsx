@@ -203,6 +203,7 @@ function DetailsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; onS
       minInvestment: fromCents(o.minInvestmentCents), maxInvestment: fromCents(o.maxInvestmentCents),
       offeringOpenDate: o.offeringOpenDate ?? "", offeringCloseDate: o.offeringCloseDate ?? "",
       rollingCloses: o.rollingCloses ? "yes" : o.rollingCloses === false ? "no" : "",
+      driveFolderUrl: o.driveFolderUrl ?? "",
     });
   }, [d]);
   const bind = (k: string) => ({ value: f[k] ?? "", disabled: !d.canEdit, onChange: (e: any) => setF({ ...f, [k]: e.target.value }) });
