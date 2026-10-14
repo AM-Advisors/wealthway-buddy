@@ -364,17 +364,37 @@ function Sign({ d, onboardingId, done }: { d: any; onboardingId: string; done: (
 
         <FeeAcceptanceCard onboardingId={onboardingId} />
 
-        <ul className="space-y-2">
-          {docs.map((doc) => (
-            <li key={doc.id} className="flex items-center justify-between rounded-md border p-3 text-sm">
-              <span>{doc.title}</span>
-              <Badge variant={doc.signed ? "default" : "outline"}>{doc.signed ? "Signed" : doc.requiresSignature ? "To sign" : "To review"}</Badge>
-            </li>
-          ))}
-          {docs.length === 0 ? <li className="text-sm text-muted-foreground">Your documents are being prepared.</li> : null}
-        </ul>
+        <div className="space-y-2">
+          <h3 className="text-sm font-semibold">Subscription documents</h3>
+          {!questionnaireDone ? (
+            <p className="text-sm text-muted-foreground">Submit the questionnaire above to unlock your subscription documents.</p>
+          ) : (
+            <ol className="space-y-2">
+              {docs.map((doc, i) => {
+                const status = doc.signed
+                  ? "Signed"
+                  : doc.requiresSignature
+                    ? "To sign"
+                    : doc.requiresAcknowledgment
+                      ? doc.acknowledged ? "Acknowledged" : "To acknowledge"
+                      : "To review";
+                const complete = doc.signed || (doc.requiresAcknowledgment && doc.acknowledged);
+                return (
+                  <li key={doc.id} className="flex items-center justify-between gap-3 rounded-md border p-3 text-sm">
+                    <span className="flex items-center gap-3">
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium">{i + 1}</span>
+                      <span>{doc.title}</span>
+                    </span>
+                    <Badge variant={complete ? "default" : "outline"}>{status}</Badge>
+                  </li>
+                );
+              })}
+              {docs.length === 0 ? <li className="text-sm text-muted-foreground">The fund's documents are being prepared. We'll let you know when they're ready.</li> : null}
+            </ol>
+          )}
+        </div>
 
-        {!signed && !fees.ok ? (
+        {!questionnaireDone || docs.length === 0 ? null : !signed && !fees.ok ? (
           <p className="text-sm text-muted-foreground">Accept the fund's fees above to review and sign your documents.</p>
         ) : !signed ? (
           <Button

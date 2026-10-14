@@ -7,12 +7,13 @@ import { canonicalExecutionStatus, type CanonicalExecutionStatus } from "@/lib/d
  * Execution belongs to each Investment, never to the Offering-level source file.
  */
 
-export const DOCUMENT_CATEGORIES = ["operating_agreement", "subscription_agreement", "ppm", "other"] as const;
+export const DOCUMENT_CATEGORIES = ["operating_agreement", "subscription_agreement", "ppm", "wire_form", "other"] as const;
 export type DocumentCategory = (typeof DOCUMENT_CATEGORIES)[number];
 export const DOCUMENT_CATEGORY_LABELS: Record<DocumentCategory, string> = {
   operating_agreement: "Operating Agreement",
   subscription_agreement: "Subscription Agreement",
   ppm: "Private Placement Memorandum (PPM)",
+  wire_form: "Wire Instructions & Funding Form",
   other: "Other Offering Document",
 };
 
@@ -268,4 +269,10 @@ export function appliedVersionFor(
   const own = individual.filter((v) => v.targetOnboardingId === onboardingId).sort((a, b) => b.version - a.version)[0];
   if (own) return { version: own.version, reason: "individual" };
   return activeVersion != null ? { version: activeVersion, reason: "template" } : { version: null, reason: "none" };
+}
+
+/** Order investors work through documents after the questionnaire: PPM, subscription agreement, wire form, then the rest. */
+export const INVESTOR_DOCUMENT_ORDER: Record<string, number> = { ppm: 0, subscription_agreement: 1, subscription: 1, wire_form: 2, operating_agreement: 3, lpa: 3 };
+export function investorDocumentRank(category: string | null | undefined, docType: string | null | undefined): number {
+  return INVESTOR_DOCUMENT_ORDER[String(category ?? "")] ?? INVESTOR_DOCUMENT_ORDER[String(docType ?? "")] ?? 9;
 }

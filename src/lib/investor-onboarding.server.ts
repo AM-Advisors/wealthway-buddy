@@ -286,7 +286,7 @@ async function gatherFacts(row: any) {
   ]);
   const { data: offeringDocs } = await db()
     .from("offering_documents")
-    .select("id, title, doc_type, requires_signature, applies_to, usage, applicability, active_version")
+    .select("id, title, doc_type, document_category, sort_order, requires_signature, applies_to, usage, applicability, active_version")
     .eq("offering_id", row.offering_id);
 
   // Investor-confirmed facts outrank prepared values; unreviewed prepared values never drive requirements.
@@ -410,12 +410,22 @@ async function gatherFacts(row: any) {
     nowIso: nowIso(),
   });
 
-  const documents = applicableDocs.map((d) => ({
-    id: String(d.id),
-    title: String(d.title ?? d.doc_type ?? "Document"),
-    requiresSignature: Boolean(d.requires_signature),
-    signed: signedIds.has(d.id),
-  }));
+  const { investorDocumentRank } = await import("@/lib/offering-document-model");
+  const ackedIds = new Set(((ackRows ?? []) as any[]).map((a) => String(a.offering_document_id)));
+  const ackIds = new Set(obligations.needsAck.map((x) => x.id));
+  const documents = applicableDocs
+    .map((d) => ({
+      id: String(d.id),
+      title: String(d.title ?? d.doc_type ?? "Document"),
+      category: (d.document_category ?? d.doc_type ?? null) as string | null,
+      requiresSignature: signIds.has(String(d.id)),
+      requiresAcknowledgment: ackIds.has(String(d.id)),
+      acknowledged: ackedIds.has(String(d.id)),
+      signed: signedIds.has(d.id),
+      rank: investorDocumentRank(d.document_category, d.doc_type),
+      sort: Number(d.sort_order ?? 0),
+    }))
+    .sort((a, b) => a.rank - b.rank || a.sort - b.sort);
   return { offering, person, profile, entity, related, accreditation, tax, requirements, isEntity, documents, completedSignatures };
 }
 
