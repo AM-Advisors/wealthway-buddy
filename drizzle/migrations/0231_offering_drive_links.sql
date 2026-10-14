@@ -1,0 +1,2 @@
+ALTER TABLE public.offerings ADD COLUMN IF NOT EXISTS drive_links jsonb NOT NULL DEFAULT '[]'::jsonb;
+COMMENT ON COLUMN public.offerings.drive_links IS 'Staff-only list of {label,url} Google Drive references; never changes Drive permissions.';
