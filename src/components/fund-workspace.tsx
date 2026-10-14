@@ -192,13 +192,27 @@ export function FundWorkspace({ fundId, tab, onTab, mode = "client", extraTabs =
       <Tabs value={tab} onValueChange={onTab}>
         <FundTabBar tab={tab} onTab={onTab} extraTabs={extraTabs} todoCount={steps.filter((s) => s.owner === "You" && !s.done && s.status !== "review" && !s.answer?.trim()).length} />
 
-        {extraTabs.map((x) => <TabsContent key={x.value} value={x.value}>{x.content}</TabsContent>)}
+        {extraTabs.map((x) => x.value === "setup" && merged ? (
+          <TabsContent key="setup" value={tab}>
+            <div className="grid gap-6 lg:grid-cols-[11rem_minmax(0,1fr)]">
+              <nav aria-label="Setup sections" className="flex gap-1 overflow-x-auto lg:sticky lg:top-4 lg:h-fit lg:flex-col">
+                {MERGED_SECTIONS.map((m) => <button key={m.id} type="button" onClick={() => document.getElementById(m.id)?.scrollIntoView({ behavior: "smooth", block: "start" })} className="shrink-0 rounded-md px-3 py-1.5 text-left text-sm text-muted-foreground hover:bg-muted hover:text-foreground">{m.label}</button>)}
+              </nav>
+              <div className="min-w-0 space-y-10">
+                <section id="fs-setup" className="scroll-mt-4 space-y-4">{x.content}</section>
+                <section id="fs-details" className="scroll-mt-4 space-y-5 border-t pt-6"><h2 className="font-heading text-xl font-semibold">Fund details</h2>{detailsBody}</section>
+                <section id="fs-team" className="scroll-mt-4 space-y-4 border-t pt-6"><h2 className="font-heading text-xl font-semibold">Team</h2><TeamTab fundId={fundId} /></section>
+                <section id="fs-banking" className="scroll-mt-4 space-y-5 border-t pt-6"><h2 className="font-heading text-xl font-semibold">Banking</h2>{bankingBody}</section>
+              </div>
+            </div>
+          </TabsContent>
+        ) : <TabsContent key={x.value} value={x.value}>{x.content}</TabsContent>)}
         <TabsContent value="distributions"><FundDistributions fundId={fundId} mode={mode} /></TabsContent>
         <TabsContent value="todos" className="space-y-4">
           {staff && <HarmoniousTodos steps={steps as any} onSetup={() => onTab("setup")} />}
           <TodosTab fundId={fundId} steps={steps.filter((s) => s.owner === "You" && !s.done) as any} />
         </TabsContent>
-        <TabsContent value="team"><TeamTab fundId={fundId} /></TabsContent>
+        {!merged && <TabsContent value="team"><TeamTab fundId={fundId} /></TabsContent>}
         <TabsContent value="overview"><FundCommandCenter fundId={fundId} onNavigate={(t) => onTab(t === "capital" ? "distributions" : t)} /></TabsContent>
         <TabsContent value="calendar"><FundCalendar fundId={fundId} /></TabsContent>
         <TabsContent value="approvals"><FundApprovals fundId={fundId} /></TabsContent>
@@ -207,64 +221,11 @@ export function FundWorkspace({ fundId, tab, onTab, mode = "client", extraTabs =
         <TabsContent value="documents"><DocumentsTab fundId={fundId} /></TabsContent>
         <TabsContent value="regulatory"><RegulatoryTab fundId={fundId} /></TabsContent>
 
-        <TabsContent value="details" className="space-y-5">
-          <Card>
-            <CardHeader><CardTitle className="text-base">Fund details</CardTitle></CardHeader>
-            <CardContent>
-              <dl className="grid gap-3 text-sm sm:grid-cols-3">
-                <div><dt className="text-xs text-muted-foreground">Type</dt><dd>{nice(f.fund_type === "other" ? f.fund_type_other : f.fund_type) || "Not recorded"}</dd></div>
-                <div><dt className="text-xs text-muted-foreground">Entity type</dt><dd>{f.entity_type ? (/^(llc|lp|gp)$/i.test(f.entity_type) ? f.entity_type.toUpperCase() : nice(f.entity_type)) : "Not recorded"}</dd></div>
-                <EinField fundId={fundId} />
-                <div><dt className="text-xs text-muted-foreground">Exemption</dt><dd>{f.reg_type ? `Reg D ${f.reg_type}` : "Not recorded"}</dd></div>
-                <div><dt className="text-xs text-muted-foreground">Target raise</dt><dd>{usd(f.target_raise_cents == null ? null : Number(f.target_raise_cents))}</dd></div>
-                <div><dt className="text-xs text-muted-foreground">State formed</dt><dd>{f.state_formed || "Not recorded"}</dd></div>
-                <div><dt className="text-xs text-muted-foreground">Date formed</dt><dd>{fmtDate(f.date_formed)}</dd></div>
-                <div><dt className="text-xs text-muted-foreground">Side letters</dt><dd>{sideLetters.active} active{sideLetters.proposed ? ` · ${sideLetters.proposed} proposed` : ""}</dd></div>
-              </dl>
-            </CardContent>
-          </Card>
-
-          <FeesSection fundId={fundId} />
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Setup progress</CardTitle>
-              <CardDescription>{pending.length ? `${pending.length} step${pending.length === 1 ? "" : "s"} still open.` : steps.length ? "All setup steps are complete." : "Harmonious hasn't started setup for this fund yet."}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {setup.percent != null && <Progress value={setup.percent} />}
-              {mode === "harmonious" ? <p className="text-sm text-muted-foreground">Each step is listed and completed in its section on the <button type="button" className="underline" onClick={() => onTab?.("setup")}>Setup tab</button>.</p> : <div className="space-y-1.5">
-                {steps.map((s, i) => (
-                  <div key={i} className="flex items-center gap-3 text-sm">
-                    {s.done ? <CheckCircle2 className="size-4 text-primary" /> : <Clock className="size-4 text-muted-foreground" />}
-                    <span className={s.done ? "" : "text-muted-foreground"}>{s.label}</span>
-                    {!s.done && <Badge variant="outline" className="ml-auto">{s.status === "review" ? "Sent - Harmonious reviewing" : s.owner === "Harmonious" ? "Harmonious - pending" : "Waiting on you"}</Badge>}
-                  </div>
-                ))}
-              </div>}
-            </CardContent>
-          </Card>
-        </TabsContent>
+        {!merged && <TabsContent value="details" className="space-y-5">{detailsBody}</TabsContent>}
+        {!merged && <TabsContent value="banking" className="space-y-5">{bankingBody}</TabsContent>}
 
         <TabsContent value="investors" className="space-y-4">{staff && <ReadinessQueue offeringId={fundId} initialTab="all" />}<InvestorsTab fundId={fundId} /><CapitalTieReport offeringId={fundId} /><FundUpdatesPanel fundId={fundId} /></TabsContent>
 
-        <TabsContent value="banking" className="space-y-5">
-          {!!td?.banks.length && (
-            <Card>
-              <CardHeader><CardTitle className="text-base">Connected accounts</CardTitle></CardHeader>
-              <CardContent className="divide-y">
-                {td.banks.map((b) => (
-                  <div key={b.id} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm">
-                    <div><p className="font-medium">{b.institution || "Bank"}{b.mask ? ` ${b.mask}` : ""}</p><p className="text-xs text-muted-foreground">{b.name || "Operating account"}</p></div>
-                    <Badge variant="outline" className="capitalize">{b.status}</Badge>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          )}
-          <BankingTab fundId={fundId} />
-          {staff && <Card><CardHeader><CardTitle className="text-base">Harmonious: fees, invoices and payments received</CardTitle><CardDescription>Bill fees, issue invoices and record wire/ACH receipts for this fund. Nothing is charged or moved automatically.</CardDescription></CardHeader><CardContent><FundPayments fundId={fundId} backTo="admin" /></CardContent></Card>}
-        </TabsContent>
 
         <TabsContent value="accounting"><AccountTab fundId={fundId} fundName={String(f.name ?? "Fund")} taxDocs={td?.taxDocs ?? []} /></TabsContent>
 
