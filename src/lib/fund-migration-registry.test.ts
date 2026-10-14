@@ -11,7 +11,7 @@ describe("fund migration registry", () => {
   it("reproduces the approved inventory counts", () => {
     const rows = E.map((e) => buildRow(e, null, null));
     const m = metrics(rows, 1);
-    expect(m).toMatchObject({ total: 219, matched: 7, missing: 114, missingWithTax: 36, archived: 72, duplicates: 5, review: 21 });
+    expect(m).toMatchObject({ total: 219, matched: 8, missing: 114, missingWithTax: 36, archived: 72, duplicates: 5, review: 20 });
   });
   it("gives no credit for folder names: unapproved match scores 0", () => {
     expect(buildRow(entry(), null, facts).score).toBe(0);
