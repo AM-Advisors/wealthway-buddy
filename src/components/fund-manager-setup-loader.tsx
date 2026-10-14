@@ -8,6 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { Progress } from "@/components/ui/progress";
+import { Check, ChevronDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { listFundSubmissionsFn, submitFundInfoFn, submissionFileFn, reviewFundSubmissionFn } from "@/lib/fund-manager-submissions.functions";
 
 type Section = "fund_details" | "fees_team" | "bank" | "document";
@@ -45,30 +48,60 @@ export function FundManagerSetupLoader({ offeringId }: { offeringId: string }) {
   const items = q.data?.items ?? [];
   const latest = (s: Section) => items.find((i: any) => i.section === s && i.status !== "withdrawn");
 
+  const isStaff = !!q.data?.isStaff;
+  const order = Object.keys(SECTION_LABEL) as Section[];
+  const done = order.filter((s) => latest(s)?.status === "approved").length;
+  const firstOpen = order.find((s) => latest(s)?.status !== "approved") ?? null;
+  const [expanded, setExpanded] = useState<Section | null | undefined>(undefined);
+  const current = expanded === undefined ? firstOpen : expanded;
+  const waitingOn = (st?: string) => (st === "submitted" ? "Waiting on Harmonious" : st === "returned" || !st ? "Waiting on fund manager" : "Complete");
+
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Load your fund information</CardTitle>
-        <CardDescription>Add what Harmonious needs to get your fund going. Each item is reviewed by Harmonious before it counts toward setup.</CardDescription>
+      <CardHeader className="space-y-3">
+        <div>
+          <CardTitle>Load your fund information</CardTitle>
+          <CardDescription>Add what Harmonious needs to get your fund going. Each item is reviewed by Harmonious before it counts toward setup.</CardDescription>
+        </div>
+        <div className="space-y-1">
+          <div className="flex justify-between text-xs text-muted-foreground"><span>{done} of {order.length} complete</span><span>{Math.round((done / order.length) * 100)}%</span></div>
+          <Progress value={(done / order.length) * 100} />
+        </div>
       </CardHeader>
-      <CardContent className="space-y-3">
-        {(Object.keys(SECTION_LABEL) as Section[]).map((s) => {
-          const l = latest(s);
-          return (
-            <div key={s} className="rounded-md border p-3">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <span className="font-medium">{s === "document" ? "Documents" : SECTION_LABEL[s]}</span>
-                  {l && <StatusBadge status={l.status} />}
-                </div>
-                <Button size="sm" variant={open === s ? "secondary" : "default"} onClick={() => setOpen(open === s ? null : s)}>{open === s ? "Close" : l ? "Update" : "Add"}</Button>
-              </div>
-              {l?.status === "returned" && l.review_note && <p className="mt-2 text-sm text-destructive">Harmonious asked: {l.review_note}</p>}
-              {open === s && <SubmitForm offeringId={offeringId} section={s} prior={l?.payload} onDone={() => { setOpen(null); refresh(); }} />}
-            </div>
-          );
-        })}
-        <History items={items} isStaff={!!q.data?.isStaff} onChange={refresh} />
+      <CardContent>
+        <ol className="space-y-2">
+          {order.map((s, idx) => {
+            const l = latest(s);
+            const isDone = l?.status === "approved";
+            const isOpen = current === s;
+            const reviewNow = isStaff && l?.status === "submitted";
+            const sectionItems = items.filter((i: any) => i.section === s);
+            return (
+              <li key={s} className={cn("rounded-lg border transition-colors", isOpen && "border-primary/60 bg-accent/20")}>
+                <button type="button" className="flex w-full items-center gap-3 p-3 text-left" onClick={() => setExpanded(isOpen ? null : s)} aria-expanded={isOpen}>
+                  <span className={cn("flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-semibold", isDone ? "border-primary bg-primary text-primary-foreground" : l?.status === "submitted" ? "border-primary text-primary" : "text-muted-foreground")}>
+                    {isDone ? <Check className="h-4 w-4" /> : idx + 1}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-medium">{s === "document" ? "Documents" : SECTION_LABEL[s]}</span>
+                    <span className="block text-xs text-muted-foreground">{waitingOn(l?.status)}</span>
+                  </span>
+                  {l ? <StatusBadge status={l.status} /> : <Badge variant="outline">Not started</Badge>}
+                  <ChevronDown className={cn("h-4 w-4 shrink-0 text-muted-foreground transition-transform", isOpen && "rotate-180")} />
+                </button>
+                {isOpen && (
+                  <div className="space-y-3 border-t px-3 pb-3 pt-3">
+                    {l?.status === "returned" && l.review_note && <p className="text-sm text-destructive">Harmonious asked: {l.review_note}</p>}
+                    {!reviewNow && (open === s
+                      ? <SubmitForm offeringId={offeringId} section={s} prior={l?.payload} onDone={() => { setOpen(null); refresh(); }} />
+                      : <Button size="sm" variant={isDone ? "outline" : "default"} onClick={() => setOpen(s)}>{l ? "Update" : "Add"}</Button>)}
+                    <History items={sectionItems} isStaff={isStaff} onChange={refresh} />
+                  </div>
+                )}
+              </li>
+            );
+          })}
+        </ol>
       </CardContent>
     </Card>
   );
