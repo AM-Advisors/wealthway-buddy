@@ -48,7 +48,7 @@ function FundSetupRegister() {
   return <main className="mx-auto max-w-6xl space-y-6 px-4 py-8 sm:px-6">
     <header className="flex flex-wrap items-center justify-between gap-4">
       <div><h1 className="font-heading text-2xl font-semibold">Fund Setup</h1><p className="text-sm text-muted-foreground">Funds and SPVs by Client.</p></div>
-      {q.data?.canPrepare && <Button asChild><Link to="/ops/fund-setup/new">Set up new fund</Link></Button>}
+      {q.data?.canPrepare && <Button asChild><Link to="/ops/fund-setup/new">Add Fund or SPV</Link></Button>}
     </header>
     <Input value={search} onChange={(e) => setSearch(e.target.value)} aria-label="Search funds and SPVs" placeholder="Search funds, SPVs and clients" className="max-w-md" />
     {view && <div className="flex items-center gap-2 text-sm text-muted-foreground">Showing {view === "stuck" ? "funds in setup for over 21 days" : "funds still in setup"} <button className="underline" onClick={() => navigate({ search: {} })}>Show all</button></div>}
