@@ -113,7 +113,7 @@ async function actorFor(userId: string): Promise<DistributionActor> {
   const base = await onboardingActor(userId);
   const { data: roles } = await db().from("user_roles").select("role").eq("user_id", userId);
   const list = ((roles ?? []) as { role: string }[]).map((r) => String(r.role));
-  const capabilities = hasOperationsEntry(list) ? capabilitiesFor(list) : [];
+  const capabilities = hasOperationsEntry(list) ? capabilitiesFor(list, { moneyPath: true }) : [];
   return {
     ...base,
     capabilities,

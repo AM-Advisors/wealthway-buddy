@@ -98,10 +98,20 @@ export function hasOperationsEntry(roles: readonly string[]): boolean {
   return roles.some((role) => (OPS_STAFF_ROLES as readonly string[]).includes(role));
 }
 
-/** The capabilities these roles add up to. An unknown role contributes nothing. */
-export function capabilitiesFor(roles: readonly string[]): OpsCapability[] {
+/** Grants Operations / Account Managers had before peer approval; used wherever money moves. */
+const MONEY_PATH_GRANTS: Record<string, OpsCapability[]> = {
+  operations: [
+    ...caps(["clients", "funds", "companies", "investors", "capital", "documents", "tasks", "reports"], SEE_PREPARE),
+    ...caps(["onboarding"], THROUGH_REVIEW),
+  ],
+  account_manager: [],
+};
+
+/** The capabilities these roles add up to. An unknown role contributes nothing.
+ *  `moneyPath` drops peer-approval grants so money movement keeps its own approvers. */
+export function capabilitiesFor(roles: readonly string[], opts: { moneyPath?: boolean } = {}): OpsCapability[] {
   const out = new Set<OpsCapability>();
-  for (const role of roles) for (const cap of ROLE_GRANTS[role] ?? []) out.add(cap);
+  for (const role of roles) for (const cap of (opts.moneyPath && MONEY_PATH_GRANTS[role]) || ROLE_GRANTS[role] || []) out.add(cap);
   return [...out].sort();
 }
 
