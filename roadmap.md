@@ -11,3 +11,4 @@
 - [x] Services & Pricing: one-click standard packages (Fund, SPV, Cap table tiers)
 - [x] Client View: wire My Funds, Activity, Reports, Documents, Tax, Messages to real records
 - [x] One Operations Funds page + demo fund flag
+- [x] Setup: save by section; fix out-of-memory save failure
