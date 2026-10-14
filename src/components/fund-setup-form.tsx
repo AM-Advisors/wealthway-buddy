@@ -66,7 +66,7 @@ export function FundSetupForm({ offeringId, mode, staffExtras }: { offeringId: s
     return req ? <Chip tone="miss">Missing {req}</Chip> : <Chip tone="done">Done</Chip>;
   };
 
-  const Field = ({ f }: { f: FieldDef }) => {
+  const renderField = (f: FieldDef) => {
     const locked = !!f.section && waiting(f.section);
     const cls = "peer h-14 w-full rounded-xl border border-input bg-background px-4 pt-5 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-ring/30 disabled:opacity-60";
     const label = <span className="pointer-events-none absolute left-4 top-2 text-[11px] font-medium text-muted-foreground">{f.label}{f.required && " *"}</span>;
@@ -82,7 +82,7 @@ export function FundSetupForm({ offeringId, mode, staffExtras }: { offeringId: s
     return <label className="relative block"><input className={cls} type={f.type ?? "text"} value={f.disabled ? f.fixed ?? "" : v(f.key)} disabled={locked || f.disabled} onChange={(e) => set(f.key, e.target.value)} />{label}</label>;
   };
 
-  const Section = ({ id, title, status, children }: { id: string; title: string; status?: React.ReactNode; children: React.ReactNode }) => {
+  const Section = ({ id, title, status, children }: { id: string; title: string; status?: React.ReactNode; children: React.ReactNode }): React.ReactElement => {
     const isOpen = !!open[id];
     return (
       <section id={`setup-form-${id}`} className="scroll-mt-24 rounded-2xl border bg-card">
@@ -103,7 +103,7 @@ export function FundSetupForm({ offeringId, mode, staffExtras }: { offeringId: s
       <Section id={s.id} title={s.title} status={statusFor(s.fields, s.fields[0]?.section)}>
         {id === "basic" && ret && <p className="rounded-lg bg-muted p-3 text-sm">Harmonious returned this: {ret.review_note ?? "please review and resubmit."}</p>}
         {id === "details" && <div className="rounded-xl border bg-background px-4 py-3 text-sm"><EinField fundId={offeringId} /></div>}
-        <div className="space-y-3">{s.fields.map((f) => <Field key={f.key} f={f} />)}</div>
+        <div className="space-y-3">{s.fields.map((f) => <div key={f.key}>{renderField(f)}</div>)}</div>
       </Section>
     );
   };
