@@ -45,7 +45,7 @@ function Hl({ text, word, accent }: { text: string; word: string; accent: string
   return <>{text.split(/(\s+)/).map((t, i) => t.replace(/[^\w$%+]/g, "").toLowerCase() === w ? <span key={i} style={{ color: accent }}>{t}</span> : t)}</>;
 }
 
-export function PostBrandLayout({ title, body, onAdd }: { title: string; body: string; onAdd: (img: { path: string; url: string }) => void }) {
+export function PostBrandLayout({ title, body, onAdd }: { title: string; body: string; onAdd: (imgs: { path: string; url: string }[]) => void }) {
   const suggest = useServerFn(marketingSuggestPostLayout);
   const art = useServerFn(marketingBackgroundArt);
   const upload = useServerFn(uploadMarketingAsset);
