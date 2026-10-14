@@ -51,7 +51,7 @@ import { fundEinFn } from "@/lib/fund-tabs.functions";
 
 const nice = (v: string | null | undefined) => (v ? v.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) : "");
 
-function EinField({ fundId }: { fundId: string }) {
+export function EinField({ fundId }: { fundId: string }) {
   const load = useServerFn(fundEinFn);
   const [reveal, setReveal] = useState(false);
   const q = useQuery({ queryKey: ["fund-ein", fundId, reveal], queryFn: () => load({ data: { fundId, reveal } }) });
