@@ -179,7 +179,7 @@ export const OPS_WORK_AREAS: OpsWorkArea[] = [
     ],
   },
   {
-    id: "funds", title: "Funds", url: "/ops/funds", icon: "building", group: "records", match: ["/ops/fund"], queues: ["funds", "regulatory", "documents"],
+    id: "funds", title: "Funds", url: "/ops/funds", icon: "building", group: "records", match: ["/ops/fund", "/ops/fund-setup"], queues: ["funds", "regulatory", "documents"],
     screens: [
       { title: "EIN and SS-4 queue", url: "/ops/ss4", description: "EIN applications across all Funds", cap: "regulatory", step: "Prepare" },
       { title: "Offering statement", url: "/admin/offering-statement", description: "Offering statement drafting", cap: "regulatory", step: "Prepare" },
