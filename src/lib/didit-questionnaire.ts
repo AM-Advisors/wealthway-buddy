@@ -15,7 +15,7 @@ export function questionKey(title: string): string {
 
 function items(responses: unknown): DiditItem[] {
   const out: DiditItem[] = [];
-  for (const q of (Array.isArray(responses) ? responses : []) as any[])
+  for (const q of (Array.isArray(responses) ? responses : responses && typeof responses === "object" ? [responses] : []) as any[])
     for (const s of (q?.sections ?? []) as any[]) for (const i of (s?.items ?? []) as any[]) out.push(i);
   return out;
 }
