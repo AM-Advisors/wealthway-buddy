@@ -1,3 +1,4 @@
+import { Ss4RequestPanel } from "@/components/ss4-request";
 import { FundSignoffQueue } from "@/components/signoff-board";
 import { useMemo, useRef, useState } from "react";
 
@@ -823,6 +824,7 @@ export function OperationsFund({ fundId }: { fundId: string }) {
       <h2 className="text-lg">Banking</h2>
       <OperationsBanking fundId={fundId} />
       <h2 className="text-lg">EIN and Form SS-4</h2>
+      <Ss4RequestPanel fundId={fundId} />
       <OperationsSs4 fundId={fundId} />
       <h2 className="text-lg">Tax documents</h2>
       <OperationsTaxDocuments fundId={fundId} />
