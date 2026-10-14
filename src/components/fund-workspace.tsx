@@ -86,9 +86,11 @@ const CLOSE_STATUS: Record<string, string> = {
 /** Primary tabs, each owning a group of the original tab values (old addresses keep working). */
 const PRIMARY: { value: string; label: string; group: string[] }[] = [
   { value: "overview", label: "Overview", group: ["overview"] },
-  { value: "setup", label: "Setup", group: ["setup", "details", "team", "banking"] },
+  { value: "setup", label: "Fund Details", group: ["setup", "details", "team"] },
   { value: "investors", label: "Investors", group: ["investors"] },
-  { value: "accounting", label: "Accounting", group: ["accounting", "assets", "closes", "distributions"] },
+  { value: "assets", label: "Asset Details", group: ["assets"] },
+  { value: "banking", label: "Banking", group: ["banking"] },
+  { value: "accounting", label: "Accounting", group: ["accounting", "closes", "distributions"] },
   { value: "documents", label: "Documents", group: ["documents"] },
 ];
 const SUB_LABEL: Record<string, string> = { setup: "Checklist", details: "Fund details", team: "Team", banking: "Banking", accounting: "Accounting", assets: "Assets", closes: "Closes", distributions: "Distributions" };
