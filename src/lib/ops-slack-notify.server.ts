@@ -1,0 +1,118 @@
+/**
+ * Slack alert to #operations whenever something is submitted, tagging the assigned
+ * Operations person (falls back to the Account Manager). Server-only, best-effort:
+ * never throws, never blocks the submission. Messages carry only the item name,
+ * fund/client, submitter and a link - never amounts, tax IDs, bank or ID details.
+ */
+const GATEWAY = "https://connector-gateway.lovable.dev/slack/api";
+export const OPS_SLACK_CHANNEL = "C057SPLASCR"; // #operations
+const SITE = "https://app.harmonious.co";
+
+const admin = async () => (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
+
+export type SubmissionNotice = {
+  kind: string;
+  /** Short, non-sensitive label, e.g. "Document - Operating Agreement". */
+  title: string;
+  offeringId?: string | null;
+  clientId?: string | null;
+  submittedBy?: string | null;
+  /** Path on the Harmonious site, e.g. "/ops/fund/123". */
+  path?: string | null;
+  /** Stable id of the thing submitted, for repeat suppression. */
+  ref?: string | null;
+};
+
+/** Operations owner first, then Account Manager. Pure, for tests. */
+export function pickOwner(team: { role: string; userId: string | null }[]): { userId: string; role: string } | null {
+  for (const role of ["operations", "account_manager"]) {
+    const m = team.find((t) => t.role === role && t.userId);
+    if (m) return { userId: m.userId!, role };
+  }
+  return null;
+}
+
+/** Five-minute bucket so repeat clicks send one message. Pure, for tests. */
+export function dedupeKey(n: Pick<SubmissionNotice, "kind" | "ref" | "offeringId" | "clientId" | "title">, at = Date.now()) {
+  return `${n.kind}:${n.ref ?? n.offeringId ?? n.clientId ?? "-"}:${n.title}:${Math.floor(at / 300000)}`;
+}
+
+/** Only the allow-listed fields ever reach Slack. Pure, for tests. */
+export function buildMessage(n: { title: string; place: string; submitter: string | null; mention: string | null; url: string; when: string }) {
+  const tag = n.mention ?? "_No Operations owner assigned._";
+  const text = `${tag} New submission - ${n.place}`;
+  return {
+    text,
+    blocks: [
+      { type: "section", text: { type: "mrkdwn", text: `${tag} *New submission - ${n.place}*\n${n.title}` } },
+      { type: "context", elements: [{ type: "mrkdwn", text: `Submitted by ${n.submitter ?? "someone"} · ${n.when}` }] },
+      { type: "actions", elements: [{ type: "button", text: { type: "plain_text", text: "Open in Harmonious" }, url: n.url }] },
+    ],
+  };
+}
+
+async function slack(method: string, body: Record<string, unknown>) {
+  const lk = process.env["LOVABLE_API_KEY"], key = process.env["SLACK_API_KEY"];
+  if (!lk || !key) return { ok: false, error: "not_connected" } as any;
+  const res = await fetch(`${GATEWAY}/${method}`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${lk}`, "X-Connection-Api-Key": key, "Content-Type": "application/json; charset=utf-8" },
+    body: JSON.stringify(body),
+  });
+  const data: any = await res.json().catch(() => ({}));
+  if (!res.ok || !data.ok) console.error(`Slack ${method} failed [${res.status}]: ${data.error ?? "unknown"}`);
+  return data;
+}
+
+async function slackIdFor(db: any, userId: string): Promise<string | null> {
+  const { data: p } = await db.from("profiles").select("email, slack_user_id").eq("user_id", userId).maybeSingle();
+  if (p?.slack_user_id) return p.slack_user_id;
+  if (!p?.email) return null;
+  const r = await slack(`users.lookupByEmail?email=${encodeURIComponent(p.email)}`, {});
+  const id = r?.ok ? (r.user?.id as string) : null;
+  if (id) await db.from("profiles").update({ slack_user_id: id }).eq("user_id", userId).then(() => null, () => null);
+  return id;
+}
+
+export async function notifySubmission(n: SubmissionNotice): Promise<void> {
+  try {
+    const db = await admin();
+    const key = dedupeKey(n);
+    const { error: dup } = await db.from("ops_slack_notifications").insert({ dedupe_key: key, kind: n.kind, offering_id: n.offeringId ?? null, client_id: n.clientId ?? null, status: "pending" });
+    if (dup) return; // already sent in this window
+    const team = await import("@/lib/harmonious-team.server");
+    let members: { role: string; userId: string | null }[] = [];
+    let place = "Harmonious";
+    let clientId = n.clientId ?? null;
+    if (n.offeringId) {
+      const t = await team.loadFundTeam(n.offeringId).catch(() => null);
+      members = (t?.team ?? []) as any;
+      clientId = clientId ?? t?.clientId ?? null;
+      const { data: f } = await db.from("offerings").select("name").eq("id", n.offeringId).maybeSingle();
+      place = f?.name ?? place;
+    } else if (clientId) {
+      members = ((await team.loadClientTeam(clientId)) as any[]).map((a) => ({ role: a.team_role, userId: a.user_id }));
+      const { data: c } = await db.from("clients").select("name").eq("id", clientId).maybeSingle();
+      place = c?.name ?? place;
+    }
+    // Never tag the submitter as their own reviewer.
+    const owner = pickOwner(members.filter((m) => m.userId !== n.submittedBy));
+    const sid = owner ? await slackIdFor(db, owner.userId) : null;
+    let mention: string | null = null;
+    if (owner) {
+      if (sid) mention = `<@${sid}>`;
+      else {
+        const { data: op } = await db.from("profiles").select("legal_name, email").eq("user_id", owner.userId).maybeSingle();
+        mention = `*${op?.legal_name || op?.email || "Operations owner"}*`;
+      }
+    }
+    const { data: sub } = n.submittedBy ? await db.from("profiles").select("legal_name, email").eq("user_id", n.submittedBy).maybeSingle() : { data: null };
+    const when = new Date().toLocaleString("en-US", { timeZone: "America/Chicago", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+    const url = `${SITE}${n.path ?? (n.offeringId ? `/ops/fund/${n.offeringId}` : "/ops/queue")}`;
+    const msg = buildMessage({ title: n.title, place, submitter: sub?.legal_name || sub?.email || null, mention, url, when });
+    const r = await slack("chat.postMessage", { channel: OPS_SLACK_CHANNEL, unfurl_links: false, ...msg });
+    await db.from("ops_slack_notifications").update({ status: r?.ok ? "sent" : "failed", error: r?.ok ? null : String(r?.error ?? "unknown"), slack_ts: r?.ts ?? null, tagged_user_id: owner?.userId ?? null, client_id: clientId }).eq("dedupe_key", key);
+  } catch (e) {
+    console.error("ops slack notify", e);
+  }
+}
