@@ -245,6 +245,20 @@ export const signSs4RequestFn = createServerFn({ method: "POST" })
     const { error } = await db.from("ss4_signature_requests").update({ status: "signed", signer_name: data.signerName, signer_title: data.signerTitle, signed_at: signedAt.toISOString(), signed_user_agent: data.userAgent ?? null, signed_pdf_path: path, form_data: form }).eq("id", r.id).eq("status", "requested");
     if (error) throw new Error(error.message);
 
+    // Put the signed PDF in the fund's Documents list as a permanently kept, signed file.
+    const { BUCKET: FILES_BUCKET } = await import("@/lib/fund-tabs.server");
+    const filesPath = `fund-files/${r.offering_id}/${crypto.randomUUID()}/Form_SS-4_signed.pdf`;
+    const { error: fUp } = await db.storage.from(FILES_BUCKET).upload(filesPath, bytes, { contentType: "application/pdf", upsert: false });
+    if (fUp) console.error("SS-4 fund file upload failed", fUp);
+    else {
+      const { error: fIns } = await db.from("fund_files").insert({ offering_id: r.offering_id, title: `Form SS-4 (signed by ${data.signerName})`, category: "uploaded", file_name: "Form_SS-4_signed.pdf", storage_path: filesPath, content_type: "application/pdf", size_bytes: bytes.byteLength, uploaded_by: context.userId, status: "signed" });
+      if (fIns) console.error("SS-4 fund file record failed", fIns);
+    }
+    try {
+      const { logFundAudit } = await import("@/lib/fund-audit.server");
+      await logFundAudit(context.userId, { offeringId: r.offering_id, eventType: "ss4_signed", summary: `Form SS-4 signed by ${data.signerName}`, values: { signer: `${data.signerName}, ${data.signerTitle}`, signedAt: signedAt.toISOString() } });
+    } catch { /* best-effort */ }
+
     // Keep the fund's SS-4 answers and current form in step (manager-authorised RPCs, EIN untouched).
     try {
       const { data: detail } = await context.supabase.rpc("get_offering_entity_details", { p_offering_id: r.offering_id }).maybeSingle();
