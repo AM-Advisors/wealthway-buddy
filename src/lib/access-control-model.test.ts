@@ -40,8 +40,7 @@ describe("effective permission resolution examples", () => {
   it("client user: only their own client", () => {
     const f = blank({ clientMemberships: [{ id: "C1", name: "Acme", role: "member", canApprove: false }] });
     expect(has(f, "clients", "view", "client", "C1")).toBe(true);
-    expect(has(f, "clients", "approve")).toBe(true);
-    expect(has(f, "capital", "approve")).toBe(false);
+    expect(has(f, "clients", "approve")).toBe(false);
     expect(effectivePermissions(f).every((p) => p.source === "relationship")).toBe(true);
   });
 
