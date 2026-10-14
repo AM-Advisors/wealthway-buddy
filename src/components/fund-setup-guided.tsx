@@ -110,7 +110,7 @@ function StepBody({ offeringId, d, s, onChange }: { offeringId: string; d: any; 
       ) : (
         <>
           <OnFile section={s.step} values={values} docs={d.onFile?.documents ?? []} />
-          {s.missing.length > 0 && <p className="text-xs text-muted-foreground">Missing: {s.missing.join(", ")}</p>}
+          {s.missing.length > 0 && <p className="text-xs text-muted-foreground">Missing: {s.missing.map((m: string) => FIELD_LABEL[m] ?? (m === "signers" ? "Signers" : m)).join(", ")}</p>}
           {isStaff && (s.step === "fund_details" || s.step === "fees_team") ? (
             editing ? <StaffForm offeringId={offeringId} section={s.step} prior={values} onDone={() => { setEditing(false); onChange(); }} /> : <Button size="sm" onClick={() => setEditing(true)}>{s.missing.length ? "Complete this step" : "Edit"}</Button>
           ) : isStaff ? (
