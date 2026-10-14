@@ -1,7 +1,7 @@
 import { Fragment, useEffect } from "react";
 
 import { Link, useRouter, useRouterState } from "@tanstack/react-router";
-import { ArrowLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, ChevronRight, UserPlus } from "lucide-react";
 
 import { Logo } from "@/components/Logo";
 import { QuickJump } from "@/components/quick-jump";
@@ -73,6 +73,11 @@ export function PortalTopbar(_props: { onSignOut: () => void }) {
             ))}
           {!inOperations && crumbs.length <= 1 && <span className="truncate text-muted-foreground">{surfaceLabel}</span>}
         </nav>
+        {inOperations && (
+          <Button asChild variant="outline" size="sm" className="ml-auto h-8 gap-1 px-2">
+            <Link to="/ops/people-access" search={{ tab: "access", sub: "invite" }} aria-label="Invite someone"><UserPlus className="h-4 w-4" /><span className="hidden sm:inline">Invite</span></Link>
+          </Button>
+        )}
         <QuickJump />
       </div>
     </header>
