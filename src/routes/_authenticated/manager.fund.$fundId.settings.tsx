@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { FundWorkspaceSection } from "@/components/fund-workspace-section";
-import { FundSetupGuided } from "@/components/fund-setup-guided";
+import { FundSetupForm } from "@/components/fund-setup-form";
 
 export const Route = createFileRoute("/_authenticated/manager/fund/$fundId/settings")({
   head: () => ({ meta: [
@@ -9,7 +9,7 @@ export const Route = createFileRoute("/_authenticated/manager/fund/$fundId/setti
     { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
   ] }), component: Page,
 });
-function Page() { const { fundId } = Route.useParams(); return <div className="space-y-6"><FundSetupGuided offeringId={fundId} /><FundWorkspaceSection title="Settings" description="Fund configuration, access, team authority, and investor-facing publishing." items={[
+function Page() { const { fundId } = Route.useParams(); return <div className="space-y-6"><FundSetupForm offeringId={fundId} mode="manager" /><FundWorkspaceSection title="Settings" description="Fund configuration, access, team authority, and investor-facing publishing." items={[
   { title: "Fund details", description: "Legal entity, offering type, targets, fees, and share price.", to: "/admin/setup" },
   { title: "Roles & permissions", description: "Assigned team, document access, and investor visibility.", to: "/manager/permissions" },
   { title: "Fund access", description: "Invite investors and manage access to this offering.", to: "/admin/access" },
