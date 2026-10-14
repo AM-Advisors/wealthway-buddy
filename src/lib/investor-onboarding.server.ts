@@ -807,10 +807,10 @@ async function syncInvitation(row: any) {
 
 /** "I sent my funds" - informational only; it never makes an investment funded. */
 export type WireSentDetails = {
-  sentOn?: string | null;
-  amountCents?: number | null;
-  sendingBank?: string | null;
-  reference?: string | null;
+  sentOn?: string | null | undefined;
+  amountCents?: number | null | undefined;
+  sendingBank?: string | null | undefined;
+  reference?: string | null | undefined;
 };
 
 /** Investor's own notice that they sent a wire. Never moves money and never
