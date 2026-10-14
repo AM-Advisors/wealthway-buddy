@@ -20,23 +20,49 @@ export type ProviderItem = {
 };
 
 export interface DocumentProvider {
-  readonly provider: "box" | "google_drive";
+  readonly provider: "box" | "google_drive" | "harmonious_storage";
   listFolder(folderId: string): Promise<ProviderItem[]>;
   getContent(fileId: string): Promise<{ bytes: Uint8Array; mimeType: string; name: string }>;
 }
 
 export class ProviderNotAuthorizedError extends Error {}
 
-type SourceRow = { provider: "box" | "google_drive"; connection_reference: string; allowed_root_ids: string[] };
+type SourceRow = { provider: "box" | "google_drive" | "harmonious_storage"; connection_reference: string; allowed_root_ids: string[] };
 
 export function providerFor(source: SourceRow): DocumentProvider {
-  if (source.connection_reference.startsWith("synthetic:")) return syntheticProvider(source.provider, source.connection_reference);
+  if (source.connection_reference.startsWith("synthetic:") && source.provider !== "harmonious_storage")
+    return syntheticProvider(source.provider, source.connection_reference);
+  // Copies held in Harmonious's own private bucket, restricted to approved path prefixes.
+  if (source.provider === "harmonious_storage" && source.connection_reference === "storage:portal-tax-documents")
+    return harmoniousStorageProvider(source.allowed_root_ids);
   // Live Box: read-only, scoped to a shared link approved per source (Super Admin approved, Founders Fund K-1s).
   if (source.provider === "box" && source.connection_reference.startsWith("box-shared:"))
     return boxSharedProvider(source.connection_reference.slice("box-shared:".length), source.allowed_root_ids);
   throw new ProviderNotAuthorizedError(
     "This document source is not authorized for live access.",
   );
+}
+
+// ------------------------------------------------- Harmonious storage --
+
+const STORAGE_BUCKET = "portal-tax-documents";
+
+function harmoniousStorageProvider(allowedPrefixes: string[]): DocumentProvider {
+  const inScope = (path: string) =>
+    !path.includes("..") && allowedPrefixes.some((p) => p.length > 0 && path.startsWith(p.endsWith("/") ? p : `${p}/`));
+  return {
+    provider: "harmonious_storage",
+    async listFolder() {
+      return [];
+    },
+    async getContent(fileId) {
+      if (!inScope(fileId)) throw new ProviderNotAuthorizedError("File is outside the approved storage folder.");
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data, error } = await supabaseAdmin.storage.from(STORAGE_BUCKET).download(fileId);
+      if (error || !data) throw new Error("Stored document unavailable.");
+      return { bytes: new Uint8Array(await data.arrayBuffer()), mimeType: "application/pdf", name: fileId.split("/").pop() ?? "document.pdf" };
+    },
+  };
 }
 
 // ------------------------------------------------------------ live Box --
