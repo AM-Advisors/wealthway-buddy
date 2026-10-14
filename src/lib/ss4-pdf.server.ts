@@ -150,7 +150,7 @@ function decodeBase64(input: string): Uint8Array {
   return bytes;
 }
 
-export async function fillSs4Pdf(data: Ss4Data): Promise<Uint8Array> {
+export async function fillSs4Pdf(data: Ss4Data, opts: { signature?: string; signedDate?: string } = {}): Promise<Uint8Array> {
   const doc = await PDFDocument.load(decodeBase64(SS4_FORM_BASE64));
   const form = doc.getForm();
 
@@ -237,6 +237,23 @@ export async function fillSs4Pdf(data: Ss4Data): Promise<Uint8Array> {
 
   // Line 18 - has the entity applied before
   check("c1_7", data.previous_ein_applied ? 0 : 1);
+
+  // Electronic signature from a Harmonious SS-4 signature request: drawn on the
+  // "Signature / Date" line just below line "Name and title" (f1_44).
+  if (opts.signature) {
+    try {
+      const nameField = textByLine.get(44);
+      const rect = nameField?.acroField.getWidgets()[0]?.getRectangle();
+      const page = doc.getPages()[0];
+      if (rect && page) {
+        const font = await doc.embedFont(StandardFonts.HelveticaOblique);
+        page.drawText(`/s/ ${clean(opts.signature)}`, { x: rect.x + 40, y: rect.y - 13, size: 9, font, color: rgb(0.08, 0.15, 0.28) });
+        if (opts.signedDate) page.drawText(clean(opts.signedDate), { x: rect.x + rect.width - 110, y: rect.y - 13, size: 9, font, color: rgb(0.08, 0.15, 0.28) });
+      }
+    } catch {
+      /* leave signature line blank for wet signature */
+    }
+  }
 
   form.flatten();
   return doc.save();
