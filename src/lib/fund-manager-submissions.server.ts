@@ -32,7 +32,7 @@ export async function listSubmissions(userId: string, offeringId: string) {
 /** Allow-listed snapshot of what is already on the fund record (no tax IDs or bank numbers). */
 async function setupOnFile(offeringId: string) {
   const [{ data: o }, { data: fee }, { data: docs }] = await Promise.all([
-    db().from("offerings").select("name, legal_entity_name, entity_type, state_formed, date_formed, principal_address, min_investment_cents, target_raise_cents, gp_entity_name, fund_signatory_person_id, signatory_title").eq("id", offeringId).maybeSingle(),
+    db().from("offerings").select("name, legal_entity_name, entity_type, state_formed, date_formed, principal_address, min_investment_cents, target_raise_cents, gp_entity_name, fund_signatory_person_id, signatory_title, fund_type, reg_type, offering_open_date, offering_close_date, rolling_closes").eq("id", offeringId).maybeSingle(),
     db().from("fund_fee_terms").select("management_fee_pct, carry_pct, hurdle_pct, status").eq("offering_id", offeringId).in("status", ["active", "approved"]).order("created_at", { ascending: false }).limit(1).maybeSingle(),
     db().from("offering_documents").select("title, doc_type").eq("offering_id", offeringId).limit(50),
   ]);
@@ -44,7 +44,7 @@ async function setupOnFile(offeringId: string) {
   const $ = (c: number | null | undefined) => (c ? String(Math.round(c / 100)) : "");
   const s = (v: unknown) => (v == null ? "" : String(v));
   return {
-    fund_details: { legalName: s(o?.legal_entity_name), displayName: s(o?.name), entityType: s(o?.entity_type), jurisdiction: s(o?.state_formed), formationDate: s(o?.date_formed), principalAddress: s(o?.principal_address), targetRaise: $(o?.target_raise_cents), minInvestment: $(o?.min_investment_cents) },
+    fund_details: { legalName: s(o?.legal_entity_name), displayName: s(o?.name), entityType: s(o?.entity_type), jurisdiction: s(o?.state_formed), formationDate: s(o?.date_formed), principalAddress: s(o?.principal_address), targetRaise: $(o?.target_raise_cents), minInvestment: $(o?.min_investment_cents), fundType: s(o?.fund_type), regType: s(o?.reg_type), gpName: s(o?.gp_entity_name), offeringOpenDate: s(o?.offering_open_date), offeringCloseDate: s(o?.offering_close_date), rollingCloses: o?.rolling_closes == null ? "" : o.rolling_closes ? "yes" : "no" },
     fees_team: { managementFeePercent: s(fee?.management_fee_pct), carryPercent: s(fee?.carry_pct), preferredReturnPercent: s(fee?.hurdle_pct), gpName: s(o?.gp_entity_name), signers: signer ? `${signer}${o?.signatory_title ? `, ${o.signatory_title}` : ""}` : "" },
     bank: {} as Record<string, string>,
     documents: ((docs ?? []) as any[]).map((d) => String(d.title ?? d.doc_type ?? "Document")),
@@ -125,7 +125,8 @@ async function apply(sb: any, userId: string, s: any): Promise<unknown> {
   if (s.section === "fund_details") {
     const fields: Record<string, unknown> = {};
     if (p.displayName) fields["displayName"] = String(p.displayName);
-    for (const k of ["entityType", "jurisdiction", "formationDate", "principalAddress", "gpName", "regType"]) if (p[k]) fields[k] = String(p[k]);
+    for (const k of ["entityType", "jurisdiction", "formationDate", "principalAddress", "gpName", "regType", "fundType", "offeringOpenDate", "offeringCloseDate"]) if (p[k]) fields[k] = String(p[k]);
+    if (p.rollingCloses === "yes" || p.rollingCloses === "no") fields["rollingCloses"] = p.rollingCloses === "yes";
     if (p.targetRaise !== undefined && p.targetRaise !== "") fields["targetRaiseCents"] = cents(p.targetRaise);
     if (p.minInvestment !== undefined && p.minInvestment !== "") fields["minInvestmentCents"] = cents(p.minInvestment) ?? 0;
     await canon.saveFundSetupFields(userId, { offeringId: s.offering_id, fields });

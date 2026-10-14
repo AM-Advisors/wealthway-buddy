@@ -1,4 +1,4 @@
-import { FundSetupGuided } from "@/components/fund-setup-guided";
+import { FundSetupForm } from "@/components/fund-setup-form";
 import { FundSignoffQueue } from "@/components/signoff-board";
 import { Link } from "@tanstack/react-router";
 import { OpsRecordPage } from "@/components/ops-record";
@@ -12,7 +12,6 @@ import { OperationsSs4, OperationsTaxDocuments } from "@/components/operations-b
 import { FundSetupChecklist, SetupRequirementsProvider } from "@/components/fund-setup-checklist";
 import { fundSetupSummary } from "@/lib/fund-launch-summary";
 
-const JUMP: Record<string, string> = { fund_details: "setup-details", team: "fs-team", fees_team: "setup-economics", bank: "fs-banking", document: "setup-documents", launch: "fs-launch" };
 
 /** The single Operations fund page: Setup (incl. launch readiness), Investors and every client tab. */
 export function OpsFundPage({ fundId, tab = "setup", onTab }: { fundId: string; tab?: string; onTab: (v: string) => void }) {
@@ -69,6 +68,6 @@ export function OpsFundPage({ fundId, tab = "setup", onTab }: { fundId: string; 
       headerExtra={<>
         <Button size="sm" variant="outline" asChild><Link to="/admin/fund-payments/$fundId" params={{ fundId }}>Payments</Link></Button>
       </>}
-      extraTabs={[{ value: "setup", label: "Setup", content: <div className="space-y-6"><FundSetupGuided offeringId={fundId} onJump={(st) => { const id = JUMP[st]; if (id) document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" }); }} />{setupBody}</div> }, { value: "record", label: "Activity & record", content: <OpsRecordPage type="fund" id={fundId} /> }]} />}
+      extraTabs={[{ value: "setup", label: "Setup", content: <FundSetupForm offeringId={fundId} mode="staff" staffExtras={setupBody} /> }, { value: "record", label: "Activity & record", content: <OpsRecordPage type="fund" id={fundId} /> }]} />}
   </main>;
 }
