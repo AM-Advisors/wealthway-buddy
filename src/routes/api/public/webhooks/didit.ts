@@ -178,6 +178,13 @@ export const Route = createFileRoute("/api/public/webhooks/didit")({
         }
 
         try {
+          const { autoApplyDiditSession } = await import("@/lib/didit-auto-apply.server");
+          await autoApplyDiditSession(sessionId);
+        } catch (e) {
+          console.error("[didit] auto-apply failed", e);
+        }
+
+        try {
           const { drainManagerAlerts } = await import("@/lib/manager-alerts.server");
           await drainManagerAlerts();
         } catch (e) {
