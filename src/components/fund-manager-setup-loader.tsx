@@ -13,7 +13,7 @@ import { Check, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { listFundSubmissionsFn, submitFundInfoFn, submissionFileFn, reviewFundSubmissionFn } from "@/lib/fund-manager-submissions.functions";
 
-type Section = "fund_details" | "fees_team" | "bank" | "document";
+export type Section = "fund_details" | "fees_team" | "bank" | "document";
 const DOC_KINDS = [
   ["ein_letter", "IRS EIN letter"],
   ["signed_w9", "Signed W-9 (no EIN letter)"],
@@ -33,7 +33,7 @@ function toBase64(file: File): Promise<string> {
   });
 }
 
-const FIELDS: Record<Exclude<Section, "document">, [string, string, string?][]> = {
+export const FIELDS: Record<Exclude<Section, "document">, [string, string, string?][]> = {
   fund_details: [["legalName", "Legal fund name"], ["displayName", "Display name"], ["entityType", "Entity type (e.g. LLC, LP)"], ["jurisdiction", "Formation state"], ["formationDate", "Formation date", "date"], ["principalAddress", "Principal address"], ["targetRaise", "Target raise ($)", "number"], ["minInvestment", "Minimum investment ($)", "number"]],
   fees_team: [["managementFeePercent", "Management fee (% per year)", "number"], ["carryPercent", "Carried interest (%)", "number"], ["preferredReturnPercent", "Preferred return (%)", "number"], ["gpName", "General partner / manager entity"], ["signers", "Signers & team (name, title, email — one per line)", "textarea"]],
   bank: [["bankName", "Bank name"], ["accountLast4", "Account number — last 4 only"], ["notes", "Notes"]],
@@ -120,7 +120,7 @@ export function FundManagerSetupLoader({ offeringId, compact = false }: { offeri
   );
 }
 
-function OnFile({ section, values, docs }: { section: Section; values: Record<string, string>; docs: string[] }) {
+export function OnFile({ section, values, docs }: { section: Section; values: Record<string, string>; docs: string[] }) {
   if (section === "document") return docs.length ? <div className="text-sm"><p className="text-xs font-medium text-muted-foreground">On file</p><ul className="mt-1 list-disc pl-5">{docs.map((d, i) => <li key={i}>{d}</li>)}</ul></div> : null;
   if (section === "bank") return <p className="text-xs text-muted-foreground">Upload your bank's wire instructions letter. Harmonious enters and verifies the full details.</p>;
   const rows = FIELDS[section].filter(([k]) => values[k]?.trim());
@@ -139,7 +139,7 @@ function StatusBadge({ status }: { status: string }) {
   return <Badge variant={v}>{t}</Badge>;
 }
 
-function SubmitForm({ offeringId, section, prior, onDone }: { offeringId: string; section: Section; prior?: Record<string, any>; onDone: () => void }) {
+export function SubmitForm({ offeringId, section, prior, onDone }: { offeringId: string; section: Section; prior?: Record<string, any>; onDone: () => void }) {
   const submit = useServerFn(submitFundInfoFn);
   const [vals, setVals] = useState<Record<string, string>>(() => Object.fromEntries(Object.entries(prior ?? {}).map(([k, v]) => [k, v == null ? "" : String(v)])));
   const [docKind, setDocKind] = useState<string>("operating_agreement");
@@ -195,7 +195,7 @@ function SubmitForm({ offeringId, section, prior, onDone }: { offeringId: string
   );
 }
 
-function History({ items, isStaff, onChange }: { items: any[]; isStaff: boolean; onChange: () => void }) {
+export function History({ items, isStaff, onChange }: { items: any[]; isStaff: boolean; onChange: () => void }) {
   const fileLink = useServerFn(submissionFileFn);
   const review = useServerFn(reviewFundSubmissionFn);
   const [notes, setNotes] = useState<Record<string, string>>({});
