@@ -423,8 +423,7 @@ export async function investorRecordDetail(userId: string, onboardingId: string)
     },
     readiness,
     questionnaire: await (async () => {
-      const { data: qs } = await db().from("offering_questionnaires").select("version, questions").eq("offering_id", row.offering_id).eq("status", "published").order("version", { ascending: false }).limit(1);
-      const q = ((qs ?? []) as any[])[0];
+      const q = await (await import("@/lib/investor-onboarding.server")).publishedQuestionnaire(row.offering_id);
       const answers = (row.questionnaire_responses ?? {}) as Record<string, unknown>;
       return {
         items: ((q?.questions ?? []) as any[]).map((x) => ({ key: x.key as string, label: x.label as string, answer: answers[x.key] == null ? null : String(answers[x.key]) })),
