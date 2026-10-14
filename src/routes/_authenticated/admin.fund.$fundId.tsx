@@ -14,6 +14,7 @@ import { SignedDocumentsCard } from "@/components/signed-documents-card";
 import { PacketEmailCard } from "@/components/packet-email-card";
 import { FundEntityCard } from "@/components/fund-entity-card";
 import { FundSetupCanonical } from "@/components/fund-setup-canonical";
+import { FundSetupForm } from "@/components/fund-setup-form";
 import { BankFeedPanel } from "@/components/bank-feed-panel";
 import { CommitmentBalancePanel } from "@/components/commitment-balance-panel";
 import { PublicPageSettings } from "@/components/public-page-settings";
@@ -260,7 +261,7 @@ function FundPage() {
         </TabsContent>
 
         <TabsContent value="setup" className="mt-6">
-          <FundSetupCanonical offeringId={fundId} />
+          <FundSetupForm offeringId={fundId} mode="staff" staffExtras={<FundSetupCanonical offeringId={fundId} />} />
         </TabsContent>
 
         <TabsContent value="documents" className="mt-6 space-y-6">
