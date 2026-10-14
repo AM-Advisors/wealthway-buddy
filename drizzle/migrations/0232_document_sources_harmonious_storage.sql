@@ -1,0 +1,2 @@
+ALTER TABLE public.document_sources DROP CONSTRAINT document_sources_provider_check;
+ALTER TABLE public.document_sources ADD CONSTRAINT document_sources_provider_check CHECK (provider = ANY (ARRAY['box'::text, 'google_drive'::text, 'harmonious_storage'::text]));
