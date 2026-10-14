@@ -35,6 +35,7 @@ export const OPS_STAFF_ROLES = [
   "admin",
   "super_admin",
   "operations",
+  "account_manager",
   "legal",
   "compliance",
   "fund_administration",
@@ -53,6 +54,8 @@ const SEE_ONLY = ["see"] as const;
 const THROUGH_APPROVE = ["see", "prepare", "review", "approve"] as const;
 const THROUGH_REVIEW = ["see", "prepare", "review"] as const;
 const SEE_PREPARE = ["see", "prepare"] as const;
+/** Internal (non-money, non-filing, non-admin) areas open to peer approval. */
+const INTERNAL_APPROVAL_AREAS: OpsArea[] = ["clients", "funds", "companies", "investors", "onboarding", "accounting", "reports", "documents", "tasks", "regulatory"];
 
 /**
  * Role to capability. Deliberately narrow: money is executed by finance,
@@ -62,12 +65,15 @@ const SEE_PREPARE = ["see", "prepare"] as const;
 const ROLE_GRANTS: Record<string, OpsCapability[]> = {
   super_admin: caps(ALL_AREAS, OPS_ACTIONS),
   admin: [...caps(ALL_AREAS, THROUGH_APPROVE), "administration:execute"],
+  // Operations and Account Managers may review and approve someone else's internal work
+  // (never their own - see canApprove). Money, tax filings and administration keep their own approvers.
   operations: [
-    ...caps(
-      ["clients", "funds", "companies", "investors", "capital", "documents", "tasks", "reports"],
-      SEE_PREPARE,
-    ),
-    ...caps(["onboarding"], THROUGH_REVIEW),
+    ...caps(INTERNAL_APPROVAL_AREAS, THROUGH_APPROVE),
+    ...caps(["capital"], SEE_PREPARE),
+  ],
+  account_manager: [
+    ...caps(INTERNAL_APPROVAL_AREAS, THROUGH_APPROVE),
+    ...caps(["capital"], SEE_ONLY),
   ],
   fund_administration: caps(
     ["funds", "investors", "capital", "accounting", "reports"],
