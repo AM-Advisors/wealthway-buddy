@@ -86,9 +86,11 @@ const CLOSE_STATUS: Record<string, string> = {
 /** Primary tabs, each owning a group of the original tab values (old addresses keep working). */
 const PRIMARY: { value: string; label: string; group: string[] }[] = [
   { value: "overview", label: "Overview", group: ["overview"] },
-  { value: "setup", label: "Setup", group: ["setup", "details", "team", "banking"] },
+  { value: "setup", label: "Fund Details", group: ["setup", "details", "team"] },
   { value: "investors", label: "Investors", group: ["investors"] },
-  { value: "accounting", label: "Accounting", group: ["accounting", "assets", "closes", "distributions"] },
+  { value: "assets", label: "Asset Details", group: ["assets"] },
+  { value: "banking", label: "Banking", group: ["banking"] },
+  { value: "accounting", label: "Accounting", group: ["accounting", "closes", "distributions"] },
   { value: "documents", label: "Documents", group: ["documents"] },
 ];
 const SUB_LABEL: Record<string, string> = { setup: "Checklist", details: "Fund details", team: "Team", banking: "Banking", accounting: "Accounting", assets: "Assets", closes: "Closes", distributions: "Distributions" };
@@ -101,15 +103,18 @@ const MORE: { value: string; label: string }[] = [
 
 function FundTabBar({ tab, onTab, extraTabs, todoCount }: { tab: string; onTab: (t: string) => void; extraTabs: ExtraTab[]; todoCount: number }) {
   const hasSetup = extraTabs.some((x) => x.value === "setup");
-  const primary = PRIMARY.map((p) => (p.value === "setup" && !hasSetup ? { ...p, value: "details", group: p.group.filter((g) => g !== "setup") } : p));
+  const primary = PRIMARY
+    .map((p) => (p.value === "setup" && !hasSetup ? { ...p, value: "details", group: p.group.filter((g) => g !== "setup") } : p))
+    .map((p) => (p.value === "setup" && hasSetup ? { ...p, group: [...p.group, "banking"] } : p))
+    .filter((p) => !(p.value === "banking" && hasSetup));
   const active = primary.find((p) => p.group.includes(tab));
   const more = [...MORE, ...extraTabs.filter((x) => x.value !== "setup").map((x) => ({ value: x.value, label: x.label }))];
   const moreActive = !active ? more.find((m) => m.value === tab) : undefined;
   const label = (m: { value: string; label: string }) => (m.value === "todos" && todoCount ? `${m.label} (${todoCount})` : m.label);
-  const pill = (on: boolean) => cn("shrink-0 rounded-md px-3 py-1.5 text-sm font-medium transition-colors", on ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground");
+  const pill = (on: boolean) => cn("shrink-0 rounded-md border px-3.5 py-1.5 text-sm font-medium transition-colors", on ? "border-border bg-muted text-foreground" : "border-transparent text-muted-foreground hover:text-foreground");
   return (
     <div className="space-y-2">
-      <div role="tablist" className="flex items-center gap-1 overflow-x-auto rounded-lg bg-muted p-1">
+      <div role="tablist" className="flex items-center gap-1 overflow-x-auto border-b pb-2">
         {primary.map((p) => (
           <button key={p.label} type="button" role="tab" aria-selected={active?.label === p.label} className={pill(active?.label === p.label)} onClick={() => onTab(p.value)}>{p.label}</button>
         ))}
