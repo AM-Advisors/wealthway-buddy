@@ -30,20 +30,30 @@ export async function opsFundsDashboard(userId: string, supabase: any) {
   const setup = new Map(((setups ?? []) as any[]).map((s) => [s.offering_id, s]));
   const activeLink = new Set(((links ?? []) as any[]).map((l) => l.offering_id));
 
+  // Readiness per onboarding runs in parallel batches (was one-at-a-time, the main slowdown).
+  const onbRows = (onbs ?? []) as any[];
   const facts: FundOnboardingFact[] = [];
-  for (const row of (onbs ?? []) as any[]) {
-    const { result } = await computeReadinessFor(row);
-    facts.push({
-      offeringId: row.offering_id, stage: row.stage, closeReady: result.closeReady, terminal: result.terminal,
-      blocked: result.items.some((i) => i.status === "blocked"), nextOwner: result.nextAction?.owner ?? null, fundingStatus: row.funding_status ?? null,
-    });
-  }
+  const factsDone = (async () => {
+    for (let i = 0; i < onbRows.length; i += 20) {
+      const chunk = await Promise.all(onbRows.slice(i, i + 20).map(async (row) => {
+        const { result } = await computeReadinessFor(row);
+        return {
+          offeringId: row.offering_id, stage: row.stage, closeReady: result.closeReady, terminal: result.terminal,
+          blocked: result.items.some((i) => i.status === "blocked"), nextOwner: result.nextAction?.owner ?? null, fundingStatus: row.funding_status ?? null,
+        } as FundOnboardingFact;
+      }));
+      facts.push(...chunk);
+    }
+  })();
   const openTasks = ((tasks ?? []) as any[]).map((t) => ({ offeringId: t.offering_id, owner: t.owner }));
   const { agreementStatusForClients } = await import("@/lib/commercial-agreements.server");
-  const agreements = await agreementStatusForClients(clientIds as string[]).catch(() => new Map());
   // Same setup % as Fund Setup and Readiness (blocking tasks + required launch conditions).
   const { fundLaunchPercents } = await import("@/lib/fund-launch-percent.server");
-  const completion = await fundLaunchPercents(offerings.map((o) => o.id as string));
+  const [agreements, completion] = await Promise.all([
+    agreementStatusForClients(clientIds as string[]).catch(() => new Map()),
+    fundLaunchPercents(offerings.map((o) => o.id as string)),
+    factsDone,
+  ]);
   void supabase;
   const rows = offerings.map((o) => {
     const mgrs = ((managers ?? []) as any[]).filter((m) => m.offering_id === o.id).map((m) => ({ id: m.user_id as string, name: (name.get(m.user_id) ?? "Unnamed") as string }));
