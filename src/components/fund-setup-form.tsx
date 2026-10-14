@@ -45,19 +45,24 @@ export function FundSetupForm({ offeringId, mode, staffExtras }: { offeringId: s
   const dirty = Object.keys(changes).length > 0;
   const refresh = () => { qc.invalidateQueries({ queryKey: ["fund-setup-form", offeringId] }); qc.invalidateQueries({ queryKey: ["staff-fund-setup", offeringId] }); };
 
-  const save = async () => {
-    if (!dirty) { toast.message("Nothing changed"); return; }
+  // Saves all changes, or only one form section's fields when `keys` is given.
+  const save = async (keys?: string[], label?: string) => {
+    const picked = keys ? Object.fromEntries(Object.entries(vals).filter(([k]) => keys.includes(k))) : vals;
+    const todo = changedBySection(picked, prior);
+    if (!Object.keys(todo).length) { toast.message("Nothing changed"); return; }
     setBusy(true);
-    try {
-      for (const [section, payload] of Object.entries(changes)) {
+    const failed: string[] = [];
+    for (const [section, payload] of Object.entries(todo)) {
+      try {
         if (isStaff) await staffSave({ data: { offeringId, section: section as any, payload } });
         else await submit({ data: { offeringId, section: section as any, payload } });
-      }
-      toast.success(isStaff ? "Saved to the fund record" : "Sent to Harmonious for review");
-      setVals({});
-      refresh();
-    } catch (e: any) { toast.error(e?.message ?? "Could not save"); }
-    finally { setBusy(false); }
+      } catch (e: any) { failed.push(e?.message ?? "Could not save"); }
+    }
+    if (failed.length) toast.error(failed[0]!);
+    else toast.success(`${label ? `${label}: ` : ""}${isStaff ? "Saved to the fund record" : "Sent to Harmonious for review"}`);
+    if (!failed.length) setVals((cur) => keys ? Object.fromEntries(Object.entries(cur).filter(([k]) => !keys.includes(k))) : {});
+    refresh();
+    setBusy(false);
   };
 
   const statusFor = (fields: FieldDef[], section?: string) => {
@@ -90,6 +95,16 @@ export function FundSetupForm({ offeringId, mode, staffExtras }: { offeringId: s
         {id === "basic" && ret && <p className="rounded-lg bg-muted p-3 text-sm">Harmonious returned this: {ret.review_note ?? "please review and resubmit."}</p>}
         {id === "details" && <div className="rounded-xl border bg-background px-4 py-3 text-sm"><EinField fundId={offeringId} /></div>}
         <div className="space-y-3">{s.fields.map((f) => <div key={f.key}>{renderField(f)}</div>)}</div>
+        {(() => {
+          const keys = s.fields.map((f) => f.key);
+          const changed = keys.some((k) => k in vals && (vals[k] ?? "") !== (prior[k] ?? ""));
+          return (
+            <div className="flex justify-end gap-2 pt-1">
+              {changed && <Button size="sm" variant="ghost" disabled={busy} onClick={() => setVals((cur) => Object.fromEntries(Object.entries(cur).filter(([k]) => !keys.includes(k))))}>Undo</Button>}
+              <Button size="sm" variant="outline" disabled={!changed || busy} onClick={() => save(keys, s.title)}>{isStaff ? `Save ${s.title}` : `Submit ${s.title}`}</Button>
+            </div>
+          );
+        })()}
       </SetupSection>
     );
   };
@@ -103,7 +118,7 @@ export function FundSetupForm({ offeringId, mode, staffExtras }: { offeringId: s
           <p className="text-xs text-muted-foreground">Launch readiness {d.launchPercent}% · {isStaff ? "Saves go straight to the fund record" : "Changes are reviewed by Harmonious"}</p>
         </div>
         <Button variant="outline" disabled={!dirty || busy} onClick={() => setVals({})}>Cancel</Button>
-        <Button className="bg-accent text-accent-foreground hover:bg-accent/90" disabled={busy} onClick={save}>{busy ? "Saving…" : isStaff ? "Save" : "Submit"}</Button>
+        <Button className="bg-accent text-accent-foreground hover:bg-accent/90" disabled={busy} onClick={() => save()}>{busy ? "Saving…" : isStaff ? "Save" : "Submit"}</Button>
       </div>
 
       {fieldSection("basic")}
