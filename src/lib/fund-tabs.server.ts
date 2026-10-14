@@ -166,7 +166,7 @@ export async function decideFees(uid: string, feeId: string, approve: boolean) {
 
 /* ---------------- Documents ---------------- */
 
-const BUCKET = "manager-uploads";
+export const BUCKET = "manager-uploads";
 
 export async function listFiles(fundId: string) {
   const d = await db();
