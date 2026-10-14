@@ -93,6 +93,18 @@ export const listClientPeople = createServerFn({ method: "GET" })
       ? await db.from("fund_managers").select("user_id, offering_id").in("offering_id", fundIds)
       : { data: [] };
     const relationships = await clientRelationshipPeople(db, data.clientId, (funds ?? []) as any[], (fm ?? []) as any[]);
+    // KYC/AML status from the person's verification record (persons table),
+    // matched by login account first, then email. Read-only display.
+    const contactRows = (people ?? []) as any[];
+    const userIds = [...new Set(contactRows.map((p) => p.user_id).filter(Boolean))];
+    const emails = [...new Set(contactRows.map((p) => String(p.email ?? "").toLowerCase()).filter(Boolean))];
+    const [{ data: byUser }, { data: byEmail }] = await Promise.all([
+      userIds.length ? db.from("persons").select("user_id, email, kyc_status, aml_status").in("user_id", userIds) : { data: [] },
+      emails.length ? db.from("persons").select("user_id, email, kyc_status, aml_status").in("email", emails) : { data: [] },
+    ]);
+    const personByUser = new Map(((byUser ?? []) as any[]).map((r) => [r.user_id, r]));
+    const personByEmail = new Map(((byEmail ?? []) as any[]).map((r) => [String(r.email ?? "").toLowerCase(), r]));
+    const verificationFor = (p: any) => (p.user_id ? personByUser.get(p.user_id) : null) ?? personByEmail.get(String(p.email ?? "").toLowerCase()) ?? null;
     return {
       caps,
       relationships,
