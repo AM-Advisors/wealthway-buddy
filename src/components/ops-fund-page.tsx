@@ -1,3 +1,5 @@
+import { DemoFundToggle } from "@/components/demo-fund-toggle";
+import { OperationsFund } from "@/components/operations-board";
 import { FundSetupForm } from "@/components/fund-setup-form";
 import { FundSignoffQueue } from "@/components/signoff-board";
 import { Link } from "@tanstack/react-router";
@@ -66,8 +68,9 @@ export function OpsFundPage({ fundId, tab = "setup", onTab }: { fundId: string; 
     {(d.retired || !d.canSeeOperations) && <header><h1 className="font-heading text-2xl font-semibold">{d.name}</h1><p className="text-muted-foreground">{d.clientName ?? "Client not assigned"} · {d.fundType ?? "Fund"}</p><p className="text-xs text-muted-foreground">Fund ID: {fundId}</p></header>}
     {d.retired || !d.canSeeOperations ? setupBody : <FundWorkspace fundId={fundId} mode="harmonious" tab={tab} onTab={(v) => onTab(v)}
       headerExtra={<>
+        <DemoFundToggle fundId={fundId} />
         <Button size="sm" variant="outline" asChild><Link to="/admin/fund-payments/$fundId" params={{ fundId }}>Payments</Link></Button>
       </>}
-      extraTabs={[{ value: "setup", label: "Setup", content: <FundSetupForm offeringId={fundId} mode="staff" staffExtras={setupBody} /> }, { value: "record", label: "Activity & record", content: <OpsRecordPage type="fund" id={fundId} /> }]} />}
+      extraTabs={[{ value: "setup", label: "Setup", content: <FundSetupForm offeringId={fundId} mode="staff" staffExtras={setupBody} /> }, { value: "record", label: "Activity & record", content: <OpsRecordPage type="fund" id={fundId} /> }, { value: "formation", label: "Formation & EIN", content: <OperationsFund fundId={fundId} /> }]} />}
   </main>;
 }

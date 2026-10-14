@@ -222,3 +222,13 @@ export const setFundDemoFn = createServerFn({ method: "POST" })
     });
     return { ok: true };
   });
+
+export const getFundDemoFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ fundId: z.string().uuid() }).parse)
+  .handler(async ({ context, data }) => {
+    await staff(context);
+    const db = (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
+    const { data: off } = await db.from("offerings").select("is_demo").eq("id", data.fundId).maybeSingle();
+    return { isDemo: !!off?.is_demo };
+  });
