@@ -189,6 +189,7 @@ export async function fundTemplateValues(offeringId: string): Promise<Record<str
     o.fund_signatory_person_id ? db().from("persons").select("legal_first_name, legal_middle_name, legal_last_name, email").eq("id", o.fund_signatory_person_id).maybeSingle() : Promise.resolve({ data: null }),
   ]);
   const legal = o.legal_entity_name || o.name;
+  const ap = (await import("@/lib/address")).parseAddressParts(o.principal_address);
   const manager = o.gp_entity_name || o.signatory_entity_name || c?.legal_name || c?.name || null;
   const signer = fullName(sig);
   const email = sig?.email || c?.primary_contact_email || null;
