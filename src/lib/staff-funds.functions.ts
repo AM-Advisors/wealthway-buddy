@@ -58,7 +58,7 @@ export const listStaffClients = createServerFn({ method: "GET" })
     return data ?? [];
   });
 
-const newFund = z.object({ name: z.string().trim().min(2).max(160), clientId: z.string().uuid(), fundType: z.enum(["SPV", "Venture Capital", "Private Equity"]), regType: z.enum(["506b", "506c", "regcf", "rega", "regaplus"]) });
+const newFund = z.object({ name: z.string().trim().min(2).max(160), clientId: z.string().uuid(), fundType: z.enum(["SPV", "Venture Capital", "Private Equity", "Hedge Fund"]), regType: z.enum(["506b", "506c", "regcf", "rega", "regaplus"]) });
 export const createStaffFund = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(newFund.parse)
