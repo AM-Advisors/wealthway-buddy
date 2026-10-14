@@ -9,7 +9,8 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { setupActor, forbid } from "@/lib/fund-setup.server";
 import { DOCUMENT_CATEGORY_LABELS, type DocumentCategory } from "@/lib/offering-document-model";
-import { createSetupDocument, uploadDocumentVersion } from "@/lib/offering-document-setup.server";
+import { createSetupDocument, saveSigningConfig, setDocumentUsage, uploadDocumentVersion } from "@/lib/offering-document-setup.server";
+import type { SigningConfig } from "@/lib/offering-document-model";
 
 const db = () => supabaseAdmin as any;
 const BUCKET = "offering-files";
@@ -143,7 +144,36 @@ export async function useTemplateInFund(userId: string, input: { templateId: str
   }
   const { version: fundVersion } = await uploadDocumentVersion(userId, { documentId, filePath: dest, fileName: v.file_name, fileSizeBytes: size });
   await db().from("document_template_uses").insert({ template_id: t.id, template_version: v.version, offering_id: input.offeringId, offering_document_id: documentId, fund_version: fundVersion, used_by: userId });
-  return { documentId, fundVersion, autofill };
+  const signing = await autoSigningSetup(userId, { documentId, version: fundVersion, category, title: String(t.title ?? ""), offeringId: input.offeringId });
+  return { documentId, fundVersion, autofill, signing };
+}
+
+/**
+ * Harmonious templates get their signature block set up automatically:
+ * LLOA -> fund signatory only; Subscription Agreement -> investor first, then
+ * fund signatory countersigns. Saved as "needs review" so staff confirm it.
+ */
+export function templateSigningConfig(category: string, title: string): SigningConfig | null {
+  const block = ["signature", "printed_name", "title", "date_signed"] as const;
+  if (/\blloa\b|letter of authori[sz]ation/i.test(title)) return { signers: [{ role: "fund_signatory", fields: [...block], order: 1 }] };
+  if (category === "subscription_agreement" || /subscription agreement/i.test(title)) {
+    return { signers: [{ role: "investor", fields: ["signature", "printed_name", "entity_name", "title", "date_signed"], order: 1 }, { role: "fund_signatory", fields: [...block], order: 2 }] };
+  }
+  return null;
+}
+
+async function autoSigningSetup(userId: string, input: { documentId: string; version: number; category: string; title: string; offeringId: string }): Promise<{ configured: boolean; roles: string[]; message: string | null }> {
+  const config = templateSigningConfig(input.category, input.title);
+  if (!config) return { configured: false, roles: [], message: null };
+  const roles = config.signers.map((x) => x.role);
+  try {
+    const { data: d } = await db().from("offering_documents").select("usage, applicability").eq("id", input.documentId).maybeSingle();
+    if (d?.usage !== "signature") await setDocumentUsage(userId, { documentId: input.documentId, usage: "signature", applicability: (d?.applicability ?? {}) as any });
+    await saveSigningConfig(userId, { documentId: input.documentId, version: input.version, config, confirm: false });
+    return { configured: true, roles, message: null };
+  } catch (e) {
+    return { configured: false, roles, message: (e as Error).message };
+  }
 }
 
 const pct = (n: unknown) => (n == null || n === "" ? null : `${Number(n)}%`);
