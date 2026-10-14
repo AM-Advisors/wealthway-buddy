@@ -44,7 +44,7 @@ export async function workQueue(): Promise<{ items: QueueItem[]; staff: { id: st
 
   for (const t of (tasks.data ?? []) as any[]) {
     const s = t.fund_setups ?? {};
-    items.push({ id: `task:${t.id}`, type: "task_review", title: `Review answer: ${t.label}`, detail: s.display_name || s.legal_fund_name || fname(s.offering_id), clientId: cid(s.offering_id, s.client_id), clientName: null, createdAt: t.updated_at, href: s.offering_id ? `/ops/fund-setup/${s.offering_id}` : "/ops/fund-setup", assignees: [] });
+    items.push({ id: `task:${t.id}`, type: "task_review", title: `Review answer: ${t.label}`, detail: s.display_name || s.legal_fund_name || fname(s.offering_id), clientId: cid(s.offering_id, s.client_id), clientName: null, createdAt: t.updated_at, href: s.offering_id ? `/ops/fund-setup/${s.offering_id}` : "/ops/funds", assignees: [] });
   }
   for (const c of (closes.data ?? []) as any[]) items.push({ id: `close:${c.id}`, type: "close_request", title: "Close request awaiting approval", detail: fname(c.offering_id), clientId: cid(c.offering_id, c.client_id), clientName: null, createdAt: c.created_at, href: "/ops/close-requests", assignees: [] });
   for (const p of (pays.data ?? []) as any[]) items.push({ id: `pay:${p.id}`, type: "payment", title: `Confirm ${String(p.payment_method).toUpperCase()} receipt`, detail: `$${((p.total_cents ?? 0) / 100).toLocaleString()} · HP-${String(p.id).replace(/-/g, "").slice(0, 8).toUpperCase()}`, clientId: p.client_id, clientName: null, createdAt: p.created_at, href: "/admin/services", assignees: [] });
@@ -69,7 +69,7 @@ export async function workQueue(): Promise<{ items: QueueItem[]; staff: { id: st
   for (const s of (setups.data ?? []) as any[]) {
     const n = s.offering_id ? nextDeadline(feesBy.get(s.offering_id) ?? []) : null;
     const flags = stuckFlags({ lastActivityAt: s.updated_at, nextDeadlineDate: n?.date ?? null });
-    if (flags.length) items.push({ id: `stuck:${s.id}`, type: "stuck_fund", title: flags.map((f) => f.label).join(" · "), detail: s.display_name || s.legal_fund_name || fname(s.offering_id), clientId: cid(s.offering_id, s.client_id), clientName: null, createdAt: s.updated_at, href: s.offering_id ? `/ops/fund-setup/${s.offering_id}` : "/ops/fund-setup", assignees: [] });
+    if (flags.length) items.push({ id: `stuck:${s.id}`, type: "stuck_fund", title: flags.map((f) => f.label).join(" · "), detail: s.display_name || s.legal_fund_name || fname(s.offering_id), clientId: cid(s.offering_id, s.client_id), clientName: null, createdAt: s.updated_at, href: s.offering_id ? `/ops/fund-setup/${s.offering_id}` : "/ops/funds", assignees: [] });
   }
 
   for (const i of items) if (i.clientId) clientIds.add(i.clientId);

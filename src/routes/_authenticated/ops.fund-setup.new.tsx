@@ -43,7 +43,7 @@ function NewFundSetup() {
   );
   return (
     <main className="mx-auto max-w-5xl bg-background px-4 py-6">
-      <FundRequestEngine key={clientId || "none"} clientId={clientId || null} mode="staff" clientPicker={picker} backTo={{ to: "/ops/fund-setup", label: "Fund Setup" }} />
+      <FundRequestEngine key={clientId || "none"} clientId={clientId || null} mode="staff" clientPicker={picker} backTo={{ to: "/ops/funds", label: "Funds" }} />
     </main>
   );
 }
