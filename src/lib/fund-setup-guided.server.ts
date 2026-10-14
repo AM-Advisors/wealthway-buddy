@@ -10,6 +10,15 @@ import { SETUP_STEPS, STEP_STATUS_LABEL, isSetupFile, redactSensitive, setupDefa
 
 const db = () => supabaseAdmin as any;
 
+/** Fees save as one versioned term set, so a partial change keeps the other current values. */
+async function withCurrentFees(userId: string, offeringId: string, payload: Record<string, string>) {
+  const { onFile } = await (await import("@/lib/fund-manager-submissions.server")).listSubmissions(userId, offeringId);
+  const cur = ((onFile as any)?.fees_team ?? {}) as Record<string, string>;
+  const out: Record<string, string> = {};
+  for (const k of ["managementFeePercent", "carryPercent", "preferredReturnPercent"]) { const v = payload[k] ?? cur[k]; if (v != null && v !== "") out[k] = v; }
+  return out;
+}
+
 async function actor(userId: string, offeringId: string) {
   const a = await setupActor(userId);
   if (!a.isStaff && !a.offeringIds.includes(offeringId)) forbid("you do not manage that fund.");
@@ -117,7 +126,8 @@ export async function staffSave(sb: any, userId: string, input: { offeringId: st
   const a = await actor(userId, input.offeringId);
   if (!a.isStaff) forbid("fund managers submit changes for Harmonious review.");
   const subs = await import("@/lib/fund-manager-submissions.server");
-  await subs.applySection(sb, userId, { offering_id: input.offeringId, section: input.section, payload: input.payload });
+  const payload = input.section === "fees_team" ? await withCurrentFees(userId, input.offeringId, input.payload) : input.payload;
+  await subs.applySection(sb, userId, { offering_id: input.offeringId, section: input.section, payload });
   await (await import("@/lib/fund-setup-extras.server")).autoCompleteAfterSave({ offeringId: input.offeringId }).catch(() => null);
   return { ok: true };
 }
@@ -142,7 +152,7 @@ export async function decideProposals(sb: any, userId: string, input: { offering
     const bySection: Record<string, Record<string, string>> = { fund_details: {}, fees_team: {} };
     for (const p of list) { const sec = FIELD_SECTION[p.field]; if (sec === "fund_details" || sec === "fees_team") bySection[sec]![p.field] = p.value; }
     const subs = await import("@/lib/fund-manager-submissions.server");
-    for (const sec of ["fund_details", "fees_team"] as const) if (Object.keys(bySection[sec]!).length) await subs.applySection(sb, userId, { offering_id: input.offeringId, section: sec, payload: bySection[sec]! });
+    for (const sec of ["fund_details", "fees_team"] as const) if (Object.keys(bySection[sec]!).length) await subs.applySection(sb, userId, { offering_id: input.offeringId, section: sec, payload: sec === "fees_team" ? await withCurrentFees(userId, input.offeringId, bySection[sec]!) : bySection[sec]! });
     await (await import("@/lib/fund-setup-extras.server")).autoCompleteAfterSave({ offeringId: input.offeringId }).catch(() => null);
   }
   if (list.length) await db().from("fund_setup_proposal_decisions").insert(list.map((p) => ({ proposal_id: p.id, decision: input.decision, decided_by: userId }))).then(() => null, () => null);
