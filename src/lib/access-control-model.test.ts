@@ -19,12 +19,13 @@ const has = (f: Facts, area: string, action: string, scopeType?: string, id?: st
   effectivePermissions(f).some((p) => p.area === area && p.action === action && (!scopeType || p.scope.type === scopeType) && (!id || p.scope.id === id));
 
 describe("effective permission resolution examples", () => {
-  it("staff user (operations): prepares globally, never approves or executes money", () => {
+  it("staff user (operations): approves others' internal work, never approves or executes money", () => {
     const f = blank({ roles: ["operations"] });
     expect(has(f, "clients", "prepare", "global")).toBe(true);
     expect(has(f, "onboarding", "review", "global")).toBe(true);
     expect(has(f, "capital", "execute")).toBe(false);
-    expect(has(f, "clients", "approve")).toBe(false);
+    expect(has(f, "clients", "approve")).toBe(true);
+    expect(has(f, "capital", "approve")).toBe(false);
     expect(userTypes(f)).toContain("harmonious");
   });
 
@@ -39,7 +40,8 @@ describe("effective permission resolution examples", () => {
   it("client user: only their own client", () => {
     const f = blank({ clientMemberships: [{ id: "C1", name: "Acme", role: "member", canApprove: false }] });
     expect(has(f, "clients", "view", "client", "C1")).toBe(true);
-    expect(has(f, "clients", "approve")).toBe(false);
+    expect(has(f, "clients", "approve")).toBe(true);
+    expect(has(f, "capital", "approve")).toBe(false);
     expect(effectivePermissions(f).every((p) => p.source === "relationship")).toBe(true);
   });
 
