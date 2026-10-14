@@ -47,31 +47,51 @@ export async function anyInvestorSigned(fundId: string) {
 
 export async function investorGrid(fundId: string) {
   const { data } = await (await db()).from("investor_onboardings")
-    .select("id, stage, funding_status, commitment_amount_cents, accepted_amount_cents, requested_amount_cents, funded_amount_cents, approved_to_fund_at, funding_released_at, executed_snapshot, last_activity_at, updated_at, person_id, application_id, investor_user_id, investment_profiles(legal_name, profile_type)")
+    .select("id, stage, funding_status, commitment_amount_cents, accepted_amount_cents, requested_amount_cents, funded_amount_cents, approved_to_fund_at, funding_released_at, executed_snapshot, last_activity_at, updated_at, person_id, application_id, investor_user_id, offering_class_key, questionnaire_submitted_at, investment_profiles(legal_name, profile_type)")
     .eq("offering_id", fundId).is("removed_at", null).order("created_at");
   // No foreign key from investor_onboardings.person_id, so persons are loaded separately.
   const ids = [...new Set(((data ?? []) as any[]).map((o) => o.person_id).filter(Boolean))];
   const { data: people } = ids.length
-    ? await (await db()).from("persons").select("id, legal_first_name, legal_last_name, preferred_name, email, phone, kyc_status, aml_status").in("id", ids)
+    ? await (await db()).from("persons").select("id, legal_first_name, legal_last_name, preferred_name, email, phone, kyc_status, aml_status, date_of_birth, address_line1, city, postal_code, tax_id_last4").in("id", ids)
     : { data: [] as any[] };
   const byId = new Map(((people ?? []) as any[]).map((p) => [p.id, p]));
+  const human = (s: string | null | undefined) => s ? s.replace(/[_-]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) : null;
   return ((data ?? []) as any[]).map((o) => {
     const p = byId.get(o.person_id) ?? {};
     const entity = !!o.investment_profiles?.profile_type && o.investment_profiles.profile_type !== "individual";
     const kyc = p.kyc_status ?? "not_started";
     const aml = p.aml_status ?? "not_started";
     const funding = canonicalFundingState({ fundingStatus: o.funding_status, approvedToFund: !!o.approved_to_fund_at, instructionsReleased: !!o.funding_released_at });
+    const kycOk = ["verified", "approved", "passed", "clear"].includes(kyc) && ["clear", "passed", "approved", "verified"].includes(aml);
+    const committedCents = o.commitment_amount_cents ?? o.accepted_amount_cents ?? o.requested_amount_cents ?? null;
+    const docs = docStatus(o);
+    // Display-only checklist of what the fund manager still needs to collect.
+    const missing: string[] = [];
+    if (!o.offering_class_key) missing.push("Class");
+    if (!o.investment_profiles?.profile_type) missing.push("Investing as (asset type)");
+    if (!p.email) missing.push("Email");
+    if (!p.phone) missing.push("Phone");
+    if (!p.address_line1 || !p.city || !p.postal_code) missing.push("Address");
+    if (!p.date_of_birth && !entity) missing.push("Date of birth");
+    if (!p.tax_id_last4) missing.push("Tax ID");
+    if (!committedCents) missing.push("Commitment amount");
+    if (!o.questionnaire_submitted_at) missing.push("Questionnaire");
+    if (!kycOk) missing.push(entity ? "KYB/AML check" : "KYC/AML check");
+    if (docs !== "Signed") missing.push("Signed subscription");
     return {
       id: o.id as string,
       name: personName(p),
       profileName: o.investment_profiles?.legal_name ?? null,
       email: p.email ?? null,
       phone: p.phone ?? null,
-      committedCents: o.commitment_amount_cents ?? o.accepted_amount_cents ?? o.requested_amount_cents ?? null,
+      classLabel: human(o.offering_class_key),
+      assetLabel: human(o.investment_profiles?.profile_type),
+      missing,
+      committedCents,
       receivedCents: isReconciledFunding(o.funding_status) ? o.funded_amount_cents ?? null : null,
       kycLabel: `${entity ? "KYB" : "KYC"}/AML: ${String(kyc).replace(/_/g, " ")} / ${String(aml).replace(/_/g, " ")}`,
-      kycOk: ["verified", "approved", "passed", "clear"].includes(kyc) && ["clear", "passed", "approved", "verified"].includes(aml),
-      docs: docStatus(o),
+      kycOk,
+      docs,
       wiring: CANONICAL_FUNDING_LABELS[funding],
       lastActivity: o.last_activity_at ?? o.updated_at ?? null,
       stage: o.stage as string,
