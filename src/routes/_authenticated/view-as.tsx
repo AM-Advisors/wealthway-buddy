@@ -4,6 +4,10 @@ import { InvestmentChecklist, FundReadiness } from "@/components/investment-read
 import { NoActiveViewAs, ViewAsBanner, useActiveViewAs } from "@/components/view-as";
 import { clientNavigation } from "@/lib/client-navigation";
 import { cn } from "@/lib/utils";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { Badge } from "@/components/ui/badge";
+import { viewAsPageFn } from "@/lib/view-as.functions";
 
 export const Route = createFileRoute("/_authenticated/view-as")({
   validateSearch: (s: Record<string, unknown>): { page?: string } => (typeof s["page"] === "string" ? { page: s["page"] } : {}),
@@ -50,15 +54,44 @@ function ViewAsPage() {
               ? <InvestmentChecklist onboardingId={ctx.onboardingId} viewAs />
               : <FundReadiness fundId={ctx.offeringId} viewAs />
           ) : (
-            <div className="rounded-lg border border-dashed p-10 text-center">
-              <p className="font-medium">Nothing here yet</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                This is the {current.title} page {ctx.subjectName} sees. It fills in as items are added for them.
-              </p>
-            </div>
+            <ViewAsPageList page={current.url} title={current.title} subject={ctx.subjectName} />
           )}
         </main>
       </div>
     </div>
+  );
+}
+
+function ViewAsPageList({ page, title, subject }: { page: string; title: string; subject: string }) {
+  const load = useServerFn(viewAsPageFn);
+  const q = useQuery({ queryKey: ["view-as-page", page], queryFn: () => load({ data: { page } }) });
+  if (q.isPending) return <Skeleton className="h-40" />;
+  if (q.error) return <p className="text-sm text-destructive">{(q.error as Error).message}</p>;
+  const items = q.data?.items ?? [];
+  if (!items.length) {
+    return (
+      <div className="rounded-lg border border-dashed p-10 text-center">
+        <p className="font-medium">Nothing here yet</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {q.data ? `${subject} has nothing on their ${title} page yet.` : `This is the ${title} page ${subject} sees. It isn't shown in Client View yet.`}
+        </p>
+      </div>
+    );
+  }
+  return (
+    <ul className="divide-y rounded-lg border">
+      {items.map((it, i) => (
+        <li key={i} className="flex items-start justify-between gap-3 p-3">
+          <div className="min-w-0">
+            <p className="truncate text-sm font-medium">{it.title}</p>
+            {it.subtitle ? <p className="text-xs text-muted-foreground">{it.subtitle}</p> : null}
+          </div>
+          <div className="flex shrink-0 flex-col items-end gap-1">
+            {it.badge ? <Badge variant="secondary">{it.badge}</Badge> : null}
+            {it.date ? <span className="text-xs text-muted-foreground">{new Date(it.date).toLocaleDateString()}</span> : null}
+          </div>
+        </li>
+      ))}
+    </ul>
   );
 }

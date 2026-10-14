@@ -431,6 +431,7 @@ function AddServicesDialog({ clientId, groups, funds, existing, onClose }: { cli
   const [picked, setPicked] = useState<Set<string>>(new Set());
   const [open, setOpen] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState("");
+  const [busy, setBusy] = useState(false);
   const offeringId = scope === "client" ? null : scope;
   const already = new Set(existing.filter((s) => (s.offeringId ?? null) === offeringId).map((s) => s.serviceKey));
   const filtered = useMemo(() => groups.map((g) => ({ ...g, services: g.services.filter((s: any) => !search || s.name.toLowerCase().includes(search.toLowerCase())) })).filter((g) => g.services.length), [groups, search]);
@@ -450,6 +451,11 @@ function AddServicesDialog({ clientId, groups, funds, existing, onClose }: { cli
           </select>
           <Input placeholder="Search services" value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-xs" />
         </div>
+        <StandardPackages groups={groups} already={already} busy={busy} onAdd={(keys, label) => {
+          if (!keys.length) { toast.info(`Everything in ${label} is already on this scope.`); return; }
+          setBusy(true);
+          change({ data: { clientId, offeringId, add: keys, remove: [] } }).then((r) => { toast.success(`${label} added at standard pricing${r.requires === "amendment" ? " - needs an amendment because a signed SOW exists" : ""}.`); onClose(); }, err).finally(() => setBusy(false));
+        }} />
         <div className="space-y-2">
           {filtered.map((g) => {
             const count = g.services.filter((s: any) => picked.has(s.key)).length;
@@ -489,6 +495,37 @@ function AddServicesDialog({ clientId, groups, funds, existing, onClose }: { cli
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+const CAP_TIERS = ["cap_table_free", "cap_table_starter", "cap_table_growth", "cap_table_scale", "cap_table_enterprise"];
+const FUND_LAUNCH_KEYS = ["entity_formation", "registered_agent"];
+
+/** One-click standard packages: adds catalog services at standard price (no overrides). */
+function StandardPackages({ groups, already, busy, onAdd }: { groups: any[]; already: Set<string>; busy: boolean; onAdd: (keys: string[], label: string) => void }) {
+  const all = groups.flatMap((g) => g.services) as { key: string; name: string; entityTypes?: string[] }[];
+  const pkg = (type: string) => [...new Set([...all.filter((s) => s.entityTypes?.includes(type) && !s.key.startsWith("cap_table")).map((s) => s.key), ...FUND_LAUNCH_KEYS.filter((k) => all.some((s) => s.key === k))])];
+  const fresh = (keys: string[]) => keys.filter((k) => !already.has(k));
+  const [tier, setTier] = useState("cap_table_starter");
+  const tiers = CAP_TIERS.filter((k) => all.some((s) => s.key === k));
+  const fund = pkg("fund"), spv = pkg("spv");
+  return (
+    <div className="space-y-2 rounded-lg border p-3">
+      <p className="text-sm font-medium">No changes needed? Add a standard package</p>
+      <p className="text-xs text-muted-foreground">Adds every service in the package at the standard catalog price. You can still remove or re-price any line afterwards.</p>
+      <div className="flex flex-wrap items-center gap-2">
+        <Button size="sm" variant="outline" disabled={busy} onClick={() => onAdd(fresh(fund), "Standard Fund package")}>Fund · {fund.length} services</Button>
+        <Button size="sm" variant="outline" disabled={busy} onClick={() => onAdd(fresh(spv), "Standard SPV package")}>SPV · {spv.length} services</Button>
+        {tiers.length ? (
+          <span className="flex items-center gap-1">
+            <select aria-label="Cap table tier" className="h-9 rounded-md border bg-background px-2 text-sm" value={tier} onChange={(e) => setTier(e.target.value)}>
+              {tiers.map((k) => <option key={k} value={k}>{all.find((s) => s.key === k)?.name.replace("Cap table management — ", "")}</option>)}
+            </select>
+            <Button size="sm" variant="outline" disabled={busy} onClick={() => onAdd(fresh([tier]), "Cap table pricing")}>Add cap table</Button>
+          </span>
+        ) : null}
+      </div>
+    </div>
   );
 }
 

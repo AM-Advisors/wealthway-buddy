@@ -53,3 +53,8 @@ export const exitEditContextFn = createServerFn({ method: "POST" })
 export const returnToClientViewFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => (await va()).returnToClientView(context.userId, sid(context.claims)));
+
+export const viewAsPageFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ page: z.string().max(80) }).parse)
+  .handler(async ({ data, context }) => (await va()).viewAsPage(context.userId, sid(context.claims), data.page));

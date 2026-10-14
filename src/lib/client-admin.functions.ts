@@ -506,7 +506,7 @@ export const getServicesPricing = createServerFn({ method: "GET" })
     return {
       caps,
       funds: funds ?? [],
-      groups: groupServices(catalog, (groups ?? []) as any[]).map((g) => ({ key: g.key, label: g.label, services: g.services.map((s) => ({ key: s.key, name: s.name, description: s.description ?? s.standard_scope ?? null })) })),
+      groups: groupServices(catalog, (groups ?? []) as any[]).map((g) => ({ key: g.key, label: g.label, services: g.services.map((s) => ({ key: s.key, name: s.name, description: s.description ?? s.standard_scope ?? null, entityTypes: ((s as any).applicable_entity_types ?? []) as string[] })) })),
       selections: ((sels ?? []) as any[]).map((s) => {
         const svc = bySvc.get(s.service_key);
         const r = prices[s.id]!;

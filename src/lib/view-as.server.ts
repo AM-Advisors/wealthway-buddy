@@ -214,3 +214,110 @@ export async function returnToClientView(staffUserId: string, authSessionId: str
   await startViewAs(staffUserId, authSessionId, { perspective: ctx!.perspective, subjectUserId, offeringId: ctx!.offeringId, onboardingId: ctx!.onboardingId });
   return { ok: true };
 }
+
+export type ViewAsItem = { title: string; subtitle?: string | null; date?: string | null; badge?: string | null };
+const fmtUsd = (c: number | null | undefined) => (c == null ? null : (c / 100).toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }));
+const human = (s: string | null | undefined) => (s ? s.replace(/_/g, " ").replace(/^./, (m) => m.toUpperCase()) : null);
+
+/**
+ * Read-only page data for Client View, limited to the subject's own records
+ * (investor: their investments/profiles; manager: the viewed fund). Metadata
+ * only - no file links, tax numbers or bank details.
+ */
+export async function viewAsPage(staffUserId: string, authSessionId: string | null, page: string): Promise<{ items: ViewAsItem[] } | null> {
+  const p = await resolvePerspective(staffUserId, authSessionId);
+  if (!p) deny("no active client view.");
+  const d = db();
+  const names = async (ids: string[]) => {
+    if (!ids.length) return new Map<string, string>();
+    const { data } = await d.from("offerings").select("id, name").in("id", [...new Set(ids)]);
+    return new Map(((data ?? []) as any[]).map((o) => [o.id, o.name as string]));
+  };
+
+  if (p!.perspective === "investor") {
+    const uid = p!.subjectUserId;
+    const { data: onbs } = await d.from("investor_onboardings").select("id, offering_id, application_id, investment_profile_id, stage, requested_amount_cents, commitment_amount_cents, funded_amount_cents, created_at").eq("investor_user_id", uid).is("removed_at", null);
+    const rows = (onbs ?? []) as any[];
+    const fund = await names(rows.map((r) => r.offering_id));
+    const { data: profs } = await d.from("investment_profiles").select("id").eq("owner_user_id", uid);
+    const profileIds = [...new Set([...((profs ?? []) as any[]).map((x) => x.id), ...rows.map((r) => r.investment_profile_id).filter(Boolean)])];
+    const catalogDocs = async (k1: boolean) => {
+      if (!profileIds.length) return [] as ViewAsItem[];
+      const { data: ents } = await d.from("document_entitlements").select("document_id").eq("principal_type", "investment_profile").eq("action", "grant").in("principal_id", profileIds);
+      const ids = ((ents ?? []) as any[]).map((e) => e.document_id);
+      if (!ids.length) return [];
+      let q = d.from("document_catalog").select("file_name, document_type, tax_year, offering_id, published_at").in("id", ids).eq("status", "published");
+      q = k1 ? q.eq("document_type", "k1") : q.neq("document_type", "k1");
+      const { data } = await q.order("published_at", { ascending: false });
+      const docs = (data ?? []) as any[];
+      const fn = await names(docs.map((x) => x.offering_id).filter(Boolean));
+      return docs.map((x) => ({ title: x.file_name, subtitle: [fn.get(x.offering_id), x.tax_year ? `Tax year ${x.tax_year}` : null].filter(Boolean).join(" · "), date: x.published_at, badge: x.document_type === "k1" ? "K-1" : human(x.document_type) }));
+    };
+    switch (page) {
+      case "/my-funds":
+        return { items: rows.map((r) => ({ title: fund.get(r.offering_id) ?? "Fund", subtitle: [fmtUsd(r.commitment_amount_cents ?? r.requested_amount_cents) && `Commitment ${fmtUsd(r.commitment_amount_cents ?? r.requested_amount_cents)}`, r.funded_amount_cents ? `Funded ${fmtUsd(r.funded_amount_cents)}` : null].filter(Boolean).join(" · "), date: r.created_at, badge: human(r.stage) })) };
+      case "/activity": {
+        if (!rows.length) return { items: [] };
+        const { data } = await d.from("investor_onboarding_events").select("event, offering_id, to_status, created_at").in("onboarding_id", rows.map((r) => r.id)).order("created_at", { ascending: false }).limit(50);
+        return { items: ((data ?? []) as any[]).map((e) => ({ title: human(e.event) ?? "Update", subtitle: [fund.get(e.offering_id), e.to_status ? `Now ${human(e.to_status)}` : null].filter(Boolean).join(" · "), date: e.created_at })) };
+      }
+      case "/investor-reporting": {
+        const [{ data: st }, { data: fr }] = await Promise.all([
+          d.from("investor_statements").select("offering_id, period_start, period_end, published_at").eq("investor_user_id", uid).not("published_at", "is", null).order("period_end", { ascending: false }),
+          d.from("financial_reports").select("offering_id, report_type, period_end, published_at").eq("subject_user_id", uid).eq("investor_visible", true).not("published_at", "is", null).order("period_end", { ascending: false }),
+        ]);
+        const all = [...((st ?? []) as any[]).map((x) => ({ ...x, kind: "Capital statement" })), ...((fr ?? []) as any[]).map((x) => ({ ...x, kind: human(x.report_type) ?? "Report" }))];
+        const fn = await names(all.map((x) => x.offering_id).filter(Boolean));
+        return { items: all.map((x) => ({ title: x.kind, subtitle: [fn.get(x.offering_id), x.period_end ? `Period ending ${x.period_end}` : null].filter(Boolean).join(" · "), date: x.published_at })) };
+      }
+      case "/documents": {
+        const { data: up } = await d.from("investor_documents").select("file_name, doc_kind, offering_id, uploaded_at, review_status").eq("user_id", uid).order("uploaded_at", { ascending: false });
+        const fn = await names(((up ?? []) as any[]).map((x) => x.offering_id).filter(Boolean));
+        const mine = ((up ?? []) as any[]).map((x) => ({ title: x.file_name, subtitle: [human(x.doc_kind), fn.get(x.offering_id), "Uploaded by them"].filter(Boolean).join(" · "), date: x.uploaded_at, badge: human(x.review_status) }));
+        return { items: [...(await catalogDocs(false)), ...mine] };
+      }
+      case "/tax": {
+        const { data: ft } = await d.from("fund_tax_documents").select("file_name, doc_type, tax_year, offering_id, created_at").eq("investor_user_id", uid).eq("review_status", "approved");
+        const fn = await names(((ft ?? []) as any[]).map((x) => x.offering_id));
+        return { items: [...(await catalogDocs(true)), ...((ft ?? []) as any[]).map((x) => ({ title: x.file_name, subtitle: [fn.get(x.offering_id), x.tax_year ? `Tax year ${x.tax_year}` : null].filter(Boolean).join(" · "), date: x.created_at, badge: human(x.doc_type) }))] };
+      }
+      case "/messages": {
+        const apps = rows.map((r) => r.application_id).filter(Boolean);
+        if (!apps.length) return { items: [] };
+        const { data } = await d.from("portal_messages").select("sender_name, sender_role, body, offering_id, created_at").in("application_id", apps).order("created_at", { ascending: false }).limit(50);
+        return { items: ((data ?? []) as any[]).map((m) => ({ title: m.sender_name ?? human(m.sender_role) ?? "Message", subtitle: String(m.body ?? "").slice(0, 200), date: m.created_at, badge: fund.get(m.offering_id) ?? null })) };
+      }
+    }
+    return null;
+  }
+
+  // Fund manager: only the viewed fund (or the funds they manage for My Funds).
+  const off = p!.offeringId;
+  switch (page) {
+    case "/my-funds": {
+      let ids = [off];
+      if (!p!.preview) {
+        const { data } = await d.from("fund_managers").select("offering_id").eq("user_id", p!.subjectUserId);
+        ids = [...new Set([off, ...((data ?? []) as any[]).map((x) => x.offering_id)])];
+      }
+      const { data } = await d.from("offerings").select("name, status, created_at").in("id", ids);
+      return { items: ((data ?? []) as any[]).map((o) => ({ title: o.name, date: o.created_at, badge: human(o.status) })) };
+    }
+    case "/manager/investors": {
+      const { data } = await d.from("investor_onboardings").select("investor_user_id, stage, commitment_amount_cents, requested_amount_cents, created_at").eq("offering_id", off).is("removed_at", null);
+      const r = (data ?? []) as any[];
+      const { data: pr } = r.length ? await d.from("profiles").select("user_id, legal_name").in("user_id", r.map((x) => x.investor_user_id)) : { data: [] };
+      const nm = new Map(((pr ?? []) as any[]).map((x) => [x.user_id, x.legal_name]));
+      return { items: r.map((x) => ({ title: nm.get(x.investor_user_id) ?? "Investor", subtitle: fmtUsd(x.commitment_amount_cents ?? x.requested_amount_cents), date: x.created_at, badge: human(x.stage) })) };
+    }
+    case "/manager/reporting": {
+      const { data } = await d.from("financial_reports").select("report_type, period_end, published_at").eq("offering_id", off).eq("manager_visible", true).not("published_at", "is", null).order("period_end", { ascending: false });
+      return { items: ((data ?? []) as any[]).map((x) => ({ title: human(x.report_type) ?? "Report", subtitle: x.period_end ? `Period ending ${x.period_end}` : null, date: x.published_at })) };
+    }
+    case "/manager/messages": {
+      const { data } = await d.from("portal_messages").select("sender_name, sender_role, body, created_at").eq("offering_id", off).order("created_at", { ascending: false }).limit(50);
+      return { items: ((data ?? []) as any[]).map((m) => ({ title: m.sender_name ?? human(m.sender_role) ?? "Message", subtitle: String(m.body ?? "").slice(0, 200), date: m.created_at })) };
+    }
+  }
+  return null;
+}
