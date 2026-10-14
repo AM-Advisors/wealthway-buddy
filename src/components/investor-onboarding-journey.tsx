@@ -290,11 +290,58 @@ function Verify({ d, onboardingId }: { d: any; onboardingId: string }) {
   );
 }
 
+function QuestionnaireForm({ d, done, locked, onSave, saving }: { d: any; onboardingId: string; done: boolean; locked: boolean; onSave: (answers: Record<string, string>, submit: boolean) => void; saving: boolean }) {
+  const questions: any[] = d.questionnaire.questions ?? [];
+  const saved = (d.questionnaireResponses ?? {}) as Record<string, unknown>;
+  const [open, setOpen] = useState(!done);
+  const [answers, setAnswers] = useState<Record<string, string>>(() => Object.fromEntries(questions.map((q) => [q.key, saved[q.key] == null ? "" : String(saved[q.key])])));
+  const missing = questions.filter((q) => q.required && !String(answers[q.key] ?? "").trim());
+  const set = (k: string, v: string) => setAnswers((a) => ({ ...a, [k]: v }));
+  return (
+    <div className="space-y-4 rounded-md border p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-sm font-medium">Investor questionnaire</p>
+          <p className="text-xs text-muted-foreground">{done ? "Your answers are saved." : `${questions.length - missing.length} of ${questions.length} answered. Questions marked * are required.`}</p>
+        </div>
+        {done && !locked ? <Button variant="outline" size="sm" onClick={() => setOpen((o) => !o)}>{open ? "Close" : "Review answers"}</Button> : done ? <Badge>Complete</Badge> : null}
+      </div>
+      {open ? (
+        <fieldset disabled={locked} className="space-y-4">
+          {questions.map((q, n) => (
+            <div key={q.key} className="space-y-1.5">
+              <Label htmlFor={q.key} className="leading-snug">{n + 1}. {q.label}{q.required ? " *" : ""}</Label>
+              {q.type === "select" || q.type === "yes_no" ? (
+                <Select value={answers[q.key] ?? ""} onValueChange={(v) => set(q.key, v)}>
+                  <SelectTrigger id={q.key}><SelectValue placeholder="Choose one" /></SelectTrigger>
+                  <SelectContent>{(q.type === "yes_no" ? ["Yes", "No"] : (q.options ?? [])).map((o: string) => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
+                </Select>
+              ) : q.type === "number" || q.type === "currency" ? (
+                <Input id={q.key} inputMode="decimal" value={answers[q.key] ?? ""} onChange={(e) => set(q.key, e.target.value)} />
+              ) : q.type === "date" ? (
+                <Input id={q.key} type="date" value={answers[q.key] ?? ""} onChange={(e) => set(q.key, e.target.value)} />
+              ) : (
+                <Input id={q.key} value={answers[q.key] ?? ""} onChange={(e) => set(q.key, e.target.value)} />
+              )}
+            </div>
+          ))}
+          <p className="text-xs text-muted-foreground">Don't enter your tax ID or bank account numbers here. Harmonious asks for them in separate, protected steps.</p>
+          {!locked ? (
+            <div className="flex flex-wrap gap-2">
+              <Button disabled={saving || missing.length > 0} onClick={() => onSave(answers, true)}>{done ? "Save changes" : "Submit answers"}</Button>
+              <Button variant="outline" disabled={saving} onClick={() => onSave(answers, false)}>Save for later</Button>
+            </div>
+          ) : null}
+        </fieldset>
+      ) : null}
+    </div>
+  );
+}
+
 function Sign({ d, onboardingId, done }: { d: any; onboardingId: string; done: () => void }) {
   const questionnaireFn = useServerFn(saveQuestionnaireFn);
   const prepareFn = useServerFn(prepareSubscriptionDocumentsFn);
   const confirmFn = useServerFn(recordSubscriptionSignatureFn);
-  const [answers, setAnswers] = useState<Record<string, string>>({});
   const [signer, setSigner] = useState("");
   const saveQ = useAction(questionnaireFn, "Answers saved.", done);
   const prepare = useAction(prepareFn, null, done);
@@ -311,24 +358,8 @@ function Sign({ d, onboardingId, done }: { d: any; onboardingId: string; done: (
         <CardDescription>These are the documents required for this investment.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
-        {d.questionnaire && !questionnaireDone ? (
-          <div className="space-y-3 rounded-md border p-4">
-            <p className="text-sm font-medium">Investor questionnaire</p>
-            {(d.questionnaire.questions ?? []).map((q: any) => (
-              <div key={q.key}>
-                <Label htmlFor={q.key}>{q.label}</Label>
-                {(q.type === "select" || q.type === "yes_no") ? (
-                  <Select value={answers[q.key] ?? String(d.questionnaireResponses?.[q.key] ?? "")} onValueChange={(v) => setAnswers({ ...answers, [q.key]: v })}>
-                    <SelectTrigger id={q.key}><SelectValue placeholder="Choose one" /></SelectTrigger>
-                    <SelectContent>{(q.type === "yes_no" ? ["Yes", "No"] : (q.options ?? [])).map((o: string) => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
-                  </Select>
-                ) : (
-                  <Textarea id={q.key} value={answers[q.key] ?? String(d.questionnaireResponses?.[q.key] ?? "")} onChange={(e) => setAnswers({ ...answers, [q.key]: e.target.value })} />
-                )}
-              </div>
-            ))}
-            <Button onClick={() => saveQ.mutate({ data: { onboardingId, answers: { ...(d.questionnaireResponses ?? {}), ...answers }, submit: true } } as any)}>Save answers</Button>
-          </div>
+        {d.questionnaire && (d.questionnaire.questions ?? []).length ? (
+          <QuestionnaireForm d={d} onboardingId={onboardingId} done={questionnaireDone} locked={signed} onSave={(answers, submit) => saveQ.mutate({ data: { onboardingId, answers, submit } } as any)} saving={saveQ.isPending} />
         ) : null}
 
         <FeeAcceptanceCard onboardingId={onboardingId} />
