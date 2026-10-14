@@ -57,8 +57,10 @@ export function eligibleFor(role: TeamRole, roles: readonly string[]): boolean {
 }
 
 /** Who may change each assignment. Super Users manage all three. */
-export function canManageRole(role: TeamRole, actorRoles: readonly string[]): boolean {
+export function canManageRole(role: TeamRole, actorRoles: readonly string[], setupUnderway = false): boolean {
   if (actorRoles.includes("super_admin")) return true;
+  // While fund setup is still underway, anyone on the Harmonious team may assign all three.
+  if (setupUnderway && staffProfile(actorRoles).isHarmoniousStaff) return true;
   const salesMgmt = actorRoles.some((r) => ["sales_management", "cro", "executive"].includes(r));
   const opsLead = actorRoles.some((r) => ["admin", "executive"].includes(r));
   if (role === "sales") return salesMgmt;
@@ -82,3 +84,8 @@ export function clientFacingContacts(team: readonly EffectiveMember[]) {
  * client assignment. Routing only - the readiness condition never changes.
  */
 export const defaultOperationsOwner = (team: readonly EffectiveMember[]) => team.find((m) => m.role === "operations")?.userId ?? null;
+
+/** Harmonious is the fund administrator unless the client is on a SaaS-only contract. */
+export function fundAdministrator(saasOnly: boolean): { name: string; isHarmonious: boolean } {
+  return saasOnly ? { name: "Client (SaaS-only contract)", isHarmonious: false } : { name: "Harmonious", isHarmonious: true };
+}

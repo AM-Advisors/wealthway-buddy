@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/lib/require-auth";
-import { TEAM_ROLES, canManageRole, clientFacingContacts, eligibleFor, teamFollowUp, type TeamRole } from "@/lib/harmonious-team";
+import { TEAM_ROLES, canManageRole, fundAdministrator, clientFacingContacts, eligibleFor, teamFollowUp, type TeamRole } from "@/lib/harmonious-team";
 import { staffProfile } from "@/lib/harmonious-staff";
 
 const uuid = z.string().uuid();
@@ -40,19 +40,46 @@ export const getHarmoniousTeam = createServerFn({ method: "GET" })
       ? (await import("@/lib/harmonious-team")).resolveTeam({ hasClient: true, client: await srv.loadClientTeam(data.clientId) })
       : (await srv.loadFundTeam(data.offeringId!)).team;
     const events = await history(data.clientId ? { client_id: data.clientId } : { offering_id: data.offeringId! });
+    const sc = await setupScope(data.clientId ? { clientId: data.clientId } : { offeringId: data.offeringId! });
     const n = await names([...team.map((m) => m.userId), ...events.flatMap((e) => [e.prior_user_id, e.new_user_id, e.changed_by])]);
     return {
       scope: data.clientId ? "client" : "fund",
       followUp: teamFollowUp(team),
-      members: team.map((m) => ({ ...m, name: m.userId ? n.get(m.userId) ?? "Staff member" : null, canManage: canManageRole(m.role, roles) })),
-      staff: TEAM_ROLES.some((r) => canManageRole(r, roles)) ? await srv.staffDirectory() : [],
+      members: team.map((m) => ({ ...m, name: m.userId ? n.get(m.userId) ?? "Staff member" : null, canManage: canManageRole(m.role, roles, sc.underway) })),
+      setupUnderway: sc.underway,
+      administrator: fundAdministrator(sc.saasOnly),
+      staff: TEAM_ROLES.some((r) => canManageRole(r, roles, sc.underway)) ? await srv.staffDirectory() : [],
       history: events.map((e) => ({ id: e.id, at: e.created_at, role: e.team_role, scope: e.scope, prior: e.prior_user_id ? n.get(e.prior_user_id) ?? "Staff member" : null, next: e.new_user_id ? n.get(e.new_user_id) ?? "Staff member" : null, priorSource: e.prior_source, newSource: e.new_source, by: e.changed_by ? n.get(e.changed_by) ?? "Staff member" : null })),
     };
   });
 
-async function assertAssignable(context: any, r: TeamRole, userId: string | null) {
+/** Setup is underway when any fund in scope is below 100% setup (or the client has no funds yet). */
+async function setupScope(scope: { clientId?: string; offeringId?: string }) {
+  const db = await admin();
+  let clientId = scope.clientId ?? null;
+  let ids: string[] = [];
+  if (scope.offeringId) {
+    ids = [scope.offeringId];
+    const { data } = await db.from("offerings").select("client_id").eq("id", scope.offeringId).maybeSingle();
+    clientId = data?.client_id ?? null;
+  } else if (clientId) {
+    const { data } = await db.from("offerings").select("id").eq("client_id", clientId).is("consolidated_into", null);
+    ids = ((data ?? []) as any[]).map((o) => o.id);
+  }
+  const { data: c } = clientId ? await db.from("clients").select("saas_only").eq("id", clientId).maybeSingle() : { data: null };
+  let underway = !ids.length;
+  if (ids.length) {
+    const { fundLaunchPercents } = await import("@/lib/fund-launch-percent.server");
+    const pct = await fundLaunchPercents(ids);
+    underway = ids.some((id) => (pct.get(id) ?? 0) < 100);
+  }
+  return { underway, saasOnly: !!c?.saas_only };
+}
+
+async function assertAssignable(context: any, r: TeamRole, userId: string | null, scope: { clientId?: string; offeringId?: string }) {
   const roles = await requireStaff(context);
-  if (!canManageRole(r, roles)) throw new Error("You can't change this assignment.");
+  const { underway } = await setupScope(scope);
+  if (!canManageRole(r, roles, underway)) throw new Error("You can't change this assignment.");
   if (userId) {
     const { rolesFor } = await import("@/lib/harmonious-team.server");
     if (!eligibleFor(r, await rolesFor(userId))) throw new Error("That person isn't eligible for this assignment.");
@@ -64,7 +91,7 @@ export const setClientTeamMember = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ clientId: uuid, role, userId: uuid.nullable() }).parse(d))
   .handler(async ({ data, context }) => {
-    await assertAssignable(context, data.role, data.userId);
+    await assertAssignable(context, data.role, data.userId, { clientId: data.clientId });
     const db = await admin();
     const { data: prev } = await db.from("client_team_assignments").select("user_id").eq("client_id", data.clientId).eq("team_role", data.role).maybeSingle();
     const prior = (prev?.user_id as string | undefined) ?? null;
@@ -83,7 +110,7 @@ export const setFundTeamOverride = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ offeringId: uuid, role, userId: uuid.nullable() }).parse(d))
   .handler(async ({ data, context }) => {
-    await assertAssignable(context, data.role, data.userId);
+    await assertAssignable(context, data.role, data.userId, { offeringId: data.offeringId });
     const srv = await import("@/lib/harmonious-team.server");
     const before = await srv.loadFundTeam(data.offeringId);
     const b = before.team.find((m) => m.role === data.role)!;
