@@ -60,9 +60,9 @@ export function InvestorsTab({ fundId }: { fundId: string }) {
          q.error ? <p className="text-sm text-destructive">{(q.error as Error).message}</p> :
          rows.length === 0 ? <p className="py-6 text-center text-sm text-muted-foreground">No investors yet. Use "Add / invite investors" to share your fund's invite link.</p> : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[1000px] text-sm">
+            <table className="w-full min-w-[1300px] text-sm">
               <thead className="text-left text-xs text-muted-foreground">
-                <tr><th className="w-8 py-2"><span className="sr-only">Select for reminder</span></th><th className="py-2">Name</th><th>Email</th><th>Phone</th><th className="text-right">Committed</th><th className="text-right">Received</th><th>KYC/KYB & AML</th><th>Fund documents</th><th>Wiring</th><th>Investor readiness</th><th>Latest activity</th></tr>
+                <tr><th className="w-8 py-2"><span className="sr-only">Select for reminder</span></th><th className="py-2">Name</th><th>Class</th><th>Investing as</th><th>Missing info</th><th>Email</th><th>Phone</th><th className="text-right">Committed</th><th className="text-right">Received</th><th>KYC/KYB & AML</th><th>Fund documents</th><th>Wiring</th><th>Investor readiness</th><th>Latest activity</th></tr>
               </thead>
               <tbody>
                 {rows.map((r) => (
@@ -71,6 +71,11 @@ export function InvestorsTab({ fundId }: { fundId: string }) {
                       <input type="checkbox" aria-label={`Remind ${r.name}`} disabled={!canRemind(r)} title={canRemind(r) ? "Select to send a reminder" : lq.data?.[r.id] ? "Reminded in the last 3 days" : "Nothing to remind"} checked={picked.includes(r.id)} onChange={(e) => setPicked((p) => e.target.checked ? [...p, r.id] : p.filter((x) => x !== r.id))} />
                     </td>
                     <td className="py-2"><p className="font-medium">{r.name}</p>{r.profileName && <p className="text-xs text-muted-foreground">{r.profileName}</p>}</td>
+                    <td>{r.classLabel ?? <span className="text-muted-foreground">-</span>}</td>
+                    <td>{r.assetLabel ?? <span className="text-muted-foreground">-</span>}</td>
+                    <td className="max-w-[220px]">{r.missing.length === 0 ? <Badge variant="secondary">Complete</Badge> : (
+                      <span title={r.missing.join(", ")} className="text-xs"><Badge variant="outline" className="mr-1 border-destructive/50 text-destructive">{r.missing.length} missing</Badge>{r.missing.slice(0, 2).join(", ")}{r.missing.length > 2 ? "…" : ""}</span>
+                    )}</td>
                     <td className="break-all">{r.email ?? "-"}</td>
                     <td>{r.phone ?? "-"}</td>
                     <td className="text-right">{usd(r.committedCents)}</td>
@@ -166,6 +171,13 @@ function InvestorSheet({ fundId, id, onClose }: { fundId: string; id: string | n
               </section>
             )}
 
+            {d.missing.length > 0 && (
+              <section className="rounded-lg border border-destructive/40 bg-destructive/5 p-3">
+                <h4 className="mb-1 font-medium">Missing info for the fund manager to obtain</h4>
+                <ul className="list-disc space-y-0.5 pl-5">{d.missing.map((t: string) => <li key={t}>{t}</li>)}</ul>
+              </section>
+            )}
+
             <section>
               <h4 className="mb-1 font-medium">Contact</h4>
               <dl className="divide-y">
@@ -176,7 +188,7 @@ function InvestorSheet({ fundId, id, onClose }: { fundId: string; id: string | n
             <section>
               <h4 className="mb-1 font-medium">Investment</h4>
               <dl className="divide-y">
-                <Row k="Class" v={d.classKey} /><Row k="Tax ID" v={d.taxIdLast4 ? `•••• ${d.taxIdLast4}` : null} />
+                <Row k="Class" v={d.classLabel} /><Row k="Investing as" v={d.assetLabel} /><Row k="Tax ID" v={d.taxIdLast4 ? `•••• ${d.taxIdLast4}` : null} />
                 <Row k="Investment date" v={d.investmentDate ? fmtDate(d.investmentDate) : null} />
                 <Row k="Stage" v={<span className="capitalize">{d.stage.replace(/_/g, " ")}</span>} />
                 <Row k="Latest activity" v={fmtDate(d.lastActivity)} />
