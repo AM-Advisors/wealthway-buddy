@@ -49,7 +49,7 @@ export async function autoApplyDiditForOnboarding(onboardingId: string, actorUse
   const { data: person } = await db().from("persons").select("*").eq("id", ob.person_id).maybeSingle();
   if (!person) return { applied: false, reason: "person not found" };
   const now = new Date().toISOString();
-  const update: Record<string, unknown> = {};
+  const update: any = {};
   const changes: any[] = [];
   const hasAddress = !!x.fields.address_line1 && !!x.fields.city;
   for (const [field, value] of Object.entries(x.fields)) {
