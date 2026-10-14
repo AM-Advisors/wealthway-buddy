@@ -26063,6 +26063,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "investor_onboardings_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "investor_onboardings_position_id_fkey"
             columns: ["position_id"]
             isOneToOne: false
