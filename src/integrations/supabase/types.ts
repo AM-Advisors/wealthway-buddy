@@ -33415,6 +33415,7 @@ export type Database = {
           consolidation_reason: string | null
           created_at: string
           date_formed: string | null
+          didit_workflow_id: string | null
           drive_sync_enabled: boolean
           ein_path: string | null
           ein_workflow_status: string | null
@@ -33480,6 +33481,7 @@ export type Database = {
           consolidation_reason?: string | null
           created_at?: string
           date_formed?: string | null
+          didit_workflow_id?: string | null
           drive_sync_enabled?: boolean
           ein_path?: string | null
           ein_workflow_status?: string | null
@@ -33545,6 +33547,7 @@ export type Database = {
           consolidation_reason?: string | null
           created_at?: string
           date_formed?: string | null
+          didit_workflow_id?: string | null
           drive_sync_enabled?: boolean
           ein_path?: string | null
           ein_workflow_status?: string | null

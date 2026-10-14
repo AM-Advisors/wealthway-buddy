@@ -1,0 +1,3 @@
+ALTER TABLE public.offerings ADD COLUMN IF NOT EXISTS didit_workflow_id text;
+ALTER TABLE public.offerings ADD CONSTRAINT offerings_didit_workflow_id_format CHECK (didit_workflow_id IS NULL OR didit_workflow_id ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$');
+COMMENT ON COLUMN public.offerings.didit_workflow_id IS 'Optional fund-specific Didit identity workflow; null uses the platform default.';
