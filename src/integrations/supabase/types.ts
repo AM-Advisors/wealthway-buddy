@@ -7099,6 +7099,7 @@ export type Database = {
           primary_contact_name: string | null
           referral_source: string | null
           relationship_owner_id: string | null
+          saas_only: boolean
           status: string
           updated_at: string
           website: string | null
@@ -7136,6 +7137,7 @@ export type Database = {
           primary_contact_name?: string | null
           referral_source?: string | null
           relationship_owner_id?: string | null
+          saas_only?: boolean
           status?: string
           updated_at?: string
           website?: string | null
@@ -7173,6 +7175,7 @@ export type Database = {
           primary_contact_name?: string | null
           referral_source?: string | null
           relationship_owner_id?: string | null
+          saas_only?: boolean
           status?: string
           updated_at?: string
           website?: string | null
