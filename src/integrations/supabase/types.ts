@@ -33542,6 +33542,7 @@ export type Database = {
           admin_services: Json
           banking_not_required_reason: string | null
           banking_path: string | null
+          banking_setup_by: string | null
           blue_sky_responsibility: string | null
           client_id: string | null
           closing_cost_cents: number
@@ -33613,6 +33614,7 @@ export type Database = {
           admin_services?: Json
           banking_not_required_reason?: string | null
           banking_path?: string | null
+          banking_setup_by?: string | null
           blue_sky_responsibility?: string | null
           client_id?: string | null
           closing_cost_cents?: number
@@ -33684,6 +33686,7 @@ export type Database = {
           admin_services?: Json
           banking_not_required_reason?: string | null
           banking_path?: string | null
+          banking_setup_by?: string | null
           blue_sky_responsibility?: string | null
           client_id?: string | null
           closing_cost_cents?: number

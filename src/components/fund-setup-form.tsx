@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { ChevronDown, ChevronLeft, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { BankingChoice } from "@/components/banking-choice";
 import { guidedSetupFn, staffSaveSetupFn } from "@/lib/fund-setup-guided.functions";
 import { submitFundInfoFn } from "@/lib/fund-manager-submissions.functions";
 import { FUND_TYPES } from "@/lib/fund-setup-canonical";
@@ -91,7 +92,11 @@ export function FundSetupForm({ offeringId, mode, staffExtras }: { offeringId: s
     const s = FORM_SECTIONS.find((x) => x.id === id)!;
     const ret = returned("fund_details");
     return (
-      <SetupSection open={open} setOpen={setOpen} id={s.id} title={s.title} status={statusFor(s.fields, s.fields[0]?.section)}>
+      <SetupSection open={open} setOpen={setOpen} id={s.id} title={s.title} status={statusFor(s.fields, s.fields[0]?.section)} action={(() => {
+        const keys = s.fields.map((f) => f.key);
+        const changed = keys.some((k) => k in vals && (vals[k] ?? "") !== (prior[k] ?? ""));
+        return <Button size="sm" variant={changed ? "default" : "outline"} disabled={!changed || busy} onClick={() => save(keys, s.title)}>{isStaff ? "Save" : "Submit"}</Button>;
+      })()}>
         {id === "basic" && ret && <p className="rounded-lg bg-muted p-3 text-sm">Harmonious returned this: {ret.review_note ?? "please review and resubmit."}</p>}
         {id === "details" && <div className="rounded-xl border bg-background px-4 py-3 text-sm"><EinField fundId={offeringId} /></div>}
         <div className="space-y-3">{s.fields.map((f) => <div key={f.key}>{renderField(f)}</div>)}</div>
@@ -137,6 +142,7 @@ export function FundSetupForm({ offeringId, mode, staffExtras }: { offeringId: s
       </SetupSection>
 
       <SetupSection open={open} setOpen={setOpen} id="bank" title="Banking" status={<Chip tone={stepOf("bank")?.status === "done" ? "done" : waiting("bank") ? "wait" : "miss"}>{stepOf("bank")?.statusLabel ?? ""}</Chip>}>
+        <BankingChoice offeringId={offeringId} onChanged={refresh} />
         {isStaff
           ? <p className="text-sm text-muted-foreground">Enter and verify wire instructions on the Banking tab. Fund manager uploads appear below.</p>
           : <SubmitForm offeringId={offeringId} section="bank" onDone={refresh} />}
@@ -167,15 +173,18 @@ function Chip({ tone, children }: { tone: "done" | "miss" | "wait"; children: Re
   return <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${c}`}>{children}</span>;
 }
 
-function SetupSection({ id, title, status, children, open, setOpen }: { id: string; title: string; status?: React.ReactNode; children: React.ReactNode; open: Record<string, boolean>; setOpen: React.Dispatch<React.SetStateAction<Record<string, boolean>>> }) {
+function SetupSection({ id, title, status, action, children, open, setOpen }: { id: string; title: string; status?: React.ReactNode; action?: React.ReactNode; children: React.ReactNode; open: Record<string, boolean>; setOpen: React.Dispatch<React.SetStateAction<Record<string, boolean>>> }) {
   const isOpen = !!open[id];
   return (
     <section id={`setup-form-${id}`} className="scroll-mt-24 rounded-2xl border bg-card">
-      <button type="button" className="flex w-full items-center gap-3 px-5 py-4 text-left" aria-expanded={isOpen} onClick={() => setOpen((o) => ({ ...o, [id]: !isOpen }))}>
-        <span className="flex h-7 w-7 items-center justify-center rounded-md border">{isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}</span>
-        <h3 className="flex-1 font-heading text-base font-semibold text-primary">{title}</h3>
-        {status}
-      </button>
+      <div className="flex items-center gap-3 pr-5">
+        <button type="button" className="flex flex-1 items-center gap-3 py-4 pl-5 text-left" aria-expanded={isOpen} onClick={() => setOpen((o) => ({ ...o, [id]: !isOpen }))}>
+          <span className="flex h-7 w-7 items-center justify-center rounded-md border">{isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}</span>
+          <h3 className="flex-1 font-heading text-base font-semibold text-primary">{title}</h3>
+          {status}
+        </button>
+        {action}
+      </div>
       {isOpen && <div className="space-y-3 px-5 pb-5">{children}</div>}
     </section>
   );
