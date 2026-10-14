@@ -139,6 +139,7 @@ export async function fundSetupOverview(userId: string, offeringId: string, hasE
       rollingCloses: o.rolling_closes,
       hasMultipleClasses: !!o.has_multiple_classes,
       driveFolderUrl: o.drive_folder_url,
+      driveLinks: (Array.isArray(o.drive_links) ? o.drive_links : []) as { label: string; url: string }[],
     },
     setup: setup
       ? { id: setup.id, fiscalYearEnd: setup.fiscal_year_end, fundTermMonths: setup.fund_term_months, investmentPeriodMonths: setup.investment_period_months }
@@ -188,6 +189,7 @@ const OFFERING_FIELDS: Record<string, string> = {
   rollingCloses: "rolling_closes",
   hasMultipleClasses: "has_multiple_classes",
   driveFolderUrl: "drive_folder_url",
+  driveLinks: "drive_links",
 };
 
 async function ensureSetup(userId: string, offeringId: string, fundType: string | null) {

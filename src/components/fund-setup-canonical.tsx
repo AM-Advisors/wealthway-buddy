@@ -210,8 +210,10 @@ function DetailsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; onS
       rollingCloses: o.rollingCloses ? "yes" : o.rollingCloses === false ? "no" : "",
       driveFolderUrl: o.driveFolderUrl ?? "",
     });
+    setLinks((o.driveLinks ?? []).map((l: any) => ({ label: l.label ?? "", url: l.url ?? "" })));
   }, [d]);
   const [editing, setEditing] = useState<Set<string>>(new Set());
+  const [links, setLinks] = useState<{ label: string; url: string }[]>([]);
   const bind = (k: string) => ({ value: f[k] ?? "", disabled: !d.canEdit, onChange: (e: any) => setF({ ...f, [k]: e.target.value }) });
   const sel = (k: string, opts: [string, string][]) => (
     <select className="h-9 w-full rounded-md border bg-background px-2 text-sm" {...bind(k)}>
@@ -236,6 +238,7 @@ function DetailsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; onS
             offeringOpenDate: f.offeringOpenDate || null, offeringCloseDate: f.offeringCloseDate || null,
             rollingCloses: f.rollingCloses === "" ? null : f.rollingCloses === "yes",
             driveFolderUrl: f.driveFolderUrl?.trim() || null,
+            driveLinks: links.filter((l) => l.url.trim()).map((l) => ({ label: l.label.trim(), url: l.url.trim() })),
           },
           setupFields: {
             fiscalYearEnd: f.fiscalYearEnd || null,
@@ -279,9 +282,26 @@ function DetailsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; onS
         <ServiceProvidersSection offeringId={offeringId} />
         <EditableSection id="drive" title="Google Drive" keys={["driveFolderUrl"]} f={f} labels={LABELS} editing={editing} setEditing={setEditing} canEdit={d.canEdit}>
         <section className="grid gap-3 sm:grid-cols-3">
-          <Field label="Google Drive folder link"><Input placeholder="https://drive.google.com/drive/folders/…" {...bind("driveFolderUrl")} /></Field>
+          <Field label="Main Google Drive folder"><Input placeholder="https://drive.google.com/drive/folders/…" {...bind("driveFolderUrl")} /></Field>
         </section>
         </EditableSection>
+        <section className="space-y-2">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-medium">Other Google Drive links</h3>
+            {d.canEdit && <Button type="button" size="sm" variant="outline" onClick={() => setLinks([...links, { label: "", url: "" }])}>Add link</Button>}
+          </div>
+          {links.length === 0 && <p className="text-xs text-muted-foreground">No other links yet. Add folders like Tax Docs, Fund Docs or Formation Docs.</p>}
+          {links.map((l, i) => (
+            <div key={i} className="grid gap-2 sm:grid-cols-[1fr_2fr_auto] items-center">
+              <Input placeholder="Label, e.g. Tax Docs" value={l.label} disabled={!d.canEdit} onChange={(e) => setLinks(links.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)))} />
+              <Input placeholder="https://drive.google.com/…" value={l.url} disabled={!d.canEdit} onChange={(e) => setLinks(links.map((x, j) => (j === i ? { ...x, url: e.target.value } : x)))} />
+              <div className="flex gap-1">
+                {l.url && <Button type="button" size="sm" variant="ghost" asChild><a href={l.url} target="_blank" rel="noreferrer">Open</a></Button>}
+                {d.canEdit && <Button type="button" size="sm" variant="ghost" onClick={() => setLinks(links.filter((_, j) => j !== i))}>Remove</Button>}
+              </div>
+            </div>
+          ))}
+        </section>
         <p className="text-xs text-muted-foreground">The Drive link is a reference for the team only; it never changes Drive permissions and is never shown to investors.</p>
         <p className="text-xs text-muted-foreground">The EIN and EIN letter stay in the locked Entity & EIN card; they are never shown to investors.</p>
         <EditableSection id="offering" title="Offering" keys={["regType","targetRaise","maxOffering","minInvestment","maxInvestment","rollingCloses","offeringOpenDate","offeringCloseDate"]} f={f} labels={LABELS} editing={editing} setEditing={setEditing} canEdit={d.canEdit}>

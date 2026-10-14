@@ -78,6 +78,7 @@ export const saveFundSetupFieldsFn = createServerFn({ method: "POST" })
           rollingCloses: z.boolean().nullish(),
           hasMultipleClasses: z.boolean(),
           driveFolderUrl: z.string().url().max(500).nullish().or(z.literal("")),
+          driveLinks: z.array(z.object({ label: z.string().max(120), url: z.string().url().max(500).refine((u) => /^https:\/\/(drive|docs)\.google\.com\//.test(u), "Use a Google Drive link") })).max(30),
         })
         .partial(),
       setupFields: z
