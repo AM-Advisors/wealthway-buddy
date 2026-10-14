@@ -94,13 +94,13 @@ export const getInvestorFundPortal = createServerFn({ method: "GET" })
     ]);
     const subs = (onbs ?? []) as any[];
     if (!facts.investorFundIds.includes(data.offeringId) && subs.length === 0) throw new Error("You don't have access to this fund.");
-    const { data: profs } = await db.from("investment_profiles").select("id, display_name").eq("owner_user_id", uid);
+    const { data: profs } = await db.from("investment_profiles").select("id, display_label, legal_name").eq("owner_user_id", uid);
     const profiles = (profs ?? []) as any[];
     const profileIds = [...new Set([...profiles.map((p) => p.id), ...subs.map((s) => s.investment_profile_id).filter(Boolean)])];
-    const profileName = new Map(profiles.map((p) => [p.id, p.display_name as string | null]));
+    const profileName = new Map(profiles.map((p) => [p.id, (p.display_label ?? p.legal_name ?? null) as string | null]));
 
     const [{ data: fund }, { data: ents }, { data: uploads }, { data: tax }] = await Promise.all([
-      db.from("offerings").select("id, name, legal_name, fund_type, entity_type, public_summary, summary, min_investment_cents, target_raise_cents").eq("id", data.offeringId).maybeSingle(),
+      db.from("offerings").select("id, name, legal_entity_name, fund_type, entity_type, public_summary, summary, min_investment_cents, target_raise_cents").eq("id", data.offeringId).maybeSingle(),
       profileIds.length ? db.from("document_entitlements").select("document_id").eq("principal_type", "investment_profile").eq("action", "grant").in("principal_id", profileIds) : Promise.resolve({ data: [] }),
       db.from("investor_documents").select("id, file_name, doc_kind, uploaded_at, review_status").eq("user_id", uid).eq("offering_id", data.offeringId).order("uploaded_at", { ascending: false }),
       db.from("fund_tax_documents").select("id, file_name, doc_type, tax_year, created_at").eq("investor_user_id", uid).eq("offering_id", data.offeringId).eq("review_status", "approved"),
@@ -113,7 +113,7 @@ export const getInvestorFundPortal = createServerFn({ method: "GET" })
     const catalog = (cat ?? []) as any[];
 
     return {
-      fund: { name: fund.name as string, legalName: (fund.legal_name ?? null) as string | null, fundType: (fund.fund_type ?? null) as string | null, entityType: (fund.entity_type ?? null) as string | null, summary: (fund.public_summary ?? fund.summary ?? null) as string | null, minInvestmentCents: (fund.min_investment_cents ?? null) as number | null },
+      fund: { name: fund.name as string, legalName: (fund.legal_entity_name ?? null) as string | null, fundType: (fund.fund_type ?? null) as string | null, entityType: (fund.entity_type ?? null) as string | null, summary: (fund.public_summary ?? fund.summary ?? null) as string | null, minInvestmentCents: (fund.min_investment_cents ?? null) as number | null },
       subscriptions: subs.map((s) => ({ id: s.id as string, stage: (s.stage ?? null) as string | null, commitmentCents: (s.commitment_amount_cents ?? s.requested_amount_cents ?? null) as number | null, fundedCents: (s.funded_amount_cents ?? null) as number | null, profile: (profileName.get(s.investment_profile_id) ?? null) as string | null, startedAt: s.created_at as string, updatedAt: (s.updated_at ?? null) as string | null })),
       documents: [
         ...catalog.filter((c) => c.document_type !== "k1").map((c) => ({ id: c.id as string, name: c.file_name as string, kind: String(c.document_type ?? "document"), date: (c.published_at ?? null) as string | null, source: "fund" as const, status: null as string | null })),
