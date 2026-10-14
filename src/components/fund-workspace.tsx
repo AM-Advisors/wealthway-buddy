@@ -37,6 +37,7 @@ import { InvestorsTab } from "@/components/fund-tabs/investors-tab";
 import { CapitalTieReport } from "@/components/investor-share-panel";
 import { FundUpdatesPanel } from "@/components/investor-onboarding-extras";
 import { DocumentsTab } from "@/components/fund-tabs/documents-tab";
+import { AuditHistoryTab } from "@/components/fund-tabs/audit-history-tab";
 import { BankingTab } from "@/components/fund-tabs/banking-tab";
 import { RequestCloseDialog } from "@/components/fund-tabs/request-close-dialog";
 import { fundRegulatoryFn } from "@/lib/fund-regulatory.functions";
@@ -92,6 +93,7 @@ const PRIMARY: { value: string; label: string; group: string[] }[] = [
   { value: "banking", label: "Banking", group: ["banking"] },
   { value: "accounting", label: "Accounting", group: ["accounting", "closes", "distributions"] },
   { value: "documents", label: "Documents", group: ["documents"] },
+  { value: "audit", label: "Audit History", group: ["audit"] },
 ];
 const SUB_LABEL: Record<string, string> = { setup: "Checklist", details: "Fund details", team: "Team", banking: "Banking", accounting: "Accounting", assets: "Assets", closes: "Closes", distributions: "Distributions" };
 const SETUP_GROUP = ["setup", "details", "team", "banking"];
@@ -290,6 +292,7 @@ export function FundWorkspace({ fundId, tab, onTab, mode = "client", extraTabs =
         <TabsContent value="requests"><FundRequests fundId={fundId} /></TabsContent>
         <TabsContent value="services"><FundServicesTab fundId={fundId} /></TabsContent>
         <TabsContent value="documents"><DocumentsTab fundId={fundId} /></TabsContent>
+        <TabsContent value="audit"><AuditHistoryTab fundId={fundId} /></TabsContent>
         <TabsContent value="regulatory"><RegulatoryTab fundId={fundId} /></TabsContent>
 
         {!merged && <TabsContent value="details" className="space-y-5">{detailsBody}</TabsContent>}
