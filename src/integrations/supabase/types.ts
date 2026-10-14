@@ -33554,6 +33554,8 @@ export type Database = {
           consolidation_reason: string | null
           created_at: string
           date_formed: string | null
+          demo_marked_at: string | null
+          demo_marked_by: string | null
           didit_workflow_id: string | null
           drive_folder_url: string | null
           drive_links: Json
@@ -33569,6 +33571,7 @@ export type Database = {
           harmonious_bank_status: string | null
           has_multiple_classes: boolean
           id: string
+          is_demo: boolean
           is_open: boolean
           legal_entity_name: string | null
           legal_name_change_reason: string | null
@@ -33622,6 +33625,8 @@ export type Database = {
           consolidation_reason?: string | null
           created_at?: string
           date_formed?: string | null
+          demo_marked_at?: string | null
+          demo_marked_by?: string | null
           didit_workflow_id?: string | null
           drive_folder_url?: string | null
           drive_links?: Json
@@ -33637,6 +33642,7 @@ export type Database = {
           harmonious_bank_status?: string | null
           has_multiple_classes?: boolean
           id?: string
+          is_demo?: boolean
           is_open?: boolean
           legal_entity_name?: string | null
           legal_name_change_reason?: string | null
@@ -33690,6 +33696,8 @@ export type Database = {
           consolidation_reason?: string | null
           created_at?: string
           date_formed?: string | null
+          demo_marked_at?: string | null
+          demo_marked_by?: string | null
           didit_workflow_id?: string | null
           drive_folder_url?: string | null
           drive_links?: Json
@@ -33705,6 +33713,7 @@ export type Database = {
           harmonious_bank_status?: string | null
           has_multiple_classes?: boolean
           id?: string
+          is_demo?: boolean
           is_open?: boolean
           legal_entity_name?: string | null
           legal_name_change_reason?: string | null
