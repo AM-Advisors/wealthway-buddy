@@ -477,3 +477,36 @@ export const setBankingChoiceFn = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+/** Who obtains the EIN, and save an EIN the fund got itself (SS-4 answers untouched). */
+export const getEinChoiceFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ offering_id: z.string().uuid() }).parse(data))
+  .handler(async ({ context, data }) => {
+    const isAdmin = await assertCanManageFund(context.supabase, context.userId, data.offering_id);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: o } = await (supabaseAdmin as any).from("offerings").select("ein_setup_by").eq("id", data.offering_id).maybeSingle();
+    return { isAdmin, setupBy: ((o as any)?.ein_setup_by ?? null) as "fund" | "harmonious" | null };
+  });
+
+export const setEinChoiceFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ offering_id: z.string().uuid(), setup_by: z.enum(["fund", "harmonious"]) }).parse(data))
+  .handler(async ({ context, data }) => {
+    await assertCanManageFund(context.supabase, context.userId, data.offering_id);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await (supabaseAdmin as any).from("offerings").update({ ein_setup_by: data.setup_by }).eq("id", data.offering_id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const saveFundEinFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ offering_id: z.string().uuid(), ein: z.string().trim().regex(/^\d{2}-?\d{7}$/, "An EIN looks like 12-3456789") }).parse(data))
+  .handler(async ({ context, data }) => {
+    await assertCanManageFund(context.supabase, context.userId, data.offering_id);
+    const { data: detail } = await context.supabase.rpc("get_offering_entity_details", { p_offering_id: data.offering_id }).maybeSingle();
+    const { error } = await context.supabase.rpc("save_offering_entity_details", { p_offering_id: data.offering_id, p_has_ein: true, p_ein: normalizeEin(data.ein), p_ss4: stripRpTinPlain(((detail as any)?.ss4 ?? {}) as any) as any });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });

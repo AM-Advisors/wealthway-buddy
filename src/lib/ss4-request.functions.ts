@@ -41,9 +41,21 @@ function splitAddress(addr: string | null | undefined): [string, string] {
   return i < 0 ? [a, ""] : [a.slice(0, i).trim(), a.slice(i + 1).trim()];
 }
 
+/** Staff, or a manager of this exact fund. */
+async function requireStaffOrManager(userId: string, offeringId: string) {
+  const { setupActor } = await import("@/lib/fund-setup.server");
+  const a = await setupActor(userId);
+  if (!a.isStaff && !a.offeringIds.includes(offeringId)) throw new Error("Forbidden: you do not manage that fund.");
+}
+
+/** Possible SS-4 signers: the fund's managers plus the chosen fund signatory (if they have a login). */
 async function managersOf(db: any, offeringId: string) {
-  const { data: fm } = await db.from("fund_managers").select("user_id").eq("offering_id", offeringId);
-  const ids = [...new Set(((fm ?? []) as any[]).map((r) => r.user_id).filter(Boolean))];
+  const [{ data: fm }, { data: o }] = await Promise.all([
+    db.from("fund_managers").select("user_id").eq("offering_id", offeringId),
+    db.from("offerings").select("fund_signatory_person_id").eq("id", offeringId).maybeSingle(),
+  ]);
+  const sigUser = o?.fund_signatory_person_id ? (await db.from("persons").select("user_id").eq("id", o.fund_signatory_person_id).maybeSingle()).data?.user_id : null;
+  const ids = [...new Set([sigUser, ...((fm ?? []) as any[]).map((r) => r.user_id)].filter(Boolean))];
   if (!ids.length) return [] as { userId: string; name: string; email: string | null; phone: string | null }[];
   const { data: profs } = await db.from("profiles").select("user_id, legal_name, email, phone").in("user_id", ids);
   const byId = new Map(((profs ?? []) as any[]).map((p) => [p.user_id, p]));
@@ -104,7 +116,7 @@ export const ss4RequestContextFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ offeringId: z.string().uuid(), signerUserId: z.string().uuid().optional() }).parse(d))
   .handler(async ({ context, data }) => {
-    await requireStaff(context.userId);
+    await requireStaffOrManager(context.userId, data.offeringId);
     const db = await admin();
     const managers = await managersOf(db, data.offeringId);
     const signer = managers.find((m) => m.userId === data.signerUserId) ?? managers[0];
@@ -123,11 +135,11 @@ export const sendSs4RequestFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ offeringId: z.string().uuid(), signerUserId: z.string().uuid(), form: formSchema, note: z.string().trim().max(1000).optional() }).parse(d))
   .handler(async ({ context, data }) => {
-    await requireStaff(context.userId);
+    await requireStaffOrManager(context.userId, data.offeringId);
     const db = await admin();
     const managers = await managersOf(db, data.offeringId);
     const signer = managers.find((m) => m.userId === data.signerUserId);
-    if (!signer) throw new Error("That person isn't a manager of this fund.");
+    if (!signer) throw new Error("That person isn't a manager or the signatory of this fund.");
     const form = strip(data.form);
     if (!String(form["legal_name"] ?? "").trim()) throw new Error("Add the legal name of the entity (line 1) first.");
     // One open request per fund: older open requests are cancelled, never deleted.
@@ -173,8 +185,8 @@ async function loadForSigner(userId: string, requestId: string) {
   const db = await admin();
   const { data: r } = await db.from("ss4_signature_requests").select("*").eq("id", requestId).maybeSingle();
   if (!r || r.signer_user_id !== userId) throw new Error("This SS-4 request isn't addressed to you.");
-  const { data: fm } = await db.from("fund_managers").select("id").eq("offering_id", r.offering_id).eq("user_id", userId).maybeSingle();
-  if (!fm) throw new Error("You no longer manage this fund.");
+  const signers = await managersOf(db, r.offering_id);
+  if (!signers.some((m) => m.userId === userId)) throw new Error("You are no longer a manager or signatory of this fund.");
   return { db, r };
 }
 
