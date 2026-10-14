@@ -22,3 +22,4 @@
 
 - Marketing, email-flow and CSA STAR rules live in src/lib/AGENTS.md - why: keeps this file within budget.- Legacy archive uploads go only through src/lib/legacy-archive-multipart.server.ts (dedicated bucket + prefix guard, signed SHA-256 per request, 5 MiB parts, no delete/retention headers) - why: Object Lock needs signed checksums and the gateway caps requests near 6 MiB.
 - Operations and Account Managers may review/approve others' internal work via src/lib/ops-capabilities.ts (never their own; money paths use capabilitiesFor(roles, { moneyPath: true })); tax, money and administration keep their own approvers - why: user-approved peer approval without widening money authority.
+- Submission alerts go only through src/lib/ops-slack-notify.server.ts (best-effort, allow-listed fields, 5-minute dedupe in ops_slack_notifications, tags fund/client operations owner then account manager) - why: one sender, never blocks or leaks sensitive data.
