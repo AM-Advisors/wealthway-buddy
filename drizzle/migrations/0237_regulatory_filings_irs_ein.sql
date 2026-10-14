@@ -1,0 +1,2 @@
+ALTER TABLE public.fund_regulatory_filings DROP CONSTRAINT fund_regulatory_filings_filing_type_check;
+ALTER TABLE public.fund_regulatory_filings ADD CONSTRAINT fund_regulatory_filings_filing_type_check CHECK (filing_type = ANY (ARRAY['form_d'::text, 'blue_sky'::text, 'irs_ein'::text]));

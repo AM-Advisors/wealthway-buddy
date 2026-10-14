@@ -506,7 +506,20 @@ export const saveFundEinFn = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     await assertCanManageFund(context.supabase, context.userId, data.offering_id);
     const { data: detail } = await context.supabase.rpc("get_offering_entity_details", { p_offering_id: data.offering_id }).maybeSingle();
-    const { error } = await context.supabase.rpc("save_offering_entity_details", { p_offering_id: data.offering_id, p_has_ein: true, p_ein: normalizeEin(data.ein), p_ss4: stripRpTinPlain(((detail as any)?.ss4 ?? {}) as any) as any });
+    const ein = normalizeEin(data.ein);
+    const { error } = await context.supabase.rpc("save_offering_entity_details", { p_offering_id: data.offering_id, p_has_ein: true, p_ein: ein, p_ss4: stripRpTinPlain(((detail as any)?.ss4 ?? {}) as any) as any });
     if (error) throw new Error(error.message);
-    return { ok: true };
+    // IRS filing record for the EIN (one per EIN), plus an Audit History entry (EIN shown as last 4 only).
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const db = supabaseAdmin as any;
+    const { data: existing } = await db.from("fund_regulatory_filings").select("id").eq("offering_id", data.offering_id).eq("filing_type", "irs_ein").eq("accession_number", ein).is("removed_at", null).maybeSingle();
+    let filingId = existing?.id ?? null;
+    if (!filingId) {
+      const { data: row, error: fErr } = await db.from("fund_regulatory_filings").insert({ offering_id: data.offering_id, filing_type: "irs_ein", filing_kind: "initial", accession_number: ein, filing_date: new Date().toISOString().slice(0, 10), notes: "EIN assigned by the IRS; submitted by the fund in Harmonious.", recorded_by: context.userId }).select("id").single();
+      if (fErr) throw new Error(fErr.message);
+      filingId = row.id;
+      const { logFundAudit } = await import("@/lib/fund-audit.server");
+      await logFundAudit(context.userId, { offeringId: data.offering_id, eventType: "irs_ein_filing_recorded", summary: "IRS EIN filing recorded", values: { ein, filingType: "IRS EIN (Form SS-4 / online)", filingDate: new Date().toISOString().slice(0, 10) } });
+    }
+    return { ok: true, filingId };
   });
