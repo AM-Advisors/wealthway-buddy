@@ -22,8 +22,33 @@ function safeName(n: string) { return n.replace(/[^\w.\-]+/g, "_").slice(0, 120)
 
 export async function listSubmissions(userId: string, offeringId: string) {
   const a = await actorFor(userId, offeringId);
-  const { data } = await db().from("fund_manager_submissions").select("*").eq("offering_id", offeringId).order("submitted_at", { ascending: false }).limit(100);
-  return { isStaff: a.isStaff, items: (data ?? []) as any[] };
+  const [{ data }, onFile] = await Promise.all([
+    db().from("fund_manager_submissions").select("*").eq("offering_id", offeringId).order("submitted_at", { ascending: false }).limit(100),
+    setupOnFile(offeringId).catch(() => null),
+  ]);
+  return { isStaff: a.isStaff, items: (data ?? []) as any[], onFile };
+}
+
+/** Allow-listed snapshot of what is already on the fund record (no tax IDs or bank numbers). */
+async function setupOnFile(offeringId: string) {
+  const [{ data: o }, { data: fee }, { data: docs }] = await Promise.all([
+    db().from("offerings").select("name, legal_entity_name, entity_type, state_formed, date_formed, principal_address, min_investment_cents, target_raise_cents, gp_entity_name, fund_signatory_person_id, signatory_title").eq("id", offeringId).maybeSingle(),
+    db().from("fund_fee_terms").select("management_fee_pct, carry_pct, hurdle_pct, status").eq("offering_id", offeringId).in("status", ["active", "approved"]).order("created_at", { ascending: false }).limit(1).maybeSingle(),
+    db().from("offering_documents").select("title, doc_type").eq("offering_id", offeringId).limit(50),
+  ]);
+  let signer: string | null = null;
+  if (o?.fund_signatory_person_id) {
+    const { data: p } = await db().from("persons").select("*").eq("id", o.fund_signatory_person_id).maybeSingle();
+    if (p) signer = [p.preferred_name ?? p.legal_first_name ?? p.first_name, p.legal_last_name ?? p.last_name].filter(Boolean).join(" ") || null;
+  }
+  const $ = (c: number | null | undefined) => (c ? String(Math.round(c / 100)) : "");
+  const s = (v: unknown) => (v == null ? "" : String(v));
+  return {
+    fund_details: { legalName: s(o?.legal_entity_name), displayName: s(o?.name), entityType: s(o?.entity_type), jurisdiction: s(o?.state_formed), formationDate: s(o?.date_formed), principalAddress: s(o?.principal_address), targetRaise: $(o?.target_raise_cents), minInvestment: $(o?.min_investment_cents) },
+    fees_team: { managementFeePercent: s(fee?.management_fee_pct), carryPercent: s(fee?.carry_pct), preferredReturnPercent: s(fee?.hurdle_pct), gpName: s(o?.gp_entity_name), signers: signer ? `${signer}${o?.signatory_title ? `, ${o.signatory_title}` : ""}` : "" },
+    bank: {} as Record<string, string>,
+    documents: ((docs ?? []) as any[]).map((d) => String(d.title ?? d.doc_type ?? "Document")),
+  };
 }
 
 export async function submit(userId: string, input: { offeringId: string; section: "fund_details" | "fees_team" | "bank" | "document"; docKind?: SubmissionDocKind | null; payload: Record<string, unknown>; file?: { name: string; base64: string } | null }) {
