@@ -40,7 +40,8 @@ export function HarmoniousTeamCard({ clientId, offeringId }: { clientId?: string
           <CardTitle className="text-base">Harmonious Team</CardTitle>
           {d.followUp ? <Badge variant="outline">{d.followUp}</Badge> : null}
         </div>
-        <CardDescription>Internal ownership for routing. It does not change anyone's access.</CardDescription>
+        <CardDescription>Internal ownership for routing. It does not change anyone's access.{d.setupUnderway ? " Setup is underway, so anyone on the Harmonious team can assign these." : ""}</CardDescription>
+        {d.administrator ? <p className="text-sm"><span className="text-muted-foreground">Fund administrator: </span><span className="font-medium">{d.administrator.name}</span></p> : null}
       </CardHeader>
       <CardContent className="space-y-3">
         <ul className="divide-y text-sm">

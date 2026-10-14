@@ -1,0 +1,2 @@
+ALTER TABLE public.clients ADD COLUMN IF NOT EXISTS saas_only boolean NOT NULL DEFAULT false;
+COMMENT ON COLUMN public.clients.saas_only IS 'True only for SaaS-only contracts; otherwise Harmonious is the fund administrator.';
