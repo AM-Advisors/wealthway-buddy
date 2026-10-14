@@ -38,7 +38,7 @@ function ManagerFundsPage() {
           Open a fund to see its investors, investments, capital, reports and documents.
         </p>
       </div>
-      <Link to="/manager/request-fund" className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground">+ Request New Fund / SPV</Link></div>
+      <Link to="/manager/request-fund" className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground">+ Add Fund or SPV</Link></div>
 
       {isLoading && <p className="text-sm text-muted-foreground">Loading your funds…</p>}
 
