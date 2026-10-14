@@ -1,5 +1,7 @@
 # Roadmap
-- [x] Slack alert to #operations on every submission, tagging assigned Operations person
-- [x] Fund page redesign: 5 tabs + More, setup stepper, tappable top numbers; fixed 0 investors
-- [ ] Slack email lookup needs users:read.email on the Slack connection (waiting on user reconnect)
-- [ ] Waiting on user: James Wonnell invitation + countersigning; Chun Mi amount
+
+## Founders Fund (Digital Irish Ventures)
+- [x] Setup: add multiple Google Drive links section
+- [x] Read all Drive folder files and fill fund details
+- [x] Create investors from Box K-1s (tax IDs encrypted, no invitations)
+- [x] Load 2025 K-1s from Box and publish to each investor (MFA download)

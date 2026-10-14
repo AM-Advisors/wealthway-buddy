@@ -33556,6 +33556,7 @@ export type Database = {
           date_formed: string | null
           didit_workflow_id: string | null
           drive_folder_url: string | null
+          drive_links: Json
           drive_sync_enabled: boolean
           ein_path: string | null
           ein_workflow_status: string | null
@@ -33623,6 +33624,7 @@ export type Database = {
           date_formed?: string | null
           didit_workflow_id?: string | null
           drive_folder_url?: string | null
+          drive_links?: Json
           drive_sync_enabled?: boolean
           ein_path?: string | null
           ein_workflow_status?: string | null
@@ -33690,6 +33692,7 @@ export type Database = {
           date_formed?: string | null
           didit_workflow_id?: string | null
           drive_folder_url?: string | null
+          drive_links?: Json
           drive_sync_enabled?: boolean
           ein_path?: string | null
           ein_workflow_status?: string | null

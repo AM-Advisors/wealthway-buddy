@@ -31,9 +31,59 @@ type SourceRow = { provider: "box" | "google_drive"; connection_reference: strin
 
 export function providerFor(source: SourceRow): DocumentProvider {
   if (source.connection_reference.startsWith("synthetic:")) return syntheticProvider(source.provider, source.connection_reference);
+  // Live Box: read-only, scoped to a shared link approved per source (Super Admin approved, Founders Fund K-1s).
+  if (source.provider === "box" && source.connection_reference.startsWith("box-shared:"))
+    return boxSharedProvider(source.connection_reference.slice("box-shared:".length), source.allowed_root_ids);
   throw new ProviderNotAuthorizedError(
-    "Live Box and Google Drive historical-document connections are not authorized yet. Phase C requires separate approval.",
+    "This document source is not authorized for live access.",
   );
+}
+
+// ------------------------------------------------------------ live Box --
+
+async function boxToken(): Promise<string> {
+  const body = new URLSearchParams({
+    grant_type: "client_credentials",
+    client_id: process.env["BOX_CLIENT_ID"] ?? "",
+    client_secret: process.env["BOX_CLIENT_SECRET"] ?? "",
+    box_subject_type: "enterprise",
+    box_subject_id: process.env["BOX_ENTERPRISE_ID"] ?? "",
+  });
+  const r = await fetch("https://api.box.com/oauth2/token", { method: "POST", body });
+  if (!r.ok) throw new Error(`Box sign-in failed [${r.status}]`);
+  return ((await r.json()) as any).access_token as string;
+}
+
+function boxSharedProvider(sharedLink: string, allowedRoots: string[]): DocumentProvider {
+  const headers = async () => ({ Authorization: `Bearer ${await boxToken()}`, BoxApi: `shared_link=${sharedLink}` });
+  const assertInScope = async (h: Record<string, string>, fileId: string) => {
+    const r = await fetch(`https://api.box.com/2.0/files/${encodeURIComponent(fileId)}?fields=name,path_collection`, { headers: h });
+    if (!r.ok) throw new Error(`Box file lookup failed [${r.status}]`);
+    const j: any = await r.json();
+    const ancestors = ((j.path_collection?.entries ?? []) as any[]).map((e) => String(e.id));
+    if (!allowedRoots.some((root) => ancestors.includes(root))) throw new ProviderNotAuthorizedError("File is outside the approved Box folder.");
+    return String(j.name);
+  };
+  return {
+    provider: "box",
+    async listFolder(folderId) {
+      const h = await headers();
+      const r = await fetch(`https://api.box.com/2.0/folders/${encodeURIComponent(folderId)}/items?limit=1000&fields=id,name,type,size,sha1,modified_at,file_version`, { headers: h });
+      if (!r.ok) throw new Error(`Box listing failed [${r.status}]`);
+      return (((await r.json()) as any).entries ?? []).map((e: any) => ({
+        id: String(e.id), name: e.name, kind: e.type === "folder" ? "folder" : "file", parentId: folderId,
+        mimeType: e.type === "folder" ? undefined : "application/pdf", size: e.size, checksum: e.sha1,
+        revision: e.file_version?.id, modifiedAt: e.modified_at,
+      }));
+    },
+    async getContent(fileId) {
+      const h = await headers();
+      const name = await assertInScope(h, fileId);
+      const r = await fetch(`https://api.box.com/2.0/files/${encodeURIComponent(fileId)}/content`, { headers: h });
+      if (!r.ok) throw new Error(`Box download failed [${r.status}]`);
+      return { bytes: new Uint8Array(await r.arrayBuffer()), mimeType: "application/pdf", name };
+    },
+  };
 }
 
 // ------------------------------------------------------------- synthetic --
