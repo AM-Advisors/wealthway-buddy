@@ -152,7 +152,7 @@ function PostEditor() {
           <Panel title="Images">
             <div className="grid grid-cols-3 gap-2">{images.map((im, i) => (
               <div key={im.path} className="relative">
-                <img src={im.url} alt="" className="aspect-square w-full rounded object-cover" />
+                <img src={im.url} alt="" className="aspect-square w-full rounded bg-muted object-contain" />
                 {!locked && <Button size="icon" variant="destructive" className="absolute right-1 top-1 h-7 w-7" onClick={() => setImagesAndSave((x) => x.filter((_, j) => j !== i))} aria-label="Remove image"><Trash2 className="h-3.5 w-3.5" /></Button>}
               </div>))}</div>
             {!locked && (<div className="mt-3 space-y-2">
@@ -206,7 +206,7 @@ function PostEditor() {
           <div className="rounded-lg border bg-card p-4 shadow-sm">
             <div className="mb-3 flex items-center gap-2"><div className="h-9 w-9 rounded-full bg-primary" /><div><p className="text-sm font-semibold">Harmonious</p><p className="text-xs text-muted-foreground">{CHANNEL_LABEL[preview]} · preview</p></div></div>
             {preview !== "instagram" && <p className="whitespace-pre-wrap text-sm">{body || "Your post text appears here."}</p>}
-            {images[0] && <img src={images[0].url} alt="" className={`mt-3 w-full rounded ${preview === "instagram" ? "aspect-square object-cover" : ""}`} />}
+            {images[0] && <img src={images[0].url} alt="" className="mt-3 h-auto w-full rounded" />}
             {preview === "instagram" && <p className="mt-3 whitespace-pre-wrap text-sm"><strong>harmonious</strong> {body}</p>}
             {body.length > CHANNEL_LIMIT[preview] && <p className="mt-2 text-xs text-destructive">Too long for {CHANNEL_LABEL[preview]}.</p>}
           </div>
