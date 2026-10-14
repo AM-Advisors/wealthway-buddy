@@ -53,6 +53,8 @@ const SEE_ONLY = ["see"] as const;
 const THROUGH_APPROVE = ["see", "prepare", "review", "approve"] as const;
 const THROUGH_REVIEW = ["see", "prepare", "review"] as const;
 const SEE_PREPARE = ["see", "prepare"] as const;
+/** Internal (non-money, non-filing, non-admin) areas open to peer approval. */
+const INTERNAL_APPROVAL_AREAS: OpsArea[] = ["clients", "funds", "companies", "investors", "onboarding", "accounting", "reports", "documents", "tasks", "regulatory"];
 
 /**
  * Role to capability. Deliberately narrow: money is executed by finance,
@@ -62,12 +64,15 @@ const SEE_PREPARE = ["see", "prepare"] as const;
 const ROLE_GRANTS: Record<string, OpsCapability[]> = {
   super_admin: caps(ALL_AREAS, OPS_ACTIONS),
   admin: [...caps(ALL_AREAS, THROUGH_APPROVE), "administration:execute"],
+  // Operations and Account Managers may review and approve someone else's internal work
+  // (never their own - see canApprove). Money, tax filings and administration keep their own approvers.
   operations: [
-    ...caps(
-      ["clients", "funds", "companies", "investors", "capital", "documents", "tasks", "reports"],
-      SEE_PREPARE,
-    ),
-    ...caps(["onboarding"], THROUGH_REVIEW),
+    ...caps(INTERNAL_APPROVAL_AREAS, THROUGH_APPROVE),
+    ...caps(["capital"], SEE_PREPARE),
+  ],
+  account_manager: [
+    ...caps(INTERNAL_APPROVAL_AREAS, THROUGH_APPROVE),
+    ...caps(["capital"], SEE_ONLY),
   ],
   fund_administration: caps(
     ["funds", "investors", "capital", "accounting", "reports"],
@@ -93,10 +98,20 @@ export function hasOperationsEntry(roles: readonly string[]): boolean {
   return roles.some((role) => (OPS_STAFF_ROLES as readonly string[]).includes(role));
 }
 
-/** The capabilities these roles add up to. An unknown role contributes nothing. */
-export function capabilitiesFor(roles: readonly string[]): OpsCapability[] {
+/** Grants Operations / Account Managers had before peer approval; used wherever money moves. */
+const MONEY_PATH_GRANTS: Record<string, OpsCapability[]> = {
+  operations: [
+    ...caps(["clients", "funds", "companies", "investors", "capital", "documents", "tasks", "reports"], SEE_PREPARE),
+    ...caps(["onboarding"], THROUGH_REVIEW),
+  ],
+  account_manager: [],
+};
+
+/** The capabilities these roles add up to. An unknown role contributes nothing.
+ *  `moneyPath` drops peer-approval grants so money movement keeps its own approvers. */
+export function capabilitiesFor(roles: readonly string[], opts: { moneyPath?: boolean } = {}): OpsCapability[] {
   const out = new Set<OpsCapability>();
-  for (const role of roles) for (const cap of ROLE_GRANTS[role] ?? []) out.add(cap);
+  for (const role of roles) for (const cap of (opts.moneyPath && MONEY_PATH_GRANTS[role]) || ROLE_GRANTS[role] || []) out.add(cap);
   return [...out].sort();
 }
 

@@ -42,10 +42,17 @@ describe("capabilities by role", () => {
     expect(can(capabilitiesFor(["admin"]), "capital", "execute")).toBe(false);
   });
 
-  it("stops operations at preparing, never approving", () => {
-    const c = capabilitiesFor(["operations"]);
-    expect(can(c, "funds", "prepare")).toBe(true);
-    expect(can(c, "funds", "approve")).toBe(false);
+  it("lets operations and account managers approve others' internal work, never their own or money", () => {
+    for (const r of ["operations", "account_manager"]) {
+      const c = capabilitiesFor([r]);
+      expect(can(c, "funds", "approve")).toBe(true);
+      expect(can(c, "accounting", "approve")).toBe(true);
+      expect(can(c, "capital", "approve")).toBe(false);
+      expect(can(c, "tax", "approve")).toBe(false);
+      expect(canApprove({ capabilities: c, area: "funds", actorUserId: "a", preparedByUserId: "b" })).toBe(true);
+      expect(canApprove({ capabilities: c, area: "funds", actorUserId: "a", preparedByUserId: "a" })).toBe(false);
+      expect(can(capabilitiesFor([r], { moneyPath: true }), "accounting", "approve")).toBe(false);
+    }
   });
 
   it("lets an executive look without touching anything", () => {
