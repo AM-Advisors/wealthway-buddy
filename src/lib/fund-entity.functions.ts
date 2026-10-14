@@ -449,3 +449,31 @@ export const startMercuryApplication = createServerFn({ method: "POST" })
       { userId: context.userId, email },
     );
   });
+
+/** Banking setup owner (fund manager or Harmonious) plus open bank requests. */
+export const getBankingChoiceFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ offering_id: z.string().uuid() }).parse(data))
+  .handler(async ({ context, data }) => {
+    await assertCanManageFund(context.supabase, context.userId, data.offering_id);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const [{ data: o }, { data: reqs }] = await Promise.all([
+      (supabaseAdmin as any).from("offerings").select("banking_setup_by").eq("id", data.offering_id).maybeSingle(),
+      context.supabase.from("offering_bank_setup_requests").select("id, bank, status, created_at").eq("offering_id", data.offering_id).order("created_at", { ascending: false }),
+    ]);
+    return {
+      setupBy: ((o as any)?.banking_setup_by ?? null) as "fund" | "harmonious" | null,
+      requests: ((reqs ?? []) as any[]).map((r) => ({ id: r.id as string, bank: r.bank as string, status: (r.status ?? "requested") as string, createdAt: r.created_at as string })),
+    };
+  });
+
+export const setBankingChoiceFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ offering_id: z.string().uuid(), setup_by: z.enum(["fund", "harmonious"]) }).parse(data))
+  .handler(async ({ context, data }) => {
+    await assertCanManageFund(context.supabase, context.userId, data.offering_id);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await (supabaseAdmin as any).from("offerings").update({ banking_setup_by: data.setup_by }).eq("id", data.offering_id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });

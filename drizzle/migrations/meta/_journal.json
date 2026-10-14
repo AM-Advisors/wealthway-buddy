@@ -1646,6 +1646,13 @@
       "when": 1792015003517,
       "tag": "0234_ss4_signature_requests",
       "breakpoints": true
+    },
+    {
+      "idx": 235,
+      "version": "7",
+      "when": 1792016228581,
+      "tag": "0235_offering_banking_setup_by",
+      "breakpoints": true
     }
   ]
 }

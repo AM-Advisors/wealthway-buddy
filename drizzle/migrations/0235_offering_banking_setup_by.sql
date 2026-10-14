@@ -1,0 +1,2 @@
+ALTER TABLE public.offerings ADD COLUMN IF NOT EXISTS banking_setup_by text CHECK (banking_setup_by IN ('fund','harmonious'));
+COMMENT ON COLUMN public.offerings.banking_setup_by IS 'Who opens the fund bank account: fund (fund manager) or harmonious.';
