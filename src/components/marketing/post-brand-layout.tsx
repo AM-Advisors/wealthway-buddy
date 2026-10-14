@@ -45,7 +45,7 @@ function Hl({ text, word, accent }: { text: string; word: string; accent: string
   return <>{text.split(/(\s+)/).map((t, i) => t.replace(/[^\w$%+]/g, "").toLowerCase() === w ? <span key={i} style={{ color: accent }}>{t}</span> : t)}</>;
 }
 
-export function PostBrandLayout({ title, body, onAdd }: { title: string; body: string; onAdd: (img: { path: string; url: string }) => void }) {
+export function PostBrandLayout({ title, body, onAdd }: { title: string; body: string; onAdd: (imgs: { path: string; url: string }[]) => void }) {
   const suggest = useServerFn(marketingSuggestPostLayout);
   const art = useServerFn(marketingBackgroundArt);
   const upload = useServerFn(uploadMarketingAsset);
@@ -107,7 +107,8 @@ export function PostBrandLayout({ title, body, onAdd }: { title: string; body: s
     ]);
     await document.fonts.ready;
     if (faces.some((face) => face.length === 0)) throw new Error("The Harmonious fonts could not load. Please try again before saving.");
-    const { domToPng } = await import("modern-screenshot");
+    const { domToJpeg } = await import("modern-screenshot");
+    const added: { path: string; url: string }[] = [];
     // Brand fonts come from a cross-origin stylesheet the capture can't read; fetch and embed it explicitly.
     const fontHref = Array.from(document.querySelectorAll<HTMLLinkElement>('link[rel="stylesheet"]')).map((l) => l.href).find((href) => href.includes("fonts.googleapis.com"));
     let fontCss = fontHref ? await fetch(fontHref).then((r) => (r.ok ? r.text() : "")).catch(() => "") : "";
@@ -136,15 +137,19 @@ export function PostBrandLayout({ title, body, onAdd }: { title: string; body: s
       });
       let url: string;
       try {
-        url = await domToPng(page, { scale: 1, width: w, height: h, style: { transform: "none" }, fetch: { bypassingCache: true }, ...(fontCss ? { font: { cssText: fontCss } } : {}) });
+        url = await domToJpeg(page, { quality: 0.92, backgroundColor: "#ffffff", scale: 1, width: w, height: h, style: { transform: "none" }, fetch: { bypassingCache: true }, ...(fontCss ? { font: { cssText: fontCss } } : {}) });
       } finally {
         els.forEach((el, k) => { el.style.cssText = saved[k] ?? ""; });
       }
       const base64 = url.split(",")[1];
       if (!base64) throw new Error("The post image could not be saved. Please try again.");
-      const r = await upload({ data: { fileName: carousel ? `carousel-${i + 1}.png` : "brand-layout.png", contentType: "image/png", base64 } });
-      onAdd(r);
+      // Upload with one retry; JPEG keeps each slide well under the request size limit.
+      const payload = { data: { fileName: carousel ? `carousel-${i + 1}.jpg` : "brand-layout.jpg", contentType: "image/jpeg", base64 } };
+      const r = await upload(payload).catch(() => upload(payload));
+      added.push(r);
     }
+    // Add every slide at once so a new post is saved once, in order, with all slides.
+    onAdd(added);
     toast.success(carousel ? `${nodes.length} carousel slides added in order` : "Brand image added");
   });
 
