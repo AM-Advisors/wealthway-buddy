@@ -169,7 +169,10 @@ function TemplateCard({ t, funds }: { t: T; funds: { id: string; name: string }[
               <option value="">Choose a fund…</option>
               {funds.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
             </select>
-            <Button size="sm" disabled={busy || !target || !t.currentApproved} onClick={() => run(() => use({ data: { templateId: t.id, version: t.currentApproved!, offeringId: target } }), "Added to the fund as a new version for its review.")}>
+            <Button size="sm" disabled={busy || !target || !t.currentApproved} onClick={() => run(async () => {
+              const r: any = await use({ data: { templateId: t.id, version: t.currentApproved!, offeringId: target } });
+              if (r?.autofill) toast.message(`Filled ${r.autofill.filled.length} field${r.autofill.filled.length === 1 ? "" : "s"} from the fund`, { description: r.autofill.open.length ? `Still blank: ${r.autofill.open.join(", ")}` : "Every field was filled." });
+            }, "Added to the fund as a new version for its review.")}>
               {t.currentApproved ? `Use approved v${t.currentApproved}` : "Needs an approved version"}
             </Button>
             <p className="text-xs text-muted-foreground">The fund then reviews it, sets signature blocks and chooses when to put it in use.</p>

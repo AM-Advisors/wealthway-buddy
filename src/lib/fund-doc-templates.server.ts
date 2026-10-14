@@ -97,7 +97,7 @@ export async function addTemplateVersion(userId: string, input: { templateId: st
   const version = await nextVersion(input.templateId);
   const bytes = Buffer.from(input.base64, "base64");
   const path = `templates/${input.templateId}/v${version}-${safe(input.fileName)}`;
-  const { error } = await supabaseAdmin.storage.from(BUCKET).upload(path, bytes, { contentType: "application/pdf", upsert: false });
+  const { error } = await supabaseAdmin.storage.from(BUCKET).upload(path, bytes, { contentType: /\.docx$/i.test(input.fileName) ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document" : "application/pdf", upsert: false });
   if (error) throw new Error(`Upload failed: ${error.message}`);
   const { error: e2 } = await db().from("document_template_versions").insert({ template_id: input.templateId, version, file_path: path, file_name: input.fileName, file_size_bytes: bytes.length, change_note: input.note || null, created_by: userId });
   if (e2) throw new Error(e2.message);
@@ -126,11 +126,52 @@ export async function useTemplateInFund(userId: string, input: { templateId: str
   const category = (t.category in DOCUMENT_CATEGORY_LABELS ? t.category : "other") as DocumentCategory;
   const { id: documentId } = await createSetupDocument(userId, { offeringId: input.offeringId, category, title: t.title });
   const dest = `${input.offeringId}/templates/${t.id}-v${v.version}-${Date.now()}-${safe(v.file_name)}`;
-  const { error } = await supabaseAdmin.storage.from(BUCKET).copy(v.file_path, dest);
-  if (error) throw new Error(`Could not copy the file: ${error.message}`);
-  const { version: fundVersion } = await uploadDocumentVersion(userId, { documentId, filePath: dest, fileName: v.file_name, fileSizeBytes: Number(v.file_size_bytes ?? 0) });
+  let size = Number(v.file_size_bytes ?? 0);
+  let autofill: { filled: string[]; open: string[] } | null = null;
+  if (/\.docx$/i.test(v.file_name)) {
+    // Word templates are filled from the fund's own record; anything unknown stays as {{...}} for review.
+    const { data: blob, error: dErr } = await supabaseAdmin.storage.from(BUCKET).download(v.file_path);
+    if (dErr || !blob) throw new Error(`Could not read the template: ${dErr?.message ?? "missing file"}`);
+    const { fillDocx } = await import("@/lib/docx-autofill");
+    const r = await fillDocx(new Uint8Array(await blob.arrayBuffer()), await fundTemplateValues(input.offeringId));
+    const { error } = await supabaseAdmin.storage.from(BUCKET).upload(dest, r.bytes, { contentType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", upsert: false });
+    if (error) throw new Error(`Could not save the filled document: ${error.message}`);
+    size = r.bytes.length; autofill = { filled: r.filled, open: r.open };
+  } else {
+    const { error } = await supabaseAdmin.storage.from(BUCKET).copy(v.file_path, dest);
+    if (error) throw new Error(`Could not copy the file: ${error.message}`);
+  }
+  const { version: fundVersion } = await uploadDocumentVersion(userId, { documentId, filePath: dest, fileName: v.file_name, fileSizeBytes: size });
   await db().from("document_template_uses").insert({ template_id: t.id, template_version: v.version, offering_id: input.offeringId, offering_document_id: documentId, fund_version: fundVersion, used_by: userId });
-  return { documentId, fundVersion };
+  return { documentId, fundVersion, autofill };
+}
+
+const pct = (n: unknown) => (n == null || n === "" ? null : `${Number(n)}%`);
+const fullName = (p: any) => (p ? [p.legal_first_name, p.legal_middle_name, p.legal_last_name].filter(Boolean).join(" ") : null);
+
+/** Fund details keyed by every placeholder spelling used in the Harmonious templates. Investor-level fields (amount, signature, date) are left for signing. */
+export async function fundTemplateValues(offeringId: string): Promise<Record<string, string | null>> {
+  const { data: o } = await db().from("offerings").select("*").eq("id", offeringId).maybeSingle();
+  if (!o) throw new Error("Fund not found.");
+  const [{ data: c }, { data: fee }, { data: sig }] = await Promise.all([
+    o.client_id ? db().from("clients").select("name, legal_name, primary_contact_name, primary_contact_email").eq("id", o.client_id).maybeSingle() : Promise.resolve({ data: null }),
+    db().from("fund_fee_terms").select("management_fee_pct, carry_pct, status, created_at").eq("offering_id", offeringId).in("status", ["active", "approved"]).order("created_at", { ascending: false }).limit(1).maybeSingle(),
+    o.fund_signatory_person_id ? db().from("persons").select("legal_first_name, legal_middle_name, legal_last_name, email").eq("id", o.fund_signatory_person_id).maybeSingle() : Promise.resolve({ data: null }),
+  ]);
+  const legal = o.legal_entity_name || o.name;
+  const manager = o.gp_entity_name || o.signatory_entity_name || c?.legal_name || c?.name || null;
+  const signer = fullName(sig);
+  const email = sig?.email || c?.primary_contact_email || null;
+  const v: Record<string, string | null> = {
+    "Fund Name": o.name, "Fund Legal Name": legal, "Legal Fund Name": legal, "Legal Name": legal,
+    "Fund Manager": manager, "Fund Manager Name": manager, "Manager Name": manager, "Fund Adviser Name": manager,
+    "Management Fee": pct(fee?.management_fee_pct), "Carry Percent": pct(fee?.carry_pct), "Carry Amount": pct(fee?.carry_pct),
+    "address": o.principal_address, "Manager Address": o.principal_address, "email": email, "Manager Email": email,
+    "Signatory's Legal Name": signer, "Fund Manager Signatory": signer, "Fund Manager Signatory Name": signer,
+    "Signatory's Title": o.signatory_title, "Signatory Title": o.signatory_title, "Fund Manager Signatory Title": o.signatory_title,
+    "State": o.state_formed, "Arbitration State": o.state_formed, "Country": "United States",
+  };
+  return v;
 }
 
 export async function templateDownloadUrl(userId: string, input: { templateId: string; version: number }) {
