@@ -91,6 +91,8 @@ const PRIMARY: { value: string; label: string; group: string[] }[] = [
   { value: "documents", label: "Documents", group: ["documents"] },
 ];
 const SUB_LABEL: Record<string, string> = { setup: "Checklist", details: "Fund details", team: "Team", banking: "Banking", accounting: "Accounting", assets: "Assets", closes: "Closes", distributions: "Distributions" };
+const SETUP_GROUP = ["setup", "details", "team", "banking"];
+const MERGED_SECTIONS = [{ id: "fs-setup", label: "Setup steps" }, { id: "fs-details", label: "Fund details" }, { id: "fs-team", label: "Team" }, { id: "fs-banking", label: "Banking" }];
 const MORE: { value: string; label: string }[] = [
   { value: "todos", label: "To dos" }, { value: "approvals", label: "Approvals" }, { value: "requests", label: "Requests" },
   { value: "calendar", label: "Calendar" }, { value: "regulatory", label: "Regulatory" }, { value: "services", label: "Services" },
@@ -117,11 +119,11 @@ function FundTabBar({ tab, onTab, extraTabs, todoCount }: { tab: string; onTab: 
           <DropdownMenuContent align="end">
             {more.map((m) => <DropdownMenuItem key={m.value} onSelect={() => onTab(m.value)}>{label(m)}</DropdownMenuItem>)}
             <DropdownMenuSeparator />
-            {["details", "team", "banking"].map((v) => <DropdownMenuItem key={v} onSelect={() => onTab(v)}>{SUB_LABEL[v]}</DropdownMenuItem>)}
+            {!hasSetup && ["details", "team", "banking"].map((v) => <DropdownMenuItem key={v} onSelect={() => onTab(v)}>{SUB_LABEL[v]}</DropdownMenuItem>)}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-      {active && active.group.length > 1 && (
+      {active && active.group.length > 1 && !(hasSetup && active.value === "setup") && (
         <div className="flex gap-1 overflow-x-auto">
           {active.group.map((g) => (
             <button key={g} type="button" onClick={() => onTab(g)} className={cn("shrink-0 rounded-full border px-3 py-1 text-xs transition-colors", tab === g ? "border-primary bg-primary text-primary-foreground" : "text-muted-foreground hover:border-primary hover:text-foreground")}>{SUB_LABEL[g] ?? g}</button>
@@ -157,6 +159,63 @@ export function FundWorkspace({ fundId, tab, onTab, mode = "client", extraTabs =
   const pending = steps.filter((s) => !s.done);
   const cap = cq.data;
   const td = tq.data;
+  // Operations: Setup, Fund details, Team and Banking live on one page so the fund can be managed without jumping between tabs.
+  const merged = extraTabs.some((x) => x.value === "setup");
+  const detailsBody = <>
+          <Card>
+            <CardHeader><CardTitle className="text-base">Fund details</CardTitle></CardHeader>
+            <CardContent>
+              <dl className="grid gap-3 text-sm sm:grid-cols-3">
+                <div><dt className="text-xs text-muted-foreground">Type</dt><dd>{nice(f.fund_type === "other" ? f.fund_type_other : f.fund_type) || "Not recorded"}</dd></div>
+                <div><dt className="text-xs text-muted-foreground">Entity type</dt><dd>{f.entity_type ? (/^(llc|lp|gp)$/i.test(f.entity_type) ? f.entity_type.toUpperCase() : nice(f.entity_type)) : "Not recorded"}</dd></div>
+                <EinField fundId={fundId} />
+                <div><dt className="text-xs text-muted-foreground">Exemption</dt><dd>{f.reg_type ? `Reg D ${f.reg_type}` : "Not recorded"}</dd></div>
+                <div><dt className="text-xs text-muted-foreground">Target raise</dt><dd>{usd(f.target_raise_cents == null ? null : Number(f.target_raise_cents))}</dd></div>
+                <div><dt className="text-xs text-muted-foreground">State formed</dt><dd>{f.state_formed || "Not recorded"}</dd></div>
+                <div><dt className="text-xs text-muted-foreground">Date formed</dt><dd>{fmtDate(f.date_formed)}</dd></div>
+                <div><dt className="text-xs text-muted-foreground">Side letters</dt><dd>{sideLetters.active} active{sideLetters.proposed ? ` · ${sideLetters.proposed} proposed` : ""}</dd></div>
+              </dl>
+            </CardContent>
+          </Card>
+
+          <FeesSection fundId={fundId} />
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Setup progress</CardTitle>
+              <CardDescription>{pending.length ? `${pending.length} step${pending.length === 1 ? "" : "s"} still open.` : steps.length ? "All setup steps are complete." : "Harmonious hasn't started setup for this fund yet."}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {setup.percent != null && <Progress value={setup.percent} />}
+              {mode === "harmonious" ? <p className="text-sm text-muted-foreground">Each step is listed and completed in its section on the <button type="button" className="underline" onClick={() => onTab?.("setup")}>Setup tab</button>.</p> : <div className="space-y-1.5">
+                {steps.map((s, i) => (
+                  <div key={i} className="flex items-center gap-3 text-sm">
+                    {s.done ? <CheckCircle2 className="size-4 text-primary" /> : <Clock className="size-4 text-muted-foreground" />}
+                    <span className={s.done ? "" : "text-muted-foreground"}>{s.label}</span>
+                    {!s.done && <Badge variant="outline" className="ml-auto">{s.status === "review" ? "Sent - Harmonious reviewing" : s.owner === "Harmonious" ? "Harmonious - pending" : "Waiting on you"}</Badge>}
+                  </div>
+                ))}
+              </div>}
+            </CardContent>
+          </Card>
+  </>;
+  const bankingBody = <>
+          {!!td?.banks.length && (
+            <Card>
+              <CardHeader><CardTitle className="text-base">Connected accounts</CardTitle></CardHeader>
+              <CardContent className="divide-y">
+                {td.banks.map((b) => (
+                  <div key={b.id} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm">
+                    <div><p className="font-medium">{b.institution || "Bank"}{b.mask ? ` ${b.mask}` : ""}</p><p className="text-xs text-muted-foreground">{b.name || "Operating account"}</p></div>
+                    <Badge variant="outline" className="capitalize">{b.status}</Badge>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+          <BankingTab fundId={fundId} />
+          {staff && <Card><CardHeader><CardTitle className="text-base">Harmonious: fees, invoices and payments received</CardTitle><CardDescription>Bill fees, issue invoices and record wire/ACH receipts for this fund. Nothing is charged or moved automatically.</CardDescription></CardHeader><CardContent><FundPayments fundId={fundId} backTo="admin" /></CardContent></Card>}
+  </>;
 
   return (
     <div className="space-y-5">
@@ -192,7 +251,7 @@ export function FundWorkspace({ fundId, tab, onTab, mode = "client", extraTabs =
       <Tabs value={tab} onValueChange={onTab}>
         <FundTabBar tab={tab} onTab={onTab} extraTabs={extraTabs} todoCount={steps.filter((s) => s.owner === "You" && !s.done && s.status !== "review" && !s.answer?.trim()).length} />
 
-        {extraTabs.map((x) => x.value === "setup" && merged ? (
+        {extraTabs.map((x) => x.value === "setup" && merged ? (!SETUP_GROUP.includes(tab) ? null :
           <TabsContent key="setup" value={tab}>
             <div className="grid gap-6 lg:grid-cols-[11rem_minmax(0,1fr)]">
               <nav aria-label="Setup sections" className="flex gap-1 overflow-x-auto lg:sticky lg:top-4 lg:h-fit lg:flex-col">
