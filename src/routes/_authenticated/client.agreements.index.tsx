@@ -72,7 +72,7 @@ function AgreementsHome() {
         <Button asChild>
           <Link to="/client/funds/new">
             <Plus className="mr-2 h-4 w-4" />
-            Request new fund
+            Add Fund or SPV
           </Link>
         </Button>
       </div>

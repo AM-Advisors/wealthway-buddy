@@ -39,7 +39,7 @@ export type FundRequestEngineMode = "client" | "staff";
  * The single "Add Fund or SPV" setup engine. Clients, fund managers, Operations and Account Managers
  * all fill in the same steps; staff mode skips the client payment (server re-checks who may skip).
  */
-export function FundRequestEngine({ clientId: id, draft, mode = "client", clientPicker, backTo }: { clientId: string | null; draft?: string; mode?: FundRequestEngineMode; clientPicker?: React.ReactNode; backTo?: { to: string; label: string } }) {
+export function FundRequestEngine({ clientId: id, draft, mode = "client", clientPicker, backTo }: { clientId: string | null; draft?: string | undefined; mode?: FundRequestEngineMode; clientPicker?: React.ReactNode; backTo?: { to: string; label: string } }) {
   const navigate = useNavigate();
   const staffMode = mode === "staff";
   const [r, setR] = useState<FundRequest>(emptyRequest());
