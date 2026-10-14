@@ -93,7 +93,7 @@ const PRIMARY: { value: string; label: string; group: string[] }[] = [
 ];
 const SUB_LABEL: Record<string, string> = { setup: "Checklist", details: "Fund details", team: "Team", banking: "Banking", accounting: "Accounting", assets: "Assets", closes: "Closes", distributions: "Distributions" };
 const SETUP_GROUP = ["setup", "details", "team", "banking"];
-const MERGED_SECTIONS = [{ id: "fs-setup", label: "Setup steps" }, { id: "fs-details", label: "Fund details" }, { id: "fs-team", label: "Team" }, { id: "fs-banking", label: "Banking" }];
+const MERGED_SECTIONS = [{ id: "fs-setup", label: "Progress" }, { id: "fs-launch", label: "Launch status" }, { id: "setup-details", label: "Fund details" }, { id: "setup-economics", label: "Fees & terms" }, { id: "setup-documents", label: "Documents" }, { id: "fund-operations", label: "EIN, tax & sign-off" }, { id: "fs-team", label: "Team" }, { id: "fs-banking", label: "Banking" }];
 const MORE: { value: string; label: string }[] = [
   { value: "todos", label: "To dos" }, { value: "approvals", label: "Approvals" }, { value: "requests", label: "Requests" },
   { value: "calendar", label: "Calendar" }, { value: "regulatory", label: "Regulatory" }, { value: "services", label: "Services" },
@@ -157,7 +157,7 @@ export function FundWorkspace({ fundId, tab, onTab, mode = "client", extraTabs =
   const ready = !!fq.data;
   useEffect(() => {
     if (!isMerged || !ready || !["details", "team", "banking"].includes(tab)) return;
-    const t = setTimeout(() => document.getElementById(`fs-${tab}`)?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
+    const t = setTimeout(() => document.getElementById(tab === "details" ? "setup-details" : `fs-${tab}`)?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
     return () => clearTimeout(t);
   }, [isMerged, ready, tab]);
   if (fq.isLoading) return <p className="text-sm text-muted-foreground">Loading fund…</p>;
@@ -267,7 +267,6 @@ export function FundWorkspace({ fundId, tab, onTab, mode = "client", extraTabs =
               </nav>
               <div className="min-w-0 space-y-10">
                 <section id="fs-setup" className="scroll-mt-4 space-y-4">{x.content}</section>
-                <section id="fs-details" className="scroll-mt-4 space-y-5 border-t pt-6"><h2 className="font-heading text-xl font-semibold">Fund details</h2>{detailsBody}</section>
                 <section id="fs-team" className="scroll-mt-4 space-y-4 border-t pt-6"><h2 className="font-heading text-xl font-semibold">Team</h2><TeamTab fundId={fundId} /></section>
                 <section id="fs-banking" className="scroll-mt-4 space-y-5 border-t pt-6"><h2 className="font-heading text-xl font-semibold">Banking</h2>{bankingBody}</section>
               </div>
