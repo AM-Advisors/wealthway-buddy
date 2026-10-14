@@ -144,6 +144,7 @@ export async function submitForReview(uid: string, id: string) {
   if (!a || a.status !== "DRAFT") throw new Error("Only drafts can be sent for internal review.");
   await db.from("approvals").update({ status: "INTERNAL_REVIEW" }).eq("id", id);
   await log(db, a, uid, "internal_review_requested", null, false);
+  await (await import("@/lib/ops-slack-notify.server")).notifySubmission({ kind: "approval_submitted", title: `Sent for internal review: ${a.title ?? a.approval_type ?? "approval"}`, offeringId: a.fund_id ?? null, clientId: a.client_id ?? null, submittedBy: uid, ref: a.id });
   return { ok: true };
 }
 
