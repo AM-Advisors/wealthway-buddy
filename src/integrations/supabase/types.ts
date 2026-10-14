@@ -22465,6 +22465,126 @@ export type Database = {
           },
         ]
       }
+      fund_setup_proposal_decisions: {
+        Row: {
+          decided_at: string
+          decided_by: string
+          decision: string
+          id: string
+          proposal_id: string
+        }
+        Insert: {
+          decided_at?: string
+          decided_by: string
+          decision: string
+          id?: string
+          proposal_id: string
+        }
+        Update: {
+          decided_at?: string
+          decided_by?: string
+          decision?: string
+          id?: string
+          proposal_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_setup_proposal_decisions_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: true
+            referencedRelation: "fund_setup_proposals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fund_setup_proposals: {
+        Row: {
+          created_at: string
+          created_by: string
+          field: string
+          id: string
+          offering_id: string
+          run_id: string
+          source_file_id: string | null
+          source_file_name: string | null
+          source_kind: string
+          value: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          field: string
+          id?: string
+          offering_id: string
+          run_id: string
+          source_file_id?: string | null
+          source_file_name?: string | null
+          source_kind: string
+          value: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          field?: string
+          id?: string
+          offering_id?: string
+          run_id?: string
+          source_file_id?: string | null
+          source_file_name?: string | null
+          source_kind?: string
+          value?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_setup_proposals_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fund_setup_reminders: {
+        Row: {
+          channel: string
+          created_at: string
+          direction: string
+          id: string
+          offering_id: string
+          sent_by: string
+          sent_on: string
+          step: string
+        }
+        Insert: {
+          channel: string
+          created_at?: string
+          direction: string
+          id?: string
+          offering_id: string
+          sent_by: string
+          sent_on?: string
+          step: string
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          direction?: string
+          id?: string
+          offering_id?: string
+          sent_by?: string
+          sent_on?: string
+          step?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_setup_reminders_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fund_setup_tasks: {
         Row: {
           assigned_user_id: string | null

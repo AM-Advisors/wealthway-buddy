@@ -1611,6 +1611,13 @@
       "when": 1792002925716,
       "tag": "0229_client_saas_only_flag",
       "breakpoints": true
+    },
+    {
+      "idx": 230,
+      "version": "7",
+      "when": 1792003373383,
+      "tag": "0230_fund_setup_reminders_proposals",
+      "breakpoints": true
     }
   ]
 }
