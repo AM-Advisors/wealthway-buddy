@@ -77,6 +77,7 @@ export const saveFundSetupFieldsFn = createServerFn({ method: "POST" })
           offeringCloseDate: z.string().max(20).nullish(),
           rollingCloses: z.boolean().nullish(),
           hasMultipleClasses: z.boolean(),
+          driveFolderUrl: z.string().url().max(500).nullish().or(z.literal("")),
         })
         .partial(),
       setupFields: z
