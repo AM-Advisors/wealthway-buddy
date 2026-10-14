@@ -128,6 +128,7 @@ export async function staffSave(sb: any, userId: string, input: { offeringId: st
   const subs = await import("@/lib/fund-manager-submissions.server");
   const payload = input.section === "fees_team" ? await withCurrentFees(userId, input.offeringId, input.payload) : input.payload;
   await subs.applySection(sb, userId, { offering_id: input.offeringId, section: input.section, payload });
+  await (await import("@/lib/fund-audit.server")).logFundAudit(userId, { offeringId: input.offeringId, eventType: `staff_save_${input.section}`, summary: `Saved ${input.section === "fees_team" ? "Fees & terms" : "Fund details"}`, values: input.payload });
   await (await import("@/lib/fund-setup-extras.server")).autoCompleteAfterSave({ offeringId: input.offeringId }).catch(() => null);
   return { ok: true };
 }
