@@ -5,7 +5,7 @@ const ex = await db.from("offerings").select("id").ilike("name", "%roas%");
 if (ex.data?.length) throw new Error("ROAS fund already exists " + JSON.stringify(ex.data));
 let { data: client } = await db.from("clients").select("id").ilike("name", "Roas Capital Management").maybeSingle();
 if (!client) {
-  const r = await db.from("clients").insert({ name: "Roas Capital Management", slug: "roas-capital-management-" + crypto.randomUUID().slice(0, 8) }).select("id").single();
+  const r = await db.from("clients").insert({ name: "Roas Capital Management" }).select("id").single();
   if (r.error) throw r.error; client = r.data;
 }
 const { assertFundIdentityFree } = await import("@/lib/fund-integrity.server");
