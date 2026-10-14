@@ -27,6 +27,8 @@ export function DocumentsTab({ fundId }: { fundId: string }) {
   const [busy, setBusy] = useState(false);
   const [gen, setGen] = useState<string | null>(null);
   const [boxes, setBoxes] = useState<any | null>(null);
+  const [mode, setMode] = useState<"pick" | null>(null);
+  const [preview, setPreview] = useState<{ title: string; body: string } | null>(null);
 
   const onUpload = async (file: File | undefined) => {
     if (!file) return;
@@ -53,10 +55,13 @@ export function DocumentsTab({ fundId }: { fundId: string }) {
             <CardTitle className="text-base">Documents</CardTitle>
             <CardDescription>Upload or delete files any time until they're signed. Signed documents are kept permanently.</CardDescription>
           </div>
-          <label>
-            <input type="file" className="hidden" disabled={busy} onChange={(e) => { onUpload(e.target.files?.[0]); e.target.value = ""; }} />
-            <Button asChild size="sm" disabled={busy}><span>{busy ? "Uploading…" : "Upload file"}</span></Button>
-          </label>
+          <div className="flex flex-wrap gap-2">
+            <label>
+              <input type="file" className="hidden" disabled={busy} onChange={(e) => { onUpload(e.target.files?.[0]); e.target.value = ""; }} />
+              <Button asChild size="sm" variant="outline" disabled={busy}><span>{busy ? "Loading…" : "Load file"}</span></Button>
+            </label>
+            <Button size="sm" onClick={() => setMode("pick")}>Generate from template</Button>
+          </div>
         </CardHeader>
         <CardContent>
           {q.isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> : files.length === 0 ? <p className="py-6 text-center text-sm text-muted-foreground">No documents yet.</p> : (
@@ -64,7 +69,7 @@ export function DocumentsTab({ fundId }: { fundId: string }) {
               {files.map((f: any) => (
                 <div key={f.id} className="flex flex-wrap items-center justify-between gap-2 p-3 text-sm">
                   <div className="min-w-0">
-                    <p className="font-medium">{f.url ? <a href={f.url} target="_blank" rel="noreferrer" className="hover:underline">{f.title}</a> : f.title}</p>
+                    <p className="font-medium">{f.url ? <a href={f.url} target="_blank" rel="noreferrer" className="hover:underline">{f.title}</a> : f.body ? <button type="button" className="text-left hover:underline" onClick={() => setPreview({ title: f.title, body: f.body })}>{f.title}</button> : f.title}</p>
                     <p className="text-xs text-muted-foreground">
                       {f.template_key ? "Generated from template" : f.file_name} · {fmtDate(f.created_at)}
                       {f.signature_boxes?.length ? ` · ${f.signature_boxes.length} signature box${f.signature_boxes.length === 1 ? "" : "es"}` : ""}
@@ -84,32 +89,42 @@ export function DocumentsTab({ fundId }: { fundId: string }) {
 
       <StandardFormsCard fundId={fundId} onGenerated={refresh} />
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Generate a document</CardTitle>
-          <CardDescription>{STARTER_NOTICE}</CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-3">
-          {groups.map((g) => (
-            <div key={g.title} className="space-y-2">
-              <p className="text-sm font-medium">{g.title}</p>
-              {g.keys.map((t) => <Button key={t.key} variant="outline" size="sm" className="w-full justify-start" onClick={() => setGen(t.key)}>{t.title}</Button>)}
-            </div>
-          ))}
-        </CardContent>
-      </Card>
 
-      {gen && <GenerateDialog fundId={fundId} templateKey={gen} onClose={() => { setGen(null); refresh(); }} />}
+      {mode === "pick" && (
+        <Dialog open onOpenChange={(o) => !o && setMode(null)}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader><DialogTitle>Generate from template</DialogTitle><DialogDescription>{STARTER_NOTICE}</DialogDescription></DialogHeader>
+            <div className="grid gap-4 sm:grid-cols-3">
+              {groups.map((g) => (
+                <div key={g.title} className="space-y-2">
+                  <p className="text-sm font-medium">{g.title}</p>
+                  {g.keys.map((t) => <Button key={t.key} variant="outline" size="sm" className="w-full justify-start whitespace-normal text-left h-auto py-2" onClick={() => { setMode(null); setGen(t.key); }}>{t.title}</Button>)}
+                </div>
+              ))}
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+      {gen && <GenerateDialog fundId={fundId} templateKey={gen} onClose={() => setGen(null)} onCreated={(doc) => { setGen(null); refresh(); setPreview(doc); }} />}
+      {preview && (
+        <Dialog open onOpenChange={(o) => !o && setPreview(null)}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader><DialogTitle>{preview.title}</DialogTitle><DialogDescription>Saved as a draft in Documents.</DialogDescription></DialogHeader>
+            <div className="max-h-[60vh] overflow-y-auto rounded-md border bg-background p-6 font-serif text-sm leading-relaxed whitespace-pre-wrap">{preview.body}</div>
+            <DialogFooter><Button onClick={() => setPreview(null)}>Done</Button></DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
       {boxes && <BoxesDialog fundId={fundId} file={boxes} onClose={() => { setBoxes(null); refresh(); }} />}
     </div>
   );
 }
 
-function GenerateDialog({ fundId, templateKey, onClose }: { fundId: string; templateKey: string; onClose: () => void }) {
+function GenerateDialog({ fundId, templateKey, onClose, onCreated }: { fundId: string; templateKey: string; onClose: () => void; onCreated: (doc: { title: string; body: string }) => void }) {
   const t = DOC_TEMPLATES.find((x) => x.key === templateKey)!;
   const gen = useServerFn(generateFundDocFn);
   const [values, setValues] = useState<Record<string, string>>({});
-  const m = useMutation({ mutationFn: () => gen({ data: { fundId, templateKey, values } }), onSuccess: () => { toast.success("Draft created in Documents"); onClose(); }, onError: (e: Error) => toast.error(e.message) });
+  const m = useMutation({ mutationFn: () => gen({ data: { fundId, templateKey, values } }), onSuccess: (r: any) => { toast.success("Draft created in Documents"); onCreated({ title: r.title, body: r.body }); }, onError: (e: Error) => toast.error(e.message) });
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-lg">

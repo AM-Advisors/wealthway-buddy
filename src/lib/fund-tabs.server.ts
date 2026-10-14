@@ -221,7 +221,7 @@ export async function saveGenerated(uid: string, fundId: string, g: { templateKe
     offering_id: fundId, title: g.title, category: g.category, template_key: g.templateKey, body: g.body, uploaded_by: uid,
   }).select("id").single();
   if (error) throw new Error("Couldn't save the document.");
-  return { id: data.id as string };
+  return { id: data.id as string, title: g.title, body: g.body };
 }
 
 /* ---------------- Banking & books ---------------- */
