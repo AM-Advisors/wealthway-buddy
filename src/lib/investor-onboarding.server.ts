@@ -642,6 +642,16 @@ async function publishedQuestionnaire(offeringId: string) {
   return ((data ?? []) as any[])[0] ?? null;
 }
 
+/** The person's most recent Didit session: their own verification, else a staff-confirmed link. */
+export async function latestDiditSessionFor(personId: string | null): Promise<string | null> {
+  if (!personId) return null;
+  const [{ data: k }, { data: d }] = await Promise.all([
+    db().from("kyc_verifications").select("session_id, updated_at").eq("person_id", personId).not("session_id", "is", null).order("updated_at", { ascending: false }).limit(1),
+    db().from("source_reconciliation_decisions").select("source_ref, created_at").eq("source", "didit").eq("decision", "confirm_match").eq("proposed_person_id", personId).order("created_at", { ascending: false }).limit(1),
+  ]);
+  return ((k ?? []) as any[])[0]?.session_id ?? (((d ?? []) as any[])[0]?.source_ref as string | undefined)?.replace(/^session:/, "") ?? null;
+}
+
 export async function saveQuestionnaire(
   userId: string,
   input: { onboardingId: string; answers: Record<string, unknown>; submit?: boolean },
@@ -656,7 +666,9 @@ export async function saveQuestionnaire(
   }
   await touch(row.id, {
     questionnaire_responses: input.answers,
-    ...(input.submit ? { questionnaire_version: questionnaire?.version ?? 1 } : {}),
+    questionnaire_source: "harmonious",
+    questionnaire_didit_session_id: await latestDiditSessionFor(row.person_id ?? null),
+    ...(input.submit ? { questionnaire_version: questionnaire?.version ?? 1, questionnaire_submitted_at: nowIso() } : {}),
   });
   await recordEvent({
     onboardingId: row.id,
