@@ -15,7 +15,7 @@ let { data: src } = await db.from("document_sources").select("id").eq("connectio
 if (!src) {
   const r = await db.from("document_sources").insert({
     provider: "box", label: "Founders Fund 2025 K-1s (Box)", connection_reference: "box-shared:https://app.box.com/s/93lnemz597wwwdco5sdkrytbv3w4xcvy",
-    purpose: "historical_tax_documents", read_only: true, allowed_root_ids: [BOX_ROOT], folder_mappings: { [BOX_ROOT]: OFFERING },
+    purpose: "historical_documents", read_only: true, allowed_root_ids: [BOX_ROOT], folder_mappings: [{ folder_id: BOX_ROOT, offering_id: OFFERING }],
     status: "approved", approved_by: ACTOR, approved_at: new Date().toISOString(), is_test_demo: false, created_by: ACTOR,
   }).select("id").single();
   if (r.error) throw r.error; src = r.data;
