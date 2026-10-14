@@ -120,6 +120,8 @@ export const listClientPeople = createServerFn({ method: "GET" })
         notes: p.notes,
         status: p.status ?? "active",
         userId: p.user_id,
+        kycStatus: verificationFor(p)?.kyc_status ?? null,
+        amlStatus: verificationFor(p)?.aml_status ?? null,
         scopes: ((scopes ?? []) as any[]).filter((s) => s.contact_id === p.id).map((s) => ({ id: s.id, offeringId: s.offering_id, companyId: s.company_id, role: s.role })),
         // Real portal access, from the existing authorization model only.
         portalFunds: portalFundAccess(p.user_id, (fm ?? []) as any[]),
