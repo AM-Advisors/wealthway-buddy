@@ -229,6 +229,7 @@ function DetailsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; onS
             minInvestmentCents: toCents(f.minInvestment ?? "") ?? 0, maxInvestmentCents: toCents(f.maxInvestment ?? ""),
             offeringOpenDate: f.offeringOpenDate || null, offeringCloseDate: f.offeringCloseDate || null,
             rollingCloses: f.rollingCloses === "" ? null : f.rollingCloses === "yes",
+            driveFolderUrl: f.driveFolderUrl?.trim() || null,
           },
           setupFields: {
             fiscalYearEnd: f.fiscalYearEnd || null,
@@ -265,6 +266,10 @@ function DetailsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; onS
           <Field label="Tax classification"><Input placeholder="e.g. Partnership" {...bind("taxClassification")} /></Field>
         </section>
         <ServiceProvidersSection offeringId={offeringId} />
+        <section className="grid gap-3 sm:grid-cols-3">
+          <Field label="Google Drive folder link"><Input placeholder="https://drive.google.com/drive/folders/…" {...bind("driveFolderUrl")} /></Field>
+        </section>
+        <p className="text-xs text-muted-foreground">The Drive link is a reference for the team only; it never changes Drive permissions and is never shown to investors.</p>
         <p className="text-xs text-muted-foreground">The EIN and EIN letter stay in the locked Entity & EIN card; they are never shown to investors.</p>
         <section className="grid gap-3 sm:grid-cols-3">
           <Field label="Offering exemption">{sel("regType", [["506b", "Rule 506(b)"], ["506c", "Rule 506(c)"], ["regcf", "Reg CF"], ["rega", "Reg A"], ["regaplus", "Reg A+"]])}</Field>
