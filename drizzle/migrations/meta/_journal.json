@@ -1681,6 +1681,13 @@
       "when": 1792017128019,
       "tag": "0239_fund_file_signatures",
       "breakpoints": true
+    },
+    {
+      "idx": 240,
+      "version": "7",
+      "when": 1792017518146,
+      "tag": "0240_person_kyc_requests",
+      "breakpoints": true
     }
   ]
 }
