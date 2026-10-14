@@ -1653,6 +1653,13 @@
       "when": 1792016228581,
       "tag": "0235_offering_banking_setup_by",
       "breakpoints": true
+    },
+    {
+      "idx": 236,
+      "version": "7",
+      "when": 1792016378306,
+      "tag": "0236_offering_ein_setup_by",
+      "breakpoints": true
     }
   ]
 }

@@ -8,7 +8,8 @@ import { BankingChoice } from "@/components/banking-choice";
 import { guidedSetupFn, staffSaveSetupFn } from "@/lib/fund-setup-guided.functions";
 import { submitFundInfoFn } from "@/lib/fund-manager-submissions.functions";
 import { FUND_TYPES } from "@/lib/fund-setup-canonical";
-import { EinField } from "@/components/fund-workspace";
+import { EinChoice } from "@/components/ein-choice";
+import { fundEinFn } from "@/lib/fund-tabs.functions";
 import { SubmitForm, History } from "@/components/fund-manager-setup-loader";
 import { FundSignatoriesCard } from "@/components/fund-signatories-card";
 import { OfferingDocumentsSetup } from "@/components/offering-documents-setup";
@@ -98,7 +99,6 @@ export function FundSetupForm({ offeringId, mode, staffExtras }: { offeringId: s
         return <Button size="sm" variant={changed ? "default" : "outline"} disabled={!changed || busy} onClick={() => save(keys, s.title)}>{isStaff ? "Save" : "Submit"}</Button>;
       })()}>
         {id === "basic" && ret && <p className="rounded-lg bg-muted p-3 text-sm">Harmonious returned this: {ret.review_note ?? "please review and resubmit."}</p>}
-        {id === "details" && <div className="rounded-xl border bg-background px-4 py-3 text-sm"><EinField fundId={offeringId} /></div>}
         <div className="space-y-3">{s.fields.map((f) => <div key={f.key}>{renderField(f)}</div>)}</div>
         {(() => {
           const keys = s.fields.map((f) => f.key);
@@ -129,6 +129,9 @@ export function FundSetupForm({ offeringId, mode, staffExtras }: { offeringId: s
       {fieldSection("basic")}
       {fieldSection("details")}
       {fieldSection("jurisdiction")}
+      <SetupSection open={open} setOpen={setOpen} id="ein" title="EIN" status={<EinStatus fundId={offeringId} />}>
+        <EinChoice offeringId={offeringId} onChanged={refresh} />
+      </SetupSection>
       {fieldSection("offering")}
       {fieldSection("fees")}
 
@@ -188,4 +191,11 @@ function SetupSection({ id, title, status, action, children, open, setOpen }: { 
       {isOpen && <div className="space-y-3 px-5 pb-5">{children}</div>}
     </section>
   );
+}
+
+function EinStatus({ fundId }: { fundId: string }) {
+  const load = useServerFn(fundEinFn);
+  const q = useQuery({ queryKey: ["fund-ein", fundId, false], queryFn: () => load({ data: { fundId, reveal: false } }) });
+  const st = q.data?.status;
+  return st === "recorded" ? <Chip tone="done">Done</Chip> : st === "in_review" ? <Chip tone="wait">Waiting on review</Chip> : <Chip tone="miss">Needed</Chip>;
 }
