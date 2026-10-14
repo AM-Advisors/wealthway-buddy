@@ -61,7 +61,7 @@ for (const r of rows) {
   await db.from("investor_record_changes").insert({ offering_id: OFFERING, onboarding_id: ob.id, subject_table: "investor_onboardings", subject_id: ob.id, field: "added_to_fund", old_value: null, new_value: { profileId: prof.id, source: "2025 K-1" }, source: "document", actor_user_id: ACTOR, manager_visible: true });
 
   // K-1: catalog + publish + entitle the investment profile.
-  const bytes = readFileSync(r.file);
+  const bytes = readFileSync("/tmp/ff/" + r.file);
   const { data: doc, error: de } = await db.from("document_catalog").insert({
     source_id: src.id, external_file_id: r.box_id, parent_folder_id: BOX_ROOT, file_name: `2025 Schedule K-1 - ${legalName}.pdf`, mime_type: "application/pdf",
     size_bytes: bytes.length, checksum: createHash("sha256").update(bytes).digest("hex"), document_type: "k1", tax_year: 2025, offering_id: OFFERING,
