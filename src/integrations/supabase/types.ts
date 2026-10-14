@@ -19820,6 +19820,71 @@ export type Database = {
           },
         ]
       }
+      fund_file_signatures: {
+        Row: {
+          created_at: string
+          created_by: string
+          file_id: string
+          id: string
+          offering_id: string
+          onboarding_id: string | null
+          sent_at: string | null
+          signed_at: string | null
+          signed_name: string | null
+          signed_user_agent: string | null
+          signer_email: string
+          signer_name: string
+          signer_role: string
+          signer_user_id: string | null
+          signing_order: number
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          file_id: string
+          id?: string
+          offering_id: string
+          onboarding_id?: string | null
+          sent_at?: string | null
+          signed_at?: string | null
+          signed_name?: string | null
+          signed_user_agent?: string | null
+          signer_email: string
+          signer_name: string
+          signer_role: string
+          signer_user_id?: string | null
+          signing_order: number
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          file_id?: string
+          id?: string
+          offering_id?: string
+          onboarding_id?: string | null
+          sent_at?: string | null
+          signed_at?: string | null
+          signed_name?: string | null
+          signed_user_agent?: string | null
+          signer_email?: string
+          signer_name?: string
+          signer_role?: string
+          signer_user_id?: string | null
+          signing_order?: number
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_file_signatures_file_id_fkey"
+            columns: ["file_id"]
+            isOneToOne: false
+            referencedRelation: "fund_files"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fund_files: {
         Row: {
           body: string | null

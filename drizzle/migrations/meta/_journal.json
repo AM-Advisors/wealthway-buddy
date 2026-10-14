@@ -1674,6 +1674,13 @@
       "when": 1792016994386,
       "tag": "0238_bank_request_ein",
       "breakpoints": true
+    },
+    {
+      "idx": 239,
+      "version": "7",
+      "when": 1792017128019,
+      "tag": "0239_fund_file_signatures",
+      "breakpoints": true
     }
   ]
 }
