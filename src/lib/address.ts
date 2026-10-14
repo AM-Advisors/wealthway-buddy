@@ -20,9 +20,9 @@ export function parseAddressParts(addr: string | null | undefined): AddressParts
   if (m && tokens.length >= 2) {
     const state = m[1]!.trim();
     const zip = m[2]!;
-    const street = tokens.slice(0, tokens.length - 2);
+    // "street[, line2], city, ST zip" — a two-token tail without a city keeps the street whole.
+    const street = tokens.length >= 3 ? tokens.slice(0, tokens.length - 2) : tokens.slice(0, tokens.length - 1);
     const city = tokens.length >= 3 ? tokens[tokens.length - 2]! : "";
-    if (street.length === 0 && !city) return { ...EMPTY, addressState: state, addressZip: zip };
     const [line1, line2] = street.length >= 2 ? [street[0]!, street.slice(1).join(", ")] : [street[0] ?? "", ""];
     return { addressLine1: line1, addressLine2: line2, addressCity: city, addressState: state, addressZip: zip };
   }
