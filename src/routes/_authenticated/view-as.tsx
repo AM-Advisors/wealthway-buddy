@@ -6,7 +6,7 @@ import { clientNavigation } from "@/lib/client-navigation";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/view-as")({
-  validateSearch: (s: Record<string, unknown>) => ({ page: typeof s.page === "string" ? s.page : undefined }),
+  validateSearch: (s: Record<string, unknown>): { page?: string } => (typeof s["page"] === "string" ? { page: s["page"] } : {}),
   head: () => ({
     meta: [
       { title: "Client View - Harmonious" },
