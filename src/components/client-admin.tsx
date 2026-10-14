@@ -166,6 +166,23 @@ function EditClientDialog({ clientId, initial, staff, onClose }: { clientId: str
 
 /* ------------------------------------------------------------ people */
 
+function verificationLabel(s: string | null | undefined) {
+  if (s === "approved") return "Approved";
+  if (s === "declined") return "Declined";
+  if (s === "in_review" || s === "pending") return "In review";
+  return "Not started";
+}
+
+function VerificationBadges({ kyc, aml }: { kyc?: string | null; aml?: string | null }) {
+  const variant = (s: string | null | undefined) => (s === "approved" ? "default" : s === "declined" ? "destructive" : "outline") as "default" | "destructive" | "outline";
+  return (
+    <>
+      <Badge variant={variant(kyc)}>KYC: {verificationLabel(kyc)}</Badge>
+      <Badge variant={variant(aml)}>AML: {verificationLabel(aml)}</Badge>
+    </>
+  );
+}
+
 export function ClientPeoplePanel({ clientId }: { clientId: string }) {
   const load = useServerFn(listClientPeople);
   const q = useQuery({ queryKey: ["client-people", clientId], queryFn: () => load({ data: { clientId } }) });
@@ -209,6 +226,7 @@ export function ClientPeoplePanel({ clientId }: { clientId: string }) {
             </div>
             <div className="mt-2 flex flex-wrap gap-1">
               {p.roles.map((r: string) => <Badge key={r} variant="secondary">{roleLabel(r)}</Badge>)}
+              <VerificationBadges kyc={p.kycStatus} aml={p.amlStatus} />
             </div>
             <div className="mt-2 text-xs">
               <span className="text-muted-foreground">Fund / company scope: </span>
