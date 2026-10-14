@@ -35,7 +35,11 @@ export const FORM_SECTIONS: { id: string; title: string; fields: FieldDef[] }[] 
   { id: "jurisdiction", title: "Jurisdiction", fields: [
     { key: "country", label: "Country", disabled: true, fixed: "United States" },
     { key: "jurisdiction", label: "State", section: fd, required: true },
-    { key: "principalAddress", label: "Principal address", section: fd },
+    { key: "addressLine1", label: "Address line 1", section: fd },
+    { key: "addressLine2", label: "Address line 2", section: fd },
+    { key: "addressCity", label: "City", section: fd },
+    { key: "addressState", label: "State (address)", section: fd },
+    { key: "addressZip", label: "ZIP code", section: fd },
   ] },
   { id: "offering", title: "Offering", fields: [
     { key: "rollingCloses", label: "Rolling closes", section: fd, options: [["yes", "Yes"], ["no", "No"]] },

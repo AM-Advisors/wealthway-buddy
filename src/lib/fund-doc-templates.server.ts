@@ -189,6 +189,7 @@ export async function fundTemplateValues(offeringId: string): Promise<Record<str
     o.fund_signatory_person_id ? db().from("persons").select("legal_first_name, legal_middle_name, legal_last_name, email").eq("id", o.fund_signatory_person_id).maybeSingle() : Promise.resolve({ data: null }),
   ]);
   const legal = o.legal_entity_name || o.name;
+  const ap = (await import("@/lib/address")).parseAddressParts(o.principal_address);
   const manager = o.gp_entity_name || o.signatory_entity_name || c?.legal_name || c?.name || null;
   const signer = fullName(sig);
   const email = sig?.email || c?.primary_contact_email || null;
@@ -197,6 +198,7 @@ export async function fundTemplateValues(offeringId: string): Promise<Record<str
     "Fund Manager": manager, "Fund Manager Name": manager, "Manager Name": manager, "Fund Adviser Name": manager,
     "Management Fee": pct(fee?.management_fee_pct), "Carry Percent": pct(fee?.carry_pct), "Carry Amount": pct(fee?.carry_pct),
     "address": o.principal_address, "Manager Address": o.principal_address, "email": email, "Manager Email": email,
+    "Address Line 1": ap.addressLine1, "Address Line 2": ap.addressLine2, "Address City": ap.addressCity, "Address State": ap.addressState, "Address ZIP": ap.addressZip,
     "Signatory's Legal Name": signer, "Fund Manager Signatory": signer, "Fund Manager Signatory Name": signer,
     "Signatory's Title": o.signatory_title, "Signatory Title": o.signatory_title, "Fund Manager Signatory Title": o.signatory_title,
     "State": o.state_formed, "Arbitration State": o.state_formed, "Country": "United States",

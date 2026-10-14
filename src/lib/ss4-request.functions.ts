@@ -8,6 +8,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/lib/require-auth";
+import { parseAddressParts } from "@/lib/address";
 
 const SITE = "https://app.harmonious.co";
 const TEAM_EMAIL = "operations@harmonious.co";
@@ -31,10 +32,13 @@ function usDate(iso: string | null | undefined) {
 }
 
 function splitAddress(addr: string | null | undefined): [string, string] {
-  const a = String(addr ?? "").replace(/\s+/g, " ").trim();
-  if (!a) return ["", ""];
-  const i = a.indexOf(",");
-  return i < 0 ? [a, ""] : [a.slice(0, i).trim(), a.slice(i + 1).trim()];
+  const p = parseAddressParts(addr);
+  const street = [p.addressLine1, p.addressLine2].map((x) => x.trim()).filter(Boolean).join(", ");
+  const cityStateZip = [
+    p.addressCity.trim(),
+    [p.addressState.trim(), p.addressZip.trim()].filter(Boolean).join(" "),
+  ].filter(Boolean).join(", ");
+  return [street, cityStateZip];
 }
 
 /** Staff, or a manager of this exact fund. */
