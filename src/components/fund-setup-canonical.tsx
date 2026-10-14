@@ -74,7 +74,7 @@ export function FundSetupCanonical({ offeringId }: { offeringId: string }) {
             const r = (d.statuses as any)[s];
             const target = SECTION_ANCHOR[s];
             return (
-              <a key={s} href={`#${target}`} onClick={jump(target)} className="rounded-md border p-3 transition-colors hover:border-primary/50 hover:bg-muted/40">
+              <a key={s} href={`#${target}`} onClick={jump(target ?? "")} className="rounded-md border p-3 transition-colors hover:border-primary/50 hover:bg-muted/40">
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-sm font-medium">{CANONICAL_SECTION_LABELS[s]}</span>
                   <Badge variant={tone(r.status)}>{(SECTION_STATUS_LABELS as any)[r.status]}</Badge>
