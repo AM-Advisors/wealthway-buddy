@@ -317,10 +317,17 @@ function Sign({ d, onboardingId, done }: { d: any; onboardingId: string; done: (
             {(d.questionnaire.questions ?? []).map((q: any) => (
               <div key={q.key}>
                 <Label htmlFor={q.key}>{q.label}</Label>
-                <Textarea id={q.key} value={answers[q.key] ?? String(d.questionnaireResponses?.[q.key] ?? "")} onChange={(e) => setAnswers({ ...answers, [q.key]: e.target.value })} />
+                {(q.type === "select" || q.type === "yes_no") ? (
+                  <Select value={answers[q.key] ?? String(d.questionnaireResponses?.[q.key] ?? "")} onValueChange={(v) => setAnswers({ ...answers, [q.key]: v })}>
+                    <SelectTrigger id={q.key}><SelectValue placeholder="Choose one" /></SelectTrigger>
+                    <SelectContent>{(q.type === "yes_no" ? ["Yes", "No"] : (q.options ?? [])).map((o: string) => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
+                  </Select>
+                ) : (
+                  <Textarea id={q.key} value={answers[q.key] ?? String(d.questionnaireResponses?.[q.key] ?? "")} onChange={(e) => setAnswers({ ...answers, [q.key]: e.target.value })} />
+                )}
               </div>
             ))}
-            <Button onClick={() => saveQ.mutate({ data: { onboardingId, answers, submit: true } } as any)}>Save answers</Button>
+            <Button onClick={() => saveQ.mutate({ data: { onboardingId, answers: { ...(d.questionnaireResponses ?? {}), ...answers }, submit: true } } as any)}>Save answers</Button>
           </div>
         ) : null}
 

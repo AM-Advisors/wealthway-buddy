@@ -422,6 +422,17 @@ export async function investorRecordDetail(userId: string, onboardingId: string)
       ...(staff ? { acceptedCents: row.accepted_amount_cents, internalNotes: row.internal_notes } : {}),
     },
     readiness,
+    questionnaire: await (async () => {
+      const { data: qs } = await db().from("offering_questionnaires").select("version, questions").eq("offering_id", row.offering_id).eq("status", "published").order("version", { ascending: false }).limit(1);
+      const q = ((qs ?? []) as any[])[0];
+      const answers = (row.questionnaire_responses ?? {}) as Record<string, unknown>;
+      return {
+        items: ((q?.questions ?? []) as any[]).map((x) => ({ key: x.key as string, label: x.label as string, answer: answers[x.key] == null ? null : String(answers[x.key]) })),
+        source: (row.questionnaire_source ?? null) as "harmonious" | "didit" | null,
+        submittedAt: (row.questionnaire_submitted_at ?? null) as string | null,
+        diditSession: row.questionnaire_didit_session_id ? `••••${String(row.questionnaire_didit_session_id).slice(-6)}` : null,
+      };
+    })(),
     activity: activityFor((changes ?? []) as any[], staff ? "staff" : "manager"),
     suggestions: staff ? ((sugg ?? []) as any[]).map((s) => ({ id: s.id, field: s.field, current: s.current_value, proposed: s.proposed_value, source: s.source, status: s.status, at: s.created_at })) : [],
     pendingReviewCount: (sugg ?? []).length,
