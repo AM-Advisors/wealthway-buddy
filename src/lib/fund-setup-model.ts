@@ -289,13 +289,15 @@ export function entityStepError(
   from: EntityStep,
   to: EntityStep,
   evidence: Record<string, unknown>,
+  opts: { isSeries?: boolean } = {},
 ): string | null {
   const fromIndex = ENTITY_STEPS.indexOf(from);
   const toIndex = ENTITY_STEPS.indexOf(to);
   if (toIndex < 0) return `${to} is not an entity formation step.`;
   if (toIndex <= fromIndex) return "Entity formation moves forward, not backward.";
   if (toIndex > fromIndex + 1) return "Entity formation steps are completed in order.";
-  const needed = EVIDENCE_REQUIRED[to];
+  // A series is created under its Master LLC and has no formation document or certificate of its own.
+  const needed = opts.isSeries && (to === "formation_filed" || to === "formation_accepted") ? undefined : EVIDENCE_REQUIRED[to];
   if (needed && !evidence[needed]) {
     return `${to.replace(/_/g, " ")} needs the supporting document on file first.`;
   }
