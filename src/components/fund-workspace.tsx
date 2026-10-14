@@ -65,7 +65,7 @@ export function EinField({ fundId }: { fundId: string }) {
   return <div><dt className="text-xs text-muted-foreground">EIN</dt><dd>{body}</dd></div>;
 }
 
-export const FUND_TABS = ["overview", "approvals", "requests", "calendar", "todos", "details", "team", "investors", "documents", "banking", "accounting", "assets", "closes", "regulatory"] as const;
+export const FUND_TABS = ["overview", "approvals", "requests", "calendar", "todos", "details", "team", "investors", "documents", "banking", "accounting", "assets", "closes", "regulatory", "audit"] as const;
 export type FundTab = (typeof FUND_TABS)[number];
 type Tab = FundTab;
 export type FundWorkspaceMode = "client" | "harmonious";
