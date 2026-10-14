@@ -342,5 +342,5 @@ export const addFundSignatoryFn = createServerFn({ method: "POST" })
 
 export const updateFundSignatoryFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ offeringId: uuid, id: uuid, title: opt, capacity: opt, makePrimary: z.boolean().optional(), remove: z.boolean().optional() }).parse)
+  .inputValidator(z.object({ offeringId: uuid, id: uuid, title: opt, capacity: opt, preferredName: opt, email: opt, makePrimary: z.boolean().optional(), remove: z.boolean().optional() }).parse)
   .handler(async ({ data, context }) => __auto(await (await signatories()).updateFundSignatory(context.userId, data), { offeringId: data.offeringId }));
