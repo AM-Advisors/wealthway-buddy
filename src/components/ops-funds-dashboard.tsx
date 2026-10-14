@@ -42,7 +42,7 @@ function RowActions({ f }: { f: any }) {
 /** Operations → Funds: which funds need attention, and what's next. */
 export function OpsFundsDashboard({ initialFilter }: { initialFilter?: FundFilter | undefined } = {}) {
   const load = useServerFn(opsFundsDashboardFn);
-  const q = useQuery({ queryKey: ["ops-funds-dashboard"], queryFn: () => load(), retry: false });
+  const q = useQuery({ queryKey: ["ops-funds-dashboard"], queryFn: () => load(), retry: false, staleTime: 60_000, gcTime: 30 * 60_000, refetchOnWindowFocus: false });
   const [filter, setFilter] = useState<FundFilter>(initialFilter ?? "all");
   const [term, setTerm] = useState("");
   const [client, setClient] = useState("any");
@@ -55,7 +55,13 @@ export function OpsFundsDashboard({ initialFilter }: { initialFilter?: FundFilte
     const sort = (x: Map<string, string>) => [...x.entries()].sort((a, b) => a[1].localeCompare(b[1]));
     return { clients: sort(c), owners: sort(o), managers: sort(m) };
   }, [rows]);
-  if (q.isPending) return <Skeleton className="h-96 w-full rounded-xl" />;
+  if (q.isPending) return (
+    <div className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6" aria-busy="true">
+      <div><h1 className="font-heading text-2xl font-semibold">Funds</h1><p className="text-sm text-muted-foreground">Loading funds…</p></div>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)}</div>
+      <div className="space-y-2">{Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-14 rounded-lg" />)}</div>
+    </div>
+  );
   if (q.isError) return <p className="text-sm text-muted-foreground">Harmonious operations access is required.</p>;
   const t = (q.data as any).totals;
   const shown = rows
@@ -65,7 +71,7 @@ export function OpsFundsDashboard({ initialFilter }: { initialFilter?: FundFilte
     .filter((r) => owner === "any" || r.owner?.id === owner)
     .filter((r) => manager === "any" || r.managers.some((m: any) => m.id === manager))
     .sort((a, b) => (b.metrics.blocked + b.metrics.needsHarmonious) - (a.metrics.blocked + a.metrics.needsHarmonious));
-  const metric: [string, number, boolean?][] = [["Active Funds", t.activeFunds], ["Investors Onboarding", t.onboarding], ["Ready to Close", t.ready], ["Needs Harmonious", t.needsHarmonious], ["Blocked", t.blocked, true]];
+  const metric: [string, number, boolean, FundFilter][] = [["Active Funds", t.activeFunds, false, "active"], ["Investors Onboarding", t.onboarding, false, "onboarding"], ["Ready to Close", t.ready, false, "ready"], ["Needs Harmonious", t.needsHarmonious, false, "needs_harmonious"], ["Blocked", t.blocked, true, "blocked"]];
   return (
     <div className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -78,8 +84,8 @@ export function OpsFundsDashboard({ initialFilter }: { initialFilter?: FundFilte
         </div>
       </div>
       <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border bg-border sm:grid-cols-5">
-        {metric.map(([l, v, warn]) => (
-          <div key={l} className="bg-card p-4 last:col-span-2 sm:last:col-span-1"><p className="text-xs uppercase tracking-wide text-muted-foreground">{l}</p><p className={cn("font-heading text-2xl font-semibold", warn && v ? "text-destructive" : "")}>{v}</p></div>
+        {metric.map(([l, v, warn, fk]) => (
+          <button type="button" key={l} onClick={() => setFilter(filter === fk ? "all" : fk)} aria-pressed={filter === fk} className={cn("bg-card p-4 text-left transition-colors hover:bg-muted/50 last:col-span-2 sm:last:col-span-1", filter === fk && "bg-muted")}><p className="text-xs uppercase tracking-wide text-muted-foreground">{l}</p><p className={cn("font-heading text-2xl font-semibold", warn && v ? "text-destructive" : "")}>{v}</p></button>
         ))}
       </div>
       <div className="space-y-3">
