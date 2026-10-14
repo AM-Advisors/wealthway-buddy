@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { ChevronDown, ChevronRight } from "lucide-react";
@@ -47,7 +47,7 @@ export function AuditHistoryTab({ fundId }: { fundId: string }) {
                 </button>
                 {isOpen && (
                   <dl className="ml-6 mt-2 grid gap-1 rounded bg-muted/50 p-2 text-xs sm:grid-cols-[180px_1fr]">
-                    {r.details.map((d, i) => (<><dt key={`k${i}`} className="text-muted-foreground">{d.label}</dt><dd key={`v${i}`} className="break-words">{d.value}</dd></>))}
+                    {r.details.map((d, i) => (<Fragment key={i}><dt className="text-muted-foreground">{d.label}</dt><dd className="break-words">{d.value}</dd></Fragment>))}
                   </dl>
                 )}
               </li>
