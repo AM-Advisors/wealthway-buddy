@@ -93,7 +93,7 @@ const PRIMARY: { value: string; label: string; group: string[] }[] = [
 ];
 const SUB_LABEL: Record<string, string> = { setup: "Checklist", details: "Fund details", team: "Team", banking: "Banking", accounting: "Accounting", assets: "Assets", closes: "Closes", distributions: "Distributions" };
 const SETUP_GROUP = ["setup", "details", "team", "banking"];
-const MERGED_SECTIONS = [{ id: "fs-setup", label: "Progress" }, { id: "setup-details", label: "Fund details" }, { id: "setup-economics", label: "Fees & terms" }, { id: "setup-documents", label: "Documents" }, { id: "fs-team", label: "Team" }, { id: "fs-banking", label: "Banking" }, { id: "fs-launch", label: "Launch" }];
+const MERGED_SECTIONS = [{ id: "fs-setup", label: "Progress" }, { id: "fs-launch", label: "Launch status" }, { id: "setup-details", label: "Fund details" }, { id: "setup-economics", label: "Fees & terms" }, { id: "setup-documents", label: "Documents" }, { id: "fund-operations", label: "EIN, tax & sign-off" }, { id: "fs-team", label: "Team" }, { id: "fs-banking", label: "Banking" }];
 const MORE: { value: string; label: string }[] = [
   { value: "todos", label: "To dos" }, { value: "approvals", label: "Approvals" }, { value: "requests", label: "Requests" },
   { value: "calendar", label: "Calendar" }, { value: "regulatory", label: "Regulatory" }, { value: "services", label: "Services" },
