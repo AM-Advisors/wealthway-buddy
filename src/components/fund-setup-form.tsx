@@ -118,7 +118,7 @@ export function FundSetupForm({ offeringId, mode, staffExtras }: { offeringId: s
           <li className="rounded-xl border bg-background px-4 py-3"><span className="block text-xs text-muted-foreground">Administrator</span>{d.administrator}</li>
           {(d.team as any[]).map((m, i) => <li key={i} className="rounded-xl border bg-background px-4 py-3"><span className="block text-xs capitalize text-muted-foreground">{String(m.role).replace(/_/g, " ")}</span>{m.name ?? "Not assigned"}</li>)}
         </ul>
-        {isStaff ? <FundSignatoriesCard offeringId={offeringId} onChanged={refresh} /> : <p className="text-sm text-muted-foreground">Harmonious adds signers so each person completes an identity check. Signer on file: {prior.signers || "none yet"}.</p>}
+        {isStaff ? <FundSignatoriesCard offeringId={offeringId} onChanged={refresh} /> : <p className="text-sm text-muted-foreground">Harmonious adds signers so each person completes an identity check. Signer on file: {prior["signers"] || "none yet"}.</p>}
       </SetupSection>
 
       <SetupSection open={open} setOpen={setOpen} id="bank" title="Banking" status={<Chip tone={stepOf("bank")?.status === "done" ? "done" : waiting("bank") ? "wait" : "miss"}>{stepOf("bank")?.statusLabel ?? ""}</Chip>}>
