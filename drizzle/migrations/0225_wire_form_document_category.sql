@@ -1,0 +1,2 @@
+ALTER TABLE public.offering_documents DROP CONSTRAINT offering_documents_category_chk;
+ALTER TABLE public.offering_documents ADD CONSTRAINT offering_documents_category_chk CHECK (document_category IS NULL OR document_category = ANY (ARRAY['operating_agreement','subscription_agreement','ppm','wire_form','other']));
