@@ -33562,6 +33562,7 @@ export type Database = {
           drive_links: Json
           drive_sync_enabled: boolean
           ein_path: string | null
+          ein_setup_by: string | null
           ein_workflow_status: string | null
           entity_type: string | null
           form_d_responsibility: string | null
@@ -33634,6 +33635,7 @@ export type Database = {
           drive_links?: Json
           drive_sync_enabled?: boolean
           ein_path?: string | null
+          ein_setup_by?: string | null
           ein_workflow_status?: string | null
           entity_type?: string | null
           form_d_responsibility?: string | null
@@ -33706,6 +33708,7 @@ export type Database = {
           drive_links?: Json
           drive_sync_enabled?: boolean
           ein_path?: string | null
+          ein_setup_by?: string | null
           ein_workflow_status?: string | null
           entity_type?: string | null
           form_d_responsibility?: string | null

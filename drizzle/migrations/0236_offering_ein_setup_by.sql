@@ -1,0 +1,2 @@
+ALTER TABLE public.offerings ADD COLUMN IF NOT EXISTS ein_setup_by text CHECK (ein_setup_by IN ('fund','harmonious'));
+COMMENT ON COLUMN public.offerings.ein_setup_by IS 'Who obtains the EIN: fund (manager applies on IRS site) or harmonious (SS-4).';
