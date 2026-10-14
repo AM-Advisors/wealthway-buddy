@@ -1,0 +1,1 @@
+alter table public.offerings add column if not exists drive_folder_url text;
