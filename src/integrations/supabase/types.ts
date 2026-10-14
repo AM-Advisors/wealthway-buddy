@@ -25918,7 +25918,10 @@ export type Database = {
           offering_id: string
           person_id: string | null
           position_id: string | null
+          questionnaire_didit_session_id: string | null
           questionnaire_responses: Json
+          questionnaire_source: string | null
+          questionnaire_submitted_at: string | null
           questionnaire_version: number | null
           removal_reason: string | null
           removed_at: string | null
@@ -25965,7 +25968,10 @@ export type Database = {
           offering_id: string
           person_id?: string | null
           position_id?: string | null
+          questionnaire_didit_session_id?: string | null
           questionnaire_responses?: Json
+          questionnaire_source?: string | null
+          questionnaire_submitted_at?: string | null
           questionnaire_version?: number | null
           removal_reason?: string | null
           removed_at?: string | null
@@ -26012,7 +26018,10 @@ export type Database = {
           offering_id?: string
           person_id?: string | null
           position_id?: string | null
+          questionnaire_didit_session_id?: string | null
           questionnaire_responses?: Json
+          questionnaire_source?: string | null
+          questionnaire_submitted_at?: string | null
           questionnaire_version?: number | null
           removal_reason?: string | null
           removed_at?: string | null
