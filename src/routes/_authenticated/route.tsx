@@ -1,6 +1,11 @@
 import { Outlet, createFileRoute, redirect, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import type { ReactNode } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { useEffect, type ReactNode } from "react";
+
+import { getPolicyStatus } from "@/lib/policies.functions";
+import { accountKycStatusFn } from "@/lib/account-kyc.functions";
+import { getPortalAccess } from "@/lib/portal-access.functions";
 
 import { OpsSidebar } from "@/components/ops-sidebar";
 
@@ -37,6 +42,17 @@ export const Route = createFileRoute("/_authenticated")({
 function AuthenticatedLayout() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const policyStatus = useServerFn(getPolicyStatus);
+  const kycStatus = useServerFn(accountKycStatusFn);
+  const portalAccess = useServerFn(getPortalAccess);
+
+  // The gates below nest, so start all their checks at once instead of one after another.
+  // Each gate still decides from its own query; this only warms the cache.
+  useEffect(() => {
+    void queryClient.prefetchQuery({ queryKey: ["policy-status"], queryFn: () => policyStatus(), staleTime: 60_000 });
+    void queryClient.prefetchQuery({ queryKey: ["account-kyc-status"], queryFn: () => kycStatus(), staleTime: 60_000 });
+    void queryClient.prefetchQuery({ queryKey: ["portal-access"], queryFn: () => portalAccess(), staleTime: 60_000 });
+  }, [queryClient, policyStatus, kycStatus, portalAccess]);
 
   async function signOut() {
     await queryClient.cancelQueries();
