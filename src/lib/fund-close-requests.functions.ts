@@ -120,6 +120,7 @@ export const createFundCloseRequest = createServerFn({ method: "POST" })
       target_date: data.targetDate, notes: data.notes.trim() || null, onboarding_ids: [...new Set(data.onboardingIds)],
     }).select("id").single();
     if (error) throw new Error("Couldn't submit the close request.");
+    await (await import("@/lib/ops-slack-notify.server")).notifySubmission({ kind: "close_request", title: "Fund close request submitted", offeringId: data.fundId, submittedBy: uid, ref: row.id, path: "/ops/close-requests" });
     if (data.details) {
       const det = data.details;
       let paPath: string | null = null;

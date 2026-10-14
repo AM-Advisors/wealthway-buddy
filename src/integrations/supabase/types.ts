@@ -26063,6 +26063,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "investor_onboardings_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "investor_onboardings_position_id_fkey"
             columns: ["position_id"]
             isOneToOne: false
@@ -33887,6 +33894,45 @@ export type Database = {
         }
         Relationships: []
       }
+      ops_slack_notifications: {
+        Row: {
+          client_id: string | null
+          created_at: string
+          dedupe_key: string
+          error: string | null
+          id: string
+          kind: string
+          offering_id: string | null
+          slack_ts: string | null
+          status: string
+          tagged_user_id: string | null
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string
+          dedupe_key: string
+          error?: string | null
+          id?: string
+          kind: string
+          offering_id?: string | null
+          slack_ts?: string | null
+          status?: string
+          tagged_user_id?: string | null
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string
+          dedupe_key?: string
+          error?: string | null
+          id?: string
+          kind?: string
+          offering_id?: string | null
+          slack_ts?: string | null
+          status?: string
+          tagged_user_id?: string | null
+        }
+        Relationships: []
+      }
       partnership_return_details: {
         Row: {
           answers: Json
@@ -37444,6 +37490,7 @@ export type Database = {
           phone: string | null
           postal_code: string | null
           region: string | null
+          slack_user_id: string | null
           tax_id: string | null
           updated_at: string
           user_id: string
@@ -37465,6 +37512,7 @@ export type Database = {
           phone?: string | null
           postal_code?: string | null
           region?: string | null
+          slack_user_id?: string | null
           tax_id?: string | null
           updated_at?: string
           user_id: string
@@ -37486,6 +37534,7 @@ export type Database = {
           phone?: string | null
           postal_code?: string | null
           region?: string | null
+          slack_user_id?: string | null
           tax_id?: string | null
           updated_at?: string
           user_id?: string

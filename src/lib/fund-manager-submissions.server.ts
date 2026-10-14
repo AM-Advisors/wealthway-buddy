@@ -54,6 +54,7 @@ export async function submit(userId: string, input: { offeringId: string; sectio
     offering_id: input.offeringId, priority: "high", status: "open", created_by: userId, team: "operations",
     responsibility_status: "HARMONIOUS_HANDLING", related_workflow_type: "fund_manager_submission", related_workflow_id: data.id, source: "workflow",
   } as any).then(() => null, () => null);
+  await (await import("@/lib/ops-slack-notify.server")).notifySubmission({ kind: "fund_manager_submission", title: `Fund manager submitted: ${label(input.section, input.docKind)}`, offeringId: input.offeringId, submittedBy: userId, ref: data.id, path: `/ops/fund-setup/${input.offeringId}` });
   return { id: data.id };
 }
 

@@ -195,6 +195,7 @@ export const submitFundRequest = createServerFn({ method: "POST" })
     } else {
       await db.from("client_fund_intakes").insert({ ...intakeRow, created_by: context.userId });
     }
+    await (await import("@/lib/ops-slack-notify.server")).notifySubmission({ kind: "client_fund_request", title: `New fund request: ${r.fund_name ?? "unnamed"}`, clientId: data.clientId, offeringId: offeringId ?? null, submittedBy: context.userId, ref: data.draftId ?? offeringId ?? null });
 
     // Lands in the existing Operations requests queue, tagged as a new fund.
     await db.from("client_intake_requests").insert({

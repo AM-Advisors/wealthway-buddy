@@ -32,7 +32,7 @@ export const getFundCapTable = createServerFn({ method: "GET" })
     const { data: setup } = await db.from("fund_setups").select("id").eq("offering_id", data.fundId).maybeSingle();
     const [{ data: obs }, { data: letters }, { data: econ }] = await Promise.all([
       db.from("investor_onboardings")
-        .select("id, stage, funding_status, offering_class_key, commitment_amount_cents, accepted_amount_cents, requested_amount_cents, funded_amount_cents, unit_count, removed_at, persons(legal_first_name, legal_last_name, preferred_name), investment_profiles(legal_name)")
+        .select("id, stage, funding_status, offering_class_key, commitment_amount_cents, accepted_amount_cents, requested_amount_cents, funded_amount_cents, unit_count, removed_at, person_id, investment_profile_id")
         .eq("offering_id", data.fundId),
       db.from("side_letters").select("id, onboarding_id, status, mfn_enabled, effective_date, expiry_date, terms").eq("offering_id", data.fundId),
       setup
@@ -41,6 +41,16 @@ export const getFundCapTable = createServerFn({ method: "GET" })
         : Promise.resolve({ data: null }),
     ]);
 
+    // No declared FK from onboardings to persons/profiles, so names are joined here.
+    const pIds = [...new Set(((obs ?? []) as any[]).map((o) => o.person_id).filter(Boolean))];
+    const prIds = [...new Set(((obs ?? []) as any[]).map((o) => o.investment_profile_id).filter(Boolean))];
+    const [{ data: ppl }, { data: profs }] = await Promise.all([
+      pIds.length ? db.from("persons").select("id, legal_first_name, legal_last_name, preferred_name").in("id", pIds) : { data: [] },
+      prIds.length ? db.from("investment_profiles").select("id, legal_name").in("id", prIds) : { data: [] },
+    ]);
+    const pMap = new Map(((ppl ?? []) as any[]).map((x) => [x.id, x]));
+    const prMap = new Map(((profs ?? []) as any[]).map((x) => [x.id, x]));
+    for (const o of (obs ?? []) as any[]) { o.persons = pMap.get(o.person_id) ?? null; o.investment_profiles = prMap.get(o.investment_profile_id) ?? null; }
     const baseTerms = readTerms(econ?.terms);
     const classTerms: Record<string, ClassTerms> = {};
     for (const c of (Array.isArray(econ?.classes) ? econ.classes : []) as any[]) {

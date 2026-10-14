@@ -149,6 +149,10 @@ async function recordEvent(input: {
   actorUserId: string;
   actorRole?: string;
 }) {
+  const SLACK_EVENTS: Record<string, string> = { questionnaire_submitted: "Investor submitted the questionnaire", signature_completed: "Investor signed subscription documents", investor_reports_funds_sent: "Investor reported a wire sent", amount_requested: "Investor submitted an investment amount", verification_completed: "Investor identity check finished" };
+  if (SLACK_EVENTS[input.event]) {
+    void (async () => (await import("@/lib/ops-slack-notify.server")).notifySubmission({ kind: `investor_${input.event}`, title: SLACK_EVENTS[input.event]!, offeringId: input.offeringId ?? null, submittedBy: input.actorUserId, ref: input.onboardingId, path: input.offeringId ? `/ops/fund-setup/${input.offeringId}` : null }))().catch(() => null);
+  }
   await db().from("investor_onboarding_events").insert({
     onboarding_id: input.onboardingId,
     offering_id: input.offeringId ?? null,
