@@ -688,6 +688,10 @@ export async function saveQuestionnaire(
     questionnaire_didit_session_id: await latestDiditSessionFor(row.person_id ?? null),
     ...(input.submit ? { questionnaire_version: questionnaire?.version ?? 1, questionnaire_submitted_at: nowIso() } : {}),
   });
+  try {
+    const { autoApplyDiditForOnboarding } = await import("@/lib/didit-auto-apply.server");
+    await autoApplyDiditForOnboarding(row.id, actor.userId);
+  } catch (e) { console.error("[didit-auto]", (e as Error).message); }
   await recordEvent({
     onboardingId: row.id,
     offeringId: row.offering_id,
