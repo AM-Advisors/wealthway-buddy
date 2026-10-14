@@ -178,8 +178,8 @@ export async function teamDashboard(viewer: string, team: TeamKey) {
     const stuck = inSetup.filter((s) => Date.now() - Date.parse(s.created_at) > 21 * 864e5);
     return {
       stats: [
-        { label: "Funds in setup", value: inSetup.length, to: "/ops/fund-setup", search: { view: "setup" }, items: await fundItems(inSetup) },
-        { label: "Stuck over 21 days", value: stuck.length, to: "/ops/fund-setup", search: { view: "stuck" }, items: await fundItems(stuck) },
+        { label: "Funds in setup", value: inSetup.length, to: "/ops/funds", items: await fundItems(inSetup) },
+        { label: "Stuck over 21 days", value: stuck.length, to: "/ops/funds", items: await fundItems(stuck) },
         { label: "Open investor onboardings", value: onb.length, to: "/admin/investor-onboarding" },
         { label: "Close requests", value: closes.length, to: "/ops/close-requests", items: plain(closes, (r) => ({ label: clientNames.get(r.client_id) ?? "Close request", sub: String(r.status).replace(/_/g, " ") })) },
       ],

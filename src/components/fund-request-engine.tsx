@@ -122,7 +122,7 @@ export function FundRequestEngine({ clientId: id, draft, mode = "client", client
         ? "Sent. Harmonious will check whether this matches a fund you already have."
         : "Sent to Harmonious. Your new fund is now in Funds while we set it up.");
       if (res.offeringId) void navigate(staffMode ? { to: "/ops/fund/$fundId", params: { fundId: res.offeringId }, search: { tab: "setup" } as any } : { to: "/client/funds/$fundId", params: { fundId: res.offeringId } });
-      else void navigate({ to: staffMode ? "/ops/fund-setup" : "/client/home" });
+      else void navigate({ to: staffMode ? "/ops/funds" : "/client/home" });
     },
     onError: (e: any) => toast.error(e?.message ?? "Could not send."),
   });

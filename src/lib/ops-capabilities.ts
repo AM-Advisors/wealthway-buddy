@@ -179,9 +179,8 @@ export const OPS_WORK_AREAS: OpsWorkArea[] = [
     ],
   },
   {
-    id: "funds", title: "Funds", url: "/ops/funds", icon: "building", group: "records", match: ["/ops/fund"], queues: ["funds", "regulatory", "documents"],
+    id: "funds", title: "Funds", url: "/ops/funds", icon: "building", group: "records", match: ["/ops/fund", "/ops/fund-setup"], queues: ["funds", "regulatory", "documents"],
     screens: [
-      { title: "Fund Setup", url: "/ops/fund-setup", description: "Details, entity & EIN, Form D, banking, documents and launch", step: "Start" },
       { title: "EIN and SS-4 queue", url: "/ops/ss4", description: "EIN applications across all Funds", cap: "regulatory", step: "Prepare" },
       { title: "Offering statement", url: "/admin/offering-statement", description: "Offering statement drafting", cap: "regulatory", step: "Prepare" },
       { title: "Formation reference data", url: "/ops/formation-reference", description: "Formation providers, state fees and formation packages", step: "Reference" },
@@ -195,7 +194,6 @@ export const OPS_WORK_AREAS: OpsWorkArea[] = [
   {
     id: "investors", title: "Investors", url: "/ops/investors", icon: "people", group: "records", queues: ["investors", "onboarding"],
     screens: [
-      { title: "Investor work by fund", url: "/ops/funds", description: "What each investment is waiting on, who owns it, and how long", cap: "onboarding", step: "Start" },
       { title: "Close requests", url: "/ops/close-requests", description: "Fund close requests from fund managers, reviewed by Harmonious", cap: "onboarding", step: "Start" },
       { title: "Investor onboarding", url: "/admin/investor-onboarding", description: "Investments in progress, KYC/KYB and accreditation", cap: "onboarding", step: "Review" },
       { title: "Applications", url: "/admin", description: "Fund applications waiting for review", cap: "onboarding", step: "Review" },
