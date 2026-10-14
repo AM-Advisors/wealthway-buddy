@@ -24,7 +24,7 @@ for (const p of people) {
     person: { firstName: p.first, middleName: p.middle, lastName: p.last, email: String(a["Email"]).toLowerCase(), phone: ph?.number ? `+${ph.callingCode}${ph.number}` : null,
       addressLine1: addr.street || null, city: addr.city || null, region: addr.state === "Texas" ? "TX" : addr.state || null, postalCode: addr.postalCode || null, country: "US" },
     profile: { type: p.type, legalName: p.legal, details: {} },
-    investment: { commitmentCents: amt, internalNotes: `Added from ROAS Didit flow questionnaire (sessions ${p.sessions.join(", ")}); approved by Alyssa Pettit.` },
+    investment: { amountCents: amt, commitmentCents: amt, internalNotes: `Added from ROAS Didit flow questionnaire (sessions ${p.sessions.join(", ")}); approved by Alyssa Pettit.` },
     taxId: tin.length === 9 ? tin : null,
   } as any);
   for (const s of p.sessions) {
