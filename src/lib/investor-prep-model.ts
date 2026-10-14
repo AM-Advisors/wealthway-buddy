@@ -84,7 +84,7 @@ export type SelectedDoc = { documentId: string; requirement: DocRequirement };
 
 export function signingModeOf(d: FundDocument): SigningMode {
   if (!d.requires_signature) return d.signing_mode === "acknowledgement" ? "acknowledgement" : "none";
-  return d.signing_mode === "investor_then_manager" || d.signing_mode === "countersign" ? "investor_then_manager" : "investor_only";
+  return d.signing_mode === "investor_then_manager" || d.signing_mode === "countersign" || d.signing_mode === "dual" ? "investor_then_manager" : "investor_only";
 }
 
 export function defaultDocuments(docs: FundDocument[]): SelectedDoc[] {

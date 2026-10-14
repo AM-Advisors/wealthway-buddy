@@ -297,7 +297,7 @@ export async function activateDocumentVersion(
       file_name: v.file_name,
       file_size_bytes: v.file_size_bytes,
       signature_template_version: v.version,
-      signing_mode: countersign ? "countersign" : d.signing_mode,
+      signing_mode: countersign ? "dual" : d.signing_mode,
       countersigner_user_id: countersign ? countersigner : d.countersigner_user_id,
     })
     .eq("id", d.id);
