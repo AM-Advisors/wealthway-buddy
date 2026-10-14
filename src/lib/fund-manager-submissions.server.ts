@@ -114,13 +114,18 @@ export async function review(sb: any, userId: string, input: { id: string; decis
 const num = (v: unknown) => (v === "" || v == null || Number.isNaN(Number(v)) ? null : Number(v));
 const cents = (v: unknown) => { const n = num(v); return n == null ? null : Math.round(n * 100); };
 
+/** Staff-side save through the same canonical path used when approving a submission. */
+export async function applySection(sb: any, userId: string, s: { offering_id: string; section: string; payload: Record<string, unknown> }) {
+  return apply(sb, userId, s);
+}
+
 async function apply(sb: any, userId: string, s: any): Promise<unknown> {
   const p: any = s.payload ?? {};
   const canon = await import("@/lib/fund-setup-canonical.server");
   if (s.section === "fund_details") {
     const fields: Record<string, unknown> = {};
     if (p.displayName) fields["displayName"] = String(p.displayName);
-    for (const k of ["entityType", "jurisdiction", "formationDate", "principalAddress", "gpName"]) if (p[k]) fields[k] = String(p[k]);
+    for (const k of ["entityType", "jurisdiction", "formationDate", "principalAddress", "gpName", "regType"]) if (p[k]) fields[k] = String(p[k]);
     if (p.targetRaise !== undefined && p.targetRaise !== "") fields["targetRaiseCents"] = cents(p.targetRaise);
     if (p.minInvestment !== undefined && p.minInvestment !== "") fields["minInvestmentCents"] = cents(p.minInvestment) ?? 0;
     await canon.saveFundSetupFields(userId, { offeringId: s.offering_id, fields });
