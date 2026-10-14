@@ -305,6 +305,7 @@ import { Route as AuthenticatedSalesFollowUpsRouteImport } from './routes/_authe
 import { Route as AuthenticatedSalesOutreachRouteImport } from './routes/_authenticated/sales_.outreach'
 import { Route as AuthenticatedSalesQuotesRouteImport } from './routes/_authenticated/sales_.quotes'
 import { Route as AuthenticatedSalesTeamRouteImport } from './routes/_authenticated/sales_.team'
+import { Route as AuthenticatedSignSignatureIdRouteImport } from './routes/_authenticated/sign.$signatureId'
 import { Route as ApiPublicCapClaimRouteImport } from './routes/api/public/cap-claim'
 import { Route as ApiPublicCapTableRequestRouteImport } from './routes/api/public/cap-table-request'
 import { Route as ApiPublicCrmUnsubscribeRouteImport } from './routes/api/public/crm-unsubscribe'
@@ -2116,6 +2117,12 @@ const AuthenticatedSalesTeamRoute = AuthenticatedSalesTeamRouteImport.update({
   path: '/sales/team',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedSignSignatureIdRoute =
+  AuthenticatedSignSignatureIdRouteImport.update({
+    id: '/sign/$signatureId',
+    path: '/sign/$signatureId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const ApiPublicCapClaimRoute = ApiPublicCapClaimRouteImport.update({
   id: '/api/public/cap-claim',
   path: '/api/public/cap-claim',
@@ -3202,6 +3209,7 @@ export interface FileRoutesByFullPath {
   '/sales/outreach': typeof AuthenticatedSalesOutreachRoute
   '/sales/quotes': typeof AuthenticatedSalesQuotesRoute
   '/sales/team': typeof AuthenticatedSalesTeamRoute
+  '/sign/$signatureId': typeof AuthenticatedSignSignatureIdRoute
   '/api/public/cap-claim': typeof ApiPublicCapClaimRoute
   '/api/public/cap-table-request': typeof ApiPublicCapTableRequestRoute
   '/api/public/crm-unsubscribe': typeof ApiPublicCrmUnsubscribeRoute
@@ -3628,6 +3636,7 @@ export interface FileRoutesByTo {
   '/sales/outreach': typeof AuthenticatedSalesOutreachRoute
   '/sales/quotes': typeof AuthenticatedSalesQuotesRoute
   '/sales/team': typeof AuthenticatedSalesTeamRoute
+  '/sign/$signatureId': typeof AuthenticatedSignSignatureIdRoute
   '/api/public/cap-claim': typeof ApiPublicCapClaimRoute
   '/api/public/cap-table-request': typeof ApiPublicCapTableRequestRoute
   '/api/public/crm-unsubscribe': typeof ApiPublicCrmUnsubscribeRoute
@@ -4062,6 +4071,7 @@ export interface FileRoutesById {
   '/_authenticated/sales_/outreach': typeof AuthenticatedSalesOutreachRoute
   '/_authenticated/sales_/quotes': typeof AuthenticatedSalesQuotesRoute
   '/_authenticated/sales_/team': typeof AuthenticatedSalesTeamRoute
+  '/_authenticated/sign/$signatureId': typeof AuthenticatedSignSignatureIdRoute
   '/api/public/cap-claim': typeof ApiPublicCapClaimRoute
   '/api/public/cap-table-request': typeof ApiPublicCapTableRequestRoute
   '/api/public/crm-unsubscribe': typeof ApiPublicCrmUnsubscribeRoute
@@ -4497,6 +4507,7 @@ export interface FileRouteTypes {
     | '/sales/outreach'
     | '/sales/quotes'
     | '/sales/team'
+    | '/sign/$signatureId'
     | '/api/public/cap-claim'
     | '/api/public/cap-table-request'
     | '/api/public/crm-unsubscribe'
@@ -4923,6 +4934,7 @@ export interface FileRouteTypes {
     | '/sales/outreach'
     | '/sales/quotes'
     | '/sales/team'
+    | '/sign/$signatureId'
     | '/api/public/cap-claim'
     | '/api/public/cap-table-request'
     | '/api/public/crm-unsubscribe'
@@ -5356,6 +5368,7 @@ export interface FileRouteTypes {
     | '/_authenticated/sales_/outreach'
     | '/_authenticated/sales_/quotes'
     | '/_authenticated/sales_/team'
+    | '/_authenticated/sign/$signatureId'
     | '/api/public/cap-claim'
     | '/api/public/cap-table-request'
     | '/api/public/crm-unsubscribe'
@@ -7647,6 +7660,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSalesTeamRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/sign/$signatureId': {
+      id: '/_authenticated/sign/$signatureId'
+      path: '/sign/$signatureId'
+      fullPath: '/sign/$signatureId'
+      preLoaderRoute: typeof AuthenticatedSignSignatureIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/api/public/cap-claim': {
       id: '/api/public/cap-claim'
       path: '/api/public/cap-claim'
@@ -9088,6 +9108,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSalesOutreachRoute: typeof AuthenticatedSalesOutreachRoute
   AuthenticatedSalesQuotesRoute: typeof AuthenticatedSalesQuotesRoute
   AuthenticatedSalesTeamRoute: typeof AuthenticatedSalesTeamRoute
+  AuthenticatedSignSignatureIdRoute: typeof AuthenticatedSignSignatureIdRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedDiligenceIndexRoute: typeof AuthenticatedDiligenceIndexRoute
   AuthenticatedManagerIndexRoute: typeof AuthenticatedManagerIndexRoute
@@ -9409,6 +9430,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSalesOutreachRoute: AuthenticatedSalesOutreachRoute,
   AuthenticatedSalesQuotesRoute: AuthenticatedSalesQuotesRoute,
   AuthenticatedSalesTeamRoute: AuthenticatedSalesTeamRoute,
+  AuthenticatedSignSignatureIdRoute: AuthenticatedSignSignatureIdRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
   AuthenticatedDiligenceIndexRoute: AuthenticatedDiligenceIndexRoute,
   AuthenticatedManagerIndexRoute: AuthenticatedManagerIndexRoute,
