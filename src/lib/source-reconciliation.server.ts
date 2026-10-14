@@ -14,13 +14,21 @@ async function didit() {
     a.from("kyc_verifications").select("id, session_id, vendor_data, verification_ref, application_id, person_id").limit(20000),
     a.from("account_identity_checks").select("id, session_id, vendor_data, person_id").limit(20000),
     a.from("investor_applications").select("id").limit(20000),
-    a.from("source_reconciliation_decisions").select("source_ref").eq("source", "didit").limit(20000),
+    a.from("source_reconciliation_decisions").select("id, source_ref, decision, proposed_person_id").eq("source", "didit").order("created_at").limit(20000),
   ]);
   if (error) throw new Error(error.message);
   const k = (kyc ?? []) as any[]; const ac = (aic ?? []) as any[];
   const appIds = new Set(((apps ?? []) as any[]).map((r) => r.id));
+  // Staff-confirmed person links (append-only; the latest decision per session wins).
+  const staffLinks = new Map<string, { id: string; personId: string | null }>();
+  for (const d of (decs ?? []) as any[]) {
+    if (d.decision === "confirm_match" && d.proposed_person_id) staffLinks.set(d.source_ref, { id: d.id, personId: d.proposed_person_id });
+    else if (d.decision === "reject_match") staffLinks.delete(d.source_ref);
+  }
   const links = (e: DiditEvent): DiditLink[] => {
     const out: DiditLink[] = [];
+    const staffLink = e.sessionId ? staffLinks.get(`session:${e.sessionId}`) : undefined;
+    if (staffLink) out.push({ via: "session", personId: staffLink.personId, verificationId: staffLink.id });
     if (e.sessionId) {
       for (const r of k) if (r.session_id === e.sessionId) out.push({ via: "session", personId: r.person_id, verificationId: r.id });
       for (const r of ac) if (r.session_id === e.sessionId) out.push({ via: "session", personId: r.person_id, verificationId: r.id });
