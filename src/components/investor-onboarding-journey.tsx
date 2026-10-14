@@ -312,7 +312,7 @@ function QuestionnaireForm({ d, done, locked, onSave, saving }: { d: any; onboar
             <div key={q.key} className="space-y-1.5">
               <Label htmlFor={q.key} className="leading-snug">{n + 1}. {q.label}{q.required ? " *" : ""}</Label>
               {q.type === "select" || q.type === "yes_no" ? (
-                <Select value={answers[q.key] || undefined} onValueChange={(v) => set(q.key, v)}>
+                <Select value={answers[q.key] ?? ""} onValueChange={(v) => set(q.key, v)}>
                   <SelectTrigger id={q.key}><SelectValue placeholder="Choose one" /></SelectTrigger>
                   <SelectContent>{(q.type === "yes_no" ? ["Yes", "No"] : (q.options ?? [])).map((o: string) => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
                 </Select>
