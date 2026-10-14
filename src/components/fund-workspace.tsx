@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { ReadinessQueue } from "@/components/investment-readiness";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -152,6 +153,13 @@ export function FundWorkspace({ fundId, tab, onTab, mode = "client", extraTabs =
   const loadReg = useServerFn(fundRegulatoryFn);
   const rq = useQuery({ queryKey: ["fund-regulatory", fundId], queryFn: () => loadReg({ data: { fundId } }) });
 
+  const isMerged = extraTabs.some((x) => x.value === "setup");
+  const ready = !!fq.data;
+  useEffect(() => {
+    if (!isMerged || !ready || !["details", "team", "banking"].includes(tab)) return;
+    const t = setTimeout(() => document.getElementById(`fs-${tab}`)?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
+    return () => clearTimeout(t);
+  }, [isMerged, ready, tab]);
   if (fq.isLoading) return <p className="text-sm text-muted-foreground">Loading fund…</p>;
   if (fq.error || !fq.data) return <p className="text-sm text-destructive">{(fq.error as any)?.message ?? "Couldn't load this fund."}</p>;
   const { setup, steps, sideLetters } = fq.data;
