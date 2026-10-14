@@ -35,7 +35,6 @@ export const OPS_STAFF_ROLES = [
   "admin",
   "super_admin",
   "operations",
-  "account_manager",
   "legal",
   "compliance",
   "fund_administration",
