@@ -15,6 +15,7 @@ import { deleteFundFileFn, generateFundDocFn, listFundFilesFn, setSignatureBoxes
 import { listTemplatesFn, useTemplateInFundFn } from "@/lib/fund-doc-templates.functions";
 import { fileToBase64, fmtDate } from "./shared";
 import { StandardFormsCard } from "./standard-forms-card";
+import { fundSigningContextFn, sendFileForSignatureFn } from "@/lib/fund-file-signing.functions";
 
 const STATUS: Record<string, string> = { draft: "Draft", out_for_signature: "Out for signature", signed: "Signed" };
 
@@ -53,6 +54,16 @@ export function DocumentsTab({ fundId }: { fundId: string }) {
   const rm = useMutation({ mutationFn: (id: string) => del({ data: { fundId, id } }), onSuccess: () => { toast.success("Deleted"); refresh(); }, onError: (e: Error) => toast.error(e.message) });
 
   const files = q.data ?? [];
+  const sigCtxFn = useServerFn(fundSigningContextFn);
+  const sendSigFn = useServerFn(sendFileForSignatureFn);
+  const sig = useQuery({ queryKey: ["fund-signing", fundId], queryFn: () => sigCtxFn({ data: { fundId } }) });
+  const [sendFor, setSendFor] = useState<any | null>(null);
+  const [inv, setInv] = useState(""); const [mgr, setMgr] = useState("");
+  const send = useMutation({
+    mutationFn: () => sendSigFn({ data: { fundId, fileId: sendFor.id, onboardingId: inv, managerUserId: mgr } }),
+    onSuccess: () => { toast.success("Sent. The investor gets a link to sign first."); setSendFor(null); setInv(""); setMgr(""); refresh(); qc.invalidateQueries({ queryKey: ["fund-signing", fundId] }); },
+    onError: (e: Error) => toast.error(e.message),
+  });
   const groups = [
     { title: "Fund documents", keys: DOC_TEMPLATES.filter((t) => t.category === "fund_document") },
     { title: "Side letters", keys: DOC_TEMPLATES.filter((t) => t.category === "side_letter") },
@@ -85,8 +96,12 @@ export function DocumentsTab({ fundId }: { fundId: string }) {
                       {f.template_key ? "Generated from template" : f.file_name} · {fmtDate(f.created_at)}
                       {f.signature_boxes?.length ? ` · ${f.signature_boxes.length} signature box${f.signature_boxes.length === 1 ? "" : "es"}` : ""}
                     </p>
+                    {(sig.data?.signatures ?? []).filter((x: any) => x.file_id === f.id).map((x: any) => (
+                      <p key={x.id} className="text-xs text-muted-foreground">{x.signing_order}. {x.signer_role === "investor" ? "Investor" : "Fund manager"} {x.signer_name}: {x.status === "signed" ? `signed ${fmtDate(x.signed_at)}` : x.status === "sent" ? "link sent, waiting" : "waits for investor"}</p>
+                    ))}
                   </div>
                   <div className="flex items-center gap-2">
+                    {f.status !== "signed" && f.body && <Button size="sm" variant="outline" onClick={() => setSendFor(f)}>{f.status === "out_for_signature" ? "Resend" : "Send for signature"}</Button>}
                     <Badge variant={f.status === "signed" ? "default" : "outline"}>{STATUS[f.status] ?? f.status}</Badge>
                     {f.status !== "signed" && <Button size="sm" variant="outline" onClick={() => setBoxes(f)}>Signature boxes</Button>}
                     {f.status === "draft" && <Button size="sm" variant="ghost" disabled={rm.isPending} onClick={() => { if (confirm(`Delete "${f.title}"?`)) rm.mutate(f.id); }}>Delete</Button>}
@@ -99,6 +114,24 @@ export function DocumentsTab({ fundId }: { fundId: string }) {
       </Card>
 
       <StandardFormsCard fundId={fundId} onGenerated={refresh} />
+
+      {sendFor && (
+        <Dialog open onOpenChange={(o) => !o && setSendFor(null)}>
+          <DialogContent className="max-w-md">
+            <DialogHeader><DialogTitle>Send for signature</DialogTitle><DialogDescription>The investor signs first, then the fund manager. Each gets an email link. When both have signed, "{sendFor.title}" is marked Signed.</DialogDescription></DialogHeader>
+            <div className="space-y-3">
+              <div className="space-y-1"><Label>1. Investor</Label>
+                <Select value={inv} onValueChange={setInv}><SelectTrigger><SelectValue placeholder="Choose an investor" /></SelectTrigger>
+                  <SelectContent>{(sig.data?.investors ?? []).map((i: any) => <SelectItem key={i.onboardingId} value={i.onboardingId} disabled={!i.email}>{i.name}{i.email ? ` (${i.email})` : " (no email)"}</SelectItem>)}</SelectContent></Select></div>
+              <div className="space-y-1"><Label>2. Fund manager</Label>
+                <Select value={mgr} onValueChange={setMgr}><SelectTrigger><SelectValue placeholder="Choose a fund manager" /></SelectTrigger>
+                  <SelectContent>{(sig.data?.managers ?? []).map((m: any) => <SelectItem key={m.userId} value={m.userId} disabled={!m.email}>{m.name}</SelectItem>)}</SelectContent></Select>
+                {!sig.data?.managers?.length && <p className="text-xs text-muted-foreground">This fund has no fund manager with a login yet.</p>}</div>
+            </div>
+            <DialogFooter><Button disabled={!inv || !mgr || send.isPending} onClick={() => send.mutate()}>{send.isPending ? "Sending…" : "Send"}</Button></DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
 
 
       {mode === "pick" && (
