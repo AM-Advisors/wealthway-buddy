@@ -41902,6 +41902,68 @@ export type Database = {
         }
         Relationships: []
       }
+      ss4_signature_requests: {
+        Row: {
+          cancelled_at: string | null
+          cancelled_by: string | null
+          created_at: string
+          form_data: Json
+          id: string
+          note: string | null
+          offering_id: string
+          requested_by: string
+          signed_at: string | null
+          signed_pdf_path: string | null
+          signed_user_agent: string | null
+          signer_name: string | null
+          signer_title: string | null
+          signer_user_id: string
+          status: string
+        }
+        Insert: {
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          created_at?: string
+          form_data?: Json
+          id?: string
+          note?: string | null
+          offering_id: string
+          requested_by: string
+          signed_at?: string | null
+          signed_pdf_path?: string | null
+          signed_user_agent?: string | null
+          signer_name?: string | null
+          signer_title?: string | null
+          signer_user_id: string
+          status?: string
+        }
+        Update: {
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          created_at?: string
+          form_data?: Json
+          id?: string
+          note?: string | null
+          offering_id?: string
+          requested_by?: string
+          signed_at?: string | null
+          signed_pdf_path?: string | null
+          signed_user_agent?: string | null
+          signer_name?: string | null
+          signer_title?: string | null
+          signer_user_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ss4_signature_requests_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       staff_activity_events: {
         Row: {
           created_at: string

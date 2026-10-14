@@ -1639,6 +1639,13 @@
       "when": 1792013648081,
       "tag": "0233_offerings_is_demo",
       "breakpoints": true
+    },
+    {
+      "idx": 234,
+      "version": "7",
+      "when": 1792015003517,
+      "tag": "0234_ss4_signature_requests",
+      "breakpoints": true
     }
   ]
 }

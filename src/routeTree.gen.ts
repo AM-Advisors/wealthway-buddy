@@ -357,6 +357,7 @@ import { Route as AuthenticatedManagerCountersignSignerIdRouteImport } from './r
 import { Route as AuthenticatedManagerFundBankingFundIdRouteImport } from './routes/_authenticated/manager.fund-banking.$fundId'
 import { Route as AuthenticatedManagerFundSetupRequestIdRouteImport } from './routes/_authenticated/manager.fund-setup.$requestId'
 import { Route as AuthenticatedManagerFundFundIdRouteImport } from './routes/_authenticated/manager.fund.$fundId'
+import { Route as AuthenticatedManagerSs4RequestIdRouteImport } from './routes/_authenticated/manager.ss4.$requestId'
 import { Route as AuthenticatedMarketingCampaignsIdRouteImport } from './routes/_authenticated/marketing_.campaigns_.$id'
 import { Route as AuthenticatedMarketingClassroomIdRouteImport } from './routes/_authenticated/marketing_.classroom_.$id'
 import { Route as AuthenticatedMarketingDesignStudioDesignIdRouteImport } from './routes/_authenticated/marketing_.design-studio_.$designId'
@@ -2418,6 +2419,12 @@ const AuthenticatedManagerFundFundIdRoute =
     path: '/manager/fund/$fundId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedManagerSs4RequestIdRoute =
+  AuthenticatedManagerSs4RequestIdRouteImport.update({
+    id: '/manager/ss4/$requestId',
+    path: '/manager/ss4/$requestId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedMarketingCampaignsIdRoute =
   AuthenticatedMarketingCampaignsIdRouteImport.update({
     id: '/marketing_/campaigns_/$id',
@@ -3248,6 +3255,7 @@ export interface FileRoutesByFullPath {
   '/manager/fund-banking/$fundId': typeof AuthenticatedManagerFundBankingFundIdRoute
   '/manager/fund-setup/$requestId': typeof AuthenticatedManagerFundSetupRequestIdRoute
   '/manager/fund/$fundId': typeof AuthenticatedManagerFundFundIdRouteWithChildren
+  '/manager/ss4/$requestId': typeof AuthenticatedManagerSs4RequestIdRoute
   '/marketing/campaigns/$id': typeof AuthenticatedMarketingCampaignsIdRoute
   '/marketing/classroom/$id': typeof AuthenticatedMarketingClassroomIdRoute
   '/marketing/design-studio/$designId': typeof AuthenticatedMarketingDesignStudioDesignIdRoute
@@ -3672,6 +3680,7 @@ export interface FileRoutesByTo {
   '/manager/countersign/$signerId': typeof AuthenticatedManagerCountersignSignerIdRoute
   '/manager/fund-banking/$fundId': typeof AuthenticatedManagerFundBankingFundIdRoute
   '/manager/fund-setup/$requestId': typeof AuthenticatedManagerFundSetupRequestIdRoute
+  '/manager/ss4/$requestId': typeof AuthenticatedManagerSs4RequestIdRoute
   '/marketing/campaigns/$id': typeof AuthenticatedMarketingCampaignsIdRoute
   '/marketing/classroom/$id': typeof AuthenticatedMarketingClassroomIdRoute
   '/marketing/design-studio/$designId': typeof AuthenticatedMarketingDesignStudioDesignIdRoute
@@ -4106,6 +4115,7 @@ export interface FileRoutesById {
   '/_authenticated/manager/fund-banking/$fundId': typeof AuthenticatedManagerFundBankingFundIdRoute
   '/_authenticated/manager/fund-setup/$requestId': typeof AuthenticatedManagerFundSetupRequestIdRoute
   '/_authenticated/manager/fund/$fundId': typeof AuthenticatedManagerFundFundIdRouteWithChildren
+  '/_authenticated/manager/ss4/$requestId': typeof AuthenticatedManagerSs4RequestIdRoute
   '/_authenticated/marketing_/campaigns_/$id': typeof AuthenticatedMarketingCampaignsIdRoute
   '/_authenticated/marketing_/classroom_/$id': typeof AuthenticatedMarketingClassroomIdRoute
   '/_authenticated/marketing_/design-studio_/$designId': typeof AuthenticatedMarketingDesignStudioDesignIdRoute
@@ -4540,6 +4550,7 @@ export interface FileRouteTypes {
     | '/manager/fund-banking/$fundId'
     | '/manager/fund-setup/$requestId'
     | '/manager/fund/$fundId'
+    | '/manager/ss4/$requestId'
     | '/marketing/campaigns/$id'
     | '/marketing/classroom/$id'
     | '/marketing/design-studio/$designId'
@@ -4964,6 +4975,7 @@ export interface FileRouteTypes {
     | '/manager/countersign/$signerId'
     | '/manager/fund-banking/$fundId'
     | '/manager/fund-setup/$requestId'
+    | '/manager/ss4/$requestId'
     | '/marketing/campaigns/$id'
     | '/marketing/classroom/$id'
     | '/marketing/design-studio/$designId'
@@ -5397,6 +5409,7 @@ export interface FileRouteTypes {
     | '/_authenticated/manager/fund-banking/$fundId'
     | '/_authenticated/manager/fund-setup/$requestId'
     | '/_authenticated/manager/fund/$fundId'
+    | '/_authenticated/manager/ss4/$requestId'
     | '/_authenticated/marketing_/campaigns_/$id'
     | '/_authenticated/marketing_/classroom_/$id'
     | '/_authenticated/marketing_/design-studio_/$designId'
@@ -7998,6 +8011,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedManagerFundFundIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/manager/ss4/$requestId': {
+      id: '/_authenticated/manager/ss4/$requestId'
+      path: '/manager/ss4/$requestId'
+      fullPath: '/manager/ss4/$requestId'
+      preLoaderRoute: typeof AuthenticatedManagerSs4RequestIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/marketing_/campaigns_/$id': {
       id: '/_authenticated/marketing_/campaigns_/$id'
       path: '/marketing/campaigns/$id'
@@ -9088,6 +9108,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedManagerFundBankingFundIdRoute: typeof AuthenticatedManagerFundBankingFundIdRoute
   AuthenticatedManagerFundSetupRequestIdRoute: typeof AuthenticatedManagerFundSetupRequestIdRoute
   AuthenticatedManagerFundFundIdRoute: typeof AuthenticatedManagerFundFundIdRouteWithChildren
+  AuthenticatedManagerSs4RequestIdRoute: typeof AuthenticatedManagerSs4RequestIdRoute
   AuthenticatedMarketingCampaignsIdRoute: typeof AuthenticatedMarketingCampaignsIdRoute
   AuthenticatedMarketingClassroomIdRoute: typeof AuthenticatedMarketingClassroomIdRoute
   AuthenticatedMarketingDesignStudioDesignIdRoute: typeof AuthenticatedMarketingDesignStudioDesignIdRoute
@@ -9421,6 +9442,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedManagerFundSetupRequestIdRoute,
   AuthenticatedManagerFundFundIdRoute:
     AuthenticatedManagerFundFundIdRouteWithChildren,
+  AuthenticatedManagerSs4RequestIdRoute: AuthenticatedManagerSs4RequestIdRoute,
   AuthenticatedMarketingCampaignsIdRoute:
     AuthenticatedMarketingCampaignsIdRoute,
   AuthenticatedMarketingClassroomIdRoute:
