@@ -1,0 +1,2 @@
+ALTER TABLE public.investor_onboardings ADD COLUMN IF NOT EXISTS merged_into_onboarding_id UUID;
+COMMENT ON COLUMN public.investor_onboardings.merged_into_onboarding_id IS 'When set (with removed_at), this record was merged into the referenced onboarding as a duplicate. Nothing was deleted.';
