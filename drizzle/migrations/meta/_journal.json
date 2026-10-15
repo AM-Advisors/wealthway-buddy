@@ -1765,6 +1765,13 @@
       "when": 1792098185385,
       "tag": "0251_plaid_link_consents",
       "breakpoints": true
+    },
+    {
+      "idx": 252,
+      "version": "7",
+      "when": 1792100366174,
+      "tag": "0252_fund_migration_requests",
+      "breakpoints": true
     }
   ]
 }

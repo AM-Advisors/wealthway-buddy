@@ -20786,6 +20786,60 @@ export type Database = {
         }
         Relationships: []
       }
+      fund_migration_requests: {
+        Row: {
+          client_id: string | null
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          decision_note: string | null
+          details: Json
+          fund_name: string
+          id: string
+          import_summary: Json | null
+          notes: string | null
+          offering_id: string | null
+          requested_by: string
+          source: string
+          source_ref: string | null
+          status: string
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          details?: Json
+          fund_name: string
+          id?: string
+          import_summary?: Json | null
+          notes?: string | null
+          offering_id?: string | null
+          requested_by: string
+          source: string
+          source_ref?: string | null
+          status?: string
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          details?: Json
+          fund_name?: string
+          id?: string
+          import_summary?: Json | null
+          notes?: string | null
+          offering_id?: string | null
+          requested_by?: string
+          source?: string
+          source_ref?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       fund_migration_rows: {
         Row: {
           accreditation_status: string | null
