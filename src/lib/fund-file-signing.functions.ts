@@ -167,7 +167,9 @@ export const remindFileSignerFn = createServerFn({ method: "POST" }).middleware(
     return sendSigningReminder(context.userId, {
       offeringId: s.offering_id, reminderKey: `file-sign:${s.id}`, documentTitle: f?.title ?? "your document", recipientEmail: s.signer_email,
       recipientName: s.signer_name || "there", recipientUserId: s.signer_user_id, path: `/sign/${s.id}`,
-      steps: s.signer_role === "investor" ? ["Read the document", "Confirm your details", "Sign"] : ["Review the investor's signed document", "Countersign as fund manager"],
+      steps: s.signer_role === "investor" ? ["Read the document", "Confirm your details", "Sign"]
+        : ((all ?? []) as any[]).some((r) => r.signing_order < s.signing_order) ? ["Review the investor's signed document", "Countersign as fund manager"]
+        : ["Read the document", "Confirm the fund details", "Sign as the fund's signatory"],
       override: data.overrideReason ? { reason: data.overrideReason } : null,
     });
   });

@@ -14587,6 +14587,45 @@ export type Database = {
           },
         ]
       }
+      document_reminders: {
+        Row: {
+          client_id: string | null
+          created_at: string
+          delivered: boolean
+          document_title: string
+          id: string
+          offering_id: string | null
+          override_reason: string | null
+          recipient_email: string
+          reminder_key: string
+          sent_by: string
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string
+          delivered?: boolean
+          document_title: string
+          id?: string
+          offering_id?: string | null
+          override_reason?: string | null
+          recipient_email: string
+          reminder_key: string
+          sent_by: string
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string
+          delivered?: boolean
+          document_title?: string
+          id?: string
+          offering_id?: string | null
+          override_reason?: string | null
+          recipient_email?: string
+          reminder_key?: string
+          sent_by?: string
+        }
+        Relationships: []
+      }
       document_signature_signers: {
         Row: {
           application_id: string
