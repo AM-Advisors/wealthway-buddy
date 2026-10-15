@@ -36,6 +36,10 @@ export const sendPasswordReset = createServerFn({ method: "POST" }).middleware([
   .inputValidator((d) => z.object({ userId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => (await srv()).resetUserPassword(context.userId, data.userId));
 
+export const createInviteLink = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ userId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => (await srv()).copyInviteLink(context.userId, data.userId));
+
 export const setTestDemoFlag = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ kind: z.union([z.enum(["user", "client"]), inviteTable]), id: z.string().uuid(), value: z.boolean() }).parse(d))
   .handler(async ({ data, context }) => (await srv()).setTestDemo(context.userId, data.kind, data.id, data.value));

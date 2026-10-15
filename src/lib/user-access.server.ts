@@ -297,6 +297,20 @@ export async function resendInvite(viewer: string, table: (typeof INVITE_TABLES)
   return { ok: true };
 }
 
+/** Makes a fresh personal invite link to copy and send by hand (replaces earlier unused links). */
+export async function copyInviteLink(viewer: string, userId: string) {
+  const db = await requireAccessManager(viewer);
+  const { data: profile } = await db.from("profiles").select("email").eq("user_id", userId).maybeSingle();
+  let email = (profile as any)?.email as string | undefined;
+  if (!email) { const { data: u } = await db.auth.admin.getUserById(userId); email = u?.user?.email ?? undefined; }
+  if (!email) throw new Error("That person has no email address on file.");
+  const shared = await import("@/lib/account-invite.server");
+  const url = await shared.setPasswordLink(db, email.toLowerCase(), viewer);
+  if (!url.includes("/invite/")) throw new Error("Could not create a personal link for that account.");
+  await log(db, { subject_kind: "user", subject_id: userId, action: "invite_link_copied", actor_id: viewer });
+  return { url };
+}
+
 /** Emails a one-time password-reset link to an existing user. */
 export async function resetUserPassword(viewer: string, userId: string) {
   const db = await requireAccessManager(viewer);
@@ -316,7 +330,7 @@ export async function resetUserPassword(viewer: string, userId: string) {
       investorName: (profile as any)?.legal_name || email,
       offeringName: "Harmonious",
       subject: "Reset your Harmonious password",
-      body: `We received a request to reset the password for your Harmonious account.\n\nUse this one-time link to choose a new password: ${portalUrl}\n\nThe link expires shortly and only works once. If you didn't ask for this, you can ignore this email - your password stays the same.`,
+      body: `We received a request to reset the password for your Harmonious account.\n\nUse this one-time link to choose a new password: ${portalUrl}\n\nThe link expires in 7 days and only works once. If you didn't ask for this, you can ignore this email - your password stays the same.`,
     },
   });
   await log(db, { subject_kind: "user", subject_id: userId, action: "password_reset_sent", reason: r.sent ? null : "email send failed", actor_id: viewer });
