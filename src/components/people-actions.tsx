@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Textarea } from "@/components/ui/textarea";
-import { getAccessStatusByEmail, restoreAccess, revokeAccess, sendPasswordReset, setTestDemoFlag } from "@/lib/user-access.functions";
+import { getAccessStatusByEmail, restoreAccess, revokeAccess, sendPasswordReset, setTestDemoFlag, createInviteLink } from "@/lib/user-access.functions";
 import { ResendInviteMenuItem, type ResendTarget } from "@/components/invite-resend";
 import type { EmailOutcome } from "@/lib/user-insights-model";
 
@@ -45,7 +45,7 @@ export function PeopleActions({ email, userId, name, info, context, resend }: {
   resend?: ResendTarget | null;
 }) {
   const qc = useQueryClient();
-  const revoke = useServerFn(revokeAccess), restore = useServerFn(restoreAccess), flag = useServerFn(setTestDemoFlag), resetPw = useServerFn(sendPasswordReset);
+  const revoke = useServerFn(revokeAccess), restore = useServerFn(restoreAccess), flag = useServerFn(setTestDemoFlag), resetPw = useServerFn(sendPasswordReset), inviteLink = useServerFn(createInviteLink);
   const [mode, setMode] = useState<Mode>(null);
   const [scope, setScope] = useState<"global" | "scoped">("global");
   const [reason, setReason] = useState("");
@@ -84,6 +84,9 @@ export function PeopleActions({ email, userId, name, info, context, resend }: {
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={async () => { try { await resetPw({ data: { userId: uid } }); toast.success("Password reset link emailed."); } catch (e) { toast.error(e instanceof Error ? e.message : "Failed."); } }}>
               Send password reset
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={async () => { try { const r = await inviteLink({ data: { userId: uid } }); await navigator.clipboard.writeText(r.url); toast.success("Personal invite link copied. Works once, for 7 days; older links stop working."); } catch (e) { toast.error(e instanceof Error ? e.message : "Failed."); } }}>
+              Copy invite link
             </DropdownMenuItem>
             <DropdownMenuItem onClick={async () => { try { await flag({ data: { kind: "user", id: uid, value: !info?.isTestDemo } }); await done(info?.isTestDemo ? "Unmarked as test/demo." : "Marked as test/demo."); } catch (e) { toast.error(e instanceof Error ? e.message : "Failed."); } }}>
               {info?.isTestDemo ? "Unmark test/demo" : "Mark as test/demo"}
