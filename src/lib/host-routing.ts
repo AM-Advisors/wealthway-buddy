@@ -45,6 +45,7 @@ const SHARED_PREFIXES = [
   "/@",
   "/auth",
   "/reset-password",
+  "/invite/",
   "/client-login",
   "/investor-login",
   "/manager-login",
