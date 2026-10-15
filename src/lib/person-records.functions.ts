@@ -13,7 +13,6 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/lib/require-auth";
 import { OPS_STAFF_ROLES } from "@/lib/ops-capabilities";
 
-const SITE = "https://app.harmonious.co";
 const DIDIT = "https://verification.didit.me/v2";
 
 async function db() {
@@ -90,29 +89,8 @@ export const sendKycLinkFn = createServerFn({ method: "POST" }).middleware([requ
     const d = await db();
     const { data: p } = await d.from("persons").select(COLS).eq("id", data.personId).maybeSingle();
     if (!p) throw new Error("Person not found.");
-    if (!p.email) throw new Error("Add an email address first so we can send the link.");
-    const workflow = process.env["DIDIT_WORKFLOW_ID"]?.trim();
-    if (!workflow) throw new Error("Identity checks aren't configured yet.");
-    const vendor = `person:${p.id}`;
-    const res = await fetch(`${DIDIT}/session/`, {
-      method: "POST", headers: { "content-type": "application/json", "x-api-key": diditKey() },
-      body: JSON.stringify({ workflow_id: workflow, vendor_data: vendor, callback: `${SITE}/home`, contact_details: { email: p.email, ...(p.phone ? { phone: p.phone } : {}) } }),
-    });
-    const text = await res.text();
-    if (!res.ok) { console.error("[person-kyc] session failed", res.status, text.slice(0, 300)); throw new Error(`Didit couldn't start the check [${res.status}].`); }
-    const s = JSON.parse(text);
-    const url = s.url ?? s.session_url ?? s.verification_url;
-    const { data: row, error } = await d.from("person_kyc_requests").insert({ person_id: p.id, mode: "link", session_id: s.session_id ?? s.id ?? null, session_url: url ?? null, status: "sent", created_by: context.userId }).select("id").single();
-    if (error) throw new Error(error.message);
-    let emailed = false;
-    if (url) {
-      try {
-        const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
-        await sendTemplateEmail("manager-alert", p.email, { idempotencyKey: `person-kyc:${row.id}`, templateData: { managerName: nm(p), headline: "Please verify your identity", intro: "Harmonious needs to confirm your identity. It takes a few minutes: you'll photograph your ID and take a quick selfie.", offeringName: "Harmonious", details: [{ label: "Provider", value: "Didit (secure identity verification)" }], portalUrl: url } });
-        emailed = true;
-      } catch (e) { console.error("[person-kyc] email failed", e); }
-    }
-    return { id: row.id as string, emailed, url: url ?? null };
+    const { sendPersonKycLink } = await import("@/lib/person-kyc-link.server");
+    return sendPersonKycLink(p, context.userId);
   });
 
 /** Pull the latest Didit result for a link check; approved results apply to the person (Didit is the authority). */

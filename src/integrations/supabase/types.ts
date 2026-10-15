@@ -26105,6 +26105,7 @@ export type Database = {
           invitation_id: string | null
           last_activity_at: string
           manager_notes: string | null
+          merged_into_onboarding_id: string | null
           offering_class_key: string | null
           offering_id: string
           person_id: string | null
@@ -26155,6 +26156,7 @@ export type Database = {
           invitation_id?: string | null
           last_activity_at?: string
           manager_notes?: string | null
+          merged_into_onboarding_id?: string | null
           offering_class_key?: string | null
           offering_id: string
           person_id?: string | null
@@ -26205,6 +26207,7 @@ export type Database = {
           invitation_id?: string | null
           last_activity_at?: string
           manager_notes?: string | null
+          merged_into_onboarding_id?: string | null
           offering_class_key?: string | null
           offering_id?: string
           person_id?: string | null

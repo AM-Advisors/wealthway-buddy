@@ -7,10 +7,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { FundOnboardingLinkCard } from "@/components/fund-onboarding-link";
 import { fundReadinessFn } from "@/lib/investor-onboarding.functions";
 import { investorDetailFn, investorGridFn, lastRemindersFn, sendInvestorRemindersFn } from "@/lib/fund-tabs.functions";
+import { bulkSendKycLinksFn, bulkSetClassFn, listInvestorDuplicatesFn, mergeInvestorsFn, requestMissingInfoFn } from "@/lib/investor-bulk.functions";
 import { reminderAllowed, reminderStep } from "@/lib/fund-health";
 import { toast } from "sonner";
 import { fmtDate, usd } from "./shared";
@@ -29,7 +32,18 @@ export function InvestorsTab({ fundId }: { fundId: string }) {
   const lq = useQuery({ queryKey: ["fund-reminders", fundId], queryFn: () => loadLast({ data: { fundId } }) });
   const [picked, setPicked] = useState<string[]>([]);
   const [sending, setSending] = useState(false);
+  const [classOpen, setClassOpen] = useState(false);
+  const [classKey, setClassKey] = useState("");
+  const bulkKyc = useServerFn(bulkSendKycLinksFn);
+  const bulkClass = useServerFn(bulkSetClassFn);
+  const askMissing = useServerFn(requestMissingInfoFn);
+  const dupLoad = useServerFn(listInvestorDuplicatesFn);
+  const dupQ = useQuery({ queryKey: ["fund-investor-duplicates", fundId], queryFn: () => dupLoad({ data: { fundId } }) });
   const canRemind = (r: any) => !!r.email && !!reminderStep(r.stage, r.docs, r.wiring) && reminderAllowed(lq.data?.[r.id] ?? null);
+  const allPicked = rows.length > 0 && picked.length === rows.length;
+  const toggleAll = (on: boolean) => setPicked(on ? rows.map((r) => r.id) : []);
+  const committed = rows.reduce((s, r) => s + (r.committedCents ?? 0), 0);
+  const received = rows.reduce((s, r) => s + (r.receivedCents ?? 0), 0);
   async function sendReminders() {
     setSending(true);
     try {
@@ -41,6 +55,26 @@ export function InvestorsTab({ fundId }: { fundId: string }) {
       await lq.refetch();
     } catch (e) { toast.error((e as Error).message); } finally { setSending(false); }
   }
+  async function runBulk(fn: () => Promise<string>) {
+    setSending(true);
+    try { toast.success(await fn()); setPicked([]); await q.refetch(); }
+    catch (e) { toast.error((e as Error).message); } finally { setSending(false); }
+  }
+  const sendKyc = () => runBulk(async () => {
+    const res = await bulkKyc({ data: { fundId, onboardingIds: picked } });
+    const sent = res.filter((x) => x.outcome === "sent").length;
+    const skipped = res.filter((x) => x.outcome === "skipped");
+    return `${sent} identity-check link${sent === 1 ? "" : "s"} sent${skipped.length ? `, ${skipped.length} skipped (${skipped[0]?.reason ?? "already done"})` : ""}.`;
+  });
+  const requestMissing = () => runBulk(async () => {
+    const res = await askMissing({ data: { fundId, onboardingIds: picked } });
+    return `Asked the fund manager for missing info on ${res.investors} investor${res.investors === 1 ? "" : "s"}.`;
+  });
+  const saveClass = () => runBulk(async () => {
+    const res = await bulkClass({ data: { fundId, onboardingIds: picked, classKey } });
+    setClassOpen(false); setClassKey("");
+    return `Class set on ${res.count} investor${res.count === 1 ? "" : "s"}.`;
+  });
   return (
     <div className="space-y-6">
     <FundOnboardingLinkCard fundId={fundId} />
@@ -50,25 +84,39 @@ export function InvestorsTab({ fundId }: { fundId: string }) {
           <CardTitle className="text-base">Investors</CardTitle>
           <CardDescription>Click an investor to see everything for this deal. Received counts only money matched to the bank.</CardDescription>
         </div>
-        <div className="flex gap-2">
-          <Button size="sm" variant="outline" disabled={!picked.length || sending} onClick={sendReminders}>{sending ? "Sending…" : `Send reminder${picked.length ? ` (${picked.length})` : ""}`}</Button>
+        <div className="flex flex-wrap gap-2">
+          <Button size="sm" variant="outline" disabled={!picked.length || sending} onClick={sendReminders}>{sending ? "Working…" : `Send reminder${picked.length ? ` (${picked.length})` : ""}`}</Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild><Button size="sm" variant="outline" disabled={!picked.length || sending}>Actions{picked.length ? ` (${picked.length})` : ""}</Button></DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={sendKyc}>Send identity-check links</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setClassOpen(true)}>Set class…</DropdownMenuItem>
+              <DropdownMenuItem onClick={requestMissing}>Ask manager for missing info</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button size="sm" onClick={() => setInvite(true)}>Add / invite investors</Button>
         </div>
       </CardHeader>
       <CardContent>
+        {rows.length > 0 && committed > 0 && (
+          <div className="mb-4 rounded-lg border p-3">
+            <div className="flex justify-between text-sm"><span className="text-muted-foreground">Funding progress</span><span className="font-medium">{usd(received)} received of {usd(committed)} committed</span></div>
+            <div className="mt-2 h-2 rounded-full bg-muted"><div className="h-2 rounded-full bg-primary" style={{ width: `${Math.min(100, Math.round((received / committed) * 100))}%` }} /></div>
+          </div>
+        )}
         {q.isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> :
-         q.error ? <p className="text-sm text-destructive">{(q.error as Error).message}</p> :
+          q.error ? <p className="text-sm text-destructive">{(q.error as Error).message}</p> :
          rows.length === 0 ? <p className="py-6 text-center text-sm text-muted-foreground">No investors yet. Use "Add / invite investors" to share your fund's invite link.</p> : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[1300px] text-sm">
               <thead className="text-left text-xs text-muted-foreground">
-                <tr><th className="w-8 py-2"><span className="sr-only">Select for reminder</span></th><th className="py-2">Name</th><th>Class</th><th>Investing as</th><th>Missing info</th><th>Email</th><th>Phone</th><th className="text-right">Committed</th><th className="text-right">Received</th><th>KYC/KYB & AML</th><th>Fund documents</th><th>Wiring</th><th>Investor readiness</th><th>Latest activity</th></tr>
+                <tr><th className="w-8 py-2"><input type="checkbox" aria-label="Select all investors" checked={allPicked} onChange={(e) => toggleAll(e.target.checked)} /></th><th className="py-2">Name</th><th>Class</th><th>Investing as</th><th>Missing info</th><th>Email</th><th>Phone</th><th className="text-right">Committed</th><th className="text-right">Received</th><th>KYC/KYB & AML</th><th>Fund documents</th><th>Wiring</th><th>Investor readiness</th><th>Latest activity</th></tr>
               </thead>
               <tbody>
                 {rows.map((r) => (
                   <tr key={r.id} className="cursor-pointer border-t hover:bg-muted" onClick={() => setOpen(r.id)}>
                     <td className="py-2" onClick={(e) => e.stopPropagation()}>
-                      <input type="checkbox" aria-label={`Remind ${r.name}`} disabled={!canRemind(r)} title={canRemind(r) ? "Select to send a reminder" : lq.data?.[r.id] ? "Reminded in the last 3 days" : "Nothing to remind"} checked={picked.includes(r.id)} onChange={(e) => setPicked((p) => e.target.checked ? [...p, r.id] : p.filter((x) => x !== r.id))} />
+                      <input type="checkbox" aria-label={`Select ${r.name}`} title={canRemind(r) ? "Select for reminders and bulk actions" : "Select for bulk actions (no reminder due)"} checked={picked.includes(r.id)} onChange={(e) => setPicked((p) => e.target.checked ? [...p, r.id] : p.filter((x) => x !== r.id))} />
                     </td>
                     <td className="py-2"><p className="font-medium">{r.name}</p>{r.profileName && <p className="text-xs text-muted-foreground">{r.profileName}</p>}</td>
                     <td>{r.classLabel ?? <span className="text-muted-foreground">-</span>}</td>
@@ -102,8 +150,59 @@ export function InvestorsTab({ fundId }: { fundId: string }) {
           <FundOnboardingLinkCard fundId={fundId} />
         </DialogContent>
       </Dialog>
+      <Dialog open={classOpen} onOpenChange={setClassOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Set class for {picked.length} investor{picked.length === 1 ? "" : "s"}</DialogTitle>
+            <DialogDescription>Type the class exactly as it should appear, e.g. "Class A".</DialogDescription>
+          </DialogHeader>
+          <Input value={classKey} onChange={(e) => setClassKey(e.target.value)} placeholder="Class A" />
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setClassOpen(false)}>Cancel</Button>
+            <Button disabled={!classKey.trim() || sending} onClick={saveClass}>Set class</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
+    {(dupQ.data?.duplicates?.length ?? 0) > 0 && <DuplicatesCard fundId={fundId} groups={dupQ.data!.duplicates} staff={dupQ.data!.staff} onMerged={() => { void q.refetch(); void dupQ.refetch(); }} />}
     </div>
+  );
+}
+
+function DuplicatesCard({ fundId, groups, staff, onMerged }: { fundId: string; groups: any[][]; staff: boolean; onMerged: () => void }) {
+  const merge = useServerFn(mergeInvestorsFn);
+  const [busy, setBusy] = useState(false);
+  async function doMerge(keepId: string, archiveId: string) {
+    const reason = window.prompt("Reason for merging (saved in Audit History):");
+    if (!reason?.trim()) return;
+    setBusy(true);
+    try { await merge({ data: { fundId, keepId, archiveId, reason: reason.trim() } }); toast.success("Records merged."); onMerged(); }
+    catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
+  }
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">Possible duplicate investors</CardTitle>
+        <CardDescription>Same name or email appears more than once. Merging keeps one record, carries over its documents and tasks, and archives the other — nothing is deleted. Staff only.</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {groups.map((g, i) => (
+          <div key={i} className="rounded-lg border p-3">
+            <ul className="divide-y text-sm">
+              {g.map((r) => (
+                <li key={r.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
+                  <span><span className="font-medium">{r.name}</span>{r.email ? <span className="ml-2 text-muted-foreground">{r.email}</span> : null}<span className="ml-2 text-xs text-muted-foreground">{usd(r.committedCents)} · {r.docs}</span></span>
+                  {staff && g.length === 2 && (
+                    <Button size="sm" variant="outline" disabled={busy} onClick={() => doMerge(r.id, g.find((x) => x.id !== r.id)!.id)}>Keep this one</Button>
+                  )}
+                </li>
+              ))}
+            </ul>
+            {g.length > 2 && <p className="mt-1 text-xs text-muted-foreground">More than two records match — merge two at a time.</p>}
+          </div>
+        ))}
+      </CardContent>
+    </Card>
   );
 }
 
