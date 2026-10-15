@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { decideAccountCheckFn } from "@/lib/account-kyc.functions";
+import { KycReviewPanel } from "@/components/kyc-review-panel";
 
 type Tone = "pass" | "fail" | "pending" | "none";
 const toneOf = (v: unknown): Tone => {
@@ -61,6 +62,8 @@ export function KycReport({ d, userId }: { d: any; userId: string }) {
       </header>
 
       {ac?.status === "review" && <ReviewBar check={ac} userId={userId} />}
+
+      {(ac?.review_details ?? kv?.review_details) && <KycReviewPanel rd={ac?.review_details ?? kv?.review_details} checkId={ac?.review_details ? ac.id : null} />}
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Block title="Applicant identity">
@@ -134,17 +137,20 @@ function ReviewBar({ check, userId }: { check: any; userId: string }) {
   const decide = useServerFn(decideAccountCheckFn);
   const [note, setNote] = useState("");
   const m = useMutation({
-    mutationFn: (action: "approve" | "decline") => decide({ data: { checkId: check.id, action, note: note.trim() || null } }),
+    mutationFn: (action: "approve" | "decline" | "send_back") => decide({ data: { checkId: check.id, action, note: note.trim() || null } }),
     onSuccess: () => { toast.success("Decision saved."); qc.invalidateQueries({ queryKey: ["person-activity", userId] }); },
     onError: (e: Error) => toast.error(e.message),
   });
   return (
     <div className="space-y-2 rounded-lg border border-accent bg-accent/10 p-3 print:hidden">
       <p className="text-sm font-medium">This check needs a review decision.</p>
-      <Textarea rows={2} placeholder="Reason (required to decline; recorded with your name)" value={note} onChange={(e) => setNote(e.target.value)} />
+      {(check.review_details?.aml?.totalHits ?? 0) > 0 && <p className="text-xs text-destructive">{check.review_details.aml.totalHits} possible watchlist matches. Review them below and note why they don't apply before approving.</p>}
+      <p className="text-xs text-muted-foreground">Your decision is saved here and sent to the verification service.</p>
+      <Textarea rows={2} placeholder="Reason (required to decline, ask again, or approve with watchlist matches; recorded with your name)" value={note} onChange={(e) => setNote(e.target.value)} />
       <div className="flex gap-2">
         <Button size="sm" disabled={m.isPending} onClick={() => m.mutate("approve")}>Approve</Button>
         <Button size="sm" variant="destructive" disabled={m.isPending} onClick={() => m.mutate("decline")}>Decline</Button>
+        <Button size="sm" variant="outline" disabled={m.isPending} onClick={() => m.mutate("send_back")}>Ask to verify again</Button>
       </div>
     </div>
   );

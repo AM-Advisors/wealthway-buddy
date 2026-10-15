@@ -1772,6 +1772,13 @@
       "when": 1792100366174,
       "tag": "0252_fund_migration_requests",
       "breakpoints": true
+    },
+    {
+      "idx": 253,
+      "version": "7",
+      "when": 1792103469871,
+      "tag": "0253_kyc_review_details",
+      "breakpoints": true
     }
   ]
 }

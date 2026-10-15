@@ -21,3 +21,10 @@ export const accountCheckQueueFn = createServerFn({ method: "POST" }).middleware
 export const decideAccountCheckFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuthUnverified])
   .inputValidator(z.object({ checkId: z.string().uuid(), action: z.enum(["approve", "decline", "send_back"]), note: z.string().max(2000).nullable() }).parse)
   .handler(async ({ data, context }) => (await srv()).decideAccountCheck(context.userId, data.checkId, data.action, data.note));
+
+export const verificationImagesFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuthUnverified])
+  .inputValidator(z.object({ checkId: z.string().uuid() }).parse)
+  .handler(async ({ data, context }) => (await srv()).verificationImages(context.userId, data.checkId));
+
+export const backfillReviewDetailsFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuthUnverified])
+  .handler(async ({ context }) => (await srv()).backfillReviewDetails(context.userId));
