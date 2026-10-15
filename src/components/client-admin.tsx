@@ -25,6 +25,7 @@ import {
 import { CLIENT_TYPES } from "@/lib/contract-ingestion";
 import { inviteClientContact } from "@/lib/client-contacts.functions";
 import { inviteToFund } from "@/lib/invitations.functions";
+import { ResendInviteButton } from "@/components/invite-resend";
 import { UserInsights } from "@/components/user-insights";
 import { getProposedFundServices } from "@/lib/client-service-config.functions";
 import {
@@ -306,7 +307,10 @@ function InviteMenu({ clientId, person, funds, onDone }: { clientId: string; per
   };
   return (
     <>
-      <Button size="sm" onClick={() => setOpen(true)}>{person.userId || person.invitedAt ? "Re-invite" : "Invite"}</Button>
+      <div className="flex gap-1">
+        {person.invitedAt && !person.userId ? <ResendInviteButton target={{ kind: "contact", id: person.id }} /> : null}
+        <Button size="sm" variant={person.userId || person.invitedAt ? "outline" : "default"} onClick={() => setOpen(true)}>{person.userId || person.invitedAt ? "Invite…" : "Invite"}</Button>
+      </div>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader><DialogTitle>Invite {person.fullName}</DialogTitle><DialogDescription>They get an email to sign in with {person.email || "their email"}.</DialogDescription></DialogHeader>

@@ -22,9 +22,9 @@ import {
   inviteToFund,
   listFundInvitations,
   removeFundAccess,
-  resendInvitation,
   revokeInvitation,
 } from "@/lib/invitations.functions";
+import { ResendInviteButton } from "@/components/invite-resend";
 
 type Role = "investor" | "fund_manager";
 
@@ -40,7 +40,6 @@ export function FundInvitations({ title = "Invitations" }: { title?: string }) {
   const load = useServerFn(listFundInvitations);
   const invite = useServerFn(inviteToFund);
   const inviteMany = useServerFn(inviteManyToFunds);
-  const resend = useServerFn(resendInvitation);
   const revoke = useServerFn(revokeInvitation);
   const remove = useServerFn(removeFundAccess);
   const queryClient = useQueryClient();
@@ -109,15 +108,6 @@ export function FundInvitations({ title = "Invitations" }: { title?: string }) {
     },
     onError: (e: unknown) =>
       toast.error(e instanceof Error ? e.message : "Could not invite that list."),
-  });
-
-  const resendMutation = useMutation({
-    mutationFn: (id: string) => resend({ data: { id } }),
-    onSuccess: () => {
-      toast.success("A fresh set-password link is on its way.");
-      void invalidate();
-    },
-    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : "Could not resend."),
   });
 
   const revokeMutation = useMutation({
@@ -350,20 +340,14 @@ export function FundInvitations({ title = "Invitations" }: { title?: string }) {
                   <p className="text-xs text-muted-foreground">
                     {inv.email} · {inv.invite_role === "fund_manager" ? "Fund manager" : "Investor"} ·{" "}
                     {new Date(inv.created_at).toLocaleDateString()}
+                    {inv.last_sent_at ? ` · last sent ${new Date(inv.last_sent_at).toLocaleDateString()}` : ""}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge variant={inv.status === "revoked" ? "outline" : "secondary"}>
                     {inv.status}
                   </Badge>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => resendMutation.mutate(inv.id)}
-                    disabled={resendMutation.isPending || inv.status === "revoked"}
-                  >
-                    Resend link
-                  </Button>
+                  <ResendInviteButton target={{ kind: "fund", id: inv.id }} disabled={inv.status === "revoked"} />
                   <Button
                     size="sm"
                     variant="ghost"

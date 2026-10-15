@@ -17,6 +17,8 @@ import {
 import { inviteToFund } from "@/lib/invitations.functions";
 import { inviteClientContact } from "@/lib/client-contacts.functions";
 import { AccessBadge, PeopleActions, useAccessStatus } from "@/components/people-actions";
+import { ResendInviteButton } from "@/components/invite-resend";
+import { DeliveryBadge, insightTime } from "@/components/user-insights";
 import { filterDirectory, INVITE_LABEL, type DirectoryRow } from "@/lib/client-directory-model";
 
 type Kind = "fund_managers" | "founders";
@@ -119,11 +121,15 @@ export function ContactDirectoryTable({ kind }: { kind: Kind }) {
                 <TableCell><div className="font-medium">{r.name}</div><div className="text-xs text-muted-foreground">{r.email}</div></TableCell>
                 <TableCell className="text-sm">{r.companies.join(", ") || "—"}</TableCell>
                 <TableCell className="text-sm">{r.assignments.length ? r.assignments.map((a) => a.name).join(", ") : <span className="text-muted-foreground">None</span>}</TableCell>
-                <TableCell><Badge variant={r.invite === "active" ? "default" : r.invite === "invited" ? "secondary" : "outline"}>{INVITE_LABEL[r.invite]}</Badge> <AccessBadge info={acc(r.email)} /></TableCell>
+                <TableCell>
+                  <div className="flex flex-wrap items-center gap-1"><Badge variant={r.invite === "active" ? "default" : r.invite === "invited" ? "secondary" : "outline"}>{INVITE_LABEL[r.invite]}</Badge> <AccessBadge info={acc(r.email)} /></div>
+                  {r.invite === "invited" && acc(r.email)?.invite && <div className="mt-1 text-xs text-muted-foreground">Invite sent: {insightTime(acc(r.email)!.invite!.lastSent)} <DeliveryBadge outcome={acc(r.email)!.invite!.outcome} /></div>}
+                </TableCell>
                 <TableCell className="text-sm">{r.verified ? "Verified" : <span className="text-muted-foreground">Not yet</span>}</TableCell>
                 <TableCell className="space-x-2 text-right">
                   <Button size="sm" variant="outline" onClick={() => setDialog({ mode: "assign", row: r })}>Assign</Button>
-                  {r.invite !== "active" && <Button size="sm" variant="outline" disabled={invite.isPending} onClick={() => invite.mutate(r)}>{r.invite === "invited" ? "Resend" : "Invite"}</Button>}
+                  {r.invite === "invited" && <ResendInviteButton onSend={() => invite.mutateAsync(r).catch(() => undefined)} />}
+                  {r.invite === "not_invited" && <Button size="sm" variant="outline" disabled={invite.isPending} onClick={() => invite.mutate(r)}>Invite</Button>}
                   {access.data && <PeopleActions email={r.email} name={r.name} info={acc(r.email)}
                     context={isFund ? (r.assignments.length === 1 ? { kind: "offering", id: r.assignments[0]!.id, label: r.assignments[0]!.name } : null)
                       : (r.clientIds.length === 1 ? { kind: "client", id: r.clientIds[0]!, label: r.companies[0] ?? "this client" } : null)} />}

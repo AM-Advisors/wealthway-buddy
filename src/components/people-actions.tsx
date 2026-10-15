@@ -9,8 +9,10 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Textarea } from "@/components/ui/textarea";
 import { getAccessStatusByEmail, restoreAccess, revokeAccess, sendPasswordReset, setTestDemoFlag } from "@/lib/user-access.functions";
+import { ResendInviteMenuItem, type ResendTarget } from "@/components/invite-resend";
+import type { EmailOutcome } from "@/lib/user-insights-model";
 
-export type AccessInfo = { userId: string; status: string; isTestDemo: boolean; scoped: number };
+export type AccessInfo = { userId: string; status: string; isTestDemo: boolean; scoped: number; invite?: { lastSent: string | null; outcome: EmailOutcome } | null | undefined };
 
 /** Access status for a list page's emails. Returns null for viewers who can't manage access. */
 export function useAccessStatus(emails: string[]) {
@@ -37,9 +39,10 @@ type Mode = null | "revoke" | "archive" | "restore";
  * Revoke / archive / restore / test-demo menu for one person. The server re-checks
  * that the caller is Super Admin or an Operations lead on every action.
  */
-export function PeopleActions({ email, userId, name, info, context }: {
+export function PeopleActions({ email, userId, name, info, context, resend }: {
   email?: string | null; userId?: string | null; name?: string | null; info?: AccessInfo | null | undefined;
   context?: { kind: "client" | "offering"; id: string; label: string } | null;
+  resend?: ResendTarget | null;
 }) {
   const qc = useQueryClient();
   const revoke = useServerFn(revokeAccess), restore = useServerFn(restoreAccess), flag = useServerFn(setTestDemoFlag), resetPw = useServerFn(sendPasswordReset);
@@ -73,6 +76,10 @@ export function PeopleActions({ email, userId, name, info, context }: {
             <DropdownMenuItem onClick={() => { setScope(context ? "scoped" : "global"); setMode("revoke"); }}>Revoke access…</DropdownMenuItem>
             <DropdownMenuItem onClick={() => setMode("archive")}>Archive…</DropdownMenuItem>
           </> : <DropdownMenuItem onClick={() => setMode("restore")}>Restore access…</DropdownMenuItem>}
+          {resend && <>
+            <DropdownMenuSeparator />
+            <ResendInviteMenuItem target={resend} />
+          </>}
           {uid && <>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={async () => { try { await resetPw({ data: { userId: uid } }); toast.success("Password reset link emailed."); } catch (e) { toast.error(e instanceof Error ? e.message : "Failed."); } }}>

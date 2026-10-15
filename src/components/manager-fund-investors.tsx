@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { InvestorRecordsSync } from "@/components/investor-records-sync";
 import { funnelStageOf, managerBucketOf, FUNNEL_LABELS, MANAGER_BUCKET_LABELS } from "@/lib/dashboard-metrics";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { ChevronDown, MoreHorizontal } from "lucide-react";
@@ -15,8 +15,9 @@ import { FundEligibilitySetup } from "@/components/fund-eligibility-setup";
 import { ManagerAddInvestor } from "@/components/manager-add-investor";
 import { PrepareInvestor } from "@/components/prepare-investor";
 import { copyText, FundOnboardingLinkCard } from "@/components/fund-onboarding-link";
-import { getFundInvestorActions, removeFundAccess, resendInvitation } from "@/lib/invitations.functions";
-import { fundReadinessFn, managerOnboardingBoardFn, resendOnboardInvitationFn } from "@/lib/investor-onboarding.functions";
+import { getFundInvestorActions, removeFundAccess } from "@/lib/invitations.functions";
+import { fundReadinessFn, managerOnboardingBoardFn } from "@/lib/investor-onboarding.functions";
+import { ResendInviteButton, ResendInviteMenuItem } from "@/components/invite-resend";
 import { fundInvestorRecordsFn, removeFromFundFn } from "@/lib/investor-record.functions";
 import { getFundLinkFn } from "@/lib/fund-onboarding-link.functions";
 import { getManagerFundHome } from "@/lib/manager-fund.functions";
@@ -53,9 +54,7 @@ export function ManagerFundInvestors({ fundId }: { fundId: string }) {
   const loadHome = useServerFn(getManagerFundHome);
   const loadLink = useServerFn(getFundLinkFn);
   const remove = useServerFn(removeFromFundFn);
-  const resendAccess = useServerFn(resendInvitation);
   const revoke = useServerFn(removeFundAccess);
-  const resendOnboard = useServerFn(resendOnboardInvitationFn);
 
   const records = useQuery({ queryKey: ["fund-investor-records", fundId], queryFn: () => loadRecords({ data: { offeringId: fundId } }) });
   const readiness = useQuery({ queryKey: ["fund-readiness", fundId], queryFn: () => loadReadiness({ data: { offeringId: fundId } }), retry: false });
@@ -72,11 +71,6 @@ export function ManagerFundInvestors({ fundId }: { fundId: string }) {
 
   const refresh = () => ["fund-investor-records", "fund-readiness", "fund-investor-progress", "fund-investor-actions", "manager-fund-home"].forEach((k) => qc.invalidateQueries({ queryKey: [k, fundId] }));
   const run = async (fn: () => Promise<unknown>, ok: string) => { try { await fn(); toast.success(ok); refresh(); } catch (e) { toast.error((e as Error).message); } };
-  const resendOne = useMutation({
-    mutationFn: (invitationId: string) => resendOnboard({ data: { invitationId } }),
-    onSuccess: (r: any) => (r?.sent ? toast.success("Invitation resent.") : toast.error("The email could not be sent.")),
-    onError: (e: any) => toast.error(String(e?.message ?? e).replace(/^Forbidden:\s*/, "")),
-  });
   const copyLink = async () => {
     try { const d = await loadLink({ data: { offeringId: fundId } }); if (d.url) await copyText(d.url, "Onboarding link copied"); else toast.message("No active onboarding link yet. Open the Onboarding Link tab to set one up."); }
     catch (e) { toast.error((e as Error).message); }
@@ -126,7 +120,7 @@ export function ManagerFundInvestors({ fundId }: { fundId: string }) {
         <DropdownMenuTrigger asChild><Button size="icon" variant="ghost" aria-label={`Actions for ${name}`}><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem asChild><Link to="/manager/$applicationId" params={{ applicationId }}>Open application</Link></DropdownMenuItem>
-          {a?.invitationId ? <DropdownMenuItem onClick={() => run(() => resendAccess({ data: { id: a.invitationId! } }), "Invitation re-sent")}>Resend invite</DropdownMenuItem> : null}
+          {a?.invitationId ? <ResendInviteMenuItem target={{ kind: "fund", id: a.invitationId }} /> : null}
           {a?.userId ? <><DropdownMenuSeparator /><DropdownMenuItem className="text-destructive" onClick={() => { if (window.confirm(`Revoke ${name}'s access to this fund? Their account and past records are kept.`)) run(() => revoke({ data: { userId: a.userId!, offeringId: fundId, role: "investor" } }), "Fund access revoked"); }}>Revoke fund access</DropdownMenuItem></> : null}
         </DropdownMenuContent>
       </DropdownMenu>
@@ -245,13 +239,13 @@ export function ManagerFundInvestors({ fundId }: { fundId: string }) {
               {pendingOnboard.map((i) => (
                 <li key={i.id} className="flex flex-wrap items-center justify-between gap-2 p-3 text-sm">
                   <div className="min-w-0"><p className="truncate font-medium">{i.investorName}</p><p className="text-xs text-muted-foreground">Invited{i.requestedAmountCents ? ` · intends ${money(i.requestedAmountCents)}` : ""}</p></div>
-                  <Button size="sm" variant="outline" disabled={resendOne.isPending} onClick={() => resendOne.mutate(String(i.id).slice(7))}>Resend invitation</Button>
+                  <ResendInviteButton target={{ kind: "onboarding", invitationId: String(i.id).slice(7) }} label="Resend invitation" />
                 </li>))}
               {pendingAccess.map((p) => (
                 <li key={p.userId} className="flex flex-wrap items-center justify-between gap-2 p-3 text-sm">
                   <div className="min-w-0"><p className="truncate font-medium">{p.name}</p><p className="text-xs text-muted-foreground">Has fund access · onboarding not begun</p></div>
                   <div className="flex gap-2">
-                    {p.invitationId ? <Button size="sm" variant="outline" onClick={() => run(() => resendAccess({ data: { id: p.invitationId! } }), "Invitation re-sent")}>Resend</Button> : null}
+                    {p.invitationId ? <ResendInviteButton target={{ kind: "fund", id: p.invitationId }} /> : null}
                     <Button size="sm" variant="ghost" className="text-destructive" onClick={() => { if (window.confirm(`Revoke ${p.name}'s access to this fund?`)) run(() => revoke({ data: { userId: p.userId, offeringId: fundId, role: "investor" } }), "Fund access revoked"); }}>Revoke</Button>
                   </div>
                 </li>))}

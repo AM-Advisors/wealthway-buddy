@@ -7,7 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AccessBadge, PeopleActions } from "@/components/people-actions";
-import { cancelInvitation, getPeopleDirectory, resendInvitation, setTestDemoFlag } from "@/lib/user-access.functions";
+import { cancelInvitation, getPeopleDirectory, setTestDemoFlag } from "@/lib/user-access.functions";
+import { ResendInviteButton } from "@/components/invite-resend";
 import { DeliveryBadge, insightTime } from "@/components/user-insights";
 
 type Tab = "all" | "invited" | "revoked" | "archived" | "test";
@@ -21,12 +22,12 @@ const when = (s: string | null) => (s ? new Date(s).toLocaleString([], { dateSty
 export function PeopleDirectory({ initial = "all" }: { initial?: Tab }) {
   const qc = useQueryClient();
   const q = useQuery({ queryKey: ["people-directory"], queryFn: useServerFn(getPeopleDirectory), retry: false });
-  const cancel = useServerFn(cancelInvitation), flag = useServerFn(setTestDemoFlag), resend = useServerFn(resendInvitation);
+  const cancel = useServerFn(cancelInvitation), flag = useServerFn(setTestDemoFlag);
   const [tab, setTab] = useState<Tab>(initial);
   const [search, setSearch] = useState("");
   const [type, setType] = useState("all");
   const [attention, setAttention] = useState("all");
-  const [busy, setBusy] = useState(false);
+  const [, setBusy] = useState(false);
   const s = search.toLowerCase();
 
   const people = useMemo(() => (q.data?.people ?? []).filter((p: any) =>
@@ -70,7 +71,7 @@ export function PeopleDirectory({ initial = "all" }: { initial?: Tab }) {
                   <td className="p-3"><div className="flex flex-wrap gap-1">{p.types.map((t: string) => <Badge key={t} variant="outline">{t}</Badge>)}</div></td>
                   <td className="space-y-2 p-3">{p.status === "active" && !p.scopedRevokes.length && !p.isTestDemo ? "Active" : <AccessBadge info={{ userId: p.id, status: p.status, isTestDemo: p.isTestDemo, scoped: p.scopedRevokes.length }} />}<div><DeliveryBadge outcome={p.latestInvite?.outcome} /></div><p className="text-xs text-muted-foreground">Invite: {insightTime(p.latestInvite?.lastSent)}</p>{p.gaps?.length > 0 && <p className="text-xs text-muted-foreground">Missing: {p.gaps.join(", ")}</p>}</td>
                   <td className="whitespace-nowrap p-3">{when(p.lastSignIn)}</td>
-                  <td className="p-3 text-right">{!p.isSelf && q.data?.canManage && <PeopleActions userId={p.id} email={p.email} name={p.name} info={{ userId: p.id, status: p.status, isTestDemo: p.isTestDemo, scoped: p.scopedRevokes.length }} />}</td>
+                  <td className="p-3 text-right">{!p.isSelf && q.data?.canManage && <PeopleActions userId={p.id} email={p.email} name={p.name} info={{ userId: p.id, status: p.status, isTestDemo: p.isTestDemo, scoped: p.scopedRevokes.length }} resend={p.latestInvite && ["pending", "accepted"].includes(p.latestInvite.status) ? { kind: "directory", table: p.latestInvite.table, id: p.latestInvite.id } : null} />}</td>
                 </tr>
               ))}
               {!people.length && <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">No one here.</td></tr>}
@@ -94,7 +95,7 @@ export function PeopleDirectory({ initial = "all" }: { initial?: Tab }) {
                     <td className="whitespace-nowrap p-3">{insightTime(i.sentAt)}</td>
                     <td className="whitespace-nowrap p-3">{insightTime(i.lastSent)}<div className="text-xs text-muted-foreground">{i.lastSender ?? ""}</div></td>
                     <td className="space-x-1 whitespace-nowrap p-3 text-right">{q.data?.canManage && <>
-                       <Button size="sm" variant="outline" disabled={busy} onClick={() => act(() => resend({ data: { table: i.table, id: i.id } }), "Invitation resent with a fresh link.")}>{busy ? "Sending…" : "Resend"}</Button>
+                       <ResendInviteButton target={{ kind: "directory", table: i.table, id: i.id }} label="Resend" />
                        <Button size="sm" variant="ghost" onClick={() => act(() => flag({ data: { kind: i.table, id: i.id, value: !i.isTestDemo } }), i.isTestDemo ? "Unmarked." : "Marked as test/demo.")}>{i.isTestDemo ? "Unmark test" : "Mark test"}</Button>
                       {i.status === "pending" && <Button size="sm" variant="outline" onClick={() => { const r = window.prompt("Reason for cancelling this invitation"); if (r && r.trim().length >= 3) void act(() => cancel({ data: { table: i.table, id: i.id, reason: r } }), "Invitation cancelled."); }}>Cancel invite</Button>}</>}
                     </td>
