@@ -211,6 +211,89 @@ export async function cancelInvite(viewer: string, table: (typeof INVITE_TABLES)
   return { ok: true };
 }
 
+/** Resends a pending invitation with a fresh one-time set-password link. */
+export async function resendInvite(viewer: string, table: (typeof INVITE_TABLES)[number], id: string) {
+  const db = await requireAccessManager(viewer);
+  const { data: invite, error } = await db.from(table).select("*").eq("id", id).eq("status", "pending").maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!invite) throw new Error("That invitation is no longer pending.");
+  const email = String(invite.email ?? "").toLowerCase();
+  if (!email) throw new Error("That invitation has no email address.");
+
+  const shared = await import("@/lib/account-invite.server");
+  await shared.ensureAccount(db, email, invite.invited_name ?? "");
+  const portalUrl = await shared.setPasswordLink(db, email);
+  const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+  const { data: inviter } = await db.from("profiles").select("legal_name, email").eq("user_id", invite.invited_by).maybeSingle();
+  const invitedByName = (inviter as any)?.legal_name || (inviter as any)?.email || "The Harmonious team";
+
+  let sent = false;
+  if (table === "fund_invitations") {
+    const { data: off } = await db.from("offerings").select("name").eq("id", invite.offering_id).maybeSingle();
+    const r = await sendTemplateEmail("fund-invitation", email, {
+      templateData: {
+        inviteeName: invite.invited_name || email,
+        offeringName: (off as any)?.name ?? "Harmonious",
+        role: invite.invite_role ?? "investor",
+        invitedByName,
+        portalUrl,
+        signInUrl: `${shared.PORTAL_ORIGIN}/auth`,
+      },
+    });
+    sent = r.sent;
+  } else {
+    let clientName = "Harmonious";
+    if (table === "client_invitations" && invite.client_id) {
+      const { data: cl } = await db.from("clients").select("name").eq("id", invite.client_id).maybeSingle();
+      clientName = (cl as any)?.name ?? clientName;
+    }
+    const r = await sendTemplateEmail("client-invitation", email, {
+      templateData: {
+        contactName: invite.invited_name || email,
+        clientName,
+        roleLabel: table === "staff_invitations" ? `Harmonious ${String(invite.role ?? "team member").replace(/_/g, " ")}` : "Client contact",
+        invitedByName,
+        passwordUrl: portalUrl,
+        signInUrl: `${shared.PORTAL_ORIGIN}/auth`,
+      },
+    });
+    sent = r.sent;
+  }
+
+  const now = new Date().toISOString();
+  const col = table === "fund_invitations" ? "last_sent_at" : table === "client_invitations" ? "invite_sent_at" : "updated_at";
+  await db.from(table).update({ [col]: now }).eq("id", id);
+  await log(db, { subject_kind: table, subject_id: id, action: "invite_resent", reason: sent ? null : "email send failed", actor_id: viewer });
+  if (!sent) throw new Error("The invitation was updated but the email could not be sent.");
+  return { ok: true };
+}
+
+/** Emails a one-time password-reset link to an existing user. */
+export async function resetUserPassword(viewer: string, userId: string) {
+  const db = await requireAccessManager(viewer);
+  const { data: profile } = await db.from("profiles").select("email, legal_name").eq("user_id", userId).maybeSingle();
+  let email = (profile as any)?.email as string | undefined;
+  if (!email) {
+    const { data: u } = await db.auth.admin.getUserById(userId);
+    email = u?.user?.email ?? undefined;
+  }
+  if (!email) throw new Error("That person has no email address on file.");
+  const shared = await import("@/lib/account-invite.server");
+  const portalUrl = await shared.setPasswordLink(db, email.toLowerCase());
+  const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+  const r = await sendTemplateEmail("investor-message", email.toLowerCase(), {
+    templateData: {
+      investorName: (profile as any)?.legal_name || email,
+      offeringName: "Harmonious",
+      subject: "Reset your Harmonious password",
+      body: `We received a request to reset the password for your Harmonious account.\n\nUse this one-time link to choose a new password: ${portalUrl}\n\nThe link expires shortly and only works once. If you didn't ask for this, you can ignore this email - your password stays the same.`,
+    },
+  });
+  await log(db, { subject_kind: "user", subject_id: userId, action: "password_reset_sent", reason: r.sent ? null : "email send failed", actor_id: viewer });
+  if (!r.sent) throw new Error("The reset email could not be sent.");
+  return { ok: true };
+}
+
 export async function setTestDemo(viewer: string, kind: "user" | "client" | (typeof INVITE_TABLES)[number], id: string, value: boolean) {
   const db = await requireAccessManager(viewer);
   if (kind === "user") {

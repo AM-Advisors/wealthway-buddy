@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AccessBadge, PeopleActions } from "@/components/people-actions";
-import { cancelInvitation, getPeopleDirectory, setTestDemoFlag } from "@/lib/user-access.functions";
+import { cancelInvitation, getPeopleDirectory, resendInvitation, setTestDemoFlag } from "@/lib/user-access.functions";
 
 type Tab = "all" | "invited" | "revoked" | "archived" | "test";
 const TABS: { id: Tab; label: string }[] = [
@@ -19,7 +19,7 @@ const when = (s: string | null) => (s ? new Date(s).toLocaleString([], { dateSty
 export function PeopleDirectory({ initial = "all" }: { initial?: Tab }) {
   const qc = useQueryClient();
   const q = useQuery({ queryKey: ["people-directory"], queryFn: useServerFn(getPeopleDirectory), retry: false });
-  const cancel = useServerFn(cancelInvitation), flag = useServerFn(setTestDemoFlag);
+  const cancel = useServerFn(cancelInvitation), flag = useServerFn(setTestDemoFlag), resend = useServerFn(resendInvitation);
   const [tab, setTab] = useState<Tab>(initial);
   const [search, setSearch] = useState("");
   const [type, setType] = useState("all");
@@ -87,7 +87,8 @@ export function PeopleDirectory({ initial = "all" }: { initial?: Tab }) {
                     <td className="whitespace-nowrap p-3">{when(i.sentAt)}</td>
                     <td className="whitespace-nowrap p-3">{when(i.lastSent)}</td>
                     <td className="space-x-1 whitespace-nowrap p-3 text-right">{q.data?.canManage && <>
-                      <Button size="sm" variant="ghost" onClick={() => act(() => flag({ data: { kind: i.table, id: i.id, value: !i.isTestDemo } }), i.isTestDemo ? "Unmarked." : "Marked as test/demo.")}>{i.isTestDemo ? "Unmark test" : "Mark test"}</Button>
+                       <Button size="sm" variant="outline" onClick={() => act(() => resend({ data: { table: i.table, id: i.id } }), "Invitation resent with a fresh link.")}>Resend</Button>
+                       <Button size="sm" variant="ghost" onClick={() => act(() => flag({ data: { kind: i.table, id: i.id, value: !i.isTestDemo } }), i.isTestDemo ? "Unmarked." : "Marked as test/demo.")}>{i.isTestDemo ? "Unmark test" : "Mark test"}</Button>
                       <Button size="sm" variant="outline" onClick={() => { const r = window.prompt("Reason for cancelling this invitation"); if (r && r.trim().length >= 3) void act(() => cancel({ data: { table: i.table, id: i.id, reason: r } }), "Invitation cancelled."); }}>Cancel invite</Button></>}
                     </td>
                   </tr>
@@ -96,7 +97,7 @@ export function PeopleDirectory({ initial = "all" }: { initial?: Tab }) {
               </tbody>
             </table>
           </div>
-          {tab === "invited" && <p className="text-xs text-muted-foreground">To resend, use Resend on the Fund Managers, Founders or Invite & access pages.</p>}
+          {tab === "invited" && <p className="text-xs text-muted-foreground">Resend emails a fresh one-time link; the old link stops working.</p>}
         </section>
       )}
 
