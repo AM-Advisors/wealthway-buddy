@@ -1688,6 +1688,13 @@
       "when": 1792017518146,
       "tag": "0240_person_kyc_requests",
       "breakpoints": true
+    },
+    {
+      "idx": 241,
+      "version": "7",
+      "when": 1792035769271,
+      "tag": "0241_activity_clicks",
+      "breakpoints": true
     }
   ]
 }
