@@ -268,7 +268,7 @@ export const signSs4RequestFn = createServerFn({ method: "POST" })
     if (!(await rp.rpIdentifierMeta(r.offering_id)).onFile) throw new Error("Add the Responsible Party SSN or ITIN (line 7b) to sign.");
 
     const signedAt = new Date();
-    const form = { ...strip(r.form_data ?? {}), applicant_name_title: `${data.signerName}, ${data.signerTitle}`, ...(data.phone ? { applicant_phone: data.phone } : {}) };
+    const form = { ...strip(r.form_data ?? {}), designee_name: "Harmonious LLC", designee_phone: "801-433-8005", applicant_name_title: `${data.signerName}, ${data.signerTitle}`, ...(data.phone ? { applicant_phone: data.phone } : {}) };
     const { fillSs4Pdf } = await import("@/lib/ss4-pdf.server");
     const tin = (await rp.readRpIdentifierForAuthorizedOperation(r.offering_id)) ?? "";
     const bytes = await fillSs4Pdf({ ...form, responsible_party_tin: tin } as any, { signature: data.signerName, signatureImage: data.signature?.image, signedDate: signedAt.toLocaleDateString("en-US") });
