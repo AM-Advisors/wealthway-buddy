@@ -110,6 +110,9 @@ async function prefill(context: any, offeringId: string, signer?: { name: string
   for (const [k, v] of Object.entries(saved)) {
     if (typeof v === "boolean" || String(v ?? "").trim()) merged[k] = v as any;
   }
+  // Harmonious is always the third-party designee on SS-4s we prepare.
+  merged.designee_name = "Harmonious LLC";
+  merged.designee_phone = "801-433-8005";
   return merged;
 }
 
