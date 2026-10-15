@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from "react";
+import { remindInvestorItemFn } from "@/lib/document-reminders.functions";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
@@ -60,6 +61,7 @@ export function InvestorsTab({ fundId, workQueue }: { fundId: string; workQueue?
     try { toast.success(await fn()); setPicked([]); await q.refetch(); }
     catch (e) { toast.error((e as Error).message); } finally { setSending(false); }
   }
+  const remindItemFn = useServerFn(remindInvestorItemFn);
   const sendKyc = () => runBulk(async () => {
     const res = await bulkKyc({ data: { fundId, onboardingIds: picked } });
     const sent = res.filter((x) => x.outcome === "sent").length;
@@ -69,6 +71,12 @@ export function InvestorsTab({ fundId, workQueue }: { fundId: string; workQueue?
   const requestMissing = () => runBulk(async () => {
     const res = await askMissing({ data: { fundId, onboardingIds: picked } });
     return `Asked the fund manager for missing info on ${res.investors} investor${res.investors === 1 ? "" : "s"}.`;
+  });
+  const remindItem = (kind: "w9" | "questionnaire") => runBulk(async () => {
+    const res = await remindItemFn({ data: { fundId, onboardingIds: picked, kind } });
+    const sent = res.filter((x) => x.outcome === "sent").length;
+    const skipped = res.filter((x) => x.outcome === "skipped");
+    return `${sent} ${kind === "w9" ? "W-9" : "questionnaire"} reminder${sent === 1 ? "" : "s"} sent${skipped.length ? `, ${skipped.length} skipped (${skipped[0]?.reason})` : ""}.`;
   });
   const saveClass = () => runBulk(async () => {
     const res = await bulkClass({ data: { fundId, onboardingIds: picked, classKey } });
@@ -93,6 +101,8 @@ export function InvestorsTab({ fundId, workQueue }: { fundId: string; workQueue?
               <DropdownMenuItem onClick={sendKyc}>Send identity-check links</DropdownMenuItem>
               <DropdownMenuItem onClick={() => setClassOpen(true)}>Set class…</DropdownMenuItem>
               <DropdownMenuItem onClick={requestMissing}>Ask manager for missing info</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => remindItem("w9")}>Send reminder: W-9 / W-8</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => remindItem("questionnaire")}>Send reminder: investor questionnaire</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
           <Button size="sm" onClick={() => setInvite(true)}>Add / invite investors</Button>
