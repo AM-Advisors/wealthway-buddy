@@ -23204,6 +23204,7 @@ export type Database = {
           revoke_reason: string | null
           revoked_at: string | null
           role: Database["public"]["Enums"]["fund_team_role"]
+          scope: string
           status: string
           updated_at: string
         }
@@ -23218,6 +23219,7 @@ export type Database = {
           revoke_reason?: string | null
           revoked_at?: string | null
           role: Database["public"]["Enums"]["fund_team_role"]
+          scope?: string
           status?: string
           updated_at?: string
         }
@@ -23232,6 +23234,7 @@ export type Database = {
           revoke_reason?: string | null
           revoked_at?: string | null
           role?: Database["public"]["Enums"]["fund_team_role"]
+          scope?: string
           status?: string
           updated_at?: string
         }
