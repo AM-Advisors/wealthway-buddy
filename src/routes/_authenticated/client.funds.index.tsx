@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 import { useClientPortal } from "@/components/client-portal-context";
+import { ClientMigrationRequest } from "@/components/client-migration-request";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -34,7 +35,7 @@ const money = (cents: number | null | undefined) =>
     : "-";
 
 function ClientFundsPage() {
-  const { data } = useClientPortal();
+  const { data, clientId } = useClientPortal();
   const all = (data?.funds ?? []) as any[];
   const [q, setQ] = useState("");
   const [show, setShow] = useState<"all" | "open" | "setup">("all");
@@ -63,7 +64,9 @@ function ClientFundsPage() {
           {k === "all" ? "All" : k === "open" ? "Open" : "In setup"}
         </Button>
       ))}
-      <Button asChild size="sm" className="ml-auto"><Link to="/client/funds/new">Add Fund or SPV</Link></Button>
+      <div className="ml-auto" />
+      <ClientMigrationRequest clientId={clientId} />
+      <Button asChild size="sm"><Link to="/client/funds/new">Add Fund or SPV</Link></Button>
     </div>
     <Card>
       <CardHeader>
