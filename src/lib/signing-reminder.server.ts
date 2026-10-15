@@ -40,11 +40,11 @@ export async function sendSigningReminder(actorId: string, input: {
   const { data: me } = await d.from("profiles").select("legal_name").eq("user_id", actorId).maybeSingle();
   const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
   const r: any = await sendTemplateEmail("signing-reminder", input.recipientEmail, {
-    cc: "operations@harmonious.co",
+    cc: "operations@harmonious.co", inboxForAnyUser: true,
     templateData: { recipientName: input.recipientName.split(/\s+/)[0] || "there", documentTitle: input.documentTitle, fundName: input.contextName ?? o?.name ?? "your fund", steps: input.steps, requestedBy: me?.legal_name ?? undefined, ctaUrl, firstTime },
   });
   const sent = r?.sent !== false;
-  await d.from("document_reminders").insert({ reminder_key: input.reminderKey, client_id: input.clientId ?? null, offering_id: input.offeringId ?? null, document_title: input.documentTitle, recipient_email: input.recipientEmail, sent_by: actorId, delivered: sent, override_reason: hit ? input.override?.reason ?? null : null });
+  await d.from("document_reminders").insert({ reminder_key: input.reminderKey, client_id: input.clientId ?? null, offering_id: input.offeringId ?? null, document_title: input.documentTitle, recipient_email: input.recipientEmail, sent_by: actorId, delivered: sent, override_reason: hit ? input.override?.reason ?? null : null, message_id: r?.messageId ?? null, inbox_message_id: r?.inboxMessageId ?? null, recipient_user_id: userId });
   const { logFundAudit } = await import("@/lib/fund-audit.server");
   if (input.offeringId) await logFundAudit(actorId, {
     offeringId: input.offeringId!, eventType: "signing_reminder_sent",

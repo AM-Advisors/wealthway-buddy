@@ -203,6 +203,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
     ...(peopleSub.length ? [{ id: "people-access", title: "People & Access", url: "/ops/people-access", icon: "people", sub: peopleSub }] : []),
     ...(canSee("mailboxes", staffRoles) ? [{ id: "mailboxes", title: "Mailboxes", url: "/ops/mailboxes", icon: "document" }] : []),
     { id: "mail", title: "Mail", url: "/ops/mail", icon: "document" },
+    { id: "reminders", title: "Reminder tracking", url: "/ops/reminders", icon: "report" },
   ];
   const leadershipItems: NavItem[] = salesOnly || !(viewLeader || adminSection) ? [] : [
     ...(viewLeader ? [{ id: "dash-leadership", title: "Leadership dashboard", url: "/ops/dashboards/leadership", icon: "report" }] : []),

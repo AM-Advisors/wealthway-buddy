@@ -268,6 +268,7 @@ import { Route as AuthenticatedOpsPeopleAccessRouteImport } from './routes/_auth
 import { Route as AuthenticatedOpsPerformanceRouteImport } from './routes/_authenticated/ops.performance'
 import { Route as AuthenticatedOpsQueueRouteImport } from './routes/_authenticated/ops.queue'
 import { Route as AuthenticatedOpsReadinessRouteImport } from './routes/_authenticated/ops.readiness'
+import { Route as AuthenticatedOpsRemindersRouteImport } from './routes/_authenticated/ops.reminders'
 import { Route as AuthenticatedOpsReportingRouteImport } from './routes/_authenticated/ops.reporting'
 import { Route as AuthenticatedOpsRolesRouteImport } from './routes/_authenticated/ops.roles'
 import { Route as AuthenticatedOpsSecurityComplianceRouteImport } from './routes/_authenticated/ops.security-compliance'
@@ -308,6 +309,7 @@ import { Route as AuthenticatedSalesOutreachRouteImport } from './routes/_authen
 import { Route as AuthenticatedSalesQuotesRouteImport } from './routes/_authenticated/sales_.quotes'
 import { Route as AuthenticatedSalesTeamRouteImport } from './routes/_authenticated/sales_.team'
 import { Route as AuthenticatedSignSignatureIdRouteImport } from './routes/_authenticated/sign.$signatureId'
+import { Route as ApiPublicBrevoWebhookRouteImport } from './routes/api/public/brevo-webhook'
 import { Route as ApiPublicCapClaimRouteImport } from './routes/api/public/cap-claim'
 import { Route as ApiPublicCapTableRequestRouteImport } from './routes/api/public/cap-table-request'
 import { Route as ApiPublicCrmUnsubscribeRouteImport } from './routes/api/public/crm-unsubscribe'
@@ -1908,6 +1910,12 @@ const AuthenticatedOpsReadinessRoute =
     path: '/ops/readiness',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOpsRemindersRoute =
+  AuthenticatedOpsRemindersRouteImport.update({
+    id: '/ops/reminders',
+    path: '/ops/reminders',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOpsReportingRoute =
   AuthenticatedOpsReportingRouteImport.update({
     id: '/ops/reporting',
@@ -2140,6 +2148,11 @@ const AuthenticatedSignSignatureIdRoute =
     path: '/sign/$signatureId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiPublicBrevoWebhookRoute = ApiPublicBrevoWebhookRouteImport.update({
+  id: '/api/public/brevo-webhook',
+  path: '/api/public/brevo-webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicCapClaimRoute = ApiPublicCapClaimRouteImport.update({
   id: '/api/public/cap-claim',
   path: '/api/public/cap-claim',
@@ -3214,6 +3227,7 @@ export interface FileRoutesByFullPath {
   '/ops/performance': typeof AuthenticatedOpsPerformanceRoute
   '/ops/queue': typeof AuthenticatedOpsQueueRoute
   '/ops/readiness': typeof AuthenticatedOpsReadinessRoute
+  '/ops/reminders': typeof AuthenticatedOpsRemindersRoute
   '/ops/reporting': typeof AuthenticatedOpsReportingRoute
   '/ops/roles': typeof AuthenticatedOpsRolesRoute
   '/ops/security-compliance': typeof AuthenticatedOpsSecurityComplianceRoute
@@ -3253,6 +3267,7 @@ export interface FileRoutesByFullPath {
   '/sales/quotes': typeof AuthenticatedSalesQuotesRoute
   '/sales/team': typeof AuthenticatedSalesTeamRoute
   '/sign/$signatureId': typeof AuthenticatedSignSignatureIdRoute
+  '/api/public/brevo-webhook': typeof ApiPublicBrevoWebhookRoute
   '/api/public/cap-claim': typeof ApiPublicCapClaimRoute
   '/api/public/cap-table-request': typeof ApiPublicCapTableRequestRoute
   '/api/public/crm-unsubscribe': typeof ApiPublicCrmUnsubscribeRoute
@@ -3647,6 +3662,7 @@ export interface FileRoutesByTo {
   '/ops/performance': typeof AuthenticatedOpsPerformanceRoute
   '/ops/queue': typeof AuthenticatedOpsQueueRoute
   '/ops/readiness': typeof AuthenticatedOpsReadinessRoute
+  '/ops/reminders': typeof AuthenticatedOpsRemindersRoute
   '/ops/reporting': typeof AuthenticatedOpsReportingRoute
   '/ops/roles': typeof AuthenticatedOpsRolesRoute
   '/ops/security-compliance': typeof AuthenticatedOpsSecurityComplianceRoute
@@ -3686,6 +3702,7 @@ export interface FileRoutesByTo {
   '/sales/quotes': typeof AuthenticatedSalesQuotesRoute
   '/sales/team': typeof AuthenticatedSalesTeamRoute
   '/sign/$signatureId': typeof AuthenticatedSignSignatureIdRoute
+  '/api/public/brevo-webhook': typeof ApiPublicBrevoWebhookRoute
   '/api/public/cap-claim': typeof ApiPublicCapClaimRoute
   '/api/public/cap-table-request': typeof ApiPublicCapTableRequestRoute
   '/api/public/crm-unsubscribe': typeof ApiPublicCrmUnsubscribeRoute
@@ -4088,6 +4105,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/performance': typeof AuthenticatedOpsPerformanceRoute
   '/_authenticated/ops/queue': typeof AuthenticatedOpsQueueRoute
   '/_authenticated/ops/readiness': typeof AuthenticatedOpsReadinessRoute
+  '/_authenticated/ops/reminders': typeof AuthenticatedOpsRemindersRoute
   '/_authenticated/ops/reporting': typeof AuthenticatedOpsReportingRoute
   '/_authenticated/ops/roles': typeof AuthenticatedOpsRolesRoute
   '/_authenticated/ops/security-compliance': typeof AuthenticatedOpsSecurityComplianceRoute
@@ -4127,6 +4145,7 @@ export interface FileRoutesById {
   '/_authenticated/sales_/quotes': typeof AuthenticatedSalesQuotesRoute
   '/_authenticated/sales_/team': typeof AuthenticatedSalesTeamRoute
   '/_authenticated/sign/$signatureId': typeof AuthenticatedSignSignatureIdRoute
+  '/api/public/brevo-webhook': typeof ApiPublicBrevoWebhookRoute
   '/api/public/cap-claim': typeof ApiPublicCapClaimRoute
   '/api/public/cap-table-request': typeof ApiPublicCapTableRequestRoute
   '/api/public/crm-unsubscribe': typeof ApiPublicCrmUnsubscribeRoute
@@ -4530,6 +4549,7 @@ export interface FileRouteTypes {
     | '/ops/performance'
     | '/ops/queue'
     | '/ops/readiness'
+    | '/ops/reminders'
     | '/ops/reporting'
     | '/ops/roles'
     | '/ops/security-compliance'
@@ -4569,6 +4589,7 @@ export interface FileRouteTypes {
     | '/sales/quotes'
     | '/sales/team'
     | '/sign/$signatureId'
+    | '/api/public/brevo-webhook'
     | '/api/public/cap-claim'
     | '/api/public/cap-table-request'
     | '/api/public/crm-unsubscribe'
@@ -4963,6 +4984,7 @@ export interface FileRouteTypes {
     | '/ops/performance'
     | '/ops/queue'
     | '/ops/readiness'
+    | '/ops/reminders'
     | '/ops/reporting'
     | '/ops/roles'
     | '/ops/security-compliance'
@@ -5002,6 +5024,7 @@ export interface FileRouteTypes {
     | '/sales/quotes'
     | '/sales/team'
     | '/sign/$signatureId'
+    | '/api/public/brevo-webhook'
     | '/api/public/cap-claim'
     | '/api/public/cap-table-request'
     | '/api/public/crm-unsubscribe'
@@ -5403,6 +5426,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/performance'
     | '/_authenticated/ops/queue'
     | '/_authenticated/ops/readiness'
+    | '/_authenticated/ops/reminders'
     | '/_authenticated/ops/reporting'
     | '/_authenticated/ops/roles'
     | '/_authenticated/ops/security-compliance'
@@ -5442,6 +5466,7 @@ export interface FileRouteTypes {
     | '/_authenticated/sales_/quotes'
     | '/_authenticated/sales_/team'
     | '/_authenticated/sign/$signatureId'
+    | '/api/public/brevo-webhook'
     | '/api/public/cap-claim'
     | '/api/public/cap-table-request'
     | '/api/public/crm-unsubscribe'
@@ -5636,6 +5661,7 @@ export interface RootRouteChildren {
   UnsubscribeTokenRoute: typeof UnsubscribeTokenRoute
   ResourcesIndexRoute: typeof ResourcesIndexRoute
   SolutionsIndexRoute: typeof SolutionsIndexRoute
+  ApiPublicBrevoWebhookRoute: typeof ApiPublicBrevoWebhookRoute
   ApiPublicCapClaimRoute: typeof ApiPublicCapClaimRoute
   ApiPublicCapTableRequestRoute: typeof ApiPublicCapTableRequestRoute
   ApiPublicCrmUnsubscribeRoute: typeof ApiPublicCrmUnsubscribeRoute
@@ -7480,6 +7506,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsReadinessRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ops/reminders': {
+      id: '/_authenticated/ops/reminders'
+      path: '/ops/reminders'
+      fullPath: '/ops/reminders'
+      preLoaderRoute: typeof AuthenticatedOpsRemindersRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ops/reporting': {
       id: '/_authenticated/ops/reporting'
       path: '/ops/reporting'
@@ -7759,6 +7792,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/sign/$signatureId'
       preLoaderRoute: typeof AuthenticatedSignSignatureIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/public/brevo-webhook': {
+      id: '/api/public/brevo-webhook'
+      path: '/api/public/brevo-webhook'
+      fullPath: '/api/public/brevo-webhook'
+      preLoaderRoute: typeof ApiPublicBrevoWebhookRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/public/cap-claim': {
       id: '/api/public/cap-claim'
@@ -9222,6 +9262,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsPerformanceRoute: typeof AuthenticatedOpsPerformanceRoute
   AuthenticatedOpsQueueRoute: typeof AuthenticatedOpsQueueRoute
   AuthenticatedOpsReadinessRoute: typeof AuthenticatedOpsReadinessRoute
+  AuthenticatedOpsRemindersRoute: typeof AuthenticatedOpsRemindersRoute
   AuthenticatedOpsReportingRoute: typeof AuthenticatedOpsReportingRoute
   AuthenticatedOpsRolesRoute: typeof AuthenticatedOpsRolesRoute
   AuthenticatedOpsSecurityComplianceRoute: typeof AuthenticatedOpsSecurityComplianceRoute
@@ -9544,6 +9585,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsPerformanceRoute: AuthenticatedOpsPerformanceRoute,
   AuthenticatedOpsQueueRoute: AuthenticatedOpsQueueRoute,
   AuthenticatedOpsReadinessRoute: AuthenticatedOpsReadinessRoute,
+  AuthenticatedOpsRemindersRoute: AuthenticatedOpsRemindersRoute,
   AuthenticatedOpsReportingRoute: AuthenticatedOpsReportingRoute,
   AuthenticatedOpsRolesRoute: AuthenticatedOpsRolesRoute,
   AuthenticatedOpsSecurityComplianceRoute:
@@ -9756,6 +9798,7 @@ const rootRouteChildren: RootRouteChildren = {
   UnsubscribeTokenRoute: UnsubscribeTokenRoute,
   ResourcesIndexRoute: ResourcesIndexRoute,
   SolutionsIndexRoute: SolutionsIndexRoute,
+  ApiPublicBrevoWebhookRoute: ApiPublicBrevoWebhookRoute,
   ApiPublicCapClaimRoute: ApiPublicCapClaimRoute,
   ApiPublicCapTableRequestRoute: ApiPublicCapTableRequestRoute,
   ApiPublicCrmUnsubscribeRoute: ApiPublicCrmUnsubscribeRoute,
