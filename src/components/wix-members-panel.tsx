@@ -5,14 +5,16 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { importWixMembersFn, listWixMembersFn, listWixSitesFn, testWixFn } from "@/lib/wix-members.functions";
+import { reviewWixMemberFn, importWixMembersFn, listWixMembersFn, listWixSitesFn, testWixFn } from "@/lib/wix-members.functions";
 
 /** Wix member area: pick site, test, import (read-only), review matches. */
 export function WixMembersPanel() {
   const qc = useQueryClient();
   const sites = useQuery({ queryKey: ["wix-sites"], queryFn: useServerFn(listWixSitesFn), retry: false });
   const members = useQuery({ queryKey: ["wix-members"], queryFn: useServerFn(listWixMembersFn), retry: false });
-  const test = useServerFn(testWixFn), run = useServerFn(importWixMembersFn);
+  const test = useServerFn(testWixFn), run = useServerFn(importWixMembersFn), review = useServerFn(reviewWixMemberFn);
+  const [rowBusy, setRowBusy] = useState<string | null>(null);
+  const doReview = async (id: string, action: "link" | "create") => { setRowBusy(id); try { await review({ data: { wixMemberId: id, action } }); toast.success(action === "link" ? "Linked to the existing person." : "Person created."); await qc.invalidateQueries({ queryKey: ["wix-members"] }); } catch (e) { toast.error(e instanceof Error ? e.message : "Something went wrong."); } finally { setRowBusy(null); } };
   const [site, setSite] = useState("");
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
@@ -46,7 +48,7 @@ export function WixMembersPanel() {
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="text-left text-muted-foreground"><tr><th className="p-2">Name</th><th className="p-2">Email</th><th className="p-2">Phone</th><th className="p-2">Wix status</th><th className="p-2">Harmonious</th></tr></thead>
+            <thead className="text-left text-muted-foreground"><tr><th className="p-2">Name</th><th className="p-2">Email</th><th className="p-2">Phone</th><th className="p-2">Wix status</th><th className="p-2">Harmonious</th><th className="p-2"></th></tr></thead>
             <tbody>{rows.slice(0, 500).map((m: any) => (
               <tr key={m.wix_member_id} className="border-t">
                 <td className="p-2">{[m.first_name, m.last_name].filter(Boolean).join(" ") || "—"}</td>
@@ -54,6 +56,7 @@ export function WixMembersPanel() {
                 <td className="p-2">{m.phone || "—"}</td>
                 <td className="p-2 capitalize">{String(m.wix_status ?? "—").toLowerCase()}</td>
                 <td className="p-2">{m.matched_person_id ? <Badge variant="secondary">Matches a person</Badge> : <Badge variant="outline">Not in Harmonious</Badge>}</td>
+                <td className="p-2 text-right">{m.linked_person_id ? <Badge>{m.review_action === "created" ? "Created" : "Linked"}</Badge> : m.matched_person_id ? <Button size="sm" variant="outline" disabled={rowBusy === m.wix_member_id} onClick={() => doReview(m.wix_member_id, "link")}>Link</Button> : <Button size="sm" variant="outline" disabled={rowBusy === m.wix_member_id || (!m.email && !m.first_name)} onClick={() => { if (window.confirm(`Create a Harmonious person for ${[m.first_name, m.last_name].filter(Boolean).join(" ") || m.email}?`)) doReview(m.wix_member_id, "create"); }}>Create person</Button>}</td>
               </tr>))}
             </tbody>
           </table>

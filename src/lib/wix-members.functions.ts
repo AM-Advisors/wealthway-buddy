@@ -106,3 +106,48 @@ export const listWixMembersFn = createServerFn({ method: "POST" }).middleware([r
     const { data } = await (await admin()).from("wix_member_imports").select("*").order("last_name", { ascending: true, nullsFirst: false }).limit(5000);
     return (data ?? []) as any[];
   });
+
+/**
+ * Staff review action, one member at a time. "link" confirms the suggested email match
+ * and only fills blank name/phone on the person; "create" adds a new person (unmatched
+ * only, re-checks email first). Nothing is written to Wix; KYC/AML is never set.
+ */
+export const reviewWixMemberFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator((x: unknown) => z.object({ wixMemberId: z.string().min(1).max(100), action: z.enum(["link", "create"]) }).parse(x))
+  .handler(async ({ data, context }) => {
+    await assertStaff(context.userId);
+    const db = await admin();
+    const { data: m } = await db.from("wix_member_imports").select("*").eq("wix_member_id", data.wixMemberId).maybeSingle();
+    if (!m) throw new Error("Member not found. Import again.");
+    if (m.linked_person_id) throw new Error("Already reviewed.");
+    const now = new Date().toISOString();
+    let personId: string;
+    if (data.action === "link") {
+      if (!m.matched_person_id) throw new Error("No matching person to link.");
+      const { data: p } = await db.from("persons").select("id, legal_first_name, legal_last_name, phone").eq("id", m.matched_person_id).maybeSingle();
+      if (!p) throw new Error("The matched person no longer exists.");
+      const fill: Record<string, string> = {};
+      if (!p.legal_first_name && m.first_name) fill["legal_first_name"] = m.first_name;
+      if (!p.legal_last_name && m.last_name) fill["legal_last_name"] = m.last_name;
+      if (!p.phone && m.phone) fill["phone"] = m.phone;
+      if (Object.keys(fill).length) {
+        const { error } = await db.from("persons").update({ ...fill, updated_at: now }).eq("id", p.id);
+        if (error) throw new Error(error.message);
+      }
+      personId = p.id;
+    } else {
+      if (m.matched_person_id) throw new Error("This member matches an existing person — link instead.");
+      if (!m.email && !m.first_name) throw new Error("Member has no name or email.");
+      if (m.email) {
+        const { data: dup } = await db.from("persons").select("id").ilike("email", m.email).limit(1);
+        if ((dup ?? []).length) throw new Error("A person with this email now exists — import again to link.");
+      }
+      const { data: row, error } = await db.from("persons").insert({ legal_first_name: m.first_name, legal_last_name: m.last_name, email: m.email, phone: m.phone, created_by: context.userId, entry_source: "staff" }).select("id").single();
+      if (error) throw new Error(error.message);
+      personId = row.id;
+    }
+    const { error } = await db.from("wix_member_imports").update({ linked_person_id: personId, review_action: data.action === "link" ? "linked" : "created", reviewed_by: context.userId, reviewed_at: now, updated_at: now }).eq("wix_member_id", m.wix_member_id).is("linked_person_id", null);
+    if (error) throw new Error(error.message);
+    console.info("[wix] member reviewed", data.action, m.wix_member_id, "->", personId, "by", context.userId);
+    return { personId };
+  });
