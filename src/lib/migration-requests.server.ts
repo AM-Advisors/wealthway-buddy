@@ -32,11 +32,11 @@ export async function listRequests() {
     requestedBy: r.requested_by as string, requestedByName: who.get(r.requested_by) ?? "Unknown", createdAt: r.created_at as string,
     decidedByName: r.decided_by ? who.get(r.decided_by) ?? "Unknown" : null, decidedAt: r.decided_at as string | null,
     decisionNote: r.decision_note as string | null, offeringId: r.offering_id as string | null, importSummary: r.import_summary as any,
-    details: r.details as Record<string, unknown>,
+    details: (r.details ?? {}) as any,
   }));
 }
 
-export async function queueRequest(userId: string, input: { source: Source; sourceRef?: string | null; fundName: string; clientId?: string | null; notes?: string | null; details?: Record<string, unknown> }) {
+export async function queueRequest(userId: string, input: { source: Source; sourceRef?: string | null | undefined; fundName: string; clientId?: string | null | undefined; notes?: string | null | undefined; details?: any }) {
   const db = await admin();
   const name = input.fundName.trim();
   if (!name) throw new Error("Add the fund name.");
@@ -60,7 +60,7 @@ export async function declineRequest(userId: string, input: { id: string; note: 
   return { ok: true };
 }
 
-export async function approveRequest(userId: string, input: { id: string; note?: string | null }) {
+export async function approveRequest(userId: string, input: { id: string; note?: string | null | undefined }) {
   const db = await admin();
   const { data: r } = await db.from("fund_migration_requests").select("*").eq("id", input.id).maybeSingle();
   if (!r) throw new Error("Request not found.");
