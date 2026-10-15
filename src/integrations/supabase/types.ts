@@ -14589,38 +14589,68 @@ export type Database = {
       }
       document_reminders: {
         Row: {
+          bounce_reason: string | null
+          bounced_at: string | null
+          click_count: number
           client_id: string | null
           created_at: string
           delivered: boolean
+          delivered_at: string | null
           document_title: string
+          first_clicked_at: string | null
+          first_opened_at: string | null
           id: string
+          inbox_message_id: string | null
+          message_id: string | null
           offering_id: string | null
+          open_count: number
           override_reason: string | null
           recipient_email: string
+          recipient_user_id: string | null
           reminder_key: string
           sent_by: string
         }
         Insert: {
+          bounce_reason?: string | null
+          bounced_at?: string | null
+          click_count?: number
           client_id?: string | null
           created_at?: string
           delivered?: boolean
+          delivered_at?: string | null
           document_title: string
+          first_clicked_at?: string | null
+          first_opened_at?: string | null
           id?: string
+          inbox_message_id?: string | null
+          message_id?: string | null
           offering_id?: string | null
+          open_count?: number
           override_reason?: string | null
           recipient_email: string
+          recipient_user_id?: string | null
           reminder_key: string
           sent_by: string
         }
         Update: {
+          bounce_reason?: string | null
+          bounced_at?: string | null
+          click_count?: number
           client_id?: string | null
           created_at?: string
           delivered?: boolean
+          delivered_at?: string | null
           document_title?: string
+          first_clicked_at?: string | null
+          first_opened_at?: string | null
           id?: string
+          inbox_message_id?: string | null
+          message_id?: string | null
           offering_id?: string | null
+          open_count?: number
           override_reason?: string | null
           recipient_email?: string
+          recipient_user_id?: string | null
           reminder_key?: string
           sent_by?: string
         }
@@ -16282,6 +16312,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      email_tracking_events: {
+        Row: {
+          created_at: string
+          dedupe_key: string
+          event: string
+          id: string
+          message_id: string
+          occurred_at: string
+          reason: string | null
+        }
+        Insert: {
+          created_at?: string
+          dedupe_key: string
+          event: string
+          id?: string
+          message_id: string
+          occurred_at: string
+          reason?: string | null
+        }
+        Update: {
+          created_at?: string
+          dedupe_key?: string
+          event?: string
+          id?: string
+          message_id?: string
+          occurred_at?: string
+          reason?: string | null
+        }
+        Relationships: []
       }
       email_unsubscribes: {
         Row: {
