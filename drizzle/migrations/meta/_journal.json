@@ -1716,6 +1716,13 @@
       "when": 1792076595218,
       "tag": "0244_migration",
       "breakpoints": true
+    },
+    {
+      "idx": 245,
+      "version": "7",
+      "when": 1792080537005,
+      "tag": "0245_client_msa_signer",
+      "breakpoints": true
     }
   ]
 }
