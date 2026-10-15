@@ -46036,6 +46036,63 @@ export type Database = {
           },
         ]
       }
+      wix_fund_staging: {
+        Row: {
+          details: Json
+          imported_at: string
+          name: string
+          wix_id: string
+        }
+        Insert: {
+          details?: Json
+          imported_at?: string
+          name?: string
+          wix_id: string
+        }
+        Update: {
+          details?: Json
+          imported_at?: string
+          name?: string
+          wix_id?: string
+        }
+        Relationships: []
+      }
+      wix_investment_staging: {
+        Row: {
+          committed_cents: number
+          details: Json
+          email: string | null
+          entity_name: string | null
+          full_name: string
+          imported_at: string
+          received_cents: number
+          wix_fund_id: string | null
+          wix_id: string
+        }
+        Insert: {
+          committed_cents?: number
+          details?: Json
+          email?: string | null
+          entity_name?: string | null
+          full_name?: string
+          imported_at?: string
+          received_cents?: number
+          wix_fund_id?: string | null
+          wix_id: string
+        }
+        Update: {
+          committed_cents?: number
+          details?: Json
+          email?: string | null
+          entity_name?: string | null
+          full_name?: string
+          imported_at?: string
+          received_cents?: number
+          wix_fund_id?: string | null
+          wix_id?: string
+        }
+        Relationships: []
+      }
       wix_member_imports: {
         Row: {
           email: string | null
