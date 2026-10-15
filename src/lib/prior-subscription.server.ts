@@ -135,10 +135,42 @@ async function reconcile(onboardingId: string, userId: string) {
   } catch (e) { console.error("prior subscription reconcile", e); }
 }
 
+/**
+ * Closed (not yet launched) fund: send onboarding to an investor who already has a record.
+ * Creates/finds their account, grants access to this fund only, and emails a set-password link.
+ * No new investment is created; on verified-email sign-in the existing Person (and its
+ * investment) is claimed through the normal claim path. Sign/Fund are satisfied only by a
+ * confirmed prior subscription - this never marks anything signed or funded.
+ */
+async function sendExistingOnboarding(userId: string, offeringId: string, investors: Awaited<ReturnType<typeof launchFlow>>["investors"], ids: string[]) {
+  const db = await admin();
+  const { data: off } = await db.from("offerings").select("name").eq("id", offeringId).maybeSingle();
+  const { data: prof } = await db.from("profiles").select("full_name").eq("id", userId).maybeSingle();
+  const inv = await import("@/lib/invitations.functions");
+  const { ensureAccount } = await import("@/lib/account-invite.server");
+  const results: { onboardingId: string; ok: boolean; message?: string }[] = [];
+  for (const id of ids) {
+    const i = investors.find((x) => x.onboardingId === id);
+    if (!i?.email) { results.push({ onboardingId: id, ok: false, message: "No email" }); continue; }
+    if (i.joined || i.invited) { results.push({ onboardingId: id, ok: false, message: "Already invited" }); continue; }
+    try {
+      const email = i.email.toLowerCase();
+      const { data: ob } = await db.from("investor_onboardings").select("persons(legal_first_name, legal_last_name)").eq("id", id).maybeSingle();
+      const name = `${(ob as any)?.persons?.legal_first_name ?? ""} ${(ob as any)?.persons?.legal_last_name ?? ""}`.trim() || i.name;
+      const { targetUserId } = await ensureAccount(db, email, name);
+      const invitationIds = await inv.grantFundAccess({ supabase: db, supabaseAdmin: db, actorId: userId, targetUserId, offeringIds: [offeringId], role: "investor", email, name, sendEmail: true });
+      const sent = await inv.sendInvitationEmail({ supabaseAdmin: db, email, name, role: "investor", fundNames: [String(off?.name ?? "Harmonious")], invitedByName: String(prof?.full_name ?? "Harmonious"), actorId: userId, invitationIds });
+      await db.from("investor_onboarding_events").insert({ onboarding_id: id, offering_id: offeringId, event: "existing_record_onboarding_sent", actor_user_id: userId, actor_role: "harmonious", detail: { email, emailSent: sent } }).then(() => null, () => null);
+      results.push(sent ? { onboardingId: id, ok: true } : { onboardingId: id, ok: false, message: "Email could not be sent" });
+    } catch (e) { results.push({ onboardingId: id, ok: false, message: (e as Error).message }); }
+  }
+  return { sent: results.filter((r) => r.ok).length, results };
+}
+
 export async function sendInvites(userId: string, input: { offeringId: string; onboardingIds: string[] }) {
   await requireManager(userId);
   const flow = await launchFlow(userId, input.offeringId);
-  if (!flow.launched) throw new Error("Launch the fund before sending invites.");
+  if (!flow.launched) return sendExistingOnboarding(userId, input.offeringId, flow.investors, input.onboardingIds);
   const { inviteInvestor } = await import("@/lib/investor-onboarding.server");
   const results: { onboardingId: string; ok: boolean; message?: string }[] = [];
   for (const id of input.onboardingIds) {
