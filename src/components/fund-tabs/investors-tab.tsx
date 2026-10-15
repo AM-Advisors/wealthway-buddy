@@ -84,19 +84,33 @@ export function InvestorsTab({ fundId }: { fundId: string }) {
           <CardTitle className="text-base">Investors</CardTitle>
           <CardDescription>Click an investor to see everything for this deal. Received counts only money matched to the bank.</CardDescription>
         </div>
-        <div className="flex gap-2">
-          <Button size="sm" variant="outline" disabled={!picked.length || sending} onClick={sendReminders}>{sending ? "Sending…" : `Send reminder${picked.length ? ` (${picked.length})` : ""}`}</Button>
+        <div className="flex flex-wrap gap-2">
+          <Button size="sm" variant="outline" disabled={!picked.length || sending} onClick={sendReminders}>{sending ? "Working…" : `Send reminder${picked.length ? ` (${picked.length})` : ""}`}</Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild><Button size="sm" variant="outline" disabled={!picked.length || sending}>Actions{picked.length ? ` (${picked.length})` : ""}</Button></DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={sendKyc}>Send identity-check links</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setClassOpen(true)}>Set class…</DropdownMenuItem>
+              <DropdownMenuItem onClick={requestMissing}>Ask manager for missing info</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button size="sm" onClick={() => setInvite(true)}>Add / invite investors</Button>
         </div>
       </CardHeader>
       <CardContent>
+        {rows.length > 0 && committed > 0 && (
+          <div className="mb-4 rounded-lg border p-3">
+            <div className="flex justify-between text-sm"><span className="text-muted-foreground">Funding progress</span><span className="font-medium">{usd(received)} received of {usd(committed)} committed</span></div>
+            <div className="mt-2 h-2 rounded-full bg-muted"><div className="h-2 rounded-full bg-primary" style={{ width: `${Math.min(100, Math.round((received / committed) * 100))}%` }} /></div>
+          </div>
+        )}
         {q.isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> :
-         q.error ? <p className="text-sm text-destructive">{(q.error as Error).message}</p> :
+          q.error ? <p className="text-sm text-destructive">{(q.error as Error).message}</p> :
          rows.length === 0 ? <p className="py-6 text-center text-sm text-muted-foreground">No investors yet. Use "Add / invite investors" to share your fund's invite link.</p> : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[1300px] text-sm">
               <thead className="text-left text-xs text-muted-foreground">
-                <tr><th className="w-8 py-2"><span className="sr-only">Select for reminder</span></th><th className="py-2">Name</th><th>Class</th><th>Investing as</th><th>Missing info</th><th>Email</th><th>Phone</th><th className="text-right">Committed</th><th className="text-right">Received</th><th>KYC/KYB & AML</th><th>Fund documents</th><th>Wiring</th><th>Investor readiness</th><th>Latest activity</th></tr>
+                <tr><th className="w-8 py-2"><input type="checkbox" aria-label="Select all investors" checked={allPicked} onChange={(e) => toggleAll(e.target.checked)} /></th><th className="py-2">Name</th><th>Class</th><th>Investing as</th><th>Missing info</th><th>Email</th><th>Phone</th><th className="text-right">Committed</th><th className="text-right">Received</th><th>KYC/KYB & AML</th><th>Fund documents</th><th>Wiring</th><th>Investor readiness</th><th>Latest activity</th></tr>
               </thead>
               <tbody>
                 {rows.map((r) => (
