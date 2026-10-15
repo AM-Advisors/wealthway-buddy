@@ -48,6 +48,7 @@ function PersonActivityPage() {
           <p className="mt-1 text-sm text-muted-foreground">{d.email} · Account created {when(d.createdAt)} · Email confirmed {when(d.confirmedAt)} · Last signed in {when(d.lastSignIn)}</p>
           {!!d.roles.length && <div className="mt-2 flex flex-wrap gap-1">{d.roles.map((r) => <Badge key={r} variant="outline">{r.replace(/_/g, " ")}</Badge>)}</div>}
         </header>
+        <AccountOverview d={d} />
         {d.email && <UserInsights email={d.email} />}
         <section className="rounded-lg border">
           <div className="flex flex-wrap items-center gap-2 border-b p-4">
@@ -69,5 +70,43 @@ function PersonActivityPage() {
         <div className="flex gap-2"><Button variant="outline" disabled={!cursor} onClick={() => setCursor(undefined)}>Newest activity</Button><Button variant="outline" disabled={!d.nextCursor} onClick={() => setCursor(d.nextCursor ?? undefined)}>Older activity</Button></div>
       </>)}
     </main>
+  );
+}
+
+const money = (c: number | null | undefined) => (c == null ? "—" : `$${(c / 100).toLocaleString(undefined, { maximumFractionDigits: 0 })}`);
+const label = (s: string | null | undefined) => (s ? s.replace(/_/g, " ") : "—");
+
+/** Account + person record + missing info + everything linked, in one place. Display only. */
+function AccountOverview({ d }: { d: any }) {
+  return (
+    <section className="grid gap-4 md:grid-cols-2">
+      <div className="rounded-lg border p-4">
+        <h2 className="text-lg">Missing information</h2>
+        {d.missing.length ? <div className="mt-2 flex flex-wrap gap-1">{d.missing.map((g: string) => <Badge key={g} variant="destructive">{g}</Badge>)}</div> : <p className="mt-2 text-sm text-muted-foreground">Nothing missing.</p>}
+        {d.missing.includes("Person record not linked") && <p className="mt-2 text-xs text-muted-foreground">This sign-in isn't connected to a person record yet, so name, phone, address and KYC/AML can't be checked.{d.people.some((p: any) => !p.linked) ? " A person record with the same email exists below." : ""}</p>}
+      </div>
+      <div className="rounded-lg border p-4">
+        <h2 className="text-lg">Person record</h2>
+        {!d.people.length ? <p className="mt-2 text-sm text-muted-foreground">No person record found for this email.</p> : d.people.map((p: any) => (
+          <dl key={p.id} className="mt-2 grid grid-cols-[7rem_1fr] gap-x-2 gap-y-1 text-sm">
+            <dt className="text-muted-foreground">Name</dt><dd>{p.name || "—"} {!p.linked && <Badge variant="outline" className="ml-1">Same email, not linked</Badge>}</dd>
+            <dt className="text-muted-foreground">Email</dt><dd>{p.email || "—"}</dd>
+            <dt className="text-muted-foreground">Phone</dt><dd>{p.phone || "—"}</dd>
+            <dt className="text-muted-foreground">Address</dt><dd>{p.address || "—"}</dd>
+            <dt className="text-muted-foreground">KYC / AML</dt><dd className="capitalize">{label(p.kyc)} / {label(p.aml)}</dd>
+            <dt className="text-muted-foreground">Onboarding</dt><dd className="capitalize">{label(p.state)}</dd>
+          </dl>))}
+      </div>
+      <div className="rounded-lg border p-4">
+        <h2 className="text-lg">Clients ({d.clients.length})</h2>
+        <ul className="mt-2 space-y-1 text-sm">{d.clients.length ? d.clients.map((c: any) => <li key={c.id} className="flex justify-between gap-2"><Link to="/ops/clients/$clientId" params={{ clientId: c.id }} className="text-primary hover:underline">{c.name}</Link><span className="capitalize text-muted-foreground">{label(c.role)}</span></li>) : <li className="text-muted-foreground">None</li>}</ul>
+        <h2 className="mt-4 text-lg">Fund teams ({d.funds.length})</h2>
+        <ul className="mt-2 space-y-1 text-sm">{d.funds.length ? d.funds.map((f: any) => <li key={f.id} className="flex justify-between gap-2"><Link to="/ops/funds/$fundId" params={{ fundId: f.id }} className="text-primary hover:underline">{f.name}</Link><span className="capitalize text-muted-foreground">{label(f.role)}</span></li>) : <li className="text-muted-foreground">None</li>}</ul>
+      </div>
+      <div className="rounded-lg border p-4">
+        <h2 className="text-lg">Investments ({d.investments.length})</h2>
+        <ul className="mt-2 space-y-1 text-sm">{d.investments.length ? d.investments.map((i: any) => <li key={i.id} className="flex flex-wrap justify-between gap-2"><Link to="/ops/funds/$fundId" params={{ fundId: i.offeringId }} className="text-primary hover:underline">{i.fund}</Link><span className="text-muted-foreground">{money(i.committed)} committed · {money(i.funded)} funded · <span className="capitalize">{label(i.status)}</span></span></li>) : <li className="text-muted-foreground">None</li>}</ul>
+      </div>
+    </section>
   );
 }
