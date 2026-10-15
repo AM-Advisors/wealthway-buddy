@@ -6,6 +6,7 @@ import {
   useRouter,
   HeadContent,
   Scripts,
+  redirect,
   type ErrorComponentProps,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
@@ -15,6 +16,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { SelfApprovalPrompt } from "@/components/self-approval-prompt";
 import { ActivityTracker } from "@/components/activity-tracker";
 import { THEME_BOOT_SCRIPT } from "@/lib/theme-mode";
+import { canonicalRedirect } from "@/lib/host-routing";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
 function NotFoundComponent() {
@@ -78,6 +80,14 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
+  beforeLoad: ({ location }) => {
+    if (typeof window === "undefined") return;
+    const target = canonicalRedirect({ url: new URL(location.href, window.location.origin).href }, {
+      CLIENT_APP_ORIGIN: import.meta.env["VITE_CLIENT_APP_ORIGIN"],
+      OPS_APP_ORIGIN: import.meta.env["VITE_OPS_APP_ORIGIN"],
+    });
+    if (target) throw redirect({ href: target.location });
+  },
   head: () => ({
     meta: [
       { charSet: "utf-8" },

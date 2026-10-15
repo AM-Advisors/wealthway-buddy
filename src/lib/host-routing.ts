@@ -27,7 +27,7 @@ export const LEGACY_ADMIN_ORIGIN = "https://app.harmoniouscapitaladmin.com";
 export const LEGACY_ORIGINS = [LEGACY_ORIGIN, LEGACY_ADMIN_ORIGIN];
 
 /** Sections that belong to Harmonious Operations. */
-const OPS_PREFIXES = ["/ops", "/admin", "/staff"];
+export const OPS_PREFIXES = ["/ops", "/admin", "/staff", "/sales", "/marketing", "/account-manager"];
 
 /**
  * Paths that belong to neither application in particular: sign-in and its
@@ -56,6 +56,9 @@ const SHARED_PREFIXES = [
   "/onboard/",
 ];
 
+// Personal account pages belong to the application in which they are opened.
+const SHARED_ACCOUNT_PREFIXES = ["/profile", "/access", "/inbox", "/messages", "/prepared", "/sign-off", "/policies"];
+
 export type PathSurface = AppSurface | "shared";
 
 function hasPrefix(pathname: string, prefix: string): boolean {
@@ -66,6 +69,7 @@ function hasPrefix(pathname: string, prefix: string): boolean {
 export function surfaceForPath(pathname: string): PathSurface {
   const path = pathname || "/";
   if (SHARED_PREFIXES.some((prefix) => path === prefix || path.startsWith(prefix))) return "shared";
+  if (SHARED_ACCOUNT_PREFIXES.some((prefix) => hasPrefix(path, prefix))) return "shared";
   if (OPS_PREFIXES.some((prefix) => hasPrefix(path, prefix))) return "ops";
   return "client";
 }
@@ -120,6 +124,19 @@ export function isDevelopmentHost(host: string): boolean {
 }
 
 export type HostConfig = { client: string; ops: string };
+
+/** Display context only; unknown/preview hosts retain workspace-based menus. */
+export function applicationSurfaceForHost(host: string, env?: Record<string, string | undefined>): AppSurface | null {
+  if (!host || isDevelopmentHost(host)) return null;
+  const origins = configuredOrigins(env);
+  if (host.toLowerCase() === hostOf(origins.ops)) return "ops";
+  if (host.toLowerCase() === hostOf(origins.client) || /^app\.[a-z0-9-]+\.harmonious\.co$/i.test(host)) return "client";
+  return null;
+}
+
+export function workspaceLeavesCurrentHost(currentHost: string, destinationOrigin: string): boolean {
+  return Boolean(currentHost) && !isDevelopmentHost(currentHost) && currentHost.toLowerCase() !== hostOf(destinationOrigin);
+}
 
 export function hostConfig(env?: Record<string, string | undefined>): HostConfig {
   return configuredOrigins(env);
@@ -176,6 +193,10 @@ export function canonicalRedirect(
   // An address we don't recognise (a custom domain, a staging host) is left
   // alone rather than bounced somewhere it may not be able to come back from.
   if (!known) return null;
+
+  if (pathname === "/" && !onLegacy) {
+    return { location: host === opsHost ? `${ops}/ops${parsed.search}` : `${client}/home${parsed.search}`, status: 302 };
+  }
 
   if (onLegacy) {
     // Machine endpoints, tracking and sign-in callbacks keep working on the old

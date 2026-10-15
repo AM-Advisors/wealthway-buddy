@@ -5,7 +5,8 @@ import { useServerFn } from "@tanstack/react-start";
 
 import { clearStoredClientContext } from "@/lib/client-context-storage";
 import { configuredOrigins } from "@/lib/app-origins";
-import { opsLeavesCurrentHost } from "@/lib/host-routing";
+import { workspaceLeavesCurrentHost } from "@/lib/host-routing";
+import { useApplicationSurface } from "@/lib/use-application-surface";
 import { enterWorkspace, resolveSession } from "@/lib/session.functions";
 import { workspaceOptions, type WorkspaceOption } from "@/lib/client-navigation";
 import type { WorkspaceKind } from "@/lib/session-resolution";
@@ -30,6 +31,7 @@ type ClientWorkspaceValue = {
   options: WorkspaceOption[];
   activeId: string | null;
   activeKind: WorkspaceKind | null;
+  applicationSurface: "client" | "ops" | null;
   /** Client account chosen in the switcher, when the person has several. */
   activeClientId: string | null;
   switchTo: (workspaceId: string) => Promise<void>;
@@ -42,6 +44,7 @@ const Ctx = createContext<ClientWorkspaceValue>({
   options: [],
   activeId: null,
   activeKind: null,
+  applicationSurface: null,
   activeClientId: null,
   switchTo: async () => {},
   clearWorkspace: () => {},
@@ -68,6 +71,7 @@ export function ClientWorkspaceProvider({ children }: { children: React.ReactNod
   const resolve = useServerFn(resolveSession);
   const enter = useServerFn(enterWorkspace);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const applicationSurface = useApplicationSurface();
 
   const { data, isLoading } = useQuery({
     queryKey: ["client-session"],
@@ -84,18 +88,17 @@ export function ClientWorkspaceProvider({ children }: { children: React.ReactNod
       CLIENT_APP_ORIGIN: import.meta.env["VITE_CLIENT_APP_ORIGIN"] as string | undefined,
       OPS_APP_ORIGIN: import.meta.env["VITE_OPS_APP_ORIGIN"] as string | undefined,
     };
-    const opsOrigin = configuredOrigins(env).ops;
+    const origins = configuredOrigins(env);
     const currentHost = typeof window === "undefined" ? "" : window.location.host;
     // Harmonious Operations lives at its own address. On a preview or local
     // address, where both applications are served together, it stays in place.
     // Either way the entry only appears because the server resolved it, and
     // opening it grants nothing on its own.
-    const leaves = opsLeavesCurrentHost(currentHost, opsOrigin);
-    return workspaceOptions((data?.workspaces ?? []) as never, env).map((option) =>
-      option.surface === "ops" && !leaves
-        ? { ...option, href: option.path, external: false }
-        : option,
-    );
+    return workspaceOptions((data?.workspaces ?? []) as never, env).map((option) => {
+      const origin = option.surface === "ops" ? origins.ops : origins.client;
+      const external = workspaceLeavesCurrentHost(currentHost, origin);
+      return { ...option, href: external ? `${origin}${option.path}` : option.path, external };
+    });
   }, [data?.workspaces]);
 
   // A remembered workspace the server no longer lists (revoked, expired,
@@ -161,6 +164,7 @@ export function ClientWorkspaceProvider({ children }: { children: React.ReactNod
     options,
     activeId: resolvedActive?.id ?? null,
     activeKind: (resolvedActive?.kind as WorkspaceKind | undefined) ?? null,
+    applicationSurface,
     // The last client account chosen stays in force on shared pages (My Funds).
     activeClientId: resolvedActive?.id?.startsWith("client:")
       ? resolvedActive.id.slice(7)
