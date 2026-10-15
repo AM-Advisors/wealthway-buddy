@@ -21,6 +21,8 @@ export interface SendTemplateEmailOptions {
   /** Dedupes retries of the same logical send; defaults to a random UUID (no dedupe). */
   idempotencyKey?: string
   replyTo?: string
+  /** Optional CC recipient (e.g. operations@harmonious.co on client reminders). */
+  cc?: string
   auditTarget?: { kind: string; id: string; actorId: string; label?: string }
 }
 
