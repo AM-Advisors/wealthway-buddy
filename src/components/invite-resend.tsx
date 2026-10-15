@@ -58,7 +58,7 @@ export function useResendInvite() {
 }
 
 export function ResendInviteButton({ target, onSend, label = "Resend invite", size = "sm", variant = "outline", message, disabled, className }: {
-  target: ResendTarget;
+  target?: ResendTarget;
   /** Custom send path for flows that build their own invitation (still shows the shared wording). */
   onSend?: () => Promise<unknown>;
   label?: string;
@@ -69,14 +69,16 @@ export function ResendInviteButton({ target, onSend, label = "Resend invite", si
   className?: string;
 }) {
   const { send, isPending } = useResendInvite();
-  const busy = !onSend && isPending(target);
+  const busy = onSend || !target ? false : isPending(target);
   return (
     <Button
       size={size}
       variant={variant}
       className={className}
       disabled={disabled || busy}
-      onClick={() => (onSend ? void onSend().catch((e: unknown) => toast.error(e instanceof Error ? e.message : "Could not resend the invitation.")) : void send(target, message))}
+      onClick={() => (onSend
+        ? void onSend().catch((e: unknown) => toast.error(e instanceof Error ? e.message : "Could not resend the invitation."))
+        : target ? void send(target, message) : undefined)}
     >
       <RotateCcw className={busy ? "h-3.5 w-3.5 animate-spin" : "h-3.5 w-3.5"} />
       {busy ? "Sending…" : label}

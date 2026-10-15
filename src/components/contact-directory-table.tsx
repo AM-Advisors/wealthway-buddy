@@ -128,7 +128,7 @@ export function ContactDirectoryTable({ kind }: { kind: Kind }) {
                 <TableCell className="text-sm">{r.verified ? "Verified" : <span className="text-muted-foreground">Not yet</span>}</TableCell>
                 <TableCell className="space-x-2 text-right">
                   <Button size="sm" variant="outline" onClick={() => setDialog({ mode: "assign", row: r })}>Assign</Button>
-                  {r.invite === "invited" && <ResendInviteButton target={{ kind: "fund", id: r.key }} onSend={() => invite.mutateAsync(r).catch(() => undefined)} />}
+                  {r.invite === "invited" && <ResendInviteButton onSend={() => invite.mutateAsync(r).catch(() => undefined)} />}
                   {r.invite === "not_invited" && <Button size="sm" variant="outline" disabled={invite.isPending} onClick={() => invite.mutate(r)}>Invite</Button>}
                   {access.data && <PeopleActions email={r.email} name={r.name} info={acc(r.email)}
                     context={isFund ? (r.assignments.length === 1 ? { kind: "offering", id: r.assignments[0]!.id, label: r.assignments[0]!.name } : null)
