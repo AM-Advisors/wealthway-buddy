@@ -12,7 +12,7 @@ import { getAccessStatusByEmail, restoreAccess, revokeAccess, sendPasswordReset,
 import { ResendInviteMenuItem, type ResendTarget } from "@/components/invite-resend";
 import type { EmailOutcome } from "@/lib/user-insights-model";
 
-export type AccessInfo = { userId: string; status: string; isTestDemo: boolean; scoped: number; invite?: { lastSent: string | null; outcome: EmailOutcome } | null };
+export type AccessInfo = { userId: string; status: string; isTestDemo: boolean; scoped: number; invite?: { lastSent: string | null; outcome: EmailOutcome } | null | undefined };
 
 /** Access status for a list page's emails. Returns null for viewers who can't manage access. */
 export function useAccessStatus(emails: string[]) {
