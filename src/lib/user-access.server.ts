@@ -407,10 +407,32 @@ export async function personActivity(viewer: string, subjectId: string, options:
     ...((access ?? []) as any[]).map((a) => ({ id: a.id, when: a.created_at, kind: "Access change", what: `${String(a.action).replace(/_/g, " ")}${a.reason && !String(a.action).startsWith("email_") ? ` — ${a.reason}` : ""}`, path: null })),
   ].sort((a, b) => String(b.when).localeCompare(String(a.when)));
   const u = auth?.user;
+  const email = (u?.email ?? prof?.email ?? "").toLowerCase();
+  const { setupGaps } = await import("@/lib/user-insights-model");
+  const PF = "id,user_id,email,legal_first_name,legal_last_name,phone,address_line1,address_line2,city,region,postal_code,kyc_status,aml_status,onboarding_state";
+  const [linkedP, emailP, cu, ftm, inv] = await Promise.all([
+    db.from("persons").select(PF).eq("user_id", subjectId),
+    email ? db.from("persons").select(PF).ilike("email", email).is("user_id", null) : Promise.resolve({ data: [] as any[] }),
+    db.from("client_users").select("client_id, client_role, clients(name)").eq("user_id", subjectId),
+    db.from("fund_team_members").select("offering_id, team_role, offerings(name)").eq("user_id", subjectId).is("removed_at", null),
+    db.from("investor_onboardings").select("id, offering_id, commitment_amount_cents, funded_amount_cents, funding_status, offerings(name)").eq("investor_user_id", subjectId),
+  ]);
+  const isStaff = ((roles ?? []) as any[]).length > 0 && !((cu.data ?? []) as any[]).length;
+  const mapP = (p: any, linked: boolean) => ({
+    id: p.id, linked, name: [p.legal_first_name, p.legal_last_name].filter(Boolean).join(" "), email: p.email, phone: p.phone,
+    address: [p.address_line1, p.address_line2, p.city, p.region, p.postal_code].filter(Boolean).join(", "),
+    kyc: p.kyc_status, aml: p.aml_status, state: p.onboarding_state, gaps: setupGaps(p, isStaff),
+  });
+  const people = [...((linkedP.data ?? []) as any[]).map((p) => mapP(p, true)), ...((emailP.data ?? []) as any[]).map((p) => mapP(p, false))];
   return {
     name: prof?.legal_name || "", email: u?.email ?? prof?.email ?? "",
     roles: ((roles ?? []) as any[]).map((r) => r.role as string),
     createdAt: u?.created_at ?? null, lastSignIn: u?.last_sign_in_at ?? null, confirmedAt: u?.email_confirmed_at ?? null,
+    people,
+    missing: people.some((p) => p.linked) ? [...new Set(people.filter((p) => p.linked).flatMap((p) => p.gaps))] : setupGaps(null, isStaff),
+    clients: ((cu.data ?? []) as any[]).map((c) => ({ id: c.client_id as string, name: (c.clients?.name ?? "Client") as string, role: c.client_role as string | null })),
+    funds: ((ftm.data ?? []) as any[]).map((f) => ({ id: f.offering_id as string, name: (f.offerings?.name ?? "Fund") as string, role: f.team_role as string | null })),
+    investments: ((inv.data ?? []) as any[]).map((i) => ({ id: i.id as string, offeringId: i.offering_id as string, fund: (i.offerings?.name ?? "Fund") as string, committed: i.commitment_amount_cents as number | null, funded: i.funded_amount_cents as number, status: i.funding_status as string })),
     events: events.slice(0, 100), nextCursor: events.length > 100 ? events[99]?.when ?? null : null,
   };
 }

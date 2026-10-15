@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { MoreHorizontal } from "lucide-react";
@@ -72,6 +73,7 @@ export function PeopleActions({ email, userId, name, info, context, resend }: {
       <DropdownMenu>
         <DropdownMenuTrigger asChild><Button size="icon" variant="ghost" aria-label={`Access actions for ${name || email}`}><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
         <DropdownMenuContent align="end">
+          {uid && <><DropdownMenuItem asChild><Link to="/ops/people/$userId" params={{ userId: uid }}>View account & everything linked</Link></DropdownMenuItem><DropdownMenuSeparator /></>}
           {status === "active" ? <>
             <DropdownMenuItem onClick={() => { setScope(context ? "scoped" : "global"); setMode("revoke"); }}>Revoke access…</DropdownMenuItem>
             <DropdownMenuItem onClick={() => setMode("archive")}>Archive…</DropdownMenuItem>
