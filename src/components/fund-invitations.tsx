@@ -111,15 +111,6 @@ export function FundInvitations({ title = "Invitations" }: { title?: string }) {
       toast.error(e instanceof Error ? e.message : "Could not invite that list."),
   });
 
-  const resendMutation = useMutation({
-    mutationFn: (id: string) => resend({ data: { id } }),
-    onSuccess: () => {
-      toast.success("A fresh set-password link is on its way.");
-      void invalidate();
-    },
-    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : "Could not resend."),
-  });
-
   const revokeMutation = useMutation({
     mutationFn: (id: string) => revoke({ data: { id } }),
     onSuccess: () => {
