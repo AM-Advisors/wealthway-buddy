@@ -1730,6 +1730,13 @@
       "when": 1792082126526,
       "tag": "0246_person_kyc_prior_mode",
       "breakpoints": true
+    },
+    {
+      "idx": 247,
+      "version": "7",
+      "when": 1792088922660,
+      "tag": "0247_wix_member_imports",
+      "breakpoints": true
     }
   ]
 }
