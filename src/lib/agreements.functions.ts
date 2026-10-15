@@ -348,6 +348,47 @@ export const getMsaWorkspace = createServerFn({ method: "GET" })
     };
   });
 
+/**
+ * Login gate: is this user blocked until their client signs the current MSA?
+ * Staff and users with no client membership are never gated. A client is
+ * covered once it has signed the current version (client_signed or executed) -
+ * waiting on Harmonious to countersign never blocks the client.
+ */
+export const getMsaGateStatus = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const who = await whoIs(context);
+    if (who.isStaff || who.clientIds.length === 0) return { gated: false as const };
+
+    const version = await currentMsaVersion(context);
+    if (!version) return { gated: false as const };
+
+    const { data: signed } = await context.supabase
+      .from("client_msa_agreements")
+      .select("client_id, status, executed_at")
+      .in("client_id", who.clientIds)
+      .eq("msa_version_id", version.id);
+    const covered = new Set(
+      ((signed ?? []) as any[])
+        .filter((a) => a.executed_at || a.status === "client_signed")
+        .map((a) => String(a.client_id)),
+    );
+    const pendingClientId = who.clientIds.find((id) => !covered.has(id));
+    if (!pendingClientId) return { gated: false as const };
+
+    const { data: client } = await context.supabase
+      .from("clients")
+      .select("name, legal_name")
+      .eq("id", pendingClientId)
+      .maybeSingle();
+    return {
+      gated: true as const,
+      clientId: pendingClientId,
+      clientName: ((client as any)?.legal_name || (client as any)?.name || null) as string | null,
+      version: version.version as string,
+    };
+  });
+
 export const signMsa = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
