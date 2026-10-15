@@ -121,11 +121,7 @@ export async function approveRequest(userId: string, input: { id: string; note?:
           investment: { amountCents: commit, commitmentCents: commit },
           allowPreLaunch: true, confirmedNew: true,
         } as any);
-        let onboardingId: string | undefined = created?.onboardingId ?? created?.onboarding?.id;
-        if (!onboardingId) {
-          const { data: ob } = await db.from("investor_onboardings").select("id").eq("offering_id", offeringId).is("removed_at", null).order("created_at", { ascending: false }).limit(1).maybeSingle();
-          onboardingId = ob?.id;
-        }
+        const onboardingId: string | undefined = created?.onboardingId;
         if (!onboardingId) throw new Error("Investor record wasn't created");
         const signed = String(d._createdDate || new Date().toISOString()).slice(0, 10);
         await prior.recordPrior(userId, {
