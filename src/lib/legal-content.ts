@@ -28,7 +28,7 @@ const COMPANY = "Harmonious Capital Administration LLC";
 
 export const PRIVACY_POLICY: LegalDocument = {
   title: "Privacy Policy",
-  updated: "September 14, 2026",
+  updated: "October 15, 2026",
   effectiveDate: "2026-09-14",
   version: 2,
   summary:
