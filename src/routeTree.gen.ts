@@ -87,6 +87,7 @@ import { Route as GuidesFundManagerFirstLoginRouteImport } from './routes/guides
 import { Route as InvestSlugRouteImport } from './routes/invest.$slug'
 import { Route as InvestorIndexRouteImport } from './routes/investor.index'
 import { Route as InvestorTaxRouteImport } from './routes/investor.tax'
+import { Route as InviteTokenRouteImport } from './routes/invite.$token'
 import { Route as JoinTokenRouteImport } from './routes/join.$token'
 import { Route as OnboardRefRouteImport } from './routes/onboard.$ref'
 import { Route as PostSlugRouteImport } from './routes/post.$slug'
@@ -847,6 +848,11 @@ const InvestorTaxRoute = InvestorTaxRouteImport.update({
   id: '/tax',
   path: '/tax',
   getParentRoute: () => InvestorRoute,
+} as any)
+const InviteTokenRoute = InviteTokenRouteImport.update({
+  id: '/invite/$token',
+  path: '/invite/$token',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const JoinTokenRoute = JoinTokenRouteImport.update({
   id: '/join/$token',
@@ -3017,6 +3023,7 @@ export interface FileRoutesByFullPath {
   '/guides/fund-manager-first-login': typeof GuidesFundManagerFirstLoginRoute
   '/invest/$slug': typeof InvestSlugRoute
   '/investor/tax': typeof InvestorTaxRoute
+  '/invite/$token': typeof InviteTokenRoute
   '/join/$token': typeof JoinTokenRoute
   '/onboard/$ref': typeof OnboardRefRoute
   '/post/$slug': typeof PostSlugRoute
@@ -3450,6 +3457,7 @@ export interface FileRoutesByTo {
   '/guides/fund-manager-first-login': typeof GuidesFundManagerFirstLoginRoute
   '/invest/$slug': typeof InvestSlugRoute
   '/investor/tax': typeof InvestorTaxRoute
+  '/invite/$token': typeof InviteTokenRoute
   '/join/$token': typeof JoinTokenRoute
   '/onboard/$ref': typeof OnboardRefRoute
   '/post/$slug': typeof PostSlugRoute
@@ -3885,6 +3893,7 @@ export interface FileRoutesById {
   '/guides/fund-manager-first-login': typeof GuidesFundManagerFirstLoginRoute
   '/invest/$slug': typeof InvestSlugRoute
   '/investor/tax': typeof InvestorTaxRoute
+  '/invite/$token': typeof InviteTokenRoute
   '/join/$token': typeof JoinTokenRoute
   '/onboard/$ref': typeof OnboardRefRoute
   '/post/$slug': typeof PostSlugRoute
@@ -4324,6 +4333,7 @@ export interface FileRouteTypes {
     | '/guides/fund-manager-first-login'
     | '/invest/$slug'
     | '/investor/tax'
+    | '/invite/$token'
     | '/join/$token'
     | '/onboard/$ref'
     | '/post/$slug'
@@ -4757,6 +4767,7 @@ export interface FileRouteTypes {
     | '/guides/fund-manager-first-login'
     | '/invest/$slug'
     | '/investor/tax'
+    | '/invite/$token'
     | '/join/$token'
     | '/onboard/$ref'
     | '/post/$slug'
@@ -5191,6 +5202,7 @@ export interface FileRouteTypes {
     | '/guides/fund-manager-first-login'
     | '/invest/$slug'
     | '/investor/tax'
+    | '/invite/$token'
     | '/join/$token'
     | '/onboard/$ref'
     | '/post/$slug'
@@ -5585,6 +5597,7 @@ export interface RootRouteChildren {
   FundSlugRoute: typeof FundSlugRoute
   GuidesFundManagerFirstLoginRoute: typeof GuidesFundManagerFirstLoginRoute
   InvestSlugRoute: typeof InvestSlugRoute
+  InviteTokenRoute: typeof InviteTokenRoute
   JoinTokenRoute: typeof JoinTokenRoute
   OnboardRefRoute: typeof OnboardRefRoute
   PostSlugRoute: typeof PostSlugRoute
@@ -6173,6 +6186,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/investor/tax'
       preLoaderRoute: typeof InvestorTaxRouteImport
       parentRoute: typeof InvestorRoute
+    }
+    '/invite/$token': {
+      id: '/invite/$token'
+      path: '/invite/$token'
+      fullPath: '/invite/$token'
+      preLoaderRoute: typeof InviteTokenRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/join/$token': {
       id: '/join/$token'
@@ -9678,6 +9698,7 @@ const rootRouteChildren: RootRouteChildren = {
   FundSlugRoute: FundSlugRoute,
   GuidesFundManagerFirstLoginRoute: GuidesFundManagerFirstLoginRoute,
   InvestSlugRoute: InvestSlugRoute,
+  InviteTokenRoute: InviteTokenRoute,
   JoinTokenRoute: JoinTokenRoute,
   OnboardRefRoute: OnboardRefRoute,
   PostSlugRoute: PostSlugRoute,
