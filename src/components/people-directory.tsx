@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AccessBadge, PeopleActions } from "@/components/people-actions";
-import { cancelInvitation, getPeopleDirectory, setTestDemoFlag } from "@/lib/user-access.functions";
+import { cancelInvitation, getPeopleDirectory, resendInvitation, setTestDemoFlag } from "@/lib/user-access.functions";
 
 type Tab = "all" | "invited" | "revoked" | "archived" | "test";
 const TABS: { id: Tab; label: string }[] = [
@@ -19,7 +19,7 @@ const when = (s: string | null) => (s ? new Date(s).toLocaleString([], { dateSty
 export function PeopleDirectory({ initial = "all" }: { initial?: Tab }) {
   const qc = useQueryClient();
   const q = useQuery({ queryKey: ["people-directory"], queryFn: useServerFn(getPeopleDirectory), retry: false });
-  const cancel = useServerFn(cancelInvitation), flag = useServerFn(setTestDemoFlag);
+  const cancel = useServerFn(cancelInvitation), flag = useServerFn(setTestDemoFlag), resend = useServerFn(resendInvitation);
   const [tab, setTab] = useState<Tab>(initial);
   const [search, setSearch] = useState("");
   const [type, setType] = useState("all");
