@@ -18,7 +18,7 @@ import { reminderAllowed, reminderStep } from "@/lib/fund-health";
 import { toast } from "sonner";
 import { fmtDate, usd } from "./shared";
 
-export function InvestorsTab({ fundId }: { fundId: string }) {
+export function InvestorsTab({ fundId, workQueue }: { fundId: string; workQueue?: ReactNode }) {
   const load = useServerFn(investorGridFn);
   const q = useQuery({ queryKey: ["fund-investor-grid", fundId], queryFn: () => load({ data: { fundId } }) });
   const loadReady = useServerFn(fundReadinessFn);
@@ -78,6 +78,7 @@ export function InvestorsTab({ fundId }: { fundId: string }) {
   return (
     <div className="space-y-6">
     <FundOnboardingLinkCard fundId={fundId} />
+    {workQueue}
     <Card>
       <CardHeader className="flex-row items-start justify-between gap-3 space-y-0">
         <div>
