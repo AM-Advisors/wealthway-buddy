@@ -1,4 +1,5 @@
 import { MigrationsTabs } from "@/components/migrations-tabs";
+import { QueueMigrationButton } from "@/components/queue-migration-button";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -152,6 +153,7 @@ function RecordDialog({ row, all, onClose }: { row: RegistryRow; all: RegistryRo
             ))}</ul>
           </section>
           <section className="space-y-2 border-t pt-3">
+            {row.status === "missing" && <QueueMigrationButton source="drive" sourceRef={row.key} fundName={row.name} />}
             <p className="font-medium">Record a review decision</p>
             <Select value={decision} onValueChange={(v) => setDecision(v as DecisionKind)}>
               <SelectTrigger aria-label="Decision"><SelectValue /></SelectTrigger>
