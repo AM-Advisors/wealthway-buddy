@@ -350,20 +350,14 @@ export function FundInvitations({ title = "Invitations" }: { title?: string }) {
                   <p className="text-xs text-muted-foreground">
                     {inv.email} · {inv.invite_role === "fund_manager" ? "Fund manager" : "Investor"} ·{" "}
                     {new Date(inv.created_at).toLocaleDateString()}
+                    {inv.last_sent_at ? ` · last sent ${new Date(inv.last_sent_at).toLocaleDateString()}` : ""}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge variant={inv.status === "revoked" ? "outline" : "secondary"}>
                     {inv.status}
                   </Badge>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => resendMutation.mutate(inv.id)}
-                    disabled={resendMutation.isPending || inv.status === "revoked"}
-                  >
-                    Resend link
-                  </Button>
+                  <ResendInviteButton target={{ kind: "fund", id: inv.id }} disabled={inv.status === "revoked"} />
                   <Button
                     size="sm"
                     variant="ghost"
