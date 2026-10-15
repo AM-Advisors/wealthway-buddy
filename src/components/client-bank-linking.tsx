@@ -8,6 +8,16 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { PLAID_CONSENT_VERSION } from "@/lib/plaid-consent";
 import {
   disconnectClientBankLink,
   finishClientBankLink,
@@ -86,8 +96,12 @@ export function ClientBankLinking() {
     if (linkToken && ready) open();
   }, [linkToken, ready, open]);
 
+  const [consentFund, setConsentFund] = useState<string | null>(null);
+  const [consentChecked, setConsentChecked] = useState(false);
+
   const beginLink = useMutation({
-    mutationFn: (fundId: string) => start({ data: { fundId } }),
+    mutationFn: (fundId: string) =>
+      start({ data: { fundId, consent: true, policyVersion: PLAID_CONSENT_VERSION } }),
     onSuccess: (result) => {
       setLinkToken(result.linkToken);
     },
@@ -121,6 +135,62 @@ export function ClientBankLinking() {
 
   return (
     <div className="space-y-6">
+      <Dialog open={Boolean(consentFund)} onOpenChange={(o) => !o && setConsentFund(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Before you connect your bank</DialogTitle>
+            <DialogDescription>
+              Harmonious uses Plaid to connect your account securely. Your bank login goes
+              straight to Plaid and your bank. We never see it.
+            </DialogDescription>
+          </DialogHeader>
+          <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+            <li>We receive account details, balances and deposits to match your payments.</li>
+            <li>We never move money from this account, and we never sell your data.</li>
+            <li>You can disconnect at any time and ask us to delete the data.</li>
+          </ul>
+          <label className="flex items-start gap-3 text-sm">
+            <Checkbox
+              checked={consentChecked}
+              onCheckedChange={(v) => setConsentChecked(v === true)}
+              aria-label="I agree"
+            />
+            <span>
+              I agree to share my bank account information with Harmonious through Plaid, as
+              described in the{" "}
+              <a href="/privacy" target="_blank" rel="noreferrer" className="text-primary underline">
+                Harmonious Privacy Policy
+              </a>{" "}
+              and{" "}
+              <a
+                href="https://plaid.com/legal/#end-user-privacy-policy"
+                target="_blank"
+                rel="noreferrer"
+                className="text-primary underline"
+              >
+                Plaid End User Privacy Policy
+              </a>
+              .
+            </span>
+          </label>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConsentFund(null)}>
+              Cancel
+            </Button>
+            <Button
+              disabled={!consentChecked || beginLink.isPending}
+              onClick={() => {
+                const id = consentFund!;
+                setConsentFund(null);
+                setPendingFund(id);
+                beginLink.mutate(id);
+              }}
+            >
+              Agree and continue
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Bank accounts</CardTitle>
@@ -192,8 +262,8 @@ export function ClientBankLinking() {
                   <Button
                     size="sm"
                     onClick={() => {
-                      setPendingFund(fund.id);
-                      beginLink.mutate(fund.id);
+                      setConsentChecked(false);
+                      setConsentFund(fund.id);
                     }}
                     disabled={!data?.configured || beginLink.isPending}
                   >

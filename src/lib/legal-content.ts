@@ -28,7 +28,7 @@ const COMPANY = "Harmonious Capital Administration LLC";
 
 export const PRIVACY_POLICY: LegalDocument = {
   title: "Privacy Policy",
-  updated: "September 14, 2026",
+  updated: "October 15, 2026",
   effectiveDate: "2026-09-14",
   version: 2,
   summary:
@@ -134,6 +134,22 @@ export const PRIVACY_POLICY: LegalDocument = {
       paragraphs: [
         `${COMPANY} maintains administrative, technical and physical safeguards (including technical and organisational measures) designed to protect personal information against accidental, unlawful or unauthorised destruction, loss, alteration, access, disclosure or use.`,
         "We require that our service providers implement and maintain appropriate security practices and procedures. Nevertheless, please be aware that internet transmissions are never completely private or secure. If you have any questions about the security of your personal information, you can contact us at support@harmonious.co.",
+      ],
+    },
+    {
+      heading: "Bank connections (Plaid)",
+      paragraphs: [
+        "Connecting a bank account is optional. You can upload wire instructions and bank statements instead. If you choose to connect, we use Plaid Inc. (\"Plaid\") to link the account securely. Before the connection starts, you must be signed in with two-step verification and give your express consent. We record your consent with your name, the policy version and the date and time.",
+        "With your consent, Plaid shares the following information about the connected account with us: institution name, account name and last four digits, account and routing numbers, balances, and transactions such as deposits. We use it only to verify the account, match payments to invoices and fund records, and support the reporting you've asked for. We do not use a connected account to move money, and we do not sell this information.",
+        "Your bank login details go directly to Plaid and your bank. Harmonious never receives or stores them. Plaid handles your information under the Plaid End User Privacy Policy, available at https://plaid.com/legal/#end-user-privacy-policy.",
+        "You can disconnect an account at any time from the Banking tab. Bank-connection data is kept while the account is connected. When you disconnect, or ask us to remove it, we delete it, unless we're required to keep it for legal, regulatory, tax or anti-money-laundering reasons. A person reviews and logs every deletion. You can also withdraw consent by contacting support@harmonious.co.",
+      ],
+    },
+    {
+      heading: "How to make a privacy request",
+      paragraphs: [
+        "To see, correct or delete your personal information, or to withdraw consent, email support@harmonious.co or use Account -> Privacy in the portal. We'll confirm your identity and respond within 30 days, or sooner if the law requires. If we can't fully complete a request because we're legally required to keep certain records, we'll tell you what we kept and why.",
+        "Our retention and deletion practices follow a written record-retention schedule that we review at least once a year.",
       ],
     },
     {

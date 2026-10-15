@@ -131,10 +131,22 @@ export const getClientBankLinking = createServerFn({ method: "GET" })
 /** Starts the secure bank sign-in for one of the client's own funds. */
 export const startClientBankLink = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ fundId: z.string().uuid() }).parse(d))
+  .inputValidator((d: unknown) =>
+    z
+      .object({ fundId: z.string().uuid(), consent: z.literal(true), policyVersion: z.string().min(1).max(40) })
+      .parse(d),
+  )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { fund } = await assertClientFund(supabase, userId, data.fundId);
+
+    // Express consent must be recorded before Plaid Link is surfaced.
+    const { error: consentError } = await (supabase as any).from("plaid_link_consents").insert({
+      user_id: userId,
+      fund_id: data.fundId,
+      policy_version: data.policyVersion,
+    });
+    if (consentError) throw new Error("Could not record your consent. Please try again.");
 
     const { createLinkToken } = await import("@/lib/plaid.server");
     const result = await createLinkToken({

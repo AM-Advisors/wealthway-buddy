@@ -36252,6 +36252,33 @@ export type Database = {
           },
         ]
       }
+      plaid_link_consents: {
+        Row: {
+          accepted_at: string
+          fund_id: string | null
+          id: string
+          policy_version: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          accepted_at?: string
+          fund_id?: string | null
+          id?: string
+          policy_version: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          accepted_at?: string
+          fund_id?: string | null
+          id?: string
+          policy_version?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       plaid_webhook_deliveries: {
         Row: {
           attempts: number

@@ -64,6 +64,20 @@ export const SECURITY_STATEMENT: SecurityStatement = {
       ],
     },
     {
+      heading: "Bank Connections (Plaid)", key: "bank_connections",
+      intro:
+        "Connecting a bank account is optional. Clients can upload wire instructions and bank statements instead. If you do connect, we use Plaid and access is read-only.",
+      bullets: [
+        "Before the bank sign-in window opens, you must be signed in with two-step verification (an authenticator app).",
+        "You also check a consent box that links to our Privacy Policy and Plaid's End User Privacy Policy. We record who agreed, when, and which version, and we check that record before the connection starts.",
+        "Your bank login details go straight to Plaid and your bank. Harmonious never sees or stores them.",
+        "The access key Plaid gives us is kept only on our servers, in restricted storage. It never reaches your browser.",
+        "We use the connection to read account details, balances and deposits so payments can be matched. We never use it to move money, and we never sell this data.",
+        "You can disconnect at any time from Banking. Bank-connection data is kept while you're connected. When you disconnect or ask us to remove it, we delete it, unless a legal or regulatory hold applies. A person reviews and logs every deletion.",
+        "Our written Information Security Policy covers Plaid and is reviewed every year. Ask support@harmonious.co for a copy.",
+      ],
+    },
+    {
       heading: "Privacy", key: "privacy",
       intro: "You can ask us what we hold about you, ask us to fix it, or ask us to remove it.",
       bullets: [
@@ -120,6 +134,7 @@ export const TRUST_SECTIONS: { key: string; heading: string }[] = [
   { key: "money_movement", heading: "Money Movement Controls" },
   { key: "encryption", heading: "Encryption" },
   { key: "business_continuity", heading: "Business Continuity" },
+  { key: "bank_connections", heading: "Bank Connections (Plaid)" },
   { key: "privacy", heading: "Privacy" },
   { key: "retention", heading: "How long we keep records" },
   { key: "cookies", heading: "Cookies and your consent" },
