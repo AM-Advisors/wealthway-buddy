@@ -268,6 +268,7 @@ import { Route as AuthenticatedOpsPeopleAccessRouteImport } from './routes/_auth
 import { Route as AuthenticatedOpsPerformanceRouteImport } from './routes/_authenticated/ops.performance'
 import { Route as AuthenticatedOpsQueueRouteImport } from './routes/_authenticated/ops.queue'
 import { Route as AuthenticatedOpsReadinessRouteImport } from './routes/_authenticated/ops.readiness'
+import { Route as AuthenticatedOpsRemindersRouteImport } from './routes/_authenticated/ops.reminders'
 import { Route as AuthenticatedOpsReportingRouteImport } from './routes/_authenticated/ops.reporting'
 import { Route as AuthenticatedOpsRolesRouteImport } from './routes/_authenticated/ops.roles'
 import { Route as AuthenticatedOpsSecurityComplianceRouteImport } from './routes/_authenticated/ops.security-compliance'
@@ -1909,6 +1910,12 @@ const AuthenticatedOpsReadinessRoute =
     path: '/ops/readiness',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOpsRemindersRoute =
+  AuthenticatedOpsRemindersRouteImport.update({
+    id: '/ops/reminders',
+    path: '/ops/reminders',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOpsReportingRoute =
   AuthenticatedOpsReportingRouteImport.update({
     id: '/ops/reporting',
@@ -3220,6 +3227,7 @@ export interface FileRoutesByFullPath {
   '/ops/performance': typeof AuthenticatedOpsPerformanceRoute
   '/ops/queue': typeof AuthenticatedOpsQueueRoute
   '/ops/readiness': typeof AuthenticatedOpsReadinessRoute
+  '/ops/reminders': typeof AuthenticatedOpsRemindersRoute
   '/ops/reporting': typeof AuthenticatedOpsReportingRoute
   '/ops/roles': typeof AuthenticatedOpsRolesRoute
   '/ops/security-compliance': typeof AuthenticatedOpsSecurityComplianceRoute
@@ -3654,6 +3662,7 @@ export interface FileRoutesByTo {
   '/ops/performance': typeof AuthenticatedOpsPerformanceRoute
   '/ops/queue': typeof AuthenticatedOpsQueueRoute
   '/ops/readiness': typeof AuthenticatedOpsReadinessRoute
+  '/ops/reminders': typeof AuthenticatedOpsRemindersRoute
   '/ops/reporting': typeof AuthenticatedOpsReportingRoute
   '/ops/roles': typeof AuthenticatedOpsRolesRoute
   '/ops/security-compliance': typeof AuthenticatedOpsSecurityComplianceRoute
@@ -4096,6 +4105,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/performance': typeof AuthenticatedOpsPerformanceRoute
   '/_authenticated/ops/queue': typeof AuthenticatedOpsQueueRoute
   '/_authenticated/ops/readiness': typeof AuthenticatedOpsReadinessRoute
+  '/_authenticated/ops/reminders': typeof AuthenticatedOpsRemindersRoute
   '/_authenticated/ops/reporting': typeof AuthenticatedOpsReportingRoute
   '/_authenticated/ops/roles': typeof AuthenticatedOpsRolesRoute
   '/_authenticated/ops/security-compliance': typeof AuthenticatedOpsSecurityComplianceRoute
@@ -4539,6 +4549,7 @@ export interface FileRouteTypes {
     | '/ops/performance'
     | '/ops/queue'
     | '/ops/readiness'
+    | '/ops/reminders'
     | '/ops/reporting'
     | '/ops/roles'
     | '/ops/security-compliance'
@@ -4973,6 +4984,7 @@ export interface FileRouteTypes {
     | '/ops/performance'
     | '/ops/queue'
     | '/ops/readiness'
+    | '/ops/reminders'
     | '/ops/reporting'
     | '/ops/roles'
     | '/ops/security-compliance'
@@ -5414,6 +5426,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/performance'
     | '/_authenticated/ops/queue'
     | '/_authenticated/ops/readiness'
+    | '/_authenticated/ops/reminders'
     | '/_authenticated/ops/reporting'
     | '/_authenticated/ops/roles'
     | '/_authenticated/ops/security-compliance'
@@ -7493,6 +7506,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsReadinessRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ops/reminders': {
+      id: '/_authenticated/ops/reminders'
+      path: '/ops/reminders'
+      fullPath: '/ops/reminders'
+      preLoaderRoute: typeof AuthenticatedOpsRemindersRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ops/reporting': {
       id: '/_authenticated/ops/reporting'
       path: '/ops/reporting'
@@ -9242,6 +9262,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsPerformanceRoute: typeof AuthenticatedOpsPerformanceRoute
   AuthenticatedOpsQueueRoute: typeof AuthenticatedOpsQueueRoute
   AuthenticatedOpsReadinessRoute: typeof AuthenticatedOpsReadinessRoute
+  AuthenticatedOpsRemindersRoute: typeof AuthenticatedOpsRemindersRoute
   AuthenticatedOpsReportingRoute: typeof AuthenticatedOpsReportingRoute
   AuthenticatedOpsRolesRoute: typeof AuthenticatedOpsRolesRoute
   AuthenticatedOpsSecurityComplianceRoute: typeof AuthenticatedOpsSecurityComplianceRoute
@@ -9564,6 +9585,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsPerformanceRoute: AuthenticatedOpsPerformanceRoute,
   AuthenticatedOpsQueueRoute: AuthenticatedOpsQueueRoute,
   AuthenticatedOpsReadinessRoute: AuthenticatedOpsReadinessRoute,
+  AuthenticatedOpsRemindersRoute: AuthenticatedOpsRemindersRoute,
   AuthenticatedOpsReportingRoute: AuthenticatedOpsReportingRoute,
   AuthenticatedOpsRolesRoute: AuthenticatedOpsRolesRoute,
   AuthenticatedOpsSecurityComplianceRoute:
