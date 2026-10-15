@@ -6,6 +6,7 @@
  */
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { adoptedSignatureSchema } from "@/lib/adopted-signature";
 
 import { requireSupabaseAuth } from "@/lib/require-auth";
 import { parseAddressParts } from "@/lib/address";
@@ -224,6 +225,7 @@ export const signSs4RequestFn = createServerFn({ method: "POST" })
       phone: z.string().trim().max(40).default(""),
       responsiblePartyTin: z.string().trim().max(20).default(""),
       consent: z.literal(true),
+      signature: adoptedSignatureSchema.optional(),
       userAgent: z.string().max(400).optional(),
     }).parse(d),
   )
@@ -241,12 +243,12 @@ export const signSs4RequestFn = createServerFn({ method: "POST" })
     const form = { ...strip(r.form_data ?? {}), applicant_name_title: `${data.signerName}, ${data.signerTitle}`, ...(data.phone ? { applicant_phone: data.phone } : {}) };
     const { fillSs4Pdf } = await import("@/lib/ss4-pdf.server");
     const tin = (await rp.readRpIdentifierForAuthorizedOperation(r.offering_id)) ?? "";
-    const bytes = await fillSs4Pdf({ ...form, responsible_party_tin: tin } as any, { signature: data.signerName, signedDate: signedAt.toLocaleDateString("en-US") });
+    const bytes = await fillSs4Pdf({ ...form, responsible_party_tin: tin } as any, { signature: data.signerName, signatureImage: data.signature?.image, signedDate: signedAt.toLocaleDateString("en-US") });
     const path = `${r.offering_id}/form-ss4-signed-${signedAt.getTime()}.pdf`;
     const { error: upErr } = await db.storage.from("fund-formation").upload(path, bytes, { contentType: "application/pdf", upsert: false });
     if (upErr) throw new Error(upErr.message);
 
-    const { error } = await db.from("ss4_signature_requests").update({ status: "signed", signer_name: data.signerName, signer_title: data.signerTitle, signed_at: signedAt.toISOString(), signed_user_agent: data.userAgent ?? null, signed_pdf_path: path, form_data: form }).eq("id", r.id).eq("status", "requested");
+    const { error } = await db.from("ss4_signature_requests").update({ status: "signed", signer_name: data.signerName, signer_title: data.signerTitle, signed_at: signedAt.toISOString(), signed_user_agent: data.userAgent ?? null, signed_pdf_path: path, form_data: form, signature_image: data.signature?.image ?? null, signature_method: data.signature?.method ?? null }).eq("id", r.id).eq("status", "requested");
     if (error) throw new Error(error.message);
 
     // Put the signed PDF in the fund's Documents list as a permanently kept, signed file.

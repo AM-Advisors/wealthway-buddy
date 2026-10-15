@@ -1139,6 +1139,8 @@ export type Database = {
           msa_agreement_id: string | null
           scope: string
           side: string
+          signature_image: string | null
+          signature_method: string | null
           signed_at: string
           signer_email: string | null
           signer_name: string
@@ -1158,6 +1160,8 @@ export type Database = {
           msa_agreement_id?: string | null
           scope: string
           side: string
+          signature_image?: string | null
+          signature_method?: string | null
           signed_at?: string
           signer_email?: string | null
           signer_name: string
@@ -1177,6 +1181,8 @@ export type Database = {
           msa_agreement_id?: string | null
           scope?: string
           side?: string
+          signature_image?: string | null
+          signature_method?: string | null
           signed_at?: string
           signer_email?: string | null
           signer_name?: string
@@ -42082,6 +42088,8 @@ export type Database = {
           note: string | null
           offering_id: string
           requested_by: string
+          signature_image: string | null
+          signature_method: string | null
           signed_at: string | null
           signed_pdf_path: string | null
           signed_user_agent: string | null
@@ -42099,6 +42107,8 @@ export type Database = {
           note?: string | null
           offering_id: string
           requested_by: string
+          signature_image?: string | null
+          signature_method?: string | null
           signed_at?: string | null
           signed_pdf_path?: string | null
           signed_user_agent?: string | null
@@ -42116,6 +42126,8 @@ export type Database = {
           note?: string | null
           offering_id?: string
           requested_by?: string
+          signature_image?: string | null
+          signature_method?: string | null
           signed_at?: string | null
           signed_pdf_path?: string | null
           signed_user_agent?: string | null

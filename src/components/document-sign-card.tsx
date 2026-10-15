@@ -204,7 +204,7 @@ export function DocumentSignCard({
           <header className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b bg-background px-4 py-3">
             <div>
               <DialogTitle className="text-base">{title}</DialogTitle>
-              <DialogDescription className="text-xs">Review and sign</DialogDescription>
+              <DialogDescription className="text-xs">Click each yellow Sign here tag, then choose Type, Draw or Upload for your signature.</DialogDescription>
             </div>
             <div className="flex items-center gap-2">
               <Button type="button" variant="outline" size="sm" onClick={onDownload}>

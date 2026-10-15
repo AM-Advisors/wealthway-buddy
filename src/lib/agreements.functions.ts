@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { adoptedSignatureSchema } from "@/lib/adopted-signature";
 
 import { requireSupabaseAuth } from "@/lib/require-auth";
 import { buildSowSections, HARMONIOUS_LEGAL_NAME, MSA_SECTIONS } from "@/lib/agreement-templates";
@@ -406,6 +407,7 @@ export const signMsa = createServerFn({ method: "POST" })
         signerTitle: z.string().min(1),
         typedSignature: z.string().min(2),
         company: z.string().nullish(),
+        signature: adoptedSignatureSchema.optional(),
       })
       .parse(d),
   )
@@ -457,6 +459,8 @@ export const signMsa = createServerFn({ method: "POST" })
       signer_user_id: who.userId,
       typed_signature: data.typedSignature,
       version_label: version.version,
+      signature_image: data.signature?.image ?? null,
+      signature_method: data.signature?.method ?? null,
     });
     if (sigError) throw new Error(sigError.message);
 

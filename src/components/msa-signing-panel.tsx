@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { SignHereTag, useSignHere } from "@/components/signature-adopt-dialog";
 import { getMsaWorkspace, signMsa } from "@/lib/agreements.functions";
 
 /**
@@ -36,7 +37,7 @@ export function MsaSigningPanel({
   const [read, setRead] = useState<Record<string, boolean>>({});
   const [name, setName] = useState("");
   const [title, setTitle] = useState("");
-  const [signature, setSignature] = useState("");
+  const sig = useSignHere(name);
   const [confirmed, setConfirmed] = useState(false);
 
   const mutation = useMutation({
@@ -46,7 +47,8 @@ export function MsaSigningPanel({
           clientId,
           signerName: name.trim(),
           signerTitle: title.trim(),
-          typedSignature: signature.trim(),
+          typedSignature: sig.signature?.name ?? name.trim(),
+          signature: sig.signature ? { method: sig.signature.method, image: sig.signature.image } : undefined,
         },
       }),
     onSuccess: () => {
@@ -65,7 +67,7 @@ export function MsaSigningPanel({
   const clientSigned = !executed && data.agreement?.status === "client_signed";
   const allRead = data.sections.every((s) => read[s.id]);
   const canSign =
-    allRead && confirmed && name.trim().length > 1 && title.trim() && signature.trim().length > 1;
+    allRead && confirmed && name.trim().length > 1 && title.trim() && sig.signed;
 
   return (
     <div className="space-y-6">
@@ -143,8 +145,8 @@ export function MsaSigningPanel({
           <CardHeader>
             <CardTitle className="text-base">Sign</CardTitle>
             <CardDescription>
-              Typing your name below is your electronic signature and binds your organisation to
-              this agreement.
+              Click the yellow Sign here tag to type, draw or upload your signature. It binds your
+              organisation to this agreement.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -159,13 +161,9 @@ export function MsaSigningPanel({
               </div>
             </div>
             <div className="space-y-1">
-              <Label htmlFor="msa-sign">Type your name to sign</Label>
-              <Input
-                id="msa-sign"
-                value={signature}
-                onChange={(e) => setSignature(e.target.value)}
-                className="font-serif text-lg"
-              />
+              <Label>Signature</Label>
+              <SignHereTag signature={sig.signature} signed={sig.signed} onClick={sig.click} />
+              {sig.dialog}
             </div>
             <label className="flex items-start gap-2 text-sm">
               <Checkbox checked={confirmed} onCheckedChange={(v) => setConfirmed(v === true)} />
