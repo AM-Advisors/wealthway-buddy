@@ -18,7 +18,7 @@ export const assignManager = createServerFn({ method: "POST" })
 
 export const recordStaffActivity = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ kind: z.enum(["page", "action"]), path: z.string().max(300), label: z.string().max(200).nullable() }).parse(d))
+  .inputValidator((d) => z.object({ kind: z.enum(["page", "action", "click"]), path: z.string().max(300), label: z.string().max(200).nullable() }).parse(d))
   .handler(async ({ context, data }) => (await import("@/lib/staff-directory.server")).logActivity(context.userId, data.kind, data.path, data.label));
 
 export const getTeamDashboard = createServerFn({ method: "GET" })

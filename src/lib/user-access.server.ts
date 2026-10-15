@@ -337,3 +337,29 @@ export async function testDemoIds() {
 export function isTestRow(t: { users: Set<string>; persons: Set<string>; clients: Set<string> }, r: any) {
   return (r.client_id && t.clients.has(r.client_id)) || (r.investor_user_id && t.users.has(r.investor_user_id)) || (r.owner_user_id && t.users.has(r.owner_user_id)) || (r.user_id && t.users.has(r.user_id)) || (r.person_id && t.persons.has(r.person_id));
 }
+
+/** Full activity trail for one user: account, pages, clicks, actions and access changes. Read-only. */
+export async function personActivity(viewer: string, subjectId: string) {
+  const db = await requireAccessViewer(viewer);
+  const [{ data: prof }, { data: auth }, { data: acts }, { data: audits }, { data: access }, { data: roles }] = await Promise.all([
+    db.from("profiles").select("legal_name, email").eq("user_id", subjectId).maybeSingle(),
+    db.auth.admin.getUserById(subjectId),
+    db.from("staff_activity_events").select("id, kind, path, label, created_at").eq("user_id", subjectId).order("created_at", { ascending: false }).limit(2000),
+    db.from("access_audit_events").select("id, action, created_at").eq("actor_user_id", subjectId).order("created_at", { ascending: false }).limit(300),
+    db.from("user_access_events").select("id, action, reason, created_at").eq("subject_id", subjectId).order("created_at", { ascending: false }).limit(300),
+    db.from("user_roles").select("role").eq("user_id", subjectId),
+  ]);
+  const kindLabel: Record<string, string> = { page: "Viewed", click: "Clicked", action: "Action" };
+  const events = [
+    ...((acts ?? []) as any[]).map((a) => ({ id: a.id, when: a.created_at, kind: kindLabel[a.kind] ?? a.kind, what: a.label || a.path || "", path: a.path })),
+    ...((audits ?? []) as any[]).map((a) => ({ id: a.id, when: a.created_at, kind: "Action", what: String(a.action).replace(/_/g, " "), path: null })),
+    ...((access ?? []) as any[]).map((a) => ({ id: a.id, when: a.created_at, kind: "Access change", what: `${String(a.action).replace(/_/g, " ")}${a.reason ? ` — ${a.reason}` : ""}`, path: null })),
+  ].sort((a, b) => String(b.when).localeCompare(String(a.when)));
+  const u = auth?.user;
+  return {
+    name: prof?.legal_name || "", email: u?.email ?? prof?.email ?? "",
+    roles: ((roles ?? []) as any[]).map((r) => r.role as string),
+    createdAt: u?.created_at ?? null, lastSignIn: u?.last_sign_in_at ?? null, confirmedAt: u?.email_confirmed_at ?? null,
+    events,
+  };
+}

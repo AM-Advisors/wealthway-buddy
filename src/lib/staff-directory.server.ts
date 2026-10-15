@@ -131,10 +131,9 @@ export async function setManager(viewer: string, employeeId: string, managerId: 
   return { ok: true };
 }
 
-export async function logActivity(userId: string, kind: "page" | "action", path: string, label: string | null) {
+export async function logActivity(userId: string, kind: "page" | "action" | "click", path: string, label: string | null) {
+  // Every signed-in user (staff and clients) is recorded; the user id comes from the verified session.
   const db = await admin();
-  const staff = await rolesOf(db, userId);
-  if (!staff.some((r) => STAFF_ROLE_SET.includes(r))) return { ok: false };
   await db.from("staff_activity_events").insert({ user_id: userId, kind, path: path.slice(0, 300), label: label?.slice(0, 200) ?? null });
   return { ok: true };
 }

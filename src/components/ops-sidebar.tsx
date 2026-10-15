@@ -44,7 +44,6 @@ import { getNavigation, operationsNavItemIsActive } from "@/lib/navigation";
 import { opsSearchIndex, searchOpsIndex } from "@/lib/ops-search";
 import { opsWorkAreas, type OpsCapability } from "@/lib/ops-capabilities";
 import { useServerFn } from "@tanstack/react-start";
-import { recordStaffActivity } from "@/lib/staff-directory.functions";
 
 const ICONS: Record<string, typeof Home> = {
   home: Home,
@@ -68,7 +67,6 @@ type NavItem = { id: string; title: string; url: string; icon: string; sub?: { t
 
 /** Key screens shown as sub-items under each Operations area (filtered by capability). */
 const OPS_SUB: Record<string, { title: string; url: string; always?: boolean }[]> = {
-  clients: [{ title: "Fund Managers", url: "/ops/clients/fund-managers", always: true }, { title: "Founders", url: "/ops/clients/founders", always: true }],
   funds: [{ title: "Service engagements", url: "/ops/service-engagements" }, { title: "Locked edit approvals", url: "/ops/locked-edits", always: true }, { title: "EIN / SS-4 queue", url: "/ops/ss4" }, { title: "Documents & signatures", url: "/ops/documents" }, { title: "HubSpot tickets", url: "/ops/hubspot-tickets" }, { title: "HubSpot deal migration", url: "/ops/hubspot-deals" }, { title: "Client Portal Launch", url: "/ops/client-portal-launch" }, { title: "Fund Migration", url: "/ops/fund-migration" }],
   investors: [{ title: "Investor onboarding & KYC", url: "/admin/investor-onboarding" }],
   capital: [{ title: "Banking", url: "/ops/banking" }, { title: "Distributions", url: "/ops/distributions" }, { title: "Capital calls & funding", url: "/admin/funding" }],
@@ -276,12 +274,6 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
   const exact = (i: NavItem) => pathname === i.url;
   const opsActive = (i: NavItem) => i.id === "queue" || i.id === "regulatory" || i.id.startsWith("dash-") ? pathname === i.url : i.id === "administration" ? pathname.startsWith(i.url) : operationsNavItemIsActive(i.url, pathname);
 
-  // Record staff screen views for managers' activity view (append-only, server re-checks staff).
-  const logView = useServerFn(recordStaffActivity);
-  useEffect(() => {
-    const t = setTimeout(() => { void logView({ data: { kind: "page", path: pathname, label: document.title.replace(/ - Harmonious.*$/, "") || null } }).catch(() => {}); }, 800);
-    return () => clearTimeout(t);
-  }, [pathname, logView]);
 
   const close = () => {
     setQuery("");
