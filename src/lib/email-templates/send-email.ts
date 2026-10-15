@@ -21,6 +21,8 @@ export interface SendTemplateEmailOptions {
   /** Dedupes retries of the same logical send; defaults to a random UUID (no dedupe). */
   idempotencyKey?: string
   replyTo?: string
+  /** Optional CC recipient (e.g. operations@harmonious.co on client reminders). */
+  cc?: string
   auditTarget?: { kind: string; id: string; actorId: string; label?: string }
 }
 
@@ -76,6 +78,7 @@ export async function sendTemplateEmail(
     body: JSON.stringify({
       sender: { name: SITE_NAME, email: `noreply@${FROM_DOMAIN}` },
       to: [{ email: recipient }],
+      ...(options.cc ? { cc: [{ email: options.cc }] } : {}),
       subject,
       htmlContent: html,
       textContent: text,

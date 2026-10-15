@@ -40,6 +40,7 @@ export async function sendSigningReminder(actorId: string, input: {
   const { data: me } = await d.from("profiles").select("legal_name").eq("user_id", actorId).maybeSingle();
   const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
   const r: any = await sendTemplateEmail("signing-reminder", input.recipientEmail, {
+    cc: "operations@harmonious.co",
     templateData: { recipientName: input.recipientName.split(/\s+/)[0] || "there", documentTitle: input.documentTitle, fundName: input.contextName ?? o?.name ?? "your fund", steps: input.steps, requestedBy: me?.legal_name ?? undefined, ctaUrl, firstTime },
   });
   const sent = r?.sent !== false;
