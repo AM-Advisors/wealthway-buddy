@@ -1,3 +1,4 @@
+import { safeInternalPath } from "@/lib/app-origins";
 import { useState } from "react";
 
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
@@ -45,6 +46,9 @@ function ResetPasswordPage() {
       const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
       toast.success("Your password is updated.");
+      const next = safeInternalPath(sessionStorage.getItem("harmonious_next"), "");
+      sessionStorage.removeItem("harmonious_next");
+      if (next) { window.location.assign(next); return; }
       navigate({ to: "/home" });
     } catch (err) {
       toast.error(

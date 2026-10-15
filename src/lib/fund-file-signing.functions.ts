@@ -49,6 +49,8 @@ export const fundSigningContextFn = createServerFn({ method: "POST" }).middlewar
       d.from("fund_managers").select("user_id").eq("offering_id", data.fundId),
       d.from("fund_file_signatures").select("id, file_id, signer_role, signing_order, signer_name, status, signed_at").eq("offering_id", data.fundId).neq("status", "cancelled").order("signing_order"),
     ]);
+    const { lastReminders } = await import("@/lib/signing-reminder.server");
+    const reminded = await lastReminders(data.fundId);
     const pids = [...new Set(((obs ?? []) as any[]).map((o) => o.person_id).filter(Boolean))];
     const { data: people } = pids.length ? await d.from("persons").select("id, legal_first_name, legal_last_name, preferred_name, email").in("id", pids) : { data: [] };
     const pm = new Map(((people ?? []) as any[]).map((p) => [p.id, p]));
@@ -56,7 +58,7 @@ export const fundSigningContextFn = createServerFn({ method: "POST" }).middlewar
     const uids = ((mgrs ?? []) as any[]).map((m) => m.user_id).filter(Boolean);
     const { data: profs } = uids.length ? await d.from("profiles").select("user_id, legal_name, email").in("user_id", uids) : { data: [] };
     const managers = ((profs ?? []) as any[]).map((p) => ({ userId: p.user_id as string, name: (p.legal_name || p.email || "Fund manager") as string, email: (p.email ?? null) as string | null }));
-    return { investors, managers, signatures: (sigs ?? []) as any[] };
+    return { investors, managers, signatures: ((sigs ?? []) as any[]).map((x) => ({ ...x, lastRemindedAt: reminded[`file-sign:${x.id}`] ?? null })) };
   });
 
 export const sendFileForSignatureFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
@@ -144,4 +146,28 @@ export const signDocumentFn = createServerFn({ method: "POST" }).middleware([req
       await sendTemplateEmail("ops-review-request", TEAM_EMAIL, { idempotencyKey: `fund-file-signed:${s.file_id}:${s.id}`, templateData: { itemLabel: "Signed document", fundName: "", detail: `"${f?.title}" has been signed by the investor and the fund manager.`, raisedBy: data.signedName, portalUrl: `${SITE}/ops/fund/${s.offering_id}?tab=documents` } });
     } catch (e) { console.error("signed email failed", e); }
     return { done: true };
+  });
+
+/** Reminder for the signer whose turn it is: opens that signing page. Never signs anything. */
+export const remindFileSignerFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator((x: unknown) => z.object({ signatureId: z.string().uuid(), overrideReason: z.string().trim().max(500).optional() }).parse(x))
+  .handler(async ({ data, context }) => {
+    const d = await db();
+    const { data: s } = await d.from("fund_file_signatures").select("*").eq("id", data.signatureId).maybeSingle();
+    if (!s) throw new Error("Signer not found.");
+    const { assertFund } = await import("@/lib/fund-tabs.server");
+    await assertFund(context.userId, s.offering_id);
+    if (s.status === "signed") throw new Error("They've already signed.");
+    if (s.status === "cancelled") throw new Error("This signing request was cancelled.");
+    const { data: all } = await d.from("fund_file_signatures").select("signing_order, status").eq("file_id", s.file_id).neq("status", "cancelled");
+    if (((all ?? []) as any[]).some((r) => r.signing_order < s.signing_order && r.status !== "signed")) throw new Error("It isn't their turn yet. The investor signs first.");
+    const { data: f } = await d.from("fund_files").select("title").eq("id", s.file_id).maybeSingle();
+    if (s.status === "waiting") await d.from("fund_file_signatures").update({ status: "sent", sent_at: new Date().toISOString() }).eq("id", s.id).eq("status", "waiting");
+    const { sendSigningReminder } = await import("@/lib/signing-reminder.server");
+    return sendSigningReminder(context.userId, {
+      offeringId: s.offering_id, reminderKey: `file-sign:${s.id}`, documentTitle: f?.title ?? "your document", recipientEmail: s.signer_email,
+      recipientName: s.signer_name || "there", recipientUserId: s.signer_user_id, path: `/sign/${s.id}`,
+      steps: s.signer_role === "investor" ? ["Read the document", "Confirm your details", "Sign"] : ["Review the investor's signed document", "Countersign as fund manager"],
+      override: data.overrideReason ? { reason: data.overrideReason } : null,
+    });
   });
