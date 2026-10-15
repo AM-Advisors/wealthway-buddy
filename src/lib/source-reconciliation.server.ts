@@ -77,7 +77,7 @@ export async function overview(userId: string) {
       { records: h.people, confirmed: h.people - h.peopleWithoutInvestment, probable: 0, unmatched: h.peopleWithoutInvestment, conflicting: 0, missingEvidence: h.noPortal, errors: 0, reviewRequired: h.peopleWithoutInvestment }, now),
     sourceCard("didit", "partial", `${d.events} stored events grouped into ${d.rows.length} sessions/records. Read from Harmonious only; no provider calls and no new sessions.`, d.counts, d.last),
     sourceCard("simplici", "blocked", "Exports sit in Google Drive, and the only Drive connections have full read/write access. Not used for scans until a metadata-only connection exists."),
-    sourceCard("wix", "not_connected", "No Wix connection. Needs a read-only API key for Contacts, Members, Forms and Media metadata."),
+    (process.env["WIX_API_KEY"] ? sourceCard("wix", "connected", "Read-only Wix connection (members and contacts). Use People & Access → Wix members → Test connection.") : sourceCard("wix", "not_connected", "No Wix connection. Needs a read-only API key for Contacts, Members, Forms and Media metadata.")),
     sourceCard("google_drive", "blocked", "Linked Drive connections have full access, not metadata-only. A separate identity with drive.metadata.readonly is required."),
     sourceCard("box", "not_connected", "No Box connection. Needs a dedicated least-privilege app, separate from Box Sign."),
   ];

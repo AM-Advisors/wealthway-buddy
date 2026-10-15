@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { PersonRecords } from "@/components/person-records";
 import { getPeopleDirectory } from "@/lib/user-access.functions";
 import { ContactDirectoryTable } from "@/components/contact-directory-table";
+import { WixMembersPanel } from "@/components/wix-members-panel";
 
 export const Route = createFileRoute("/_authenticated/ops/people-access")({
   head: () => ({
@@ -53,11 +54,11 @@ function PeopleAccessPage() {
         <TabsContent value="employees"><EmployeesPage /></TabsContent>
         <TabsContent value="others" className="space-y-4">
           <div className="flex flex-wrap gap-1">
-            {([["accounts", "All accounts"], ["fund_managers", "Fund managers"], ["founders", "Founders"]] as const).map(([id, label]) => (
+            {([["accounts", "All accounts"], ["fund_managers", "Fund managers"], ["founders", "Founders"], ["wix", "Wix members"]] as const).map(([id, label]) => (
               <Button key={id} size="sm" variant={(sub ?? "accounts") === id ? "default" : "outline"} onClick={() => navigate({ search: { tab: "others", sub: id }, replace: true })}>{label}</Button>
             ))}
           </div>
-          {sub === "fund_managers" ? <ContactDirectoryTable kind="fund_managers" /> : sub === "founders" ? <ContactDirectoryTable kind="founders" /> : <PeopleDirectory />}
+          {sub === "wix" ? <WixMembersPanel /> : sub === "fund_managers" ? <ContactDirectoryTable kind="fund_managers" /> : sub === "founders" ? <ContactDirectoryTable kind="founders" /> : <PeopleDirectory />}
         </TabsContent>
         <TabsContent value="test"><PeopleDirectory initial="test" /></TabsContent>
         <TabsContent value="roles"><RolesPage /></TabsContent>
