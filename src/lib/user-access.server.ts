@@ -440,8 +440,23 @@ export async function personActivity(viewer: string, subjectId: string, options:
     ...((kv.data ?? []) as any[]).map((k) => ({ id: k.id, kind: "Investor verification", status: k.harmonious_decision || k.provider_decision || k.status, when: k.verification_completed_on || k.created_at, document: [k.document_type, k.document_issuing_country, k.document_number_last4 ? `••••${k.document_number_last4}` : null].filter(Boolean).join(" · ") || null, expires: k.document_expiration_date, liveness: k.liveness_status, faceMatch: k.face_match_status, faceScore: k.face_match_score, aml: null as string | null })),
     ...((ac.data ?? []) as any[]).map((c) => { const s = c.decision_summary ?? {}; return { id: c.id, kind: "Account verification", status: c.status, when: c.decided_at || c.created_at, document: [s.document?.type, s.document?.country, s.document?.last4 ? `••••${s.document.last4}` : null].filter(Boolean).join(" · ") || null, expires: s.document?.expires ?? null, liveness: s.liveness ?? null, faceMatch: s.faceMatch ?? null, faceScore: null, aml: s.aml?.status ?? null }; }),
   ].sort((a, b) => String(b.when).localeCompare(String(a.when)));
+  // Full identity/AML report (display only; ID numbers last-four only, no images).
+  const [kvFull, profs, pFull] = await Promise.all([
+    linkedIds.length ? db.from("kyc_verifications").select("id, status, session_id, workflow_id, document_type, document_issuing_country, document_issuing_region, document_issue_date, document_expiration_date, document_number_last4, document_expired, verified_full_name, verified_date_of_birth, liveness_status, face_match_status, face_match_score, address_check_status, proof_of_address_status, provider_decision, provider_warnings, harmonious_decision, harmonious_decision_reason, verification_completed_on, created_at, updated_at").in("person_id", linkedIds).order("created_at", { ascending: false }).limit(5) : { data: [] },
+    linkedIds.length ? db.from("investment_profiles").select("id, profile_type, display_label, legal_name, status, tax_id_type, tax_id_last4, city, region, country").in("person_id", linkedIds) : { data: [] },
+    linkedIds.length ? db.from("persons").select("id, date_of_birth, citizenship_country, residence_country, tax_residency_country, kyc_status, aml_status, kyc_verified_at, aml_screened_at, identity_verified_at, reverification_due_at, tax_id_last4").in("id", linkedIds) : { data: [] },
+  ]);
+  const acFull = ((ac.data ?? []) as any[]);
+  const { data: acRows } = acFull.length ? await db.from("account_identity_checks").select("id, status, session_id, warnings, decision_note, decided_at, decided_by, created_at, updated_at, decision_summary").in("id", acFull.map((c) => c.id)) : { data: [] as any[] };
+  const kycReport = {
+    person: ((pFull.data ?? []) as any[])[0] ?? null,
+    accountChecks: ((acRows ?? []) as any[]).filter((c) => c.status !== "not_started").sort((a, b) => String(b.created_at).localeCompare(String(a.created_at))),
+    verifications: (kvFull.data ?? []) as any[],
+    profiles: (profs.data ?? []) as any[],
+  };
   return {
     identityChecks,
+    kycReport,
     name: prof?.legal_name || "", email: u?.email ?? prof?.email ?? "",
     roles: ((roles ?? []) as any[]).map((r) => r.role as string),
     createdAt: u?.created_at ?? null, lastSignIn: u?.last_sign_in_at ?? null, confirmedAt: u?.email_confirmed_at ?? null,
