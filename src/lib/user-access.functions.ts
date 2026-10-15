@@ -47,3 +47,7 @@ export const setClientArchived = createServerFn({ method: "POST" }).middleware([
 export const getAccessHistory = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ subjectId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => (await srv()).accessHistory(context.userId, data.subjectId));
+
+export const getPersonActivity = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ userId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => (await srv()).personActivity(context.userId, data.userId));

@@ -23,6 +23,8 @@ import {
   type ClientCapability,
 } from "@/lib/client-admin-model";
 import { CLIENT_TYPES } from "@/lib/contract-ingestion";
+import { inviteClientContact } from "@/lib/client-contacts.functions";
+import { inviteToFund } from "@/lib/invitations.functions";
 import { getProposedFundServices } from "@/lib/client-service-config.functions";
 import {
   createClientFund,
@@ -212,10 +214,11 @@ export function ClientPeoplePanel({ clientId }: { clientId: string }) {
           <div key={p.id} className={`rounded-lg border p-3 ${p.status === "inactive" ? "opacity-60" : ""}`}>
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
-                <p className="font-medium">{p.fullName} {p.status === "inactive" ? <Badge variant="outline">Inactive</Badge> : null}</p>
+                <p className="font-medium">{p.userId ? <Link to="/ops/people/$userId" params={{ userId: p.userId }} className="text-primary hover:underline">{p.fullName}</Link> : p.fullName} <InviteStatus p={p} /> {p.status === "inactive" ? <Badge variant="outline">Inactive</Badge> : null}</p>
                 <p className="text-xs text-muted-foreground">{[p.title, p.email, p.phone].filter(Boolean).join(" · ") || "-"}</p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
+                {caps.includes("manage_people") && p.status !== "inactive" ? <InviteMenu clientId={clientId} person={p} funds={d.funds as any[]} onDone={refresh} /> : null}
                 {caps.includes("manage_people") ? <Button size="sm" variant="outline" onClick={() => setEdit(p)}>Edit</Button> : null}
                 {caps.includes("manage_people") ? (
                   <Button size="sm" variant="ghost" onClick={() => status({ data: { clientId, id: p.id, active: p.status === "inactive" } }).then(refresh, err)}>
@@ -272,6 +275,53 @@ export function ClientPeoplePanel({ clientId }: { clientId: string }) {
       </CardContent>
     </Card>
     </div>
+  );
+}
+
+function InviteStatus({ p }: { p: any }) {
+  if (p.userId) return <Badge variant="secondary">Active account</Badge>;
+  if (p.invitedAt) return <Badge variant="outline">Invited {new Date(p.invitedAt).toLocaleDateString()}</Badge>;
+  return <Badge variant="outline">Not invited</Badge>;
+}
+
+/** Invite a client person as a founder/contact, fund manager or investor. Each send is re-checked on the server. */
+function InviteMenu({ clientId, person, funds, onDone }: { clientId: string; person: any; funds: { id: string; name: string }[]; onDone: () => void }) {
+  const contactInvite = useServerFn(inviteClientContact);
+  const fundInvite = useServerFn(inviteToFund);
+  const [open, setOpen] = useState(false);
+  const [as, setAs] = useState<"contact" | "fund_manager" | "investor">("contact");
+  const [fund, setFund] = useState("");
+  const [busy, setBusy] = useState(false);
+  void clientId;
+  const send = async () => {
+    if (!person.email) { toast.error("Add an email address first."); return; }
+    setBusy(true);
+    try {
+      if (as === "contact") await contactInvite({ data: { id: person.id } });
+      else await fundInvite({ data: { offeringIds: [fund], email: person.email, name: person.fullName, role: as, sendEmail: true } });
+      toast.success(`Invitation sent to ${person.email}.`); setOpen(false); onDone();
+    } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
+  };
+  return (
+    <>
+      <Button size="sm" onClick={() => setOpen(true)}>{person.userId || person.invitedAt ? "Re-invite" : "Invite"}</Button>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Invite {person.fullName}</DialogTitle><DialogDescription>They get an email to sign in with {person.email || "their email"}.</DialogDescription></DialogHeader>
+          <div className="grid gap-3">
+            <div className="space-y-1"><Label htmlFor="inv-as">Invite as</Label>
+              <select id="inv-as" className="h-9 w-full rounded-md border bg-background px-2 text-sm" value={as} onChange={(e) => setAs(e.target.value as any)}>
+                <option value="contact">Founder / client contact</option><option value="fund_manager">Fund manager / team</option><option value="investor">Investor</option>
+              </select></div>
+            {as !== "contact" ? <div className="space-y-1"><Label htmlFor="inv-fund">Fund</Label>
+              <select id="inv-fund" className="h-9 w-full rounded-md border bg-background px-2 text-sm" value={fund} onChange={(e) => setFund(e.target.value)}>
+                <option value="">Choose a fund…</option>{funds.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
+              </select>{!funds.length ? <p className="text-xs text-muted-foreground">This client has no funds yet.</p> : null}</div> : null}
+          </div>
+          <DialogFooter><Button variant="ghost" onClick={() => setOpen(false)}>Cancel</Button><Button disabled={busy || (as !== "contact" && !fund)} onClick={send}>{busy ? "Sending…" : "Send invite"}</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 

@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -59,7 +60,7 @@ export function PeopleDirectory({ initial = "all" }: { initial?: Tab }) {
             <tbody className="divide-y">
               {people.map((p: any) => (
                 <tr key={p.id}>
-                  <td className="p-3"><div className="font-medium">{p.name || p.email}</div><div className="text-xs text-muted-foreground">{p.email}{p.isSelf ? " · you" : ""}</div></td>
+                  <td className="p-3"><Link to="/ops/people/$userId" params={{ userId: p.id }} className="font-medium text-primary hover:underline">{p.name || p.email}</Link><div className="text-xs text-muted-foreground">{p.email}{p.isSelf ? " · you" : ""}</div></td>
                   <td className="p-3"><div className="flex flex-wrap gap-1">{p.types.map((t: string) => <Badge key={t} variant="outline">{t}</Badge>)}</div></td>
                   <td className="p-3">{p.status === "active" && !p.scopedRevokes.length && !p.isTestDemo ? "Active" : <AccessBadge info={{ userId: p.id, status: p.status, isTestDemo: p.isTestDemo, scoped: p.scopedRevokes.length }} />}</td>
                   <td className="whitespace-nowrap p-3">{when(p.lastSignIn)}</td>

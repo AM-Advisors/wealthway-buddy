@@ -120,6 +120,7 @@ export const listClientPeople = createServerFn({ method: "GET" })
         notes: p.notes,
         status: p.status ?? "active",
         userId: p.user_id,
+        invitedAt: p.invited_at ?? null,
         kycStatus: verificationFor(p)?.kyc_status ?? null,
         amlStatus: verificationFor(p)?.aml_status ?? null,
         scopes: ((scopes ?? []) as any[]).filter((s) => s.contact_id === p.id).map((s) => ({ id: s.id, offeringId: s.offering_id, companyId: s.company_id, role: s.role })),
