@@ -1,4 +1,5 @@
 import { MigrationsTabs } from "@/components/migrations-tabs";
+import { QueueMigrationButton } from "@/components/queue-migration-button";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -84,6 +85,7 @@ function WixFundsPage() {
           <DialogHeader><DialogTitle>{open?.name}</DialogTitle></DialogHeader>
           {open && (
             <div className="space-y-4 text-sm">
+              {!open.match && <QueueMigrationButton source="wix" sourceRef={open.wixId} fundName={open.name} />}
               {open.match && <Link className="text-primary underline" to="/admin/fund/$fundId" params={{ fundId: open.match.id }}>Open {open.match.name} in Harmonious</Link>}
               <dl className="grid grid-cols-[180px_1fr] gap-x-3 gap-y-1">
                 {Object.entries(open.details).filter(([k]) => !k.startsWith("link-") && !k.startsWith("_")).map(([k, v]) => (<><dt key={k + "k"} className="text-muted-foreground">{k}</dt><dd key={k + "v"} className="break-all">{show(v)}</dd></>))}

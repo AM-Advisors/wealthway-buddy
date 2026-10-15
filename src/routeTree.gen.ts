@@ -387,6 +387,7 @@ import { Route as AuthenticatedOpsEmployeesUserIdRouteImport } from './routes/_a
 import { Route as AuthenticatedOpsFundAccountingFundIdRouteImport } from './routes/_authenticated/ops.fund-accounting.$fundId'
 import { Route as AuthenticatedOpsFundManagerFundIdRouteImport } from './routes/_authenticated/ops.fund-manager.$fundId'
 import { Route as AuthenticatedOpsFundMigrateFundIdRouteImport } from './routes/_authenticated/ops.fund-migrate.$fundId'
+import { Route as AuthenticatedOpsFundMigrationRequestsRouteImport } from './routes/_authenticated/ops.fund-migration_.requests'
 import { Route as AuthenticatedOpsFundMigrationSourcesRouteImport } from './routes/_authenticated/ops.fund-migration_.sources'
 import { Route as AuthenticatedOpsFundMigrationWixRouteImport } from './routes/_authenticated/ops.fund-migration_.wix'
 import { Route as AuthenticatedOpsFundSetupIndexRouteImport } from './routes/_authenticated/ops.fund-setup.index'
@@ -2604,6 +2605,12 @@ const AuthenticatedOpsFundMigrateFundIdRoute =
     path: '/ops/fund-migrate/$fundId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOpsFundMigrationRequestsRoute =
+  AuthenticatedOpsFundMigrationRequestsRouteImport.update({
+    id: '/ops/fund-migration_/requests',
+    path: '/ops/fund-migration/requests',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOpsFundMigrationSourcesRoute =
   AuthenticatedOpsFundMigrationSourcesRouteImport.update({
     id: '/ops/fund-migration_/sources',
@@ -3324,6 +3331,7 @@ export interface FileRoutesByFullPath {
   '/ops/fund-accounting/$fundId': typeof AuthenticatedOpsFundAccountingFundIdRoute
   '/ops/fund-manager/$fundId': typeof AuthenticatedOpsFundManagerFundIdRoute
   '/ops/fund-migrate/$fundId': typeof AuthenticatedOpsFundMigrateFundIdRoute
+  '/ops/fund-migration/requests': typeof AuthenticatedOpsFundMigrationRequestsRoute
   '/ops/fund-migration/sources': typeof AuthenticatedOpsFundMigrationSourcesRoute
   '/ops/fund-migration/wix': typeof AuthenticatedOpsFundMigrationWixRoute
   '/ops/fund-setup/$fundId': typeof AuthenticatedOpsFundSetupFundIdRoute
@@ -3755,6 +3763,7 @@ export interface FileRoutesByTo {
   '/ops/fund-accounting/$fundId': typeof AuthenticatedOpsFundAccountingFundIdRoute
   '/ops/fund-manager/$fundId': typeof AuthenticatedOpsFundManagerFundIdRoute
   '/ops/fund-migrate/$fundId': typeof AuthenticatedOpsFundMigrateFundIdRoute
+  '/ops/fund-migration/requests': typeof AuthenticatedOpsFundMigrationRequestsRoute
   '/ops/fund-migration/sources': typeof AuthenticatedOpsFundMigrationSourcesRoute
   '/ops/fund-migration/wix': typeof AuthenticatedOpsFundMigrationWixRoute
   '/ops/fund-setup/$fundId': typeof AuthenticatedOpsFundSetupFundIdRoute
@@ -4196,6 +4205,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/fund-accounting/$fundId': typeof AuthenticatedOpsFundAccountingFundIdRoute
   '/_authenticated/ops/fund-manager/$fundId': typeof AuthenticatedOpsFundManagerFundIdRoute
   '/_authenticated/ops/fund-migrate/$fundId': typeof AuthenticatedOpsFundMigrateFundIdRoute
+  '/_authenticated/ops/fund-migration_/requests': typeof AuthenticatedOpsFundMigrationRequestsRoute
   '/_authenticated/ops/fund-migration_/sources': typeof AuthenticatedOpsFundMigrationSourcesRoute
   '/_authenticated/ops/fund-migration_/wix': typeof AuthenticatedOpsFundMigrationWixRoute
   '/_authenticated/ops/fund-setup/$fundId': typeof AuthenticatedOpsFundSetupFundIdRoute
@@ -4637,6 +4647,7 @@ export interface FileRouteTypes {
     | '/ops/fund-accounting/$fundId'
     | '/ops/fund-manager/$fundId'
     | '/ops/fund-migrate/$fundId'
+    | '/ops/fund-migration/requests'
     | '/ops/fund-migration/sources'
     | '/ops/fund-migration/wix'
     | '/ops/fund-setup/$fundId'
@@ -5068,6 +5079,7 @@ export interface FileRouteTypes {
     | '/ops/fund-accounting/$fundId'
     | '/ops/fund-manager/$fundId'
     | '/ops/fund-migrate/$fundId'
+    | '/ops/fund-migration/requests'
     | '/ops/fund-migration/sources'
     | '/ops/fund-migration/wix'
     | '/ops/fund-setup/$fundId'
@@ -5508,6 +5520,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/fund-accounting/$fundId'
     | '/_authenticated/ops/fund-manager/$fundId'
     | '/_authenticated/ops/fund-migrate/$fundId'
+    | '/_authenticated/ops/fund-migration_/requests'
     | '/_authenticated/ops/fund-migration_/sources'
     | '/_authenticated/ops/fund-migration_/wix'
     | '/_authenticated/ops/fund-setup/$fundId'
@@ -8300,6 +8313,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsFundMigrateFundIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ops/fund-migration_/requests': {
+      id: '/_authenticated/ops/fund-migration_/requests'
+      path: '/ops/fund-migration/requests'
+      fullPath: '/ops/fund-migration/requests'
+      preLoaderRoute: typeof AuthenticatedOpsFundMigrationRequestsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ops/fund-migration_/sources': {
       id: '/_authenticated/ops/fund-migration_/sources'
       path: '/ops/fund-migration/sources'
@@ -9272,6 +9292,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsFundAccountingFundIdRoute: typeof AuthenticatedOpsFundAccountingFundIdRoute
   AuthenticatedOpsFundManagerFundIdRoute: typeof AuthenticatedOpsFundManagerFundIdRoute
   AuthenticatedOpsFundMigrateFundIdRoute: typeof AuthenticatedOpsFundMigrateFundIdRoute
+  AuthenticatedOpsFundMigrationRequestsRoute: typeof AuthenticatedOpsFundMigrationRequestsRoute
   AuthenticatedOpsFundMigrationSourcesRoute: typeof AuthenticatedOpsFundMigrationSourcesRoute
   AuthenticatedOpsFundMigrationWixRoute: typeof AuthenticatedOpsFundMigrationWixRoute
   AuthenticatedOpsFundSetupFundIdRoute: typeof AuthenticatedOpsFundSetupFundIdRoute
@@ -9622,6 +9643,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedOpsFundManagerFundIdRoute,
   AuthenticatedOpsFundMigrateFundIdRoute:
     AuthenticatedOpsFundMigrateFundIdRoute,
+  AuthenticatedOpsFundMigrationRequestsRoute:
+    AuthenticatedOpsFundMigrationRequestsRoute,
   AuthenticatedOpsFundMigrationSourcesRoute:
     AuthenticatedOpsFundMigrationSourcesRoute,
   AuthenticatedOpsFundMigrationWixRoute: AuthenticatedOpsFundMigrationWixRoute,
