@@ -65,7 +65,9 @@ function ClientPortalLayout() {
   return (
     <ClientPortalProvider>
       <ClientIntakeGate>
-        <ClientShell />
+        <MsaGate>
+          <ClientShell />
+        </MsaGate>
       </ClientIntakeGate>
     </ClientPortalProvider>
   );
