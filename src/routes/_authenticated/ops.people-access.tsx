@@ -11,6 +11,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
 import { PersonRecords } from "@/components/person-records";
 import { getPeopleDirectory } from "@/lib/user-access.functions";
+import { ContactDirectoryTable } from "@/components/contact-directory-table";
 
 export const Route = createFileRoute("/_authenticated/ops/people-access")({
   head: () => ({
@@ -50,7 +51,14 @@ function PeopleAccessPage() {
         <TabsList className="flex-wrap">{tabs.map((t) => <TabsTrigger key={t.id} value={t.id}>{t.title}</TabsTrigger>)}<TabsTrigger value="records">Details & ID checks</TabsTrigger></TabsList>
         <TabsContent value="records"><PersonRecords /></TabsContent>
         <TabsContent value="employees"><EmployeesPage /></TabsContent>
-        <TabsContent value="others"><PeopleDirectory /></TabsContent>
+        <TabsContent value="others" className="space-y-4">
+          <div className="flex flex-wrap gap-1">
+            {([["accounts", "All accounts"], ["fund_managers", "Fund managers"], ["founders", "Founders"]] as const).map(([id, label]) => (
+              <Button key={id} size="sm" variant={(sub ?? "accounts") === id ? "default" : "outline"} onClick={() => navigate({ search: { tab: "others", sub: id }, replace: true })}>{label}</Button>
+            ))}
+          </div>
+          {sub === "fund_managers" ? <ContactDirectoryTable kind="fund_managers" /> : sub === "founders" ? <ContactDirectoryTable kind="founders" /> : <PeopleDirectory />}
+        </TabsContent>
         <TabsContent value="test"><PeopleDirectory initial="test" /></TabsContent>
         <TabsContent value="roles"><RolesPage /></TabsContent>
         <TabsContent value="access"><AccessControlCenter tab={sub ?? "people"} onTabChange={(t) => navigate({ search: { tab: "access", sub: t }, replace: true })} /></TabsContent>
