@@ -111,7 +111,7 @@ export async function directory(viewer: string) {
   const canManage = (await rolesOf(db, viewer)).some((x) => ACCESS_MANAGERS.includes(x));
   const { directoryInsights } = await import("@/lib/user-insights.server");
   const insights = await directoryInsights(db, people);
-  const pending = insights.invitations.filter((i: any) => i.table !== "client_contacts" && i.status === "pending");
+  const pending = insights.invitations.filter((i: any) => i.table !== "client_contacts" && (i.status === "pending" || i.status === "accepted" && insights.people.some((p: any) => String(p.email).toLowerCase() === i.email && !p.lastSignIn)));
   return { canManage, providerError: insights.providerError, people: insights.people, invites: pending.map((i: any) => ({ ...i, type: i.table === "staff_invitations" ? "Employee" : i.table === "client_invitations" ? "Client contact" : String(i.role).includes("investor") ? "Investor" : "Fund Manager", sentAt: i.firstSent, lastSent: i.lastSent })), clients: clients ?? [] };
 }
 

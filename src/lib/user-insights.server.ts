@@ -67,14 +67,21 @@ export async function personInsights(viewer: string, email: string) {
     if (error) throw new Error("Could not load login status.");
     return { id: p.user_id, name: p.legal_name, createdAt: data?.user?.created_at ?? null, confirmedAt: data?.user?.email_confirmed_at ?? null, lastSignIn: data?.user?.last_sign_in_at ?? null };
   }));
-  const provider = invitations.some((i: any) => i.attempts.some((a: any) => a.messageId)) ? await brevoEvents({ email, limit: "1000" }) : { events: [], error: null };
+  const accountIds = accounts.map(a => a.id);
+  const { data: resets, error: resetError } = accountIds.length ? await db.from("user_access_events").select("id,action,reason,actor_id,created_at").in("subject_id", accountIds).in("action", ["email_sent", "email_failed"]).order("created_at", { ascending: false }).limit(500) : { data: [], error: null };
+  if (resetError) throw new Error("Could not load password reset history.");
+  const resetAttempts = (resets ?? []).map(parseEmailAttempt).filter(Boolean);
+  const provider = invitations.some((i: any) => i.attempts.some((a: any) => a.messageId)) || resetAttempts.some((a: any) => a.messageId) ? await brevoEvents({ email, limit: "1000" }) : { events: [], error: null };
   const providerEvents = provider.events, providerError = provider.error;
-  const { data: persons, error: personError } = accounts.length ? await db.from("persons").select(PERSON_FIELDS).in("user_id", accounts.map(a => a.id)) : { data: [], error: null };
+  const { data: persons, error: personError } = await db.from("persons").select(PERSON_FIELDS).or(`email.eq.${email}${accountIds.length ? `,user_id.in.(${accountIds.join(",")})` : ""}`);
   if (personError) throw new Error("Could not load setup details.");
   const ids = (persons ?? []).map((p: any) => p.id);
   const { data: onboarding, error: onboardingError } = ids.length ? await db.from("investor_onboardings").select("id,offering_id,stage,funding_status,questionnaire_submitted_at").in("person_id", ids).is("removed_at", null) : { data: [], error: null };
   if (onboardingError) throw new Error("Could not load onboarding progress.");
+  const fundIds = [...new Set((onboarding ?? []).map((o: any) => o.offering_id))];
+  const { data: funds } = fundIds.length ? await db.from("offerings").select("id,name").in("id", fundIds) : { data: [] };
+  const fundNames = new Map((funds ?? []).map((f: any) => [f.id, f.name]));
   const { data: roles } = accounts.length ? await db.from("user_roles").select("role").in("user_id", accounts.map(a => a.id)) : { data: [] };
   const staff = (roles ?? []).some((r: any) => ["admin", "super_admin", "operations", "executive", "finance", "tax", "leadership", "account_manager", "client_success"].includes(r.role));
-  return { accounts, providerError, invitations: invitations.map((i: any) => ({ ...i, outcome: emailOutcome(i.attempts[0] ?? null, providerEvents, !!providerError), attempts: i.attempts.map((a: any) => ({ ...a, outcome: emailOutcome(a, providerEvents, !!providerError) })) })), setup: (persons ?? []).map((p: any) => ({ id: p.id, name: [p.legal_first_name, p.legal_last_name].filter(Boolean).join(" "), kyc: p.kyc_status, aml: p.aml_status, state: p.onboarding_state, gaps: setupGaps(p, staff) })), onboarding: onboarding ?? [] };
+  return { accounts, providerError, passwordResets: resetAttempts.map((a: any) => ({ ...a, outcome: emailOutcome(a, providerEvents, !!providerError) })), invitations: invitations.map((i: any) => ({ ...i, outcome: emailOutcome(i.attempts[0] ?? null, providerEvents, !!providerError), attempts: i.attempts.map((a: any) => ({ ...a, outcome: emailOutcome(a, providerEvents, !!providerError) })) })), setup: (persons ?? []).map((p: any) => ({ id: p.id, name: [p.legal_first_name, p.legal_last_name].filter(Boolean).join(" "), kyc: p.kyc_status, aml: p.aml_status, state: p.onboarding_state, gaps: setupGaps(p, staff) })), onboarding: (onboarding ?? []).map((o: any) => ({ ...o, fundName: fundNames.get(o.offering_id) ?? "Fund" })) };
 }
