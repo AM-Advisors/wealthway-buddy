@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { ReadinessQueue } from "@/components/investment-readiness";
+import { FundMigrationStatus } from "@/components/fund-migration-status";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -298,7 +299,7 @@ export function FundWorkspace({ fundId, tab, onTab, mode = "client", extraTabs =
         {!merged && <TabsContent value="details" className="space-y-5">{detailsBody}</TabsContent>}
         {!merged && <TabsContent value="banking" className="space-y-5">{bankingBody}</TabsContent>}
 
-        <TabsContent value="investors" className="space-y-4"><InvestorsTab fundId={fundId} workQueue={staff ? <ReadinessQueue offeringId={fundId} initialTab="all" /> : undefined} /><CapitalTieReport offeringId={fundId} /><FundUpdatesPanel fundId={fundId} /></TabsContent>
+        <TabsContent value="investors" className="space-y-4">{staff && <FundMigrationStatus fundId={fundId} />}<InvestorsTab fundId={fundId} workQueue={staff ? <ReadinessQueue offeringId={fundId} initialTab="all" /> : undefined} /><CapitalTieReport offeringId={fundId} /><FundUpdatesPanel fundId={fundId} /></TabsContent>
 
 
         <TabsContent value="accounting"><AccountTab fundId={fundId} fundName={String(f.name ?? "Fund")} taxDocs={td?.taxDocs ?? []} /></TabsContent>
