@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getPersonActivity } from "@/lib/user-access.functions";
 import { UserInsights } from "@/components/user-insights";
+import { PersonKycUpdate } from "@/components/person-kyc-update";
 
 export const Route = createFileRoute("/_authenticated/ops/people/$userId")({
   head: () => ({
@@ -49,6 +50,7 @@ function PersonActivityPage() {
           {!!d.roles.length && <div className="mt-2 flex flex-wrap gap-1">{d.roles.map((r) => <Badge key={r} variant="outline">{r.replace(/_/g, " ")}</Badge>)}</div>}
         </header>
         <AccountOverview d={d} />
+        {d.people.filter((p: any) => p.linked).map((p: any) => <PersonKycUpdate key={p.id} personId={p.id} />)}
         {d.email && <UserInsights email={d.email} />}
         <section className="rounded-lg border">
           <div className="flex flex-wrap items-center gap-2 border-b p-4">
