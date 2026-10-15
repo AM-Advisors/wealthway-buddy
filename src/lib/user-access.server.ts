@@ -143,7 +143,7 @@ export async function statusByEmail(viewer: string, emails: string[]) {
     const mine = ((st ?? []) as any[]).filter((s) => s.user_id === p.user_id);
     const g = mine.find((s) => s.scope === "global");
     const latest = latestByEmail.get(email);
-    out[email] = { userId: p.user_id, status: g ? g.state : "active", isTestDemo: !!p.is_test_demo, scoped: mine.length - (g ? 1 : 0), invite: latest ? { lastSent: latest.lastSent ?? latest.reportedSentAt, outcome: latest.outcome } : null };
+    out[email] = { userId: p.user_id, status: g ? g.state : "active", isTestDemo: !!p.is_test_demo, scoped: mine.length - (g ? 1 : 0), invite: latest ? { lastSent: latest.lastSent ?? latest.reportedSentAt, outcome: latest.outcome } : undefined };
   }
   return out;
 }
