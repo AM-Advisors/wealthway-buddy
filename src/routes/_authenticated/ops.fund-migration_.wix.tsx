@@ -28,11 +28,12 @@ export const Route = createFileRoute("/_authenticated/ops/fund-migration_/wix")(
 
 const usd = (c: number) => (c / 100).toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
 const show = (v: unknown) => (typeof v === "object" ? JSON.stringify(v) : String(v));
-type Row = Awaited<ReturnType<typeof getWixFundStaging>>["rows"][number];
+type Inv = { id: string; name: string; person: string; email: string | null; committed: number; received: number; details: any };
+type Row = { wixId: string; name: string; details: Record<string, unknown>; match: { id: string; name: string } | null; investments: Inv[]; committed: number; received: number };
 
 function WixFundsPage() {
   const get = useServerFn(getWixFundStaging);
-  const q = useQuery({ queryKey: ["wix-fund-staging"], queryFn: () => get() });
+  const q = useQuery({ queryKey: ["wix-fund-staging"], queryFn: () => get() as Promise<{ rows: Row[]; totalInvestments: number; unlinked: number }> });
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | "matched" | "new">("all");
   const [open, setOpen] = useState<Row | null>(null);
@@ -81,7 +82,7 @@ function WixFundsPage() {
           <DialogHeader><DialogTitle>{open?.name}</DialogTitle></DialogHeader>
           {open && (
             <div className="space-y-4 text-sm">
-              {open.match && <Link className="text-primary underline" to="/admin/funds/$fundId" params={{ fundId: open.match.id }}>Open {open.match.name} in Harmonious</Link>}
+              {open.match && <Link className="text-primary underline" to="/admin/fund/$fundId" params={{ fundId: open.match.id }}>Open {open.match.name} in Harmonious</Link>}
               <dl className="grid grid-cols-[180px_1fr] gap-x-3 gap-y-1">
                 {Object.entries(open.details).filter(([k]) => !k.startsWith("link-") && !k.startsWith("_")).map(([k, v]) => (<><dt key={k + "k"} className="text-muted-foreground">{k}</dt><dd key={k + "v"} className="break-all">{show(v)}</dd></>))}
               </dl>
