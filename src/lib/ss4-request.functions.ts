@@ -190,12 +190,10 @@ export const resendSs4RequestFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ requestId: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
     const db = await admin();
-    const { data: r } = await db.from("ss4_signature_requests").select("id, offering_id, signer_user_id, note").eq("id", data.requestId).maybeSingle();
+    const { data: r } = await db.from("ss4_signature_requests").select("id, offering_id, signer_user_id, note, status").eq("id", data.requestId).maybeSingle();
     if (!r) throw new Error("Request not found.");
     await requireStaffOrManager(context.userId, r.offering_id);
-    if (r.status_check !== undefined) { /* unreachable */ }
-    const { data: statusRow } = await db.from("ss4_signature_requests").select("status").eq("id", data.requestId).maybeSingle();
-    if ((statusRow as any)?.status !== "requested") throw new Error("Only a request still waiting for signature can be resent.");
+    if (r.status !== "requested") throw new Error("Only a request still waiting for signature can be resent.");
     const { data: prof } = await db.from("profiles").select("email, legal_name").eq("user_id", r.signer_user_id).maybeSingle();
     const signerEmail = ((prof as any)?.email ?? null) as string | null;
     let emailed = false;
