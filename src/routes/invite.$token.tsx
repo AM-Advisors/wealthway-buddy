@@ -33,6 +33,8 @@ function InvitePage() {
   const go = async () => {
     setBusy(true);
     try {
+      const next = new URLSearchParams(window.location.search).get("next");
+      if (next) sessionStorage.setItem("harmonious_next", next);
       const r = await redeem({ data: { token } });
       if (r.url) { window.location.href = r.url; return; }
       setFailed(true);
