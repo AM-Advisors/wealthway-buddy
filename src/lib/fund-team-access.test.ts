@@ -5,6 +5,7 @@ import {
   grantRefusal,
   hasFundTeamPermission,
   isGrantLive,
+  scopeRefusal,
 } from "./fund-team-access";
 
 const base = {
