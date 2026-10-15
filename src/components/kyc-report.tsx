@@ -61,7 +61,7 @@ export function KycReport({ d, userId }: { d: any; userId: string }) {
         </div>
       </header>
 
-      {ac && ["review", "pending"].includes(ac.status) && <ReviewBar check={ac} userId={userId} />}
+      {ac?.status === "review" && <ReviewBar check={ac} userId={userId} />}
 
       {(ac?.review_details ?? kv?.review_details) && <KycReviewPanel rd={ac?.review_details ?? kv?.review_details} checkId={ac?.review_details ? ac.id : null} />}
 
