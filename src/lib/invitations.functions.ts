@@ -145,7 +145,7 @@ type GrantInput = {
   sendEmail: boolean;
 };
 
-async function grantFundAccess(input: GrantInput) {
+export async function grantFundAccess(input: GrantInput) {
   const { supabaseAdmin, actorId, targetUserId, offeringIds, role, email, name } = input;
   const authz = await import("@/lib/reviewer-authz.server");
   authz.assertInvitableRole(role);
@@ -204,7 +204,7 @@ async function grantFundAccess(input: GrantInput) {
   return ((invitations ?? []) as any[]).map((i) => i.id as string);
 }
 
-async function sendInvitationEmail(opts: {
+export async function sendInvitationEmail(opts: {
   supabaseAdmin: any;
   email: string;
   name: string;
