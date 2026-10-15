@@ -184,6 +184,48 @@ export const cancelSs4RequestFn = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/** Resend the signing email for an open SS-4 request without changing the request. */
+export const resendSs4RequestFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ requestId: z.string().uuid() }).parse(d))
+  .handler(async ({ context, data }) => {
+    const db = await admin();
+    const { data: r } = await db.from("ss4_signature_requests").select("id, offering_id, signer_user_id, note").eq("id", data.requestId).maybeSingle();
+    if (!r) throw new Error("Request not found.");
+    await requireStaffOrManager(context.userId, r.offering_id);
+    if (r.status_check !== undefined) { /* unreachable */ }
+    const { data: statusRow } = await db.from("ss4_signature_requests").select("status").eq("id", data.requestId).maybeSingle();
+    if ((statusRow as any)?.status !== "requested") throw new Error("Only a request still waiting for signature can be resent.");
+    const { data: prof } = await db.from("profiles").select("email, legal_name").eq("user_id", r.signer_user_id).maybeSingle();
+    const signerEmail = ((prof as any)?.email ?? null) as string | null;
+    let emailed = false;
+    if (signerEmail) {
+      try {
+        const { data: o } = await db.from("offerings").select("name").eq("id", r.offering_id).maybeSingle();
+        const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+        // No idempotency key: each resend is a fresh email, not a dedupe of the first send.
+        await sendTemplateEmail("manager-alert", signerEmail, {
+          templateData: {
+            managerName: ((prof as any)?.legal_name || "Fund manager") as string,
+            headline: "Reminder: please review and sign your Form SS-4",
+            intro: "Harmonious has filled in the IRS Form SS-4 to get your fund's EIN. Please check each line, add the Responsible Party SSN or ITIN, and sign.",
+            offeringName: o?.name ?? "your fund",
+            details: [{ label: "Form", value: "IRS Form SS-4 (EIN application)" }, ...(((r as any).note ? [{ label: "Note from Harmonious", value: (r as any).note }] : []) as { label: string; value: string }[])],
+            portalUrl: `${SITE}/manager/ss4/${r.id}`,
+          },
+        });
+        emailed = true;
+      } catch (e) {
+        console.error("SS-4 resend email failed", e);
+      }
+    }
+    try {
+      const { logFundAudit } = await import("@/lib/fund-audit.server");
+      await logFundAudit(context.userId, { offeringId: r.offering_id, eventType: "ss4_request_resent", summary: `SS-4 signing email resent${signerEmail ? ` to ${signerEmail}` : ""}` });
+    } catch { /* best-effort */ }
+    return { emailed, signerEmail };
+  });
+
 async function loadForSigner(userId: string, requestId: string) {
   const db = await admin();
   const { data: r } = await db.from("ss4_signature_requests").select("*").eq("id", requestId).maybeSingle();
