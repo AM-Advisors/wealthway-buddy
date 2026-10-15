@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { SignHereTag, useSignHere } from "@/components/signature-adopt-dialog";
 import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -209,13 +210,14 @@ export function Ss4SignView({ requestId }: { requestId: string }) {
   const [phone, setPhone] = useState("");
   const [tin, setTin] = useState("");
   const [consent, setConsent] = useState(false);
+  const sig = useSignHere(name);
   useEffect(() => {
     if (!q.data) return;
     const [n, ...t] = String(q.data.form["applicant_name_title"] ?? "").split(",");
     setName((n ?? "").trim()); setTitle(t.join(",").trim()); setPhone(String(q.data.form["applicant_phone"] ?? ""));
   }, [q.data]);
   const sign = useMutation({
-    mutationFn: () => signFn({ data: { requestId, signerName: name, signerTitle: title, phone, responsiblePartyTin: tin, consent: true, userAgent: navigator.userAgent } }),
+    mutationFn: () => signFn({ data: { requestId, signerName: name, signerTitle: title, phone, responsiblePartyTin: tin, consent: true, signature: sig.signature ? { method: sig.signature.method, image: sig.signature.image } : undefined, userAgent: navigator.userAgent } }),
     onSuccess: () => { toast.success("Signed. Harmonious will file your SS-4 with the IRS."); setTin(""); qc.invalidateQueries({ queryKey: ["ss4-sign", requestId] }); },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -273,9 +275,10 @@ export function Ss4SignView({ requestId }: { requestId: string }) {
           </div>
           <label className="flex items-start gap-2 text-sm">
             <Checkbox checked={consent} onCheckedChange={(v) => setConsent(Boolean(v))} className="mt-0.5" />
-            <span>Under penalties of perjury, I declare that I have examined this application, and to the best of my knowledge and belief, it is true, correct and complete. I agree that typing my name is my electronic signature.</span>
+            <span>Under penalties of perjury, I declare that I have examined this application, and to the best of my knowledge and belief, it is true, correct and complete. I agree that the signature I adopt is my electronic signature.</span>
           </label>
-          <Button onClick={() => sign.mutate()} disabled={!consent || name.trim().length < 2 || title.trim().length < 2 || (!d.tinOnFile && !tin.trim()) || sign.isPending}>{sign.isPending ? "Signing…" : "Sign Form SS-4"}</Button>
+          <div className="space-y-1"><Label className="text-xs">Signature</Label><SignHereTag signature={sig.signature} signed={sig.signed} onClick={sig.click} />{sig.dialog}</div>
+          <Button onClick={() => sign.mutate()} disabled={!consent || !sig.signed || name.trim().length < 2 || title.trim().length < 2 || (!d.tinOnFile && !tin.trim()) || sign.isPending}>{sign.isPending ? "Signing…" : "Sign Form SS-4"}</Button>
         </section>
       )}
     </div>
