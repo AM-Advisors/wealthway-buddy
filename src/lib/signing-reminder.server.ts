@@ -46,7 +46,7 @@ export async function sendSigningReminder(actorId: string, input: {
   await d.from("document_reminders").insert({ reminder_key: input.reminderKey, client_id: input.clientId ?? null, offering_id: input.offeringId ?? null, document_title: input.documentTitle, recipient_email: input.recipientEmail, sent_by: actorId, delivered: sent, override_reason: hit ? input.override?.reason ?? null : null });
   const { logFundAudit } = await import("@/lib/fund-audit.server");
   if (input.offeringId) await logFundAudit(actorId, {
-    offeringId: input.offeringId, eventType: "signing_reminder_sent",
+    offeringId: input.offeringId!, eventType: "signing_reminder_sent",
     summary: `${sent ? "Signing reminder sent" : "Signing reminder could not be delivered"} to ${input.recipientName} (${input.recipientEmail}) for ${input.documentTitle}${hit ? " — Super Admin override" : ""}`,
     values: { reminderKey: input.reminderKey, document: input.documentTitle, recipient: input.recipientEmail, link: firstTime ? "Personal set-password link" : "Direct link", ...(hit ? { overrideReason: input.override?.reason } : {}) },
   });
