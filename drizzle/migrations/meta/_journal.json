@@ -1695,6 +1695,13 @@
       "when": 1792035769271,
       "tag": "0241_activity_clicks",
       "breakpoints": true
+    },
+    {
+      "idx": 242,
+      "version": "7",
+      "when": 1792049806399,
+      "tag": "0242_fund_team_grant_scopes",
+      "breakpoints": true
     }
   ]
 }

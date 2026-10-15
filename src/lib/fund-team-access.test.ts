@@ -29,12 +29,27 @@ describe("fund team access", () => {
   });
   it("allows a valid grant", () => expect(grantRefusal(base)).toBeNull());
   it("refuses non-managers", () => expect(grantRefusal({ ...base, granterIsFundManager: false })).toMatch(/Fund Manager/));
+  it("allows staff to grant on a fund they don't manage", () =>
+    expect(grantRefusal({ ...base, granterIsFundManager: false, granterIsStaff: true })).toBeNull());
   it("refuses escalation roles", () => expect(grantRefusal({ ...base, role: "fund_manager" })).toMatch(/Viewer or Assistant/));
   it("refuses self-grant", () => {
     expect(grantRefusal({ ...base, granteeEmail: "M@x.co" })).toMatch(/yourself/);
     expect(grantRefusal({ ...base, granteeUserId: "u1" })).toMatch(/yourself/);
   });
   it("refuses investors in the fund", () => expect(grantRefusal({ ...base, granteeIsInvestorInFund: true })).toMatch(/Investors/));
+  it("all_funds is staff-only", () => {
+    expect(scopeRefusal("all_funds", true, false)).toMatch(/staff/);
+    expect(scopeRefusal("all_funds", false, true)).toBeNull();
+  });
+  it("all_managed needs a fund manager", () => {
+    expect(scopeRefusal("all_managed", false, true)).toMatch(/Fund Manager/);
+    expect(scopeRefusal("all_managed", true, false)).toBeNull();
+  });
+  it("unknown scopes are refused", () => expect(scopeRefusal("everything", true, true)).toMatch(/Unknown/));
+  it("grantRefusal enforces scope rules", () => {
+    expect(grantRefusal({ ...base, scope: "all_funds" })).toMatch(/staff/);
+    expect(grantRefusal({ ...base, scope: "all_managed" })).toBeNull();
+  });
   it("expired or revoked grants are not live", () => {
     expect(isGrantLive({ status: "active", expires_at: null })).toBe(true);
     expect(isGrantLive({ status: "revoked", expires_at: null })).toBe(false);
