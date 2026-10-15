@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { uploadFundFileFn } from "@/lib/fund-tabs.functions";
+import { fileToBase64 } from "@/components/fund-tabs/shared";
 import { prefillWireFromBank } from "@/lib/bank-feed.functions";
 import { listManagedWireInstructions, saveManagedWireInstructions } from "@/lib/wire-instructions.functions";
 
@@ -17,7 +19,7 @@ const empty = Object.fromEntries(FIELDS.map(([k]) => [k, ""])) as Form;
 const mask = (v?: string) => (v ? `••••${String(v).slice(-4)}` : "-");
 
 /** Wire instructions pre-filled from the connected bank; Harmonious saves and verifies them. */
-export function WireFromBankForm({ fundId }: { fundId: string }) {
+export function WireFromBankForm({ fundId, allowPrefill = true }: { fundId: string; allowPrefill?: boolean }) {
   const qc = useQueryClient();
   const prefill = useServerFn(prefillWireFromBank);
   const list = useServerFn(listManagedWireInstructions);
@@ -27,6 +29,20 @@ export function WireFromBankForm({ fundId }: { fundId: string }) {
   const saved = (fund?.wire_instructions ?? {}) as Record<string, string>;
   const isAdmin = !!current.data?.isAdmin;
   const [f, setF] = useState<Form | null>(null);
+  const uploadFile = useServerFn(uploadFundFileFn);
+  const [uploading, setUploading] = useState(false);
+  const [uploaded, setUploaded] = useState<string | null>(null);
+  const onLetter = async (file: File | undefined) => {
+    if (!file) return;
+    setUploading(true);
+    try {
+      await uploadFile({ data: { fundId, title: "Wire instructions", category: "banking", fileName: file.name, contentType: file.type || "application/octet-stream", base64: await fileToBase64(file) } });
+      setUploaded(file.name);
+      toast.success("Wire instructions uploaded. Harmonious will verify them.");
+      qc.invalidateQueries();
+    } catch (e) { toast.error((e as Error).message); } finally { setUploading(false); }
+  };
+  const manual = () => setF({ ...empty, ...Object.fromEntries(Object.entries(saved).map(([k, v]) => [k, String(v)])), memo: saved["memo"] || "Investor name + fund name" });
   const fill = useMutation({
     mutationFn: () => prefill({ data: { fundId } }),
     onSuccess: (r) => setF({ ...empty, ...Object.fromEntries(Object.entries(saved).map(([k, v]) => [k, String(v)])), ...r, memo: saved["memo"] || "Investor name + fund name" }),
@@ -48,7 +64,15 @@ export function WireFromBankForm({ fundId }: { fundId: string }) {
         </dl>
       ) : <p className="text-muted-foreground">No wire instructions saved yet.</p>}
       {!f ? (
-        <Button size="sm" variant="outline" onClick={() => fill.mutate()} disabled={fill.isPending}>{fill.isPending ? "Reading bank…" : "Fill wire form from connected bank"}</Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <label className="inline-flex">
+            <input type="file" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx" className="sr-only" disabled={uploading} onChange={(e) => { void onLetter(e.target.files?.[0]); e.target.value = ""; }} />
+            <span className="inline-flex h-8 cursor-pointer items-center rounded-md border px-3 text-sm font-medium hover:bg-muted">{uploading ? "Uploading…" : "Upload wire instructions"}</span>
+          </label>
+          {isAdmin && <Button size="sm" variant="outline" onClick={manual}>Enter manually</Button>}
+          {allowPrefill && <Button size="sm" variant="outline" onClick={() => fill.mutate()} disabled={fill.isPending}>{fill.isPending ? "Reading bank…" : "Fill wire form from connected bank"}</Button>}
+          {uploaded && <span className="text-xs text-muted-foreground">Uploaded {uploaded} - saved to Documents</span>}
+        </div>
       ) : (
         <div className="space-y-2 rounded-md border p-3">
           {FIELDS.map(([k, label]) => (

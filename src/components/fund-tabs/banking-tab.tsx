@@ -22,21 +22,34 @@ export function BankingTab({ fundId }: { fundId: string }) {
   const load = useServerFn(fundBooksFn);
   const q = useQuery({ queryKey: ["fund-books", fundId], queryFn: () => load({ data: { fundId } }) });
   const d = q.data;
+  const [mode, setMode] = useState<"upload" | "connect">("upload");
   return (
     <div className="space-y-5">
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Connect your bank</CardTitle>
-          <CardDescription>Connect the fund's bank account securely through Plaid. This is read-only: no money can be moved from here.</CardDescription>
+          <CardTitle className="text-base">How do you want to share banking?</CardTitle>
+          <CardDescription>Connecting the bank is optional. You can instead upload the wire instructions and bank statements.</CardDescription>
         </CardHeader>
-        <CardContent><BankFeedPanel fundId={fundId} /></CardContent>
+        <CardContent className="flex flex-wrap gap-2">
+          <Button size="sm" variant={mode === "upload" ? "default" : "outline"} onClick={() => setMode("upload")}>Upload documents (no bank connection)</Button>
+          <Button size="sm" variant={mode === "connect" ? "default" : "outline"} onClick={() => setMode("connect")}>Connect bank</Button>
+        </CardContent>
       </Card>
+      {mode === "connect" && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Connect your bank</CardTitle>
+            <CardDescription>Connect the fund's bank account securely through Plaid. This is read-only: no money can be moved from here.</CardDescription>
+          </CardHeader>
+          <CardContent><BankFeedPanel fundId={fundId} /></CardContent>
+        </Card>
+      )}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Wire instructions</CardTitle>
-          <CardDescription>Pre-filled from the connected bank. Investors only see these after Harmonious verifies them.</CardDescription>
+          <CardDescription>{mode === "connect" ? "Pre-filled from the connected bank, or" : "Upload the bank's wire instructions letter, or"} enter them by hand. Investors only see these after Harmonious verifies them.</CardDescription>
         </CardHeader>
-        <CardContent><WireFromBankForm fundId={fundId} /></CardContent>
+        <CardContent><WireFromBankForm fundId={fundId} allowPrefill={mode === "connect"} /></CardContent>
       </Card>
       {q.isLoading ? <p className="text-sm text-muted-foreground">Loading books…</p> : q.error || !d ? <p className="text-sm text-destructive">{(q.error as Error)?.message ?? "Couldn't load the books."}</p> : (
         <>
