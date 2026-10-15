@@ -15,7 +15,7 @@ import { deleteFundFileFn, generateFundDocFn, listFundFilesFn, setSignatureBoxes
 import { listTemplatesFn, useTemplateInFundFn } from "@/lib/fund-doc-templates.functions";
 import { fileToBase64, fmtDate } from "./shared";
 import { StandardFormsCard } from "./standard-forms-card";
-import { fundSigningContextFn, sendFileForSignatureFn } from "@/lib/fund-file-signing.functions";
+import { fundSigningContextFn, sendFileForSignatureFn, remindFileSignerFn } from "@/lib/fund-file-signing.functions";
 
 const STATUS: Record<string, string> = { draft: "Draft", out_for_signature: "Out for signature", signed: "Signed" };
 
@@ -57,6 +57,20 @@ export function DocumentsTab({ fundId }: { fundId: string }) {
   const sigCtxFn = useServerFn(fundSigningContextFn);
   const sendSigFn = useServerFn(sendFileForSignatureFn);
   const sig = useQuery({ queryKey: ["fund-signing", fundId], queryFn: () => sigCtxFn({ data: { fundId } }) });
+  const remindFn = useServerFn(remindFileSignerFn);
+  const remind = useMutation({
+    mutationFn: async (id: string) => {
+      try { return await remindFn({ data: { signatureId: id } }); }
+      catch (e: any) {
+        if (!/24 hours/.test(e?.message ?? "")) throw e;
+        const reason = window.prompt("A reminder was already sent today. Super Admins can send another — enter a reason (it's logged):");
+        if (!reason?.trim()) throw e;
+        return await remindFn({ data: { signatureId: id, overrideReason: reason.trim() } });
+      }
+    },
+    onSuccess: (r: any) => { toast.success(`Reminder sent to ${r.recipientEmail}.`); qc.invalidateQueries({ queryKey: ["fund-signing", fundId] }); },
+    onError: (e: Error) => toast.error(e.message),
+  });
   const [sendFor, setSendFor] = useState<any | null>(null);
   const [inv, setInv] = useState(""); const [mgr, setMgr] = useState("");
   const send = useMutation({
@@ -97,7 +111,7 @@ export function DocumentsTab({ fundId }: { fundId: string }) {
                       {f.signature_boxes?.length ? ` · ${f.signature_boxes.length} signature box${f.signature_boxes.length === 1 ? "" : "es"}` : ""}
                     </p>
                     {(sig.data?.signatures ?? []).filter((x: any) => x.file_id === f.id).map((x: any) => (
-                      <p key={x.id} className="text-xs text-muted-foreground">{x.signing_order}. {x.signer_role === "investor" ? "Investor" : "Fund manager"} {x.signer_name}: {x.status === "signed" ? `signed ${fmtDate(x.signed_at)}` : x.status === "sent" ? "link sent, waiting" : "waits for investor"}</p>
+                      <p key={x.id} className="text-xs text-muted-foreground">{x.signing_order}. {x.signer_role === "investor" ? "Investor" : "Fund manager"} {x.signer_name}: {x.status === "signed" ? `signed ${fmtDate(x.signed_at)}` : x.status === "sent" ? "link sent, waiting" : "waits for investor"}{x.lastRemindedAt ? ` · last reminded ${fmtDate(x.lastRemindedAt)}` : ""}{x.status !== "signed" && (x.status === "sent" || (sig.data?.signatures ?? []).filter((y: any) => y.file_id === f.id && y.signing_order < x.signing_order).every((y: any) => y.status === "signed")) && <button type="button" className="ml-2 text-primary underline-offset-2 hover:underline disabled:opacity-50" disabled={remind.isPending} onClick={() => remind.mutate(x.id)}>Send reminder</button>}</p>
                     ))}
                   </div>
                   <div className="flex items-center gap-2">

@@ -140,8 +140,16 @@ export function Ss4RequestPanel({ fundId }: { fundId: string }) {
   });
   const cancel = useMutation({ mutationFn: (id: string) => cancelFn({ data: { requestId: id } }), onSuccess: () => qc.invalidateQueries({ queryKey: ["ss4-request", fundId] }), onError: (e: Error) => toast.error(e.message) });
   const resend = useMutation({
-    mutationFn: (id: string) => resendFn({ data: { requestId: id } }),
-    onSuccess: (r) => { toast.success(r.emailed ? `Resent to ${r.signerEmail}.` : "No email on file for that manager — share the signing link with them."); },
+    mutationFn: async (id: string) => {
+      try { return await resendFn({ data: { requestId: id } }); }
+      catch (e: any) {
+        if (!/24 hours/.test(e?.message ?? "")) throw e;
+        const reason = window.prompt("A reminder was already sent today. Super Admins can send another — enter a reason (it's logged):");
+        if (!reason?.trim()) throw e;
+        return await resendFn({ data: { requestId: id, overrideReason: reason.trim() } });
+      }
+    },
+    onSuccess: (r) => { toast.success(`Reminder sent to ${r.signerEmail}.`); },
     onError: (e: Error) => toast.error(e.message),
   });
   const openPdf = async (id: string) => { try { const r = await pdfFn({ data: { requestId: id } }); if (r.url) window.open(r.url, "_blank", "noopener"); } catch (e) { toast.error((e as Error).message); } };
@@ -195,7 +203,7 @@ export function Ss4RequestPanel({ fundId }: { fundId: string }) {
               <div className="flex items-center gap-2">
                 <Badge variant={r.status === "signed" ? "default" : "outline"}>{r.status === "requested" ? "Waiting for signature" : r.status === "signed" ? "Signed" : "Cancelled"}</Badge>
                 {r.hasPdf && <Button size="sm" variant="outline" onClick={() => openPdf(r.id)}>Open signed SS-4</Button>}
-                {r.status === "requested" && <Button size="sm" variant="outline" onClick={() => resend.mutate(r.id)} disabled={resend.isPending}>{resend.isPending ? "Resending…" : "Resend"}</Button>}
+                {r.status === "requested" && <Button size="sm" variant="outline" onClick={() => resend.mutate(r.id)} disabled={resend.isPending}>{resend.isPending ? "Sending…" : "Send reminder"}</Button>}
                 {r.status === "requested" && <Button size="sm" variant="ghost" onClick={() => cancel.mutate(r.id)}>Cancel</Button>}
               </div>
             </div>
