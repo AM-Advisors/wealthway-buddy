@@ -75,7 +75,7 @@ export function SignatureAdoptDialog({
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  defaultName?: string;
+  defaultName?: string | undefined;
   onAdopt: (sig: AdoptedSignature) => void;
 }) {
   const [tab, setTab] = useState<SignatureMethod>("typed");

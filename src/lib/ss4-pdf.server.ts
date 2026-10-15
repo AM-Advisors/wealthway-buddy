@@ -150,7 +150,7 @@ function decodeBase64(input: string): Uint8Array {
   return bytes;
 }
 
-export async function fillSs4Pdf(data: Ss4Data, opts: { signature?: string; signatureImage?: string; signedDate?: string } = {}): Promise<Uint8Array> {
+export async function fillSs4Pdf(data: Ss4Data, opts: { signature?: string; signatureImage?: string | undefined; signedDate?: string } = {}): Promise<Uint8Array> {
   const doc = await PDFDocument.load(decodeBase64(SS4_FORM_BASE64));
   const form = doc.getForm();
 
