@@ -76,6 +76,10 @@ export function PeopleActions({ email, userId, name, info, context, resend }: {
             <DropdownMenuItem onClick={() => { setScope(context ? "scoped" : "global"); setMode("revoke"); }}>Revoke access…</DropdownMenuItem>
             <DropdownMenuItem onClick={() => setMode("archive")}>Archive…</DropdownMenuItem>
           </> : <DropdownMenuItem onClick={() => setMode("restore")}>Restore access…</DropdownMenuItem>}
+          {resend && <>
+            <DropdownMenuSeparator />
+            <ResendInviteMenuItem target={resend} />
+          </>}
           {uid && <>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={async () => { try { await resetPw({ data: { userId: uid } }); toast.success("Password reset link emailed."); } catch (e) { toast.error(e instanceof Error ? e.message : "Failed."); } }}>
