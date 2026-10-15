@@ -262,7 +262,8 @@ async function processDeals(db: any, userId: string, run: any, deals: any[], ful
       let dealId: string;
       if (ex) {
         if (editedInHarmonious(ex)) {
-          await db.from("crm_deals").update(hsFields).eq("id", ex.id);
+          // Keep the edit marker: never advance last_imported_at past a Harmonious edit.
+          await db.from("crm_deals").update({ ...hsFields, last_imported_at: ex.last_imported_at, updated_at: ex.updated_at }).eq("id", ex.id);
           errors.push({ at: now, kind: "conflict", hubspotDealId: id, message: "Changed in Harmonious since the last import; HubSpot values saved alongside, Harmonious values kept" });
           bump(counts, "deals_conflict");
         } else {
