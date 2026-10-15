@@ -1,3 +1,4 @@
+import { MigrationsTabs } from "@/components/migrations-tabs";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -43,6 +44,7 @@ function SourcesPage() {
     <main className="mx-auto max-w-7xl space-y-6 px-4 py-8 sm:px-6">
       <header className="space-y-1">
         <Link to="/ops/fund-migration" className="text-sm text-muted-foreground hover:underline">Fund Migration</Link>
+        <MigrationsTabs />
         <h1 className="font-heading text-2xl font-semibold">Source Reconciliation</h1>
         <p className="text-sm text-muted-foreground">Read-only. Decisions here are recorded for review and never change a person, investment, verification or fund. A historical verification result is not current eligibility.</p>
       </header>
