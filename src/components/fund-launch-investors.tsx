@@ -44,7 +44,7 @@ export function FundLaunchInvestors({ fundId, items }: { fundId: string; items: 
         <div className="grid gap-2 sm:grid-cols-4">{d.checklist.map((c) => (
           <div key={c.label} className={`rounded-lg border p-3 text-sm ${c.done ? "border-primary bg-primary/5" : ""}`}>{c.done ? "✓ " : ""}{c.label}</div>
         ))}</div>
-        {!d.launched && <p className="text-xs text-muted-foreground">Launching uses the normal approval on <Link to="/ops/fund/$fundId" params={{ fundId }} className="text-primary underline">Fund Setup</Link>. Invites unlock after launch.</p>}
+        {!d.launched && <p className="text-xs text-muted-foreground">Launching uses the normal approval on <Link to="/ops/fund/$fundId" params={{ fundId }} className="text-primary underline">Fund Setup</Link>. Before launch, "Send onboarding" invites existing investors to their current record only.</p>}
         <p className="text-xs text-muted-foreground">Investors who signed and funded before Harmonious can be marked as a prior subscription. A second staff member confirms it. They still complete About You and identity verification, then skip Sign and Fund. Prior funding is labelled "Funded (prior, off-platform)" and is never counted as money Harmonious reconciled.</p>
         {!d.investors.length && <p className="text-sm text-muted-foreground">No investors yet. Accept investor suggestions in Step 3.</p>}
         {d.investors.length > 0 && (
@@ -53,7 +53,7 @@ export function FundLaunchInvestors({ fundId, items }: { fundId: string; items: 
               <thead><tr className="text-left text-xs text-muted-foreground"><th className="w-8" /><th>Investor</th><th>Commitment</th><th>Prior subscription</th><th>Progress</th><th /></tr></thead>
               <tbody className="divide-y">{d.investors.map((i) => (<Fragment key={i.onboardingId}>
                 <tr>
-                  <td>{d.canManage && d.launched && !i.invited && !i.joined && <Checkbox checked={sel.includes(i.onboardingId)} onCheckedChange={(v) => setSel((x) => v ? [...x, i.onboardingId] : x.filter((y) => y !== i.onboardingId))} aria-label={`Select ${i.name}`} />}</td>
+                  <td>{d.canManage && !i.invited && !i.joined && <Checkbox checked={sel.includes(i.onboardingId)} onCheckedChange={(v) => setSel((x) => v ? [...x, i.onboardingId] : x.filter((y) => y !== i.onboardingId))} aria-label={`Select ${i.name}`} />}</td>
                   <td className="py-2"><div className="font-medium text-foreground">{i.name}</div><div className="text-xs text-muted-foreground">{i.email ?? "No email"}</div></td>
                   <td>{usd(i.commitmentCents)}</td>
                   <td>{i.prior ? <div className="space-y-0.5">
@@ -71,7 +71,7 @@ export function FundLaunchInvestors({ fundId, items }: { fundId: string; items: 
             </table>
           </div>
         )}
-        {d.canManage && d.launched && <Button size="sm" disabled={!sel.length || busy} onClick={invite}>{busy ? "Sending…" : `Send invites${sel.length ? ` (${sel.length})` : ""}`}</Button>}
+        {d.canManage && <Button size="sm" disabled={!sel.length || busy} onClick={invite}>{busy ? "Sending…" : `${d.launched ? "Send invites" : "Send onboarding"}${sel.length ? ` (${sel.length})` : ""}`}</Button>}
       </>}
     </section>
   );
