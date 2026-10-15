@@ -116,7 +116,7 @@ export function InvestorsTab({ fundId }: { fundId: string }) {
                 {rows.map((r) => (
                   <tr key={r.id} className="cursor-pointer border-t hover:bg-muted" onClick={() => setOpen(r.id)}>
                     <td className="py-2" onClick={(e) => e.stopPropagation()}>
-                      <input type="checkbox" aria-label={`Remind ${r.name}`} disabled={!canRemind(r)} title={canRemind(r) ? "Select to send a reminder" : lq.data?.[r.id] ? "Reminded in the last 3 days" : "Nothing to remind"} checked={picked.includes(r.id)} onChange={(e) => setPicked((p) => e.target.checked ? [...p, r.id] : p.filter((x) => x !== r.id))} />
+                      <input type="checkbox" aria-label={`Select ${r.name}`} title={canRemind(r) ? "Select for reminders and bulk actions" : "Select for bulk actions (no reminder due)"} checked={picked.includes(r.id)} onChange={(e) => setPicked((p) => e.target.checked ? [...p, r.id] : p.filter((x) => x !== r.id))} />
                     </td>
                     <td className="py-2"><p className="font-medium">{r.name}</p>{r.profileName && <p className="text-xs text-muted-foreground">{r.profileName}</p>}</td>
                     <td>{r.classLabel ?? <span className="text-muted-foreground">-</span>}</td>
@@ -150,8 +150,59 @@ export function InvestorsTab({ fundId }: { fundId: string }) {
           <FundOnboardingLinkCard fundId={fundId} />
         </DialogContent>
       </Dialog>
+      <Dialog open={classOpen} onOpenChange={setClassOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Set class for {picked.length} investor{picked.length === 1 ? "" : "s"}</DialogTitle>
+            <DialogDescription>Type the class exactly as it should appear, e.g. "Class A".</DialogDescription>
+          </DialogHeader>
+          <Input value={classKey} onChange={(e) => setClassKey(e.target.value)} placeholder="Class A" />
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setClassOpen(false)}>Cancel</Button>
+            <Button disabled={!classKey.trim() || sending} onClick={saveClass}>Set class</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
+    {(dupQ.data?.duplicates?.length ?? 0) > 0 && <DuplicatesCard fundId={fundId} groups={dupQ.data!.duplicates} staff={dupQ.data!.staff} onMerged={() => { void q.refetch(); void dupQ.refetch(); }} />}
     </div>
+  );
+}
+
+function DuplicatesCard({ fundId, groups, staff, onMerged }: { fundId: string; groups: any[][]; staff: boolean; onMerged: () => void }) {
+  const merge = useServerFn(mergeInvestorsFn);
+  const [busy, setBusy] = useState(false);
+  async function doMerge(keepId: string, archiveId: string) {
+    const reason = window.prompt("Reason for merging (saved in Audit History):");
+    if (!reason?.trim()) return;
+    setBusy(true);
+    try { await merge({ data: { fundId, keepId, archiveId, reason: reason.trim() } }); toast.success("Records merged."); onMerged(); }
+    catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
+  }
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">Possible duplicate investors</CardTitle>
+        <CardDescription>Same name or email appears more than once. Merging keeps one record, carries over its documents and tasks, and archives the other — nothing is deleted. Staff only.</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {groups.map((g, i) => (
+          <div key={i} className="rounded-lg border p-3">
+            <ul className="divide-y text-sm">
+              {g.map((r) => (
+                <li key={r.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
+                  <span><span className="font-medium">{r.name}</span>{r.email ? <span className="ml-2 text-muted-foreground">{r.email}</span> : null}<span className="ml-2 text-xs text-muted-foreground">{usd(r.committedCents)} · {r.docs}</span></span>
+                  {staff && g.length === 2 && (
+                    <Button size="sm" variant="outline" disabled={busy} onClick={() => doMerge(r.id, g.find((x) => x.id !== r.id)!.id)}>Keep this one</Button>
+                  )}
+                </li>
+              ))}
+            </ul>
+            {g.length > 2 && <p className="mt-1 text-xs text-muted-foreground">More than two records match — merge two at a time.</p>}
+          </div>
+        ))}
+      </CardContent>
+    </Card>
   );
 }
 
