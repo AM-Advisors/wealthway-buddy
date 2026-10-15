@@ -380,6 +380,11 @@ export async function syncVerification(input: {
     source,
     actorUserId: input.actorUserId ?? null,
   });
+  try {
+    const { buildReviewDetails } = await import("@/lib/kyc-review-model");
+    const rd = buildReviewDetails(decision);
+    if (rd?.sessionId) await db().from("kyc_verifications").update({ review_details: rd as any }).eq("id", input.verification.id);
+  } catch (e) { console.error("[kyc] review details", e instanceof Error ? e.message : String(e)); }
   return { ...applied, source };
 }
 
