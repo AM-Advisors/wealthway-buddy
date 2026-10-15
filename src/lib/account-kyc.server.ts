@@ -82,6 +82,11 @@ export async function startAccountCheck(uid: string, origin: string) {
 export async function applyAccountDecision(c: any, decision: Record<string, any>) {
   const { normalizeDiditDecision, evaluateDocumentExpiry } = await import("@/lib/kyc-verification");
   const n = normalizeDiditDecision(decision);
+  try {
+    const { buildReviewDetails } = await import("@/lib/kyc-review-model");
+    const rd = buildReviewDetails(decision);
+    if (rd) await db().from("account_identity_checks").update({ review_details: rd }).eq("id", c.id);
+  } catch (e) { console.error("[account-kyc] review details", e instanceof Error ? e.message : String(e)); }
   if (["approved", "declined"].includes(c.status) && c.decided_by) return c; // human decision stands
   const exp = evaluateDocumentExpiry({ expirationDate: n.document.expirationDate, verificationDate: new Date() });
   let to: AccountCheckStatus = n.providerStatus === "approved" ? "approved" : n.providerStatus === "declined" ? "declined" : n.providerStatus === "review" ? "review" : "pending";
@@ -102,7 +107,7 @@ export async function accountCheckByProviderRef(vendorData: string | null, sessi
 
 export async function reconcileAccountCheck(uid: string) {
   const c = await latest(uid);
-  if (c?.session_id && c.status === "pending") {
+  if (c?.session_id && (c.status === "pending" || !c.review_details)) {
     const { fetchDiditSessionDecision } = await import("@/lib/didit.server");
     const d = await fetchDiditSessionDecision(String(c.session_id));
     if (d) await applyAccountDecision(c, d);
@@ -127,12 +132,62 @@ export async function decideAccountCheck(uid: string, checkId: string, action: "
   await assertDecider(uid);
   const { data: c } = await db().from("account_identity_checks").select("*").eq("id", checkId).maybeSingle();
   if (!c) throw new Error("Check not found.");
-  if (c.user_id === uid) throw new Error("You can't decide your own identity check.");
+  const isSuper = (await roles(uid)).includes("super_admin");
+  if (c.user_id === uid && !(isSuper && note?.trim())) throw new Error(isSuper ? "Add a reason to decide your own identity check." : "You can't decide your own identity check.");
   if (action !== "approve" && !note?.trim()) throw new Error("Add a note explaining why.");
+  if (action === "approve" && (c.review_details?.aml?.totalHits ?? 0) > 0 && !note?.trim()) throw new Error("Add a note explaining why the possible watchlist matches were ruled out.");
   if (action === "approve" && c.status !== "review") throw new Error("Only checks marked Needs review can be approved by hand.");
   if (c.status === "approved" && action !== "send_back") throw new Error("Already approved.");
   const to = action === "approve" ? "approved" : action === "decline" ? "declined" : "sent_back";
   await db().from("account_identity_checks").update({ status: to, decided_by: uid, decided_at: now(), decision_note: note?.trim() || null, updated_at: now() }).eq("id", checkId);
   await logEvent(c, `staff_${action}`, c.status, to, uid, note?.trim() || null);
+  if (c.session_id && action !== "send_back") await pushProviderStatus(String(c.session_id), action === "approve" ? "Approved" : "Declined", note);
+  if (action === "approve") {
+    try {
+      const { fetchSessionDecision } = await import("@/lib/kyc-verification.server");
+      const d = await fetchSessionDecision(String(c.session_id ?? ""));
+      const mod: any = await import("@/lib/didit-auto-apply.server");
+      const fn = mod.autoApplyDiditSession ?? mod.autoApplyApprovedSession ?? mod.default;
+      if (d && typeof fn === "function") await fn({ userId: c.user_id, personId: c.person_id, decision: d, actorUserId: uid, source: "staff_approval" });
+    } catch (e) { console.error("[account-kyc] auto-apply after approval", e instanceof Error ? e.message : String(e)); }
+  }
   return { ok: true };
+}
+
+/** Best-effort: mirror a Harmonious decision back to the verification provider. */
+async function pushProviderStatus(sessionId: string, status: "Approved" | "Declined", note: string | null) {
+  const key = process.env["DIDIT_API_KEY"];
+  if (!key) return;
+  try {
+    const r = await fetch(`${DIDIT_SESSION_URL}${encodeURIComponent(sessionId)}/update-status/`, { method: "PATCH", headers: { "content-type": "application/json", "x-api-key": key }, body: JSON.stringify({ new_status: status, comment: note?.trim() || "Decided in Harmonious" }) });
+    if (!r.ok) console.error("[account-kyc] provider status push failed", r.status);
+  } catch (e) { console.error("[account-kyc] provider status push", e instanceof Error ? e.message : String(e)); }
+}
+
+/** Short-lived provider image links for a reviewer. Never stored; each view is logged. */
+export async function verificationImages(uid: string, checkId: string) {
+  await assertDecider(uid);
+  const { data: c } = await db().from("account_identity_checks").select("*").eq("id", checkId).maybeSingle();
+  if (!c?.session_id) throw new Error("No verification session on this check.");
+  const { fetchSessionDecision } = await import("@/lib/kyc-verification.server");
+  const { extractImages } = await import("@/lib/kyc-review-model");
+  const d = await fetchSessionDecision(String(c.session_id));
+  await logEvent(c, "images_viewed", c.status, c.status, uid);
+  return extractImages(d);
+}
+
+/** Refresh stored review details for every check with a session (read-only from the provider). */
+export async function backfillReviewDetails(uid: string) {
+  await assertDecider(uid);
+  const { fetchSessionDecision } = await import("@/lib/kyc-verification.server");
+  const { buildReviewDetails } = await import("@/lib/kyc-review-model");
+  let n = 0;
+  for (const t of ["account_identity_checks", "kyc_verifications"]) {
+    const { data } = await db().from(t).select("id, session_id").not("session_id", "is", null).limit(500);
+    for (const r of (data ?? []) as any[]) {
+      const rd = buildReviewDetails(await fetchSessionDecision(String(r.session_id)));
+      if (rd) { await db().from(t).update({ review_details: rd }).eq("id", r.id); n++; }
+    }
+  }
+  return { refreshed: n };
 }
