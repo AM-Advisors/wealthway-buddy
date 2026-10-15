@@ -1,0 +1,3 @@
+ALTER TABLE public.person_kyc_requests DROP CONSTRAINT IF EXISTS person_kyc_requests_mode_check;
+ALTER TABLE public.person_kyc_requests ADD CONSTRAINT person_kyc_requests_mode_check CHECK (mode IN ('link','document','prior'));
+COMMENT ON TABLE public.person_kyc_requests IS 'Staff-started Didit checks (link or document-only) plus staff-recorded prior KYC (mode prior, informational only; never sets KYC/AML status). ID images are never stored. Server functions only.';
