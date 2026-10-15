@@ -296,6 +296,7 @@ export type Database = {
           id: string
           person_id: string | null
           provider: string
+          review_details: Json | null
           session_id: string | null
           session_url: string | null
           status: string
@@ -313,6 +314,7 @@ export type Database = {
           id?: string
           person_id?: string | null
           provider?: string
+          review_details?: Json | null
           session_id?: string | null
           session_url?: string | null
           status?: string
@@ -330,6 +332,7 @@ export type Database = {
           id?: string
           person_id?: string | null
           provider?: string
+          review_details?: Json | null
           session_id?: string | null
           session_url?: string | null
           status?: string
@@ -28757,6 +28760,7 @@ export type Database = {
           provider_warnings: Json
           reconciled_at: string | null
           result: Json
+          review_details: Json | null
           session_id: string | null
           session_url: string | null
           status: Database["public"]["Enums"]["check_status"]
@@ -28799,6 +28803,7 @@ export type Database = {
           provider_warnings?: Json
           reconciled_at?: string | null
           result?: Json
+          review_details?: Json | null
           session_id?: string | null
           session_url?: string | null
           status?: Database["public"]["Enums"]["check_status"]
@@ -28841,6 +28846,7 @@ export type Database = {
           provider_warnings?: Json
           reconciled_at?: string | null
           result?: Json
+          review_details?: Json | null
           session_id?: string | null
           session_url?: string | null
           status?: Database["public"]["Enums"]["check_status"]
