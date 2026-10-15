@@ -12,10 +12,12 @@ export async function recordClientInboxCopy(input: {
   html: string;
   text?: string | undefined;
   dedupeKey?: string | undefined;
-}) {
+  /** Reminders reach every signed-up person (investors too), not only client contacts. */
+  anyUser?: boolean;
+}): Promise<string | null> {
   try {
     const email = String(input.recipientEmail ?? "").trim().toLowerCase();
-    if (!email) return;
+    if (!email) return null;
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
@@ -24,7 +26,7 @@ export async function recordClientInboxCopy(input: {
       .select("id")
       .ilike("email", email)
       .maybeSingle();
-    if (!profile?.id) return;
+    if (!profile?.id) return null;
 
     const { data: membership } = await supabaseAdmin
       .from("client_users")
@@ -33,17 +35,17 @@ export async function recordClientInboxCopy(input: {
       .limit(1)
       .maybeSingle();
     // Only client contacts get a portal inbox.
-    if (!membership?.client_id) return;
+    if (!membership?.client_id && !input.anyUser) return null;
 
     const preview = (input.text ?? "")
       .replace(/\s+/g, " ")
       .trim()
       .slice(0, 240);
 
-    await supabaseAdmin.from("client_messages").upsert(
+    const { data: ins } = await supabaseAdmin.from("client_messages").upsert(
       {
         user_id: profile.id,
-        client_id: membership.client_id,
+        client_id: membership?.client_id ?? null,
         template: input.template,
         subject: input.subject,
         body_html: input.html,
@@ -52,8 +54,10 @@ export async function recordClientInboxCopy(input: {
         dedupe_key: input.dedupeKey ?? null,
       },
       { onConflict: "user_id,dedupe_key", ignoreDuplicates: true },
-    );
+    ).select("id").maybeSingle();
+    return (ins as any)?.id ?? null;
   } catch (err) {
     console.error("[client-inbox] copy failed", input.template, err);
+    return null;
   }
 }

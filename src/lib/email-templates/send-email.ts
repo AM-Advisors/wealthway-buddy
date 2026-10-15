@@ -13,7 +13,7 @@ const SITE_NAME = "Harmonious"
 const FROM_DOMAIN = "harmonious.co"
 
 export type SendTemplateEmailResult =
-  | { sent: true; messageId?: string | null }
+  | { sent: true; messageId?: string | null; inboxMessageId?: string | null }
   | { sent: false; reason: 'recipient_suppressed' }
 
 export interface SendTemplateEmailOptions {
@@ -23,6 +23,8 @@ export interface SendTemplateEmailOptions {
   replyTo?: string
   /** Optional CC recipient (e.g. operations@harmonious.co on client reminders). */
   cc?: string
+  /** Also copy into the portal inbox of investors (not only client contacts). */
+  inboxForAnyUser?: boolean
   auditTarget?: { kind: string; id: string; actorId: string; label?: string }
 }
 
@@ -107,19 +109,21 @@ export async function sendTemplateEmail(
 
   // Mirror the email into the recipient's portal inbox when they are a client
   // contact. Best-effort only - the email has already gone out.
+  let inboxMessageId: string | null = null
   try {
     const { recordClientInboxCopy } = await import('@/lib/client-inbox.server')
-    await recordClientInboxCopy({
+    inboxMessageId = await recordClientInboxCopy({
       recipientEmail: recipient,
       template: templateName,
       subject,
       html,
       text,
       dedupeKey: options.idempotencyKey,
+      anyUser: options.inboxForAnyUser,
     })
   } catch (error) {
     console.error('[send-email] inbox copy failed', templateName, error)
   }
 
-  return { sent: true, messageId }
+  return { sent: true, messageId, inboxMessageId }
 }
