@@ -10,7 +10,7 @@ const BREVO_GATEWAY_URL = 'https://connector-gateway.lovable.dev/brevo'
 const SITE_NAME = "Harmonious"
 // FROM_DOMAIN is the domain shown in the From: header. It must be a sender
 // domain verified in the Brevo account, or sends will be rejected.
-const FROM_DOMAIN = "onboarding.harmonious.co"
+const FROM_DOMAIN = "harmonious.co"
 
 export type SendTemplateEmailResult =
   | { sent: true; messageId?: string | null }

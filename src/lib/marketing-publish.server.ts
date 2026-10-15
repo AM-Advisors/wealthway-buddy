@@ -167,7 +167,7 @@ export async function sendMarketingEmail(to: string, subject: string, html: stri
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${lovable}`, "X-Connection-Api-Key": brevo },
     body: JSON.stringify({
-      sender: { name: "Harmonious", email: "marketing@onboarding.harmonious.co" },
+      sender: { name: "Harmonious", email: "marketing@harmonious.co" },
       to: [{ email: to }], ...(replyTo ? { replyTo: { email: replyTo } } : {}), subject, htmlContent: html, textContent: text, tags: ["marketing"], ...(attachments?.length ? { attachment: attachments } : {}),
       headers: { "List-Unsubscribe": `<${unsubscribeUrl}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click", "X-Idempotency-Key": key },
     }),
