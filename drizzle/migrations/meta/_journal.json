@@ -1779,6 +1779,13 @@
       "when": 1792103469871,
       "tag": "0253_kyc_review_details",
       "breakpoints": true
+    },
+    {
+      "idx": 254,
+      "version": "7",
+      "when": 1792103876077,
+      "tag": "0254_document_reminders",
+      "breakpoints": true
     }
   ]
 }
