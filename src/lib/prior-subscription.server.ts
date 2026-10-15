@@ -70,6 +70,7 @@ export async function launchFlow(userId: string, offeringId: string) {
     return {
       onboardingId: o.id, name: o.investment_profiles?.legal_name ?? o.investment_profiles?.display_label ?? `${p.legal_first_name ?? ""} ${p.legal_last_name ?? ""}`.trim(),
       email: p.email ?? null, commitmentCents: o.commitment_amount_cents ?? o.requested_amount_cents ?? null, progress, joined, invited: Boolean(inv), kyc,
+      invitedAt: inv?.created_at ?? null, inviteStatus: inv?.status ?? null, acceptedAt: inv?.accepted_at ?? null,
       prior: prior ? { id: prior.id, version: prior.version, commitmentCents: prior.commitment_cents, fundedCents: prior.funded_cents, signedOn: prior.signed_on,
         evidence: prior.evidence_item_ids, status: prior.decision?.decision ?? "awaiting", recordedByMe: prior.recorded_by === userId, note: prior.decision?.note ?? null } : null,
     };
