@@ -137,7 +137,7 @@ export async function statusByEmail(viewer: string, emails: string[]) {
     const at = i.attempts[0]?.at ?? i.createdAt;
     if (!prev || String(at) > String(prev.attempts[0]?.at ?? prev.createdAt)) latestByEmail.set(i.email, i);
   }
-  const out: Record<string, { userId: string; status: string; isTestDemo: boolean; scoped: number; invite?: { lastSent: string | null; outcome: any } }> = {};
+  const out: Record<string, { userId: string; status: string; isTestDemo: boolean; scoped: number; invite?: { lastSent: string | null; outcome: any } | undefined }> = {};
   for (const p of (profs ?? []) as any[]) {
     const email = String(p.email).toLowerCase();
     const mine = ((st ?? []) as any[]).filter((s) => s.user_id === p.user_id);
