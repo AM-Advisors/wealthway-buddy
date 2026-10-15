@@ -46032,8 +46032,12 @@ export type Database = {
           imported_by: string
           last_login_at: string | null
           last_name: string | null
+          linked_person_id: string | null
           matched_person_id: string | null
           phone: string | null
+          review_action: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
           signed_up_at: string | null
           site_id: string
           updated_at: string
@@ -46047,8 +46051,12 @@ export type Database = {
           imported_by: string
           last_login_at?: string | null
           last_name?: string | null
+          linked_person_id?: string | null
           matched_person_id?: string | null
           phone?: string | null
+          review_action?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           signed_up_at?: string | null
           site_id: string
           updated_at?: string
@@ -46062,8 +46070,12 @@ export type Database = {
           imported_by?: string
           last_login_at?: string | null
           last_name?: string | null
+          linked_person_id?: string | null
           matched_person_id?: string | null
           phone?: string | null
+          review_action?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           signed_up_at?: string | null
           site_id?: string
           updated_at?: string

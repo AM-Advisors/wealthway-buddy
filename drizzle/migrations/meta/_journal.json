@@ -1737,6 +1737,13 @@
       "when": 1792088922660,
       "tag": "0247_wix_member_imports",
       "breakpoints": true
+    },
+    {
+      "idx": 248,
+      "version": "7",
+      "when": 1792089192132,
+      "tag": "0248_wix_member_review",
+      "breakpoints": true
     }
   ]
 }
