@@ -294,7 +294,7 @@ function InviteMenu({ clientId, person, funds, onDone }: { clientId: string; per
   const [busy, setBusy] = useState(false);
   void clientId;
   const send = async () => {
-    if (!person.email) return toast.error("Add an email address first.");
+    if (!person.email) { toast.error("Add an email address first."); return; }
     setBusy(true);
     try {
       if (as === "contact") await contactInvite({ data: { id: person.id } });
