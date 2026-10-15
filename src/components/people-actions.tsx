@@ -75,6 +75,9 @@ export function PeopleActions({ email, userId, name, info, context }: {
           </> : <DropdownMenuItem onClick={() => setMode("restore")}>Restore access…</DropdownMenuItem>}
           {uid && <>
             <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={async () => { try { await resetPw({ data: { userId: uid } }); toast.success("Password reset link emailed."); } catch (e) { toast.error(e instanceof Error ? e.message : "Failed."); } }}>
+              Send password reset
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={async () => { try { await flag({ data: { kind: "user", id: uid, value: !info?.isTestDemo } }); await done(info?.isTestDemo ? "Unmarked as test/demo." : "Marked as test/demo."); } catch (e) { toast.error(e instanceof Error ? e.message : "Failed."); } }}>
               {info?.isTestDemo ? "Unmark test/demo" : "Mark as test/demo"}
             </DropdownMenuItem>
