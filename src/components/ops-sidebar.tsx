@@ -43,7 +43,6 @@ import { SidebarAccountFooter } from "@/components/sidebar-account-footer";
 import { getNavigation, operationsNavItemIsActive } from "@/lib/navigation";
 import { opsSearchIndex, searchOpsIndex } from "@/lib/ops-search";
 import { opsWorkAreas, type OpsCapability } from "@/lib/ops-capabilities";
-import { useServerFn } from "@tanstack/react-start";
 
 const ICONS: Record<string, typeof Home> = {
   home: Home,
