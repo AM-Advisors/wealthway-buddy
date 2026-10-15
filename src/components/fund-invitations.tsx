@@ -22,9 +22,9 @@ import {
   inviteToFund,
   listFundInvitations,
   removeFundAccess,
-  resendInvitation,
   revokeInvitation,
 } from "@/lib/invitations.functions";
+import { ResendInviteButton } from "@/components/invite-resend";
 
 type Role = "investor" | "fund_manager";
 
@@ -40,7 +40,6 @@ export function FundInvitations({ title = "Invitations" }: { title?: string }) {
   const load = useServerFn(listFundInvitations);
   const invite = useServerFn(inviteToFund);
   const inviteMany = useServerFn(inviteManyToFunds);
-  const resend = useServerFn(resendInvitation);
   const revoke = useServerFn(revokeInvitation);
   const remove = useServerFn(removeFundAccess);
   const queryClient = useQueryClient();
