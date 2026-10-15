@@ -430,7 +430,18 @@ export async function personActivity(viewer: string, subjectId: string, options:
     kyc: p.kyc_status, aml: p.aml_status, state: p.onboarding_state, gaps: setupGaps(p, isStaff),
   });
   const people = [...((linkedP.data ?? []) as any[]).map((p) => mapP(p, true)), ...((emailP.data ?? []) as any[]).map((p) => mapP(p, false))];
+  // Identity check results (document, liveness, face match, AML) - display only, last-four only.
+  const linkedIds = people.filter((p) => p.linked).map((p) => p.id);
+  const [kv, ac] = await Promise.all([
+    linkedIds.length ? db.from("kyc_verifications").select("id, status, document_type, document_issuing_country, document_number_last4, document_expiration_date, liveness_status, face_match_status, face_match_score, provider_decision, harmonious_decision, verification_completed_on, created_at").in("person_id", linkedIds).order("created_at", { ascending: false }).limit(10) : { data: [] },
+    db.from("account_identity_checks").select("id, status, decision_summary, decided_at, created_at").eq("user_id", subjectId).order("created_at", { ascending: false }).limit(10),
+  ]);
+  const identityChecks = [
+    ...((kv.data ?? []) as any[]).map((k) => ({ id: k.id, kind: "Investor verification", status: k.harmonious_decision || k.provider_decision || k.status, when: k.verification_completed_on || k.created_at, document: [k.document_type, k.document_issuing_country, k.document_number_last4 ? `••••${k.document_number_last4}` : null].filter(Boolean).join(" · ") || null, expires: k.document_expiration_date, liveness: k.liveness_status, faceMatch: k.face_match_status, faceScore: k.face_match_score, aml: null as string | null })),
+    ...((ac.data ?? []) as any[]).map((c) => { const s = c.decision_summary ?? {}; return { id: c.id, kind: "Account verification", status: c.status, when: c.decided_at || c.created_at, document: [s.document?.type, s.document?.country, s.document?.last4 ? `••••${s.document.last4}` : null].filter(Boolean).join(" · ") || null, expires: s.document?.expires ?? null, liveness: s.liveness ?? null, faceMatch: s.faceMatch ?? null, faceScore: null, aml: s.aml?.status ?? null }; }),
+  ].sort((a, b) => String(b.when).localeCompare(String(a.when)));
   return {
+    identityChecks,
     name: prof?.legal_name || "", email: u?.email ?? prof?.email ?? "",
     roles: ((roles ?? []) as any[]).map((r) => r.role as string),
     createdAt: u?.created_at ?? null, lastSignIn: u?.last_sign_in_at ?? null, confirmedAt: u?.email_confirmed_at ?? null,
