@@ -13,7 +13,6 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/lib/require-auth";
 import { OPS_STAFF_ROLES } from "@/lib/ops-capabilities";
 
-const SITE = "https://app.harmonious.co";
 const DIDIT = "https://verification.didit.me/v2";
 
 async function db() {
