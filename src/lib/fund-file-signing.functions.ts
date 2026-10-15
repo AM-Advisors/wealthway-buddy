@@ -138,9 +138,12 @@ export const signDocumentFn = createServerFn({ method: "POST" }).middleware([req
     const { logFundAudit } = await import("@/lib/fund-audit.server");
     const { data: f } = await d.from("fund_files").select("title").eq("id", s.file_id).maybeSingle();
     await logFundAudit(context.userId, { offeringId: s.offering_id, eventType: "document_signed_by", summary: `"${f?.title}" signed by ${data.signedName} (${s.signer_role === "investor" ? "investor" : "fund manager"})`, values: { signedAt: now } });
+    const notify = (async (title: string, kind: string) => (await import("@/lib/ops-slack-notify.server")).notifySubmission({ kind, title, offeringId: s.offering_id, submittedBy: context.userId, ref: s.id, path: `/ops/fund/${s.offering_id}?tab=documents`, completed: true }));
+    await notify(`"${f?.title ?? "Document"}" signed by ${data.signedName} (${s.signer_role === "investor" ? "investor" : "fund manager"})`, "document_signed").catch(() => null);
     if (next) { await emailSigner(d, next); return { done: false }; }
     await d.from("fund_files").update({ status: "signed" }).eq("id", s.file_id);
     await logFundAudit(context.userId, { offeringId: s.offering_id, eventType: "document_fully_signed", summary: `"${f?.title}" fully signed`, values: { signedAt: now } });
+    await notify(`"${f?.title ?? "Document"}" is fully signed`, "document_fully_signed").catch(() => null);
     try {
       const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
       await sendTemplateEmail("ops-review-request", TEAM_EMAIL, { idempotencyKey: `fund-file-signed:${s.file_id}:${s.id}`, templateData: { itemLabel: "Signed document", fundName: "", detail: `"${f?.title}" has been signed by the investor and the fund manager.`, raisedBy: data.signedName, portalUrl: `${SITE}/ops/fund/${s.offering_id}?tab=documents` } });

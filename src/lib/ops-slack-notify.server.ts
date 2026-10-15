@@ -21,7 +21,19 @@ export type SubmissionNotice = {
   path?: string | null;
   /** Stable id of the thing submitted, for repeat suppression. */
   ref?: string | null;
+  /** Completion alert: tags both the Operations owner and the Account Manager. */
+  completed?: boolean;
 };
+
+/** Operations owner and Account Manager (distinct people). Pure, for tests. */
+export function pickOwners(team: { role: string; userId: string | null }[]): { userId: string; role: string }[] {
+  const out: { userId: string; role: string }[] = [];
+  for (const role of ["operations", "account_manager"]) {
+    const m = team.find((t) => t.role === role && t.userId && !out.some((o) => o.userId === t.userId));
+    if (m) out.push({ userId: m.userId!, role });
+  }
+  return out;
+}
 
 /** Operations owner first, then Account Manager. Pure, for tests. */
 export function pickOwner(team: { role: string; userId: string | null }[]): { userId: string; role: string } | null {
@@ -38,14 +50,15 @@ export function dedupeKey(n: Pick<SubmissionNotice, "kind" | "ref" | "offeringId
 }
 
 /** Only the allow-listed fields ever reach Slack. Pure, for tests. */
-export function buildMessage(n: { title: string; place: string; submitter: string | null; mention: string | null; url: string; when: string }) {
+export function buildMessage(n: { title: string; place: string; submitter: string | null; mention: string | null; url: string; when: string; completed?: boolean }) {
   const tag = n.mention ?? "_No Operations owner assigned._";
-  const text = `${tag} New submission - ${n.place}`;
+  const head = n.completed ? "Completed" : "New submission";
+  const text = `${tag} ${head} - ${n.place}`;
   return {
     text,
     blocks: [
-      { type: "section", text: { type: "mrkdwn", text: `${tag} *New submission - ${n.place}*\n${n.title}` } },
-      { type: "context", elements: [{ type: "mrkdwn", text: `Submitted by ${n.submitter ?? "someone"} · ${n.when}` }] },
+      { type: "section", text: { type: "mrkdwn", text: `${tag} *${head} - ${n.place}*\n${n.title}` } },
+      { type: "context", elements: [{ type: "mrkdwn", text: `${n.completed ? "Completed" : "Submitted"} by ${n.submitter ?? "someone"} · ${n.when}` }] },
       { type: "actions", elements: [{ type: "button", text: { type: "plain_text", text: "Open in Harmonious" }, url: n.url }] },
     ],
   };
@@ -96,20 +109,23 @@ export async function notifySubmission(n: SubmissionNotice): Promise<void> {
       place = c?.name ?? place;
     }
     // Never tag the submitter as their own reviewer.
-    const owner = pickOwner(members.filter((m) => m.userId !== n.submittedBy));
-    const sid = owner ? await slackIdFor(db, owner.userId) : null;
-    let mention: string | null = null;
-    if (owner) {
-      if (sid) mention = `<@${sid}>`;
+    const others = members.filter((m) => m.userId !== n.submittedBy);
+    const owners = n.completed ? pickOwners(others) : (() => { const o = pickOwner(others); return o ? [o] : []; })();
+    const owner = owners[0] ?? null;
+    const tags: string[] = [];
+    for (const o of owners) {
+      const sid = await slackIdFor(db, o.userId);
+      if (sid) tags.push(`<@${sid}>`);
       else {
-        const { data: op } = await db.from("profiles").select("legal_name, email").eq("user_id", owner.userId).maybeSingle();
-        mention = `*${op?.legal_name || op?.email || "Operations owner"}*`;
+        const { data: op } = await db.from("profiles").select("legal_name, email").eq("user_id", o.userId).maybeSingle();
+        tags.push(`*${op?.legal_name || op?.email || (o.role === "operations" ? "Operations owner" : "Account Manager")}*`);
       }
     }
+    const mention: string | null = tags.length ? tags.join(" ") : null;
     const { data: sub } = n.submittedBy ? await db.from("profiles").select("legal_name, email").eq("user_id", n.submittedBy).maybeSingle() : { data: null };
     const when = new Date().toLocaleString("en-US", { timeZone: "America/Chicago", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
     const url = `${SITE}${n.path ?? (n.offeringId ? `/ops/fund/${n.offeringId}` : "/ops/queue")}`;
-    const msg = buildMessage({ title: n.title, place, submitter: sub?.legal_name || sub?.email || null, mention, url, when });
+    const msg = buildMessage({ title: n.title, place, submitter: sub?.legal_name || sub?.email || null, mention, url, when, completed: n.completed });
     const r = await slack("chat.postMessage", { channel: OPS_SLACK_CHANNEL, unfurl_links: false, ...msg });
     await db.from("ops_slack_notifications").update({ status: r?.ok ? "sent" : "failed", error: r?.ok ? null : String(r?.error ?? "unknown"), slack_ts: r?.ts ?? null, tagged_user_id: owner?.userId ?? null, client_id: clientId }).eq("dedupe_key", key);
   } catch (e) {
