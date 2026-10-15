@@ -83,6 +83,7 @@ import { Route as AuthRegisterRouteImport } from './routes/auth.register'
 import { Route as CapClaimTokenRouteImport } from './routes/cap-claim.$token'
 import { Route as ClassroomImgSplatRouteImport } from './routes/classroom-img.$'
 import { Route as FundSlugRouteImport } from './routes/fund.$slug'
+import { Route as GuidesFundManagerFirstLoginRouteImport } from './routes/guides.fund-manager-first-login'
 import { Route as InvestSlugRouteImport } from './routes/invest.$slug'
 import { Route as InvestorIndexRouteImport } from './routes/investor.index'
 import { Route as InvestorTaxRouteImport } from './routes/investor.tax'
@@ -826,6 +827,12 @@ const FundSlugRoute = FundSlugRouteImport.update({
   path: '/fund/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GuidesFundManagerFirstLoginRoute =
+  GuidesFundManagerFirstLoginRouteImport.update({
+    id: '/guides/fund-manager-first-login',
+    path: '/guides/fund-manager-first-login',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const InvestSlugRoute = InvestSlugRouteImport.update({
   id: '/invest/$slug',
   path: '/invest/$slug',
@@ -3007,6 +3014,7 @@ export interface FileRoutesByFullPath {
   '/cap-claim/$token': typeof CapClaimTokenRoute
   '/classroom-img/$': typeof ClassroomImgSplatRoute
   '/fund/$slug': typeof FundSlugRoute
+  '/guides/fund-manager-first-login': typeof GuidesFundManagerFirstLoginRoute
   '/invest/$slug': typeof InvestSlugRoute
   '/investor/tax': typeof InvestorTaxRoute
   '/join/$token': typeof JoinTokenRoute
@@ -3439,6 +3447,7 @@ export interface FileRoutesByTo {
   '/cap-claim/$token': typeof CapClaimTokenRoute
   '/classroom-img/$': typeof ClassroomImgSplatRoute
   '/fund/$slug': typeof FundSlugRoute
+  '/guides/fund-manager-first-login': typeof GuidesFundManagerFirstLoginRoute
   '/invest/$slug': typeof InvestSlugRoute
   '/investor/tax': typeof InvestorTaxRoute
   '/join/$token': typeof JoinTokenRoute
@@ -3873,6 +3882,7 @@ export interface FileRoutesById {
   '/cap-claim/$token': typeof CapClaimTokenRoute
   '/classroom-img/$': typeof ClassroomImgSplatRoute
   '/fund/$slug': typeof FundSlugRoute
+  '/guides/fund-manager-first-login': typeof GuidesFundManagerFirstLoginRoute
   '/invest/$slug': typeof InvestSlugRoute
   '/investor/tax': typeof InvestorTaxRoute
   '/join/$token': typeof JoinTokenRoute
@@ -4311,6 +4321,7 @@ export interface FileRouteTypes {
     | '/cap-claim/$token'
     | '/classroom-img/$'
     | '/fund/$slug'
+    | '/guides/fund-manager-first-login'
     | '/invest/$slug'
     | '/investor/tax'
     | '/join/$token'
@@ -4743,6 +4754,7 @@ export interface FileRouteTypes {
     | '/cap-claim/$token'
     | '/classroom-img/$'
     | '/fund/$slug'
+    | '/guides/fund-manager-first-login'
     | '/invest/$slug'
     | '/investor/tax'
     | '/join/$token'
@@ -5176,6 +5188,7 @@ export interface FileRouteTypes {
     | '/cap-claim/$token'
     | '/classroom-img/$'
     | '/fund/$slug'
+    | '/guides/fund-manager-first-login'
     | '/invest/$slug'
     | '/investor/tax'
     | '/join/$token'
@@ -5570,6 +5583,7 @@ export interface RootRouteChildren {
   CapClaimTokenRoute: typeof CapClaimTokenRoute
   ClassroomImgSplatRoute: typeof ClassroomImgSplatRoute
   FundSlugRoute: typeof FundSlugRoute
+  GuidesFundManagerFirstLoginRoute: typeof GuidesFundManagerFirstLoginRoute
   InvestSlugRoute: typeof InvestSlugRoute
   JoinTokenRoute: typeof JoinTokenRoute
   OnboardRefRoute: typeof OnboardRefRoute
@@ -6130,6 +6144,13 @@ declare module '@tanstack/react-router' {
       path: '/fund/$slug'
       fullPath: '/fund/$slug'
       preLoaderRoute: typeof FundSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/guides/fund-manager-first-login': {
+      id: '/guides/fund-manager-first-login'
+      path: '/guides/fund-manager-first-login'
+      fullPath: '/guides/fund-manager-first-login'
+      preLoaderRoute: typeof GuidesFundManagerFirstLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/invest/$slug': {
@@ -9655,6 +9676,7 @@ const rootRouteChildren: RootRouteChildren = {
   CapClaimTokenRoute: CapClaimTokenRoute,
   ClassroomImgSplatRoute: ClassroomImgSplatRoute,
   FundSlugRoute: FundSlugRoute,
+  GuidesFundManagerFirstLoginRoute: GuidesFundManagerFirstLoginRoute,
   InvestSlugRoute: InvestSlugRoute,
   JoinTokenRoute: JoinTokenRoute,
   OnboardRefRoute: OnboardRefRoute,
