@@ -179,9 +179,9 @@ function QuestionnaireCard({ q }: { q: { items: { key: string; label: string; an
         <CardTitle className="text-base">Investor questionnaire</CardTitle>
         <p className="text-xs text-muted-foreground">
           {answered} of {q.items.length} answered
-          {q.source ? ` · ${q.source === "didit" ? "Answered in Didit" : "Answered in Harmonious"}` : ""}
+          {q.source ? ` · ${q.source === "didit" ? "Answered during identity verification" : "Answered in Harmonious"}` : ""}
           {q.submittedAt ? ` · ${new Date(q.submittedAt).toLocaleDateString()}` : ""}
-          {q.diditSession ? ` · Didit session ${q.diditSession}` : " · No Didit session linked"}
+          {q.diditSession ? ` · Verification ref ${q.diditSession}` : " · No verification linked"}
         </p>
       </CardHeader>
       <CardContent>

@@ -570,7 +570,7 @@ async function applyDecision(input: ApplyInput): Promise<SyncResult> {
       to_state: person?.onboarding_state ?? "kyc_pending",
       actor_kind: input.trigger === "manual" ? "staff" : "provider",
       actor_user_id: input.actorUserId,
-      reason: `Didit ${normalized.providerDecision ?? "result"} synchronised (${input.source})`,
+      reason: `Identity check ${normalized.providerDecision ?? "result"} synchronised (${input.source})`,
       detail: {
         provider_decision: normalized.providerDecision,
         harmonious_kyc: decision.kyc,

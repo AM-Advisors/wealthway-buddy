@@ -25,7 +25,7 @@ export const ADDRESS_PROVIDERS: AddressProviderConfig = {
 export const PROVIDER_LABELS: Record<string, string> = {
   google: "Google Address Validation",
   google_places: "Google Places",
-  didit: "Didit",
+  didit: "Identity check",
   none: "Not configured",
 };
 

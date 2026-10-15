@@ -31,7 +31,7 @@ export const DIMENSIONS = [
   ["manager", "Manager relationship"],
   ["k1", "Box K-1 location"],
   ["signing", "Signing templates"],
-  ["didit", "Didit verification flow"],
+  ["didit", "Identity verification flow"],
 ] as const;
 export type Dimension = (typeof DIMENSIONS)[number][0];
 export type DimensionState = { status: "verified" | "missing" | "blocked"; note: string };
@@ -94,7 +94,7 @@ export function buildRow(e: InventoryEntry, latest: Decision | null, facts: Fund
     manager: f ? v(f.managerCount > 0, `${f.managerCount} fund manager(s) linked`, "No fund manager linked") : { status: "missing", note: "No manager relationship" },
     k1: { status: "blocked", note: "Dedicated read-only Box connection not set up" },
     signing: f ? v(f.signingTemplates > 0, `${f.signingTemplates} signing template(s)`, "No signing template mapped") : { status: "missing", note: "No signing template mapped" },
-    didit: { status: "blocked", note: "Didit flow mapping not yet approved (Step E)" },
+    didit: { status: "blocked", note: "Identity verification flow mapping not yet approved (Step E)" },
   };
   const verified = Object.values(dims).filter((d) => d.status === "verified").length;
   const score = Math.round((verified / DIMENSIONS.length) * 100);

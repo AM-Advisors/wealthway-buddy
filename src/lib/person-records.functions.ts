@@ -103,7 +103,7 @@ export const refreshKycLinkFn = createServerFn({ method: "POST" }).middleware([r
     if (!r || r.mode !== "link" || !r.session_id) throw new Error("Nothing to refresh.");
     const { fetchDiditSessionDecision, mapDiditStatus, amlStatusFromDecision } = await import("@/lib/didit.server");
     const dec: any = await fetchDiditSessionDecision(r.session_id);
-    if (!dec) throw new Error("Didit has no result yet.");
+    if (!dec) throw new Error("The identity check has no result yet.");
     const kyc = mapDiditStatus(dec.status)?.kyc ?? "pending";
     const aml = amlStatusFromDecision(dec)?.status ?? null;
     const now = new Date().toISOString();
@@ -136,7 +136,7 @@ export const runDocumentCheckFn = createServerFn({ method: "POST" }).middleware(
     if (data.back) form.append("back_image", blob(data.back), data.back.fileName);
     const idRes = await fetch(`${DIDIT}/id-verification/`, { method: "POST", headers: { "x-api-key": key }, body: form });
     const idText = await idRes.text();
-    if (!idRes.ok) { console.error("[person-kyc] id check failed", idRes.status, idText.slice(0, 300)); throw new Error(`Didit couldn't check the document [${idRes.status}]: ${idText.slice(0, 200)}`); }
+    if (!idRes.ok) { console.error("[person-kyc] id check failed", idRes.status, idText.slice(0, 300)); throw new Error(`The identity check couldn't review the document [${idRes.status}]: ${idText.slice(0, 200)}`); }
     const idj = JSON.parse(idText);
     const idv = idj.id_verification ?? idj;
     const idStatus = String(idv.status ?? "Unknown");

@@ -78,7 +78,7 @@ export async function autoApplyDiditForOnboarding(onboardingId: string, actorUse
   await db().from("person_onboarding_events").insert({
     person_id: person.id, from_state: person.onboarding_state ?? null, to_state: person.onboarding_state ?? "kyc_pending",
     actor_kind: "provider", actor_user_id: actorUserId,
-    reason: "Didit approved session auto-applied",
+    reason: "Approved identity check applied automatically",
     detail: { fields: changes.map((c) => c.field), aml: x.amlStatus },
   });
   try {
