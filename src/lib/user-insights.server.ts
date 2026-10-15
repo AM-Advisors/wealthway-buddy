@@ -73,7 +73,12 @@ export async function personInsights(viewer: string, email: string) {
   const resetAttempts = (resets ?? []).map(parseEmailAttempt).filter(Boolean);
   const provider = invitations.some((i: any) => i.attempts.some((a: any) => a.messageId)) || resetAttempts.some((a: any) => a.messageId) ? await brevoEvents({ email, limit: "1000" }) : { events: [], error: null };
   const providerEvents = provider.events, providerError = provider.error;
-  const { data: persons, error: personError } = await db.from("persons").select(PERSON_FIELDS).or(`email.eq.${email}${accountIds.length ? `,user_id.in.(${accountIds.join(",")})` : ""}`);
+  const [byEmail, byAccount] = await Promise.all([
+    db.from("persons").select(PERSON_FIELDS).eq("email", email),
+    accountIds.length ? db.from("persons").select(PERSON_FIELDS).in("user_id", accountIds) : Promise.resolve({ data: [], error: null }),
+  ]);
+  const persons = [...new Map([...(byEmail.data ?? []), ...(byAccount.data ?? [])].map((p: any) => [p.id, p])).values()];
+  const personError = byEmail.error ?? byAccount.error;
   if (personError) throw new Error("Could not load setup details.");
   const ids = (persons ?? []).map((p: any) => p.id);
   const { data: onboarding, error: onboardingError } = ids.length ? await db.from("investor_onboardings").select("id,offering_id,stage,funding_status,questionnaire_submitted_at").in("person_id", ids).is("removed_at", null) : { data: [], error: null };
