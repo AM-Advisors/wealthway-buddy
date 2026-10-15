@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AccessBadge, PeopleActions } from "@/components/people-actions";
 import { cancelInvitation, getPeopleDirectory, resendInvitation, setTestDemoFlag } from "@/lib/user-access.functions";
+import { DeliveryBadge, insightTime } from "@/components/user-insights";
 
 type Tab = "all" | "invited" | "revoked" | "archived" | "test";
 const TABS: { id: Tab; label: string }[] = [
@@ -24,16 +25,18 @@ export function PeopleDirectory({ initial = "all" }: { initial?: Tab }) {
   const [tab, setTab] = useState<Tab>(initial);
   const [search, setSearch] = useState("");
   const [type, setType] = useState("all");
+  const [attention, setAttention] = useState("all");
+  const [busy, setBusy] = useState(false);
   const s = search.toLowerCase();
 
   const people = useMemo(() => (q.data?.people ?? []).filter((p: any) =>
-    `${p.name} ${p.email}`.toLowerCase().includes(s) && (type === "all" || p.types.includes(type)) &&
-    (tab === "test" ? p.isTestDemo : tab === "archived" ? p.status === "archived" : tab === "revoked" ? (p.status === "revoked" || p.scopedRevokes.length > 0) : tab === "all" ? p.status === "active" && !p.isTestDemo : false)), [q.data, s, type, tab]);
+    `${p.name} ${p.email}`.toLowerCase().includes(s) && (type === "all" || p.types.includes(type)) && (attention === "all" || attention === "never" && !p.lastSignIn || attention === "setup" && p.gaps?.length > 0 || attention === "email" && ["Failed", "Bounced", "Blocked"].includes(p.latestInvite?.outcome.status)) &&
+    (tab === "test" ? p.isTestDemo : tab === "archived" ? p.status === "archived" : tab === "revoked" ? (p.status === "revoked" || p.scopedRevokes.length > 0) : tab === "all" ? p.status === "active" && !p.isTestDemo : false)), [q.data, s, type, tab, attention]);
   const invites = useMemo(() => (q.data?.invites ?? []).filter((i: any) =>
-    `${i.name ?? ""} ${i.email}`.toLowerCase().includes(s) && (type === "all" || i.type === type) && (tab === "invited" ? !i.isTestDemo : tab === "test" ? i.isTestDemo : false)), [q.data, s, type, tab]);
+    `${i.name ?? ""} ${i.email}`.toLowerCase().includes(s) && (type === "all" || i.type === type) && (attention === "all" || attention === "expired" && i.expiresAt && Date.parse(i.expiresAt) < Date.now() || attention === "email" && ["Failed", "Bounced", "Blocked"].includes(i.outcome.status)) && (tab === "invited" ? !i.isTestDemo : tab === "test" ? i.isTestDemo : false)), [q.data, s, type, tab, attention]);
   const testClients = tab === "test" ? (q.data?.clients ?? []).filter((c: any) => c.is_test_demo) : [];
 
-  const act = async (fn: () => Promise<any>, msg: string) => { try { await fn(); toast.success(msg); await qc.invalidateQueries(); } catch (e) { toast.error(e instanceof Error ? e.message : "Failed."); } };
+  const act = async (fn: () => Promise<any>, msg: string) => { setBusy(true); try { await fn(); toast.success(msg); } catch (e) { toast.error(e instanceof Error ? e.message : "Failed."); } finally { await qc.invalidateQueries(); setBusy(false); } };
 
   return (
     <main className="mx-auto max-w-6xl space-y-6 px-4 py-10">
@@ -41,6 +44,7 @@ export function PeopleDirectory({ initial = "all" }: { initial?: Tab }) {
         <h1 className="text-3xl">{tab === "test" ? "Test & Demo users" : "All users"}</h1>
         <p className="mt-2 text-sm text-muted-foreground">Everyone with an account or an open invitation. Revoke, archive or restore access; mark test and demo records so they're left out of totals.</p>
       </header>
+      {q.data && <div className="flex flex-wrap gap-3 border-y py-3 text-sm"><span>Pending invites: {q.data.invites.filter((i: any) => !i.isTestDemo).length}</span><span>Expired: {q.data.invites.filter((i: any) => !i.isTestDemo && i.expiresAt && Date.parse(i.expiresAt) < Date.now()).length}</span><span>Never signed in: {q.data.people.filter((p: any) => !p.isTestDemo && !p.lastSignIn).length}</span><span>Incomplete setup: {q.data.people.filter((p: any) => !p.isTestDemo && p.gaps.length).length}</span><span>Email failures: {q.data.invites.filter((i: any) => !i.isTestDemo && ["Failed", "Bounced", "Blocked"].includes(i.outcome.status)).length}</span></div>}
       <div className="flex flex-wrap gap-1">
         {TABS.map((t) => <Button key={t.id} size="sm" variant={tab === t.id ? "default" : "outline"} onClick={() => setTab(t.id)}>{t.label}</Button>)}
       </div>
@@ -49,9 +53,11 @@ export function PeopleDirectory({ initial = "all" }: { initial?: Tab }) {
         <select aria-label="Filter by type" className="rounded border bg-background px-2 text-sm" value={type} onChange={(e) => setType(e.target.value)}>
           <option value="all">All types</option>{TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
         </select>
+        <select aria-label="Filter by attention needed" className="rounded border bg-background px-2 text-sm" value={attention} onChange={e => { setAttention(e.target.value); if (e.target.value === "expired") setTab("invited"); }}><option value="all">All statuses</option><option value="never">Never signed in</option><option value="setup">Incomplete setup</option><option value="email">Email problems</option><option value="expired">Expired invitations</option></select>
       </div>
       {q.isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
       {q.error && <p className="text-sm text-destructive">{(q.error as Error).message}</p>}
+      {q.data?.providerError && <p className="text-sm text-muted-foreground">{q.data.providerError} <Button variant="outline" size="sm" onClick={() => q.refetch()}>Refresh email status</Button></p>}
 
       {tab !== "invited" && q.data && (
         <div className="overflow-x-auto rounded-lg border">
@@ -62,7 +68,7 @@ export function PeopleDirectory({ initial = "all" }: { initial?: Tab }) {
                 <tr key={p.id}>
                   <td className="p-3"><Link to="/ops/people/$userId" params={{ userId: p.id }} className="font-medium text-primary hover:underline">{p.name || p.email}</Link><div className="text-xs text-muted-foreground">{p.email}{p.isSelf ? " · you" : ""}</div></td>
                   <td className="p-3"><div className="flex flex-wrap gap-1">{p.types.map((t: string) => <Badge key={t} variant="outline">{t}</Badge>)}</div></td>
-                  <td className="p-3">{p.status === "active" && !p.scopedRevokes.length && !p.isTestDemo ? "Active" : <AccessBadge info={{ userId: p.id, status: p.status, isTestDemo: p.isTestDemo, scoped: p.scopedRevokes.length }} />}</td>
+                  <td className="space-y-2 p-3">{p.status === "active" && !p.scopedRevokes.length && !p.isTestDemo ? "Active" : <AccessBadge info={{ userId: p.id, status: p.status, isTestDemo: p.isTestDemo, scoped: p.scopedRevokes.length }} />}<div><DeliveryBadge outcome={p.latestInvite?.outcome} /></div><p className="text-xs text-muted-foreground">Invite: {insightTime(p.latestInvite?.lastSent)}</p>{p.gaps?.length > 0 && <p className="text-xs text-muted-foreground">Missing: {p.gaps.join(", ")}</p>}</td>
                   <td className="whitespace-nowrap p-3">{when(p.lastSignIn)}</td>
                   <td className="p-3 text-right">{!p.isSelf && q.data?.canManage && <PeopleActions userId={p.id} email={p.email} name={p.name} info={{ userId: p.id, status: p.status, isTestDemo: p.isTestDemo, scoped: p.scopedRevokes.length }} />}</td>
                 </tr>
@@ -82,15 +88,15 @@ export function PeopleDirectory({ initial = "all" }: { initial?: Tab }) {
               <tbody className="divide-y">
                 {invites.map((i: any) => (
                   <tr key={i.table + i.id}>
-                    <td className="p-3"><div className="font-medium">{i.name || i.email}</div><div className="text-xs text-muted-foreground">{i.email}</div></td>
+                    <td className="space-y-2 p-3"><Link to="/ops/people/invitations/$invitationId" params={{ invitationId: i.id }} search={{ source: i.table }} className="font-medium text-primary hover:underline">{i.name || i.email}</Link><div className="text-xs text-muted-foreground">{i.email}</div><DeliveryBadge outcome={i.outcome} /><div className="text-xs text-muted-foreground">Expires: {insightTime(i.expiresAt)}</div></td>
                     <td className="p-3"><Badge variant="outline">{i.type}</Badge></td>
                     <td className="p-3">{i.invitedBy || "—"}</td>
-                    <td className="whitespace-nowrap p-3">{when(i.sentAt)}</td>
-                    <td className="whitespace-nowrap p-3">{when(i.lastSent)}</td>
+                    <td className="whitespace-nowrap p-3">{insightTime(i.sentAt)}</td>
+                    <td className="whitespace-nowrap p-3">{insightTime(i.lastSent)}<div className="text-xs text-muted-foreground">{i.lastSender ?? ""}</div></td>
                     <td className="space-x-1 whitespace-nowrap p-3 text-right">{q.data?.canManage && <>
-                       <Button size="sm" variant="outline" onClick={() => act(() => resend({ data: { table: i.table, id: i.id } }), "Invitation resent with a fresh link.")}>Resend</Button>
+                       <Button size="sm" variant="outline" disabled={busy} onClick={() => act(() => resend({ data: { table: i.table, id: i.id } }), "Invitation resent with a fresh link.")}>{busy ? "Sending…" : "Resend"}</Button>
                        <Button size="sm" variant="ghost" onClick={() => act(() => flag({ data: { kind: i.table, id: i.id, value: !i.isTestDemo } }), i.isTestDemo ? "Unmarked." : "Marked as test/demo.")}>{i.isTestDemo ? "Unmark test" : "Mark test"}</Button>
-                      <Button size="sm" variant="outline" onClick={() => { const r = window.prompt("Reason for cancelling this invitation"); if (r && r.trim().length >= 3) void act(() => cancel({ data: { table: i.table, id: i.id, reason: r } }), "Invitation cancelled."); }}>Cancel invite</Button></>}
+                      {i.status === "pending" && <Button size="sm" variant="outline" onClick={() => { const r = window.prompt("Reason for cancelling this invitation"); if (r && r.trim().length >= 3) void act(() => cancel({ data: { table: i.table, id: i.id, reason: r } }), "Invitation cancelled."); }}>Cancel invite</Button>}</>}
                     </td>
                   </tr>
                 ))}

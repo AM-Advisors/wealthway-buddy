@@ -356,6 +356,7 @@ export const inviteClientContact = createServerFn({ method: "POST" })
       canApprove: data.canApprove,
       note: data.note || "",
       invitedByName: who.email || "The Harmonious team",
+      actorId: who.userId,
     });
 
     await audit(context, who, {
@@ -380,6 +381,7 @@ async function sendClientWelcome(input: {
   canApprove: boolean;
   note: string;
   invitedByName: string;
+  actorId: string;
   resend?: boolean;
 }): Promise<{ status: "sent" | "suppressed" | "failed"; message: string }> {
   let result: { status: "sent" | "suppressed" | "failed"; message: string };
@@ -396,6 +398,7 @@ async function sendClientWelcome(input: {
     const roleEntry = CLIENT_CONTACT_ROLES.find((r) => r.value === input.role);
 
     const sent = await sendTemplateEmail("client-invitation", input.email, {
+      auditTarget: { kind: "client_invitations", id: input.invitationId, actorId: input.actorId },
       idempotencyKey: input.resend
         ? `client-invite-${input.invitationId}-${Date.now()}`
         : `client-invite-${input.invitationId}`,
@@ -428,7 +431,7 @@ async function sendClientWelcome(input: {
   await input.supabaseAdmin
     .from("client_invitations")
     .update({
-      invite_sent_at: result.status === "sent" ? new Date().toISOString() : null,
+      ...(result.status === "sent" ? { invite_sent_at: new Date().toISOString() } : {}),
       invite_status: result.status,
       invite_note: result.status === "sent" ? null : result.message,
     })
@@ -464,6 +467,7 @@ export const resendClientInvitation = createServerFn({ method: "POST" })
       canApprove: (row as any).can_approve === true,
       note: String((row as any).note ?? ""),
       invitedByName: who.email || "The Harmonious team",
+      actorId: who.userId,
       resend: true,
     });
 

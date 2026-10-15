@@ -109,7 +109,10 @@ export async function directory(viewer: string) {
   ];
   const { data: clients } = await db.from("clients").select("id, name, status, is_test_demo").order("name");
   const canManage = (await rolesOf(db, viewer)).some((x) => ACCESS_MANAGERS.includes(x));
-  return {canManage,  people, invites, clients: clients ?? [] };
+  const { directoryInsights } = await import("@/lib/user-insights.server");
+  const insights = await directoryInsights(db, people);
+  const pending = insights.invitations.filter((i: any) => i.table !== "client_contacts" && (i.status === "pending" || i.status === "accepted" && insights.people.some((p: any) => String(p.email).toLowerCase() === i.email && !p.lastSignIn)));
+  return { canManage, providerError: insights.providerError, people: insights.people, invites: pending.map((i: any) => ({ ...i, type: i.table === "staff_invitations" ? "Employee" : i.table === "client_invitations" ? "Client contact" : String(i.role).includes("investor") ? "Investor" : "Fund Manager", sentAt: i.firstSent, lastSent: i.lastSent })), clients: clients ?? [] };
 }
 
 /** Quick status lookup for list pages (by emails). */
@@ -214,7 +217,7 @@ export async function cancelInvite(viewer: string, table: (typeof INVITE_TABLES)
 /** Resends a pending invitation with a fresh one-time set-password link. */
 export async function resendInvite(viewer: string, table: (typeof INVITE_TABLES)[number], id: string) {
   const db = await requireAccessManager(viewer);
-  const { data: invite, error } = await db.from(table).select("*").eq("id", id).eq("status", "pending").maybeSingle();
+  const { data: invite, error } = await db.from(table).select("*").eq("id", id).in("status", ["pending", "accepted"]).maybeSingle();
   if (error) throw new Error(error.message);
   if (!invite) throw new Error("That invitation is no longer pending.");
   const email = String(invite.email ?? "").toLowerCase();
@@ -231,6 +234,7 @@ export async function resendInvite(viewer: string, table: (typeof INVITE_TABLES)
   if (table === "fund_invitations") {
     const { data: off } = await db.from("offerings").select("name").eq("id", invite.offering_id).maybeSingle();
     const r = await sendTemplateEmail("fund-invitation", email, {
+      auditTarget: { kind: table, id, actorId: viewer },
       templateData: {
         inviteeName: invite.invited_name || email,
         offeringName: (off as any)?.name ?? "Harmonious",
@@ -248,6 +252,7 @@ export async function resendInvite(viewer: string, table: (typeof INVITE_TABLES)
       clientName = (cl as any)?.name ?? clientName;
     }
     const r = await sendTemplateEmail("client-invitation", email, {
+      auditTarget: { kind: table, id, actorId: viewer },
       templateData: {
         contactName: invite.invited_name || email,
         clientName,
@@ -262,7 +267,10 @@ export async function resendInvite(viewer: string, table: (typeof INVITE_TABLES)
 
   const now = new Date().toISOString();
   const col = table === "fund_invitations" ? "last_sent_at" : table === "client_invitations" ? "invite_sent_at" : "updated_at";
-  await db.from(table).update({ [col]: now }).eq("id", id);
+  if (sent) {
+    const { error } = await db.from(table).update({ [col]: now }).eq("id", id);
+    if (error) throw new Error("Email sent, but the invitation timestamp could not be updated.");
+  }
   await log(db, { subject_kind: table, subject_id: id, action: "invite_resent", reason: sent ? null : "email send failed", actor_id: viewer });
   if (!sent) throw new Error("The invitation was updated but the email could not be sent.");
   return { ok: true };
@@ -282,6 +290,7 @@ export async function resetUserPassword(viewer: string, userId: string) {
   const portalUrl = await shared.setPasswordLink(db, email.toLowerCase());
   const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
   const r = await sendTemplateEmail("investor-message", email.toLowerCase(), {
+    auditTarget: { kind: "user", id: userId, actorId: viewer, label: "Password reset" },
     templateData: {
       investorName: (profile as any)?.legal_name || email,
       offeringName: "Harmonious",
@@ -339,27 +348,34 @@ export function isTestRow(t: { users: Set<string>; persons: Set<string>; clients
 }
 
 /** Full activity trail for one user: account, pages, clicks, actions and access changes. Read-only. */
-export async function personActivity(viewer: string, subjectId: string) {
+export async function personActivity(viewer: string, subjectId: string, options: { before?: string | undefined; from?: string | undefined; to?: string | undefined } = {}) {
   const db = await requireAccessViewer(viewer);
+  const activityQuery = (table: string, fields: string, column: string) => {
+    let q = db.from(table).select(fields).eq(column, subjectId).order("created_at", { ascending: false }).order("id", { ascending: false });
+    if (options.before) q = q.lt("created_at", options.before);
+    if (options.from) q = q.gte("created_at", options.from);
+    if (options.to) q = q.lte("created_at", options.to);
+    return q.limit(101);
+  };
   const [{ data: prof }, { data: auth }, { data: acts }, { data: audits }, { data: access }, { data: roles }] = await Promise.all([
     db.from("profiles").select("legal_name, email").eq("user_id", subjectId).maybeSingle(),
     db.auth.admin.getUserById(subjectId),
-    db.from("staff_activity_events").select("id, kind, path, label, created_at").eq("user_id", subjectId).order("created_at", { ascending: false }).limit(2000),
-    db.from("access_audit_events").select("id, action, created_at").eq("actor_user_id", subjectId).order("created_at", { ascending: false }).limit(300),
-    db.from("user_access_events").select("id, action, reason, created_at").eq("subject_id", subjectId).order("created_at", { ascending: false }).limit(300),
+    activityQuery("staff_activity_events", "id, kind, path, label, created_at", "user_id"),
+    activityQuery("access_audit_events", "id, action, created_at", "actor_user_id"),
+    activityQuery("user_access_events", "id, action, reason, created_at", "subject_id"),
     db.from("user_roles").select("role").eq("user_id", subjectId),
   ]);
   const kindLabel: Record<string, string> = { page: "Viewed", click: "Clicked", action: "Action" };
   const events = [
     ...((acts ?? []) as any[]).map((a) => ({ id: a.id, when: a.created_at, kind: kindLabel[a.kind] ?? a.kind, what: a.label || a.path || "", path: a.path })),
     ...((audits ?? []) as any[]).map((a) => ({ id: a.id, when: a.created_at, kind: "Action", what: String(a.action).replace(/_/g, " "), path: null })),
-    ...((access ?? []) as any[]).map((a) => ({ id: a.id, when: a.created_at, kind: "Access change", what: `${String(a.action).replace(/_/g, " ")}${a.reason ? ` — ${a.reason}` : ""}`, path: null })),
+    ...((access ?? []) as any[]).map((a) => ({ id: a.id, when: a.created_at, kind: "Access change", what: `${String(a.action).replace(/_/g, " ")}${a.reason && !String(a.action).startsWith("email_") ? ` — ${a.reason}` : ""}`, path: null })),
   ].sort((a, b) => String(b.when).localeCompare(String(a.when)));
   const u = auth?.user;
   return {
     name: prof?.legal_name || "", email: u?.email ?? prof?.email ?? "",
     roles: ((roles ?? []) as any[]).map((r) => r.role as string),
     createdAt: u?.created_at ?? null, lastSignIn: u?.last_sign_in_at ?? null, confirmedAt: u?.email_confirmed_at ?? null,
-    events,
+    events: events.slice(0, 100), nextCursor: events.length > 100 ? events[99]?.when ?? null : null,
   };
 }

@@ -13,7 +13,7 @@ const SITE_NAME = "Harmonious"
 const FROM_DOMAIN = "onboarding.harmonious.co"
 
 export type SendTemplateEmailResult =
-  | { sent: true }
+  | { sent: true; messageId?: string | null }
   | { sent: false; reason: 'recipient_suppressed' }
 
 export interface SendTemplateEmailOptions {
@@ -21,6 +21,7 @@ export interface SendTemplateEmailOptions {
   /** Dedupes retries of the same logical send; defaults to a random UUID (no dedupe). */
   idempotencyKey?: string
   replyTo?: string
+  auditTarget?: { kind: string; id: string; actorId: string; label?: string }
 }
 
 /**
@@ -85,9 +86,20 @@ export async function sendTemplateEmail(
   })
 
   if (!response.ok) {
+    if (options.auditTarget) {
+      const { recordUserEmail } = await import('@/lib/user-email-audit.server')
+      await recordUserEmail(options.auditTarget, { sent: false })
+    }
     const errorBody = await response.text()
     console.error(`[send-email] Brevo send failed [${response.status}]: ${errorBody}`)
     throw new Error(`Brevo send failed [${response.status}]: ${errorBody}`)
+  }
+
+  const payload = await response.json() as { messageId?: string }
+  const messageId = payload.messageId ?? null
+  if (options.auditTarget) {
+    const { recordUserEmail } = await import('@/lib/user-email-audit.server')
+    await recordUserEmail(options.auditTarget, { sent: true, messageId })
   }
 
   // Mirror the email into the recipient's portal inbox when they are a client
@@ -106,5 +118,5 @@ export async function sendTemplateEmail(
     console.error('[send-email] inbox copy failed', templateName, error)
   }
 
-  return { sent: true }
+  return { sent: true, messageId }
 }

@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getPersonActivity } from "@/lib/user-access.functions";
+import { UserInsights } from "@/components/user-insights";
 
 export const Route = createFileRoute("/_authenticated/ops/people/$userId")({
   head: () => ({
@@ -28,7 +29,10 @@ const KINDS = ["All", "Viewed", "Clicked", "Action", "Access change"];
 function PersonActivityPage() {
   const { userId } = Route.useParams();
   const load = useServerFn(getPersonActivity);
-  const q = useQuery({ queryKey: ["person-activity", userId], queryFn: () => load({ data: { userId } }), retry: false });
+  const [cursor, setCursor] = useState<string | undefined>();
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
+  const q = useQuery({ queryKey: ["person-activity", userId, cursor, from, to], queryFn: () => load({ data: { userId, ...(cursor ? { before: cursor } : {}), ...(from ? { from: new Date(from + "T00:00:00").toISOString() } : {}), ...(to ? { to: new Date(to + "T23:59:59.999").toISOString() } : {}) } }), retry: false });
   const [kind, setKind] = useState("All");
   const [search, setSearch] = useState("");
   const d = q.data;
@@ -44,11 +48,14 @@ function PersonActivityPage() {
           <p className="mt-1 text-sm text-muted-foreground">{d.email} · Account created {when(d.createdAt)} · Email confirmed {when(d.confirmedAt)} · Last signed in {when(d.lastSignIn)}</p>
           {!!d.roles.length && <div className="mt-2 flex flex-wrap gap-1">{d.roles.map((r) => <Badge key={r} variant="outline">{r.replace(/_/g, " ")}</Badge>)}</div>}
         </header>
+        {d.email && <UserInsights email={d.email} />}
         <section className="rounded-lg border">
           <div className="flex flex-wrap items-center gap-2 border-b p-4">
             <h2 className="mr-auto text-lg">Activity ({events.length})</h2>
             {KINDS.map((k) => <Button key={k} size="sm" variant={kind === k ? "default" : "outline"} onClick={() => setKind(k)}>{k}</Button>)}
             <Input className="max-w-xs" placeholder="Search activity" value={search} onChange={(e) => setSearch(e.target.value)} />
+            <Input aria-label="Activity from date" type="date" className="w-auto" value={from} onChange={e => { setFrom(e.target.value); setCursor(undefined); }} />
+            <Input aria-label="Activity to date" type="date" className="w-auto" value={to} onChange={e => { setTo(e.target.value); setCursor(undefined); }} />
           </div>
           {!events.length ? <p className="p-4 text-sm text-muted-foreground">No activity recorded yet. Pages and clicks are recorded from today onward.</p> : (
             <ul className="divide-y">{events.map((e) => (
@@ -59,6 +66,7 @@ function PersonActivityPage() {
             </ul>
           )}
         </section>
+        <div className="flex gap-2"><Button variant="outline" disabled={!cursor} onClick={() => setCursor(undefined)}>Newest activity</Button><Button variant="outline" disabled={!d.nextCursor} onClick={() => setCursor(d.nextCursor ?? undefined)}>Older activity</Button></div>
       </>)}
     </main>
   );

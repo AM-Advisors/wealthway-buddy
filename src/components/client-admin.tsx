@@ -25,6 +25,7 @@ import {
 import { CLIENT_TYPES } from "@/lib/contract-ingestion";
 import { inviteClientContact } from "@/lib/client-contacts.functions";
 import { inviteToFund } from "@/lib/invitations.functions";
+import { UserInsights } from "@/components/user-insights";
 import { getProposedFundServices } from "@/lib/client-service-config.functions";
 import {
   createClientFund,
@@ -231,6 +232,7 @@ export function ClientPeoplePanel({ clientId }: { clientId: string }) {
               {p.roles.map((r: string) => <Badge key={r} variant="secondary">{roleLabel(r)}</Badge>)}
               <VerificationBadges kyc={p.kycStatus} aml={p.amlStatus} />
             </div>
+            {p.email && <UserInsights email={p.email} compact />}
             <div className="mt-2 text-xs">
               <span className="text-muted-foreground">Fund / company scope: </span>
               {p.scopes.length ? p.scopes.map((s: any) => (

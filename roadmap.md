@@ -1,5 +1,12 @@
 # Roadmap
 
+## User invitation and account insights
+- [x] Track successful/failed invitation sends and exact Brevo message outcomes
+- [x] Add invite, login, setup filters and clickable invitation/user history
+- [x] Show shared insights under client People
+- [x] Validate delivery/setup model (13 tests) and clean preview compilation; Brevo read-only delivery lookup verified
+- [ ] Authenticated end-to-end invitation/account walkthrough — blocked: no synthetic QA sessions; shared production backend must not be used for browser tests
+
 ## Client app and Operations separation
 - [x] Complete client/staff address routing without changing permissions
 - [x] Distinguish client and staff menus, top bars and sign-in presentation
