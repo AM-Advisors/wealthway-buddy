@@ -26,7 +26,7 @@ export function QuickJump() {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (r) => r.location.pathname });
-  const { session, activeId } = useClientWorkspace();
+  const { session, activeId, applicationSurface } = useClientWorkspace();
 
   useEffect(() => recordVisit(pathname), [pathname]);
 
@@ -42,17 +42,17 @@ export function QuickJump() {
   }, []);
 
   const groups = useMemo(() => {
-    const nav = getNavigation(session as never, activeId, pathname);
+    const nav = getNavigation(session as never, activeId, pathname, applicationSurface);
     const out: { heading: string; items: { title: string; url: string; hint?: string }[] }[] = [];
     if (nav.primary.length) out.push({ heading: "Your portal", items: nav.primary.map((i) => ({ title: i.title, url: i.url })) });
     const caps = (session as { operationsCapabilities?: OpsCapability[] } | null)?.operationsCapabilities ?? [];
-    if ((session as { operations?: boolean } | null)?.operations) {
+    if (nav.shell === "ops" && (session as { operations?: boolean } | null)?.operations) {
       out.push({ heading: "Harmonious Operations", items: opsSearchIndex(caps).map((e) => ({ title: e.title, url: e.url, hint: e.area })) });
-    } else if (nav.operations.length) {
+    } else if (nav.shell === "ops" && nav.operations.length) {
       out.push({ heading: "Harmonious", items: nav.operations.map((o) => ({ title: o.title, url: o.url })) });
     }
     return out;
-  }, [session, activeId, pathname]);
+  }, [session, activeId, pathname, applicationSurface]);
 
   const go = (url: string) => {
     setOpen(false);

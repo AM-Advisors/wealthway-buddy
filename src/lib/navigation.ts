@@ -17,6 +17,7 @@ import {
 } from "@/lib/client-navigation";
 import { OPS_HOME, activeOpsSection, opsNavigation, type OpsCapability } from "@/lib/ops-capabilities";
 import type { WorkspaceKind } from "@/lib/session-resolution";
+import { OPS_PREFIXES } from "@/lib/host-routing";
 
 export type NavBadgeKey = "signOff" | "applications" | "unpaidInvoices" | "serviceRequests" | "myClients";
 
@@ -76,7 +77,7 @@ export function operationsNavItemIsActive(url: string, pathname: string): boolea
 }
 
 export function surfaceLabelForPath(pathname: string): string {
-  if (isUnder(pathname, "/ops") || isUnder(pathname, "/admin") || isUnder(pathname, "/staff") || isUnder(pathname, "/sales")) return "Harmonious Operations";
+  if (OPS_PREFIXES.some((prefix) => isUnder(pathname, prefix))) return "Harmonious Operations";
   if (isUnder(pathname, "/manager")) return "Fund management";
   if (isUnder(pathname, "/client")) return "Company workspace";
   if (isUnder(pathname, "/professional")) return "Professional workspace";
@@ -91,6 +92,7 @@ export function getNavigation(
   session: NavigationSession | null | undefined,
   activeWorkspaceId: string | null,
   pathname: string,
+  applicationSurface: Shell | null = null,
 ): Navigation {
   const workspaces = session?.workspaces ?? [];
   const pathKind = workspaceKindForPath(pathname);
@@ -112,13 +114,15 @@ export function getNavigation(
   // Staff on any internal page, or in the Operations workspace, get the
   // canonical Operations menu. Everyone else gets the client menu for their
   // resolved workspace. The retired legacy sidebar has no branch here.
-  const shell: Shell =
+  const resolvedShell: Shell =
     (staff && (onInternalPage || salesPage || activeKind === "operations" || !hasClientWorkspace)) || (commercialStaff && salesPage) ? "ops" : "client";
+  const shell: Shell = applicationSurface === "client" ? "client"
+    : applicationSurface === "ops" && (staff || commercialStaff) ? "ops" : resolvedShell;
 
   return {
     shell,
     activeKind,
-    primary: clientNavigation(activeKind),
+    primary: shell === "client" ? clientNavigation(activeKind === "operations" ? workspaces.find((w) => w.surface === "client")?.kind ?? null : activeKind) : [],
     operations,
     account: accountMenu({ isProfessional: workspaces.some((w) => w.kind === "professional") }),
     switcher: workspaces,

@@ -209,6 +209,20 @@
   }
 }
 
+/* Client navigation is light and quiet; staff navigation retains the navy console. */
+.workspace-client {
+  --sidebar: var(--background);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: var(--secondary);
+  --sidebar-accent-foreground: var(--secondary-foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
+}
+
+.workspace-ops [data-sidebar="menu-button"] { min-height: 2rem; }
+
 /* Brand gradient: deep navy #142647 → black #000000 */
 @utility bg-brand-gradient {
   background-image: linear-gradient(
