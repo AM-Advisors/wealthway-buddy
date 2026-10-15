@@ -18,3 +18,10 @@ describe("ops slack notify", () => {
     expect(Object.keys(m)).toEqual(["text", "blocks"]);
   });
 });
+
+import { pickOwners as _po } from "./ops-slack-notify.server";
+describe("pickOwners", () => {
+  it("returns operations then account manager", () => {
+    expect(_po([{ role: "account_manager", userId: "b" }, { role: "operations", userId: "a" }])).toEqual([{ userId: "a", role: "operations" }, { userId: "b", role: "account_manager" }]);
+  });
+});

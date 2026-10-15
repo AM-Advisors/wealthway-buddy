@@ -570,6 +570,7 @@ export async function certifyTaxForm(
     onboarding_id: ob.id, offering_id: ob.offering_id, event: "tax_form_certified", actor_user_id: userId, actor_role: "investor",
     detail: { form_type: routing.formType, revision: rev.revision },
   }).then(() => null, () => null);
+  await (async () => (await import("@/lib/ops-slack-notify.server")).notifySubmission({ kind: "tax_form_certified", title: `Investor completed their ${routing.formType} tax form`, offeringId: ob.offering_id, submittedBy: userId, ref: inserted.id, path: ob.offering_id ? `/ops/fund-setup/${ob.offering_id}` : null, completed: true }))().catch(() => null);
   return { ok: true };
 }
 

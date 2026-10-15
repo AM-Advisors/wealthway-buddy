@@ -463,6 +463,7 @@ export const signMsa = createServerFn({ method: "POST" })
       signature_method: data.signature?.method ?? null,
     });
     if (sigError) throw new Error(sigError.message);
+    await (async () => (await import("@/lib/ops-slack-notify.server")).notifySubmission({ kind: "msa_signed", title: `Master Service Agreement signed by ${data.signerName}`, clientId: data.clientId, submittedBy: who.userId, ref: (agreement as any).id, path: "/ops/queue", completed: true }))().catch(() => null);
 
     const now = new Date().toISOString();
     await context.supabase
