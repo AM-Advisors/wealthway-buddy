@@ -162,8 +162,8 @@ export const getDeliveryDetails = createServerFn({ method: "POST" })
     const messageId = event?.message_id ?? logEvent?.message_id ?? null;
     const headers: { label: string; value: string }[] = [
       { label: "To", value: data.recipient },
-      { label: "From", value: "Harmonious <noreply@onboarding.harmonious.co>" },
-      { label: "Sender domain", value: "notify.onboarding.harmonious.co" },
+      { label: "From", value: "Harmonious <noreply@harmonious.co>" },
+      { label: "Sender domain", value: "harmonious.co" },
       { label: "Subject", value: sent?.subject ?? "-" },
       { label: "Message-ID", value: messageId ?? "-" },
       {
