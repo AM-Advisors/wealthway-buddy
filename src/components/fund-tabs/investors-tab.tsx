@@ -32,7 +32,18 @@ export function InvestorsTab({ fundId }: { fundId: string }) {
   const lq = useQuery({ queryKey: ["fund-reminders", fundId], queryFn: () => loadLast({ data: { fundId } }) });
   const [picked, setPicked] = useState<string[]>([]);
   const [sending, setSending] = useState(false);
+  const [classOpen, setClassOpen] = useState(false);
+  const [classKey, setClassKey] = useState("");
+  const bulkKyc = useServerFn(bulkSendKycLinksFn);
+  const bulkClass = useServerFn(bulkSetClassFn);
+  const askMissing = useServerFn(requestMissingInfoFn);
+  const dupQ = useQuery({ queryKey: ["fund-investor-duplicates", fundId], queryFn: () => dupLoad({ data: { fundId } }) });
+  const dupLoad = useServerFn(listInvestorDuplicatesFn);
   const canRemind = (r: any) => !!r.email && !!reminderStep(r.stage, r.docs, r.wiring) && reminderAllowed(lq.data?.[r.id] ?? null);
+  const allPicked = rows.length > 0 && picked.length === rows.length;
+  const toggleAll = (on: boolean) => setPicked(on ? rows.map((r) => r.id) : []);
+  const committed = rows.reduce((s, r) => s + (r.committedCents ?? 0), 0);
+  const received = rows.reduce((s, r) => s + (r.receivedCents ?? 0), 0);
   async function sendReminders() {
     setSending(true);
     try {
@@ -44,6 +55,26 @@ export function InvestorsTab({ fundId }: { fundId: string }) {
       await lq.refetch();
     } catch (e) { toast.error((e as Error).message); } finally { setSending(false); }
   }
+  async function runBulk(fn: () => Promise<string>) {
+    setSending(true);
+    try { toast.success(await fn()); setPicked([]); await q.refetch(); }
+    catch (e) { toast.error((e as Error).message); } finally { setSending(false); }
+  }
+  const sendKyc = () => runBulk(async () => {
+    const res = await bulkKyc({ data: { fundId, onboardingIds: picked } });
+    const sent = res.filter((x) => x.outcome === "sent").length;
+    const skipped = res.filter((x) => x.outcome === "skipped");
+    return `${sent} identity-check link${sent === 1 ? "" : "s"} sent${skipped.length ? `, ${skipped.length} skipped (${skipped[0]?.reason ?? "already done"})` : ""}.`;
+  });
+  const requestMissing = () => runBulk(async () => {
+    const res = await askMissing({ data: { fundId, onboardingIds: picked } });
+    return `Asked the fund manager for missing info on ${res.investors} investor${res.investors === 1 ? "" : "s"}.`;
+  });
+  const saveClass = () => runBulk(async () => {
+    const res = await bulkClass({ data: { fundId, onboardingIds: picked, classKey } });
+    setClassOpen(false); setClassKey("");
+    return `Class set on ${res.count} investor${res.count === 1 ? "" : "s"}.`;
+  });
   return (
     <div className="space-y-6">
     <FundOnboardingLinkCard fundId={fundId} />
