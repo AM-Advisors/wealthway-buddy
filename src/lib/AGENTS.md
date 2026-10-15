@@ -216,3 +216,5 @@
 - Legacy archive uploads go only through src/lib/legacy-archive-multipart.server.ts (dedicated bucket + prefix guard, signed SHA-256 per request, 5 MiB parts, no delete/retention headers) - why: Object Lock needs signed checksums and the gateway caps requests near 6 MiB.
 - Verification session details are stored only as the display-safe review shape from src/lib/kyc-review-model.ts (review_details; last-four numbers, no image URLs); photos are fetched on demand for reviewers and never saved; staff decisions are mirrored back to the provider - why: review in Harmonious without copying ID images.
 - Document reminders (MSA, W-9/W-8, investor questionnaire, fund-file signers incl. LLOA) all send through src/lib/signing-reminder.server.ts; every send is recorded in document_reminders (24h limit per reminder key) and fund-scoped ones also in fund Audit History - why: one branded flow and one rate limit.
+
+- Completion alerts (SS-4, fund document signatures, MSA, W-9/W-8, questionnaire) use notifySubmission({ completed: true }) in ops-slack-notify.server.ts, tagging both the Operations owner and Account Manager - why: one sender, both owners see finished work.
