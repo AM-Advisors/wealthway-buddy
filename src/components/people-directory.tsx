@@ -96,7 +96,7 @@ export function PeopleDirectory({ initial = "all" }: { initial?: Tab }) {
                     <td className="space-x-1 whitespace-nowrap p-3 text-right">{q.data?.canManage && <>
                        <Button size="sm" variant="outline" disabled={busy} onClick={() => act(() => resend({ data: { table: i.table, id: i.id } }), "Invitation resent with a fresh link.")}>{busy ? "Sending…" : "Resend"}</Button>
                        <Button size="sm" variant="ghost" onClick={() => act(() => flag({ data: { kind: i.table, id: i.id, value: !i.isTestDemo } }), i.isTestDemo ? "Unmarked." : "Marked as test/demo.")}>{i.isTestDemo ? "Unmark test" : "Mark test"}</Button>
-                      <Button size="sm" variant="outline" onClick={() => { const r = window.prompt("Reason for cancelling this invitation"); if (r && r.trim().length >= 3) void act(() => cancel({ data: { table: i.table, id: i.id, reason: r } }), "Invitation cancelled."); }}>Cancel invite</Button></>}
+                      {i.status === "pending" && <Button size="sm" variant="outline" onClick={() => { const r = window.prompt("Reason for cancelling this invitation"); if (r && r.trim().length >= 3) void act(() => cancel({ data: { table: i.table, id: i.id, reason: r } }), "Invitation cancelled."); }}>Cancel invite</Button>}</>}
                     </td>
                   </tr>
                 ))}

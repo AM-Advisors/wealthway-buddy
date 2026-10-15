@@ -217,7 +217,7 @@ export async function cancelInvite(viewer: string, table: (typeof INVITE_TABLES)
 /** Resends a pending invitation with a fresh one-time set-password link. */
 export async function resendInvite(viewer: string, table: (typeof INVITE_TABLES)[number], id: string) {
   const db = await requireAccessManager(viewer);
-  const { data: invite, error } = await db.from(table).select("*").eq("id", id).eq("status", "pending").maybeSingle();
+  const { data: invite, error } = await db.from(table).select("*").eq("id", id).in("status", ["pending", "accepted"]).maybeSingle();
   if (error) throw new Error(error.message);
   if (!invite) throw new Error("That invitation is no longer pending.");
   const email = String(invite.email ?? "").toLowerCase();
