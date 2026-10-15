@@ -1,0 +1,2 @@
+ALTER TABLE public.agreement_signatures ADD COLUMN IF NOT EXISTS signature_image text, ADD COLUMN IF NOT EXISTS signature_method text CHECK (signature_method IN ('typed','drawn','uploaded'));
+ALTER TABLE public.ss4_signature_requests ADD COLUMN IF NOT EXISTS signature_image text, ADD COLUMN IF NOT EXISTS signature_method text CHECK (signature_method IN ('typed','drawn','uploaded'));
