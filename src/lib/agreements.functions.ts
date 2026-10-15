@@ -373,7 +373,14 @@ export const getMsaGateStatus = createServerFn({ method: "GET" })
         .filter((a) => a.executed_at || a.status === "client_signed")
         .map((a) => String(a.client_id)),
     );
-    const pendingClientId = who.clientIds.find((id) => !covered.has(id));
+    // A client with a designated MSA signer only gates that person.
+    const uncovered = who.clientIds.filter((id) => !covered.has(id));
+    if (uncovered.length === 0) return { gated: false as const };
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: signerRows } = await (supabaseAdmin as any)
+      .from("clients").select("id, msa_signer_user_id").in("id", uncovered);
+    const signerOf = new Map(((signerRows ?? []) as any[]).map((r) => [String(r.id), r.msa_signer_user_id as string | null]));
+    const pendingClientId = uncovered.find((id) => !signerOf.get(id) || signerOf.get(id) === who.userId);
     if (!pendingClientId) return { gated: false as const };
 
     const { data: client } = await context.supabase
@@ -405,6 +412,15 @@ export const signMsa = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     const who = await whoIs(context);
     await assertClientAccess(context, who, data.clientId);
+    {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: c } = await (supabaseAdmin as any)
+        .from("clients").select("msa_signer_user_id").eq("id", data.clientId).maybeSingle();
+      const signer = (c as any)?.msa_signer_user_id as string | null;
+      if (signer && signer !== who.userId) {
+        throw new Error("Another person on your team has been assigned to sign this agreement.");
+      }
+    }
 
     const version = await currentMsaVersion(context);
     if (!version) throw new Error("No master services agreement has been published yet.");
