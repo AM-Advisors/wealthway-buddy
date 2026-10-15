@@ -1,3 +1,4 @@
+import { MigrationsTabs } from "@/components/migrations-tabs";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -45,6 +46,7 @@ function WixFundsPage() {
   return (
     <div className="mx-auto max-w-6xl space-y-4 p-6">
       <div className="flex flex-wrap items-center justify-between gap-2">
+        <MigrationsTabs />
         <h1 className="font-heading text-2xl font-semibold">Wix funds review</h1>
         <Button asChild size="sm" variant="outline"><Link to="/ops/fund-migration">Back to Fund Migration</Link></Button>
       </div>
