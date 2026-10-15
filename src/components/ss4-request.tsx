@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   cancelSs4RequestFn,
+  resendSs4RequestFn,
   getSs4SignRequestFn,
   sendSs4RequestFn,
   signSs4RequestFn,
@@ -137,6 +138,11 @@ export function Ss4RequestPanel({ fundId }: { fundId: string }) {
     onError: (e: Error) => toast.error(e.message),
   });
   const cancel = useMutation({ mutationFn: (id: string) => cancelFn({ data: { requestId: id } }), onSuccess: () => qc.invalidateQueries({ queryKey: ["ss4-request", fundId] }), onError: (e: Error) => toast.error(e.message) });
+  const resend = useMutation({
+    mutationFn: (id: string) => resendFn({ data: { requestId: id } }),
+    onSuccess: (r) => { toast.success(r.emailed ? `Resent to ${r.signerEmail}.` : "No email on file for that manager — share the signing link with them."); },
+    onError: (e: Error) => toast.error(e.message),
+  });
   const openPdf = async (id: string) => { try { const r = await pdfFn({ data: { requestId: id } }); if (r.url) window.open(r.url, "_blank", "noopener"); } catch (e) { toast.error((e as Error).message); } };
 
   if (q.isLoading) return <div className="h-20 animate-pulse rounded-lg bg-muted" />;
