@@ -9,7 +9,7 @@
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
 - Domain/architecture rules live in src/lib/AGENTS.md; read it before changing any engine, authorization or workflow — why: keeps this file small.
-- Partition addresses/menus through host-routing.ts + navigation.ts; share fund engines — why: separation never grants authority.
+- Partition hosts/menus through host-routing.ts + navigation.ts; share fund engines — why: display grants no authority.
 - Never automate filings (except IRS e-filing of approved 1065s/K-1s per src/lib/AGENTS.md), tax payments, refunds, ACH/wire or provider money movement; server-side authorization only — why: user-mandated safety boundary.
 - Browser tests live in e2e/*.e2e.ts (Playwright, `bun run test:e2e`), run only against QA with synthetic sessions; helpers refuse production URLs — why: keep them out of unit runs and away from real data.
 - Sales uses the Operations shell for authorized Operations staff, while commercial-only Sales staff get a Sales-only menu — why: presentation must not imply wider Operations access.
@@ -28,4 +28,4 @@
 - Fund setup keeps one main Drive folder (offerings.drive_folder_url) plus a staff-only list of labeled links (offerings.drive_links) - why: funds have many Drive folders; links never change permissions.
 - Staff and fund managers share one Fund Setup form (src/components/fund-setup-form.tsx, field layout in src/lib/fund-setup-form-model.ts); mode only picks the save path (staff save vs. manager submission for review), never authority - why: one setup experience that can't drift.
 - "Add Fund or SPV" for clients, fund managers, Operations and Account Managers uses one engine (src/components/fund-request-engine.tsx + submitFundRequest); staff mode only skips the client payment after a server-side funds/prepare check - why: one creation path that cannot drift.
-- User lists live only in People & Access; every signed-in user's page views/click labels go to staff_activity_events (src/components/activity-tracker.tsx), shown at /ops/people/$userId - why: one people list, full activity trail.
+- People & Access is the only user list; activity-tracker.tsx logs views/click labels to staff_activity_events; user-insights.server.ts correlates Brevo message IDs in user_access_events, never infers delivery — why: one directory, truthful audit.

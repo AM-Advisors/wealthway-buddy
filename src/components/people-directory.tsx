@@ -57,6 +57,7 @@ export function PeopleDirectory({ initial = "all" }: { initial?: Tab }) {
       </div>
       {q.isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
       {q.error && <p className="text-sm text-destructive">{(q.error as Error).message}</p>}
+      {q.data?.providerError && <p className="text-sm text-muted-foreground">{q.data.providerError} <Button variant="outline" size="sm" onClick={() => q.refetch()}>Refresh email status</Button></p>}
 
       {tab !== "invited" && q.data && (
         <div className="overflow-x-auto rounded-lg border">
