@@ -33,7 +33,7 @@ export const Route = createFileRoute("/api/public/brevo-webhook")({
           if (error) continue; // duplicate delivery
           const { data: rows } = await d.from("document_reminders").select("id, delivered_at, first_opened_at, first_clicked_at, open_count, click_count").eq("message_id", messageId).limit(5);
           for (const r of (rows ?? []) as any[]) {
-            const patch: Record<string, unknown> = {};
+            const patch: any = {};
             if (ev === "delivered") patch.delivered_at = r.delivered_at ?? at;
             else if (ev === "opened" || ev === "unique_opened" || ev === "proxy_open") { patch.open_count = (r.open_count ?? 0) + 1; patch.first_opened_at = r.first_opened_at ?? at; }
             else if (ev === "click") { patch.click_count = (r.click_count ?? 0) + 1; patch.first_clicked_at = r.first_clicked_at ?? at; }
