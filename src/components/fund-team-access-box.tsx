@@ -44,7 +44,7 @@ export function FundTeamAccessBox({ fundId }: { fundId: string }) {
       if (target.kind === "pick") payload.fundIds = [fundId, ...target.ids];
       const res = await grant({ data: payload });
       const failed = (res?.results ?? []).filter((r: any) => !r.ok);
-      if (failed.length) toast.warning(`Added to ${(res?.results ?? []).length - failed.length} fund(s); ${failed.length} skipped: ${failed[0].error}`);
+      if (failed.length) toast.warning(`Added to ${(res?.results ?? []).length - failed.length} fund(s); ${failed.length} skipped: ${failed[0]?.error ?? "unknown reason"}`);
       else toast.success("Access granted");
       setEmail("");
       setTarget({ kind: "this" });

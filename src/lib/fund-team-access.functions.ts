@@ -179,7 +179,7 @@ export const grantFundTeamAccess = createServerFn({ method: "POST" })
     const results = [] as Awaited<ReturnType<typeof grantOne>>[];
     for (const fid of targets) results.push(await grantOne(fid, "fund"));
     const failed = results.filter((r) => !r.ok);
-    if (failed.length === results.length) throw new Error(failed[0].error ?? "Could not grant access.");
+    if (failed.length === results.length) throw new Error(failed[0]?.error ?? "Could not grant access.");
     return { ok: true, results };
   });
 
