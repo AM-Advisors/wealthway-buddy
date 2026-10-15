@@ -40,11 +40,11 @@ export async function autoApplyDiditForOnboarding(onboardingId: string, actorUse
   const { data: ob } = await db().from("investor_onboardings")
     .select("id, offering_id, person_id, investment_profile_id, questionnaire_didit_session_id")
     .eq("id", onboardingId).maybeSingle();
-  if (!ob?.person_id || !ob.questionnaire_didit_session_id) return { applied: false, reason: "no linked Didit session" };
+  if (!ob?.person_id || !ob.questionnaire_didit_session_id) return { applied: false, reason: "no linked identity check" };
   const decision = await fetchDiditSessionDecision(ob.questionnaire_didit_session_id);
-  if (!decision) return { applied: false, reason: "Didit decision unavailable" };
+  if (!decision) return { applied: false, reason: "identity-check result unavailable" };
   const x = extractDiditDetails(decision);
-  if (!x.sessionApproved) return { applied: false, reason: `Didit status ${(decision as any).status ?? "unknown"}` };
+  if (!x.sessionApproved) return { applied: false, reason: `identity-check status ${(decision as any).status ?? "unknown"}` };
 
   const { data: person } = await db().from("persons").select("*").eq("id", ob.person_id).maybeSingle();
   if (!person) return { applied: false, reason: "person not found" };
