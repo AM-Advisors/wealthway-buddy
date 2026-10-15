@@ -2,6 +2,17 @@ import { emailOutcome, parseEmailAttempt, setupGaps } from "@/lib/user-insights-
 
 const TABLES = ["staff_invitations", "client_invitations", "fund_invitations", "client_contacts"] as const;
 const PERSON_FIELDS = "id,user_id,email,legal_first_name,legal_last_name,phone,address_line1,city,region,postal_code,kyc_status,aml_status,onboarding_state";
+async function brevoEvents(params: Record<string, string>) {
+  const apiKey = process.env["LOVABLE_API_KEY"], key = process.env["BREVO_API_KEY"];
+  if (!apiKey || !key) return { events: [] as any[], error: "Email confirmation is unavailable." };
+  try {
+    const url = new URL("https://connector-gateway.lovable.dev/brevo/smtp/statistics/events");
+    for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
+    const res = await fetch(url, { headers: { Authorization: `Bearer ${apiKey}`, "X-Connection-Api-Key": key } });
+    if (!res.ok) { console.error("Invitation delivery lookup failed", res.status); return { events: [] as any[], error: `Email service lookup failed (${res.status}).` }; }
+    return { events: ((await res.json()) as { events?: any[] }).events ?? [], error: null };
+  } catch { return { events: [] as any[], error: "Email confirmation could not be loaded." }; }
+}
 export async function invitationSummaries(db: any, emails?: string[]) {
   const results = await Promise.all(TABLES.map(async table => {
     let q = db.from(table).select("*").order("created_at", { ascending: false });
@@ -33,11 +44,13 @@ export async function directoryInsights(db: any, people: any[]) {
     db.from("investor_onboardings").select("person_id,investor_user_id,questionnaire_submitted_at,stage,funding_status").is("removed_at", null).limit(20000),
   ]);
   if (error || onboardingError) throw new Error("Could not load setup progress.");
-  return { invitations, people: people.map(p => {
+  const provider = invitations.some((i: any) => i.attempts[0]?.messageId) ? await brevoEvents({ limit: "1000" }) : { events: [], error: null };
+  const confirmed = invitations.map((i: any) => ({ ...i, outcome: emailOutcome(i.attempts[0] ?? null, provider.events, !!provider.error) }));
+  return { invitations: confirmed, providerError: provider.error, people: people.map(p => {
     const linked = (persons ?? []).filter((x: any) => x.user_id === p.id);
     const gaps = [...new Set(linked.length ? linked.flatMap((x: any) => setupGaps(x, p.types.includes("Employee"))) : setupGaps(null, p.types.includes("Employee")))];
     if (!p.types.includes("Employee") && (onboardings ?? []).some((o: any) => (o.investor_user_id === p.id || linked.some((x: any) => x.id === o.person_id)) && !o.questionnaire_submitted_at)) gaps.push("Questionnaire");
-    const mine = invitations.filter((i: any) => i.email === String(p.email).toLowerCase());
+    const mine = confirmed.filter((i: any) => i.email === String(p.email).toLowerCase());
     const latest = [...mine].sort((a: any, b: any) => String(b.attempts[0]?.at ?? b.createdAt).localeCompare(String(a.attempts[0]?.at ?? a.createdAt)))[0];
     return { ...p, gaps, latestInvite: latest ?? null };
   }) };
@@ -54,18 +67,8 @@ export async function personInsights(viewer: string, email: string) {
     if (error) throw new Error("Could not load login status.");
     return { id: p.user_id, name: p.legal_name, createdAt: data?.user?.created_at ?? null, confirmedAt: data?.user?.email_confirmed_at ?? null, lastSignIn: data?.user?.last_sign_in_at ?? null };
   }));
-  let providerEvents: any[] = [], providerError: string | null = null;
-  const apiKey = process.env["LOVABLE_API_KEY"], key = process.env["BREVO_API_KEY"];
-  if (invitations.some((i: any) => i.attempts.some((a: any) => a.messageId))) {
-    if (!apiKey || !key) providerError = "Email confirmation is unavailable.";
-    else try {
-      const url = new URL("https://connector-gateway.lovable.dev/brevo/smtp/statistics/events");
-      url.searchParams.set("email", email); url.searchParams.set("limit", "100");
-      const res = await fetch(url, { headers: { Authorization: `Bearer ${apiKey}`, "X-Connection-Api-Key": key } });
-      if (!res.ok) { console.error("Invitation delivery lookup failed", res.status); providerError = `Email service lookup failed (${res.status}).`; }
-      else providerEvents = ((await res.json()) as { events?: any[] }).events ?? [];
-    } catch { providerError = "Email confirmation could not be loaded."; }
-  }
+  const provider = invitations.some((i: any) => i.attempts.some((a: any) => a.messageId)) ? await brevoEvents({ email, limit: "1000" }) : { events: [], error: null };
+  const providerEvents = provider.events, providerError = provider.error;
   const { data: persons, error: personError } = accounts.length ? await db.from("persons").select(PERSON_FIELDS).in("user_id", accounts.map(a => a.id)) : { data: [], error: null };
   if (personError) throw new Error("Could not load setup details.");
   const ids = (persons ?? []).map((p: any) => p.id);

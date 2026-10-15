@@ -112,7 +112,7 @@ export async function directory(viewer: string) {
   const { directoryInsights } = await import("@/lib/user-insights.server");
   const insights = await directoryInsights(db, people);
   const pending = insights.invitations.filter((i: any) => i.table !== "client_contacts" && i.status === "pending");
-  return { canManage, people: insights.people, invites: pending.map((i: any) => ({ ...i, type: i.table === "staff_invitations" ? "Employee" : i.table === "client_invitations" ? "Client contact" : String(i.role).includes("investor") ? "Investor" : "Fund Manager", sentAt: i.firstSent, lastSent: i.lastSent })), clients: clients ?? [] };
+  return { canManage, providerError: insights.providerError, people: insights.people, invites: pending.map((i: any) => ({ ...i, type: i.table === "staff_invitations" ? "Employee" : i.table === "client_invitations" ? "Client contact" : String(i.role).includes("investor") ? "Investor" : "Fund Manager", sentAt: i.firstSent, lastSent: i.lastSent })), clients: clients ?? [] };
 }
 
 /** Quick status lookup for list pages (by emails). */
