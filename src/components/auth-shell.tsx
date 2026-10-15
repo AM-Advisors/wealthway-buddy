@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 
 import { Logo } from "@/components/Logo";
+import { useApplicationSurface } from "@/lib/use-application-surface";
 
 /** Shared brand frame for the sign-in, registration and reset screens, so the
  *  journey into the portal looks like one Harmonious product. */
@@ -20,6 +21,10 @@ export function AuthShell({
   blurb?: string;
   points?: string[];
 }) {
+  const staff = useApplicationSurface() === "ops";
+  const title = staff ? "Harmonious Operations" : heading;
+  const description = staff ? "Your team workspace for clients, funds and outstanding work." : blurb;
+  const highlights = staff ? ["Authorized Harmonious staff", "Independent review and approvals", "A permanent record of every action"] : points;
   return (
     <div className="min-h-screen lg:grid lg:grid-cols-2">
       <aside className="hidden flex-col justify-between bg-brand-gradient px-10 py-12 text-brand-white lg:flex">
@@ -27,11 +32,11 @@ export function AuthShell({
           <Logo variant="white" className="h-8 w-auto" />
         </Link>
         <div className="max-w-sm">
-          <h2 className="text-3xl leading-tight text-brand-white">{heading}</h2>
-          <p className="mt-4 text-brand-white/80">{blurb}</p>
+          <h2 className="text-3xl leading-tight text-brand-white">{title}</h2>
+          <p className="mt-4 text-brand-white/80">{description}</p>
         </div>
         <ul className="space-y-2 text-sm text-brand-white/80">
-          {points.map((p) => (
+          {highlights.map((p) => (
             <li key={p}>{p}</li>
           ))}
         </ul>

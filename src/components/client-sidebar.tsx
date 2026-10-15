@@ -80,9 +80,9 @@ export function ClientSidebar({ onSignOut }: { onSignOut: () => void }) {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const pathname = useRouterState({ select: (r) => r.location.pathname });
-  const { session, options, activeId } = useClientWorkspace();
+  const { session, options, activeId, applicationSurface } = useClientWorkspace();
 
-  const navigation = getNavigation(session as never, activeId, pathname);
+  const navigation = getNavigation(session as never, activeId, pathname, applicationSurface);
   const capFn = useServerFn(getMyCapTables);
   const caps = useQuery({ queryKey: ["my-cap-tables"], queryFn: () => capFn({ data: { environment: getStripeEnvironment() } }), staleTime: 60_000 });
   const capLinks = ["/client/cap-table"];
@@ -110,19 +110,19 @@ export function ClientSidebar({ onSignOut }: { onSignOut: () => void }) {
   };
 
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar collapsible="icon" data-testid="client-sidebar">
       <SidebarHeader>
         <Link to="/home" aria-label="Harmonious home" data-testid="brand-logo" className="flex items-center px-2 py-1">
           <ClientBrandStyles brand={brand} />
           {brand?.logo_path ? (
             <img src={brand.logo_path} alt="Company logo" className={collapsed ? "h-6 w-6 object-contain object-left" : "h-7 w-auto max-w-[160px] object-contain object-left"} />
           ) : collapsed ? (
-            <LogoIcon variant="white" className="h-6 w-6 object-contain object-left" />
+            <><span className="dark:hidden"><LogoIcon variant="navy" className="h-6 w-6 object-contain" /></span><span className="hidden dark:block"><LogoIcon variant="white" className="h-6 w-6 object-contain" /></span></>
           ) : (
-            <Logo variant="white" className="h-7 w-auto" />
+            <><span className="dark:hidden"><Logo variant="navy" className="h-7 w-auto" /></span><span className="hidden dark:block"><Logo variant="white" className="h-7 w-auto" /></span></>
           )}
         </Link>
-
+        {!collapsed && <p className="px-2 pb-2 text-xs font-medium text-sidebar-foreground/70">Client portal</p>}
       </SidebarHeader>
 
       <SidebarContent>

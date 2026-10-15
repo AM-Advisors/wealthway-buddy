@@ -11,6 +11,8 @@ import { destinationAfterSignIn, intendedPathFromLocation } from "@/lib/post-sig
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useApplicationSurface } from "@/lib/use-application-surface";
+import { CLIENT_ORIGIN_DEFAULT } from "@/lib/app-origins";
 
 export const Route = createFileRoute("/auth/")({
   head: () => ({
@@ -34,6 +36,8 @@ export const Route = createFileRoute("/auth/")({
 function SignInPage() {
   const navigate = useNavigate();
   const { session, loading } = useAuth();
+  const applicationSurface = useApplicationSurface();
+  const staff = applicationSurface === "ops";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -46,13 +50,13 @@ function SignInPage() {
     (async () => {
       const intended =
         typeof window === "undefined" ? null : intendedPathFromLocation(window.location.search);
-      const to = await destinationAfterSignIn(session.user.id, intended);
+      const to = await destinationAfterSignIn(session.user.id, intended ?? (staff ? "/ops" : "/home"));
       if (active) navigate({ to: to as never });
     })();
     return () => {
       active = false;
     };
-  }, [loading, session, navigate]);
+  }, [loading, session, navigate, staff]);
 
   async function recordAttempt(address: string, success: boolean, reason?: string) {
     try {
@@ -106,9 +110,9 @@ function SignInPage() {
 
   return (
     <div>
-      <h1 className="text-3xl">Welcome back</h1>
+      <h1 className="text-3xl">{staff ? "Operations sign in" : "Welcome back"}</h1>
       <p className="mt-2 text-muted-foreground">
-        Sign in and we'll take you straight to your part of the portal.
+        {staff ? "Sign in to your Harmonious staff workspace." : "Sign in to your client portal."}
       </p>
 
       <Button
@@ -163,12 +167,10 @@ function SignInPage() {
         </Button>
       </form>
 
-      <p className="mt-6 text-sm text-muted-foreground">
+      {staff && <p className="mt-6 text-sm text-muted-foreground">
         Signing in as a client?{" "}
-        <Link to="/client-login" className="font-medium text-foreground hover:underline">
-          Use the client portal sign in
-        </Link>
-      </p>
+        <a href={`${CLIENT_ORIGIN_DEFAULT}/auth`} className="font-medium text-foreground hover:underline">Open the client portal</a>
+      </p>}
 
       <p className="mt-2 text-sm text-muted-foreground">
         Have an invitation?{" "}

@@ -1,5 +1,6 @@
-import { Link } from "@tanstack/react-router";
-import { ChevronsUpDown, FileSignature, LogOut, Monitor, Moon, Repeat, Sun, UserRound, ShieldCheck } from "lucide-react";
+import { Link, useRouterState } from "@tanstack/react-router";
+import { ChevronsUpDown, FileSignature, LogOut, Monitor, Moon, Repeat, Sun, UserRound, ExternalLink } from "lucide-react";
+import { getNavigation } from "@/lib/navigation";
 import { useThemeMode, type ThemeMode } from "@/lib/theme-mode";
 
 import { useClientWorkspace } from "@/components/client-workspace";
@@ -32,12 +33,15 @@ export function SidebarAccountFooter({
 }) {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
-  const { session, options, activeId, switchTo } = useClientWorkspace();
+  const { session, options, activeId, switchTo, applicationSurface } = useClientWorkspace();
+  const pathname = useRouterState({ select: (r) => r.location.pathname });
+  const { shell } = getNavigation(session as never, activeId, pathname, applicationSurface);
   const name = session?.person?.name;
   const email = session?.person?.email;
   const label = name || email || "Your account";
   const initial = (name || email || "H").trim().charAt(0).toUpperCase();
-  const others = options.filter((o) => o.id !== activeId);
+  const others = options.filter((o) => o.id !== activeId && o.surface === shell);
+  const otherApplication = options.filter((o) => o.surface !== shell);
   const { mode, setMode } = useThemeMode();
   const modes: { value: ThemeMode; label: string; Icon: typeof Sun }[] = [
     { value: "light", label: "Light", Icon: Sun },
@@ -105,6 +109,12 @@ export function SidebarAccountFooter({
                   </DropdownMenuSubContent>
                 </DropdownMenuSub>
               )}
+              {otherApplication.length > 0 && <>
+                <DropdownMenuSeparator />
+                {otherApplication.map((option) => <DropdownMenuItem key={option.id} onSelect={(event) => { event.preventDefault(); void switchTo(option.id); }}>
+                  <ExternalLink className="size-4" /><span className="truncate">{option.surface === "ops" ? "Open Harmonious Operations" : `Open client portal · ${option.label}`}</span>
+                </DropdownMenuItem>)}
+              </>}
               <DropdownMenuSeparator />
               <p className="px-2 pb-1 text-xs text-muted-foreground">Appearance</p>
               <div className="flex gap-1 px-2 pb-2" role="radiogroup" aria-label="Appearance">

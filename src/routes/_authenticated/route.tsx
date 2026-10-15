@@ -65,8 +65,7 @@ function AuthenticatedLayout() {
 
   return (
     <ClientWorkspaceProvider>
-      <SidebarProvider>
-        <div className="flex min-h-screen w-full bg-background">
+      <WorkspaceShell>
           <Menu onSignOut={signOut} />
           <div className="flex min-w-0 flex-1 flex-col">
             <PortalTopbar onSignOut={signOut} />
@@ -86,10 +85,18 @@ function AuthenticatedLayout() {
             </main>
             <PortalFooter />
           </div>
-        </div>
-      </SidebarProvider>
+      </WorkspaceShell>
     </ClientWorkspaceProvider>
   );
+}
+
+function WorkspaceShell({ children }: { children: ReactNode }) {
+  const pathname = useRouterState({ select: (r) => r.location.pathname });
+  const { activeId, session, applicationSurface } = useClientWorkspace();
+  const { shell } = getNavigation(session as never, activeId, pathname, applicationSurface);
+  return <SidebarProvider className={`workspace-${shell}`} data-application={shell}>
+    <div className="flex min-h-screen w-full bg-background">{children}</div>
+  </SidebarProvider>;
 }
 
 /**
@@ -102,8 +109,8 @@ function Menu({ onSignOut }: { onSignOut: () => void }) {
   const pathname = useRouterState({ select: (r) => r.location.pathname });
   // One canonical projection decides the shell. Hostname and pathname only
   // pick a layout; Operations still requires resolved staff facts.
-  const { activeId, session } = useClientWorkspace();
-  const { shell } = getNavigation(session as never, activeId, pathname);
+  const { activeId, session, applicationSurface } = useClientWorkspace();
+  const { shell } = getNavigation(session as never, activeId, pathname, applicationSurface);
   if (shell === "ops") return <OpsSidebar onSignOut={onSignOut} />;
   return <ClientSidebar onSignOut={onSignOut} />;
 }

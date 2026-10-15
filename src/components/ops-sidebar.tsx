@@ -289,6 +289,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
             <Logo variant="white" className="h-7 w-auto" />
           )}
         </Link>
+        {!collapsed && <p className="px-2 pb-2 text-xs font-medium text-sidebar-primary">Harmonious Operations</p>}
         {!collapsed && !salesOnly && (
           <div className="relative px-1 pb-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-sidebar-foreground/60" aria-hidden />
