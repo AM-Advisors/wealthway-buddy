@@ -59,6 +59,24 @@ export interface PersonForPrefill {
  * Builds the prefill Harmonious already knows, so the person does not retype
  * it. Sensitive identifiers are never included, even if present on the record.
  */
+const ALPHA3: Record<string, string> = {
+  US: "USA", USA: "USA", "UNITED STATES": "USA", "UNITED STATES OF AMERICA": "USA", AMERICA: "USA",
+  CA: "CAN", CANADA: "CAN", MX: "MEX", MEXICO: "MEX", GB: "GBR", UK: "GBR", "UNITED KINGDOM": "GBR",
+  IE: "IRL", IRELAND: "IRL", DE: "DEU", GERMANY: "DEU", FR: "FRA", FRANCE: "FRA", ES: "ESP", SPAIN: "ESP",
+  IT: "ITA", ITALY: "ITA", NL: "NLD", NETHERLANDS: "NLD", CH: "CHE", SWITZERLAND: "CHE", AU: "AUS", AUSTRALIA: "AUS",
+  NZ: "NZL", "NEW ZEALAND": "NZL", IN: "IND", INDIA: "IND", CN: "CHN", CHINA: "CHN", JP: "JPN", JAPAN: "JPN",
+  SG: "SGP", SINGAPORE: "SGP", HK: "HKG", "HONG KONG": "HKG", KR: "KOR", "SOUTH KOREA": "KOR", TW: "TWN", TAIWAN: "TWN",
+  BR: "BRA", BRAZIL: "BRA", IL: "ISR", ISRAEL: "ISR", AE: "ARE", "UNITED ARAB EMIRATES": "ARE", ZA: "ZAF", "SOUTH AFRICA": "ZAF",
+  PH: "PHL", PHILIPPINES: "PHL", KY: "CYM", "CAYMAN ISLANDS": "CYM", BM: "BMU", BERMUDA: "BMU",
+};
+
+/** Provider requires ISO alpha-3; unknown values are dropped rather than failing the session. */
+function toAlpha3(v: string | null | undefined): string | null {
+  if (!v) return null;
+  const k = v.trim().toUpperCase().replace(/\./g, "");
+  return ALPHA3[k] ?? null;
+}
+
 export function buildDiditPrefill(person: PersonForPrefill | null | undefined): Partial<
   Record<PrefillField, string>
 > {
@@ -74,7 +92,7 @@ export function buildDiditPrefill(person: PersonForPrefill | null | undefined): 
     city: person.city,
     state: person.region,
     postal_code: person.postal_code,
-    country: person.country ?? (person["residence_country"] as string | null | undefined),
+    country: toAlpha3(person.country ?? (person["residence_country"] as string | null | undefined)),
   };
 
   const out: Partial<Record<PrefillField, string>> = {};
