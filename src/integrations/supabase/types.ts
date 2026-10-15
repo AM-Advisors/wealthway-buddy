@@ -46024,6 +46024,54 @@ export type Database = {
           },
         ]
       }
+      wix_member_imports: {
+        Row: {
+          email: string | null
+          first_name: string | null
+          imported_at: string
+          imported_by: string
+          last_login_at: string | null
+          last_name: string | null
+          matched_person_id: string | null
+          phone: string | null
+          signed_up_at: string | null
+          site_id: string
+          updated_at: string
+          wix_member_id: string
+          wix_status: string | null
+        }
+        Insert: {
+          email?: string | null
+          first_name?: string | null
+          imported_at?: string
+          imported_by: string
+          last_login_at?: string | null
+          last_name?: string | null
+          matched_person_id?: string | null
+          phone?: string | null
+          signed_up_at?: string | null
+          site_id: string
+          updated_at?: string
+          wix_member_id: string
+          wix_status?: string | null
+        }
+        Update: {
+          email?: string | null
+          first_name?: string | null
+          imported_at?: string
+          imported_by?: string
+          last_login_at?: string | null
+          last_name?: string | null
+          matched_person_id?: string | null
+          phone?: string | null
+          signed_up_at?: string | null
+          site_id?: string
+          updated_at?: string
+          wix_member_id?: string
+          wix_status?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
