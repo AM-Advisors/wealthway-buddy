@@ -1,5 +1,10 @@
 # Roadmap
 
+## Client app and Operations separation
+- [ ] Complete client/staff address routing without changing permissions
+- [ ] Distinguish client and staff menus, top bars and sign-in presentation
+- [ ] Verify address redirects and synthetic QA client/staff flows
+
 ## Founders Fund (Digital Irish Ventures)
 - [x] Setup: add multiple Google Drive links section
 - [x] Read all Drive folder files and fill fund details
