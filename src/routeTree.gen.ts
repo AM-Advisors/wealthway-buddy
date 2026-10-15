@@ -440,6 +440,7 @@ import { Route as AuthenticatedManagerFundFundIdTeamRouteImport } from './routes
 import { Route as AuthenticatedManagerFundFundIdTransactionsRouteImport } from './routes/_authenticated/manager.fund.$fundId.transactions'
 import { Route as AuthenticatedMarketingStudioContentItemIdRouteImport } from './routes/_authenticated/marketing_.studio_.content.$itemId'
 import { Route as AuthenticatedMarketingStudioResearchMonitoringRouteImport } from './routes/_authenticated/marketing_.studio_.research_.monitoring'
+import { Route as AuthenticatedOpsPeopleInvitationsInvitationIdRouteImport } from './routes/_authenticated/ops.people.invitations.$invitationId'
 import { Route as AuthenticatedOpsTaxKindIdRouteImport } from './routes/_authenticated/ops.tax_.$kind.$id'
 import { Route as AuthenticatedProfessionalTaxKindIdRouteImport } from './routes/_authenticated/professional.tax_.$kind.$id'
 import { Route as AuthenticatedManagerFundFundIdInvestorOnboardingIdRouteImport } from './routes/_authenticated/manager.fund.$fundId.investor.$onboardingId'
@@ -2908,6 +2909,12 @@ const AuthenticatedMarketingStudioResearchMonitoringRoute =
     path: '/marketing/studio/research/monitoring',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOpsPeopleInvitationsInvitationIdRoute =
+  AuthenticatedOpsPeopleInvitationsInvitationIdRouteImport.update({
+    id: '/invitations/$invitationId',
+    path: '/invitations/$invitationId',
+    getParentRoute: () => AuthenticatedOpsPeopleRoute,
+  } as any)
 const AuthenticatedOpsTaxKindIdRoute =
   AuthenticatedOpsTaxKindIdRouteImport.update({
     id: '/ops/tax_/$kind/$id',
@@ -3357,6 +3364,7 @@ export interface FileRoutesByFullPath {
   '/manager/fund/$fundId/transactions': typeof AuthenticatedManagerFundFundIdTransactionsRoute
   '/marketing/studio/content/$itemId': typeof AuthenticatedMarketingStudioContentItemIdRoute
   '/marketing/studio/research/monitoring': typeof AuthenticatedMarketingStudioResearchMonitoringRoute
+  '/ops/people/invitations/$invitationId': typeof AuthenticatedOpsPeopleInvitationsInvitationIdRoute
   '/ops/tax/$kind/$id': typeof AuthenticatedOpsTaxKindIdRoute
   '/professional/tax/$kind/$id': typeof AuthenticatedProfessionalTaxKindIdRoute
   '/manager/fund/$fundId/': typeof AuthenticatedManagerFundFundIdIndexRoute
@@ -3784,6 +3792,7 @@ export interface FileRoutesByTo {
   '/manager/fund/$fundId/transactions': typeof AuthenticatedManagerFundFundIdTransactionsRoute
   '/marketing/studio/content/$itemId': typeof AuthenticatedMarketingStudioContentItemIdRoute
   '/marketing/studio/research/monitoring': typeof AuthenticatedMarketingStudioResearchMonitoringRoute
+  '/ops/people/invitations/$invitationId': typeof AuthenticatedOpsPeopleInvitationsInvitationIdRoute
   '/ops/tax/$kind/$id': typeof AuthenticatedOpsTaxKindIdRoute
   '/professional/tax/$kind/$id': typeof AuthenticatedProfessionalTaxKindIdRoute
   '/manager/fund/$fundId': typeof AuthenticatedManagerFundFundIdIndexRoute
@@ -4221,6 +4230,7 @@ export interface FileRoutesById {
   '/_authenticated/manager/fund/$fundId/transactions': typeof AuthenticatedManagerFundFundIdTransactionsRoute
   '/_authenticated/marketing_/studio_/content/$itemId': typeof AuthenticatedMarketingStudioContentItemIdRoute
   '/_authenticated/marketing_/studio_/research_/monitoring': typeof AuthenticatedMarketingStudioResearchMonitoringRoute
+  '/_authenticated/ops/people/invitations/$invitationId': typeof AuthenticatedOpsPeopleInvitationsInvitationIdRoute
   '/_authenticated/ops/tax_/$kind/$id': typeof AuthenticatedOpsTaxKindIdRoute
   '/_authenticated/professional/tax_/$kind/$id': typeof AuthenticatedProfessionalTaxKindIdRoute
   '/_authenticated/manager/fund/$fundId/': typeof AuthenticatedManagerFundFundIdIndexRoute
@@ -4658,6 +4668,7 @@ export interface FileRouteTypes {
     | '/manager/fund/$fundId/transactions'
     | '/marketing/studio/content/$itemId'
     | '/marketing/studio/research/monitoring'
+    | '/ops/people/invitations/$invitationId'
     | '/ops/tax/$kind/$id'
     | '/professional/tax/$kind/$id'
     | '/manager/fund/$fundId/'
@@ -5085,6 +5096,7 @@ export interface FileRouteTypes {
     | '/manager/fund/$fundId/transactions'
     | '/marketing/studio/content/$itemId'
     | '/marketing/studio/research/monitoring'
+    | '/ops/people/invitations/$invitationId'
     | '/ops/tax/$kind/$id'
     | '/professional/tax/$kind/$id'
     | '/manager/fund/$fundId'
@@ -5521,6 +5533,7 @@ export interface FileRouteTypes {
     | '/_authenticated/manager/fund/$fundId/transactions'
     | '/_authenticated/marketing_/studio_/content/$itemId'
     | '/_authenticated/marketing_/studio_/research_/monitoring'
+    | '/_authenticated/ops/people/invitations/$invitationId'
     | '/_authenticated/ops/tax_/$kind/$id'
     | '/_authenticated/professional/tax_/$kind/$id'
     | '/_authenticated/manager/fund/$fundId/'
@@ -8618,6 +8631,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMarketingStudioResearchMonitoringRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ops/people/invitations/$invitationId': {
+      id: '/_authenticated/ops/people/invitations/$invitationId'
+      path: '/invitations/$invitationId'
+      fullPath: '/ops/people/invitations/$invitationId'
+      preLoaderRoute: typeof AuthenticatedOpsPeopleInvitationsInvitationIdRouteImport
+      parentRoute: typeof AuthenticatedOpsPeopleRoute
+    }
     '/_authenticated/ops/tax_/$kind/$id': {
       id: '/_authenticated/ops/tax_/$kind/$id'
       path: '/ops/tax/$kind/$id'
@@ -8853,11 +8873,14 @@ const AuthenticatedProfessionalRouteWithChildren =
 
 interface AuthenticatedOpsPeopleRouteChildren {
   AuthenticatedOpsPeopleUserIdRoute: typeof AuthenticatedOpsPeopleUserIdRoute
+  AuthenticatedOpsPeopleInvitationsInvitationIdRoute: typeof AuthenticatedOpsPeopleInvitationsInvitationIdRoute
 }
 
 const AuthenticatedOpsPeopleRouteChildren: AuthenticatedOpsPeopleRouteChildren =
   {
     AuthenticatedOpsPeopleUserIdRoute: AuthenticatedOpsPeopleUserIdRoute,
+    AuthenticatedOpsPeopleInvitationsInvitationIdRoute:
+      AuthenticatedOpsPeopleInvitationsInvitationIdRoute,
   }
 
 const AuthenticatedOpsPeopleRouteWithChildren =

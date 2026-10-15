@@ -393,9 +393,11 @@ async function sendClientWelcome(input: {
       .maybeSingle();
 
     const passwordUrl = await setPasswordLink(input.supabaseAdmin, input.email);
+    const { data: inviteActor } = await input.supabaseAdmin.from("client_invitations").select("invited_by").eq("id", input.invitationId).single();
     const roleEntry = CLIENT_CONTACT_ROLES.find((r) => r.value === input.role);
 
     const sent = await sendTemplateEmail("client-invitation", input.email, {
+      ...(inviteActor?.invited_by ? { auditTarget: { kind: "client_invitations", id: input.invitationId, actorId: inviteActor.invited_by } } : {}),
       idempotencyKey: input.resend
         ? `client-invite-${input.invitationId}-${Date.now()}`
         : `client-invite-${input.invitationId}`,
@@ -428,7 +430,7 @@ async function sendClientWelcome(input: {
   await input.supabaseAdmin
     .from("client_invitations")
     .update({
-      invite_sent_at: result.status === "sent" ? new Date().toISOString() : null,
+      ...(result.status === "sent" ? { invite_sent_at: new Date().toISOString() } : {}),
       invite_status: result.status,
       invite_note: result.status === "sent" ? null : result.message,
     })

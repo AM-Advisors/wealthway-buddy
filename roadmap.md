@@ -1,5 +1,11 @@
 # Roadmap
 
+## User invitation and account insights
+- [ ] Track successful/failed invitation sends and exact Brevo message outcomes
+- [ ] Add invite, login, setup filters and clickable invitation/user history
+- [ ] Show shared insights under client People
+- [ ] Validate focused tests and errors; authenticated QA requires synthetic sessions
+
 ## Client app and Operations separation
 - [x] Complete client/staff address routing without changing permissions
 - [x] Distinguish client and staff menus, top bars and sign-in presentation

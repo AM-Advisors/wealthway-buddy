@@ -119,13 +119,16 @@ export const inviteStaff = createServerFn({ method: "POST" })
       .maybeSingle();
     if (existing) throw new Error("That person already has a pending invitation for this role.");
 
-    const { error } = await context.supabase.from("staff_invitations").insert({
+    const { data: invitation, error } = await context.supabase.from("staff_invitations").insert({
       email,
       role: data.role as any,
       invited_name: data.name || null,
       invited_by: who.userId,
-    });
+    }).select("id").single();
     if (error) throw new Error(error.message);
+    if (!invitation) throw new Error("Invitation could not be created.");
+    const { resendInvite } = await import("@/lib/user-access.server");
+    await resendInvite(who.userId, "staff_invitations", invitation.id);
     return { ok: true };
   });
 

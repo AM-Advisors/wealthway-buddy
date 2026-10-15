@@ -49,5 +49,18 @@ export const getAccessHistory = createServerFn({ method: "POST" }).middleware([r
   .handler(async ({ data, context }) => (await srv()).accessHistory(context.userId, data.subjectId));
 
 export const getPersonActivity = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ userId: z.string().uuid() }).parse(d))
-  .handler(async ({ data, context }) => (await srv()).personActivity(context.userId, data.userId));
+  .inputValidator((d) => z.object({ userId: z.string().uuid(), before: z.string().datetime().optional(), from: z.string().datetime().optional(), to: z.string().datetime().optional() }).parse(d))
+  .handler(async ({ data, context }) => (await srv()).personActivity(context.userId, data.userId, data));
+
+export const getUserInsights = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ email: z.string().trim().email().max(320) }).parse(d))
+  .handler(async ({ data, context }) => (await import("@/lib/user-insights.server")).personInsights(context.userId, data.email));
+
+export const getInvitationInsight = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ id: z.string().uuid(), source: z.enum(["staff_invitations", "client_invitations", "fund_invitations", "client_contacts"]) }).parse(d))
+  .handler(async ({ data, context }) => {
+    const db = await (await srv()).requireAccessViewer(context.userId);
+    const { data: row, error } = await db.from(data.source).select("email").eq("id", data.id).maybeSingle();
+    if (error || !row) throw new Error("Invitation not found.");
+    return { email: String(row.email), name: "" };
+  });

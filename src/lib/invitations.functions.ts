@@ -195,7 +195,7 @@ async function grantFundAccess(input: GrantInput) {
         status: "accepted",
         accepted_at: now,
         accepted_by: targetUserId,
-        last_sent_at: input.sendEmail ? now : null,
+        last_sent_at: null,
       })),
     )
     .select("id");
@@ -211,6 +211,8 @@ async function sendInvitationEmail(opts: {
   role: InvitationRole;
   fundNames: string[];
   invitedByName: string;
+  actorId: string;
+  invitationIds: string[];
 }) {
   const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
   const { buildOpenPixelUrl } = await import("@/lib/email-tracking.server");
@@ -219,7 +221,9 @@ async function sendInvitationEmail(opts: {
     recipient: opts.email,
     template: "fund-invitation",
   });
+  const firstId = opts.invitationIds[0];
   const result = await sendTemplateEmail("fund-invitation", opts.email, {
+    ...(firstId ? { auditTarget: { kind: "fund_invitations", id: firstId, actorId: opts.actorId } } : {}),
     templateData: {
       inviteeName: opts.name || opts.email,
       offeringName: opts.fundNames.join(", ") || "Harmonious",
@@ -230,6 +234,12 @@ async function sendInvitationEmail(opts: {
       pixelUrl,
     },
   });
+  if (result.sent) {
+    const { error } = await opts.supabaseAdmin.from("fund_invitations").update({ last_sent_at: new Date().toISOString() }).in("id", opts.invitationIds);
+    if (error) throw new Error("Email sent, but invitation status could not be updated.");
+  }
+  const { recordUserEmail } = await import("@/lib/user-email-audit.server");
+  for (const id of opts.invitationIds.slice(1)) await recordUserEmail({ kind: "fund_invitations", id, actorId: opts.actorId }, result);
   return result.sent;
 }
 
@@ -284,6 +294,7 @@ export const inviteToFund = createServerFn({ method: "POST" })
         role: data.role,
         fundNames: (offerings as any[]).map((o) => o.name as string),
         invitedByName: await actorName(supabase, userId, claims),
+        actorId: userId, invitationIds,
       });
     }
 
@@ -365,7 +376,7 @@ export const inviteManyToFunds = createServerFn({ method: "POST" })
           entry.email,
           entry.name,
         );
-        await grantFundAccess({
+        const invitationIds = await grantFundAccess({
           supabase,
           supabaseAdmin,
           actorId: userId,
@@ -385,6 +396,7 @@ export const inviteManyToFunds = createServerFn({ method: "POST" })
             role: data.role,
             fundNames,
             invitedByName: invitedBy,
+            actorId: userId, invitationIds,
           });
         }
         results.push({ email: entry.email, status: "invited", accountCreated, emailSent });
@@ -426,6 +438,7 @@ export const resendInvitation = createServerFn({ method: "POST" })
       role: (invitation as any).invite_role as InvitationRole,
       fundNames: [((offering as any)?.name as string) ?? "Harmonious"],
       invitedByName: await actorName(supabase, userId, claims),
+      actorId: userId, invitationIds: [data.id],
     });
 
 
@@ -608,10 +621,10 @@ export const addExistingInvestorToFund = createServerFn({ method: "POST" })
     if (!u?.user || !email) throw new Error("That person's account couldn't be found.");
     const { data: fund } = await supabase.from("offerings").select("name").eq("id", data.fundId).maybeSingle();
     if (!fund) throw new Error("Fund not found.");
-    await grantFundAccess({ supabase, supabaseAdmin, actorId: userId, targetUserId: data.userId, offeringIds: [data.fundId], role: "investor" as InvitationRole, email, name: person?.legal_name ?? "", sendEmail: data.sendEmail });
+    const invitationIds = await grantFundAccess({ supabase, supabaseAdmin, actorId: userId, targetUserId: data.userId, offeringIds: [data.fundId], role: "investor" as InvitationRole, email, name: person?.legal_name ?? "", sendEmail: data.sendEmail });
     let emailSent = false;
     if (data.sendEmail) {
-      emailSent = await sendInvitationEmail({ supabaseAdmin, email, name: person?.legal_name ?? "", role: "investor" as InvitationRole, fundNames: [(fund as any).name], invitedByName: await actorName(supabase, userId, claims) });
+      emailSent = await sendInvitationEmail({ supabaseAdmin, email, name: person?.legal_name ?? "", role: "investor" as InvitationRole, fundNames: [(fund as any).name], invitedByName: await actorName(supabase, userId, claims), actorId: userId, invitationIds });
     }
     return { status: "added" as const, emailSent };
   });

@@ -182,6 +182,7 @@ export const inviteClientContact = createServerFn({ method: "POST" })
     const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
     const day = new Date().toISOString().slice(0, 10);
     await sendTemplateEmail("client-admin-alert", String(c.email).toLowerCase(), {
+      auditTarget: { kind: "client_contacts", id: c.id, actorId: context.userId },
       templateData: {
         contactName: c.full_name,
         headline: `You're invited to ${client?.name ?? "a Harmonious client"} on Harmonious`,
