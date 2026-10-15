@@ -1751,6 +1751,13 @@
       "when": 1792090326815,
       "tag": "0249_adopted_signature_images",
       "breakpoints": true
+    },
+    {
+      "idx": 250,
+      "version": "7",
+      "when": 1792096818942,
+      "tag": "0250_wix_fund_staging",
+      "breakpoints": true
     }
   ]
 }
