@@ -209,3 +209,5 @@
 - Staff-recorded prior KYC (person_kyc_requests mode "prior", recordPriorKycFn) is reference only and never sets kyc_status/aml_status; status changes only from a live identity check - why: the identity provider stays the KYC/AML authority.
 - Wix member-area import is read-only (src/lib/wix-members.functions.ts → wix_member_imports staging, email match suggestion only); never writes to Wix or auto-creates people - why: Wix is a legacy source, Harmonious records need review.
 - In-app signatures (MSA, SS-4) are captured only via src/components/signature-adopt-dialog.tsx (type/draw/upload → PNG validated by src/lib/adopted-signature.ts, stored with method); Box Sign documents keep Box’s own ceremony - why: one familiar signing pop-up, Box stays authority for fund documents.
+
+- Signing reminders go only through src/lib/signing-reminder.server.ts (signing-reminder email, deep link or one-time invite link that returns to the document, 24h per document/signer limit with logged Super Admin override, fund audit event) - why: one consistent, non-spammy reminder that never signs or files anything.
