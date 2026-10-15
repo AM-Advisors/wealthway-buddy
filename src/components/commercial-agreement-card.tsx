@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getCommercialAgreementStatus, updateContractStructure } from "@/lib/commercial-agreements.functions";
 import { CONTRACT_STRUCTURES, CONTRACT_STRUCTURE_LABELS, DOC_STATUS_LABELS, type ContractStructure } from "@/lib/commercial-agreement-model";
+import { MsaSignerPicker } from "@/components/msa-signer-picker";
 
 /**
  * Operations view of the Harmonious MSA/SOW. Informational only - it never
@@ -57,6 +58,7 @@ export function CommercialAgreementCard({ clientId, offeringId }: { clientId?: s
             <p className="font-medium">{s.structureLabel}</p>
           )}
         </div>
+        {s.clientId ? <MsaSignerPicker clientId={s.clientId} /> : null}
         {s.lines.map((l: any) => (
           <div key={l.key}>
             <p className="text-xs text-muted-foreground">{l.label}</p>

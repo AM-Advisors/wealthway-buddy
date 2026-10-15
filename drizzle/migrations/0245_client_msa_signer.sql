@@ -1,0 +1,2 @@
+ALTER TABLE public.clients ADD COLUMN IF NOT EXISTS msa_signer_user_id uuid;
+COMMENT ON COLUMN public.clients.msa_signer_user_id IS 'Client team member designated by staff to sign the Harmonious MSA; null = any client user may sign.';

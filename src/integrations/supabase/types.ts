@@ -7126,6 +7126,7 @@ export type Database = {
           legal_name: string | null
           msa_document_path: string | null
           msa_signed_on: string | null
+          msa_signer_user_id: string | null
           msa_version: string | null
           name: string
           notes: string | null
@@ -7164,6 +7165,7 @@ export type Database = {
           legal_name?: string | null
           msa_document_path?: string | null
           msa_signed_on?: string | null
+          msa_signer_user_id?: string | null
           msa_version?: string | null
           name: string
           notes?: string | null
@@ -7202,6 +7204,7 @@ export type Database = {
           legal_name?: string | null
           msa_document_path?: string | null
           msa_signed_on?: string | null
+          msa_signer_user_id?: string | null
           msa_version?: string | null
           name?: string
           notes?: string | null
