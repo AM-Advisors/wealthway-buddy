@@ -13,7 +13,7 @@ export async function recordClientInboxCopy(input: {
   text?: string | undefined;
   dedupeKey?: string | undefined;
   /** Reminders reach every signed-up person (investors too), not only client contacts. */
-  anyUser?: boolean;
+  anyUser?: boolean | undefined;
 }): Promise<string | null> {
   try {
     const email = String(input.recipientEmail ?? "").trim().toLowerCase();
