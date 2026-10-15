@@ -1,9 +1,10 @@
 # Roadmap
 
 ## Client app and Operations separation
-- [ ] Complete client/staff address routing without changing permissions
-- [ ] Distinguish client and staff menus, top bars and sign-in presentation
-- [ ] Verify address redirects and synthetic QA client/staff flows
+- [x] Complete client/staff address routing without changing permissions
+- [x] Distinguish client and staff menus, top bars and sign-in presentation
+- [x] Verify address redirects and sign-in screens (93 focused tests; desktop/phone browser checks)
+- [ ] Authenticated client/staff click-through — blocked: no synthetic QA sessions available; shared production backend must not be used for browser tests
 
 ## Founders Fund (Digital Irish Ventures)
 - [x] Setup: add multiple Google Drive links section

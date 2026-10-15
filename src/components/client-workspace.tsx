@@ -117,13 +117,14 @@ export function ClientWorkspaceProvider({ children }: { children: React.ReactNod
   }, [data, options, activeId]);
 
   const resolvedActive = useMemo(() => {
+    const surfaceOptions = applicationSurface ? options.filter((option) => option.surface === applicationSurface) : options;
     const pathKind = workspaceKindForPath(pathname);
-    const fromPath = options.find((o) => pathKind !== null && o.kind === pathKind);
-    const stored = options.find((o) => o.id === activeId);
+    const fromPath = surfaceOptions.find((o) => pathKind !== null && o.kind === pathKind);
+    const stored = surfaceOptions.find((o) => o.id === activeId);
     // Several client accounts share the company area: keep the chosen one.
     if (stored && fromPath && stored.kind === fromPath.kind) return stored;
-    return fromPath ?? stored ?? options.find((o) => o.surface === "client") ?? options[0] ?? null;
-  }, [options, activeId, pathname]);
+    return fromPath ?? stored ?? surfaceOptions.find((o) => o.surface === "client") ?? surfaceOptions[0] ?? null;
+  }, [options, activeId, pathname, applicationSurface]);
 
   const switchTo = useCallback(
     async (workspaceId: string) => {

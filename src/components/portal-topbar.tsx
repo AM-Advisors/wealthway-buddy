@@ -51,7 +51,8 @@ export function PortalTopbar(_props: { onSignOut: () => void }) {
         <SidebarTrigger />
         {topbarShowsLogo(isMobile, openMobile) && (
           <Link to={inOperations ? "/ops" : "/home"} aria-label="Harmonious home" data-testid="brand-logo" className="shrink-0">
-            <Logo variant="navy" className="h-6 w-auto" />
+            <span className="dark:hidden"><Logo variant="navy" className="h-6 w-auto" /></span>
+            <span className="hidden dark:block"><Logo variant="white" className="h-6 w-auto" /></span>
           </Link>
         )}
         <span className={`shrink-0 text-xs font-semibold ${inOperations ? "text-primary" : "text-muted-foreground"}`}>{inOperations ? "Operations" : "Client portal"}</span>
