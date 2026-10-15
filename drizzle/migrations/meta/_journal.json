@@ -1709,6 +1709,13 @@
       "when": 1792073762622,
       "tag": "0243_investor_onboarding_merge_pointer",
       "breakpoints": true
+    },
+    {
+      "idx": 244,
+      "version": "7",
+      "when": 1792076595218,
+      "tag": "0244_migration",
+      "breakpoints": true
     }
   ]
 }
