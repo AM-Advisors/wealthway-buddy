@@ -89,7 +89,7 @@ export async function overview(userId: string) {
 
 export async function decide(userId: string, input: { source: SourceId; sourceRef: string; decision: ReviewDecision; reason: string; personId?: string | null | undefined; registryKey?: string | null | undefined }) {
   await staff(userId);
-  if (input.source !== "didit") throw new Error("Only Didit records are available for review until other sources are connected.");
+  if (input.source !== "didit") throw new Error("Only identity-verification records are available for review until other sources are connected.");
   const { rows } = await didit();
   const row = rows.find((r) => r.ref === input.sourceRef);
   if (!row) throw new Error("That source record was not found.");

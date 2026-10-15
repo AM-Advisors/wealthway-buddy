@@ -106,7 +106,7 @@ function GuidePage() {
 
         <Step n={3} title="Verify your identity">
           <p>
-            Click <strong className="text-foreground">Start verification</strong>. Our ID partner, Didit, will ask for a
+            Click <strong className="text-foreground">Start verification</strong>. Harmonious will ask for a
             photo of your government ID, a quick selfie, and your address. It takes about 5 minutes. On a computer
             you can scan a code to finish on your phone. Your ID number is never shown in the portal.
           </p>

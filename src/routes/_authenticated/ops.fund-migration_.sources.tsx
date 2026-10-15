@@ -18,7 +18,7 @@ export const Route = createFileRoute("/_authenticated/ops/fund-migration_/source
   head: () => ({
     meta: [
       { title: "Source Reconciliation - Harmonious Operations" },
-      { name: "description", content: "Read-only reconciliation of historical records across Harmonious, Didit, Simplici, Wix, Google Drive and Box." },
+      { name: "description", content: "Read-only reconciliation of historical records across Harmonious, identity verification, Simplici, Wix, Google Drive and Box." },
       { property: "og:title", content: "Source Reconciliation - Harmonious Operations" },
       { property: "og:description", content: "Match historical source records to Harmonious before any import." },
       { property: "og:type", content: "website" },
@@ -74,7 +74,7 @@ function SourcesPage() {
 
       <section className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="font-heading text-lg font-semibold">Didit verification history</h2>
+          <h2 className="font-heading text-lg font-semibold">Identity verification history</h2>
           <Select value={cls} onValueChange={setCls}>
             <SelectTrigger className="w-56" aria-label="Filter by match"><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -131,7 +131,7 @@ function ReviewDialog({ row, onClose }: { row: any; onClose: () => void }) {
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-lg">
-        <DialogHeader><DialogTitle>Didit session {row.sessionId}</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>Verification session {row.sessionId}</DialogTitle></DialogHeader>
         <div className="space-y-3 text-sm">
           <p><span className="text-muted-foreground">Classification:</span> {CLASS_LABEL[row.matchClass as MatchClass]}</p>
           <p><span className="text-muted-foreground">Linked by:</span> {row.linkedVia ?? "nothing"} · <span className="text-muted-foreground">People found:</span> {row.personIds.length}</p>

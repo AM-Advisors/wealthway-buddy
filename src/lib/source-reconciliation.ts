@@ -10,7 +10,7 @@ export type MatchClass = "confirmed" | "probable" | "unmatched" | "conflicting" 
 export type ReviewDecision = "confirm_match" | "reject_match" | "mark_unresolved" | "flag_duplicate" | "link_fund" | "request_evidence" | "stage_for_import";
 
 export const SOURCE_LABEL: Record<SourceId, string> = {
-  harmonious: "Harmonious", didit: "Didit", simplici: "Simplici", wix: "Wix", google_drive: "Google Drive", box: "Box",
+  harmonious: "Harmonious", didit: "Identity verification", simplici: "Simplici", wix: "Wix", google_drive: "Google Drive", box: "Box",
 };
 export const STATUS_LABEL: Record<ConnectionStatus, string> = {
   connected: "Connected", partial: "Partially available", not_connected: "Not connected", blocked: "Blocked", error: "Error",

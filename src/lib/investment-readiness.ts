@@ -87,7 +87,7 @@ export const REQUIREMENT_SOURCE: Record<string, string> = {
   account: "accounts",
   investment_profile: "investment_profiles",
   investment_amount: "investor_onboardings",
-  identity_verification: "identity_verification (Didit)",
+  identity_verification: "identity_verification",
   entity_verification: "entity_verifications (KYB)",
   beneficial_owners: "profile_relationships",
   aml: "aml_screenings",

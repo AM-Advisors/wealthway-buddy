@@ -20,7 +20,7 @@ const FIELDS: [string, string][] = [
 const STATUS: Record<string, string> = { approved: "Approved", review: "In review", declined: "Declined", pending: "Pending", not_started: "Not started" };
 const badge = (label: string, s: string | null | undefined) => <Badge variant={s === "approved" ? "default" : s === "declined" ? "destructive" : "outline"}>{label}: {STATUS[s ?? "not_started"] ?? s}</Badge>;
 
-/** Staff list of people records: edit details, send a Didit link, or check an uploaded ID. */
+/** Staff list of people records: edit details, send an identity-check link, or check an uploaded ID. */
 export function PersonRecords() {
   const qc = useQueryClient();
   const [search, setSearch] = useState("");
@@ -31,7 +31,7 @@ export function PersonRecords() {
   const refresh = () => qc.invalidateQueries({ queryKey: ["person-records"] });
   const sendLink = useServerFn(sendKycLinkFn);
   const refreshFn = useServerFn(refreshKycLinkFn);
-  const link = useMutation({ mutationFn: (id: string) => sendLink({ data: { personId: id } }), onSuccess: (r) => { toast.success(r.emailed ? "Didit link emailed." : "Check started, but the email didn't send. Copy the link from the person's checks."); refresh(); }, onError: (e: Error) => toast.error(e.message) });
+  const link = useMutation({ mutationFn: (id: string) => sendLink({ data: { personId: id } }), onSuccess: (r) => { toast.success(r.emailed ? "Identity-check link emailed." : "Check started, but the email didn't send. Copy the link from the person's checks."); refresh(); }, onError: (e: Error) => toast.error(e.message) });
   const pull = useMutation({ mutationFn: (id: string) => refreshFn({ data: { requestId: id } }), onSuccess: (r) => { toast.success(`KYC: ${STATUS[r.status] ?? r.status}`); refresh(); }, onError: (e: Error) => toast.error(e.message) });
 
   return (
@@ -50,7 +50,7 @@ export function PersonRecords() {
                 <div className="flex flex-wrap gap-1">{badge("KYC", p.kyc_status)}{badge("AML", p.aml_status)}</div>
                 {p.checks.map((c: any) => (
                   <p key={c.id} className="text-xs text-muted-foreground">
-                    {new Date(c.created_at).toLocaleDateString()} · {c.mode === "link" ? "Didit link" : "Document only"} · {c.mode === "document" ? `ID ${c.id_status ?? "?"}, AML ${STATUS[c.aml_status] ?? c.aml_status ?? "not run"}` : STATUS[c.status] ?? c.status}
+                    {new Date(c.created_at).toLocaleDateString()} · {c.mode === "link" ? "Identity-check link" : "Document only"} · {c.mode === "document" ? `ID ${c.id_status ?? "?"}, AML ${STATUS[c.aml_status] ?? c.aml_status ?? "not run"}` : STATUS[c.status] ?? c.status}
                     {c.mode === "link" && c.session_url && <> · <button type="button" className="underline" onClick={() => { void navigator.clipboard.writeText(c.session_url); toast.success("Link copied."); }}>Copy link</button></>}
                     {c.mode === "link" && <> · <button type="button" className="underline" disabled={pull.isPending} onClick={() => pull.mutate(c.id)}>Check result</button></>}
                   </p>
@@ -79,7 +79,7 @@ function EditDialog({ person, onClose, onSaved }: { person: any; onClose: () => 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
-        <DialogHeader><DialogTitle>{person.id ? `Edit ${person.name}` : "Add person"}</DialogTitle><DialogDescription>KYC and AML results come only from Didit and can't be typed in here.</DialogDescription></DialogHeader>
+        <DialogHeader><DialogTitle>{person.id ? `Edit ${person.name}` : "Add person"}</DialogTitle><DialogDescription>KYC and AML results come only from the identity check and can't be typed in here.</DialogDescription></DialogHeader>
         <div className="grid gap-3 sm:grid-cols-2">
           {FIELDS.map(([k, label]) => <div key={k} className="space-y-1"><Label>{label}</Label><Input value={v[k]} onChange={(e) => setV({ ...v, [k]: e.target.value })} /></div>)}
         </div>
@@ -107,7 +107,7 @@ function DocDialog({ person, onClose, onDone }: { person: any; onClose: () => vo
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-md">
-        <DialogHeader><DialogTitle>Check ID document for {person.name}</DialogTitle><DialogDescription>Didit checks the document and runs AML screening. Without a selfie this is document-only, not full KYC. The images aren't stored in Harmonious.</DialogDescription></DialogHeader>
+        <DialogHeader><DialogTitle>Check ID document for {person.name}</DialogTitle><DialogDescription>The identity check reviews the document and runs AML screening. Without a selfie this is document-only, not full KYC. The images aren't stored in Harmonious.</DialogDescription></DialogHeader>
         {result ? (
           <div className="space-y-1 text-sm">
             <p>Document: <b>{result.idStatus}</b></p>

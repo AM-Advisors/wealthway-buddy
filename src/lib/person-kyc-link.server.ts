@@ -31,7 +31,7 @@ export async function sendPersonKycLink(person: any, createdBy: string): Promise
     }),
   });
   const text = await res.text();
-  if (!res.ok) { console.error("[person-kyc] session failed", res.status, text.slice(0, 300)); throw new Error(`Didit couldn't start the check [${res.status}].`); }
+  if (!res.ok) { console.error("[person-kyc] session failed", res.status, text.slice(0, 300)); throw new Error(`The identity check couldn't be started [${res.status}].`); }
   const s = JSON.parse(text);
   const url = s.url ?? s.session_url ?? s.verification_url;
   const { data: row, error } = await d.from("person_kyc_requests")
@@ -49,7 +49,7 @@ export async function sendPersonKycLink(person: any, createdBy: string): Promise
           headline: "Please verify your identity",
           intro: "Harmonious needs to confirm your identity. It takes a few minutes: you'll photograph your ID and take a quick selfie.",
           offeringName: "Harmonious",
-          details: [{ label: "Provider", value: "Didit (secure identity verification)" }],
+          details: [{ label: "What you'll need", value: "Government ID and a selfie" }],
           portalUrl: url,
         },
       });

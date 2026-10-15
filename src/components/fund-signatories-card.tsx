@@ -124,7 +124,7 @@ export function FundSignatoriesCard({ offeringId, onChanged }: { offeringId: str
             {(mode === "new" ? np.email.trim() : d.candidates.find((c) => c.key === key && c.kyc !== "verified" && c.key.startsWith("contact:"))) ? (
               <label className="flex items-start gap-2 text-sm">
                 <Checkbox checked={sendInvite} onCheckedChange={(v) => setSendInvite(v === true)} />
-                <span>Send identity check and onboarding invitation<span className="block text-xs text-muted-foreground">Emails them a sign-in link. They complete their own ID check (Didit) when they sign in.</span></span>
+                <span>Send identity check and onboarding invitation<span className="block text-xs text-muted-foreground">Emails them a sign-in link. They complete their own ID check when they sign in.</span></span>
               </label>
             ) : null}
             {review && (
