@@ -204,7 +204,7 @@ export function canonicalRedirect(
     if (surface === "shared") return null;
     const kind = classifyLegacyPath(pathname);
     const base = kind === "operations" ? ops : client;
-    return { location: `${base}${tail}`, status: 302 };
+    return { location: `${base}${pathname === "/" ? `/home${parsed.search}${parsed.hash}` : tail}`, status: 302 };
   }
 
   if (surface === "shared") return null;
