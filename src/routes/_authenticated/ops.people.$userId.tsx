@@ -50,6 +50,7 @@ function PersonActivityPage() {
           {!!d.roles.length && <div className="mt-2 flex flex-wrap gap-1">{d.roles.map((r) => <Badge key={r} variant="outline">{r.replace(/_/g, " ")}</Badge>)}</div>}
         </header>
         <AccountOverview d={d} />
+        <IdentityResults checks={d.identityChecks ?? []} />
         {d.people.filter((p: any) => p.linked).map((p: any) => <PersonKycUpdate key={p.id} personId={p.id} />)}
         {d.email && <UserInsights email={d.email} />}
         <section className="rounded-lg border">
@@ -109,6 +110,29 @@ function AccountOverview({ d }: { d: any }) {
         <h2 className="text-lg">Investments ({d.investments.length})</h2>
         <ul className="mt-2 space-y-1 text-sm">{d.investments.length ? d.investments.map((i: any) => <li key={i.id} className="flex flex-wrap justify-between gap-2"><Link to="/ops/funds/$fundId" params={{ fundId: i.offeringId }} className="text-primary hover:underline">{i.fund}</Link><span className="text-muted-foreground">{money(i.committed)} committed · {money(i.funded)} funded · <span className="capitalize">{label(i.status)}</span></span></li>) : <li className="text-muted-foreground">None</li>}</ul>
       </div>
+    </section>
+  );
+}
+
+/** Latest identity checks: document, liveness (live selfie), face match and AML. Display only. */
+function IdentityResults({ checks }: { checks: any[] }) {
+  const tone = (v: string | null | undefined) => (!v ? "outline" : /approv|pass|clear|verified|match/i.test(v) ? "default" : /declin|fail|reject/i.test(v) ? "destructive" : "secondary") as any;
+  const cell = (v: string | null | undefined) => <Badge variant={tone(v)} className="capitalize">{v ? v.replace(/_/g, " ").toLowerCase() : "not done"}</Badge>;
+  return (
+    <section className="rounded-lg border p-4">
+      <h2 className="text-lg">Identity check results</h2>
+      {!checks.length ? <p className="mt-2 text-sm text-muted-foreground">No identity check yet. Use "Request updated check" below to email a link. They scan their ID and take a live selfie on their phone.</p> : (
+        <div className="mt-2 overflow-x-auto"><table className="w-full text-sm">
+          <thead className="text-left text-xs text-muted-foreground"><tr><th className="py-1">Date</th><th>Check</th><th>Result</th><th>ID document</th><th>Liveness</th><th>Face match</th><th>AML</th></tr></thead>
+          <tbody>{checks.map((c) => (
+            <tr key={c.id} className="border-t">
+              <td className="py-2">{when(c.when)}</td><td>{c.kind}</td><td>{cell(c.status)}</td>
+              <td className="text-xs">{c.document || "—"}{c.expires ? <div className="text-muted-foreground">Expires {c.expires}</div> : null}</td>
+              <td>{cell(c.liveness)}</td><td>{cell(c.faceMatch)}{c.faceScore != null ? <span className="ml-1 text-xs text-muted-foreground">{Math.round(Number(c.faceScore))}%</span> : null}</td><td>{c.kind === "Account verification" ? cell(c.aml) : "—"}</td>
+            </tr>))}</tbody>
+        </table></div>
+      )}
+      <p className="mt-2 text-xs text-muted-foreground">"Not done" for liveness or face match means only the ID was checked. Send a new link so they can finish the live selfie.</p>
     </section>
   );
 }
