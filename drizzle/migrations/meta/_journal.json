@@ -1723,6 +1723,13 @@
       "when": 1792080537005,
       "tag": "0245_client_msa_signer",
       "breakpoints": true
+    },
+    {
+      "idx": 246,
+      "version": "7",
+      "when": 1792082126526,
+      "tag": "0246_person_kyc_prior_mode",
+      "breakpoints": true
     }
   ]
 }

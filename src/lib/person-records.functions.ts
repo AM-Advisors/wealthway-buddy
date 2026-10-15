@@ -161,3 +161,43 @@ export const runDocumentCheckFn = createServerFn({ method: "POST" }).middleware(
     await logPerson(p.id, context.userId, "document_check", { idStatus, amlStatus });
     return { id: row.id as string, idStatus, amlStatus, summary };
   });
+
+/**
+ * Record a KYC check done before Harmonious (another provider, a prior run, paper file).
+ * Informational only: it never sets kyc_status/aml_status — the identity provider stays the
+ * authority, so staff then request an updated check with sendKycLinkFn.
+ */
+export const recordPriorKycFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator((x: unknown) => z.object({
+    personId: z.string().uuid(),
+    provider: z.string().trim().min(1).max(100),
+    checkedOn: z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/, "Use YYYY-MM-DD"),
+    kycResult: z.enum(["approved", "review", "declined", "unknown"]),
+    amlResult: z.enum(["approved", "review", "declined", "unknown"]),
+    documentType: z.enum(["drivers_license", "passport", "other", "unknown"]),
+    reference: z.string().trim().max(200).optional(),
+    note: z.string().trim().max(1000).optional(),
+  }).parse(x))
+  .handler(async ({ data, context }) => {
+    await assertStaff(context.userId);
+    const d = await db();
+    const { data: p } = await d.from("persons").select("id").eq("id", data.personId).maybeSingle();
+    if (!p) throw new Error("Person not found.");
+    const summary = { provider: data.provider, checkedOn: data.checkedOn, kycResult: data.kycResult, amlResult: data.amlResult, reference: data.reference ?? null, note: data.note ?? null, info: "Prior check recorded by staff. Not a Harmonious verification; does not change KYC/AML status." };
+    const { data: row, error } = await d.from("person_kyc_requests").insert({ person_id: p.id, mode: "prior", document_type: data.documentType === "unknown" ? null : data.documentType, status: "recorded", id_status: data.kycResult, aml_status: data.amlResult, result_summary: summary, created_by: context.userId }).select("id").single();
+    if (error) throw new Error(error.message);
+    logPerson(p.id, context.userId, "prior_kyc_recorded", { provider: data.provider, checkedOn: data.checkedOn });
+    return { id: row.id as string };
+  });
+
+/** One person's editable details + recent checks, for the account page. */
+export const getPersonRecordFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator((x: unknown) => z.object({ personId: z.string().uuid() }).parse(x))
+  .handler(async ({ data, context }) => {
+    await assertStaff(context.userId);
+    const d = await db();
+    const { data: p } = await d.from("persons").select(COLS).eq("id", data.personId).maybeSingle();
+    if (!p) throw new Error("Person not found.");
+    const { data: reqs } = await d.from("person_kyc_requests").select("id, mode, status, id_status, aml_status, session_url, result_summary, created_at").eq("person_id", p.id).order("created_at", { ascending: false }).limit(10);
+    return { ...p, name: nm(p), checks: (reqs ?? []) as any[] };
+  });
