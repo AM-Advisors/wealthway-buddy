@@ -120,14 +120,30 @@ export async function statusByEmail(viewer: string, emails: string[]) {
   const db = await requireAccessViewer(viewer);
   const list = [...new Set(emails.filter(Boolean).map((e) => e.toLowerCase()))].slice(0, 2000);
   if (!list.length) return {};
-  const { data: profs } = await db.from("profiles").select("user_id, email, is_test_demo").in("email", list);
+  const [profsRow, invitesRow] = await Promise.all([
+    db.from("profiles").select("user_id, email, is_test_demo").in("email", list),
+    (async () => {
+      try { return await (await import("@/lib/user-insights.server")).invitationSummaries(db, list); } catch { return []; }
+    })(),
+  ]);
+  const profs = profsRow.data, invites = invitesRow as any[];
   const ids = ((profs ?? []) as any[]).map((p) => p.user_id);
   const { data: st } = ids.length ? await db.from("user_access_states").select("user_id, state, scope").is("lifted_at", null).in("user_id", ids) : { data: [] };
-  const out: Record<string, { userId: string; status: string; isTestDemo: boolean; scoped: number }> = {};
+  // Latest still-open invitation per email, for "Invite sent" + delivery display next to the resend action.
+  const latestByEmail = new Map<string, any>();
+  for (const i of invites) {
+    if (!["pending", "accepted"].includes(String(i.status))) continue;
+    const prev = latestByEmail.get(i.email);
+    const at = i.attempts[0]?.at ?? i.createdAt;
+    if (!prev || String(at) > String(prev.attempts[0]?.at ?? prev.createdAt)) latestByEmail.set(i.email, i);
+  }
+  const out: Record<string, { userId: string; status: string; isTestDemo: boolean; scoped: number; invite?: { lastSent: string | null; outcome: any } }> = {};
   for (const p of (profs ?? []) as any[]) {
+    const email = String(p.email).toLowerCase();
     const mine = ((st ?? []) as any[]).filter((s) => s.user_id === p.user_id);
     const g = mine.find((s) => s.scope === "global");
-    out[String(p.email).toLowerCase()] = { userId: p.user_id, status: g ? g.state : "active", isTestDemo: !!p.is_test_demo, scoped: mine.length - (g ? 1 : 0) };
+    const latest = latestByEmail.get(email);
+    out[email] = { userId: p.user_id, status: g ? g.state : "active", isTestDemo: !!p.is_test_demo, scoped: mine.length - (g ? 1 : 0), invite: latest ? { lastSent: latest.lastSent ?? latest.reportedSentAt, outcome: latest.outcome } : null };
   }
   return out;
 }
