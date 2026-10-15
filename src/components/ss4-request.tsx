@@ -124,6 +124,7 @@ export function Ss4RequestPanel({ fundId }: { fundId: string }) {
   const loadFn = useServerFn(ss4RequestContextFn);
   const sendFn = useServerFn(sendSs4RequestFn);
   const cancelFn = useServerFn(cancelSs4RequestFn);
+  const resendFn = useServerFn(resendSs4RequestFn);
   const pdfFn = useServerFn(ss4SignedPdfUrlFn);
   const [signer, setSigner] = useState<string | undefined>();
   const [form, setForm] = useState<Form | null>(null);
@@ -194,6 +195,7 @@ export function Ss4RequestPanel({ fundId }: { fundId: string }) {
               <div className="flex items-center gap-2">
                 <Badge variant={r.status === "signed" ? "default" : "outline"}>{r.status === "requested" ? "Waiting for signature" : r.status === "signed" ? "Signed" : "Cancelled"}</Badge>
                 {r.hasPdf && <Button size="sm" variant="outline" onClick={() => openPdf(r.id)}>Open signed SS-4</Button>}
+                {r.status === "requested" && <Button size="sm" variant="outline" onClick={() => resend.mutate(r.id)} disabled={resend.isPending}>{resend.isPending ? "Resending…" : "Resend"}</Button>}
                 {r.status === "requested" && <Button size="sm" variant="ghost" onClick={() => cancel.mutate(r.id)}>Cancel</Button>}
               </div>
             </div>
