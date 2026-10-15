@@ -50,7 +50,7 @@ describe("app and staff separation", () => {
     expect(staff.primary).toEqual([]);
   });
   it("cannot invent staff access from the host", () => {
-    expect(getNavigation({ operations: false, workspaces: [mixed.workspaces[0]] }, "investor", "/profile", "ops").shell).toBe("client");
+    expect(getNavigation({ operations: false, workspaces: mixed.workspaces.filter((workspace) => workspace.surface === "client") }, "investor", "/profile", "ops").shell).toBe("client");
     expect(getNavigation(null, null, "/ops", "ops").operations).toEqual([]);
   });
   it("leaves for both applications but keeps preview switches local", () => {
