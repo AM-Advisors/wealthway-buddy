@@ -78,6 +78,7 @@ export async function sendTemplateEmail(
     body: JSON.stringify({
       sender: { name: SITE_NAME, email: `noreply@${FROM_DOMAIN}` },
       to: [{ email: recipient }],
+      ...(options.cc ? { cc: [{ email: options.cc }] } : {}),
       subject,
       htmlContent: html,
       textContent: text,
