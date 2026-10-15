@@ -298,7 +298,7 @@ export function FundWorkspace({ fundId, tab, onTab, mode = "client", extraTabs =
         {!merged && <TabsContent value="details" className="space-y-5">{detailsBody}</TabsContent>}
         {!merged && <TabsContent value="banking" className="space-y-5">{bankingBody}</TabsContent>}
 
-        <TabsContent value="investors" className="space-y-4">{staff && <ReadinessQueue offeringId={fundId} initialTab="all" />}<InvestorsTab fundId={fundId} /><CapitalTieReport offeringId={fundId} /><FundUpdatesPanel fundId={fundId} /></TabsContent>
+        <TabsContent value="investors" className="space-y-4"><InvestorsTab fundId={fundId} workQueue={staff ? <ReadinessQueue offeringId={fundId} initialTab="all" /> : undefined} /><CapitalTieReport offeringId={fundId} /><FundUpdatesPanel fundId={fundId} /></TabsContent>
 
 
         <TabsContent value="accounting"><AccountTab fundId={fundId} fundName={String(f.name ?? "Fund")} taxDocs={td?.taxDocs ?? []} /></TabsContent>
