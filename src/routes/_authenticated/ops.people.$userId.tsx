@@ -99,7 +99,7 @@ function AccountOverview({ d }: { d: any }) {
       </div>
       <div className="rounded-lg border p-4">
         <h2 className="text-lg">Clients ({d.clients.length})</h2>
-        <ul className="mt-2 space-y-1 text-sm">{d.clients.length ? d.clients.map((c: any) => <li key={c.id} className="flex justify-between gap-2"><Link to="/ops/clients/$clientId" params={{ clientId: c.id }} className="text-primary hover:underline">{c.name}</Link><span className="capitalize text-muted-foreground">{label(c.role)}</span></li>) : <li className="text-muted-foreground">None</li>}</ul>
+        <ul className="mt-2 space-y-1 text-sm">{d.clients.length ? d.clients.map((c: any) => <li key={c.id} className="flex justify-between gap-2"><Link to="/ops/clients/$clientId" params={{ clientId: c.id }} search={{} as any} className="text-primary hover:underline">{c.name}</Link><span className="capitalize text-muted-foreground">{label(c.role)}</span></li>) : <li className="text-muted-foreground">None</li>}</ul>
         <h2 className="mt-4 text-lg">Fund teams ({d.funds.length})</h2>
         <ul className="mt-2 space-y-1 text-sm">{d.funds.length ? d.funds.map((f: any) => <li key={f.id} className="flex justify-between gap-2"><Link to="/ops/funds/$fundId" params={{ fundId: f.id }} className="text-primary hover:underline">{f.name}</Link><span className="capitalize text-muted-foreground">{label(f.role)}</span></li>) : <li className="text-muted-foreground">None</li>}</ul>
       </div>
