@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { AccessBadge, PeopleActions } from "@/components/people-actions";
 import { cancelInvitation, getPeopleDirectory, setTestDemoFlag } from "@/lib/user-access.functions";
 import { ResendInviteButton } from "@/components/invite-resend";
+import { matchFundOptions, matchesInvite, matchesPerson } from "@/lib/people-search";
 import { DeliveryBadge, insightTime } from "@/components/user-insights";
 
 type Tab = "all" | "invited" | "revoked" | "archived" | "test";
@@ -29,13 +30,15 @@ export function PeopleDirectory({ initial = "all" }: { initial?: Tab }) {
   const [attention, setAttention] = useState("all");
   const [, setBusy] = useState(false);
   const s = search.toLowerCase();
+  const matchedFunds = useMemo(() => matchFundOptions(q.data?.fundOptions ?? [], s), [q.data, s]);
 
   const people = useMemo(() => (q.data?.people ?? []).filter((p: any) =>
-    `${p.name} ${p.email}`.toLowerCase().includes(s) && (type === "all" || p.types.includes(type)) && (attention === "all" || attention === "never" && !p.lastSignIn || attention === "setup" && p.gaps?.length > 0 || attention === "email" && ["Failed", "Bounced", "Blocked"].includes(p.latestInvite?.outcome.status)) &&
+    matchesPerson({ name: p.name, email: p.email, funds: p.funds }, s, { matchAllFundsMarker: matchedFunds.length > 0 }) && (type === "all" || p.types.includes(type)) && (attention === "all" || attention === "never" && !p.lastSignIn || attention === "setup" && p.gaps?.length > 0 || attention === "email" && ["Failed", "Bounced", "Blocked"].includes(p.latestInvite?.outcome.status)) &&
     (tab === "test" ? p.isTestDemo : tab === "archived" ? p.status === "archived" : tab === "revoked" ? (p.status === "revoked" || p.scopedRevokes.length > 0) : tab === "all" ? p.status === "active" && !p.isTestDemo : false)), [q.data, s, type, tab, attention]);
   const invites = useMemo(() => (q.data?.invites ?? []).filter((i: any) =>
-    `${i.name ?? ""} ${i.email}`.toLowerCase().includes(s) && (type === "all" || i.type === type) && (attention === "all" || attention === "expired" && i.expiresAt && Date.parse(i.expiresAt) < Date.now() || attention === "email" && ["Failed", "Bounced", "Blocked"].includes(i.outcome.status)) && (tab === "invited" ? !i.isTestDemo : tab === "test" ? i.isTestDemo : false)), [q.data, s, type, tab, attention]);
+    matchesInvite({ name: i.name, email: i.email, fundName: i.fundName }, s) && (type === "all" || i.type === type) && (attention === "all" || attention === "expired" && i.expiresAt && Date.parse(i.expiresAt) < Date.now() || attention === "email" && ["Failed", "Bounced", "Blocked"].includes(i.outcome.status)) && (tab === "invited" ? !i.isTestDemo : tab === "test" ? i.isTestDemo : false)), [q.data, s, type, tab, attention]);
   const testClients = tab === "test" ? (q.data?.clients ?? []).filter((c: any) => c.is_test_demo) : [];
+
 
   const act = async (fn: () => Promise<any>, msg: string) => { setBusy(true); try { await fn(); toast.success(msg); } catch (e) { toast.error(e instanceof Error ? e.message : "Failed."); } finally { await qc.invalidateQueries(); setBusy(false); } };
 
@@ -50,12 +53,18 @@ export function PeopleDirectory({ initial = "all" }: { initial?: Tab }) {
         {TABS.map((t) => <Button key={t.id} size="sm" variant={tab === t.id ? "default" : "outline"} onClick={() => setTab(t.id)}>{t.label}</Button>)}
       </div>
       <div className="flex flex-wrap gap-2">
-        <Input placeholder="Search name or email" value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-sm" />
+        <Input placeholder="Search name, email or fund" value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-sm" />
         <select aria-label="Filter by type" className="rounded border bg-background px-2 text-sm" value={type} onChange={(e) => setType(e.target.value)}>
           <option value="all">All types</option>{TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
         </select>
         <select aria-label="Filter by attention needed" className="rounded border bg-background px-2 text-sm" value={attention} onChange={e => { setAttention(e.target.value); if (e.target.value === "expired") setTab("invited"); }}><option value="all">All statuses</option><option value="never">Never signed in</option><option value="setup">Incomplete setup</option><option value="email">Email problems</option><option value="expired">Expired invitations</option></select>
       </div>
+      {s && matchedFunds.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 text-sm">
+          <span className="text-xs uppercase text-muted-foreground">Funds matching your search</span>
+          {matchedFunds.map((f: any) => <Link key={f.id} to="/ops/funds/$fundId" params={{ fundId: f.id }} className="rounded-full border px-3 py-1 text-xs text-primary hover:bg-muted">{f.name}</Link>)}
+        </div>
+      )}
       {q.isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
       {q.error && <p className="text-sm text-destructive">{(q.error as Error).message}</p>}
       {q.data?.providerError && <p className="text-sm text-muted-foreground">{q.data.providerError} <Button variant="outline" size="sm" onClick={() => q.refetch()}>Refresh email status</Button></p>}
@@ -67,7 +76,7 @@ export function PeopleDirectory({ initial = "all" }: { initial?: Tab }) {
             <tbody className="divide-y">
               {people.map((p: any) => (
                 <tr key={p.id}>
-                  <td className="p-3"><Link to="/ops/people/$userId" params={{ userId: p.id }} className="font-medium text-primary hover:underline">{p.name || p.email}</Link><div className="text-xs text-muted-foreground">{p.email}{p.isSelf ? " · you" : ""}</div></td>
+                  <td className="p-3"><Link to="/ops/people/$userId" params={{ userId: p.id }} className="font-medium text-primary hover:underline">{p.name || p.email}</Link><div className="text-xs text-muted-foreground">{p.email}{p.isSelf ? " · you" : ""}</div>{s && (p.funds ?? []).some((f: string) => f.toLowerCase().includes(s)) && <div className="text-xs text-muted-foreground">Funds: {(p.funds as string[]).join(", ")}</div>}</td>
                   <td className="p-3"><div className="flex flex-wrap gap-1">{p.types.map((t: string) => <Badge key={t} variant="outline">{t}</Badge>)}{p.fundTeam && <Badge variant="secondary" title="Fund team access">Team: {p.fundTeam.allFunds ? "All funds" : p.fundTeam.allManaged ? "All managed funds" : `${p.fundTeam.grants} fund${p.fundTeam.grants === 1 ? "" : "s"}`}</Badge>}</div></td>
                   <td className="space-y-2 p-3">{p.status === "active" && !p.scopedRevokes.length && !p.isTestDemo ? "Active" : <AccessBadge info={{ userId: p.id, status: p.status, isTestDemo: p.isTestDemo, scoped: p.scopedRevokes.length }} />}<div><DeliveryBadge outcome={p.latestInvite?.outcome} /></div><p className="text-xs text-muted-foreground">Invite: {insightTime(p.latestInvite?.lastSent)}</p>{p.gaps?.length > 0 && <p className="text-xs text-muted-foreground">Missing: {p.gaps.join(", ")}</p>}</td>
                   <td className="whitespace-nowrap p-3">{when(p.lastSignIn)}</td>

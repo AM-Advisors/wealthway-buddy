@@ -64,7 +64,7 @@ export async function isGloballyBlocked(uid: string) {
 export type PersonType = "Employee" | "Fund Manager" | "Founder" | "Client contact" | "Investor" | "User";
 export async function directory(viewer: string) {
   const db = await requireAccessViewer(viewer);
-  const [users, roles, cu, ftm, contacts, profiles, states, persons, si, ci, fi, ftg] = await Promise.all([
+  const [users, roles, cu, ftm, contacts, profiles, states, persons, si, ci, fi, ftg, off] = await Promise.all([
     allAuthUsers(db),
     db.from("user_roles").select("user_id, role").limit(50000),
     db.from("client_users").select("user_id, client_id").limit(50000),
@@ -77,9 +77,11 @@ export async function directory(viewer: string) {
     db.from("client_invitations").select("id, email, invited_name, invited_by, status, created_at, invite_sent_at, client_id, is_test_demo").eq("status", "pending").limit(5000),
     db.from("fund_invitations").select("id, email, invited_name, invited_by, status, created_at, last_sent_at, offering_id, invite_role, is_test_demo").eq("status", "pending").is("accepted_at", null).limit(5000),
     db.from("fund_team_grants").select("grantee_user_id, role, scope, offering_id").eq("status", "active").not("grantee_user_id", "is", null).limit(50000),
+    db.from("offerings").select("id, name").limit(20000),
   ]);
   const by = <T,>(rows: any[], k: string) => { const m = new Map<string, T[]>(); for (const r of rows ?? []) if (r[k]) m.set(r[k], [...(m.get(r[k]) ?? []), r]); return m; };
   const R = by<any>(roles.data, "user_id"), CU = by<any>(cu.data, "user_id"), F = by<any>(ftm.data, "user_id"), C = by<any>(contacts.data, "user_id"), S = by<any>(states.data, "user_id"), FTG = by<any>(ftg.data, "grantee_user_id");
+  const OFF = new Map(((off.data ?? []) as any[]).map((o) => [o.id, String(o.name ?? "")]));
   const P = new Map(((profiles.data ?? []) as any[]).map((p) => [p.user_id, p]));
   const investorUsers = new Set(((persons.data ?? []) as any[]).map((p) => p.user_id));
   const people = users.map((u: any) => {
@@ -95,11 +97,14 @@ export async function directory(viewer: string) {
     const global = st.find((s) => s.scope === "global");
     const p = P.get(u.id);
     const ftg = (FTG.get(u.id) ?? []) as any[];
+    const funds = [...new Set((F.get(u.id) ?? []).map((x: any) => OFF.get(x.offering_id)).filter(Boolean))] as string[];
+    if (ftg.some((g) => g.scope === "all_funds" || g.scope === "all_managed")) funds.push("All funds");
     return {
       kind: "user" as const, id: u.id, email: u.email ?? p?.email ?? "", name: p?.legal_name || u.user_metadata?.full_name || "",
       types: types.length ? types : ["User" as PersonType], lastSignIn: u.last_sign_in_at ?? null, createdAt: u.created_at,
       status: global ? (global.state as "revoked" | "archived") : "active" as const,
       scopedRevokes: st.filter((s) => s.scope !== "global").map((s) => ({ id: s.id, scope: s.scope, scopeId: s.scope_id, reason: s.reason })),
+      funds,
       fundTeam: ftg.length
         ? { grants: ftg.length, allFunds: ftg.some((g) => g.scope === "all_funds"), allManaged: ftg.some((g) => g.scope === "all_managed") }
         : null,
@@ -116,8 +121,9 @@ export async function directory(viewer: string) {
   const canManage = (await rolesOf(db, viewer)).some((x) => ACCESS_MANAGERS.includes(x));
   const { directoryInsights } = await import("@/lib/user-insights.server");
   const insights = await directoryInsights(db, people);
+  const fiFund = new Map(((fi.data ?? []) as any[]).map((i) => [i.id, OFF.get(i.offering_id) ?? ""]));
   const pending = insights.invitations.filter((i: any) => i.table !== "client_contacts" && (i.status === "pending" || i.status === "accepted" && insights.people.some((p: any) => String(p.email).toLowerCase() === i.email && !p.lastSignIn)));
-  return { canManage, providerError: insights.providerError, people: insights.people, invites: pending.map((i: any) => ({ ...i, type: i.table === "staff_invitations" ? "Employee" : i.table === "client_invitations" ? "Client contact" : String(i.role).includes("investor") ? "Investor" : "Fund Manager", sentAt: i.firstSent, lastSent: i.lastSent })), clients: clients ?? [] };
+  return { canManage, providerError: insights.providerError, people: insights.people, invites: pending.map((i: any) => ({ ...i, type: i.table === "staff_invitations" ? "Employee" : i.table === "client_invitations" ? "Client contact" : String(i.role).includes("investor") ? "Investor" : "Fund Manager", fundName: fiFund.get(i.id) || null, sentAt: i.firstSent, lastSent: i.lastSent })), clients: clients ?? [], fundOptions: ((off.data ?? []) as any[]).map((o) => ({ id: o.id, name: String(o.name ?? "") })).filter((o) => o.name).sort((a, b) => a.name.localeCompare(b.name)) };
 }
 
 /** Quick status lookup for list pages (by emails). */
