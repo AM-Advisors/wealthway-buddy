@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { InvestorRecordsSync } from "@/components/investor-records-sync";
 import { funnelStageOf, managerBucketOf, FUNNEL_LABELS, MANAGER_BUCKET_LABELS } from "@/lib/dashboard-metrics";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { ChevronDown, MoreHorizontal } from "lucide-react";

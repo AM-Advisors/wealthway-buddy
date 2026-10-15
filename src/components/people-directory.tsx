@@ -27,7 +27,7 @@ export function PeopleDirectory({ initial = "all" }: { initial?: Tab }) {
   const [search, setSearch] = useState("");
   const [type, setType] = useState("all");
   const [attention, setAttention] = useState("all");
-  const [busy, setBusy] = useState(false);
+  const [, setBusy] = useState(false);
   const s = search.toLowerCase();
 
   const people = useMemo(() => (q.data?.people ?? []).filter((p: any) =>
