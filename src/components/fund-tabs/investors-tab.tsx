@@ -37,8 +37,8 @@ export function InvestorsTab({ fundId }: { fundId: string }) {
   const bulkKyc = useServerFn(bulkSendKycLinksFn);
   const bulkClass = useServerFn(bulkSetClassFn);
   const askMissing = useServerFn(requestMissingInfoFn);
-  const dupQ = useQuery({ queryKey: ["fund-investor-duplicates", fundId], queryFn: () => dupLoad({ data: { fundId } }) });
   const dupLoad = useServerFn(listInvestorDuplicatesFn);
+  const dupQ = useQuery({ queryKey: ["fund-investor-duplicates", fundId], queryFn: () => dupLoad({ data: { fundId } }) });
   const canRemind = (r: any) => !!r.email && !!reminderStep(r.stage, r.docs, r.wiring) && reminderAllowed(lq.data?.[r.id] ?? null);
   const allPicked = rows.length > 0 && picked.length === rows.length;
   const toggleAll = (on: boolean) => setPicked(on ? rows.map((r) => r.id) : []);
