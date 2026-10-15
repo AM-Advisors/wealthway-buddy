@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 
 const TABS = [
+  { to: "/ops/fund-migration/requests", label: "Approval queue" },
   { to: "/ops/fund-migration/wix", label: "Wix funds" },
   { to: "/ops/fund-migration", label: "Google Drive gaps" },
   { to: "/ops/fund-migration/sources", label: "Source reconciliation" },
