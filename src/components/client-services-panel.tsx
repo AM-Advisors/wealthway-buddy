@@ -39,7 +39,7 @@ export function ClientServicesPanel({ clientId }: { clientId: string }) {
   const gated = d.client.menu_gating === "entitlements";
   const decideWithNote = (maker: string, approveFn: (note: string | null) => Promise<unknown>, ok: string) => {
     const mine = maker === d.me;
-    if (mine && !d.isSuperAdmin) return toast.error("A different staff member must approve this.");
+    if (mine && !d.isSuperAdmin) { toast.error("A different staff member must approve this."); return; }
     const note = mine ? askNote("Reason for approving your own entry (required, logged):", true) : null;
     if (mine && note === undefined) return;
     run(() => approveFn(note ?? null), ok);
@@ -82,7 +82,7 @@ export function ClientServicesPanel({ clientId }: { clientId: string }) {
       {d.canPrepare && (
         <form className="grid gap-3 rounded-md border p-3 md:grid-cols-6" onSubmit={(e) => {
           e.preventDefault();
-          if (!form.serviceKey) return toast.error("Pick a service.");
+          if (!form.serviceKey) { toast.error("Pick a service."); return; }
           const cents = Math.round(Number(form.amount || 0) * 100);
           run(() => save({ data: { clientId, serviceKey: form.serviceKey, cadence: form.cadence, amountCents: cents, startDate: form.startDate, cardAutopay: form.cardAutopay } }), "Service added - waiting for a second person to approve");
           setForm((f) => ({ ...f, serviceKey: "", amount: "" }));

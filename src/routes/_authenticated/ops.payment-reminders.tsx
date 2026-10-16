@@ -53,7 +53,7 @@ function PaymentRemindersPage() {
           <tbody>
             {shown.map((r) => (
               <tr key={r.id} className="border-t">
-                <td className="p-2"><Link to="/ops/clients/$clientId" params={{ clientId: r.client_id }} className="text-primary hover:underline">{r.client_name}</Link></td>
+                <td className="p-2"><Link to="/ops/clients/$clientId" params={{ clientId: r.client_id }} search={{ tab: undefined }} className="text-primary hover:underline">{r.client_name}</Link></td>
                 <td>{r.label}</td><td>{usd(Number(r.amount_cents))}</td><td>{r.due_on}</td>
                 <td>{r.last_sent_at ? new Date(r.last_sent_at).toLocaleDateString() : "—"}</td>
                 <td>{r.card_autopay ? <Badge variant="outline">Card autopay</Badge> : r.reminders_paused ? <Badge variant="outline">Paused</Badge> : <Badge>Emailing</Badge>}</td>

@@ -26,7 +26,7 @@ export function MigrationPaymentsCard({ fundId }: { fundId: string }) {
   const run = async (fn: () => Promise<unknown>, ok: string) => { try { await fn(); toast.success(ok); refresh(); } catch (e) { toast.error((e as Error).message); } };
   const confirm = (p: any) => {
     const mine = p.recorded_by === d.me;
-    if (mine && !d.isSuperAdmin) return toast.error("A different staff member must confirm this.");
+    if (mine && !d.isSuperAdmin) { toast.error("A different staff member must confirm this."); return; }
     const note = mine ? window.prompt("Reason for confirming your own record (required, logged):") : null;
     if (mine && !note?.trim()) return;
     run(() => decide({ data: { id: p.id, confirm: true, note } }), "Payment confirmed");
@@ -41,7 +41,7 @@ export function MigrationPaymentsCard({ fundId }: { fundId: string }) {
       {open && (
         <form className="grid gap-3 rounded-md border p-3 md:grid-cols-3" onSubmit={(e) => {
           e.preventDefault();
-          if (!f.amount || !f.paidOn) return toast.error("Amount and date paid are required.");
+          if (!f.amount || !f.paidOn) { toast.error("Amount and date paid are required."); return; }
           run(() => record({ data: { offeringId: fundId, amountCents: Math.round(Number(f.amount) * 100), paidOn: f.paidOn, method: f.method as never, periodStart: f.periodStart || null, periodEnd: f.periodEnd || null, serviceKeys: f.keys, note: f.note || null } }), "Recorded - waiting for Finance to confirm");
           setOpen(false);
         }}>
