@@ -47052,6 +47052,13 @@ export type Database = {
         }[]
       }
       fund_dependency_preserved: { Args: { _tbl: string }; Returns: boolean }
+      fund_setup_entered_facts: {
+        Args: { p_offering_id: string }
+        Returns: {
+          has_ein: boolean
+          has_wire: boolean
+        }[]
+      }
       fund_setup_manager: { Args: { _setup_id: string }; Returns: boolean }
       generate_due_calendar_tasks: { Args: never; Returns: number }
       get_bank_access_token: {

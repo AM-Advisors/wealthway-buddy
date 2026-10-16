@@ -196,6 +196,25 @@ export function dependenciesSatisfied(
   return true;
 }
 
+// ------------------------------------------------------- auto-completion
+
+/** Master entity a series fund sits under ("X, a series of Y LLC" -> "Y LLC"), else null. */
+export function seriesMasterName(name: string | null | undefined): string | null {
+  const m = /\ba series of\s+(.+)$/i.exec(String(name ?? "").trim());
+  return m ? m[1]!.trim() : null;
+}
+
+/** Setup tasks / launch conditions that are complete purely from entered data. */
+export function autoCompletedKeys(f: { seriesMaster: string | null; hasEin: boolean; hasWire: boolean }) {
+  const tasks: string[] = [];
+  const conditions: string[] = [];
+  if (f.seriesMaster) tasks.push("entity_formation", "entity_registered_agent");
+  if (f.hasEin) tasks.push("entity_ein");
+  if (f.seriesMaster && f.hasEin) conditions.push("entity_active");
+  if (f.hasWire) { tasks.push("banking_account"); conditions.push("banking_active"); }
+  return { tasks, conditions };
+}
+
 // ------------------------------------------------------------ task catalog
 
 export interface TaskTemplate {
@@ -211,7 +230,7 @@ export interface TaskTemplate {
 const CATALOG: TaskTemplate[] = [
   { taskKey: "client_profile", section: "client", label: "Manager / GP details confirmed", responsibleParty: "client", clientEditable: true },
   { taskKey: "client_signatories", section: "client", label: "Authorized signatories identified", responsibleParty: "client", clientEditable: true },
-  { taskKey: "client_service_providers", section: "client", label: "Counsel, auditor, tax preparer, custodian named", responsibleParty: "harmonious_and_client", clientEditable: true },
+  { taskKey: "client_service_providers", section: "client", label: "Counsel, auditor, tax preparer, custodian named", responsibleParty: "harmonious_and_client", clientEditable: true, blocking: false },
   { taskKey: "fund_information", section: "fund_information", label: "Fund information captured", responsibleParty: "harmonious_and_client", clientEditable: true },
   { taskKey: "entity_formation", section: "entity", label: "Entity formed and accepted", responsibleParty: "client_counsel", dependencies: ["fund_information"] },
   { taskKey: "entity_ein", section: "entity", label: "EIN received", responsibleParty: "harmonious", dependencies: ["entity_formation"] },

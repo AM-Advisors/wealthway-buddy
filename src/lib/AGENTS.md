@@ -229,3 +229,4 @@
 - The Operations sidebar passes all groups through dedupeNav (src/lib/ops-nav-registry.ts) so each screen has one home; Super Admin individual grants (staff_nav_grants) add `<area>:see` via grantCapabilities in session facts and never cover capital/tax/administration - why: display plus view access only, money keeps its own approvers.
 
 - Template approval exemptions require exact approved-template provenance (document + fund version) in offering-document-setup.server.ts; managers configure/activate only those versions - why: later custom uploads never inherit trusted-template authority.
+- Fund setup tasks auto-complete only from entered data via syncAutoCompletedTasks (fund-setup.server.ts) + autoCompletedKeys (fund-setup-model.ts): series-of-master name covers formation/registered agent, entered EIN, entered wire instructions; logged, never un-completes - why: no duplicate manual check-offs.

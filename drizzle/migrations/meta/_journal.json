@@ -1898,6 +1898,13 @@
       "when": 1792186841377,
       "tag": "0270_commitment_review_status",
       "breakpoints": true
+    },
+    {
+      "idx": 271,
+      "version": "7",
+      "when": 1792187888853,
+      "tag": "0271_fund_setup_entered_facts",
+      "breakpoints": true
     }
   ]
 }
