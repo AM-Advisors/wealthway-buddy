@@ -86,7 +86,7 @@ export const PRODUCTS: Product[] = [
     ],
     administration: [{ name: "Ledger administration", description: "Share ledger, issuances and certificates are included in the plan.", prices: yearly(0, "Included") }],
     servicing: {
-      client: [CLIENT_SERVICING[0], { name: "Managed cap table", description: "Harmonious records issuances and transfers for you.", prices: cadences(3750) }],
+      client: [CLIENT_SERVICING[0]!, { name: "Managed cap table", description: "Harmonious records issuances and transfers for you.", prices: cadences(3750) }],
       investor: [{ name: "Stakeholder portal", description: "Holders view their shares and certificates.", prices: yearly(0, "Included") }],
     },
     alaCarte: [{ name: "Membership / share transfer", prices: once(1875, "each") }, { name: "Cap table migration", prices: once(null, "Custom quote") }],
@@ -109,7 +109,7 @@ export const PRODUCTS: Product[] = [
       { name: "Enhanced SPV administration", description: "Added on top of the one-time fee.", prices: yearly(2500, "from"), items: ["Investor statements", "Annual financial package", "Investment value tracking", "Enhanced distribution calculations"] },
     ],
     servicing: {
-      client: [CLIENT_SERVICING[0], { name: "Core", description: "72-hour response.", prices: once(0, "Included in SPV fee") }, { name: "White Glove", description: "Named administrator, proactive management.", prices: yearly(7500, "from") }],
+      client: [CLIENT_SERVICING[0]!, { name: "Core", description: "72-hour response.", prices: once(0, "Included in SPV fee") }, { name: "White Glove", description: "Named administrator, proactive management.", prices: yearly(7500, "from") }],
       investor: INVESTOR_SERVICING,
     },
     alaCarte: FUND_A_LA_CARTE,

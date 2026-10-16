@@ -27,8 +27,8 @@ function Lines({ title, lines }: { title: string; lines: Line[] }) {
 
 /** Per-product pricing: Fund cost, Fund Administration, Servicing (client / investor), À la carte. */
 export function ProductPricing() {
-  const [key, setKey] = useState(PRODUCTS[0].key);
-  const p = PRODUCTS.find((x) => x.key === key)!;
+  const [key, setKey] = useState(PRODUCTS[0]!.key);
+  const p = PRODUCTS.find((x) => x.key === key) ?? PRODUCTS[0]!;
   return (
     <section className="mt-12 space-y-6">
       <h2 className="text-2xl">Pricing by product</h2>
