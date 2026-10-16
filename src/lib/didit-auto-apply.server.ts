@@ -85,6 +85,15 @@ export async function autoApplyDiditForOnboarding(onboardingId: string, actorUse
     const { reconcileReadinessForSubjects } = await import("@/lib/investor-onboarding.server");
     await reconcileReadinessForSubjects({ investmentProfileId: ob.investment_profile_id }, "didit_auto_apply");
   } catch (e) { console.error("[didit-auto] readiness", (e as Error).message); }
+  const kycNow = update.kyc_status ?? person.kyc_status;
+  const amlNow = update.aml_status ?? person.aml_status;
+  if (kycNow === "approved" && amlNow === "approved") {
+    try {
+      const { notifyComplianceClear } = await import("@/lib/ops-slack-notify.server");
+      const name = [person.legal_first_name, person.legal_last_name].filter(Boolean).join(" ") || person.email || "Investor";
+      await notifyComplianceClear({ personId: person.id, personName: name, offeringId: ob.offering_id });
+    } catch (e) { console.error("[didit-auto] compliance notify", (e as Error).message); }
+  }
   return { applied: true, changed: changes.length };
 }
 
