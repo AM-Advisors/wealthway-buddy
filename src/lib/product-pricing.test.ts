@@ -12,7 +12,7 @@ describe("product pricing", () => {
     }
   });
   it("SPV fees are back at pre-increase prices", () => {
-    expect(productByKey("spv").fundCost.map((l) => l.prices[0].amount)).toEqual([5000, 7500, 12500, 15000, null]);
+    expect(productByKey("spv").fundCost.map((l) => l.prices[0]!.amount)).toEqual([5000, 7500, 12500, 15000, null]);
   });
   it("servicing contains no accounting work", () => {
     for (const p of PRODUCTS) for (const l of [...p.servicing.client, ...p.servicing.investor]) {
@@ -22,7 +22,7 @@ describe("product pricing", () => {
   });
   it("SaaS fund documents are $500 and Form D stays $160", () => {
     const a = productByKey("saas").alaCarte;
-    expect(a.find((l) => l.name.startsWith("Harmonious fund documents"))!.prices[0].amount).toBe(500);
-    expect(a.find((l) => l.name.startsWith("Form D"))!.prices[0].amount).toBe(160);
+    expect(a.find((l) => l.name.startsWith("Harmonious fund documents"))!.prices[0]!.amount).toBe(500);
+    expect(a.find((l) => l.name.startsWith("Form D"))!.prices[0]!.amount).toBe(160);
   });
 });

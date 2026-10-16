@@ -7,8 +7,8 @@ export type Billing = "monthly" | "quarterly" | "annual" | "one_time";
 export const BILLING_LABEL: Record<Billing, string> = { monthly: "Monthly", quarterly: "Quarterly", annual: "Yearly", one_time: "One-time" };
 
 /** amount null = custom quote. */
-export interface Price { amount: number | null; billing: Billing; note?: string }
-export interface Line { name: string; description?: string; prices: Price[]; items?: string[] }
+export interface Price { amount: number | null; billing: Billing; note?: string | undefined }
+export interface Line { name: string; description?: string | undefined; prices: Price[]; items?: string[] | undefined }
 export type ProductKey = "cap_table" | "venture" | "private_equity" | "hedge" | "spv" | "saas";
 export interface Product {
   key: ProductKey; name: string; intro: string;
