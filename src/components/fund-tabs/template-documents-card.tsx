@@ -86,7 +86,7 @@ function fitPages(el: HTMLElement) {
   wrapper.style.zoom = String(scale);
 }
 
-function ReviewDialog({ fundId, doc, onClose, approve }: { fundId: string; doc: any; onClose: () => void; approve?: { disabled: boolean; run: () => void } }) {
+function ReviewDialog({ fundId, doc, onClose, approve }: { fundId: string; doc: any; onClose: () => void; approve?: { disabled: boolean; run: () => void } | undefined }) {
   const getUrl = useServerFn(fundTemplateDocumentUrlFn);
   const box = useRef<HTMLDivElement>(null);
   const [state, setState] = useState<"loading" | "ready" | "error">("loading");
