@@ -1,7 +1,7 @@
 # Separate signature pages for template fund documents
 
 ## What changes for the user
-- **Signing is split by who signs.** Every Harmonious template document (Operating Agreement, Subscription Agreement, side letters, LLOA, and so on) on any fund gets its own **Fund manager signature page** and **Investor signature page**, instead of one shared signing block in the document.
+- **One signature page, separate blocks.** Every Harmonious template document (Operating Agreement, Subscription Agreement, side letters, LLOA, and so on) on any fund gets a single signature page with a separate **Fund manager block** and **Investor block**, instead of signing lines scattered through the document.
 - **Signing order is a choice.** When sending, the sender picks: Investor first then fund manager (default for subscriptions), Fund manager first then investor, Fund manager only (default for the Operating Agreement), or Investor only. The choice is saved per document and can be changed until anyone has signed.
 - **Investor signature pages are made automatically.** For each investor on the fund, Harmonious builds their signature page already filled in: legal name, entity name and signer title (for entities), commitment amount, class, address and date line. Joint investors (for example Robert and Chaunntel Pettit) get a block for each signer.
 - **Full document or signature page only.** Clients choose per document:
@@ -19,7 +19,7 @@
 Nothing goes out without a person clicking Send, and identity checks still apply before investors can sign.
 
 ## Steps
-1. Add signature-page templates (fund manager page, individual investor page, entity investor page, joint signers page).
+1. Add one signature-page template with a fund manager block and an investor block (individual, entity, or joint signers).
 2. Store each document's signing order and "full / signature page only" choice; default by document type.
 3. Generate per-investor signature pages filled from investor and fund records.
 4. Update the Send for signature window with order and mode choices, and add Send to all investors and Countersign all.
