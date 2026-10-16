@@ -180,6 +180,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
     staleTime: 30_000,
   });
   const fundHits = records.data?.funds ?? [];
+  const clientHits = records.data?.clients ?? [];
   const peopleHits = canSeePeople ? records.data?.people ?? [] : [];
   const allowedUrls = useMemo(() => new Set(opsWorkAreas(capabilities).flatMap((a) => a.screens.map((s) => s.url))), [capabilities]);
 
