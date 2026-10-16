@@ -1159,8 +1159,8 @@ export async function syncAutoCompletedTasks(setupId: string) {
 /** Drafts regulatory + eligibility from the exemption, opens the ledger, and records the standard tax/reporting defaults. Reviews/approvals stay with people. */
 async function autoDefaultSetup(setupId: string, setup: any) {
   const now = nowIso();
-  const { data: off } = await db().from("offerings").select("name, client_id, reg_type, min_investment_cents, created_by").eq("id", setup.offering_id).maybeSingle();
-  const actor = setup.created_by ?? off?.created_by ?? null;
+  const { data: off } = await db().from("offerings").select("name, client_id, reg_type, min_investment_cents").eq("id", setup.offering_id).maybeSingle();
+  const actor = setup.created_by ?? null;
   const done: Record<string, string> = {};
   const derived = derivedRegulatoryAndEligibility(off?.reg_type, off?.min_investment_cents);
   if (derived) {
