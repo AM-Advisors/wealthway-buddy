@@ -12,7 +12,7 @@ export interface SlaEngagement { service_product: string; service_level: string;
 export interface ResolvedSla { hours: number | null; resolutionHours: number | null; warningPct: number; source: string; policyId: string | null; }
 
 const PRODUCT_LEVEL_NAME: Record<string, string> = {
-  "SPV_ADMINISTRATION/CORE": "SPV Core", "SPV_ADMINISTRATION/PLUS": "SPV Plus", "SPV_ADMINISTRATION/WHITE_GLOVE": "SPV White Glove",
+  "SPV_ADMINISTRATION/SELF_SERVE": "SPV Self Serve", "FUND_ADMINISTRATION/SELF_SERVE": "Fund Self Serve", "SPV_ADMINISTRATION/SAAS": "SPV SaaS", "FUND_ADMINISTRATION/SAAS": "Fund SaaS", "SPV_ADMINISTRATION/CORE": "SPV Core", "SPV_ADMINISTRATION/PLUS": "SPV Plus", "SPV_ADMINISTRATION/WHITE_GLOVE": "SPV White Glove",
   "FUND_ADMINISTRATION/CORE": "Fund Core", "FUND_ADMINISTRATION/FUND_ADMINISTRATION": "Fund Administration",
   "FUND_ADMINISTRATION/WHITE_GLOVE": "White Glove Fund Administration", "FUND_ADMINISTRATION/INSTITUTIONAL": "Institutional",
 };
@@ -37,6 +37,9 @@ export function resolveSla(eng: SlaEngagement | null, policies: SlaPolicy[], req
 
   if (eng?.sla_initial_response_hours != null) {
     return { hours: Number(eng.sla_initial_response_hours), resolutionHours: eng.sla_resolution_target_hours ?? policy?.resolution_target_hours ?? null, warningPct, source: "Engagement Override", policyId: policy?.id ?? null };
+  }
+  if (eng && policy && (eng.service_level === "SELF_SERVE" || eng.service_level === "SAAS")) {
+    return { hours: null, resolutionHours: null, warningPct, source: eng.service_level === "SAAS" ? "SaaS — no Harmonious support" : "Self Serve — help center, no response target", policyId: policy.id };
   }
   if (eng && policy) {
     const name = PRODUCT_LEVEL_NAME[`${eng.service_product}/${eng.service_level}`] ?? `${eng.service_product} ${eng.service_level}`;

@@ -81,7 +81,7 @@ export function AdministrationTiers() {
       <div>
         <h2 className="text-2xl">Fund Administration</h2>
         <p className="mt-2 max-w-2xl text-muted-foreground">Software, people and execution for funds — know exactly what is being handled.</p>
-        <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-4">{withLive(FUND_CARDS, "FUND_ADMINISTRATION", q.data).map((c) => <CardView key={c.key} c={c} />)}</div>
+        <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">{withLive(FUND_CARDS, "FUND_ADMINISTRATION", q.data).map((c) => <CardView key={c.key} c={c} />)}</div>
         <p className="mt-3 text-xs text-muted-foreground">SPV Core and Fund Core are different packages.</p>
       </div>
     </section>
