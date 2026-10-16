@@ -73,9 +73,13 @@ export function DocumentsTab({ fundId }: { fundId: string }) {
   });
   const [sendFor, setSendFor] = useState<any | null>(null);
   const [inv, setInv] = useState(""); const [mgr, setMgr] = useState("");
+  const [whoSigns, setWhoSigns] = useState<"both" | "manager">("both");
+  const sendSignatoryFn = useServerFn(sendFileToSignatoryFn);
   const send = useMutation({
-    mutationFn: () => sendSigFn({ data: { fundId, fileId: sendFor.id, onboardingId: inv, managerUserId: mgr } }),
-    onSuccess: () => { toast.success("Sent. The investor gets a link to sign first."); setSendFor(null); setInv(""); setMgr(""); refresh(); qc.invalidateQueries({ queryKey: ["fund-signing", fundId] }); },
+    mutationFn: () => whoSigns === "manager"
+      ? sendSignatoryFn({ data: { fundId, fileId: sendFor.id, managerUserId: mgr } })
+      : sendSigFn({ data: { fundId, fileId: sendFor.id, onboardingId: inv, managerUserId: mgr } }),
+    onSuccess: () => { toast.success(whoSigns === "manager" ? "Sent. The fund manager gets a link to sign." : "Sent. The investor gets a link to sign first."); setSendFor(null); setInv(""); setMgr(""); setWhoSigns("both"); refresh(); qc.invalidateQueries({ queryKey: ["fund-signing", fundId] }); },
     onError: (e: Error) => toast.error(e.message),
   });
   const groups = [
