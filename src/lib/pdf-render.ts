@@ -10,10 +10,10 @@ import { COMPANY, companyAddressLines, companyLogoUrl } from "@/lib/company-deta
 const PAGE_W = 595.28; // A4
 const PAGE_H = 841.89;
 const MARGIN = 52;
-const NAVY = rgb(0.078, 0.149, 0.278);
-const TEAL = rgb(0.365, 0.776, 0.82);
-const INK = rgb(0.133, 0.122, 0.125);
-const MUTED = rgb(0.42, 0.44, 0.5);
+const NAVY = rgb(0, 0, 0);
+const TEAL = rgb(0, 0, 0);
+const INK = rgb(0, 0, 0);
+const MUTED = rgb(0.15, 0.15, 0.15);
 const LINE = rgb(0.9, 0.92, 0.94);
 
 export type PdfRow = { label: string; value: string };
