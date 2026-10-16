@@ -64,9 +64,9 @@ export function FundOnboardingSettings({ fundId }: { fundId: string }) {
                       <span className="font-medium">{doc.title}</span>
                       {doc.requiresSignature ? (
                         <Badge variant={doc.readiness.ready ? "secondary" : "outline"}>{doc.readiness.ready ? `Ready · v${doc.templateVersion}` : "Needs preparation"}</Badge>
-                      ) : <Badge variant="outline">For review only</Badge>}
+                      ) : (doc as any).managerOnly ? <Badge variant="outline">Fund manager signs · not sent to investors</Badge> : <Badge variant="outline">For review only</Badge>}
                     </div>
-                    <div className="flex flex-wrap items-center gap-1 text-xs">
+                    {!(doc as any).managerOnly && <div className="flex flex-wrap items-center gap-1 text-xs">
                       <span className="text-muted-foreground">Applies to:</span>
                       {q.data.canConfigureApplicability ? (
                         <>
@@ -77,7 +77,7 @@ export function FundOnboardingSettings({ fundId }: { fundId: string }) {
                           })}
                         </>
                       ) : <span>{doc.appliesTo.length ? doc.appliesTo.map((v: string) => APPLIES_TO_OPTIONS.find((o) => o[0] === v)?.[1] ?? v).join(", ") : "All investors"} (set by Harmonious)</span>}
-                    </div>
+                    </div>}
                     {doc.requiresSignature && (
                       <div className="flex flex-wrap gap-2">
                         <Select value={doc.signingMode} onValueChange={(v) => update(doc, { signingMode: v as any })}>

@@ -109,7 +109,7 @@ export async function fundSetupOverview(userId: string, offeringId: string, hasE
     classCount: classes.length,
     documentCount: (docs.data ?? []).length,
     bankingState,
-    adminConfigured: false,
+    adminConfigured: await adminServicesRecorded(setup?.id),
   });
 
   return {
@@ -306,4 +306,12 @@ export async function assignInvestmentClass(userId: string, input: { onboardingI
   if (err) throw new Error(err);
   await db().from("investor_onboardings").update({ offering_class_key: input.classKey }).eq("id", row.id);
   return { ok: true };
+}
+
+/** Harmonious services count as recorded once tax, accounting and reporting setup tasks are complete (set automatically or by staff). */
+async function adminServicesRecorded(setupId: string | null | undefined) {
+  if (!setupId) return false;
+  const { data } = await db().from("fund_setup_tasks").select("task_key, status").eq("setup_id", setupId).in("task_key", ["tax_setup", "accounting_book", "reporting_configuration"]);
+  const rows = (data ?? []) as any[];
+  return rows.length > 0 && rows.every((r) => r.status === "complete");
 }

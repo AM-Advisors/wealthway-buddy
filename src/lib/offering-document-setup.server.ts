@@ -307,7 +307,10 @@ export async function activateDocumentVersion(
     await db().from("offering_document_versions").update({ approval_status: "superseded", superseded_at: now() }).eq("offering_document_id", d.id).eq("version", previous);
     await event(d.offering_id, d.id, previous, "version_superseded", userId);
   }
-  const countersign = (v.signing_config?.signers ?? []).some((s: any) => s.role === "fund_signatory");
+  const signers = (v.signing_config?.signers ?? []) as any[];
+  const countersign = signers.some((s) => s.role === "fund_signatory");
+  // "dual" means investor signs, then the fund manager countersigns. A fund-signatory-only version (e.g. the Operating Agreement) is not dual.
+  const investorSigns = signers.some((s) => s.role !== "fund_signatory");
   let countersigner: string | null = null;
   if (countersign) {
     const { data: o } = await db().from("offerings").select("fund_signatory_person_id").eq("id", d.offering_id).maybeSingle();
@@ -322,7 +325,7 @@ export async function activateDocumentVersion(
       file_name: v.file_name,
       file_size_bytes: v.file_size_bytes,
       signature_template_version: v.version,
-      signing_mode: countersign ? "dual" : d.signing_mode,
+      signing_mode: countersign && investorSigns ? "dual" : countersign ? "investor_only" : d.signing_mode,
       countersigner_user_id: countersign ? countersigner : d.countersigner_user_id,
     })
     .eq("id", d.id);

@@ -47,7 +47,7 @@ export const getFundOnboardingSettings = createServerFn({ method: "POST" })
       db.from("offerings").select("id, name, reg_type").eq("id", data.offeringId).maybeSingle(),
       db
         .from("offering_documents")
-        .select("id, title, requires_signature, signing_mode, countersigner_user_id, investor_required, signature_template_version, sort_order, applies_to")
+        .select("id, title, doc_type, usage, requires_signature, signing_mode, countersigner_user_id, investor_required, signature_template_version, sort_order, applies_to")
         .eq("offering_id", data.offeringId)
         .order("sort_order", { ascending: true }),
       db.from("fund_managers").select("user_id").eq("offering_id", data.offeringId),
@@ -87,7 +87,8 @@ export const getFundOnboardingSettings = createServerFn({ method: "POST" })
         return {
           id: d.id as string,
           title: d.title as string,
-          requiresSignature: Boolean(d.requires_signature),
+          requiresSignature: d.usage ? d.usage === "signature" : Boolean(d.requires_signature),
+          managerOnly: d.doc_type === "operating_agreement" || d.investor_required === false,
           investorRequired: d.investor_required !== false,
           appliesTo: ((d.applies_to ?? []) as string[]),
           signingMode: (d.signing_mode ?? "investor_only") as "investor_only" | "dual",

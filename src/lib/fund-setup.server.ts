@@ -1178,6 +1178,8 @@ async function autoDefaultSetup(setupId: string, setup: any) {
     const { data: elig } = await db().from("fund_eligibility_configs").select("id").eq("setup_id", setupId).limit(1);
     if (!elig?.length) await db().from("fund_eligibility_configs").insert({ setup_id: setupId, version: 1, status: "draft", rules: derived.rules, created_by: actor });
     done["investor_eligibility"] = `Derived from ${derived.selections.exemption}; minimum = fund investor minimum`;
+    // Regulatory setup is drafted automatically; only the human review remains, so show it as in progress rather than "not started".
+    await db().from("fund_setup_tasks").update({ status: "in_progress", notes: `Drafted automatically from ${derived.selections.exemption} - review and approve`, updated_at: now }).eq("setup_id", setupId).eq("task_key", "compliance_config").eq("status", "not_started");
   }
   const { data: book } = await db().from("ledger_books").select("id").eq("offering_id", setup.offering_id).eq("domain", "fund_accounting").maybeSingle();
   let bookId = book?.id as string | undefined;
