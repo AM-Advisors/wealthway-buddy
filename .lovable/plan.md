@@ -14,9 +14,9 @@
 - Banking gets the same simple layout:
   - bank name
   - account name
-  - last 4 digits of the account
+  - full account number and routing number (typed twice to confirm)
   - **Upload bank letter** (bank verification letter or wire instructions)
-- Full account and routing numbers still go through the existing verified wire-instructions entry on the Banking tab, never shown in full here. The letter is filed in Documents and logged.
+- The numbers are saved through the existing encrypted, verified wire-instructions record. After saving, the box shows only the last 4 digits, and a staff "Reveal" is logged. A second person still verifies the numbers before they're used. The letter is filed in Documents and logged.
 - "Who opens the account?" (fund themselves, or Harmonious with Texas Capital Bank or Mercury) only shows while banking isn't done, under "Need a bank account?".
 
 ### 3. Cleaner setup page
