@@ -1835,6 +1835,13 @@
       "when": 1792163852987,
       "tag": "0261_restore_spv_pre_uplift_prices",
       "breakpoints": true
+    },
+    {
+      "idx": 262,
+      "version": "7",
+      "when": 1792164457965,
+      "tag": "0262_remove_uplift_except_saas",
+      "breakpoints": true
     }
   ]
 }
