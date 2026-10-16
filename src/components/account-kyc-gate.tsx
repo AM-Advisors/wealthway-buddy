@@ -1,3 +1,4 @@
+import { useRouterState } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -9,6 +10,7 @@ import { accountKycStatusFn, startAccountCheckFn } from "@/lib/account-kyc.funct
 
 /** Nobody but Harmonious staff reaches the platform until their identity is verified. Enforced again on the server. */
 export function AccountKycGate({ children, onSignOut }: { children: ReactNode; onSignOut: () => void | Promise<void> }) {
+  const pathname = useRouterState({ select: (r) => r.location.pathname });
   const status = useServerFn(accountKycStatusFn);
   const start = useServerFn(startAccountCheckFn);
   const q = useQuery({
@@ -17,7 +19,9 @@ export function AccountKycGate({ children, onSignOut }: { children: ReactNode; o
   });
   const m = useMutation({ mutationFn: () => start(), onSuccess: (r) => { if (r.url) window.location.assign(r.url); else void q.refetch(); }, onError: (e: Error) => toast.error(e.message) });
   const s = q.data;
-  if (s?.open) return <>{children}</>;
+  // Self-serve sign-up (pick plan, sign SOW, pay) comes first; identity is a later step and access stays closed until it passes.
+  const onPlanPage = /^\/plan(\/|$)/.test(pathname);
+  if (s?.open || onPlanPage) return <>{children}</>;
 
   const body = (() => {
     if (q.isLoading) return { title: "One moment…", text: "Checking your account.", cta: null as string | null };
