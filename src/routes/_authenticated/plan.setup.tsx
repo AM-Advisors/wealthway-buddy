@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { mySaasSetupFn, startSaasCheckoutFn, submitKybFn } from "@/lib/saas-orders.functions";
+import { chooseWireFn, mySaasSetupFn, startSaasCheckoutFn, submitKybFn } from "@/lib/saas-orders.functions";
 import { getStripe, getStripeEnvironment } from "@/lib/stripe";
 
 const TITLE = "Finish setup - Harmonious";
@@ -32,23 +32,26 @@ function Step({ done, title, children }: { done: boolean; title: string; childre
   );
 }
 
+const usdCents = (c: number) => (c / 100).toLocaleString("en-US", { style: "currency", currency: "USD" });
+
 function PlanSetup() {
   const qc = useQueryClient();
   const setupFn = useServerFn(mySaasSetupFn);
   const checkout = useServerFn(startSaasCheckoutFn);
   const kyb = useServerFn(submitKybFn);
   const q = useQuery({ queryKey: ["saas-setup"], queryFn: () => setupFn(), refetchInterval: 15_000 });
-  const [paying, setPaying] = useState(false);
+  const [paying, setPaying] = useState<null | "card" | "ach">(null);
+  const wireFn = useServerFn(chooseWireFn);
   const [f, setF] = useState({ legalName: "", ein: "", formationState: "", entityType: "LLC", owner: "", percent: "100" });
   const order = q.data?.order;
 
   const options = useMemo(() => ({
     fetchClientSecret: async () => {
-      const r: any = await checkout({ data: { orderId: order!.id, environment: getStripeEnvironment(), returnUrl: `${window.location.origin}/plan/setup` } });
+      const r: any = await checkout({ data: { orderId: order!.id, environment: getStripeEnvironment(), returnUrl: `${window.location.origin}/plan/setup`, method: paying ?? "card" } });
       if (r.error) { toast.error(r.error); throw new Error(r.error); }
       return r.clientSecret as string;
     },
-  }), [order?.id]);
+  }), [order?.id, paying]);
 
   if (q.isPending) return <div className="p-10 text-sm text-muted-foreground">Loading…</div>;
   if (!order) return (
@@ -59,6 +62,11 @@ function PlanSetup() {
   );
   const paid = ["paid", "past_due"].includes(order.payment_status);
   const kybDone = order.kyb_status === "approved";
+
+  async function chooseWire() {
+    try { await wireFn({ data: { orderId: order.id } }); qc.invalidateQueries({ queryKey: ["saas-setup"] }); }
+    catch (e) { toast.error((e as Error).message); }
+  }
 
   async function sendKyb() {
     try {
@@ -77,8 +85,25 @@ function PlanSetup() {
         <Step done={paid} title="Payment">
           {order.payment_status === "cancelled" && <p className="text-sm text-destructive">Your payment lapsed. Restart it to reopen access.</p>}
           {paying ? (
-            <EmbeddedCheckoutProvider stripe={getStripe()} options={options}><EmbeddedCheckout /></EmbeddedCheckoutProvider>
-          ) : <Button onClick={() => setPaying(true)}>Pay by card</Button>}
+            <div className="space-y-2">
+              <EmbeddedCheckoutProvider key={paying} stripe={getStripe()} options={options}><EmbeddedCheckout /></EmbeddedCheckoutProvider>
+              <Button variant="ghost" size="sm" onClick={() => setPaying(null)}>Choose another way to pay</Button>
+            </div>
+          ) : order.payment_method === "wire" && order.wire_reference ? (
+            <div className="space-y-2 rounded-md border p-3 text-sm">
+              <p className="font-medium">Paying by wire: {usdCents(Number(order.recurring_cents) + Number(order.one_time_cents))}</p>
+              <p>Use reference <span className="font-mono font-medium">{order.wire_reference}</span> on your wire.</p>
+              <p className="text-muted-foreground">Harmonious will send verified wire instructions from operations@harmonious.co. Never send money to instructions you receive any other way. Your plan opens once our Finance team confirms the wire has arrived.</p>
+              <div className="flex flex-wrap gap-2"><Button variant="outline" size="sm" onClick={() => setPaying("card")}>Pay by card instead</Button><Button variant="outline" size="sm" onClick={() => setPaying("ach")}>Pay by ACH instead</Button></div>
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              <Button onClick={() => setPaying("card")}>Pay by card</Button>
+              <Button variant="outline" onClick={() => setPaying("ach")}>Pay by ACH (bank account)</Button>
+              <Button variant="outline" onClick={chooseWire}>Pay by wire</Button>
+            </div>
+          )}
+          {order.payment_method === "ach" && !paid && !paying && <p className="text-sm text-muted-foreground">ACH payments take 3–5 business days to clear. Your plan opens once the payment settles.</p>}
         </Step>
         <Step done={!!q.data?.kycOpen} title="Identity verification (you)">
           <p className="text-sm text-muted-foreground">Complete identity verification from the prompt when you sign in.</p>

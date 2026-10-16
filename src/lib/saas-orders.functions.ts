@@ -31,8 +31,16 @@ export const signSaasOrderFn = createServerFn({ method: "POST" }).middleware([re
   });
 
 export const startSaasCheckoutFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuthUnverified])
-  .inputValidator(z.object({ orderId: z.string().uuid(), environment: z.enum(["sandbox", "live"]), returnUrl: z.string().url().max(500) }).parse)
-  .handler(async ({ data, context }) => (await srv()).startOrderCheckout(context.userId, await email(context), data.orderId, data.environment, data.returnUrl));
+  .inputValidator(z.object({ orderId: z.string().uuid(), environment: z.enum(["sandbox", "live"]), returnUrl: z.string().url().max(500), method: z.enum(["card", "ach"]).default("card") }).parse)
+  .handler(async ({ data, context }) => (await srv()).startOrderCheckout(context.userId, await email(context), data.orderId, data.environment, data.returnUrl, data.method));
+
+export const chooseWireFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuthUnverified])
+  .inputValidator(z.object({ orderId: z.string().uuid() }).parse)
+  .handler(async ({ data, context }) => (await srv()).chooseWire(context.userId, data.orderId));
+
+export const confirmWireReceivedFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ orderId: z.string().uuid(), amountCents: z.number().int().min(1).max(100_000_000), note: z.string().max(1000).nullable() }).parse)
+  .handler(async ({ data, context }) => (await srv()).confirmWireReceived(context.userId, data.orderId, data.amountCents, data.note));
 
 export const submitKybFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuthUnverified])
   .inputValidator(z.object({
