@@ -51,7 +51,7 @@ const wireSchema = z.object({
   routing_number: z.string().trim().max(64).default(""),
   swift: z.string().trim().max(32).default(""),
   memo: z.string().trim().max(240).default(""),
-  wire_scope: z.enum(["domestic", "international", "both"]).default("domestic"),
+  wire_scope: z.preprocess((v) => (v ? v : undefined), z.enum(["domestic", "international", "both"]).default("domestic")),
   intl_bank_name: z.string().trim().max(160).default(""),
   intl_account_name: z.string().trim().max(160).default(""),
   intl_account_number: z.string().trim().max(64).default(""),
