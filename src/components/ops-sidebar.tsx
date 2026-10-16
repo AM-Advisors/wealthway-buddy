@@ -164,8 +164,22 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
   const isSalesLeader = canSee("salesLeader", staffRoles);
   const capabilities = ((session as { operationsCapabilities?: OpsCapability[] } | null)?.operationsCapabilities ?? []);
   const [query, setQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedQuery(query), 250);
+    return () => clearTimeout(t);
+  }, [query]);
   const index = useMemo(() => opsSearchIndex(capabilities), [capabilities]);
   const results = query.trim() ? searchOpsIndex(index, query) : null;
+  const canSeePeople = canSee("peopleEmployees", staffRoles) || canSee("peopleOthers", staffRoles);
+  const records = useQuery({
+    queryKey: ["ops-quick-search", debouncedQuery],
+    queryFn: () => opsQuickSearchFn({ data: { q: debouncedQuery } }),
+    enabled: canSeePeople && debouncedQuery.trim().length >= 2,
+    staleTime: 30_000,
+  });
+  const fundHits = canSeePeople ? records.data?.funds ?? [] : [];
+  const peopleHits = canSeePeople ? records.data?.people ?? [] : [];
   const allowedUrls = useMemo(() => new Set(opsWorkAreas(capabilities).flatMap((a) => a.screens.map((s) => s.url))), [capabilities]);
 
   const home = sections.find((s) => s.id === "home");
