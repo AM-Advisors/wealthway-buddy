@@ -76,7 +76,7 @@ export function DocumentsTab({ fundId }: { fundId: string }) {
     onError: (e: Error) => toast.error(e.message),
   });
   const [sendFor, setSendFor] = useState<any | null>(null);
-  const [inv, setInv] = useState(""); const [mgr, setMgr] = useState("");
+  const [mgr, setMgr] = useState("");
   type Order = "investor_first" | "manager_first" | "manager_only" | "investor_only";
   const [order, setOrder] = useState<Order>("investor_first");
   const [signMode, setSignMode] = useState<"full" | "signature_page">("full");
