@@ -136,17 +136,25 @@ export function DocumentsTab({ fundId }: { fundId: string }) {
       {sendFor && (
         <Dialog open onOpenChange={(o) => !o && setSendFor(null)}>
           <DialogContent className="max-w-md">
-            <DialogHeader><DialogTitle>Send for signature</DialogTitle><DialogDescription>The investor signs first, then the fund manager. Each gets an email link. When both have signed, "{sendFor.title}" is marked Signed.</DialogDescription></DialogHeader>
+            <DialogHeader><DialogTitle>Send for signature</DialogTitle><DialogDescription>{whoSigns === "manager" ? `Only the fund manager signs "${sendFor.title}". They get an email link; once they sign it's marked Signed.` : `The investor signs first, then the fund manager. Each gets an email link. When both have signed, "${sendFor.title}" is marked Signed.`}</DialogDescription></DialogHeader>
             <div className="space-y-3">
-              <div className="space-y-1"><Label>1. Investor</Label>
-                <Select value={inv} onValueChange={setInv}><SelectTrigger><SelectValue placeholder="Choose an investor" /></SelectTrigger>
-                  <SelectContent>{(sig.data?.investors ?? []).map((i: any) => <SelectItem key={i.onboardingId} value={i.onboardingId} disabled={!i.email}>{i.name}{i.email ? ` (${i.email})` : " (no email)"}</SelectItem>)}</SelectContent></Select></div>
-              <div className="space-y-1"><Label>2. Fund manager</Label>
+              <div className="space-y-1"><Label>Who signs?</Label>
+                <Select value={whoSigns} onValueChange={(v) => setWhoSigns(v as "both" | "manager")}><SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="both">Investor, then fund manager</SelectItem>
+                    <SelectItem value="manager">Fund manager only</SelectItem>
+                  </SelectContent></Select></div>
+              {whoSigns === "both" && (
+                <div className="space-y-1"><Label>1. Investor</Label>
+                  <Select value={inv} onValueChange={setInv}><SelectTrigger><SelectValue placeholder="Choose an investor" /></SelectTrigger>
+                    <SelectContent>{(sig.data?.investors ?? []).map((i: any) => <SelectItem key={i.onboardingId} value={i.onboardingId} disabled={!i.email}>{i.name}{i.email ? ` (${i.email})` : " (no email)"}</SelectItem>)}</SelectContent></Select></div>
+              )}
+              <div className="space-y-1"><Label>{whoSigns === "manager" ? "Fund manager" : "2. Fund manager"}</Label>
                 <Select value={mgr} onValueChange={setMgr}><SelectTrigger><SelectValue placeholder="Choose a fund manager" /></SelectTrigger>
                   <SelectContent>{(sig.data?.managers ?? []).map((m: any) => <SelectItem key={m.userId} value={m.userId} disabled={!m.email}>{m.name}</SelectItem>)}</SelectContent></Select>
                 {!sig.data?.managers?.length && <p className="text-xs text-muted-foreground">This fund has no fund manager with a login yet.</p>}</div>
             </div>
-            <DialogFooter><Button disabled={!inv || !mgr || send.isPending} onClick={() => send.mutate()}>{send.isPending ? "Sending…" : "Send"}</Button></DialogFooter>
+            <DialogFooter><Button disabled={!mgr || (whoSigns === "both" && !inv) || send.isPending} onClick={() => send.mutate()}>{send.isPending ? "Sending…" : "Send"}</Button></DialogFooter>
           </DialogContent>
         </Dialog>
       )}
