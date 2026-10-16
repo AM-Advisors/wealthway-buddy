@@ -33821,6 +33821,8 @@ export type Database = {
       offerings: {
         Row: {
           admin_services: Json
+          arbitration_city: string | null
+          arbitration_state: string | null
           banking_not_required_reason: string | null
           banking_path: string | null
           banking_setup_by: string | null
@@ -33894,6 +33896,8 @@ export type Database = {
         }
         Insert: {
           admin_services?: Json
+          arbitration_city?: string | null
+          arbitration_state?: string | null
           banking_not_required_reason?: string | null
           banking_path?: string | null
           banking_setup_by?: string | null
@@ -33967,6 +33971,8 @@ export type Database = {
         }
         Update: {
           admin_services?: Json
+          arbitration_city?: string | null
+          arbitration_state?: string | null
           banking_not_required_reason?: string | null
           banking_path?: string | null
           banking_setup_by?: string | null
