@@ -18,10 +18,21 @@ export interface Product {
 }
 
 /** Annual price offered as yearly or quarterly (+10%). No monthly billing. */
-export const cadences = (annual: number): Price[] => [
+export const cadences = (annual: number, quarterly?: number): Price[] => [
   { amount: annual, billing: "annual" },
-  { amount: Math.round((annual / 4) * 1.1), billing: "quarterly" },
+  { amount: quarterly ?? Math.round((annual / 4) * 1.1), billing: "quarterly" },
 ];
+/**
+ * Rate card (service_pricing_versions, Fund Administration levels): yearly / quarterly.
+ * Admin + client servicing must add up to these exactly.
+ */
+export const RATE_CARD_FUND_LEVELS = {
+  core: { annual: 15000, quarterly: 4250 },
+  fund_administration: { annual: 20000, quarterly: 5500 },
+  white_glove: { annual: 36000, quarterly: 10000 },
+} as const;
+const ADMIN_Q = { annual: 12000, quarterly: 3300 };
+const svc = (lvl: keyof typeof RATE_CARD_FUND_LEVELS) => cadences(RATE_CARD_FUND_LEVELS[lvl].annual - ADMIN_Q.annual, RATE_CARD_FUND_LEVELS[lvl].quarterly - ADMIN_Q.quarterly);
 const once = (amount: number | null, note?: string): Price[] => [{ amount, billing: "one_time", note }];
 const yearly = (amount: number | null, note?: string): Price[] => [{ amount, billing: "annual", note }];
 
@@ -30,9 +41,9 @@ export const ACCOUNTING_TERMS = ["general ledger", "nav", "waterfall", "quarterl
 // Servicing (shared by fund products) — support and hands-on level only.
 const CLIENT_SERVICING: Line[] = [
   { name: "Self Serve", description: "You run it on the platform. Help center only.", prices: yearly(0, "Included"), items: ["Help center", "Self-serve setup, templates and e-signature"] },
-  { name: "Core", description: "72-hour response.", prices: cadences(3000), items: ["Email support, 72-hour response", "Setup and document review on request"] },
-  { name: "Plus", description: "48-hour response, named contact.", prices: cadences(8000), items: ["Named relationship contact", "48-hour response", "Quarterly check-in call"] },
-  { name: "White Glove", description: "24-hour response, proactive management.", prices: cadences(24000), items: ["Named administrator", "24-hour priority response", "Proactive deadline and calendar management", "GP approval workflows run for you"] },
+  { name: "Core", description: "72-hour response.", prices: svc("core"), items: ["Email support, 72-hour response", "Setup and document review on request"] },
+  { name: "Plus", description: "48-hour response, named contact.", prices: svc("fund_administration"), items: ["Named relationship contact", "48-hour response", "Quarterly check-in call"] },
+  { name: "White Glove", description: "24-hour response, proactive management.", prices: svc("white_glove"), items: ["Named administrator", "24-hour priority response", "Proactive deadline and calendar management", "GP approval workflows run for you"] },
   { name: "Institutional", description: "Dedicated team, custom SLAs.", prices: yearly(null, "Custom quote"), items: ["Dedicated team", "Custom SLAs and approval controls"] },
 ];
 /** Investor servicing tiers: one yearly price per fund, set by number of investors. */
@@ -80,14 +91,14 @@ const fundCost: Line[] = [{ name: "Fund platform fee", description: "Base price 
 const fundAdmin = (nav: "quarterly" | "monthly", annual: number): Line => ({
   name: nav === "monthly" ? "Fund Administration — monthly NAV" : "Fund Administration — quarterly NAV",
   description: "Accounting work, priced separately from servicing.",
-  prices: cadences(annual),
+  prices: annual === ADMIN_Q.annual ? cadences(ADMIN_Q.annual, ADMIN_Q.quarterly) : cadences(annual),
   items: ["General ledger, trial balance and bank reconciliation", nav === "monthly" ? "Monthly close and monthly NAV" : "Quarterly close and quarterly NAV",
     "Capital accounts, contributions and distributions", "Management fee and waterfall calculations", "Quarterly reporting package and schedule of investments", "Year-end package for tax and audit"],
 });
 
 function fundProduct(key: ProductKey, name: string, intro: string, admin: Line[], extra: string[]): Product {
   return { key, name, intro, fundCost, administration: admin, servicing: { client: CLIENT_SERVICING, investor: INVESTOR_SERVICING }, alaCarte: FUND_A_LA_CARTE,
-    openPoints: ["Administration and servicing were split so they add up to today's tier totals (Core $15,000, Fund Admin $20,000, White Glove $36,000). Confirm the split.", ...extra] };
+    openPoints: ["Administration + servicing add up to the rate card: Core $15,000/yr or $4,250/qtr, Fund Admin $20,000/yr or $5,500/qtr, White Glove $36,000/yr or $10,000/qtr.", ...extra] };
 }
 
 export const PRODUCTS: Product[] = [
@@ -97,7 +108,7 @@ export const PRODUCTS: Product[] = [
       { name: "Free", description: "Up to 5 stakeholders", prices: yearly(0, "Free") },
       { name: "Starter", description: "Up to 25 stakeholders", prices: [{ amount: 1200, billing: "annual" }] },
       { name: "Growth", description: "Up to 50 stakeholders", prices: [{ amount: 3000, billing: "annual" }] },
-      { name: "Scale", description: "Unlimited stakeholders", prices: [{ amount: 5990, billing: "annual" }] },
+      { name: "Scale", description: "Unlimited stakeholders", prices: yearly(null, "Custom quote") },
       { name: "Enterprise", description: "Custom", prices: yearly(null, "Custom quote") },
     ],
     administration: [{ name: "Ledger administration", description: "Share ledger, issuances and certificates are included in the plan.", prices: yearly(0, "Included") }],
@@ -106,7 +117,7 @@ export const PRODUCTS: Product[] = [
       investor: [{ name: "Stakeholder portal", description: "Holders view their shares and certificates.", prices: yearly(0, "Included") }],
     },
     alaCarte: [{ name: "Membership / share transfer", prices: once(1500, "each") }, { name: "Cap table migration", prices: once(null, "Custom quote") }],
-    openPoints: ["25% increase removed. Rate card says Starter $150 / Growth $300; card checkout charges $129 / $299. Sheet uses the rate card — confirm which is right.", "Monthly billing removed; cap table plans are yearly only. Card checkout charges the existing yearly prices ($1,290 / $2,990 / $5,990). Confirm."],
+    openPoints: ["Yearly prices match the rate card: Starter $1,200, Growth $3,000, Scale custom quote.", "Card checkout still charges the older yearly prices ($1,290 / $2,990 / $5,990) until the checkout prices are updated."],
   },
   fundProduct("venture", "Venture Funds", "Closed-end venture funds with capital calls and quarterly reporting.", [fundAdmin("quarterly", 12000)], []),
   fundProduct("private_equity", "Private Equity Funds", "Closed-end PE funds with capital calls, waterfalls and quarterly NAV.", [fundAdmin("quarterly", 12000)], ["Private Equity uses the same administration price as Venture. Confirm or set a higher price for complex waterfalls."]),
