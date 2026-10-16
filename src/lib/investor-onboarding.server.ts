@@ -246,6 +246,22 @@ async function loadOfferingRequirements(offeringId: string): Promise<OfferingReq
   }, (offering as any)?.reg_type ?? null);
 }
 
+// Short-lived cache: a fund's document list is the same for every investor on it.
+const DOCS_CACHE = new Map<string, { at: number; v: any[] }>();
+const DOCS_TTL = 60_000;
+
+async function offeringDocsCached(offeringId: string): Promise<any[]> {
+  const hit = DOCS_CACHE.get(offeringId);
+  if (hit && Date.now() - hit.at < DOCS_TTL) return hit.v;
+  const { data } = await db()
+    .from("offering_documents")
+    .select("id, title, doc_type, document_category, sort_order, requires_signature, applies_to, usage, applicability, active_version")
+    .eq("offering_id", offeringId);
+  const v = (data ?? []) as any[];
+  DOCS_CACHE.set(offeringId, { at: Date.now(), v });
+  return v;
+}
+
 // ------------------------------------------------------------ facts
 
 async function gatherFacts(row: any) {
