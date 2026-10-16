@@ -1,3 +1,4 @@
+import { invalidateFund } from "@/lib/fund-query-keys";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -27,7 +28,7 @@ export function AssetManager({ fundId, assets }: { fundId: string; assets: any[]
   const add = useServerFn(addFundAssetFn);
   const mark = useServerFn(recordAssetMarkFn);
   const decide = useServerFn(decideAssetMarkFn);
-  const refresh = () => { qc.invalidateQueries({ queryKey: ["client-fund-tabs", fundId] }); qc.invalidateQueries({ queryKey: ["fund-account", fundId] }); };
+  const refresh = () => { void invalidateFund(qc, fundId); };
   const [f, setF] = useState({ assetName: "", issuerName: "", assetClass: "private_preferred" as (typeof CLASSES)[number], instrument: "", acquisitionDate: today(), cost: "" });
   const addM = useMutation({
     mutationFn: () => add({ data: { fundId, assetName: f.assetName.trim(), issuerName: f.issuerName.trim() || f.assetName.trim(), assetClass: f.assetClass, instrument: f.instrument || null, acquisitionDate: f.acquisitionDate || null, costCents: toCents(f.cost) ?? 0 } }),

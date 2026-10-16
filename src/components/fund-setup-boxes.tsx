@@ -1,3 +1,4 @@
+import { invalidateFund } from "@/lib/fund-query-keys";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -79,7 +80,7 @@ export function EinBox({ offeringId, onChanged }: { offeringId: string; onChange
   const letter = latest(files.data as any[], "ein_letter");
   const status = (ein.data as any)?.status as string | undefined;
   const done = einComplete({ status, hasLetter: !!letter });
-  const refresh = () => { qc.invalidateQueries({ queryKey: ["fund-ein", offeringId] }); qc.invalidateQueries({ queryKey: ["fund-files", offeringId] }); onChanged?.(); };
+  const refresh = () => { void invalidateFund(qc, offeringId); onChanged?.(); };
 
   if (ein.isPending || files.isPending) return <div className="h-24 animate-pulse rounded-2xl bg-muted" />;
   if ((ein.data as any)?.allowed === false) return null;
@@ -140,7 +141,7 @@ export function BankBox({ offeringId, isStaff, onChanged }: { offeringId: string
   const letter = latest(files.data as any[], "bank_letter");
   const det = ((wire.data as any)?.details ?? {}) as Record<string, string>;
   const done = bankComplete({ bankName: det["bank_name"], accountMasked: det["account_number"], hasLetter: !!letter });
-  const refresh = () => { qc.invalidateQueries({ queryKey: ["fund-wire", offeringId] }); qc.invalidateQueries({ queryKey: ["fund-files", offeringId] }); onChanged?.(); };
+  const refresh = () => { void invalidateFund(qc, offeringId); onChanged?.(); };
   if (wire.isPending || files.isPending) return <div className="h-24 animate-pulse rounded-2xl bg-muted" />;
   const form = isStaff
     ? <BankForm offeringId={offeringId} prior={det} letter={letter} onSaved={() => { setEditing(false); refresh(); }} />

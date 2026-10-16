@@ -1,3 +1,4 @@
+import { invalidateFund } from "@/lib/fund-query-keys";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
@@ -21,7 +22,7 @@ export function RegulatoryTab({ fundId }: { fundId: string }) {
   const q = useQuery({ queryKey: ["fund-regulatory", fundId], queryFn: () => load({ data: { fundId } }) });
   const [edit, setEdit] = useState<any | null>(null);
   const today = new Date().toISOString().slice(0, 10);
-  const refresh = () => qc.invalidateQueries({ queryKey: ["fund-regulatory", fundId] });
+  const refresh = () => { void invalidateFund(qc, fundId); };
 
   if (q.isLoading) return <p className="text-sm text-muted-foreground">Loading...</p>;
   if (q.error) return <p className="text-sm text-destructive">{(q.error as Error).message}</p>;

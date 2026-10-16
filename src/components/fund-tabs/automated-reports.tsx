@@ -1,3 +1,4 @@
+import { invalidateFund } from "@/lib/fund-query-keys";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -54,7 +55,7 @@ export function AutomatedReports({ fundId, fundName }: { fundId: string; fundNam
   const target = { kind: "service_request" as const, answers: { offering_id: fundId }, serviceKeys: [KEY[kind]] };
   const quote = useFundPayment(q.data && !q.data.staff ? target : null);
   const total = quote.data?.totalCents ?? 0;
-  const refresh = () => { qc.invalidateQueries({ queryKey: ["fund-reports", fundId] }); qc.invalidateQueries({ queryKey: ["fund-account", fundId] }); };
+  const refresh = () => { void invalidateFund(qc, fundId); };
 
   const send = useMutation({
     mutationFn: (paymentId?: string) => submit({ data: { fundId, kind, periodStart: p.start, periodEnd: p.end, inputs: inputs as any, paymentId: paymentId ?? null } }),

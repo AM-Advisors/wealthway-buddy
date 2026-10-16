@@ -1,3 +1,4 @@
+import { invalidateFund } from "@/lib/fund-query-keys";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -114,7 +115,7 @@ function Ledger({ fundId, d }: { fundId: string; d: any }) {
   const add = useServerFn(addLedgerEntryFn);
   const voidFn = useServerFn(voidLedgerEntryFn);
   const [f, setF] = useState({ date: new Date().toISOString().slice(0, 10), description: "", category: LEDGER_CATEGORIES[0] as string, direction: "out" as "in" | "out", amount: "" });
-  const refresh = () => qc.invalidateQueries({ queryKey: ["fund-books", fundId] });
+  const refresh = () => { void invalidateFund(qc, fundId); };
   const m = useMutation({
     mutationFn: () => { const c = toCents(f.amount); if (!c) throw new Error("Enter an amount."); return add({ data: { fundId, entryDate: f.date, description: f.description, category: f.category, direction: f.direction, amountCents: c, bankTransactionId: null } }); },
     onSuccess: () => { toast.success("Entry added"); setF({ ...f, description: "", amount: "" }); refresh(); }, onError: (e: Error) => toast.error(e.message),

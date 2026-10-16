@@ -1,3 +1,4 @@
+import { invalidateFund } from "@/lib/fund-query-keys";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -26,7 +27,7 @@ export function DocumentsTab({ fundId }: { fundId: string }) {
   const upload = useServerFn(uploadFundFileFn);
   const del = useServerFn(deleteFundFileFn);
   const q = useQuery({ queryKey: ["fund-files", fundId], queryFn: () => list({ data: { fundId } }) });
-  const refresh = () => qc.invalidateQueries({ queryKey: ["fund-files", fundId] });
+  const refresh = () => { void invalidateFund(qc, fundId); };
   const [busy, setBusy] = useState(false);
   const [gen, setGen] = useState<string | null>(null);
   const [boxes, setBoxes] = useState<any | null>(null);
