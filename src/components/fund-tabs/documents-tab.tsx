@@ -211,7 +211,7 @@ export function DocumentsTab({ fundId }: { fundId: string }) {
             </div>
             {(tpl.data?.templates ?? []).some((t: any) => t.currentApproved) && (
               <div className="space-y-2 border-t pt-4">
-                <p className="text-sm font-medium">Harmonious templates</p>
+                <p className="text-sm font-medium">Harmonious fund templates</p>
                 <p className="text-xs text-muted-foreground">Filled in from the fund's details, with the signature block set up for you.</p>
                 <div className="grid gap-2 sm:grid-cols-3">
                   {(tpl.data?.templates ?? []).filter((t: any) => t.currentApproved).map((t: any) => (
@@ -236,7 +236,7 @@ export function DocumentsTab({ fundId }: { fundId: string }) {
             )}
             <DialogFooter>
               <Button variant="outline" onClick={() => setChecking(null)}>Cancel</Button>
-              <Button disabled={useTpl.isPending || check.isLoading} onClick={() => useTpl.mutate(checking, { onSettled: () => setChecking(null) })}>{useTpl.isPending ? "Creating…" : "Use Harmonious template"}</Button>
+              <Button disabled={useTpl.isPending || check.isLoading} onClick={() => useTpl.mutate(checking, { onSettled: () => setChecking(null) })}>{useTpl.isPending ? "Creating…" : "Use fund template"}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

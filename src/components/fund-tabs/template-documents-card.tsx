@@ -36,7 +36,7 @@ export function TemplateDocumentsCard({ fundId }: { fundId: string }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Harmonious template documents</CardTitle>
+        <CardTitle className="text-base">Harmonious fund template documents</CardTitle>
         <CardDescription>Review each filled document before it goes out. Drafts can be deleted until they're approved or sent.</CardDescription>
       </CardHeader>
       <CardContent>
