@@ -44,7 +44,7 @@ function AddFlow() {
   const [companyName, setCompanyName] = useState("");
   const [legalName, setLegalName] = useState("");
   const [tier, setTier] = useState<CapTierKey>("starter");
-  const [interval, setInterval] = useState<BillingInterval>("monthly");
+  const [interval, setInterval] = useState<BillingInterval>("annual");
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState<"free" | "sales" | null>(null);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
@@ -103,9 +103,9 @@ function AddFlow() {
       {step === 2 && (
         <div className="space-y-4">
           <div className="inline-flex rounded-md border p-1">
-            {(["monthly", "annual"] as const).map((i) => (
+            {(["annual"] as const).map((i) => (
               <Button key={i} size="sm" variant={interval === i ? "default" : "ghost"} onClick={() => setInterval(i)}>
-                {i === "monthly" ? "Monthly" : "Annual (2 months free)"}
+                Billed yearly
               </Button>
             ))}
           </div>
