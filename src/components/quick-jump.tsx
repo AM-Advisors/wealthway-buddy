@@ -44,6 +44,7 @@ export function QuickJump() {
     staleTime: 30_000,
   });
   const fundHits = records.data?.funds ?? [];
+  const clientHits = records.data?.clients ?? [];
   const peopleHits = records.data?.people ?? [];
 
   useEffect(() => recordVisit(pathname), [pathname]);
@@ -85,25 +86,25 @@ export function QuickJump() {
         <kbd className="hidden rounded border px-1 text-[10px] md:inline">⌘K</kbd>
       </Button>
       <CommandDialog open={open} onOpenChange={setOpen}>
-        <CommandInput value={query} onValueChange={setQuery} placeholder={isStaff ? "Find a screen, fund or person…" : "Type a page, e.g. Fund Setup, reports, tax…"} />
+        <CommandInput value={query} onValueChange={setQuery} placeholder={isStaff ? "Find a fund, client, person or screen…" : "Type a page, e.g. Fund Setup, reports, tax…"} />
         <CommandList>
           <CommandEmpty>{records.isFetching ? "Searching…" : "Nothing matches."}</CommandEmpty>
-          {groups.map((g) => (
-            <CommandGroup key={g.heading} heading={g.heading}>
-              {g.items.map((i) => (
-                <CommandItem key={`${g.heading}-${i.url}`} value={`${i.title} ${i.hint ?? ""} ${i.url}`} onSelect={() => go(i.url)}>
-                  <span>{i.title}</span>
-                  {i.hint && <span className="ml-auto text-xs text-muted-foreground">{i.hint}</span>}
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          ))}
           {!!fundHits.length && (
             <CommandGroup heading="Funds">
               {fundHits.map((f) => (
                 <CommandItem key={`f-${f.id}`} value={`fund ${f.name} ${query}`} onSelect={() => go(`/ops/fund/${f.id}`)}>
                   <span>{f.name}</span>
                   <span className="ml-auto text-xs text-muted-foreground">{f.open ? "Open fund" : "In setup"}</span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          )}
+          {!!clientHits.length && (
+            <CommandGroup heading="Clients">
+              {clientHits.map((c) => (
+                <CommandItem key={`c-${c.id}`} value={`client ${c.name} ${query}`} onSelect={() => go(`/ops/clients/${c.id}`)}>
+                  <span>{c.name}</span>
+                  <span className="ml-auto text-xs text-muted-foreground">Client</span>
                 </CommandItem>
               ))}
             </CommandGroup>
@@ -118,6 +119,16 @@ export function QuickJump() {
               ))}
             </CommandGroup>
           )}
+          {groups.map((g) => (
+            <CommandGroup key={g.heading} heading={g.heading}>
+              {g.items.map((i) => (
+                <CommandItem key={`${g.heading}-${i.url}`} value={`${i.title} ${i.hint ?? ""} ${i.url}`} onSelect={() => go(i.url)}>
+                  <span>{i.title}</span>
+                  {i.hint && <span className="ml-auto text-xs text-muted-foreground">{i.hint}</span>}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          ))}
         </CommandList>
       </CommandDialog>
     </>

@@ -180,6 +180,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
     staleTime: 30_000,
   });
   const fundHits = records.data?.funds ?? [];
+  const clientHits = records.data?.clients ?? [];
   const peopleHits = canSeePeople ? records.data?.people ?? [] : [];
   const allowedUrls = useMemo(() => new Set(opsWorkAreas(capabilities).flatMap((a) => a.screens.map((s) => s.url))), [capabilities]);
 
@@ -338,19 +339,9 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
           <SidebarGroup>
             <SidebarGroupContent>
               <SidebarMenu>
-                {results.length === 0 && !fundHits.length && !peopleHits.length && (
+                {!results.length && !fundHits.length && !clientHits.length && !peopleHits.length && (
                   <p className="px-2 py-2 text-xs text-sidebar-foreground/70">Nothing matches “{query}”.</p>
                 )}
-                {results.map((r) => (
-                  <SidebarMenuItem key={r.url}>
-                    <SidebarMenuButton asChild className="h-auto py-1.5">
-                      <Link to={r.url as never} onClick={close} className="flex flex-col items-start">
-                        <span className="truncate text-sm">{r.title}</span>
-                        <span className="truncate text-[11px] text-sidebar-foreground/60">{r.area}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
@@ -365,6 +356,25 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
                         <Link to="/ops/fund/$fundId" params={{ fundId: f.id }} onClick={close} className="flex flex-col items-start">
                           <span className="truncate text-sm">{f.name}</span>
                           <span className="truncate text-[11px] text-sidebar-foreground/60">{f.open ? "Open fund" : "In setup"}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          )}
+          {!!clientHits.length && (
+            <SidebarGroup>
+              <SidebarGroupContent>
+                <p className="px-2 pb-1 text-[11px] font-medium uppercase tracking-wide text-sidebar-foreground/60">Clients</p>
+                <SidebarMenu>
+                  {clientHits.map((c) => (
+                    <SidebarMenuItem key={c.id}>
+                      <SidebarMenuButton asChild className="h-auto py-1.5">
+                        <Link to="/ops/clients/$clientId" params={{ clientId: c.id }} search={{} as never} onClick={close} className="flex flex-col items-start">
+                          <span className="truncate text-sm">{c.name}</span>
+                          <span className="truncate text-[11px] text-sidebar-foreground/60">Client</span>
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -392,6 +402,22 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
               </SidebarGroupContent>
             </SidebarGroup>
           )}
+          <SidebarGroup>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {results.map((r) => (
+                  <SidebarMenuItem key={r.url}>
+                    <SidebarMenuButton asChild className="h-auto py-1.5">
+                      <Link to={r.url as never} onClick={close} className="flex flex-col items-start">
+                        <span className="truncate text-sm">{r.title}</span>
+                        <span className="truncate text-[11px] text-sidebar-foreground/60">{r.area}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
           </>
         ) : (
           <>
