@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { ChevronsUpDown, FileSignature, LogOut, Monitor, Moon, Repeat, Sun, UserRound, ExternalLink } from "lucide-react";
+import { ChevronsUpDown, FileSignature, LogOut, Monitor, Moon, Repeat, ShieldCheck, Sun, UserRound, ExternalLink } from "lucide-react";
 import { getNavigation } from "@/lib/navigation";
 import { useThemeMode, type ThemeMode } from "@/lib/theme-mode";
 
