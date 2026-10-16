@@ -31,7 +31,7 @@ function SaasOrders() {
     if (!amt) return;
     const cents = Math.round(Number(amt.replace(/[^0-9.]/g, "")) * 100);
     const note = cents < due * 100 ? window.prompt("Amount is short. Add a note to confirm anyway:") : null;
-    try { await confirmWire({ data: { orderId: o.id, amountCents: cents, note } }); toast.success("Wire confirmed. Access opens once the other checks pass."); q.refetch(); }
+    try { await confirmWire({ data: { orderId: o.id, amountCents: cents, note } }); toast.success("Wire confirmed. Access opens once the other checks pass."); qc.invalidateQueries({ queryKey: ["staff-saas-orders"] }); }
     catch (e) { toast.error((e as Error).message); }
   }
   const legal = useServerFn(legalReviewSaasOrderFn);
