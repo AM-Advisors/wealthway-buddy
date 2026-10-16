@@ -50,7 +50,27 @@ function SaasOrders() {
     <div className="mx-auto max-w-5xl space-y-4 px-4 py-8">
       <h1 className="text-3xl">Self-serve SaaS orders</h1>
       <p className="text-sm text-muted-foreground">Click-through SOWs under the standard MSA. They're active without a countersignature; Sales or Legal review them afterwards. Access opens only after payment, identity and business checks.</p>
-      {(d?.orders ?? []).length === 0 && <p className="text-sm text-muted-foreground">No orders yet.</p>}
+      <Card data-testid="auto-activated-sows">
+        <CardHeader><CardTitle className="text-lg">Auto-activated SaaS SOWs</CardTitle></CardHeader>
+        <CardContent className="overflow-x-auto">
+          {(d?.orders ?? []).length === 0 ? <p className="text-sm text-muted-foreground">No signed SOWs yet.</p> : (
+            <table className="w-full text-sm">
+              <thead><tr className="text-left text-muted-foreground"><th className="py-1 pr-3 font-medium">Company</th><th className="py-1 pr-3 font-medium">Signed by</th><th className="py-1 pr-3 font-medium">Signed</th><th className="py-1 pr-3 font-medium">MSA</th><th className="py-1 font-medium">Status</th></tr></thead>
+              <tbody>
+                {(d?.orders ?? []).map((o: any) => (
+                  <tr key={o.id} className="border-t">
+                    <td className="py-1.5 pr-3">{o.company_name}{o.environment === "sandbox" && <Badge variant="secondary" className="ml-2">test</Badge>}</td>
+                    <td className="py-1.5 pr-3">{o.signer_name}</td>
+                    <td className="py-1.5 pr-3 whitespace-nowrap">{new Date(o.signed_at).toLocaleString()}</td>
+                    <td className="py-1.5 pr-3">{o.msa_version}</td>
+                    <td className="py-1.5">{o.status} · pay {o.payment_status}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </CardContent>
+      </Card>
       {(d?.orders ?? []).map((o: any) => (
         <Card key={o.id}>
           <CardHeader className="flex-row items-center justify-between gap-2 space-y-0">
