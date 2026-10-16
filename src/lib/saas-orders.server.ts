@@ -62,7 +62,7 @@ async function ownOrder(uid: string, orderId: string) {
   return data;
 }
 
-export async function startOrderCheckout(uid: string, email: string | null, orderId: string, env: "sandbox" | "live", returnUrl: string) {
+export async function startOrderCheckout(uid: string, email: string | null, orderId: string, env: "sandbox" | "live", returnUrl: string, method: "card" | "ach" = "card") {
   const o = await ownOrder(uid, orderId);
   if (o.payment_status === "paid") return { clientSecret: null as string | null, paid: true };
   const snap = o.price_snapshot as ReturnType<typeof priceOrder>;
@@ -84,13 +84,46 @@ export async function startOrderCheckout(uid: string, email: string | null, orde
     const meta = { kind: "saas_order", orderId: o.id, clientId: o.client_id, userId: uid };
     const session = await stripe.checkout.sessions.create({
       mode: "subscription", ui_mode: "embedded_page" as any, return_url: returnUrl, customer,
-      line_items: line_items as any, metadata: meta, subscription_data: { metadata: meta }, managed_payments: { enabled: true },
+      line_items: line_items as any, metadata: meta, subscription_data: { metadata: meta },
+      // ACH (US bank account) runs through Stripe; the client authorizes the debit in checkout and Stripe confirms settlement.
+      ...(method === "ach" ? { payment_method_types: ["us_bank_account"], automatic_tax: { enabled: true } } : { managed_payments: { enabled: true } }),
     } as any);
-    await (await db()).from("saas_orders").update({ stripe_customer_id: customer, environment: env, updated_at: nowIso() }).eq("id", o.id);
+    await (await db()).from("saas_orders").update({ payment_method: method, stripe_customer_id: customer, environment: env, updated_at: nowIso() }).eq("id", o.id);
     return { clientSecret: session.client_secret ?? "", paid: false };
   } catch (e) {
     return { error: getStripeErrorMessage(e) };
   }
+}
+
+const WIRE_CONFIRMERS = ["finance", "admin", "super_admin"];
+
+/** Client chooses to pay by wire. Nothing is charged; Harmonious confirms receipt. */
+export async function chooseWire(uid: string, orderId: string) {
+  const o = await ownOrder(uid, orderId);
+  if (o.payment_status === "paid") return { reference: o.wire_reference as string | null };
+  const reference = o.wire_reference ?? `HRM-${String(o.id).slice(0, 8).toUpperCase()}`;
+  await (await db()).from("saas_orders").update({ payment_method: "wire", wire_reference: reference, updated_at: nowIso() }).eq("id", o.id);
+  await event(o.id, uid, "wire_chosen", { reference });
+  return { reference };
+}
+
+/** Harmonious staff confirm an incoming wire landed. Record only; no money is moved. */
+export async function confirmWireReceived(uid: string, orderId: string, amountCents: number, note: string | null) {
+  const r = await roles(uid);
+  if (!r.some((x) => WIRE_CONFIRMERS.includes(x))) throw new Error("Only Finance can confirm a wire was received.");
+  const d = await db();
+  const { data: o } = await d.from("saas_orders").select("*").eq("id", orderId).maybeSingle();
+  if (!o) throw new Error("Order not found.");
+  if (o.payment_method !== "wire") throw new Error("This order isn't set to pay by wire.");
+  if (o.user_id === uid) throw new Error("You can't confirm your own payment.");
+  if (o.payment_status === "paid") return { ok: true };
+  const due = Number(o.recurring_cents) + Number(o.one_time_cents);
+  if (amountCents < due && !note?.trim()) throw new Error("The amount is less than what's due. Add a note to confirm anyway.");
+  const end = new Date(); end.setMonth(end.getMonth() + (o.billing_interval === "annual" ? 12 : 3));
+  await d.from("saas_orders").update({ payment_status: "paid", wire_received_by: uid, wire_received_at: nowIso(), wire_received_cents: amountCents, wire_note: note, current_period_end: end.toISOString(), updated_at: nowIso() }).eq("id", o.id);
+  await event(o.id, uid, "wire_received_confirmed", { amount_cents: amountCents, due_cents: due, note });
+  await recompute(o.id);
+  return { ok: true };
 }
 
 export async function submitKyb(uid: string, orderId: string, k: { legalName: string; ein: string; formationState: string; entityType: string; owners: { name: string; percent: number }[] }) {
@@ -146,7 +179,7 @@ export async function syncOrderPayment(sub: any, deleted: boolean) {
 
 export async function mySetup(uid: string) {
   const d = await db();
-  const { data: o } = await d.from("saas_orders").select("id, company_name, billing_interval, price_snapshot, payment_status, kyb_status, kyb_note, status, signed_at, signer_name, msa_version, msa_accepted_at").eq("user_id", uid).order("created_at", { ascending: false }).limit(1).maybeSingle();
+  const { data: o } = await d.from("saas_orders").select("id, company_name, billing_interval, price_snapshot, payment_status, payment_method, wire_reference, recurring_cents, one_time_cents, kyb_status, kyb_note, status, signed_at, signer_name, msa_version, msa_accepted_at").eq("user_id", uid).order("created_at", { ascending: false }).limit(1).maybeSingle();
   const kyc = await kycOpen(uid);
   if (o && o.status !== "active") await recompute(o.id);
   return { order: o ?? null, kycOpen: kyc };
@@ -165,9 +198,9 @@ export async function myEntitlements(uid: string): Promise<string[] | null> {
 
 export async function staffOrders(uid: string) {
   const r = await roles(uid);
-  if (!r.some((x) => [...KYB_DECIDERS, ...LEGAL_REVIEWERS].includes(x))) throw new Error("Staff only.");
-  const { data } = await (await db()).from("saas_orders").select("id, client_id, company_name, billing_interval, recurring_cents, one_time_cents, payment_status, kyb_status, kyb_details, kyb_note, status, signer_name, signed_at, msa_version, legal_reviewed_at, environment").order("created_at", { ascending: false }).limit(200);
-  return { orders: (data ?? []) as any[], canDecideKyb: r.some((x) => KYB_DECIDERS.includes(x)), canLegalReview: r.some((x) => LEGAL_REVIEWERS.includes(x)) };
+  if (!r.some((x) => [...KYB_DECIDERS, ...LEGAL_REVIEWERS, ...WIRE_CONFIRMERS].includes(x))) throw new Error("Staff only.");
+  const { data } = await (await db()).from("saas_orders").select("id, client_id, company_name, billing_interval, recurring_cents, one_time_cents, payment_status, kyb_status, kyb_details, kyb_note, status, signer_name, signed_at, msa_version, legal_reviewed_at, environment, user_id, payment_method, wire_reference, wire_received_at, wire_received_cents").order("created_at", { ascending: false }).limit(200);
+  return { orders: (data ?? []) as any[], canConfirmWire: r.some((x) => WIRE_CONFIRMERS.includes(x)), me: uid, canDecideKyb: r.some((x) => KYB_DECIDERS.includes(x)), canLegalReview: r.some((x) => LEGAL_REVIEWERS.includes(x)) };
 }
 
 export async function decideKyb(uid: string, orderId: string, approve: boolean, note: string | null) {
