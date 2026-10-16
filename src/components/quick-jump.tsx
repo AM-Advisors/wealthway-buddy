@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { Search } from "lucide-react";
 
 import { useClientWorkspace } from "@/components/client-workspace";
@@ -15,6 +16,7 @@ import {
 import { getNavigation } from "@/lib/navigation";
 import type { OpsCapability } from "@/lib/ops-capabilities";
 import { opsSearchIndex } from "@/lib/ops-search";
+import { opsQuickSearchFn } from "@/lib/ops-quick-search.functions";
 import { recordVisit } from "@/lib/recent-screens";
 
 /**
@@ -27,6 +29,22 @@ export function QuickJump() {
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (r) => r.location.pathname });
   const { session, activeId, applicationSurface } = useClientWorkspace();
+
+  const [query, setQuery] = useState("");
+  const [debounced, setDebounced] = useState("");
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(query.trim()), 250);
+    return () => clearTimeout(t);
+  }, [query]);
+  const isStaff = !!(session as { operations?: boolean } | null)?.operations;
+  const records = useQuery({
+    queryKey: ["ops-quick-search", debounced],
+    queryFn: () => opsQuickSearchFn({ data: { q: debounced } }),
+    enabled: open && isStaff && debounced.length >= 2,
+    staleTime: 30_000,
+  });
+  const fundHits = records.data?.funds ?? [];
+  const peopleHits = records.data?.people ?? [];
 
   useEffect(() => recordVisit(pathname), [pathname]);
 
@@ -67,9 +85,9 @@ export function QuickJump() {
         <kbd className="hidden rounded border px-1 text-[10px] md:inline">⌘K</kbd>
       </Button>
       <CommandDialog open={open} onOpenChange={setOpen}>
-        <CommandInput placeholder="Type a page, e.g. Fund Setup, reports, tax…" />
+        <CommandInput value={query} onValueChange={setQuery} placeholder={isStaff ? "Find a screen, fund or person…" : "Type a page, e.g. Fund Setup, reports, tax…"} />
         <CommandList>
-          <CommandEmpty>No matching page.</CommandEmpty>
+          <CommandEmpty>{records.isFetching ? "Searching…" : "Nothing matches."}</CommandEmpty>
           {groups.map((g) => (
             <CommandGroup key={g.heading} heading={g.heading}>
               {g.items.map((i) => (
@@ -80,6 +98,26 @@ export function QuickJump() {
               ))}
             </CommandGroup>
           ))}
+          {!!fundHits.length && (
+            <CommandGroup heading="Funds">
+              {fundHits.map((f) => (
+                <CommandItem key={`f-${f.id}`} value={`fund ${f.name} ${query}`} onSelect={() => go(`/ops/fund/${f.id}`)}>
+                  <span>{f.name}</span>
+                  <span className="ml-auto text-xs text-muted-foreground">{f.open ? "Open fund" : "In setup"}</span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          )}
+          {!!peopleHits.length && (
+            <CommandGroup heading="People">
+              {peopleHits.map((p) => (
+                <CommandItem key={`p-${p.id}`} value={`person ${p.name} ${p.email} ${query}`} onSelect={() => go(`/ops/people/${p.id}`)}>
+                  <span>{p.name || p.email}</span>
+                  <span className="ml-auto text-xs text-muted-foreground">{p.email}</span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          )}
         </CommandList>
       </CommandDialog>
     </>
