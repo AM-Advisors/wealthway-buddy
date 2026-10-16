@@ -280,9 +280,9 @@ export const PRICING: PricingSection[] = [
   ] },
   { id: "cap_tables", title: "Cap Tables", items: [
     { name: "Free", description: "Up to 5 stakeholders.", kind: "fixed", amountUsd: 0, approved: true },
-    { name: "Starter", description: "Up to 25 stakeholders. $1,290 billed yearly.", kind: "fixed", amountUsd: 129, unit: "/ month", approved: true },
-    { name: "Growth", description: "Up to 50 stakeholders. $2,990 billed yearly.", kind: "fixed", amountUsd: 299, unit: "/ month", approved: true },
-    { name: "Scale", description: "For larger cap tables.", kind: "fixed", amountUsd: 599, unit: "/ month", approved: true },
+    { name: "Starter", description: "Up to 25 stakeholders. Billed yearly.", kind: "fixed", amountUsd: 1200, unit: "/ year", approved: true },
+    { name: "Growth", description: "Up to 50 stakeholders. Billed yearly.", kind: "fixed", amountUsd: 3000, unit: "/ year", approved: true },
+    { name: "Scale", description: "Unlimited stakeholders. Priced for your cap table.", kind: "custom", approved: true },
     { name: "Enterprise", description: "Talk to our team.", kind: "custom", approved: true },
   ] },
   { id: "additional", title: "Additional Services", items: [

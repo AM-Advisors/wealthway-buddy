@@ -46,3 +46,16 @@ describe("25% increase removed except SaaS", () => {
     expect(s.alaCarte.find((l) => l.name === "Capital call")!.prices[0]!.amount).toBe(3750);
   });
 });
+
+describe("aligned to the rate card", () => {
+  const sum = (p: ReturnType<typeof productByKey>, i: number, b: "annual" | "quarterly") =>
+    p.administration[0]!.prices.find((x) => x.billing === b)!.amount! + p.servicing.client[i]!.prices.find((x) => x.billing === b)!.amount!;
+  it("venture admin + servicing equals rate card yearly and quarterly", () => {
+    const v = productByKey("venture");
+    expect([sum(v, 1, "annual"), sum(v, 2, "annual"), sum(v, 3, "annual")]).toEqual([15000, 20000, 36000]);
+    expect([sum(v, 1, "quarterly"), sum(v, 2, "quarterly"), sum(v, 3, "quarterly")]).toEqual([4250, 5500, 10000]);
+  });
+  it("cap table yearly: Starter 1200, Growth 3000, Scale custom", () => {
+    expect(productByKey("cap_table").fundCost.map((l) => l.prices[0]!.amount)).toEqual([0, 1200, 3000, null, null]);
+  });
+});
