@@ -25333,6 +25333,9 @@ export type Database = {
           accreditation_status: Database["public"]["Enums"]["check_status"]
           aml_status: Database["public"]["Enums"]["check_status"]
           commitment_cents: number | null
+          commitment_confirmed_at: string | null
+          commitment_confirmed_by: string | null
+          commitment_status: string
           created_at: string
           current_step: string
           documents_status: Database["public"]["Enums"]["check_status"]
@@ -25358,6 +25361,9 @@ export type Database = {
           accreditation_status?: Database["public"]["Enums"]["check_status"]
           aml_status?: Database["public"]["Enums"]["check_status"]
           commitment_cents?: number | null
+          commitment_confirmed_at?: string | null
+          commitment_confirmed_by?: string | null
+          commitment_status?: string
           created_at?: string
           current_step?: string
           documents_status?: Database["public"]["Enums"]["check_status"]
@@ -25383,6 +25389,9 @@ export type Database = {
           accreditation_status?: Database["public"]["Enums"]["check_status"]
           aml_status?: Database["public"]["Enums"]["check_status"]
           commitment_cents?: number | null
+          commitment_confirmed_at?: string | null
+          commitment_confirmed_by?: string | null
+          commitment_status?: string
           created_at?: string
           current_step?: string
           documents_status?: Database["public"]["Enums"]["check_status"]
