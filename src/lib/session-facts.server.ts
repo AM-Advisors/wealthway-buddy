@@ -157,7 +157,7 @@ export async function gatherFacts(context: any): Promise<CanonicalFacts> {
     ]);
 
   const roleList = rows(roles).map((r) => String(r.role));
-  const operations = staffFactsFromRoles(roleList, await readNavGrants(context));
+  const operations = staffFactsFromRoles(roleList, hasOperationsEntry(roleList) ? await readNavGrants(context) : []);
   facts.staff = { active: operations.operationsEntry, roles: operations.staffRoles };
   facts.managedFundIds = rows(managed).map((r) => String(r.offering_id));
   facts.investmentProfileIds = rows(profiles).map((r) => String(r.id));
