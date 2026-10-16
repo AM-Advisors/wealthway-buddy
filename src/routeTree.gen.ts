@@ -167,6 +167,8 @@ import { Route as AuthenticatedClientSignOffsRouteImport } from './routes/_authe
 import { Route as AuthenticatedClientWiresRouteImport } from './routes/_authenticated/client.wires'
 import { Route as AuthenticatedDiligenceIndexRouteImport } from './routes/_authenticated/diligence.index'
 import { Route as AuthenticatedDiligenceOfferingIdRouteImport } from './routes/_authenticated/diligence.$offeringId'
+import { Route as AuthenticatedHelpIndexRouteImport } from './routes/_authenticated/help.index'
+import { Route as AuthenticatedHelpSlugRouteImport } from './routes/_authenticated/help.$slug'
 import { Route as AuthenticatedInvestmentOnboardingIdRouteImport } from './routes/_authenticated/investment.$onboardingId'
 import { Route as AuthenticatedManagerIndexRouteImport } from './routes/_authenticated/manager.index'
 import { Route as AuthenticatedManagerApplicationIdRouteImport } from './routes/_authenticated/manager.$applicationId'
@@ -403,6 +405,8 @@ import { Route as AuthenticatedOpsFundSetupNewRouteImport } from './routes/_auth
 import { Route as AuthenticatedOpsFundFundIdRouteImport } from './routes/_authenticated/ops.fund.$fundId'
 import { Route as AuthenticatedOpsFundsIndexRouteImport } from './routes/_authenticated/ops.funds.index'
 import { Route as AuthenticatedOpsFundsFundIdRouteImport } from './routes/_authenticated/ops.funds.$fundId'
+import { Route as AuthenticatedOpsHelpIndexRouteImport } from './routes/_authenticated/ops.help.index'
+import { Route as AuthenticatedOpsHelpSlugRouteImport } from './routes/_authenticated/ops.help.$slug'
 import { Route as AuthenticatedOpsInvestorsIndexRouteImport } from './routes/_authenticated/ops.investors.index'
 import { Route as AuthenticatedOpsInvestorsInvestorIdRouteImport } from './routes/_authenticated/ops.investors.$investorId'
 import { Route as AuthenticatedOpsPeopleUserIdRouteImport } from './routes/_authenticated/ops.people.$userId'
@@ -1318,6 +1322,16 @@ const AuthenticatedDiligenceOfferingIdRoute =
     path: '/diligence/$offeringId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedHelpIndexRoute = AuthenticatedHelpIndexRouteImport.update({
+  id: '/help/',
+  path: '/help/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedHelpSlugRoute = AuthenticatedHelpSlugRouteImport.update({
+  id: '/help/$slug',
+  path: '/help/$slug',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedInvestmentOnboardingIdRoute =
   AuthenticatedInvestmentOnboardingIdRouteImport.update({
     id: '/investment/$onboardingId',
@@ -2705,6 +2719,18 @@ const AuthenticatedOpsFundsFundIdRoute =
     path: '/ops/funds/$fundId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOpsHelpIndexRoute =
+  AuthenticatedOpsHelpIndexRouteImport.update({
+    id: '/ops/help/',
+    path: '/ops/help/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedOpsHelpSlugRoute =
+  AuthenticatedOpsHelpSlugRouteImport.update({
+    id: '/ops/help/$slug',
+    path: '/ops/help/$slug',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOpsInvestorsIndexRoute =
   AuthenticatedOpsInvestorsIndexRouteImport.update({
     id: '/ops/investors/',
@@ -3162,6 +3188,7 @@ export interface FileRoutesByFullPath {
   '/client/sign-offs': typeof AuthenticatedClientSignOffsRoute
   '/client/wires': typeof AuthenticatedClientWiresRoute
   '/diligence/$offeringId': typeof AuthenticatedDiligenceOfferingIdRoute
+  '/help/$slug': typeof AuthenticatedHelpSlugRoute
   '/investment/$onboardingId': typeof AuthenticatedInvestmentOnboardingIdRoute
   '/manager/$applicationId': typeof AuthenticatedManagerApplicationIdRoute
   '/manager/activity': typeof AuthenticatedManagerActivityRoute
@@ -3319,6 +3346,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/client/': typeof AuthenticatedClientIndexRoute
   '/diligence/': typeof AuthenticatedDiligenceIndexRoute
+  '/help/': typeof AuthenticatedHelpIndexRoute
   '/manager/': typeof AuthenticatedManagerIndexRoute
   '/my-funds/': typeof AuthenticatedMyFundsIndexRoute
   '/ops/': typeof AuthenticatedOpsIndexRoute
@@ -3391,6 +3419,7 @@ export interface FileRoutesByFullPath {
   '/ops/fund-setup/new': typeof AuthenticatedOpsFundSetupNewRoute
   '/ops/fund/$fundId': typeof AuthenticatedOpsFundFundIdRoute
   '/ops/funds/$fundId': typeof AuthenticatedOpsFundsFundIdRoute
+  '/ops/help/$slug': typeof AuthenticatedOpsHelpSlugRoute
   '/ops/investors/$investorId': typeof AuthenticatedOpsInvestorsInvestorIdRoute
   '/ops/people/$userId': typeof AuthenticatedOpsPeopleUserIdRoute
   '/ops/people/test-demo': typeof AuthenticatedOpsPeopleTestDemoRoute
@@ -3428,6 +3457,7 @@ export interface FileRoutesByFullPath {
   '/ops/companies/': typeof AuthenticatedOpsCompaniesIndexRoute
   '/ops/fund-setup/': typeof AuthenticatedOpsFundSetupIndexRoute
   '/ops/funds/': typeof AuthenticatedOpsFundsIndexRoute
+  '/ops/help/': typeof AuthenticatedOpsHelpIndexRoute
   '/ops/investors/': typeof AuthenticatedOpsInvestorsIndexRoute
   '/admin/clients/$clientId/entities': typeof AuthenticatedAdminClientsClientIdEntitiesRoute
   '/client/agreements/sow/$sowId': typeof AuthenticatedClientAgreementsSowSowIdRoute
@@ -3602,6 +3632,7 @@ export interface FileRoutesByTo {
   '/client/sign-offs': typeof AuthenticatedClientSignOffsRoute
   '/client/wires': typeof AuthenticatedClientWiresRoute
   '/diligence/$offeringId': typeof AuthenticatedDiligenceOfferingIdRoute
+  '/help/$slug': typeof AuthenticatedHelpSlugRoute
   '/investment/$onboardingId': typeof AuthenticatedInvestmentOnboardingIdRoute
   '/manager/$applicationId': typeof AuthenticatedManagerApplicationIdRoute
   '/manager/activity': typeof AuthenticatedManagerActivityRoute
@@ -3759,6 +3790,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/client': typeof AuthenticatedClientIndexRoute
   '/diligence': typeof AuthenticatedDiligenceIndexRoute
+  '/help': typeof AuthenticatedHelpIndexRoute
   '/manager': typeof AuthenticatedManagerIndexRoute
   '/my-funds': typeof AuthenticatedMyFundsIndexRoute
   '/ops': typeof AuthenticatedOpsIndexRoute
@@ -3830,6 +3862,7 @@ export interface FileRoutesByTo {
   '/ops/fund-setup/new': typeof AuthenticatedOpsFundSetupNewRoute
   '/ops/fund/$fundId': typeof AuthenticatedOpsFundFundIdRoute
   '/ops/funds/$fundId': typeof AuthenticatedOpsFundsFundIdRoute
+  '/ops/help/$slug': typeof AuthenticatedOpsHelpSlugRoute
   '/ops/investors/$investorId': typeof AuthenticatedOpsInvestorsInvestorIdRoute
   '/ops/people/$userId': typeof AuthenticatedOpsPeopleUserIdRoute
   '/ops/people/test-demo': typeof AuthenticatedOpsPeopleTestDemoRoute
@@ -3867,6 +3900,7 @@ export interface FileRoutesByTo {
   '/ops/companies': typeof AuthenticatedOpsCompaniesIndexRoute
   '/ops/fund-setup': typeof AuthenticatedOpsFundSetupIndexRoute
   '/ops/funds': typeof AuthenticatedOpsFundsIndexRoute
+  '/ops/help': typeof AuthenticatedOpsHelpIndexRoute
   '/ops/investors': typeof AuthenticatedOpsInvestorsIndexRoute
   '/admin/clients/$clientId/entities': typeof AuthenticatedAdminClientsClientIdEntitiesRoute
   '/client/agreements/sow/$sowId': typeof AuthenticatedClientAgreementsSowSowIdRoute
@@ -4050,6 +4084,7 @@ export interface FileRoutesById {
   '/_authenticated/client/sign-offs': typeof AuthenticatedClientSignOffsRoute
   '/_authenticated/client/wires': typeof AuthenticatedClientWiresRoute
   '/_authenticated/diligence/$offeringId': typeof AuthenticatedDiligenceOfferingIdRoute
+  '/_authenticated/help/$slug': typeof AuthenticatedHelpSlugRoute
   '/_authenticated/investment/$onboardingId': typeof AuthenticatedInvestmentOnboardingIdRoute
   '/_authenticated/manager/$applicationId': typeof AuthenticatedManagerApplicationIdRoute
   '/_authenticated/manager/activity': typeof AuthenticatedManagerActivityRoute
@@ -4207,6 +4242,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/client/': typeof AuthenticatedClientIndexRoute
   '/_authenticated/diligence/': typeof AuthenticatedDiligenceIndexRoute
+  '/_authenticated/help/': typeof AuthenticatedHelpIndexRoute
   '/_authenticated/manager/': typeof AuthenticatedManagerIndexRoute
   '/_authenticated/my-funds/': typeof AuthenticatedMyFundsIndexRoute
   '/_authenticated/ops/': typeof AuthenticatedOpsIndexRoute
@@ -4279,6 +4315,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/fund-setup/new': typeof AuthenticatedOpsFundSetupNewRoute
   '/_authenticated/ops/fund/$fundId': typeof AuthenticatedOpsFundFundIdRoute
   '/_authenticated/ops/funds/$fundId': typeof AuthenticatedOpsFundsFundIdRoute
+  '/_authenticated/ops/help/$slug': typeof AuthenticatedOpsHelpSlugRoute
   '/_authenticated/ops/investors/$investorId': typeof AuthenticatedOpsInvestorsInvestorIdRoute
   '/_authenticated/ops/people/$userId': typeof AuthenticatedOpsPeopleUserIdRoute
   '/_authenticated/ops/people_/test-demo': typeof AuthenticatedOpsPeopleTestDemoRoute
@@ -4316,6 +4353,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/companies/': typeof AuthenticatedOpsCompaniesIndexRoute
   '/_authenticated/ops/fund-setup/': typeof AuthenticatedOpsFundSetupIndexRoute
   '/_authenticated/ops/funds/': typeof AuthenticatedOpsFundsIndexRoute
+  '/_authenticated/ops/help/': typeof AuthenticatedOpsHelpIndexRoute
   '/_authenticated/ops/investors/': typeof AuthenticatedOpsInvestorsIndexRoute
   '/_authenticated/admin/clients/$clientId/entities': typeof AuthenticatedAdminClientsClientIdEntitiesRoute
   '/_authenticated/client/agreements/sow/$sowId': typeof AuthenticatedClientAgreementsSowSowIdRoute
@@ -4499,6 +4537,7 @@ export interface FileRouteTypes {
     | '/client/sign-offs'
     | '/client/wires'
     | '/diligence/$offeringId'
+    | '/help/$slug'
     | '/investment/$onboardingId'
     | '/manager/$applicationId'
     | '/manager/activity'
@@ -4656,6 +4695,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/client/'
     | '/diligence/'
+    | '/help/'
     | '/manager/'
     | '/my-funds/'
     | '/ops/'
@@ -4728,6 +4768,7 @@ export interface FileRouteTypes {
     | '/ops/fund-setup/new'
     | '/ops/fund/$fundId'
     | '/ops/funds/$fundId'
+    | '/ops/help/$slug'
     | '/ops/investors/$investorId'
     | '/ops/people/$userId'
     | '/ops/people/test-demo'
@@ -4765,6 +4806,7 @@ export interface FileRouteTypes {
     | '/ops/companies/'
     | '/ops/fund-setup/'
     | '/ops/funds/'
+    | '/ops/help/'
     | '/ops/investors/'
     | '/admin/clients/$clientId/entities'
     | '/client/agreements/sow/$sowId'
@@ -4939,6 +4981,7 @@ export interface FileRouteTypes {
     | '/client/sign-offs'
     | '/client/wires'
     | '/diligence/$offeringId'
+    | '/help/$slug'
     | '/investment/$onboardingId'
     | '/manager/$applicationId'
     | '/manager/activity'
@@ -5096,6 +5139,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/client'
     | '/diligence'
+    | '/help'
     | '/manager'
     | '/my-funds'
     | '/ops'
@@ -5167,6 +5211,7 @@ export interface FileRouteTypes {
     | '/ops/fund-setup/new'
     | '/ops/fund/$fundId'
     | '/ops/funds/$fundId'
+    | '/ops/help/$slug'
     | '/ops/investors/$investorId'
     | '/ops/people/$userId'
     | '/ops/people/test-demo'
@@ -5204,6 +5249,7 @@ export interface FileRouteTypes {
     | '/ops/companies'
     | '/ops/fund-setup'
     | '/ops/funds'
+    | '/ops/help'
     | '/ops/investors'
     | '/admin/clients/$clientId/entities'
     | '/client/agreements/sow/$sowId'
@@ -5386,6 +5432,7 @@ export interface FileRouteTypes {
     | '/_authenticated/client/sign-offs'
     | '/_authenticated/client/wires'
     | '/_authenticated/diligence/$offeringId'
+    | '/_authenticated/help/$slug'
     | '/_authenticated/investment/$onboardingId'
     | '/_authenticated/manager/$applicationId'
     | '/_authenticated/manager/activity'
@@ -5543,6 +5590,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/'
     | '/_authenticated/client/'
     | '/_authenticated/diligence/'
+    | '/_authenticated/help/'
     | '/_authenticated/manager/'
     | '/_authenticated/my-funds/'
     | '/_authenticated/ops/'
@@ -5615,6 +5663,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/fund-setup/new'
     | '/_authenticated/ops/fund/$fundId'
     | '/_authenticated/ops/funds/$fundId'
+    | '/_authenticated/ops/help/$slug'
     | '/_authenticated/ops/investors/$investorId'
     | '/_authenticated/ops/people/$userId'
     | '/_authenticated/ops/people_/test-demo'
@@ -5652,6 +5701,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/companies/'
     | '/_authenticated/ops/fund-setup/'
     | '/_authenticated/ops/funds/'
+    | '/_authenticated/ops/help/'
     | '/_authenticated/ops/investors/'
     | '/_authenticated/admin/clients/$clientId/entities'
     | '/_authenticated/client/agreements/sow/$sowId'
@@ -6861,6 +6911,20 @@ declare module '@tanstack/react-router' {
       path: '/diligence/$offeringId'
       fullPath: '/diligence/$offeringId'
       preLoaderRoute: typeof AuthenticatedDiligenceOfferingIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/help/': {
+      id: '/_authenticated/help/'
+      path: '/help'
+      fullPath: '/help/'
+      preLoaderRoute: typeof AuthenticatedHelpIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/help/$slug': {
+      id: '/_authenticated/help/$slug'
+      path: '/help/$slug'
+      fullPath: '/help/$slug'
+      preLoaderRoute: typeof AuthenticatedHelpSlugRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/investment/$onboardingId': {
@@ -8515,6 +8579,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsFundsFundIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ops/help/': {
+      id: '/_authenticated/ops/help/'
+      path: '/ops/help'
+      fullPath: '/ops/help/'
+      preLoaderRoute: typeof AuthenticatedOpsHelpIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ops/help/$slug': {
+      id: '/_authenticated/ops/help/$slug'
+      path: '/ops/help/$slug'
+      fullPath: '/ops/help/$slug'
+      preLoaderRoute: typeof AuthenticatedOpsHelpSlugRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ops/investors/': {
       id: '/_authenticated/ops/investors/'
       path: '/ops/investors'
@@ -9262,6 +9340,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminTimelineRoute: typeof AuthenticatedAdminTimelineRoute
   AuthenticatedAdminWireRoute: typeof AuthenticatedAdminWireRoute
   AuthenticatedDiligenceOfferingIdRoute: typeof AuthenticatedDiligenceOfferingIdRoute
+  AuthenticatedHelpSlugRoute: typeof AuthenticatedHelpSlugRoute
   AuthenticatedInvestmentOnboardingIdRoute: typeof AuthenticatedInvestmentOnboardingIdRoute
   AuthenticatedManagerApplicationIdRoute: typeof AuthenticatedManagerApplicationIdRoute
   AuthenticatedManagerActivityRoute: typeof AuthenticatedManagerActivityRoute
@@ -9393,6 +9472,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSignSignatureIdRoute: typeof AuthenticatedSignSignatureIdRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedDiligenceIndexRoute: typeof AuthenticatedDiligenceIndexRoute
+  AuthenticatedHelpIndexRoute: typeof AuthenticatedHelpIndexRoute
   AuthenticatedManagerIndexRoute: typeof AuthenticatedManagerIndexRoute
   AuthenticatedMyFundsIndexRoute: typeof AuthenticatedMyFundsIndexRoute
   AuthenticatedOpsIndexRoute: typeof AuthenticatedOpsIndexRoute
@@ -9443,6 +9523,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsFundSetupNewRoute: typeof AuthenticatedOpsFundSetupNewRoute
   AuthenticatedOpsFundFundIdRoute: typeof AuthenticatedOpsFundFundIdRoute
   AuthenticatedOpsFundsFundIdRoute: typeof AuthenticatedOpsFundsFundIdRoute
+  AuthenticatedOpsHelpSlugRoute: typeof AuthenticatedOpsHelpSlugRoute
   AuthenticatedOpsInvestorsInvestorIdRoute: typeof AuthenticatedOpsInvestorsInvestorIdRoute
   AuthenticatedOpsPeopleTestDemoRoute: typeof AuthenticatedOpsPeopleTestDemoRoute
   AuthenticatedOpsPeriodLinksBatchIdRoute: typeof AuthenticatedOpsPeriodLinksBatchIdRoute
@@ -9456,6 +9537,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsCompaniesIndexRoute: typeof AuthenticatedOpsCompaniesIndexRoute
   AuthenticatedOpsFundSetupIndexRoute: typeof AuthenticatedOpsFundSetupIndexRoute
   AuthenticatedOpsFundsIndexRoute: typeof AuthenticatedOpsFundsIndexRoute
+  AuthenticatedOpsHelpIndexRoute: typeof AuthenticatedOpsHelpIndexRoute
   AuthenticatedOpsInvestorsIndexRoute: typeof AuthenticatedOpsInvestorsIndexRoute
   AuthenticatedAdminClientsClientIdEntitiesRoute: typeof AuthenticatedAdminClientsClientIdEntitiesRoute
   AuthenticatedMarketingStudioContentItemIdRoute: typeof AuthenticatedMarketingStudioContentItemIdRoute
@@ -9569,6 +9651,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminTimelineRoute: AuthenticatedAdminTimelineRoute,
   AuthenticatedAdminWireRoute: AuthenticatedAdminWireRoute,
   AuthenticatedDiligenceOfferingIdRoute: AuthenticatedDiligenceOfferingIdRoute,
+  AuthenticatedHelpSlugRoute: AuthenticatedHelpSlugRoute,
   AuthenticatedInvestmentOnboardingIdRoute:
     AuthenticatedInvestmentOnboardingIdRoute,
   AuthenticatedManagerApplicationIdRoute:
@@ -9722,6 +9805,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSignSignatureIdRoute: AuthenticatedSignSignatureIdRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
   AuthenticatedDiligenceIndexRoute: AuthenticatedDiligenceIndexRoute,
+  AuthenticatedHelpIndexRoute: AuthenticatedHelpIndexRoute,
   AuthenticatedManagerIndexRoute: AuthenticatedManagerIndexRoute,
   AuthenticatedMyFundsIndexRoute: AuthenticatedMyFundsIndexRoute,
   AuthenticatedOpsIndexRoute: AuthenticatedOpsIndexRoute,
@@ -9801,6 +9885,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsFundSetupNewRoute: AuthenticatedOpsFundSetupNewRoute,
   AuthenticatedOpsFundFundIdRoute: AuthenticatedOpsFundFundIdRoute,
   AuthenticatedOpsFundsFundIdRoute: AuthenticatedOpsFundsFundIdRoute,
+  AuthenticatedOpsHelpSlugRoute: AuthenticatedOpsHelpSlugRoute,
   AuthenticatedOpsInvestorsInvestorIdRoute:
     AuthenticatedOpsInvestorsInvestorIdRoute,
   AuthenticatedOpsPeopleTestDemoRoute: AuthenticatedOpsPeopleTestDemoRoute,
@@ -9817,6 +9902,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsCompaniesIndexRoute: AuthenticatedOpsCompaniesIndexRoute,
   AuthenticatedOpsFundSetupIndexRoute: AuthenticatedOpsFundSetupIndexRoute,
   AuthenticatedOpsFundsIndexRoute: AuthenticatedOpsFundsIndexRoute,
+  AuthenticatedOpsHelpIndexRoute: AuthenticatedOpsHelpIndexRoute,
   AuthenticatedOpsInvestorsIndexRoute: AuthenticatedOpsInvestorsIndexRoute,
   AuthenticatedAdminClientsClientIdEntitiesRoute:
     AuthenticatedAdminClientsClientIdEntitiesRoute,
