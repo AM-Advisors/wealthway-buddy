@@ -45,6 +45,7 @@ import { getNavigation, operationsNavItemIsActive } from "@/lib/navigation";
 import { opsSearchIndex, searchOpsIndex } from "@/lib/ops-search";
 import { opsQuickSearchFn } from "@/lib/ops-quick-search.functions";
 import { opsWorkAreas, type OpsCapability } from "@/lib/ops-capabilities";
+import { dedupeNav, extraGrantItems } from "@/lib/ops-nav-registry";
 
 const ICONS: Record<string, typeof Home> = {
   home: Home,
@@ -288,6 +289,26 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
     ] },
   ] : [];
 
+  if (!salesOnly && (leader || has("finance", "account_manager", "client_success", "operations"))) financeItems.push({ id: "payment-reminders", title: "Payment reminders", url: "/ops/payment-reminders", icon: "money" });
+  const navGrants = ((session as { opsNavGrants?: { url: string; title: string }[] } | null)?.opsNavGrants ?? []);
+  const navKey = `${staffRoles.join(",")}|${capabilities.length}|${navGrants.map((g) => g.url).join(",")}|${salesOnly}`;
+  // One home per screen across the whole menu; recomputed only when roles or grants change.
+  const groups = useMemo(() => {
+    const deduped = dedupeNav([
+      { id: "operations", label: "Operations", items: opsItems },
+      { id: "finance", label: "Accounting & Finance", items: financeItems },
+      { id: "sales", label: "Sales", items: salesItems },
+      { id: "account-management", label: "Account Management", items: amItems },
+      { id: "marketing", label: "Marketing", items: mkItems },
+      { id: "team", label: "Team", items: teamItems },
+      { id: "leadership", label: "Leadership", items: leadershipItems },
+    ]);
+    const byId = Object.fromEntries(deduped.map((g) => [g.id, g.items as NavItem[]])) as Record<string, NavItem[]>;
+    return { byId, extra: extraGrantItems(deduped, navGrants) as NavItem[] };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [navKey]);
+  const G = (id: string) => groups.byId[id] ?? [];
+
   const exact = (i: NavItem) => pathname === i.url;
   const opsActive = (i: NavItem) => i.id === "queue" || i.id === "regulatory" || i.id.startsWith("dash-") ? pathname === i.url : i.id === "administration" ? pathname.startsWith(i.url) : operationsNavItemIsActive(i.url, pathname);
 
@@ -387,13 +408,14 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
               </SidebarGroup>
             )}
             <SidebarFavorites collapsed={collapsed} onNavigate={close} />
-            <NavSection id="operations" label="Operations" items={opsItems} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={opsActive} />
-            <NavSection id="finance" label="Accounting & Finance" items={financeItems} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={opsActive} />
-            <NavSection id="sales" label="Sales" items={salesItems} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={exact} />
-            <NavSection id="account-management" label="Account Management" items={amItems} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={exact} />
-            <NavSection id="marketing" label="Marketing" items={mkItems} pathname={pathname} collapsed={collapsed} onNavigate={close} compactGroups isActive={(i) => i.url === "/marketing" ? pathname === i.url : i.sub ? i.sub.some((s) => s.url === "/marketing/studio" ? pathname === s.url || pathname.startsWith("/marketing/studio/content/") : pathname === s.url || pathname.startsWith(`${s.url}/`)) : pathname === i.url || pathname.startsWith(`${i.url}/`)} />
-            <NavSection id="team" label="Team" items={teamItems} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={(i) => i.id === "people-access" ? pathname.startsWith("/ops/people-access") || pathname.startsWith("/ops/employees") : pathname === i.url} />
-            <NavSection id="leadership" label="Leadership" items={leadershipItems} pathname={pathname} collapsed={collapsed} onNavigate={close}
+            <NavSection id="operations" label="Operations" items={G("operations")} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={opsActive} />
+            <NavSection id="finance" label="Accounting & Finance" items={G("finance")} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={opsActive} />
+            <NavSection id="sales" label="Sales" items={G("sales")} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={exact} />
+            <NavSection id="account-management" label="Account Management" items={G("account-management")} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={exact} />
+            <NavSection id="marketing" label="Marketing" items={G("marketing")} pathname={pathname} collapsed={collapsed} onNavigate={close} compactGroups isActive={(i) => i.url === "/marketing" ? pathname === i.url : i.sub ? i.sub.some((s) => s.url === "/marketing/studio" ? pathname === s.url || pathname.startsWith("/marketing/studio/content/") : pathname === s.url || pathname.startsWith(`${s.url}/`)) : pathname === i.url || pathname.startsWith(`${i.url}/`)} />
+            <NavSection id="team" label="Team" items={G("team")} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={(i) => i.id === "people-access" ? pathname.startsWith("/ops/people-access") || pathname.startsWith("/ops/employees") : pathname === i.url} />
+            <NavSection id="extra-access" label="Extra access" items={groups.extra} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={exact} />
+            <NavSection id="leadership" label="Leadership" items={G("leadership")} pathname={pathname} collapsed={collapsed} onNavigate={close}
               isActive={(i) => i.sub ? i.sub.some((x) => pathname === x.url) : pathname === i.url} />
             <SidebarSeparator />
             <SidebarGroup>
