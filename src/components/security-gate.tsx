@@ -1,3 +1,4 @@
+import { canEnrollPasskey } from "@/lib/passkeys";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useRouterState } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
@@ -152,7 +153,6 @@ function Shell({ children, onSignOut }: { children: ReactNode; onSignOut: () => 
 }
 
 const passkeysSupported = () => typeof window !== "undefined" && !!window.PublicKeyCredential;
-import { canEnrollPasskey } from "@/lib/passkeys";
 
 function MfaSetup({ onDone }: { onDone: () => void }) {
   const [totp, setTotp] = useState<{ id: string; qr: string; secret: string } | null>(null);
