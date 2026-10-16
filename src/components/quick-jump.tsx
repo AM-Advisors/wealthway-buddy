@@ -86,7 +86,7 @@ export function QuickJump() {
         <kbd className="hidden rounded border px-1 text-[10px] md:inline">⌘K</kbd>
       </Button>
       <CommandDialog open={open} onOpenChange={setOpen}>
-        <CommandInput value={query} onValueChange={setQuery} placeholder={isStaff ? "Find a screen, fund or person…" : "Type a page, e.g. Fund Setup, reports, tax…"} />
+        <CommandInput value={query} onValueChange={setQuery} placeholder={isStaff ? "Find a fund, client, person or screen…" : "Type a page, e.g. Fund Setup, reports, tax…"} />
         <CommandList>
           <CommandEmpty>{records.isFetching ? "Searching…" : "Nothing matches."}</CommandEmpty>
           {!!fundHits.length && (
