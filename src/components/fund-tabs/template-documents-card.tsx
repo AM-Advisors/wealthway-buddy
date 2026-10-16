@@ -61,7 +61,17 @@ export function TemplateDocumentsCard({ fundId }: { fundId: string }) {
           </div>
         )}
       </CardContent>
-      {review && <ReviewDialog fundId={fundId} doc={review} onClose={() => setReview(null)} />}
+      {review && (
+        <ReviewDialog
+          fundId={fundId}
+          doc={review}
+          onClose={() => setReview(null)}
+          approve={!review.isActive && review.version ? {
+            disabled: useVersion.isPending || (review.signers.length > 0 && review.signingStatus !== "confirmed"),
+            run: () => useVersion.mutate(review, { onSuccess: () => setReview(null) }),
+          } : undefined}
+        />
+      )}
     </Card>
   );
 }
@@ -76,7 +86,7 @@ function fitPages(el: HTMLElement) {
   wrapper.style.zoom = String(scale);
 }
 
-function ReviewDialog({ fundId, doc, onClose }: { fundId: string; doc: any; onClose: () => void }) {
+function ReviewDialog({ fundId, doc, onClose, approve }: { fundId: string; doc: any; onClose: () => void; approve?: { disabled: boolean; run: () => void } }) {
   const getUrl = useServerFn(fundTemplateDocumentUrlFn);
   const box = useRef<HTMLDivElement>(null);
   const [state, setState] = useState<"loading" | "ready" | "error">("loading");
@@ -111,7 +121,12 @@ function ReviewDialog({ fundId, doc, onClose }: { fundId: string; doc: any; onCl
         </DialogHeader>
         {state === "loading" && <p className="text-sm text-muted-foreground">Opening the document…</p>}
         {state === "error" && <p className="text-sm text-destructive">Couldn't open the document. Try Download instead.</p>}
-        {isDocx ? <div ref={box} className="document-surface max-h-[75vh] overflow-auto rounded-md border" /> : url && state === "ready" && <iframe title={doc.title} src={url} className="h-[75vh] w-full rounded-md border bg-white" />}
+        {isDocx ? <div ref={box} className="document-surface max-h-[70vh] overflow-auto rounded-md border" /> : url && state === "ready" && <iframe title={doc.title} src={url} className="h-[70vh] w-full rounded-md border bg-white" />}
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" onClick={onClose}>Close</Button>
+          {approve ? <Button disabled={approve.disabled || state !== "ready"} onClick={approve.run}>Approve</Button>
+            : doc.isActive ? <Badge variant="outline">Approved</Badge> : null}
+        </div>
       </DialogContent>
     </Dialog>
   );
