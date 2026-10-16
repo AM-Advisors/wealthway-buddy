@@ -24302,6 +24302,33 @@ export type Database = {
         }
         Relationships: []
       }
+      help_article_reviews: {
+        Row: {
+          approved_by: string
+          created_at: string
+          id: string
+          note: string | null
+          slug: string
+          version: number
+        }
+        Insert: {
+          approved_by: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          slug: string
+          version: number
+        }
+        Update: {
+          approved_by?: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          slug?: string
+          version?: number
+        }
+        Relationships: []
+      }
       help_content: {
         Row: {
           created_at: string
