@@ -379,8 +379,8 @@ export const uploadDeckFile = createServerFn({ method: "POST" })
     await assertManage(supabase, data.offering_id);
 
     const binary = Buffer.from(data.content_base64, "base64");
-    if (binary.length === 0) throw new Error("That file appears to be empty.");
-    if (binary.length > 25 * 1024 * 1024) throw new Error("The deck file must be 25 MB or smaller.");
+    const { validateUpload } = await import("@/lib/upload-validation");
+    const checked = validateUpload(new Uint8Array(binary), data.file_name, { allowed: ["pdf", "pptx", "ppt"], maxBytes: 25 * 1024 * 1024, label: "Deck file" });
 
     const deck = await ensureDeck(supabase, data.offering_id, userId);
     const safeName = data.file_name.replace(/[\\/:*?"<>|]/g, "_");
@@ -389,7 +389,7 @@ export const uploadDeckFile = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error: upErr } = await supabaseAdmin.storage
       .from(BUCKET)
-      .upload(path, binary, { contentType: data.content_type || "application/pdf", upsert: false });
+      .upload(path, binary, { contentType: checked.contentType, upsert: false });
     if (upErr) throw new Error(upErr.message);
 
     if (deck.deck_file_path) {

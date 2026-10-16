@@ -155,13 +155,15 @@ export const uploadFundTaxDocument = createServerFn({ method: "POST" })
     const who = await requireFundAccess(context, data.offeringId);
 
     const binary = Buffer.from(data.contentBase64, "base64");
+    const { validateUpload } = await import("@/lib/upload-validation");
+    const checked = validateUpload(new Uint8Array(binary), data.fileName, { allowed: ["pdf"], maxBytes: 20 * 1024 * 1024, label: "Tax document" });
     const safeName = data.fileName.replace(/[^A-Za-z0-9._-]/g, "_");
     const path = `tax/${data.offeringId}/${Date.now()}-${safeName}`;
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error: uploadError } = await supabaseAdmin.storage
       .from(BUCKET)
-      .upload(path, new Uint8Array(binary), { contentType: "application/pdf", upsert: true });
+      .upload(path, new Uint8Array(binary), { contentType: checked.contentType, upsert: true });
     if (uploadError) throw new Error(uploadError.message);
 
     const { data: inserted, error } = await context.supabase

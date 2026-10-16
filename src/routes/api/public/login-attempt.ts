@@ -39,21 +39,25 @@ export const Route = createFileRoute("/api/public/login-attempt")({
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
+        // A successful sign-in is only recorded when the caller proves it with
+        // their own fresh session token for that same email address.
         let userId: string | null = null;
         if (parsed.success) {
-          const { data } = await supabaseAdmin
-            .from("profiles")
-            .select("user_id")
-            .ilike("email", parsed.email)
-            .maybeSingle();
-          userId = (data as any)?.user_id ?? null;
+          const token = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ?? "";
+          if (!token) return new Response("Unauthorized", { status: 401 });
+          const { data: auth, error: authError } = await supabaseAdmin.auth.getUser(token);
+          const authEmail = auth?.user?.email?.toLowerCase();
+          if (authError || !auth?.user || authEmail !== parsed.email.toLowerCase()) {
+            return new Response("Unauthorized", { status: 401 });
+          }
+          userId = auth.user.id;
         }
 
         await supabaseAdmin.from("login_attempts").insert({
           email: parsed.email.toLowerCase(),
           user_id: userId,
           success: parsed.success,
-          failure_reason: parsed.success ? null : (parsed.reason ?? "Sign-in failed"),
+          failure_reason: parsed.success ? null : `Reported by sign-in page (unverified): ${parsed.reason ?? "Sign-in failed"}`.slice(0, 300),
           ip_address: ip,
           user_agent: request.headers.get("user-agent")?.slice(0, 400) ?? null,
         });

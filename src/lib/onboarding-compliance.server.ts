@@ -71,7 +71,8 @@ function fail(message: string): never {
 
 /** Keyed fingerprint so a changed TIN is detectable without storing it. */
 async function tinFingerprint(tin: string): Promise<string> {
-  const key = process.env['SUPABASE_SERVICE_ROLE_KEY'] ?? "harmonious-tin";
+  const key = process.env['SUPABASE_SERVICE_ROLE_KEY'];
+  if (!key) throw new Error("Tax details can't be saved right now. Please try again later.");
   const enc = new TextEncoder();
   const k = await crypto.subtle.importKey("raw", enc.encode(key), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
   const sig = await crypto.subtle.sign("HMAC", k, enc.encode(tin.replace(/\D/g, "")));

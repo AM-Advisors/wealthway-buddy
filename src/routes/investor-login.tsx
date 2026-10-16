@@ -59,9 +59,14 @@ function InvestorLoginPage() {
 
   async function recordAttempt(address: string, success: boolean, reason?: string) {
     try {
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (success) {
+        const { data: sess } = await supabase.auth.getSession();
+        if (sess.session?.access_token) headers.Authorization = `Bearer ${sess.session.access_token}`;
+      }
       await fetch("/api/public/login-attempt", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ email: address, success, reason }),
       });
     } catch {

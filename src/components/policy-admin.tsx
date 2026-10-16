@@ -208,7 +208,7 @@ export function PolicyAcceptancesBoard() {
       r.ip_address ?? "",
     ]);
     const csv = [header, ...body]
-      .map((line) => line.map((cell) => `"${String(cell ?? "").replaceAll('"', '""')}"`).join(","))
+      .map((line) => line.map((cell) => { let t = String(cell ?? ""); if (/^[=+\-@\t\r]/.test(t)) t = `'${t}`; return `"${t.replaceAll('"', '""')}"`; }).join(","))
       .join("\n");
     const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
     const a = document.createElement("a");

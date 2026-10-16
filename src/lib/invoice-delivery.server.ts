@@ -95,7 +95,7 @@ export async function invoiceDelivery(
         detail: chosen?.status ?? null,
       });
     } catch (err) {
-      console.error("[invoice-delivery] log read failed", person.email, err);
+      console.error("[invoice-delivery] log read failed", err instanceof Error ? err.message : "unknown error");
       available = false;
       rows.push({ ...person, state: "unknown", at: null, detail: null });
     }
