@@ -2,7 +2,7 @@
  * Self-serve SaaS order model (pure). Prices come only from product-pricing.ts
  * and are recomputed on the server; the browser total is a preview.
  */
-import { productByKey, type Line } from "./product-pricing";
+import { INVESTOR_TIERS, productByKey, type Line } from "./product-pricing";
 
 export const SAAS_MSA_VERSION = "Harmonious MSA 2026-10";
 export type OrderInterval = "annual" | "quarterly";
@@ -12,7 +12,11 @@ export type ServicingKey = (typeof SERVICING_KEYS)[number];
 export const CAP_TIERS = ["none", "starter", "growth", "scale"] as const;
 export type CapTier = (typeof CAP_TIERS)[number];
 
+export const INVESTOR_SERVICING_KEYS = ["self_serve", "essentials", "standard", "plus", "premier"] as const;
+export type InvestorServicingKey = (typeof INVESTOR_SERVICING_KEYS)[number];
+
 export interface OrderSelection {
+  investorServicing?: InvestorServicingKey; // per fund; defaults to Self Serve
   funds: number; // SaaS platform fee per fund (0 = none)
   servicing: ServicingKey;
   capTable: CapTier;
@@ -56,6 +60,13 @@ export function priceOrder(sel: OrderSelection, interval: OrderInterval): Priced
     if (!l) throw new Error("Unknown servicing level.");
     push(`servicing_${sel.servicing}`, `${l.name} servicing`, 1, periodAmount(l, interval), true);
   }
+  const inv = sel.investorServicing ?? "self_serve";
+  if (inv !== "self_serve" && funds) {
+    const tier = INVESTOR_TIERS.find((t) => t.key === inv);
+    const l = productByKey("saas").servicing.investor.find((x) => x.name === `${tier?.name} investor servicing`);
+    if (!l) throw new Error("Unknown investor servicing tier.");
+    push(`investor_servicing_${inv}`, `${l.name} (per fund)`, funds, periodAmount(l, interval), true);
+  }
   if (sel.capTable !== "none") {
     const l = productByKey("cap_table").fundCost.find((x) => x.name === CAP_NAME[sel.capTable as Exclude<CapTier, "none">]);
     if (!l) throw new Error("Unknown cap table plan.");
@@ -78,7 +89,7 @@ export function priceOrder(sel: OrderSelection, interval: OrderInterval): Priced
 /** Entitlement keys an order grants once access opens. */
 export function entitlementKeys(sel: OrderSelection): string[] {
   const keys = ["platform_core", `servicing_${sel.servicing}`];
-  if (sel.funds > 0) keys.push("fund_platform");
+  if (sel.funds > 0) keys.push("fund_platform", `investor_servicing_${sel.investorServicing ?? "self_serve"}`);
   if (sel.capTable !== "none") keys.push("cap_table", `cap_table_${sel.capTable}`);
   for (const [k, q] of Object.entries(sel.alaCarte ?? {})) if (q > 0) keys.push(`alacarte_${k}`);
   return keys;
