@@ -16,7 +16,7 @@ import { TemplateDocumentsCard } from "./template-documents-card";
 import { listTemplatesFn, templateAutofillCheckFn, useTemplateInFundFn } from "@/lib/fund-doc-templates.functions";
 import { fileToBase64, fmtDate } from "./shared";
 import { StandardFormsCard } from "./standard-forms-card";
-import { fundSigningContextFn, sendFileForSignatureFn, sendFileToSignatoryFn, remindFileSignerFn } from "@/lib/fund-file-signing.functions";
+import { fundSigningContextFn, sendFileForSignatureFn, remindFileSignerFn } from "@/lib/fund-file-signing.functions";
 
 const STATUS: Record<string, string> = { draft: "Draft", out_for_signature: "Out for signature", signed: "Signed" };
 
@@ -77,15 +77,26 @@ export function DocumentsTab({ fundId }: { fundId: string }) {
   });
   const [sendFor, setSendFor] = useState<any | null>(null);
   const [inv, setInv] = useState(""); const [mgr, setMgr] = useState("");
-  const [whoSigns, setWhoSigns] = useState<"both" | "manager">("both");
-  const sendSignatoryFn = useServerFn(sendFileToSignatoryFn);
+  type Order = "investor_first" | "manager_first" | "manager_only" | "investor_only";
+  const [order, setOrder] = useState<Order>("investor_first");
+  const [signMode, setSignMode] = useState<"full" | "signature_page">("full");
+  const [invIds, setInvIds] = useState<string[]>([]);
+  const needsInv = order !== "manager_only", needsMgr = order !== "investor_only";
   const send = useMutation({
-    mutationFn: () => whoSigns === "manager"
-      ? sendSignatoryFn({ data: { fundId, fileId: sendFor.id, managerUserId: mgr } })
-      : sendSigFn({ data: { fundId, fileId: sendFor.id, onboardingId: inv, managerUserId: mgr } }),
-    onSuccess: () => { toast.success(whoSigns === "manager" ? "Sent. The fund manager gets a link to sign." : "Sent. The investor gets a link to sign first."); setSendFor(null); setInv(""); setMgr(""); setWhoSigns("both"); refresh(); qc.invalidateQueries({ queryKey: ["fund-signing", fundId] }); },
+    mutationFn: () => sendSigFn({ data: { fundId, fileId: sendFor.id, order, mode: signMode, onboardingIds: needsInv ? invIds : [], managerUserId: needsMgr ? mgr || undefined : undefined } }),
+    onSuccess: (r: any) => {
+      toast.success(`Sent ${r.sent} signing request${r.sent === 1 ? "" : "s"}.${r.skipped?.length ? ` Skipped: ${r.skipped.map((x: any) => `${x.name} (${x.reason})`).join(", ")}.` : ""}`);
+      setSendFor(null); setInvIds([]); setMgr(""); refresh(); qc.invalidateQueries({ queryKey: ["fund-signing", fundId] });
+    },
     onError: (e: Error) => toast.error(e.message),
   });
+  const openSend = (f: any) => {
+    setSendFor(f);
+    setOrder(f.doc_type === "operating_agreement" || f.template_key === "operating_agreement" ? "manager_only" : (f.signing_order ?? "investor_first"));
+    setSignMode(f.signing_mode ?? "full");
+    setInvIds([]);
+  };
+  const ORDER_LABEL: Record<Order, string> = { investor_first: "Investor first, then fund manager", manager_first: "Fund manager first, then investor", manager_only: "Fund manager only", investor_only: "Investor only" };
   const groups = [
     { title: "Fund documents", keys: DOC_TEMPLATES.filter((t) => t.category === "fund_document") },
     { title: "Side letters", keys: DOC_TEMPLATES.filter((t) => t.category === "side_letter") },
@@ -119,11 +130,11 @@ export function DocumentsTab({ fundId }: { fundId: string }) {
                       {f.signature_boxes?.length ? ` · ${f.signature_boxes.length} signature box${f.signature_boxes.length === 1 ? "" : "es"}` : ""}
                     </p>
                     {(sig.data?.signatures ?? []).filter((x: any) => x.file_id === f.id).map((x: any) => (
-                      <p key={x.id} className="text-xs text-muted-foreground">{x.signing_order}. {x.signer_role === "investor" ? "Investor" : "Fund manager"} {x.signer_name}: {x.status === "signed" ? `signed ${fmtDate(x.signed_at)}` : x.status === "sent" ? "link sent, waiting" : "waits for investor"}{x.lastRemindedAt ? ` · last reminded ${fmtDate(x.lastRemindedAt)}` : ""}{x.status !== "signed" && (x.status === "sent" || (sig.data?.signatures ?? []).filter((y: any) => y.file_id === f.id && y.signing_order < x.signing_order).every((y: any) => y.status === "signed")) && <button type="button" className="ml-2 text-primary underline-offset-2 hover:underline disabled:opacity-50" disabled={remind.isPending} onClick={() => remind.mutate(x.id)}>Send reminder</button>}</p>
+                      <p key={x.id} className="text-xs text-muted-foreground">{x.signing_order}. {x.signer_role === "investor" ? "Investor" : "Fund manager"} {x.signer_name}: {x.status === "signed" ? `signed ${fmtDate(x.signed_at)}` : x.status === "sent" ? "link sent, waiting" : "waits for the earlier signer"}{x.lastRemindedAt ? ` · last reminded ${fmtDate(x.lastRemindedAt)}` : ""}{x.status !== "signed" && (x.status === "sent" || (sig.data?.signatures ?? []).filter((y: any) => y.file_id === f.id && y.signing_order < x.signing_order).every((y: any) => y.status === "signed")) && <button type="button" className="ml-2 text-primary underline-offset-2 hover:underline disabled:opacity-50" disabled={remind.isPending} onClick={() => remind.mutate(x.id)}>Send reminder</button>}</p>
                     ))}
                   </div>
                   <div className="flex items-center gap-2">
-                    {f.status !== "signed" && f.body && <Button size="sm" variant="outline" onClick={() => { setSendFor(f); setWhoSigns(f.doc_type === "operating_agreement" ? "manager" : "both"); }}>{f.status === "out_for_signature" ? "Resend" : "Send for signature"}</Button>}
+                    {f.status !== "signed" && f.body && <Button size="sm" variant="outline" onClick={() => openSend(f)}>{f.status === "out_for_signature" ? "Resend" : "Send for signature"}</Button>}
                     <Badge variant={f.status === "signed" ? "default" : "outline"}>{STATUS[f.status] ?? f.status}</Badge>
                     {f.status !== "signed" && <Button size="sm" variant="outline" onClick={() => setBoxes(f)}>Signature boxes</Button>}
                     {f.status === "draft" && <Button size="sm" variant="ghost" disabled={rm.isPending} onClick={() => { if (confirm(`Delete "${f.title}"?`)) rm.mutate(f.id); }}>Delete</Button>}
@@ -142,30 +153,45 @@ export function DocumentsTab({ fundId }: { fundId: string }) {
       {sendFor && (
         <Dialog open onOpenChange={(o) => !o && setSendFor(null)}>
           <DialogContent className="max-w-md">
-            <DialogHeader><DialogTitle>Send for signature</DialogTitle><DialogDescription>{whoSigns === "manager" ? `Only the fund manager signs "${sendFor.title}". They get an email link; once they sign it's marked Signed.` : `The investor signs first, then the fund manager. Each gets an email link. When both have signed, "${sendFor.title}" is marked Signed.`}</DialogDescription></DialogHeader>
+            <DialogHeader><DialogTitle>Send for signature</DialogTitle><DialogDescription>Each investor gets one signature page with a fund manager block and an investor block, filled in from their records. When every page is signed, "{sendFor.title}" is marked Signed.</DialogDescription></DialogHeader>
             <div className="space-y-3">
               {sendFor.body && (
                 <Button type="button" size="sm" variant="outline" className="w-full" onClick={() => setPreview({ title: sendFor.title, body: sendFor.body })}>
                   View document before sending
                 </Button>
               )}
-              <div className="space-y-1"><Label>Who signs?</Label>
-                <Select value={whoSigns} onValueChange={(v) => setWhoSigns(v as "both" | "manager")}><SelectTrigger><SelectValue /></SelectTrigger>
+              <div className="space-y-1"><Label>Signing order</Label>
+                <Select value={order} onValueChange={(v) => setOrder(v as Order)}><SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{(Object.keys(ORDER_LABEL) as Order[]).map((k) => <SelectItem key={k} value={k}>{ORDER_LABEL[k]}</SelectItem>)}</SelectContent></Select></div>
+              <div className="space-y-1"><Label>What they sign</Label>
+                <Select value={signMode} onValueChange={(v) => setSignMode(v as "full" | "signature_page")}><SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="both">Investor, then fund manager</SelectItem>
-                    <SelectItem value="manager">Fund manager only</SelectItem>
+                    <SelectItem value="full">Full document with signature page</SelectItem>
+                    <SelectItem value="signature_page">Signature page only (document shown to read)</SelectItem>
                   </SelectContent></Select></div>
-              {whoSigns === "both" && (
-                <div className="space-y-1"><Label>1. Investor</Label>
-                  <Select value={inv} onValueChange={setInv}><SelectTrigger><SelectValue placeholder="Choose an investor" /></SelectTrigger>
-                    <SelectContent>{(sig.data?.investors ?? []).map((i: any) => <SelectItem key={i.onboardingId} value={i.onboardingId} disabled={!i.email}>{i.name}{i.email ? ` (${i.email})` : " (no email)"}</SelectItem>)}</SelectContent></Select></div>
+              {needsInv && (
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between"><Label>Investors</Label>
+                    <button type="button" className="text-xs text-primary hover:underline" onClick={() => { const all = (sig.data?.investors ?? []).filter((i: any) => i.email).map((i: any) => i.onboardingId); setInvIds(invIds.length === all.length ? [] : all); }}>{invIds.length && invIds.length === (sig.data?.investors ?? []).filter((i: any) => i.email).length ? "Clear" : "Select all"}</button></div>
+                  <div className="max-h-48 space-y-1 overflow-y-auto rounded-md border p-2">
+                    {(sig.data?.investors ?? []).map((i: any) => (
+                      <label key={i.onboardingId} className={`flex items-center gap-2 text-sm ${i.email ? "" : "opacity-50"}`}>
+                        <input type="checkbox" disabled={!i.email} checked={invIds.includes(i.onboardingId)} onChange={(e) => setInvIds(e.target.checked ? [...invIds, i.onboardingId] : invIds.filter((x) => x !== i.onboardingId))} />
+                        {i.name}{i.email ? "" : " (no email)"}
+                      </label>
+                    ))}
+                    {!sig.data?.investors?.length && <p className="text-xs text-muted-foreground">No investors on this fund yet.</p>}
+                  </div>
+                </div>
               )}
-              <div className="space-y-1"><Label>{whoSigns === "manager" ? "Fund manager" : "2. Fund manager"}</Label>
-                <Select value={mgr} onValueChange={setMgr}><SelectTrigger><SelectValue placeholder="Choose a fund manager" /></SelectTrigger>
-                  <SelectContent>{(sig.data?.managers ?? []).map((m: any) => <SelectItem key={m.userId} value={m.userId} disabled={!m.email}>{m.name}</SelectItem>)}</SelectContent></Select>
-                {!sig.data?.managers?.length && <p className="text-xs text-muted-foreground">This fund has no fund manager with a login yet.</p>}</div>
+              {needsMgr && (
+                <div className="space-y-1"><Label>Fund manager</Label>
+                  <Select value={mgr} onValueChange={setMgr}><SelectTrigger><SelectValue placeholder="Choose a fund manager" /></SelectTrigger>
+                    <SelectContent>{(sig.data?.managers ?? []).map((m: any) => <SelectItem key={m.userId} value={m.userId} disabled={!m.email}>{m.name}</SelectItem>)}</SelectContent></Select>
+                  {!sig.data?.managers?.length && <p className="text-xs text-muted-foreground">This fund has no fund manager with a login yet.</p>}</div>
+              )}
             </div>
-            <DialogFooter><Button disabled={!mgr || (whoSigns === "both" && !inv) || send.isPending} onClick={() => send.mutate()}>{send.isPending ? "Sending…" : "Send"}</Button></DialogFooter>
+            <DialogFooter><Button disabled={(needsMgr && !mgr) || (needsInv && !invIds.length) || send.isPending} onClick={() => send.mutate()}>{send.isPending ? "Sending…" : needsInv && invIds.length > 1 ? `Send to ${invIds.length} investors` : "Send"}</Button></DialogFooter>
           </DialogContent>
         </Dialog>
       )}
