@@ -40,7 +40,8 @@ async function assertCanEditOffering(supabase: any, userId: string, offeringId: 
 }
 
 
-export { ALL_WIRE_FIELDS as WIRE_FIELDS } from "@/lib/wire-scope";
+import { ALL_WIRE_FIELDS } from "@/lib/wire-scope";
+export const WIRE_FIELDS = ALL_WIRE_FIELDS;
 
 const wireSchema = z.object({
   bank_name: z.string().trim().max(160).default(""),
