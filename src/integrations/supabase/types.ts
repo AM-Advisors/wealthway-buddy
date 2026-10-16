@@ -7133,6 +7133,7 @@ export type Database = {
           is_test_demo: boolean
           jurisdiction: string | null
           legal_name: string | null
+          menu_gating: string
           msa_document_path: string | null
           msa_signed_on: string | null
           msa_signer_user_id: string | null
@@ -7172,6 +7173,7 @@ export type Database = {
           is_test_demo?: boolean
           jurisdiction?: string | null
           legal_name?: string | null
+          menu_gating?: string
           msa_document_path?: string | null
           msa_signed_on?: string | null
           msa_signer_user_id?: string | null
@@ -7211,6 +7213,7 @@ export type Database = {
           is_test_demo?: boolean
           jurisdiction?: string | null
           legal_name?: string | null
+          menu_gating?: string
           msa_document_path?: string | null
           msa_signed_on?: string | null
           msa_signer_user_id?: string | null
@@ -39645,6 +39648,154 @@ export type Database = {
             columns: ["offering_id"]
             isOneToOne: false
             referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      saas_order_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          detail: Json | null
+          event_kind: string
+          id: string
+          order_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          detail?: Json | null
+          event_kind: string
+          id?: string
+          order_id: string
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          detail?: Json | null
+          event_kind?: string
+          id?: string
+          order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saas_order_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "saas_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      saas_orders: {
+        Row: {
+          activated_at: string | null
+          activation_mode: string
+          billing_interval: string
+          client_id: string
+          company_name: string
+          created_at: string
+          current_period_end: string | null
+          environment: string
+          id: string
+          kyb_decided_at: string | null
+          kyb_decided_by: string | null
+          kyb_details: Json | null
+          kyb_note: string | null
+          kyb_status: string
+          legal_reviewed_at: string | null
+          legal_reviewed_by: string | null
+          msa_accepted_at: string
+          msa_version: string
+          one_time_cents: number
+          payment_status: string
+          price_snapshot: Json
+          recurring_cents: number
+          selection: Json
+          signed_at: string
+          signed_ip: string | null
+          signer_name: string
+          signer_title: string | null
+          status: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          activated_at?: string | null
+          activation_mode?: string
+          billing_interval: string
+          client_id: string
+          company_name: string
+          created_at?: string
+          current_period_end?: string | null
+          environment?: string
+          id?: string
+          kyb_decided_at?: string | null
+          kyb_decided_by?: string | null
+          kyb_details?: Json | null
+          kyb_note?: string | null
+          kyb_status?: string
+          legal_reviewed_at?: string | null
+          legal_reviewed_by?: string | null
+          msa_accepted_at: string
+          msa_version: string
+          one_time_cents?: number
+          payment_status?: string
+          price_snapshot: Json
+          recurring_cents?: number
+          selection: Json
+          signed_at?: string
+          signed_ip?: string | null
+          signer_name: string
+          signer_title?: string | null
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          activated_at?: string | null
+          activation_mode?: string
+          billing_interval?: string
+          client_id?: string
+          company_name?: string
+          created_at?: string
+          current_period_end?: string | null
+          environment?: string
+          id?: string
+          kyb_decided_at?: string | null
+          kyb_decided_by?: string | null
+          kyb_details?: Json | null
+          kyb_note?: string | null
+          kyb_status?: string
+          legal_reviewed_at?: string | null
+          legal_reviewed_by?: string | null
+          msa_accepted_at?: string
+          msa_version?: string
+          one_time_cents?: number
+          payment_status?: string
+          price_snapshot?: Json
+          recurring_cents?: number
+          selection?: Json
+          signed_at?: string
+          signed_ip?: string | null
+          signer_name?: string
+          signer_title?: string | null
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saas_orders_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
             referencedColumns: ["id"]
           },
         ]

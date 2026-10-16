@@ -1,11 +1,13 @@
-import { Outlet, createFileRoute, redirect, useNavigate, useRouterState } from "@tanstack/react-router";
-import { useQueryClient } from "@tanstack/react-query";
+import { Link, Outlet, createFileRoute, redirect, useNavigate, useRouterState } from "@tanstack/react-router";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, type ReactNode } from "react";
 
 import { getPolicyStatus } from "@/lib/policies.functions";
 import { accountKycStatusFn } from "@/lib/account-kyc.functions";
 import { getPortalAccess } from "@/lib/portal-access.functions";
+import { myEntitlementsFn } from "@/lib/saas-orders.functions";
+import { requiredEntitlement } from "@/lib/saas-order-model";
 
 import { OpsSidebar } from "@/components/ops-sidebar";
 
@@ -73,13 +75,15 @@ function AuthenticatedLayout() {
             <main className="min-w-0 flex-1">
               <PolicyGate onSignOut={signOut}>
                 <AccountKycGate onSignOut={signOut}>
-                <PortalGate onSignOut={signOut}>
+                <PlanAwarePortalGate onSignOut={signOut}>
                   <SecurityGate onSignOut={signOut}>
                     <OpsAreaGate>
-                      <Outlet />
+                      <EntitlementGate>
+                        <Outlet />
+                      </EntitlementGate>
                     </OpsAreaGate>
                   </SecurityGate>
-                </PortalGate>
+                </PlanAwarePortalGate>
                 </AccountKycGate>
               </PolicyGate>
             </main>
@@ -87,6 +91,29 @@ function AuthenticatedLayout() {
           </div>
       </WorkspaceShell>
     </ClientWorkspaceProvider>
+  );
+}
+
+/** Self-serve sign-up pages (/plan/*) open before any invitation exists; everything else keeps the invite gate. */
+function PlanAwarePortalGate({ children, onSignOut }: { children: ReactNode; onSignOut: () => void }) {
+  const pathname = useRouterState({ select: (r) => r.location.pathname });
+  if (pathname === "/plan" || pathname.startsWith("/plan/")) return <>{children}</>;
+  return <PortalGate onSignOut={onSignOut}>{children}</PortalGate>;
+}
+
+/** Clients on purchased-services menus can't open pages they haven't bought (server checks still apply). */
+function EntitlementGate({ children }: { children: ReactNode }) {
+  const pathname = useRouterState({ select: (r) => r.location.pathname });
+  const entFn = useServerFn(myEntitlementsFn);
+  const need = requiredEntitlement(pathname);
+  const ents = useQuery({ queryKey: ["my-entitlements"], queryFn: () => entFn(), staleTime: 60_000, enabled: !!need });
+  if (!need || !ents.data || ents.data.includes(need)) return <>{children}</>;
+  return (
+    <div className="mx-auto max-w-2xl px-4 py-16">
+      <h1 className="text-3xl">Not in your plan</h1>
+      <p className="mt-3 text-sm text-muted-foreground">This area isn't part of the services you've purchased.</p>
+      <Link to="/plan/start" className="mt-6 inline-block text-sm font-medium text-primary underline">Add to plan</Link>
+    </div>
   );
 }
 

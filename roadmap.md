@@ -25,3 +25,8 @@
 - [x] Client View: wire My Funds, Activity, Reports, Documents, Tax, Messages to real records
 - [x] One Operations Funds page + demo fund flag
 - [x] Setup: save by section; fix out-of-memory save failure
+
+## Self-serve SaaS sign-up
+- [x] Picker, click-through SOW under fixed MSA, card checkout, KYB review, purchase-gated menus
+- [ ] Switch existing clients to purchase-gated menus — waiting on user review of the impact report
+- [ ] Automated business (KYB) check through the verification provider — today compliance reviews submitted details
