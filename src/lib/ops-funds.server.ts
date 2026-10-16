@@ -92,7 +92,5 @@ async function buildOpsFundsDashboard(userId: string, supabase: any) {
     };
   });
   // Demo funds are display-only: listed behind a toggle, never counted.
-  const { data: myRoles } = await db().from("user_roles").select("role").eq("user_id", userId);
-  const canDelete = ((myRoles ?? []) as any[]).some((r) => r.role === "super_admin");
-  return { rows, canDelete, totals: totals(rows.filter((r) => !r.isDemo)) };
+  return { rows, totals: totals(rows.filter((r) => !r.isDemo)) };
 }
