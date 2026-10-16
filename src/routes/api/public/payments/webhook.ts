@@ -83,6 +83,10 @@ async function syncFundPayment(session: any, env: StripeEnv, outcome: "paid" | "
 
 async function route(sub: any, env: StripeEnv, deleted = false) {
   if (sub.metadata?.kind === "whitelabel") return syncWhitelabel(sub, env, deleted);
+  if (sub.metadata?.kind === "saas_order") {
+    const { syncOrderPayment } = await import("@/lib/saas-orders.server");
+    return syncOrderPayment(sub, deleted);
+  }
   return syncCapSubscription(sub, env, deleted);
 }
 
