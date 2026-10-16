@@ -197,6 +197,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
   const regulatorySub = [{ title: "Close requests", url: "/ops/close-requests" }, { title: "Security & Compliance", url: "/ops/security-compliance" }].filter((x) => allowedUrls.has(x.url));
   if (leader || has("compliance", "legal")) regulatorySub.unshift({ title: "Compliance dashboard", url: "/ops/dashboards/compliance" });
   if (!salesOnly) opsItems.push({ id: "ops-agreements", title: "My agreements", url: "/ops/agreements", icon: "document" });
+  if (leader || has("compliance", "legal", "sales_management")) regulatorySub.push({ title: "Self-serve SaaS orders", url: "/ops/saas-orders" });
   if (regulatorySub.length) opsItems.push({ id: "regulatory", title: "Regulatory & filings", url: regulatorySub[0]!.url, icon: "shield", sub: regulatorySub });
   const financeItems: NavItem[] = salesOnly ? [] : [
     ...(leader || has("finance", "tax", "fund_administration") ? [{ id: "dash-finance", title: "Finance dashboard", url: "/ops/dashboards/finance", icon: "report" }] : []),

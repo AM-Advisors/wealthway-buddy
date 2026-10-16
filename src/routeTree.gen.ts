@@ -272,6 +272,7 @@ import { Route as AuthenticatedOpsReadinessRouteImport } from './routes/_authent
 import { Route as AuthenticatedOpsRemindersRouteImport } from './routes/_authenticated/ops.reminders'
 import { Route as AuthenticatedOpsReportingRouteImport } from './routes/_authenticated/ops.reporting'
 import { Route as AuthenticatedOpsRolesRouteImport } from './routes/_authenticated/ops.roles'
+import { Route as AuthenticatedOpsSaasOrdersRouteImport } from './routes/_authenticated/ops.saas-orders'
 import { Route as AuthenticatedOpsSecurityComplianceRouteImport } from './routes/_authenticated/ops.security-compliance'
 import { Route as AuthenticatedOpsServiceEngagementsRouteImport } from './routes/_authenticated/ops.service-engagements'
 import { Route as AuthenticatedOpsSs4RouteImport } from './routes/_authenticated/ops.ss4'
@@ -284,6 +285,8 @@ import { Route as AuthenticatedOpsTaxReviewRouteImport } from './routes/_authent
 import { Route as AuthenticatedOpsTeamRouteImport } from './routes/_authenticated/ops.team'
 import { Route as AuthenticatedOpsValuationsRouteImport } from './routes/_authenticated/ops.valuations'
 import { Route as AuthenticatedOpsWebhookLogRouteImport } from './routes/_authenticated/ops.webhook-log'
+import { Route as AuthenticatedPlanSetupRouteImport } from './routes/_authenticated/plan.setup'
+import { Route as AuthenticatedPlanStartRouteImport } from './routes/_authenticated/plan.start'
 import { Route as AuthenticatedProfessionalIndexRouteImport } from './routes/_authenticated/professional.index'
 import { Route as AuthenticatedProfessionalAcceptanceRouteImport } from './routes/_authenticated/professional.acceptance'
 import { Route as AuthenticatedProfessionalActivityRouteImport } from './routes/_authenticated/professional.activity'
@@ -1934,6 +1937,12 @@ const AuthenticatedOpsRolesRoute = AuthenticatedOpsRolesRouteImport.update({
   path: '/ops/roles',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedOpsSaasOrdersRoute =
+  AuthenticatedOpsSaasOrdersRouteImport.update({
+    id: '/ops/saas-orders',
+    path: '/ops/saas-orders',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOpsSecurityComplianceRoute =
   AuthenticatedOpsSecurityComplianceRouteImport.update({
     id: '/ops/security-compliance',
@@ -2002,6 +2011,16 @@ const AuthenticatedOpsWebhookLogRoute =
     path: '/ops/webhook-log',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedPlanSetupRoute = AuthenticatedPlanSetupRouteImport.update({
+  id: '/plan/setup',
+  path: '/plan/setup',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPlanStartRoute = AuthenticatedPlanStartRouteImport.update({
+  id: '/plan/start',
+  path: '/plan/start',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedProfessionalIndexRoute =
   AuthenticatedProfessionalIndexRouteImport.update({
     id: '/',
@@ -3238,6 +3257,7 @@ export interface FileRoutesByFullPath {
   '/ops/reminders': typeof AuthenticatedOpsRemindersRoute
   '/ops/reporting': typeof AuthenticatedOpsReportingRoute
   '/ops/roles': typeof AuthenticatedOpsRolesRoute
+  '/ops/saas-orders': typeof AuthenticatedOpsSaasOrdersRoute
   '/ops/security-compliance': typeof AuthenticatedOpsSecurityComplianceRoute
   '/ops/service-engagements': typeof AuthenticatedOpsServiceEngagementsRoute
   '/ops/ss4': typeof AuthenticatedOpsSs4Route
@@ -3250,6 +3270,8 @@ export interface FileRoutesByFullPath {
   '/ops/team': typeof AuthenticatedOpsTeamRoute
   '/ops/valuations': typeof AuthenticatedOpsValuationsRoute
   '/ops/webhook-log': typeof AuthenticatedOpsWebhookLogRoute
+  '/plan/setup': typeof AuthenticatedPlanSetupRoute
+  '/plan/start': typeof AuthenticatedPlanStartRoute
   '/professional/acceptance': typeof AuthenticatedProfessionalAcceptanceRoute
   '/professional/activity': typeof AuthenticatedProfessionalActivityRoute
   '/professional/authority': typeof AuthenticatedProfessionalAuthorityRoute
@@ -3674,6 +3696,7 @@ export interface FileRoutesByTo {
   '/ops/reminders': typeof AuthenticatedOpsRemindersRoute
   '/ops/reporting': typeof AuthenticatedOpsReportingRoute
   '/ops/roles': typeof AuthenticatedOpsRolesRoute
+  '/ops/saas-orders': typeof AuthenticatedOpsSaasOrdersRoute
   '/ops/security-compliance': typeof AuthenticatedOpsSecurityComplianceRoute
   '/ops/service-engagements': typeof AuthenticatedOpsServiceEngagementsRoute
   '/ops/ss4': typeof AuthenticatedOpsSs4Route
@@ -3686,6 +3709,8 @@ export interface FileRoutesByTo {
   '/ops/team': typeof AuthenticatedOpsTeamRoute
   '/ops/valuations': typeof AuthenticatedOpsValuationsRoute
   '/ops/webhook-log': typeof AuthenticatedOpsWebhookLogRoute
+  '/plan/setup': typeof AuthenticatedPlanSetupRoute
+  '/plan/start': typeof AuthenticatedPlanStartRoute
   '/professional/acceptance': typeof AuthenticatedProfessionalAcceptanceRoute
   '/professional/activity': typeof AuthenticatedProfessionalActivityRoute
   '/professional/authority': typeof AuthenticatedProfessionalAuthorityRoute
@@ -4118,6 +4143,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/reminders': typeof AuthenticatedOpsRemindersRoute
   '/_authenticated/ops/reporting': typeof AuthenticatedOpsReportingRoute
   '/_authenticated/ops/roles': typeof AuthenticatedOpsRolesRoute
+  '/_authenticated/ops/saas-orders': typeof AuthenticatedOpsSaasOrdersRoute
   '/_authenticated/ops/security-compliance': typeof AuthenticatedOpsSecurityComplianceRoute
   '/_authenticated/ops/service-engagements': typeof AuthenticatedOpsServiceEngagementsRoute
   '/_authenticated/ops/ss4': typeof AuthenticatedOpsSs4Route
@@ -4130,6 +4156,8 @@ export interface FileRoutesById {
   '/_authenticated/ops/team': typeof AuthenticatedOpsTeamRoute
   '/_authenticated/ops/valuations': typeof AuthenticatedOpsValuationsRoute
   '/_authenticated/ops/webhook-log': typeof AuthenticatedOpsWebhookLogRoute
+  '/_authenticated/plan/setup': typeof AuthenticatedPlanSetupRoute
+  '/_authenticated/plan/start': typeof AuthenticatedPlanStartRoute
   '/_authenticated/professional/acceptance': typeof AuthenticatedProfessionalAcceptanceRoute
   '/_authenticated/professional/activity': typeof AuthenticatedProfessionalActivityRoute
   '/_authenticated/professional/authority': typeof AuthenticatedProfessionalAuthorityRoute
@@ -4563,6 +4591,7 @@ export interface FileRouteTypes {
     | '/ops/reminders'
     | '/ops/reporting'
     | '/ops/roles'
+    | '/ops/saas-orders'
     | '/ops/security-compliance'
     | '/ops/service-engagements'
     | '/ops/ss4'
@@ -4575,6 +4604,8 @@ export interface FileRouteTypes {
     | '/ops/team'
     | '/ops/valuations'
     | '/ops/webhook-log'
+    | '/plan/setup'
+    | '/plan/start'
     | '/professional/acceptance'
     | '/professional/activity'
     | '/professional/authority'
@@ -4999,6 +5030,7 @@ export interface FileRouteTypes {
     | '/ops/reminders'
     | '/ops/reporting'
     | '/ops/roles'
+    | '/ops/saas-orders'
     | '/ops/security-compliance'
     | '/ops/service-engagements'
     | '/ops/ss4'
@@ -5011,6 +5043,8 @@ export interface FileRouteTypes {
     | '/ops/team'
     | '/ops/valuations'
     | '/ops/webhook-log'
+    | '/plan/setup'
+    | '/plan/start'
     | '/professional/acceptance'
     | '/professional/activity'
     | '/professional/authority'
@@ -5442,6 +5476,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/reminders'
     | '/_authenticated/ops/reporting'
     | '/_authenticated/ops/roles'
+    | '/_authenticated/ops/saas-orders'
     | '/_authenticated/ops/security-compliance'
     | '/_authenticated/ops/service-engagements'
     | '/_authenticated/ops/ss4'
@@ -5454,6 +5489,8 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/team'
     | '/_authenticated/ops/valuations'
     | '/_authenticated/ops/webhook-log'
+    | '/_authenticated/plan/setup'
+    | '/_authenticated/plan/start'
     | '/_authenticated/professional/acceptance'
     | '/_authenticated/professional/activity'
     | '/_authenticated/professional/authority'
@@ -7548,6 +7585,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsRolesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ops/saas-orders': {
+      id: '/_authenticated/ops/saas-orders'
+      path: '/ops/saas-orders'
+      fullPath: '/ops/saas-orders'
+      preLoaderRoute: typeof AuthenticatedOpsSaasOrdersRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ops/security-compliance': {
       id: '/_authenticated/ops/security-compliance'
       path: '/ops/security-compliance'
@@ -7630,6 +7674,20 @@ declare module '@tanstack/react-router' {
       path: '/ops/webhook-log'
       fullPath: '/ops/webhook-log'
       preLoaderRoute: typeof AuthenticatedOpsWebhookLogRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/plan/setup': {
+      id: '/_authenticated/plan/setup'
+      path: '/plan/setup'
+      fullPath: '/plan/setup'
+      preLoaderRoute: typeof AuthenticatedPlanSetupRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/plan/start': {
+      id: '/_authenticated/plan/start'
+      path: '/plan/start'
+      fullPath: '/plan/start'
+      preLoaderRoute: typeof AuthenticatedPlanStartRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/professional/': {
@@ -9286,6 +9344,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsRemindersRoute: typeof AuthenticatedOpsRemindersRoute
   AuthenticatedOpsReportingRoute: typeof AuthenticatedOpsReportingRoute
   AuthenticatedOpsRolesRoute: typeof AuthenticatedOpsRolesRoute
+  AuthenticatedOpsSaasOrdersRoute: typeof AuthenticatedOpsSaasOrdersRoute
   AuthenticatedOpsSecurityComplianceRoute: typeof AuthenticatedOpsSecurityComplianceRoute
   AuthenticatedOpsServiceEngagementsRoute: typeof AuthenticatedOpsServiceEngagementsRoute
   AuthenticatedOpsSs4Route: typeof AuthenticatedOpsSs4Route
@@ -9298,6 +9357,8 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsTeamRoute: typeof AuthenticatedOpsTeamRoute
   AuthenticatedOpsValuationsRoute: typeof AuthenticatedOpsValuationsRoute
   AuthenticatedOpsWebhookLogRoute: typeof AuthenticatedOpsWebhookLogRoute
+  AuthenticatedPlanSetupRoute: typeof AuthenticatedPlanSetupRoute
+  AuthenticatedPlanStartRoute: typeof AuthenticatedPlanStartRoute
   AuthenticatedProfileProfileIdRoute: typeof AuthenticatedProfileProfileIdRoute
   AuthenticatedSalesCommissionsRoute: typeof AuthenticatedSalesCommissionsRoute
   AuthenticatedSalesCrmRoute: typeof AuthenticatedSalesCrmRoute
@@ -9609,6 +9670,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsRemindersRoute: AuthenticatedOpsRemindersRoute,
   AuthenticatedOpsReportingRoute: AuthenticatedOpsReportingRoute,
   AuthenticatedOpsRolesRoute: AuthenticatedOpsRolesRoute,
+  AuthenticatedOpsSaasOrdersRoute: AuthenticatedOpsSaasOrdersRoute,
   AuthenticatedOpsSecurityComplianceRoute:
     AuthenticatedOpsSecurityComplianceRoute,
   AuthenticatedOpsServiceEngagementsRoute:
@@ -9623,6 +9685,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsTeamRoute: AuthenticatedOpsTeamRoute,
   AuthenticatedOpsValuationsRoute: AuthenticatedOpsValuationsRoute,
   AuthenticatedOpsWebhookLogRoute: AuthenticatedOpsWebhookLogRoute,
+  AuthenticatedPlanSetupRoute: AuthenticatedPlanSetupRoute,
+  AuthenticatedPlanStartRoute: AuthenticatedPlanStartRoute,
   AuthenticatedProfileProfileIdRoute: AuthenticatedProfileProfileIdRoute,
   AuthenticatedSalesCommissionsRoute: AuthenticatedSalesCommissionsRoute,
   AuthenticatedSalesCrmRoute: AuthenticatedSalesCrmRoute,
