@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { accessOpen, entitlementKeys, filterByEntitlements, priceOrder } from "./saas-order-model";
+import { accessOpen, entitlementKeys, filterByEntitlements, priceOrder, requiredEntitlement } from "./saas-order-model";
 
 const base = { funds: 1, servicing: "self_serve" as const, capTable: "none" as const, alaCarte: {} };
 
@@ -28,5 +28,14 @@ describe("SaaS self-serve orders", () => {
     const keys = entitlementKeys({ ...base, funds: 0, capTable: "starter" });
     expect(filterByEntitlements(links, keys).map((l) => l.url)).toEqual(["/manager", "/client/cap-table", "/profile"]);
     expect(filterByEntitlements(links, null)).toHaveLength(4);
+  });
+
+  it("cap-table-only buyer sees only Cap Table and basics", () => {
+    const keys = entitlementKeys({ ...base, funds: 0, capTable: "starter" });
+    const menu = ["/client/home", "/client/funds", "/client/cap-table", "/client/cap-table/investors", "/client", "/profile", "/my-funds", "/activity", "/investor-reporting", "/documents", "/tax", "/messages", "/professional"].map((url) => ({ url }));
+    expect(filterByEntitlements(menu, keys).map((l) => l.url)).toEqual(["/client/home", "/client/cap-table", "/client/cap-table/investors", "/client", "/profile", "/messages"]);
+    expect(requiredEntitlement("/client/documents-unknown")).toBe("__unpurchased");
+    expect(requiredEntitlement("/ops/funds")).toBeNull();
+    expect(requiredEntitlement("/client/agreements/msa")).toBeNull();
   });
 });
