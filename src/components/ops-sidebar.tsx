@@ -372,7 +372,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
                   {clientHits.map((c) => (
                     <SidebarMenuItem key={c.id}>
                       <SidebarMenuButton asChild className="h-auto py-1.5">
-                        <Link to="/ops/clients/$clientId" params={{ clientId: c.id }} onClick={close} className="flex flex-col items-start">
+                        <Link to="/ops/clients/$clientId" params={{ clientId: c.id }} search={{} as never} onClick={close} className="flex flex-col items-start">
                           <span className="truncate text-sm">{c.name}</span>
                           <span className="truncate text-[11px] text-sidebar-foreground/60">Client</span>
                         </Link>
