@@ -19975,7 +19975,9 @@ export type Database = {
           id: string
           offering_id: string
           onboarding_id: string | null
+          packet_id: string | null
           sent_at: string | null
+          signature_page: string | null
           signed_at: string | null
           signed_name: string | null
           signed_user_agent: string | null
@@ -19993,7 +19995,9 @@ export type Database = {
           id?: string
           offering_id: string
           onboarding_id?: string | null
+          packet_id?: string | null
           sent_at?: string | null
+          signature_page?: string | null
           signed_at?: string | null
           signed_name?: string | null
           signed_user_agent?: string | null
@@ -20011,7 +20015,9 @@ export type Database = {
           id?: string
           offering_id?: string
           onboarding_id?: string | null
+          packet_id?: string | null
           sent_at?: string | null
+          signature_page?: string | null
           signed_at?: string | null
           signed_name?: string | null
           signed_user_agent?: string | null
@@ -20044,6 +20050,8 @@ export type Database = {
           id: string
           offering_id: string
           signature_boxes: Json
+          signing_mode: string
+          signing_order: string
           size_bytes: number | null
           standard_form_id: string | null
           status: string
@@ -20063,6 +20071,8 @@ export type Database = {
           id?: string
           offering_id: string
           signature_boxes?: Json
+          signing_mode?: string
+          signing_order?: string
           size_bytes?: number | null
           standard_form_id?: string | null
           status?: string
@@ -20082,6 +20092,8 @@ export type Database = {
           id?: string
           offering_id?: string
           signature_boxes?: Json
+          signing_mode?: string
+          signing_order?: string
           size_bytes?: number | null
           standard_form_id?: string | null
           status?: string

@@ -1807,6 +1807,13 @@
       "when": 1792157987300,
       "tag": "0257_offering_documents_soft_remove",
       "breakpoints": true
+    },
+    {
+      "idx": 258,
+      "version": "7",
+      "when": 1792160476234,
+      "tag": "0258_fund_file_signing_order_mode",
+      "breakpoints": true
     }
   ]
 }
