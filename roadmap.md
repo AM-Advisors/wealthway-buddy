@@ -44,7 +44,7 @@
 - [ ] Switch individual legacy clients to purchased-services menus (per client, needs approval)
 
 ## Fund setup cleanup (2026-10-16)
-- [ ] Clarify setup template labels: SPV is a fund type; SPV templates are fund templates
+- [x] Clarify setup template labels: SPV is a fund type; SPV templates are fund templates (presentation only; signed-in QA unavailable)
 - [x] EIN + IRS letter box, Banking (full numbers) + bank letter box
 - [x] Finished sections become summary boxes with separate Edit panel
 - [ ] Investor levels — waiting on what "levels" means
