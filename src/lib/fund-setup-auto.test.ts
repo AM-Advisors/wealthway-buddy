@@ -18,3 +18,16 @@ describe("fund setup auto-completion", () => {
     expect(r.conditions).toEqual(["banking_active"]);
   });
 });
+
+import { derivedRegulatoryAndEligibility } from "./fund-setup-model";
+describe("regulatory -> eligibility", () => {
+  it("506(b) allows up to 35 sophisticated non-accredited, uses fund minimum, Form D at close", () => {
+    const d = derivedRegulatoryAndEligibility("506b", 50000000)!;
+    expect(d.rules.max_non_accredited).toBe(35);
+    expect(d.rules.min_investment_cents).toBe(50000000);
+    expect(d.selections.form_d).toBe("determined_at_close");
+  });
+  it("506(c) requires accredited investors", () => {
+    expect(derivedRegulatoryAndEligibility("506c", null)!.rules.accredited_required).toBe(true);
+  });
+});

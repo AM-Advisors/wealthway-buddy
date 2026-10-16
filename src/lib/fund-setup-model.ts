@@ -215,6 +215,17 @@ export function autoCompletedKeys(f: { seriesMaster: string | null; hasEin: bool
   return { tasks, conditions };
 }
 
+/** Regulatory selections + investor eligibility rules derived from the fund's exemption. Form D / Blue Sky are decided at close. */
+export function derivedRegulatoryAndEligibility(regType: string | null | undefined, minInvestmentCents: number | null | undefined) {
+  const r = String(regType ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  if (r !== "506b" && r !== "506c") return null;
+  const selections = { exemption: r === "506b" ? "Rule 506(b)" : "Rule 506(c)", general_solicitation: r === "506c", form_d: "determined_at_close", blue_sky: "determined_at_close" };
+  const rules = r === "506b"
+    ? { exemption: "506b", accredited_required: false, max_non_accredited: 35, non_accredited_must_be_sophisticated: true, accreditation_verification: "self_certification", general_solicitation_allowed: false, min_investment_cents: minInvestmentCents ?? null }
+    : { exemption: "506c", accredited_required: true, max_non_accredited: 0, accreditation_verification: "reasonable_steps_verification", general_solicitation_allowed: true, min_investment_cents: minInvestmentCents ?? null };
+  return { selections, rules };
+}
+
 // ------------------------------------------------------------ task catalog
 
 export interface TaskTemplate {
