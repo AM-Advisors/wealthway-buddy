@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { CtaLink } from "@/components/marketing/cta-link";
+import { Button } from "@/components/ui/button";
+import { appUrl } from "@/lib/app-origins";
 import { ProductPricing } from "@/components/marketing/product-pricing";
 import { PricingCalculator } from "@/components/marketing/pricing-calculator";
 import { OfferingSection } from "@/components/marketing/offering-section";
@@ -52,6 +54,10 @@ function PricingPage() {
           Pricing depends on the structure, number of investors and services you need. Talk to us and
           we'll put together a quote.
         </p>
+        <div className="mt-6 flex flex-wrap items-center gap-3">
+          <Button asChild size="lg"><a href={appUrl("client", "/plan/start")}>Start now — no sales call</a></Button>
+          <span className="text-sm text-muted-foreground">Pick SaaS services, agree online and pay by card. Institutional and Enterprise plans go through our team.</span>
+        </div>
         <div className="mt-10 grid gap-6 sm:grid-cols-2">
           {PRICING.map((section) => (
             <section key={section.id} className="rounded-xl border bg-card p-6">
