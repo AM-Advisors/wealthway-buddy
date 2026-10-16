@@ -9,11 +9,14 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { HARMONIOUS_LEGAL_NAME, MSA_SECTIONS } from "@/lib/agreement-templates";
+import { INVESTOR_TIERS, investorTierFor } from "@/lib/product-pricing";
 import { signSaasOrderFn } from "@/lib/saas-orders.functions";
 import { alaCarteCatalog, CAP_TIERS, priceOrder, SAAS_MSA_VERSION, SERVICING_KEYS, type CapTier, type OrderInterval, type ServicingKey } from "@/lib/saas-order-model";
 
 const TITLE = "Build your plan - Harmonious";
 const DESC = "Pick the Harmonious services you need, agree to the Statement of Work and start right away.";
+const INV_LABEL = Object.fromEntries(INVESTOR_TIERS.map((t) => [t.key, t.maxInvestors ? `${t.name} (up to ${t.maxInvestors})` : t.name])) as Record<InvestorServicingKey, string>;
+
 export const Route = createFileRoute("/_authenticated/plan/start")({
   head: () => ({ meta: [
     { title: TITLE }, { name: "description", content: DESC }, { property: "og:title", content: TITLE }, { property: "og:description", content: DESC },
@@ -47,6 +50,9 @@ function PlanStart() {
   const [funds, setFunds] = useState(1);
   const [servicing, setServicing] = useState<ServicingKey>("self_serve");
   const [capTable, setCapTable] = useState<CapTier>("none");
+  const [investorServicing, setInvestorServicing] = useState<InvestorServicingKey>("self_serve");
+  const [investorCount, setInvestorCount] = useState(0);
+  const suggested = investorCount > 0 ? investorTierFor(investorCount) : null;
   const [alaCarte, setAlaCarte] = useState<Record<string, number>>({});
   const [company, setCompany] = useState("");
   const [name, setName] = useState("");
@@ -54,8 +60,8 @@ function PlanStart() {
   const [agree, setAgree] = useState(false);
   const [busy, setBusy] = useState(false);
   const catalog = useMemo(() => alaCarteCatalog(), []);
-  const selection = { funds, servicing, capTable, alaCarte };
-  const priced = useMemo(() => { try { return priceOrder(selection, interval); } catch { return null; } }, [funds, servicing, capTable, alaCarte, interval]);
+  const selection = { funds, servicing, capTable, alaCarte, investorServicing };
+  const priced = useMemo(() => { try { return priceOrder(selection, interval); } catch { return null; } }, [funds, servicing, capTable, alaCarte, interval, investorServicing]);
   const per = interval === "annual" ? "year" : "quarter";
 
   async function submit() {
@@ -85,6 +91,14 @@ function PlanStart() {
           </CardContent></Card>
           <Card><CardHeader><CardTitle className="text-lg">Servicing</CardTitle></CardHeader><CardContent>
             <Choice value={servicing} options={SERVICING_KEYS} labels={SERV_LABEL} onChange={setServicing} />
+          </CardContent></Card>
+          <Card><CardHeader><CardTitle className="text-lg">Investor servicing (per fund)</CardTitle></CardHeader><CardContent className="space-y-3">
+            <div className="flex items-center gap-3">
+              <Label htmlFor="investor-count">Investors per fund</Label>
+              <Input id="investor-count" type="number" min={0} value={investorCount} onChange={(e) => setInvestorCount(Math.max(0, Number(e.target.value) || 0))} className="w-24" />
+            </div>
+            {suggested && <p className="text-sm text-muted-foreground">Suggested: {suggested.name}{suggested.key === "institutional" ? " (contact us for a quote)" : ""}</p>}
+            <Choice value={investorServicing} options={INVESTOR_SERVICING_KEYS} labels={INV_LABEL} onChange={setInvestorServicing} />
           </CardContent></Card>
           <Card><CardHeader><CardTitle className="text-lg">Cap table</CardTitle></CardHeader><CardContent>
             <Choice value={capTable} options={CAP_TIERS} labels={CAP_LABEL} onChange={setCapTable} />

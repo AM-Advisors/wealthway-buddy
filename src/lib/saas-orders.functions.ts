@@ -3,13 +3,14 @@ import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 
 import { requireSupabaseAuth, requireSupabaseAuthUnverified } from "@/lib/require-auth";
-import { CAP_TIERS, SERVICING_KEYS } from "@/lib/saas-order-model";
+import { CAP_TIERS, INVESTOR_SERVICING_KEYS, SERVICING_KEYS } from "@/lib/saas-order-model";
 
 const srv = () => import("@/lib/saas-orders.server");
 const selection = z.object({
   funds: z.number().int().min(0).max(50),
   servicing: z.enum(SERVICING_KEYS),
   capTable: z.enum(CAP_TIERS),
+  investorServicing: z.enum(INVESTOR_SERVICING_KEYS).optional(),
   alaCarte: z.record(z.string().max(80), z.number().int().min(0).max(100)),
 });
 async function email(context: any) {
