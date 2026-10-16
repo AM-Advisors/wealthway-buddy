@@ -36,6 +36,8 @@ export const Route = createFileRoute("/api/public/marketing/run")({
           return { result: r, status: r?.error ? "failed" : r?.skipped ? "skipped" : "completed", failedStage: r?.error ? "search_analytics_query" : null };
         });
         out["missed"] = await recordMissed(now).catch((e) => ({ error: String(e) }));
+        // Rides the existing 5-minute internal run: #operations notice for new items awaiting Harmonious approval.
+        out["approval_alerts"] = await (await import("@/lib/approval-alerts.server")).runApprovalAlerts().catch((e) => ({ error: String(e) }));
         return Response.json(out);
       },
     },
