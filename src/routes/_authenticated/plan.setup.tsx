@@ -10,7 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { chooseWireFn, mySaasSetupFn, startSaasCheckoutFn, submitKybFn } from "@/lib/saas-orders.functions";
+import { chooseWireFn, mySaasSetupFn, startSaasCheckoutFn, submitKybFn, uploadKybDocumentFn } from "@/lib/saas-orders.functions";
+import { KYB_DOCUMENTS } from "@/lib/saas-order-model";
 import { getStripe, getStripeEnvironment } from "@/lib/stripe";
 
 const TITLE = "Finish setup - Harmonious";
@@ -68,10 +69,21 @@ function PlanSetup() {
     catch (e) { toast.error((e as Error).message); }
   }
 
+  const uploadFn = useServerFn(uploadKybDocumentFn);
+  async function uploadDoc(kind: "formation" | "ein_letter", file: File | undefined) {
+    if (!file) return;
+    try {
+      const buf = new Uint8Array(await file.arrayBuffer());
+      let bin = ""; for (let i = 0; i < buf.length; i += 0x8000) bin += String.fromCharCode(...buf.subarray(i, i + 0x8000));
+      await uploadFn({ data: { orderId: order.id, kind, fileName: file.name, mime: file.type, base64: btoa(bin) } });
+      toast.success("Uploaded"); qc.invalidateQueries({ queryKey: ["saas-setup"] });
+    } catch (e) { toast.error((e as Error).message); }
+  }
   async function sendKyb() {
     try {
-      await kyb({ data: { orderId: order.id, legalName: f.legalName, ein: f.ein, formationState: f.formationState, entityType: f.entityType, owners: [{ name: f.owner, percent: Number(f.percent) || 0 }] } });
-      toast.success("Business details sent for review.");
+      const r: any = await kyb({ data: { orderId: order.id, legalName: f.legalName, ein: f.ein, formationState: f.formationState, entityType: f.entityType, owners: [{ name: f.owner, percent: Number(f.percent) || 0 }] } });
+      if (r?.flags?.length) toast.error("A few items are missing. See the list below.");
+      else toast.success("Business check complete. Sent to our Legal team.");
       qc.invalidateQueries({ queryKey: ["saas-setup"] });
     } catch (e) { toast.error((e as Error).message); }
   }
@@ -109,10 +121,19 @@ function PlanSetup() {
           <p className="text-sm text-muted-foreground">Complete identity verification from the prompt when you sign in.</p>
         </Step>
         <Step done={kybDone} title="Business verification">
-          {order.kyb_status === "review" ? <p className="text-sm text-muted-foreground">With our compliance team. We'll email you once it's approved.</p>
+          {["review", "legal_review"].includes(order.kyb_status) ? <p className="text-sm text-muted-foreground">Automatic check passed. With our Legal team since {new Date(order.kyb_sent_to_legal_at ?? Date.now()).toLocaleString()}. We'll email you once it's approved.</p>
             : (
               <div className="grid gap-2 sm:grid-cols-2">
                 {order.kyb_status === "declined" && <p className="text-sm text-destructive sm:col-span-2">Needs changes: {order.kyb_note}</p>}
+                {order.kyb_status === "needs_info" && (order.kyb_flags ?? []).length > 0 && (
+                  <div className="rounded-md border border-destructive/40 p-3 text-sm sm:col-span-2"><p className="font-medium text-destructive">Missing before Legal can review:</p>
+                    <ul className="ml-4 list-disc">{(order.kyb_flags as string[]).map((x) => <li key={x}>{x}</li>)}</ul></div>
+                )}
+                {KYB_DOCUMENTS.map((doc) => (
+                  <div key={doc.key} className="sm:col-span-2"><Label htmlFor={`doc-${doc.key}`}>{doc.label}</Label>
+                    {order.kyb_documents?.[doc.key] && <p className="text-xs text-muted-foreground">On file: {order.kyb_documents[doc.key].name}. Upload again to replace.</p>}
+                    <Input id={`doc-${doc.key}`} type="file" accept="application/pdf,image/png,image/jpeg" onChange={(e) => uploadDoc(doc.key, e.target.files?.[0])} /></div>
+                ))}
                 <div><Label htmlFor="ln">Legal name</Label><Input id="ln" value={f.legalName} onChange={(e) => setF({ ...f, legalName: e.target.value })} /></div>
                 <div><Label htmlFor="ein">EIN</Label><Input id="ein" value={f.ein} onChange={(e) => setF({ ...f, ein: e.target.value })} placeholder="12-3456789" /></div>
                 <div><Label htmlFor="st">State of formation</Label><Input id="st" value={f.formationState} onChange={(e) => setF({ ...f, formationState: e.target.value })} /></div>

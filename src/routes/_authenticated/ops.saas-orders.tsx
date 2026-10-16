@@ -79,9 +79,11 @@ function SaasOrders() {
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
             <p>Signed by {o.signer_name} on {new Date(o.signed_at).toLocaleString()} · {o.msa_version} · {usd(o.recurring_cents)} / {o.billing_interval === "annual" ? "year" : "quarter"}{o.one_time_cents ? ` + ${usd(o.one_time_cents)} one-time` : ""}</p>
+            {o.kyb_sent_to_legal_at && o.kyb_status === "legal_review" && <p className="text-muted-foreground">Automatic check passed · sent to Legal {new Date(o.kyb_sent_to_legal_at).toLocaleString()}</p>}
+            {o.kyb_status === "needs_info" && <p className="text-destructive">Automatic check {o.kyb_checked_at ? new Date(o.kyb_checked_at).toLocaleString() : ""} flagged: {(o.kyb_flags ?? []).join(" ")}</p>}
             {o.kyb_details && <p className="text-muted-foreground">Business: {o.kyb_details.legal_name} · EIN ••{o.kyb_details.ein_last4} · {o.kyb_details.entity_type}, {o.kyb_details.formation_state} · Owners: {(o.kyb_details.beneficial_owners ?? []).map((b: any) => `${b.name} (${b.percent}%)`).join(", ")}</p>}
             <div className="flex flex-wrap gap-2">
-              {d?.canDecideKyb && o.kyb_status === "review" && <><Button size="sm" onClick={() => kyb(o.id, true)}>Approve business</Button><Button size="sm" variant="outline" onClick={() => kyb(o.id, false)}>Send back</Button></>}
+              {d?.canDecideKyb && ["review", "legal_review"].includes(o.kyb_status) && <><Button size="sm" onClick={() => kyb(o.id, true)}>Legal: approve business</Button><Button size="sm" variant="outline" onClick={() => kyb(o.id, false)}>Send back</Button></>}
               {d?.canConfirmWire && o.payment_method === "wire" && o.payment_status !== "paid" && o.user_id !== d.me && <Button size="sm" onClick={() => wireReceived(o)}>Confirm wire received ({o.wire_reference})</Button>}
               {o.wire_received_at && <span className="text-xs text-muted-foreground">Wire of {usd(o.wire_received_cents)} confirmed {new Date(o.wire_received_at).toLocaleDateString()}</span>}
               {d?.canLegalReview && !o.legal_reviewed_at && <Button size="sm" variant="outline" onClick={() => review(o.id)}>Mark SOW reviewed</Button>}
