@@ -35,3 +35,15 @@ export const templateDownloadUrlFn = createServerFn({ method: "POST" }).middlewa
 export const templateAutofillCheckFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ templateId: uuid, version: z.number().int().min(1), offeringId: uuid }).parse(d))
   .handler(async ({ data, context }) => (await eng()).templateAutofillCheck(context.userId, data));
+
+export const listFundTemplateDocumentsFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ offeringId: uuid }).parse(d))
+  .handler(async ({ data, context }) => (await eng()).listFundTemplateDocuments(context.userId, data.offeringId));
+
+export const removeFundTemplateDocumentFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ offeringId: uuid, documentId: uuid, reason: z.string().max(500).nullish() }).parse(d))
+  .handler(async ({ data, context }) => (await eng()).removeFundTemplateDocument(context.userId, data));
+
+export const fundTemplateDocumentUrlFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ offeringId: uuid, versionId: uuid }).parse(d))
+  .handler(async ({ data, context }) => (await eng()).fundTemplateDocumentUrl(context.userId, data));

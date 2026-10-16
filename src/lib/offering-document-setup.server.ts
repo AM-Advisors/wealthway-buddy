@@ -51,7 +51,7 @@ async function event(offeringId: string, documentId: string | null, version: num
 export async function listSetupDocuments(userId: string, offeringId: string) {
   const actor = await assertRead(userId, offeringId);
   const [{ data: docs }, { data: versions }] = await Promise.all([
-    db().from("offering_documents").select("id, title, doc_type, document_category, usage, applicability, active_version, current_version, requires_signature").eq("offering_id", offeringId).order("sort_order"),
+    db().from("offering_documents").select("id, title, doc_type, document_category, usage, applicability, active_version, current_version, requires_signature").eq("offering_id", offeringId).is("removed_at", null).order("sort_order"),
     db().from("offering_document_versions").select("*").eq("offering_id", offeringId).order("version", { ascending: false }),
   ]);
   const vs = (versions ?? []) as any[];
