@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
   BadgeCheck,
@@ -42,6 +43,7 @@ import { SidebarFavorites, FavoriteStar } from "@/components/sidebar-favorites";
 import { SidebarAccountFooter } from "@/components/sidebar-account-footer";
 import { getNavigation, operationsNavItemIsActive } from "@/lib/navigation";
 import { opsSearchIndex, searchOpsIndex } from "@/lib/ops-search";
+import { opsQuickSearchFn } from "@/lib/ops-quick-search.functions";
 import { opsWorkAreas, type OpsCapability } from "@/lib/ops-capabilities";
 
 const ICONS: Record<string, typeof Home> = {
@@ -162,8 +164,22 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
   const isSalesLeader = canSee("salesLeader", staffRoles);
   const capabilities = ((session as { operationsCapabilities?: OpsCapability[] } | null)?.operationsCapabilities ?? []);
   const [query, setQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedQuery(query), 250);
+    return () => clearTimeout(t);
+  }, [query]);
   const index = useMemo(() => opsSearchIndex(capabilities), [capabilities]);
   const results = query.trim() ? searchOpsIndex(index, query) : null;
+  const canSeePeople = canSee("peopleEmployees", staffRoles) || canSee("peopleOthers", staffRoles);
+  const records = useQuery({
+    queryKey: ["ops-quick-search", debouncedQuery],
+    queryFn: () => opsQuickSearchFn({ data: { q: debouncedQuery } }),
+    enabled: debouncedQuery.trim().length >= 2,
+    staleTime: 30_000,
+  });
+  const fundHits = records.data?.funds ?? [];
+  const peopleHits = canSeePeople ? records.data?.people ?? [] : [];
   const allowedUrls = useMemo(() => new Set(opsWorkAreas(capabilities).flatMap((a) => a.screens.map((s) => s.url))), [capabilities]);
 
   const home = sections.find((s) => s.id === "home");
@@ -307,10 +323,11 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
 
       <SidebarContent className="overflow-x-hidden">
         {results ? (
+          <>
           <SidebarGroup>
             <SidebarGroupContent>
               <SidebarMenu>
-                {results.length === 0 && (
+                {results.length === 0 && !fundHits.length && !peopleHits.length && (
                   <p className="px-2 py-2 text-xs text-sidebar-foreground/70">Nothing matches “{query}”.</p>
                 )}
                 {results.map((r) => (
@@ -326,6 +343,45 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
+          {!!fundHits.length && (
+            <SidebarGroup>
+              <SidebarGroupContent>
+                <p className="px-2 pb-1 text-[11px] font-medium uppercase tracking-wide text-sidebar-foreground/60">Funds</p>
+                <SidebarMenu>
+                  {fundHits.map((f) => (
+                    <SidebarMenuItem key={f.id}>
+                      <SidebarMenuButton asChild className="h-auto py-1.5">
+                        <Link to="/ops/fund/$fundId" params={{ fundId: f.id }} onClick={close} className="flex flex-col items-start">
+                          <span className="truncate text-sm">{f.name}</span>
+                          <span className="truncate text-[11px] text-sidebar-foreground/60">{f.open ? "Open fund" : "In setup"}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          )}
+          {!!peopleHits.length && (
+            <SidebarGroup>
+              <SidebarGroupContent>
+                <p className="px-2 pb-1 text-[11px] font-medium uppercase tracking-wide text-sidebar-foreground/60">People</p>
+                <SidebarMenu>
+                  {peopleHits.map((p) => (
+                    <SidebarMenuItem key={p.id}>
+                      <SidebarMenuButton asChild className="h-auto py-1.5">
+                        <Link to="/ops/people/$userId" params={{ userId: p.id }} onClick={close} className="flex flex-col items-start">
+                          <span className="truncate text-sm">{p.name || p.email}</span>
+                          <span className="truncate text-[11px] text-sidebar-foreground/60">{p.email || "Person record"}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          )}
+          </>
         ) : (
           <>
             {home && !salesOnly && (
