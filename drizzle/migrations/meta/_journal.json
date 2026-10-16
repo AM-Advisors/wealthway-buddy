@@ -1884,6 +1884,13 @@
       "when": 1792172087346,
       "tag": "0268_saas_kyb_auto_check",
       "breakpoints": true
+    },
+    {
+      "idx": 269,
+      "version": "7",
+      "when": 1792176762378,
+      "tag": "0269_restrict_help_article_reviews",
+      "breakpoints": true
     }
   ]
 }

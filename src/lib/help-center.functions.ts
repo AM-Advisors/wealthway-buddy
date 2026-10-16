@@ -14,7 +14,7 @@ async function rolesOf(context: any): Promise<string[]> {
 }
 
 async function approvals(context: any): Promise<Map<string, number>> {
-  const { data, error } = await context.supabase.from("help_article_reviews").select("slug, version");
+  const { data, error } = await (context.supabase as any).rpc("help_approved_versions");
   if (error) throw new Error(error.message);
   const m = new Map<string, number>();
   for (const r of (data ?? []) as any[]) m.set(r.slug, Math.max(m.get(r.slug) ?? 0, r.version));
