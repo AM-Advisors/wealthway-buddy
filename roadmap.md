@@ -1,5 +1,9 @@
 # Roadmap
 
+## Fund setup and tab navigation
+- [x] Connect Fund Setup and fund tabs with fund-specific links, visible Banking and persistent navigation; preview compiles
+- [ ] Authenticated click-through — blocked: isolated synthetic QA session unavailable; shared production backend cannot be used for browser tests
+
 ## Template signature sending
 - [x] Remove separate Harmonious approval for generated Harmonious templates; preserve non-template review and signing controls
 - [x] Validate template activation and regressions (53 tests; preview compiles)

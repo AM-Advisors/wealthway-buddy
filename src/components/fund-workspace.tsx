@@ -105,29 +105,31 @@ const MORE: { value: string; label: string }[] = [
   { value: "calendar", label: "Calendar" }, { value: "regulatory", label: "Regulatory" }, { value: "services", label: "Services" },
 ];
 
-function FundTabBar({ tab, onTab, extraTabs, todoCount }: { tab: string; onTab: (t: string) => void; extraTabs: ExtraTab[]; todoCount: number }) {
+function FundTabBar({ fundId, mode, tab, onTab, extraTabs, todoCount }: { fundId: string; mode: FundWorkspaceMode; tab: string; onTab: (t: string) => void; extraTabs: ExtraTab[]; todoCount: number }) {
   const hasSetup = extraTabs.some((x) => x.value === "setup");
   const primary = PRIMARY
     .map((p) => (p.value === "setup" && !hasSetup ? { ...p, value: "details", group: p.group.filter((g) => g !== "setup") } : p))
-    .map((p) => (p.value === "setup" && hasSetup ? { ...p, group: [...p.group, "banking"] } : p))
-    .filter((p) => !(p.value === "banking" && hasSetup));
+    .map((p) => (p.value === "setup" && hasSetup ? { ...p, label: "Fund Setup" } : p));
   const active = primary.find((p) => p.group.includes(tab));
   const more = [...MORE, ...extraTabs.filter((x) => x.value !== "setup").map((x) => ({ value: x.value, label: x.label }))];
   const moreActive = !active ? more.find((m) => m.value === tab) : undefined;
   const label = (m: { value: string; label: string }) => (m.value === "todos" && todoCount ? `${m.label} (${todoCount})` : m.label);
   const pill = (on: boolean) => cn("shrink-0 rounded-md border px-3.5 py-1.5 text-sm font-medium transition-colors", on ? "border-border bg-muted text-foreground" : "border-transparent text-muted-foreground hover:text-foreground");
+  const tabLink = (value: string, text: string, className: string, selected?: boolean) => mode === "harmonious"
+    ? <Link to="/ops/fund/$fundId" params={{ fundId }} search={(prev) => ({ ...prev, tab: value })} resetScroll={false} role="tab" aria-selected={selected} className={className}>{text}</Link>
+    : <Link to="/client/funds/$fundId" params={{ fundId }} search={(prev) => ({ ...prev, tab: value as FundTab })} resetScroll={false} role="tab" aria-selected={selected} className={className}>{text}</Link>;
   return (
-    <div className="space-y-2">
-      <div role="tablist" className="flex items-center gap-1 overflow-x-auto border-b pb-2">
+    <div id="fund-workspace-tabs" className="sticky top-0 z-20 space-y-2 bg-background pt-2">
+      <div role="tablist" aria-label="Fund tabs" className="flex items-center gap-1 overflow-x-auto border-b pb-2">
         {primary.map((p) => (
-          <button key={p.label} type="button" role="tab" aria-selected={active?.label === p.label} className={pill(active?.label === p.label)} onClick={() => onTab(p.value)}>{p.label}</button>
+          <span key={p.value} className="shrink-0">{tabLink(p.value, p.label, pill(active?.value === p.value), active?.value === p.value)}</span>
         ))}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button type="button" className={cn(pill(!!moreActive), "inline-flex items-center gap-1")}>{moreActive ? `More: ${label(moreActive)}` : todoCount ? `More (${todoCount})` : "More"}<ChevronDown className="h-3.5 w-3.5" /></button>
+            <Button variant="ghost" className={cn(pill(!!moreActive), "inline-flex h-auto items-center gap-1")}>{moreActive ? `More: ${label(moreActive)}` : todoCount ? `More (${todoCount})` : "More"}<ChevronDown className="h-3.5 w-3.5" /></Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            {more.map((m) => <DropdownMenuItem key={m.value} onSelect={() => onTab(m.value)}>{label(m)}</DropdownMenuItem>)}
+            {more.map((m) => <DropdownMenuItem key={m.value} asChild>{tabLink(m.value, label(m), "cursor-pointer")}</DropdownMenuItem>)}
             <DropdownMenuSeparator />
             {!hasSetup && ["details", "team", "banking"].map((v) => <DropdownMenuItem key={v} onSelect={() => onTab(v)}>{SUB_LABEL[v]}</DropdownMenuItem>)}
           </DropdownMenuContent>
@@ -136,7 +138,7 @@ function FundTabBar({ tab, onTab, extraTabs, todoCount }: { tab: string; onTab: 
       {active && active.group.length > 1 && !(hasSetup && active.value === "setup") && (
         <div className="flex gap-1 overflow-x-auto">
           {active.group.map((g) => (
-            <button key={g} type="button" onClick={() => onTab(g)} className={cn("shrink-0 rounded-full border px-3 py-1 text-xs transition-colors", tab === g ? "border-primary bg-primary text-primary-foreground" : "text-muted-foreground hover:border-primary hover:text-foreground")}>{SUB_LABEL[g] ?? g}</button>
+            <span key={g} className="shrink-0">{tabLink(g, SUB_LABEL[g] ?? g, cn("inline-flex rounded-md border px-3 py-1 text-xs transition-colors", tab === g ? "border-primary bg-primary text-primary-foreground" : "text-muted-foreground hover:border-primary hover:text-foreground"), tab === g)}</span>
           ))}
         </div>
       )}
@@ -266,7 +268,7 @@ export function FundWorkspace({ fundId, tab, onTab, mode = "client", extraTabs =
       </div>
 
       <Tabs value={tab} onValueChange={onTab}>
-        <FundTabBar tab={tab} onTab={onTab} extraTabs={extraTabs} todoCount={steps.filter((s) => s.owner === "You" && !s.done && s.status !== "review" && !s.answer?.trim()).length} />
+        <FundTabBar fundId={fundId} mode={mode} tab={tab} onTab={onTab} extraTabs={extraTabs} todoCount={steps.filter((s) => s.owner === "You" && !s.done && s.status !== "review" && !s.answer?.trim()).length} />
 
         {extraTabs.map((x) => x.value === "setup" && merged ? (!SETUP_GROUP.includes(tab) ? null :
           <TabsContent key="setup" value={tab}>

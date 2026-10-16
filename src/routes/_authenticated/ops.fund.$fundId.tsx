@@ -24,5 +24,5 @@ function FundRoute() {
   const { fundId } = Route.useParams();
   const { tab } = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
-  return <OpsFundPage fundId={fundId} tab={tab ?? "setup"} onTab={(v) => navigate({ search: { tab: v }, replace: true })} />;
+  return <OpsFundPage fundId={fundId} tab={tab ?? "setup"} onTab={(v) => navigate({ search: (prev) => ({ ...prev, tab: v }), resetScroll: false })} />;
 }
