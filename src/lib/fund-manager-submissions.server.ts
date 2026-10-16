@@ -126,7 +126,7 @@ async function apply(sb: any, userId: string, s: any): Promise<unknown> {
   if (s.section === "fund_details") {
     const fields: Record<string, unknown> = {};
     if (p.displayName) fields["displayName"] = String(p.displayName);
-    for (const k of ["entityType", "jurisdiction", "formationDate", "gpName", "regType", "fundType", "offeringOpenDate", "offeringCloseDate"]) if (p[k]) fields[k] = String(p[k]);
+    for (const k of ["entityType", "jurisdiction", "formationDate", "gpName", "regType", "fundType", "offeringOpenDate", "offeringCloseDate", "arbitrationCity", "arbitrationState"]) if (p[k]) fields[k] = String(p[k]);
     // The address is edited as separate fields but stored as one line on the fund record.
     const partKeys = ["addressLine1", "addressLine2", "addressCity", "addressState", "addressZip"] as const;
     if (partKeys.some((k) => p[k])) {

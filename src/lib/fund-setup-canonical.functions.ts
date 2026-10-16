@@ -75,6 +75,8 @@ export const saveFundSetupFieldsFn = createServerFn({ method: "POST" })
           maxInvestmentCents: z.number().int().min(0).nullish(),
           offeringOpenDate: z.string().max(20).nullish(),
           offeringCloseDate: z.string().max(20).nullish(),
+          arbitrationCity: z.string().max(120).nullish(),
+          arbitrationState: z.string().max(120).nullish(),
           rollingCloses: z.boolean().nullish(),
           hasMultipleClasses: z.boolean(),
           driveFolderUrl: z.string().url().max(500).nullish().or(z.literal("")),
