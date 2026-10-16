@@ -12,9 +12,9 @@ const SPV_CORE_ITEMS = ["Investor roster & portal", "KYC/KYB/AML & accreditation
 const SPV_CARDS: Card[] = [
   { key: "spv-self", level: "SELF_SERVE", name: "Self Serve", positioning: "Run it yourself on the platform", priceText: "Included in the base fund price", items: ADMINISTRATION_TIERS.find((t) => t.key === "self_serve")!.entitlements },
   { key: "spv-core", level: "CORE", name: "SPV Core", positioning: "Essential SPV Infrastructure", starting: 0, priceText: "Buy-up · 72-hour response", items: SPV_CORE_ITEMS },
-  { key: "spv-plus", level: "PLUS", name: "SPV Plus", positioning: "Enhanced SPV Administration", starting: 3125, startingSuffix: "/year added · configurable", plus: "SPV Core", note: "Or included in certain SPV packages.",
+  { key: "spv-plus", level: "PLUS", name: "SPV Plus", positioning: "Enhanced SPV Administration", starting: 2500, startingSuffix: "/year added · configurable", plus: "SPV Core", note: "Or included in certain SPV packages.",
     items: ["Enhanced reconciliation", "Investor statements", "Enhanced capital reporting", "Annual financial package", "Investment value tracking", "Enhanced distribution calculations", "Tax preparer coordination", "Enhanced close support", "Additional reporting"] },
-  { key: "spv-wg", level: "WHITE_GLOVE", name: "SPV White Glove", positioning: "Managed SPV Operations", starting: 9375, startingSuffix: "/year additional", plus: "SPV Plus", note: "Configured by SPV complexity.",
+  { key: "spv-wg", level: "WHITE_GLOVE", name: "SPV White Glove", positioning: "Managed SPV Operations", starting: 7500, startingSuffix: "/year additional", plus: "SPV Plus", note: "Configured by SPV complexity.",
     items: ["Dedicated administrator", "Priority support", "Proactive investor follow-up", "KYC exception management", "Treasury coordination", "Distribution management", "Investor inquiry management", "Transfer administration", "Tax coordination", "Regulatory & operating calendars"] },
   { key: "spv-saas", level: "SAAS", name: "SaaS", positioning: "Platform only, no Harmonious support", priceText: "Services à la carte", note: "À la carte at Core prices + 50%. Harmonious fund documents $500 each.", items: ADMINISTRATION_TIERS.find((t) => t.key === "saas")!.entitlements },
 ];

@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { CtaLink } from "@/components/marketing/cta-link";
-import { AdministrationTiers } from "@/components/marketing/administration-tiers";
+import { ProductPricing } from "@/components/marketing/product-pricing";
 import { PricingCalculator } from "@/components/marketing/pricing-calculator";
 import { OfferingSection } from "@/components/marketing/offering-section";
 import { SiteFooter } from "@/components/site-footer";
@@ -75,7 +75,7 @@ function PricingPage() {
             </section>
           ))}
         </div>
-        <AdministrationTiers />
+        <ProductPricing />
         <PricingCalculator />
         <div className="mt-10">
           <CtaLink cta="talk_to_administrator" />

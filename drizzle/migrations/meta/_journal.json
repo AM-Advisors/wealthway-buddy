@@ -1828,6 +1828,13 @@
       "when": 1792162011646,
       "tag": "0260_service_ladder_self_serve_saas",
       "breakpoints": true
+    },
+    {
+      "idx": 261,
+      "version": "7",
+      "when": 1792163852987,
+      "tag": "0261_restore_spv_pre_uplift_prices",
+      "breakpoints": true
     }
   ]
 }
