@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
   BadgeCheck,
@@ -42,6 +43,7 @@ import { SidebarFavorites, FavoriteStar } from "@/components/sidebar-favorites";
 import { SidebarAccountFooter } from "@/components/sidebar-account-footer";
 import { getNavigation, operationsNavItemIsActive } from "@/lib/navigation";
 import { opsSearchIndex, searchOpsIndex } from "@/lib/ops-search";
+import { opsQuickSearchFn } from "@/lib/ops-quick-search.functions";
 import { opsWorkAreas, type OpsCapability } from "@/lib/ops-capabilities";
 
 const ICONS: Record<string, typeof Home> = {
