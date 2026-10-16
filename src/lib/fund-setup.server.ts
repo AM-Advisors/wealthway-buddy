@@ -292,6 +292,7 @@ export async function updateFundInformation(
   if (Object.keys(mirror).length && (data as any)?.offering_id) {
     await db().from("offerings").update(mirror).eq("id", (data as any).offering_id);
   }
+  if ((data as any)?.offering_id) await syncFundFacts((data as any).offering_id);
   await recordEvent({
     setupId,
     subjectTable: "fund_setups",
