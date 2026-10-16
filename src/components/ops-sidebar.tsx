@@ -175,10 +175,10 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
   const records = useQuery({
     queryKey: ["ops-quick-search", debouncedQuery],
     queryFn: () => opsQuickSearchFn({ data: { q: debouncedQuery } }),
-    enabled: canSeePeople && debouncedQuery.trim().length >= 2,
+    enabled: debouncedQuery.trim().length >= 2,
     staleTime: 30_000,
   });
-  const fundHits = canSeePeople ? records.data?.funds ?? [] : [];
+  const fundHits = records.data?.funds ?? [];
   const peopleHits = canSeePeople ? records.data?.people ?? [] : [];
   const allowedUrls = useMemo(() => new Set(opsWorkAreas(capabilities).flatMap((a) => a.screens.map((s) => s.url))), [capabilities]);
 
