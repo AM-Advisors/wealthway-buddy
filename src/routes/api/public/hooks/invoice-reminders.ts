@@ -22,7 +22,10 @@ export const Route = createFileRoute("/api/public/hooks/invoice-reminders")({
             return Response.json({ skipped: true, reason: "already ran today" });
           }
           const result = await sendInvoiceReminders();
-          return Response.json(result);
+          // Service renewal reminders for current clients ride the same daily run (email only, never charges).
+          const { runPaymentReminders } = await import("@/lib/billing-records.server");
+          const services = await runPaymentReminders().catch((err) => { console.error("[payment-reminders] failed", err); return { paymentReminders: 0 }; });
+          return Response.json({ ...result, ...services });
         } catch (err) {
           console.error("[invoice-reminders] failed", err);
           return Response.json({ error: "reminder run failed" }, { status: 500 });
