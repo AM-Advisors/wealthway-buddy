@@ -1,0 +1,2 @@
+ALTER TABLE public.offering_documents ADD COLUMN IF NOT EXISTS removed_at timestamptz, ADD COLUMN IF NOT EXISTS removed_by uuid, ADD COLUMN IF NOT EXISTS removed_reason text;
+COMMENT ON COLUMN public.offering_documents.removed_at IS 'Set when staff delete an unsent, unapproved draft; the row is kept for history.';

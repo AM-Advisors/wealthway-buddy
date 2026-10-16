@@ -1800,6 +1800,13 @@
       "when": 1792156752832,
       "tag": "0256_offering_arbitration_fields",
       "breakpoints": true
+    },
+    {
+      "idx": 257,
+      "version": "7",
+      "when": 1792157987300,
+      "tag": "0257_offering_documents_soft_remove",
+      "breakpoints": true
     }
   ]
 }
