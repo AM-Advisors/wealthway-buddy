@@ -1163,6 +1163,9 @@ export async function syncAutoCompletedTasks(setupId: string) {
   }
   await db().from("fund_setup_tasks").update({ blocking: false }).eq("setup_id", setupId).eq("task_key", "client_service_providers").eq("blocking", true);
   await autoDefaultSetup(setupId, setup).catch(() => null);
+  // Optional (non-blocking) items never hold up "all blocking setup tasks complete".
+  const { data: allTasks } = await db().from("fund_setup_tasks").select("blocking, status").eq("setup_id", setupId);
+  if (allTasks && !(allTasks as any[]).some((t) => t.blocking !== false && t.status !== "complete")) await db().from("fund_launch_conditions").update({ satisfied: true, satisfied_at: nowIso(), evidence: { auto: true }, updated_at: nowIso() }).eq("setup_id", setupId).eq("condition_key", "blocking_tasks_complete").eq("satisfied", false);
 }
 
 /** Drafts regulatory + eligibility from the exemption, opens the ledger, and records the standard tax/reporting defaults. Reviews/approvals stay with people. */
