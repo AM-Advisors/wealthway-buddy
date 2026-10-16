@@ -26,7 +26,9 @@ import {
   defaultOnboardingRequirements,
   dependenciesSatisfied,
   economicsEditError,
+  autoCompletedKeys,
   entityStepError,
+  seriesMasterName,
   evaluateReadiness,
   investorOnboardingPath,
   isFundStructure,
@@ -1128,7 +1130,32 @@ export async function setOnboardingRequirement(
 
 // ---------------------------------------------------- readiness & launch
 
+/** Mark tasks/conditions complete when the entered data already proves them (series master, EIN, wire instructions). Logged; never un-completes. */
+export async function syncAutoCompletedTasks(setupId: string) {
+  const { data: setup } = await db().from("fund_setups").select("id, offering_id, legal_fund_name").eq("id", setupId).maybeSingle();
+  if (!setup) return;
+  const { data: off } = await db().from("offerings").select("name").eq("id", setup.offering_id).maybeSingle();
+  const { data: facts } = await db().rpc("fund_setup_entered_facts", { p_offering_id: setup.offering_id });
+  const f = (Array.isArray(facts) ? facts[0] : facts) ?? {};
+  const master = seriesMasterName(setup.legal_fund_name) ?? seriesMasterName(off?.name);
+  const keys = autoCompletedKeys({ seriesMaster: master, hasEin: !!f.has_ein, hasWire: !!f.has_wire });
+  const now = nowIso();
+  const reason = (k: string) => k === "entity_ein" ? "EIN entered" : k === "banking_account" || k === "banking_active" ? "Wire instructions entered" : `Covered by master entity ${master}`;
+  if (keys.tasks.length) {
+    const { data: open } = await db().from("fund_setup_tasks").select("id, task_key, status").eq("setup_id", setupId).in("task_key", keys.tasks).neq("status", "complete");
+    for (const t of (open ?? []) as any[]) {
+      await db().from("fund_setup_tasks").update({ status: "complete", completed_at: now, notes: `Auto-completed: ${reason(t.task_key)}`, updated_at: now }).eq("id", t.id);
+      await db().from("fund_setup_events").insert({ setup_id: setupId, subject_table: "fund_setup_tasks", subject_id: t.id, event: "task_auto_completed", from_status: t.status, to_status: "complete", detail: { reason: reason(t.task_key) }, actor_role: "system" }).then(() => null, () => null);
+    }
+  }
+  if (keys.conditions.length) {
+    await db().from("fund_launch_conditions").update({ satisfied: true, satisfied_at: now, evidence: { auto: true }, updated_at: now }).eq("setup_id", setupId).in("condition_key", keys.conditions).eq("satisfied", false);
+  }
+  await db().from("fund_setup_tasks").update({ blocking: false }).eq("setup_id", setupId).eq("task_key", "client_service_providers").eq("blocking", true);
+}
+
 async function readinessFor(setupId: string) {
+  await syncAutoCompletedTasks(setupId).catch(() => null);
   const [conditions, tasks, approvals] = await Promise.all([
     db().from("fund_launch_conditions").select("*").eq("setup_id", setupId),
     db().from("fund_setup_tasks").select("*").eq("setup_id", setupId),
@@ -1375,6 +1402,7 @@ export async function launchFund(userId: string, setupId: string) {
 
 export async function fundSetupDetail(userId: string, setupId: string) {
   const { actor, setup } = await assertSetupAccess(userId, setupId);
+  await syncAutoCompletedTasks(setupId).catch(() => null);
   const [
     parties,
     tasks,
