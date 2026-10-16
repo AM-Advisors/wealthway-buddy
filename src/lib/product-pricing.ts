@@ -89,7 +89,7 @@ export const PRODUCTS: Product[] = [
       investor: [{ name: "Stakeholder portal", description: "Holders view their shares and certificates.", prices: yearly(0, "Included") }],
     },
     alaCarte: [{ name: "Membership / share transfer", prices: once(1500, "each") }, { name: "Cap table migration", prices: once(null, "Custom quote") }],
-    openPoints: ["25% increase removed. Rate card says Starter $150 / Growth $300; card checkout charges $129 / $299. Sheet uses the rate card — confirm which is right.", "Scale shows $599/mo; rate card lists it as custom. Confirm."],
+    openPoints: ["25% increase removed. Rate card says Starter $150 / Growth $300; card checkout charges $129 / $299. Sheet uses the rate card — confirm which is right.", "Monthly billing removed; cap table plans are yearly only. Card checkout charges the existing yearly prices ($1,290 / $2,990 / $5,990). Confirm."],
   },
   fundProduct("venture", "Venture Funds", "Closed-end venture funds with capital calls and quarterly reporting.", [fundAdmin("quarterly", 12000)], []),
   fundProduct("private_equity", "Private Equity Funds", "Closed-end PE funds with capital calls, waterfalls and quarterly NAV.", [fundAdmin("quarterly", 12000)], ["Private Equity uses the same administration price as Venture. Confirm or set a higher price for complex waterfalls."]),
