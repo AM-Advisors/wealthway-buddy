@@ -829,7 +829,12 @@ export const saveCapPosition = createServerFn({ method: "POST" })
     if (data.commitment_cents != null) {
       const { error: appErr } = await supabaseAdmin
         .from("investor_applications")
-        .update({ commitment_cents: data.commitment_cents })
+        .update({
+          commitment_cents: data.commitment_cents,
+          commitment_status: "confirmed",
+          commitment_confirmed_by: context.userId,
+          commitment_confirmed_at: new Date().toISOString(),
+        } as any)
         .eq("id", data.application_id);
       if (appErr) throw new Error(appErr.message);
       // Keep a confirmed subscription in step so every view agrees.

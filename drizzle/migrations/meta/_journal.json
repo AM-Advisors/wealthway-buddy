@@ -1891,6 +1891,13 @@
       "when": 1792176762378,
       "tag": "0269_restrict_help_article_reviews",
       "breakpoints": true
+    },
+    {
+      "idx": 270,
+      "version": "7",
+      "when": 1792186841377,
+      "tag": "0270_commitment_review_status",
+      "breakpoints": true
     }
   ]
 }
