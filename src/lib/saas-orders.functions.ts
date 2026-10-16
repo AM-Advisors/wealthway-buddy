@@ -44,11 +44,15 @@ export const confirmWireReceivedFn = createServerFn({ method: "POST" }).middlewa
 
 export const submitKybFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuthUnverified])
   .inputValidator(z.object({
-    orderId: z.string().uuid(), legalName: z.string().trim().min(2).max(200), ein: z.string().trim().min(9).max(12),
-    formationState: z.string().trim().min(2).max(60), entityType: z.string().trim().min(2).max(60),
-    owners: z.array(z.object({ name: z.string().trim().min(2).max(160), percent: z.number().min(0).max(100) })).min(1).max(10),
+    orderId: z.string().uuid(), legalName: z.string().trim().max(200), ein: z.string().trim().max(12),
+    formationState: z.string().trim().max(60), entityType: z.string().trim().max(60),
+    owners: z.array(z.object({ name: z.string().trim().max(160), percent: z.number().min(0).max(100) })).max(10),
   }).parse)
   .handler(async ({ data, context }) => (await srv()).submitKyb(context.userId, data.orderId, data));
+
+export const uploadKybDocumentFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuthUnverified])
+  .inputValidator(z.object({ orderId: z.string().uuid(), kind: z.enum(["formation", "ein_letter"]), fileName: z.string().min(1).max(200), mime: z.string().max(80), base64: z.string().max(14_000_000) }).parse)
+  .handler(async ({ data, context }) => (await srv()).uploadKybDocument(context.userId, data.orderId, data.kind, data.fileName, data.mime, data.base64));
 
 export const mySaasSetupFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuthUnverified])
   .handler(async ({ context }) => (await srv()).mySetup(context.userId) as Promise<any>);

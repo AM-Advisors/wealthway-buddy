@@ -128,14 +128,46 @@ export async function confirmWireReceived(uid: string, orderId: string, amountCe
 
 export async function submitKyb(uid: string, orderId: string, k: { legalName: string; ein: string; formationState: string; entityType: string; owners: { name: string; percent: number }[] }) {
   const o = await ownOrder(uid, orderId);
-  if (o.kyb_status === "approved") return { ok: true };
+  if (o.kyb_status === "approved") return { ok: true, flags: [] as string[] };
   const digits = k.ein.replace(/\D/g, "");
-  if (digits.length !== 9) throw new Error("EIN must have 9 digits.");
   const details = { legal_name: k.legalName, ein_last4: digits.slice(-4), formation_state: k.formationState, entity_type: k.entityType, beneficial_owners: k.owners };
   const d = await db();
-  await d.from("saas_orders").update({ kyb_status: "review", kyb_details: details, updated_at: nowIso() }).eq("id", o.id);
-  await d.from("clients").update({ legal_name: k.legalName, ein_last4: digits.slice(-4), jurisdiction: k.formationState, entity_type: k.entityType }).eq("id", o.client_id);
-  await event(o.id, uid, "kyb_submitted", { ein_last4: digits.slice(-4), owners: k.owners.length });
+  const { data: full } = await d.from("saas_orders").select("kyb_documents, company_name, client_id").eq("id", o.id).maybeSingle();
+  const { kybFlags } = await import("@/lib/saas-order-model");
+  // Automatic check replaces the manual compliance pass: flag gaps, otherwise route straight to Legal.
+  const flags = kybFlags({ legalName: k.legalName, einDigits: digits, formationState: k.formationState, entityType: k.entityType, owners: k.owners }, (full?.kyb_documents ?? {}) as any, await kycOpen(uid));
+  const now = nowIso();
+  const complete = flags.length === 0;
+  await d.from("saas_orders").update({
+    kyb_status: complete ? "legal_review" : "needs_info", kyb_details: details, kyb_flags: flags, kyb_checked_at: now,
+    kyb_sent_to_legal_at: complete ? now : null, kyb_note: complete ? null : flags.join(" "), updated_at: now,
+  }).eq("id", o.id);
+  if (digits.length === 9) await d.from("clients").update({ legal_name: k.legalName, ein_last4: digits.slice(-4), jurisdiction: k.formationState, entity_type: k.entityType }).eq("id", o.client_id);
+  await event(o.id, uid, "kyb_submitted", { ein_last4: digits.slice(-4), owners: k.owners.length, flags: flags.length });
+  if (complete) {
+    await event(o.id, null, "kyb_sent_to_legal", { at: now });
+    await (await import("@/lib/ops-slack-notify.server")).notifySubmission({ kind: "kyb_legal_review", once: true, ref: `${o.id}:${now}`, title: `Business check ready for Legal: ${full?.company_name ?? "SaaS client"}`, clientId: full?.client_id ?? null, submittedBy: uid, path: "/ops/saas-orders" });
+  }
+  return { ok: true, flags };
+}
+
+const KYB_DOC_MAX = 10 * 1024 * 1024;
+/** Client uploads a business-check document (stored privately, path only on the order). */
+export async function uploadKybDocument(uid: string, orderId: string, kind: "formation" | "ein_letter", fileName: string, mime: string, base64: string) {
+  const o = await ownOrder(uid, orderId);
+  if (o.kyb_status === "approved" || o.kyb_status === "legal_review") throw new Error("Your business check is already with our team.");
+  if (!["application/pdf", "image/png", "image/jpeg"].includes(mime)) throw new Error("Upload a PDF, PNG or JPG.");
+  const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+  if (bytes.length > KYB_DOC_MAX) throw new Error("Files must be under 10 MB.");
+  const d = await db();
+  const safe = fileName.replace(/[^A-Za-z0-9._-]/g, "_").slice(-80);
+  const path = `kyb/${o.id}/${kind}-${Date.now()}-${safe}`;
+  const { error } = await d.storage.from("compliance-evidence").upload(path, bytes, { contentType: mime, upsert: false });
+  if (error) throw new Error(error.message);
+  const { data: cur } = await d.from("saas_orders").select("kyb_documents").eq("id", o.id).maybeSingle();
+  const docs = { ...((cur?.kyb_documents ?? {}) as Record<string, unknown>), [kind]: { path, name: fileName, uploaded_at: nowIso() } };
+  await d.from("saas_orders").update({ kyb_documents: docs, updated_at: nowIso() }).eq("id", o.id);
+  await event(o.id, uid, "kyb_document_uploaded", { kind });
   return { ok: true };
 }
 
@@ -179,7 +211,7 @@ export async function syncOrderPayment(sub: any, deleted: boolean) {
 
 export async function mySetup(uid: string) {
   const d = await db();
-  const { data: o } = await d.from("saas_orders").select("id, company_name, billing_interval, price_snapshot, payment_status, payment_method, wire_reference, recurring_cents, one_time_cents, kyb_status, kyb_note, status, signed_at, signer_name, msa_version, msa_accepted_at").eq("user_id", uid).order("created_at", { ascending: false }).limit(1).maybeSingle();
+  const { data: o } = await d.from("saas_orders").select("id, company_name, billing_interval, price_snapshot, payment_status, payment_method, wire_reference, recurring_cents, one_time_cents, kyb_status, kyb_note, kyb_flags, kyb_documents, kyb_sent_to_legal_at, status, signed_at, signer_name, msa_version, msa_accepted_at").eq("user_id", uid).order("created_at", { ascending: false }).limit(1).maybeSingle();
   const kyc = await kycOpen(uid);
   if (o && o.status !== "active") await recompute(o.id);
   return { order: o ?? null, kycOpen: kyc };
@@ -200,16 +232,17 @@ export async function myEntitlements(uid: string): Promise<string[] | null> {
 export async function staffOrders(uid: string) {
   const r = await roles(uid);
   if (!r.some((x) => [...KYB_DECIDERS, ...LEGAL_REVIEWERS, ...WIRE_CONFIRMERS].includes(x))) throw new Error("Staff only.");
-  const { data } = await (await db()).from("saas_orders").select("id, client_id, company_name, billing_interval, recurring_cents, one_time_cents, payment_status, kyb_status, kyb_details, kyb_note, status, signer_name, signed_at, msa_version, legal_reviewed_at, environment, user_id, payment_method, wire_reference, wire_received_at, wire_received_cents").order("created_at", { ascending: false }).limit(200);
-  return { orders: (data ?? []) as any[], canConfirmWire: r.some((x) => WIRE_CONFIRMERS.includes(x)), me: uid, canDecideKyb: r.some((x) => KYB_DECIDERS.includes(x)), canLegalReview: r.some((x) => LEGAL_REVIEWERS.includes(x)) };
+  const { data } = await (await db()).from("saas_orders").select("id, client_id, company_name, billing_interval, recurring_cents, one_time_cents, payment_status, kyb_status, kyb_details, kyb_note, kyb_flags, kyb_documents, kyb_checked_at, kyb_sent_to_legal_at, status, signer_name, signed_at, msa_version, legal_reviewed_at, environment, user_id, payment_method, wire_reference, wire_received_at, wire_received_cents").order("created_at", { ascending: false }).limit(200);
+  return { orders: (data ?? []) as any[], canConfirmWire: r.some((x) => WIRE_CONFIRMERS.includes(x)), me: uid, canDecideKyb: r.some((x) => [...KYB_DECIDERS, ...LEGAL_REVIEWERS].includes(x)), canLegalReview: r.some((x) => LEGAL_REVIEWERS.includes(x)) };
 }
 
 export async function decideKyb(uid: string, orderId: string, approve: boolean, note: string | null) {
   const r = await roles(uid);
-  if (!r.some((x) => KYB_DECIDERS.includes(x))) throw new Error("Only compliance can decide business checks.");
+  if (!r.some((x) => [...KYB_DECIDERS, ...LEGAL_REVIEWERS].includes(x))) throw new Error("Only Legal can decide business checks.");
   const d = await db();
   const { data: o } = await d.from("saas_orders").select("user_id, kyb_status").eq("id", orderId).maybeSingle();
   if (!o) throw new Error("Order not found.");
+  if (!["legal_review", "review"].includes(o.kyb_status)) throw new Error("This business check isn't waiting on Legal.");
   if (o.user_id === uid && !r.includes("super_admin")) throw new Error("You can't review your own business check.");
   if (o.user_id === uid && !note?.trim()) throw new Error("A reason is required to approve your own check.");
   if (!approve && !note?.trim()) throw new Error("Please give a reason.");

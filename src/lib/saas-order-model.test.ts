@@ -51,3 +51,20 @@ describe("menu keys from purchased services", () => {
     expect(menuKeysFromServices([])).toEqual([]);
   });
 });
+
+import { kybFlags } from "./saas-order-model";
+describe("automatic business check", () => {
+  const ok = { legalName: "Acme LLC", einDigits: "123456789", formationState: "DE", entityType: "LLC", owners: [{ name: "Jo", percent: 60 }] };
+  const docs = { formation: { path: "x" }, ein_letter: { path: "y" } };
+  it("complete submission has no flags", () => expect(kybFlags(ok, docs, true)).toEqual([]));
+  it("flags each missing document", () => {
+    const f = kybFlags(ok, {}, true);
+    expect(f).toHaveLength(2);
+    expect(f[0]).toContain("Certificate of formation");
+    expect(f[1]).toContain("EIN letter");
+  });
+  it("flags ownership over 100% and unapproved identity", () => {
+    const f = kybFlags({ ...ok, owners: [{ name: "A", percent: 70 }, { name: "B", percent: 40 }] }, docs, false);
+    expect(f).toEqual(["Ownership adds up to more than 100%.", "Your identity verification isn't approved yet."]);
+  });
+});
