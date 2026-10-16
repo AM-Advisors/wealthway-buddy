@@ -131,3 +131,13 @@ export function filterByEntitlements<T extends { url: string }>(links: T[], keys
   if (!keys) return links;
   return links.filter((l) => { const need = requiredEntitlement(l.url); return !need || keys.includes(need); });
 }
+
+/** Signed-SOW service keys that open the fund pages. */
+export const FUND_SERVICE_KEYS = ["fund_management", "capital_accounts", "investor_records", "fund_platform"];
+/** Purchased service keys plus the menu areas they open (fund pages, cap table). */
+export function menuKeysFromServices(keys: string[]): string[] {
+  const out = new Set(keys);
+  if (keys.some((k) => FUND_SERVICE_KEYS.includes(k))) out.add("fund_platform");
+  if (keys.some((k) => k === "cap_table" || k.startsWith("cap_table_"))) out.add("cap_table");
+  return [...out];
+}

@@ -193,7 +193,8 @@ export async function myEntitlements(uid: string): Promise<string[] | null> {
   const { data: c } = await d.from("clients").select("menu_gating").eq("id", link.client_id).maybeSingle();
   if (c?.menu_gating !== "entitlements") return null;
   const { data: ents } = await d.from("service_entitlements").select("service_key").eq("client_id", link.client_id).eq("status", "included");
-  return ((ents ?? []) as any[]).map((e) => String(e.service_key));
+  const { menuKeysFromServices } = await import("@/lib/saas-order-model");
+  return menuKeysFromServices(((ents ?? []) as any[]).map((e) => String(e.service_key)));
 }
 
 export async function staffOrders(uid: string) {
