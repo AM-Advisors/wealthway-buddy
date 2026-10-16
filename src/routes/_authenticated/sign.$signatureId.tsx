@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { getSignatureFn, signDocumentFn } from "@/lib/fund-file-signing.functions";
 
@@ -32,6 +33,7 @@ function SignPage() {
   const q = useQuery({ queryKey: key, queryFn: () => load({ data: { id: signatureId } }), retry: false });
   const [name, setName] = useState("");
   const [ok, setOk] = useState(false);
+  const [viewDoc, setViewDoc] = useState(false);
   const m = useMutation({
     mutationFn: () => sign({ data: { id: signatureId, signedName: name, consent: true, userAgent: navigator.userAgent } }),
     onSuccess: (r) => { toast.success(r.done ? "Signed. The document is now fully signed." : "Signed. The fund manager will be asked to countersign."); qc.invalidateQueries({ queryKey: key }); },
@@ -55,7 +57,16 @@ function SignPage() {
           </li>
         ))}
       </ol>
-      <div className="max-h-[60vh] overflow-y-auto whitespace-pre-wrap rounded-xl border p-5 text-sm leading-relaxed">{s.body || "This document has no text to show."}</div>
+      <div className="flex items-center justify-between gap-3 rounded-xl border p-4">
+        <p className="text-sm text-muted-foreground">Read the full document before you sign.</p>
+        <Button variant="outline" onClick={() => setViewDoc(true)}>View document</Button>
+      </div>
+      <Dialog open={viewDoc} onOpenChange={setViewDoc}>
+        <DialogContent className="flex max-h-[85vh] max-w-3xl flex-col">
+          <DialogHeader><DialogTitle>{s.title}</DialogTitle></DialogHeader>
+          <div className="flex-1 overflow-y-auto whitespace-pre-wrap rounded-lg border p-5 text-sm leading-relaxed">{s.body || "This document has no text to show."}</div>
+        </DialogContent>
+      </Dialog>
       {s.status === "signed" ? (
         <p className="rounded-xl border p-4 text-sm">You signed this on {new Date(s.signedAt!).toLocaleString()}.</p>
       ) : !s.yourTurn ? (

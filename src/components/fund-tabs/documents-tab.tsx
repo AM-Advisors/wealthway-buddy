@@ -119,7 +119,7 @@ export function DocumentsTab({ fundId }: { fundId: string }) {
                     ))}
                   </div>
                   <div className="flex items-center gap-2">
-                    {f.status !== "signed" && f.body && <Button size="sm" variant="outline" onClick={() => setSendFor(f)}>{f.status === "out_for_signature" ? "Resend" : "Send for signature"}</Button>}
+                    {f.status !== "signed" && f.body && <Button size="sm" variant="outline" onClick={() => { setSendFor(f); setWhoSigns(f.doc_type === "operating_agreement" ? "manager" : "both"); }}>{f.status === "out_for_signature" ? "Resend" : "Send for signature"}</Button>}
                     <Badge variant={f.status === "signed" ? "default" : "outline"}>{STATUS[f.status] ?? f.status}</Badge>
                     {f.status !== "signed" && <Button size="sm" variant="outline" onClick={() => setBoxes(f)}>Signature boxes</Button>}
                     {f.status === "draft" && <Button size="sm" variant="ghost" disabled={rm.isPending} onClick={() => { if (confirm(`Delete "${f.title}"?`)) rm.mutate(f.id); }}>Delete</Button>}
