@@ -37,3 +37,8 @@
 - [x] Payment reminders page + daily emails
 - [x] Sidebar dedupe, Payment reminders item, Super Admin extra sidebar items
 - [ ] Switch individual legacy clients to purchased-services menus (per client, needs approval)
+
+## Fund setup cleanup (2026-10-16)
+- [x] EIN + IRS letter box, Banking (full numbers) + bank letter box
+- [x] Finished sections become summary boxes with separate Edit panel
+- [ ] Investor levels — waiting on what "levels" means
