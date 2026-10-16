@@ -151,7 +151,7 @@ export function BankBox({ offeringId, isStaff, onChanged }: { offeringId: string
         ["Bank", det["bank_name"]], ["Account name", det["account_name"]], ["Account", <span className="font-mono">{det["account_number"]}</span>],
         ["Routing", <span className="font-mono">{det["routing_number"] ? `•••••${String(det["routing_number"]).slice(-4)}` : ""}</span>],
         ["Bank letter", letter?.url ? <a className="inline-flex items-center gap-1 text-primary underline" href={letter.url} target="_blank" rel="noreferrer"><FileText className="h-3.5 w-3.5" />{letter.file_name ?? letter.title}</a> : letter?.file_name],
-      ]} note="Full numbers are stored encrypted and shown masked. A second person verifies them before any use." />
+      ]} note="Full numbers are stored encrypted and shown masked." />
       <EditSheet open={editing} onOpenChange={setEditing} title="Banking">{form}</EditSheet>
     </>
   );
@@ -182,7 +182,7 @@ function BankForm({ offeringId, prior, letter, onSaved }: { offeringId: string; 
     try {
       await save({ data: { offering_id: offeringId, bank_name: v.bankName, bank_address: prior["bank_address"] ?? "", account_name: v.accountName, account_number: v.account, routing_number: v.routing, swift: prior["swift"] ?? "", memo: prior["memo"] ?? "" } });
       if (file) await uploadLetter(upload, offeringId, file, "bank_letter", "Bank letter");
-      toast.success("Banking saved - waiting for a second person to verify"); onSaved();
+      toast.success("Banking saved"); onSaved();
     } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
   };
   return (
