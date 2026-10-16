@@ -220,6 +220,52 @@ export async function templateAutofillCheck(userId: string, input: { templateId:
   return { filled: r.filled, open: r.open, fillable: true };
 }
 
+/** Documents made from Harmonious templates on one fund, newest first, with what can be done to each. */
+export async function listFundTemplateDocuments(userId: string, offeringId: string) {
+  await staff(userId);
+  const { data: uses } = await db().from("document_template_uses").select("offering_document_id, fund_version, used_at, template_id").eq("offering_id", offeringId).order("used_at", { ascending: false });
+  const ids = [...new Set(((uses ?? []) as any[]).map((u) => u.offering_document_id))];
+  if (!ids.length) return [];
+  const [{ data: docs }, { data: vers }, { data: sigs }, { data: sends }] = await Promise.all([
+    db().from("offering_documents").select("id, title, document_category, active_version, removed_at").in("id", ids),
+    db().from("offering_document_versions").select("id, offering_document_id, version, file_name, approval_status, signing_config, signing_config_status").in("offering_document_id", ids),
+    db().from("document_signatures").select("offering_document_id").in("offering_document_id", ids),
+    db().from("offering_document_sends").select("offering_document_id").in("offering_document_id", ids),
+  ]);
+  const used = new Set([...((sigs ?? []) as any[]), ...((sends ?? []) as any[])].map((r) => r.offering_document_id));
+  return ids.map((id) => {
+    const d = ((docs ?? []) as any[]).find((x) => x.id === id);
+    if (!d || d.removed_at) return null;
+    const u = ((uses ?? []) as any[]).find((x) => x.offering_document_id === id);
+    const v = ((vers ?? []) as any[]).filter((x) => x.offering_document_id === id).sort((a, b) => b.version - a.version)[0];
+    const locked = used.has(id) || d.active_version != null || ["approved", "active"].includes(v?.approval_status);
+    return { id, title: d.title as string, usedAt: u?.used_at as string, versionId: v?.id ?? null, fileName: v?.file_name ?? null, signers: ((v?.signing_config?.signers ?? []) as any[]).map((x) => x.role as string), signingStatus: v?.signing_config_status ?? null, canDelete: !locked };
+  }).filter(Boolean);
+}
+
+/** Removes an unsent, unapproved template draft from the fund. The record is kept (hidden) for history. */
+export async function removeFundTemplateDocument(userId: string, input: { offeringId: string; documentId: string; reason?: string | null | undefined }) {
+  await staff(userId);
+  const list = (await listFundTemplateDocuments(userId, input.offeringId)) as any[];
+  const d = list.find((x) => x.id === input.documentId);
+  if (!d) throw new Error("That document was not found on this fund.");
+  if (!d.canDelete) throw new Error("This document has been approved or sent for signature, so it can't be deleted.");
+  const { error } = await db().from("offering_documents").update({ removed_at: now(), removed_by: userId, removed_reason: input.reason || null }).eq("id", d.id).is("removed_at", null);
+  if (error) throw new Error(error.message);
+  await db().from("offering_document_events").insert({ offering_id: input.offeringId, offering_document_id: d.id, version: null, event: "document_removed", actor_user_id: userId, detail: { title: d.title, reason: input.reason || null } });
+  return { ok: true };
+}
+
+/** Short-lived link to read a template document on this fund. */
+export async function fundTemplateDocumentUrl(userId: string, input: { offeringId: string; versionId: string }) {
+  await staff(userId);
+  const { data: v } = await db().from("offering_document_versions").select("file_path, offering_id").eq("id", input.versionId).maybeSingle();
+  if (!v || v.offering_id !== input.offeringId) throw new Error("That document was not found.");
+  const { data, error } = await supabaseAdmin.storage.from(BUCKET).createSignedUrl(v.file_path, 300);
+  if (error) throw new Error(error.message);
+  return { url: data.signedUrl };
+}
+
 export async function templateDownloadUrl(userId: string, input: { templateId: string; version: number }) {
   await staff(userId);
   const { data: v } = await db().from("document_template_versions").select("file_path").eq("template_id", input.templateId).eq("version", input.version).maybeSingle();

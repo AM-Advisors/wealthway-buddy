@@ -33302,6 +33302,9 @@ export type Database = {
           id: string
           investor_required: boolean
           offering_id: string
+          removed_at: string | null
+          removed_by: string | null
+          removed_reason: string | null
           requires_signature: boolean
           signature_template_version: number
           signing_mode: string
@@ -33328,6 +33331,9 @@ export type Database = {
           id?: string
           investor_required?: boolean
           offering_id: string
+          removed_at?: string | null
+          removed_by?: string | null
+          removed_reason?: string | null
           requires_signature?: boolean
           signature_template_version?: number
           signing_mode?: string
@@ -33354,6 +33360,9 @@ export type Database = {
           id?: string
           investor_required?: boolean
           offering_id?: string
+          removed_at?: string | null
+          removed_by?: string | null
+          removed_reason?: string | null
           requires_signature?: boolean
           signature_template_version?: number
           signing_mode?: string
