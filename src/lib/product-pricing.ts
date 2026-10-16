@@ -35,13 +35,30 @@ const CLIENT_SERVICING: Line[] = [
   { name: "White Glove", description: "24-hour response, proactive management.", prices: cadences(24000), items: ["Named administrator", "24-hour priority response", "Proactive deadline and calendar management", "GP approval workflows run for you"] },
   { name: "Institutional", description: "Dedicated team, custom SLAs.", prices: yearly(null, "Custom quote"), items: ["Dedicated team", "Custom SLAs and approval controls"] },
 ];
-const INVESTOR_SERVICING: Line[] = [
-  { name: "Self Serve investors", description: "Investors use the portal; questions go to the fund manager.", prices: yearly(0, "Included"), items: ["Investor portal", "Automated onboarding and reminders"] },
-  { name: "Managed investor support", description: "Harmonious answers investor questions and chases missing items.", prices: cadences(2500), items: ["Investor inquiry handling", "Onboarding follow-up and KYC exception chasing", "Statement and tax-document delivery help"] },
-  { name: "Per-investor onboarding help", prices: once(50, "per investor") },
+/** Investor servicing tiers: one yearly price per fund, set by number of investors. */
+export interface InvestorTier { key: string; name: string; maxInvestors: number | null; annual: number | null; items: string[] }
+export const INVESTOR_TIERS: InvestorTier[] = [
+  { key: "self_serve", name: "Self Serve", maxInvestors: null, annual: 0, items: ["Investor portal", "Automated onboarding and reminders", "Questions go to the fund manager"] },
+  { key: "essentials", name: "Essentials", maxInvestors: 25, annual: 1500, items: ["Everything in Self Serve", "Investor questions answered by email", "Chasing missing onboarding items"] },
+  { key: "standard", name: "Standard", maxInvestors: 75, annual: 3500, items: ["Everything in Essentials", "KYC/AML exception follow-up", "Statement and tax-document (K-1) delivery help"] },
+  { key: "plus", name: "Plus", maxInvestors: 150, annual: 6500, items: ["Everything in Standard", "Named investor contact", "Phone support", "Transfers and contact-change help"] },
+  { key: "premier", name: "Premier", maxInvestors: 300, annual: 11000, items: ["Everything in Plus", "Same-day responses", "Capital call and distribution notice help", "Quarterly investor-activity report to the manager"] },
+  { key: "institutional", name: "Institutional", maxInvestors: null, annual: null, items: ["Dedicated investor team", "Custom service levels"] },
 ];
+const PAID_TIERS = INVESTOR_TIERS.filter((t) => t.maxInvestors != null);
+/** Smallest paid tier that covers this many investors (Institutional above 300). */
+export function investorTierFor(count: number): InvestorTier {
+  return PAID_TIERS.find((t) => count <= t.maxInvestors!) ?? INVESTOR_TIERS.find((t) => t.key === "institutional")!;
+}
+const tierRange = (t: InvestorTier, i: number) => t.key === "self_serve" ? "Any number of investors" : t.key === "institutional" ? "300+ investors" : `${i === 1 ? "Up to" : `${(PAID_TIERS[i - 2]!.maxInvestors! + 1)}-`}${i === 1 ? " " : ""}${t.maxInvestors} investors`;
+const investorLines = (mult = 1): Line[] => INVESTOR_TIERS.map((t, i) => ({
+  name: `${t.name} investor servicing`, description: tierRange(t, i), items: t.items,
+  prices: t.annual == null ? yearly(null, "Custom quote") : t.annual === 0 ? yearly(0, "Included") : cadences(Math.round(t.annual * mult)),
+}));
+const INVESTOR_SERVICING: Line[] = investorLines();
 
 const FUND_A_LA_CARTE: Line[] = [
+  { name: "Per-investor onboarding help (Self Serve funds)", prices: once(50, "per investor") },
   { name: "Harmonious fund documents (OA, PPM, Subscription Agreement)", prices: once(500, "each") },
   { name: "K-1 / 1065 / 1042-S services", prices: yearly(2500) },
   { name: "Financial statements", prices: once(2500, "per report") },
@@ -122,7 +139,7 @@ export const PRODUCTS: Product[] = [
     key: "saas", name: "SaaS Platform", intro: "Platform only, no Harmonious support. Buy services one at a time.",
     fundCost: [{ name: "Platform fee", description: "Full platform access per fund.", prices: cadences(Math.round(2500 * SAAS_BASE_UPLIFT)) }],
     administration: [{ name: "Fund Administration", description: "Not included. Available à la carte.", prices: yearly(null, "SaaS à la carte price") }],
-    servicing: { client: [{ name: "No Harmonious support", description: "Help center only.", prices: yearly(0, "Included") }], investor: [{ name: "Investor portal", prices: yearly(0, "Included") }] },
+    servicing: { client: [{ name: "No Harmonious support", description: "Help center only.", prices: yearly(0, "Included") }], investor: investorLines(SAAS_BASE_UPLIFT * SAAS_MARKUP) },
     alaCarte: FUND_A_LA_CARTE.map((l) => l.name.startsWith("Harmonious fund documents")
       ? { ...l, prices: once(SAAS_FUND_DOCUMENT_CENTS / 100, "each, fixed") }
       : { ...l, prices: l.prices.map((p) => (p.amount == null || /Form D|Blue Sky/.test(l.name) ? p : { ...p, amount: Math.round(p.amount * SAAS_BASE_UPLIFT * SAAS_MARKUP) })) }),
