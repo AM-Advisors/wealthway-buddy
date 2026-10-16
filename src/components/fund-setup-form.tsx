@@ -54,14 +54,15 @@ export function FundSetupForm({ offeringId, mode, staffExtras }: { offeringId: s
     if (!Object.keys(todo).length) { toast.message("Nothing changed"); return; }
     setBusy(true);
     const failed: string[] = [];
+    let reviewed = false;
     for (const [section, payload] of Object.entries(todo)) {
       try {
         if (isStaff) await staffSave({ data: { offeringId, section: section as any, payload } });
-        else await submit({ data: { offeringId, section: section as any, payload } });
+        else { const r: any = await submit({ data: { offeringId, section: section as any, payload } }); if (!r?.applied) reviewed = true; }
       } catch (e: any) { failed.push(e?.message ?? "Could not save"); }
     }
     if (failed.length) toast.error(failed[0]!);
-    else toast.success(`${label ? `${label}: ` : ""}${isStaff ? "Saved to the fund record" : "Sent to Harmonious for review"}`);
+    else toast.success(`${label ? `${label}: ` : ""}${isStaff || !reviewed ? "Saved to the fund record" : "Sent to Harmonious for review"}`);
     if (!failed.length) setVals((cur) => keys ? Object.fromEntries(Object.entries(cur).filter(([k]) => !keys.includes(k))) : {});
     refresh();
     setBusy(false);

@@ -28,7 +28,8 @@ async function assertRead(userId: string, offeringId: string) {
 }
 async function assertStaffFor(userId: string, offeringId: string) {
   const actor = await assertRead(userId, offeringId);
-  if (!actor.isStaff) forbid("only Harmonious can change canonical fund setup.");
+  // Fund managers may save Fund details / Fees on their own fund via the self-serve grant.
+  if (!actor.isStaff && !(await import("@/lib/self-serve.server")).selfServeAllows(userId, offeringId, "fund_setup")) forbid("only Harmonious can change canonical fund setup.");
   return actor;
 }
 

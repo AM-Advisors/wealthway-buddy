@@ -9,18 +9,22 @@ export const SERVICE_LADDERS: Record<LadderProduct, { label: string; levels: Lad
   SPV_ADMINISTRATION: {
     label: "SPV Administration",
     levels: [
+      { level: "SELF_SERVE", name: "Self Serve", positioning: "Platform only, included in the base fund price" },
       { level: "CORE", name: "SPV Core", positioning: "Essential SPV Infrastructure" },
       { level: "PLUS", name: "SPV Plus", positioning: "Enhanced SPV Administration" },
       { level: "WHITE_GLOVE", name: "SPV White Glove", positioning: "Managed SPV Operations" },
+      { level: "SAAS", name: "SaaS", positioning: "No Harmonious support, services à la carte" },
     ],
   },
   FUND_ADMINISTRATION: {
     label: "Fund Administration",
     levels: [
+      { level: "SELF_SERVE", name: "Self Serve", positioning: "Platform only, included in the base fund price" },
       { level: "CORE", name: "Fund Core", positioning: "Essential Fund Administration" },
       { level: "FUND_ADMINISTRATION", name: "Fund Administration", positioning: "Complete Fund Administration" },
       { level: "WHITE_GLOVE", name: "White Glove Fund Administration", positioning: "Managed Fund Operations" },
       { level: "INSTITUTIONAL", name: "Institutional Fund Administration", positioning: "Outsourced Fund Operations" },
+      { level: "SAAS", name: "SaaS", positioning: "No Harmonious support, services à la carte" },
     ],
   },
 };

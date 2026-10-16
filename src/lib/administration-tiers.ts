@@ -1,7 +1,12 @@
 // Canonical Harmonious administration tiers (pure). Prices/entitlements are
 // the commercial source for pricing pages and quotes; a tier never grants access.
 
-export type TierKey = "core" | "fund_admin" | "white_glove" | "institutional";
+export type TierKey = "self_serve" | "core" | "fund_admin" | "white_glove" | "institutional" | "saas";
+
+/** SaaS à la carte = Core à la carte price × this markup (fund documents are a fixed $500 each). */
+export const SAAS_MARKUP = 1.5;
+export const SAAS_FUND_DOCUMENT_CENTS = 50000;
+export const saasPriceCents = (coreCents: number) => Math.round((coreCents * SAAS_MARKUP) / 100) * 100;
 export type BillingCadence = "annual" | "quarterly" | "monthly";
 
 export interface AdministrationTier {
@@ -21,13 +26,27 @@ export interface AdministrationTier {
 
 export const ADMINISTRATION_TIERS: AdministrationTier[] = [
   {
+    key: "self_serve",
+    name: "Self Serve",
+    positioning: "Run your fund on the platform",
+    statement: "You run it; the platform does the work.",
+    operatingModel: "Included in the base fund price. Clients set up funds, generate Harmonious templates, invite investors and send documents for signature themselves. Help center support.",
+    prices: null,
+    selfServe: true,
+    entitlements: [
+      "Fund setup without Harmonious review", "Harmonious document templates, autofilled", "Investor invites, onboarding & e-signature",
+      "Investor portal & document storage", "KYC/KYB/AML workflow", "Help center",
+    ],
+  },
+  {
     key: "core",
     name: "Core Administration",
     positioning: "Essential SPV infrastructure",
     statement: "We provide the infrastructure.",
-    operatingModel: "Included with Harmonious-administered SPVs",
-    prices: null,
+    operatingModel: "Buy-up from Self Serve: Harmonious support with a 72-hour response target.",
+    prices: { annual: 18750, quarterly: 5313, monthly: 1875 },
     selfServe: false,
+    includesPrevious: "self_serve",
     entitlements: [
       "Investor records & portal", "KYC/KYB/AML workflow", "Accreditation workflow",
       "Subscription & commitment tracking", "Funding status", "Document storage",
@@ -42,7 +61,7 @@ export const ADMINISTRATION_TIERS: AdministrationTier[] = [
     positioning: "Complete Fund Administration",
     statement: "We administer the fund.",
     operatingModel: "Collaborative — Harmonious owns normal administration; the GP initiates or approves material fund actions.",
-    prices: { annual: 20000, quarterly: 5500, monthly: 2000 },
+    prices: { annual: 25000, quarterly: 6875, monthly: 2500 },
     selfServe: true,
     scope: ["1 Fund, 1 GP, 1 Management Company", "Up to 50 investors", "Standard structure & waterfall", "Quarterly NAV & reporting"],
     entitlements: [
@@ -60,7 +79,7 @@ export const ADMINISTRATION_TIERS: AdministrationTier[] = [
     positioning: "Managed Fund Operations",
     statement: "We run the back office with you.",
     operatingModel: "Harmonious managed — we proactively manage recurring operational requirements so you don't have to remember routine deadlines.",
-    prices: { annual: 36000, quarterly: 10000, monthly: 3500 },
+    prices: { annual: 45000, quarterly: 12500, monthly: 4375 },
     selfServe: true,
     includesPrevious: "fund_admin",
     entitlements: [
@@ -79,7 +98,7 @@ export const ADMINISTRATION_TIERS: AdministrationTier[] = [
     statement: "We become your operating infrastructure.",
     operatingModel: "Dedicated administration team with custom SLAs and approval controls.",
     prices: null,
-    startingAnnual: 60000,
+    startingAnnual: 75000,
     selfServe: false,
     includesPrevious: "white_glove",
     entitlements: [
@@ -90,6 +109,18 @@ export const ADMINISTRATION_TIERS: AdministrationTier[] = [
     ],
   },
 ];
+
+export const SAAS_TIER: AdministrationTier = {
+  key: "saas",
+  name: "SaaS",
+  positioning: "Platform only",
+  statement: "Software only, services when you need them.",
+  operatingModel: "No Harmonious support. Buy services one at a time at SaaS à la carte prices (Core à la carte + markup); Harmonious fund documents are $500 each.",
+  prices: null,
+  selfServe: true,
+  entitlements: ["Full platform access", "À la carte services on request", "Harmonious fund documents — $500 each"],
+};
+ADMINISTRATION_TIERS.push(SAAS_TIER);
 
 export const tierByKey = (k: TierKey) => ADMINISTRATION_TIERS.find((t) => t.key === k)!;
 

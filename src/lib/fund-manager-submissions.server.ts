@@ -1,6 +1,7 @@
 /**
  * Fund manager setup submissions. A fund's manager submits Fund details, Fees & team,
- * bank (wire instructions file) and documents. Nothing counts until Harmonious approves:
+ * bank (wire instructions file) and documents. Fund details and Fees save directly (self-serve);
+ * bank and documents still need Harmonious approval, which
  * approval applies the values through the canonical Fund Setup services as the reviewer,
  * so the same checks, history and auto-completion run as when staff enter them.
  */
@@ -53,7 +54,7 @@ async function setupOnFile(offeringId: string) {
 }
 
 export async function submit(userId: string, input: { offeringId: string; section: "fund_details" | "fees_team" | "bank" | "document"; docKind?: SubmissionDocKind | null; payload: Record<string, unknown>; file?: { name: string; base64: string } | null }) {
-  await actorFor(userId, input.offeringId);
+  const actor = await actorFor(userId, input.offeringId);
   if ((input.section === "document" || input.section === "bank") && !input.file) throw new Error("Attach the file.");
   if (input.section === "document" && !input.docKind) throw new Error("Choose the document type.");
   if (input.section === "document" && input.docKind === "ein_letter" && !/^\d{2}-?\d{7}$/.test(String(input.payload["ein"] ?? "").trim())) throw new Error("Enter the 9-digit EIN shown on the letter.");
@@ -74,6 +75,19 @@ export async function submit(userId: string, input: { offeringId: string; sectio
     payload: input.payload, file_path: filePath, file_name: input.file?.name ?? null, submitted_by: userId,
   }).select("id").single();
   if (error) throw new Error(error.message);
+  // Self-serve: Fund details and Fees save straight away for the fund's manager, through the
+  // same canonical services (validation + history). Bank and documents still go to review.
+  if (!actor.isStaff && (input.section === "fund_details" || input.section === "fees_team")) {
+    try {
+      const { runSelfServe } = await import("@/lib/self-serve.server");
+      await runSelfServe({ userId, offeringId: input.offeringId, scope: "fund_setup" }, () => apply(null, userId, { offering_id: input.offeringId, section: input.section, payload: input.payload }));
+      await db().from("fund_manager_submissions").update({ status: "approved", reviewed_by: userId, reviewed_at: new Date().toISOString(), review_note: "Self-serve: saved directly by the fund manager" }).eq("id", data.id);
+      await (await import("@/lib/fund-setup-extras.server")).autoCompleteAfterSave({ offeringId: input.offeringId }).catch(() => null);
+      return { id: data.id, applied: true };
+    } catch (e) {
+      console.error("self-serve apply failed; sending to review", e);
+    }
+  }
   await db().from("staff_tasks").insert({
     title: `Review fund manager submission: ${label(input.section, input.docKind)}`,
     description: "A fund manager submitted setup information. Review it on the fund's Setup tab.",
@@ -81,7 +95,7 @@ export async function submit(userId: string, input: { offeringId: string; sectio
     responsibility_status: "HARMONIOUS_HANDLING", related_workflow_type: "fund_manager_submission", related_workflow_id: data.id, source: "workflow",
   } as any).then(() => null, () => null);
   await (await import("@/lib/ops-slack-notify.server")).notifySubmission({ kind: "fund_manager_submission", title: `Fund manager submitted: ${label(input.section, input.docKind)}`, offeringId: input.offeringId, submittedBy: userId, ref: data.id, path: `/ops/fund-setup/${input.offeringId}` });
-  return { id: data.id };
+  return { id: data.id, applied: false };
 }
 
 export function label(section: string, docKind?: string | null) {
@@ -141,7 +155,7 @@ async function apply(sb: any, userId: string, s: any): Promise<unknown> {
     await canon.saveFundSetupFields(userId, { offeringId: s.offering_id, fields });
     if (p.legalName) {
       const { data: o } = await db().from("offerings").select("legal_entity_name").eq("id", s.offering_id).maybeSingle();
-      if ((o?.legal_entity_name ?? "") !== p.legalName) await (canon as any).changeLegalName(userId, { offeringId: s.offering_id, legalName: String(p.legalName), reason: "Submitted by fund manager; approved by Harmonious" });
+      if ((o?.legal_entity_name ?? "") !== p.legalName) await (canon as any).changeLegalName(userId, { offeringId: s.offering_id, legalName: String(p.legalName), reason: s.reviewed_by === undefined ? "Saved by fund manager (self-serve)" : "Submitted by fund manager; approved by Harmonious" });
     }
     return;
   }

@@ -33897,6 +33897,7 @@ export type Database = {
           reg_type: Database["public"]["Enums"]["reg_type"]
           registered_agent: string | null
           rolling_closes: boolean | null
+          service_tier: string
           share_price_cents: number
           signatory_capacity: string | null
           signatory_entity_name: string | null
@@ -33972,6 +33973,7 @@ export type Database = {
           reg_type: Database["public"]["Enums"]["reg_type"]
           registered_agent?: string | null
           rolling_closes?: boolean | null
+          service_tier?: string
           share_price_cents?: number
           signatory_capacity?: string | null
           signatory_entity_name?: string | null
@@ -34047,6 +34049,7 @@ export type Database = {
           reg_type?: Database["public"]["Enums"]["reg_type"]
           registered_agent?: string | null
           rolling_closes?: boolean | null
+          service_tier?: string
           share_price_cents?: number
           signatory_capacity?: string | null
           signatory_entity_name?: string | null
@@ -37431,6 +37434,7 @@ export type Database = {
           rate_bps: number | null
           retired_at: string | null
           retired_reason: string | null
+          saas_amount_cents: number | null
           service_key: string | null
           sort_order: number
           unit: string | null
@@ -37451,6 +37455,7 @@ export type Database = {
           rate_bps?: number | null
           retired_at?: string | null
           retired_reason?: string | null
+          saas_amount_cents?: number | null
           service_key?: string | null
           sort_order?: number
           unit?: string | null
@@ -37471,6 +37476,7 @@ export type Database = {
           rate_bps?: number | null
           retired_at?: string | null
           retired_reason?: string | null
+          saas_amount_cents?: number | null
           service_key?: string | null
           sort_order?: number
           unit?: string | null

@@ -1814,6 +1814,20 @@
       "when": 1792160476234,
       "tag": "0258_fund_file_signing_order_mode",
       "breakpoints": true
+    },
+    {
+      "idx": 259,
+      "version": "7",
+      "when": 1792161870845,
+      "tag": "0259_self_serve_saas_tiers",
+      "breakpoints": true
+    },
+    {
+      "idx": 260,
+      "version": "7",
+      "when": 1792162011646,
+      "tag": "0260_service_ladder_self_serve_saas",
+      "breakpoints": true
     }
   ]
 }

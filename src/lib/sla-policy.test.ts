@@ -44,3 +44,16 @@ describe("SPV transaction pricing", () => {
     expect(feeGroup("additional_close", "transaction")).toBe("event");
   });
 });
+
+import { describe as d2, it as i2, expect as e2 } from "vitest";
+import { resolveSla as rs } from "./sla-policy";
+d2("self serve / SaaS tiers", () => {
+  const pol = (level: string) => ({ id: level, service_product: "FUND_ADMINISTRATION", service_level: level, request_type: null, is_global_fallback: false, initial_response_hours: null, resolution_target_hours: null, warning_threshold_percentage: 75, use_contract_sla: false, active: true, effective_from: "2026-01-01", effective_to: null });
+  const global = { ...pol("G"), id: "g", service_product: null, service_level: null, is_global_fallback: true, initial_response_hours: 72 };
+  i2("has no response target and never falls back to the global SLA", () => {
+    for (const lvl of ["SELF_SERVE", "SAAS"]) {
+      const r = rs({ service_product: "FUND_ADMINISTRATION", service_level: lvl }, [pol(lvl), global], null, "2026-10-16");
+      e2(r.hours).toBeNull(); e2(r.policyId).toBe(lvl);
+    }
+  });
+});
