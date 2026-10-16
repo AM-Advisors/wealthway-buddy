@@ -75,7 +75,7 @@ export async function clientServices(uid: string, clientId: string) {
   };
 }
 
-export async function saveClientService(uid: string, input: { clientId: string; id?: string; serviceKey: string; cadence: Cadence; amountCents: number; startDate: string; cardAutopay: boolean; offeringId?: string | null }) {
+export async function saveClientService(uid: string, input: { clientId: string; id?: string | undefined; serviceKey: string; cadence: Cadence; amountCents: number; startDate: string; cardAutopay: boolean; offeringId?: string | null | undefined }) {
   await need(uid, PREPARE, "Only Sales, Account Managers and Operations can set services.");
   const opt = serviceCatalog().find((o) => o.key === input.serviceKey);
   if (!opt) throw new Error("Unknown service.");

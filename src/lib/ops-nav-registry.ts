@@ -63,7 +63,7 @@ export function dedupeNav(groups: NavGroup[]): NavGroup[] {
       });
       if (!ownNew && !sub.some((s) => s.url !== item.url)) return [];
       seen.add(key(item.url));
-      return [{ ...item, sub: item.sub ? sub : undefined }];
+      return [item.sub ? { ...item, sub } : { ...item }];
     }),
   })).filter((g) => g.items.length > 0);
 }
