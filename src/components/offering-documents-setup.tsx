@@ -202,6 +202,8 @@ function DocumentRow({ doc, data, offeringId, onChanged }: { doc: Doc; data: Dat
         </div>
       </div>
 
+      {sendOpen && active && <SendDocDialog doc={doc} offeringId={offeringId} onClose={() => setSendOpen(false)} onSent={onChanged} />}
+
       {showRequest && !data.canEdit && <ChangeRequestForm doc={doc} offeringId={offeringId} onDone={() => { setShowRequest(false); onChanged(); }} />}
 
       {doc.changeRequests.length > 0 && (
