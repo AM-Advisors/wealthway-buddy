@@ -1821,6 +1821,13 @@
       "when": 1792161870845,
       "tag": "0259_self_serve_saas_tiers",
       "breakpoints": true
+    },
+    {
+      "idx": 260,
+      "version": "7",
+      "when": 1792162011646,
+      "tag": "0260_service_ladder_self_serve_saas",
+      "breakpoints": true
     }
   ]
 }
