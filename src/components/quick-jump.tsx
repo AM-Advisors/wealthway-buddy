@@ -44,6 +44,7 @@ export function QuickJump() {
     staleTime: 30_000,
   });
   const fundHits = records.data?.funds ?? [];
+  const clientHits = records.data?.clients ?? [];
   const peopleHits = records.data?.people ?? [];
 
   useEffect(() => recordVisit(pathname), [pathname]);
