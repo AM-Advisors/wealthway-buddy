@@ -196,6 +196,7 @@ function DocumentRow({ doc, data, offeringId, onChanged }: { doc: Doc; data: Dat
           {latest && <Badge variant={latest.state === "ready_for_use" ? "default" : "secondary"}>{VERSION_STATE_LABELS[latest.state]}</Badge>}
           {!data.canEdit && active && <Button size="sm" variant="outline" onClick={() => setShowRequest(!showRequest)}>Request a change</Button>}
           {data.canEdit && active && <Button size="sm" variant="outline" onClick={() => setOpen(true)}>Replace</Button>}
+          {active && <Button size="sm" onClick={() => setSendOpen(true)}>Send</Button>}
           <Button size="sm" variant={latest ? "ghost" : "default"} onClick={() => setOpen(!open)}>{open ? "Hide" : latest ? "Manage" : "Set up"}</Button>
         </div>
       </div>
