@@ -30,17 +30,14 @@ import { ManagerBankingSummary } from "@/components/manager-banking-summary";
 import { BANK_CHOICES, getFundEntity, requestBankSetup } from "@/lib/fund-entity.functions";
 import { MercuryApplicationCard } from "@/components/mercury-application-card";
 
-const FIELDS: { key: string; label: string; hint?: string }[] = [
-  { key: "bank_name", label: "Receiving bank" },
-  { key: "bank_address", label: "Bank address" },
-  { key: "account_name", label: "Account name" },
-  { key: "account_number", label: "Account number" },
-  { key: "routing_number", label: "Routing number (ABA)" },
-  { key: "swift", label: "SWIFT / BIC", hint: "International wires only" },
-  { key: "memo", label: "Reference / memo" },
-];
+import { ALL_WIRE_FIELDS, DOMESTIC_WIRE_FIELDS, INTL_WIRE_FIELDS, WIRE_FIELD_LABELS, wireScopeOf } from "@/lib/wire-scope";
 
-const empty = Object.fromEntries(FIELDS.map((f) => [f.key, ""])) as Record<string, string>;
+const field = (key: string) => ({ key, label: WIRE_FIELD_LABELS[key] ?? key, hint: undefined as string | undefined });
+const DOMESTIC = DOMESTIC_WIRE_FIELDS.map(field);
+const INTL = INTL_WIRE_FIELDS.map(field);
+const SCOPES = [["domestic", "USA only"], ["international", "International only"], ["both", "Both"]] as const;
+
+const empty = Object.fromEntries(ALL_WIRE_FIELDS.map((k) => [k, ""])) as Record<string, string>;
 
 /**
  * Everything banking for one fund: entering the account details, asking
@@ -80,7 +77,7 @@ export function FundBanking({ fundId, backTo }: { fundId: string; backTo: "admin
 
   useEffect(() => {
     if (!fund) return;
-    setForm({ ...empty, ...(fund.wire_instructions ?? {}) });
+    setForm({ ...empty, ...(fund.wire_instructions ?? {}), wire_scope: wireScopeOf(fund.wire_instructions ?? {}) });
     setConfirmAccount("");
   }, [fund]);
 
@@ -91,16 +88,7 @@ export function FundBanking({ fundId, backTo }: { fundId: string; backTo: "admin
   const saveMutation = useMutation({
     mutationFn: () =>
       saveWire({
-        data: {
-          offering_id: fundId,
-          bank_name: form["bank_name"] ?? "",
-          bank_address: form["bank_address"] ?? "",
-          account_name: form["account_name"] ?? "",
-          account_number: form["account_number"] ?? "",
-          routing_number: form["routing_number"] ?? "",
-          swift: form["swift"] ?? "",
-          memo: form["memo"] ?? "",
-        } as any,
+        data: { offering_id: fundId, ...Object.fromEntries(ALL_WIRE_FIELDS.map((k) => [k, form[k] ?? ""])), wire_scope: form["wire_scope"] || "domestic" } as any,
       }),
     onSuccess: () => {
       toast.success("Banking details saved. The change is recorded in the fund's history.");
@@ -166,7 +154,16 @@ export function FundBanking({ fundId, backTo }: { fundId: string; backTo: "admin
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {FIELDS.map((field) => (
+                  <div className="grid gap-1.5">
+                    <Label>Wires accepted from</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {SCOPES.map(([v, l]) => (
+                        <Button key={v} type="button" size="sm" disabled={!canEdit} variant={(form["wire_scope"] || "domestic") === v ? "default" : "outline"} onClick={() => setForm((p) => ({ ...p, wire_scope: v }))}>{l}</Button>
+                      ))}
+                    </div>
+                    <p className="text-xs text-muted-foreground">With Both, each investor sees only the instructions for where they are located.</p>
+                  </div>
+                  {([...((form["wire_scope"] || "domestic") !== "international" ? [{ key: "__h_dom", label: "USA wires and ACH", hint: undefined as string | undefined }, ...DOMESTIC] : []), ...((form["wire_scope"] || "domestic") !== "domestic" ? [{ key: "__h_intl", label: "International wires", hint: undefined as string | undefined }, ...INTL] : [])]).map((field) => field.key.startsWith("__h_") ? <p key={field.key} className="pt-2 text-sm font-semibold">{field.label}</p> : (
                     <div key={field.key} className="grid gap-1.5">
                       <Label htmlFor={`bank-${field.key}`}>{field.label}</Label>
                       <Input
