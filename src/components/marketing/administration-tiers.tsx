@@ -52,7 +52,7 @@ function CardView({ c }: { c: Card }) {
           <>
             <p className="text-2xl font-semibold">{usd(c.prices.annual)}<span className="text-sm font-normal text-muted-foreground">/year</span></p>
             {save ? <p className="text-xs"><span className="rounded bg-accent px-1.5 py-0.5 text-accent-foreground">Best value — save {usd(save)}</span></p> : null}
-            <p className="mt-1 text-xs text-muted-foreground">or {usd(c.prices.quarterly!)}/quarter · {usd(c.prices.monthly!)}/month</p>
+            <p className="mt-1 text-xs text-muted-foreground">or {usd(c.prices.quarterly!)}/quarter</p>
           </>
         ) : c.starting ? (
           <p className="text-2xl font-semibold">From {c.level !== "INSTITUTIONAL" && c.key.startsWith("spv") ? "+" : ""}{usd(c.starting)}<span className="text-sm font-normal text-muted-foreground">{c.startingSuffix}</span></p>
