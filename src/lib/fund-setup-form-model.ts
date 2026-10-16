@@ -31,6 +31,8 @@ export const FORM_SECTIONS: { id: string; title: string; fields: FieldDef[] }[] 
     { key: "formationDate", label: "Formation date", section: fd, type: "date" },
     { key: "offeringOpenDate", label: "Open date", section: fd, type: "date" },
     { key: "offeringCloseDate", label: "Close Date", section: fd, type: "date" },
+    { key: "arbitrationCity", label: "Arbitration city (Subscription Agreement)", section: fd },
+    { key: "arbitrationState", label: "Arbitration state (Subscription Agreement)", section: fd },
   ] },
   { id: "jurisdiction", title: "Jurisdiction", fields: [
     { key: "country", label: "Country", disabled: true, fixed: "United States" },

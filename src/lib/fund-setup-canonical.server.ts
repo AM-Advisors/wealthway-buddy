@@ -186,6 +186,8 @@ const OFFERING_FIELDS: Record<string, string> = {
   maxInvestmentCents: "max_investment_cents",
   offeringOpenDate: "offering_open_date",
   offeringCloseDate: "offering_close_date",
+  arbitrationCity: "arbitration_city",
+  arbitrationState: "arbitration_state",
   rollingCloses: "rolling_closes",
   hasMultipleClasses: "has_multiple_classes",
   driveFolderUrl: "drive_folder_url",
