@@ -419,6 +419,7 @@ import { Route as AuthenticatedSalesQuotesIdRouteImport } from './routes/_authen
 import { Route as AuthenticatedSalesRepsIdRouteImport } from './routes/_authenticated/sales_.reps.$id'
 import { Route as ApiPublicEmailClickRouteImport } from './routes/api/public/email/click'
 import { Route as ApiPublicEmailOpenRouteImport } from './routes/api/public/email/open'
+import { Route as ApiPublicHooksApprovalAlertsRouteImport } from './routes/api/public/hooks/approval-alerts'
 import { Route as ApiPublicHooksBankAlertsRouteImport } from './routes/api/public/hooks/bank-alerts'
 import { Route as ApiPublicHooksInvoiceRemindersRouteImport } from './routes/api/public/hooks/invoice-reminders'
 import { Route as ApiPublicIrsEfileAckRouteImport } from './routes/api/public/irs-efile/ack'
@@ -2801,6 +2802,12 @@ const ApiPublicEmailOpenRoute = ApiPublicEmailOpenRouteImport.update({
   path: '/api/public/email/open',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHooksApprovalAlertsRoute =
+  ApiPublicHooksApprovalAlertsRouteImport.update({
+    id: '/api/public/hooks/approval-alerts',
+    path: '/api/public/hooks/approval-alerts',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksBankAlertsRoute =
   ApiPublicHooksBankAlertsRouteImport.update({
     id: '/api/public/hooks/bank-alerts',
@@ -3431,6 +3438,7 @@ export interface FileRoutesByFullPath {
   '/sales/reps/$id': typeof AuthenticatedSalesRepsIdRoute
   '/api/public/email/click': typeof ApiPublicEmailClickRoute
   '/api/public/email/open': typeof ApiPublicEmailOpenRoute
+  '/api/public/hooks/approval-alerts': typeof ApiPublicHooksApprovalAlertsRoute
   '/api/public/hooks/bank-alerts': typeof ApiPublicHooksBankAlertsRoute
   '/api/public/hooks/invoice-reminders': typeof ApiPublicHooksInvoiceRemindersRoute
   '/api/public/irs-efile/ack': typeof ApiPublicIrsEfileAckRoute
@@ -3874,6 +3882,7 @@ export interface FileRoutesByTo {
   '/sales/reps/$id': typeof AuthenticatedSalesRepsIdRoute
   '/api/public/email/click': typeof ApiPublicEmailClickRoute
   '/api/public/email/open': typeof ApiPublicEmailOpenRoute
+  '/api/public/hooks/approval-alerts': typeof ApiPublicHooksApprovalAlertsRoute
   '/api/public/hooks/bank-alerts': typeof ApiPublicHooksBankAlertsRoute
   '/api/public/hooks/invoice-reminders': typeof ApiPublicHooksInvoiceRemindersRoute
   '/api/public/irs-efile/ack': typeof ApiPublicIrsEfileAckRoute
@@ -4327,6 +4336,7 @@ export interface FileRoutesById {
   '/_authenticated/sales_/reps/$id': typeof AuthenticatedSalesRepsIdRoute
   '/api/public/email/click': typeof ApiPublicEmailClickRoute
   '/api/public/email/open': typeof ApiPublicEmailOpenRoute
+  '/api/public/hooks/approval-alerts': typeof ApiPublicHooksApprovalAlertsRoute
   '/api/public/hooks/bank-alerts': typeof ApiPublicHooksBankAlertsRoute
   '/api/public/hooks/invoice-reminders': typeof ApiPublicHooksInvoiceRemindersRoute
   '/api/public/irs-efile/ack': typeof ApiPublicIrsEfileAckRoute
@@ -4780,6 +4790,7 @@ export interface FileRouteTypes {
     | '/sales/reps/$id'
     | '/api/public/email/click'
     | '/api/public/email/open'
+    | '/api/public/hooks/approval-alerts'
     | '/api/public/hooks/bank-alerts'
     | '/api/public/hooks/invoice-reminders'
     | '/api/public/irs-efile/ack'
@@ -5223,6 +5234,7 @@ export interface FileRouteTypes {
     | '/sales/reps/$id'
     | '/api/public/email/click'
     | '/api/public/email/open'
+    | '/api/public/hooks/approval-alerts'
     | '/api/public/hooks/bank-alerts'
     | '/api/public/hooks/invoice-reminders'
     | '/api/public/irs-efile/ack'
@@ -5675,6 +5687,7 @@ export interface FileRouteTypes {
     | '/_authenticated/sales_/reps/$id'
     | '/api/public/email/click'
     | '/api/public/email/open'
+    | '/api/public/hooks/approval-alerts'
     | '/api/public/hooks/bank-alerts'
     | '/api/public/hooks/invoice-reminders'
     | '/api/public/irs-efile/ack'
@@ -5787,6 +5800,7 @@ export interface RootRouteChildren {
   OnboardIOnboardingIdRoute: typeof OnboardIOnboardingIdRoute
   ApiPublicEmailClickRoute: typeof ApiPublicEmailClickRoute
   ApiPublicEmailOpenRoute: typeof ApiPublicEmailOpenRoute
+  ApiPublicHooksApprovalAlertsRoute: typeof ApiPublicHooksApprovalAlertsRoute
   ApiPublicHooksBankAlertsRoute: typeof ApiPublicHooksBankAlertsRoute
   ApiPublicHooksInvoiceRemindersRoute: typeof ApiPublicHooksInvoiceRemindersRoute
   ApiPublicIrsEfileAckRoute: typeof ApiPublicIrsEfileAckRoute
@@ -8677,6 +8691,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicEmailOpenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/approval-alerts': {
+      id: '/api/public/hooks/approval-alerts'
+      path: '/api/public/hooks/approval-alerts'
+      fullPath: '/api/public/hooks/approval-alerts'
+      preLoaderRoute: typeof ApiPublicHooksApprovalAlertsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/bank-alerts': {
       id: '/api/public/hooks/bank-alerts'
       path: '/api/public/hooks/bank-alerts'
@@ -10004,6 +10025,7 @@ const rootRouteChildren: RootRouteChildren = {
   OnboardIOnboardingIdRoute: OnboardIOnboardingIdRoute,
   ApiPublicEmailClickRoute: ApiPublicEmailClickRoute,
   ApiPublicEmailOpenRoute: ApiPublicEmailOpenRoute,
+  ApiPublicHooksApprovalAlertsRoute: ApiPublicHooksApprovalAlertsRoute,
   ApiPublicHooksBankAlertsRoute: ApiPublicHooksBankAlertsRoute,
   ApiPublicHooksInvoiceRemindersRoute: ApiPublicHooksInvoiceRemindersRoute,
   ApiPublicIrsEfileAckRoute: ApiPublicIrsEfileAckRoute,
