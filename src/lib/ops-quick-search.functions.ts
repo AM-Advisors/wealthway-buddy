@@ -26,10 +26,11 @@ export const opsQuickSearchFn = createServerFn({ method: "GET" })
   .handler(async ({ data, context }) => {
     await assertStaff(context.userId);
     const s = data.q.replace(/[%,()]/g, " ").trim();
-    if (!s) return { funds: [], people: [] };
+    if (!s) return { funds: [], clients: [], people: [] };
     const d = await db();
-    const [funds, people] = await Promise.all([
+    const [funds, clients, people] = await Promise.all([
       d.from("offerings").select("id, name, is_open").ilike("name", `%${s}%`).order("name").limit(5),
+      d.from("clients").select("id, name").ilike("name", `%${s}%`).order("name").limit(5),
       d
         .from("persons")
         .select("id, legal_first_name, legal_last_name, preferred_name, email")
@@ -41,6 +42,7 @@ export const opsQuickSearchFn = createServerFn({ method: "GET" })
       [p.preferred_name, [p.legal_first_name, p.legal_last_name].filter(Boolean).join(" ")].find((v: string | null) => !!v?.trim()) || "";
     return {
       funds: ((funds.data ?? []) as any[]).map((f) => ({ id: f.id, name: f.name, open: !!f.is_open })),
+      clients: ((clients.data ?? []) as any[]).map((c) => ({ id: c.id, name: c.name ?? "" })),
       people: ((people.data ?? []) as any[]).map((p) => ({ id: p.id, name: personName(p), email: p.email ?? "" })),
     };
   });
