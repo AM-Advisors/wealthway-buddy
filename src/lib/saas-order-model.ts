@@ -141,3 +141,26 @@ export function menuKeysFromServices(keys: string[]): string[] {
   if (keys.some((k) => k === "cap_table" || k.startsWith("cap_table_"))) out.add("cap_table");
   return [...out];
 }
+
+// ---------- Automatic business check (KYB) ----------
+export const KYB_DOCUMENTS = [
+  { key: "formation", label: "Certificate of formation / incorporation" },
+  { key: "ein_letter", label: "IRS EIN letter (CP 575 or 147C)" },
+] as const;
+export type KybDocKey = (typeof KYB_DOCUMENTS)[number]["key"];
+
+/** Everything missing before Legal can review. Empty = complete. Pure, for tests. */
+export function kybFlags(k: { legalName?: string; einDigits?: string; formationState?: string; entityType?: string; owners?: { name: string; percent: number }[] }, docs: Partial<Record<KybDocKey, unknown>>, signerKycOpen: boolean): string[] {
+  const f: string[] = [];
+  if (!k.legalName?.trim()) f.push("Legal name is missing.");
+  if ((k.einDigits ?? "").length !== 9) f.push("EIN must have 9 digits.");
+  if (!k.formationState?.trim()) f.push("State of formation is missing.");
+  if (!k.entityType?.trim()) f.push("Entity type is missing.");
+  const owners = (k.owners ?? []).filter((o) => o.name?.trim());
+  if (!owners.length) f.push("Add at least one beneficial owner.");
+  const total = owners.reduce((s, o) => s + (Number(o.percent) || 0), 0);
+  if (total > 100) f.push("Ownership adds up to more than 100%.");
+  for (const d of KYB_DOCUMENTS) if (!docs[d.key]) f.push(`${d.label} is missing.`);
+  if (!signerKycOpen) f.push("Your identity verification isn't approved yet.");
+  return f;
+}

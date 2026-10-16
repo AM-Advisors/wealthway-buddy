@@ -39976,10 +39976,14 @@ export type Database = {
           current_period_end: string | null
           environment: string
           id: string
+          kyb_checked_at: string | null
           kyb_decided_at: string | null
           kyb_decided_by: string | null
           kyb_details: Json | null
+          kyb_documents: Json
+          kyb_flags: Json
           kyb_note: string | null
+          kyb_sent_to_legal_at: string | null
           kyb_status: string
           legal_reviewed_at: string | null
           legal_reviewed_by: string | null
@@ -40016,10 +40020,14 @@ export type Database = {
           current_period_end?: string | null
           environment?: string
           id?: string
+          kyb_checked_at?: string | null
           kyb_decided_at?: string | null
           kyb_decided_by?: string | null
           kyb_details?: Json | null
+          kyb_documents?: Json
+          kyb_flags?: Json
           kyb_note?: string | null
+          kyb_sent_to_legal_at?: string | null
           kyb_status?: string
           legal_reviewed_at?: string | null
           legal_reviewed_by?: string | null
@@ -40056,10 +40064,14 @@ export type Database = {
           current_period_end?: string | null
           environment?: string
           id?: string
+          kyb_checked_at?: string | null
           kyb_decided_at?: string | null
           kyb_decided_by?: string | null
           kyb_details?: Json | null
+          kyb_documents?: Json
+          kyb_flags?: Json
           kyb_note?: string | null
+          kyb_sent_to_legal_at?: string | null
           kyb_status?: string
           legal_reviewed_at?: string | null
           legal_reviewed_by?: string | null
