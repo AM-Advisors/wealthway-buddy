@@ -352,3 +352,37 @@ export async function sendReminders(uid: string, fundId: string, onboardingIds: 
   }
   return results;
 }
+
+/** Investor levels + the fund's "needs upgrade" check (display only). */
+export async function investorLevels(fundId: string) {
+  const { investorLevel, portalFeatures, upgradeCheck } = await import("@/lib/investor-levels");
+  const d = await db();
+  const { data: f } = await d.from("offerings").select("client_id").eq("id", fundId).maybeSingle();
+  const { data: ob } = await d.from("investor_onboardings")
+    .select("id, application_id, commitment_amount_cents, accepted_amount_cents, requested_amount_cents")
+    .eq("offering_id", fundId).is("removed_at", null);
+  const rows = (ob ?? []) as any[];
+  const appIds = rows.map((o) => o.application_id).filter(Boolean);
+  const { data: acc } = appIds.length
+    ? await d.from("accreditation_records").select("application_id, status, qualifies, method").in("application_id", appIds)
+    : { data: [] as any[] };
+  const accBy = new Map(((acc ?? []) as any[]).map((a) => [a.application_id, a]));
+  let tierKey: string | null = null;
+  const clientId = (f as any)?.client_id;
+  if (clientId) {
+    const { data: svc } = await d.from("client_service_records").select("service_key, offering_id")
+      .eq("client_id", clientId).eq("status", "active").like("service_key", "investor_servicing_%");
+    const list = (svc ?? []) as any[];
+    const pick = list.find((s) => s.offering_id === fundId) ?? list.find((s) => !s.offering_id);
+    tierKey = pick ? String(pick.service_key).replace("investor_servicing_", "") : null;
+  }
+  const effective = tierKey ?? "self_serve";
+  const investors = rows.map((o) => {
+    const a = accBy.get(o.application_id);
+    const accredited = !!a && a.qualifies === true && ["approved"].includes(String(a.status));
+    const qp = accredited && /qualified.?purchaser/i.test(String(a?.method ?? ""));
+    const level = investorLevel({ accredited, qualifiedPurchaser: qp, commitmentCents: o.commitment_amount_cents ?? o.accepted_amount_cents ?? o.requested_amount_cents ?? null });
+    return { id: o.id as string, level, features: portalFeatures(level, effective) };
+  });
+  return { tierKey, investorCount: investors.length, investors, ...upgradeCheck(tierKey, investors.map((i) => i.level)) };
+}

@@ -17,6 +17,9 @@ import { investorDetailFn, investorGridFn, lastRemindersFn, sendInvestorReminder
 import { bulkSendKycLinksFn, bulkSetClassFn, listInvestorDuplicatesFn, mergeInvestorsFn, requestMissingInfoFn } from "@/lib/investor-bulk.functions";
 import { reminderAllowed, reminderStep } from "@/lib/fund-health";
 import { toast } from "sonner";
+import { investorLevelsFn } from "@/lib/fund-tabs.functions";
+import { FEATURE_LABELS, LEVELS, portalFeatures } from "@/lib/investor-levels";
+import { INVESTOR_TIERS } from "@/lib/product-pricing";
 import { fmtDate, usd } from "./shared";
 
 export function InvestorsTab({ fundId, workQueue }: { fundId: string; workQueue?: ReactNode }) {
@@ -86,6 +89,7 @@ export function InvestorsTab({ fundId, workQueue }: { fundId: string; workQueue?
   return (
     <div className="space-y-6">
     <FundOnboardingLinkCard fundId={fundId} />
+    <InvestorLevelsCard fundId={fundId} />
     {workQueue}
     <Card>
       <CardHeader className="flex-row items-start justify-between gap-3 space-y-0">
@@ -320,5 +324,38 @@ function InvestorSheet({ fundId, id, onClose }: { fundId: string; id: string | n
         )}
       </SheetContent>
     </Sheet>
+  );
+}
+
+function InvestorLevelsCard({ fundId }: { fundId: string }) {
+  const load = useServerFn(investorLevelsFn);
+  const q = useQuery({ queryKey: ["fund-investor-levels", fundId], queryFn: () => load({ data: { fundId } }), retry: false });
+  if (!q.data) return null;
+  const d = q.data;
+  const tierName = (k: string | null) => INVESTOR_TIERS.find((t) => t.key === (k ?? "self_serve"))?.name ?? "Self Serve";
+  const counts = LEVELS.map((l) => ({ ...l, n: d.investors.filter((i) => i.level === l.key).length }));
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="flex flex-wrap items-center gap-2 text-base">
+          Investor levels
+          <Badge variant="outline">{tierName(d.tierKey)} servicing{d.tierKey ? "" : " (none recorded)"}</Badge>
+          {d.needsUpgrade ? <Badge variant="destructive">Needs upgrade{d.suggestedTier ? ` to ${tierName(d.suggestedTier)}` : ""}</Badge> : <Badge variant="secondary">Tier fits</Badge>}
+        </CardTitle>
+        <CardDescription>{d.investorCount} investor{d.investorCount === 1 ? "" : "s"}. Portal features depend on each investor's level and what this fund's servicing tier includes. Nothing is charged automatically.</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3 text-sm">
+        {d.reasons.length ? <ul className="list-disc pl-5 text-destructive">{d.reasons.map((r) => <li key={r}>{r}</li>)}</ul> : null}
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {counts.map((c) => (
+            <div key={c.key} className="rounded-md border p-2">
+              <p className="font-semibold">{c.label} · {c.n}</p>
+              <p className="text-xs text-muted-foreground">{c.rule}</p>
+              <p className="mt-1 text-xs">{portalFeatures(c.key, d.tierKey ?? "self_serve").map((f) => FEATURE_LABELS[f]).join(", ") || "Documents, subscription and tax forms"}</p>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 }
