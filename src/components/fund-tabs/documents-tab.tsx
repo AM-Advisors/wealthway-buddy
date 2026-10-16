@@ -138,6 +138,11 @@ export function DocumentsTab({ fundId }: { fundId: string }) {
           <DialogContent className="max-w-md">
             <DialogHeader><DialogTitle>Send for signature</DialogTitle><DialogDescription>{whoSigns === "manager" ? `Only the fund manager signs "${sendFor.title}". They get an email link; once they sign it's marked Signed.` : `The investor signs first, then the fund manager. Each gets an email link. When both have signed, "${sendFor.title}" is marked Signed.`}</DialogDescription></DialogHeader>
             <div className="space-y-3">
+              {sendFor.body && (
+                <Button type="button" size="sm" variant="outline" className="w-full" onClick={() => setPreview({ title: sendFor.title, body: sendFor.body })}>
+                  View document before sending
+                </Button>
+              )}
               <div className="space-y-1"><Label>Who signs?</Label>
                 <Select value={whoSigns} onValueChange={(v) => setWhoSigns(v as "both" | "manager")}><SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
