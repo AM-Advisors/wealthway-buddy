@@ -86,6 +86,7 @@ export function InvestorsTab({ fundId, workQueue }: { fundId: string; workQueue?
   return (
     <div className="space-y-6">
     <FundOnboardingLinkCard fundId={fundId} />
+    <InvestorLevelsCard fundId={fundId} />
     {workQueue}
     <Card>
       <CardHeader className="flex-row items-start justify-between gap-3 space-y-0">
