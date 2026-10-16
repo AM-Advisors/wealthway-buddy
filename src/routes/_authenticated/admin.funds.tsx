@@ -438,7 +438,7 @@ function FundsPage() {
                 </p>
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
-                {WIRE_FIELDS.map((key) => (
+                {WIRE_FIELDS.filter((k) => k !== "wire_scope").map((key) => (
                   <div key={key} className="space-y-1.5">
                     <Label htmlFor={`wire_${key}`} className="capitalize">
                       {key.replace(/_/g, " ")}

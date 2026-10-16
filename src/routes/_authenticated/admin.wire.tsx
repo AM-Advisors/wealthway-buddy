@@ -43,7 +43,7 @@ type WireKey = (typeof WIRE_FIELDS)[number];
 
 const emptyWire = () => Object.fromEntries(WIRE_FIELDS.map((k) => [k, ""])) as Record<WireKey, string>;
 
-const PLACEHOLDERS: Record<WireKey, string> = {
+const PLACEHOLDERS: Partial<Record<WireKey, string>> = {
   bank_name: "First National Bank",
   bank_address: "123 Main St, Chicago, IL 60601",
   account_name: "Harmonious Income Fund I, LP",
@@ -162,7 +162,7 @@ function WireAdminPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
-                {WIRE_FIELDS.map((field) => (
+                {WIRE_FIELDS.filter((k) => k !== "wire_scope").map((field) => (
                   <div key={field} className="space-y-1.5">
                     <Label htmlFor={`${fund.id}-${field}`}>{FIELD_LABELS[field] ?? field}</Label>
                     <Input

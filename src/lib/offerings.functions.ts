@@ -40,15 +40,8 @@ async function assertCanEditOffering(supabase: any, userId: string, offeringId: 
 }
 
 
-export const WIRE_FIELDS = [
-  "bank_name",
-  "bank_address",
-  "account_name",
-  "account_number",
-  "routing_number",
-  "swift",
-  "memo",
-] as const;
+import { ALL_WIRE_FIELDS } from "@/lib/wire-scope";
+export const WIRE_FIELDS = ALL_WIRE_FIELDS;
 
 const wireSchema = z.object({
   bank_name: z.string().trim().max(160).default(""),
@@ -58,6 +51,15 @@ const wireSchema = z.object({
   routing_number: z.string().trim().max(64).default(""),
   swift: z.string().trim().max(32).default(""),
   memo: z.string().trim().max(240).default(""),
+  wire_scope: z.preprocess((v) => (v ? v : undefined), z.enum(["domestic", "international", "both"]).default("domestic")),
+  intl_bank_name: z.string().trim().max(160).default(""),
+  intl_account_name: z.string().trim().max(160).default(""),
+  intl_account_number: z.string().trim().max(64).default(""),
+  intermediary_bank: z.string().trim().max(160).default(""),
+  intermediary_swift: z.string().trim().max(32).default(""),
+  intermediary_routing: z.string().trim().max(64).default(""),
+  intermediary_account: z.string().trim().max(64).default(""),
+  intl_memo: z.string().trim().max(240).default(""),
 });
 
 export const FUND_TYPES = [

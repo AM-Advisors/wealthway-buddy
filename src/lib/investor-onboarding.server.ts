@@ -1080,7 +1080,15 @@ export async function fundingInstructions(userId: string, onboardingId: string) 
   if (!gate.allowed) return { unlocked: false, reasons: gate.reasons, instructions: null };
 
   const { data: wire } = await db().rpc("get_wire_instructions", { p_offering_id: row.offering_id });
-  const details = Array.isArray(wire) ? (wire[0]?.details ?? null) : ((wire as any)?.details ?? null);
+  const rawDetails = Array.isArray(wire) ? (wire[0]?.details ?? null) : ((wire as any)?.details ?? null);
+  // Show only the instructions that apply: USA-only, international-only, or (for "both") by where the investor is located.
+  const { instructionsForInvestor, DOMESTIC_WIRE_FIELDS, INTL_WIRE_FIELDS } = await import("@/lib/wire-scope");
+  const { data: prof } = row.investment_profile_id ? await db().from("investment_profiles").select("country").eq("id", row.investment_profile_id).maybeSingle() : { data: null };
+  const { data: per } = row.person_id ? await db().from("persons").select("residence_country, country").eq("id", row.person_id).maybeSingle() : { data: null };
+  const investorCountry = (prof as any)?.country || (per as any)?.residence_country || (per as any)?.country || null;
+  const shown = instructionsForInvestor(rawDetails, investorCountry);
+  const keep = new Set<string>([...(shown.domestic ? DOMESTIC_WIRE_FIELDS : []), ...(shown.international ? INTL_WIRE_FIELDS : [])]);
+  const details = rawDetails ? Object.fromEntries(Object.entries(rawDetails as Record<string, unknown>).filter(([k, v]) => keep.has(k) && String(v ?? "").trim()).map(([k, v]) => [k, String(v)])) as Record<string, string> : null;
   const { data: setup } = await db()
     .from("fund_setups")
     .select("id")

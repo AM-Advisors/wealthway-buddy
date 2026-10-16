@@ -28,6 +28,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { isReconciledFunding } from "@/lib/funding-status";
+import { WIRE_FIELD_LABELS } from "@/lib/wire-scope";
 import { FeeAcceptanceCard, OnboardingUploadsCard, useFeesAccepted } from "@/components/investor-onboarding-extras";
 
 const money = (cents: number | null | undefined) =>
@@ -459,7 +460,7 @@ function Fund({ d, onboardingId, done }: { d: any; onboardingId: string; done: (
                 <p><strong>Bank:</strong> {f.instructions.bankName ?? "-"}</p>
                 {f.instructions.details && typeof f.instructions.details === "object"
                   ? Object.entries(f.instructions.details).map(([k, v]) => (
-                      <p key={k}><strong>{k.replace(/_/g, " ")}:</strong> {String(v)}</p>
+                      <p key={k}><strong>{WIRE_FIELD_LABELS[k] ?? k.replace(/_/g, " ")}:</strong> {String(v)}</p>
                     ))
                   : null}
                 <p><strong>Reference:</strong> {f.instructions.reference}</p>
