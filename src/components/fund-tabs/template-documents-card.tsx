@@ -90,7 +90,7 @@ function ReviewDialog({ fundId, doc, onClose }: { fundId: string; doc: any; onCl
         </DialogHeader>
         {state === "loading" && <p className="text-sm text-muted-foreground">Opening the document…</p>}
         {state === "error" && <p className="text-sm text-destructive">Couldn't open the document. Try Download instead.</p>}
-        {isDocx ? <div ref={box} className="max-h-[75vh] overflow-auto rounded-md border bg-muted" /> : url && state === "ready" && <iframe title={doc.title} src={url} className="h-[75vh] w-full rounded-md border" />}
+        {isDocx ? <div ref={box} className="document-surface max-h-[75vh] overflow-auto rounded-md border" /> : url && state === "ready" && <iframe title={doc.title} src={url} className="h-[75vh] w-full rounded-md border bg-white" />}
       </DialogContent>
     </Dialog>
   );
