@@ -201,9 +201,22 @@ export async function fundTemplateValues(offeringId: string): Promise<Record<str
     "Address Line 1": ap.addressLine1, "Address Line 2": ap.addressLine2, "Address City": ap.addressCity, "Address State": ap.addressState, "Address ZIP": ap.addressZip,
     "Signatory's Legal Name": signer, "Fund Manager Signatory": signer, "Fund Manager Signatory Name": signer,
     "Signatory's Title": o.signatory_title, "Signatory Title": o.signatory_title, "Fund Manager Signatory Title": o.signatory_title,
-    "State": o.state_formed, "Arbitration State": o.state_formed, "Country": "United States",
+    "State": o.state_formed, "Arbitration State": o.arbitration_state || o.state_formed, "Arbitration City": o.arbitration_city, "Country": "United States",
   };
   return v;
+}
+
+/** Shows which blanks an approved template needs and which the fund already has, without saving anything. */
+export async function templateAutofillCheck(userId: string, input: { templateId: string; version: number; offeringId: string }) {
+  await staff(userId);
+  const { data: v } = await db().from("document_template_versions").select("file_path, file_name, status").eq("template_id", input.templateId).eq("version", input.version).maybeSingle();
+  if (!v || v.status !== "approved") throw new Error("Only an approved template version can be used.");
+  if (!/\.docx$/i.test(v.file_name)) return { filled: [], open: [], fillable: false };
+  const { data: blob, error } = await supabaseAdmin.storage.from(BUCKET).download(v.file_path);
+  if (error || !blob) throw new Error("Could not read the template.");
+  const { fillDocx } = await import("@/lib/docx-autofill");
+  const r = await fillDocx(new Uint8Array(await blob.arrayBuffer()), await fundTemplateValues(input.offeringId));
+  return { filled: r.filled, open: r.open, fillable: true };
 }
 
 export async function templateDownloadUrl(userId: string, input: { templateId: string; version: number }) {

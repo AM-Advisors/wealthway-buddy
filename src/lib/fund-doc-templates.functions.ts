@@ -31,3 +31,7 @@ export const useTemplateInFundFn = createServerFn({ method: "POST" }).middleware
 export const templateDownloadUrlFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ templateId: uuid, version: z.number().int().min(1) }).parse(d))
   .handler(async ({ data, context }) => (await eng()).templateDownloadUrl(context.userId, data));
+
+export const templateAutofillCheckFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ templateId: uuid, version: z.number().int().min(1), offeringId: uuid }).parse(d))
+  .handler(async ({ data, context }) => (await eng()).templateAutofillCheck(context.userId, data));
