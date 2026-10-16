@@ -3526,6 +3526,39 @@ export type Database = {
           },
         ]
       }
+      billing_record_events: {
+        Row: {
+          actor_id: string | null
+          client_id: string | null
+          created_at: string
+          detail: Json
+          entity_id: string
+          entity_kind: string
+          event_kind: string
+          id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          client_id?: string | null
+          created_at?: string
+          detail?: Json
+          entity_id: string
+          entity_kind: string
+          event_kind: string
+          id?: string
+        }
+        Update: {
+          actor_id?: string | null
+          client_id?: string | null
+          created_at?: string
+          detail?: Json
+          entity_id?: string
+          entity_kind?: string
+          event_kind?: string
+          id?: string
+        }
+        Relationships: []
+      }
       book_tax_adjustments: {
         Row: {
           account_id: string | null
@@ -6366,6 +6399,50 @@ export type Database = {
           },
         ]
       }
+      client_menu_switch_requests: {
+        Row: {
+          client_id: string
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          id: string
+          note: string | null
+          preview: Json
+          requested_by: string
+          status: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          id?: string
+          note?: string | null
+          preview?: Json
+          requested_by: string
+          status?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          id?: string
+          note?: string | null
+          preview?: Json
+          requested_by?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_menu_switch_requests_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_messages: {
         Row: {
           body_html: string
@@ -6640,6 +6717,74 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "client_service_configurations_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_service_records: {
+        Row: {
+          amount_cents: number
+          approval_note: string | null
+          approved_at: string | null
+          approved_by: string | null
+          cadence: string
+          card_autopay: boolean
+          client_id: string
+          created_at: string
+          id: string
+          label: string
+          offering_id: string | null
+          proposed_by: string | null
+          reminders_paused: boolean
+          service_key: string
+          start_date: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount_cents?: number
+          approval_note?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          cadence?: string
+          card_autopay?: boolean
+          client_id: string
+          created_at?: string
+          id?: string
+          label: string
+          offering_id?: string | null
+          proposed_by?: string | null
+          reminders_paused?: boolean
+          service_key: string
+          start_date?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount_cents?: number
+          approval_note?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          cadence?: string
+          card_autopay?: boolean
+          client_id?: string
+          created_at?: string
+          id?: string
+          label?: string
+          offering_id?: string | null
+          proposed_by?: string | null
+          reminders_paused?: boolean
+          service_key?: string
+          start_date?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_service_records_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
@@ -32059,6 +32204,74 @@ export type Database = {
         }
         Relationships: []
       }
+      migration_payments: {
+        Row: {
+          amount_cents: number
+          client_id: string | null
+          confirm_note: string | null
+          confirmed_at: string | null
+          confirmed_by: string | null
+          created_at: string
+          id: string
+          included_service_keys: string[]
+          method: string
+          note: string | null
+          offering_id: string
+          paid_on: string
+          period_end: string | null
+          period_start: string | null
+          proof_path: string | null
+          recorded_by: string
+          status: string
+        }
+        Insert: {
+          amount_cents: number
+          client_id?: string | null
+          confirm_note?: string | null
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          id?: string
+          included_service_keys?: string[]
+          method: string
+          note?: string | null
+          offering_id: string
+          paid_on: string
+          period_end?: string | null
+          period_start?: string | null
+          proof_path?: string | null
+          recorded_by: string
+          status?: string
+        }
+        Update: {
+          amount_cents?: number
+          client_id?: string | null
+          confirm_note?: string | null
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          id?: string
+          included_service_keys?: string[]
+          method?: string
+          note?: string | null
+          offering_id?: string
+          paid_on?: string
+          period_end?: string | null
+          period_start?: string | null
+          proof_path?: string | null
+          recorded_by?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "migration_payments_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       msa_sections: {
         Row: {
           body: string
@@ -35030,6 +35243,44 @@ export type Database = {
             columns: ["offering_id"]
             isOneToOne: false
             referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_reminder_sends: {
+        Row: {
+          due_on: string
+          id: string
+          manual: boolean
+          record_id: string
+          sent_at: string
+          sent_by: string | null
+          stage_key: string
+        }
+        Insert: {
+          due_on: string
+          id?: string
+          manual?: boolean
+          record_id: string
+          sent_at?: string
+          sent_by?: string | null
+          stage_key: string
+        }
+        Update: {
+          due_on?: string
+          id?: string
+          manual?: boolean
+          record_id?: string
+          sent_at?: string
+          sent_by?: string | null
+          stage_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_reminder_sends_record_id_fkey"
+            columns: ["record_id"]
+            isOneToOne: false
+            referencedRelation: "client_service_records"
             referencedColumns: ["id"]
           },
         ]
@@ -42678,6 +42929,42 @@ export type Database = {
           role?: Database["public"]["Enums"]["app_role"]
           status?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      staff_nav_grants: {
+        Row: {
+          created_at: string
+          granted_by: string
+          id: string
+          item_title: string
+          item_url: string
+          reason: string
+          revoked_at: string | null
+          revoked_by: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          granted_by: string
+          id?: string
+          item_title: string
+          item_url: string
+          reason: string
+          revoked_at?: string | null
+          revoked_by?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          granted_by?: string
+          id?: string
+          item_title?: string
+          item_url?: string
+          reason?: string
+          revoked_at?: string | null
+          revoked_by?: string | null
+          user_id?: string
         }
         Relationships: []
       }

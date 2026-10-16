@@ -1,0 +1,2 @@
+GRANT SELECT ON public.staff_nav_grants TO authenticated;
+CREATE POLICY "Staff read their own sidebar grants" ON public.staff_nav_grants FOR SELECT TO authenticated USING (user_id = auth.uid() AND revoked_at IS NULL);

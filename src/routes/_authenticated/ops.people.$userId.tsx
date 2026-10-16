@@ -9,6 +9,7 @@ import { getPersonActivity } from "@/lib/user-access.functions";
 import { UserInsights } from "@/components/user-insights";
 import { PersonKycUpdate } from "@/components/person-kyc-update";
 import { KycReport } from "@/components/kyc-report";
+import { SidebarAccessCard } from "@/components/sidebar-access-card";
 
 export const Route = createFileRoute("/_authenticated/ops/people/$userId")({
   head: () => ({
@@ -51,6 +52,7 @@ function PersonActivityPage() {
           {!!d.roles.length && <div className="mt-2 flex flex-wrap gap-1">{d.roles.map((r) => <Badge key={r} variant="outline">{r.replace(/_/g, " ")}</Badge>)}</div>}
         </header>
         <AccountOverview d={d} />
+        {d.roles.length > 0 && <SidebarAccessCard userId={userId} />}
         <KycReport d={d} userId={userId} />
         <IdentityResults checks={d.identityChecks ?? []} />
         {d.people.filter((p: any) => p.linked).map((p: any) => <PersonKycUpdate key={p.id} personId={p.id} />)}

@@ -264,6 +264,7 @@ import { Route as AuthenticatedOpsMailRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedOpsMailboxesRouteImport } from './routes/_authenticated/ops.mailboxes'
 import { Route as AuthenticatedOpsMessagesRouteImport } from './routes/_authenticated/ops.messages'
 import { Route as AuthenticatedOpsNavRouteImport } from './routes/_authenticated/ops.nav'
+import { Route as AuthenticatedOpsPaymentRemindersRouteImport } from './routes/_authenticated/ops.payment-reminders'
 import { Route as AuthenticatedOpsPeopleRouteImport } from './routes/_authenticated/ops.people'
 import { Route as AuthenticatedOpsPeopleAccessRouteImport } from './routes/_authenticated/ops.people-access'
 import { Route as AuthenticatedOpsPerformanceRouteImport } from './routes/_authenticated/ops.performance'
@@ -1892,6 +1893,12 @@ const AuthenticatedOpsNavRoute = AuthenticatedOpsNavRouteImport.update({
   path: '/ops/nav',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedOpsPaymentRemindersRoute =
+  AuthenticatedOpsPaymentRemindersRouteImport.update({
+    id: '/ops/payment-reminders',
+    path: '/ops/payment-reminders',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOpsPeopleRoute = AuthenticatedOpsPeopleRouteImport.update({
   id: '/ops/people',
   path: '/ops/people',
@@ -3249,6 +3256,7 @@ export interface FileRoutesByFullPath {
   '/ops/mailboxes': typeof AuthenticatedOpsMailboxesRoute
   '/ops/messages': typeof AuthenticatedOpsMessagesRoute
   '/ops/nav': typeof AuthenticatedOpsNavRoute
+  '/ops/payment-reminders': typeof AuthenticatedOpsPaymentRemindersRoute
   '/ops/people': typeof AuthenticatedOpsPeopleRouteWithChildren
   '/ops/people-access': typeof AuthenticatedOpsPeopleAccessRoute
   '/ops/performance': typeof AuthenticatedOpsPerformanceRoute
@@ -3688,6 +3696,7 @@ export interface FileRoutesByTo {
   '/ops/mailboxes': typeof AuthenticatedOpsMailboxesRoute
   '/ops/messages': typeof AuthenticatedOpsMessagesRoute
   '/ops/nav': typeof AuthenticatedOpsNavRoute
+  '/ops/payment-reminders': typeof AuthenticatedOpsPaymentRemindersRoute
   '/ops/people': typeof AuthenticatedOpsPeopleRouteWithChildren
   '/ops/people-access': typeof AuthenticatedOpsPeopleAccessRoute
   '/ops/performance': typeof AuthenticatedOpsPerformanceRoute
@@ -4135,6 +4144,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/mailboxes': typeof AuthenticatedOpsMailboxesRoute
   '/_authenticated/ops/messages': typeof AuthenticatedOpsMessagesRoute
   '/_authenticated/ops/nav': typeof AuthenticatedOpsNavRoute
+  '/_authenticated/ops/payment-reminders': typeof AuthenticatedOpsPaymentRemindersRoute
   '/_authenticated/ops/people': typeof AuthenticatedOpsPeopleRouteWithChildren
   '/_authenticated/ops/people-access': typeof AuthenticatedOpsPeopleAccessRoute
   '/_authenticated/ops/performance': typeof AuthenticatedOpsPerformanceRoute
@@ -4583,6 +4593,7 @@ export interface FileRouteTypes {
     | '/ops/mailboxes'
     | '/ops/messages'
     | '/ops/nav'
+    | '/ops/payment-reminders'
     | '/ops/people'
     | '/ops/people-access'
     | '/ops/performance'
@@ -5022,6 +5033,7 @@ export interface FileRouteTypes {
     | '/ops/mailboxes'
     | '/ops/messages'
     | '/ops/nav'
+    | '/ops/payment-reminders'
     | '/ops/people'
     | '/ops/people-access'
     | '/ops/performance'
@@ -5468,6 +5480,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/mailboxes'
     | '/_authenticated/ops/messages'
     | '/_authenticated/ops/nav'
+    | '/_authenticated/ops/payment-reminders'
     | '/_authenticated/ops/people'
     | '/_authenticated/ops/people-access'
     | '/_authenticated/ops/performance'
@@ -7529,6 +7542,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsNavRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ops/payment-reminders': {
+      id: '/_authenticated/ops/payment-reminders'
+      path: '/ops/payment-reminders'
+      fullPath: '/ops/payment-reminders'
+      preLoaderRoute: typeof AuthenticatedOpsPaymentRemindersRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ops/people': {
       id: '/_authenticated/ops/people'
       path: '/ops/people'
@@ -9336,6 +9356,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsMailboxesRoute: typeof AuthenticatedOpsMailboxesRoute
   AuthenticatedOpsMessagesRoute: typeof AuthenticatedOpsMessagesRoute
   AuthenticatedOpsNavRoute: typeof AuthenticatedOpsNavRoute
+  AuthenticatedOpsPaymentRemindersRoute: typeof AuthenticatedOpsPaymentRemindersRoute
   AuthenticatedOpsPeopleRoute: typeof AuthenticatedOpsPeopleRouteWithChildren
   AuthenticatedOpsPeopleAccessRoute: typeof AuthenticatedOpsPeopleAccessRoute
   AuthenticatedOpsPerformanceRoute: typeof AuthenticatedOpsPerformanceRoute
@@ -9662,6 +9683,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsMailboxesRoute: AuthenticatedOpsMailboxesRoute,
   AuthenticatedOpsMessagesRoute: AuthenticatedOpsMessagesRoute,
   AuthenticatedOpsNavRoute: AuthenticatedOpsNavRoute,
+  AuthenticatedOpsPaymentRemindersRoute: AuthenticatedOpsPaymentRemindersRoute,
   AuthenticatedOpsPeopleRoute: AuthenticatedOpsPeopleRouteWithChildren,
   AuthenticatedOpsPeopleAccessRoute: AuthenticatedOpsPeopleAccessRoute,
   AuthenticatedOpsPerformanceRoute: AuthenticatedOpsPerformanceRoute,

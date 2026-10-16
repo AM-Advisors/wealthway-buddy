@@ -10,6 +10,7 @@
  *    and expiry take effect on the very next request.
  */
 import { emptyFacts, type RelationshipFacts } from "@/lib/session-resolution";
+import { grantCapabilities } from "@/lib/ops-nav-registry";
 import { capabilitiesFor, hasOperationsEntry, OPS_STAFF_ROLES, type OpsCapability } from "@/lib/ops-capabilities";
 
 export type ProfessionalMembershipFact = {
@@ -46,6 +47,8 @@ export type StaffFacts = {
   operationsEntry: boolean;
   /** Granular Operations capabilities - never collapsed into a boolean. */
   capabilities: OpsCapability[];
+  /** Individual sidebar items a Super Admin granted (view only; money/tax/admin never). */
+  navGrants: { url: string; title: string }[];
 };
 
 export type CanonicalFacts = RelationshipFacts & {
@@ -83,20 +86,30 @@ export function delegationFact(row: any, now = Date.now()): DelegationFact {
   };
 }
 
-export function staffFactsFromRoles(roles: string[]): StaffFacts {
+export function staffFactsFromRoles(roles: string[], navGrants: { url: string; title: string }[] = []): StaffFacts {
   const entry = hasOperationsEntry(roles);
+  const capabilities = entry ? [...new Set([...capabilitiesFor(roles), ...grantCapabilities(navGrants.map((g) => g.url))])] : [];
   return {
+    navGrants: entry ? navGrants : [],
     roles,
     staffRoles: roles.filter((r) => (OPS_STAFF_ROLES as readonly string[]).includes(r)),
     operationsEntry: entry,
-    capabilities: entry ? capabilitiesFor(roles) : [],
+    capabilities,
   };
 }
 
 /** Staff facts alone (one query) - for per-request Operations guards. */
 export async function gatherStaffFacts(context: any): Promise<StaffFacts> {
-  const { data } = await context.supabase.from("user_roles").select("role").eq("user_id", context.userId);
-  return staffFactsFromRoles(((data ?? []) as any[]).map((r) => String(r.role)));
+  const [{ data }, grants] = await Promise.all([
+    context.supabase.from("user_roles").select("role").eq("user_id", context.userId),
+    readNavGrants(context),
+  ]);
+  return staffFactsFromRoles(((data ?? []) as any[]).map((r) => String(r.role)), grants);
+}
+
+async function readNavGrants(context: any): Promise<{ url: string; title: string }[]> {
+  const { data } = await context.supabase.from("staff_nav_grants").select("item_url, item_title").eq("user_id", context.userId).is("revoked_at", null);
+  return ((data ?? []) as any[]).map((g) => ({ url: String(g.item_url), title: String(g.item_title) }));
 }
 
 /** Identity alone (one query) - for callers that only need name/email. */
@@ -144,7 +157,7 @@ export async function gatherFacts(context: any): Promise<CanonicalFacts> {
     ]);
 
   const roleList = rows(roles).map((r) => String(r.role));
-  const operations = staffFactsFromRoles(roleList);
+  const operations = staffFactsFromRoles(roleList, hasOperationsEntry(roleList) ? await readNavGrants(context) : []);
   facts.staff = { active: operations.operationsEntry, roles: operations.staffRoles };
   facts.managedFundIds = rows(managed).map((r) => String(r.offering_id));
   facts.investmentProfileIds = rows(profiles).map((r) => String(r.id));

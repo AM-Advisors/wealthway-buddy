@@ -30,3 +30,10 @@
 - [x] Picker, click-through SOW under fixed MSA, card checkout, KYB review, purchase-gated menus
 - [ ] Switch existing clients to purchase-gated menus — waiting on user review of the impact report
 - [ ] Automated business (KYB) check through the verification provider — today compliance reviews submitted details
+
+## Current-client services & role sidebar (2026-10-16)
+- [x] Client Services tab (set services, approve, menu switch with preview)
+- [x] Migration fund payment records (Finance confirms)
+- [x] Payment reminders page + daily emails
+- [x] Sidebar dedupe, Payment reminders item, Super Admin extra sidebar items
+- [ ] Switch individual legacy clients to purchased-services menus (per client, needs approval)
