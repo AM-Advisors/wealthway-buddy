@@ -55,7 +55,7 @@ const COMPLETES_WHEN: Record<string, string> = {
   banking_account: "bank instructions verified (or banking marked not required)",
   investor_eligibility: "eligibility rules approved",
   investor_onboarding_steps: "onboarding steps saved",
-  compliance_config: "regulatory configuration reviewed",
+  compliance_config: "Reg Type selected",
 };
 
 const STATUSES = [
