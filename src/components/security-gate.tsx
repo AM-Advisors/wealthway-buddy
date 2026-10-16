@@ -1,3 +1,4 @@
+import { canEnrollPasskey } from "@/lib/passkeys";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useRouterState } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
@@ -188,13 +189,14 @@ function MfaSetup({ onDone }: { onDone: () => void }) {
       <CardHeader>
         <CardTitle className="font-heading">Protect your account</CardTitle>
         <CardDescription>
-          Harmonious requires a second step at every sign-in. Choose a passkey or an authenticator app.
+          Harmonious requires a second step at every sign-in.{" "}
+          {canEnrollPasskey() ? "Choose a passkey or an authenticator app." : "Set up an authenticator app such as Google Authenticator, 1Password or Authy."}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {!totp && (
           <>
-            {passkeysSupported() && (
+            {canEnrollPasskey() && (
               <Button className="w-full" disabled={busy} onClick={addPasskey}>
                 Use a passkey (Face ID, Touch ID, Windows Hello)
               </Button>
