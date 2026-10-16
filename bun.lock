@@ -50,6 +50,7 @@
         "cmdk": "^1.1.1",
         "date-fns": "^4.1.0",
         "docx": "^9.8.1",
+        "docx-preview": "^0.4.1",
         "embla-carousel-react": "^8.6.0",
         "fflate": "^0.8.3",
         "html-to-image": "1.11.11",
@@ -834,6 +835,8 @@
     "diff": ["diff@8.0.4", "", {}, "sha512-DPi0FmjiSU5EvQV0++GFDOJ9ASQUVFh5kD+OzOnYdi7n3Wpm9hWWGfB/O2blfHcMVTL5WkQXSnRiK9makhrcnw=="],
 
     "docx": ["docx@9.8.1", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/docx/-/docx-9.8.1.tgz", { "dependencies": { "@types/node": "^26.6.2", "hash.js": "^1.1.7", "jszip": "^3.10.1", "nanoid": "^6.0.1", "xml": "^1.0.1", "xml-js": "^1.6.8" } }, "sha512-bv4yDxgiV9aRyh327HG+V36wG0f23wk32SDhXGQpUhnykVtIPaR1K4ISi8E+DYJ7OcRQRkR8Y70QYlSS08V1cA=="],
+
+    "docx-preview": ["docx-preview@0.4.1", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/docx-preview/-/docx-preview-0.4.1.tgz", { "dependencies": { "jszip": ">=3.0.0" } }, "sha512-Dv4g+LeE0swHpPvNC0lAT0YsR5Zq5pAxw7d3vHQ8EChBLgIrqqe9VPL5nVt2HBJap8bEZbXUI0TJob7kBeNU9w=="],
 
     "dom-helpers": ["dom-helpers@5.2.1", "", { "dependencies": { "@babel/runtime": "^7.8.7", "csstype": "^3.0.2" } }, "sha512-nRCa7CK3VTrM2NmGkIy4cbK7IZlgBE/PYMn55rrXefr5xXDP0LdtfPnblFDoVdcAfslJ7or6iqAUnx0CCGIWQA=="],
 
