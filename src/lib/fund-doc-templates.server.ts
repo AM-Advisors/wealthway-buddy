@@ -151,11 +151,11 @@ export async function useTemplateInFund(userId: string, input: { templateId: str
 /**
  * Harmonious templates get their signature block set up automatically:
  * LLOA -> fund signatory only; Subscription Agreement -> investor first, then
- * fund signatory countersigns. Saved as "needs review" so staff confirm it.
+ * fund signatory countersigns. Saved as confirmed so the document is ready to send.
  */
 export function templateSigningConfig(category: string, title: string): SigningConfig | null {
   const block = ["signature", "printed_name", "title", "date_signed"] as const;
-  if (/\blloa\b|letter of authori[sz]ation/i.test(title)) return { signers: [{ role: "fund_signatory", fields: [...block], order: 1 }] };
+  if (category === "operating_agreement" || /\blloa\b|letter of authori[sz]ation|operating agreement/i.test(title)) return { signers: [{ role: "fund_signatory", fields: [...block], order: 1 }] };
   if (category === "subscription_agreement" || /subscription agreement/i.test(title)) {
     return { signers: [{ role: "investor", fields: ["signature", "printed_name", "entity_name", "title", "date_signed"], order: 1 }, { role: "fund_signatory", fields: [...block], order: 2 }] };
   }
@@ -169,7 +169,8 @@ async function autoSigningSetup(userId: string, input: { documentId: string; ver
   try {
     const { data: d } = await db().from("offering_documents").select("usage, applicability").eq("id", input.documentId).maybeSingle();
     if (d?.usage !== "signature") await setDocumentUsage(userId, { documentId: input.documentId, usage: "signature", applicability: (d?.applicability ?? {}) as any });
-    await saveSigningConfig(userId, { documentId: input.documentId, version: input.version, config, confirm: false });
+    // Harmonious templates have a fixed signer order, so the boxes are ready to send (still editable, logged).
+    await saveSigningConfig(userId, { documentId: input.documentId, version: input.version, config, confirm: true });
     return { configured: true, roles, message: null };
   } catch (e) {
     return { configured: false, roles, message: (e as Error).message };
