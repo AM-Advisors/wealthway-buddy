@@ -24,6 +24,8 @@ import { Logo, LogoIcon } from "@/components/Logo";
 import { ClientBrandStyles, useClientBrand } from "@/components/client-brand";
 import { useClientWorkspace } from "@/components/client-workspace";
 import { getMyCapTables } from "@/lib/cap-table-billing.functions";
+import { myEntitlementsFn } from "@/lib/saas-orders.functions";
+import { filterByEntitlements } from "@/lib/saas-order-model";
 import { getStripeEnvironment } from "@/lib/stripe";
 import { SidebarAccountFooter } from "@/components/sidebar-account-footer";
 import {
@@ -87,9 +89,13 @@ export function ClientSidebar({ onSignOut }: { onSignOut: () => void }) {
   const caps = useQuery({ queryKey: ["my-cap-tables"], queryFn: () => capFn({ data: { environment: getStripeEnvironment() } }), staleTime: 60_000 });
   const capLinks = ["/client/cap-table"];
   // Cap Table links only show once the client has an active (or free) cap table.
-  const items = caps.data?.hasActive
+  const entFn = useServerFn(myEntitlementsFn);
+  const ents = useQuery({ queryKey: ["my-entitlements"], queryFn: () => entFn(), staleTime: 60_000 });
+  const base = caps.data?.hasActive
     ? navigation.primary
     : navigation.primary.filter((i: { url: string }) => !capLinks.some((c) => i.url === c || i.url.startsWith(`${c}/`)));
+  // Clients on purchased-services menus only see what they bought; legacy clients are unchanged.
+  const items = filterByEntitlements(base, ents.data ?? null);
   const active = (options ?? []).find((o) => o.id === activeId);
   const brand = useClientBrand(active?.kind === "company");
   const sharedFn = useServerFn(listMySharedFunds);
