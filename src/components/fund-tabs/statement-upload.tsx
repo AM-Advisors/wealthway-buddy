@@ -1,3 +1,4 @@
+import { invalidateFund } from "@/lib/fund-query-keys";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -22,7 +23,7 @@ export function StatementUpload({ fundId, investors }: { fundId: string; investo
   const key = ["bank-statements", fundId];
   const q = useQuery({ queryKey: key, queryFn: () => list({ data: { fundId } }) });
   const [busy, setBusy] = useState(false);
-  const refresh = () => { qc.invalidateQueries({ queryKey: key }); qc.invalidateQueries({ queryKey: ["fund-books", fundId] }); qc.invalidateQueries({ queryKey: ["fund-account", fundId] }); };
+  const refresh = () => { void invalidateFund(qc, fundId); };
   const onFile = async (f: File | undefined) => {
     if (!f) return;
     setBusy(true);

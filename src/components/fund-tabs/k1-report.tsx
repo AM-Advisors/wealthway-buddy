@@ -1,3 +1,4 @@
+import { invalidateFund } from "@/lib/fund-query-keys";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -49,7 +50,7 @@ export function K1Report({ fundId }: { fundId: string }) {
   const target = { kind: "service_request" as const, answers: { offering_id: fundId }, serviceKeys: ["tax_k1"] };
   const quote = useFundPayment(q.data && !staff ? target : null);
   const total = quote.data?.totalCents ?? 0;
-  const refresh = () => qc.invalidateQueries({ queryKey: key });
+  const refresh = () => { void invalidateFund(qc, fundId); };
   const send = useMutation({
     mutationFn: (paymentId?: string) => submit({ data: { fundId, taxYear: Number(year), totals: totals as any, notes: notes || undefined, paymentId: paymentId ?? null } }),
     onSuccess: () => { toast.success("K-1 draft built and sent to Harmonious for approval."); setVals({}); setNotes(""); setPayOpen(false); refresh(); },

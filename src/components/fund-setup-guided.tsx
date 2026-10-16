@@ -1,3 +1,4 @@
+import { invalidateFund } from "@/lib/fund-query-keys";
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -29,7 +30,7 @@ export function FundSetupGuided({ offeringId, compact = false, onJump }: { offer
   const qc = useQueryClient();
   const load = useServerFn(guidedSetupFn);
   const q = useQuery({ queryKey: ["guided-setup", offeringId], queryFn: () => load({ data: { offeringId } }), staleTime: 30_000 });
-  const refresh = () => { qc.invalidateQueries({ queryKey: ["guided-setup", offeringId] }); qc.invalidateQueries({ queryKey: ["fund-submissions", offeringId] }); };
+  const refresh = () => { void invalidateFund(qc, offeringId); };
   const [expanded, setExpanded] = useState<SetupStep | null | undefined>(undefined);
   if (q.isPending) return <Card><CardContent className="p-4 text-sm text-muted-foreground">Loading fund setup…</CardContent></Card>;
   if (q.isError || !q.data) return <Card><CardContent className="p-4 text-sm text-muted-foreground">Fund setup isn't available for your account.</CardContent></Card>;

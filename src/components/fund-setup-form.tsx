@@ -1,3 +1,4 @@
+import { invalidateFund } from "@/lib/fund-query-keys";
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -46,7 +47,7 @@ export function FundSetupForm({ offeringId, mode, staffExtras }: { offeringId: s
   const returned = (s: string) => (d.items as any[]).find((i) => i.section === s && i.status !== "withdrawn")?.status === "returned" ? (d.items as any[]).find((i) => i.section === s && i.status !== "withdrawn") : null;
   const changes = changedBySection(vals, prior);
   const dirty = Object.keys(changes).length > 0;
-  const refresh = () => { qc.invalidateQueries({ queryKey: ["fund-setup-form", offeringId] }); qc.invalidateQueries({ queryKey: ["staff-fund-setup", offeringId] }); };
+  const refresh = () => { void invalidateFund(qc, offeringId); };
 
   // Saves all changes, or only one form section's fields when `keys` is given.
   const save = async (keys?: string[], label?: string) => {
