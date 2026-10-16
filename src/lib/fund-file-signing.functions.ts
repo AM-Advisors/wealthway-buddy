@@ -199,6 +199,9 @@ export const sendFileToSignatoryFn = createServerFn({ method: "POST" }).middlewa
     return { ok: true };
   });
 
+/** Rows signed together with this one: its packet, or the whole file for older single-round sends. */
+const peers = (d: any, s: any, cols: string) => { const q = d.from("fund_file_signatures").select(cols).neq("status", "cancelled"); return s.packet_id ? q.eq("packet_id", s.packet_id) : q.eq("file_id", s.file_id).is("packet_id", null); };
+
 async function loadForSigner(userId: string, email: string | undefined, id: string) {
   const d = await db();
   const { data: s } = await d.from("fund_file_signatures").select("*").eq("id", id).maybeSingle();
@@ -213,16 +216,17 @@ export const getSignatureFn = createServerFn({ method: "POST" }).middleware([req
   .handler(async ({ data, context }) => {
     const { d, s } = await loadForSigner(context.userId, (context.claims as any)?.email, data.id);
     const [{ data: f }, { data: o }, { data: all }] = await Promise.all([
-      d.from("fund_files").select("title, body, status").eq("id", s.file_id).maybeSingle(),
+      d.from("fund_files").select("title, body, status, signing_mode").eq("id", s.file_id).maybeSingle(),
       d.from("offerings").select("name").eq("id", s.offering_id).maybeSingle(),
-      d.from("fund_file_signatures").select("signing_order, signer_role, signer_name, status, signed_at, signed_name").eq("file_id", s.file_id).neq("status", "cancelled").order("signing_order"),
+      peers(d, s, "signing_order, signer_role, signer_name, status, signed_at, signed_name").order("signing_order"),
     ]);
     const earlier = ((all ?? []) as any[]).filter((r) => r.signing_order < s.signing_order);
     return {
       title: f?.title ?? "Document", body: (f?.body ?? "") as string, fundName: o?.name ?? "", role: s.signer_role as string,
       signerName: s.signer_name as string, status: s.status as string, signedAt: s.signed_at as string | null,
       yourTurn: s.status === "sent" || (s.status === "waiting" && earlier.every((r) => r.status === "signed")),
-      signers: all ?? [],
+      signers: all ?? [], signaturePage: (s.signature_page ?? null) as string | null, mode: (f?.signing_mode ?? "full") as string,
+      waitingOn: earlier.find((r) => r.status !== "signed")?.signer_role ?? null,
     };
   });
 
@@ -232,9 +236,10 @@ export const signDocumentFn = createServerFn({ method: "POST" }).middleware([req
     const { d, s } = await loadForSigner(context.userId, (context.claims as any)?.email, data.id);
     if (s.status === "signed") throw new Error("You've already signed this document.");
     if (s.status === "cancelled") throw new Error("This signing request was cancelled.");
-    const { data: all } = await d.from("fund_file_signatures").select("*").eq("file_id", s.file_id).neq("status", "cancelled").order("signing_order");
+    const { data: all } = await peers(d, s, "*").order("signing_order");
     const rows = (all ?? []) as any[];
-    if (rows.some((r) => r.signing_order < s.signing_order && r.status !== "signed")) throw new Error("The investor needs to sign first.");
+    const blocker = rows.find((r) => r.signing_order < s.signing_order && r.status !== "signed");
+    if (blocker) throw new Error(blocker.signer_role === "investor" ? "The investor needs to sign first." : "The fund manager needs to sign first.");
     const now = new Date().toISOString();
     const { data: upd, error } = await d.from("fund_file_signatures").update({ status: "signed", signed_name: data.signedName, signed_at: now, signed_user_agent: data.userAgent ?? null, signer_user_id: s.signer_user_id ?? context.userId }).eq("id", s.id).in("status", ["waiting", "sent"]).select("id");
     if (error) throw new Error(error.message);
@@ -246,6 +251,9 @@ export const signDocumentFn = createServerFn({ method: "POST" }).middleware([req
     const notify = (async (title: string, kind: string) => (await import("@/lib/ops-slack-notify.server")).notifySubmission({ kind, title, offeringId: s.offering_id, submittedBy: context.userId, ref: s.id, path: `/ops/fund/${s.offering_id}?tab=documents`, completed: true }));
     await notify(`"${f?.title ?? "Document"}" signed by ${data.signedName} (${s.signer_role === "investor" ? "investor" : "fund manager"})`, "document_signed").catch(() => null);
     if (next) { await emailSigner(d, next); return { done: false }; }
+    // The document is Signed once every packet on it is complete.
+    const { data: open } = await d.from("fund_file_signatures").select("id").eq("file_id", s.file_id).in("status", ["waiting", "sent"]).limit(1);
+    if (open?.length) return { done: true };
     await d.from("fund_files").update({ status: "signed" }).eq("id", s.file_id);
     await logFundAudit(context.userId, { offeringId: s.offering_id, eventType: "document_fully_signed", summary: `"${f?.title}" fully signed`, values: { signedAt: now } });
     await notify(`"${f?.title ?? "Document"}" is fully signed`, "document_fully_signed").catch(() => null);
@@ -267,16 +275,17 @@ export const remindFileSignerFn = createServerFn({ method: "POST" }).middleware(
     await assertFund(context.userId, s.offering_id);
     if (s.status === "signed") throw new Error("They've already signed.");
     if (s.status === "cancelled") throw new Error("This signing request was cancelled.");
-    const { data: all } = await d.from("fund_file_signatures").select("signing_order, status").eq("file_id", s.file_id).neq("status", "cancelled");
-    if (((all ?? []) as any[]).some((r) => r.signing_order < s.signing_order && r.status !== "signed")) throw new Error("It isn't their turn yet. The investor signs first.");
+    const { data: all } = await peers(d, s, "signing_order, status, signer_role");
+    const first = ((all ?? []) as any[]).find((r) => r.signing_order < s.signing_order && r.status !== "signed");
+    if (first) throw new Error(`It isn't their turn yet. The ${first.signer_role === "investor" ? "investor" : "fund manager"} signs first.`);
     const { data: f } = await d.from("fund_files").select("title").eq("id", s.file_id).maybeSingle();
     if (s.status === "waiting") await d.from("fund_file_signatures").update({ status: "sent", sent_at: new Date().toISOString() }).eq("id", s.id).eq("status", "waiting");
     const { sendSigningReminder } = await import("@/lib/signing-reminder.server");
     return sendSigningReminder(context.userId, {
       offeringId: s.offering_id, reminderKey: `file-sign:${s.id}`, documentTitle: f?.title ?? "your document", recipientEmail: s.signer_email,
       recipientName: s.signer_name || "there", recipientUserId: s.signer_user_id, path: `/sign/${s.id}`,
-      steps: s.signer_role === "investor" ? ["Read the document", "Confirm your details", "Sign"]
-        : ((all ?? []) as any[]).some((r) => r.signing_order < s.signing_order) ? ["Review the investor's signed document", "Countersign as fund manager"]
+      steps: s.signer_role === "investor" && !((all ?? []) as any[]).some((r) => r.signing_order < s.signing_order) ? ["Read the document", "Confirm your details", "Sign"]
+        : ((all ?? []) as any[]).some((r) => r.signing_order < s.signing_order) ? [s.signer_role === "investor" ? "Review the document the fund manager signed" : "Review the investor's signed document", "Countersign"]
         : ["Read the document", "Confirm the fund details", "Sign as the fund's signatory"],
       override: data.overrideReason ? { reason: data.overrideReason } : null,
     });
