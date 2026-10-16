@@ -23,8 +23,32 @@ async function staff(userId: string) {
   return a;
 }
 
+/** Staff, or the fund's own manager (self-serve: clients use Harmonious templates on their fund). */
+async function staffOrManager(userId: string, offeringId: string) {
+  const a = await setupActor(userId);
+  if (!a.isStaff && !a.offeringIds.includes(offeringId)) forbid("you do not manage that fund.");
+  return a;
+}
+const asManager = async <T>(a: { isStaff: boolean }, userId: string, offeringId: string, fn: () => Promise<T>) =>
+  a.isStaff ? fn() : (await import("@/lib/self-serve.server")).runSelfServe({ userId, offeringId, scope: "template_documents" }, fn);
+
 export async function listTemplates(userId: string) {
-  await staff(userId);
+  const actor = await setupActor(userId);
+  if (!actor.isStaff) {
+    // Fund managers only see approved Harmonious templates they can use (no history, no other funds).
+    if (!actor.offeringIds.length) forbid("you do not manage a fund.");
+    const [{ data: t }, { data: v }] = await Promise.all([
+      db().from("document_templates").select("id, title, category, description").is("archived_at", null).order("created_at", { ascending: false }),
+      db().from("document_template_versions").select("template_id, version, status").eq("status", "approved").order("version", { ascending: false }),
+    ]);
+    return {
+      funds: [],
+      templates: ((t ?? []) as any[]).map((tp) => ({
+        id: tp.id as string, title: tp.title as string, category: (DOCUMENT_CATEGORY_LABELS as any)[tp.category] ?? tp.category, categoryKey: tp.category as string,
+        description: tp.description as string | null, currentApproved: (((v ?? []) as any[]).find((x) => x.template_id === tp.id)?.version ?? null) as number | null, versions: [], uses: [],
+      })).filter((x) => x.currentApproved != null),
+    };
+  }
   const [{ data: t }, { data: v }, { data: u }, { data: funds }] = await Promise.all([
     db().from("document_templates").select("*").is("archived_at", null).order("created_at", { ascending: false }),
     db().from("document_template_versions").select("id, template_id, version, file_name, status, change_note, created_by, created_at, decided_by, decided_at, decision_note, source_offering_id, source_version").order("version", { ascending: false }),
@@ -119,7 +143,10 @@ export async function decideTemplateVersion(userId: string, input: { templateId:
 
 /** Copies an approved template version into a Fund as a new version awaiting that Fund's review. */
 export async function useTemplateInFund(userId: string, input: { templateId: string; version: number; offeringId: string }) {
-  await staff(userId);
+  const a = await staffOrManager(userId, input.offeringId);
+  return asManager(a, userId, input.offeringId, () => useTemplateInFundInner(userId, input));
+}
+async function useTemplateInFundInner(userId: string, input: { templateId: string; version: number; offeringId: string }) {
   const { data: t } = await db().from("document_templates").select("*").eq("id", input.templateId).maybeSingle();
   if (!t) throw new Error("Template not found.");
   const { data: v } = await db().from("document_template_versions").select("*").eq("template_id", t.id).eq("version", input.version).maybeSingle();
@@ -209,7 +236,7 @@ export async function fundTemplateValues(offeringId: string): Promise<Record<str
 
 /** Shows which blanks an approved template needs and which the fund already has, without saving anything. */
 export async function templateAutofillCheck(userId: string, input: { templateId: string; version: number; offeringId: string }) {
-  await staff(userId);
+  await staffOrManager(userId, input.offeringId);
   const { data: v } = await db().from("document_template_versions").select("file_path, file_name, status").eq("template_id", input.templateId).eq("version", input.version).maybeSingle();
   if (!v || v.status !== "approved") throw new Error("Only an approved template version can be used.");
   if (!/\.docx$/i.test(v.file_name)) return { filled: [], open: [], fillable: false };
@@ -222,7 +249,7 @@ export async function templateAutofillCheck(userId: string, input: { templateId:
 
 /** Documents made from Harmonious templates on one fund, newest first, with what can be done to each. */
 export async function listFundTemplateDocuments(userId: string, offeringId: string) {
-  await staff(userId);
+  await staffOrManager(userId, offeringId);
   const { data: uses } = await db().from("document_template_uses").select("offering_document_id, fund_version, used_at, template_id").eq("offering_id", offeringId).order("used_at", { ascending: false });
   const ids = [...new Set(((uses ?? []) as any[]).map((u) => u.offering_document_id))];
   if (!ids.length) return [];
@@ -245,7 +272,7 @@ export async function listFundTemplateDocuments(userId: string, offeringId: stri
 
 /** Removes an unsent, unapproved template draft from the fund. The record is kept (hidden) for history. */
 export async function removeFundTemplateDocument(userId: string, input: { offeringId: string; documentId: string; reason?: string | null | undefined }) {
-  await staff(userId);
+  await staffOrManager(userId, input.offeringId);
   const list = (await listFundTemplateDocuments(userId, input.offeringId)) as any[];
   const d = list.find((x) => x.id === input.documentId);
   if (!d) throw new Error("That document was not found on this fund.");
@@ -258,7 +285,7 @@ export async function removeFundTemplateDocument(userId: string, input: { offeri
 
 /** Short-lived link to read a template document on this fund. */
 export async function fundTemplateDocumentUrl(userId: string, input: { offeringId: string; versionId: string }) {
-  await staff(userId);
+  await staffOrManager(userId, input.offeringId);
   const { data: v } = await db().from("offering_document_versions").select("file_path, offering_id").eq("id", input.versionId).maybeSingle();
   if (!v || v.offering_id !== input.offeringId) throw new Error("That document was not found.");
   const { data, error } = await supabaseAdmin.storage.from(BUCKET).createSignedUrl(v.file_path, 300);
