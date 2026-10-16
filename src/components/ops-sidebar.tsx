@@ -351,7 +351,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
                   {fundHits.map((f) => (
                     <SidebarMenuItem key={f.id}>
                       <SidebarMenuButton asChild className="h-auto py-1.5">
-                        <Link to={`/ops/fund/${f.id}`} onClick={close} className="flex flex-col items-start">
+                        <Link to="/ops/fund/$fundId" params={{ fundId: f.id }} onClick={close} className="flex flex-col items-start">
                           <span className="truncate text-sm">{f.name}</span>
                           <span className="truncate text-[11px] text-sidebar-foreground/60">{f.open ? "Open fund" : "In setup"}</span>
                         </Link>
@@ -370,7 +370,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
                   {peopleHits.map((p) => (
                     <SidebarMenuItem key={p.id}>
                       <SidebarMenuButton asChild className="h-auto py-1.5">
-                        <Link to={`/ops/people/${p.id}`} onClick={close} className="flex flex-col items-start">
+                        <Link to="/ops/people/$userId" params={{ userId: p.id }} onClick={close} className="flex flex-col items-start">
                           <span className="truncate text-sm">{p.name || p.email}</span>
                           <span className="truncate text-[11px] text-sidebar-foreground/60">{p.email || "Person record"}</span>
                         </Link>

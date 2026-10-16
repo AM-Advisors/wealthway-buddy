@@ -13,7 +13,8 @@ async function db() {
 }
 async function assertStaff(uid: string) {
   const { OPS_STAFF_ROLES } = await import("@/lib/ops-capabilities");
-  const { data } = await db().from("user_roles").select("role").eq("user_id", uid);
+  const d = await db();
+  const { data } = await d.from("user_roles").select("role").eq("user_id", uid);
   const roles = ((data ?? []) as any[]).map((r) => r.role);
   if (!roles.some((r) => (OPS_STAFF_ROLES as readonly string[]).includes(r))) throw new Error("Staff only");
   return roles;
