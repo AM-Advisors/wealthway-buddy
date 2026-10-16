@@ -16,7 +16,7 @@ export const INVESTOR_SERVICING_KEYS = ["self_serve", "essentials", "standard", 
 export type InvestorServicingKey = (typeof INVESTOR_SERVICING_KEYS)[number];
 
 export interface OrderSelection {
-  investorServicing?: InvestorServicingKey; // per fund; defaults to Self Serve
+  investorServicing?: InvestorServicingKey | undefined; // per fund; defaults to Self Serve
   funds: number; // SaaS platform fee per fund (0 = none)
   servicing: ServicingKey;
   capTable: CapTier;
