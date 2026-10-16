@@ -39,3 +39,15 @@ describe("SaaS self-serve orders", () => {
     expect(requiredEntitlement("/client/agreements/msa")).toBeNull();
   });
 });
+
+import { menuKeysFromServices } from "./saas-order-model";
+describe("menu keys from purchased services", () => {
+  it("SOW fund administration opens fund pages; free cap table opens cap table", () => {
+    const k = menuKeysFromServices(["fund_management", "cap_table_free"]);
+    expect(k).toContain("fund_platform");
+    expect(k).toContain("cap_table");
+  });
+  it("nothing purchased opens nothing", () => {
+    expect(menuKeysFromServices([])).toEqual([]);
+  });
+});
