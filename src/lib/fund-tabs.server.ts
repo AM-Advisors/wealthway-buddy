@@ -379,7 +379,7 @@ export async function investorLevels(fundId: string) {
   const effective = tierKey ?? "self_serve";
   const investors = rows.map((o) => {
     const a = accBy.get(o.application_id);
-    const accredited = !!a && a.qualifies === true && ["verified", "approved", "passed"].includes(String(a.status));
+    const accredited = !!a && a.qualifies === true && ["approved"].includes(String(a.status));
     const qp = accredited && /qualified.?purchaser/i.test(String(a?.method ?? ""));
     const level = investorLevel({ accredited, qualifiedPurchaser: qp, commitmentCents: o.commitment_amount_cents ?? o.accepted_amount_cents ?? o.requested_amount_cents ?? null });
     return { id: o.id as string, level, features: portalFeatures(level, effective) };
