@@ -197,7 +197,19 @@ export async function launchedOffering(offeringIdOrSlug: string) {
   return { offering, setup };
 }
 
+// Short-lived cache: fund requirements rarely change, and readiness views re-read them per investor.
+const REQ_CACHE = new Map<string, { at: number; v: OfferingRequirements }>();
+const REQ_TTL = 60_000;
+
 export async function offeringRequirements(offeringId: string): Promise<OfferingRequirements> {
+  const hit = REQ_CACHE.get(offeringId);
+  if (hit && Date.now() - hit.at < REQ_TTL) return hit.v;
+  const v = await loadOfferingRequirements(offeringId);
+  REQ_CACHE.set(offeringId, { at: Date.now(), v });
+  return v;
+}
+
+async function loadOfferingRequirements(offeringId: string): Promise<OfferingRequirements> {
   const [{ data: offering }, { data: req }, { data: setup }] = await Promise.all([
     db().from("offerings").select("*").eq("id", offeringId).maybeSingle(),
     db().from("offering_requirements").select("*").eq("offering_id", offeringId).maybeSingle(),
@@ -232,6 +244,22 @@ export async function offeringRequirements(offeringId: string): Promise<Offering
     permittedProfileTypes: (rules['permittedProfileTypes'] as string[] | undefined) ?? null,
     foreignInvestorsPermitted: rules['foreignInvestorsPermitted'] !== false,
   }, (offering as any)?.reg_type ?? null);
+}
+
+// Short-lived cache: a fund's document list is the same for every investor on it.
+const DOCS_CACHE = new Map<string, { at: number; v: any[] }>();
+const DOCS_TTL = 60_000;
+
+async function offeringDocsCached(offeringId: string): Promise<any[]> {
+  const hit = DOCS_CACHE.get(offeringId);
+  if (hit && Date.now() - hit.at < DOCS_TTL) return hit.v;
+  const { data } = await db()
+    .from("offering_documents")
+    .select("id, title, doc_type, document_category, sort_order, requires_signature, applies_to, usage, applicability, active_version")
+    .eq("offering_id", offeringId);
+  const v = (data ?? []) as any[];
+  DOCS_CACHE.set(offeringId, { at: Date.now(), v });
+  return v;
 }
 
 // ------------------------------------------------------------ facts
@@ -288,10 +316,7 @@ async function gatherFacts(row: any) {
           )
       : Promise.resolve({ data: [] as any[] }),
   ]);
-  const { data: offeringDocs } = await db()
-    .from("offering_documents")
-    .select("id, title, doc_type, document_category, sort_order, requires_signature, applies_to, usage, applicability, active_version")
-    .eq("offering_id", row.offering_id);
+  const offeringDocs = await offeringDocsCached(row.offering_id);
 
   // Investor-confirmed facts outrank prepared values; unreviewed prepared values never drive requirements.
   const { loadConfirmedFacts } = await import("@/lib/prepared-investor.server");
