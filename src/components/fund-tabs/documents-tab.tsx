@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DOC_TEMPLATES, STARTER_NOTICE } from "@/lib/fund-doc-templates";
 import { deleteFundFileFn, generateFundDocFn, listFundFilesFn, setSignatureBoxesFn, uploadFundFileFn } from "@/lib/fund-tabs.functions";
-import { listTemplatesFn, useTemplateInFundFn } from "@/lib/fund-doc-templates.functions";
+import { listTemplatesFn, templateAutofillCheckFn, useTemplateInFundFn } from "@/lib/fund-doc-templates.functions";
 import { fileToBase64, fmtDate } from "./shared";
 import { StandardFormsCard } from "./standard-forms-card";
 import { fundSigningContextFn, sendFileForSignatureFn, sendFileToSignatoryFn, remindFileSignerFn } from "@/lib/fund-file-signing.functions";
@@ -40,6 +40,9 @@ export function DocumentsTab({ fundId }: { fundId: string }) {
     onSuccess: (r: any) => { setMode(null); setMade({ title: r.title, signing: r.signing, autofill: r.autofill }); qc.invalidateQueries(); },
     onError: (e: Error) => toast.error(e.message),
   });
+  const checkFn = useServerFn(templateAutofillCheckFn);
+  const [checking, setChecking] = useState<any | null>(null);
+  const check = useQuery({ queryKey: ["tpl-check", fundId, checking?.id], enabled: !!checking, retry: false, queryFn: () => checkFn({ data: { templateId: checking.id, version: checking.currentApproved, offeringId: fundId } }) });
   const ROLE: Record<string, string> = { investor: "Investor", fund_signatory: "Fund manager (fund signatory)" };
 
   const onUpload = async (file: File | undefined) => {
@@ -183,11 +186,29 @@ export function DocumentsTab({ fundId }: { fundId: string }) {
                 <p className="text-xs text-muted-foreground">Filled in from the fund's details, with the signature block set up for you.</p>
                 <div className="grid gap-2 sm:grid-cols-3">
                   {(tpl.data?.templates ?? []).filter((t: any) => t.currentApproved).map((t: any) => (
-                    <Button key={t.id} variant="outline" size="sm" className="h-auto w-full justify-start whitespace-normal py-2 text-left" disabled={useTpl.isPending} onClick={() => useTpl.mutate(t)}>{useTpl.isPending && useTpl.variables?.id === t.id ? "Creating…" : t.title}</Button>
+                    <Button key={t.id} variant="outline" size="sm" className="h-auto w-full justify-start whitespace-normal py-2 text-left" disabled={useTpl.isPending} onClick={() => { setMode(null); setChecking(t); }}>{useTpl.isPending && useTpl.variables?.id === t.id ? "Creating…" : t.title}</Button>
                   ))}
                 </div>
               </div>
             )}
+          </DialogContent>
+        </Dialog>
+      )}
+      {checking && (
+        <Dialog open onOpenChange={(o) => !o && setChecking(null)}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader><DialogTitle>{checking.title}</DialogTitle><DialogDescription>These blanks are filled from this fund's details. Anything missing can be added under Setup → Fund Details, or left blank for review.</DialogDescription></DialogHeader>
+            {check.isLoading ? <p className="text-sm text-muted-foreground">Checking the template…</p> : check.error ? <p className="text-sm text-destructive">{(check.error as Error).message}</p> : (
+              <div className="space-y-3 text-sm">
+                <div><p className="font-medium">Have it ({check.data?.filled.length ?? 0})</p><p className="text-xs text-muted-foreground">{check.data?.filled.join(", ") || "None"}</p></div>
+                <div><p className="font-medium">Missing ({check.data?.open.length ?? 0})</p><p className="text-xs text-muted-foreground">{check.data?.open.join(", ") || "Nothing. Every blank will be filled."}</p>
+                  {!!check.data?.open.length && <p className="mt-1 text-xs text-muted-foreground">Investor amount, signature and date blanks are completed at signing.</p>}</div>
+              </div>
+            )}
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setChecking(null)}>Cancel</Button>
+              <Button disabled={useTpl.isPending || check.isLoading} onClick={() => useTpl.mutate(checking, { onSettled: () => setChecking(null) })}>{useTpl.isPending ? "Creating…" : "Use Harmonious template"}</Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       )}
