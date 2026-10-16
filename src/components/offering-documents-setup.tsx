@@ -130,6 +130,7 @@ function DocumentRow({ doc, data, offeringId, onChanged }: { doc: Doc; data: Dat
   const [effective, setEffective] = useState("");
   const [rollout, setRollout] = useState<{ version: number; r: Awaited<ReturnType<typeof rolloutPreviewFn>> } | null>(null);
   const [showRequest, setShowRequest] = useState(false);
+  const [sendOpen, setSendOpen] = useState(false);
   const latest = doc.versions[0];
   const active = doc.versions.find((v) => v.isActive);
   const run = async (fn: () => Promise<unknown>, ok: string) => {
