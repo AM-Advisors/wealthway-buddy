@@ -84,6 +84,7 @@ import { Route as CapClaimTokenRouteImport } from './routes/cap-claim.$token'
 import { Route as ClassroomImgSplatRouteImport } from './routes/classroom-img.$'
 import { Route as FundSlugRouteImport } from './routes/fund.$slug'
 import { Route as GuidesFundManagerFirstLoginRouteImport } from './routes/guides.fund-manager-first-login'
+import { Route as GuidesSignOperatingAgreementRouteImport } from './routes/guides.sign-operating-agreement'
 import { Route as InvestSlugRouteImport } from './routes/invest.$slug'
 import { Route as InvestorIndexRouteImport } from './routes/investor.index'
 import { Route as InvestorTaxRouteImport } from './routes/investor.tax'
@@ -836,6 +837,12 @@ const GuidesFundManagerFirstLoginRoute =
   GuidesFundManagerFirstLoginRouteImport.update({
     id: '/guides/fund-manager-first-login',
     path: '/guides/fund-manager-first-login',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const GuidesSignOperatingAgreementRoute =
+  GuidesSignOperatingAgreementRouteImport.update({
+    id: '/guides/sign-operating-agreement',
+    path: '/guides/sign-operating-agreement',
     getParentRoute: () => rootRouteImport,
   } as any)
 const InvestSlugRoute = InvestSlugRouteImport.update({
@@ -3048,6 +3055,7 @@ export interface FileRoutesByFullPath {
   '/classroom-img/$': typeof ClassroomImgSplatRoute
   '/fund/$slug': typeof FundSlugRoute
   '/guides/fund-manager-first-login': typeof GuidesFundManagerFirstLoginRoute
+  '/guides/sign-operating-agreement': typeof GuidesSignOperatingAgreementRoute
   '/invest/$slug': typeof InvestSlugRoute
   '/investor/tax': typeof InvestorTaxRoute
   '/invite/$token': typeof InviteTokenRoute
@@ -3486,6 +3494,7 @@ export interface FileRoutesByTo {
   '/classroom-img/$': typeof ClassroomImgSplatRoute
   '/fund/$slug': typeof FundSlugRoute
   '/guides/fund-manager-first-login': typeof GuidesFundManagerFirstLoginRoute
+  '/guides/sign-operating-agreement': typeof GuidesSignOperatingAgreementRoute
   '/invest/$slug': typeof InvestSlugRoute
   '/investor/tax': typeof InvestorTaxRoute
   '/invite/$token': typeof InviteTokenRoute
@@ -3926,6 +3935,7 @@ export interface FileRoutesById {
   '/classroom-img/$': typeof ClassroomImgSplatRoute
   '/fund/$slug': typeof FundSlugRoute
   '/guides/fund-manager-first-login': typeof GuidesFundManagerFirstLoginRoute
+  '/guides/sign-operating-agreement': typeof GuidesSignOperatingAgreementRoute
   '/invest/$slug': typeof InvestSlugRoute
   '/investor/tax': typeof InvestorTaxRoute
   '/invite/$token': typeof InviteTokenRoute
@@ -4370,6 +4380,7 @@ export interface FileRouteTypes {
     | '/classroom-img/$'
     | '/fund/$slug'
     | '/guides/fund-manager-first-login'
+    | '/guides/sign-operating-agreement'
     | '/invest/$slug'
     | '/investor/tax'
     | '/invite/$token'
@@ -4808,6 +4819,7 @@ export interface FileRouteTypes {
     | '/classroom-img/$'
     | '/fund/$slug'
     | '/guides/fund-manager-first-login'
+    | '/guides/sign-operating-agreement'
     | '/invest/$slug'
     | '/investor/tax'
     | '/invite/$token'
@@ -5247,6 +5259,7 @@ export interface FileRouteTypes {
     | '/classroom-img/$'
     | '/fund/$slug'
     | '/guides/fund-manager-first-login'
+    | '/guides/sign-operating-agreement'
     | '/invest/$slug'
     | '/investor/tax'
     | '/invite/$token'
@@ -5647,6 +5660,7 @@ export interface RootRouteChildren {
   ClassroomImgSplatRoute: typeof ClassroomImgSplatRoute
   FundSlugRoute: typeof FundSlugRoute
   GuidesFundManagerFirstLoginRoute: typeof GuidesFundManagerFirstLoginRoute
+  GuidesSignOperatingAgreementRoute: typeof GuidesSignOperatingAgreementRoute
   InvestSlugRoute: typeof InvestSlugRoute
   InviteTokenRoute: typeof InviteTokenRoute
   JoinTokenRoute: typeof JoinTokenRoute
@@ -6216,6 +6230,13 @@ declare module '@tanstack/react-router' {
       path: '/guides/fund-manager-first-login'
       fullPath: '/guides/fund-manager-first-login'
       preLoaderRoute: typeof GuidesFundManagerFirstLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/guides/sign-operating-agreement': {
+      id: '/guides/sign-operating-agreement'
+      path: '/guides/sign-operating-agreement'
+      fullPath: '/guides/sign-operating-agreement'
+      preLoaderRoute: typeof GuidesSignOperatingAgreementRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/invest/$slug': {
@@ -9784,6 +9805,7 @@ const rootRouteChildren: RootRouteChildren = {
   ClassroomImgSplatRoute: ClassroomImgSplatRoute,
   FundSlugRoute: FundSlugRoute,
   GuidesFundManagerFirstLoginRoute: GuidesFundManagerFirstLoginRoute,
+  GuidesSignOperatingAgreementRoute: GuidesSignOperatingAgreementRoute,
   InvestSlugRoute: InvestSlugRoute,
   InviteTokenRoute: InviteTokenRoute,
   JoinTokenRoute: JoinTokenRoute,
