@@ -17,11 +17,10 @@ export interface Product {
   alaCarte: Line[]; openPoints: string[];
 }
 
-/** Annual price offered as yearly, quarterly (+10%) and monthly (+20%). */
+/** Annual price offered as yearly or quarterly (+10%). No monthly billing. */
 export const cadences = (annual: number): Price[] => [
   { amount: annual, billing: "annual" },
   { amount: Math.round((annual / 4) * 1.1), billing: "quarterly" },
-  { amount: Math.round((annual / 12) * 1.2), billing: "monthly" },
 ];
 const once = (amount: number | null, note?: string): Price[] => [{ amount, billing: "one_time", note }];
 const yearly = (amount: number | null, note?: string): Price[] => [{ amount, billing: "annual", note }];
@@ -78,10 +77,10 @@ export const PRODUCTS: Product[] = [
   {
     key: "cap_table", name: "Cap Table", intro: "Ownership records, share issuance and stakeholder portal for companies.",
     fundCost: [
-      { name: "Free", description: "Up to 5 stakeholders", prices: [{ amount: 0, billing: "monthly" }] },
-      { name: "Starter", description: "Up to 25 stakeholders", prices: [{ amount: 150, billing: "monthly" }, { amount: 1200, billing: "annual" }] },
-      { name: "Growth", description: "Up to 50 stakeholders", prices: [{ amount: 300, billing: "monthly" }, { amount: 3000, billing: "annual" }] },
-      { name: "Scale", description: "Unlimited stakeholders", prices: [{ amount: 599, billing: "monthly" }, { amount: 5990, billing: "annual" }] },
+      { name: "Free", description: "Up to 5 stakeholders", prices: yearly(0, "Free") },
+      { name: "Starter", description: "Up to 25 stakeholders", prices: [{ amount: 1200, billing: "annual" }] },
+      { name: "Growth", description: "Up to 50 stakeholders", prices: [{ amount: 3000, billing: "annual" }] },
+      { name: "Scale", description: "Unlimited stakeholders", prices: [{ amount: 5990, billing: "annual" }] },
       { name: "Enterprise", description: "Custom", prices: yearly(null, "Custom quote") },
     ],
     administration: [{ name: "Ledger administration", description: "Share ledger, issuances and certificates are included in the plan.", prices: yearly(0, "Included") }],
@@ -109,11 +108,15 @@ export const PRODUCTS: Product[] = [
       { name: "Enhanced SPV administration", description: "Added on top of the one-time fee.", prices: yearly(2500, "from"), items: ["Investor statements", "Annual financial package", "Investment value tracking", "Enhanced distribution calculations"] },
     ],
     servicing: {
-      client: [CLIENT_SERVICING[0]!, { name: "Core", description: "72-hour response.", prices: once(0, "Included in SPV fee") }, { name: "White Glove", description: "Named administrator, proactive management.", prices: yearly(7500, "from") }],
+      client: [CLIENT_SERVICING[0]!,
+        { name: "Core", description: "72-hour response.", prices: cadences(1500), items: ["Email support, 72-hour response", "Document review on request"] },
+        { name: "Plus", description: "48-hour response, named contact.", prices: cadences(2500), items: ["Named relationship contact", "48-hour response"] },
+        { name: "White Glove", description: "24-hour response, proactive management.", prices: cadences(7500), items: ["Named administrator", "24-hour priority response", "Proactive deadline management"] },
+        { name: "Institutional", description: "Dedicated team, custom SLAs.", prices: yearly(null, "Custom quote"), items: ["Dedicated team", "Custom SLAs"] }],
       investor: INVESTOR_SERVICING,
     },
     alaCarte: FUND_A_LA_CARTE,
-    openPoints: ["SPV Plus ($2,500/yr) mostly covered accounting work, so it is now 'Enhanced SPV administration'. Confirm.", "All non-SaaS prices are back to before the 25% increase."],
+    openPoints: ["SPV Core $1,500/yr is a placeholder. Confirm.", "All non-SaaS prices are back to before the 25% increase."],
   },
   {
     key: "saas", name: "SaaS Platform", intro: "Platform only, no Harmonious support. Buy services one at a time.",
