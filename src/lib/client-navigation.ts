@@ -40,6 +40,7 @@ const INVESTOR_NAV: ClientNavLink[] = [
   { title: "Documents", url: "/documents", icon: "document" },
   { title: "Tax", url: "/tax", icon: "tax" },
   { title: "Messages", url: "/messages", icon: "message" },
+  { title: "Help", url: "/help", icon: "document" },
   { title: "Profile", url: "/profile", icon: "person" },
 ];
 
@@ -57,6 +58,7 @@ const FUND_MANAGER_NAV: ClientNavLink[] = [
   { title: "Agreements", url: "/manager/agreements", icon: "document" },
   { title: "Cap Table", url: "/client/cap-table", icon: "pie" },
   { title: "Settings", url: "/client", icon: "settings" },
+  { title: "Help", url: "/help", icon: "document" },
   { title: "Profile", url: "/profile", icon: "person" },
 ];
 
@@ -69,6 +71,7 @@ const COMPANY_NAV: ClientNavLink[] = [
   { title: "Documents", url: "/client/cap-table/documents", icon: "document" },
   { title: "Reports", url: "/client/cap-table/reports", icon: "report" },
   { title: "Settings", url: "/client", icon: "settings" },
+  { title: "Help", url: "/help", icon: "document" },
   { title: "Profile", url: "/profile", icon: "person" },
 ];
 
@@ -77,6 +80,7 @@ const PROFESSIONAL_NAV: ClientNavLink[] = [
   { title: "Clients", url: "/professional/profiles", icon: "people" },
   { title: "Tasks", url: "/professional/tasks", icon: "tasks" },
   { title: "Documents", url: "/professional/documents", icon: "document" },
+  { title: "Help", url: "/help", icon: "document" },
   { title: "Profile", url: "/profile", icon: "person" },
 ];
 
