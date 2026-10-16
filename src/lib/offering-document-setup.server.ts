@@ -206,7 +206,8 @@ export async function approveDocumentVersion(userId: string, input: { documentId
 
 export async function setDocumentUsage(userId: string, input: { documentId: string; usage: DocumentUsage; applicability: Applicability }) {
   const d = await docRow(input.documentId);
-  await assertStaff(userId, d.offering_id);
+  const actor = await assertRead(userId, d.offering_id);
+  if (!actor.isStaff && !(await import("@/lib/self-serve.server")).selfServeAllows(userId, d.offering_id, "template_documents")) await assertTemplateEditor(userId, d);
   await db()
     .from("offering_documents")
     .update({ usage: input.usage, applicability: input.applicability, requires_signature: input.usage === "signature" })

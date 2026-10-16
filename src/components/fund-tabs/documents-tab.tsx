@@ -244,7 +244,7 @@ export function DocumentsTab({ fundId }: { fundId: string }) {
       {made && (
         <Dialog open onOpenChange={(o) => !o && setMade(null)}>
           <DialogContent className="max-w-lg">
-            <DialogHeader><DialogTitle>{made.title}</DialogTitle><DialogDescription>Added to the fund's offering documents as a new version for review.</DialogDescription></DialogHeader>
+            <DialogHeader><DialogTitle>{made.title}</DialogTitle><DialogDescription>Added to the fund's offering documents. No additional Harmonious approval is required.</DialogDescription></DialogHeader>
             <div className="space-y-3 text-sm">
               {made.signing?.roles?.length ? (
                 <div>

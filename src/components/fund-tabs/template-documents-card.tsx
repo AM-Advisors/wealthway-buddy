@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { fundTemplateDocumentUrlFn, listFundTemplateDocumentsFn, removeFundTemplateDocumentFn } from "@/lib/fund-doc-templates.functions";
+import { activateDocumentVersionFn } from "@/lib/fund-setup-canonical.functions";
 import { fmtDate } from "./shared";
 
 const ROLE: Record<string, string> = { investor: "Investor", fund_signatory: "Fund manager" };
@@ -17,6 +18,12 @@ export function TemplateDocumentsCard({ fundId }: { fundId: string }) {
   const qc = useQueryClient();
   const list = useServerFn(listFundTemplateDocumentsFn);
   const del = useServerFn(removeFundTemplateDocumentFn);
+  const activate = useServerFn(activateDocumentVersionFn);
+  const useVersion = useMutation({
+    mutationFn: (d: any) => activate({ data: { documentId: d.id, version: d.version, scope: "new_only" } }),
+    onSuccess: () => { toast.success("Ready to send"); qc.invalidateQueries(); },
+    onError: (e: Error) => toast.error(e.message),
+  });
   const q = useQuery({ queryKey: ["fund-template-docs", fundId], queryFn: () => list({ data: { offeringId: fundId } }) as Promise<any[]> });
   const [review, setReview] = useState<any | null>(null);
   const rm = useMutation({
@@ -44,8 +51,9 @@ export function TemplateDocumentsCard({ fundId }: { fundId: string }) {
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  {!d.canDelete && <Badge variant="outline">Approved or sent</Badge>}
+                  {d.isActive && <Badge variant="outline">In use</Badge>}
                   <Button size="sm" variant="outline" disabled={!d.versionId} onClick={() => setReview(d)}>Review</Button>
+                  {!d.isActive && d.version && <Button size="sm" disabled={useVersion.isPending || (d.signers.length > 0 && d.signingStatus !== "confirmed")} onClick={() => useVersion.mutate(d)}>Use this version</Button>}
                   {d.canDelete && <Button size="sm" variant="ghost" disabled={rm.isPending} onClick={() => { if (confirm(`Delete "${d.title}"? It hasn't been sent, and it stays in Audit History.`)) rm.mutate(d); }}>Delete</Button>}
                 </div>
               </div>
