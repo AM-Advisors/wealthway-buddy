@@ -154,7 +154,7 @@ export function DocumentsTab({ fundId }: { fundId: string }) {
       {sendFor && (
         <Dialog open onOpenChange={(o) => !o && setSendFor(null)}>
           <DialogContent className="max-w-md">
-            <DialogHeader><DialogTitle>Send for signature</DialogTitle><DialogDescription>Each investor gets one signature page with a fund manager block and an investor block, filled in from their records. When every page is signed, "{sendFor.title}" is marked Signed.</DialogDescription></DialogHeader>
+            <DialogHeader><DialogTitle>Send for signature</DialogTitle><DialogDescription>{order === "manager_only" ? `Only the fund manager signs "${sendFor.title}". Investors are not asked to sign it.` : order === "investor_only" ? `Each investor gets a signature page filled in from their records. When every page is signed, "${sendFor.title}" is marked Signed.` : `Each investor gets one signature page with a fund manager block and an investor block, filled in from their records. When every page is signed, "${sendFor.title}" is marked Signed.`}</DialogDescription></DialogHeader>
             <div className="space-y-3">
               {sendFor.body && (
                 <Button type="button" size="sm" variant="outline" className="w-full" onClick={() => setPreview({ title: sendFor.title, body: sendFor.body })}>
