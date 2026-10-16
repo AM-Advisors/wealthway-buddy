@@ -6,6 +6,7 @@
  */
 const GATEWAY = "https://connector-gateway.lovable.dev/slack/api";
 export const OPS_SLACK_CHANNEL = "C057SPLASCR"; // #operations
+export const COMPLIANCE_SLACK_CHANNEL = "C0C9TBQTXNY"; // #compliance-regulatory
 const SITE = "https://app.harmonious.co";
 
 const admin = async () => (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
