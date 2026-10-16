@@ -35,7 +35,7 @@ export async function runApprovalAlerts(): Promise<{ checked: number; sent: numb
   for (const item of items) {
     if (seen.has(`approval_needed:${item.id}`) || sent >= 25) continue;
     let path: string | null = null;
-    try { const d = destinationFor(item as any) as any; path = typeof d === "string" ? d : d?.to ?? null; } catch { path = null; }
+    try { const d = destinationFor(item as any) as any; path = typeof d === "string" ? d : null; } catch { path = null; }
     await notifySubmission({ kind: "approval_needed", once: true, ref: item.id, title: alertTitle(item), offeringId: item.fundId ?? null, clientId: item.clientId ?? null, path: path && path.startsWith("/") ? path : "/ops/queue" });
     sent += 1;
   }
