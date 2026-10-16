@@ -6,7 +6,9 @@ export type TierKey = "self_serve" | "core" | "fund_admin" | "white_glove" | "in
 /** SaaS à la carte = Core à la carte price × this markup (fund documents are a fixed $500 each). */
 export const SAAS_MARKUP = 1.5;
 export const SAAS_FUND_DOCUMENT_CENTS = 50000;
-export const saasPriceCents = (coreCents: number) => Math.round((coreCents * SAAS_MARKUP) / 100) * 100;
+/** SaaS keeps the October 2026 +25% uplift that standard prices no longer carry. */
+export const SAAS_BASE_UPLIFT = 1.25;
+export const saasPriceCents = (coreCents: number) => Math.round((coreCents * SAAS_BASE_UPLIFT * SAAS_MARKUP) / 100) * 100;
 export type BillingCadence = "annual" | "quarterly" | "monthly";
 
 export interface AdministrationTier {
@@ -44,7 +46,7 @@ export const ADMINISTRATION_TIERS: AdministrationTier[] = [
     positioning: "Essential SPV infrastructure",
     statement: "We provide the infrastructure.",
     operatingModel: "Buy-up from Self Serve: Harmonious support with a 72-hour response target.",
-    prices: { annual: 18750, quarterly: 5313, monthly: 1875 },
+    prices: { annual: 15000, quarterly: 4250, monthly: 1500 },
     selfServe: false,
     includesPrevious: "self_serve",
     entitlements: [
@@ -61,7 +63,7 @@ export const ADMINISTRATION_TIERS: AdministrationTier[] = [
     positioning: "Complete Fund Administration",
     statement: "We administer the fund.",
     operatingModel: "Collaborative — Harmonious owns normal administration; the GP initiates or approves material fund actions.",
-    prices: { annual: 25000, quarterly: 6875, monthly: 2500 },
+    prices: { annual: 20000, quarterly: 5500, monthly: 2000 },
     selfServe: true,
     scope: ["1 Fund, 1 GP, 1 Management Company", "Up to 50 investors", "Standard structure & waterfall", "Quarterly NAV & reporting"],
     entitlements: [
@@ -79,7 +81,7 @@ export const ADMINISTRATION_TIERS: AdministrationTier[] = [
     positioning: "Managed Fund Operations",
     statement: "We run the back office with you.",
     operatingModel: "Harmonious managed — we proactively manage recurring operational requirements so you don't have to remember routine deadlines.",
-    prices: { annual: 45000, quarterly: 12500, monthly: 4375 },
+    prices: { annual: 36000, quarterly: 10000, monthly: 3500 },
     selfServe: true,
     includesPrevious: "fund_admin",
     entitlements: [
@@ -98,7 +100,7 @@ export const ADMINISTRATION_TIERS: AdministrationTier[] = [
     statement: "We become your operating infrastructure.",
     operatingModel: "Dedicated administration team with custom SLAs and approval controls.",
     prices: null,
-    startingAnnual: 75000,
+    startingAnnual: 60000,
     selfServe: false,
     includesPrevious: "white_glove",
     entitlements: [

@@ -26,3 +26,16 @@ describe("product pricing", () => {
     expect(a.find((l) => l.name.startsWith("Form D"))!.prices[0]!.amount).toBe(160);
   });
 });
+
+describe("25% increase removed except SaaS", () => {
+  it("standard fund prices are pre-increase", () => {
+    const v = productByKey("venture");
+    expect(v.fundCost[0]!.prices[0]!.amount).toBe(2500);
+    expect(v.alaCarte.find((l) => l.name === "Capital call")!.prices[0]!.amount).toBe(2000);
+  });
+  it("SaaS keeps the increased prices", () => {
+    const s = productByKey("saas");
+    expect(s.fundCost[0]!.prices[0]!.amount).toBe(3125);
+    expect(s.alaCarte.find((l) => l.name === "Capital call")!.prices[0]!.amount).toBe(3750);
+  });
+});
