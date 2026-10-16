@@ -36,7 +36,8 @@ async function assertRead(userId: string, offeringId: string) {
 }
 async function assertStaff(userId: string, offeringId: string) {
   const a = await assertRead(userId, offeringId);
-  if (!a.isStaff) forbid("only Harmonious can configure offering documents.");
+  // Fund managers may set up Harmonious template documents on their own fund (self-serve grant).
+  if (!a.isStaff && !(await import("@/lib/self-serve.server")).selfServeAllows(userId, offeringId, "template_documents")) forbid("only Harmonious can configure offering documents.");
   return a;
 }
 async function docRow(documentId: string) {
