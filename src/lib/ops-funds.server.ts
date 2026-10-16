@@ -5,8 +5,24 @@ import { fundMetrics, totals, type FundOnboardingFact } from "@/lib/ops-funds-mo
 
 const db = () => supabaseAdmin as any;
 
+// Short-lived cache: the dashboard recomputes readiness for every investor, which is expensive;
+// the data is identical for all staff, so share one result for a minute. Read-only either way.
+let DASH_CACHE: { at: number; v: { rows: any[]; totals: any } } | null = null;
+const DASH_TTL = 60_000;
+
 export async function opsFundsDashboard(userId: string, supabase: any) {
   await assertStaff(userId);
+  const { data: myRoles } = await db().from("user_roles").select("role").eq("user_id", userId);
+  const canDelete = ((myRoles ?? []) as any[]).some((r) => r.role === "super_admin");
+  if (DASH_CACHE && Date.now() - DASH_CACHE.at < DASH_TTL) {
+    return { rows: DASH_CACHE.v.rows, canDelete, totals: DASH_CACHE.v.totals };
+  }
+  const built = await buildOpsFundsDashboard(userId, supabase);
+  DASH_CACHE = { at: Date.now(), v: { rows: built.rows, totals: built.totals } };
+  return { rows: built.rows, canDelete, totals: built.totals };
+}
+
+async function buildOpsFundsDashboard(userId: string, supabase: any) {
   const [{ data: offs }, { data: onbs }, { data: tasks }, { data: setups }, { data: managers }, { data: links }] = await Promise.all([
     db().from("offerings").select("id, name, client_id, is_open, is_demo").order("name").limit(1000),
     db().from("investor_onboardings").select("*").not("stage", "in", "(declined,cancelled)").limit(5000),
