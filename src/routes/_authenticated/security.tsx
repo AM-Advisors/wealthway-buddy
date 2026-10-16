@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { RecoveryCodes } from "@/components/security-gate";
 import { PrivacyRequestsCard } from "@/components/privacy-requests-card";
 import { generateRecoveryCodes, getMySecurity, signOutOtherSessions } from "@/lib/account-security.functions";
+import { canEnrollPasskey } from "@/lib/passkeys";
 
 export const Route = createFileRoute("/_authenticated/security")({
   head: () => ({
@@ -121,7 +122,7 @@ function SecurityPage() {
             </div>
           ) : (
             <div className="flex flex-wrap gap-2">
-              {typeof window !== "undefined" && window.PublicKeyCredential && <Button size="sm" onClick={addPasskey}>Add passkey</Button>}
+              {canEnrollPasskey() && <Button size="sm" onClick={addPasskey}>Add passkey</Button>}
               <Button size="sm" variant="outline" onClick={startTotp}>Add authenticator app</Button>
             </div>
           )}

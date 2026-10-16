@@ -285,14 +285,11 @@ function ProfilePage() {
 
       <Section title="Security" description="How you sign in.">
         <p className="text-sm text-muted-foreground">
-          Sign-in is managed through your email address and Google account. You can also add a
-          passkey (Face ID, Touch ID or Windows Hello) or an authenticator app as a second step.
+          Sign-in is managed through your email address and Google account, with an authenticator
+          app (Google Authenticator, 1Password, Authy) as the second step.
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
           <Button asChild size="sm">
-            <Link to="/security">Add a passkey</Link>
-          </Button>
-          <Button asChild size="sm" variant="outline">
             <Link to="/security">Add an authenticator app</Link>
           </Button>
         </div>
