@@ -1262,3 +1262,14 @@ export async function recentOperationsActivity(context: Ctx, limit = 20) {
 }
 
 export type { OpsCapability };
+
+/**
+ * Every item waiting on a Harmonious review or approval, read with the server
+ * client for the #operations Slack alert sweep. Only allow-listed fields leave.
+ */
+export async function pendingApprovalItemsForAlerts(s: any): Promise<WorkItem[]> {
+  const lookup = await lookups(s);
+  const now = new Date();
+  const collected = await Promise.all(COLLECTORS.map(({ load }) => load(s, lookup, now).catch(() => [] as WorkItem[])));
+  return collected.flat().filter(summaryIsSafe).filter((i) => i.requiredAction === "review" || i.requiredAction === "approve");
+}

@@ -24,6 +24,8 @@ export type SubmissionNotice = {
   ref?: string | null;
   /** Completion alert: tags both the Operations owner and the Account Manager. */
   completed?: boolean;
+  /** Send at most once ever for this kind+ref (no 5-minute window). */
+  once?: boolean;
 };
 
 /** Operations owner and Account Manager (distinct people). Pure, for tests. */
@@ -91,7 +93,7 @@ async function slackIdFor(db: any, userId: string): Promise<string | null> {
 export async function notifySubmission(n: SubmissionNotice): Promise<void> {
   try {
     const db = await admin();
-    const key = dedupeKey(n);
+    const key = n.once ? `${n.kind}:${n.ref ?? n.title}` : dedupeKey(n);
     const { error: dup } = await db.from("ops_slack_notifications").insert({ dedupe_key: key, kind: n.kind, offering_id: n.offeringId ?? null, client_id: n.clientId ?? null, status: "pending" });
     if (dup) return; // already sent in this window
     const team = await import("@/lib/harmonious-team.server");
