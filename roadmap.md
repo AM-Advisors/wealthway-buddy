@@ -1,5 +1,9 @@
 # Roadmap
 
+## Fund setup and tab navigation
+- [ ] Connect Fund Setup and the fund tabs within the same fund workspace (presentation only)
+- [ ] Validate navigation; authenticated QA requires an isolated synthetic session
+
 ## Template signature sending
 - [x] Remove separate Harmonious approval for generated Harmonious templates; preserve non-template review and signing controls
 - [x] Validate template activation and regressions (53 tests; preview compiles)
