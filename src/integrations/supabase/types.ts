@@ -47085,6 +47085,13 @@ export type Database = {
         Args: { p_offering_id: string }
         Returns: Json
       }
+      help_approved_versions: {
+        Args: never
+        Returns: {
+          slug: string
+          version: number
+        }[]
+      }
       is_any_staff: { Args: never; Returns: boolean }
       is_client_member: { Args: { _client_id: string }; Returns: boolean }
       is_contract_staff: { Args: never; Returns: boolean }
