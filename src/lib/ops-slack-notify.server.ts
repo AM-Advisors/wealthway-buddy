@@ -133,3 +133,38 @@ export async function notifySubmission(n: SubmissionNotice): Promise<void> {
     console.error("ops slack notify", e);
   }
 }
+
+/**
+ * Posts to #compliance-regulatory when a person's KYC and AML are both fully
+ * clear (approved with no hits). Best-effort, deduped per person; carries only
+ * the person name, fund and a link - never ID numbers or screening details.
+ */
+export async function notifyComplianceClear(n: { personId: string; personName: string; offeringId?: string | null }): Promise<void> {
+  try {
+    const db = await admin();
+    const key = `compliance_clear:${n.personId}`;
+    const { error: dup } = await db.from("ops_slack_notifications").insert({ dedupe_key: key, kind: "compliance_clear", offering_id: n.offeringId ?? null, status: "pending" });
+    if (dup) return; // already announced
+    let place = "Harmonious";
+    if (n.offeringId) {
+      const { data: f } = await db.from("offerings").select("name").eq("id", n.offeringId).maybeSingle();
+      place = f?.name ?? place;
+    }
+    const when = new Date().toLocaleString("en-US", { timeZone: "America/Chicago", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+    const url = `${SITE}/ops/compliance`;
+    const text = `KYC/AML fully clear - ${n.personName}`;
+    const r = await slack("chat.postMessage", {
+      channel: COMPLIANCE_SLACK_CHANNEL,
+      unfurl_links: false,
+      text,
+      blocks: [
+        { type: "section", text: { type: "mrkdwn", text: `*KYC/AML fully clear - ${n.personName}*\n${place}` } },
+        { type: "context", elements: [{ type: "mrkdwn", text: `Identity check and screening both approved · ${when}` }] },
+        { type: "actions", elements: [{ type: "button", text: { type: "plain_text", text: "Open in Harmonious" }, url }] },
+      ],
+    });
+    await db.from("ops_slack_notifications").update({ status: r?.ok ? "sent" : "failed", error: r?.ok ? null : String(r?.error ?? "unknown"), slack_ts: r?.ts ?? null }).eq("dedupe_key", key);
+  } catch (e) {
+    console.error("compliance slack notify", e);
+  }
+}
