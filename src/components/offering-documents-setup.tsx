@@ -517,3 +517,68 @@ function ChangeRequestForm({ doc, offeringId, onDone }: { doc: Doc; offeringId: 
     </div>
   );
 }
+
+/** Send one in-use offering document straight to chosen investors, from its row. */
+function SendDocDialog({ doc, offeringId, onClose, onSent }: { doc: Doc; offeringId: string; onClose: () => void; onSent: () => void }) {
+  const list = useServerFn(listSendableDocumentsFn);
+  const send = useServerFn(sendDocumentsFn);
+  const q = useQuery({ queryKey: ["sendable-docs", offeringId], queryFn: () => list({ data: { offeringId } }) });
+  const [invs, setInvs] = useState<string[]>([]);
+  const [note, setNote] = useState("");
+  const [busy, setBusy] = useState(false);
+  const investors = q.data?.investors ?? [];
+
+  const submit = async () => {
+    setBusy(true);
+    try {
+      const r = await send({ data: { offeringId, documentIds: [doc.id], onboardingIds: invs, note: note || null } });
+      toast.success(`Sent to ${r.results.filter((x: any) => x.documents > 0).length} investor(s).`);
+      r.results.filter((x: any) => x.skipped).forEach((s: any) => toast.message(`${s.name}: ${s.skipped}`));
+      onSent();
+      onClose();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Could not send that document.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Send "{doc.title}"</DialogTitle>
+          <DialogDescription>Each chosen investor gets an email with a sign-in link and sees the document in their portal. Investors only receive it if it applies to them.</DialogDescription>
+        </DialogHeader>
+        {q.isLoading ? <p className="text-sm text-muted-foreground">Loading investors…</p> : investors.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No investors on this fund yet.</p>
+        ) : (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label>Investors</Label>
+              <button type="button" className="text-xs text-primary hover:underline" onClick={() => setInvs(invs.length === investors.length ? [] : investors.map((i: any) => i.onboardingId))}>
+                {invs.length === investors.length ? "Clear" : "Select all"}
+              </button>
+            </div>
+            <div className="max-h-60 space-y-2 overflow-y-auto rounded-md border p-2">
+              {investors.map((i: any) => (
+                <label key={i.onboardingId} className="flex items-center gap-2 text-sm">
+                  <Checkbox checked={invs.includes(i.onboardingId)} onCheckedChange={() => setInvs(invs.includes(i.onboardingId) ? invs.filter((x) => x !== i.onboardingId) : [...invs, i.onboardingId])} />
+                  <span>{i.name}{!i.hasEmail && <span className="text-muted-foreground"> (no email)</span>}</span>
+                </label>
+              ))}
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor={`note-${doc.id}`}>Note (optional)</Label>
+              <Textarea id={`note-${doc.id}`} value={note} maxLength={1000} onChange={(e) => setNote(e.target.value)} placeholder="Short message for investors" />
+            </div>
+          </div>
+        )}
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button disabled={busy || !invs.length} onClick={submit}>{busy ? "Sending…" : `Send to ${invs.length} investor(s)`}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
