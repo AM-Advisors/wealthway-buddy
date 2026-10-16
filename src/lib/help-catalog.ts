@@ -1,0 +1,116 @@
+/** Help center articles. Server-only: import from server handlers, never from components. */
+import type { HelpArticle } from "@/lib/help-articles";
+
+const U = "2026-10-16";
+const c = (a: Omit<HelpArticle, "audience" | "version" | "updated"> & { version?: number }): HelpArticle => ({ audience: "client", version: 1, updated: U, ...a });
+const s = (a: Omit<HelpArticle, "audience" | "version" | "updated"> & { version?: number }): HelpArticle => ({ audience: "staff", version: 1, updated: U, ...a });
+
+export const HELP_CATALOG: HelpArticle[] = [
+  // ---------------- Client ----------------
+  c({ slug: "fund-manager-first-login", title: "First login, SS-4 and Operating Agreement", summary: "Sign in for the first time, verify your identity, sign Form SS-4 and your fund's Operating Agreement.", roles: ["fund_manager"], services: ["funds", "signing", "identity"], guide: "fund-manager-first-login", sections: [] }),
+  c({ slug: "sign-operating-agreement", title: "How to sign your Operating Agreement", summary: "Open the signing email, review the agreement and sign it electronically.", roles: ["fund_manager"], services: ["signing", "funds"], guide: "sign-operating-agreement", sections: [] }),
+  c({ slug: "getting-started", title: "Getting started with Harmonious", summary: "Your first sign-in, your menu and where to find things.", roles: [], services: [], sections: [
+    { steps: ["Open the invitation email from Harmonious and select the link. Invitation links expire after seven days.", "Sign in with the email address the invitation was sent to.", "Accept the Master Service Agreement if you're asked to.", "Use the menu on the left. It only shows the services on your account."] },
+    { heading: "Need a hand?", paragraphs: ["Use Messages to reach your Harmonious team. A person on our team will reply."] },
+  ] }),
+  c({ slug: "verify-identity", title: "Verifying your identity", summary: "What the identity check asks for and how long it takes.", roles: [], services: ["identity"], sections: [
+    { steps: ["Have a valid driver's license or passport ready.", "Follow the prompts to photograph your ID, then take a short live selfie.", "Most checks finish in a few minutes. Some need a manual review by our compliance team."] },
+    { paragraphs: ["Signing and funding open once your check is approved. If you're asked to retry, use good light and keep the whole ID in the frame."] },
+  ] }),
+  c({ slug: "sign-documents", title: "Signing documents on Harmonious", summary: "How electronic signing and signing order work.", roles: [], services: ["signing"], sections: [
+    { steps: ["Open the signing email, or go to Documents.", "Select Open and sign, then review the whole document.", "Select the signature box, add your signature and confirm."] },
+    { paragraphs: ["Some documents need more than one person, for example the investor first and the fund manager second. You'll get an email when it's your turn and when everyone has signed."] },
+  ] }),
+  c({ slug: "investor-onboarding", title: "Investor onboarding: About You, Verification, Sign, Fund", summary: "The four steps to invest in a fund.", roles: ["investor"], services: ["funds", "identity", "signing"], sections: [
+    { steps: ["About You: your details and how you're investing (yourself, a trust or an entity).", "Verification: a quick identity check.", "Sign: the subscription agreement and any other fund documents.", "Fund: wire instructions and confirmation of your payment."] },
+    { paragraphs: ["You can save and come back at any time. Your progress is kept."] },
+  ] }),
+  c({ slug: "investor-documents-tax", title: "Finding your documents and K-1s", summary: "Where statements, agreements and tax forms live.", roles: ["investor"], services: ["tax", "fund_admin"], sections: [
+    { steps: ["Documents holds your signed agreements and fund statements.", "Tax holds your K-1s once they're released for the year.", "Downloads may ask you to confirm it's you first."] },
+  ] }),
+  c({ slug: "investor-wire", title: "Sending your investment by wire", summary: "Use only the wire instructions shown in Harmonious.", roles: ["investor"], services: ["banking", "funds"], sections: [
+    { steps: ["Open the Fund step of your onboarding to see the fund's wire instructions.", "Include the reference shown, so we can match your payment.", "Mark the wire as sent. We confirm it when the funds arrive."] },
+    { heading: "Stay safe", paragraphs: ["Harmonious never changes wire instructions by email. If you get an email that does, don't send money. Contact us through Messages first."] },
+  ] }),
+  c({ slug: "manager-set-up-fund", title: "Setting up a fund or SPV", summary: "Fill in fund details section by section and submit for review.", roles: ["fund_manager"], services: ["funds"], sections: [
+    { steps: ["Go to My Funds and select Add Fund or SPV.", "Complete Fund Details, Investors, Asset Details and Banking. Each section saves on its own.", "Once a section is complete it becomes a summary box. Use Edit to change it.", "Submit. Harmonious reviews your fund before it launches."] },
+  ] }),
+  c({ slug: "manager-ein", title: "Getting your fund's EIN", summary: "Apply with the IRS yourself or have Harmonious prepare the SS-4.", roles: ["fund_manager"], services: ["funds", "tax"], sections: [
+    { steps: ["In the EIN section, pick who will get the EIN.", "If Harmonious prepares it, you'll get an SS-4 to confirm and sign.", "Once you have the EIN, enter it and upload the IRS letter."] },
+  ] }),
+  c({ slug: "manager-templates", title: "Using Harmonious fund document templates", summary: "Generate the Operating Agreement, PPM and Subscription Agreement from your fund details.", roles: ["fund_manager"], services: ["funds", "signing"], sections: [
+    { steps: ["Complete Fund Details. Any missing fields are highlighted.", "In Documents, choose Generate from template.", "Review the document, then choose the full document or signature pages only and set the signing order.", "Send it for signature."] },
+  ] }),
+  c({ slug: "manager-invite-investors", title: "Inviting investors to your fund", summary: "Share your investor link or send invitations.", roles: ["fund_manager"], services: ["funds"], sections: [
+    { steps: ["Open your fund and go to Investors.", "Copy the investor link, or add investors by email.", "Track each investor's progress through onboarding on the same page."] },
+  ] }),
+  c({ slug: "manager-banking", title: "Fund banking", summary: "Open the account yourself or with Harmonious, then add the bank letter.", roles: ["fund_manager"], services: ["banking", "funds"], sections: [
+    { steps: ["In Banking, choose who opens the account.", "Enter the bank details and upload the bank verification letter.", "Harmonious verifies the details before anyone uses them."] },
+  ] }),
+  c({ slug: "cap-table-basics", title: "Cap Table basics", summary: "Stakeholders, securities and documents for your company.", roles: ["company"], services: ["cap_table"], sections: [
+    { steps: ["Stakeholders lists everyone who holds equity.", "Transactions records issuances, transfers and exercises.", "Documents keeps the agreements for each security.", "Reports gives you a current ownership summary."] },
+  ] }),
+  c({ slug: "cap-table-import", title: "Bringing your existing cap table over", summary: "Upload your current cap table for review.", roles: ["company"], services: ["cap_table"], sections: [
+    { steps: ["Go to Cap Table and choose import.", "Upload your current spreadsheet and supporting agreements.", "Your team reviews it with you before it becomes your record."] },
+  ] }),
+  c({ slug: "fund-admin-reports", title: "Fund administration reports", summary: "NAV, statements and quarterly reporting.", roles: ["fund_manager", "investor"], services: ["fund_admin"], sections: [
+    { paragraphs: ["If fund administration is part of your plan, Harmonious prepares fund statements and reports. They appear under Reports once they're approved."] },
+  ] }),
+  c({ slug: "k1-timing", title: "When K-1s are available", summary: "How tax forms are prepared and released.", roles: ["investor", "fund_manager"], services: ["tax"], sections: [
+    { paragraphs: ["K-1s are released after the fund's partnership return is approved. You get an email when yours is ready under Tax. Harmonious can't give personal tax advice. Please talk to your own tax advisor."] },
+  ] }),
+  c({ slug: "plan-and-billing", title: "Your plan, invoices and payments", summary: "See your services, pay invoices and change your plan.", roles: ["fund_manager", "company"], services: ["billing"], sections: [
+    { steps: ["Settings shows the services you've purchased.", "Invoices lists what's due. You can pay by card, ACH or wire.", "Wire payments are confirmed by our team once they're received.", "To add services, open Plan and choose what you need."] },
+  ] }),
+  c({ slug: "professional-access", title: "Working with your clients' records", summary: "How CPAs and attorneys access client files.", roles: ["professional"], services: ["tax", "fund_admin"], sections: [
+    { steps: ["Clients lists every profile that has shared access with you.", "Tasks shows what's waiting on you.", "Documents holds only what your clients chose to share."] },
+  ] }),
+  c({ slug: "account-security", title: "Keeping your account secure", summary: "Turn on an authenticator app and protect your sign-in.", roles: [], services: [], sections: [
+    { steps: ["Go to Profile, then Security.", "Add an authenticator app.", "You'll be asked for a code before sensitive downloads and signing."] },
+  ] }),
+
+  // ---------------- Staff ----------------
+  s({ slug: "staff-start-here", title: "Start here: how Operations works", summary: "Menus, approvals and the two-person rule.", roles: [], services: [], sections: [
+    { paragraphs: ["Your menu shows what your role covers. A Super Admin can grant extra individual items.", "Most changes need a second person to approve. You can review other people's work, but never your own. Money, tax and administration keep their own approvers. Super Admins may self-approve, with a required reason that is logged permanently."] },
+  ] }),
+  s({ slug: "staff-client-help", title: "Pointing clients to the right help article", summary: "Use the Client help center tab to send links.", roles: [], services: [], sections: [
+    { steps: ["Open Help center, then the Client help center tab.", "Open the article and copy its link.", "Clients must sign in to read it. They only see approved articles for their role."] },
+  ] }),
+  s({ slug: "staff-approve-help", title: "Approving help articles", summary: "Review drafts before clients can see them.", roles: ["super_admin", "operations"], services: [], sections: [
+    { steps: ["Open a draft article and read it end to end.", "Select Approve for clients and add a note.", "Changing an article creates a new version, which needs approving again."] },
+  ] }),
+  s({ slug: "staff-fund-setup", title: "Fund setup and launch readiness", summary: "Completing a fund on the client's behalf.", roles: ["operations", "account_manager"], services: ["funds"], sections: [
+    { steps: ["Open the fund from Funds.", "Complete each section. Staff saves go straight to the fund record.", "Review the readiness percentage, which comes only from the fund's tasks and launch conditions.", "Request launch. A second person approves it."] },
+  ] }),
+  s({ slug: "staff-migrations", title: "Migrating an existing fund", summary: "Wix, Drive gaps and client migration requests.", roles: ["operations", "account_manager"], services: ["funds", "fund_admin"], sections: [
+    { steps: ["Go to Funds, then Migrations.", "Review the source row and queue it for approval.", "Once it's approved, the fund becomes a closed draft, and its investors become earlier subscriptions waiting for a second confirmation.", "Track progress on the fund's Migration status card."] },
+  ] }),
+  s({ slug: "staff-send-signature", title: "Sending documents for signature", summary: "Signing order, signature pages and reminders.", roles: ["operations", "account_manager"], services: ["signing"], sections: [
+    { steps: ["Open the fund's Documents tab and select Send for signature.", "Choose the signers and the order: investor first, manager first, manager only or investor only.", "Preview the document before sending.", "Use Send reminder for pending signers. Reminders copy operations@harmonious.co."] },
+  ] }),
+  s({ slug: "staff-ss4", title: "Preparing and resending an SS-4", summary: "Harmonious-prepared EIN requests.", roles: ["operations", "tax"], services: ["tax", "funds"], sections: [
+    { steps: ["Prepare the SS-4 from the fund's EIN section.", "The Third Party Designee is always Harmonious LLC, 801-433-8005.", "Send it to the fund manager to confirm and sign. Use Resend if needed.", "Filing with the IRS stays manual."] },
+  ] }),
+  s({ slug: "staff-identity-review", title: "Reviewing identity and AML results", summary: "Using the Customer Identification Report.", roles: ["compliance", "operations"], services: ["identity"], sections: [
+    { steps: ["Open the person from People & Access and view the identity report.", "Check the document, liveness, face match and watchlist results.", "Possible watchlist matches need a compliance decision with a written reason.", "Approved sessions apply automatically. In Review and Declined never do."] },
+  ] }),
+  s({ slug: "staff-people-access", title: "Inviting people and managing access", summary: "Invites, resends, password resets and activity.", roles: ["operations", "account_manager", "super_admin"], services: [], sections: [
+    { steps: ["People & Access is the only user list.", "Use the menu on a person to resend an invite, reset a password or view their activity.", "A Blocked status means their email provider refused delivery, not that their account is denied."] },
+  ] }),
+  s({ slug: "staff-confirm-wire", title: "Confirming a received wire", summary: "Recording SaaS wire payments.", roles: ["finance"], services: ["billing", "banking"], sections: [
+    { steps: ["Open Self-serve SaaS orders.", "Match the bank receipt to the order's wire reference.", "Record the amount received. Short payments need a note.", "You can't confirm an order you placed yourself."] },
+    { paragraphs: ["Harmonious never starts ACH or wire transfers from the platform."] },
+  ] }),
+  s({ slug: "staff-migration-payments", title: "Recording what migrated clients paid", summary: "Client services and payment history.", roles: ["finance", "account_manager"], services: ["billing"], sections: [
+    { steps: ["Open the client's services panel and select their current services.", "Record what the client paid for each migrated fund, and what that payment included.", "A second person activates the record.", "Payment reminders follow the invoice schedule."] },
+  ] }),
+  s({ slug: "staff-sales-pricing", title: "Pricing, plans and SOWs", summary: "Where pricing comes from and what can be custom.", roles: ["sales"], services: ["billing"], sections: [
+    { paragraphs: ["Use the product pricing sheets for each product. Custom prices need CEO or CRO approval. Self-serve clients sign a click-through SOW under the MSA. Only Institutional and Enterprise terms are negotiated."] },
+  ] }),
+  s({ slug: "staff-k1-release", title: "Releasing K-1s", summary: "From approved return to investor portal.", roles: ["tax"], services: ["tax"], sections: [
+    { steps: ["Make sure the fund's 1065 and K-1s are approved by the tax approver.", "IRS e-filing runs only for approved returns.", "Release K-1s to investors. They're notified to download them under Tax."] },
+  ] }),
+  s({ slug: "staff-super-admin", title: "Super Admin responsibilities", summary: "Self-approval, sidebar grants and document sources.", roles: ["super_admin"], services: [], sections: [
+    { steps: ["Self-approval needs a reason, and the reason is logged permanently. It never covers MFA, your own authority or granting yourself access.", "Grant individual sidebar items from People & Access. Money, tax and administration items can't be granted.", "Approve each document source separately."] },
+  ] }),
+];
