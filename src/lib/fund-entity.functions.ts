@@ -217,6 +217,7 @@ export const saveFundEntity = createServerFn({ method: "POST" })
       p_ss4: stripRpTinPlain(data.ss4) as any,
     });
     if (detailError) throw new Error(detailError.message);
+    await (await import("@/lib/fund-setup.server")).syncFundFacts(data.offering_id);
 
     return { ok: true };
   });
@@ -531,6 +532,7 @@ export const saveFundEinFn = createServerFn({ method: "POST" })
     const ein = normalizeEin(data.ein);
     const { error } = await context.supabase.rpc("save_offering_entity_details", { p_offering_id: data.offering_id, p_has_ein: true, p_ein: ein, p_ss4: stripRpTinPlain(((detail as any)?.ss4 ?? {}) as any) as any });
     if (error) throw new Error(error.message);
+    await (await import("@/lib/fund-setup.server")).syncFundFacts(data.offering_id);
     // IRS filing record for the EIN (one per EIN), plus an Audit History entry (EIN shown as last 4 only).
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const db = supabaseAdmin as any;
