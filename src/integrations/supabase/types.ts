@@ -39959,6 +39959,7 @@ export type Database = {
           msa_accepted_at: string
           msa_version: string
           one_time_cents: number
+          payment_method: string
           payment_status: string
           price_snapshot: Json
           recurring_cents: number
@@ -39972,6 +39973,11 @@ export type Database = {
           stripe_subscription_id: string | null
           updated_at: string
           user_id: string
+          wire_note: string | null
+          wire_received_at: string | null
+          wire_received_by: string | null
+          wire_received_cents: number | null
+          wire_reference: string | null
         }
         Insert: {
           activated_at?: string | null
@@ -39993,6 +39999,7 @@ export type Database = {
           msa_accepted_at: string
           msa_version: string
           one_time_cents?: number
+          payment_method?: string
           payment_status?: string
           price_snapshot: Json
           recurring_cents?: number
@@ -40006,6 +40013,11 @@ export type Database = {
           stripe_subscription_id?: string | null
           updated_at?: string
           user_id: string
+          wire_note?: string | null
+          wire_received_at?: string | null
+          wire_received_by?: string | null
+          wire_received_cents?: number | null
+          wire_reference?: string | null
         }
         Update: {
           activated_at?: string | null
@@ -40027,6 +40039,7 @@ export type Database = {
           msa_accepted_at?: string
           msa_version?: string
           one_time_cents?: number
+          payment_method?: string
           payment_status?: string
           price_snapshot?: Json
           recurring_cents?: number
@@ -40040,6 +40053,11 @@ export type Database = {
           stripe_subscription_id?: string | null
           updated_at?: string
           user_id?: string
+          wire_note?: string | null
+          wire_received_at?: string | null
+          wire_received_by?: string | null
+          wire_received_cents?: number | null
+          wire_reference?: string | null
         }
         Relationships: [
           {
