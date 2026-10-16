@@ -162,7 +162,7 @@ function WireAdminPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
-                {WIRE_FIELDS.map((field) => (
+                {WIRE_FIELDS.filter((k) => k !== "wire_scope").map((field) => (
                   <div key={field} className="space-y-1.5">
                     <Label htmlFor={`${fund.id}-${field}`}>{FIELD_LABELS[field] ?? field}</Label>
                     <Input
