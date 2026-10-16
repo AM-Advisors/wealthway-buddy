@@ -14,7 +14,8 @@ A new "Build your plan" page, reachable from the pricing page ("Start now") and 
 A live total shows as they choose. Prices always come from the live rate card on the server, never from the browser.
 
 ## 2. Generated SOW, click-through signature
-- The picks become a Statement of Work. It uses the existing SOW template (MSA terms plus a scope and pricing schedule), shown in full on screen and printable.
+- The picks become a Statement of Work: a scope and pricing schedule under the standard Harmonious MSA, shown in full on screen and printable.
+- **The MSA is required and can't be changed.** Clients agree by ticking one box ("I agree to the Master Services Agreement and this Statement of Work"). They can't edit, redline or request changes. Only Institutional and Enterprise deals, handled by Sales, can get a negotiated MSA.
 - The client signs with the existing signature popup. For self-serve SaaS orders, the SOW is **active immediately**, with no Harmonious countersignature. Your name, timestamp, IP and the exact price snapshot are logged permanently. Sales and Legal see each one in an "Auto-activated SaaS SOWs" list to review afterwards.
 - Sales-drafted SOWs keep the current two-party countersign rule.
 
