@@ -4,11 +4,11 @@ import { useServerFn } from "@tanstack/react-start";
 import { ChevronDown, ChevronLeft, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { BankingChoice } from "@/components/banking-choice";
 import { guidedSetupFn, staffSaveSetupFn } from "@/lib/fund-setup-guided.functions";
 import { submitFundInfoFn } from "@/lib/fund-manager-submissions.functions";
 import { FUND_TYPES } from "@/lib/fund-setup-canonical";
-import { EinChoice } from "@/components/ein-choice";
+import { BankBox, EditSheet, EinBox, SummaryBox } from "@/components/fund-setup-boxes";
+import { fieldSectionComplete } from "@/lib/fund-setup-complete";
 import { fundEinFn } from "@/lib/fund-tabs.functions";
 import { SubmitForm, History } from "@/components/fund-manager-setup-loader";
 import { FundSignatoriesCard } from "@/components/fund-signatories-card";
@@ -33,6 +33,7 @@ export function FundSetupForm({ offeringId, mode, staffExtras }: { offeringId: s
   const [vals, setVals] = useState<Record<string, string>>({});
   const [open, setOpen] = useState<Record<string, boolean>>({ basic: true, details: true, jurisdiction: true });
   const [busy, setBusy] = useState(false);
+  const [editingSection, setEditingSection] = useState<string | null>(null);
   const isStaff = mode === "staff" && !!d?.isStaff;
 
   if (q.isPending) return <div className="rounded-xl border bg-card p-6 text-sm text-muted-foreground">Loading setup…</div>;
@@ -93,46 +94,54 @@ export function FundSetupForm({ offeringId, mode, staffExtras }: { offeringId: s
   const fieldSection = (id: string) => {
     const s = FORM_SECTIONS.find((x) => x.id === id)!;
     const ret = returned("fund_details");
+    const keys = s.fields.map((f) => f.key);
+    const changed = keys.some((k) => k in vals && (vals[k] ?? "") !== (prior[k] ?? ""));
+    const required = s.fields.filter((f) => f.required && !f.disabled).map((f) => f.key);
+    const filled = s.fields.filter((f) => !f.disabled && String(prior[f.key] ?? "").trim()).length;
+    const editable = s.fields.filter((f) => !f.disabled).length;
+    const display = (f: FieldDef) => f.disabled ? f.fixed ?? "" : (f.options ? ((f.key === "fundType" ? FUND_TYPES.map((t) => [t, t] as const) : f.options).find(([val]) => val === prior[f.key])?.[1] ?? prior[f.key]) : prior[f.key]) ?? "";
+    const saveBar = (after?: () => void) => (
+      <div className="flex justify-end gap-2 pt-1">
+        {changed && <Button size="sm" variant="ghost" disabled={busy} onClick={() => setVals((cur) => Object.fromEntries(Object.entries(cur).filter(([k]) => !keys.includes(k))))}>Cancel</Button>}
+        <Button size="sm" disabled={!changed || busy} onClick={async () => { await save(keys, s.title); after?.(); }}>{isStaff ? "Save" : "Submit"}</Button>
+      </div>
+    );
+    const fields = <div className="space-y-3">{s.fields.map((f) => <div key={f.key}>{renderField(f)}</div>)}</div>;
+    if (!ret && !waiting(s.fields[0]?.section ?? "") && fieldSectionComplete(required, prior, changed && editingSection !== id)) {
+      return (
+        <div key={id}>
+          <SummaryBox title={s.title} rows={s.fields.map((f) => [f.label, display(f)] as [string, React.ReactNode])} onEdit={() => setEditingSection(id)} />
+          <EditSheet open={editingSection === id} onOpenChange={(o) => { if (!o) { setVals((cur) => Object.fromEntries(Object.entries(cur).filter(([k]) => !keys.includes(k)))); setEditingSection(null); } }} title={s.title}>
+            {!isStaff && <p className="text-sm text-muted-foreground">Changes go to Harmonious for review. The approved values stay in place until then.</p>}
+            {fields}{saveBar(() => setEditingSection(null))}
+          </EditSheet>
+        </div>
+      );
+    }
     return (
-      <SetupSection open={open} setOpen={setOpen} id={s.id} title={s.title} status={statusFor(s.fields, s.fields[0]?.section)} action={(() => {
-        const keys = s.fields.map((f) => f.key);
-        const changed = keys.some((k) => k in vals && (vals[k] ?? "") !== (prior[k] ?? ""));
-        return <Button size="sm" variant={changed ? "default" : "outline"} disabled={!changed || busy} onClick={() => save(keys, s.title)}>{isStaff ? "Save" : "Submit"}</Button>;
-      })()}>
+      <SetupSection open={open} setOpen={setOpen} id={s.id} title={s.title} status={<span className="flex items-center gap-2"><span className="hidden text-xs text-muted-foreground sm:inline">{filled} of {editable} filled in</span>{statusFor(s.fields, s.fields[0]?.section)}</span>}>
         {id === "basic" && ret && <p className="rounded-lg bg-muted p-3 text-sm">Harmonious returned this: {ret.review_note ?? "please review and resubmit."}</p>}
-        <div className="space-y-3">{s.fields.map((f) => <div key={f.key}>{renderField(f)}</div>)}</div>
-        {(() => {
-          const keys = s.fields.map((f) => f.key);
-          const changed = keys.some((k) => k in vals && (vals[k] ?? "") !== (prior[k] ?? ""));
-          return (
-            <div className="flex justify-end gap-2 pt-1">
-              {changed && <Button size="sm" variant="ghost" disabled={busy} onClick={() => setVals((cur) => Object.fromEntries(Object.entries(cur).filter(([k]) => !keys.includes(k))))}>Undo</Button>}
-              <Button size="sm" variant="outline" disabled={!changed || busy} onClick={() => save(keys, s.title)}>{isStaff ? `Save ${s.title}` : `Submit ${s.title}`}</Button>
-            </div>
-          );
-        })()}
+        {fields}{saveBar()}
       </SetupSection>
     );
   };
 
+  const allDone = d.launchPercent >= 100;
+
   return (
     <div className="space-y-4 bg-background">
-      <div className="sticky top-0 z-10 flex items-center gap-3 rounded-2xl border bg-card px-3 py-3 shadow-sm">
+      <div className="flex items-center gap-3 rounded-2xl border bg-card px-3 py-3">
         <Button variant="outline" size="icon" aria-label="Back" onClick={() => window.history.back()}><ChevronLeft className="h-4 w-4" /></Button>
         <div className="min-w-0 flex-1">
-          <h2 className="truncate font-heading text-lg font-semibold">Fund setup — {d.fundName}</h2>
-          <p className="text-xs text-muted-foreground">Launch readiness {d.launchPercent}% · {isStaff ? "Saves go straight to the fund record" : "Changes are reviewed by Harmonious"}</p>
+          <h2 className="truncate font-heading text-lg font-semibold">{allDone ? d.fundName : `Fund setup — ${d.fundName}`}</h2>
+          {!allDone && <p className="text-xs text-muted-foreground">Launch readiness {d.launchPercent}% · {isStaff ? "Saves go straight to the fund record" : "Changes are reviewed by Harmonious"}</p>}
         </div>
-        <Button variant="outline" disabled={!dirty || busy} onClick={() => setVals({})}>Cancel</Button>
-        <Button className="bg-accent text-accent-foreground hover:bg-accent/90" disabled={busy} onClick={() => save()}>{busy ? "Saving…" : isStaff ? "Save" : "Submit"}</Button>
       </div>
 
       {fieldSection("basic")}
       {fieldSection("details")}
       {fieldSection("jurisdiction")}
-      <SetupSection open={open} setOpen={setOpen} id="ein" title="EIN" status={<EinStatus fundId={offeringId} />}>
-        <EinChoice offeringId={offeringId} onChanged={refresh} />
-      </SetupSection>
+      <EinBox offeringId={offeringId} onChanged={refresh} />
       {fieldSection("offering")}
       {fieldSection("fees")}
 
@@ -145,25 +154,20 @@ export function FundSetupForm({ offeringId, mode, staffExtras }: { offeringId: s
         {isStaff ? <FundSignatoriesCard offeringId={offeringId} onChanged={refresh} /> : <p className="text-sm text-muted-foreground">Harmonious adds signers so each person completes an identity check. Signer on file: {prior["signers"] || "none yet"}.</p>}
       </SetupSection>
 
-      <SetupSection open={open} setOpen={setOpen} id="bank" title="Banking" status={<Chip tone={stepOf("bank")?.status === "done" ? "done" : waiting("bank") ? "wait" : "miss"}>{stepOf("bank")?.statusLabel ?? ""}</Chip>}>
-        <BankingChoice offeringId={offeringId} onChanged={refresh} />
-        {isStaff
-          ? <p className="text-sm text-muted-foreground">Enter and verify wire instructions on the Banking tab. Fund manager uploads appear below.</p>
-          : <SubmitForm offeringId={offeringId} section="bank" onDone={refresh} />}
-        <History items={(d.items as any[]).filter((i) => i.section === "bank")} isStaff={isStaff} onChange={refresh} />
-      </SetupSection>
+      <BankBox offeringId={offeringId} isStaff={isStaff} onChanged={refresh} />
+      {!!(d.items as any[]).some((i) => i.section === "bank") && <History items={(d.items as any[]).filter((i) => i.section === "bank")} isStaff={isStaff} onChange={refresh} />}
 
       <SetupSection open={open} setOpen={setOpen} id="documents" title="Documents" status={<Chip tone={stepOf("document")?.status === "done" ? "done" : "miss"}>{stepOf("document")?.statusLabel ?? ""}</Chip>}>
         {isStaff ? <OfferingDocumentsSetup offeringId={offeringId} onChanged={refresh} /> : <SubmitForm offeringId={offeringId} section="document" onDone={refresh} />}
         <History items={(d.items as any[]).filter((i) => i.section === "document" || i.section === "fund_details" || i.section === "fees_team")} isStaff={isStaff} onChange={refresh} />
       </SetupSection>
 
-      <SetupSection open={open} setOpen={setOpen} id="launch" title="Review & Launch" status={<Chip tone={d.launchPercent >= 100 ? "done" : "miss"}>{d.launchPercent}%</Chip>}>
+      {!allDone && <SetupSection open={open} setOpen={setOpen} id="launch" title="Review & Launch" status={<Chip tone={d.launchPercent >= 100 ? "done" : "miss"}>{d.launchPercent}%</Chip>}>
         <ul className="space-y-1 text-sm">
           {(d.steps as any[]).filter((s) => s.step !== "launch").map((s) => <li key={s.step} className="flex justify-between gap-3 border-b py-2 last:border-0"><span className="capitalize">{String(s.step).replace(/_/g, " ")}</span><span className="text-muted-foreground">{s.statusLabel}</span></li>)}
         </ul>
         <p className="text-sm text-muted-foreground">Harmonious launches the fund once every required item is in place.</p>
-      </SetupSection>
+      </SetupSection>}
 
       {isStaff && staffExtras && (
         <SetupSection open={open} setOpen={setOpen} id="staff" title="Harmonious only" status={<Chip tone="wait">Staff</Chip>}>{staffExtras}</SetupSection>
