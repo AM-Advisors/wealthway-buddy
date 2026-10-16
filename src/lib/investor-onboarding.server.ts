@@ -300,10 +300,7 @@ async function gatherFacts(row: any) {
           )
       : Promise.resolve({ data: [] as any[] }),
   ]);
-  const { data: offeringDocs } = await db()
-    .from("offering_documents")
-    .select("id, title, doc_type, document_category, sort_order, requires_signature, applies_to, usage, applicability, active_version")
-    .eq("offering_id", row.offering_id);
+  const offeringDocs = await offeringDocsCached(row.offering_id);
 
   // Investor-confirmed facts outrank prepared values; unreviewed prepared values never drive requirements.
   const { loadConfirmedFacts } = await import("@/lib/prepared-investor.server");
