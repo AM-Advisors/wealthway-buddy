@@ -58,7 +58,7 @@ const SHARED_PREFIXES = [
 ];
 
 // Personal account pages belong to the application in which they are opened.
-const SHARED_ACCOUNT_PREFIXES = ["/profile", "/access", "/inbox", "/messages", "/prepared", "/sign-off", "/policies"];
+const SHARED_ACCOUNT_PREFIXES = ["/profile", "/access", "/inbox", "/messages", "/prepared", "/sign-off", "/policies", "/security"];
 
 export type PathSurface = AppSurface | "shared";
 
