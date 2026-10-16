@@ -94,6 +94,39 @@ export const sendFileForSignatureFn = createServerFn({ method: "POST" }).middlew
     return { ok: true };
   });
 
+/**
+ * Send a document to the fund's signatory only - for documents like the
+ * operating agreement that the fund manager signs alone. One signer row,
+ * signing order 1; the same signing page, reminders and audit apply.
+ */
+export const sendFileToSignatoryFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator((x: unknown) => z.object({ fundId: z.string().uuid(), fileId: z.string().uuid(), managerUserId: z.string().uuid() }).parse(x))
+  .handler(async ({ data, context }) => {
+    const { assertFund } = await import("@/lib/fund-tabs.server");
+    await assertFund(context.userId, data.fundId);
+    const d = await db();
+    const { data: f } = await d.from("fund_files").select("id, status, title").eq("id", data.fileId).eq("offering_id", data.fundId).is("deleted_at", null).maybeSingle();
+    if (!f) throw new Error("Document not found.");
+    if (f.status === "signed") throw new Error("This document is already signed.");
+    const { data: mgr } = await d.from("fund_managers").select("user_id").eq("offering_id", data.fundId).eq("user_id", data.managerUserId).maybeSingle();
+    if (!mgr) throw new Error("That person isn't a manager of this fund.");
+    const { data: mp } = await d.from("profiles").select("legal_name, email").eq("user_id", data.managerUserId).maybeSingle();
+    if (!mp?.email) throw new Error("This fund manager has no email address.");
+    // Any earlier unsigned round is cancelled, never deleted.
+    await d.from("fund_file_signatures").update({ status: "cancelled" }).eq("file_id", f.id).in("status", ["waiting", "sent"]);
+    const { data: rows, error } = await d.from("fund_file_signatures").insert([
+      { file_id: f.id, offering_id: data.fundId, signer_role: "fund_manager", signing_order: 1, signer_name: mp.legal_name || mp.email, signer_email: String(mp.email).toLowerCase(), signer_user_id: data.managerUserId, created_by: context.userId },
+    ]).select("*");
+    if (error) throw new Error(error.message);
+    await d.from("fund_files").update({ status: "out_for_signature" }).eq("id", f.id);
+    await emailSigner(d, (rows as any[])[0]);
+    try {
+      const { logFundAudit } = await import("@/lib/fund-audit.server");
+      await logFundAudit(context.userId, { offeringId: data.fundId, eventType: "document_sent_for_signature", summary: `Sent "${f.title}" to the fund signatory for signature`, values: { fundManager: mp.legal_name || mp.email, signatoryOnly: true } });
+    } catch { /* best-effort */ }
+    return { ok: true };
+  });
+
 async function loadForSigner(userId: string, email: string | undefined, id: string) {
   const d = await db();
   const { data: s } = await d.from("fund_file_signatures").select("*").eq("id", id).maybeSingle();
