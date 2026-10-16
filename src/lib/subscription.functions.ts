@@ -152,21 +152,9 @@ export const confirmSubscription = createServerFn({ method: "POST" })
       .eq("id", application.id);
     if (appError) throw new Error(appError.message);
 
-    // Turn the confirmed commitment into shares when the fund has a share price.
-    const sharePriceCents = Number((offering as any)?.share_price_cents ?? 0);
-    let sharesIssued: number | null = null;
-    if (sharePriceCents > 0) {
-      sharesIssued = Math.floor(cents / sharePriceCents);
-      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      await supabaseAdmin.from("investor_cap_positions").upsert(
-        {
-          application_id: application.id,
-          offering_id: application.offering_id,
-          shares: sharesIssued,
-        },
-        { onConflict: "application_id" },
-      );
-    }
+    // Shares are never issued from the investor's own confirmation. Staff or the
+    // fund manager record them on the cap table once payment has been received.
+    const sharesIssued: number | null = null;
 
     await (await import("@/lib/ownership-email.server")).notifyOwnershipChange(
       application.offering_id as string,
