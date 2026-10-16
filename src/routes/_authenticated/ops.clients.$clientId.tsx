@@ -2,6 +2,7 @@ import { createFileRoute, useParams } from "@tanstack/react-router";
 
 import { OpsRecordPage } from "@/components/ops-record";
 import { ClientTimeline } from "@/components/client-timeline";
+import { ClientServicesPanel } from "@/components/client-services-panel";
 
 export const Route = createFileRoute("/_authenticated/ops/clients/$clientId")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -26,6 +27,7 @@ function RecordRoute() {
   return (
     <div className="space-y-6">
       <OpsRecordPage type="client" id={clientId} />
+      <div className="mx-auto w-full max-w-6xl px-4 md:px-6"><ClientServicesPanel clientId={clientId} /></div>
       <div className="mx-auto w-full max-w-6xl px-4 pb-6 md:px-6"><ClientTimeline clientId={clientId} /></div>
     </div>
   );
