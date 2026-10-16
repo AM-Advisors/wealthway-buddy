@@ -5,14 +5,21 @@ describe("product pricing", () => {
   it("has the six products", () => {
     expect(PRODUCTS.map((p) => p.key)).toEqual(["cap_table", "venture", "private_equity", "hedge", "spv", "saas"]);
   });
-  it("every price is monthly, quarterly, yearly or one-time", () => {
+  it("no monthly option: every price is quarterly, yearly or one-time", () => {
     for (const p of PRODUCTS) for (const l of allLines(p)) {
       expect(l.prices.length).toBeGreaterThan(0);
-      for (const pr of l.prices) expect(["monthly", "quarterly", "annual", "one_time"]).toContain(pr.billing);
+      for (const pr of l.prices) expect(["quarterly", "annual", "one_time"]).toContain(pr.billing);
     }
   });
   it("SPV fees are back at pre-increase prices", () => {
     expect(productByKey("spv").fundCost.map((l) => l.prices[0]!.amount)).toEqual([5000, 7500, 12500, 15000, null]);
+  });
+  it("SPVs offer priced Core, Plus, White Glove and Institutional servicing", () => {
+    const c = productByKey("spv").servicing.client;
+    expect(c.map((l) => l.name)).toEqual(["Self Serve", "Core", "Plus", "White Glove", "Institutional"]);
+    expect(c[1]!.prices[0]!.amount).toBe(1500);
+    expect(c[2]!.prices[0]!.amount).toBe(2500);
+    expect(c[3]!.prices[0]!.amount).toBe(7500);
   });
   it("servicing contains no accounting work", () => {
     for (const p of PRODUCTS) for (const l of [...p.servicing.client, ...p.servicing.investor]) {

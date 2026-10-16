@@ -3,8 +3,8 @@
 // Servicing = how hands-on Harmonious is, split into client and investor servicing. No accounting items.
 import { SAAS_BASE_UPLIFT, SAAS_FUND_DOCUMENT_CENTS, SAAS_MARKUP } from "./administration-tiers";
 
-export type Billing = "monthly" | "quarterly" | "annual" | "one_time";
-export const BILLING_LABEL: Record<Billing, string> = { monthly: "Monthly", quarterly: "Quarterly", annual: "Yearly", one_time: "One-time" };
+export type Billing = "quarterly" | "annual" | "one_time";
+export const BILLING_LABEL: Record<Billing, string> = { quarterly: "Quarterly", annual: "Yearly", one_time: "One-time" };
 
 /** amount null = custom quote. */
 export interface Price { amount: number | null; billing: Billing; note?: string | undefined }
