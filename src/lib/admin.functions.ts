@@ -384,7 +384,13 @@ export const sendInvestorEmail = createServerFn({ method: "POST" })
   });
 
 const testEmailSchema = z.object({
-  to: z.string().trim().email().max(255),
+  // Test sends are internal previews: only Harmonious mailboxes may receive them.
+  to: z
+    .string()
+    .trim()
+    .email()
+    .max(255)
+    .refine((v) => /@harmonious\.co$/i.test(v), "Test emails can only be sent to a harmonious.co address."),
   subject: z.string().trim().min(2).max(200),
   body: z.string().trim().min(2).max(5000),
   applicationId: z.string().uuid().optional(),
