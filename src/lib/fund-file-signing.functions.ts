@@ -61,8 +61,56 @@ export const fundSigningContextFn = createServerFn({ method: "POST" }).middlewar
     return { investors, managers, signatures: ((sigs ?? []) as any[]).map((x) => ({ ...x, lastRemindedAt: reminded[`file-sign:${x.id}`] ?? null })) };
   });
 
+const ORDERS = ["investor_first", "manager_first", "manager_only", "investor_only"] as const;
+type Order = (typeof ORDERS)[number];
+const money = (c: unknown) => (c == null ? null : `$${(Number(c) / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+const line = (label: string, v: string | null | undefined) => `${label}: ${v && String(v).trim() ? v : "____________________"}`;
+
+/** One signature page per send: a fund manager block and an investor block, pre-filled from the records. */
+function buildSignaturePage(i: { title: string; fundName: string; order: Order; investor: any | null; manager: any | null }) {
+  const parts = [`SIGNATURE PAGE`, `${i.title}`, `${i.fundName}`, ""];
+  const inv = i.investor ? [
+    "INVESTOR",
+    line("Investor (legal name)", i.investor.entityName || i.investor.name),
+    ...(i.investor.entityName ? [line("Signed by", i.investor.name), line("Title", null)] : []),
+    line("Commitment amount", i.investor.amount),
+    ...(i.investor.classKey ? [line("Class", i.investor.classKey)] : []),
+    line("Address", i.investor.address),
+    "Signature: ____________________", "Date: ____________________", "",
+  ] : [];
+  const mgr = i.manager ? [
+    "FUND MANAGER",
+    line("Fund", i.fundName), line("Signed by", i.manager.name), line("Title", i.manager.title),
+    "Signature: ____________________", "Date: ____________________", "",
+  ] : [];
+  return [...parts, ...(i.order === "manager_first" ? [...mgr, ...inv] : [...inv, ...mgr])].join("\n").trim();
+}
+
+async function investorDetails(d: any, fundId: string, onboardingId: string) {
+  const { data: ob } = await d.from("investor_onboardings").select("id, person_id, investor_user_id, investment_profile_id, commitment_amount_cents, accepted_amount_cents, requested_amount_cents, offering_class_key").eq("id", onboardingId).eq("offering_id", fundId).is("removed_at", null).maybeSingle();
+  if (!ob) throw new Error("That investor isn't in this fund.");
+  const [{ data: p }, { data: ip }] = await Promise.all([
+    ob.person_id ? d.from("persons").select("legal_first_name, legal_last_name, preferred_name, email, address_line1, address_line2, city, region, postal_code").eq("id", ob.person_id).maybeSingle() : Promise.resolve({ data: null }),
+    ob.investment_profile_id ? d.from("investment_profiles").select("profile_type, legal_name").eq("id", ob.investment_profile_id).maybeSingle() : Promise.resolve({ data: null }),
+  ]);
+  const name = [p?.legal_first_name, p?.legal_last_name].filter(Boolean).join(" ") || pname(p) || p?.email || "Investor";
+  const entity = ip && ip.profile_type && !/individual/i.test(ip.profile_type) && ip.legal_name && ip.legal_name !== name ? ip.legal_name : null;
+  const address = [p?.address_line1, p?.address_line2, p?.city, [p?.region, p?.postal_code].filter(Boolean).join(" ")].filter(Boolean).join(", ") || null;
+  return { ob, email: p?.email ? String(p.email).toLowerCase() : null, name, entityName: entity as string | null, amount: money(ob.commitment_amount_cents ?? ob.accepted_amount_cents ?? ob.requested_amount_cents), classKey: ob.offering_class_key as string | null, address };
+}
+
+/**
+ * Send a document for signature with a chosen signing order and mode.
+ * Each investor gets their own signing packet (with the fund manager when the
+ * order includes them) and their own pre-filled signature page.
+ */
 export const sendFileForSignatureFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((x: unknown) => z.object({ fundId: z.string().uuid(), fileId: z.string().uuid(), onboardingId: z.string().uuid(), managerUserId: z.string().uuid() }).parse(x))
+  .inputValidator((x: unknown) => z.object({
+    fundId: z.string().uuid(), fileId: z.string().uuid(),
+    onboardingId: z.string().uuid().optional(), onboardingIds: z.array(z.string().uuid()).max(500).optional(),
+    managerUserId: z.string().uuid().optional(),
+    order: z.enum(ORDERS).default("investor_first"), mode: z.enum(["full", "signature_page"]).default("full"),
+  }).parse(x))
   .handler(async ({ data, context }) => {
     const { assertFund } = await import("@/lib/fund-tabs.server");
     await assertFund(context.userId, data.fundId);
@@ -70,28 +118,52 @@ export const sendFileForSignatureFn = createServerFn({ method: "POST" }).middlew
     const { data: f } = await d.from("fund_files").select("id, status, title").eq("id", data.fileId).eq("offering_id", data.fundId).is("deleted_at", null).maybeSingle();
     if (!f) throw new Error("Document not found.");
     if (f.status === "signed") throw new Error("This document is already signed.");
-    const { data: ob } = await d.from("investor_onboardings").select("id, person_id, investor_user_id").eq("id", data.onboardingId).eq("offering_id", data.fundId).is("removed_at", null).maybeSingle();
-    if (!ob) throw new Error("That investor isn't in this fund.");
-    const { data: p } = ob.person_id ? await d.from("persons").select("legal_first_name, legal_last_name, preferred_name, email").eq("id", ob.person_id).maybeSingle() : { data: null };
-    if (!p?.email) throw new Error("This investor has no email address yet.");
-    const { data: mgr } = await d.from("fund_managers").select("user_id").eq("offering_id", data.fundId).eq("user_id", data.managerUserId).maybeSingle();
-    if (!mgr) throw new Error("That person isn't a manager of this fund.");
-    const { data: mp } = await d.from("profiles").select("legal_name, email").eq("user_id", data.managerUserId).maybeSingle();
-    if (!mp?.email) throw new Error("This fund manager has no email address.");
+    const needsInv = data.order !== "manager_only", needsMgr = data.order !== "investor_only";
+    const invIds = [...new Set([...(data.onboardingIds ?? []), ...(data.onboardingId ? [data.onboardingId] : [])])];
+    if (needsInv && !invIds.length) throw new Error("Choose at least one investor.");
+    let mp: any = null;
+    if (needsMgr) {
+      if (!data.managerUserId) throw new Error("Choose a fund manager.");
+      const { data: mgr } = await d.from("fund_managers").select("user_id").eq("offering_id", data.fundId).eq("user_id", data.managerUserId).maybeSingle();
+      if (!mgr) throw new Error("That person isn't a manager of this fund.");
+      const { data: prof } = await d.from("profiles").select("legal_name, email").eq("user_id", data.managerUserId).maybeSingle();
+      if (!prof?.email) throw new Error("This fund manager has no email address.");
+      mp = prof;
+    }
+    const { data: o } = await d.from("offerings").select("name, legal_entity_name, signatory_title").eq("id", data.fundId).maybeSingle();
+    const fundName = o?.legal_entity_name || o?.name || "Fund";
+    const manager = mp ? { name: mp.legal_name || mp.email, title: o?.signatory_title ?? null } : null;
+    const invOrder = data.order === "manager_first" ? 2 : 1, mgrOrder = data.order === "manager_first" ? 1 : 2;
+
     // Any earlier unsigned round is cancelled, never deleted.
     await d.from("fund_file_signatures").update({ status: "cancelled" }).eq("file_id", f.id).in("status", ["waiting", "sent"]);
-    const { data: rows, error } = await d.from("fund_file_signatures").insert([
-      { file_id: f.id, offering_id: data.fundId, signer_role: "investor", signing_order: 1, signer_name: pname(p) || p.email, signer_email: String(p.email).toLowerCase(), signer_user_id: ob.investor_user_id ?? null, onboarding_id: ob.id, created_by: context.userId },
-      { file_id: f.id, offering_id: data.fundId, signer_role: "fund_manager", signing_order: 2, signer_name: mp.legal_name || mp.email, signer_email: String(mp.email).toLowerCase(), signer_user_id: data.managerUserId, created_by: context.userId },
-    ]).select("*");
-    if (error) throw new Error(error.message);
+    await d.from("fund_files").update({ signing_order: data.order, signing_mode: data.mode }).eq("id", f.id);
+
+    const sent: string[] = [], skipped: { name: string; reason: string }[] = [];
+    const packets = needsInv ? invIds : [null];
+    for (const oid of packets) {
+      let inv: Awaited<ReturnType<typeof investorDetails>> | null = null;
+      if (oid) {
+        try { inv = await investorDetails(d, data.fundId, oid); } catch (e) { skipped.push({ name: "Investor", reason: (e as Error).message }); continue; }
+        if (!inv.email) { skipped.push({ name: inv.name, reason: "no email address" }); continue; }
+      }
+      const packet = crypto.randomUUID();
+      const page = buildSignaturePage({ title: f.title, fundName, order: data.order, investor: inv, manager });
+      const rows: any[] = [];
+      if (inv) rows.push({ file_id: f.id, offering_id: data.fundId, packet_id: packet, signature_page: page, signer_role: "investor", signing_order: needsMgr ? invOrder : 1, signer_name: inv.entityName ? `${inv.name} for ${inv.entityName}` : inv.name, signer_email: inv.email, signer_user_id: inv.ob.investor_user_id ?? null, onboarding_id: inv.ob.id, created_by: context.userId });
+      if (mp) rows.push({ file_id: f.id, offering_id: data.fundId, packet_id: packet, signature_page: page, signer_role: "fund_manager", signing_order: needsInv ? mgrOrder : 1, signer_name: mp.legal_name || mp.email, signer_email: String(mp.email).toLowerCase(), signer_user_id: data.managerUserId, created_by: context.userId });
+      const { data: ins, error } = await d.from("fund_file_signatures").insert(rows).select("*");
+      if (error) throw new Error(error.message);
+      await emailSigner(d, (ins as any[]).sort((a, b) => a.signing_order - b.signing_order)[0]);
+      sent.push(inv?.name ?? manager?.name ?? "Signer");
+    }
+    if (!sent.length) throw new Error(`Nothing was sent. ${skipped.map((s) => `${s.name}: ${s.reason}`).join("; ")}`);
     await d.from("fund_files").update({ status: "out_for_signature" }).eq("id", f.id);
-    await emailSigner(d, (rows as any[]).find((r) => r.signing_order === 1));
     try {
       const { logFundAudit } = await import("@/lib/fund-audit.server");
-      await logFundAudit(context.userId, { offeringId: data.fundId, eventType: "document_sent_for_signature", summary: `Sent "${f.title}" for signature`, values: { investor: pname(p) || p.email, fundManager: mp.legal_name || mp.email } });
+      await logFundAudit(context.userId, { offeringId: data.fundId, eventType: "document_sent_for_signature", summary: `Sent "${f.title}" for signature (${sent.length} packet${sent.length === 1 ? "" : "s"})`, values: { order: data.order, mode: data.mode, sentTo: sent.join(", "), fundManager: manager?.name ?? null, skipped: skipped.map((s) => `${s.name}: ${s.reason}`).join("; ") || null } });
     } catch { /* best-effort */ }
-    return { ok: true };
+    return { ok: true, sent: sent.length, skipped };
   });
 
 /**
