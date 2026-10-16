@@ -36,7 +36,7 @@ function SignPage() {
   const [viewDoc, setViewDoc] = useState(false);
   const m = useMutation({
     mutationFn: () => sign({ data: { id: signatureId, signedName: name, consent: true, userAgent: navigator.userAgent } }),
-    onSuccess: (r) => { toast.success(r.done ? "Signed. The document is now fully signed." : "Signed. The fund manager will be asked to countersign."); qc.invalidateQueries({ queryKey: key }); },
+    onSuccess: (r) => { toast.success(r.done ? "Signed. The document is now fully signed." : "Signed. The next signer will be asked to sign."); qc.invalidateQueries({ queryKey: key }); },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -58,7 +58,7 @@ function SignPage() {
         ))}
       </ol>
       <div className="flex items-center justify-between gap-3 rounded-xl border p-4">
-        <p className="text-sm text-muted-foreground">Read the full document before you sign.</p>
+        <p className="text-sm text-muted-foreground">{s.mode === "signature_page" ? "Read the full document, then sign the signature page below." : "Read the full document before you sign."}</p>
         <Button variant="outline" onClick={() => setViewDoc(true)}>View document</Button>
       </div>
       <Dialog open={viewDoc} onOpenChange={setViewDoc}>
@@ -67,10 +67,16 @@ function SignPage() {
           <div className="flex-1 overflow-y-auto whitespace-pre-wrap rounded-lg border p-5 text-sm leading-relaxed">{s.body || "This document has no text to show."}</div>
         </DialogContent>
       </Dialog>
+      {s.signaturePage && (
+        <div className="rounded-xl border p-5">
+          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">Signature page</p>
+          <div className="whitespace-pre-wrap text-sm leading-relaxed">{s.signaturePage}</div>
+        </div>
+      )}
       {s.status === "signed" ? (
         <p className="rounded-xl border p-4 text-sm">You signed this on {new Date(s.signedAt!).toLocaleString()}.</p>
       ) : !s.yourTurn ? (
-        <p className="rounded-xl border p-4 text-sm">The investor needs to sign first. We'll email you when it's your turn.</p>
+        <p className="rounded-xl border p-4 text-sm">{s.waitingOn === "fund_manager" ? "The fund manager" : "The investor"} needs to sign first. We'll email you when it's your turn.</p>
       ) : (
         <div className="space-y-3 rounded-xl border p-4">
           <label className="flex items-start gap-2 text-sm"><input type="checkbox" className="mt-1" checked={ok} onChange={(e) => setOk(e.target.checked)} />I've read this document and agree that typing my name below is my legal signature.</label>
