@@ -101,19 +101,29 @@ export function accessOpen(o: { payment_status: string; kyb_status: string; msa_
 }
 
 // ---------- Menu gating ----------
-const ALWAYS = ["/home", "/manager", "/client/home", "/messages", "/manager/messages", "/client", "/profile", "/manager/agreements", "/client/agreements", "/plan/setup", "/plan/start"];
+// Deny-by-default for gated clients: a path is either always allowed, tied to a purchase, or unpurchased.
+const ALWAYS = ["/home", "/manager", "/client/home", "/messages", "/manager/messages", "/client", "/profile", "/access", "/security", "/manager/agreements", "/client/agreements", "/plan/setup", "/plan/start"];
+const ALWAYS_PREFIX = ["/plan/", "/sign/", "/guides/", "/client/agreements/", "/manager/messages/", "/manager/agreements/", "/client/inbox", "/client/invoices", "/client/payments", "/client/services", "/client/sign-offs", "/client/banking", "/client/wires", "/client/setup-options", "/client/add-cap-table"];
 const NEEDS: { prefix: string; key: string }[] = [
   { prefix: "/client/cap-table", key: "cap_table" },
   { prefix: "/my-funds", key: "fund_platform" },
   { prefix: "/client/funds", key: "fund_platform" },
+  { prefix: "/activity", key: "fund_platform" },
+  { prefix: "/investor-reporting", key: "fund_platform" },
+  { prefix: "/documents", key: "fund_platform" },
+  { prefix: "/tax", key: "fund_platform" },
+  { prefix: "/distributions", key: "fund_platform" },
   { prefix: "/manager/", key: "fund_platform" },
 ];
+export const UNPURCHASED = "__unpurchased";
+const CLIENT_SPACES = ["/client", "/manager", "/my-funds", "/activity", "/investor-reporting", "/documents", "/tax", "/distributions", "/professional"];
 
-/** Required entitlement for a client path, or null when always allowed / not gated. */
+/** Required entitlement for a client path, or null when always allowed / not a client page. */
 export function requiredEntitlement(path: string): string | null {
-  if (ALWAYS.includes(path)) return null;
-  const hit = NEEDS.find((n) => path === n.prefix || path.startsWith(n.prefix.endsWith("/") ? n.prefix : `${n.prefix}/`) || (n.prefix.endsWith("/") && path.startsWith(n.prefix)));
-  return hit?.key ?? null;
+  if (ALWAYS.includes(path) || ALWAYS_PREFIX.some((p) => path === p.replace(/\/$/, "") || path.startsWith(p.endsWith("/") ? p : `${p}/`) || path === p)) return null;
+  const hit = NEEDS.find((n) => n.prefix.endsWith("/") ? path.startsWith(n.prefix) : path === n.prefix || path.startsWith(`${n.prefix}/`));
+  if (hit) return hit.key;
+  return CLIENT_SPACES.some((c) => path === c || path.startsWith(`${c}/`)) ? UNPURCHASED : null;
 }
 
 /** Legacy clients (null keys) keep their full menu; gated clients only see what they bought. */
