@@ -1,5 +1,10 @@
 # Roadmap
 
+## Template signature sending
+- [x] Remove separate Harmonious approval for generated Harmonious templates; preserve non-template review and signing controls
+- [x] Validate template activation and regressions (53 tests; preview compiles)
+- [ ] Signed-in review → send → sign walkthrough — blocked: no isolated synthetic QA session; shared production backend cannot be used for browser tests
+
 ## User invitation and account insights
 - [x] Track successful/failed invitation sends and exact Brevo message outcomes
 - [x] Add invite, login, setup filters and clickable invitation/user history

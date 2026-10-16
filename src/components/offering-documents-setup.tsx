@@ -251,17 +251,17 @@ function DocumentRow({ doc, data, offeringId, onChanged }: { doc: Doc; data: Dat
           </Step>
 
           <Step n={2} title="How it is used and who it applies to" done={!!doc.usage}>
-            <UsageEditor doc={doc} data={data} busy={busy} onSave={(usage, applicability) => run(() => setUsage({ data: { documentId: doc.id, usage, applicability } }), "Usage saved")} />
+            <UsageEditor doc={doc} data={{ ...data, canEdit: data.canEdit || doc.canConfigureTemplate }} busy={busy} onSave={(usage, applicability) => run(() => setUsage({ data: { documentId: doc.id, usage, applicability } }), "Usage saved")} />
           </Step>
 
           {needsSigning && (
             <Step n={3} title="Signature blocks" done={latest?.signingStatus === "confirmed"}>
               {!latest ? <p className="text-sm text-muted-foreground">Upload the document first, then add its signature blocks here.</p>
-                : <SigningEditor key={`${latest.version}-${latest.signingStatus}`} doc={doc} version={latest} data={data} onChanged={onChanged} />}
+                : <SigningEditor key={`${latest.version}-${latest.signingStatus}`} doc={doc} version={latest} data={{ ...data, canEdit: data.canEdit || doc.canConfigureTemplate }} onChanged={onChanged} />}
             </Step>
           )}
 
-          <Step n={needsSigning ? 4 : 3} title="Approve and put in use" done={!!active && active.version === latest?.version}>
+          <Step n={needsSigning ? 4 : 3} title={latest?.approvedTemplate ? "Put in use" : "Approve and put in use"} done={!!active && active.version === latest?.version}>
             {doc.versions.length === 0 && <p className="text-sm text-muted-foreground">No file uploaded yet.</p>}
             {doc.versions.map((v) => (
               <div key={v.version} className="rounded-md bg-muted/40 p-2 text-sm">
@@ -272,12 +272,12 @@ function DocumentRow({ doc, data, offeringId, onChanged }: { doc: Doc; data: Dat
                   </span>
                   <Badge variant="outline">{v.isActive ? "In use (template)" : v.rolloutScope === "single" && v.approval === "approved" ? "Individual version" : VERSION_STATE_LABELS[v.state]}</Badge>
                 </div>
-                {data.canEdit && v.approval !== "superseded" && (
+                {(data.canEdit || doc.canConfigureTemplate) && v.approval !== "superseded" && (
                   <div className="mt-2 flex flex-wrap items-center gap-2">
-                    {v.approval === "uploaded_review_required" && (
+                    {data.canEdit && v.approval === "uploaded_review_required" && !v.approvedTemplate && (
                       <Button size="sm" variant="outline" disabled={busy} onClick={() => run(() => approve({ data: { documentId: doc.id, version: v.version } }), "Approved for use")}>Approve for use</Button>
                     )}
-                    {v.approval === "approved" && !v.isActive && v.rolloutScope !== "single" && (
+                    {(v.approval === "approved" || v.approvedTemplate) && !v.isActive && v.rolloutScope !== "single" && (
                       <Button size="sm" disabled={busy || (needsSigning && v.signingStatus !== "confirmed")} onClick={() => startActivate(v.version)}>Use this version</Button>
                     )}
                     {needsSigning && v.signingStatus !== "confirmed" && !v.isActive && (

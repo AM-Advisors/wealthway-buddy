@@ -3,13 +3,13 @@
  * becomes a versioned template; each version needs approval by a different
  * Harmonious team member (also enforced by a DB trigger). Using a template in
  * another Fund copies the file into that Fund as a NEW fund document version,
- * which still goes through that Fund's normal review, signing setup and
+ * which needs no duplicate Harmonious approval but still requires signing setup and
  * activation. Nothing is sent to investors and no Fund document is replaced.
  */
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { setupActor, forbid } from "@/lib/fund-setup.server";
 import { DOCUMENT_CATEGORY_LABELS, type DocumentCategory } from "@/lib/offering-document-model";
-import { createSetupDocument, saveSigningConfig, setDocumentUsage, uploadDocumentVersion } from "@/lib/offering-document-setup.server";
+import { activateDocumentVersion, createSetupDocument, saveSigningConfig, setDocumentUsage, uploadDocumentVersion } from "@/lib/offering-document-setup.server";
 import type { SigningConfig } from "@/lib/offering-document-model";
 
 const db = () => supabaseAdmin as any;
@@ -141,7 +141,7 @@ export async function decideTemplateVersion(userId: string, input: { templateId:
   return { ok: true };
 }
 
-/** Copies an approved template version into a Fund as a new version awaiting that Fund's review. */
+/** Copies an approved template without duplicate fund-level Harmonious review. */
 export async function useTemplateInFund(userId: string, input: { templateId: string; version: number; offeringId: string }) {
   const a = await staffOrManager(userId, input.offeringId);
   return asManager(a, userId, input.offeringId, () => useTemplateInFundInner(userId, input));
@@ -170,8 +170,15 @@ async function useTemplateInFundInner(userId: string, input: { templateId: strin
     if (error) throw new Error(`Could not copy the file: ${error.message}`);
   }
   const { version: fundVersion } = await uploadDocumentVersion(userId, { documentId, filePath: dest, fileName: v.file_name, fileSizeBytes: size });
-  await db().from("document_template_uses").insert({ template_id: t.id, template_version: v.version, offering_id: input.offeringId, offering_document_id: documentId, fund_version: fundVersion, used_by: userId });
+  const { error: provenanceError } = await db().from("document_template_uses").insert({ template_id: t.id, template_version: v.version, offering_id: input.offeringId, offering_document_id: documentId, fund_version: fundVersion, used_by: userId });
+  if (provenanceError) throw new Error(provenanceError.message);
   const signing = await autoSigningSetup(userId, { documentId, version: fundVersion, category, title: String(t.title ?? ""), offeringId: input.offeringId });
+  // First use only; existing active versions require an explicit rollout choice.
+  const { data: document } = await db().from("offering_documents").select("active_version, usage").eq("id", documentId).maybeSingle();
+  if (document && document.active_version == null && (document.usage !== "signature" || signing.configured)) {
+    if (!document.usage) await setDocumentUsage(userId, { documentId, usage: "reference", applicability: {} });
+    await activateDocumentVersion(userId, { documentId, version: fundVersion, scope: "new_only" });
+  }
   return { documentId, fundVersion, autofill, signing };
 }
 
@@ -266,7 +273,7 @@ export async function listFundTemplateDocuments(userId: string, offeringId: stri
     const u = ((uses ?? []) as any[]).find((x) => x.offering_document_id === id);
     const v = ((vers ?? []) as any[]).filter((x) => x.offering_document_id === id).sort((a, b) => b.version - a.version)[0];
     const locked = used.has(id) || d.active_version != null || ["approved", "active"].includes(v?.approval_status);
-    return { id, title: d.title as string, usedAt: u?.used_at as string, versionId: v?.id ?? null, fileName: v?.file_name ?? null, signers: ((v?.signing_config?.signers ?? []) as any[]).map((x) => x.role as string), signingStatus: v?.signing_config_status ?? null, canDelete: !locked };
+    return { id, title: d.title as string, usedAt: u?.used_at as string, version: v?.version ?? null, isActive: d.active_version === v?.version, versionId: v?.id ?? null, fileName: v?.file_name ?? null, signers: ((v?.signing_config?.signers ?? []) as any[]).map((x) => x.role as string), signingStatus: v?.signing_config_status ?? null, canDelete: !locked };
   }).filter(Boolean);
 }
 

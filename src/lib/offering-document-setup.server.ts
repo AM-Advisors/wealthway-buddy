@@ -19,6 +19,7 @@ import {
   appliedVersionFor,
   resignTargets,
   rolloutCounts,
+  requiresDocumentApproval,
   type RolloutScope,
   type Applicability,
   type DocumentCategory,
@@ -45,6 +46,24 @@ async function docRow(documentId: string) {
   if (!data) throw new Error("That document was not found.");
   return data;
 }
+/** Provenance is version-specific: a later upload never inherits the template exemption. */
+async function approvedTemplateVersions(offeringId: string): Promise<Set<string>> {
+  const { data: uses, error } = await db().from("document_template_uses").select("offering_document_id, fund_version, template_id, template_version").eq("offering_id", offeringId);
+  if (error) throw new Error(error.message);
+  const ids = [...new Set((uses ?? []).map((u: any) => u.template_id))];
+  if (!ids.length) return new Set();
+  const { data: versions, error: versionError } = await db().from("document_template_versions").select("template_id, version, status").in("template_id", ids).eq("status", "approved");
+  if (versionError) throw new Error(versionError.message);
+  return new Set((uses ?? []).filter((u: any) => (versions ?? []).some((v: any) => v.template_id === u.template_id && v.version === u.template_version)).map((u: any) => `${u.offering_document_id}:${u.fund_version}`));
+}
+async function assertTemplateEditor(userId: string, d: any, version?: number) {
+  const actor = await assertRead(userId, d.offering_id);
+  if (!actor.isStaff) {
+    const templates = await approvedTemplateVersions(d.offering_id);
+    if (!templates.has(`${d.id}:${version ?? d.current_version}`)) forbid("only Harmonious can configure uploaded offering documents.");
+  }
+  return actor;
+}
 async function event(offeringId: string, documentId: string | null, version: number | null, ev: string, actor: string, detail: Record<string, unknown> = {}) {
   await db().from("offering_document_events").insert({ offering_id: offeringId, offering_document_id: documentId, version, event: ev, actor_user_id: actor, detail });
 }
@@ -56,6 +75,7 @@ export async function listSetupDocuments(userId: string, offeringId: string) {
     db().from("offering_document_versions").select("*").eq("offering_id", offeringId).order("version", { ascending: false }),
   ]);
   const vs = (versions ?? []) as any[];
+  const templates = await approvedTemplateVersions(offeringId);
   const list = ((docs ?? []) as any[]).map((d) => {
     const own = vs.filter((v) => v.offering_document_id === d.id);
     const view = own.map((v) => ({
@@ -65,15 +85,17 @@ export async function listSetupDocuments(userId: string, offeringId: string) {
       uploadedAt: v.created_at,
       effectiveDate: v.effective_date,
       approval: v.approval_status,
+      approvedTemplate: templates.has(`${d.id}:${v.version}`),
       signingStatus: v.signing_config_status,
       signingConfig: (v.signing_config ?? null) as SigningConfig | null,
-      state: versionState({ approval: v.approval_status, usage: d.usage, signingStatus: v.signing_config_status }),
+      state: versionState({ approval: v.approval_status, usage: d.usage, signingStatus: v.signing_config_status, approvedTemplate: templates.has(`${d.id}:${v.version}`) }),
       isActive: d.active_version === v.version,
       rolloutScope: (v.rollout_scope ?? null) as RolloutScope | null,
       targetOnboardingId: (v.target_onboarding_id ?? null) as string | null,
     }));
     return {
       id: d.id,
+      canConfigureTemplate: !actor.isStaff && templates.has(`${d.id}:${d.current_version}`),
       title: d.title,
       category: d.document_category as DocumentCategory | null,
       usage: d.usage as DocumentUsage | null,
@@ -184,7 +206,8 @@ export async function approveDocumentVersion(userId: string, input: { documentId
 
 export async function setDocumentUsage(userId: string, input: { documentId: string; usage: DocumentUsage; applicability: Applicability }) {
   const d = await docRow(input.documentId);
-  await assertStaff(userId, d.offering_id);
+  const actor = await assertRead(userId, d.offering_id);
+  if (!actor.isStaff && !(await import("@/lib/self-serve.server")).selfServeAllows(userId, d.offering_id, "template_documents")) await assertTemplateEditor(userId, d);
   await db()
     .from("offering_documents")
     .update({ usage: input.usage, applicability: input.applicability, requires_signature: input.usage === "signature" })
@@ -195,7 +218,7 @@ export async function setDocumentUsage(userId: string, input: { documentId: stri
 
 export async function saveSigningConfig(userId: string, input: { documentId: string; version: number; config: SigningConfig; confirm: boolean }) {
   const d = await docRow(input.documentId);
-  await assertStaff(userId, d.offering_id);
+  await assertTemplateEditor(userId, d, input.version);
   if (d.usage !== "signature") throw new Error("Set the document to Signature Required first.");
   const v = await versionRow(d.id, input.version);
   if (v.approval_status === "superseded") throw new Error("A superseded version can't be configured.");
@@ -256,9 +279,10 @@ export async function activateDocumentVersion(
   input: { documentId: string; version: number; scope?: RolloutScope | undefined; targetOnboardingId?: string | null | undefined; note?: string | null | undefined; impactAcknowledged?: boolean | undefined },
 ) {
   const d = await docRow(input.documentId);
-  await assertStaff(userId, d.offering_id);
+  await assertTemplateEditor(userId, d, input.version);
   const v = await versionRow(d.id, input.version);
-  if (v.approval_status !== "approved") throw new Error("Approve this version before activating it.");
+  const templates = await approvedTemplateVersions(d.offering_id);
+  if (v.approval_status === "superseded" || requiresDocumentApproval(v.approval_status, templates.has(`${d.id}:${v.version}`))) throw new Error("Approve this version before activating it.");
   if (d.usage === "signature" && v.signing_config_status !== "confirmed") throw new Error("Confirm the signing setup for this version first.");
   const replacing = !!d.active_version && d.active_version !== v.version;
   const scope: RolloutScope = input.scope ?? (replacing ? (input.impactAcknowledged ? "new_only" : (null as any)) : "new_only");
@@ -327,7 +351,7 @@ async function reconcile(onboardingIds: string[], userId: string) {
 /** Counts per choice for the Replace dialog, plus the investors to pick from for "Only one investor". */
 export async function rolloutPreview(userId: string, input: { documentId: string }) {
   const d = await docRow(input.documentId);
-  await assertStaff(userId, d.offering_id);
+  await assertTemplateEditor(userId, d);
   const inv = await investmentsForDocument(d.offering_id, d.id);
   const { data: rows } = await db().from("investor_onboardings").select("id, investment_profile_id").eq("offering_id", d.offering_id).is("removed_at", null);
   const pids = ((rows ?? []) as any[]).map((r) => r.investment_profile_id).filter(Boolean);

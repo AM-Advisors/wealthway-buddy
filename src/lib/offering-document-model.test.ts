@@ -123,10 +123,14 @@ describe("setup status and access", () => {
     expect(offeringDocumentsSetupStatus([{ category: "subscription_agreement", usage: "signature", activeState: "ready_for_use", latestState: "ready_for_use" }]).status).toBe("complete");
     expect(offeringDocumentsSetupStatus([{ category: "ppm", usage: null, activeState: null, latestState: "uploaded_review_required" }]).status).toBe("in_progress");
   });
-  it("configuration is Harmonious-only; managers read only their fund; investors only their own investment", () => {
-    for (const fn of ["createSetupDocument", "uploadDocumentVersion", "approveDocumentVersion", "setDocumentUsage", "saveSigningConfig", "activateDocumentVersion", "previewVersionImpact"]) {
+  it("custom upload and approval remain Harmonious-only; template configuration uses a fund-scoped guard", () => {
+    for (const fn of ["createSetupDocument", "uploadDocumentVersion", "approveDocumentVersion", "previewVersionImpact"]) {
       const body = server.slice(server.indexOf(`export async function ${fn}`));
       expect(body.slice(0, 400)).toMatch(/assertStaff\(/);
+    }
+    for (const fn of ["saveSigningConfig", "activateDocumentVersion"]) {
+      const body = server.slice(server.indexOf(`export async function ${fn}`));
+      expect(body.slice(0, 650)).toMatch(/assertTemplateEditor\(userId, d, input.version\)/);
     }
     expect(server).toMatch(/!a\.isStaff && !a\.offeringIds\.includes\(offeringId\)/);
     expect(server).toMatch(/row\.investor_user_id !== userId/);

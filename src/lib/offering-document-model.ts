@@ -60,6 +60,11 @@ export type SigningConfig = { signers: SignerConfig[] };
 export type VersionApproval = "uploaded_review_required" | "approved" | "superseded";
 export type SigningConfigStatus = "not_configured" | "needs_review" | "confirmed";
 
+/** Only exact, server-verified approved-template provenance waives fund-level review. */
+export function requiresDocumentApproval(approval: VersionApproval, approvedTemplate: boolean): boolean {
+  return approval !== "approved" && !(approval === "uploaded_review_required" && approvedTemplate);
+}
+
 /** Display state for one version on the Fund Setup screen. */
 export type VersionState =
   | "uploaded_review_required"
@@ -81,9 +86,10 @@ export function versionState(input: {
   approval: VersionApproval;
   usage: DocumentUsage | null;
   signingStatus: SigningConfigStatus;
+  approvedTemplate?: boolean;
 }): VersionState {
   if (input.approval === "superseded") return "superseded";
-  if (input.approval === "uploaded_review_required") return "uploaded_review_required";
+  if (requiresDocumentApproval(input.approval, input.approvedTemplate === true)) return "uploaded_review_required";
   if (!input.usage) return "approved_for_use";
   if (input.usage !== "signature") return "ready_for_use";
   if (input.signingStatus === "confirmed") return "ready_for_use";
