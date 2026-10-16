@@ -144,3 +144,6 @@ export const fundAccountFn = createServerFn({ method: "POST" }).middleware([requ
     const merged = [...official, ...fromReports].sort((a, b) => String(a.as_of_date).localeCompare(String(b.as_of_date))).slice(-24);
     return { statements: (st.data ?? []) as any[], reviews: (rv.data ?? []) as any[], nav: merged };
   });
+
+export const investorLevelsFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator(fund.parse)
+  .handler(async ({ data, context }) => { const s = await srv(); await s.assertFund(context.userId, data.fundId); return s.investorLevels(data.fundId); });
