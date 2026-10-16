@@ -22,12 +22,12 @@ const SPV_CARDS: Card[] = [
 const fundTier = (k: AdministrationTier["key"]) => ADMINISTRATION_TIERS.find((t) => t.key === k)!;
 const FUND_CARDS: Card[] = [
   { key: "fund-self", level: "SELF_SERVE", name: "Self Serve", positioning: "Run it yourself on the platform", priceText: "Included in the base fund price", items: ADMINISTRATION_TIERS.find((t) => t.key === "self_serve")!.entitlements },
-  { key: "fund-core", level: "CORE", name: "Fund Core", positioning: "Essential Fund Administration", prices: { annual: 18750, quarterly: 5313, monthly: 1875 },
+  { key: "fund-core", level: "CORE", name: "Fund Core", positioning: "Essential Fund Administration", prices: { annual: 15000, quarterly: 4250, monthly: 1500 },
     items: ["Fund general ledger & bank reconciliation", "Contributions & distributions", "Investor roster, onboarding & portal", "KYC/KYB/AML & accreditation", "Subscription & commitment records", "Basic capital accounts", "Investor statements", "Fund documents", "Basic quarterly reporting", "Year-end accounting data package"] },
   { key: "fund-admin", level: "FUND_ADMINISTRATION", name: "Fund Administration", positioning: "Complete Fund Administration", prices: fundTier("fund_admin").prices, plus: "Fund Core",
     items: ["Investment accounting & full capital accounts", "Quarterly NAV & quarterly close", "Management fee & standard waterfall", "Capital call & distribution administration", "Quarterly reporting package & schedule of investments", "Tax & audit coordination", "Fund operating calendar", "Enhanced investor reporting"] },
   { key: "fund-wg", level: "WHITE_GLOVE", name: "White Glove Fund Administration", positioning: "Managed Fund Operations", prices: fundTier("white_glove").prices, plus: "Fund Administration", items: fundTier("white_glove").entitlements.slice(0, 9) },
-  { key: "fund-inst", level: "INSTITUTIONAL", name: "Institutional", positioning: "Outsourced Fund Operations", starting: 75000, startingSuffix: "/year", note: "Custom pricing required.", items: fundTier("institutional").entitlements.slice(0, 8), cta: true },
+  { key: "fund-inst", level: "INSTITUTIONAL", name: "Institutional", positioning: "Outsourced Fund Operations", starting: 60000, startingSuffix: "/year", note: "Custom pricing required.", items: fundTier("institutional").entitlements.slice(0, 8), cta: true },
   { key: "fund-saas", level: "SAAS", name: "SaaS", positioning: "Platform only, no Harmonious support", priceText: "Services à la carte", note: "À la carte at Core prices + 50%. Harmonious fund documents $500 each.", items: ADMINISTRATION_TIERS.find((t) => t.key === "saas")!.entitlements },
 ];
 
