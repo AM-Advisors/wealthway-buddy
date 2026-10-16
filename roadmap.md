@@ -1,5 +1,9 @@
 # Roadmap
 
+## Template signature sending
+- [ ] Remove separate Harmonious approval for generated Harmonious templates; preserve non-template review and signing controls
+- [ ] Validate template send eligibility and regressions
+
 ## User invitation and account insights
 - [x] Track successful/failed invitation sends and exact Brevo message outcomes
 - [x] Add invite, login, setup filters and clickable invitation/user history
