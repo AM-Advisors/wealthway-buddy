@@ -43,7 +43,7 @@ type WireKey = (typeof WIRE_FIELDS)[number];
 
 const emptyWire = () => Object.fromEntries(WIRE_FIELDS.map((k) => [k, ""])) as Record<WireKey, string>;
 
-const PLACEHOLDERS: Record<WireKey, string> = {
+const PLACEHOLDERS: Partial<Record<WireKey, string>> = {
   bank_name: "First National Bank",
   bank_address: "123 Main St, Chicago, IL 60601",
   account_name: "Harmonious Income Fund I, LP",

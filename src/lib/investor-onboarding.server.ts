@@ -1088,7 +1088,7 @@ export async function fundingInstructions(userId: string, onboardingId: string) 
   const investorCountry = (prof as any)?.country || (per as any)?.residence_country || (per as any)?.country || null;
   const shown = instructionsForInvestor(rawDetails, investorCountry);
   const keep = new Set<string>([...(shown.domestic ? DOMESTIC_WIRE_FIELDS : []), ...(shown.international ? INTL_WIRE_FIELDS : [])]);
-  const details = rawDetails ? Object.fromEntries(Object.entries(rawDetails as Record<string, unknown>).filter(([k, v]) => keep.has(k) && String(v ?? "").trim())) : null;
+  const details = rawDetails ? Object.fromEntries(Object.entries(rawDetails as Record<string, unknown>).filter(([k, v]) => keep.has(k) && String(v ?? "").trim()).map(([k, v]) => [k, String(v)])) as Record<string, string> : null;
   const { data: setup } = await db()
     .from("fund_setups")
     .select("id")
