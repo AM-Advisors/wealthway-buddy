@@ -224,6 +224,7 @@ export async function saveBankDetails(sb: any, userId: string, input: { offering
   const details = Object.fromEntries(Object.entries(input.details).map(([k, v]) => [k, String(v ?? "").trim()]).filter(([, v]) => v !== ""));
   const { error } = await sb.rpc("save_wire_instructions", { p_offering_id: input.offeringId, p_details: details });
   if (error) throw new Error("The bank details couldn't be saved.");
+  await (await import("@/lib/fund-setup.server")).syncFundFacts(input.offeringId);
   await activity(input.offeringId, userId, "bank_instructions_entered", "New bank instructions entered - pending verification");
   return { ok: true };
 }
@@ -288,6 +289,7 @@ async function writeEntity(sb: any, offeringId: string, patch: { ein?: string; s
   const ss4 = patch.ss4 ?? ((cur as any)?.ss4 ?? {});
   const { error } = await sb.rpc("save_offering_entity_details", { p_offering_id: offeringId, p_has_ein: !!ein, p_ein: ein, p_ss4: ss4 });
   if (error) throw new Error("Entity details couldn't be saved.");
+  await (await import("@/lib/fund-setup.server")).syncFundFacts(offeringId);
 }
 
 /** Records a real EIN (existing, or received from the IRS). An IRS letter is required. */

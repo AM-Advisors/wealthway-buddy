@@ -1131,6 +1131,14 @@ export async function setOnboardingRequirement(
 
 // ---------------------------------------------------- readiness & launch
 
+/** Run after any fund fact is saved anywhere (fund tabs, setup, migrations) so setup tasks and readiness reflect it. Best-effort; never throws. */
+export async function syncFundFacts(offeringId: string) {
+  try {
+    const { data } = await db().from("fund_setups").select("id").eq("offering_id", offeringId);
+    for (const s of (data ?? []) as any[]) await syncAutoCompletedTasks(s.id).catch(() => null);
+  } catch { /* best-effort */ }
+}
+
 /** Mark tasks/conditions complete when the entered data already proves them (series master, EIN, wire instructions). Logged; never un-completes. */
 export async function syncAutoCompletedTasks(setupId: string) {
   const { data: setup } = await db().from("fund_setups").select("id, offering_id, legal_fund_name, created_by").eq("id", setupId).maybeSingle();

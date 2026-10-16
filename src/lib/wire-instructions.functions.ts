@@ -119,6 +119,7 @@ export const saveManagedWireInstructions = createServerFn({ method: "POST" })
       p_details: details as any,
     });
     if (error) throw new Error(error.message);
+    await (await import("@/lib/fund-setup.server")).syncFundFacts(data.offering_id);
 
     const changes = diffRecords(previous, next, [...WIRE_FIELDS]);
     if (changes.length > 0) {
