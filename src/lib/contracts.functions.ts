@@ -1648,13 +1648,15 @@ export const uploadSowDocument = createServerFn({ method: "POST" })
     if (!sow) throw new Error("That statement of work could not be found.");
 
     const binary = Buffer.from(data.contentBase64, "base64");
+    const { validateUpload } = await import("@/lib/upload-validation");
+    const checked = validateUpload(new Uint8Array(binary), data.fileName, { allowed: ["pdf", "docx", "doc"], maxBytes: 25 * 1024 * 1024, label: "Agreement file" });
     const safeName = data.fileName.replace(/[^A-Za-z0-9._-]/g, "_");
     const path = `client-sows/${data.id}/${Date.now()}-${safeName}`;
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error: uploadError } = await supabaseAdmin.storage
       .from("fund-formation")
-      .upload(path, new Uint8Array(binary), { contentType: data.contentType, upsert: true });
+      .upload(path, new Uint8Array(binary), { contentType: checked.contentType, upsert: true });
     if (uploadError) throw new Error(uploadError.message);
 
     const { error: updateError } = await context.supabase

@@ -32,7 +32,11 @@ const money = (cents: number | null) =>
     ? ""
     : (cents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" });
 
-const csvCell = (value: unknown) => `"${String(value ?? "").replace(/"/g, '""')}"`;
+const csvCell = (value: unknown) => {
+  let text = String(value ?? "");
+  if (/^[=+\-@\t\r]/.test(text)) text = `'${text}`;
+  return `"${text.replace(/"/g, '""')}"`;
+};
 
 function download(rows: AuditEntry[], name: string) {
   const header = ["When", "Category", "Summary", "Fund or client", "Person", "Status", "Amount", "Detail"];

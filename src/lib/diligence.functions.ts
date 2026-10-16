@@ -385,8 +385,8 @@ export const addDiligenceDocument = createServerFn({ method: "POST" })
     if (!room) throw new Error("Create the diligence room first.");
 
     const binary = Buffer.from(data.content_base64, "base64");
-    if (binary.length === 0) throw new Error("That file appears to be empty.");
-    if (binary.length > 20 * 1024 * 1024) throw new Error("Files must be 20 MB or smaller.");
+    const { validateUpload, DOCUMENT_KINDS } = await import("@/lib/upload-validation");
+    const checked = validateUpload(new Uint8Array(binary), data.file_name, { allowed: DOCUMENT_KINDS, maxBytes: 20 * 1024 * 1024 });
 
     const { uploadFileTo } = await import("@/lib/box.server");
     const safeName = data.file_name.replace(/[\\/:*?"<>|]/g, "_");
@@ -394,7 +394,7 @@ export const addDiligenceDocument = createServerFn({ method: "POST" })
       room.box_folder_id,
       safeName,
       new Uint8Array(binary),
-      data.content_type || "application/octet-stream",
+      checked.contentType,
     );
 
     const { error } = await supabase.from("diligence_documents").insert({
@@ -1506,8 +1506,8 @@ export const addDocumentVersion = createServerFn({ method: "POST" })
     if (!room) throw new Error("That diligence room is not available.");
 
     const binary = Buffer.from(data.content_base64, "base64");
-    if (binary.length === 0) throw new Error("That file appears to be empty.");
-    if (binary.length > 20 * 1024 * 1024) throw new Error("Files must be 20 MB or smaller.");
+    const { validateUpload, DOCUMENT_KINDS } = await import("@/lib/upload-validation");
+    const checked = validateUpload(new Uint8Array(binary), data.file_name, { allowed: DOCUMENT_KINDS, maxBytes: 20 * 1024 * 1024 });
 
     // Keep a record of the version being replaced.
     const { error: histErr } = await supabase.from("diligence_document_versions").insert({
@@ -1533,7 +1533,7 @@ export const addDocumentVersion = createServerFn({ method: "POST" })
       room.box_folder_id,
       versioned,
       new Uint8Array(binary),
-      data.content_type || "application/octet-stream",
+      checked.contentType,
     );
 
     const { error } = await supabase
