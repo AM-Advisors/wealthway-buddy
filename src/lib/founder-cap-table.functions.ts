@@ -142,11 +142,25 @@ export const getFounderCapTable = createServerFn({ method: "GET" })
       .filter((e) => e.status === "included")
       .map((e) => String(e.service_key));
 
+    // Cap table records are only returned when the client's plan includes Cap Table.
+    const plan = planFor(includedKeys);
+    if (!plan) {
+      return {
+        clientId: who.clientId,
+        canEdit: false,
+        canApprove: false,
+        plan: null,
+        stakeholders: [],
+        holdings: [],
+        transfers: [],
+      };
+    }
+
     return {
       clientId: who.clientId,
       canEdit: who.canEdit,
       canApprove: who.canApprove,
-      plan: planFor(includedKeys),
+      plan,
       stakeholders: (stakeholders ?? []) as any[],
       holdings: (holdings ?? []) as any[],
       transfers: (transfers ?? []) as any[],
