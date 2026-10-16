@@ -13,7 +13,7 @@ export function einComplete(input: { status: string | null | undefined; hasLette
 }
 
 /** Banking box is complete with a bank name, an account on file and the bank letter. */
-export function bankComplete(input: { bankName?: string | null; accountMasked?: string | null; hasLetter: boolean }) {
+export function bankComplete(input: { bankName?: string | null | undefined; accountMasked?: string | null | undefined; hasLetter: boolean }) {
   return !!input.bankName?.trim() && !!input.accountMasked?.replace(/\D/g, "").length && input.hasLetter;
 }
 
