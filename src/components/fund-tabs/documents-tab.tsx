@@ -15,7 +15,7 @@ import { deleteFundFileFn, generateFundDocFn, listFundFilesFn, setSignatureBoxes
 import { listTemplatesFn, useTemplateInFundFn } from "@/lib/fund-doc-templates.functions";
 import { fileToBase64, fmtDate } from "./shared";
 import { StandardFormsCard } from "./standard-forms-card";
-import { fundSigningContextFn, sendFileForSignatureFn, remindFileSignerFn } from "@/lib/fund-file-signing.functions";
+import { fundSigningContextFn, sendFileForSignatureFn, sendFileToSignatoryFn, remindFileSignerFn } from "@/lib/fund-file-signing.functions";
 
 const STATUS: Record<string, string> = { draft: "Draft", out_for_signature: "Out for signature", signed: "Signed" };
 
