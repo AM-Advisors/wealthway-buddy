@@ -197,7 +197,19 @@ export async function launchedOffering(offeringIdOrSlug: string) {
   return { offering, setup };
 }
 
+// Short-lived cache: fund requirements rarely change, and readiness views re-read them per investor.
+const REQ_CACHE = new Map<string, { at: number; v: OfferingRequirements }>();
+const REQ_TTL = 60_000;
+
 export async function offeringRequirements(offeringId: string): Promise<OfferingRequirements> {
+  const hit = REQ_CACHE.get(offeringId);
+  if (hit && Date.now() - hit.at < REQ_TTL) return hit.v;
+  const v = await loadOfferingRequirements(offeringId);
+  REQ_CACHE.set(offeringId, { at: Date.now(), v });
+  return v;
+}
+
+async function loadOfferingRequirements(offeringId: string): Promise<OfferingRequirements> {
   const [{ data: offering }, { data: req }, { data: setup }] = await Promise.all([
     db().from("offerings").select("*").eq("id", offeringId).maybeSingle(),
     db().from("offering_requirements").select("*").eq("offering_id", offeringId).maybeSingle(),
