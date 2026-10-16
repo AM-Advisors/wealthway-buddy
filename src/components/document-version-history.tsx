@@ -113,7 +113,7 @@ export function DocumentVersionHistory({ offeringId }: { offeringId: string }) {
             disabled={busy === "spv" || refreshMutation.isPending}
             onClick={() => refreshMutation.mutate("spv")}
           >
-            Update SPV documents to the latest
+            Update fund templates (SPV) to the latest
           </Button>
         </div>
 

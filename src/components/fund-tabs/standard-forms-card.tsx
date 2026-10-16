@@ -38,11 +38,12 @@ export function StandardFormsCard({ fundId, onGenerated }: { fundId: string; onG
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">{d.isSpv ? "SPV documents" : "ILPA templates"}</CardTitle>
+        <CardTitle className="text-base">Fund templates</CardTitle>
+        <Badge variant="outline" className="w-fit">{d.isSpv ? "Fund type: SPV" : "ILPA model documents"}</Badge>
         <CardDescription>
           {d.isSpv
-            ? "Harmonious's standard Subscription Agreement, Operating Agreement and PPM, filled in with this SPV's details. Review before sending."
-            : "Regular funds use ILPA's model documents. Download from ILPA, complete with counsel, then upload the final version above."}
+            ? "Harmonious Subscription Agreement, Operating Agreement and PPM for SPV funds."
+            : "ILPA model documents for other fund types."}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-2">
@@ -82,7 +83,7 @@ function UploadDialog({ form, onClose }: { form: { key: string; title: string };
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Harmonious {form.title}</DialogTitle>
-          <DialogDescription>Paste the form text or load a .txt/.md file. Use {"{{field}}"} where SPV details go: {FIELDS}. Each upload is a new version used for every SPV; earlier versions are kept.</DialogDescription>
+          <DialogDescription>Paste the form text or load a .txt/.md file. Use {"{{field}}"} where fund details go: {FIELDS}. Each upload is a new fund-template version for SPV funds; earlier versions are kept.</DialogDescription>
         </DialogHeader>
         <input type="file" accept=".txt,.md,text/plain,text/markdown" onChange={async (e) => { const f = e.target.files?.[0]; if (f) setBody(await f.text()); }} />
         <Textarea rows={14} value={body} onChange={(e) => setBody(e.target.value)} placeholder="This Subscription Agreement is entered into with {{legal_name}}..." />

@@ -10,7 +10,7 @@ import { TEMPLATE_PACKS, applyTemplatePack } from "@/lib/document-templates.func
 
 /**
  * Lets a fund manager drop a ready-made legal pack into a fund:
- * the ILPA model documents for a pooled fund, or the SPV set for a single deal.
+ * the ILPA model documents for a pooled fund, or fund templates for an SPV fund.
  */
 export function TemplatePackPicker({
   offeringId,
@@ -52,7 +52,7 @@ export function TemplatePackPicker({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Start from template documents</CardTitle>
+        <CardTitle>Fund templates</CardTitle>
         <CardDescription>
           Add a ready-made set to {offeringName ?? "this fund"}. Everything is a starting point for
           your counsel to tailor, and investors see it straight away.
@@ -62,8 +62,9 @@ export function TemplatePackPicker({
         {TEMPLATE_PACKS.map((pack) => (
           <div key={pack.id} className="flex flex-col justify-between rounded-lg border p-4">
             <div className="space-y-2">
-              <p className="font-medium">{pack.name}</p>
-              <p className="text-sm text-muted-foreground">{pack.summary}</p>
+              <p className="font-medium">{pack.id === "spv" ? "Harmonious fund templates" : pack.name}</p>
+              {pack.id === "spv" && <Badge variant="outline">Fund type: SPV</Badge>}
+              <p className="text-sm text-muted-foreground">{pack.id === "spv" ? "Private placement memorandum, subscription agreement and manager entity operating agreement for SPV funds." : pack.summary}</p>
               <ul className="space-y-1 pt-1 text-sm">
                 {pack.items.map((item) => (
                   <li key={item.title} className="flex items-center gap-2">
@@ -87,7 +88,7 @@ export function TemplatePackPicker({
               disabled={pending !== null}
               onClick={() => mutation.mutate(pack.id)}
             >
-              {pending === pack.id ? "Adding…" : `Use ${pack.name}`}
+              {pending === pack.id ? "Adding…" : pack.id === "spv" ? "Use fund templates" : `Use ${pack.name}`}
             </Button>
           </div>
         ))}
