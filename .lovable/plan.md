@@ -19,7 +19,7 @@
 Nothing goes out without a person clicking Send, and identity checks still apply before investors can sign.
 
 ## Steps
-1. Add signature-page templates (fund manager page, individual investor page, entity investor page, joint signers page).
+1. Add one signature-page template with a fund manager block and an investor block (individual, entity, or joint signers).
 2. Store each document's signing order and "full / signature page only" choice; default by document type.
 3. Generate per-investor signature pages filled from investor and fund records.
 4. Update the Send for signature window with order and mode choices, and add Send to all investors and Countersign all.
