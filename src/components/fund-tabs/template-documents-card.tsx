@@ -58,6 +58,16 @@ export function TemplateDocumentsCard({ fundId }: { fundId: string }) {
   );
 }
 
+/** Shrinks full-size pages to fit the screen (like a PDF on a phone) instead of squeezing the text. */
+function fitPages(el: HTMLElement) {
+  const wrapper = el.querySelector<HTMLElement>(".docx-wrapper");
+  const page = wrapper?.querySelector<HTMLElement>("section.docx");
+  if (!wrapper || !page) return;
+  wrapper.style.zoom = "1";
+  const scale = Math.min(1, (el.clientWidth - 8) / (page.offsetWidth + 32));
+  wrapper.style.zoom = String(scale);
+}
+
 function ReviewDialog({ fundId, doc, onClose }: { fundId: string; doc: any; onClose: () => void }) {
   const getUrl = useServerFn(fundTemplateDocumentUrlFn);
   const box = useRef<HTMLDivElement>(null);
@@ -75,15 +85,18 @@ function ReviewDialog({ fundId, doc, onClose }: { fundId: string; doc: any; onCl
         const { renderAsync } = await import("docx-preview");
         if (off || !box.current) return;
         await renderAsync(bytes, box.current, undefined, { inWrapper: true, ignoreLastRenderedPageBreak: false });
+        fitPages(box.current);
         setState("ready");
       } catch { if (!off) setState("error"); }
     })();
-    return () => { off = true; };
+    const onResize = () => box.current && fitPages(box.current);
+    window.addEventListener("resize", onResize);
+    return () => { off = true; window.removeEventListener("resize", onResize); };
   }, [doc.versionId]);
   const isDocx = /\.docx$/i.test(doc.fileName ?? "");
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-h-[92vh] max-w-5xl overflow-hidden">
+      <DialogContent className="max-h-[92vh] w-[calc(100vw-1rem)] max-w-5xl overflow-hidden p-3 sm:p-6">
         <DialogHeader>
           <DialogTitle>{doc.title}</DialogTitle>
           <DialogDescription>Filled in from the fund's details. {url && <a href={url} className="underline" target="_blank" rel="noreferrer">Download</a>}</DialogDescription>

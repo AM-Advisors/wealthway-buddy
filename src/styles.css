@@ -264,6 +264,6 @@ html.screen-protected input, html.screen-protected textarea, html.screen-protect
 /* Rendered documents always print-like: black text on white paper, in any theme. */
 .document-surface { background: #e5e7eb; color: #000; color-scheme: light; }
 .document-surface .docx-wrapper { background: #e5e7eb !important; padding: 16px !important; }
-.document-surface .docx-wrapper > section.docx { background: #fff !important; color: #000 !important; box-shadow: 0 1px 4px rgb(0 0 0 / 0.2); margin-bottom: 16px !important; max-width: 100%; }
+.document-surface .docx-wrapper > section.docx { background: #fff !important; color: #000 !important; box-shadow: 0 1px 4px rgb(0 0 0 / 0.2); margin-bottom: 16px !important; }
 .document-surface section.docx, .document-surface section.docx * { color: #000 !important; }
 .document-surface iframe { background: #fff; }
