@@ -2,7 +2,7 @@
 
 ## Thomas secondary contacts (2026-10-17)
 - [x] Add secondary phone storage and staff editing; show both secondary contacts in View account
-- [ ] Save requested phone on Thomas's linked person and verify read-back and tests
+- [x] Save requested phone on Thomas's linked person with history; verified read-back, 17 tests passed, build OK
 - [ ] Authenticated UI walkthrough — blocked: no isolated synthetic QA session
 
 ## Live view account (2026-10-17)
