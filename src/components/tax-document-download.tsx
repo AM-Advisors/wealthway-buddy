@@ -189,7 +189,7 @@ export function TaxDocumentDownload({ documentId, label }: { documentId: string;
               <DialogFooter className="gap-2 sm:gap-0">
                 <Button onClick={go} disabled={busy}>{busy ? "Checking…" : "Confirm and download"}</Button>
               </DialogFooter>
-              <Button variant="link" size="sm" className="h-auto p-0" disabled={busy} onClick={() => void sendEmailCode()}>
+              <Button variant="link" size="sm" className="h-auto p-0" disabled={busy} onClick={() => { setMode("email"); void sendEmailCode(); }}>
                 Locked out of your app? Email me a code instead
               </Button>
             </div>
