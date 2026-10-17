@@ -1,3 +1,4 @@
+import { fundOriginLabel, migrationApplies } from "@/lib/fund-origin";
 import { useEffect } from "react";
 import { ReadinessQueue } from "@/components/investment-readiness";
 import { FundMigrationStatus } from "@/components/fund-migration-status";
@@ -245,6 +246,7 @@ export function FundWorkspace({ fundId, tab, onTab, mode = "client", extraTabs =
           <p className="text-sm text-muted-foreground">{f.legal_entity_name || "Legal name not recorded"}</p>
         </div>
         <div className="flex items-center gap-2">
+          <Badge variant="outline">{fundOriginLabel(f.fund_origin)}</Badge>
           <Badge variant={f.is_open ? "default" : "secondary"}>{f.is_open ? "Open to investors" : "In setup"}</Badge>
           {headerExtra}
           {!staff && <Button onClick={() => setCloseOpen(true)}>Request Fund Close</Button>}
@@ -302,7 +304,7 @@ export function FundWorkspace({ fundId, tab, onTab, mode = "client", extraTabs =
         {!merged && <TabsContent value="details" className="space-y-5">{detailsBody}</TabsContent>}
         {!merged && <TabsContent value="banking" className="space-y-5">{bankingBody}</TabsContent>}
 
-        <TabsContent value="investors" className="space-y-4">{staff && <FundMigrationStatus fundId={fundId} />}{staff && mode === "harmonious" && <MigrationPaymentsCard fundId={fundId} />}<InvestorsTab fundId={fundId} workQueue={staff ? <ReadinessQueue offeringId={fundId} initialTab="all" /> : undefined} /><CapitalTieReport offeringId={fundId} /><FundUpdatesPanel fundId={fundId} /></TabsContent>
+        <TabsContent value="investors" className="space-y-4">{staff && migrationApplies(f.fund_origin) && <FundMigrationStatus fundId={fundId} />}{staff && migrationApplies(f.fund_origin) && <MigrationPaymentsCard fundId={fundId} />}<InvestorsTab fundId={fundId} workQueue={staff ? <ReadinessQueue offeringId={fundId} initialTab="all" /> : undefined} /><CapitalTieReport offeringId={fundId} /><FundUpdatesPanel fundId={fundId} /></TabsContent>
 
 
         <TabsContent value="accounting"><AccountTab fundId={fundId} fundName={String(f.name ?? "Fund")} taxDocs={td?.taxDocs ?? []} /></TabsContent>

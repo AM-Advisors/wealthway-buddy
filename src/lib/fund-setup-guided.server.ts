@@ -63,7 +63,7 @@ export async function guidedState(userId: string, offeringId: string) {
   const subs = await import("@/lib/fund-manager-submissions.server");
   const [{ items, onFile }, { data: o }, { data: mgrs }, team, proposals, pct, { data: rem }] = await Promise.all([
     subs.listSubmissions(userId, offeringId),
-    db().from("offerings").select("name, client_id, reg_type, drive_folder_url").eq("id", offeringId).maybeSingle(),
+    db().from("offerings").select("name, client_id, reg_type, drive_folder_url, fund_origin").eq("id", offeringId).maybeSingle(),
     db().from("fund_managers").select("user_id").eq("offering_id", offeringId),
     (await import("@/lib/harmonious-team.server")).loadFundTeam(offeringId).catch(() => null),
     a.isStaff ? pendingProposals(offeringId) : Promise.resolve([] as any[]),
@@ -111,7 +111,7 @@ export async function guidedState(userId: string, offeringId: string) {
     return { step, status, statusLabel: STEP_STATUS_LABEL[status], owner, missing: miss, remindedToday: reminded };
   });
   return {
-    isStaff: a.isStaff, directSetupEdits, fundName: o?.name ?? "Fund", launchPercent: pct.get(offeringId) ?? 0,
+    isStaff: a.isStaff, directSetupEdits, fundOrigin: o?.fund_origin ?? null, fundName: o?.name ?? "Fund", launchPercent: pct.get(offeringId) ?? 0,
     hasDriveFolder: !!o?.drive_folder_url, saasOnly: !!client?.saas_only,
     administrator: client?.saas_only ? "Client (SaaS-only contract)" : "Harmonious",
     team: ((team?.team ?? []) as any[]).map((m) => ({ role: m.role, name: m.userId ? names.get(m.userId)?.name ?? "Staff member" : null })),

@@ -16,6 +16,8 @@ import { FundSignatoriesCard } from "@/components/fund-signatories-card";
 import { OfferingDocumentsSetup } from "@/components/offering-documents-setup";
 import { FORM_SECTIONS, changedBySection, type FieldDef } from "@/lib/fund-setup-form-model";
 
+import { FundOriginControl } from "@/components/fund-origin-control";
+
 type Mode = "staff" | "manager";
 
 /**
@@ -139,6 +141,7 @@ export function FundSetupForm({ offeringId, mode, staffExtras }: { offeringId: s
         </div>
       </div>
 
+      <FundOriginControl offeringId={offeringId} origin={d.fundOrigin} editable={isStaff} />
       {fieldSection("basic")}
       {fieldSection("details")}
       {fieldSection("jurisdiction")}
