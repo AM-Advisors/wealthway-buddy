@@ -25430,6 +25430,45 @@ export type Database = {
           },
         ]
       }
+      investor_bank_verifications: {
+        Row: {
+          account_mask: string | null
+          created_at: string
+          expected_names: string[]
+          id: string
+          institution_name: string | null
+          investor_user_id: string
+          name_match: boolean
+          onboarding_id: string
+          owner_names: string[]
+          status: string
+        }
+        Insert: {
+          account_mask?: string | null
+          created_at?: string
+          expected_names?: string[]
+          id?: string
+          institution_name?: string | null
+          investor_user_id: string
+          name_match: boolean
+          onboarding_id: string
+          owner_names?: string[]
+          status: string
+        }
+        Update: {
+          account_mask?: string | null
+          created_at?: string
+          expected_names?: string[]
+          id?: string
+          institution_name?: string | null
+          investor_user_id?: string
+          name_match?: boolean
+          onboarding_id?: string
+          owner_names?: string[]
+          status?: string
+        }
+        Relationships: []
+      }
       investor_bulk_imports: {
         Row: {
           committed_at: string | null
