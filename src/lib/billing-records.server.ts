@@ -170,6 +170,7 @@ export async function fundMigrationPayments(uid: string, offeringId: string) {
 
 export async function recordMigrationPayment(uid: string, input: { offeringId: string; amountCents: number; paidOn: string; method: string; periodStart: string | null; periodEnd: string | null; serviceKeys: string[]; note: string | null }) {
   await need(uid, PREPARE, "Only Sales, Account Managers and Operations can record payments.");
+  await (await import("@/lib/fund-origin.server")).requireMigrationFund(input.offeringId);
   const valid = new Set(serviceCatalog().map((s) => s.key));
   if (input.serviceKeys.some((k) => !valid.has(k))) throw new Error("Unknown service.");
   if (input.periodStart && input.periodEnd && input.periodEnd < input.periodStart) throw new Error("Period end is before start.");

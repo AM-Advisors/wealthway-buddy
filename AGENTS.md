@@ -16,7 +16,8 @@
 - Server functions import requireSupabaseAuth only from src/lib/require-auth.ts (same middleware, light context), never the generated module — why: its Database-typed context exceeds preview typecheck limits.
 - Client and Operations share fund-workspace.tsx (mode client|harmonious); tab links retain fund ID and audience, staff controls use mode and actions keep server checks — why: one connected fund view, presentation grants no authority.
 - Offering Statement management fee/carry/preferred return are projections of the active fund_fee_terms row (src/lib/offering-statement.functions.ts overwrites them on read and save) - why: the statement must never differ from the fund record.
-- Fund Setup/Readiness % uses fund-launch-summary.ts; guided banking uses bankSetupStatus(onFile.bankOnFile, latest submission) — why: one completion source; replacement submissions retain review.
+- Setup %: fund-launch-summary.ts; banking: bankSetupStatus — why: shared facts, replacement review retained.
+- Explicit fund_origin via fund-origin.ts separates new/migration panels and records — why: files never imply takeover.
 
 - Marketing (incl. menu groups/post design options), email-flow and CSA STAR rules live in src/lib/AGENTS.md - why: keeps this file within budget.- Operations and Account Managers may review/approve others' internal work via src/lib/ops-capabilities.ts (never their own; money paths use capabilitiesFor(roles, { moneyPath: true })); tax, money and administration keep their own approvers - why: user-approved peer approval without widening money authority.
 - Submission alerts go only through src/lib/ops-slack-notify.server.ts (best-effort, allow-listed fields, 5-minute dedupe in ops_slack_notifications, tags fund/client operations owner then account manager) - why: one sender, never blocks or leaks sensitive data.
