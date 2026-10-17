@@ -1,9 +1,10 @@
 # Roadmap
 
 ## Investor step email updates
-- [ ] Add per-fund frequency controls for investor and manager progress emails.
-- [ ] Wire canonical completion history to branded, fund-scoped updates without changing approvals.
-- [ ] Test frequency, recipient isolation and completion rules; signed-in QA requires an isolated synthetic session.
+- [x] Add independent immediate/daily/weekly/off controls for investors and managers in Investor Onboarding Settings; default off, changes audit-recorded.
+- [x] Use canonical four-step completion after reconciliation, silent initial baseline, stable recipient/step dedupe, branded private summaries and existing five-minute job; approvals unchanged, no new email schema.
+- [x] 43 focused tests passed, including saved-settings read-back, duplicate prevention and removed-manager denial; preview compiles.
+- [ ] Signed-in UI and real email walkthrough — blocked: isolated synthetic QA URL/session unavailable; no production emails sent during testing.
 
 ## New fund versus migration (2026-10-17)
 - [x] Persist explicit classification; Erebor New fund verified by read-back; new inserts default New fund, existing funds stay unclassified.
