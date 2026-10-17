@@ -53,7 +53,7 @@ export function TemplateDocumentsCard({ fundId }: { fundId: string }) {
                   <p className="text-xs text-muted-foreground">
                     Made {fmtDate(d.usedAt)} · {d.signers.length ? `Signs: ${d.signers.map((r: string, i: number) => `${i + 1}. ${ROLE[r] ?? r}`).join(", ")}` : "No signatures"}
                   </p>
-                  {sq.data?.[d.title] && <p className="text-xs font-medium text-primary">{sq.data[d.title].status === "signed" ? "Signed" : "Sent"} · {sq.data[d.title].signer ?? "Fund manager"}{sq.data[d.title].sentAt ? ` · ${fmtDate(sq.data[d.title].sentAt!)}` : ""}{sq.data[d.title].status === "sent" ? " · waiting to sign" : ""}</p>}
+                  {(() => { const st = sq.data?.[d.title]; return st ? <p className="text-xs font-medium text-primary">{st.status === "signed" ? "Signed" : "Sent"} · {st.signer ?? "Fund manager"}{st.sentAt ? ` · ${fmtDate(st.sentAt)}` : ""}{st.status === "sent" ? " · waiting to sign" : ""}</p> : null; })()}
                 </div>
                 <div className="flex items-center gap-2">
                   {d.isActive && <Badge variant="outline">In use</Badge>}
