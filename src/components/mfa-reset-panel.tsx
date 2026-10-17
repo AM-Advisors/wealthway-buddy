@@ -33,7 +33,7 @@ export function MfaResetPanel({ email, userId }: { email: string; userId: string
       <p className="text-sm text-destructive">{q.error instanceof Error && q.error.message === "Forbidden" ? "Administrator access is required to reset an authenticator." : "Unable to load authenticator resets. Refresh and try again."}</p>
       <Button variant="outline" size="sm" onClick={() => void q.refetch()}>Try again</Button>
     </div> : <>
-      <p className="text-sm text-muted-foreground">Confirm the account holder's identity. One administrator approval removes the authenticator and remembered devices; every reset is logged.</p>
+      <p className="text-sm text-muted-foreground">Confirm the account holder's identity. Super Admins can request and approve alone; other administrators need a second person. Every reset is logged.</p>
       <form className="space-y-3" onSubmit={event => { event.preventDefault(); void run(async () => { await request({ data: { email, reason, identityCheck } }); setReason(""); setIdentityCheck(""); }, "Reset requested — awaiting another administrator"); }}>
         <div className="grid gap-3 sm:grid-cols-3">
           <label className="space-y-1 text-sm"><span>Account email</span><Input type="email" value={email} readOnly /></label>
@@ -46,7 +46,7 @@ export function MfaResetPanel({ email, userId }: { email: string; userId: string
         <div className="flex flex-wrap items-center gap-2"><span className="break-all font-medium">{r.target_email}</span><Badge variant="outline">{r.status}</Badge><span className="text-muted-foreground">{new Date(r.created_at).toLocaleString()}</span></div>
         <p className="break-words">{r.reason} · Identity: {r.identity_check}</p>
         {r.decision_reason && <p className="break-words text-muted-foreground">Decision: {r.decision_reason}</p>}
-        {r.status === "pending" && !r.canDecide && <p className="text-muted-foreground">Another administrator must approve resets of your own account.</p>}
+        {r.status === "pending" && !r.canDecide && <p className="text-muted-foreground">Awaiting a second administrator.</p>}
         {r.canDecide && <div className="flex flex-wrap gap-2">
           <Button size="sm" disabled={busy} onClick={() => { if (window.confirm(`Remove the authenticator and remembered devices for ${r.target_email}?`)) void run(() => decide({ data: { id: r.id, approve: true } }), "Authenticator reset approved"); }}>Approve reset</Button>
           <Button size="sm" variant="outline" disabled={busy} onClick={() => { const declineReason = window.prompt("Reason for declining"); if (declineReason?.trim()) void run(() => decide({ data: { id: r.id, approve: false, reason: declineReason.trim() } }), "Reset declined"); }}>Decline</Button>
