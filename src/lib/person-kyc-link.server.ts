@@ -42,7 +42,10 @@ export async function sendPersonKycLink(person: any, createdBy: string): Promise
   if (url) {
     try {
       const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+      const { secondaryCcFor } = await import("@/lib/person-emails.server");
+      const secondary = await secondaryCcFor(person.email);
       await sendTemplateEmail("manager-alert", person.email, {
+        ...(secondary ? { cc: secondary } : {}),
         idempotencyKey: `person-kyc:${row.id}`,
         templateData: {
           managerName: nm(person),
