@@ -34,6 +34,8 @@ export function StandardFormsCard({ fundId, onGenerated }: { fundId: string; onG
   });
   if (!q.data) return null;
   const d = q.data;
+  // SPV funds use the Harmonious template documents above; hide this older text-form list when none were uploaded.
+  if (d.isSpv && !d.forms.some((f: any) => f.version)) return null;
 
   return (
     <Card>
