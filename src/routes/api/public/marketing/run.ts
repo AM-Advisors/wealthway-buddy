@@ -38,6 +38,7 @@ export const Route = createFileRoute("/api/public/marketing/run")({
         out["missed"] = await recordMissed(now).catch((e) => ({ error: String(e) }));
         // Rides the existing 5-minute internal run: #operations notice for new items awaiting Harmonious approval.
         out["approval_alerts"] = await (await import("@/lib/approval-alerts.server")).runApprovalAlerts().catch((e) => ({ error: String(e) }));
+        out["investor_progress"] = await (await import("@/lib/investor-progress-email.server")).drainProgressEmails(100).catch((e) => ({ error: String(e) }));
         return Response.json(out);
       },
     },
