@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { RecoveryCodes } from "@/components/security-gate";
 import { PrivacyRequestsCard } from "@/components/privacy-requests-card";
 import { generateRecoveryCodes, getMySecurity, signOutOtherSessions } from "@/lib/account-security.functions";
+import { getMyTrustedDevicesFn, revokeAllTrustedDevicesFn, revokeTrustedDeviceFn } from "@/lib/mfa-ease.functions";
 import { canEnrollPasskey } from "@/lib/passkeys";
 
 export const Route = createFileRoute("/_authenticated/security")({
@@ -43,6 +44,9 @@ const EVENT_LABELS: Record<string, string> = {
   mfa_failed: "Second step failed",
   mfa_enrolled: "Method added",
   mfa_removed: "Method removed",
+  mfa_trusted_device_added: "Device remembered",
+  mfa_trusted_device_revoked: "Device forgotten",
+  mfa_fallback_code_sent: "Code emailed",
   recovery_code_used: "Recovery code used",
   session_timeout: "Timed out",
 };
