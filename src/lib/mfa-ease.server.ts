@@ -101,8 +101,8 @@ function sixDigitCode(): string {
  */
 export function smsSenderConfig(): SmsSender | null {
   return pickSmsSender({
-    TWILIO_FROM_NUMBER: process.env.TWILIO_FROM_NUMBER,
-    TWILIO_MESSAGING_SERVICE_SID: process.env.TWILIO_MESSAGING_SERVICE_SID,
+    TWILIO_FROM_NUMBER: process.env["TWILIO_FROM_NUMBER"] ?? "",
+    TWILIO_MESSAGING_SERVICE_SID: process.env["TWILIO_MESSAGING_SERVICE_SID"] ?? "",
   });
 }
 
@@ -114,7 +114,7 @@ async function issueCode(
   userId: string,
   purpose: string,
   target: string,
-  deliver: (code: string) => Promise<void>,
+  deliver: (code: string) => Promise<unknown>,
 ) {
   const since = new Date(Date.now() - 60 * 60_000).toISOString();
   const { data: recent } = await db()
@@ -177,8 +177,8 @@ async function sendSms(to: string, body: string) {
   if (!sender) {
     throw new Error("Text messages aren't turned on yet. Ask Operations to add a Twilio phone number.");
   }
-  const lovableKey = process.env.LOVABLE_API_KEY;
-  const twilioKey = process.env.TWILIO_API_KEY;
+  const lovableKey = process.env["LOVABLE_API_KEY"];
+  const twilioKey = process.env["TWILIO_API_KEY"];
   if (!lovableKey || !twilioKey) throw new Error("Text messaging isn't configured on this server.");
 
   const form = new URLSearchParams({ To: to, Body: body });
