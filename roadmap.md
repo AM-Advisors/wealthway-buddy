@@ -59,9 +59,15 @@
 - [x] Assurance floor kept: session must still be aal2; device/email proof covers freshness only (27 focused tests; build green)
 - [x] Email fallback verified signed in (code requested, wrong code rejected with attempt tracking); remember-device correctly refused without a second step
 - [ ] Remembered-device skip shown in the real UI — needs an aal2 session from a real authenticator sign-in (preview sessions are aal1 by design)
-- [ ] Phone (SMS) codes — blocked: hosted sign-in has phone sign-in off and there is no Twilio connection
+- [ ] Phone (SMS) codes — built and gated on a Twilio sender number; see "Twilio texts for confirmation codes" below
 
 ## Secondary email for people (2026-10-17)
 - [x] persons.secondary_email column + validation (app + DB check); staff edit field in People & Access; Thomas Morgan Jr. set to morgato27@gmail.com
 - [x] Copies (CC) of informational emails to the secondary address: signing requests, signing reminders, document sends, identity-check links
 - [x] Security line kept: codes, invites and password resets never go to the secondary address (verified signed in; 4 unit tests; build green)
+
+## Twilio texts for confirmation codes (2026-10-17)
+- [x] Twilio connected (gateway-backed, server-side only); texted codes reuse the emailed-code engine — single-use 6-digit, 10-minute expiry, 5 attempts, 3/hour cap shared across channels, security-event audit
+- [x] Text option appears only when a Twilio sender number is configured AND a mobile number is on the person's record; a texted code can never satisfy an emailed-code request (12 focused tests; build green)
+- [ ] Sender number and account credit — blocked: the connected Twilio account has no phone number and a $0.00 balance; needs Alyssa's go-ahead to buy one (~$1.15/month), then TWILIO_FROM_NUMBER saved as a secret
+- [ ] Turn-on walkthrough in the real UI — needs the sender number above

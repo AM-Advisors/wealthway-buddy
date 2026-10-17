@@ -7,13 +7,20 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { downloadMyTaxDocument, startTaxDocumentStepUp } from "@/lib/portal-documents.functions";
-import { checkTrustedDeviceFn, rememberThisDeviceFn, requestMfaEmailCodeFn } from "@/lib/mfa-ease.functions";
+import {
+  checkTrustedDeviceFn,
+  getMfaSmsStatusFn,
+  rememberThisDeviceFn,
+  requestMfaEmailCodeFn,
+  requestMfaSmsCodeFn,
+} from "@/lib/mfa-ease.functions";
 
 /**
- * Download with step-up. Three ways to pass the fresh check:
+ * Download with step-up. Four ways to pass the fresh check:
  *  - a remembered device (30 days) skips the prompt entirely;
  *  - a fresh authenticator code (the device is then remembered);
- *  - a single-use emailed code, for someone locked out of their authenticator app.
+ *  - a single-use emailed code, for someone locked out of their authenticator app;
+ *  - a single-use texted code, when texting is turned on and a mobile number is on file.
  */
 const TOKEN_KEY = "hm-mfa-trusted-token";
 
@@ -55,9 +62,14 @@ export function TaxDocumentDownload({ documentId, label }: { documentId: string;
   const checkTrusted = useServerFn(checkTrustedDeviceFn);
   const rememberFn = useServerFn(rememberThisDeviceFn);
   const emailCodeFn = useServerFn(requestMfaEmailCodeFn);
+  const smsCodeFn = useServerFn(requestMfaSmsCodeFn);
+  const smsStatusFn = useServerFn(getMfaSmsStatusFn);
   const [open, setOpen] = useState(false);
-  const [mode, setMode] = useState<"authenticator" | "email">("authenticator");
+  const [mode, setMode] = useState<"authenticator" | "email" | "phone">("authenticator");
   const [emailSent, setEmailSent] = useState(false);
+  const [smsSent, setSmsSent] = useState(false);
+  const [smsOn, setSmsOn] = useState(false);
+  const [smsTo, setSmsTo] = useState<string | null>(null);
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -70,7 +82,7 @@ export function TaxDocumentDownload({ documentId, label }: { documentId: string;
     }
   }
 
-  async function startAndDownload(proof: { trustedDeviceToken?: string; emailCode?: string }) {
+  async function startAndDownload(proof: { trustedDeviceToken?: string; emailCode?: string; smsCode?: string }) {
     const { stepUpId } = await startFn({ data: { documentId, ...proof } });
     const res: any = await downloadFn({ data: { documentId, stepUpId } });
     if (!res?.ok) { toast.error(res?.message ?? "This document is unavailable."); return false; }
@@ -79,7 +91,7 @@ export function TaxDocumentDownload({ documentId, label }: { documentId: string;
     const a = document.createElement("a");
     a.href = url; a.download = res.fileName; a.click();
     setTimeout(() => URL.revokeObjectURL(url), 10_000);
-    setOpen(false); setCode(""); setEmailSent(false); setMode("authenticator");
+    setOpen(false); setCode(""); setEmailSent(false); setSmsSent(false); setMode("authenticator");
     return true;
   }
 
@@ -119,10 +131,10 @@ export function TaxDocumentDownload({ documentId, label }: { documentId: string;
     }
   }
 
-  async function goWithEmailCode() {
+  async function goWithCode(proof: { emailCode?: string; smsCode?: string }) {
     setBusy(true);
     try {
-      await startAndDownload({ emailCode: code.trim() });
+      await startAndDownload(proof);
     } catch (e: any) {
       toast.error(String(e?.message ?? "Not available.").replace(/^Forbidden:\s*/, ""));
     } finally {
@@ -144,9 +156,32 @@ export function TaxDocumentDownload({ documentId, label }: { documentId: string;
     }
   }
 
+  async function sendTextCode() {
+    setBusy(true);
+    try {
+      await smsCodeFn({ data: { purpose: "tax_document" } });
+      setSmsSent(true);
+      setCode("");
+      toast.success(`Code sent by text to ${smsTo ?? "your phone"} (it expires in 10 minutes).`);
+    } catch (e: any) {
+      toast.error(String(e?.message ?? "Couldn't send the code."));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function openDialog() {
     setOpen(true);
     setMode("authenticator");
+    // Whether a text code is on offer is decided by the server: it needs both a
+    // Twilio sender number and a mobile number on this account.
+    try {
+      const s = await smsStatusFn();
+      setSmsOn(!!s?.enabled);
+      setSmsTo(s?.to ?? null);
+    } catch {
+      setSmsOn(false);
+    }
     // A remembered device skips the code prompt entirely.
     const uid = await userId();
     const token = uid ? storedToken(uid) : null;
@@ -192,8 +227,13 @@ export function TaxDocumentDownload({ documentId, label }: { documentId: string;
               <Button variant="link" size="sm" className="h-auto p-0" disabled={busy} onClick={() => { setMode("email"); void sendEmailCode(); }}>
                 Locked out of your app? Email me a code instead
               </Button>
+              {smsOn ? (
+                <Button variant="link" size="sm" className="h-auto p-0" disabled={busy} onClick={() => { setMode("phone"); void sendTextCode(); }}>
+                  Or text me a code instead
+                </Button>
+              ) : null}
             </div>
-          ) : (
+          ) : mode === "email" ? (
             <div className="space-y-2">
               {!emailSent ? (
                 <Button className="w-full" disabled={busy} onClick={() => void sendEmailCode()}>
@@ -211,7 +251,35 @@ export function TaxDocumentDownload({ documentId, label }: { documentId: string;
                     maxLength={6}
                   />
                   <DialogFooter className="gap-2 sm:gap-0">
-                    <Button onClick={goWithEmailCode} disabled={busy || code.trim().length !== 6}>
+                    <Button onClick={() => void goWithCode({ emailCode: code.trim() })} disabled={busy || code.trim().length !== 6}>
+                      {busy ? "Checking…" : "Confirm and download"}
+                    </Button>
+                  </DialogFooter>
+                </>
+              )}
+              <Button variant="link" size="sm" className="h-auto p-0" disabled={busy} onClick={() => setMode("authenticator")}>
+                Use my authenticator app instead
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {!smsSent ? (
+                <Button className="w-full" disabled={busy} onClick={() => void sendTextCode()}>
+                  {busy ? "Sending…" : `Send a code by text to ${smsTo ?? "my phone"}`}
+                </Button>
+              ) : (
+                <>
+                  <p className="text-sm text-muted-foreground">Enter the 6-digit code we just texted you.</p>
+                  <Input
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    placeholder="6-digit code"
+                    value={code}
+                    onChange={(e) => setCode(e.target.value)}
+                    maxLength={6}
+                  />
+                  <DialogFooter className="gap-2 sm:gap-0">
+                    <Button onClick={() => void goWithCode({ smsCode: code.trim() })} disabled={busy || code.trim().length !== 6}>
                       {busy ? "Checking…" : "Confirm and download"}
                     </Button>
                   </DialogFooter>
