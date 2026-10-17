@@ -6,7 +6,7 @@
  */
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { setupActor, forbid } from "@/lib/fund-setup.server";
-import { SETUP_STEPS, STEP_STATUS_LABEL, isSetupFile, redactSensitive, setupDefaults, stepStatus, waitingOnViewer, type SetupStep, type StepStatus } from "@/lib/fund-setup-waiting";
+import { SETUP_STEPS, STEP_STATUS_LABEL, bankSetupStatus, isSetupFile, redactSensitive, setupDefaults, stepStatus, waitingOnViewer, type SetupStep, type StepStatus } from "@/lib/fund-setup-waiting";
 
 const db = () => supabaseAdmin as any;
 
@@ -95,7 +95,7 @@ export async function guidedState(userId: string, offeringId: string) {
       status = stepStatus({ complete: teamComplete, harmoniousOwned: true });
       if (!teamComplete) miss = ((team?.team ?? []) as any[]).filter((m) => !m.userId).map((m) => ({ sales: "Sales", account_manager: "Account Manager", operations: "Operations" } as any)[m.role]);
     } else if (step === "bank") {
-      status = stepStatus({ submission: latest("bank"), complete: latest("bank") === "approved" });
+      status = bankSetupStatus(onFile.bankOnFile, latest("bank"));
     } else if (step === "document") {
       const has = ((onFile as any)?.documents ?? []).length > 0;
       status = stepStatus({ submission: latest("document"), complete: has });
