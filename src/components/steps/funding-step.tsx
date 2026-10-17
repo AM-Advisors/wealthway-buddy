@@ -396,6 +396,7 @@ export function FundingStep({ offeringId }: { offeringId?: string }) {
                   <RadioGroupItem value="ach" id="method-ach" className="mt-1" />
                   <Label htmlFor="method-ach" className="font-normal">
                     ACH debit - authorize us to debit your bank account for the commitment amount.
+                    <span className="mt-1 block text-xs text-destructive">ACH usually takes 3-5 business days to arrive, and can take longer. Choose it early so funds arrive before the closing date.</span>
                   </Label>
                 </div>
               </RadioGroup>

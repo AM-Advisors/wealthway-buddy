@@ -465,6 +465,20 @@ function Fund({ d, onboardingId, done }: { d: any; onboardingId: string; done: (
                   : null}
                 <p><strong>Reference:</strong> {f.instructions.reference}</p>
                 <p><strong>Amount:</strong> {money(f.instructions.expectedAmountCents)}</p>
+                {(f.instructions.methods ?? []).length > 0 && (
+                  <div className="space-y-2 pt-2">
+                    <p className="font-semibold">Ways you can send it</p>
+                    {(f.instructions.methods as { method: string; timeline: string }[]).map((m) => (
+                      <div key={m.method} className={m.method === "wire" ? "rounded-md border p-3" : "rounded-md border border-destructive/30 bg-destructive/5 p-3"}>
+                        <p className="font-medium">{m.method === "ach" ? "ACH (use the bank and routing number above)" : m.method === "check" ? "Check" : "Wire"}</p>
+                        <p className={m.method === "wire" ? "text-muted-foreground" : "text-destructive"}>{m.timeline}</p>
+                        {m.method === "check" && f.instructions.check && (
+                          <p className="mt-1">Payable to <strong>{f.instructions.check.payableTo ?? "-"}</strong>, mailed to <span className="whitespace-pre-line">{f.instructions.check.mailTo ?? "-"}</span>. Write the reference on the memo line.</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
                 <p className="rounded-md bg-muted p-3 text-muted-foreground">{f.instructions.warning}</p>
               </div>
             ) : (

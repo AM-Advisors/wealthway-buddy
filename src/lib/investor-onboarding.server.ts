@@ -1105,10 +1105,15 @@ export async function fundingInstructions(userId: string, onboardingId: string) 
       instructions: null,
     };
   }
+  const { normalizePaymentMethods, PAYMENT_METHOD_TIMELINE } = await import("@/lib/payment-methods");
+  const { data: pm } = await db().from("offerings").select("payment_methods, check_payable_to, check_mail_address").eq("id", row.offering_id).maybeSingle();
+  const methods = normalizePaymentMethods((pm as any)?.payment_methods).filter((m) => m !== "ach" || !!shown.domestic);
   return {
     unlocked: true,
     reasons: [] as string[],
     instructions: {
+      methods: methods.map((m) => ({ method: m, timeline: PAYMENT_METHOD_TIMELINE[m] })),
+      check: methods.includes("check") ? { payableTo: (pm as any)?.check_payable_to ?? null, mailTo: (pm as any)?.check_mail_address ?? null } : null,
       bankName: banking.bank_name as string | null,
       details,
       expectedAmountCents: row.accepted_amount_cents ?? row.requested_amount_cents,
