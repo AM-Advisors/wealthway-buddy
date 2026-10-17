@@ -10,13 +10,14 @@ import { UserInsights } from "@/components/user-insights";
 import { PersonKycUpdate } from "@/components/person-kyc-update";
 import { KycReport } from "@/components/kyc-report";
 import { SidebarAccessCard } from "@/components/sidebar-access-card";
+import { RefreshCw } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/ops/people/$userId")({
   head: () => ({
     meta: [
-      { title: "User activity - Harmonious" },
+      { title: "View account - Harmonious" },
       { name: "description", content: "Every sign-in, page viewed, click and access change for one user." },
-      { property: "og:title", content: "User activity - Harmonious" },
+      { property: "og:title", content: "View account - Harmonious" },
       { property: "og:description", content: "The full activity trail for one Harmonious user." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -27,7 +28,8 @@ export const Route = createFileRoute("/_authenticated/ops/people/$userId")({
 });
 
 const when = (s: string | null) => (s ? new Date(s).toLocaleString([], { dateStyle: "medium", timeStyle: "short" }) : "Never");
-const KINDS = ["All", "Viewed", "Clicked", "Action", "Access change"];
+const KINDS = ["All", "Viewed", "Clicked", "Action", "Access change", "Security"];
+const SESSION_LABELS = { unknown: "Status unknown", sign_in_recorded: "Sign-in recorded", sign_out_recorded: "Sign-out recorded", timeout_recorded: "Session timed out", revoked: "Sessions revoked" };
 
 function PersonActivityPage() {
   const { userId } = Route.useParams();
@@ -35,7 +37,7 @@ function PersonActivityPage() {
   const [cursor, setCursor] = useState<string | undefined>();
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
-  const q = useQuery({ queryKey: ["person-activity", userId, cursor, from, to], queryFn: () => load({ data: { userId, ...(cursor ? { before: cursor } : {}), ...(from ? { from: new Date(from + "T00:00:00").toISOString() } : {}), ...(to ? { to: new Date(to + "T23:59:59.999").toISOString() } : {}) } }), retry: false });
+  const q = useQuery({ queryKey: ["person-activity", userId, cursor, from, to], queryFn: () => load({ data: { userId, ...(cursor ? { before: cursor } : {}), ...(from ? { from: new Date(from + "T00:00:00").toISOString() } : {}), ...(to ? { to: new Date(to + "T23:59:59.999").toISOString() } : {}) } }), retry: false, refetchInterval: 30_000, refetchOnWindowFocus: true });
   const [kind, setKind] = useState("All");
   const [search, setSearch] = useState("");
   const d = q.data;
@@ -46,11 +48,17 @@ function PersonActivityPage() {
       {q.isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
       {q.error && <p className="text-sm text-destructive">{(q.error as Error).message}</p>}
       {d && (<>
-        <header>
+        <header className="space-y-2">
+          <div className="flex flex-wrap items-center justify-between gap-2"><p className="text-sm text-muted-foreground">View account</p><Button variant="outline" size="icon" aria-label="Refresh account" title="Refresh account" disabled={q.isFetching} onClick={() => void q.refetch()}><RefreshCw className={`h-4 w-4 ${q.isFetching ? "animate-spin motion-reduce:animate-none" : ""}`} /></Button></div>
           <h1 className="text-3xl">{d.name || d.email}</h1>
           <p className="mt-1 text-sm text-muted-foreground">{d.email} · Account created {when(d.createdAt)} · Email confirmed {when(d.confirmedAt)} · Last signed in {when(d.lastSignIn)}</p>
           {!!d.roles.length && <div className="mt-2 flex flex-wrap gap-1">{d.roles.map((r) => <Badge key={r} variant="outline">{r.replace(/_/g, " ")}</Badge>)}</div>}
         </header>
+        <section className="space-y-3 border-y py-4">
+          <div className="flex flex-wrap items-center gap-2"><h2 className="text-lg">Session & activity</h2><Badge variant="outline">{SESSION_LABELS[d.sessionStatus.state]}</Badge><span className="text-sm text-muted-foreground">{d.sessionStatus.at ? when(d.sessionStatus.at) : "No session evidence"}</span></div>
+          <p className="text-sm">Last activity: {d.lastActivity ? `${d.lastActivity.label || d.lastActivity.path || "Recorded activity"} · ${when(d.lastActivity.created_at)}` : "Not recorded"}</p>
+          <p className="text-xs text-muted-foreground">Updated {when(d.checkedAt)} · A recorded sign-out applies to that session; other devices may still be signed in. Current online presence is not confirmed.</p>
+        </section>
         <AccountOverview d={d} />
         {d.roles.length > 0 && <SidebarAccessCard userId={userId} />}
         <KycReport d={d} userId={userId} />
@@ -65,7 +73,7 @@ function PersonActivityPage() {
             <Input aria-label="Activity from date" type="date" className="w-auto" value={from} onChange={e => { setFrom(e.target.value); setCursor(undefined); }} />
             <Input aria-label="Activity to date" type="date" className="w-auto" value={to} onChange={e => { setTo(e.target.value); setCursor(undefined); }} />
           </div>
-          {!events.length ? <p className="p-4 text-sm text-muted-foreground">No activity recorded yet. Pages and clicks are recorded from today onward.</p> : (
+          {!events.length ? <p className="p-4 text-sm text-muted-foreground">No activity matches these filters.</p> : (
             <ul className="divide-y">{events.map((e) => (
               <li key={e.id} className="flex flex-wrap items-center justify-between gap-2 p-3 text-sm">
                 <div className="flex min-w-0 items-center gap-2"><Badge variant={e.kind === "Viewed" ? "secondary" : "outline"}>{e.kind}</Badge><span className="truncate">{e.what}</span>{e.path && e.what !== e.path && <span className="text-xs text-muted-foreground">{e.path}</span>}</div>
@@ -107,7 +115,7 @@ function AccountOverview({ d }: { d: any }) {
       <div className="rounded-lg border p-4">
         <h2 className="text-lg">Clients ({d.clients.length})</h2>
         <ul className="mt-2 space-y-1 text-sm">{d.clients.length ? d.clients.map((c: any) => <li key={c.id} className="flex justify-between gap-2"><Link to="/ops/clients/$clientId" params={{ clientId: c.id }} search={{} as any} className="text-primary hover:underline">{c.name}</Link><span className="capitalize text-muted-foreground">{label(c.role)}</span></li>) : <li className="text-muted-foreground">None</li>}</ul>
-        <h2 className="mt-4 text-lg">Fund teams ({d.funds.length})</h2>
+        <h2 className="mt-4 text-lg">Funds ({d.funds.length})</h2>
         <ul className="mt-2 space-y-1 text-sm">{d.funds.length ? d.funds.map((f: any) => <li key={f.id} className="flex justify-between gap-2"><Link to="/ops/funds/$fundId" params={{ fundId: f.id }} className="text-primary hover:underline">{f.name}</Link><span className="capitalize text-muted-foreground">{label(f.role)}</span></li>) : <li className="text-muted-foreground">None</li>}</ul>
       </div>
       <div className="rounded-lg border p-4">

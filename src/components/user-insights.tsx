@@ -12,7 +12,7 @@ export function DeliveryBadge({ outcome }: { outcome?: EmailOutcome | null }) {
 }
 export function UserInsights({ email, compact = false }: { email: string; compact?: boolean }) {
   const load = useServerFn(getUserInsights);
-  const q = useQuery({ queryKey: ["user-insights", email.toLowerCase()], queryFn: () => load({ data: { email } }), enabled: !!email, retry: false, staleTime: 60000 });
+  const q = useQuery({ queryKey: ["user-insights", email.toLowerCase()], queryFn: () => load({ data: { email } }), enabled: !!email, retry: false, staleTime: 60000, refetchInterval: compact ? false : 30_000 });
   if (q.isPending) return <p className="text-xs text-muted-foreground">Loading account insights…</p>;
   if (q.error) return <div className="text-xs text-muted-foreground">Account insights unavailable. <Button size="sm" variant="ghost" onClick={() => q.refetch()}>Retry</Button></div>;
   const d = q.data;
