@@ -290,3 +290,53 @@ export const remindFileSignerFn = createServerFn({ method: "POST" }).middleware(
       override: data.overrideReason ? { reason: data.overrideReason } : null,
     });
   });
+
+/**
+ * Send an in-use Harmonious template document (e.g. the Operating Agreement) to one
+ * fund manager for signature. The signer sees the document's text; the original file
+ * stays attached. Same signer row, email, reminders and audit as other fund files.
+ */
+export const sendTemplateDocToSignatoryFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator((x: unknown) => z.object({ fundId: z.string().uuid(), documentId: z.string().uuid(), managerUserId: z.string().uuid() }).parse(x))
+  .handler(async ({ data, context }) => {
+    const { assertFund } = await import("@/lib/fund-tabs.server");
+    await assertFund(context.userId, data.fundId);
+    const d = await db();
+    const { data: doc } = await d.from("offering_documents").select("id, title, offering_id, active_version, removed_at").eq("id", data.documentId).maybeSingle();
+    if (!doc || doc.offering_id !== data.fundId || doc.removed_at) throw new Error("Document not found.");
+    if (doc.active_version == null) throw new Error("Put this document in use before sending it.");
+    const { data: v } = await d.from("offering_document_versions").select("file_path, file_name").eq("offering_document_id", doc.id).eq("version", doc.active_version).maybeSingle();
+    if (!v?.file_path) throw new Error("This document has no file.");
+    const { data: mgr } = await d.from("fund_managers").select("user_id").eq("offering_id", data.fundId).eq("user_id", data.managerUserId).maybeSingle();
+    if (!mgr) throw new Error("That person isn't a manager of this fund.");
+    const { data: mp } = await d.from("profiles").select("legal_name, email").eq("user_id", data.managerUserId).maybeSingle();
+    if (!mp?.email) throw new Error("This fund manager has no email address.");
+
+    let body = "";
+    const { data: blob } = await d.storage.from("offering-files").download(v.file_path);
+    if (blob && /\.docx$/i.test(v.file_name ?? "")) {
+      const JSZip = (await import("jszip")).default;
+      const zip = await JSZip.loadAsync(await blob.arrayBuffer());
+      const xml = (await zip.file("word/document.xml")?.async("string")) ?? "";
+      body = xml.replace(/<w:tab\/>/g, "\t").replace(/<\/w:p>/g, "\n").replace(/<[^>]+>/g, "")
+        .replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/\n{3,}/g, "\n\n").trim();
+    }
+    if (!body) throw new Error("Couldn't read this document's text to send it.");
+
+    const { data: f, error: fe } = await d.from("fund_files").insert({
+      offering_id: data.fundId, title: doc.title, category: "legal", file_name: v.file_name, body,
+      template_key: "operating_agreement", status: "draft", signing_order: "manager_only", uploaded_by: context.userId,
+    }).select("id").single();
+    if (fe) throw new Error(fe.message);
+    const { data: rows, error } = await d.from("fund_file_signatures").insert([
+      { file_id: f.id, offering_id: data.fundId, signer_role: "fund_manager", signing_order: 1, signer_name: mp.legal_name || mp.email, signer_email: String(mp.email).toLowerCase(), signer_user_id: data.managerUserId, created_by: context.userId },
+    ]).select("*");
+    if (error) throw new Error(error.message);
+    await d.from("fund_files").update({ status: "out_for_signature" }).eq("id", f.id);
+    await emailSigner(d, (rows as any[])[0]);
+    try {
+      const { logFundAudit } = await import("@/lib/fund-audit.server");
+      await logFundAudit(context.userId, { offeringId: data.fundId, eventType: "document_sent_for_signature", summary: `Sent "${doc.title}" (v${doc.active_version}) to the fund manager for signature`, values: { fundManager: mp.legal_name || mp.email, signatoryOnly: true } });
+    } catch { /* best-effort */ }
+    return { ok: true, name: (mp.legal_name || mp.email) as string };
+  });
