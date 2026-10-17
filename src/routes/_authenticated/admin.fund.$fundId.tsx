@@ -261,7 +261,7 @@ function FundPage() {
         </TabsContent>
 
         <TabsContent value="setup" className="mt-6">
-          <FundSetupForm offeringId={fundId} mode="staff" staffExtras={<FundSetupCanonical offeringId={fundId} />} />
+          <FundSetupForm offeringId={fundId} mode="staff" staffExtras={<FundSetupCanonical offeringId={fundId} staffOnly />} />
         </TabsContent>
 
         <TabsContent value="documents" className="mt-6 space-y-6">
