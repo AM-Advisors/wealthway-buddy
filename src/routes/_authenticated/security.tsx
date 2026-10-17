@@ -12,6 +12,8 @@ import { Input } from "@/components/ui/input";
 import { RecoveryCodes } from "@/components/security-gate";
 import { PrivacyRequestsCard } from "@/components/privacy-requests-card";
 import { generateRecoveryCodes, getMySecurity, signOutOtherSessions } from "@/lib/account-security.functions";
+import { getMyTrustedDevicesFn, revokeAllTrustedDevicesFn, revokeTrustedDeviceFn } from "@/lib/mfa-ease.functions";
+import type { TrustedDeviceView } from "@/lib/mfa-ease";
 import { canEnrollPasskey } from "@/lib/passkeys";
 
 export const Route = createFileRoute("/_authenticated/security")({
@@ -43,6 +45,9 @@ const EVENT_LABELS: Record<string, string> = {
   mfa_failed: "Second step failed",
   mfa_enrolled: "Method added",
   mfa_removed: "Method removed",
+  mfa_trusted_device_added: "Device remembered",
+  mfa_trusted_device_revoked: "Device forgotten",
+  mfa_fallback_code_sent: "Code emailed",
   recovery_code_used: "Recovery code used",
   session_timeout: "Timed out",
 };
@@ -52,7 +57,11 @@ function SecurityPage() {
   const fetchSec = useServerFn(getMySecurity);
   const signOutOthers = useServerFn(signOutOtherSessions);
   const genCodes = useServerFn(generateRecoveryCodes);
+  const fetchTrusted = useServerFn(getMyTrustedDevicesFn);
+  const revokeDevice = useServerFn(revokeTrustedDeviceFn);
+  const revokeAllDevices = useServerFn(revokeAllTrustedDevicesFn);
   const { data } = useQuery({ queryKey: ["my-security"], queryFn: () => fetchSec() });
+  const { data: trusted } = useQuery<TrustedDeviceView[]>({ queryKey: ["my-trusted-devices"], queryFn: () => fetchTrusted() });
   const [factors, setFactors] = useState<any[]>([]);
   const [codes, setCodes] = useState<string[] | null>(null);
   const [totp, setTotp] = useState<{ id: string; qr: string; secret: string } | null>(null);
@@ -158,6 +167,38 @@ function SecurityPage() {
             </div>
           ))}
           {data && data.devices.length === 0 && <p className="text-sm text-muted-foreground">No devices recorded yet.</p>}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="font-heading text-lg">Remembered devices</CardTitle>
+          <CardDescription>
+            Devices you confirmed with your second step skip repeated code prompts for 30 days.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {(trusted ?? []).map((d) => (
+            <div key={d.id} className="flex items-center justify-between rounded-md border p-3 text-sm">
+              <div>
+                <p className="font-medium">{browser(d.user_agent)}</p>
+                <p className="text-xs text-muted-foreground">
+                  added {fmt(d.created_at)} · {d.expires_at && new Date(d.expires_at) > new Date() && !d.revoked_at ? `trusted until ${fmt(d.expires_at)}` : "no longer trusted"}
+                </p>
+              </div>
+              {!d.revoked_at && (
+                <Button size="sm" variant="outline" onClick={async () => { await revokeDevice({ data: { id: d.id } }); toast.success("Device forgotten"); void qc.invalidateQueries({ queryKey: ["my-trusted-devices"] }); }}>
+                  Forget
+                </Button>
+              )}
+            </div>
+          ))}
+          {trusted && trusted.length === 0 && <p className="text-sm text-muted-foreground">No remembered devices yet. Confirm a code once and this browser will be remembered.</p>}
+          {trusted && trusted.some((d) => !d.revoked_at) && (
+            <Button size="sm" variant="outline" onClick={async () => { await revokeAllDevices(); toast.success("All remembered devices forgotten"); void qc.invalidateQueries({ queryKey: ["my-trusted-devices"] }); }}>
+              Forget all devices
+            </Button>
+          )}
         </CardContent>
       </Card>
 

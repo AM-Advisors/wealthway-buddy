@@ -14,6 +14,7 @@ import {
   type FolderMapping,
   type FreezeRow,
 } from "@/lib/portal-documents";
+import { pickStepUpMethod, type StepUpProof, type StepUpProofUsed } from "@/lib/mfa-ease";
 import { providerFor, ProviderNotAuthorizedError, type ProviderItem } from "@/lib/document-providers.server";
 
 const db = () => supabaseAdmin as any;
@@ -116,23 +117,47 @@ async function decide(userId: string, claims: unknown, documentId: string, inten
   return { doc, decision };
 }
 
-/** Records a step-up for one document after a fresh second-factor check on this session. */
-export async function beginTaxStepUp(userId: string, claims: unknown, documentId: string) {
+/**
+ * Records a step-up for one document. The fresh second factor normally comes
+ * from a re-verified authenticator (amr in the session); a remembered device
+ * token or a single-use emailed code can stand in for the freshness check only.
+ * The session itself must still be aal2 (checked inside decide()).
+ */
+export async function beginTaxStepUp(userId: string, claims: unknown, documentId: string, proof?: StepUpProof) {
   const { decision } = await decide(userId, claims, documentId, "list");
   if (!decision.allow) {
     await log(userId, documentId, "step_up", "deny", decision.reason);
     forbid(DENY_MESSAGES[decision.reason] ?? "Not available.");
   }
+  let method = "mfa_reverify";
+  let proofUsed: StepUpProofUsed = "fresh";
   if (!freshSecondFactor(claims as any)) {
-    await log(userId, documentId, "step_up", "deny", "second_factor_not_fresh");
-    forbid("Please confirm your two-step code again.");
+    const ease = await import("@/lib/mfa-ease.server");
+    const trustedOk = proof?.trustedDeviceToken
+      ? (await ease.checkTrustedDevice(userId, proof.trustedDeviceToken)).trusted
+      : false;
+    let emailOk = false;
+    if (!trustedOk && proof?.emailCode) {
+      try {
+        emailOk = (await ease.verifyFallbackCode(userId, proof.emailCode, "tax_document")).ok;
+      } catch {
+        emailOk = false;
+      }
+    }
+    const picked = pickStepUpMethod({ freshSecondFactor: false, trustedDeviceOk: trustedOk, emailCodeOk: emailOk });
+    if (!picked.proofUsed) {
+      await log(userId, documentId, "step_up", "deny", "second_factor_not_fresh");
+      forbid("Please confirm your two-step code again.");
+    }
+    method = picked.method;
+    proofUsed = picked.proofUsed;
   }
   const { data, error } = await db().from("stepup_authentications").insert({
-    user_id: userId, method: "mfa_reverify", action: STEP_UP_ACTION, resource_type: "document_catalog", resource_id: documentId,
+    user_id: userId, method, action: STEP_UP_ACTION, resource_type: "document_catalog", resource_id: documentId,
     status: "verified", verified_at: nowIso(), expires_at: new Date(Date.now() + STEP_UP_TTL_MS).toISOString(),
   }).select("id").single();
   if (error) throw new Error(error.message);
-  await log(userId, documentId, "step_up", "allow", "verified");
+  await log(userId, documentId, "step_up", "allow", `verified (${proofUsed})`);
   return { stepUpId: data.id as string };
 }
 

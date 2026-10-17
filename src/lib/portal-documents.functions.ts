@@ -3,6 +3,7 @@ import { setResponseHeader } from "@tanstack/react-start/server";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/lib/require-auth";
+import type { StepUpProof } from "@/lib/mfa-ease";
 
 const srv = () => import("@/lib/portal-documents.server");
 const id = z.string().uuid();
@@ -13,8 +14,24 @@ export const getMyTaxDocuments = createServerFn({ method: "GET" }).middleware([r
   .handler(async ({ context }) => { noStore(); return (await srv()).investorTaxView(context.userId, context.claims); });
 
 export const startTaxDocumentStepUp = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ documentId: id }).parse(d))
-  .handler(async ({ data, context }) => (await srv()).beginTaxStepUp(context.userId, context.claims, data.documentId));
+  .inputValidator((d) =>
+    z
+      .object({
+        documentId: id,
+        // A remembered-device token or a single-use emailed code can stand in for
+        // the fresh authenticator check. The session must still be aal2.
+        trustedDeviceToken: z.string().min(10).max(200).optional(),
+        emailCode: z.string().trim().regex(/^\d{6}$/).optional(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    noStore();
+    const proof: StepUpProof = {};
+    if (data.trustedDeviceToken) proof.trustedDeviceToken = data.trustedDeviceToken;
+    if (data.emailCode) proof.emailCode = data.emailCode;
+    return (await srv()).beginTaxStepUp(context.userId, context.claims, data.documentId, proof);
+  });
 
 export const downloadMyTaxDocument = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ documentId: id, stepUpId: id }).parse(d))

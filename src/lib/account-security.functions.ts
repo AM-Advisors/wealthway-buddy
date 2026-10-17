@@ -110,6 +110,9 @@ export const signOutOtherSessions = createServerFn({ method: "POST" })
       .from("known_devices")
       .update({ revoked_at: new Date().toISOString() })
       .eq("user_id", context.userId);
+    // Remembered devices belong to signed-out sessions too.
+    const ease = await import("@/lib/mfa-ease.server");
+    await ease.revokeAllTrustedDevices(context.userId, "signed out other sessions");
     await recordSecurityEvent({ userId: context.userId, eventType: "sign_out", action: "signed out other sessions" });
     return { ok: true };
   });
@@ -277,6 +280,9 @@ export const decideMfaReset = createServerFn({ method: "POST" })
       for (const f of factors?.factors ?? []) {
         await supabaseAdmin.auth.admin.mfa.deleteFactor({ id: f.id, userId: req.target_user_id });
       }
+      // A reset also removes any remembered devices on the locked-out account.
+      const ease = await import("@/lib/mfa-ease.server");
+      await ease.revokeAllTrustedDevices(req.target_user_id, "second-step reset approved");
       await recordSecurityEvent({
         userId: req.target_user_id,
         email: req.target_email,
