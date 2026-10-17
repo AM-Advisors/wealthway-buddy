@@ -1,9 +1,10 @@
 # Roadmap
 
 ## New fund versus migration (2026-10-17)
-- [ ] Persist a fund classification and mark Erebor New fund.
-- [ ] Expose classification and separate migration-only setup/readiness.
-- [ ] Run focused regression checks; signed-in walkthrough requires isolated synthetic QA.
+- [x] Persist explicit classification; Erebor New fund verified by read-back; new inserts default New fund, existing funds stay unclassified.
+- [x] Shared setup marking and fund badge; migration panels/checklist hidden for new funds, new prior-subscription/payment/migration checklist records guarded. Canonical launch/KYC/money readiness unchanged.
+- [x] Focused origin and banking regressions: 12 passed.
+- [ ] Signed-in marking and investor-tab walkthrough — blocked: isolated synthetic QA URL/session unavailable; no production browser tests.
 
 ## Missing authenticator reset controls (2026-10-17)
 - [x] Expose existing administrator-checked reset requests and second-person decisions in View account, below Session & activity

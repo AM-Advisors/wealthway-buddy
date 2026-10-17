@@ -107,6 +107,7 @@ export const getFundMigration = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ offeringId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const who = await requireStaff(context);
+    await (await import("@/lib/fund-origin.server")).requireMigrationFund(data.offeringId);
 
     const { data: offering } = await context.supabase
       .from("offerings")
@@ -166,6 +167,7 @@ export const saveFundMigration = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const who = await requireSuper(context);
+    await (await import("@/lib/fund-origin.server")).requireMigrationFund(data.offeringId);
 
     const { data: existing } = await context.supabase
       .from("fund_migrations")
@@ -219,6 +221,7 @@ export const setMigrationStep = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const who = await requireSuper(context);
+    await (await import("@/lib/fund-origin.server")).requireMigrationFund(data.offeringId);
 
     const { data: row } = await context.supabase
       .from("fund_migrations")
