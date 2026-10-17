@@ -13,8 +13,24 @@ export const getMyTaxDocuments = createServerFn({ method: "GET" }).middleware([r
   .handler(async ({ context }) => { noStore(); return (await srv()).investorTaxView(context.userId, context.claims); });
 
 export const startTaxDocumentStepUp = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ documentId: id }).parse(d))
-  .handler(async ({ data, context }) => (await srv()).beginTaxStepUp(context.userId, context.claims, data.documentId));
+  .inputValidator((d) =>
+    z
+      .object({
+        documentId: id,
+        // A remembered-device token or a single-use emailed code can stand in for
+        // the fresh authenticator check. The session must still be aal2.
+        trustedDeviceToken: z.string().min(10).max(200).optional(),
+        emailCode: z.string().trim().regex(/^\d{6}$/).optional(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    noStore();
+    return (await srv()).beginTaxStepUp(context.userId, context.claims, data.documentId, {
+      trustedDeviceToken: data.trustedDeviceToken,
+      emailCode: data.emailCode,
+    });
+  });
 
 export const downloadMyTaxDocument = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ documentId: id, stepUpId: id }).parse(d))
