@@ -35,6 +35,10 @@ export async function commandCenter(uid: string, fundId: string) {
     db.from("fund_request_events").select("kind, created_at, request_id, detail, fund_service_requests(title)").eq("fund_id", fundId).eq("client_visible", true).in("kind", ["submitted", "submitted_by_staff", "client_provided_information", "cancelled"]).order("created_at", { ascending: false }).limit(8),
   ]);
   const approvalsAwaiting = (apprRaw ?? []) as any[];
+  // Documents waiting for this person's signature (their own requests only).
+  const { data: sigRaw } = await db.from("fund_file_signatures").select("id, status, signing_order, file_id, fund_files(title)")
+    .eq("offering_id", fundId).eq("signer_user_id", uid).in("status", ["sent", "waiting"]).limit(20);
+  const toSign = ((sigRaw ?? []) as any[]).map((r) => ({ id: r.id as string, title: (r.fund_files?.title ?? "Document") as string, yourTurn: r.status === "sent" }));
   const openRequests = ((reqRaw ?? []) as any[]).filter((r) => staff || r.client_visibility);
   const ACT: Record<string, string> = { approval_requested: "Approval requested", approved: "Approved", changes_requested: "Changes requested", workflow_completed: "Completed", submitted: "Request submitted", submitted_by_staff: "Request opened", client_provided_information: "Information provided", cancelled: "Request cancelled" };
   const activity = [
@@ -97,6 +101,7 @@ export async function commandCenter(uid: string, fundId: string) {
     handling: open.filter((t) => t.responsibility_status === "HARMONIOUS_HANDLING").sort((a, b) => (a.due_date ?? "9999").localeCompare(b.due_date ?? "9999")),
     waiting: open.filter((t) => t.responsibility_status === "WAITING_ON_INVESTOR" || t.responsibility_status === "WAITING_ON_THIRD_PARTY"),
     tasks: shaped, deadlines, capital, nextReport, activity,
+    toSign,
     approvalsAwaiting: approvalsAwaiting.map((a) => ({ id: a.id, title: a.title, type: a.approval_type, amount: a.approval_amount, currency: a.currency, due_date: a.due_date, task_id: a.task_id })),
     requests: { open: openRequests.length, attention: openRequests.filter((r) => r.status === "WAITING_ON_CLIENT" || r.status === "READY_FOR_APPROVAL").length },
     health: fundHealth(tasks, items, capital.length ? { overdue: capitalOverdue } : null, today),

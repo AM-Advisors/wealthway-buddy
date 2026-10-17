@@ -88,8 +88,17 @@ export function FundCommandCenter({ fundId, onNavigate }: { fundId: string; onNa
       <div className="grid gap-4 lg:grid-cols-3">
         {/* 1. Your attention */}
         <Card title="Your attention" className="lg:col-span-2">
-          {d.approvalsAwaiting.length || d.attention.length ? (
+          {d.toSign?.length || d.approvalsAwaiting.length || d.attention.length ? (
             <ul className="divide-y">
+              {(d.toSign ?? []).map((sg) => (
+                <li key={sg.id} className="flex flex-wrap items-center gap-2 py-2">
+                  <div className="min-w-0 flex-1">
+                    <span className="font-medium">Sign: {sg.title}</span>
+                    <p className="text-xs text-muted-foreground">{sg.yourTurn ? "Waiting for your signature" : "Waiting on an earlier signer first"}</p>
+                  </div>
+                  <Button size="sm" asChild><a href={`/sign/${sg.id}`}>{sg.yourTurn ? "Review & sign" : "View"}</a></Button>
+                </li>
+              ))}
               {d.approvalsAwaiting.map((a) => (
                 <li key={a.id} className="flex flex-wrap items-center gap-2 py-2">
                   <div className="min-w-0 flex-1">
