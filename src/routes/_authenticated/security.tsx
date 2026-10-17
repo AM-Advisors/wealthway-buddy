@@ -13,6 +13,7 @@ import { RecoveryCodes } from "@/components/security-gate";
 import { PrivacyRequestsCard } from "@/components/privacy-requests-card";
 import { generateRecoveryCodes, getMySecurity, signOutOtherSessions } from "@/lib/account-security.functions";
 import { getMyTrustedDevicesFn, revokeAllTrustedDevicesFn, revokeTrustedDeviceFn } from "@/lib/mfa-ease.functions";
+import type { TrustedDeviceView } from "@/lib/mfa-ease";
 import { canEnrollPasskey } from "@/lib/passkeys";
 
 export const Route = createFileRoute("/_authenticated/security")({
@@ -60,7 +61,7 @@ function SecurityPage() {
   const revokeDevice = useServerFn(revokeTrustedDeviceFn);
   const revokeAllDevices = useServerFn(revokeAllTrustedDevicesFn);
   const { data } = useQuery({ queryKey: ["my-security"], queryFn: () => fetchSec() });
-  const { data: trusted } = useQuery({ queryKey: ["my-trusted-devices"], queryFn: () => fetchTrusted() });
+  const { data: trusted } = useQuery<TrustedDeviceView[]>({ queryKey: ["my-trusted-devices"], queryFn: () => fetchTrusted() });
   const [factors, setFactors] = useState<any[]>([]);
   const [codes, setCodes] = useState<string[] | null>(null);
   const [totp, setTotp] = useState<{ id: string; qr: string; secret: string } | null>(null);

@@ -11,6 +11,7 @@ import {
   isTrustedRowValid,
   trustedDeviceExpiry,
   type TrustedDeviceRowLike,
+  type TrustedDeviceView,
 } from "./mfa-ease";
 
 const db = () => supabaseAdmin as any;
@@ -53,7 +54,7 @@ export async function listTrustedDevices(userId: string) {
     .eq("user_id", userId)
     .order("last_used_at", { ascending: false, nullsFirst: false })
     .limit(20);
-  return data ?? [];
+  return (data ?? []) as TrustedDeviceView[];
 }
 
 export async function revokeTrustedDevice(userId: string, id: string, reason: string) {
