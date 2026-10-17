@@ -420,7 +420,7 @@ export async function personActivity(viewer: string, subjectId: string, options:
   const u = auth?.user;
   const email = (u?.email ?? prof?.email ?? "").toLowerCase();
   const { setupGaps } = await import("@/lib/user-insights-model");
-  const PF = "id,user_id,email,legal_first_name,legal_last_name,phone,address_line1,address_line2,city,region,postal_code,kyc_status,aml_status,onboarding_state";
+  const PF = "id,user_id,email,secondary_email,legal_first_name,legal_last_name,phone,secondary_phone,address_line1,address_line2,city,region,postal_code,kyc_status,aml_status,onboarding_state";
   const [linkedP, emailP, cu, ftm, inv, managers] = await Promise.all([
     db.from("persons").select(PF).eq("user_id", subjectId),
     email ? db.from("persons").select(PF).ilike("email", email).is("user_id", null) : Promise.resolve({ data: [] as any[] }),
@@ -432,6 +432,7 @@ export async function personActivity(viewer: string, subjectId: string, options:
   const isStaff = ((roles ?? []) as any[]).length > 0 && !((cu.data ?? []) as any[]).length;
   const mapP = (p: any, linked: boolean) => ({
     id: p.id, linked, name: [p.legal_first_name, p.legal_last_name].filter(Boolean).join(" "), email: p.email, phone: p.phone,
+    secondaryEmail: p.secondary_email, secondaryPhone: p.secondary_phone,
     address: [p.address_line1, p.address_line2, p.city, p.region, p.postal_code].filter(Boolean).join(", "),
     kyc: p.kyc_status, aml: p.aml_status, state: p.onboarding_state, gaps: setupGaps(p, isStaff),
   });
