@@ -7,6 +7,7 @@
  */
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { setupActor, forbid } from "@/lib/fund-setup.server";
+import { fundEditWindow } from "@/lib/manager-edit-window.server";
 
 const db = () => supabaseAdmin as any;
 const BUCKET = "fund-formation";
@@ -58,6 +59,7 @@ async function setupOnFile(offeringId: string) {
 
 export async function submit(userId: string, input: { offeringId: string; section: "fund_details" | "fees_team" | "bank" | "document"; docKind?: SubmissionDocKind | null; payload: Record<string, unknown>; file?: { name: string; base64: string } | null }) {
   const actor = await actorFor(userId, input.offeringId);
+  const directSetup = !actor.isStaff && (input.section === "fund_details" || input.section === "fees_team") && await fundEditWindow(input.offeringId);
   if ((input.section === "document" || input.section === "bank") && !input.file) throw new Error("Attach the file.");
   if (input.section === "document" && !input.docKind) throw new Error("Choose the document type.");
   if (input.section === "document" && input.docKind === "ein_letter" && !/^\d{2}-?\d{7}$/.test(String(input.payload["ein"] ?? "").trim())) throw new Error("Enter the 9-digit EIN shown on the letter.");
@@ -80,7 +82,7 @@ export async function submit(userId: string, input: { offeringId: string; sectio
   if (error) throw new Error(error.message);
   // Self-serve: Fund details and Fees save straight away for the fund's manager, through the
   // same canonical services (validation + history). Bank and documents still go to review.
-  if (!actor.isStaff && (input.section === "fund_details" || input.section === "fees_team")) {
+  if (directSetup) {
     try {
       const { runSelfServe } = await import("@/lib/self-serve.server");
       await runSelfServe({ userId, offeringId: input.offeringId, scope: "fund_setup" }, () => apply(null, userId, { offering_id: input.offeringId, section: input.section, payload: input.payload }));

@@ -19,6 +19,7 @@ import {
 } from "@/lib/investor-record-model";
 import { personCreationBlocker } from "@/lib/person-resolution";
 import { findPersonCandidates, resolvePersonServer, withPersonCreationLock } from "@/lib/person-resolution.server";
+import { exclusiveRecord, investorEditWindow } from "@/lib/manager-edit-window.server";
 
 const db = () => supabaseAdmin as any;
 const nowIso = () => new Date().toISOString();
@@ -239,8 +240,8 @@ const ADDRESS_FIELDS = new Set(["address_line1", "address_line2", "city", "regio
 
 /**
  * Apply edits. Harmonious edits apply directly. A Fund Manager's edits apply
- * directly only to records not supplied by the investor; material changes to
- * an investor-owned (claimed) Person become a reviewer suggestion instead.
+ * directly before signing/capital sending; shared records and security contacts
+ * retain review. Later changes become reviewer suggestions.
  */
 export async function updateInvestorRecord(userId: string, input: {
   onboardingId: string; person?: PersonInput; profile?: { legalName?: string | null; details?: Record<string, unknown> }; investment?: InvestmentInput;
@@ -250,6 +251,14 @@ export async function updateInvestorRecord(userId: string, input: {
   if (row.removed_at) fail("This investor has been removed from the Fund.");
   const source = sourceFor(actor);
   const changes: Change[] = []; let suggested = 0;
+  const direct = actor.isStaff || await investorEditWindow(row);
+  const personDirect = actor.isStaff || (direct && await exclusiveRecord(row, "person_id"));
+  const profileDirect = actor.isStaff || (direct && await exclusiveRecord(row, "investment_profile_id"));
+  const suggest = async (table: string, id: string, field: string, from: unknown, to: unknown) => {
+    const { error } = await db().from("investor_record_suggestions").insert({ offering_id: row.offering_id, onboarding_id: row.id, subject_table: table, subject_id: id, field, current_value: from ?? null, proposed_value: to, source, proposed_by: actor.userId });
+    if (error) fail(error.message);
+    suggested++;
+  };
 
   if (input.person && row.person_id) {
     const { data: cur } = await db().from("persons").select("*").eq("id", row.person_id).maybeSingle();
@@ -259,9 +268,9 @@ export async function updateInvestorRecord(userId: string, input: {
       if (!PERSON_FIELDS.includes(f) || sameValue(cur?.[f], v)) continue;
       const investorOwned = Boolean(cur?.user_id) && (cur?.entry_source === "investor" || Boolean(row.investor_confirmed_at));
       const materialField = isMaterial(f) || ADDRESS_FIELDS.has(f) || f === "email";
-      if (!actor.isStaff && investorOwned && materialField) {
-        await db().from("investor_record_suggestions").insert({ offering_id: row.offering_id, onboarding_id: row.id, subject_table: "persons", subject_id: row.person_id, field: f, current_value: cur?.[f] ?? null, proposed_value: v, source, proposed_by: actor.userId });
-        suggested++; continue;
+      if (!actor.isStaff && ((!personDirect && materialField) || (investorOwned && ["email", "phone"].includes(f)))) {
+        await suggest("persons", row.person_id, f, cur?.[f], v);
+        continue;
       }
       apply[f] = v;
       changes.push({ offeringId: row.offering_id, onboardingId: row.id, table: "persons", id: row.person_id, field: f, from: cur?.[f] ?? null, to: v, source, actor: actor.userId });
@@ -287,7 +296,10 @@ export async function updateInvestorRecord(userId: string, input: {
         changes.push({ offeringId: row.offering_id, onboardingId: row.id, table: "investment_profiles", id: row.investment_profile_id, field: "details", from: cur?.details ?? {}, to: next, source, actor: actor.userId });
       }
     }
-    if (Object.keys(apply).length) {
+    if (!profileDirect && Object.keys(apply).length) {
+      for (const [field, value] of Object.entries(apply)) await suggest("investment_profiles", row.investment_profile_id, field, cur?.[field], value);
+      for (let i = changes.length - 1; i >= 0; i--) if (changes[i]?.table === "investment_profiles") changes.splice(i, 1);
+    } else if (Object.keys(apply).length) {
       const { error } = await db().from("investment_profiles").update({ ...apply, updated_at: nowIso() }).eq("id", row.investment_profile_id);
       if (error) fail(error.message);
     }
@@ -301,6 +313,10 @@ export async function updateInvestorRecord(userId: string, input: {
     const apply: Record<string, unknown> = {};
     for (const [f, v] of Object.entries(patch)) {
       if (sameValue(row[f], v)) continue;
+      if (!direct && !["manager_notes", "source_referral"].includes(f)) {
+        await suggest("investor_onboardings", row.id, f, row[f], v);
+        continue;
+      }
       apply[f] = v;
       changes.push({ offeringId: row.offering_id, onboardingId: row.id, table: "investor_onboardings", id: row.id, field: f, from: row[f] ?? null, to: v, source, actor: actor.userId });
     }
@@ -401,6 +417,8 @@ export async function investorRecordDetail(userId: string, onboardingId: string)
     stages: ((result as any).stages ?? []).map((s: any) => ({ key: s.stage, label: s.title, status: s.status })),
   };
   const reviewSet = await (await import("@/lib/related-person.server")).relationshipsUnderReview(((rel ?? []) as any[]).map((r) => r.id));
+  const directEdits = staff || await investorEditWindow(row);
+  const directContact = staff || (directEdits && await exclusiveRecord(row, "person_id"));
   // Sensitive boundary: tax IDs, KYC/AML status fields, ID images and DOB never leave for managers.
   const safePerson = person ? {
     firstName: person.legal_first_name, middleName: person.legal_middle_name, lastName: person.legal_last_name, preferredName: person.preferred_name,
@@ -435,8 +453,8 @@ export async function investorRecordDetail(userId: string, onboardingId: string)
     activity: activityFor((changes ?? []) as any[], staff ? "staff" : "manager"),
     suggestions: staff ? ((sugg ?? []) as any[]).map((s) => ({ id: s.id, field: s.field, current: s.current_value, proposed: s.proposed_value, source: s.source, status: s.status, at: s.created_at })) : [],
     pendingReviewCount: (sugg ?? []).length,
-    // Mirrors updateInvestorRecord: a manager's contact edits to investor-controlled data become suggestions.
-    contactEditMode: role === "manager" && Boolean(person?.user_id) && (person?.entry_source === "investor" || Boolean(row.investor_confirmed_at)) ? "suggest" as const : "direct" as const,
+    contactEditMode: directContact ? "direct" as const : "suggest" as const,
+    detailsEditMode: directEdits ? "direct" as const : "suggest" as const,
     claimState: claimState({ hasAccount: Boolean(row.investor_user_id), entrySource: row.entry_source }),
     actor: { isStaff: actor.isStaff },
   };

@@ -59,6 +59,7 @@ async function profileNames(ids: string[]) {
 
 export async function guidedState(userId: string, offeringId: string) {
   const a = await actor(userId, offeringId);
+  const directSetupEdits = a.isStaff || await (await import("@/lib/manager-edit-window.server")).fundEditWindow(offeringId);
   const subs = await import("@/lib/fund-manager-submissions.server");
   const [{ items, onFile }, { data: o }, { data: mgrs }, team, proposals, pct, { data: rem }] = await Promise.all([
     subs.listSubmissions(userId, offeringId),
@@ -110,7 +111,7 @@ export async function guidedState(userId: string, offeringId: string) {
     return { step, status, statusLabel: STEP_STATUS_LABEL[status], owner, missing: miss, remindedToday: reminded };
   });
   return {
-    isStaff: a.isStaff, fundName: o?.name ?? "Fund", launchPercent: pct.get(offeringId) ?? 0,
+    isStaff: a.isStaff, directSetupEdits, fundName: o?.name ?? "Fund", launchPercent: pct.get(offeringId) ?? 0,
     hasDriveFolder: !!o?.drive_folder_url, saasOnly: !!client?.saas_only,
     administrator: client?.saas_only ? "Client (SaaS-only contract)" : "Harmonious",
     team: ((team?.team ?? []) as any[]).map((m) => ({ role: m.role, name: m.userId ? names.get(m.userId)?.name ?? "Staff member" : null })),

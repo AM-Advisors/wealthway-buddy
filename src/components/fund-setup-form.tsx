@@ -43,7 +43,7 @@ export function FundSetupForm({ offeringId, mode, staffExtras }: { offeringId: s
   const v = (k: string) => vals[k] ?? prior[k] ?? "";
   const set = (k: string, x: string) => setVals((s) => ({ ...s, [k]: x }));
   const stepOf = (s: string) => (d.steps as any[]).find((x) => x.step === s);
-  const waiting = (s: string) => !isStaff && stepOf(s)?.status === "waiting_harmonious";
+  const waiting = (s: string) => !isStaff && !d.directSetupEdits && stepOf(s)?.status === "waiting_harmonious";
   const returned = (s: string) => (d.items as any[]).find((i) => i.section === s && i.status !== "withdrawn")?.status === "returned" ? (d.items as any[]).find((i) => i.section === s && i.status !== "withdrawn") : null;
   const changes = changedBySection(vals, prior);
   const dirty = Object.keys(changes).length > 0;
@@ -104,7 +104,7 @@ export function FundSetupForm({ offeringId, mode, staffExtras }: { offeringId: s
     const saveBar = (after?: () => void) => (
       <div className="flex justify-end gap-2 pt-1">
         {changed && <Button size="sm" variant="ghost" disabled={busy} onClick={() => setVals((cur) => Object.fromEntries(Object.entries(cur).filter(([k]) => !keys.includes(k))))}>Cancel</Button>}
-        <Button size="sm" disabled={!changed || busy} onClick={async () => { await save(keys, s.title); after?.(); }}>{isStaff ? "Save" : "Submit"}</Button>
+        <Button size="sm" disabled={!changed || busy} onClick={async () => { await save(keys, s.title); after?.(); }}>{isStaff || d.directSetupEdits ? "Save" : "Submit"}</Button>
       </div>
     );
     const fields = <div className="space-y-3">{s.fields.map((f) => <div key={f.key}>{renderField(f)}</div>)}</div>;
@@ -113,7 +113,7 @@ export function FundSetupForm({ offeringId, mode, staffExtras }: { offeringId: s
         <div key={id}>
           <SummaryBox title={s.title} rows={s.fields.map((f) => [f.label, display(f)] as [string, React.ReactNode])} onEdit={() => setEditingSection(id)} />
           <EditSheet open={editingSection === id} onOpenChange={(o) => { if (!o) { setVals((cur) => Object.fromEntries(Object.entries(cur).filter(([k]) => !keys.includes(k)))); setEditingSection(null); } }} title={s.title}>
-            {!isStaff && <p className="text-sm text-muted-foreground">Changes go to Harmonious for review. The approved values stay in place until then.</p>}
+            {!isStaff && !d.directSetupEdits && <p className="text-sm text-muted-foreground">An investor has signed or sent capital. Changes need Harmonious review.</p>}
             {fields}{saveBar(() => setEditingSection(null))}
           </EditSheet>
         </div>
@@ -135,7 +135,7 @@ export function FundSetupForm({ offeringId, mode, staffExtras }: { offeringId: s
         <Button variant="outline" size="icon" aria-label="Back" onClick={() => window.history.back()}><ChevronLeft className="h-4 w-4" /></Button>
         <div className="min-w-0 flex-1">
           <h2 className="truncate font-heading text-lg font-semibold">{allDone ? d.fundName : `Fund setup — ${d.fundName}`}</h2>
-          {!allDone && <p className="text-xs text-muted-foreground">Launch readiness {d.launchPercent}% · {isStaff ? "Saves go straight to the fund record" : "Changes are reviewed by Harmonious"}</p>}
+          {!allDone && <p className="text-xs text-muted-foreground">Launch readiness {d.launchPercent}%</p>}
         </div>
       </div>
 
