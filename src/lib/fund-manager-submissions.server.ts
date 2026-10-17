@@ -32,7 +32,7 @@ export async function listSubmissions(userId: string, offeringId: string) {
 
 /** Allow-listed snapshot of what is already on the fund record (no tax IDs or bank numbers). */
 async function setupOnFile(offeringId: string) {
-  const [{ data: o }, { data: fee }, { data: docs }, { data: bankTask }] = await Promise.all([
+  const [{ data: bankTask }, { data: o }, { data: fee }, { data: docs }] = await Promise.all([
     db().from("fund_setup_tasks").select("status, fund_setups!inner(offering_id)").eq("fund_setups.offering_id", offeringId).eq("task_key", "banking_account").limit(1).maybeSingle(),
     db().from("offerings").select("name, legal_entity_name, entity_type, state_formed, date_formed, principal_address, min_investment_cents, target_raise_cents, gp_entity_name, fund_signatory_person_id, signatory_title, fund_type, reg_type, offering_open_date, offering_close_date, rolling_closes").eq("id", offeringId).maybeSingle(),
     db().from("fund_fee_terms").select("management_fee_pct, carry_pct, hurdle_pct, status").eq("offering_id", offeringId).in("status", ["active", "approved"]).order("created_at", { ascending: false }).limit(1).maybeSingle(),
