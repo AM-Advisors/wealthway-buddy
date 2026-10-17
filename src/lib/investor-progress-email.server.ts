@@ -1,4 +1,4 @@
-import { journeySteps, type JourneyStepView } from './investor-journey-model'
+import type { JourneyStepView } from './investor-journey-model'
 import { progressDue, progressFrequency, progressRecipientAllowed, type ProgressFrequency } from './investor-progress-email'
 
 const admin = async () => (await import('@/integrations/supabase/client.server')).supabaseAdmin as any

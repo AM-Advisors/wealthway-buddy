@@ -2107,7 +2107,7 @@ export async function computeReadinessFor(row: any, closeAmountCents?: number | 
 export async function reconcileInvestmentReadiness(onboardingId: string, ctx: { actorUserId: string | null; trigger: string }) {
   const { readinessTransitions, readinessTaskPlan, READINESS_RULE_VERSION } = await import("@/lib/investment-readiness");
   const row = await onboardingRow(onboardingId);
-  const { result } = await computeReadinessFor(row);
+  const { result, facts } = await computeReadinessFor(row);
   const [{ data: evs }, { data: tasks }] = await Promise.all([
     db().from("investment_readiness_events").select("requirement_key,new_status,created_at").eq("onboarding_id", row.id).order("created_at", { ascending: true }),
     db().from("investment_readiness_tasks").select("id,requirement_key").eq("onboarding_id", row.id).eq("status", "open"),
@@ -2147,6 +2147,13 @@ export async function reconcileInvestmentReadiness(onboardingId: string, ctx: { 
   for (const k of plan.resolve) {
     await db().from("investment_readiness_tasks").update({ status: "resolved", resolved_at: at }).eq("id", open.get(k));
   }
+  try {
+    const { captureProgress } = await import("@/lib/investor-progress-email.server");
+    await captureProgress(row, journeySteps(facts.requirements, {
+      stage: row.stage, approvedToFund: Boolean(row.approved_to_fund_at),
+      fundingStatus: row.funding_status, investorReportsSent: Boolean(row.investor_reports_sent_at),
+    }), initial);
+  } catch (e) { console.error("[investor-progress] capture failed", e); }
   return { result, transitions: transitions.length, created: plan.create.length, resolved: plan.resolve.length };
 }
 

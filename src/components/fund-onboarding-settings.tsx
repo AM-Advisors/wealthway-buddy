@@ -9,13 +9,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { APPLIES_TO_OPTIONS } from "@/lib/prepared-investor-workflow";
-import { getFundOnboardingSettings, saveDocumentSigningConfig } from "@/lib/fund-onboarding.functions";
+import { getFundOnboardingSettings, saveDocumentSigningConfig, saveInvestorProgressFrequency } from "@/lib/fund-onboarding.functions";
+import { PROGRESS_FREQUENCIES, PROGRESS_FREQUENCY_LABELS, type ProgressFrequency } from "@/lib/investor-progress-email";
+import { invalidateFund } from "@/lib/fund-query-keys";
 
 /** Investor Onboarding Settings for one fund. Verification and accreditation are read-only. */
 export function FundOnboardingSettings({ fundId }: { fundId: string }) {
   const qc = useQueryClient();
   const load = useServerFn(getFundOnboardingSettings);
   const save = useServerFn(saveDocumentSigningConfig);
+  const saveFrequency = useServerFn(saveInvestorProgressFrequency);
+  const [savingFrequency, setSavingFrequency] = useState(false);
   const [open, setOpen] = useState(false);
   const [preparing, setPreparing] = useState<string | null>(null);
   const q = useQuery({ queryKey: ["fund-onboarding-settings", fundId], queryFn: () => load({ data: { offeringId: fundId } }), enabled: open, retry: false });
@@ -38,6 +42,17 @@ export function FundOnboardingSettings({ fundId }: { fundId: string }) {
     }
   };
 
+  const updateFrequency = async (audience: "investor" | "manager", frequency: ProgressFrequency) => {
+    if (!q.data || savingFrequency) return;
+    setSavingFrequency(true);
+    try {
+      await saveFrequency({ data: { offeringId: fundId, ...q.data.progressEmails, [audience]: frequency } });
+      await invalidateFund(qc, fundId);
+      toast.success("Email frequency saved");
+    } catch (e) { toast.error(e instanceof Error ? e.message : "Could not save email frequency"); }
+    finally { setSavingFrequency(false); }
+  };
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-start justify-between gap-3">
@@ -53,6 +68,18 @@ export function FundOnboardingSettings({ fundId }: { fundId: string }) {
           {q.error && <p className="text-muted-foreground">{(q.error as Error).message}</p>}
           {q.data && (
             <>
+              <section className="space-y-3">
+                <p className="font-medium">Step completion emails</p>
+                {([['investor', 'Investor updates'], ['manager', 'Fund manager updates']] as const).map(([audience, label]) => (
+                  <div key={audience} className="flex flex-wrap items-center justify-between gap-2">
+                    <label htmlFor={`progress-${audience}`}>{label}</label>
+                    <Select value={q.data.progressEmails[audience]} disabled={savingFrequency} onValueChange={(v) => updateFrequency(audience, v as ProgressFrequency)}>
+                      <SelectTrigger id={`progress-${audience}`} className="w-full sm:w-56"><SelectValue /></SelectTrigger>
+                      <SelectContent>{PROGRESS_FREQUENCIES.map((frequency) => <SelectItem key={frequency} value={frequency}>{PROGRESS_FREQUENCY_LABELS[frequency]}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                ))}
+              </section>
               <section><p className="font-medium">Verification</p><p className="text-muted-foreground">{q.data.verification}</p></section>
               <section><p className="font-medium">Accreditation</p><p className="text-muted-foreground">{q.data.accreditation} Set by the offering; it can't be weakened here.</p></section>
               <section className="space-y-2">
