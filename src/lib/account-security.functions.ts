@@ -175,6 +175,12 @@ export const useRecoveryCode = createServerFn({ method: "POST" })
 
 // ---------- Super Administrator tools ----------
 
+async function isSuperAdmin(userId: string) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data } = await supabaseAdmin.from("user_roles").select("role").eq("user_id", userId).eq("role", "super_admin" as never).maybeSingle();
+  return !!data;
+}
+
 async function requireAdmin(context: { supabase: any; userId: string }) {
   const { data } = await context.supabase.rpc("is_platform_admin", { _uid: context.userId });
   if (!data) throw new Error("Forbidden");
@@ -215,10 +221,11 @@ export const listSecurityActivity = createServerFn({ method: "POST" })
       .select("*")
       .order("created_at", { ascending: false })
       .limit(50);
+    const superAdmin = await isSuperAdmin(context.userId);
     return {
       rows: rows ?? [],
       total: count ?? 0,
-      resets: (resets ?? []).map((r) => ({ ...r, canDecide: canApproveMfaReset(r, context.userId) })),
+      resets: (resets ?? []).map((r) => ({ ...r, canDecide: canApproveMfaReset(r, context.userId, superAdmin) })),
     };
   });
 
@@ -271,7 +278,8 @@ export const decideMfaReset = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: req } = await supabaseAdmin.from("mfa_reset_requests").select("*").eq("id", data.id).maybeSingle();
     if (!req || req.status !== "pending") throw new Error("Request is not pending.");
-    if (!canApproveMfaReset(req, context.userId)) throw new Error("You cannot approve a reset of your own account.");
+    if (!canApproveMfaReset(req, context.userId, await isSuperAdmin(context.userId)))
+      throw new Error("A different administrator must decide (only Super Admins may approve their own request, never for their own account).");
     if (!data.approve && !data.reason) throw new Error("A reason is required to decline.");
     const { error } = await supabaseAdmin
       .from("mfa_reset_requests")
