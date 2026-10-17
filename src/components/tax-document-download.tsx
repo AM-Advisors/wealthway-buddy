@@ -144,7 +144,7 @@ export function TaxDocumentDownload({ documentId, label }: { documentId: string;
     }
   }
 
-  async function open() {
+  async function openDialog() {
     setOpen(true);
     setMode("authenticator");
     // A remembered device skips the code prompt entirely.
@@ -167,7 +167,7 @@ export function TaxDocumentDownload({ documentId, label }: { documentId: string;
 
   return (
     <>
-      <Button size="sm" variant="outline" onClick={() => void open()}>Download</Button>
+      <Button size="sm" variant="outline" onClick={() => void openDialog()}>Download</Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>

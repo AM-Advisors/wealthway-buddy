@@ -26,6 +26,17 @@ export interface TrustedDeviceRowLike {
   revoked_at: string | null;
 }
 
+/** What the Security page shows for one remembered device. */
+export interface TrustedDeviceView {
+  id: string;
+  device_id: string | null;
+  user_agent: string | null;
+  created_at: string;
+  last_used_at: string | null;
+  expires_at: string;
+  revoked_at: string | null;
+}
+
 export function trustedDeviceExpiry(now = new Date()): string {
   return new Date(now.getTime() + TRUSTED_DEVICE_MS).toISOString();
 }

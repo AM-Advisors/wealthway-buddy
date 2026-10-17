@@ -3,6 +3,7 @@ import { setResponseHeader } from "@tanstack/react-start/server";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/lib/require-auth";
+import type { StepUpProof } from "@/lib/mfa-ease";
 
 const srv = () => import("@/lib/portal-documents.server");
 const id = z.string().uuid();
@@ -26,10 +27,10 @@ export const startTaxDocumentStepUp = createServerFn({ method: "POST" }).middlew
   )
   .handler(async ({ data, context }) => {
     noStore();
-    return (await srv()).beginTaxStepUp(context.userId, context.claims, data.documentId, {
-      trustedDeviceToken: data.trustedDeviceToken,
-      emailCode: data.emailCode,
-    });
+    const proof: StepUpProof = {};
+    if (data.trustedDeviceToken) proof.trustedDeviceToken = data.trustedDeviceToken;
+    if (data.emailCode) proof.emailCode = data.emailCode;
+    return (await srv()).beginTaxStepUp(context.userId, context.claims, data.documentId, proof);
   });
 
 export const downloadMyTaxDocument = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
