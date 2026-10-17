@@ -1,5 +1,10 @@
 # Roadmap
 
+## Investor step email updates
+- [ ] Add per-fund frequency controls for investor and manager progress emails.
+- [ ] Wire canonical completion history to branded, fund-scoped updates without changing approvals.
+- [ ] Test frequency, recipient isolation and completion rules; signed-in QA requires an isolated synthetic session.
+
 ## New fund versus migration (2026-10-17)
 - [x] Persist explicit classification; Erebor New fund verified by read-back; new inserts default New fund, existing funds stay unclassified.
 - [x] Shared setup marking and fund badge; migration panels/checklist hidden for new funds, new prior-subscription/payment/migration checklist records guarded. Canonical launch/KYC/money readiness unchanged.
