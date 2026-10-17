@@ -235,12 +235,19 @@ export const requestMfaReset = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await requireAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: prof } = await supabaseAdmin
-      .from("profiles")
-      .select("user_id, email")
-      .ilike("email", data.email)
-      .maybeSingle();
-    if (!prof?.user_id) throw new Error("No account found for that email.");
+    const wanted = data.email.toLowerCase();
+    // Sign-in accounts are the authority: some accounts (e.g. created via
+    // Google sign-in) have no profiles row, so search auth users directly.
+    let targetUserId: string | null = null;
+    for (let page = 1; page <= 50 && !targetUserId; page++) {
+      const { data: list, error } = await supabaseAdmin.auth.admin.listUsers({ page, perPage: 200 });
+      if (error) throw new Error("Could not look up accounts right now.");
+      const hit = list.users.find((u) => (u.email ?? "").toLowerCase() === wanted);
+      if (hit) targetUserId = hit.id;
+      if (list.users.length < 200) break;
+    }
+    if (!targetUserId) throw new Error("No account found for that email.");
+    const prof = { user_id: targetUserId };
     await supabaseAdmin.from("mfa_reset_requests").insert({
       target_user_id: prof.user_id,
       target_email: data.email.toLowerCase(),
