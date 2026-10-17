@@ -26,7 +26,7 @@ export function InvestorBankVerify({ onboardingId }: { onboardingId: string }) {
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : "Could not verify the bank."),
     onSettled: () => setToken(null),
   });
-  const { open, ready } = usePlaidLink({ token: token ?? "", onSuccess: (t) => done.mutate(t), onExit: () => setToken(null) });
+  const { open, ready } = usePlaidLink({ token: token ?? "", onSuccess: (t: string | null) => { if (t) done.mutate(t); }, onExit: () => setToken(null) });
   const begin = useMutation({
     mutationFn: () => start({ data: { onboardingId } }),
     onSuccess: (r) => setToken(r.linkToken),
