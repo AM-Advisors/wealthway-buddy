@@ -33,11 +33,21 @@ function summarize(p: any): string {
   return JSON.stringify(rest).slice(0, 600);
 }
 
+export async function investorWindowOpen(db: any, onboardingId: unknown): Promise<boolean> {
+  if (typeof onboardingId !== "string") return false;
+  const { data: row } = await db.from("investor_onboardings").select("id, offering_id, investment_profile_id, application_id, funding_status, funded_amount_cents, investor_reports_sent_at, stage, removed_at").eq("id", onboardingId).maybeSingle();
+  if (!row || row.removed_at) return false;
+  return (await import("@/lib/manager-edit-window.server")).investorEditWindow(row);
+}
+
 /** Apply when unlocked (then lock); otherwise queue an approval request and throw PendingApproval. */
 export async function lockedSave<T>(actionKey: keyof typeof LOCKED_ACTIONS, ctx: Ctx, payload: any, apply: () => Promise<T>): Promise<T> {
   const a = LOCKED_ACTIONS[actionKey]!;
   const key = a.key(payload);
   const db = await admin();
+  // Before any investor signature or capital, investor edits apply directly
+  // (apply() still authorizes the caller and keeps shared-record review).
+  if (actionKey === "investor" && await investorWindowOpen(db, payload?.onboardingId)) return apply();
   const { data: lock } = await db.from("record_locks").select("resource_key").eq("resource_key", key).maybeSingle();
   if (!lock && !a.alwaysLocked) {
     const r = await apply();
