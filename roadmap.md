@@ -98,3 +98,8 @@
 - [x] Confirm banking_account is complete on Erebor; guided setup now consumes the same bankOnFile evidence as the manager setup loader.
 - [x] Regression tests cover completion without a submission and replacement-review precedence.
 - [ ] Signed-in page verification — QA-only browser policy prevents opening real-fund pages during testing.
+
+## Manager edits before signing or funding
+- [ ] Allow direct investor detail updates before that investor signs or sends capital; keep shared-record, identity and post-signing protections.
+- [ ] Apply the same boundary to fund setup details across all investors in that fund; align Save labels.
+- [ ] Run focused regression tests and verify with synthetic data.
