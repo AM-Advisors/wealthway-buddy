@@ -398,16 +398,21 @@ export async function personActivity(viewer: string, subjectId: string, options:
     if (options.to) q = q.lte("created_at", options.to);
     return q.limit(101);
   };
-  const [{ data: prof }, { data: auth }, { data: acts }, { data: audits }, { data: access }, { data: roles }] = await Promise.all([
+  const [{ data: prof }, { data: auth }, { data: acts }, { data: audits }, { data: access }, { data: roles }, security, sessionEvents, revocation, latestActivity] = await Promise.all([
     db.from("profiles").select("legal_name, email").eq("user_id", subjectId).maybeSingle(),
     db.auth.admin.getUserById(subjectId),
     activityQuery("staff_activity_events", "id, kind, path, label, created_at", "user_id"),
     activityQuery("access_audit_events", "id, action, created_at", "actor_user_id"),
     activityQuery("user_access_events", "id, action, reason, created_at", "subject_id"),
     db.from("user_roles").select("role").eq("user_id", subjectId),
+    activityQuery("security_events", "id,event_type,action,path,created_at", "user_id").neq("event_type", "heartbeat").neq("event_type", "page_view"),
+    db.from("security_events").select("event_type,action,created_at").eq("user_id", subjectId).in("event_type", ["sign_in", "sign_out", "session_timeout"]).order("created_at", { ascending: false }).limit(50),
+    db.from("security_session_revocations").select("revoked_after").eq("user_id", subjectId).maybeSingle(),
+    db.from("staff_activity_events").select("created_at,path,label").eq("user_id", subjectId).order("created_at", { ascending: false }).limit(1).maybeSingle(),
   ]);
   const kindLabel: Record<string, string> = { page: "Viewed", click: "Clicked", action: "Action" };
   const events = [
+    ...((security.data ?? []) as any[]).map(a => ({ id: `security:${a.id}`, when: a.created_at, kind: "Security", what: `${String(a.event_type).replace(/_/g, " ")}${a.action ? ` — ${a.action}` : ""}`, path: a.path })),
     ...((acts ?? []) as any[]).map((a) => ({ id: a.id, when: a.created_at, kind: kindLabel[a.kind] ?? a.kind, what: a.label || a.path || "", path: a.path })),
     ...((audits ?? []) as any[]).map((a) => ({ id: a.id, when: a.created_at, kind: "Action", what: String(a.action).replace(/_/g, " "), path: null })),
     ...((access ?? []) as any[]).map((a) => ({ id: a.id, when: a.created_at, kind: "Access change", what: `${String(a.action).replace(/_/g, " ")}${a.reason && !String(a.action).startsWith("email_") ? ` — ${a.reason}` : ""}`, path: null })),
@@ -416,12 +421,13 @@ export async function personActivity(viewer: string, subjectId: string, options:
   const email = (u?.email ?? prof?.email ?? "").toLowerCase();
   const { setupGaps } = await import("@/lib/user-insights-model");
   const PF = "id,user_id,email,legal_first_name,legal_last_name,phone,address_line1,address_line2,city,region,postal_code,kyc_status,aml_status,onboarding_state";
-  const [linkedP, emailP, cu, ftm, inv] = await Promise.all([
+  const [linkedP, emailP, cu, ftm, inv, managers] = await Promise.all([
     db.from("persons").select(PF).eq("user_id", subjectId),
     email ? db.from("persons").select(PF).ilike("email", email).is("user_id", null) : Promise.resolve({ data: [] as any[] }),
     db.from("client_users").select("client_id, client_role, clients(name)").eq("user_id", subjectId),
     db.from("fund_team_members").select("offering_id, team_role, offerings(name)").eq("user_id", subjectId).is("removed_at", null),
     db.from("investor_onboardings").select("id, offering_id, commitment_amount_cents, funded_amount_cents, funding_status, offerings(name)").eq("investor_user_id", subjectId),
+    db.from("fund_managers").select("offering_id, offerings(name)").eq("user_id", subjectId),
   ]);
   const isStaff = ((roles ?? []) as any[]).length > 0 && !((cu.data ?? []) as any[]).length;
   const mapP = (p: any, linked: boolean) => ({
@@ -454,7 +460,14 @@ export async function personActivity(viewer: string, subjectId: string, options:
     verifications: (kvFull.data ?? []) as any[],
     profiles: (profs.data ?? []) as any[],
   };
+  const { accountSessionStatus } = await import("@/lib/account-session-status");
+  const funds = new Map<string, { id: string; name: string; role: string | null }>();
+  for (const f of ftm.data ?? []) funds.set(f.offering_id, { id: f.offering_id, name: f.offerings?.name ?? "Fund", role: f.team_role });
+  for (const f of managers.data ?? []) funds.set(f.offering_id, { id: f.offering_id, name: f.offerings?.name ?? "Fund", role: "Fund manager" });
   return {
+    sessionStatus: sessionEvents.error || revocation.error ? { state: "unknown" as const, at: null } : accountSessionStatus(sessionEvents.data ?? [], revocation.data?.revoked_after ?? null, u?.last_sign_in_at ?? null),
+    lastActivity: latestActivity.data ?? null,
+    checkedAt: new Date().toISOString(),
     identityChecks,
     kycReport,
     name: prof?.legal_name || "", email: u?.email ?? prof?.email ?? "",
@@ -463,7 +476,7 @@ export async function personActivity(viewer: string, subjectId: string, options:
     people,
     missing: people.some((p) => p.linked) ? [...new Set(people.filter((p) => p.linked).flatMap((p) => p.gaps))] : setupGaps(null, isStaff),
     clients: ((cu.data ?? []) as any[]).map((c) => ({ id: c.client_id as string, name: (c.clients?.name ?? "Client") as string, role: c.client_role as string | null })),
-    funds: ((ftm.data ?? []) as any[]).map((f) => ({ id: f.offering_id as string, name: (f.offerings?.name ?? "Fund") as string, role: f.team_role as string | null })),
+    funds: [...funds.values()],
     investments: ((inv.data ?? []) as any[]).map((i) => ({ id: i.id as string, offeringId: i.offering_id as string, fund: (i.offerings?.name ?? "Fund") as string, committed: i.commitment_amount_cents as number | null, funded: i.funded_amount_cents as number, status: i.funding_status as string })),
     events: events.slice(0, 100), nextCursor: events.length > 100 ? events[99]?.when ?? null : null,
   };

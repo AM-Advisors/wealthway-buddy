@@ -1,5 +1,11 @@
 # Roadmap
 
+## Live view account (2026-10-17)
+- [x] Simplify action to View account; refresh account, funds and activity every 30 seconds
+- [x] Include canonical fund-manager memberships and recorded sign-out/timeout/revocation evidence without claiming online presence
+- [ ] Validate focused tests and preview compilation
+- [ ] Authenticated account walkthrough — blocked: no isolated synthetic QA session; shared production backend cannot be used for browser tests
+
 ## Fund setup and tab navigation
 - [x] Connect Fund Setup and fund tabs with fund-specific links, visible Banking and persistent navigation; preview compiles
 - [ ] Authenticated click-through — blocked: isolated synthetic QA session unavailable; shared production backend cannot be used for browser tests
