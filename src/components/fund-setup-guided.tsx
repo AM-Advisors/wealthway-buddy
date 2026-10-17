@@ -49,7 +49,6 @@ export function FundSetupGuided({ offeringId, compact = false, onJump }: { offer
             <CardTitle>{compact ? "Finish your fund setup" : "Fund setup"}</CardTitle>
             <CardDescription>
               {d.waitingOnYou ? <span className="font-medium text-foreground">{d.waitingOnYou} {d.waitingOnYou === 1 ? "item is" : "items are"} waiting on you. </span> : null}
-              {d.isStaff ? "Save directly, or review what the fund manager sent." : "Each item is reviewed by Harmonious before it counts."}
             </CardDescription>
           </div>
           {d.isStaff && <StaffTools offeringId={offeringId} hasDrive={d.hasDriveFolder} hasDefaults={Object.keys(d.defaults ?? {}).length > 0} onDone={refresh} />}
@@ -131,9 +130,9 @@ function StepBody({ offeringId, d, s, onChange }: { offeringId: string; d: any; 
           ) : isStaff ? (
             <StepLink isStaff offeringId={offeringId} to={s.step === "bank" ? "banking" : "documents"} label={s.step === "bank" ? "Enter bank details" : "Manage documents"} />
           ) : editing ? (
-            <SubmitForm offeringId={offeringId} section={s.step} prior={values} onDone={() => { setEditing(false); onChange(); }} />
+            <SubmitForm offeringId={offeringId} section={s.step} directSave={d.directSetupEdits} prior={values} onDone={() => { setEditing(false); onChange(); }} />
           ) : (
-            s.status !== "waiting_harmonious" && <Button size="sm" variant={s.status === "done" ? "outline" : "default"} onClick={() => setEditing(true)}>{s.status === "done" ? "Suggest a change" : "Complete this step"}</Button>
+            (s.status !== "waiting_harmonious" || (d.directSetupEdits && ["fund_details", "fees_team"].includes(s.step))) && <Button size="sm" variant={s.status === "done" ? "outline" : "default"} onClick={() => setEditing(true)}>{s.status === "done" ? "Edit" : "Complete this step"}</Button>
           )}
           <History items={sectionItems} isStaff={isStaff} onChange={onChange} />
         </>

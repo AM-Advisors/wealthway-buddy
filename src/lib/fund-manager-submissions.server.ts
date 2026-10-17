@@ -28,7 +28,7 @@ export async function listSubmissions(userId: string, offeringId: string) {
     db().from("fund_manager_submissions").select("*").eq("offering_id", offeringId).order("submitted_at", { ascending: false }).limit(100),
     setupOnFile(offeringId).catch(() => null),
   ]);
-  return { isStaff: a.isStaff, items: (data ?? []) as any[], onFile };
+  return { isStaff: a.isStaff, directSetupEdits: a.isStaff || await fundEditWindow(offeringId), items: (data ?? []) as any[], onFile };
 }
 
 /** Allow-listed snapshot of what is already on the fund record (no tax IDs or bank numbers). */

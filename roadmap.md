@@ -100,6 +100,7 @@
 - [ ] Signed-in page verification — QA-only browser policy prevents opening real-fund pages during testing.
 
 ## Manager edits before signing or funding
-- [ ] Allow direct investor detail updates before that investor signs or sends capital; keep shared-record, identity and post-signing protections.
-- [ ] Apply the same boundary to fund setup details across all investors in that fund; align Save labels.
-- [ ] Run focused regression tests and verify with synthetic data.
+- [x] Allow direct investor detail updates before that investor signs or sends capital; keep shared-record, identity and post-signing protections.
+- [x] Apply the same boundary to fund setup details across all investors in that fund; align Save labels.
+- [x] Run focused regression tests with synthetic data: 56 passing.
+- [ ] Signed-in browser walkthrough — requires synthetic QA manager session (not configured); no production testing.

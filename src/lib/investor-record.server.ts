@@ -266,8 +266,6 @@ export async function updateInvestorRecord(userId: string, input: {
     const apply: Record<string, unknown> = {};
     for (const [f, v] of Object.entries(patch)) {
       if (!PERSON_FIELDS.includes(f) || sameValue(cur?.[f], v)) continue;
-      const investorOwned = Boolean(cur?.user_id) && (cur?.entry_source === "investor" || Boolean(row.investor_confirmed_at));
-      const materialField = isMaterial(f) || ADDRESS_FIELDS.has(f) || f === "email";
       if (!actor.isStaff && (!personDirect || (Boolean(cur?.user_id) && ["email", "phone"].includes(f)))) {
         await suggest("persons", row.person_id, f, cur?.[f], v);
         continue;

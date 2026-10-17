@@ -74,7 +74,7 @@ export function FundManagerSetupLoader({ offeringId, compact = false }: { offeri
       <CardHeader className="space-y-3">
         <div>
           <CardTitle>{compact ? "Finish your fund setup" : "Load your fund information"}</CardTitle>
-          <CardDescription>Add what Harmonious needs to get your fund going. Each item is reviewed by Harmonious before it counts toward setup.</CardDescription>
+          <CardDescription>Fund information</CardDescription>
         </div>
         <div className="space-y-1">
           <div className="flex justify-between text-xs text-muted-foreground"><span>{done} of {order.length} complete</span><span>{Math.round((done / order.length) * 100)}%</span></div>
@@ -108,8 +108,8 @@ export function FundManagerSetupLoader({ offeringId, compact = false }: { offeri
                     <OnFile section={s} values={known(s)} docs={onFile?.documents ?? []} />
                     {!isDone && missing(s).length > 0 && <p className="text-xs text-muted-foreground">Missing: {missing(s).join(", ")}</p>}
                     {!reviewNow && (open === s
-                      ? <SubmitForm offeringId={offeringId} section={s} prior={known(s)} onDone={() => { setOpen(null); refresh(); }} />
-                      : <Button size="sm" variant={isDone ? "outline" : "default"} onClick={() => setOpen(s)}>{isDone || Object.values(known(s)).some(Boolean) && !missing(s).length ? "Suggest a change" : "Complete this step"}</Button>)}
+                      ? <SubmitForm offeringId={offeringId} section={s} directSave={!!q.data?.directSetupEdits} prior={known(s)} onDone={() => { setOpen(null); refresh(); }} />
+                      : <Button size="sm" variant={isDone ? "outline" : "default"} onClick={() => setOpen(s)}>{isDone || Object.values(known(s)).some(Boolean) && !missing(s).length ? "Edit" : "Complete this step"}</Button>)}
                     <History items={sectionItems} isStaff={isStaff} onChange={refresh} />
                   </div>
                 )}
@@ -141,7 +141,7 @@ function StatusBadge({ status }: { status: string }) {
   return <Badge variant={v}>{t}</Badge>;
 }
 
-export function SubmitForm({ offeringId, section, prior, onDone }: { offeringId: string; section: Section; prior?: Record<string, any>; onDone: () => void }) {
+export function SubmitForm({ offeringId, section, prior, onDone, directSave = false }: { offeringId: string; section: Section; prior?: Record<string, any>; onDone: () => void; directSave?: boolean }) {
   const submit = useServerFn(submitFundInfoFn);
   const [vals, setVals] = useState<Record<string, string>>(() => Object.fromEntries(Object.entries(prior ?? {}).map(([k, v]) => [k, v == null ? "" : String(v)])));
   const [docKind, setDocKind] = useState<string>("operating_agreement");
@@ -157,8 +157,8 @@ export function SubmitForm({ offeringId, section, prior, onDone }: { offeringId:
       for (const [k] of fields) if (vals[k]?.trim()) payload[k] = vals[k].trim();
       const f = file ? { name: file.name, base64: await toBase64(file) } : null;
       if (file && file.size > 10 * 1024 * 1024) throw new Error("Files must be 10 MB or smaller.");
-      await submit({ data: { offeringId, section, docKind: section === "document" ? (docKind as any) : null, payload, file: f } });
-      toast.success("Sent to Harmonious for review");
+      const result = await submit({ data: { offeringId, section, docKind: section === "document" ? (docKind as any) : null, payload, file: f } });
+      toast.success(result.applied ? "Saved to the fund record" : "Sent to Harmonious for review");
       onDone();
     } catch (e: any) {
       toast.error(e?.message ?? "Could not submit");
@@ -192,7 +192,7 @@ export function SubmitForm({ offeringId, section, prior, onDone }: { offeringId:
           {section === "bank" && <p className="mt-1 text-xs text-muted-foreground">For security, Harmonious enters and verifies full account details from your bank's letter. Don't type full account numbers here.</p>}
         </div>
       )}
-      <div className="sm:col-span-2"><Button onClick={go} disabled={busy}>{busy ? "Sending…" : "Submit for review"}</Button></div>
+      <div className="sm:col-span-2"><Button onClick={go} disabled={busy}>{busy ? "Saving…" : directSave && (section === "fund_details" || section === "fees_team") ? "Save" : "Submit for review"}</Button></div>
     </div>
   );
 }
