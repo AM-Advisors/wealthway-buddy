@@ -94,7 +94,7 @@ function SecurityActivityPage() {
       <Card>
         <CardHeader><CardTitle className="font-heading text-lg">Two-step sign-in resets</CardTitle></CardHeader>
         <CardContent className="space-y-4">
-          <p className="text-sm text-muted-foreground">Confirm the person's identity first. A different Super Administrator must approve before their methods are removed.</p>
+          <p className="text-sm text-muted-foreground">Confirm the person's identity first. One administrator approval removes their methods; every reset is logged.</p>
           <div className="grid gap-2 sm:grid-cols-3">
             <Input placeholder="User email" value={reset.email} onChange={(e) => setReset({ ...reset, email: e.target.value })} />
             <Input placeholder="Reason" value={reset.reason} onChange={(e) => setReset({ ...reset, reason: e.target.value })} />

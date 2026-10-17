@@ -1,3 +1,4 @@
+import { canApproveMfaReset } from "@/lib/mfa-reset-rules";
 import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
@@ -217,7 +218,7 @@ export const listSecurityActivity = createServerFn({ method: "POST" })
     return {
       rows: rows ?? [],
       total: count ?? 0,
-      resets: (resets ?? []).map((r) => ({ ...r, canDecide: r.status === "pending" && r.requested_by !== context.userId })),
+      resets: (resets ?? []).map((r) => ({ ...r, canDecide: canApproveMfaReset(r, context.userId) })),
     };
   });
 
@@ -270,7 +271,7 @@ export const decideMfaReset = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: req } = await supabaseAdmin.from("mfa_reset_requests").select("*").eq("id", data.id).maybeSingle();
     if (!req || req.status !== "pending") throw new Error("Request is not pending.");
-    if (req.requested_by === context.userId) throw new Error("A different administrator must decide.");
+    if (!canApproveMfaReset(req, context.userId)) throw new Error("You cannot approve a reset of your own account.");
     if (!data.approve && !data.reason) throw new Error("A reason is required to decline.");
     const { error } = await supabaseAdmin
       .from("mfa_reset_requests")
