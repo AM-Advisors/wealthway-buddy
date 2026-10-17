@@ -85,7 +85,7 @@ export function FundManagerSetupLoader({ offeringId, compact = false }: { offeri
         <ol className="space-y-2">
           {order.map((s, idx) => {
             const l = latest(s);
-            const isDone = l?.status === "approved";
+            const isDone = isApproved(s);
             const isOpen = current === s;
             const reviewNow = isStaff && l?.status === "submitted";
             const sectionItems = items.filter((i: any) => i.section === s);
@@ -97,7 +97,7 @@ export function FundManagerSetupLoader({ offeringId, compact = false }: { offeri
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block font-medium">{s === "document" ? "Documents" : SECTION_LABEL[s]}</span>
-                    <span className="block text-xs text-muted-foreground">{!l && missing(s).length && Object.values(known(s)).some(Boolean) ? "Missing info" : waitingOn(l?.status)}</span>
+                    <span className="block text-xs text-muted-foreground">{!l && missing(s).length && Object.values(known(s)).some(Boolean) ? "Missing info" : waitingOn(l?.status, s)}</span>
                   </span>
                   {l ? <StatusBadge status={l.status} /> : <Badge variant="outline">{Object.values(known(s)).some(Boolean) ? "Missing info" : "Not started"}</Badge>}
                   <ChevronDown className={cn("h-4 w-4 shrink-0 text-muted-foreground transition-transform", isOpen && "rotate-180")} />
