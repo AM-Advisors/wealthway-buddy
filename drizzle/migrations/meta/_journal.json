@@ -1933,6 +1933,13 @@
       "when": 1792260306524,
       "tag": "0275_mfa_reset_super_admin_single_approval",
       "breakpoints": true
+    },
+    {
+      "idx": 276,
+      "version": "7",
+      "when": 1792261921207,
+      "tag": "0276_migration",
+      "breakpoints": true
     }
   ]
 }

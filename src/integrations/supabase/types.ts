@@ -34175,6 +34175,8 @@ export type Database = {
           banking_path: string | null
           banking_setup_by: string | null
           blue_sky_responsibility: string | null
+          check_mail_address: string | null
+          check_payable_to: string | null
           client_id: string | null
           closing_cost_cents: number
           closing_cost_rate_id: string | null
@@ -34217,6 +34219,7 @@ export type Database = {
           name_normalized: string | null
           offering_close_date: string | null
           offering_open_date: string | null
+          payment_methods: string[]
           principal_address: string | null
           public_headline: string | null
           public_page_enabled: boolean
@@ -34251,6 +34254,8 @@ export type Database = {
           banking_path?: string | null
           banking_setup_by?: string | null
           blue_sky_responsibility?: string | null
+          check_mail_address?: string | null
+          check_payable_to?: string | null
           client_id?: string | null
           closing_cost_cents?: number
           closing_cost_rate_id?: string | null
@@ -34293,6 +34298,7 @@ export type Database = {
           name_normalized?: string | null
           offering_close_date?: string | null
           offering_open_date?: string | null
+          payment_methods?: string[]
           principal_address?: string | null
           public_headline?: string | null
           public_page_enabled?: boolean
@@ -34327,6 +34333,8 @@ export type Database = {
           banking_path?: string | null
           banking_setup_by?: string | null
           blue_sky_responsibility?: string | null
+          check_mail_address?: string | null
+          check_payable_to?: string | null
           client_id?: string | null
           closing_cost_cents?: number
           closing_cost_rate_id?: string | null
@@ -34369,6 +34377,7 @@ export type Database = {
           name_normalized?: string | null
           offering_close_date?: string | null
           offering_open_date?: string | null
+          payment_methods?: string[]
           principal_address?: string | null
           public_headline?: string | null
           public_page_enabled?: boolean
