@@ -1606,3 +1606,18 @@ export async function clientFundSetup(userId: string, setupId?: string) {
     banking: detail.banking,
   };
 }
+
+/** Self-serve launch status for one fund (staff or that fund's managers). */
+export async function launchStatusForOffering(userId: string, offeringId: string) {
+  const actor = await setupActor(userId);
+  if (!actor.isStaff && !actor.offeringIds.includes(offeringId)) forbid("you do not manage that fund.");
+  const { data } = await db().from("fund_setups").select("id, launch_state").eq("offering_id", offeringId).order("created_at", { ascending: false }).limit(1);
+  const setup = ((data ?? []) as any[])[0];
+  if (!setup) return null;
+  const { result } = await readinessFor(setup.id);
+  return {
+    setupId: setup.id as string,
+    launchState: setup.launch_state as string,
+    blockers: result.unmet.filter((u) => u.key !== "harmonious_approval"),
+  };
+}
