@@ -18,10 +18,12 @@ export const startTaxDocumentStepUp = createServerFn({ method: "POST" }).middlew
     z
       .object({
         documentId: id,
-        // A remembered-device token or a single-use emailed code can stand in for
-        // the fresh authenticator check. The session must still be aal2.
+        // A remembered-device token, a single-use emailed code or a single-use
+        // texted code can stand in for the fresh authenticator check. The session
+        // must still be aal2.
         trustedDeviceToken: z.string().min(10).max(200).optional(),
         emailCode: z.string().trim().regex(/^\d{6}$/).optional(),
+        smsCode: z.string().trim().regex(/^\d{6}$/).optional(),
       })
       .parse(d),
   )
@@ -30,6 +32,7 @@ export const startTaxDocumentStepUp = createServerFn({ method: "POST" }).middlew
     const proof: StepUpProof = {};
     if (data.trustedDeviceToken) proof.trustedDeviceToken = data.trustedDeviceToken;
     if (data.emailCode) proof.emailCode = data.emailCode;
+    if (data.smsCode) proof.smsCode = data.smsCode;
     return (await srv()).beginTaxStepUp(context.userId, context.claims, data.documentId, proof);
   });
 

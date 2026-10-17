@@ -144,7 +144,22 @@ export async function beginTaxStepUp(userId: string, claims: unknown, documentId
         emailOk = false;
       }
     }
-    const picked = pickStepUpMethod({ freshSecondFactor: false, trustedDeviceOk: trustedOk, emailCodeOk: emailOk });
+    // A texted code is only ever tried when there is no remembered device and no
+    // emailed code in play, so the two channels can't be traded against each other.
+    let smsOk = false;
+    if (!trustedOk && !emailOk && proof?.smsCode) {
+      try {
+        smsOk = (await ease.verifySmsCode(userId, proof.smsCode, "tax_document")).ok;
+      } catch {
+        smsOk = false;
+      }
+    }
+    const picked = pickStepUpMethod({
+      freshSecondFactor: false,
+      trustedDeviceOk: trustedOk,
+      emailCodeOk: emailOk,
+      smsCodeOk: smsOk,
+    });
     if (!picked.proofUsed) {
       await log(userId, documentId, "step_up", "deny", "second_factor_not_fresh");
       forbid("Please confirm your two-step code again.");

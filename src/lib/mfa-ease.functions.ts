@@ -1,10 +1,17 @@
 // Server functions for the second-step ease options (remembered devices and the
-// emailed-code fallback). Called from the browser.
+// emailed- or texted-code fallback). Called from the browser.
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth, requireSupabaseAuthUnverified } from "./require-auth";
 
 const srv = () => import("./mfa-ease.server");
+
+/** The mobile number Operations holds for this account, if any. */
+async function phoneForUser(userId: string): Promise<string | null> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data } = await supabaseAdmin.from("persons").select("phone").eq("user_id", userId).limit(1);
+  return data?.[0]?.phone ?? null;
+}
 
 /** Remember this device for 30 days. Requires a verified second step (aal2). */
 export const rememberThisDeviceFn = createServerFn({ method: "POST" })
@@ -55,3 +62,33 @@ export const verifyMfaEmailCodeFn = createServerFn({ method: "POST" })
     z.object({ code: z.string().trim().regex(/^\d{6}$/), purpose: z.string().trim().max(60).default("step_up") }).parse(d),
   )
   .handler(async ({ data, context }) => (await srv()).verifyFallbackCode(context.userId, data.code, data.purpose));
+
+/**
+ * Whether this account can be sent a text code, and where it would go. The
+ * answer is false until Operations attaches a Twilio phone number to the
+ * connected account AND a mobile number is on the person's record.
+ */
+export const getMfaSmsStatusFn = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuthUnverified])
+  .handler(async ({ context }) => {
+    const { smsSenderConfig } = await srv();
+    const { maskPhone, normalizeSmsPhone } = await import("./mfa-ease");
+    const phone = normalizeSmsPhone(await phoneForUser(context.userId));
+    return { enabled: !!smsSenderConfig() && !!phone, to: phone ? maskPhone(phone) : null };
+  });
+
+/** Texts a single-use 6-digit code to the mobile number on this account. */
+export const requestMfaSmsCodeFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuthUnverified])
+  .inputValidator((d) => z.object({ purpose: z.string().trim().max(60).default("step_up") }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { sendSmsCode } = await srv();
+    return sendSmsCode(context.userId, await phoneForUser(context.userId), data.purpose);
+  });
+
+export const verifyMfaSmsCodeFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuthUnverified])
+  .inputValidator((d) =>
+    z.object({ code: z.string().trim().regex(/^\d{6}$/), purpose: z.string().trim().max(60).default("step_up") }).parse(d),
+  )
+  .handler(async ({ data, context }) => (await srv()).verifySmsCode(context.userId, data.code, data.purpose));
