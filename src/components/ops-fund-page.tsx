@@ -12,7 +12,6 @@ import { getStaffFundSetup } from "@/lib/staff-funds.functions";
 import { Button } from "@/components/ui/button";
 import { OperationsSs4, OperationsTaxDocuments } from "@/components/operations-board";
 import { FundSetupChecklist, SetupRequirementsProvider } from "@/components/fund-setup-checklist";
-import { fundSetupSummary } from "@/lib/fund-launch-summary";
 
 
 /** The single Operations fund page: Setup (incl. launch readiness), Investors and every client tab. */
@@ -24,6 +23,7 @@ export function OpsFundPage({ fundId, tab = "setup", onTab }: { fundId: string; 
   const d = q.data;
   const setupBody = <>
 {d.retired ? <p>This Fund is retired. Its setup cannot be changed.</p> : d.canSeeOperations ? <>
+      {!d.canUseCanonical && d.hasSetup && <FundSetupChecklist tasks={d.tasks} conditions={d.conditions} evidence={d.evidence} canEdit={d.canUseOperations} canNavigate={false} onChanged={() => q.refetch()} />}
       {d.canUseCanonical && (
         <SetupRequirementsProvider value={{ tasks: d.tasks, conditions: d.conditions, evidence: d.evidence, canEdit: d.canUseOperations, approvalCount: d.approvalCount, setupId: d.setupId, isPreparer: d.isPreparer, approvals: d.approvals, onChanged: () => q.refetch() }}>
           <FundSetupCanonical offeringId={fundId} staffOnly />
