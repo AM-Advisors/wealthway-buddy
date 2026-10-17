@@ -1,5 +1,10 @@
 # Roadmap
 
+## Make Thomas text codes live (2026-10-17)
+- [x] Twilio has SMS-capable +1 682-305-2462 and $45.50 credit; sender configured; 21 focused tests passed. App SMS is freshness-only, not hosted sign-in MFA.
+- [x] Publishing requested for current contact and MFA changes; deployment completion not yet verified
+- [ ] Enable and verify Thomas selecting phone codes — blocked: secondary phone remains contact-only; hosted phone-MFA configuration requires user settings and enrollment, not an app-code bypass
+
 ## Thomas secondary contacts (2026-10-17)
 - [x] Add secondary phone storage and staff editing; show both secondary contacts in View account
 - [x] Save requested phone on Thomas's linked person with history; verified read-back, 17 tests passed, build OK
@@ -80,5 +85,5 @@
 ## Twilio texts for confirmation codes (2026-10-17)
 - [x] Twilio connected (gateway-backed, server-side only); texted codes reuse the emailed-code engine — single-use 6-digit, 10-minute expiry, 5 attempts, 3/hour cap shared across channels, security-event audit
 - [x] Text option appears only when a Twilio sender number is configured AND a mobile number is on the person's record; a texted code can never satisfy an emailed-code request (12 focused tests; build green)
-- [ ] Sender number and account credit — blocked: the connected Twilio account has no phone number and a $0.00 balance; needs Alyssa's go-ahead to buy one (~$1.15/month), then TWILIO_FROM_NUMBER saved as a secret
+- [x] Sender number and account credit — verified SMS-capable +1 682-305-2462, $45.50 balance; TWILIO_FROM_NUMBER configured
 - [ ] Turn-on walkthrough in the real UI — needs the sender number above
