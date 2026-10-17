@@ -55,7 +55,7 @@ function InvestorRecordPage() {
   const save = async (payload: any) => {
     try {
       const r = await update({ data: payload });
-      toast.success(r.suggested ? `${r.changed} saved; ${r.suggested} sent to Harmonious for review because the investor supplied it.` : r.changed ? "Saved" : "No changes");
+      toast.success(r.suggested ? `${r.changed} saved; ${r.suggested} sent to Harmonious for review.` : r.changed ? "Saved" : "No changes");
       setEdit({}); refresh();
     } catch (e) { toast.error((e as Error).message); }
   };
@@ -128,12 +128,12 @@ function InvestorRecordPage() {
           amountCents: cents(edit['amount']), commitmentCents: cents(edit['commitment']), acceptedCents: staff ? cents(edit['accepted']) : undefined,
           investmentDate: edit['investmentDate'], unitCount: edit['units'] ? Number(edit['units']) : undefined, sourceReferral: edit['referral'],
           managerNotes: edit['managerNotes'], internalNotes: staff ? edit['internalNotes'] : undefined,
-        } })}>Save investment</Button>
+        } })}>{data.detailsEditMode === "suggest" ? "Submit investment changes" : "Save investment"}</Button>
       </CardContent></Card> : null}
 
       {tab === "profile" ? <div className="space-y-4">
         <Card><CardHeader><CardTitle className="text-base">Contact</CardTitle>
-          {data.contactEditMode === "suggest" ? <p className="text-sm text-muted-foreground">This investor has claimed their record and supplies their own contact details. Your changes are sent to Harmonious as suggested updates; they don't overwrite what the investor entered.</p>
+          {data.contactEditMode === "suggest" ? <p className="text-sm text-muted-foreground">Changes need review because signing or funding has started, or this contact is shared with another investment.</p>
             : data.claimState === "prepared" ? <p className="text-sm text-muted-foreground">Prepared record: entered by {SOURCE_LABELS[data.overview.enteredBy as EntrySource] ?? "the Fund team"}, not by the investor. Nobody has access to it until the investor signs in with this email, and they'll be asked to confirm it.</p> : null}
         </CardHeader><CardContent className="grid gap-3 sm:grid-cols-2">
           {field("firstName", "Legal first name", p?.firstName)}{field("middleName", "Middle name", p?.middleName)}{field("lastName", "Last name", p?.lastName)}{field("preferredName", "Preferred name", p?.preferredName)}
