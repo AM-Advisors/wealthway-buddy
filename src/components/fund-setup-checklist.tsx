@@ -116,7 +116,7 @@ export function FundSetupChecklist({
                 {!c.satisfied && (c.key === "blocking_tasks_complete"
                   ? <p className="text-xs text-muted-foreground">{open} setup task{open === 1 ? "" : "s"} left below.</p>
                   : c.key === "harmonious_approval"
-                    ? <p className="text-xs text-muted-foreground">Second-person approval once everything else is complete.</p>
+                    ? <p className="text-xs text-muted-foreground">Confirm launch once everything else is complete.</p>
                     : <GoTo k={c.key} canNavigate={canNavigate} />)}
               </div></li>
             ))}
@@ -221,7 +221,7 @@ export function LaunchRequirements() {
     setBusy(true);
     try {
       await decide({ data: { setupId: r.setupId, decision, reason: reason.trim() || undefined } });
-      toast.success(decision === "approved" ? "Launch approved" : "Launch declined");
+      toast.success(decision === "approved" ? "Launch confirmed" : "Launch declined");
       setReason(""); r.onChanged();
     } catch (e: any) { toast.error(e.message); } finally { setBusy(false); }
   };
@@ -230,21 +230,19 @@ export function LaunchRequirements() {
       <p className="font-medium">Launch</p>
       <p className="text-xs text-muted-foreground">{open} setup task{open === 1 ? "" : "s"} left across all sections · {r.approvalCount} launch decision{r.approvalCount === 1 ? "" : "s"} recorded</p>
       <ul className="mt-2 space-y-1.5 text-sm">
-        {conds.map((c) => <li key={c.id} className="flex items-start gap-2">{icon(c.satisfied)}<div><p>{c.label}</p>{!c.satisfied && c.key === "harmonious_approval" && <p className="text-xs text-muted-foreground">Second-person approval once everything else is complete.</p>}</div></li>)}
+        {conds.map((c) => <li key={c.id} className="flex items-start gap-2">{icon(c.satisfied)}<div><p>{c.label}</p>{!c.satisfied && c.key === "harmonious_approval" && <p className="text-xs text-muted-foreground">Confirm launch once everything else is complete.</p>}</div></li>)}
         {unplaced.map((t) => <li key={t.id} className="flex items-start gap-2">{icon(t.status === "complete")}{t.label}</li>)}
       </ul>
       {approval && !approval.satisfied && r.canEdit && r.setupId && (
         <div className="mt-3 space-y-2 border-t pt-3">
           {!othersMet ? (
             <p className="text-sm text-muted-foreground">Approval opens once every other setup task and launch condition is complete.</p>
-          ) : r.isPreparer ? (
-            <p className="text-sm text-muted-foreground">You helped prepare this Fund's setup, so a different Harmonious team member needs to approve the launch.</p>
           ) : (
             <>
               <label className="block text-sm font-medium" htmlFor="launch-reason">Note (required to decline)</label>
               <textarea id="launch-reason" className="w-full rounded-md border bg-background p-2 text-sm" rows={2} value={reason} onChange={(e) => setReason(e.target.value)} />
               <div className="flex gap-2">
-                <Button size="sm" disabled={busy} onClick={() => run("approved")}>Approve launch</Button>
+                <Button size="sm" disabled={busy} onClick={() => run("approved")}>Confirm launch</Button>
                 <Button size="sm" variant="outline" disabled={busy || !reason.trim()} onClick={() => run("declined")}>Decline</Button>
               </div>
             </>
