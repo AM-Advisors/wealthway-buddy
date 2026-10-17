@@ -438,7 +438,7 @@ export const DEFAULT_LAUNCH_CONDITIONS: { key: string; label: string; required: 
   { key: "eligibility_approved", label: "Investor eligibility rules approved", required: true },
   { key: "onboarding_configured", label: "Investor onboarding steps configured", required: true },
   { key: "blocking_tasks_complete", label: "All blocking setup tasks complete", required: true },
-  { key: "harmonious_approval", label: "Harmonious launch approval", required: true },
+  { key: "harmonious_approval", label: "Launch confirmed", required: true },
 ];
 
 export interface ReadinessInput {
@@ -471,7 +471,7 @@ export function evaluateReadiness(input: ReadinessInput): ReadinessResult {
     });
   }
   if (!input.harmoniousApproved) {
-    unmet.push({ key: "harmonious_approval", label: "Harmonious launch approval" });
+    unmet.push({ key: "harmonious_approval", label: "Launch confirmed" });
   }
   const ready = unmet.length === 0;
   return {
@@ -482,7 +482,7 @@ export function evaluateReadiness(input: ReadinessInput): ReadinessResult {
   };
 }
 
-/** Launch approval is a Harmonious act and never an inference from progress. */
+/** Launch is an explicit confirmation (staff or the fund's own manager), never an inference from progress. */
 export function launchApprovalError(input: {
   actorIsStaff: boolean;
   unmetBeforeApproval: { key: string }[];

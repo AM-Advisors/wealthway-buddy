@@ -1298,20 +1298,15 @@ export async function decideLaunch(
   userId: string,
   input: { setupId: string; decision: "approved" | "declined"; reason?: string | undefined },
 ) {
-  const actor = await assertStaff(userId);
-  const setup = await setupRow(input.setupId);
+  // Self-serve (user decision Oct 2026): Harmonious staff or the fund's own manager may confirm launch
+  // once every other required condition and blocking task is complete. No second person is required.
+  const { actor, setup } = await assertSetupAccess(userId, input.setupId);
   const { result } = await readinessFor(input.setupId);
+  const role = actor.isStaff ? "harmonious" : "fund_manager";
 
   if (input.decision === "approved") {
-    const error = launchApprovalError({
-      actorIsStaff: actor.isStaff,
-      unmetBeforeApproval: result.unmet,
-    });
+    const error = launchApprovalError({ actorIsStaff: true, unmetBeforeApproval: result.unmet });
     if (error) fail(error);
-    const preparers = await launchPreparers(input.setupId, setup);
-    if (preparers.has(userId)) {
-      fail("Launch approval must come from a second person who did not prepare this Fund's setup.");
-    }
   }
   if (input.decision === "declined" && !input.reason?.trim()) fail("Give a reason for declining.");
 
@@ -1331,7 +1326,7 @@ export async function decideLaunch(
       event: "launch_declined",
       detail: { reason: input.reason ?? null },
       actorUserId: userId,
-      actorRole: "harmonious",
+      actorRole: role,
     });
     return { setup, decision: input.decision, readiness: result };
   }
@@ -1362,7 +1357,7 @@ export async function decideLaunch(
     event: "launch_approved",
     toStatus: "ready",
     actorUserId: userId,
-    actorRole: "harmonious",
+    actorRole: role,
   });
   await (await import("@/lib/fund-alerts-kick.server")).kickFundAlerts();
   return { setup: updated, decision: input.decision, readiness: { ...result, ready: true } };
@@ -1373,8 +1368,7 @@ export async function decideLaunch(
  * link is derived from the offering record - never from client input.
  */
 export async function launchFund(userId: string, setupId: string) {
-  await assertStaff(userId);
-  const setup = await setupRow(setupId);
+  const { setup } = await assertSetupAccess(userId, setupId);
   const { result } = await readinessFor(setupId);
   if (!result.ready || setup.launch_state !== "ready") {
     fail("This fund is not approved for investor onboarding yet.");
@@ -1610,5 +1604,20 @@ export async function clientFundSetup(userId: string, setupId?: string) {
       unmet: detail.readiness.unmet,
     },
     banking: detail.banking,
+  };
+}
+
+/** Self-serve launch status for one fund (staff or that fund's managers). */
+export async function launchStatusForOffering(userId: string, offeringId: string) {
+  const actor = await setupActor(userId);
+  if (!actor.isStaff && !actor.offeringIds.includes(offeringId)) forbid("you do not manage that fund.");
+  const { data } = await db().from("fund_setups").select("id, launch_state").eq("offering_id", offeringId).order("created_at", { ascending: false }).limit(1);
+  const setup = ((data ?? []) as any[])[0];
+  if (!setup) return null;
+  const { result } = await readinessFor(setup.id);
+  return {
+    setupId: setup.id as string,
+    launchState: setup.launch_state as string,
+    blockers: result.unmet.filter((u) => u.key !== "harmonious_approval"),
   };
 }

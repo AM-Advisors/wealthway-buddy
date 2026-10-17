@@ -293,3 +293,8 @@ export const clientFundSetupFn = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) =>
     (await engine()).clientFundSetup(context.userId, data.setupId),
   );
+
+export const launchStatusFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ offeringId: z.string().uuid() }).parse)
+  .handler(async ({ data, context }) => (await engine()).launchStatusForOffering(context.userId, data.offeringId));

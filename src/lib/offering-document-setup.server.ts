@@ -37,8 +37,7 @@ async function assertRead(userId: string, offeringId: string) {
 }
 async function assertStaff(userId: string, offeringId: string) {
   const a = await assertRead(userId, offeringId);
-  // Fund managers may set up Harmonious template documents on their own fund (self-serve grant).
-  if (!a.isStaff && !(await import("@/lib/self-serve.server")).selfServeAllows(userId, offeringId, "template_documents")) forbid("only Harmonious can configure offering documents.");
+  // Self-serve (user decision Oct 2026): the fund's own managers configure and approve their documents.
   return a;
 }
 async function docRow(documentId: string) {
@@ -57,12 +56,8 @@ async function approvedTemplateVersions(offeringId: string): Promise<Set<string>
   return new Set((uses ?? []).filter((u: any) => (versions ?? []).some((v: any) => v.template_id === u.template_id && v.version === u.template_version)).map((u: any) => `${u.offering_document_id}:${u.fund_version}`));
 }
 async function assertTemplateEditor(userId: string, d: any, version?: number) {
-  const actor = await assertRead(userId, d.offering_id);
-  if (!actor.isStaff) {
-    const templates = await approvedTemplateVersions(d.offering_id);
-    if (!templates.has(`${d.id}:${version ?? d.current_version}`)) forbid("only Harmonious can configure uploaded offering documents.");
-  }
-  return actor;
+  void version; // self-serve: any version of the manager's own fund
+  return assertRead(userId, d.offering_id);
 }
 async function event(offeringId: string, documentId: string | null, version: number | null, ev: string, actor: string, detail: Record<string, unknown> = {}) {
   await db().from("offering_document_events").insert({ offering_id: offeringId, offering_document_id: documentId, version, event: ev, actor_user_id: actor, detail });
@@ -138,7 +133,7 @@ export async function listSetupDocuments(userId: string, offeringId: string) {
       };
     }),
   );
-  return { canEdit: actor.isStaff, documents: withUsage, status, hasFundSignatory: !!o?.fund_signatory_person_id, hasMultipleClasses: !!o?.has_multiple_classes };
+  return { canEdit: true /* self-serve: actor already scoped to this fund */, documents: withUsage, status, hasFundSignatory: !!o?.fund_signatory_person_id, hasMultipleClasses: !!o?.has_multiple_classes };
 }
 
 export async function createSetupDocument(userId: string, input: { offeringId: string; category: DocumentCategory; title?: string | null | undefined }) {
@@ -282,6 +277,13 @@ export async function activateDocumentVersion(
   await assertTemplateEditor(userId, d, input.version);
   const v = await versionRow(d.id, input.version);
   const templates = await approvedTemplateVersions(d.offering_id);
+  if (v.approval_status === "uploaded_review_required" && !templates.has(`${d.id}:${v.version}`)) {
+    // Self-serve: putting a version in use is the approval; recorded with who did it.
+    await (await import("@/lib/legal-name-gate.server")).assertLegalName({ offeringId: d.offering_id }, "offering_document_approval");
+    await db().from("offering_document_versions").update({ approval_status: "approved", approved_by: userId, approved_at: now() }).eq("id", v.id);
+    await event(d.offering_id, d.id, v.version, "version_approved", userId, { selfServe: true });
+    v.approval_status = "approved";
+  }
   if (v.approval_status === "superseded" || requiresDocumentApproval(v.approval_status, templates.has(`${d.id}:${v.version}`))) throw new Error("Approve this version before activating it.");
   if (d.usage === "signature" && v.signing_config_status !== "confirmed") throw new Error("Confirm the signing setup for this version first.");
   const replacing = !!d.active_version && d.active_version !== v.version;
