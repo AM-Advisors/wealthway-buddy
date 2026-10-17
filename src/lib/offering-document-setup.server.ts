@@ -133,7 +133,7 @@ export async function listSetupDocuments(userId: string, offeringId: string) {
       };
     }),
   );
-  return { canEdit: true, // self-serve: actor is already scoped to this fund documents: withUsage, status, hasFundSignatory: !!o?.fund_signatory_person_id, hasMultipleClasses: !!o?.has_multiple_classes };
+  return { canEdit: true /* self-serve: actor already scoped to this fund */, documents: withUsage, status, hasFundSignatory: !!o?.fund_signatory_person_id, hasMultipleClasses: !!o?.has_multiple_classes };
 }
 
 export async function createSetupDocument(userId: string, input: { offeringId: string; category: DocumentCategory; title?: string | null | undefined }) {
