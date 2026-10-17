@@ -17,9 +17,9 @@ export const FALLBACK_CODE_TTL_MS = 10 * 60_000;
 export const FALLBACK_MAX_ATTEMPTS = 5;
 export const FALLBACK_SENDS_PER_HOUR = 3;
 
-export type StepUpProof = { trustedDeviceToken?: string; emailCode?: string };
-export type StepUpMethod = "mfa_reverify" | "trusted_device" | "otp_email";
-export type StepUpProofUsed = "fresh" | "trusted_device" | "email_code" | null;
+export type StepUpProof = { trustedDeviceToken?: string; emailCode?: string; smsCode?: string };
+export type StepUpMethod = "mfa_reverify" | "trusted_device" | "otp_email" | "otp_sms";
+export type StepUpProofUsed = "fresh" | "trusted_device" | "email_code" | "sms_code" | null;
 
 export interface TrustedDeviceRowLike {
   expires_at: string;
@@ -47,15 +47,21 @@ export function isTrustedRowValid(row: TrustedDeviceRowLike | null | undefined, 
   return new Date(row.expires_at).getTime() > now.getTime();
 }
 
-/** Which proof satisfies the fresh second factor. `fresh` wins; then device; then emailed code. */
+/**
+ * Which proof satisfies the fresh second factor. `fresh` wins; then device; then
+ * emailed code; then texted code - email is listed first because it costs nothing
+ * and needs no carrier routing.
+ */
 export function pickStepUpMethod(input: {
   freshSecondFactor: boolean;
   trustedDeviceOk: boolean;
   emailCodeOk: boolean;
+  smsCodeOk?: boolean;
 }): { method: StepUpMethod; proofUsed: StepUpProofUsed } {
   if (input.freshSecondFactor) return { method: "mfa_reverify", proofUsed: "fresh" };
   if (input.trustedDeviceOk) return { method: "trusted_device", proofUsed: "trusted_device" };
   if (input.emailCodeOk) return { method: "otp_email", proofUsed: "email_code" };
+  if (input.smsCodeOk) return { method: "otp_sms", proofUsed: "sms_code" };
   return { method: "mfa_reverify", proofUsed: null };
 }
 
@@ -71,4 +77,56 @@ export function maskEmail(email: string): string {
   const name = email.slice(0, at);
   const head = name.slice(0, Math.min(2, name.length));
   return `${head}***${name.slice(-2)}@${email.slice(at + 1)}`;
+}
+
+// ------------------------------------------------------------ texted codes
+
+/**
+ * A texted code is the same single-use 6-digit proof as an emailed one, delivered
+ * to the mobile number on the person's record. It is stored in mfa_fallback_codes
+ * with a ":sms" purpose marker, so a texted code can never satisfy a request that
+ * expects an emailed one - and the hourly cap stays shared across both channels.
+ */
+export function smsPurpose(purpose: string): string {
+  return `${purpose}:sms`;
+}
+
+/**
+ * A stored phone value ("303-555-0142", "+1 303 555 0142") -> E.164 for Twilio.
+ * Bare ten-digit numbers are read as US. Anything whose country can't be worked
+ * out returns null rather than guessing.
+ */
+export function normalizeSmsPhone(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+  const text = raw.trim();
+  if (!text) return null;
+  const digits = text.replace(/\D/g, "");
+  if (digits.length < 8 || digits.length > 15) return null;
+  if (text.startsWith("+")) return `+${digits}`;
+  if (digits.length === 10) return `+1${digits}`;
+  if (digits.length === 11 && digits.startsWith("1")) return `+${digits}`;
+  return null;
+}
+
+/** +13035550142 -> "+1 •••0142" - shown in confirmations, never the whole number. */
+export function maskPhone(e164: string): string {
+  const digits = e164.replace(/\D/g, "");
+  if (digits.length < 5) return "your phone";
+  const last4 = digits.slice(-4);
+  const country = digits.slice(0, digits.length - 10);
+  return country ? `+${country} •••${last4}` : `•••${last4}`;
+}
+
+/** Where the app may text from: a Twilio number, a messaging service, or nothing yet. */
+export type SmsSender = { from: string } | { messagingServiceSid: string };
+
+export function pickSmsSender(env: {
+  TWILIO_FROM_NUMBER?: string;
+  TWILIO_MESSAGING_SERVICE_SID?: string;
+}): SmsSender | null {
+  const from = normalizeSmsPhone(env.TWILIO_FROM_NUMBER);
+  if (from) return { from };
+  const sid = (env.TWILIO_MESSAGING_SERVICE_SID ?? "").trim();
+  if (/^MG[0-9a-f]{32}$/i.test(sid)) return { messagingServiceSid: sid };
+  return null;
 }
