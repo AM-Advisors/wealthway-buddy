@@ -4,7 +4,11 @@ import {
   countRecentFallbackSends,
   isTrustedRowValid,
   maskEmail,
+  maskPhone,
+  normalizeSmsPhone,
+  pickSmsSender,
   pickStepUpMethod,
+  smsPurpose,
   trustedDeviceExpiry,
 } from "./mfa-ease";
 
