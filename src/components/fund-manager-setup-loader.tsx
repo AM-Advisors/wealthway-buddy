@@ -59,11 +59,13 @@ export function FundManagerSetupLoader({ offeringId, compact = false }: { offeri
   };
   const missing = (sec: Section): string[] => sec === "document" ? (onFile?.documents?.length ? [] : ["at least one document"]) : sec === "bank" ? [] : FIELDS[sec].filter(([k]) => !known(sec)[k]?.trim()).map(([, l]) => l.replace(/ \(.*\)$/, ""));
   const order = Object.keys(SECTION_LABEL) as Section[];
-  const done = order.filter((s) => latest(s)?.status === "approved").length;
-  const firstOpen = order.find((s) => latest(s)?.status !== "approved") ?? null;
+  const onRecord = (s: Section) => s === "bank" && !!(onFile as any)?.bankOnFile && !["submitted", "returned"].includes(latest(s)?.status);
+  const isApproved = (s: Section) => latest(s)?.status === "approved" || onRecord(s);
+  const done = order.filter(isApproved).length;
+  const firstOpen = order.find((s) => !isApproved(s)) ?? null;
   const [expanded, setExpanded] = useState<Section | null | undefined>(undefined);
   const current = expanded === undefined ? firstOpen : expanded;
-  const waitingOn = (st?: string) => (st === "submitted" ? "Waiting for Harmonious review" : st === "returned" ? "Needs changes" : st === "approved" ? "Approved" : "Waiting on fund manager");
+  const waitingOn = (st?: string, s?: Section) => (st === "submitted" ? "Waiting for Harmonious review" : st === "returned" ? "Needs changes" : st === "approved" ? "Approved" : s && onRecord(s) ? "On file" : "Waiting on fund manager");
   if (q.isPending) return <Card><CardContent className="p-4 text-sm text-muted-foreground">Loading fund setup…</CardContent></Card>;
   if (compact && done === order.length) return <p className="rounded-lg border bg-card px-4 py-3 text-sm"><Check className="mr-2 inline h-4 w-4 text-primary" />Fund setup complete.</p>;
 
