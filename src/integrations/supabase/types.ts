@@ -36629,6 +36629,7 @@ export type Database = {
           residence_country: string | null
           reverification_due_at: string | null
           secondary_email: string | null
+          secondary_phone: string | null
           tax_id_last4: string | null
           tax_id_reference: string | null
           tax_residency_country: string | null
@@ -36666,6 +36667,7 @@ export type Database = {
           residence_country?: string | null
           reverification_due_at?: string | null
           secondary_email?: string | null
+          secondary_phone?: string | null
           tax_id_last4?: string | null
           tax_id_reference?: string | null
           tax_residency_country?: string | null
@@ -36703,6 +36705,7 @@ export type Database = {
           residence_country?: string | null
           reverification_due_at?: string | null
           secondary_email?: string | null
+          secondary_phone?: string | null
           tax_id_last4?: string | null
           tax_id_reference?: string | null
           tax_residency_country?: string | null
