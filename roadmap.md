@@ -1,5 +1,10 @@
 # Roadmap
 
+## New fund versus migration (2026-10-17)
+- [ ] Persist a fund classification and mark Erebor New fund.
+- [ ] Expose classification and separate migration-only setup/readiness.
+- [ ] Run focused regression checks; signed-in walkthrough requires isolated synthetic QA.
+
 ## Missing authenticator reset controls (2026-10-17)
 - [x] Expose existing administrator-checked reset requests and second-person decisions in View account, below Session & activity
 - [x] Add Security activity & resets to the People & Access administrator menu
