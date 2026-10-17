@@ -1,6 +1,6 @@
 // Server-only engine for the second-step ease options (trusted devices, emailed
-// codes). Browser code goes through mfa-ease.functions.ts; other server modules
-// may import these helpers directly.
+// codes and texted codes). Browser code goes through mfa-ease.functions.ts; other
+// server modules may import these helpers directly.
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { randomToken, readRequestGeo, recordSecurityEvent, sha256 } from "./account-security.server";
 import {
@@ -9,7 +9,12 @@ import {
   FALLBACK_SENDS_PER_HOUR,
   countRecentFallbackSends,
   isTrustedRowValid,
+  maskPhone,
+  normalizeSmsPhone,
+  pickSmsSender,
+  smsPurpose,
   trustedDeviceExpiry,
+  type SmsSender,
   type TrustedDeviceRowLike,
   type TrustedDeviceView,
 } from "./mfa-ease";
@@ -78,7 +83,9 @@ export async function revokeAllTrustedDevices(userId: string, reason: string) {
   return { ok: true as const };
 }
 
-// ------------------------------------------------------------ emailed codes
+// ------------------------------------------------------------ one-time codes
+
+const GATEWAY_URL = "https://connector-gateway.lovable.dev/twilio";
 
 function sixDigitCode(): string {
   const buf = new Uint32Array(1);
@@ -86,14 +93,29 @@ function sixDigitCode(): string {
   return String(100000 + ((buf[0] ?? 0) % 900000));
 }
 
-/** Emails a single-use 6-digit code to the account's verified address. Rate limited. */
-export async function sendFallbackCode(
+/**
+ * Which sender the app may text from. Null until Operations attaches a Twilio
+ * phone number (TWILIO_FROM_NUMBER) or a messaging service (TWILIO_MESSAGING_SERVICE_SID)
+ * to the connected Twilio account - a connected account with no number cannot
+ * originate messages.
+ */
+export function smsSenderConfig(): SmsSender | null {
+  return pickSmsSender({
+    TWILIO_FROM_NUMBER: process.env.TWILIO_FROM_NUMBER,
+    TWILIO_MESSAGING_SERVICE_SID: process.env.TWILIO_MESSAGING_SERVICE_SID,
+  });
+}
+
+/**
+ * Shared issue path for a single-use code: hourly cap, supersede anything still
+ * pending for this purpose, store only the hash, then hand the code to `deliver`.
+ */
+async function issueCode(
   userId: string,
-  email: string | null | undefined,
   purpose: string,
-  firstName: string | null,
+  target: string,
+  deliver: (code: string) => Promise<void>,
 ) {
-  if (!email) throw new Error("This account has no email address to send a code to.");
   const since = new Date(Date.now() - 60 * 60_000).toISOString();
   const { data: recent } = await db()
     .from("mfa_fallback_codes")
@@ -118,25 +140,102 @@ export async function sendFallbackCode(
     code_hash: await sha256(code),
     purpose,
     expires_at,
-    sent_to: email.toLowerCase(),
+    sent_to: target,
   });
   if (error) throw new Error(error.message);
-
-  const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
-  await sendTemplateEmail("manager-alert", email, {
-    templateData: {
-      managerName: firstName ?? "there",
-      headline: "Your Harmonious confirmation code",
-      intro: `Use ${code} to confirm it's you. It expires in ten minutes and works once. If this was not you, do not use it - and contact operations@harmonious.co.`,
-      details: [],
-      portalUrl: "https://app.harmonious.co/security",
-    },
-  });
-  await recordSecurityEvent({ userId, email, eventType: "mfa_fallback_code_sent", action: `code emailed (${purpose})` });
+  await deliver(code);
   return { sent: true as const, expiresAt: expires_at };
 }
 
-/** Verifies the emailed code. A wrong or stale code never becomes usable. */
+/** Emails a single-use 6-digit code to the account's verified address. Rate limited. */
+export async function sendFallbackCode(
+  userId: string,
+  email: string | null | undefined,
+  purpose: string,
+  firstName: string | null,
+) {
+  if (!email) throw new Error("This account has no email address to send a code to.");
+  const result = await issueCode(userId, purpose, email.toLowerCase(), async (code) => {
+    const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+    await sendTemplateEmail("manager-alert", email, {
+      templateData: {
+        managerName: firstName ?? "there",
+        headline: "Your Harmonious confirmation code",
+        intro: `Use ${code} to confirm it's you. It expires in ten minutes and works once. If this was not you, do not use it - and contact operations@harmonious.co.`,
+        details: [],
+        portalUrl: "https://app.harmonious.co/security",
+      },
+    });
+  });
+  await recordSecurityEvent({ userId, email, eventType: "mfa_fallback_code_sent", action: `code emailed (${purpose})` });
+  return result;
+}
+
+/** Sends one text through the connected Twilio account via the connector gateway. */
+async function sendSms(to: string, body: string) {
+  const sender = smsSenderConfig();
+  if (!sender) {
+    throw new Error("Text messages aren't turned on yet. Ask Operations to add a Twilio phone number.");
+  }
+  const lovableKey = process.env.LOVABLE_API_KEY;
+  const twilioKey = process.env.TWILIO_API_KEY;
+  if (!lovableKey || !twilioKey) throw new Error("Text messaging isn't configured on this server.");
+
+  const form = new URLSearchParams({ To: to, Body: body });
+  if ("from" in sender) form.set("From", sender.from);
+  else form.set("MessagingServiceSid", sender.messagingServiceSid);
+
+  const response = await fetch(`${GATEWAY_URL}/Messages.json`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${lovableKey}`,
+      "X-Connection-Api-Key": twilioKey,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: form,
+  });
+  const text = await response.text();
+  if (!response.ok) {
+    // Twilio's own status and reason stay in the server log; the person gets a
+    // plain message so a carrier or account problem never reads as their fault.
+    console.error(`Twilio text failed [${response.status}]: ${text}`);
+    throw new Error("That text didn't go out. Try the email code instead.");
+  }
+  let sid = "";
+  try {
+    sid = String(JSON.parse(text)?.sid ?? "");
+  } catch {
+    /* Twilio answered something we don't recognise; treat it as undelivered below. */
+  }
+  if (!sid) {
+    console.error(`Twilio text returned no message id: ${text.slice(0, 300)}`);
+    throw new Error("That text didn't go out. Try the email code instead.");
+  }
+  return sid;
+}
+
+/**
+ * Texts a single-use 6-digit code to the mobile number on the person's record.
+ * Rate limited on the same hourly cap as emailed codes.
+ */
+export async function sendSmsCode(userId: string, rawPhone: string | null | undefined, purpose: string) {
+  const phone = normalizeSmsPhone(rawPhone);
+  if (!phone) throw new Error("No mobile number we can text is on this account. Ask Operations to add one.");
+  const result = await issueCode(userId, smsPurpose(purpose), phone, (code) =>
+    sendSms(
+      phone,
+      `Harmonious: your confirmation code is ${code}. It expires in 10 minutes and works once. Not you? Contact operations@harmonious.co`,
+    ),
+  );
+  await recordSecurityEvent({
+    userId,
+    eventType: "mfa_fallback_code_sent",
+    action: `code texted to ${maskPhone(phone)} (${purpose})`,
+  });
+  return result;
+}
+
+/** Verifies a one-time code. A wrong or stale code never becomes usable. */
 export async function verifyFallbackCode(userId: string, code: string, purpose: string) {
   const { data: rows } = await db()
     .from("mfa_fallback_codes")
@@ -165,5 +264,37 @@ export async function verifyFallbackCode(userId: string, code: string, purpose: 
   }
   await db().from("mfa_fallback_codes").update({ status: "used", used_at: new Date().toISOString() }).eq("id", row.id);
   await recordSecurityEvent({ userId, eventType: "mfa_verified", action: "email fallback code accepted" });
+  return { ok: true as const };
+}
+
+/** Verifies a texted code. Same single-use rules as an emailed one. */
+export async function verifySmsCode(userId: string, code: string, purpose: string) {
+  const { data: rows } = await db()
+    .from("mfa_fallback_codes")
+    .select("id, code_hash, attempts, expires_at")
+    .eq("user_id", userId)
+    .eq("purpose", smsPurpose(purpose))
+    .eq("status", "pending")
+    .order("created_at", { ascending: false })
+    .limit(1);
+  const row = (rows ?? [])[0];
+  if (!row) throw new Error("That code is no longer valid. Request a new one.");
+  if (new Date(row.expires_at).getTime() <= Date.now()) {
+    await db().from("mfa_fallback_codes").update({ status: "expired" }).eq("id", row.id);
+    throw new Error("That code expired. Request a new one.");
+  }
+  if ((row.attempts ?? 0) >= FALLBACK_MAX_ATTEMPTS) {
+    await db().from("mfa_fallback_codes").update({ status: "failed" }).eq("id", row.id);
+    throw new Error("Too many attempts. Request a new code.");
+  }
+  if ((await sha256(code)) !== row.code_hash) {
+    await db()
+      .from("mfa_fallback_codes")
+      .update({ attempts: (row.attempts ?? 0) + 1 })
+      .eq("id", row.id);
+    throw new Error("That code is not correct.");
+  }
+  await db().from("mfa_fallback_codes").update({ status: "used", used_at: new Date().toISOString() }).eq("id", row.id);
+  await recordSecurityEvent({ userId, eventType: "mfa_verified", action: "text fallback code accepted" });
   return { ok: true as const };
 }
