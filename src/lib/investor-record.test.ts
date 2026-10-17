@@ -73,6 +73,7 @@ vi.mock("@/lib/investor-onboarding.server", () => {
     launchedOffering: async (id: string) => ({ offering: { id }, setup: {} }),
     reconcileAfter: async (ids: string[]) => { reconciled.push(...ids.filter(Boolean)); },
     computeReadinessFor: async () => ({ result: { closeReady: false, nextAction: null, stages: [] } }),
+    publishedQuestionnaire: async () => null,
     assertOnboardingAccess: async (u: string, id: string) => {
       const a = await actor(u); const row = tables["investor_onboardings"]!.find((r) => r.id === id);
       if (!row) throw new Error("not found");
@@ -208,13 +209,52 @@ describe("sync, provenance and scope", () => {
     expect(ch.new_value).toBe(12_500_000);
     expect(reconciled).toEqual([r.onboardingId]);
   });
-  it("a manager's material edit to investor-owned data becomes a review, not an overwrite", async () => {
+  it("a manager updates unsigned unfunded investor-owned details directly", async () => {
     const s = await srv();
     const r = await s.createInvestor(STAFF, jane());
     Object.assign(tables["persons"]![0]!, { user_id: JANE, entry_source: "investor" });
     const out = await s.updateInvestorRecord(MGR_A, { onboardingId: r.onboardingId, person: { addressLine1: "9 Other Rd" } });
+    expect(out.suggested).toBe(0);
+    expect(tables["persons"]![0]!.address_line1).toBe("9 Other Rd");
+    expect(tables["investor_record_changes"].some((c) => c.field === "address_line1" && c.actor_user_id === MGR_A)).toBe(true);
+  });
+  it("a signature requires review for contact, profile and investment changes", async () => {
+    const s = await srv();
+    const r = await s.createInvestor(STAFF, jane());
+    tables["fund_file_signatures"] = [{ onboarding_id: r.onboardingId, signer_role: "investor", status: "signed" }];
+    const out = await s.updateInvestorRecord(MGR_A, { onboardingId: r.onboardingId, person: { addressLine1: "9 Other Rd" }, profile: { legalName: "Changed investor" }, investment: { amountCents: 200 } });
+    expect(out.suggested).toBe(3);
+    expect(out.changed).toBe(0);
+    expect(tables["persons"][0].address_line1).toBe("1 Main St");
+    expect(tables["investor_onboardings"][0].requested_amount_cents).toBe(10_000_000);
+  });
+  it("reported capital sent requires review even before reconciliation", async () => {
+    const s = await srv();
+    const r = await s.createInvestor(STAFF, jane());
+    tables["investor_onboardings"][0].investor_reports_sent_at = "2026-10-17T22:00:00Z";
+    const out = await s.updateInvestorRecord(MGR_A, { onboardingId: r.onboardingId, investment: { amountCents: 200 } });
     expect(out.suggested).toBe(1);
-    expect(tables["persons"]![0]!.address_line1).toBe("1 Main St");
+    expect(tables["investor_onboardings"][0].requested_amount_cents).toBe(10_000_000);
+  });
+  it("fund setup stops direct editing when any investor signs", async () => {
+    const s = await srv();
+    const r = await s.createInvestor(STAFF, jane());
+    const { fundEditWindow } = await import("@/lib/manager-edit-window.server");
+    expect(await fundEditWindow(FUND_A)).toBe(true);
+    tables["fund_file_signatures"] = [{ onboarding_id: r.onboardingId, signer_role: "investor", status: "signed" }];
+    expect(await fundEditWindow(FUND_A)).toBe(false);
+    expect(await fundEditWindow(FUND_B)).toBe(true);
+  });
+  it("manager cannot overwrite a shared contact or a signed-in security phone", async () => {
+    const s = await srv();
+    const r = await s.createInvestor(STAFF, jane());
+    tables["persons"][0].user_id = JANE;
+    const phone = await s.updateInvestorRecord(MGR_A, { onboardingId: r.onboardingId, person: { phone: "+12145550100" } });
+    expect(phone.suggested).toBe(1);
+    tables["investor_onboardings"].push({ id: "other", person_id: tables["persons"][0].id, offering_id: FUND_B });
+    const address = await s.updateInvestorRecord(MGR_A, { onboardingId: r.onboardingId, person: { addressLine1: "9 Other Rd" } });
+    expect(address.suggested).toBe(1);
+    expect(tables["persons"][0].address_line1).toBe("1 Main St");
   });
   it("Fund Manager cannot see or edit another Fund's investments", async () => {
     const s = await srv();
@@ -410,11 +450,13 @@ describe("roster presentation", () => {
     expect(row.hasAccount).toBe(false);
     expect(row.investorConfirmed).toBe(false);
   });
-  it("manager edit mode is 'suggest' once the investor controls their data", async () => {
+  it("manager edit mode stays direct until signing or funding starts", async () => {
     const s = await srv();
     const r = await s.createInvestor(STAFF, jane());
     expect((await s.investorRecordDetail(MGR_A, r.onboardingId)).contactEditMode).toBe("direct");
     Object.assign(tables["persons"]![0]!, { user_id: JANE, entry_source: "investor" });
+    expect((await s.investorRecordDetail(MGR_A, r.onboardingId)).contactEditMode).toBe("direct");
+    tables["investor_onboardings"][0].funded_amount_cents = 1;
     expect((await s.investorRecordDetail(MGR_A, r.onboardingId)).contactEditMode).toBe("suggest");
     expect((await s.investorRecordDetail(STAFF, r.onboardingId)).contactEditMode).toBe("direct");
   });
