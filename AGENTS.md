@@ -13,7 +13,7 @@
 - Never automate filings (except IRS e-filing of approved 1065s/K-1s per src/lib/AGENTS.md), tax payments, refunds, ACH/wire or provider money movement; server-side authorization only — why: user-mandated safety boundary.
 - Browser tests live in e2e/*.e2e.ts (Playwright, `bun run test:e2e`), run only against QA with synthetic sessions; helpers refuse production URLs — why: keep them out of unit runs and away from real data.
 - Sales uses the Operations shell for authorized Operations staff, while commercial-only Sales staff get a Sales-only menu — why: presentation must not imply wider Operations access.
-- Server functions import requireSupabaseAuth from src/lib/require-auth.ts (same runtime middleware, light context type), never the generated module directly - why: the generated Database-typed context made the whole-app typecheck exceed the preview time limit.
+- Server functions import requireSupabaseAuth only from src/lib/require-auth.ts (same middleware, light context), never the generated module — why: its Database-typed context exceeds preview typecheck limits.
 - Client and Operations share fund-workspace.tsx (mode client|harmonious); tab links retain fund ID and audience, staff controls use mode and actions keep server checks — why: one connected fund view, presentation grants no authority.
 - Offering Statement management fee/carry/preferred return are projections of the active fund_fee_terms row (src/lib/offering-statement.functions.ts overwrites them on read and save) - why: the statement must never differ from the fund record.
 - Fund setup % and launch label come only from src/lib/fund-launch-summary.ts (tasks + launch conditions) on Fund Setup and Readiness - why: the same fund must show one number everywhere.
