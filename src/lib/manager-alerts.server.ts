@@ -273,6 +273,7 @@ export async function drainManagerAlerts(limit = 25): Promise<{ processed: numbe
   const { data: pending } = await supabaseAdmin
     .from("notification_events")
     .select("id, event_kind, offering_id, application_id, investor_user_id, field, old_value, new_value, amount_cents, metadata, claimed_at")
+    .neq("event_kind", "investor_step_progress")
     .is("sent_at", null)
     .order("created_at", { ascending: true })
     .limit(limit);

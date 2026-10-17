@@ -6,6 +6,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/lib/require-auth";
+import { PROGRESS_FREQUENCIES } from "@/lib/investor-progress-email";
 
 async function admin() {
   return (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
@@ -42,6 +43,8 @@ export const getFundOnboardingSettings = createServerFn({ method: "POST" })
     if (!auth.allowed) throw new Error("Forbidden: you are not assigned to this fund.");
     const db = await admin();
     const { signingConfigComplete } = await import("@/lib/fund-onboarding-model");
+    const { getProgressSettings } = await import("@/lib/investor-progress-email.server");
+    const progressEmails = await getProgressSettings(db, data.offeringId);
 
     const [{ data: offering }, { data: docs }, { data: managers }, { data: setup }] = await Promise.all([
       db.from("offerings").select("id, name, reg_type").eq("id", data.offeringId).maybeSingle(),
@@ -74,6 +77,7 @@ export const getFundOnboardingSettings = createServerFn({ method: "POST" })
 
     const reg = String(offering?.reg_type ?? "").toLowerCase();
     return {
+      progressEmails,
       offeringName: offering?.name ?? "Fund",
       accreditation:
         reg === "506c"
@@ -112,6 +116,17 @@ export const getFundOnboardingSettings = createServerFn({ method: "POST" })
           }
         : { released: false, bankName: null, accountMasked: "", version: null },
     };
+  });
+
+export const saveInvestorProgressFrequency = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ offeringId: z.string().uuid(), investor: z.enum(PROGRESS_FREQUENCIES), manager: z.enum(PROGRESS_FREQUENCIES) }).parse)
+  .handler(async ({ data, context }) => {
+    const auth = await fundAuthority(context.supabase, context.userId, data.offeringId);
+    if (!auth.allowed) throw new Error("Forbidden: you are not assigned to this fund.");
+    const db = await admin();
+    const { saveProgressSettings } = await import("@/lib/investor-progress-email.server");
+    return saveProgressSettings(db, data.offeringId, context.userId, { investor: data.investor, manager: data.manager });
   });
 
 export const saveDocumentSigningConfig = createServerFn({ method: "POST" })

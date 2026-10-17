@@ -1,4 +1,5 @@
 import type { ComponentType } from 'react'
+import { template as investorProgress } from './investor-progress'
 import { template as investorMessage } from './investor-message'
 import { template as documentSigned } from './document-signed'
 import { template as investorInvitation } from './investor-invitation'
@@ -45,6 +46,7 @@ export interface TemplateEntry {
  *   // then add to TEMPLATES: 'welcome': welcomeTemplate
  */
 export const TEMPLATES: Record<string, TemplateEntry> = {
+  'investor-progress': investorProgress,
   'investor-message': investorMessage,
   'document-signed': documentSigned,
   'investor-invitation': investorInvitation,

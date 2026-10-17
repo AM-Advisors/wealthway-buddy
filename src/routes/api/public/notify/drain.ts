@@ -14,7 +14,9 @@ export const Route = createFileRoute("/api/public/notify/drain")({
 
         const { drainManagerAlerts } = await import("@/lib/manager-alerts.server");
         const result = await drainManagerAlerts(50);
-        return Response.json(result);
+        const { drainProgressEmails } = await import("@/lib/investor-progress-email.server");
+        const progress = await drainProgressEmails(100);
+        return Response.json({ ...result, progress });
       },
     },
   },

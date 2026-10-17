@@ -84,6 +84,7 @@ const mocks = vi.hoisted(() => ({
   sendInvoiceReminders: vi.fn(),
   claimReminderRun: vi.fn(),
   drainManagerAlerts: vi.fn(),
+  drainProgressEmails: vi.fn(),
 }));
 
 vi.mock("@/lib/invoice-reminders.server", () => ({
@@ -92,6 +93,9 @@ vi.mock("@/lib/invoice-reminders.server", () => ({
 }));
 vi.mock("@/lib/manager-alerts.server", () => ({
   drainManagerAlerts: mocks.drainManagerAlerts,
+}));
+vi.mock("@/lib/investor-progress-email.server", () => ({
+  drainProgressEmails: mocks.drainProgressEmails,
 }));
 
 describe("privileged job logic is not entered before authentication", () => {
@@ -102,6 +106,7 @@ describe("privileged job logic is not entered before authentication", () => {
     sendInvoiceReminders.mockReset().mockResolvedValue({ reminded: 0 });
     claimReminderRun.mockReset().mockResolvedValue(true);
     drainManagerAlerts.mockReset().mockResolvedValue({ sent: 0 });
+    mocks.drainProgressEmails.mockReset().mockResolvedValue({ sent: 0 });
   });
 
   afterEach(() => {
@@ -133,9 +138,11 @@ describe("privileged job logic is not entered before authentication", () => {
     const denied = await handler({ request: req({ "x-cron-secret": "wrong" }) });
     expect(denied.status).toBe(401);
     expect(drainManagerAlerts).not.toHaveBeenCalled();
+    expect(mocks.drainProgressEmails).not.toHaveBeenCalled();
 
     const ok = await handler({ request: req({ authorization: `Bearer ${SECRET}` }) });
     expect(ok.status).toBe(200);
     expect(drainManagerAlerts).toHaveBeenCalledTimes(1);
+    expect(mocks.drainProgressEmails).toHaveBeenCalledTimes(1);
   });
 });
