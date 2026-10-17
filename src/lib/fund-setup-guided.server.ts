@@ -95,7 +95,7 @@ export async function guidedState(userId: string, offeringId: string) {
       status = stepStatus({ complete: teamComplete, harmoniousOwned: true });
       if (!teamComplete) miss = ((team?.team ?? []) as any[]).filter((m) => !m.userId).map((m) => ({ sales: "Sales", account_manager: "Account Manager", operations: "Operations" } as any)[m.role]);
     } else if (step === "bank") {
-      status = bankSetupStatus(onFile.bankOnFile, latest("bank"));
+      status = bankSetupStatus(!!onFile?.bankOnFile, latest("bank"));
     } else if (step === "document") {
       const has = ((onFile as any)?.documents ?? []).length > 0;
       status = stepStatus({ submission: latest("document"), complete: has });

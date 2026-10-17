@@ -34,7 +34,7 @@ export function stepStatus(i: StepInput): StepStatus {
 
 /** Canonical banking completion counts even when no manager uploaded a letter. */
 export function bankSetupStatus(bankOnFile: boolean, submission: StepInput["submission"]): StepStatus {
-  return stepStatus({ submission, complete: bankOnFile || submission === "approved" });
+  return stepStatus({ submission: submission ?? null, complete: bankOnFile || submission === "approved" });
 }
 
 /** How many steps are waiting on the viewer. */
