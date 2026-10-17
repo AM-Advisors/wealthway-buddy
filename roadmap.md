@@ -1,5 +1,10 @@
 # Roadmap
 
+## Missing authenticator reset controls (2026-10-17)
+- [x] Expose existing administrator-checked reset requests and second-person decisions in View account, below Session & activity
+- [x] Add Security activity & resets to the People & Access administrator menu
+- [ ] Validate preview compilation; authenticated walkthrough blocked by unavailable isolated synthetic QA
+
 ## Make Thomas text codes live (2026-10-17)
 - [x] Twilio has SMS-capable +1 682-305-2462 and $45.50 credit; sender configured; 21 focused tests passed. App SMS is freshness-only, not hosted sign-in MFA.
 - [x] Publishing requested for current contact and MFA changes; deployment completion not yet verified

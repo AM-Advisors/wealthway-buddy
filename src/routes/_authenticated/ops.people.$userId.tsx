@@ -11,6 +11,7 @@ import { PersonKycUpdate } from "@/components/person-kyc-update";
 import { KycReport } from "@/components/kyc-report";
 import { SidebarAccessCard } from "@/components/sidebar-access-card";
 import { RefreshCw } from "lucide-react";
+import { MfaResetPanel } from "@/components/mfa-reset-panel";
 
 export const Route = createFileRoute("/_authenticated/ops/people/$userId")({
   head: () => ({
@@ -59,6 +60,7 @@ function PersonActivityPage() {
           <p className="text-sm">Last activity: {d.lastActivity ? `${d.lastActivity.label || d.lastActivity.path || "Recorded activity"} · ${when(d.lastActivity.created_at)}` : "Not recorded"}</p>
           <p className="text-xs text-muted-foreground">Updated {when(d.checkedAt)} · A recorded sign-out applies to that session; other devices may still be signed in. Current online presence is not confirmed.</p>
         </section>
+        {d.email && <MfaResetPanel email={d.email} userId={userId} />}
         <AccountOverview d={d} />
         {d.roles.length > 0 && <SidebarAccessCard userId={userId} />}
         <KycReport d={d} userId={userId} />

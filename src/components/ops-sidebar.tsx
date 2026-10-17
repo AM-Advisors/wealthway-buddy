@@ -212,6 +212,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
     return ok.length ? [{ id, title, url: ok[0]!.url, icon, sub: ok }] : [];
   };
   const peopleSub = [
+    ...(has("super_admin", "admin") ? [{ title: "Security activity & resets", url: "/admin/security-activity" }] : []),
     ...(canSee("peopleEmployees", staffRoles) ? [{ title: "Employees", url: "/ops/people-access?tab=employees" }] : []),
     ...(canSee("peopleOthers", staffRoles) ? [{ title: "Everyone else", url: "/ops/people-access?tab=others" }] : []),
     ...(canSee("peopleEmployees", staffRoles) ? [{ title: "Roles", url: "/ops/people-access?tab=roles" }, { title: "Invites & access", url: "/ops/people-access?tab=access" }] : []),
