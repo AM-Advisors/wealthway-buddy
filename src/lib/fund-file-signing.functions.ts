@@ -22,8 +22,9 @@ async function emailSigner(d: any, sig: any) {
     const { data: o } = await d.from("offerings").select("name").eq("id", sig.offering_id).maybeSingle();
     const { data: f } = await d.from("fund_files").select("title").eq("id", sig.file_id).maybeSingle();
     const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
-    await sendTemplateEmail("manager-alert", sig.signer_email, {
+    const r = await sendTemplateEmail("manager-alert", sig.signer_email, {
       idempotencyKey: `fund-file-sign:${sig.id}`,
+      cc: TEAM_EMAIL,
       templateData: {
         managerName: sig.signer_name,
         headline: `Please sign: ${f?.title ?? "a document"}`,
@@ -33,6 +34,7 @@ async function emailSigner(d: any, sig: any) {
         portalUrl: `${SITE}/sign/${sig.id}`,
       },
     });
+    console.log("signing email", sig.id, r.sent ? "sent" : (r as any).reason);
   } catch (e) { console.error("signing email failed", e); }
   await d.from("fund_file_signatures").update({ status: "sent", sent_at: new Date().toISOString() }).eq("id", sig.id).eq("status", "waiting");
 }
@@ -323,6 +325,9 @@ export const sendTemplateDocToSignatoryFn = createServerFn({ method: "POST" }).m
     }
     if (!body) throw new Error("Couldn't read this document's text to send it.");
 
+    // An earlier unsigned send of this document is cancelled (never deleted) so only one request is open.
+    const { data: prior } = await d.from("fund_files").select("id").eq("offering_id", data.fundId).eq("title", doc.title).eq("template_key", "operating_agreement").eq("status", "out_for_signature").is("deleted_at", null);
+    for (const p of (prior ?? []) as any[]) await d.from("fund_file_signatures").update({ status: "cancelled" }).eq("file_id", p.id).in("status", ["waiting", "sent"]);
     const { data: f, error: fe } = await d.from("fund_files").insert({
       offering_id: data.fundId, title: doc.title, category: "legal", file_name: v.file_name, body,
       template_key: "operating_agreement", status: "draft", signing_order: "manager_only", uploaded_by: context.userId,
@@ -336,7 +341,30 @@ export const sendTemplateDocToSignatoryFn = createServerFn({ method: "POST" }).m
     await emailSigner(d, (rows as any[])[0]);
     try {
       const { logFundAudit } = await import("@/lib/fund-audit.server");
+      const { notifySubmission } = await import("@/lib/ops-slack-notify.server");
+      await notifySubmission({ kind: "document_sent_for_signature", title: `${doc.title} sent to ${mp.legal_name || mp.email} to sign`, offeringId: data.fundId, submittedBy: context.userId, ref: f.id, path: `/ops/fund/${data.fundId}?tab=documents` } as any);
+    } catch { /* best-effort */ }
+    try {
+      const { logFundAudit } = await import("@/lib/fund-audit.server");
       await logFundAudit(context.userId, { offeringId: data.fundId, eventType: "document_sent_for_signature", summary: `Sent "${doc.title}" (v${doc.active_version}) to the fund manager for signature`, values: { fundManager: mp.legal_name || mp.email, signatoryOnly: true } });
     } catch { /* best-effort */ }
     return { ok: true, name: (mp.legal_name || mp.email) as string };
+  });
+
+/** Latest signature request per template document title on this fund, for the "Sent" status on the template card. */
+export const templateDocSendStatusFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator((x: unknown) => z.object({ fundId: z.string().uuid() }).parse(x))
+  .handler(async ({ data, context }) => {
+    const { assertFund } = await import("@/lib/fund-tabs.server");
+    await assertFund(context.userId, data.fundId);
+    const d = await db();
+    const { data: files } = await d.from("fund_files").select("id, title, status, created_at").eq("offering_id", data.fundId).eq("template_key", "operating_agreement").is("deleted_at", null).order("created_at", { ascending: false });
+    const out: Record<string, { status: string; signer: string | null; sentAt: string | null }> = {};
+    for (const f of (files ?? []) as any[]) {
+      if (out[f.title]) continue;
+      const { data: sig } = await d.from("fund_file_signatures").select("signer_name, status, sent_at, signed_at").eq("file_id", f.id).neq("status", "cancelled").order("created_at", { ascending: false }).limit(1).maybeSingle();
+      if (!sig) continue;
+      out[f.title] = { status: f.status === "signed" || sig.signed_at ? "signed" : "sent", signer: sig.signer_name ?? null, sentAt: sig.sent_at ?? null };
+    }
+    return out;
   });

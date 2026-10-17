@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { fundTemplateDocumentUrlFn, listFundTemplateDocumentsFn, removeFundTemplateDocumentFn } from "@/lib/fund-doc-templates.functions";
-import { fundSigningContextFn, sendTemplateDocToSignatoryFn } from "@/lib/fund-file-signing.functions";
+import { fundSigningContextFn, sendTemplateDocToSignatoryFn, templateDocSendStatusFn } from "@/lib/fund-file-signing.functions";
 import { activateDocumentVersionFn } from "@/lib/fund-setup-canonical.functions";
 import { fmtDate } from "./shared";
 
@@ -33,6 +33,8 @@ export function TemplateDocumentsCard({ fundId }: { fundId: string }) {
     onSuccess: () => { toast.success("Deleted"); qc.invalidateQueries(); },
     onError: (e: Error) => toast.error(e.message),
   });
+  const statusFn = useServerFn(templateDocSendStatusFn);
+  const sq = useQuery({ queryKey: ["template-doc-sends", fundId], queryFn: () => statusFn({ data: { fundId } }) });
   const docs = q.data ?? [];
   if (!q.isLoading && docs.length === 0) return null;
   return (
@@ -51,11 +53,12 @@ export function TemplateDocumentsCard({ fundId }: { fundId: string }) {
                   <p className="text-xs text-muted-foreground">
                     Made {fmtDate(d.usedAt)} · {d.signers.length ? `Signs: ${d.signers.map((r: string, i: number) => `${i + 1}. ${ROLE[r] ?? r}`).join(", ")}` : "No signatures"}
                   </p>
+                  {sq.data?.[d.title] && <p className="text-xs font-medium text-primary">{sq.data[d.title].status === "signed" ? "Signed" : "Sent"} · {sq.data[d.title].signer ?? "Fund manager"}{sq.data[d.title].sentAt ? ` · ${fmtDate(sq.data[d.title].sentAt!)}` : ""}{sq.data[d.title].status === "sent" ? " · waiting to sign" : ""}</p>}
                 </div>
                 <div className="flex items-center gap-2">
                   {d.isActive && <Badge variant="outline">In use</Badge>}
                   <Button size="sm" variant="outline" disabled={!d.versionId} onClick={() => setReview(d)}>Review</Button>
-                  {d.isActive && d.signers.length > 0 && d.signers.every((r: string) => r === "fund_signatory") && <Button size="sm" onClick={() => setSendFor(d)}>Send for signature</Button>}
+                  {d.isActive && d.signers.length > 0 && d.signers.every((r: string) => r === "fund_signatory") && sq.data?.[d.title]?.status !== "signed" && <Button size="sm" onClick={() => setSendFor(d)}>{sq.data?.[d.title] ? "Resend" : "Send for signature"}</Button>}
                   {!d.isActive && d.version && <Button size="sm" disabled={useVersion.isPending || (d.signers.length > 0 && d.signingStatus !== "confirmed")} onClick={() => useVersion.mutate(d)}>Use this version</Button>}
                   {d.canDelete && <Button size="sm" variant="ghost" disabled={rm.isPending} onClick={() => { if (confirm(`Delete "${d.title}"? It hasn't been sent, and it stays in Audit History.`)) rm.mutate(d); }}>Delete</Button>}
                 </div>
