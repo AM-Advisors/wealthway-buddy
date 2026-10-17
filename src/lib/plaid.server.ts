@@ -113,3 +113,26 @@ export function getAuthNumbers(accessToken: string) {
     numbers: { ach: { account_id: string; account: string; routing: string; wire_routing: string | null }[] };
   }>("/auth/get", { access_token: accessToken });
 }
+
+/** One-time bank check (Auth + Identity). No webhook, no transactions; the connection is removed right after. */
+export function createVerifyLinkToken(opts: { userId: string }) {
+  return call<{ link_token: string; expiration: string }>("/link/token/create", {
+    user: { client_user_id: opts.userId },
+    client_name: "Harmonious",
+    products: ["auth", "identity"],
+    country_codes: ["US"],
+    language: "en",
+    ...(process.env["PLAID_REDIRECT_URI"] ? { redirect_uri: process.env["PLAID_REDIRECT_URI"] } : {}),
+  });
+}
+
+export function getIdentity(accessToken: string) {
+  return call<{ accounts: (PlaidAccount & { owners: { names: string[] }[] })[]; item: { institution_id: string | null } }>(
+    "/identity/get",
+    { access_token: accessToken },
+  );
+}
+
+export function removeItem(accessToken: string) {
+  return call<{ removed?: boolean }>("/item/remove", { access_token: accessToken });
+}

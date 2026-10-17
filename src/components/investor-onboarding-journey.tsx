@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { InvestorBankVerify } from "@/components/investor-bank-verify";
 import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -465,6 +466,7 @@ function Fund({ d, onboardingId, done }: { d: any; onboardingId: string; done: (
                   : null}
                 <p><strong>Reference:</strong> {f.instructions.reference}</p>
                 <p><strong>Amount:</strong> {money(f.instructions.expectedAmountCents)}</p>
+                {(f.instructions.methods ?? []).some((m: any) => m.method === "ach") && <InvestorBankVerify onboardingId={onboardingId} />}
                 {(f.instructions.methods ?? []).length > 0 && (
                   <div className="space-y-2 pt-2">
                     <p className="font-semibold">Ways you can send it</p>
