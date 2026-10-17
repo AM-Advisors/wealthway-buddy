@@ -2,7 +2,7 @@
 
 ## Make Thomas text codes live (2026-10-17)
 - [x] Twilio has SMS-capable +1 682-305-2462 and $45.50 credit; sender configured; 21 focused tests passed. App SMS is freshness-only, not hosted sign-in MFA.
-- [ ] Publish current contact and MFA changes
+- [x] Publishing requested for current contact and MFA changes; deployment completion not yet verified
 - [ ] Enable and verify Thomas selecting phone codes — blocked: secondary phone remains contact-only; hosted phone-MFA configuration requires user settings and enrollment, not an app-code bypass
 
 ## Thomas secondary contacts (2026-10-17)
