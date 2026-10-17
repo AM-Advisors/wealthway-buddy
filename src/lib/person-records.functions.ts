@@ -71,7 +71,12 @@ export const savePersonRecordFn = createServerFn({ method: "POST" }).middleware(
     for (const [k, v] of Object.entries(data.fields)) if (v !== undefined) f[k] = v === "" ? null : v;
     if (f["email"]) f["email"] = String(f["email"]).toLowerCase();
     if (f["secondary_email"] !== undefined) {
-      const cleaned = cleanSecondaryEmail(f["email"] ?? null, f["secondary_email"]);
+      let primary = (f["email"] as string | null) ?? null;
+      if (!primary && data.id) {
+        const { data: cur } = await d.from("persons").select("email").eq("id", data.id).maybeSingle();
+        primary = (cur as any)?.email ?? null;
+      }
+      const cleaned = cleanSecondaryEmail(primary, f["secondary_email"]);
       if (!cleaned.ok) throw new Error(cleaned.error);
       f["secondary_email"] = cleaned.value;
     }
