@@ -1947,6 +1947,13 @@
       "when": 1792262905072,
       "tag": "0277_migration",
       "breakpoints": true
+    },
+    {
+      "idx": 278,
+      "version": "7",
+      "when": 1792275369983,
+      "tag": "0278_fund_origin_classification",
+      "breakpoints": true
     }
   ]
 }

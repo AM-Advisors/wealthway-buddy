@@ -122,7 +122,7 @@ export const getClientFund = createServerFn({ method: "GET" })
 
     const { data: f } = await db
       .from("offerings")
-      .select("id, name, legal_entity_name, reg_type, is_open, fund_type, fund_type_other, entity_type, state_formed, date_formed, target_raise_cents")
+      .select("id, name, legal_entity_name, reg_type, is_open, fund_type, fund_type_other, entity_type, state_formed, date_formed, target_raise_cents, fund_origin")
       .eq("id", data.fundId)
       .maybeSingle();
     if (!f) throw new Error("Fund not found.");

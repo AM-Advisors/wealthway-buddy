@@ -34238,6 +34238,7 @@ export type Database = {
           ein_workflow_status: string | null
           entity_type: string | null
           form_d_responsibility: string | null
+          fund_origin: string | null
           fund_signatory_person_id: string | null
           fund_type: string | null
           fund_type_other: string | null
@@ -34317,6 +34318,7 @@ export type Database = {
           ein_workflow_status?: string | null
           entity_type?: string | null
           form_d_responsibility?: string | null
+          fund_origin?: string | null
           fund_signatory_person_id?: string | null
           fund_type?: string | null
           fund_type_other?: string | null
@@ -34396,6 +34398,7 @@ export type Database = {
           ein_workflow_status?: string | null
           entity_type?: string | null
           form_d_responsibility?: string | null
+          fund_origin?: string | null
           fund_signatory_person_id?: string | null
           fund_type?: string | null
           fund_type_other?: string | null

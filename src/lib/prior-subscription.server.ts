@@ -95,6 +95,7 @@ async function onboardingIn(offeringId: string, onboardingId: string) {
 
 export async function recordPrior(userId: string, input: { offeringId: string; onboardingId: string; commitmentCents: number; fundedCents: number; signedOn: string; evidenceItemIds: string[]; reason?: string | null | undefined }) {
   await requireManager(userId);
+  await (await import("@/lib/fund-origin.server")).requireMigrationFund(input.offeringId);
   await onboardingIn(input.offeringId, input.onboardingId);
   if (input.fundedCents > input.commitmentCents) throw new Error("Funded amount can't be more than the commitment.");
   if (new Date(input.signedOn) > new Date()) throw new Error("The signed date can't be in the future.");
