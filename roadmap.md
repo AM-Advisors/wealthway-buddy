@@ -52,3 +52,11 @@
 - [x] EIN + IRS letter box, Banking (full numbers) + bank letter box
 - [x] Finished sections become summary boxes with separate Edit panel
 - [ ] Investor levels — waiting on what "levels" means
+
+## MFA ease options (2026-10-17)
+- [x] Remember this device (30 days) for in-app step-ups; revoking on "sign out other sessions" and approved MFA reset; Security page card to forget devices
+- [x] Emailed-code fallback (single-use 10-minute code, 3/hour, 5 attempts, audited) for tax-document downloads
+- [x] Assurance floor kept: session must still be aal2; device/email proof covers freshness only (27 focused tests; build green)
+- [x] Email fallback verified signed in (code requested, wrong code rejected with attempt tracking); remember-device correctly refused without a second step
+- [ ] Remembered-device skip shown in the real UI — needs an aal2 session from a real authenticator sign-in (preview sessions are aal1 by design)
+- [ ] Phone (SMS) codes — blocked: hosted sign-in has phone sign-in off and there is no Twilio connection
