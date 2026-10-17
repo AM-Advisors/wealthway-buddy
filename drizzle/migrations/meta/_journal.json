@@ -1905,6 +1905,13 @@
       "when": 1792187888853,
       "tag": "0271_fund_setup_entered_facts",
       "breakpoints": true
+    },
+    {
+      "idx": 272,
+      "version": "7",
+      "when": 1792255722771,
+      "tag": "0272_mfa_ease_options",
+      "breakpoints": true
     }
   ]
 }
