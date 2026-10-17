@@ -50,7 +50,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-export function FundSetupCanonical({ offeringId }: { offeringId: string }) {
+export function FundSetupCanonical({ offeringId, staffOnly = false }: { offeringId: string; staffOnly?: boolean }) {
   const qc = useQueryClient();
   const load = useServerFn(getFundSetupOverview);
   const q = useQuery({ queryKey: ["fund-setup-canonical", offeringId], queryFn: () => load({ data: { offeringId } }) });
@@ -60,6 +60,15 @@ export function FundSetupCanonical({ offeringId }: { offeringId: string }) {
   if (q.error || !q.data) return <p className="text-sm text-destructive">Fund setup couldn't be loaded.</p>;
   const d = q.data;
 
+  if (staffOnly) return (
+    <div className="space-y-6">
+      <LegalNameCard d={d} offeringId={offeringId} onSaved={refresh} />
+      <FundSetupPhase3 offeringId={offeringId} onChanged={refresh} />
+      <FormationRecordCard offeringId={offeringId} />
+      <FundServicesCard offeringId={offeringId} onChanged={refresh} />
+      <LaunchRequirements />
+    </div>
+  );
   return (
     <div className="space-y-6">
       <Card>

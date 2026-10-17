@@ -174,7 +174,19 @@ export function FundSetupForm({ offeringId, mode, staffExtras }: { offeringId: s
       </SetupSection>}
 
       {isStaff && staffExtras && (
-        <SetupSection open={open} setOpen={setOpen} id="staff" title="Harmonious only" status={<Chip tone="wait">Staff</Chip>}>{staffExtras}</SetupSection>
+        (() => { const forUs = (d.steps as any[]).filter((s) => s.status === "waiting_harmonious"); return (
+        <SetupSection open={open} setOpen={setOpen} id="staff" title="Harmonious only" status={<Chip tone={forUs.length ? "miss" : "done"}>{forUs.length ? `${forUs.length} for Harmonious` : "Nothing needed"}</Chip>}>
+          <div className="rounded-xl border bg-background p-4">
+            <h4 className="text-sm font-semibold">Waiting on Harmonious</h4>
+            {forUs.length ? <ul className="mt-2 space-y-2 text-sm">{forUs.map((s) => (
+              <li key={s.step} className="flex flex-wrap justify-between gap-2 border-b pb-2 last:border-0">
+                <span><span className="capitalize">{String(s.step).replace(/_/g, " ")}</span>{s.missing?.length ? <span className="block text-xs text-muted-foreground">Missing: {(s.missing as string[]).join(", ")}</span> : null}</span>
+                <a className="text-primary underline" href={`#setup-form-${s.step === "document" ? "documents" : s.step}`}>Go to step</a>
+              </li>))}</ul>
+              : <p className="mt-1 text-sm text-muted-foreground">Nothing needed from Harmonious right now.</p>}
+          </div>
+          {staffExtras}
+        </SetupSection>); })()
       )}
     </div>
   );
