@@ -13,7 +13,7 @@ import { listPersonRecordsFn, refreshKycLinkFn, runDocumentCheckFn, savePersonRe
 
 const FIELDS: [string, string][] = [
   ["legal_first_name", "First name"], ["legal_middle_name", "Middle name"], ["legal_last_name", "Last name"], ["preferred_name", "Preferred name"],
-  ["email", "Email"], ["phone", "Phone"], ["date_of_birth", "Date of birth (YYYY-MM-DD)"], ["citizenship_country", "Citizenship"],
+  ["email", "Email"], ["secondary_email", "Secondary email (gets copies)"], ["phone", "Phone"], ["date_of_birth", "Date of birth (YYYY-MM-DD)"], ["citizenship_country", "Citizenship"],
   ["residence_country", "Country of residence"], ["address_line1", "Address line 1"], ["address_line2", "Address line 2"], ["city", "City"],
   ["region", "State"], ["postal_code", "ZIP"], ["country", "Country"],
 ];
@@ -46,7 +46,7 @@ export function PersonRecords() {
             <div key={p.id} className="flex flex-wrap items-start justify-between gap-3 p-3 text-sm">
               <div className="min-w-0 space-y-1">
                 <p className="font-medium">{p.name}</p>
-                <p className="text-xs text-muted-foreground">{p.email ?? "No email"}{p.user_id ? " · has login" : ""}</p>
+                <p className="text-xs text-muted-foreground">{p.email ?? "No email"}{p.secondary_email ? ` · copies to ${p.secondary_email}` : ""}{p.user_id ? " · has login" : ""}</p>
                 <div className="flex flex-wrap gap-1">{badge("KYC", p.kyc_status)}{badge("AML", p.aml_status)}</div>
                 {p.checks.map((c: any) => (
                   <p key={c.id} className="text-xs text-muted-foreground">

@@ -22,9 +22,11 @@ async function emailSigner(d: any, sig: any) {
     const { data: o } = await d.from("offerings").select("name").eq("id", sig.offering_id).maybeSingle();
     const { data: f } = await d.from("fund_files").select("title").eq("id", sig.file_id).maybeSingle();
     const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+    const { secondaryCcFor } = await import("@/lib/person-emails.server");
+    const secondary = await secondaryCcFor(sig.signer_email);
     const r = await sendTemplateEmail("manager-alert", sig.signer_email, {
       idempotencyKey: `fund-file-sign:${sig.id}`,
-      cc: TEAM_EMAIL,
+      cc: secondary ? [TEAM_EMAIL, secondary] : TEAM_EMAIL,
       templateData: {
         managerName: sig.signer_name,
         headline: `Please sign: ${f?.title ?? "a document"}`,

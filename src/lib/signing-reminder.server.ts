@@ -39,8 +39,10 @@ export async function sendSigningReminder(actorId: string, input: {
   const { data: o } = input.offeringId ? await d.from("offerings").select("name").eq("id", input.offeringId).maybeSingle() : { data: null };
   const { data: me } = await d.from("profiles").select("legal_name").eq("user_id", actorId).maybeSingle();
   const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+  const { secondaryCcFor } = await import("@/lib/person-emails.server");
+  const secondary = await secondaryCcFor(input.recipientEmail);
   const r: any = await sendTemplateEmail("signing-reminder", input.recipientEmail, {
-    cc: "operations@harmonious.co", inboxForAnyUser: true,
+    cc: secondary ? ["operations@harmonious.co", secondary] : "operations@harmonious.co", inboxForAnyUser: true,
     templateData: { recipientName: input.recipientName.split(/\s+/)[0] || "there", documentTitle: input.documentTitle, fundName: input.contextName ?? o?.name ?? "your fund", steps: input.steps, requestedBy: me?.legal_name ?? undefined, ctaUrl, firstTime },
   });
   const sent = r?.sent !== false;

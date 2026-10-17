@@ -99,7 +99,9 @@ export async function sendDocumentsToInvestors(userId: string, input: { offering
     let emailed = false;
     if (email) {
       try {
-        const r = await sendTemplateEmail("documents-sent", email, { templateData: {
+        const { secondaryCcFor } = await import("@/lib/person-emails.server");
+        const secondary = await secondaryCcFor(email);
+        const r = await sendTemplateEmail("documents-sent", email, { ...(secondary ? { cc: secondary } : {}), templateData: {
           investorName: inv.name ?? "", fundName: fund?.name ?? "your fund", senderName: sender?.full_name ?? "Your fund manager",
           documents: mine.map((d) => d.title), note: input.note || "", ctaUrl: `${PORTAL}/investment/${inv.onboardingId}`,
         } });

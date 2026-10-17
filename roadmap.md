@@ -60,3 +60,8 @@
 - [x] Email fallback verified signed in (code requested, wrong code rejected with attempt tracking); remember-device correctly refused without a second step
 - [ ] Remembered-device skip shown in the real UI — needs an aal2 session from a real authenticator sign-in (preview sessions are aal1 by design)
 - [ ] Phone (SMS) codes — blocked: hosted sign-in has phone sign-in off and there is no Twilio connection
+
+## Secondary email for people (2026-10-17)
+- [x] persons.secondary_email column + validation (app + DB check); staff edit field in People & Access; Thomas Morgan Jr. set to morgato27@gmail.com
+- [x] Copies (CC) of informational emails to the secondary address: signing requests, signing reminders, document sends, identity-check links
+- [x] Security line kept: codes, invites and password resets never go to the secondary address (verified signed in; 4 unit tests; build green)

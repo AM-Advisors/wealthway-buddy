@@ -12,6 +12,7 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/lib/require-auth";
 import { OPS_STAFF_ROLES } from "@/lib/ops-capabilities";
+import { cleanSecondaryEmail } from "@/lib/person-emails";
 
 const DIDIT = "https://verification.didit.me/v2";
 
@@ -33,7 +34,7 @@ function logPerson(personId: string, uid: string, action: string, detail: Record
 }
 const nm = (p: any) => p.preferred_name || [p.legal_first_name, p.legal_last_name].filter(Boolean).join(" ") || p.email || "Unnamed";
 
-const COLS = "id, legal_first_name, legal_middle_name, legal_last_name, preferred_name, email, phone, date_of_birth, citizenship_country, residence_country, address_line1, address_line2, city, region, postal_code, country, kyc_status, aml_status, kyc_verified_at, aml_screened_at, user_id, is_test_demo";
+const COLS = "id, legal_first_name, legal_middle_name, legal_last_name, preferred_name, email, secondary_email, phone, date_of_birth, citizenship_country, residence_country, address_line1, address_line2, city, region, postal_code, country, kyc_status, aml_status, kyc_verified_at, aml_screened_at, user_id, is_test_demo";
 
 export const listPersonRecordsFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((x: unknown) => z.object({ search: z.string().trim().max(100).default("") }).parse(x))
@@ -53,7 +54,7 @@ export const listPersonRecordsFn = createServerFn({ method: "POST" }).middleware
 const personFields = z.object({
   legal_first_name: z.string().trim().max(100).optional(), legal_middle_name: z.string().trim().max(100).optional(),
   legal_last_name: z.string().trim().max(100).optional(), preferred_name: z.string().trim().max(100).optional(),
-  email: z.string().trim().max(200).optional(), phone: z.string().trim().max(40).optional(),
+  email: z.string().trim().max(200).optional(), secondary_email: z.string().trim().max(200).optional(), phone: z.string().trim().max(40).optional(),
   date_of_birth: z.string().trim().regex(/^(\d{4}-\d{2}-\d{2})?$/, "Use YYYY-MM-DD").optional(),
   citizenship_country: z.string().trim().max(60).optional(), residence_country: z.string().trim().max(60).optional(),
   address_line1: z.string().trim().max(200).optional(), address_line2: z.string().trim().max(200).optional(),
@@ -69,6 +70,16 @@ export const savePersonRecordFn = createServerFn({ method: "POST" }).middleware(
     const f: Record<string, any> = {};
     for (const [k, v] of Object.entries(data.fields)) if (v !== undefined) f[k] = v === "" ? null : v;
     if (f["email"]) f["email"] = String(f["email"]).toLowerCase();
+    if (f["secondary_email"] !== undefined) {
+      let primary = (f["email"] as string | null) ?? null;
+      if (!primary && data.id) {
+        const { data: cur } = await d.from("persons").select("email").eq("id", data.id).maybeSingle();
+        primary = (cur as any)?.email ?? null;
+      }
+      const cleaned = cleanSecondaryEmail(primary, f["secondary_email"]);
+      if (!cleaned.ok) throw new Error(cleaned.error);
+      f["secondary_email"] = cleaned.value;
+    }
     if (data.id) {
       const { error } = await d.from("persons").update({ ...f, updated_at: new Date().toISOString() }).eq("id", data.id);
       if (error) throw new Error(error.message);
