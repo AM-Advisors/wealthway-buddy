@@ -93,3 +93,8 @@
 - [x] Text option appears only when a Twilio sender number is configured AND a mobile number is on the person's record; a texted code can never satisfy an emailed-code request (12 focused tests; build green)
 - [x] Sender number and account credit — verified SMS-capable +1 682-305-2462, $45.50 balance; TWILIO_FROM_NUMBER configured
 - [ ] Turn-on walkthrough in the real UI — needs the sender number above
+
+## Erebor bank waiting label (2026-10-17)
+- [x] Confirm banking_account is complete on Erebor; guided setup now consumes the same bankOnFile evidence as the manager setup loader.
+- [x] Regression tests cover completion without a submission and replacement-review precedence.
+- [ ] Signed-in page verification — QA-only browser policy prevents opening real-fund pages during testing.

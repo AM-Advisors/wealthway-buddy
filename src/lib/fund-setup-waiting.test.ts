@@ -1,7 +1,20 @@
 import { describe, expect, it } from "vitest";
-import { isSetupFile, redactSensitive, setupDefaults, stepStatus, waitingOnViewer } from "@/lib/fund-setup-waiting";
+import { bankSetupStatus, isSetupFile, redactSensitive, setupDefaults, stepStatus, waitingOnViewer } from "@/lib/fund-setup-waiting";
 
 describe("guided setup", () => {
+  it("completes banking from the fund record without a manager submission", () => {
+    expect(bankSetupStatus(true, null)).toBe("done");
+    expect(bankSetupStatus(false, null)).toBe("waiting_manager");
+  });
+  it("keeps replacement bank submissions waiting for review", () => {
+    expect(bankSetupStatus(true, "submitted")).toBe("waiting_harmonious");
+  });
+  it("keeps returned bank submissions needing changes", () => {
+    expect(bankSetupStatus(true, "returned")).toBe("needs_changes");
+  });
+  it("recognizes an approved bank submission", () => {
+    expect(bankSetupStatus(false, "approved")).toBe("done");
+  });
   it("projects step owner", () => {
     expect(stepStatus({ submission: "submitted", complete: false })).toBe("waiting_harmonious");
     expect(stepStatus({ submission: "returned", complete: true })).toBe("needs_changes");

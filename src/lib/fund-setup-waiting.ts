@@ -32,6 +32,11 @@ export function stepStatus(i: StepInput): StepStatus {
   return "waiting_manager";
 }
 
+/** Canonical banking completion counts even when no manager uploaded a letter. */
+export function bankSetupStatus(bankOnFile: boolean, submission: StepInput["submission"]): StepStatus {
+  return stepStatus({ submission: submission ?? null, complete: bankOnFile || submission === "approved" });
+}
+
 /** How many steps are waiting on the viewer. */
 export function waitingOnViewer(statuses: readonly StepStatus[], viewerIsStaff: boolean): number {
   return statuses.filter((s) => (viewerIsStaff ? s === "waiting_harmonious" : s === "waiting_manager" || s === "needs_changes")).length;
