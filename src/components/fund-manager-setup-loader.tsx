@@ -59,11 +59,13 @@ export function FundManagerSetupLoader({ offeringId, compact = false }: { offeri
   };
   const missing = (sec: Section): string[] => sec === "document" ? (onFile?.documents?.length ? [] : ["at least one document"]) : sec === "bank" ? [] : FIELDS[sec].filter(([k]) => !known(sec)[k]?.trim()).map(([, l]) => l.replace(/ \(.*\)$/, ""));
   const order = Object.keys(SECTION_LABEL) as Section[];
-  const done = order.filter((s) => latest(s)?.status === "approved").length;
-  const firstOpen = order.find((s) => latest(s)?.status !== "approved") ?? null;
+  const onRecord = (s: Section) => s === "bank" && !!(onFile as any)?.bankOnFile && !["submitted", "returned"].includes(latest(s)?.status);
+  const isApproved = (s: Section) => latest(s)?.status === "approved" || onRecord(s);
+  const done = order.filter(isApproved).length;
+  const firstOpen = order.find((s) => !isApproved(s)) ?? null;
   const [expanded, setExpanded] = useState<Section | null | undefined>(undefined);
   const current = expanded === undefined ? firstOpen : expanded;
-  const waitingOn = (st?: string) => (st === "submitted" ? "Waiting for Harmonious review" : st === "returned" ? "Needs changes" : st === "approved" ? "Approved" : "Waiting on fund manager");
+  const waitingOn = (st?: string, s?: Section) => (st === "submitted" ? "Waiting for Harmonious review" : st === "returned" ? "Needs changes" : st === "approved" ? "Approved" : s && onRecord(s) ? "On file" : "Waiting on fund manager");
   if (q.isPending) return <Card><CardContent className="p-4 text-sm text-muted-foreground">Loading fund setup…</CardContent></Card>;
   if (compact && done === order.length) return <p className="rounded-lg border bg-card px-4 py-3 text-sm"><Check className="mr-2 inline h-4 w-4 text-primary" />Fund setup complete.</p>;
 
@@ -83,7 +85,7 @@ export function FundManagerSetupLoader({ offeringId, compact = false }: { offeri
         <ol className="space-y-2">
           {order.map((s, idx) => {
             const l = latest(s);
-            const isDone = l?.status === "approved";
+            const isDone = isApproved(s);
             const isOpen = current === s;
             const reviewNow = isStaff && l?.status === "submitted";
             const sectionItems = items.filter((i: any) => i.section === s);
@@ -95,7 +97,7 @@ export function FundManagerSetupLoader({ offeringId, compact = false }: { offeri
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block font-medium">{s === "document" ? "Documents" : SECTION_LABEL[s]}</span>
-                    <span className="block text-xs text-muted-foreground">{!l && missing(s).length && Object.values(known(s)).some(Boolean) ? "Missing info" : waitingOn(l?.status)}</span>
+                    <span className="block text-xs text-muted-foreground">{!l && missing(s).length && Object.values(known(s)).some(Boolean) ? "Missing info" : waitingOn(l?.status, s)}</span>
                   </span>
                   {l ? <StatusBadge status={l.status} /> : <Badge variant="outline">{Object.values(known(s)).some(Boolean) ? "Missing info" : "Not started"}</Badge>}
                   <ChevronDown className={cn("h-4 w-4 shrink-0 text-muted-foreground transition-transform", isOpen && "rotate-180")} />
