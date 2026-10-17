@@ -1,5 +1,10 @@
 # Roadmap
 
+## Make Thomas text codes live (2026-10-17)
+- [ ] Check Twilio sender and balance, and secure phone-code sign-in support
+- [ ] Publish current contact and MFA changes
+- [ ] Enable and verify Thomas selecting phone codes — requires a verified authentication phone and supported sign-in MFA
+
 ## Thomas secondary contacts (2026-10-17)
 - [x] Add secondary phone storage and staff editing; show both secondary contacts in View account
 - [x] Save requested phone on Thomas's linked person with history; verified read-back, 17 tests passed, build OK
