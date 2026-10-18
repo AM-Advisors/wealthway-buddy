@@ -1,5 +1,10 @@
 # Roadmap
 
+## Applicable investor-profile documents
+- [ ] Require only applicable investor documents and reuse saved evidence for the same investing profile.
+- [ ] Add an Update option preserving prior documents and review safeguards; keep investment signatures separate.
+- [ ] Run focused requirement, reuse and authorization checks; authenticated QA requires isolated synthetic access.
+
 ## Investor-link layout
 - [x] Put required investor steps before supporting documents and status panels.
 - [x] Add account setup below dedicated-link login and retain the invitation through registration.
