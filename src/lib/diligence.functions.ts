@@ -674,7 +674,7 @@ async function logActivity(
   });
 }
 
-const DEFAULT_NDA = `CONFIDENTIALITY ACKNOWLEDGEMENT
+export const DEFAULT_NDA = `CONFIDENTIALITY ACKNOWLEDGEMENT
 
 The materials in this diligence room are confidential and are provided solely so that you can evaluate a possible investment. By continuing you agree that you will:
 
@@ -685,7 +685,7 @@ The materials in this diligence room are confidential and are provided solely so
 
 This acknowledgement is recorded with your name, the date and time, and your network address.`;
 
-function ndaHash(text: string, version: number) {
+export function ndaHash(text: string, version: number) {
   let h = 0;
   const src = `${version}::${text}`;
   for (let i = 0; i < src.length; i += 1) h = (h * 31 + src.charCodeAt(i)) | 0;
