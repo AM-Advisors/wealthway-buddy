@@ -50,7 +50,8 @@ export async function w9State(sb: any, uid: string, fundId: string) {
   ]);
   if (error) throw new Error("W-9 signature status could not be loaded.");
   const { data: docs } = setup ? await db().from("fund_setup_documents").select("id, created_at, storage_path").eq("setup_id", setup.id).in("doc_type", ["w9", "signed_w9"]).eq("is_current", true).order("created_at", { ascending: false }).limit(1) : { data: [] };
-  const sources = [...(tax ?? []).map((x: any) => ({ ...x, ref: `fund_tax_documents:${x.id}` })), ...(files ?? []).map((x: any) => ({ ...x, ref: `fund_files:${x.id}` })), ...(docs ?? []).filter((x: any) => x.storage_path !== request?.signed_path).map((x: any) => ({ ...x, ref: `fund_setup_documents:${x.id}` }))].sort((x, y) => y.created_at.localeCompare(x.created_at));
+  const { data: submissions } = await db().from("fund_manager_submissions").select("id, submitted_at").eq("offering_id", fundId).eq("doc_kind", "signed_w9").in("status", ["submitted", "approved"]).order("submitted_at", { ascending: false }).limit(1);
+  const sources = [...(tax ?? []).map((x: any) => ({ ...x, ref: `fund_tax_documents:${x.id}` })), ...(files ?? []).map((x: any) => ({ ...x, ref: `fund_files:${x.id}` })), ...(docs ?? []).filter((x: any) => x.storage_path !== request?.signed_path).map((x: any) => ({ ...x, ref: `fund_setup_documents:${x.id}` })), ...(submissions ?? []).map((x: any) => ({ ...x, created_at: x.submitted_at, ref: `fund_manager_submissions:${x.id}` }))].sort((x, y) => y.created_at.localeCompare(x.created_at));
   const source = sources[0] ?? null;
   const ids = (managers ?? []).map((x: any) => x.user_id);
   const { data: profiles } = ids.length ? await db().from("profiles").select("user_id, legal_name, email").in("user_id", ids) : { data: [] };
@@ -67,6 +68,8 @@ export async function prepareW9(sb: any, uid: string, fundId: string, signerId: 
   if (state.request?.status === "pending") return { id: state.request.id };
   if (state.request?.status === "signed" && !state.newerSource) throw new Error("The current W-9 is already signed.");
   const fill = await facts(sb, fundId);
+  const { data: setup } = await db().from("fund_setups").select("id").eq("offering_id", fundId).maybeSingle();
+  if (!setup) throw new Error("Save the fund setup before preparing its W-9.");
   fill.federalClassification = classification as typeof fill.federalClassification;
   fill.llcClass = classification === "llc" ? llcClass : null;
   const missing = fundW9Missing(fill);
@@ -122,5 +125,15 @@ export async function signW9(uid: string, fundId: string, requestId: string, sig
   await db().from("staff_tasks").update({ status: "done" }).eq("offering_id", fundId).eq("title", "Review and sign the fund W-9").neq("status", "done");
   await (await import("@/lib/fund-audit.server")).logFundAudit(uid, { offeringId: fundId, eventType: "fund_w9_signed", summary: "Fund manager signed the fund W-9", values: { requestId: r.id, signedAt: now } });
   await (await import("@/lib/ops-slack-notify.server")).notifySubmission({ kind: "fund_w9_signed", title: "Fund W-9 signed", offeringId: fundId, submittedBy: uid, ref: r.id, path: `/ops/fund/${fundId}?tab=setup`, completed: true }).catch(() => null);
+  return { ok: true };
+}
+
+export async function cancelW9(uid: string, fundId: string, requestId: string) {
+  const a = await access(uid, fundId);
+  const { data: r } = await db().from("fund_w9_signature_requests").select("signer_user_id, status").eq("id", requestId).eq("offering_id", fundId).maybeSingle();
+  if (!r || r.status !== "pending" || (!a.staff && r.signer_user_id !== uid)) throw new Error("Only an unsigned W-9 request may be cancelled by Harmonious or its assigned signer.");
+  const { error } = await db().from("fund_w9_signature_requests").update({ status: "cancelled" }).eq("id", requestId).eq("status", "pending");
+  if (error) throw new Error("The W-9 request could not be cancelled.");
+  await (await import("@/lib/fund-audit.server")).logFundAudit(uid, { offeringId: fundId, eventType: "fund_w9_cancelled", summary: "Unsigned fund W-9 request cancelled; original preserved", values: { requestId } });
   return { ok: true };
 }

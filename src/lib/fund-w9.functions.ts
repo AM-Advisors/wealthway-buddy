@@ -9,3 +9,5 @@ export const prepareFundW9Fn = createServerFn({ method: "POST" }).middleware([re
   .handler(async ({ context, data }) => (await import("@/lib/fund-w9.server")).prepareW9(context.supabase, context.userId, data.offeringId, data.signerId, data.classification, data.llcClass));
 export const signFundW9Fn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator(fund.extend({ requestId: z.string().uuid(), signedName: z.string().trim().min(2).max(200), signature: adoptedSignatureSchema, consent: z.literal(true) }).parse)
   .handler(async ({ context, data }) => (await import("@/lib/fund-w9.server")).signW9(context.userId, data.offeringId, data.requestId, data.signedName, data.signature));
+export const cancelFundW9Fn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator(fund.extend({ requestId: z.string().uuid() }).parse)
+  .handler(async ({ context, data }) => (await import("@/lib/fund-w9.server")).cancelW9(context.userId, data.offeringId, data.requestId));

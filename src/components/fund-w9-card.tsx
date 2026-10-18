@@ -6,12 +6,13 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { SignatureAdoptDialog } from "@/components/signature-adopt-dialog";
-import { fundW9StateFn, prepareFundW9Fn, signFundW9Fn } from "@/lib/fund-w9.functions";
+import { fundW9StateFn, prepareFundW9Fn, signFundW9Fn, cancelFundW9Fn } from "@/lib/fund-w9.functions";
 import { invalidateFund } from "@/lib/fund-query-keys";
 
 export function FundW9Card({ offeringId }: { offeringId: string }) {
   const qc = useQueryClient();
   const load = useServerFn(fundW9StateFn), prepare = useServerFn(prepareFundW9Fn), sign = useServerFn(signFundW9Fn);
+  const cancel = useServerFn(cancelFundW9Fn);
   const q = useQuery({ queryKey: ["fund-w9", offeringId], queryFn: () => load({ data: { offeringId } }) });
   const [signer, setSigner] = useState("");
   const [classification, setClassification] = useState("");
@@ -38,6 +39,7 @@ export function FundW9Card({ offeringId }: { offeringId: string }) {
       <Button size="sm" disabled={busy || !signerId || !currentClass} onClick={async () => { setBusy(true); try { await prepare({ data: { offeringId, signerId, classification: currentClass as any, llcClass: currentClass === "llc" ? (llc || d.details.classification.split(" ")[1] || undefined) as "C" | "S" | "P" | undefined : undefined } }); setReviewed(false); setConsent(false); await invalidateFund(qc, offeringId); toast.success(d.staff ? "W-9 ready for fund manager signature" : "W-9 ready to review"); } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); } }}>{d.staff ? "Prepare W-9 for manager signature" : "Prepare W-9 to review and sign"}</Button>
     </>}
     {myTurn && <><label className="flex items-start gap-2 text-sm"><Checkbox checked={consent} onCheckedChange={(v) => setConsent(v === true)} /><span>I reviewed the populated W-9, am authorized to sign for this fund, and adopt the certification printed on the form.</span></label><Button size="sm" disabled={!reviewed || !consent || busy} onClick={() => setAdopt(true)}><PenLine className="mr-2 h-4 w-4" />Sign W-9</Button></>}
+    {r?.status === "pending" && (d.staff || myTurn) && <Button size="sm" variant="ghost" disabled={busy} onClick={async () => { if (!window.confirm("Cancel this unsigned W-9 request? The original will be kept.")) return; setBusy(true); try { await cancel({ data: { offeringId, requestId: r.id } }); setReviewed(false); setConsent(false); await invalidateFund(qc, offeringId); } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); } }}>Cancel unsigned request</Button>}
     <SignatureAdoptDialog open={adopt} onOpenChange={setAdopt} defaultName={d.managers.find((m: { id: string; name: string }) => m.id === d.me)?.name} onAdopt={async (signature) => { if (!r) return; setBusy(true); try { await sign({ data: { offeringId, requestId: r.id, signedName: signature.name, signature: { method: signature.method, image: signature.image }, consent: true } }); await invalidateFund(qc, offeringId); toast.success("Signed W-9 saved to the fund"); } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); } }} />
   </section>;
 }
