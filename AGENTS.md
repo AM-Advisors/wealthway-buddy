@@ -12,8 +12,8 @@
 - Partition hosts/menus through host-routing.ts + navigation.ts; share fund engines — why: display grants no authority.
 - Never automate filings (except IRS e-filing of approved 1065s/K-1s per src/lib/AGENTS.md), tax payments, refunds, ACH/wire or provider money movement; server-side authorization only — why: user-mandated safety boundary.
 - Browser tests live in e2e/*.e2e.ts (Playwright, `bun run test:e2e`), run only against QA with synthetic sessions; helpers refuse production URLs — why: keep them out of unit runs and away from real data.
-- Sales uses the Operations shell for authorized Operations staff, while commercial-only Sales staff get a Sales-only menu — why: presentation must not imply wider Operations access.
-- Server functions import requireSupabaseAuth only from src/lib/require-auth.ts (same middleware, light context), never the generated module — why: its Database-typed context exceeds preview typecheck limits.
+- Sales uses Operations shell only for authorized Operations staff; commercial-only staff get Sales-only menus — why: no implied authority.
+- Server functions import requireSupabaseAuth only from src/lib/require-auth.ts, never the generated module — why: light context avoids preview typecheck limits.
 - Client and Operations share fund-workspace.tsx (mode client|harmonious); tab links retain fund ID and audience, staff controls use mode and actions keep server checks — why: one connected fund view, presentation grants no authority.
 - Offering Statement projects active fund_fee_terms on read/save — why: matches fund fees, carry and preferred return.
 - Setup %: fund-launch-summary.ts; banking: bankSetupStatus; Ops/manager launch: ManagerLaunchCard + invalidateFund — why: shared facts and actions, retained review.
@@ -24,7 +24,7 @@
 - Submission alerts go only through src/lib/ops-slack-notify.server.ts (best-effort, allow-listed fields, 5-minute dedupe in ops_slack_notifications, tags fund/client operations owner then account manager) - why: one sender, never blocks or leaks sensitive data.
 - Approved Didit sessions auto-apply identity details, KYC and AML onto the person via src/lib/didit-auto-apply.server.ts (webhook + questionnaire save; In Review/Declined never auto-apply; every change logged) - why: Didit is the KYC/KYB/AML authority, no duplicate human approval.
 - Live portal documents come only from approved document_sources: `box-shared:<link>` (read-only Box, files under allowed_root_ids) or `storage:portal-tax-documents` (private-bucket copies, paths under allowed_root_ids prefixes) in src/lib/document-providers.server.ts; all other live refs are refused - why: per-source Super Admin approval, never a broad Box/Drive connection.
-- Fund setup keeps one main Drive folder (offerings.drive_folder_url) plus a staff-only list of labeled links (offerings.drive_links) - why: funds have many Drive folders; links never change permissions.
+- Fund Drive: offerings.drive_folder_url is the main folder; offerings.drive_links holds staff-only labeled links — why: multiple folders, unchanged permissions.
 - Shared Fund Setup: fund-setup-form.tsx + fund-setup-form-model.ts; mode selects save path, never authority — why: one form.
 - "Add Fund or SPV" for clients, fund managers, Operations and Account Managers uses one engine (src/components/fund-request-engine.tsx + submitFundRequest); staff mode only skips the client payment after a server-side funds/prepare check - why: one creation path that cannot drift.
 - People & Access is the only directory; activity-tracker/user-insights/account-session-status show recorded evidence, never online presence; View account resets reuse admin-checked account-security — why: truthful audit, unchanged authority.
