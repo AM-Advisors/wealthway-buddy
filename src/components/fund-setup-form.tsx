@@ -147,7 +147,7 @@ export function FundSetupForm({ offeringId, mode, staffExtras }: { offeringId: s
       {fieldSection("basic")}
       {fieldSection("details")}
       {fieldSection("jurisdiction")}
-      {prior["entityType"] === "Series LLC" && <FormationEvidenceSection offeringId={offeringId} kinds={["formation", "certificate"]} />}
+      <FormationEvidenceSection offeringId={offeringId} kinds={["formation", "certificate"]} />
       <EinBox offeringId={offeringId} onChanged={refresh} />
       <FundW9Card offeringId={offeringId} />
       {fieldSection("offering")}

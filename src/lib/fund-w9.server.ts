@@ -36,8 +36,8 @@ export async function w9State(sb: any, uid: string, fundId: string) {
     db().from("fund_setups").select("id").eq("offering_id", fundId).maybeSingle(),
   ]);
   if (error) throw new Error("W-9 signature status could not be loaded.");
-  const { data: docs } = setup ? await db().from("fund_setup_documents").select("id, created_at").eq("setup_id", setup.id).in("doc_type", ["w9", "signed_w9"]).eq("is_current", true).order("created_at", { ascending: false }).limit(1) : { data: [] };
-  const sources = [...(tax ?? []).map((x: any) => ({ ...x, ref: `fund_tax_documents:${x.id}` })), ...(files ?? []).map((x: any) => ({ ...x, ref: `fund_files:${x.id}` })), ...(docs ?? []).map((x: any) => ({ ...x, ref: `fund_setup_documents:${x.id}` }))].sort((x, y) => y.created_at.localeCompare(x.created_at));
+  const { data: docs } = setup ? await db().from("fund_setup_documents").select("id, created_at, storage_path").eq("setup_id", setup.id).in("doc_type", ["w9", "signed_w9"]).eq("is_current", true).order("created_at", { ascending: false }).limit(1) : { data: [] };
+  const sources = [...(tax ?? []).map((x: any) => ({ ...x, ref: `fund_tax_documents:${x.id}` })), ...(files ?? []).map((x: any) => ({ ...x, ref: `fund_files:${x.id}` })), ...(docs ?? []).filter((x: any) => x.storage_path !== request?.signed_path).map((x: any) => ({ ...x, ref: `fund_setup_documents:${x.id}` }))].sort((x, y) => y.created_at.localeCompare(x.created_at));
   const source = sources[0] ?? null;
   const ids = (managers ?? []).map((x: any) => x.user_id);
   const { data: profiles } = ids.length ? await db().from("profiles").select("user_id, legal_name, email").in("user_id", ids) : { data: [] };
@@ -85,6 +85,8 @@ export async function signW9(uid: string, fundId: string, requestId: string, sig
   if (await sha256Hex(preview) !== r.preview_sha256) throw new Error("The reviewed W-9 changed. Prepare a new version.");
   const { PDFDocument, StandardFonts } = await import("pdf-lib");
   const pdf = await PDFDocument.load(preview);
+  // Remove the renderer's unsigned-preview record; replace it with the signature record below.
+  if (pdf.getPageCount() > 1) pdf.removePage(pdf.getPageCount() - 1);
   const image = await pdf.embedPng(pngBytesFromDataUrl(signature.image));
   const font = await pdf.embedFont(StandardFonts.Helvetica);
   const now = new Date().toISOString();

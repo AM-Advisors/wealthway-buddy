@@ -38,7 +38,7 @@ import {
 } from "@/lib/fund-setup-phase3";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { FormationEvidenceSection, RegulatoryFilingsCard } from "@/components/fund-setup-extras";
+import { RegulatoryFilingsCard } from "@/components/fund-setup-extras";
 import { OperationsBanking } from "@/components/operations-board";
 import { RequiredHere } from "@/components/fund-setup-checklist";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
