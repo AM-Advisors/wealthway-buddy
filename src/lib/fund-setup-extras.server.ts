@@ -156,7 +156,7 @@ export async function autoCompleteTasks(offeringId: string) {
       investment_target: !!o?.target_raise_cents,
     };
     // More steps that close themselves from data already recorded elsewhere (forward-only).
-    const [{ data: w9 }, { data: fees }, { data: sigs }, { data: team }, { data: docs }, { data: bank }, { data: elig }, { data: onb }, { data: reg }, { data: bp }] = await Promise.all([
+    const [{ data: w9 }, { data: fees }, { data: sigs }, { data: team }, { data: docs }, { data: bank }, { data: elig }, { data: onb }, { data: reg }, { data: bp }, { data: fundLetters }] = await Promise.all([
       db().from("fund_setup_documents").select("id").eq("setup_id", s.id).in("doc_type", ["signed_w9", "ein_letter"]).eq("is_current", true).limit(1),
       db().from("fund_fee_terms").select("id").eq("offering_id", offeringId).eq("status", "active").limit(1),
       db().from("fund_signatories").select("id").eq("offering_id", offeringId).eq("status", "active").limit(1),
@@ -167,9 +167,10 @@ export async function autoCompleteTasks(offeringId: string) {
       db().from("fund_onboarding_requirements").select("id").eq("setup_id", s.id).eq("required", true).limit(1),
       db().from("fund_regulatory_configs").select("id").eq("setup_id", s.id).not("reviewed_at", "is", null).limit(1),
       db().from("offerings").select("banking_path").eq("id", offeringId).maybeSingle(),
+      db().from("fund_files").select("id").eq("offering_id", offeringId).eq("category", "ein_letter").is("deleted_at", null).limit(1),
     ]);
     const docKinds = new Set(((docs ?? []) as any[]).flatMap((d) => [d.doc_type, d.document_category]).filter(Boolean));
-    done["entity_ein"] = done["entity_ein"] || !!w9?.length;
+    done["entity_ein"] = done["entity_ein"] || !!w9?.length || !!fundLetters?.length;
     done["economics_terms"] = !!fees?.length;
     done["client_signatories"] = !!sigs?.length;
     done["client_profile"] = !!team?.length;

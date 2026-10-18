@@ -102,9 +102,10 @@ async function controlledDocs(offeringId: string, docType: string) {
 export async function phase3Overview(sb: any, userId: string, offeringId: string) {
   const actor = await assertRead(userId, offeringId);
   const o = await offering(offeringId);
-  const [versions, einLetters, { data: detail }, setup] = await Promise.all([
+  const [versions, einLetters, w9Docs, { data: detail }, setup] = await Promise.all([
     bankVersions(sb, offeringId),
     controlledDocs(offeringId, "ein_letter"),
+    controlledDocs(offeringId, "signed_w9"),
     sb.rpc("get_offering_entity_details", { p_offering_id: offeringId }).maybeSingle(),
     db().from("fund_setups").select("id, fiscal_year_end").eq("offering_id", offeringId).maybeSingle(),
   ]);
@@ -137,7 +138,7 @@ export async function phase3Overview(sb: any, userId: string, offeringId: string
   const { data: econ } = setup.data ? await db().from("fund_economics_versions").select("id").eq("setup_id", setup.data.id).eq("status", "approved").limit(1) : { data: [] };
 
   const banking = bankingSection({ path: o.banking_path, harmoniousStatus: o.harmonious_bank_status, versions });
-  const entity = entitySection({ path: o.ein_path, hasEin, hasEinLetter: einLetters.some((d) => d.is_current), status: o.ein_workflow_status, basicsComplete: !!(o.entity_type && o.state_formed && o.date_formed) });
+  const entity = entitySection({ path: o.ein_path, hasEin, hasEinLetter: einLetters.some((d) => d.is_current), hasSignedW9: w9Docs.some((d) => d.is_current), status: o.ein_workflow_status, basicsComplete: !!(o.entity_type && o.state_formed && o.date_formed) });
   const services = (o.admin_services ?? {}) as Partial<Record<AdminService, ServiceChoice>>;
   const admin = adminSection({ services, formD: o.form_d_responsibility, blueSky: o.blue_sky_responsibility, regType: o.reg_type });
 
@@ -161,7 +162,7 @@ export async function phase3Overview(sb: any, userId: string, offeringId: string
       hasEin,
       einMasked: hasEin ? `••-•••${String((detail as any).ein).replace(/\D/g, "").slice(-4)}` : "",
       letters: einLetters.map((d) => ({ id: d.id, version: d.version, current: d.is_current, uploadedAt: d.created_at })),
-      w9OnFile: (await controlledDocs(offeringId, "signed_w9")).some((d) => d.is_current),
+      w9OnFile: w9Docs.some((d) => d.is_current),
       responsiblePersonId: o.ss4_responsible_person_id as string | null,
       ss4Prefilled: Object.keys(prefill),
       ss4Missing: missing,
@@ -250,7 +251,7 @@ export async function reviewBankVersion(sb: any, userId: string, input: { offeri
 
 // ------------------------------------------------------------------ controlled documents
 
-async function addControlledDoc(userId: string, offeringId: string, docType: string, title: string, path: string): Promise<string> {
+async function addControlledDoc(userId: string, offeringId: string, docType: string, title: string, path: string, uploadedRole = "harmonious"): Promise<string> {
   const sid = await setupId(offeringId);
   if (!sid) throw new Error("Save the Fund Details first so a setup record exists.");
   const existing = await controlledDocs(offeringId, docType);
@@ -266,7 +267,7 @@ async function addControlledDoc(userId: string, offeringId: string, docType: str
     status: "uploaded",
     investor_facing: false,
     uploaded_by: userId,
-    uploaded_role: "harmonious",
+    uploaded_role: uploadedRole,
     supersedes_id: current?.id ?? null,
   }).select("id").single();
   if (error) throw new Error(error.message);
@@ -343,7 +344,7 @@ export async function uploadSignedW9(userId: string, input: { offeringId: string
 export async function recordManagerSignedW9(userId: string, offeringId: string, path: string) {
   const { data: signature } = await db().from("fund_w9_signature_requests").select("id").eq("offering_id", offeringId).eq("signer_user_id", userId).eq("signed_path", path).eq("status", "signed").maybeSingle();
   if (!signature) throw new Error("The fund W-9 signature has not been recorded.");
-  await addControlledDoc(userId, offeringId, "signed_w9", "Signed fund W-9", path);
+  await addControlledDoc(userId, offeringId, "signed_w9", "Signed fund W-9", path, "fund_manager");
   await db().from("staff_tasks").update({ status: "done" }).eq("offering_id", offeringId).eq("title", W9_TASK).neq("status", "done");
   await (await import("@/lib/fund-setup-extras.server")).autoCompleteTasks(offeringId);
 }

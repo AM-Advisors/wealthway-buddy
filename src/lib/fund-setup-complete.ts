@@ -8,8 +8,8 @@ export function formatEin(raw: string) {
 }
 
 /** EIN box is complete once an EIN is on file and the IRS letter is uploaded. */
-export function einComplete(input: { status: string | null | undefined; hasLetter: boolean }) {
-  return input.status === "recorded" && input.hasLetter;
+export function einComplete(input: { status: string | null | undefined; hasLetter: boolean; hasSignedW9?: boolean }) {
+  return input.status === "recorded" && (input.hasLetter || input.hasSignedW9 === true);
 }
 
 /** Banking box is complete with a bank name, an account on file and the bank letter. */
