@@ -19,7 +19,7 @@
 - Setup %: fund-launch-summary.ts; banking: bankSetupStatus; Ops/manager launch: ManagerLaunchCard + invalidateFund — why: shared facts and actions, retained review.
 - Fund origin separates new/migration workflows; investor-progress-email uses canonical steps, audit frequency and the existing drain — why: no inferred takeover or duplicate engine.
 
-- Marketing/email/CSA STAR: src/lib/AGENTS.md — why: scoped rules.
+- Marketing/email/CSA STAR rules: src/lib/AGENTS.md.
 - Operations and Account Managers may review/approve others' internal work via src/lib/ops-capabilities.ts (never their own; money paths use capabilitiesFor(roles, { moneyPath: true })); tax, money and administration keep their own approvers - why: user-approved peer approval without widening money authority.
 - Submission alerts go only through src/lib/ops-slack-notify.server.ts (best-effort, allow-listed fields, 5-minute dedupe in ops_slack_notifications, tags fund/client operations owner then account manager) - why: one sender, never blocks or leaks sensitive data.
 - Approved Didit sessions auto-apply identity details, KYC and AML onto the person via src/lib/didit-auto-apply.server.ts (webhook + questionnaire save; In Review/Declined never auto-apply; every change logged) - why: Didit is the KYC/KYB/AML authority, no duplicate human approval.
@@ -35,4 +35,4 @@
 - Fund W-9: fund-w9.server.ts reuses pinned IRS PDFs and signature adoption; immutable fund_w9_signature_requests, assigned-manager-only signing — why: reviewed facts, no impersonation.
 - Series/IRS use fund-setup-extras evidence + scoped listFiles — why: one completion source.
 
-- Investor entry uses investor-entry-path.ts; task forms precede supporting panels — why: same investment, no new authority.
+- Investor entry uses investor-entry-path.ts; profile evidence uses investor_documents.investment_profile_id with retained originals and canonical requirement projection — why: collect once without approving KYC or reusing fund signatures.
