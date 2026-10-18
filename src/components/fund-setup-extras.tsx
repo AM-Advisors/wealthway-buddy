@@ -9,13 +9,14 @@ import {
   getFundSetupExtrasFn,
   removeRegulatoryFilingFn,
   saveFundProvidersFn,
-  uploadFormationEvidenceFn,
+  uploadFormationFileFn,
 } from "@/lib/fund-setup-extras.functions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { invalidateFund } from "@/lib/fund-query-keys";
 
 const US_STATES = "AL AK AZ AR CA CO CT DE DC FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA PR RI SC SD TN TX UT VT VA WA WV WI WY".split(" ");
 
@@ -98,20 +99,20 @@ const EVIDENCE: { kind: "formation" | "certificate" | "ein_letter"; label: strin
   { kind: "ein_letter", label: "IRS EIN letter" },
 ];
 
-export function FormationEvidenceSection({ offeringId }: { offeringId: string }) {
+export function FormationEvidenceSection({ offeringId, kinds }: { offeringId: string; kinds?: ("formation" | "certificate" | "ein_letter")[] }) {
   const { data } = useExtras(offeringId);
-  const upload = useServerFn(uploadFormationEvidenceFn);
-  const refresh = useRefresh();
+  const upload = useServerFn(uploadFormationFileFn);
+  const qc = useQueryClient();
+  const refresh = () => invalidateFund(qc, offeringId);
   const [busy, setBusy] = useState<string | null>(null);
   if (!data) return null;
   const onFile = async (kind: string, file: File | undefined) => {
     if (!file) return;
     setBusy(kind);
     try {
-      const path = `fund-setup-restricted/${offeringId}/${kind}/${Date.now()}-${file.name.replace(/[^\w.\-]+/g, "_")}`;
-      const { error } = await supabase.storage.from("fund-formation").upload(path, file);
-      if (error) throw new Error("The file couldn't be uploaded.");
-      await upload({ data: { offeringId, kind: kind as any, path } });
+      if (file.size > 10 * 1024 * 1024) throw new Error("Files must be 10 MB or smaller.");
+      const base64 = await new Promise<string>((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(String(reader.result).split(",")[1] ?? ""); reader.onerror = reject; reader.readAsDataURL(file); });
+      await upload({ data: { offeringId, kind: kind as any, fileName: file.name, base64 } });
       toast.success("Uploaded");
       refresh();
     } catch (e: any) { toast.error(e.message); } finally { setBusy(null); }
@@ -119,28 +120,27 @@ export function FormationEvidenceSection({ offeringId }: { offeringId: string })
   return (
     <div className="space-y-2 rounded-md border p-3">
       <p className="text-sm font-medium">Formation documents</p>
-      <p className="text-xs text-muted-foreground">Harmonious only, never shown to investors. A new upload adds a version; earlier versions are kept.</p>
+      <p className="text-xs text-muted-foreground">Fund formation evidence</p>
       <ul className="divide-y">
-        {EVIDENCE.map((e) => {
+        {EVIDENCE.filter((e) => !kinds || kinds.includes(e.kind)).map((e) => {
           const ev = data.evidence[e.kind];
           return (
-            <li key={e.kind} className="flex flex-wrap items-center justify-between gap-2 py-2">
+            <li key={e.kind} className="space-y-2 py-3">
               <span className="flex items-center gap-2 text-sm">
                 {ev.present ? <CheckCircle2 className="h-4 w-4 text-primary" /> : <Circle className="h-4 w-4 text-muted-foreground" />}
                 {e.label}
                 {ev.present ? <Badge variant="secondary">On file{ev.version ? ` · v${ev.version}` : ""}</Badge> : <Badge variant="outline">Upload below</Badge>}
               </span>
-              {data.canEdit && data.hasSetup && (
+              {data.canUploadEvidence && data.hasSetup && (
                 <Label className="inline-flex cursor-pointer items-center rounded-md border px-3 py-1.5 text-xs">
                   {busy === e.kind ? "Uploading…" : ev.present ? "Replace" : "Upload"}
-                  <input type="file" accept="application/pdf,image/*" className="sr-only" disabled={!!busy} onChange={(x) => onFile(e.kind, x.target.files?.[0])} />
+                  <input aria-label={`Upload ${e.label}`} type="file" accept="application/pdf,image/*" className="sr-only" disabled={!!busy} onChange={(x) => onFile(e.kind, x.target.files?.[0])} />
                 </Label>
               )}
             </li>
           );
         })}
       </ul>
-      <p className="text-xs text-muted-foreground">The EIN number itself is still recorded below with its IRS letter.</p>
     </div>
   );
 }

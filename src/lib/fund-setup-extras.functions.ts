@@ -30,6 +30,21 @@ export const uploadFormationEvidenceFn = createServerFn({ method: "POST" })
   .inputValidator(z.object({ offeringId: uuid, kind: z.enum(["formation", "certificate", "ein_letter"]), path: z.string().min(3).max(400) }).parse)
   .handler(async ({ data, context }) => (await x()).uploadEvidence(context.userId, data));
 
+export const uploadFormationFileFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ offeringId: uuid, kind: z.enum(["formation", "certificate", "ein_letter"]), fileName: z.string().min(1).max(200), base64: z.string().min(1).max(15_000_000) }).parse)
+  .handler(async ({ data, context }) => {
+    const s = await x();
+    const state = await s.getExtras(context.userId, data.offeringId);
+    if (!state.canUploadEvidence || !state.hasSetup) throw new Error("These documents need Harmonious review or a saved fund setup.");
+    const bytes = new Uint8Array(Buffer.from(data.base64, "base64"));
+    const checked = (await import("@/lib/upload-validation")).validateUpload(bytes, data.fileName, { allowed: ["pdf", "png", "jpg", "webp"], maxBytes: 10 * 1024 * 1024 });
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const path = `fund-setup-restricted/${data.offeringId}/${data.kind}/${crypto.randomUUID()}-${data.fileName.replace(/[^\w.\-]+/g, "_")}`;
+    const { error } = await supabaseAdmin.storage.from("fund-formation").upload(path, bytes, { contentType: checked.contentType, upsert: false });
+    if (error) throw new Error("The file could not be uploaded.");
+    return s.uploadEvidence(context.userId, { offeringId: data.offeringId, kind: data.kind, path });
+  });
+
 export const addRegulatoryFilingFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(

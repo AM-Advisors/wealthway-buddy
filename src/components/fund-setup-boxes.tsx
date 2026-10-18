@@ -14,6 +14,7 @@ import { saveFundEinFn } from "@/lib/fund-entity.functions";
 import { fundEinFn, listFundFilesFn, uploadFundFileFn } from "@/lib/fund-tabs.functions";
 import { getFundWireInstructions, saveManagedWireInstructions } from "@/lib/wire-instructions.functions";
 import { bankComplete, EIN_RE, einComplete, formatEin, validateBankEntry } from "@/lib/fund-setup-complete";
+import { fundW9StateFn } from "@/lib/fund-w9.functions";
 
 const inputCls = "h-12 w-full rounded-xl border border-input bg-background px-4 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-ring/30";
 const toBase64 = (f: File) => new Promise<string>((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(",")[1] ?? ""); r.onerror = rej; r.readAsDataURL(f); });
@@ -72,6 +73,8 @@ async function uploadLetter(upload: any, offeringId: string, file: File, categor
 export function EinBox({ offeringId, onChanged }: { offeringId: string; onChanged?: () => void }) {
   const qc = useQueryClient();
   const loadEin = useServerFn(fundEinFn);
+  const loadW9 = useServerFn(fundW9StateFn);
+  const w9 = useQuery({ queryKey: ["fund-w9", offeringId], queryFn: () => loadW9({ data: { offeringId } }) });
   const [reveal, setReveal] = useState(false);
   const ein = useQuery({ queryKey: ["fund-ein", offeringId, reveal], queryFn: () => loadEin({ data: { fundId: offeringId, reveal } }) });
   const files = useLetters(offeringId);
@@ -79,7 +82,7 @@ export function EinBox({ offeringId, onChanged }: { offeringId: string; onChange
   const [showChoice, setShowChoice] = useState(false);
   const letter = latest(files.data as any[], "ein_letter");
   const status = (ein.data as any)?.status as string | undefined;
-  const done = einComplete({ status, hasLetter: !!letter });
+  const done = einComplete({ status, hasLetter: !!letter, hasSignedW9: w9.data?.request?.status === "signed" && !w9.data.newerSource });
   const refresh = () => { void invalidateFund(qc, offeringId); onChanged?.(); };
 
   if (ein.isPending || files.isPending) return <div className="h-24 animate-pulse rounded-2xl bg-muted" />;
@@ -89,7 +92,7 @@ export function EinBox({ offeringId, onChanged }: { offeringId: string; onChange
     <>
       <SummaryBox title="EIN" onEdit={() => setEditing(true)} rows={[
         ["EIN", <span className="inline-flex items-center gap-2 font-mono">{(ein.data as any)?.ein}<button type="button" className="font-sans text-xs text-primary underline" onClick={() => setReveal((x) => !x)}>{reveal ? "Hide" : "Show"}</button></span>],
-        ["IRS letter", letter?.url ? <a className="inline-flex items-center gap-1 text-primary underline" href={letter.url} target="_blank" rel="noreferrer"><FileText className="h-3.5 w-3.5" />{letter.file_name ?? letter.title}</a> : letter?.file_name],
+        [letter ? "IRS letter" : "Signed W-9", letter?.url ? <a className="inline-flex items-center gap-1 text-primary underline" href={letter.url} target="_blank" rel="noreferrer"><FileText className="h-3.5 w-3.5" />{letter.file_name ?? letter.title}</a> : w9.data?.request?.url ? <a href={w9.data.request.url} target="_blank" rel="noreferrer" className="text-primary underline">Open signed W-9</a> : letter?.file_name],
       ]} note={letter?.created_at ? `Letter added ${new Date(letter.created_at).toLocaleDateString()}` : undefined} />
       <EditSheet open={editing} onOpenChange={setEditing} title="EIN">{form}</EditSheet>
     </>

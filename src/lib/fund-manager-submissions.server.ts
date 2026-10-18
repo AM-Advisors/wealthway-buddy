@@ -80,6 +80,7 @@ export async function submit(userId: string, input: { offeringId: string; sectio
     payload: input.payload, file_path: filePath, file_name: input.file?.name ?? null, submitted_by: userId,
   }).select("id").single();
   if (error) throw new Error(error.message);
+  if (input.docKind === "signed_w9") await (await import("@/lib/fund-w9.server")).requestW9AfterUpload(userId, input.offeringId, `fund_manager_submissions:${data.id}`);
   // Self-serve: Fund details and Fees save straight away for the fund's manager, through the
   // same canonical services (validation + history). Bank and documents still go to review.
   if (directSetup) {

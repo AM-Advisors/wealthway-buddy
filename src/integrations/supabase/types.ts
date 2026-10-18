@@ -23779,6 +23779,68 @@ export type Database = {
           },
         ]
       }
+      fund_w9_signature_requests: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          offering_id: string
+          preview_path: string
+          preview_sha256: string
+          signature_method: string | null
+          signed_at: string | null
+          signed_name: string | null
+          signed_path: string | null
+          signed_sha256: string | null
+          signer_user_id: string
+          snapshot: Json
+          source_ref: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          offering_id: string
+          preview_path: string
+          preview_sha256: string
+          signature_method?: string | null
+          signed_at?: string | null
+          signed_name?: string | null
+          signed_path?: string | null
+          signed_sha256?: string | null
+          signer_user_id: string
+          snapshot: Json
+          source_ref?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          offering_id?: string
+          preview_path?: string
+          preview_sha256?: string
+          signature_method?: string | null
+          signed_at?: string | null
+          signed_name?: string | null
+          signed_path?: string | null
+          signed_sha256?: string | null
+          signer_user_id?: string
+          snapshot?: Json
+          source_ref?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_w9_signature_requests_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       funding_acknowledgements: {
         Row: {
           acknowledged_at: string

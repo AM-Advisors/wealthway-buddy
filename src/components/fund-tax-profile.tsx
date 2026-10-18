@@ -26,6 +26,8 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { statusTone } from "@/lib/status";
+import { FundW9Card } from "@/components/fund-w9-card";
+import { invalidateFund } from "@/lib/fund-query-keys";
 
 function when(value: string | null | undefined) {
   if (!value) return "-";
@@ -89,7 +91,7 @@ export function FundTaxProfile() {
       setNote("");
       setTaxYear("");
       if (fileRef.current) fileRef.current.value = "";
-      queryClient.invalidateQueries({ queryKey: ["fund-tax-profile", selected] });
+      void invalidateFund(queryClient, selected);
     },
     onError: (e: any) => toast.error(e?.message ?? "Could not upload that file."),
   });
@@ -183,6 +185,7 @@ export function FundTaxProfile() {
         )}
       </Card>
 
+      <FundW9Card offeringId={selected} />
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">

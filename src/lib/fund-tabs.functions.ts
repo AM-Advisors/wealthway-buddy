@@ -56,7 +56,7 @@ export const decideFeesFn = createServerFn({ method: "POST" }).middleware([requi
   .handler(async ({ data, context }) => __auto(await (await srv()).decideFees(context.userId, data.feeId, data.approve), { feeId: data.feeId }));
 
 export const listFundFilesFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator(fund.parse)
-  .handler(async ({ data, context }) => { const s = await srv(); await s.assertFund(context.userId, data.fundId); return s.listFiles(data.fundId); });
+  .handler(async ({ data, context }) => { const s = await srv(); await s.assertFund(context.userId, data.fundId); const a = await (await import("@/lib/fund-setup.server")).setupActor(context.userId); return s.listFiles(data.fundId, a.isStaff || a.offeringIds.includes(data.fundId)); });
 
 export const uploadFundFileFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator(fund.extend({ title: z.string().trim().min(1).max(200), category: z.string().max(40), fileName: z.string().min(1).max(200), contentType: z.string().max(120), base64: z.string().max(28_000_000) }).parse)

@@ -96,15 +96,20 @@ async function controlledDocs(offeringId: string, docType: string) {
   const sid = await setupId(offeringId);
   if (!sid) return [];
   const { data } = await db().from("fund_setup_documents").select("id, version, is_current, uploaded_by, created_at, title").eq("setup_id", sid).eq("doc_type", docType).order("version", { ascending: false });
+  if (docType === "ein_letter") {
+    const { data: files } = await db().from("fund_files").select("id, uploaded_by, created_at, title").eq("offering_id", offeringId).eq("category", "ein_letter").is("deleted_at", null);
+    return [...(data ?? []), ...(files ?? []).map((f: any) => ({ ...f, version: null, is_current: true }))] as any[];
+  }
   return (data ?? []) as any[];
 }
 
 export async function phase3Overview(sb: any, userId: string, offeringId: string) {
   const actor = await assertRead(userId, offeringId);
   const o = await offering(offeringId);
-  const [versions, einLetters, { data: detail }, setup] = await Promise.all([
+  const [versions, einLetters, w9Docs, { data: detail }, setup] = await Promise.all([
     bankVersions(sb, offeringId),
     controlledDocs(offeringId, "ein_letter"),
+    controlledDocs(offeringId, "signed_w9"),
     sb.rpc("get_offering_entity_details", { p_offering_id: offeringId }).maybeSingle(),
     db().from("fund_setups").select("id, fiscal_year_end").eq("offering_id", offeringId).maybeSingle(),
   ]);
@@ -137,7 +142,7 @@ export async function phase3Overview(sb: any, userId: string, offeringId: string
   const { data: econ } = setup.data ? await db().from("fund_economics_versions").select("id").eq("setup_id", setup.data.id).eq("status", "approved").limit(1) : { data: [] };
 
   const banking = bankingSection({ path: o.banking_path, harmoniousStatus: o.harmonious_bank_status, versions });
-  const entity = entitySection({ path: o.ein_path, hasEin, hasEinLetter: einLetters.some((d) => d.is_current), status: o.ein_workflow_status, basicsComplete: !!(o.entity_type && o.state_formed && o.date_formed) });
+  const entity = entitySection({ path: o.ein_path, hasEin, hasEinLetter: einLetters.some((d) => d.is_current), hasSignedW9: w9Docs.some((d) => d.is_current), status: o.ein_workflow_status, basicsComplete: !!(o.entity_type && o.state_formed && o.date_formed) });
   const services = (o.admin_services ?? {}) as Partial<Record<AdminService, ServiceChoice>>;
   const admin = adminSection({ services, formD: o.form_d_responsibility, blueSky: o.blue_sky_responsibility, regType: o.reg_type });
 
@@ -161,7 +166,7 @@ export async function phase3Overview(sb: any, userId: string, offeringId: string
       hasEin,
       einMasked: hasEin ? `••-•••${String((detail as any).ein).replace(/\D/g, "").slice(-4)}` : "",
       letters: einLetters.map((d) => ({ id: d.id, version: d.version, current: d.is_current, uploadedAt: d.created_at })),
-      w9OnFile: (await controlledDocs(offeringId, "signed_w9")).some((d) => d.is_current),
+      w9OnFile: w9Docs.some((d) => d.is_current),
       responsiblePersonId: o.ss4_responsible_person_id as string | null,
       ss4Prefilled: Object.keys(prefill),
       ss4Missing: missing,
@@ -250,7 +255,7 @@ export async function reviewBankVersion(sb: any, userId: string, input: { offeri
 
 // ------------------------------------------------------------------ controlled documents
 
-async function addControlledDoc(userId: string, offeringId: string, docType: string, title: string, path: string): Promise<string> {
+async function addControlledDoc(userId: string, offeringId: string, docType: string, title: string, path: string, uploadedRole = "harmonious"): Promise<string> {
   const sid = await setupId(offeringId);
   if (!sid) throw new Error("Save the Fund Details first so a setup record exists.");
   const existing = await controlledDocs(offeringId, docType);
@@ -266,7 +271,7 @@ async function addControlledDoc(userId: string, offeringId: string, docType: str
     status: "uploaded",
     investor_facing: false,
     uploaded_by: userId,
-    uploaded_role: "harmonious",
+    uploaded_role: uploadedRole,
     supersedes_id: current?.id ?? null,
   }).select("id").single();
   if (error) throw new Error(error.message);
@@ -333,10 +338,20 @@ const W9_TASK = "Upload signed W-9 (no EIN letter on file)";
 export async function uploadSignedW9(userId: string, input: { offeringId: string; path: string }) {
   await assertStaff(userId, input.offeringId);
   if (!input.path.startsWith(`fund-setup-restricted/${input.offeringId}/`)) throw new Error("That file does not belong to this fund.");
-  await addControlledDoc(userId, input.offeringId, "signed_w9", "Signed W-9", input.path);
+  const sourceId = await addControlledDoc(userId, input.offeringId, "signed_w9", "Signed W-9", input.path);
   await db().from("staff_tasks").update({ status: "done" } as any).eq("offering_id", input.offeringId).eq("title", W9_TASK).neq("status", "done");
   await activity(input.offeringId, userId, "w9_uploaded", "Signed W-9 uploaded; W-9 task closed");
+  await (await import("@/lib/fund-w9.server")).requestW9AfterUpload(userId, input.offeringId, `fund_setup_documents:${sourceId}`);
   return { ok: true };
+}
+
+/** Called only after the authenticated W-9 engine has saved immutable signature evidence. */
+export async function recordManagerSignedW9(userId: string, offeringId: string, path: string) {
+  const { data: signature } = await db().from("fund_w9_signature_requests").select("id").eq("offering_id", offeringId).eq("signer_user_id", userId).eq("signed_path", path).eq("status", "signed").maybeSingle();
+  if (!signature) throw new Error("The fund W-9 signature has not been recorded.");
+  await addControlledDoc(userId, offeringId, "signed_w9", "Signed fund W-9", path, "fund_manager");
+  await db().from("staff_tasks").update({ status: "done" }).eq("offering_id", offeringId).eq("title", W9_TASK).neq("status", "done");
+  await (await import("@/lib/fund-setup-extras.server")).autoCompleteTasks(offeringId);
 }
 
 export async function saveSs4(sb: any, userId: string, input: { offeringId: string; answers: Record<string, unknown>; responsiblePersonId?: string | null | undefined; responsiblePartyTin?: string | null | undefined }) {

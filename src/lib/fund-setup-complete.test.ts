@@ -12,6 +12,12 @@ describe("fund setup boxes", () => {
     expect(bankComplete({ bankName: "Mercury", accountMasked: "••••1234", hasLetter: true })).toBe(true);
     expect(bankComplete({ bankName: "Mercury", accountMasked: "••••1234", hasLetter: false })).toBe(false);
   });
+  it("a manager-signed W-9 substitutes for the IRS letter but not the recorded EIN", () => {
+    expect(einComplete({ status: "recorded", hasLetter: false, hasSignedW9: true })).toBe(true);
+    expect(einComplete({ status: "not_recorded", hasLetter: false, hasSignedW9: true })).toBe(false);
+    expect(einComplete({ status: "in_review", hasLetter: false, hasSignedW9: true })).toBe(false);
+    expect(einComplete({ status: "recorded", hasLetter: false, hasSignedW9: false })).toBe(false);
+  });
   it("full account and routing numbers must be typed twice and match", () => {
     const ok = { bankName: "Mercury", accountName: "Fund LLC", account: "123456789", account2: "123456789", routing: "021000021", routing2: "021000021" };
     expect(validateBankEntry(ok)).toBeNull();

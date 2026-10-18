@@ -188,7 +188,7 @@ export async function decideFees(uid: string, feeId: string, approve: boolean) {
 
 export const BUCKET = "manager-uploads";
 
-export async function listFiles(fundId: string) {
+export async function listFiles(fundId: string, includeSetupEvidence = false) {
   const d = await db();
   const { data } = await d.from("fund_files").select("*").eq("offering_id", fundId).is("deleted_at", null).order("created_at", { ascending: false });
   const out = [] as any[];
@@ -197,12 +197,27 @@ export async function listFiles(fundId: string) {
     if (r.storage_path) url = (await d.storage.from(BUCKET).createSignedUrl(r.storage_path, 600)).data?.signedUrl ?? null;
     out.push({ ...r, url });
   }
+  if (includeSetupEvidence) {
+    const { data: setup } = await d.from("fund_setups").select("id").eq("offering_id", fundId).maybeSingle();
+    const { data: evidence } = setup ? await d.from("fund_setup_documents").select("id, doc_type, title, storage_path, created_at").eq("setup_id", setup.id).eq("doc_type", "ein_letter").eq("is_current", true) : { data: [] };
+    for (const e of evidence ?? []) {
+      if (!e.storage_path) continue;
+      const signed = await d.storage.from("fund-formation").createSignedUrl(e.storage_path, 300);
+      out.push({ id: e.id, category: "ein_letter", title: e.title, file_name: e.title, created_at: e.created_at, url: signed.data?.signedUrl ?? null, setupEvidence: true });
+    }
+    out.sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
+  }
   return out;
 }
 
 export async function uploadFile(uid: string, fundId: string, f: { title: string; category: string; fileName: string; contentType: string; base64: string }) {
   const bytes = Buffer.from(f.base64, "base64");
   if (bytes.byteLength > 20 * 1024 * 1024) throw new Error("Files must be 20 MB or smaller.");
+  if (f.category === "ein_letter") {
+    const state = await (await import("@/lib/fund-setup-extras.server")).getExtras(uid, fundId);
+    if (!state.canUploadEvidence || !state.hasSetup) throw new Error("IRS evidence needs Harmonious review or a saved fund setup.");
+    (await import("@/lib/upload-validation")).validateUpload(new Uint8Array(bytes), f.fileName, { allowed: ["pdf", "png", "jpg", "webp"], maxBytes: 10 * 1024 * 1024 });
+  }
   const path = `fund-files/${fundId}/${crypto.randomUUID()}/${f.fileName.replace(/[^a-zA-Z0-9._-]+/g, "_")}`;
   const d = await db();
   const { error } = await d.storage.from(BUCKET).upload(path, bytes, { contentType: f.contentType || "application/octet-stream", upsert: false });
@@ -212,6 +227,14 @@ export async function uploadFile(uid: string, fundId: string, f: { title: string
     content_type: f.contentType, size_bytes: bytes.byteLength, uploaded_by: uid,
   }).select("id").single();
   if (e2) throw new Error("Couldn't save the file.");
+  if (f.category === "ein_letter") {
+    const evidencePath = `fund-setup-restricted/${fundId}/ein_letter/${data.id}/${f.fileName.replace(/[^\w.\-]+/g, "_")}`;
+    const { error: copyError } = await d.storage.from("fund-formation").upload(evidencePath, bytes, { contentType: f.contentType || "application/pdf", upsert: false });
+    if (copyError) throw new Error("The file was saved but IRS evidence could not be linked. Please retry.");
+    await (await import("@/lib/fund-setup-extras.server")).uploadEvidence(uid, { offeringId: fundId, kind: "ein_letter", path: evidencePath });
+  }
+  await (await import("@/lib/fund-setup-extras.server")).autoCompleteAfterSave({ offeringId: fundId });
+  if (["w9", "signed_w9"].includes(f.category)) await (await import("@/lib/fund-w9.server")).requestW9AfterUpload(uid, fundId, `fund_files:${data.id}`);
   return { id: data.id as string };
 }
 

@@ -1,4 +1,5 @@
 import { Ss4RequestPanel } from "@/components/ss4-request";
+import { invalidateFund } from "@/lib/fund-query-keys";
 import { FundSignoffQueue } from "@/components/signoff-board";
 import { useMemo, useRef, useState } from "react";
 
@@ -509,6 +510,7 @@ export function OperationsTaxDocuments({ fundId }: { fundId?: string }) {
       setNote("");
       setTaxYear("");
       if (fileRef.current) fileRef.current.value = "";
+      if (offeringId) void invalidateFund(queryClient, offeringId);
       queryClient.invalidateQueries({ queryKey: ["ops-queue"] });
     },
     onError: (e: any) => toast.error(e?.message ?? "Could not upload that file."),
