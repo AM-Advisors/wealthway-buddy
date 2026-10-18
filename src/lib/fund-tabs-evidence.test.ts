@@ -35,7 +35,7 @@ describe("shared IRS evidence read-back", () => {
     expect(files.map((f) => f.id)).toEqual(["letter"]);
     expect(files[0]?.category).toBe("ein_letter");
     expect(einComplete({ status: "recorded", hasLetter: files.some((f) => f.category === "ein_letter") })).toBe(true);
-    expect(mock.tables.fund_files).toEqual([]);
+    expect(mock.tables["fund_files"]).toEqual([]);
     expect(mock.urls).toHaveBeenCalledWith("fund-formation", "current.pdf");
   });
   it("ordinary fund viewers never receive restricted setup evidence", async () => {
