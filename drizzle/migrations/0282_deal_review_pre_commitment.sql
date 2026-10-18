@@ -1,0 +1,3 @@
+ALTER TABLE public.diligence_documents ADD COLUMN IF NOT EXISTS show_pre_commitment boolean NOT NULL DEFAULT false;
+UPDATE public.diligence_documents SET show_pre_commitment = true WHERE category IN ('offering_terms','strategy','fundraising','team','track_record') AND archived_at IS NULL;
+COMMENT ON COLUMN public.diligence_documents.show_pre_commitment IS 'Manager-chosen: visible on the investor-link deal review before an investment is started (signed-in, launched fund, NDA when required).';

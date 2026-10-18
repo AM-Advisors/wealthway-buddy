@@ -12631,6 +12631,7 @@ export type Database = {
           id: string
           offering_id: string
           room_id: string
+          show_pre_commitment: boolean
           size_bytes: number | null
           title: string
           uploaded_at: string
@@ -12648,6 +12649,7 @@ export type Database = {
           id?: string
           offering_id: string
           room_id: string
+          show_pre_commitment?: boolean
           size_bytes?: number | null
           title: string
           uploaded_at?: string
@@ -12665,6 +12667,7 @@ export type Database = {
           id?: string
           offering_id?: string
           room_id?: string
+          show_pre_commitment?: boolean
           size_bytes?: number | null
           title?: string
           uploaded_at?: string
