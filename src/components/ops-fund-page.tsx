@@ -12,6 +12,7 @@ import { getStaffFundSetup } from "@/lib/staff-funds.functions";
 import { Button } from "@/components/ui/button";
 import { OperationsSs4, OperationsTaxDocuments } from "@/components/operations-board";
 import { FundSetupChecklist, SetupRequirementsProvider } from "@/components/fund-setup-checklist";
+import { ManagerLaunchCard } from "@/components/manager-launch-card";
 
 
 /** The single Operations fund page: Setup (incl. launch readiness), Investors and every client tab. */
@@ -46,6 +47,7 @@ export function OpsFundPage({ fundId, tab = "setup", onTab }: { fundId: string; 
     : openCond ? { label: openCond.label, tab: "setup" } : d.hasSetup ? { label: "Invite and onboard investors", tab: "investors" } : null;
   return <main className="mx-auto max-w-7xl space-y-6 px-4 py-8 sm:px-6">
     <Button variant="ghost" size="sm" asChild><Link to="/ops/funds">← Funds</Link></Button>
+    {tab === "setup" && !d.retired && d.canUseOperations && <ManagerLaunchCard fundId={fundId} />}
     {next && !d.retired && d.canSeeOperations && (
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-primary/30 bg-primary/5 px-4 py-3">
         <div className="min-w-0"><p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Next step</p><p className="font-medium">{next.label}</p></div>
