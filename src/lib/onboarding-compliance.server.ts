@@ -572,6 +572,7 @@ export async function certifyTaxForm(
     detail: { form_type: routing.formType, revision: rev.revision },
   }).then(() => null, () => null);
   await (async () => (await import("@/lib/ops-slack-notify.server")).notifySubmission({ kind: "tax_form_certified", title: `Investor completed their ${routing.formType} tax form`, offeringId: ob.offering_id, submittedBy: userId, ref: inserted.id, path: ob.offering_id ? `/ops/fund-setup/${ob.offering_id}` : null, completed: true }))().catch(() => null);
+  await (await import("./investor-onboarding.server")).reconcileReadinessForSubjects({ investmentProfileId: ob.investment_profile_id }, "profile_tax_form_updated");
   return { ok: true };
 }
 

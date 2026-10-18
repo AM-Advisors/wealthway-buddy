@@ -1,9 +1,10 @@
 # Roadmap
 
 ## Applicable investor-profile documents
-- [ ] Require only applicable investor documents and reuse saved evidence for the same investing profile.
-- [ ] Add an Update option preserving prior documents and review safeguards; keep investment signatures separate.
-- [ ] Run focused requirement, reuse and authorization checks; authenticated QA requires isolated synthetic access.
+- [x] Require applicable profile documents, reuse profile-bound uploads across investments, retain provider identity checks and canonical verification rules.
+- [x] Add document Update and official tax-form Update; retain previous versions and separate investment signatures.
+- [x] Focused requirement, reuse, compliance and authorization checks: 120 passed; preview compiles.
+- [ ] Authenticated upload → second investment → Update walkthrough — blocked: isolated synthetic QA access unavailable; no production records changed or signatures made.
 
 ## Investor-link layout
 - [x] Put required investor steps before supporting documents and status panels.

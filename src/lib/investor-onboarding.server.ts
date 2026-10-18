@@ -448,7 +448,7 @@ async function gatherFacts(row: any) {
   });
 
   const { investorDocumentRank } = await import("@/lib/offering-document-model");
-  const uploads = await loadProfileDocumentEvidence(db(), row);
+  const uploads = await loadProfileDocumentEvidence(await db(), row);
   const profileDocs = profileDocumentRequirements(eff.profileType ?? null, requirements,
     uploads.map((u) => ({ kind: u.doc_kind, status: u.review_status })), offering.accreditationMethod);
   const missingEntityDocs = profileDocs.filter((r) => r.kind !== "accreditation_proof" && !r.received);
