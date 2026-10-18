@@ -1,7 +1,6 @@
 import { DemoFundToggle } from "@/components/demo-fund-toggle";
 import { OperationsFund } from "@/components/operations-board";
 import { FundSetupForm } from "@/components/fund-setup-form";
-import { FundSignoffQueue } from "@/components/signoff-board";
 import { Link } from "@tanstack/react-router";
 import { OpsRecordPage } from "@/components/ops-record";
 import { FundWorkspace, FUND_TABS } from "@/components/fund-workspace";
@@ -10,7 +9,6 @@ import { useServerFn } from "@tanstack/react-start";
 import { FundSetupCanonical } from "@/components/fund-setup-canonical";
 import { getStaffFundSetup } from "@/lib/staff-funds.functions";
 import { Button } from "@/components/ui/button";
-import { OperationsSs4, OperationsTaxDocuments } from "@/components/operations-board";
 import { FundSetupChecklist, SetupRequirementsProvider } from "@/components/fund-setup-checklist";
 import { ManagerLaunchCard } from "@/components/manager-launch-card";
 
@@ -27,17 +25,10 @@ export function OpsFundPage({ fundId, tab = "setup", onTab }: { fundId: string; 
       {!d.canUseCanonical && d.hasSetup && <FundSetupChecklist tasks={d.tasks} conditions={d.conditions} evidence={d.evidence} canEdit={d.canUseOperations} canNavigate={false} onChanged={() => q.refetch()} />}
       {d.canUseCanonical && (
         <SetupRequirementsProvider value={{ tasks: d.tasks, conditions: d.conditions, evidence: d.evidence, canEdit: d.canUseOperations, approvalCount: d.approvalCount, setupId: d.setupId, isPreparer: d.isPreparer, approvals: d.approvals, onChanged: () => q.refetch() }}>
-          <FundSetupCanonical offeringId={fundId} staffOnly />
+          <FundSetupCanonical offeringId={fundId} staffOnly hideLaunch />
         </SetupRequirementsProvider>
       )}
-      {d.canUseOperations && <section id="fund-operations" className="scroll-mt-6 space-y-4 border-t pt-6" aria-label="EIN, tax and sign-off">
-        <h2 className="font-heading text-xl font-semibold">EIN and Form SS-4</h2>
-        <OperationsSs4 fundId={fundId} />
-        <h2 className="font-heading text-xl font-semibold">Tax documents</h2>
-        <OperationsTaxDocuments fundId={fundId} />
-        <h2 className="font-heading text-xl font-semibold">Sign-off queue</h2>
-        <FundSignoffQueue fundId={fundId} />
-      </section>}
+      {d.canUseOperations && <p className="text-sm text-muted-foreground">EIN and Form SS-4, tax documents and the sign-off queue are on the <button type="button" className="text-primary underline" onClick={() => onTab("formation")}>Formation &amp; EIN</button> tab.</p>}
     </> : <p>Fund details are available to the Operations team.</p>}
   </>;
   const openTask = (d.tasks ?? []).find((t: { status: string }) => t.status !== "complete") as { label: string } | undefined;

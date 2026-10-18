@@ -27,6 +27,7 @@ import { FundSetupPhase3 } from "@/components/fund-setup-phase3";
 import { FundServicesCard } from "@/components/fund-services-card";
 import { FormationRecordCard } from "@/components/formation-record-card";
 import { RequiredHere, LaunchRequirements } from "@/components/fund-setup-checklist";
+import { staffSetupApplies } from "@/lib/staff-setup-applicability";
 import { FundSignatoriesCard } from "@/components/fund-signatories-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -50,7 +51,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-export function FundSetupCanonical({ offeringId, staffOnly = false }: { offeringId: string; staffOnly?: boolean }) {
+export function FundSetupCanonical({ offeringId, staffOnly = false, hideLaunch = false }: { offeringId: string; staffOnly?: boolean; hideLaunch?: boolean }) {
   const qc = useQueryClient();
   const load = useServerFn(getFundSetupOverview);
   const q = useQuery({ queryKey: ["fund-setup-canonical", offeringId], queryFn: () => load({ data: { offeringId } }) });
@@ -59,14 +60,15 @@ export function FundSetupCanonical({ offeringId, staffOnly = false }: { offering
   if (q.isLoading) return <p className="text-sm text-muted-foreground">Loading fund setup…</p>;
   if (q.error || !q.data) return <p className="text-sm text-destructive">Fund setup couldn't be loaded.</p>;
   const d = q.data;
+  const applies = staffSetupApplies({ fundType: d.offering.fundType, hasMultipleClasses: (d.offering as any).hasMultipleClasses });
 
   if (staffOnly) return (
     <div className="space-y-6">
       <LegalNameCard d={d} offeringId={offeringId} onSaved={refresh} />
-      <FundSetupPhase3 offeringId={offeringId} onChanged={refresh} />
+      <FundSetupPhase3 offeringId={offeringId} onChanged={refresh} hideBanking={!applies.banking} showClasses={applies.classAssignment} />
       <FormationRecordCard offeringId={offeringId} />
       <FundServicesCard offeringId={offeringId} onChanged={refresh} />
-      <LaunchRequirements />
+      {(applies.launch || !hideLaunch) && <LaunchRequirements />}
     </div>
   );
   return (
