@@ -6,5 +6,8 @@ export async function loadProfileDocumentEvidence(d: any, row: any) {
     .or(`investment_profile_id.eq.${row.investment_profile_id},and(investment_profile_id.is.null,onboarding_id.eq.${row.id})`)
     .order("uploaded_at", { ascending: false });
   if (error) throw new Error("Your profile documents could not be loaded.");
-  return (data ?? []) as any[];
+  const rows = (data ?? []) as any[];
+  // Recheck returned scope as well as the query; malformed legacy references are never reused.
+  return rows.filter((r) => r.user_id === row.investor_user_id &&
+    (r.investment_profile_id === row.investment_profile_id || (r.investment_profile_id == null && r.onboarding_id === row.id)));
 }

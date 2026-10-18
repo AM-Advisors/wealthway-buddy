@@ -29,7 +29,7 @@ export function profileDocumentRequirements(type: string | null, requirements: R
   return kinds.map((kind) => {
     const row = evidence.find((e) => e.kind === kind);
     const canonical = kind === "accreditation_proof" ? state("accreditation") === "valid" : state("entity_verification") === "valid";
-    const received = !!row && !["rejected", "needs_followup"].includes(row.status);
+    const received = !!row && !["rejected", "needs_followup"].includes(row.status) && state(kind === "accreditation_proof" ? "accreditation" : "entity_verification") !== "refresh_required";
     return { kind, label: PROFILE_DOCUMENT_KINDS.find((k) => k.value === kind)?.label ?? kind, received: received || canonical, status: row?.status ?? (canonical ? "on_file" : "missing") };
   });
 }

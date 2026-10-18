@@ -16,6 +16,9 @@ describe("applicable profile documents", () => {
     expect(reqs[0]?.state).toBe("missing");
   });
   it("requires an update for rejected evidence", () => expect(profileDocumentRequirements("llc", reqs, [{ kind: "entity_formation", status: "needs_followup" }])[0]?.received).toBe(false));
+  it("requires updated evidence when verification has expired", () => {
+    expect(profileDocumentRequirements("individual", [{ key: "accreditation", label: "Accreditation", state: "refresh_required" }], [{ kind: "accreditation_proof", status: "accepted" }])[0]?.received).toBe(false);
+  });
   it("does not request documentary proof for self-certification", () => {
     const r: RequirementResult[] = [{ key: "accreditation", label: "Accreditation", state: "missing" }];
     expect(profileDocumentRequirements("individual", r, [], "self_certification")).toEqual([]);
