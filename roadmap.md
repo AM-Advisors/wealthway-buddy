@@ -1,5 +1,10 @@
 # Roadmap
 
+## Erebor test run (2026-10-18)
+- [x] Run focused synthetic rule checks: 14 files, 156 tests passed, no failures.
+- [x] Read-only live record check: classified New fund; all blocking setup tasks and eight operational launch conditions complete; launch confirmation outstanding, not launched, closed to onboarding. Two investor records have Person and investing Profile; neither has recorded funding. Calvin's investment amount remains $500,000; commitment amount is unset.
+- [ ] Signed-in end-to-end Erebor walkthrough — blocked: isolated QA URL and synthetic staff/manager/investor sessions unavailable; no records changed or messages sent.
+
 ## Investor step email updates
 - [x] Add independent immediate/daily/weekly/off controls for investors and managers in Investor Onboarding Settings; default off, changes audit-recorded.
 - [x] Use canonical four-step completion after reconciliation, silent initial baseline, stable recipient/step dedupe, branded private summaries and existing five-minute job; approvals unchanged, no new email schema.
