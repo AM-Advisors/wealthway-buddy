@@ -17,6 +17,8 @@ import { OfferingDocumentsSetup } from "@/components/offering-documents-setup";
 import { FORM_SECTIONS, changedBySection, type FieldDef } from "@/lib/fund-setup-form-model";
 
 import { FundOriginControl } from "@/components/fund-origin-control";
+import { FormationEvidenceSection } from "@/components/fund-setup-extras";
+import { FundW9Card } from "@/components/fund-w9-card";
 
 type Mode = "staff" | "manager";
 
@@ -145,7 +147,9 @@ export function FundSetupForm({ offeringId, mode, staffExtras }: { offeringId: s
       {fieldSection("basic")}
       {fieldSection("details")}
       {fieldSection("jurisdiction")}
+      {prior["entityType"] === "Series LLC" && <FormationEvidenceSection offeringId={offeringId} kinds={["formation", "certificate"]} />}
       <EinBox offeringId={offeringId} onChanged={refresh} />
+      <FundW9Card offeringId={offeringId} />
       {fieldSection("offering")}
       {fieldSection("fees")}
 

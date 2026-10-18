@@ -339,6 +339,15 @@ export async function uploadSignedW9(userId: string, input: { offeringId: string
   return { ok: true };
 }
 
+/** Called only after the authenticated W-9 engine has saved immutable signature evidence. */
+export async function recordManagerSignedW9(userId: string, offeringId: string, path: string) {
+  const { data: signature } = await db().from("fund_w9_signature_requests").select("id").eq("offering_id", offeringId).eq("signer_user_id", userId).eq("signed_path", path).eq("status", "signed").maybeSingle();
+  if (!signature) throw new Error("The fund W-9 signature has not been recorded.");
+  await addControlledDoc(userId, offeringId, "signed_w9", "Signed fund W-9", path);
+  await db().from("staff_tasks").update({ status: "done" }).eq("offering_id", offeringId).eq("title", W9_TASK).neq("status", "done");
+  await (await import("@/lib/fund-setup-extras.server")).autoCompleteTasks(offeringId);
+}
+
 export async function saveSs4(sb: any, userId: string, input: { offeringId: string; answers: Record<string, unknown>; responsiblePersonId?: string | null | undefined; responsiblePartyTin?: string | null | undefined }) {
   await assertStaff(userId, input.offeringId);
   const { data: cur } = await sb.rpc("get_offering_entity_details", { p_offering_id: input.offeringId }).maybeSingle();
