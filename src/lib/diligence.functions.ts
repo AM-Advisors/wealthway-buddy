@@ -59,6 +59,10 @@ function readiness(
   };
 }
 
+export function wireVisibleToCaller(canManageRoom: boolean, approvedToFund: boolean) {
+  return canManageRoom || approvedToFund;
+}
+
 async function canManage(supabase: any, offeringId: string) {
   const { data } = await supabase.rpc("can_manage_diligence", { _offering_id: offeringId });
   return Boolean(data);
@@ -116,7 +120,16 @@ export const getDiligenceRoom = createServerFn({ method: "POST" })
       .maybeSingle();
 
     let wireDetails: Record<string, string> | null = null;
-    try {
+    // Investors only see wire details once approved to fund (the Fund step); staff and managers always.
+    const { data: myOnboarding } = await supabase
+      .from("investor_onboardings")
+      .select("approved_to_fund_at")
+      .eq("offering_id", data.offering_id)
+      .eq("investor_user_id", context.userId)
+      .not("approved_to_fund_at", "is", null)
+      .limit(1);
+    const managerView = await canManage(supabase, data.offering_id);
+    if (wireVisibleToCaller(managerView, (myOnboarding ?? []).length > 0)) try {
       const { data: wireRow } = await supabase
         .rpc("get_wire_instructions", { p_offering_id: data.offering_id })
         .maybeSingle();
