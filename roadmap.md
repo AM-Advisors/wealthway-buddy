@@ -1,5 +1,11 @@
 # Roadmap
 
+## Series LLC formation and fund W-9 (2026-10-18)
+- [ ] Show separate formation and certificate uploads in shared Series LLC setup.
+- [ ] Synchronize IRS letter evidence and completion across the existing fund records.
+- [ ] Prompt authorized fund managers to review and sign W-9s using saved fund details, preserving original uploads.
+- [ ] Run focused regression checks; signed-in walkthrough requires isolated synthetic QA access.
+
 ## Erebor test run (2026-10-18)
 - [x] Run focused synthetic rule checks: 14 files, 156 tests passed, no failures.
 - [x] Read-only live record check: classified New fund; all blocking setup tasks and eight operational launch conditions complete; launch confirmation outstanding, not launched, closed to onboarding. Two investor records have Person and investing Profile; neither has recorded funding. Calvin's investment amount remains $500,000; commitment amount is unset.
