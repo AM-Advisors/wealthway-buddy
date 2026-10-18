@@ -2206,9 +2206,15 @@ export async function staffReconcileReadiness(userId: string, onboardingId: stri
   return { transitions: r.transitions, created: r.created, resolved: r.resolved };
 }
 
+/** Investors follow their four steps; readiness is a staff/manager view. */
+export function readinessViewerAllowed(role: Access["role"]) {
+  return role !== "investor";
+}
+
 export async function investmentReadiness(userId: string, onboardingId: string) {
   const { readinessView } = await import("@/lib/investment-readiness");
   const access = await assertOnboardingAccess(userId, onboardingId);
+  if (!readinessViewerAllowed(access.role)) forbid("readiness is shown only to Harmonious and fund managers.");
   const { result, facts } = await computeReadinessFor(access.row);
   const { data: offering } = await db().from("offerings").select("name").eq("id", access.row.offering_id).maybeSingle();
   return {
