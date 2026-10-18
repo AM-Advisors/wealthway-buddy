@@ -185,12 +185,13 @@ export const deleteMyUpload = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const { data: row } = await supabase
       .from("investor_documents")
-      .select("id, storage_path")
+      .select("id, storage_path, investment_profile_id")
       .eq("id", data.id)
       .eq("user_id", userId)
       .maybeSingle();
     if (!row) throw new Error("That file is not available.");
 
+    if (row.investment_profile_id) throw new Error("Profile documents are retained. Use Update to add a new version.");
     await supabase.storage.from("investor-uploads").remove([row.storage_path]);
     const { error } = await supabase.from("investor_documents").delete().eq("id", row.id);
     if (error) throw new Error(error.message);
