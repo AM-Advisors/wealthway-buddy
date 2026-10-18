@@ -53,7 +53,7 @@ export async function getFundLink(userId: string, offeringId: string) {
   };
 }
 
-/** Create or regenerate. Old link stops working; investors it already started are untouched. Staff or this fund's managers. */
+/** Create or regenerate. Old link stops working; investors it already started are untouched. Staff only. */
 export async function regenerateFundLink(userId: string, offeringId: string) {
   await assertLinkManager(userId, offeringId);
   await launchedOffering(offeringId);
