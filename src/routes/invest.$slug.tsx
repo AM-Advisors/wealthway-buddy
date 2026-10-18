@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { PENDING_MATCH_MESSAGE } from "@/lib/investor-record-model";
 import { getOfferingLanding, startOnboardingFn } from "@/lib/investor-onboarding.functions";
 import { useAuth } from "@/hooks/useAuth";
+import { DealReview } from "@/components/deal-review";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -75,15 +76,27 @@ function InvestLanding() {
             Minimum investment {money(fund.minInvestmentCents)}
             {fund.targetClose ? ` · Target close ${fund.targetClose}` : ""}
           </p>
-          {loading ? null : user ? (
-            <Button onClick={() => begin.mutate()} disabled={begin.isPending}>
-              {begin.isPending ? "Opening…" : "Start or continue your investment"}
-            </Button>
-          ) : (
-            <Button onClick={() => navigate({ to: "/auth" })}>Sign in to invest</Button>
+          {loading || user ? null : (
+            <Button onClick={() => navigate({ to: "/auth" })}>Sign in to review the deal and invest</Button>
           )}
         </CardContent>
       </Card>
+      {user ? (
+        <div className="mt-6 space-y-6">
+          <h2 className="text-xl font-semibold">Review this deal</h2>
+          <DealReview slug={slug} />
+          <Card>
+            <CardContent className="space-y-3 py-6">
+              <p className="text-sm text-muted-foreground">
+                Reviewing creates no commitment. When you continue, you'll go through About You, Verification, Sign and Fund.
+              </p>
+              <Button onClick={() => begin.mutate()} disabled={begin.isPending}>
+                {begin.isPending ? "Opening…" : "I've reviewed this deal - continue to invest"}
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      ) : null}
     </main>
   );
 }
