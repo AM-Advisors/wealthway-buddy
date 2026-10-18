@@ -1,10 +1,11 @@
 # Roadmap
 
 ## Series LLC formation and fund W-9 (2026-10-18)
-- [ ] Show separate formation and certificate uploads in shared Series LLC setup.
-- [ ] Synchronize IRS letter evidence and completion across the existing fund records.
-- [ ] Prompt authorized fund managers to review and sign W-9s using saved fund details, preserving original uploads.
-- [ ] Run focused regression checks; signed-in walkthrough requires isolated synthetic QA access.
+- [x] Show separate formation and certificate uploads in shared setup, including Series LLC; preserve append-only versions and post-signing review.
+- [x] Synchronize IRS letter evidence from both upload stores; recorded EIN plus letter or manager-signed W-9 completes the visible EIN box.
+- [x] Prompt managers after staff, tax-profile, fund-file or setup-submission W-9 uploads; populate official W-9 from fund facts, confirm tax classification, assigned-manager-only signing, original/preview/hash/signature preserved.
+- [x] Focused regression checks: 24 passed; official IRS W-9 fingerprint verified; preview compiles.
+- [ ] Signed-in upload → review → sign → read-back walkthrough — blocked: isolated synthetic QA access unavailable; no real signatures or test emails sent.
 
 ## Erebor test run (2026-10-18)
 - [x] Run focused synthetic rule checks: 14 files, 156 tests passed, no failures.

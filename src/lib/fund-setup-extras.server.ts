@@ -88,6 +88,9 @@ export async function uploadEvidence(userId: string, input: { offeringId: string
   const a = await assertRead(userId, input.offeringId);
   if (!a.isStaff && !await (await import("@/lib/manager-edit-window.server")).fundEditWindow(input.offeringId)) throw new Error("Formation changes need Harmonious review after an investor signs or sends capital.");
   if (!input.path.startsWith(`fund-setup-restricted/${input.offeringId}/`)) throw new Error("That file does not belong to this fund.");
+  const { data: file, error: fileError } = await db().storage.from("fund-formation").download(input.path);
+  if (fileError || !file) throw new Error("The uploaded evidence file is unavailable.");
+  (await import("@/lib/upload-validation")).validateUpload(new Uint8Array(await file.arrayBuffer()), input.path, { allowed: ["pdf", "png", "jpg", "webp"], maxBytes: 10 * 1024 * 1024 });
   const s = await setupFor(input.offeringId);
   await linkEvidence(userId, s.id, input.kind, input.path, undefined, a.isStaff ? "harmonious" : "fund_manager");
   await event(s.id, input.offeringId, userId, "formation_evidence_uploaded", `${EVIDENCE[input.kind].title} uploaded`);
