@@ -62,6 +62,7 @@ export async function getExtras(userId: string, offeringId: string) {
   const { data: filings } = await db().from("fund_regulatory_filings").select("*").eq("offering_id", offeringId).is("removed_at", null).order("filing_date", { ascending: false, nullsFirst: false });
   return {
     canEdit: a.isStaff,
+    canUploadEvidence: a.isStaff || await (await import("@/lib/manager-edit-window.server")).fundEditWindow(offeringId),
     hasSetup: !!s,
     providers: (s?.service_providers ?? {}) as Providers,
     evidence,
@@ -84,17 +85,18 @@ export async function saveProviders(userId: string, input: { offeringId: string;
 }
 
 export async function uploadEvidence(userId: string, input: { offeringId: string; kind: EvidenceKind; path: string }) {
-  await assertStaff(userId, input.offeringId);
+  const a = await assertRead(userId, input.offeringId);
+  if (!a.isStaff && !await (await import("@/lib/manager-edit-window.server")).fundEditWindow(input.offeringId)) throw new Error("Formation changes need Harmonious review after an investor signs or sends capital.");
   if (!input.path.startsWith(`fund-setup-restricted/${input.offeringId}/`)) throw new Error("That file does not belong to this fund.");
   const s = await setupFor(input.offeringId);
-  await linkEvidence(userId, s.id, input.kind, input.path);
+  await linkEvidence(userId, s.id, input.kind, input.path, undefined, a.isStaff ? "harmonious" : "fund_manager");
   await event(s.id, input.offeringId, userId, "formation_evidence_uploaded", `${EVIDENCE[input.kind].title} uploaded`);
   await autoCompleteTasks(input.offeringId);
   return { ok: true };
 }
 
 /** Appends a new version (older ones kept) and points the entity formation record at it. */
-export async function linkEvidence(userId: string, setupIdV: string, kind: EvidenceKind, path: string | null, existingDocId?: string) {
+export async function linkEvidence(userId: string, setupIdV: string, kind: EvidenceKind, path: string | null, existingDocId?: string, uploadedRole = "harmonious") {
   const spec = EVIDENCE[kind];
   let docId = existingDocId;
   if (!docId) {
@@ -103,7 +105,7 @@ export async function linkEvidence(userId: string, setupIdV: string, kind: Evide
     if (current) await db().from("fund_setup_documents").update({ is_current: false }).eq("id", current.id);
     const { data, error } = await db().from("fund_setup_documents").insert({
       setup_id: setupIdV, doc_type: spec.docType, title: spec.title, storage_path: path, version: ((existing ?? [])[0]?.version ?? 0) + 1,
-      is_current: true, status: "uploaded", investor_facing: false, uploaded_by: userId, uploaded_role: "harmonious", supersedes_id: current?.id ?? null,
+      is_current: true, status: "uploaded", investor_facing: false, uploaded_by: userId, uploaded_role: uploadedRole, supersedes_id: current?.id ?? null,
     }).select("id").single();
     if (error) throw new Error(error.message);
     docId = data.id;

@@ -9,7 +9,7 @@ import {
   getFundSetupExtrasFn,
   removeRegulatoryFilingFn,
   saveFundProvidersFn,
-  uploadFormationEvidenceFn,
+  uploadFormationFileFn,
 } from "@/lib/fund-setup-extras.functions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -101,7 +101,7 @@ const EVIDENCE: { kind: "formation" | "certificate" | "ein_letter"; label: strin
 
 export function FormationEvidenceSection({ offeringId, kinds }: { offeringId: string; kinds?: ("formation" | "certificate" | "ein_letter")[] }) {
   const { data } = useExtras(offeringId);
-  const upload = useServerFn(uploadFormationEvidenceFn);
+  const upload = useServerFn(uploadFormationFileFn);
   const qc = useQueryClient();
   const refresh = () => invalidateFund(qc, offeringId);
   const [busy, setBusy] = useState<string | null>(null);
@@ -110,10 +110,9 @@ export function FormationEvidenceSection({ offeringId, kinds }: { offeringId: st
     if (!file) return;
     setBusy(kind);
     try {
-      const path = `fund-setup-restricted/${offeringId}/${kind}/${Date.now()}-${file.name.replace(/[^\w.\-]+/g, "_")}`;
-      const { error } = await supabase.storage.from("fund-formation").upload(path, file);
-      if (error) throw new Error("The file couldn't be uploaded.");
-      await upload({ data: { offeringId, kind: kind as any, path } });
+      if (file.size > 10 * 1024 * 1024) throw new Error("Files must be 10 MB or smaller.");
+      const base64 = await new Promise<string>((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(String(reader.result).split(",")[1] ?? ""); reader.onerror = reject; reader.readAsDataURL(file); });
+      await upload({ data: { offeringId, kind: kind as any, fileName: file.name, base64 } });
       toast.success("Uploaded");
       refresh();
     } catch (e: any) { toast.error(e.message); } finally { setBusy(null); }
