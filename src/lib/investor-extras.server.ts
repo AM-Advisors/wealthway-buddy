@@ -4,6 +4,8 @@
  * investment (investor side) or can access the fund (manager/staff side).
  */
 import { assertFund, db } from "@/lib/fund-tabs.server";
+import { loadProfileDocumentEvidence } from "./profile-document-evidence.server";
+import { profileDocumentRequirements } from "./profile-document-requirements";
 
 export const ONBOARDING_DOC_KINDS = [
   { value: "identification", label: "Government ID" },
@@ -21,25 +23,42 @@ const MAX_BYTES = 15 * 1024 * 1024;
 
 async function ownOnboarding(userId: string, onboardingId: string) {
   const d = await db();
-  const { data: ob } = await d.from("investor_onboardings").select("id, offering_id, investor_user_id, application_id").eq("id", onboardingId).maybeSingle();
+  const { data: ob } = await d.from("investor_onboardings").select("id, offering_id, investor_user_id, application_id, investment_profile_id").eq("id", onboardingId).maybeSingle();
   if (!ob || ob.investor_user_id !== userId) throw new Error("This investment isn't available.");
-  return { d, ob: ob as { id: string; offering_id: string; application_id: string | null } };
+  if (ob.investment_profile_id) {
+    const { data: profile } = await d.from("investment_profiles").select("owner_user_id").eq("id", ob.investment_profile_id).maybeSingle();
+    if (!profile || profile.owner_user_id !== userId) throw new Error("That investing profile isn't yours.");
+  }
+  return { d, ob };
 }
 
 export type OnboardingUpload = { id: string; fileName: string; kind: string; uploadedAt: string; status: string; note: string | null; canDelete: boolean };
 
 export async function listUploads(userId: string, onboardingId: string): Promise<OnboardingUpload[]> {
-  const { d } = await ownOnboarding(userId, onboardingId);
-  const { data } = await d.from("investor_documents").select("id, file_name, doc_kind, uploaded_at, review_status, review_note")
-    .eq("onboarding_id", onboardingId).eq("user_id", userId).order("uploaded_at", { ascending: false });
+  const { d, ob } = await ownOnboarding(userId, onboardingId);
+  const data = await loadProfileDocumentEvidence(d, ob);
   return ((data ?? []) as any[]).map((r) => ({
     id: String(r.id), fileName: String(r.file_name), kind: String(r.doc_kind), uploadedAt: String(r.uploaded_at),
-    status: String(r.review_status ?? "new"), note: r.review_note ?? null, canDelete: (r.review_status ?? "new") === "new",
+    status: String(r.review_status ?? "new"), note: r.review_note ?? null, canDelete: !r.investment_profile_id && (r.review_status ?? "new") === "new",
   }));
+}
+
+export async function profileUploadState(userId: string, onboardingId: string) {
+  const { d, ob } = await ownOnboarding(userId, onboardingId);
+  const rows = await listUploads(userId, onboardingId);
+  if (!ob.investment_profile_id) return { profileId: null, profileName: null, requirements: [], rows };
+  const { data: profile } = await d.from("investment_profiles").select("profile_type, display_label, legal_name").eq("id", ob.investment_profile_id).maybeSingle();
+  const { onboardingDetail, offeringRequirements } = await import("./investor-onboarding.server");
+  const [detail, rules] = await Promise.all([onboardingDetail(userId, onboardingId), offeringRequirements(ob.offering_id)]);
+  return { profileId: ob.investment_profile_id as string, profileName: String(profile?.display_label ?? profile?.legal_name ?? "Investing profile"), rows,
+    requirements: profileDocumentRequirements(profile?.profile_type ?? null, detail.requirements, rows, rules.accreditationMethod) };
 }
 
 export async function uploadDoc(userId: string, input: { onboardingId: string; kind: OnboardingDocKind; fileName: string; contentType: string; base64: string }) {
   const { d, ob } = await ownOnboarding(userId, input.onboardingId);
+  if (!ob.investment_profile_id) throw new Error("Choose who is investing first.");
+  const state = await profileUploadState(userId, input.onboardingId);
+  if (!state.requirements.some((r) => r.kind === input.kind)) throw new Error("That document does not apply to this investing profile. Identity checks and tax forms use their dedicated steps.");
   const bytes = Buffer.from(input.base64, "base64");
   if (bytes.length === 0) throw new Error("That file is empty.");
   if (bytes.length > MAX_BYTES) throw new Error("Files can be up to 15 MB.");
@@ -48,21 +67,25 @@ export async function uploadDoc(userId: string, input: { onboardingId: string; k
   const up = await d.storage.from(BUCKET).upload(path, bytes, { contentType: input.contentType || "application/octet-stream" });
   if (up.error) throw new Error("Couldn't save that file. Please try again.");
   const { error } = await d.from("investor_documents").insert({
-    onboarding_id: ob.id, application_id: ob.application_id, offering_id: ob.offering_id, user_id: userId,
+    onboarding_id: ob.id, application_id: ob.application_id, offering_id: ob.offering_id, user_id: userId, investment_profile_id: ob.investment_profile_id,
     storage_path: path, file_name: safe, doc_kind: input.kind,
   });
   if (error) {
     await d.storage.from(BUCKET).remove([path]);
     throw new Error(error.message);
   }
+  await d.from("investment_profile_events").insert({ profile_id: ob.investment_profile_id, actor_id: userId, event: "supporting_document_uploaded", detail: { kind: input.kind, onboarding_id: ob.id } });
+  const { reconcileReadinessForSubjects } = await import("./investor-onboarding.server");
+  await reconcileReadinessForSubjects({ investmentProfileId: ob.investment_profile_id }, "profile_document_uploaded");
   return { ok: true };
 }
 
 /** Only files Harmonious hasn't reviewed yet can be removed. */
 export async function deleteDoc(userId: string, onboardingId: string, id: string) {
   const { d } = await ownOnboarding(userId, onboardingId);
-  const { data: row } = await d.from("investor_documents").select("id, storage_path, review_status, user_id, onboarding_id").eq("id", id).maybeSingle();
+  const { data: row } = await d.from("investor_documents").select("id, storage_path, review_status, user_id, onboarding_id, investment_profile_id").eq("id", id).maybeSingle();
   if (!row || row.user_id !== userId || row.onboarding_id !== onboardingId) throw new Error("That file isn't available.");
+  if (row.investment_profile_id) throw new Error("Profile documents are kept for the record. Use Update to add a new version.");
   if ((row.review_status ?? "new") !== "new") throw new Error("Harmonious has already reviewed this file, so it can't be removed.");
   await d.from("investor_documents").delete().eq("id", id);
   await d.storage.from(BUCKET).remove([row.storage_path]);

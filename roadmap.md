@@ -1,5 +1,11 @@
 # Roadmap
 
+## Applicable investor-profile documents
+- [x] Require applicable profile documents, reuse profile-bound uploads across investments, retain provider identity checks and canonical verification rules.
+- [x] Add document Update and official tax-form Update; retain previous versions and separate investment signatures.
+- [x] Focused requirement, reuse, compliance and authorization checks: 120 passed; preview compiles.
+- [ ] Authenticated upload → second investment → Update walkthrough — blocked: isolated synthetic QA access unavailable; no production records changed or signatures made.
+
 ## Investor-link layout
 - [x] Put required investor steps before supporting documents and status panels.
 - [x] Add account setup below dedicated-link login and retain the invitation through registration.

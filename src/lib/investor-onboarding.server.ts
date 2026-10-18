@@ -1,5 +1,7 @@
 import { managerComplianceLabel, managerTaxLabel } from "@/lib/onboarding-compliance-model";
 import { managerFundingLabel } from "@/lib/fund-onboarding-model";
+import { profileDocumentRequirements, reusableProfileAccreditation } from "./profile-document-requirements";
+import { loadProfileDocumentEvidence } from "./profile-document-evidence.server";
 /**
  * Fund Administration Phase B - server-only investor onboarding engine.
  *
@@ -344,7 +346,13 @@ async function gatherFacts(row: any) {
     ((ackRows ?? []) as any[]).map((a) => ({ documentId: String(a.offering_document_id), version: Number(a.version) })),
   );
 
-  const accreditation = ((accreditations ?? []) as any[])[0] ?? null;
+  const { data: profileAccreditations } = row.investment_profile_id
+    ? await db().from("profile_accreditations").select("status, verification_method, verified_at, expires_at, offering_id").eq("profile_id", row.investment_profile_id)
+    : { data: [] };
+  const reusableAccreditation = reusableProfileAccreditation(profileAccreditations ?? [], row.offering_id);
+  const accreditation = reusableAccreditation
+    ? { ...reusableAccreditation, method: reusableAccreditation.verification_method }
+    : ((accreditations ?? []) as any[])[0] ?? null;
   const tax = ((taxProfiles ?? []) as any[])[0] ?? null;
   // Only completion evidence written by the verified signing webhook counts.
   const docScope = {
@@ -440,6 +448,17 @@ async function gatherFacts(row: any) {
   });
 
   const { investorDocumentRank } = await import("@/lib/offering-document-model");
+  const uploads = await loadProfileDocumentEvidence(await db(), row);
+  const profileDocs = profileDocumentRequirements(eff.profileType ?? null, requirements,
+    uploads.map((u) => ({ kind: u.doc_kind, status: u.review_status })), offering.accreditationMethod);
+  const missingEntityDocs = profileDocs.filter((r) => r.kind !== "accreditation_proof" && !r.received);
+  if (missingEntityDocs.length) {
+    const entityRequirement = requirements.find((r) => r.key === "entity_verification");
+    if (entityRequirement && entityRequirement.state !== "valid") {
+      entityRequirement.state = "missing";
+      entityRequirement.reason = `Upload: ${missingEntityDocs.map((r) => r.label).join(", ")}.`;
+    }
+  }
   const ackedIds = new Set(((ackRows ?? []) as any[]).map((a) => String(a.offering_document_id)));
   const ackIds = new Set(obligations.needsAck.map((x) => x.id));
   const documents = applicableDocs

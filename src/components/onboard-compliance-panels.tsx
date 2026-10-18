@@ -327,6 +327,7 @@ export function TaxSignPanel({ onboardingId, done }: { onboardingId: string; don
   const [foreignTin, setForeignTin] = useState("");
   const [sig, setSig] = useState("");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [updating, setUpdating] = useState(false);
   useEffect(() => () => { if (previewUrl) URL.revokeObjectURL(previewUrl); }, [previewUrl]);
   const form = q.data?.tax.form;
   const preview = useMutation({
@@ -339,15 +340,16 @@ export function TaxSignPanel({ onboardingId, done }: { onboardingId: string; don
   });
   const sign = useMutation({
     mutationFn: () => taxFn({ data: { onboardingId, formType: form!.formType, legalName, tin: tin || null, foreignTin: foreignTin || null, certifiedName: sig, acknowledgedRevision: form!.revision } }),
-    onSuccess: () => { toast.success(`${form!.title} signed`); setTin(""); setPreviewUrl(null); qc.invalidateQueries({ queryKey: ["onboard-compliance", onboardingId] }); done(); },
+    onSuccess: () => { toast.success(`${form!.title} signed`); setTin(""); setPreviewUrl(null); setUpdating(false); qc.invalidateQueries({ queryKey: ["onboard-compliance", onboardingId] }); done(); },
     onError: (e: Error) => toast.error(e.message),
   });
   if (!q.data) return null;
   const d = q.data;
-  if (d.tax.state === "valid") {
+  if (d.tax.state === "valid" && !updating) {
     return (
       <Card><CardContent className="flex flex-col gap-2 pt-6 text-sm sm:flex-row sm:items-center sm:justify-between">
         <span>{d.tax.current ? `${d.tax.current.formType.toUpperCase()} signed (${d.tax.current.revision})${d.tax.current.tinMasked ? ` · TIN ${d.tax.current.tinMasked}` : ""}` : "Tax form on file"}</span>
+        <Button size="sm" variant="outline" onClick={() => setUpdating(true)}>Update tax form</Button>
         <Button size="sm" variant="outline" onClick={async () => { try { const r = await docFn({ data: { onboardingId } }); if (r.url) window.open(r.url, "_blank", "noopener"); } catch (e) { toast.error((e as Error).message); } }}>View signed form</Button>
       </CardContent></Card>
     );

@@ -16,7 +16,7 @@ import { fileToBase64, fmtDate } from "@/components/fund-tabs/shared";
 import { uploadFundFileFn } from "@/lib/fund-tabs.functions";
 import {
   acceptFeesFn, deleteOnboardingDocFn, feeStatusFn, fundUpdatesFn, listOnboardingUploadsFn, myInvestorUpdatesFn,
-  postFundUpdateFn, removeFundUpdateFn, uploadOnboardingDocFn, updateAttachmentOptionsFn,
+  postFundUpdateFn, removeFundUpdateFn, uploadOnboardingDocFn, updateAttachmentOptionsFn, profileUploadStateFn,
 } from "@/lib/investor-extras.functions";
 
 const KINDS = [
@@ -34,62 +34,54 @@ const STATUS: Record<string, string> = { new: "Waiting for review", accepted: "A
 
 export function OnboardingUploadsCard({ onboardingId }: { onboardingId: string }) {
   const qc = useQueryClient();
-  const list = useServerFn(listOnboardingUploadsFn);
+  const list = useServerFn(profileUploadStateFn);
   const upload = useServerFn(uploadOnboardingDocFn);
-  const del = useServerFn(deleteOnboardingDocFn);
-  const key = ["onboarding-uploads", onboardingId];
+  const key = ["onboarding-profile-documents", onboardingId];
   const q = useQuery({ queryKey: key, queryFn: () => list({ data: { onboardingId } }) });
-  const [kind, setKind] = useState<Kind>("identification");
-  const [file, setFile] = useState<File | null>(null);
+  const [updating, setUpdating] = useState<Kind | null>(null);
+  const [files, setFiles] = useState<Partial<Record<Kind, File>>>({});
   const up = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (kind: Kind) => {
+      const file = files[kind];
       if (!file) throw new Error("Choose a file first.");
       return upload({ data: { onboardingId, kind, fileName: file.name, contentType: file.type, base64: await fileToBase64(file) } });
     },
-    onSuccess: () => { toast.success("File uploaded."); setFile(null); qc.invalidateQueries({ queryKey: key }); },
+    onSuccess: () => {
+      toast.success("Document saved for this profile."); setFiles({}); setUpdating(null);
+      void qc.invalidateQueries({ predicate: (query) => ["onboarding-profile-documents", "onboarding", "onboard-portal", "profile-detail", "investment-readiness"].includes(String(query.queryKey[0])) });
+    },
     onError: (e: Error) => toast.error(e.message),
   });
-  const rm = useMutation({
-    mutationFn: (id: string) => del({ data: { onboardingId, id } }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: key }),
-    onError: (e: Error) => toast.error(e.message),
-  });
-  const rows = q.data ?? [];
-  const have = new Set(rows.map((r) => r.kind));
-
+  if (q.isPending) return <p className="text-sm text-muted-foreground">Loading profile documents…</p>;
+  if (q.isError) return <p className="text-sm text-destructive">Your documents could not be loaded.</p>;
+  if (!q.data?.profileId || !q.data.requirements.length) return null;
+  const d = q.data;
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Your documents</CardTitle>
-        <CardDescription>Upload what applies to you. Companies and trusts also add formation documents, the operating or trust agreement and an owner list. Files stay private to you and Harmonious.</CardDescription>
+        <CardTitle className="text-base">Documents for {d.profileName}</CardTitle>
+        <CardDescription>Saved with this investing profile. Previous versions remain on file.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex flex-wrap gap-2">
-          {KINDS.map((k) => <Badge key={k.value} variant={have.has(k.value) ? "default" : "outline"}>{have.has(k.value) ? "✓ " : ""}{k.label}</Badge>)}
-        </div>
-        <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
-          <div><Label>Document type</Label>
-            <Select value={kind} onValueChange={(v) => setKind(v as Kind)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>{KINDS.map((k) => <SelectItem key={k.value} value={k.value}>{k.label}</SelectItem>)}</SelectContent>
-            </Select>
-          </div>
-          <div><Label htmlFor="ob-file">File (up to 15 MB)</Label><Input id="ob-file" type="file" onChange={(e) => setFile(e.target.files?.[0] ?? null)} /></div>
-          <Button disabled={!file || up.isPending} onClick={() => up.mutate()}>{up.isPending ? "Uploading..." : "Upload"}</Button>
-        </div>
-        {rows.length > 0 && (
-          <ul className="divide-y rounded-md border text-sm">
-            {rows.map((r) => (
-              <li key={r.id} className="flex flex-wrap items-center justify-between gap-2 p-3">
-                <div className="min-w-0"><p className="truncate font-medium">{r.fileName}</p><p className="text-xs text-muted-foreground">{kindLabel(r.kind)} · {fmtDate(r.uploadedAt)}{r.note ? ` · ${r.note}` : ""}</p></div>
-                <div className="flex items-center gap-2">
-                  <Badge variant={r.status === "accepted" ? "default" : "outline"}>{STATUS[r.status] ?? r.status}</Badge>
-                  {r.canDelete && <Button size="sm" variant="ghost" disabled={rm.isPending} onClick={() => rm.mutate(r.id)}>Remove</Button>}
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
+        {d.requirements.map((r) => {
+          const kind = r.kind as Kind;
+          const latest = d.rows.find((row) => row.kind === kind);
+          const open = !r.received || updating === kind;
+          return <section key={kind} className="space-y-3 border-b pb-4 last:border-0 last:pb-0">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h3 className="text-sm font-medium">{r.label}</h3>
+              <div className="flex items-center gap-2">
+                <Badge variant={r.received ? "default" : "outline"}>{r.status === "on_file" ? "On file" : r.received ? "Saved for this profile" : "Required"}</Badge>
+                {r.received ? <Button variant="outline" size="sm" disabled={up.isPending} onClick={() => setUpdating(updating === kind ? null : kind)}>{updating === kind ? "Cancel" : "Update"}</Button> : null}
+              </div>
+            </div>
+            {latest ? <p className="break-words text-xs text-muted-foreground">{latest.fileName} · {fmtDate(latest.uploadedAt)} · {STATUS[latest.status] ?? latest.status}{latest.note ? ` · ${latest.note}` : ""}</p> : null}
+            {open ? <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+              <div className="min-w-0 flex-1 space-y-1"><Label htmlFor={`profile-file-${kind}`}>File (up to 15 MB)</Label><Input key={`${kind}-${latest?.id ?? "none"}`} id={`profile-file-${kind}`} type="file" disabled={up.isPending} onChange={(e) => setFiles((prev) => ({ ...prev, [kind]: e.target.files?.[0] }))} /></div>
+              <Button disabled={!files[kind] || up.isPending} onClick={() => up.mutate(kind)}>{up.isPending && up.variables === kind ? "Uploading…" : r.received ? "Save update" : "Upload"}</Button>
+            </div> : null}
+          </section>;
+        })}
       </CardContent>
     </Card>
   );

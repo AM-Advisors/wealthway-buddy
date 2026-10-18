@@ -29,6 +29,7 @@ import type { PortalStep, PortalStepView, PortalView } from "@/lib/onboard-porta
 import { cn } from "@/lib/utils";
 import { ConfirmYourInformation, ReviewPreparedDocuments } from "@/components/prepared-investor-review";
 import { CertificationsPanel, EligibilityPanel, TaxAndCompliancePanel, TaxSignPanel } from "@/components/onboard-compliance-panels";
+import { OnboardingUploadsCard } from "@/components/investor-onboarding-extras";
 import { isReconciledFunding } from "@/lib/funding-status";
 
 const money = (cents: number | null | undefined) =>
@@ -156,6 +157,7 @@ export function OnboardPortal({ onboardingId }: { onboardingId: string }) {
       {view === "documents" ? <CertificationsPanel onboardingId={onboardingId} done={refresh} /> : null}
       {view === "documents" ? <ReviewPreparedDocuments onboardingId={onboardingId} /> : null}
       {view === "documents" ? <DocumentsStep d={d} onboardingId={onboardingId} done={refresh} /> : null}
+      <OnboardingUploadsCard onboardingId={onboardingId} />
       {view === "completed" ? <FundStep d={d} onboardingId={onboardingId} done={refresh} /> : null}
       {view === "completed" ? <Completed d={d} /> : null}
     </div>

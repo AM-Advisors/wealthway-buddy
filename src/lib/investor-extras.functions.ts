@@ -13,6 +13,11 @@ export const listOnboardingUploadsFn = createServerFn({ method: "POST" })
   .inputValidator(z.object({ onboardingId: uuid }).parse)
   .handler(async ({ data, context }): Promise<OnboardingUpload[]> => (await x()).listUploads(context.userId, data.onboardingId));
 
+export const profileUploadStateFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ onboardingId: uuid }).parse)
+  .handler(async ({ data, context }) => (await x()).profileUploadState(context.userId, data.onboardingId));
+
 export const uploadOnboardingDocFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ onboardingId: uuid, kind: KIND, fileName: z.string().min(1).max(255), contentType: z.string().max(120), base64: z.string().min(1).max(21_000_000) }).parse)
