@@ -439,6 +439,7 @@ export const uploadTaxDocument = createServerFn({ method: "POST" })
       idempotencyKey: `ops-tax-${(inserted as any).id}`,
     });
 
+    if (data.docType === "w9" && !data.investorUserId) await (await import("@/lib/fund-w9.server")).requestW9AfterUpload(context.userId, data.offeringId, `fund_tax_documents:${(inserted as any).id}`);
     return { id: (inserted as any).id as string };
   });
 

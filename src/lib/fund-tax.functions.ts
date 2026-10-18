@@ -205,6 +205,7 @@ export const uploadFundTaxDocument = createServerFn({ method: "POST" })
       console.error("tax document operations alert failed", err);
     }
 
+    if (data.docType === "w9") await (await import("@/lib/fund-w9.server")).requestW9AfterUpload(context.userId, data.offeringId, `fund_tax_documents:${(inserted as any).id}`);
     return { id: (inserted as any).id as string };
   });
 

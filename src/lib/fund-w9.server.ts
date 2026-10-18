@@ -6,6 +6,19 @@ import { pngBytesFromDataUrl, type AdoptedSignatureInput } from "@/lib/adopted-s
 
 const db = () => supabaseAdmin as any;
 const BUCKET = "fund-formation";
+/** Upload hooks only: never called by page reads, never signs or prepares a form. */
+export async function requestW9AfterUpload(uid: string, fundId: string, sourceRef: string) {
+  try {
+    await access(uid, fundId);
+    const title = "Review and sign the fund W-9";
+    const { data: existing } = await db().from("staff_tasks").select("id").eq("offering_id", fundId).eq("title", title).neq("status", "done").limit(1);
+    if (!existing?.length) await db().from("staff_tasks").insert({ offering_id: fundId, title, description: "A W-9 was uploaded. The fund manager must review the populated W-9 and sign it on the fund's Setup tab.", status: "open", priority: "high", team: "operations", created_by: uid, client_visibility: true, responsibility_status: "CLIENT_INFORMATION_REQUIRED", information_request_type: "signed_w9", requested_information: "Review and sign the fund W-9", related_workflow_type: "fund_w9_signature" });
+    const { data: managers } = await db().from("fund_managers").select("user_id").eq("offering_id", fundId);
+    const ids = (managers ?? []).map((m: any) => m.user_id).filter((id: string) => id !== uid);
+    const { data: profiles } = ids.length ? await db().from("profiles").select("user_id, legal_name, email").in("user_id", ids) : { data: [] };
+    for (const p of profiles ?? []) if (p.email) await (await import("@/lib/signing-reminder.server")).sendSigningReminder(uid, { offeringId: fundId, reminderKey: `fund-w9-upload:${sourceRef}:${p.user_id}`, documentTitle: "Fund Form W-9", recipientEmail: p.email, recipientName: p.legal_name || "Fund manager", recipientUserId: p.user_id, path: `/manager/fund/${fundId}?tab=setup`, steps: ["Open the fund W-9", "Review the saved fund details", "Sign as the fund manager"] }).catch(() => null);
+  } catch { /* best-effort notice must not fail an upload */ }
+}
 async function access(uid: string, fundId: string) {
   const actor = await setupActor(uid);
   const { data: manager, error } = await db().from("fund_managers").select("user_id").eq("offering_id", fundId).eq("user_id", uid).maybeSingle();
@@ -97,8 +110,8 @@ export async function signW9(uid: string, fundId: string, requestId: string, sig
   // Place the adopted signature and date in Part II of the official W-9 as well.
   const first = pdf.getPages()[0];
   if (!first) throw new Error("The W-9 has no page.");
-  first.drawImage(image, { x: 110, y: 232, width: 180, height: 32 });
-  first.drawText(now.slice(0, 10), { x: 440, y: 245, size: 10, font });
+  first.drawImage(image, { x: 155, y: 195, width: 180, height: 28 });
+  first.drawText(now.slice(0, 10), { x: 420, y: 198, size: 10, font });
   const bytes = await pdf.save();
   const path = `fund-setup-restricted/${fundId}/w9/${r.id}/signed-${crypto.randomUUID()}.pdf`;
   const { error: uploadError } = await db().storage.from(BUCKET).upload(path, bytes, { contentType: "application/pdf", upsert: false });
@@ -106,6 +119,7 @@ export async function signW9(uid: string, fundId: string, requestId: string, sig
   const { data: saved, error: saveError } = await db().from("fund_w9_signature_requests").update({ status: "signed", signed_path: path, signed_sha256: await sha256Hex(bytes), signed_name: signedName, signature_method: signature.method, signed_at: now }).eq("id", r.id).eq("status", "pending").select("id");
   if (saveError || !saved?.length) throw new Error("The W-9 was already signed or could not be saved.");
   await (await import("@/lib/fund-setup-phase3.server")).recordManagerSignedW9(uid, fundId, path);
+  await db().from("staff_tasks").update({ status: "done" }).eq("offering_id", fundId).eq("title", "Review and sign the fund W-9").neq("status", "done");
   await (await import("@/lib/fund-audit.server")).logFundAudit(uid, { offeringId: fundId, eventType: "fund_w9_signed", summary: "Fund manager signed the fund W-9", values: { requestId: r.id, signedAt: now } });
   await (await import("@/lib/ops-slack-notify.server")).notifySubmission({ kind: "fund_w9_signed", title: "Fund W-9 signed", offeringId: fundId, submittedBy: uid, ref: r.id, path: `/ops/fund/${fundId}?tab=setup`, completed: true }).catch(() => null);
   return { ok: true };

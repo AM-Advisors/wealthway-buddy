@@ -96,6 +96,10 @@ async function controlledDocs(offeringId: string, docType: string) {
   const sid = await setupId(offeringId);
   if (!sid) return [];
   const { data } = await db().from("fund_setup_documents").select("id, version, is_current, uploaded_by, created_at, title").eq("setup_id", sid).eq("doc_type", docType).order("version", { ascending: false });
+  if (docType === "ein_letter") {
+    const { data: files } = await db().from("fund_files").select("id, uploaded_by, created_at, title").eq("offering_id", offeringId).eq("category", "ein_letter").is("deleted_at", null);
+    return [...(data ?? []), ...(files ?? []).map((f: any) => ({ ...f, version: null, is_current: true }))] as any[];
+  }
   return (data ?? []) as any[];
 }
 
@@ -334,9 +338,10 @@ const W9_TASK = "Upload signed W-9 (no EIN letter on file)";
 export async function uploadSignedW9(userId: string, input: { offeringId: string; path: string }) {
   await assertStaff(userId, input.offeringId);
   if (!input.path.startsWith(`fund-setup-restricted/${input.offeringId}/`)) throw new Error("That file does not belong to this fund.");
-  await addControlledDoc(userId, input.offeringId, "signed_w9", "Signed W-9", input.path);
+  const sourceId = await addControlledDoc(userId, input.offeringId, "signed_w9", "Signed W-9", input.path);
   await db().from("staff_tasks").update({ status: "done" } as any).eq("offering_id", input.offeringId).eq("title", W9_TASK).neq("status", "done");
   await activity(input.offeringId, userId, "w9_uploaded", "Signed W-9 uploaded; W-9 task closed");
+  await (await import("@/lib/fund-w9.server")).requestW9AfterUpload(userId, input.offeringId, `fund_setup_documents:${sourceId}`);
   return { ok: true };
 }
 

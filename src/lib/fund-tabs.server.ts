@@ -234,6 +234,7 @@ export async function uploadFile(uid: string, fundId: string, f: { title: string
     await (await import("@/lib/fund-setup-extras.server")).uploadEvidence(uid, { offeringId: fundId, kind: "ein_letter", path: evidencePath });
   }
   await (await import("@/lib/fund-setup-extras.server")).autoCompleteAfterSave({ offeringId: fundId });
+  if (["w9", "signed_w9"].includes(f.category)) await (await import("@/lib/fund-w9.server")).requestW9AfterUpload(uid, fundId, `fund_files:${data.id}`);
   return { id: data.id as string };
 }
 
