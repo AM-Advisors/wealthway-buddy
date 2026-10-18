@@ -88,7 +88,7 @@ function ServiceBlock({ s, d, offeringId, onChanged }: { s: D["services"][number
           {s.reviewedByName && <>Reviewed by {s.reviewedByName}{s.reviewedAt ? ` on ${new Date(s.reviewedAt).toLocaleDateString()}` : ""}.</>}
         </p>
       )}
-      {!d.canEdit ? (
+      {!d.canEdit || locked ? (
         <div className="grid gap-1 text-sm sm:grid-cols-2">
           {Object.entries(s.fields).map(([k, v]) => (
             <div key={k}><span className="text-muted-foreground">{FIELDS[s.kind].find((f) => f.key === k)?.label ?? k}: </span>{String(v)}</div>

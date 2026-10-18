@@ -76,7 +76,7 @@ function OwnerTag({ owner }: { owner: "harmonious" | "client" | null }) {
   return <Badge variant={owner === "client" ? "default" : "secondary"}>{OWNER_LABELS[owner]}</Badge>;
 }
 
-export function FundSetupPhase3({ offeringId, onChanged }: { offeringId: string; onChanged?: () => void }) {
+export function FundSetupPhase3({ offeringId, onChanged, hideBanking = false, showClasses = true }: { offeringId: string; onChanged?: () => void; hideBanking?: boolean; showClasses?: boolean }) {
   const qc = useQueryClient();
   const load = useServerFn(phase3OverviewFn);
   const q = useQuery({ queryKey: ["fund-setup-p3", offeringId], queryFn: () => load({ data: { offeringId } }) });
@@ -90,9 +90,9 @@ export function FundSetupPhase3({ offeringId, onChanged }: { offeringId: string;
   return (
     <div className="space-y-6">
       <EntityEinCard d={d} offeringId={offeringId} onChanged={refresh} />
-      <BankingCard d={d} offeringId={offeringId} onChanged={refresh} />
+      {!hideBanking && <BankingCard d={d} offeringId={offeringId} onChanged={refresh} />}
       <AdminCard d={d} offeringId={offeringId} onChanged={refresh} />
-      {d.canEdit && <ClassAssignmentCard offeringId={offeringId} />}
+      {d.canEdit && showClasses && <ClassAssignmentCard offeringId={offeringId} />}
       <ReviewCard d={d} />
     </div>
   );
