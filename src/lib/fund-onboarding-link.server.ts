@@ -18,10 +18,17 @@ async function currentLink(offeringId: string) {
   return data as any;
 }
 
-/** Staff, or a Fund Manager of this exact fund. Nobody else. */
+/** Staff, or a Fund Manager of this exact fund. Nobody else. View/copy only for managers. */
 async function assertLinkViewer(userId: string, offeringId: string) {
   const actor = await onboardingActor(userId);
   if (!actor.isStaff && !actor.managedOfferingIds.includes(offeringId)) forbid("you do not have access to this fund's onboarding link.");
+  return actor;
+}
+
+/** Staff only. Managers view and copy the link; they never regenerate or disable it. */
+async function assertLinkManager(userId: string, offeringId: string) {
+  const actor = await onboardingActor(userId);
+  if (!actor.isStaff) forbid("only Harmonious staff can manage this fund's onboarding link.");
   return actor;
 }
 
@@ -42,13 +49,13 @@ export async function getFundLink(userId: string, offeringId: string) {
     regeneratedAt: row && first && row.created_at !== first.created_at ? (row.created_at as string) : null,
     lastUsedAt: (row?.last_used_at ?? null) as string | null,
     starts: count ?? 0,
-    canManage: true,
+    canManage: actor.isStaff,
   };
 }
 
 /** Create or regenerate. Old link stops working; investors it already started are untouched. Staff or this fund's managers. */
 export async function regenerateFundLink(userId: string, offeringId: string) {
-  await assertLinkViewer(userId, offeringId);
+  await assertLinkManager(userId, offeringId);
   await launchedOffering(offeringId);
   const prev = await currentLink(offeringId);
   if (prev) await db().from("fund_onboarding_links").update({ status: "superseded", superseded_at: new Date().toISOString() }).eq("id", prev.id);
@@ -59,7 +66,7 @@ export async function regenerateFundLink(userId: string, offeringId: string) {
 }
 
 export async function setFundLinkEnabled(userId: string, offeringId: string, enabled: boolean) {
-  await assertLinkViewer(userId, offeringId);
+  await assertLinkManager(userId, offeringId);
   const row = await currentLink(offeringId);
   if (!row) throw new Error("No onboarding link is configured for this fund.");
   await db().from("fund_onboarding_links").update(enabled ? { status: "active", disabled_at: null } : { status: "disabled", disabled_at: new Date().toISOString() }).eq("id", row.id);
