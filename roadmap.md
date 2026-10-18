@@ -1,5 +1,11 @@
 # Roadmap
 
+## Investor-link layout
+- [x] Put required investor steps before supporting documents and status panels.
+- [x] Add account setup below dedicated-link login and retain the invitation through registration.
+- [x] Focused regressions: 42 checks passed (invitation paths, link controls and canonical investor journey).
+- [ ] Authenticated walkthrough — blocked: isolated synthetic QA access unavailable; no accounts created or invitations sent.
+
 ## Series LLC formation and fund W-9 (2026-10-18)
 - [x] Show separate formation and certificate uploads in shared setup, including Series LLC; preserve append-only versions and post-signing review.
 - [x] Synchronize IRS letter evidence from both upload stores; recorded EIN plus letter or manager-signed W-9 completes the visible EIN box.

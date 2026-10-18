@@ -32,11 +32,11 @@ function InvestmentPage() {
   const { step } = Route.useSearch();
   return (
     <main className="mx-auto max-w-3xl space-y-6 px-4 py-10">
+      <InvestorOnboardingJourney onboardingId={onboardingId} requestedStep={step} />
       <ConfirmYourInformation onboardingId={onboardingId} />
       <InvestmentOfferingDocuments onboardingId={onboardingId} />
       <InvestmentChecklist onboardingId={onboardingId} />
       <OnboardingBankDetails onboardingId={onboardingId} />
-      <InvestorOnboardingJourney onboardingId={onboardingId} requestedStep={step} />
     </main>
   );
 }

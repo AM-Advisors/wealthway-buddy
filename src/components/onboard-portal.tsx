@@ -111,8 +111,6 @@ export function OnboardPortal({ onboardingId }: { onboardingId: string }) {
         {d.profileLabel ? <p className="text-sm text-muted-foreground">Investing as {d.profileLabel}</p> : null}
       </header>
 
-      <ConfirmYourInformation onboardingId={onboardingId} onChanged={refresh} />
-
       <ol className="flex items-stretch gap-2" aria-label="Progress">
         {steps.map((s, i) => {
           const done = s.state === "complete" || s.state === "not_applicable";
@@ -146,6 +144,9 @@ export function OnboardPortal({ onboardingId }: { onboardingId: string }) {
           </div>
         </li>
       </ol>
+
+      <ConfirmYourInformation onboardingId={onboardingId} onChanged={refresh} />
+
 
       {view === "verification" ? <VerificationStep d={d} onboardingId={onboardingId} done={refresh} /> : null}
       {view === "verification" ? <TaxAndCompliancePanel onboardingId={onboardingId} done={refresh} /> : null}

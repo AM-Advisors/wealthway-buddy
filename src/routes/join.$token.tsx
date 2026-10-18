@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { resolveFundLinkFn, startFromFundLinkFn } from "@/lib/fund-onboarding-link.functions";
@@ -57,11 +57,12 @@ function JoinPage() {
           <>
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground">You are onboarding for</p>
-              <h1 className="font-heading text-2xl font-semibold">{q.data!.fundName}</h1>
-              {q.data!.managedBy ? <p className="text-sm text-muted-foreground">Managed by {q.data!.managedBy}</p> : null}
+              <h1 className="font-heading text-2xl font-semibold">{q.data?.fundName}</h1>
+              {q.data?.managedBy ? <p className="text-sm text-muted-foreground">Managed by {q.data?.managedBy}</p> : null}
             </div>
             <p className="text-sm text-muted-foreground">{user ? "Continue to choose how you're investing and finish your investment." : "Sign in or create your Harmonious account to continue. If you already have one, use it - you can pick an investing profile you already have or add a new one."}</p>
             <Button className="w-full" disabled={busy || loading} onClick={begin}>{busy ? "Opening…" : user ? "Continue" : "Sign in to continue"}</Button>
+            {!user ? <Button className="w-full" variant="outline" asChild><Link to="/auth/register" search={{ next: `/join/${token}` } as never}>Set up your account</Link></Button> : null}
             {err ? <p className="text-sm text-destructive">{err}</p> : null}
           </>
         )}

@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useApplicationSurface } from "@/lib/use-application-surface";
+import { investorEntryPath } from "@/lib/investor-entry-path";
 import { CLIENT_ORIGIN_DEFAULT } from "@/lib/app-origins";
 
 export const Route = createFileRoute("/auth/")({
@@ -42,7 +43,11 @@ function SignInPage() {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [registerNext, setRegisterNext] = useState<string | null>(null);
-  useEffect(() => setRegisterNext(intendedPathFromLocation(window.location.search)), []);
+  const [investorEntry, setInvestorEntry] = useState(false);
+  useEffect(() => {
+    setRegisterNext(intendedPathFromLocation(window.location.search));
+    setInvestorEntry(!!investorEntryPath(window.location.search));
+  }, []);
 
   useEffect(() => {
     if (loading || !session) return;
@@ -117,7 +122,7 @@ function SignInPage() {
     <div>
       <h1 className="text-3xl">{staff ? "Operations sign in" : "Welcome back"}</h1>
       <p className="mt-2 text-muted-foreground">
-        {staff ? "Sign in to your Harmonious staff workspace." : "Sign in to your client portal."}
+        {staff ? "Sign in to your Harmonious staff workspace." : investorEntry ? "Sign in to complete your investment." : "Sign in to your client portal."}
       </p>
 
       <Button
@@ -172,12 +177,14 @@ function SignInPage() {
         </Button>
       </form>
 
+      {investorEntry && !staff ? <Button className="mt-4 w-full" variant="outline" asChild><Link to="/auth/register" search={(registerNext ? { next: registerNext } : {}) as never}>Set up your account</Link></Button> : null}
+
       {staff && <p className="mt-6 text-sm text-muted-foreground">
         Signing in as a client?{" "}
         <a href={`${CLIENT_ORIGIN_DEFAULT}/auth`} className="font-medium text-foreground hover:underline">Open the client portal</a>
       </p>}
 
-      <p className="mt-2 text-sm text-muted-foreground">
+      {!investorEntry || staff ? <p className="mt-2 text-sm text-muted-foreground">
         Have an invitation?{" "}
         <Link
           to="/auth/register"
@@ -186,7 +193,7 @@ function SignInPage() {
         >
           Create your account
         </Link>
-      </p>
+      </p> : null}
     </div>
   );
 }
