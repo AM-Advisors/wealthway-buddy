@@ -56,8 +56,8 @@ export async function w9State(sb: any, uid: string, fundId: string) {
   const ids = (managers ?? []).map((x: any) => x.user_id);
   const { data: profiles } = ids.length ? await db().from("profiles").select("user_id, legal_name, email").in("user_id", ids) : { data: [] };
   const newerSource = !!source && request?.status === "signed" && source.created_at > request.created_at && source.ref !== request.source_ref;
-  const displayFill = request?.status === "pending" ? request.snapshot : fill;
-  return { staff: a.staff, assigned: a.assigned, me: uid, needed: !!source || String(fill.tin ?? "").length === 9, sourceRef: source?.ref ?? null, newerSource, missing: fundW9Missing(fill), details: { legalName: displayFill.legalName, address: [displayFill.addressLine, displayFill.cityStateZip].filter(Boolean).join(", "), classification: [displayFill.federalClassification, displayFill.llcClass].filter(Boolean).join(" "), ein: `••-•••${String(fill.tin ?? "").slice(-4)}` }, managers: (profiles ?? []).map((p: any) => ({ id: p.user_id as string, name: (p.legal_name || p.email) as string })), request: request ? { id: request.id as string, status: request.status as string, signerId: request.signer_user_id as string, signedAt: request.signed_at as string | null, signedName: request.signed_name as string | null, url: await url(request.signed_path || request.preview_path) } : null };
+  const displayFill = request && !newerSource ? request.snapshot : fill;
+  return { staff: a.staff, assigned: a.assigned, me: uid, needed: !!request || !!source || String(fill.tin ?? "").length === 9, sourceRef: source?.ref ?? null, newerSource, missing: fundW9Missing(fill), details: { legalName: displayFill.legalName, address: [displayFill.addressLine, displayFill.cityStateZip].filter(Boolean).join(", "), classification: [displayFill.federalClassification, displayFill.llcClass].filter(Boolean).join(" "), ein: `••-•••${displayFill.einLast4 ?? String(fill.tin ?? "").slice(-4)}` }, managers: (profiles ?? []).map((p: any) => ({ id: p.user_id as string, name: (p.legal_name || p.email) as string })), request: request ? { id: request.id as string, status: request.status as string, signerId: request.signer_user_id as string, signedAt: request.signed_at as string | null, signedName: request.signed_name as string | null, url: await url(request.signed_path || request.preview_path) } : null };
 }
 export async function prepareW9(sb: any, uid: string, fundId: string, signerId: string, classification: string, llcClass?: "C" | "S" | "P") {
   const a = await access(uid, fundId);
@@ -82,7 +82,7 @@ export async function prepareW9(sb: any, uid: string, fundId: string, signerId: 
   const { error: uploadError } = await db().storage.from(BUCKET).upload(path, bytes, { contentType: "application/pdf", upsert: false });
   if (uploadError) throw new Error("The W-9 preview could not be saved.");
   const { tin: _tin, ...snapshot } = fill;
-  const { error } = await db().from("fund_w9_signature_requests").insert({ id, offering_id: fundId, signer_user_id: signerId, source_ref: state.sourceRef, snapshot, preview_path: path, preview_sha256: await sha256Hex(bytes), created_by: uid });
+  const { error } = await db().from("fund_w9_signature_requests").insert({ id, offering_id: fundId, signer_user_id: signerId, source_ref: state.sourceRef, snapshot: { ...snapshot, einLast4: String(fill.tin).slice(-4) }, preview_path: path, preview_sha256: await sha256Hex(bytes), created_by: uid });
   if (error) throw new Error("The W-9 request could not be saved. Refresh to check for an existing request.");
   await (await import("@/lib/fund-audit.server")).logFundAudit(uid, { offeringId: fundId, eventType: "fund_w9_prepared", summary: "Fund W-9 prepared for manager signature", values: { requestId: id } });
   const { data: profile } = await db().from("profiles").select("legal_name, email").eq("user_id", signerId).maybeSingle();
