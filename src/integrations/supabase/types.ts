@@ -26029,6 +26029,7 @@ export type Database = {
           doc_kind: string
           file_name: string
           id: string
+          investment_profile_id: string | null
           note: string | null
           offering_id: string
           onboarding_id: string | null
@@ -26049,6 +26050,7 @@ export type Database = {
           doc_kind: string
           file_name: string
           id?: string
+          investment_profile_id?: string | null
           note?: string | null
           offering_id: string
           onboarding_id?: string | null
@@ -26069,6 +26071,7 @@ export type Database = {
           doc_kind?: string
           file_name?: string
           id?: string
+          investment_profile_id?: string | null
           note?: string | null
           offering_id?: string
           onboarding_id?: string | null
@@ -26086,6 +26089,13 @@ export type Database = {
             columns: ["application_id"]
             isOneToOne: false
             referencedRelation: "investor_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_documents_investment_profile_id_fkey"
+            columns: ["investment_profile_id"]
+            isOneToOne: false
+            referencedRelation: "investment_profiles"
             referencedColumns: ["id"]
           },
           {
