@@ -33,4 +33,4 @@
 - New items awaiting Harmonious review/approval (any Operations work-queue source) post once each to #operations via src/lib/approval-alerts.server.ts, run from the existing 5-minute internal job; first run records the backlog silently - why: one alert path, no extra polling job.
 
 - Fund W-9: fund-w9.server.ts reuses pinned IRS PDFs and signature adoption; immutable fund_w9_signature_requests, assigned-manager-only signing — why: reviewed facts, no impersonation.
-- Series LLC/IRS use fund-setup-extras evidence + scoped listFiles — why: one completion source.
+- Series/IRS use fund-setup-extras evidence + scoped listFiles — why: one completion source.
