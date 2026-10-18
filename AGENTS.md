@@ -15,7 +15,7 @@
 - Sales uses the Operations shell for authorized Operations staff, while commercial-only Sales staff get a Sales-only menu — why: presentation must not imply wider Operations access.
 - Server functions import requireSupabaseAuth only from src/lib/require-auth.ts (same middleware, light context), never the generated module — why: its Database-typed context exceeds preview typecheck limits.
 - Client and Operations share fund-workspace.tsx (mode client|harmonious); tab links retain fund ID and audience, staff controls use mode and actions keep server checks — why: one connected fund view, presentation grants no authority.
-- Offering Statement management fee/carry/preferred return are projections of the active fund_fee_terms row (src/lib/offering-statement.functions.ts overwrites them on read and save) - why: the statement must never differ from the fund record.
+- Offering Statement projects active fund_fee_terms on read/save — why: matches fund fees, carry and preferred return.
 - Setup %: fund-launch-summary.ts; banking: bankSetupStatus; Ops/manager launch: ManagerLaunchCard + invalidateFund — why: shared facts and actions, retained review.
 - Fund origin separates new/migration workflows; investor-progress-email uses canonical steps, audit frequency and the existing drain — why: no inferred takeover or duplicate engine.
 
@@ -34,3 +34,5 @@
 
 - Fund W-9: fund-w9.server.ts reuses pinned IRS PDFs and signature adoption; immutable fund_w9_signature_requests, assigned-manager-only signing — why: reviewed facts, no impersonation.
 - Series/IRS use fund-setup-extras evidence + scoped listFiles — why: one completion source.
+
+- Investor entry uses investor-entry-path.ts; task forms precede supporting panels — why: same investment, no new authority.

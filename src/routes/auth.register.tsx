@@ -11,6 +11,7 @@ import { consumeOAuthReturnError, startGoogleOAuth } from "@/lib/google-oauth";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { investorEntryPath } from "@/lib/investor-entry-path";
 import { Label } from "@/components/ui/label";
 
 export const Route = createFileRoute("/auth/register")({
@@ -40,6 +41,8 @@ function RegisterPage() {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);
+  const [next, setNext] = useState<string | null>(null);
+  useEffect(() => setNext(investorEntryPath(window.location.search)), []);
   const checkEligibility = useServerFn(checkInviteEligibility);
 
   useEffect(() => {
@@ -49,7 +52,7 @@ function RegisterPage() {
 
   async function signUpWithGoogle() {
     setBusy(true);
-    const errorMessage = await startGoogleOAuth("/auth");
+    const errorMessage = await startGoogleOAuth("/auth", next);
     if (errorMessage) {
       toast.error(errorMessage);
       setBusy(false);
@@ -74,7 +77,7 @@ function RegisterPage() {
         password,
         options: {
           // An investor who arrived from their onboarding link returns straight to it.
-          emailRedirectTo: `${window.location.origin}${portalNext() ?? "/onboarding/kyc"}`,
+          emailRedirectTo: `${window.location.origin}${next ?? "/onboarding/kyc"}`,
         },
       });
       if (error) throw error;
@@ -96,7 +99,7 @@ function RegisterPage() {
         </p>
         <p className="mt-6 text-sm text-muted-foreground">
           Already confirmed?{" "}
-          <Link to="/auth" className="font-medium text-foreground hover:underline">
+          <Link to="/auth" search={(next ? { next } : {}) as never} className="font-medium text-foreground hover:underline">
             Sign in
           </Link>
         </p>
@@ -162,7 +165,7 @@ function RegisterPage() {
 
       <p className="mt-6 text-sm text-muted-foreground">
         Already registered?{" "}
-        <Link to="/auth" className="font-medium text-foreground hover:underline">
+        <Link to="/auth" search={(next ? { next } : {}) as never} className="font-medium text-foreground hover:underline">
           Sign in
         </Link>
       </p>
@@ -170,8 +173,3 @@ function RegisterPage() {
   );
 }
 
-/** Only an onboard.harmonious.co invitation path is carried through sign-up. */
-function portalNext(): string | null {
-  const next = new URLSearchParams(window.location.search).get("next") ?? "";
-  return /^\/onboard\/[A-Za-z0-9]{16,64}$/.test(next) || /^\/onboard\/i\/[0-9a-f-]{36}$/i.test(next) ? next : null;
-}
