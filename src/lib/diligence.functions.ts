@@ -89,7 +89,7 @@ export const getDiligenceRoom = createServerFn({ method: "POST" })
     if (room) {
       const { data: docs, error } = await supabase
         .from("diligence_documents")
-        .select("id, category, title, description, file_name, size_bytes, uploaded_at")
+        .select("id, category, title, description, file_name, size_bytes, uploaded_at, show_pre_commitment")
         .eq("room_id", room.id)
         .is("archived_at", null)
         .order("uploaded_at", { ascending: false });

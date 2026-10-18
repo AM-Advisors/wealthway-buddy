@@ -1,3 +1,4 @@
+import { setPreCommitmentVisibility } from "@/lib/deal-review.functions";
 import { useEffect, useRef, useState } from "react";
 
 import { Link } from "@tanstack/react-router";
@@ -909,6 +910,9 @@ function DocumentsTab({
                           >
                             {openHistory === doc.id ? "Hide history" : "History"}
                           </Button>
+                          {canManage ? (
+                            <PreCommitmentToggle doc={doc} onDone={refresh} />
+                          ) : null}
                           {canManage ? (
                             <Button
                               size="sm"
@@ -1903,5 +1907,19 @@ function InvestingPath({ offeringId }: { offeringId: string }) {
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+function PreCommitmentToggle({ doc, onDone }: { doc: any; onDone: () => void }) {
+  const set = useServerFn(setPreCommitmentVisibility);
+  const m = useMutation({
+    mutationFn: () => set({ data: { id: doc.id, show: !doc.show_pre_commitment } }),
+    onSuccess: onDone,
+    onError: (e: any) => toast.error(e.message),
+  });
+  return (
+    <Button size="sm" variant="ghost" disabled={m.isPending} onClick={() => m.mutate()}>
+      {doc.show_pre_commitment ? "Shown before commitment" : "Show before commitment"}
+    </Button>
   );
 }
