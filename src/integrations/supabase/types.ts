@@ -26140,12 +26140,15 @@ export type Database = {
           note: string | null
           offering_id: string
           onboarding_id: string | null
+          prepared_for_person_id: string | null
           review_note: string | null
           review_status: string
           reviewed_at: string | null
           reviewed_by: string | null
           storage_path: string
           uploaded_at: string
+          uploaded_by: string | null
+          uploaded_by_role: string | null
           user_id: string
         }
         Insert: {
@@ -26161,12 +26164,15 @@ export type Database = {
           note?: string | null
           offering_id: string
           onboarding_id?: string | null
+          prepared_for_person_id?: string | null
           review_note?: string | null
           review_status?: string
           reviewed_at?: string | null
           reviewed_by?: string | null
           storage_path: string
           uploaded_at?: string
+          uploaded_by?: string | null
+          uploaded_by_role?: string | null
           user_id: string
         }
         Update: {
@@ -26182,12 +26188,15 @@ export type Database = {
           note?: string | null
           offering_id?: string
           onboarding_id?: string | null
+          prepared_for_person_id?: string | null
           review_note?: string | null
           review_status?: string
           reviewed_at?: string | null
           reviewed_by?: string | null
           storage_path?: string
           uploaded_at?: string
+          uploaded_by?: string | null
+          uploaded_by_role?: string | null
           user_id?: string
         }
         Relationships: [
