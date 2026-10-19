@@ -665,5 +665,17 @@ export const listRecordChangeAudit = createServerFn({ method: "GET" })
         status: null,
       })),
     ];
+    let stepsQ = db.from("investor_onboarding_events").select("id,onboarding_id,offering_id,event,actor_user_id,created_at,from_status,to_status").order("created_at", { ascending: false }).limit(500);
+    if (since) stepsQ = stepsQ.gte("created_at", since);
+    if (data.offeringId) stepsQ = stepsQ.eq("offering_id", data.offeringId);
+    const steps = await stepsQ;
+    if (steps.error) throw new Error(steps.error.message);
+    const { stepLabel } = await import("@/lib/investor-step-history-model");
+    for (const e of (steps.data ?? []) as any[]) entries.push({
+      id: `step-${e.id}`, at: e.created_at, actor: personName.get(e.actor_user_id) ?? null,
+      fundName: e.offering_id ? (fundName.get(e.offering_id) ?? null) : null, category: "Investor step",
+      summary: stepLabel(e.event), detail: joinDetail([e.from_status || e.to_status ? `Status: ${e.from_status ?? "(none)"} → ${e.to_status ?? "(none)"}` : null]),
+      amountCents: null, status: null,
+    } as AuditEntry);
     return finish(entries, data);
   });
