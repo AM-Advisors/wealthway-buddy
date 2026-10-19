@@ -37,3 +37,5 @@
 
 - Investor entry uses investor-entry-path.ts; profile evidence uses investor_documents.investment_profile_id with retained originals and canonical requirement projection — why: collect once without approving KYC or reusing fund signatures.
 
+- Persons are the single person record: exact duplicates (email + legal name + DOB, never two accounts) merge via merge_persons (person-merge.server.ts), others go to person_duplicate_flags for staff; merged rows stay read-only, never deleted — why: one record without guessing.
+- Managers/Harmonious upload investor documents via uploadDocFor (prepared_for_person_id until the investor claims); uploads never verify — why: complete records without bypassing identity checks.

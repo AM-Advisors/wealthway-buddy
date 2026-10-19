@@ -5,7 +5,7 @@ export const STEP_LABELS: Record<string, string> = {
   signature_completed: 'Documents signed', investor_reports_funds_sent: 'Investor reported funds sent', approved_to_fund: 'Approved to fund',
   funding_released: 'Funding released', accepted: 'Accepted', closed: 'Closed', removed: 'Removed', investor_confirmed: 'Investor confirmed',
   personal_link_created: 'Personal link created', personal_link_emailed: 'Personal link emailed', personal_link_copied: 'Personal link copied',
-  tax_form_uploaded: 'Tax form uploaded', w9_uploaded: 'W-9 uploaded',
+  tax_form_uploaded: 'Tax form uploaded', w9_uploaded: 'W-9 uploaded', document_uploaded_on_behalf: 'Document uploaded for the investor',
 };
 export const stepLabel = (e: string) => STEP_LABELS[e] ?? e.replace(/_/g, ' ').replace(/^\w/, (c) => c.toUpperCase());
 
