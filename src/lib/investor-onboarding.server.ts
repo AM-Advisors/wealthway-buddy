@@ -2331,7 +2331,9 @@ export async function getPersonalLink(userId: string, onboardingId: string) {
   const { data: setup } = await db().from("fund_setups").select("launch_state, launched_at").eq("offering_id", row.offering_id).maybeSingle();
   const launched = Boolean(setup?.launched_at);
   const link = await linkView(row);
-  return { link, launched, hasEmail: Boolean(row.persons?.email), canCreate: !isInvestor && !link && Boolean(row.persons?.email), canSend: !isInvestor && Boolean(link) && link?.state === "active" };
+  const { personalLinkPermissions } = await import("@/lib/personal-investment-link-model");
+  const perms = personalLinkPermissions({ isInvestor, hasLink: Boolean(link), linkActive: link?.state === "active", hasEmail: Boolean(row.persons?.email) });
+  return { link, launched, hasEmail: Boolean(row.persons?.email), canCreate: perms.canCreate, canSend: perms.canSend };
 }
 export async function createPersonalLink(userId: string, onboardingId: string) {
   const row = await personalLinkRow(onboardingId);
