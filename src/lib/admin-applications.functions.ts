@@ -56,12 +56,12 @@ export const createInvestorApplication = createServerFn({ method: "POST" })
 
     const { data: offering, error: offeringError } = await supabase
       .from("offerings")
-      .select("id, name, min_investment_cents, is_open")
+      .select("id, name, min_investment_cents, is_open, lifecycle_status")
       .eq("id", data.offering_id)
       .maybeSingle();
     if (offeringError) throw new Error(offeringError.message);
     if (!offering) throw new Error("That fund no longer exists.");
-    if (!offering.is_open) throw new Error("That fund is closed to new investors.");
+    if (!offering.is_open || (offering as any).lifecycle_status === "closed") throw new Error("That fund is closed to new investments.");
 
     if (
       data.commitment_cents !== null &&

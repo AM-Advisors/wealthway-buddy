@@ -4,6 +4,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/lib/require-auth";
 import { documentsUnlocked, preCommitmentDocs, publishedTerms } from "@/lib/deal-review-model";
 import { DEFAULT_NDA, ndaHash } from "@/lib/diligence.functions";
+import { fundAcceptsInvestments, prospectDocumentsVisible } from "@/lib/fund-status-model";
 
 const slugInput = z.object({ slug: z.string().min(1).max(200) });
 
@@ -55,7 +56,7 @@ export const getDealReview = createServerFn({ method: "POST" })
     const accepted = await ndaAccepted(db, room, ctx.userId);
     const unlocked = documentsUnlocked(ndaRequired, accepted);
     let documents: any[] = [];
-    if (room && unlocked) {
+    if (room && unlocked && prospectDocumentsVisible(offering)) {
       const { data: docs } = await db
         .from("diligence_documents")
         .select("id, category, title, description, file_name, size_bytes, uploaded_at, show_pre_commitment, archived_at, visibility")
@@ -66,7 +67,8 @@ export const getDealReview = createServerFn({ method: "POST" })
     if (room) await log(db, ctx.userId, offering.id, room.id, "deal_review_visit", "Opened the deal review");
     return {
       offeringId: offering.id as string,
-      isOpen: offering.is_open !== false,
+      isOpen: fundAcceptsInvestments(offering),
+      closed: offering.lifecycle_status === "closed",
       intro: (room?.intro ?? null) as string | null,
       statement: publishedTerms(statement as any),
       assets: (assets ?? []) as any[],
@@ -101,7 +103,7 @@ export const openDealReviewDocument = createServerFn({ method: "POST" })
   .inputValidator(slugInput.extend({ id: z.string().uuid() }).parse)
   .handler(async ({ data, context: ctx }) => {
     const { db, offering, room } = await context(data.slug);
-    if (!room) throw new Error("That document is not available.");
+    if (!room || !prospectDocumentsVisible(offering)) throw new Error("That document is not available.");
     if (!documentsUnlocked(Boolean(room.nda_required), await ndaAccepted(db, room, ctx.userId))) {
       throw new Error("Please accept the confidentiality agreement first.");
     }
