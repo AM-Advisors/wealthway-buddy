@@ -2103,6 +2103,14 @@ async function confirmedPrior(onboardingId: string) {
   return p ? { fundedCents: p.funded_cents, signedOn: p.signed_on } : null;
 }
 
+/** Saves the dashboard summary for one onboarding (derived cache; failures never block the caller). */
+export async function saveReadinessSummary(row: any, result: any) {
+  await db().from("onboarding_readiness_summaries").upsert({
+    onboarding_id: row.id, offering_id: row.offering_id, close_ready: !!result.closeReady, terminal: result.terminal ?? null,
+    blocked: result.items.some((i: any) => i.status === "blocked"), next_owner: result.nextAction?.owner ?? null, computed_at: nowIso(),
+  }).then(() => null, () => null);
+}
+
 export async function computeReadinessFor(row: any, closeAmountCents?: number | null) {
   const { computeReadiness } = await import("@/lib/investment-readiness");
   const facts = await gatherFacts(row);
@@ -2133,6 +2141,7 @@ export async function reconcileInvestmentReadiness(onboardingId: string, ctx: { 
   const { readinessTransitions, readinessTaskPlan, READINESS_RULE_VERSION } = await import("@/lib/investment-readiness");
   const row = await onboardingRow(onboardingId);
   const { result, facts } = await computeReadinessFor(row);
+  await saveReadinessSummary(row, result);
   const [{ data: evs }, { data: tasks }] = await Promise.all([
     db().from("investment_readiness_events").select("requirement_key,new_status,created_at").eq("onboarding_id", row.id).order("created_at", { ascending: true }),
     db().from("investment_readiness_tasks").select("id,requirement_key").eq("onboarding_id", row.id).eq("status", "open"),

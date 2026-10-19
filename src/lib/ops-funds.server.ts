@@ -22,6 +22,9 @@ export async function opsFundsDashboard(userId: string, supabase: any) {
   return { rows: built.rows, canDelete, totals: built.totals };
 }
 
+const SUMMARY_TTL = 60 * 60 * 1000;
+const REFRESH_LIMIT = 4;
+
 async function buildOpsFundsDashboard(userId: string, supabase: any) {
   const [{ data: offs }, { data: onbs }, { data: tasks }, { data: setups }, { data: managers }, { data: links }] = await Promise.all([
     db().from("offerings").select("id, name, client_id, is_open, is_demo").order("name").limit(1000),
@@ -46,21 +49,35 @@ async function buildOpsFundsDashboard(userId: string, supabase: any) {
   const setup = new Map(((setups ?? []) as any[]).map((s) => [s.offering_id, s]));
   const activeLink = new Set(((links ?? []) as any[]).map((l) => l.offering_id));
 
-  // Readiness per onboarding runs in parallel batches (was one-at-a-time, the main slowdown).
+  // Per-investor readiness comes from saved summaries. Computing it live for every
+  // investor made thousands of database calls and the page timed out. Only missing or
+  // stale summaries (older than SUMMARY_TTL, oldest first) are refreshed, up to
+  // REFRESH_LIMIT per load, so the page always stays within the server's limits.
   const onbRows = (onbs ?? []) as any[];
-  const facts: FundOnboardingFact[] = [];
+  const ids = onbRows.map((r) => r.id);
+  const saved = new Map<string, any>();
+  for (let i = 0; i < ids.length; i += 300) {
+    const { data } = await db().from("onboarding_readiness_summaries").select("*").in("onboarding_id", ids.slice(i, i + 300));
+    for (const r of (data ?? []) as any[]) saved.set(r.onboarding_id, r);
+  }
+  const cutoff = Date.now() - SUMMARY_TTL;
+  const stale = onbRows
+    .filter((r) => { const s = saved.get(r.id); return !s || new Date(s.computed_at).getTime() < cutoff || (r.updated_at && new Date(r.updated_at) > new Date(s.computed_at)); })
+    .sort((a, b) => (saved.has(a.id) ? 1 : 0) - (saved.has(b.id) ? 1 : 0))
+    .slice(0, REFRESH_LIMIT);
   const factsDone = (async () => {
-    for (let i = 0; i < onbRows.length; i += 20) {
-      const chunk = await Promise.all(onbRows.slice(i, i + 20).map(async (row) => {
-        const { result } = await computeReadinessFor(row);
-        return {
-          offeringId: row.offering_id, stage: row.stage, closeReady: result.closeReady, terminal: result.terminal,
-          blocked: result.items.some((i) => i.status === "blocked"), nextOwner: result.nextAction?.owner ?? null, fundingStatus: row.funding_status ?? null,
-        } as FundOnboardingFact;
+    const { saveReadinessSummary } = await import("@/lib/investor-onboarding.server");
+    for (let i = 0; i < stale.length; i += 5) {
+      await Promise.all(stale.slice(i, i + 5).map(async (row) => {
+        try {
+          const { result } = await computeReadinessFor(row);
+          await saveReadinessSummary(row, result);
+          saved.set(row.id, { close_ready: result.closeReady, terminal: result.terminal, blocked: result.items.some((x) => x.status === "blocked"), next_owner: result.nextAction?.owner ?? null });
+        } catch { /* keep the previous summary */ }
       }));
-      facts.push(...chunk);
     }
   })();
+  const facts: FundOnboardingFact[] = [];
   const openTasks = ((tasks ?? []) as any[]).map((t) => ({ offeringId: t.offering_id, owner: t.owner }));
   const { agreementStatusForClients } = await import("@/lib/commercial-agreements.server");
   // Same setup % as Fund Setup and Readiness (blocking tasks + required launch conditions).
@@ -71,6 +88,10 @@ async function buildOpsFundsDashboard(userId: string, supabase: any) {
     factsDone,
   ]);
   void supabase;
+  for (const row of onbRows) {
+    const sm = saved.get(row.id);
+    facts.push({ offeringId: row.offering_id, stage: row.stage, closeReady: !!sm?.close_ready, terminal: sm?.terminal ?? null, blocked: !!sm?.blocked, nextOwner: sm?.next_owner ?? null, fundingStatus: row.funding_status ?? null });
+  }
   const rows = offerings.map((o) => {
     const mgrs = ((managers ?? []) as any[]).filter((m) => m.offering_id === o.id).map((m) => ({ id: m.user_id as string, name: (name.get(m.user_id) ?? "Unnamed") as string }));
     const s = setup.get(o.id);
