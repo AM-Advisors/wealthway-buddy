@@ -34776,6 +34776,44 @@ export type Database = {
           },
         ]
       }
+      onboarding_readiness_summaries: {
+        Row: {
+          blocked: boolean
+          close_ready: boolean
+          computed_at: string
+          next_owner: string | null
+          offering_id: string
+          onboarding_id: string
+          terminal: string | null
+        }
+        Insert: {
+          blocked?: boolean
+          close_ready?: boolean
+          computed_at?: string
+          next_owner?: string | null
+          offering_id: string
+          onboarding_id: string
+          terminal?: string | null
+        }
+        Update: {
+          blocked?: boolean
+          close_ready?: boolean
+          computed_at?: string
+          next_owner?: string | null
+          offering_id?: string
+          onboarding_id?: string
+          terminal?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_readiness_summaries_onboarding_id_fkey"
+            columns: ["onboarding_id"]
+            isOneToOne: true
+            referencedRelation: "investor_onboardings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       onboarding_step_views: {
         Row: {
           application_id: string
