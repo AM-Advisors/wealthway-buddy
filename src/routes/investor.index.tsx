@@ -3,6 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 
 import { getMyPortfolioValue } from "@/lib/cap-table.functions";
+import { MyPersonalInvestmentLinks } from "@/components/personal-investment-link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const Route = createFileRoute("/investor/")({
@@ -36,6 +37,7 @@ function InvestorHome() {
         <h1 className="text-2xl font-semibold">My investments</h1>
         <p className="text-sm text-muted-foreground">Open a fund to see its documents, deal room, payments, taxes and messages.</p>
       </div>
+      <MyPersonalInvestmentLinks />
       {isLoading ? (
         <p className="text-sm text-muted-foreground">Loading…</p>
       ) : funds.length === 0 ? (
