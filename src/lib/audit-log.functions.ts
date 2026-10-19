@@ -579,3 +579,91 @@ export const listAuditFunds = createServerFn({ method: "GET" })
   });
 
 export const formatAuditAmount = money;
+
+/* ---------------------------------------------------------- record changes */
+
+/**
+ * Unified record history: who changed a fund, client contact or investor
+ * record, when, and before/after. Read-only; staff verified first, then the
+ * service-role-only history tables are read inside the handler.
+ */
+export const listRecordChangeAudit = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => filterSchema.parse(d ?? {}))
+  .handler(async ({ data, context }) => {
+    await requireStaff(context);
+    const since = sinceOf(data.days);
+    const { fundName, clientName, personName } = await lookups(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const db = supabaseAdmin as any;
+
+    let inv = db.from("investor_record_changes").select("*").order("created_at", { ascending: false }).limit(500);
+    let names = db.from("offering_name_history").select("*").order("created_at", { ascending: false }).limit(200);
+    let contacts = db.from("client_contact_events").select("*").order("created_at", { ascending: false }).limit(200);
+    if (since) {
+      inv = inv.gte("created_at", since);
+      names = names.gte("created_at", since);
+      contacts = contacts.gte("created_at", since);
+    }
+    if (data.offeringId) {
+      inv = inv.eq("offering_id", data.offeringId);
+      names = names.eq("offering_id", data.offeringId);
+    }
+    const [a, b, c] = await Promise.all([
+      inv,
+      names,
+      data.offeringId ? Promise.resolve({ data: [], error: null }) : contacts,
+    ]);
+    for (const r of [a, b, c]) if (r.error) throw new Error(r.error.message);
+
+    const short = (v: unknown) => {
+      if (v === null || v === undefined || v === "") return "(empty)";
+      const text = typeof v === "string" ? v : JSON.stringify(v);
+      return text.length > 140 ? `${text.slice(0, 140)}…` : text;
+    };
+
+    const entries: AuditEntry[] = [
+      ...((a.data ?? []) as any[]).map((e) => ({
+        id: `inv-${e.id}`,
+        at: e.created_at,
+        actor: personName.get(e.actor_user_id) ?? null,
+        fundName: e.offering_id ? (fundName.get(e.offering_id) ?? null) : null,
+        category: "Investor record",
+        summary: `${e.field ?? "field"} changed${e.subject_table ? ` (${e.subject_table})` : ""}`,
+        detail: joinDetail([
+          `Before: ${short(e.old_value)}`,
+          `After: ${short(e.new_value)}`,
+          e.source ? `Source: ${e.source}` : null,
+        ]),
+        amountCents: null,
+        status: null,
+      })),
+      ...((b.data ?? []) as any[]).map((e) => ({
+        id: `name-${e.id}`,
+        at: e.created_at,
+        actor: personName.get(e.actor_id) ?? null,
+        fundName: fundName.get(e.offering_id) ?? null,
+        category: "Fund name",
+        summary: `Renamed to ${e.new_name}`,
+        detail: joinDetail([
+          `Before: ${short(e.previous_name)}`,
+          e.effective_date ? `Effective: ${e.effective_date}` : null,
+          e.reason ? `Reason: ${e.reason}` : null,
+        ]),
+        amountCents: null,
+        status: null,
+      })),
+      ...((c.data ?? []) as any[]).map((e) => ({
+        id: `contact-${e.id}`,
+        at: e.created_at,
+        actor: personName.get(e.actor_id) ?? null,
+        fundName: e.client_id ? (clientName.get(e.client_id) ?? null) : null,
+        category: "Client contact",
+        summary: String(e.event_kind ?? "changed").replace(/_/g, " "),
+        detail: e.detail ? short(e.detail) : null,
+        amountCents: null,
+        status: null,
+      })),
+    ];
+    return finish(entries, data);
+  });

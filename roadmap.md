@@ -151,3 +151,10 @@
 - [x] Apply the same boundary to fund setup details across all investors in that fund; align Save labels.
 - [x] Run focused regression tests with synthetic data: 56 passing.
 - [ ] Signed-in browser walkthrough — requires synthetic QA manager session (not configured); no production testing.
+
+## V2.5 migration (plan approved 2026-10-19)
+- [x] Phase 0: checked existing — audit log already existed (/admin/audit); extended rather than duplicated
+- [x] Phase 1: Record history tab (investor record changes, fund renames, client contact changes), staff-only, read-only
+- [ ] Phase 2: Portfolio exposure charts, multi-metric editor, controlled share links
+- [ ] Phase 3: Compliance report schedules (check existing compliance tables first)
+- [ ] Later: cap-table scenarios, valuation sensitivity, client review screen

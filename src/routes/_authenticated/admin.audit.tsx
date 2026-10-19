@@ -11,6 +11,7 @@ import {
   listHoldAudit,
   listInvestorCheckAudit,
   listMoneyAudit,
+  listRecordChangeAudit,
   listScopeAudit,
 } from "@/lib/audit-log.functions";
 
@@ -64,8 +65,9 @@ function AuditLogPage() {
         </p>
       </header>
 
-      <Tabs defaultValue="money">
+      <Tabs defaultValue="records">
         <TabsList>
+          <TabsTrigger value="records">Record history</TabsTrigger>
           <TabsTrigger value="money">Money movement</TabsTrigger>
           <TabsTrigger value="distributions">Distributions</TabsTrigger>
           <TabsTrigger value="checks">Investor checks</TabsTrigger>
@@ -74,6 +76,15 @@ function AuditLogPage() {
           <TabsTrigger value="scope">Scope and fees</TabsTrigger>
         </TabsList>
 
+        <TabsContent value="records" className="pt-4">
+          <AuditLogTable
+            name="record-history"
+            title="Record history"
+            description="Who changed an investor record, fund name or client contact, when, and what it was before and after."
+            loader={listRecordChangeAudit}
+            funds={funds}
+          />
+        </TabsContent>
         <TabsContent value="money" className="pt-4">
           <AuditLogTable
             name="money-movement"
