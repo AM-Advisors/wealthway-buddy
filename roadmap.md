@@ -1,5 +1,8 @@
 # Roadmap
 
+## Broader V2.5 review
+- [x] Compared investor/client and Operations source with current equivalents; recommendations: unified record history, reviewed compliance-report schedules, cap-table financing scenarios, valuation sensitivity, consolidated client reviews, and remaining Portfolio/Report Card presentation improvements. No app features or source-project records imported.
+
 ## V2.5 Portfolio and Report card
 - [x] Compare V2.5 screens and workflows with current portfolio/reporting engines.
 - [x] Add Portfolio plus all three Report Card types: operational, investor risk/action plan, and diligence; reuse canonical records and existing authorization/approval rules.
