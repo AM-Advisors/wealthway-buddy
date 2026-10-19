@@ -136,7 +136,7 @@ function BankingCard({ d, offeringId, onChanged }: { d: D; offeringId: string; o
           <p className="text-sm font-medium">How will this Fund's bank account be handled?</p>
           <div className="flex flex-wrap gap-2">
             {(Object.keys(BANKING_PATH_LABELS) as BankingPath[]).map((p) => (
-              <Button key={p} size="sm" variant={b.path === p ? "default" : "outline"} disabled={!d.canEdit || busy || p === "not_required"} onClick={() => run(() => setPath({ data: { offeringId, path: p } }), "Saved")}>
+              <Button key={p} size="sm" variant={b.path === p ? "default" : "outline"} disabled={!d.canEditClient || busy || p === "not_required"} onClick={() => run(() => setPath({ data: { offeringId, path: p } }), "Saved")}>
                 {BANKING_PATH_LABELS[p]}
               </Button>
             ))}
@@ -294,8 +294,8 @@ function EntityEinCard({ d, offeringId, onChanged }: { d: D; offeringId: string;
         <div className="space-y-2">
           <p className="text-sm font-medium">How will the EIN be handled?</p>
           <div className="flex flex-wrap gap-2">
-            <Button size="sm" variant={e.path === "existing" ? "default" : "outline"} disabled={!d.canEdit || busy} onClick={() => run(() => setPath({ data: { offeringId, path: "existing" } }), "Saved")}>I already have an EIN</Button>
-            <Button size="sm" variant={e.path === "harmonious" ? "default" : "outline"} disabled={!d.canEdit || busy} onClick={() => run(() => setPath({ data: { offeringId, path: "harmonious" } }), "Saved")}>Have Harmonious obtain the EIN</Button>
+            <Button size="sm" variant={e.path === "existing" ? "default" : "outline"} disabled={!d.canEditClient || busy} onClick={() => run(() => setPath({ data: { offeringId, path: "existing" } }), "Saved")}>I already have an EIN</Button>
+            <Button size="sm" variant={e.path === "harmonious" ? "default" : "outline"} disabled={!d.canEditClient || busy} onClick={() => run(() => setPath({ data: { offeringId, path: "harmonious" } }), "Saved")}>Have Harmonious obtain the EIN</Button>
           </div>
         </div>
 
@@ -317,7 +317,7 @@ function EntityEinCard({ d, offeringId, onChanged }: { d: D; offeringId: string;
               </div>
         )}
 
-        {d.canEdit && (e.path === "existing" || (e.path === "harmonious" && e.status === "submitted")) && (
+        {((d.canEditClient && e.path === "existing") || (d.canEdit && e.path === "harmonious" && e.status === "submitted")) && (
           <div className="flex flex-wrap items-end gap-2 rounded-md border p-3">
             <div className="space-y-1">
               <Label htmlFor="ein-number">EIN Number</Label>

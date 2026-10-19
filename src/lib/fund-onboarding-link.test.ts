@@ -91,8 +91,9 @@ describe("link management authorization", () => {
     const s = await srv();
     await expect(s.getFundLink(OUTSIDER, FUND_A)).rejects.toThrow(/Forbidden/);
     await expect(s.getFundLink(MGR_B, FUND_A)).rejects.toThrow(/Forbidden/);
-    await expect(s.regenerateFundLink(MGR_A, FUND_A)).rejects.toThrow(/Forbidden/);
-    await expect(s.setFundLinkEnabled(MGR_A, FUND_A, false)).rejects.toThrow(/Forbidden/);
+    await expect(s.regenerateFundLink(MGR_B, FUND_A)).rejects.toThrow(/Forbidden/);
+    await expect(s.setFundLinkEnabled(MGR_B, FUND_A, false)).rejects.toThrow(/Forbidden/);
+    await expect(s.regenerateFundLink(OUTSIDER, FUND_A)).rejects.toThrow(/Forbidden/);
   });
   it("a fund manager of that exact fund can view and copy it but not manage it", async () => {
     const s = await srv();

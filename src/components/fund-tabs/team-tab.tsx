@@ -154,7 +154,7 @@ function MemberEditor({ fundId, member, onClose }: { fundId: string; member: any
         {f.email.trim() && pq.data?.people.find((p) => p.key === pick)?.kyc !== "verified" && (
           <label className="flex items-start gap-2 text-sm">
             <Checkbox checked={sendInvite} onCheckedChange={(v) => setSendInvite(v === true)} />
-            <span>Send identity check and onboarding invitation<span className="block text-xs text-muted-foreground">Harmonious staff only. Emails a sign-in link; they complete their own ID check when they sign in.</span></span>
+            <span>Send identity check and onboarding invitation<span className="block text-xs text-muted-foreground">Emails a sign-in link; they complete their own ID check when they sign in.</span></span>
           </label>
         )}
         <div className="flex flex-wrap gap-2">

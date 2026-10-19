@@ -68,11 +68,11 @@ export function FundTeam({ fundId }: { fundId: string }) {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base">Add fund manager</CardTitle>
-            <CardDescription>Harmonious staff only. Adds an existing person to this fund only. No email is sent.</CardDescription>
+            <CardDescription>Adds a person who already has a Harmonious account to this fund only. No email is sent. To invite someone new, use Team → Add person.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
             <div className="flex gap-2">
-              <Input placeholder="Search by name or email" value={term} onChange={(e) => setTerm(e.target.value)} />
+              <Input placeholder={d.isStaff ? "Search by name or email" : "Their exact email address"} value={term} onChange={(e) => setTerm(e.target.value)} />
               <Button variant="outline" disabled={term.trim().length < 2} onClick={() => search({ data: { fundId, q: term } }).then(setHits, err)}>Search</Button>
             </div>
             {hits?.map((h) => (

@@ -25,11 +25,9 @@ async function assertLinkViewer(userId: string, offeringId: string) {
   return actor;
 }
 
-/** Staff only. Managers view and copy the link; they never regenerate or disable it. */
+/** Staff, or a Fund Manager of this exact fund (client self-service). Every change is recorded. */
 async function assertLinkManager(userId: string, offeringId: string) {
-  const actor = await onboardingActor(userId);
-  if (!actor.isStaff) forbid("only Harmonious staff can manage this fund's onboarding link.");
-  return actor;
+  return assertLinkViewer(userId, offeringId);
 }
 
 export async function getFundLink(userId: string, offeringId: string) {
@@ -49,11 +47,11 @@ export async function getFundLink(userId: string, offeringId: string) {
     regeneratedAt: row && first && row.created_at !== first.created_at ? (row.created_at as string) : null,
     lastUsedAt: (row?.last_used_at ?? null) as string | null,
     starts: count ?? 0,
-    canManage: actor.isStaff,
+    canManage: actor.isStaff || actor.managedOfferingIds.includes(offeringId),
   };
 }
 
-/** Create or regenerate. Old link stops working; investors it already started are untouched. Staff only. */
+/** Create or regenerate. Old link stops working; investors it already started are untouched. Staff or this fund's managers. */
 export async function regenerateFundLink(userId: string, offeringId: string) {
   await assertLinkManager(userId, offeringId);
   await launchedOffering(offeringId);

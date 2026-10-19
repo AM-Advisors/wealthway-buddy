@@ -152,6 +152,7 @@ export async function phase3Overview(sb: any, userId: string, offeringId: string
 
   return {
     canEdit: actor.isStaff,
+    canEditClient: true,
     banking: {
       path: o.banking_path as BankingPath | null,
       notRequiredReason: actor.isStaff ? o.banking_not_required_reason : null,
@@ -195,7 +196,8 @@ export async function phase3Overview(sb: any, userId: string, offeringId: string
 // ------------------------------------------------------------------ banking
 
 export async function setBankingPath(userId: string, input: { offeringId: string; path: BankingPath; reason?: string | null | undefined }) {
-  await assertStaff(userId, input.offeringId);
+  // Choosing a path is client self-service; marking banking not required stays with Harmonious. Bank verification is unchanged.
+  if (input.path === "not_required") await assertStaff(userId, input.offeringId); else await assertRead(userId, input.offeringId);
   const o = await offering(input.offeringId);
   if (input.path === "not_required") {
     const { count } = await db().from("investor_onboardings").select("id", { count: "exact", head: true }).eq("offering_id", input.offeringId).is("removed_at", null);
@@ -281,7 +283,7 @@ async function addControlledDoc(userId: string, offeringId: string, docType: str
 // ------------------------------------------------------------------ EIN / SS-4
 
 export async function setEinPath(userId: string, input: { offeringId: string; path: EinPath }) {
-  await assertStaff(userId, input.offeringId);
+  await assertRead(userId, input.offeringId);
   const o = await offering(input.offeringId);
   await db().from("offerings").update({ ein_path: input.path, ein_workflow_status: input.path === "harmonious" ? (o.ein_workflow_status ?? "information_needed") : o.ein_workflow_status }).eq("id", input.offeringId);
   await activity(input.offeringId, userId, "ein_path_set", input.path === "harmonious" ? "Harmonious will obtain the EIN" : "Fund already has an EIN");
@@ -299,7 +301,8 @@ async function writeEntity(sb: any, offeringId: string, patch: { ein?: string; s
 
 /** Records a real EIN (existing, or received from the IRS). An IRS letter is required. */
 export async function recordEin(sb: any, userId: string, input: { offeringId: string; ein: string; letterPath?: string | null | undefined; received: boolean }) {
-  await assertStaff(userId, input.offeringId);
+  // Clients record an existing EIN themselves; recording an IRS-issued EIN after Harmonious files stays with Harmonious.
+  if (input.received) await assertStaff(userId, input.offeringId); else await assertRead(userId, input.offeringId);
   if (!validEin(input.ein)) throw new Error("Enter the 9-digit EIN.");
   if (input.letterPath && !input.letterPath.startsWith(`fund-setup-restricted/${input.offeringId}/`)) throw new Error("That file does not belong to this fund.");
   const o = await offering(input.offeringId);
