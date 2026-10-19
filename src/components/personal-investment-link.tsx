@@ -33,13 +33,14 @@ export function PersonalInvestmentLinkCard({ onboardingId }: { onboardingId: str
 }
 
 /** Investor: their own links back to each investment. */
-export function MyPersonalInvestmentLinks() {
+export function MyPersonalInvestmentLinks({ onlyOnboardingId }: { onlyOnboardingId?: string } = {}) {
   const load = useServerFn(getMyPersonalInvestmentLinks), copied = useServerFn(recordPersonalInvestmentLinkCopy);
   const { data } = useQuery({ queryKey: ["my-personal-investment-links"], queryFn: () => load() });
-  if (!data?.links.length) return null;
+  const links = (data?.links ?? []).filter((l) => !onlyOnboardingId || l.onboardingId === onlyOnboardingId);
+  if (!links.length) return null;
   return (
-    <Card><CardHeader><CardTitle className="text-base">Your personal investment link{data.links.length > 1 ? "s" : ""}</CardTitle></CardHeader><CardContent className="space-y-2 text-sm">
-      {data.links.map((l) => <div key={l.onboardingId} className="flex flex-wrap items-center justify-between gap-2 border-b pb-2 last:border-0">
+    <Card><CardHeader><CardTitle className="text-base">Your personal investment link{links.length > 1 ? "s" : ""}</CardTitle></CardHeader><CardContent className="space-y-2 text-sm">
+      {links.map((l) => <div key={l.onboardingId} className="flex flex-wrap items-center justify-between gap-2 border-b pb-2 last:border-0">
         <span>{l.fundName}</span>
         <span className="flex gap-2"><Button size="sm" variant="outline" asChild><a href={l.url}>Open</a></Button><Button size="sm" variant="ghost" onClick={async () => { await navigator.clipboard?.writeText(l.url).catch(() => undefined); toast.success("Link copied"); void copied({ data: { onboardingId: l.onboardingId } }).catch(() => null); }}>Copy</Button></span>
       </div>)}
