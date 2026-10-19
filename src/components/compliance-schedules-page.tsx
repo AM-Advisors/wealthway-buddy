@@ -9,11 +9,10 @@ import { Input } from '@/components/ui/input';
 import { REPORT_TYPES, type ReportType } from '@/lib/compliance-schedule-model';
 import { decideComplianceDelivery, getComplianceSchedules, saveComplianceSchedule } from '@/lib/compliance-schedules.functions';
 
-export const complianceSchedulesQuery = (load: typeof getComplianceSchedules) => ({ queryKey: ['compliance-schedules'], queryFn: () => load() });
 
 export function ComplianceSchedulesPage() {
   const load = useServerFn(getComplianceSchedules), save = useServerFn(saveComplianceSchedule), decide = useServerFn(decideComplianceDelivery), qc = useQueryClient();
-  const { data } = useSuspenseQuery(complianceSchedulesQuery(load));
+  const { data } = useSuspenseQuery({ queryKey: ['compliance-schedules'], queryFn: () => load() });
   const [name, setName] = useState(''), [type, setType] = useState<ReportType>('combined'), [freq, setFreq] = useState<'weekly' | 'monthly' | 'quarterly'>('monthly'), [recipients, setRecipients] = useState(''), [first, setFirst] = useState(new Date().toISOString().slice(0, 10)), [reasons, setReasons] = useState<Record<string, string>>({});
   const refresh = () => qc.invalidateQueries({ queryKey: ['compliance-schedules'] });
   const create = async () => { try { await save({ data: { name, reportType: type, frequency: freq, recipients: recipients.split(/[,\s]+/).filter(Boolean), firstRunOn: first, active: true } }); toast.success('Schedule saved'); setName(''); setRecipients(''); refresh(); } catch (e) { toast.error((e as Error).message); } };
