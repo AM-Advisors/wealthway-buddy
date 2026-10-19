@@ -2301,3 +2301,79 @@ export async function readinessQueue(userId: string) {
     ageDays: Math.floor((now - new Date(t.became_actionable_at ?? t.created_at).getTime()) / 86400000),
   }));
 }
+
+/* ------------------------------------------------ personal investment links */
+// Each investor's own link is the existing email-bound invitation (/onboard/<token>), attached to
+// their investment so claiming it opens that exact investment. Creating one never sends email.
+async function personalLinkRow(onboardingId: string) {
+  const { data: row } = await db().from("investor_onboardings").select("id, offering_id, invitation_id, investor_user_id, person_id, requested_amount_cents, removed_at, persons(email, legal_first_name, legal_last_name)").eq("id", onboardingId).maybeSingle();
+  if (!row || row.removed_at) fail("That investor record was not found.");
+  return row as any;
+}
+async function linkView(row: any) {
+  const { onboardInvitationUrl } = await import("@/lib/onboard-portal-model");
+  if (!row.invitation_id) return null;
+  const { data: inv } = await db().from("fund_invitations").select("id, token, status, expires_at, last_sent_at, accepted_at, created_at").eq("id", row.invitation_id).maybeSingle();
+  if (!inv) return null;
+  const expired = inv.expires_at && inv.expires_at < nowIso();
+  return { url: onboardInvitationUrl(String(inv.token)), createdAt: inv.created_at, expiresAt: inv.expires_at, lastSentAt: inv.last_sent_at, claimed: Boolean(row.investor_user_id || inv.accepted_at), state: inv.status === "revoked" || inv.status === "disabled" ? "disabled" : expired ? "expired" : row.investor_user_id || inv.accepted_at ? "claimed" : "active" };
+}
+async function managerOrStaff(userId: string, offeringId: string) {
+  const actor = await onboardingActor(userId);
+  if (!actor.isStaff && !actor.managedOfferingIds.includes(offeringId)) forbid("you do not manage that fund.");
+  return actor;
+}
+export async function getPersonalLink(userId: string, onboardingId: string) {
+  const row = await personalLinkRow(onboardingId);
+  const actor = await onboardingActor(userId);
+  const isInvestor = row.investor_user_id === userId;
+  if (!isInvestor && !actor.isStaff && !actor.managedOfferingIds.includes(row.offering_id)) forbid("you do not have access to that investor.");
+  const { data: setup } = await db().from("fund_setups").select("launch_state, launched_at").eq("offering_id", row.offering_id).maybeSingle();
+  const launched = Boolean(setup?.launched_at);
+  const link = await linkView(row);
+  return { link, launched, hasEmail: Boolean(row.persons?.email), canCreate: !isInvestor && !link && Boolean(row.persons?.email), canSend: !isInvestor && Boolean(link) && link?.state === "active" };
+}
+export async function createPersonalLink(userId: string, onboardingId: string) {
+  const row = await personalLinkRow(onboardingId);
+  const actor = await managerOrStaff(userId, row.offering_id);
+  if (row.invitation_id) fail("This investor already has a personal link. Harmonious can replace it if needed.");
+  const email = String(row.persons?.email ?? "").trim().toLowerCase();
+  if (!email) fail("Add the investor's email first.");
+  const name = `${row.persons?.legal_first_name ?? ""} ${row.persons?.legal_last_name ?? ""}`.trim() || null;
+  const { data: inv, error } = await db().from("fund_invitations").insert({
+    offering_id: row.offering_id, email, invited_name: name, invited_by: actor.userId, token: crypto.randomUUID().replace(/-/g, ""),
+    expires_at: new Date(Date.now() + 30 * 86_400_000).toISOString(), status: "pending", onboarding_status: "invited",
+    intended_amount_cents: row.requested_amount_cents ?? null, invitation_source: actor.isStaff ? "harmonious:personal_link" : "manager:personal_link", invite_role: "investor", role: "investor",
+  }).select("*").single();
+  if (error) fail(error.message);
+  const { error: linkErr } = await db().from("investor_onboardings").update({ invitation_id: inv.id }).eq("id", onboardingId).is("invitation_id", null);
+  if (linkErr) fail(linkErr.message);
+  await recordEvent({ onboardingId, offeringId: row.offering_id, event: "personal_link_created", subjectTable: "fund_invitations", subjectId: inv.id, detail: { emailSent: false }, actorUserId: actor.userId, actorRole: actor.isStaff ? "harmonious" : "manager" });
+  return { link: await linkView({ ...row, invitation_id: inv.id }) };
+}
+export async function sendPersonalLink(userId: string, onboardingId: string) {
+  const row = await personalLinkRow(onboardingId);
+  const actor = await managerOrStaff(userId, row.offering_id);
+  if (!row.invitation_id) fail("Create the personal link first.");
+  const { data: inv } = await db().from("fund_invitations").select("*").eq("id", row.invitation_id).maybeSingle();
+  if (!inv || (inv.expires_at && inv.expires_at < nowIso())) fail("This link has expired. Ask Harmonious to replace it.");
+  const { data: offering } = await db().from("offerings").select("*").eq("id", row.offering_id).maybeSingle();
+  const sent = await sendOnboardInvitationEmail(inv, offering, actor.userId);
+  await recordEvent({ onboardingId, offeringId: row.offering_id, event: "personal_link_emailed", subjectTable: "fund_invitations", subjectId: inv.id, detail: { emailSent: sent }, actorUserId: actor.userId, actorRole: actor.isStaff ? "harmonious" : "manager" });
+  return { emailSent: Boolean(sent) };
+}
+export async function recordPersonalLinkCopy(userId: string, onboardingId: string) {
+  const row = await personalLinkRow(onboardingId);
+  const actor = await onboardingActor(userId);
+  const isInvestor = row.investor_user_id === userId;
+  if (!isInvestor && !actor.isStaff && !actor.managedOfferingIds.includes(row.offering_id)) forbid("you do not have access to that investor.");
+  await recordEvent({ onboardingId, offeringId: row.offering_id, event: "personal_link_copied", actorUserId: userId, actorRole: isInvestor ? "investor" : actor.isStaff ? "harmonious" : "manager" });
+  return { ok: true };
+}
+/** Investor: only their own claimed investments. */
+export async function myPersonalLinks(userId: string) {
+  const { data: rows } = await db().from("investor_onboardings").select("id, offering_id, invitation_id, investor_user_id, offerings(name)").eq("investor_user_id", userId).is("removed_at", null);
+  const { onboardInvitationUrl } = await import("@/lib/onboard-portal-model");
+  void onboardInvitationUrl;
+  return { links: ((rows ?? []) as any[]).map((r) => ({ onboardingId: r.id as string, fundName: String(r.offerings?.name ?? "Fund"), url: `https://onboard.harmonious.co/onboard/i/${r.id}` })) };
+}
