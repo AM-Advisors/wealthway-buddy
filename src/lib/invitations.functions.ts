@@ -665,11 +665,19 @@ export const getFundInvestorActions = createServerFn({ method: "GET" })
 
 /**
  * Fund Team: people with explicit operational access to one fund.
- * Anyone who manages the fund (or Harmonious staff) can view; only Harmonious
- * staff (legacy admin) can add or remove, so a manager can never hand out
- * authority. Delegated professionals are shown read-only from the existing
+ * Anyone who manages the fund (or Harmonious staff) can view, add or remove
+ * fund managers for that fund only. Managers add existing accounts by exact
+ * email and cannot remove the last manager. Delegated professionals are shown read-only from the existing
  * delegation model and are managed there.
  */
+/** Staff, or a fund manager of this exact fund (client self-service for the fund team). */
+async function canManageFundTeam(ctx: any, userId: string, fundId: string) {
+  if (ctx.isAdmin) return true;
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data } = await (supabaseAdmin as any).from("fund_managers").select("id").eq("offering_id", fundId).eq("user_id", userId).maybeSingle();
+  return !!data;
+}
+
 export const getFundTeam = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ fundId: z.string().uuid() }).parse(d))
@@ -692,7 +700,8 @@ export const getFundTeam = createServerFn({ method: "GET" })
       return { userId: id, name: (p?.legal_name as string | null) ?? "Unnamed person", email: maskEmail(p?.email ?? null) };
     };
     return {
-      canManage: ctx.isAdmin,
+      canManage: await canManageFundTeam(ctx, context.userId, data.fundId),
+      isStaff: !!ctx.isAdmin,
       staff: (staff ?? []).map((s: any) => ({ ...who(s.staff_user_id), role: String(s.assignment_role ?? "Assigned"), since: s.created_at, source: "Client assignment" })),
       managers: (managers ?? []).map((m: any) => ({ ...who(m.user_id), role: "Fund manager", since: m.created_at, source: "Fund manager assignment" })),
       delegates: (dels ?? []).map((d: any) => ({ ...who(d.delegate_user_id), role: String(d.authority_level ?? "Delegate"), since: d.effective_at, source: "Delegation" })),
@@ -706,11 +715,18 @@ export const searchFundTeamCandidates = createServerFn({ method: "GET" })
   .handler(async ({ data, context }) => {
     const ctx = await reviewerContext(context.supabase, context.userId);
     assertFundAllowed(ctx, data.fundId);
-    if (!ctx.isAdmin) throw new Error("Forbidden: only Harmonious staff can change the fund team.");
+    if (!(await canManageFundTeam(ctx, context.userId, data.fundId))) throw new Error("Forbidden: only this fund's managers or Harmonious can change the fund team.");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const db = supabaseAdmin as any;
-    const like = `%${data.q.replace(/[%_,()]/g, " ")}%`;
-    const { data: people } = await db.from("profiles").select("user_id, legal_name, email").or(`legal_name.ilike.${like},email.ilike.${like}`).limit(15);
+    let people: any[] | null;
+    if (ctx.isAdmin) {
+      const like = `%${data.q.replace(/[%_,()]/g, " ")}%`;
+      ({ data: people } = await db.from("profiles").select("user_id, legal_name, email").or(`legal_name.ilike.${like},email.ilike.${like}`).limit(15));
+    } else {
+      // Fund managers look up one person by exact email; they never browse the directory.
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(data.q)) return [];
+      ({ data: people } = await db.from("profiles").select("user_id, legal_name, email").ilike("email", data.q.replace(/[%_]/g, "")).limit(1));
+    }
     const ids = (people ?? []).map((p: any) => p.user_id);
     const { data: on } = ids.length ? await db.from("fund_managers").select("user_id").eq("offering_id", data.fundId).in("user_id", ids) : { data: [] };
     const onTeam = new Set((on ?? []).map((x: any) => x.user_id));
@@ -725,7 +741,7 @@ export const addFundTeamMember = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const ctx = await reviewerContext(supabase, userId);
     assertFundAllowed(ctx, data.fundId);
-    if (!ctx.isAdmin) throw new Error("Forbidden: only Harmonious staff can change the fund team.");
+    if (!(await canManageFundTeam(ctx, context.userId, data.fundId))) throw new Error("Forbidden: only this fund's managers or Harmonious can change the fund team.");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const db = supabaseAdmin as any;
     const { data: existing } = await db.from("fund_managers").select("id").eq("offering_id", data.fundId).eq("user_id", data.userId).maybeSingle();
@@ -746,7 +762,12 @@ export const removeFundTeamMember = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const ctx = await reviewerContext(supabase, userId);
     assertFundAllowed(ctx, data.fundId);
-    if (!ctx.isAdmin) throw new Error("Forbidden: only Harmonious staff can change the fund team.");
+    if (!(await canManageFundTeam(ctx, context.userId, data.fundId))) throw new Error("Forbidden: only this fund's managers or Harmonious can change the fund team.");
+    if (!ctx.isAdmin) {
+      const { supabaseAdmin: a } = await import("@/integrations/supabase/client.server");
+      const { count } = await (a as any).from("fund_managers").select("id", { count: "exact", head: true }).eq("offering_id", data.fundId);
+      if ((count ?? 0) <= 1) throw new Error("A fund needs at least one fund manager. Add another manager before removing this one.");
+    }
     await removeAccessFor(userId, data.userId, data.fundId, "fund_manager");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await (supabaseAdmin as any).from("fund_invitations").update({ status: "revoked" }).eq("offering_id", data.fundId).eq("accepted_by", data.userId).eq("invite_role", "fund_manager").neq("status", "revoked");

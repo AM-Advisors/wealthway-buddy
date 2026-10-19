@@ -123,8 +123,8 @@ async function sendContactInvite(userId: string, contactId: string) {
 
 /** Find or add a Client contact by email for this Fund, then send the identity-check + onboarding invitation. */
 export async function inviteFundPerson(userId: string, input: { offeringId: string; contactKey?: string | null | undefined; fullName?: string | null | undefined; email?: string | null | undefined }) {
-  const actor = await staffFor(userId, input.offeringId);
-  if (!actor.isStaff) forbid("only Harmonious can send invitations.");
+  // Staff or this fund's managers (client self-service). Contacts stay scoped to the fund's own client; identity checks are unchanged.
+  await staffFor(userId, input.offeringId);
   const { data: o } = await db().from("offerings").select("client_id").eq("id", input.offeringId).maybeSingle();
   if (!o?.client_id) throw new Error("Link this Fund to a Client before inviting people.");
   let contactId = input.contactKey?.startsWith("contact:") ? input.contactKey.slice(8) : null;

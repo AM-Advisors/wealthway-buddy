@@ -304,7 +304,7 @@ export function FundRequestEngine({ clientId: id, draft, mode = "client", client
                   <Pick value={r.documents_path} onChange={(v) => set("documents_path", v as any)} options={[{ value: "have", label: "I have documents to upload" }, { value: "prepare", label: "Harmonious to prepare from templates" }]} />
                 </F>
                 {r.documents_path === "have" && <DocUploads clientId={id} kinds={DOC_KINDS} docs={r.documents} onChange={(d) => set("documents", d)} />}
-                <p className="text-xs text-muted-foreground">Harmonious reviews every document and sets up signing before anything goes to investors.</p>
+                <p className="text-xs text-muted-foreground">You can review, approve and set up signing for these documents yourself before anything goes to investors.</p>
               </div>
             )}
 
