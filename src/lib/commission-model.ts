@@ -57,3 +57,16 @@ export function splitLine(opts: {
 export function validRates(r: CommissionRates) {
   return Object.values(r).every((v) => Number.isFinite(v) && v >= 0 && v <= 50);
 }
+
+/** Who may record that a commission was paid out (record only; never moves money). */
+export const PAYOUT_RECORDERS = ["finance", "cro", "executive"];
+
+/** Commission is paid at the end of the quarter in which the client paid. */
+export function payoutDueDate(paidOn: string): string {
+  const [y, m] = paidOn.slice(0, 10).split("-").map(Number) as [number, number];
+  const qEndMonth = Math.ceil(m / 3) * 3;
+  const last = new Date(Date.UTC(y, qEndMonth, 0)).getUTCDate();
+  return `${y}-${String(qEndMonth).padStart(2, "0")}-${String(last).padStart(2, "0")}`;
+}
+
+export type PayoutStatus = "not_earned" | "scheduled" | "paid_out";

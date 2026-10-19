@@ -2038,6 +2038,13 @@
       "when": 1792445636154,
       "tag": "0290_onboarding_readiness_summary",
       "breakpoints": true
+    },
+    {
+      "idx": 291,
+      "version": "7",
+      "when": 1792446752760,
+      "tag": "0291_commission_payouts",
+      "breakpoints": true
     }
   ]
 }
