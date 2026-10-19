@@ -22174,6 +22174,50 @@ export type Database = {
           },
         ]
       }
+      fund_reopen_requests: {
+        Row: {
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          decision_reason: string | null
+          id: string
+          offering_id: string
+          reason: string
+          requested_by: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_reason?: string | null
+          id?: string
+          offering_id: string
+          reason: string
+          requested_by: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_reason?: string | null
+          id?: string
+          offering_id?: string
+          reason?: string
+          requested_by?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_reopen_requests_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fund_report_drafts: {
         Row: {
           computed: Json
@@ -23413,6 +23457,47 @@ export type Database = {
             columns: ["person_id"]
             isOneToOne: false
             referencedRelation: "persons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fund_status_events: {
+        Row: {
+          action: string
+          actor_id: string
+          created_at: string
+          id: string
+          offering_id: string
+          reason: string
+          request_id: string | null
+          self_approved: boolean
+        }
+        Insert: {
+          action: string
+          actor_id: string
+          created_at?: string
+          id?: string
+          offering_id: string
+          reason: string
+          request_id?: string | null
+          self_approved?: boolean
+        }
+        Update: {
+          action?: string
+          actor_id?: string
+          created_at?: string
+          id?: string
+          offering_id?: string
+          reason?: string
+          request_id?: string | null
+          self_approved?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_status_events_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
             referencedColumns: ["id"]
           },
         ]
@@ -34405,6 +34490,9 @@ export type Database = {
           check_mail_address: string | null
           check_payable_to: string | null
           client_id: string | null
+          closed_at: string | null
+          closed_by: string | null
+          closed_reason: string | null
           closing_cost_cents: number
           closing_cost_rate_id: string | null
           closing_cost_reason: string | null
@@ -34440,6 +34528,7 @@ export type Database = {
           legal_name_change_reason: string | null
           legal_name_changed_by: string | null
           legal_name_effective_date: string | null
+          lifecycle_status: string
           max_investment_cents: number | null
           max_offering_cents: number | null
           min_investment_cents: number
@@ -34485,6 +34574,9 @@ export type Database = {
           check_mail_address?: string | null
           check_payable_to?: string | null
           client_id?: string | null
+          closed_at?: string | null
+          closed_by?: string | null
+          closed_reason?: string | null
           closing_cost_cents?: number
           closing_cost_rate_id?: string | null
           closing_cost_reason?: string | null
@@ -34520,6 +34612,7 @@ export type Database = {
           legal_name_change_reason?: string | null
           legal_name_changed_by?: string | null
           legal_name_effective_date?: string | null
+          lifecycle_status?: string
           max_investment_cents?: number | null
           max_offering_cents?: number | null
           min_investment_cents?: number
@@ -34565,6 +34658,9 @@ export type Database = {
           check_mail_address?: string | null
           check_payable_to?: string | null
           client_id?: string | null
+          closed_at?: string | null
+          closed_by?: string | null
+          closed_reason?: string | null
           closing_cost_cents?: number
           closing_cost_rate_id?: string | null
           closing_cost_reason?: string | null
@@ -34600,6 +34696,7 @@ export type Database = {
           legal_name_change_reason?: string | null
           legal_name_changed_by?: string | null
           legal_name_effective_date?: string | null
+          lifecycle_status?: string
           max_investment_cents?: number | null
           max_offering_cents?: number | null
           min_investment_cents?: number
@@ -47664,6 +47761,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      close_fund: {
+        Args: { _actor: string; _offering: string; _reason: string }
+        Returns: undefined
+      }
       consolidate_duplicate_fund: {
         Args: {
           _actor: string
@@ -47717,6 +47818,16 @@ export type Database = {
       current_account_classification: {
         Args: { _user_id: string }
         Returns: string
+      }
+      decide_fund_reopen: {
+        Args: {
+          _actor: string
+          _approve: boolean
+          _reason: string
+          _request: string
+          _self_approved: boolean
+        }
+        Returns: undefined
       }
       diligence_access_open: {
         Args: { _offering_id: string }

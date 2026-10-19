@@ -1,4 +1,5 @@
 import { ManagerLaunchCard } from "@/components/manager-launch-card";
+import { FundStatusCard } from "@/components/fund-status-card";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { FundSetupForm } from "@/components/fund-setup-form";
 import { FundCommandCenter } from "@/components/fund-command-center";
@@ -24,5 +25,5 @@ function Overview() {
   const { fundId } = Route.useParams();
   const navigate = useNavigate();
   const go = (t: "calendar" | "investors" | "capital" | "approvals" | "requests") => navigate({ to: ({ calendar: "/manager/fund/$fundId/calendar", investors: "/manager/fund/$fundId/investors", capital: "/manager/fund/$fundId/transactions", approvals: "/manager/fund/$fundId/approvals", requests: "/manager/fund/$fundId/requests" } as const)[t], params: { fundId } });
-  return <div className="space-y-6"><FundSetupForm offeringId={fundId} mode="manager" /><ManagerLaunchCard fundId={fundId} /><FundCommandCenter fundId={fundId} onNavigate={go} /><ManagerFundDashboard fundId={fundId} /><FundUpdatesFeed offeringId={fundId} limit={6} /><FormationRecordCard offeringId={fundId} /><ManagerCloseSheets offeringId={fundId} /><ManagerFundHome offeringId={fundId} embedded /></div>;
+  return <div className="space-y-6"><FundSetupForm offeringId={fundId} mode="manager" /><ManagerLaunchCard fundId={fundId} /><FundStatusCard fundId={fundId} /><FundCommandCenter fundId={fundId} onNavigate={go} /><ManagerFundDashboard fundId={fundId} /><FundUpdatesFeed offeringId={fundId} limit={6} /><FormationRecordCard offeringId={fundId} /><ManagerCloseSheets offeringId={fundId} /><ManagerFundHome offeringId={fundId} embedded /></div>;
 }

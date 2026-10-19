@@ -62,6 +62,7 @@ export function DealReview({ slug }: { slug: string }) {
 
   return (
     <div className="space-y-4">
+      {d.closed ? <p role="status" className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm">This fund is closed to new investments.</p> : null}
       {d.intro ? <p className="whitespace-pre-wrap text-sm">{d.intro}</p> : null}
 
       {d.assets.length > 0 && (
@@ -96,7 +97,7 @@ export function DealReview({ slug }: { slug: string }) {
         </Card>
       )}
 
-      {d.hasRoom && (
+      {d.hasRoom && !d.closed && (
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Fund documents</CardTitle>
