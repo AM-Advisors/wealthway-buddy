@@ -1982,6 +1982,13 @@
       "when": 1792358438440,
       "tag": "0282_deal_review_pre_commitment",
       "breakpoints": true
+    },
+    {
+      "idx": 283,
+      "version": "7",
+      "when": 1792432628180,
+      "tag": "0283_portfolio_monitoring_and_report_cards",
+      "breakpoints": true
     }
   ]
 }

@@ -37293,6 +37293,48 @@ export type Database = {
           },
         ]
       }
+      portfolio_monitoring_versions: {
+        Row: {
+          actor_id: string
+          asset_id: string
+          created_at: string
+          detail: Json
+          id: string
+          offering_id: string
+        }
+        Insert: {
+          actor_id: string
+          asset_id: string
+          created_at?: string
+          detail?: Json
+          id?: string
+          offering_id: string
+        }
+        Update: {
+          actor_id?: string
+          asset_id?: string
+          created_at?: string
+          detail?: Json
+          id?: string
+          offering_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portfolio_monitoring_versions_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "portfolio_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "portfolio_monitoring_versions_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       portfolio_opening_positions: {
         Row: {
           as_of_date: string
@@ -39559,6 +39601,182 @@ export type Database = {
             columns: ["resolved_person_id"]
             isOneToOne: false
             referencedRelation: "persons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      report_card_configuration_versions: {
+        Row: {
+          actor_id: string
+          created_at: string
+          id: string
+          reason: string
+          thresholds: Json
+          weights: Json
+        }
+        Insert: {
+          actor_id: string
+          created_at?: string
+          id?: string
+          reason: string
+          thresholds: Json
+          weights?: Json
+        }
+        Update: {
+          actor_id?: string
+          created_at?: string
+          id?: string
+          reason?: string
+          thresholds?: Json
+          weights?: Json
+        }
+        Relationships: []
+      }
+      report_card_decisions: {
+        Row: {
+          actor_id: string
+          card_id: string
+          created_at: string
+          decision: string
+          id: string
+          override_id: string | null
+          reason: string
+        }
+        Insert: {
+          actor_id: string
+          card_id: string
+          created_at?: string
+          decision: string
+          id?: string
+          override_id?: string | null
+          reason?: string
+        }
+        Update: {
+          actor_id?: string
+          card_id?: string
+          created_at?: string
+          decision?: string
+          id?: string
+          override_id?: string | null
+          reason?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_card_decisions_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: true
+            referencedRelation: "report_card_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "report_card_decisions_override_id_fkey"
+            columns: ["override_id"]
+            isOneToOne: false
+            referencedRelation: "self_approval_overrides"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      report_card_evidence: {
+        Row: {
+          card_id: string
+          content_base64: string
+          content_type: string
+          created_at: string
+          file_name: string
+          id: string
+          uploaded_by: string
+        }
+        Insert: {
+          card_id: string
+          content_base64: string
+          content_type: string
+          created_at?: string
+          file_name: string
+          id?: string
+          uploaded_by: string
+        }
+        Update: {
+          card_id?: string
+          content_base64?: string
+          content_type?: string
+          created_at?: string
+          file_name?: string
+          id?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_card_evidence_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "report_card_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      report_card_versions: {
+        Row: {
+          answers: Json
+          author_id: string
+          created_at: string
+          id: string
+          investor_visible: boolean
+          kind: string
+          metrics: Json
+          offering_id: string | null
+          period_end: string
+          period_start: string
+          subject_id: string
+          subject_type: string
+          summary: string
+          supersedes_id: string | null
+        }
+        Insert: {
+          answers?: Json
+          author_id: string
+          created_at?: string
+          id?: string
+          investor_visible?: boolean
+          kind: string
+          metrics?: Json
+          offering_id?: string | null
+          period_end: string
+          period_start: string
+          subject_id: string
+          subject_type: string
+          summary?: string
+          supersedes_id?: string | null
+        }
+        Update: {
+          answers?: Json
+          author_id?: string
+          created_at?: string
+          id?: string
+          investor_visible?: boolean
+          kind?: string
+          metrics?: Json
+          offering_id?: string | null
+          period_end?: string
+          period_start?: string
+          subject_id?: string
+          subject_type?: string
+          summary?: string
+          supersedes_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_card_versions_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "report_card_versions_supersedes_id_fkey"
+            columns: ["supersedes_id"]
+            isOneToOne: false
+            referencedRelation: "report_card_versions"
             referencedColumns: ["id"]
           },
         ]

@@ -68,6 +68,7 @@ import { DiligenceQuestionBoard } from "@/components/diligence-question-board";
 import { Textarea } from "@/components/ui/textarea";
 import { DiligenceAssistant } from "@/components/diligence-assistant";
 import { DiligenceAccessPanel } from "@/components/diligence-access-panel";
+import { ReportCardsWorkspace } from "@/components/report-cards-workspace";
 import { RoomKycApplication } from "@/components/room-kyc-application";
 import { PitchDeckPanel } from "@/components/pitch-deck-panel";
 import { OfferingStatementView } from "@/components/offering-statement-view";
@@ -388,12 +389,14 @@ export function DiligenceRoom({ offeringId }: { offeringId: string }) {
           <TabsTrigger value="checklist">Checklist</TabsTrigger>
           <TabsTrigger value="questions">Questions</TabsTrigger>
           <TabsTrigger value="requests">{canManage ? "Ask investors" : "Your questions"}</TabsTrigger>
+          <TabsTrigger value="report-card">Report card</TabsTrigger>
           <TabsTrigger value="activity">Activity</TabsTrigger>
           {canManage ? <TabsTrigger value="engagement">Who's viewing</TabsTrigger> : null}
           {canManage ? <TabsTrigger value="access">Investor access</TabsTrigger> : null}
           {canManage ? <TabsTrigger value="settings">Agreement</TabsTrigger> : null}
         </TabsList>
 
+        <TabsContent value="report-card" className="mt-6"><ReportCardsWorkspace kind="diligence" subjectId={offeringId} /></TabsContent>
         <TabsContent value="overview" className="mt-6">
           <OverviewTab data={data} access={a} />
         </TabsContent>
