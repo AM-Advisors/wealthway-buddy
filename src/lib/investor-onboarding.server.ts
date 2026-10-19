@@ -2373,7 +2373,6 @@ export async function recordPersonalLinkCopy(userId: string, onboardingId: strin
 /** Investor: only their own claimed investments. */
 export async function myPersonalLinks(userId: string) {
   const { data: rows } = await db().from("investor_onboardings").select("id, offering_id, invitation_id, investor_user_id, offerings(name)").eq("investor_user_id", userId).is("removed_at", null);
-  const { onboardInvitationUrl } = await import("@/lib/onboard-portal-model");
-  void onboardInvitationUrl;
-  return { links: ((rows ?? []) as any[]).map((r) => ({ onboardingId: r.id as string, fundName: String(r.offerings?.name ?? "Fund"), url: `https://onboard.harmonious.co/onboard/i/${r.id}` })) };
+  const { ONBOARD_ORIGIN } = await import("@/lib/onboard-portal-model");
+  return { links: ((rows ?? []) as any[]).map((r) => ({ onboardingId: r.id as string, fundName: String(r.offerings?.name ?? "Fund"), url: `${ONBOARD_ORIGIN}/onboard/i/${r.id}` })) };
 }
