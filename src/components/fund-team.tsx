@@ -86,7 +86,7 @@ export function FundTeam({ fundId }: { fundId: string }) {
           </CardContent>
         </Card>
       ) : (
-        <p className="text-xs text-muted-foreground">Only Harmonious can change this fund's team.</p>
+        <p className="text-xs text-muted-foreground">Only this fund's managers or Harmonious can change this fund's team.</p>
       )}
       {section("Fund managers", "Explicit fund manager assignments for this fund.", d.managers as Member[], true)}
       {section("Harmonious staff", "Staff assigned to this fund's client. Changed from the client record.", d.staff as Member[], false)}
