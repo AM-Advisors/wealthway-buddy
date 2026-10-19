@@ -1,0 +1,3 @@
+import { createFileRoute } from '@tanstack/react-router';
+import { PortfolioWorkspace } from '@/components/portfolio-workspace';
+export const Route=createFileRoute('/_authenticated/manager/portfolio')({head:()=>({meta:[{title:'Portfolio - Harmonious'},{name:'description',content:'Authorized Portfolio records with recorded evidence and history.'},{property:'og:title',content:'Portfolio - Harmonious'},{property:'og:description',content:'Review authorized Portfolio records in Harmonious.'},{property:'og:type',content:'website'},{name:'twitter:card',content:'summary'},{name:'robots',content:'noindex'}]}),component:()=><PortfolioWorkspace/>});

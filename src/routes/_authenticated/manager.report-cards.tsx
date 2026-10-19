@@ -1,0 +1,3 @@
+import { createFileRoute } from '@tanstack/react-router';
+import { ReportCardsPage } from '@/components/report-cards-page';
+export const Route=createFileRoute('/_authenticated/manager/report-cards')({head:()=>({meta:[{title:'Report Cards - Harmonious'},{name:'description',content:'Authorized Report Cards records with recorded evidence and history.'},{property:'og:title',content:'Report Cards - Harmonious'},{property:'og:description',content:'Review authorized Report Cards records in Harmonious.'},{property:'og:type',content:'website'},{name:'twitter:card',content:'summary'},{name:'robots',content:'noindex'}]}),component:()=><ReportCardsPage audience="manager"/>});
