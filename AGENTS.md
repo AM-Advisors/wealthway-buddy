@@ -8,7 +8,7 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
-- Read src/lib/AGENTS.md before workflow/auth changes — why: scoped rules.
+- Read subdirectory AGENTS.md before changes there, especially src/lib/AGENTS.md for workflows/auth — why: scoped rules.
 - Partition hosts/menus through host-routing.ts + navigation.ts; share fund engines — why: display grants no authority.
 - Never automate filings (except IRS e-filing of approved 1065s/K-1s per src/lib/AGENTS.md), tax payments, refunds, ACH/wire or provider money movement; server-side authorization only — why: user-mandated safety boundary.
 - Browser tests live in e2e/*.e2e.ts (Playwright, `bun run test:e2e`), run only against QA with synthetic sessions; helpers refuse production URLs — why: keep them out of unit runs and away from real data.
@@ -37,4 +37,3 @@
 
 - Investor entry uses investor-entry-path.ts; profile evidence uses investor_documents.investment_profile_id with retained originals and canonical requirement projection — why: collect once without approving KYC or reusing fund signatures.
 
-- Portfolio monitoring and Report Cards use portfolio-report-cards.server.ts with immutable version/evidence/decision storage, effective canonical marks, profile-owner-only risk answers and existing diligence/NDA checks — why: adapt V2.5 presentation without importing its financial or access engines.
