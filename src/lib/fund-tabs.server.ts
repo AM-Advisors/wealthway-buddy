@@ -5,6 +5,7 @@
  * bookkeeping corrections are voids, never edits. Nothing here moves money,
  * files anything or sends email.
  */
+import { investorSteps } from "@/lib/investor-step-status";
 import { canonicalFundingState, CANONICAL_FUNDING_LABELS, isReconciledFunding } from "@/lib/funding-status";
 
 export const STAFF_ROLES = ["admin", "super_admin", "operations", "fund_administration", "legal", "compliance"];
@@ -93,6 +94,8 @@ export async function investorGrid(fundId: string) {
       kycOk,
       docs,
       wiring: CANONICAL_FUNDING_LABELS[funding],
+      steps: investorSteps({ stage: o.stage, claimed: !!o.investor_user_id, profileChosen: !!o.investment_profiles?.profile_type, questionnaireDone: !!o.questionnaire_submitted_at,
+        kyc, aml, signed: docs === "Signed", outForSignature: docs === "Out for signature", funding }),
       lastActivity: o.last_activity_at ?? o.updated_at ?? null,
       stage: o.stage as string,
       applicationId: o.application_id ?? null,

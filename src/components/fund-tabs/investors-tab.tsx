@@ -1,3 +1,4 @@
+import { currentStep, STEP_STATE_LABELS, type StepState, type StepStatus } from "@/lib/investor-step-status";
 import { useState, type ReactNode } from "react";
 import { remindInvestorItemFn } from "@/lib/document-reminders.functions";
 import { useQuery } from "@tanstack/react-query";
@@ -125,7 +126,7 @@ export function InvestorsTab({ fundId, workQueue }: { fundId: string; workQueue?
           <div className="overflow-x-auto">
             <table className="w-full min-w-[1300px] text-sm">
               <thead className="text-left text-xs text-muted-foreground">
-                <tr><th className="w-8 py-2"><input type="checkbox" aria-label="Select all investors" checked={allPicked} onChange={(e) => toggleAll(e.target.checked)} /></th><th className="py-2">Name</th><th>Class</th><th>Investing as</th><th>Missing info</th><th>Email</th><th>Phone</th><th className="text-right">Committed</th><th className="text-right">Received</th><th>KYC/KYB & AML</th><th>Fund documents</th><th>Wiring</th><th>Investor readiness</th><th>Latest activity</th></tr>
+                <tr><th className="w-8 py-2"><input type="checkbox" aria-label="Select all investors" checked={allPicked} onChange={(e) => toggleAll(e.target.checked)} /></th><th className="py-2">Name</th><th>Progress</th><th>Class</th><th>Investing as</th><th>Missing info</th><th>Email</th><th>Phone</th><th className="text-right">Committed</th><th className="text-right">Received</th><th>KYC/KYB & AML</th><th>Fund documents</th><th>Wiring</th><th>Investor readiness</th><th>Latest activity</th></tr>
               </thead>
               <tbody>
                 {rows.map((r) => (
@@ -134,6 +135,7 @@ export function InvestorsTab({ fundId, workQueue }: { fundId: string; workQueue?
                       <input type="checkbox" aria-label={`Select ${r.name}`} title={canRemind(r) ? "Select for reminders and bulk actions" : "Select for bulk actions (no reminder due)"} checked={picked.includes(r.id)} onChange={(e) => setPicked((p) => e.target.checked ? [...p, r.id] : p.filter((x) => x !== r.id))} />
                     </td>
                     <td className="py-2"><p className="font-medium">{r.name}</p>{r.profileName && <p className="text-xs text-muted-foreground">{r.profileName}</p>}</td>
+                    <td><StepChips steps={r.steps} /><p className="mt-0.5 text-[11px] text-muted-foreground">{(() => { const c = currentStep(r.steps); return c ? `${c.label}: ${STEP_STATE_LABELS[c.state]}` : "All steps complete"; })()}</p></td>
                     <td>{r.classLabel ?? <span className="text-muted-foreground">-</span>}</td>
                     <td>{r.assetLabel ?? <span className="text-muted-foreground">-</span>}</td>
                     <td className="max-w-[220px]">{r.missing.length === 0 ? <Badge variant="secondary">Complete</Badge> : (
@@ -221,12 +223,18 @@ function DuplicatesCard({ fundId, groups, staff, onMerged }: { fundId: string; g
   );
 }
 
-const STEPS = ["About You", "Verification", "Sign", "Fund"];
-function stepIndex(d: any) {
-  if (d.wiring === "Funded") return 4;
-  if (d.docs === "Signed") return 3;
-  if (d.kycOk) return 2;
-  return d.stage && d.stage !== "invited" ? 1 : 0;
+const STATE_DOT: Record<StepState, string> = {
+  complete: "bg-primary text-primary-foreground", in_progress: "border-2 border-primary text-primary",
+  waiting_harmonious: "border-2 border-accent bg-accent/20 text-foreground", blocked: "bg-destructive text-destructive-foreground", not_started: "bg-muted text-muted-foreground",
+};
+function StepChips({ steps }: { steps: StepStatus[] }) {
+  return (
+    <div className="flex items-center gap-1">
+      {steps.map((st, i) => (
+        <span key={st.key} title={`${st.label}: ${STEP_STATE_LABELS[st.state]} — ${st.detail}`} className={`flex size-6 items-center justify-center rounded-full text-[10px] font-medium ${STATE_DOT[st.state]}`}>{i + 1}</span>
+      ))}
+    </div>
+  );
 }
 
 function Row({ k, v }: { k: string; v: React.ReactNode }) {
@@ -237,7 +245,6 @@ function InvestorSheet({ fundId, id, onClose }: { fundId: string; id: string | n
   const load = useServerFn(investorDetailFn);
   const q = useQuery({ queryKey: ["fund-investor", fundId, id], queryFn: () => load({ data: { fundId, onboardingId: id! } }), enabled: !!id });
   const d = q.data;
-  const done = d ? stepIndex(d) : 0;
   const pct = d && d.committedCents ? Math.min(100, Math.round(((d.receivedCents ?? 0) / d.committedCents) * 100)) : 0;
   return (
     <Sheet open={!!id} onOpenChange={(o) => !o && onClose()}>
@@ -268,14 +275,16 @@ function InvestorSheet({ fundId, id, onClose }: { fundId: string; id: string | n
 
             <section>
               <h4 className="mb-2 font-medium">Progress</h4>
-              <ol className="grid grid-cols-4 gap-2">
-                {STEPS.map((s, i) => (
-                  <li key={s} className="text-center">
-                    <div className={`mx-auto mb-1 flex size-7 items-center justify-center rounded-full text-xs font-medium ${i < done ? "bg-primary text-primary-foreground" : i === done ? "border-2 border-primary text-primary" : "bg-muted text-muted-foreground"}`}>{i + 1}</div>
-                    <span className="text-xs">{s}</span>
+              <ol className="space-y-2">
+                {(d.steps as StepStatus[]).map((st, i) => (
+                  <li key={st.key} className="flex items-center gap-3 rounded-md border p-2">
+                    <span className={`flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-medium ${STATE_DOT[st.state]}`}>{i + 1}</span>
+                    <span className="flex-1"><span className="font-medium">{st.label}</span><span className="block text-xs text-muted-foreground">{st.detail}</span></span>
+                    <Badge variant={st.state === "complete" ? "secondary" : st.state === "blocked" ? "destructive" : "outline"}>{STEP_STATE_LABELS[st.state]}</Badge>
                   </li>
                 ))}
               </ol>
+              <p className="mt-2 text-xs text-muted-foreground">See the History tab for who completed each step and when.</p>
             </section>
 
             {d.openItems.length > 0 && (
