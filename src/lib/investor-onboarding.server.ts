@@ -616,7 +616,7 @@ export async function chooseProfile(
   input: {
     onboardingId: string;
     profileId?: string | null | undefined;
-    create?: { profileType: string; displayLabel: string; legalName?: string | null } | undefined;
+    create?: { profileType: string; displayLabel: string; legalName?: string | null; kyc?: Record<string, string> | undefined } | undefined;
   },
 ) {
   const { actor, row } = await assertInvestorOwns(userId, input.onboardingId);
@@ -632,6 +632,9 @@ export async function chooseProfile(
     if (!profile || profile.owner_user_id !== actor.userId) forbid("that investment profile is not yours.");
   } else if (input.create) {
     if (!isInvestmentProfileType(input.create.profileType)) fail("Choose a supported kind of investor.");
+    const { sanitizeKycInput } = await import("@/lib/kyc-fields");
+    const kyc = sanitizeKycInput(input.create.profileType, input.create.kyc ?? {});
+    if (kyc.missing.length) fail(`Please add: ${kyc.missing.join(", ")}.`);
     const { data: person } = await db()
       .from("persons")
       .select("id")
@@ -645,8 +648,11 @@ export async function chooseProfile(
         profile_type: input.create.profileType,
         display_label: input.create.displayLabel,
         legal_name: input.create.legalName ?? null,
+        ...kyc.columns,
+        tax_id_last4: kyc.taxLast4,
+        details: { kyc: kyc.details },
         status: "active",
-      })
+      } as any)
       .select("id")
       .single();
     if (error) fail(error.message);

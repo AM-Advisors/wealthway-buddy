@@ -19,7 +19,9 @@ import {
   setInvestmentAmountFn,
   startInvestmentVerificationFn,
 } from "@/lib/investor-onboarding.functions";
-import { investorHomeSummary, openableStep, type JourneyStep, type JourneyStepView } from "@/lib/investor-journey-model";
+import { investorHomeSummary, nextJourneyStep, openableStep, type JourneyStep, type JourneyStepView } from "@/lib/investor-journey-model";
+import { kycFieldsFor } from "@/lib/kyc-fields";
+import { DealReview } from "@/components/deal-review";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -83,14 +85,24 @@ export function InvestorOnboardingJourney({
 
   const d: any = detail.data;
   const steps: JourneyStepView[] = d?.journey ?? [];
-  const [active, setActive] = useState<JourneyStep | null>(null);
+  const [active, setActive] = useState<JourneyStep | "review" | null>(null);
   useEffect(() => {
-    if (d && !active) setActive(openableStep(steps, requestedStep));
+    if (!d || active) return;
+    const fresh = !requestedStep && d.stage !== undefined && !d.investmentProfileId;
+    setActive(fresh ? "review" : openableStep(steps, requestedStep));
   }, [d, active, steps, requestedStep]);
 
   if (detail.isLoading) return <p className="text-sm text-muted-foreground">Loading your investment…</p>;
   if (!d) return <p className="text-sm text-muted-foreground">This investment is not available.</p>;
   const current = active ?? openableStep(steps, requestedStep);
+  const order: (JourneyStep | "review")[] = ["review", ...steps.map((s) => s.key)];
+  const nextKey = nextJourneyStep(steps);
+  const reachedIndex = Math.max(0, steps.findIndex((s) => s.key === nextKey));
+  const pos = order.indexOf(current);
+  const prev = pos > 0 ? order[pos - 1] : null;
+  const nextCandidate = pos >= 0 && pos < order.length - 1 ? order[pos + 1] : null;
+  const nextIdx = nextCandidate ? steps.findIndex((s) => s.key === nextCandidate) : -1;
+  const next = nextCandidate && (nextIdx <= reachedIndex || steps[nextIdx]?.state !== "locked") ? nextCandidate : null;
   const amount = d.acceptedAmountCents ?? d.requestedAmountCents;
   const complete = isReconciledFunding(d.fundingStatus);
 
@@ -135,12 +147,25 @@ export function InvestorOnboardingJourney({
         </Card>
       ) : null}
 
-      <ol className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+      <ol className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+        <li>
+          <button
+            type="button"
+            onClick={() => setActive("review")}
+            className={cn(
+              "w-full rounded-md border p-3 text-left text-sm transition-colors",
+              current === "review" ? "border-primary bg-primary/5" : "hover:bg-muted/50",
+            )}
+          >
+            <span className="font-medium">Review the deal</span>
+            <span className="mt-1 block text-xs text-muted-foreground">Fund, terms and documents</span>
+          </button>
+        </li>
         {steps.map((s, i) => (
           <li key={s.key}>
             <button
               type="button"
-              disabled={s.state === "locked"}
+              disabled={s.state === "locked" && i > reachedIndex}
               onClick={() => setActive(s.key)}
               className={cn(
                 "w-full rounded-md border p-3 text-left text-sm transition-colors disabled:opacity-50",
@@ -157,11 +182,20 @@ export function InvestorOnboardingJourney({
         ))}
       </ol>
 
+      {current === "review" ? <DealReview slug={d.offering?.slug ?? d.offering?.id} /> : null}
       {current === "about" ? <AboutYou d={d} onboardingId={onboardingId} done={refresh} /> : null}
       {current === "verify" ? <Verify d={d} onboardingId={onboardingId} /> : null}
       {current === "sign" ? <Sign d={d} onboardingId={onboardingId} done={refresh} /> : null}
       {current === "fund" ? <Fund d={d} onboardingId={onboardingId} done={refresh} /> : null}
-      {current !== "fund" ? <OnboardingUploadsCard onboardingId={onboardingId} /> : null}
+      <div className="flex justify-between gap-2">
+        {prev ? <Button variant="outline" onClick={() => setActive(prev)}>Back</Button> : <span />}
+        {next ? (
+          <Button variant={current === "review" ? "default" : "outline"} onClick={() => setActive(next)}>
+            {current === "review" ? "Continue to About You" : "Next"}
+          </Button>
+        ) : null}
+      </div>
+      {current !== "fund" && current !== "review" ? <OnboardingUploadsCard onboardingId={onboardingId} /> : null}
     </div>
   );
 }
@@ -174,6 +208,9 @@ function AboutYou({ d, onboardingId, done }: { d: any; onboardingId: string; don
   const [profileId, setProfileId] = useState<string>(d.investmentProfileId ?? "");
   const [newType, setNewType] = useState("individual");
   const [newName, setNewName] = useState("");
+  const [kyc, setKyc] = useState<Record<string, string>>({});
+  const fields = kycFieldsFor(newType, false);
+  const missing = fields.some((f) => f.required && !(kyc[f.key] ?? "").trim());
   const [amount, setAmount] = useState(d.requestedAmountCents ? String(d.requestedAmountCents / 100) : "");
   const choose = useAction(chooseFn, "Saved.", done);
   const setAmt = useAction(amountFn, "Amount saved.", done);
@@ -205,26 +242,39 @@ function AboutYou({ d, onboardingId, done }: { d: any; onboardingId: string; don
         ) : null}
 
         <div className="space-y-3 rounded-md border p-4">
-          <p className="text-sm font-medium">{list.length ? "Or add someone new" : "Add who is investing"}</p>
+          <p className="text-sm font-medium">Add new investment profile</p>
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
               <Label>Type</Label>
-              <Select value={newType} onValueChange={setNewType}>
+              <Select value={newType} onValueChange={(v) => { setNewType(v); setKyc({}); }}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>{PROFILE_TYPES.map(([v, l]) => <SelectItem key={v} value={v}>{l}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div>
-              <Label htmlFor="pname">{newType === "individual" || newType === "joint" ? "Name as it should appear" : "Legal name"}</Label>
+              <Label htmlFor="pname">{newType === "individual" || newType === "joint" || newType === "ira" ? "Full legal name" : "Legal name"}</Label>
               <Input id="pname" value={newName} onChange={(e) => setNewName(e.target.value)} />
             </div>
+            {fields.map((f) => (
+              <div key={f.key}>
+                <Label htmlFor={`kyc-${f.key}`}>{f.label}</Label>
+                <Input
+                  id={`kyc-${f.key}`}
+                  type={f.kind === "date" ? "date" : "text"}
+                  autoComplete="off"
+                  value={kyc[f.key] ?? ""}
+                  onChange={(e) => setKyc((k) => ({ ...k, [f.key]: e.target.value }))}
+                />
+              </div>
+            ))}
           </div>
+          <p className="text-xs text-muted-foreground">We use these details to verify this profile once. We keep only the last four digits of ID numbers, and you won't be asked again for other funds.</p>
           <Button
             variant="outline"
-            disabled={newName.trim().length < 2}
+            disabled={newName.trim().length < 2 || missing}
             onClick={() =>
               choose.mutate({
-                data: { onboardingId, create: { profileType: newType, displayLabel: newName.trim(), legalName: newName.trim() } },
+                data: { onboardingId, create: { profileType: newType, displayLabel: newName.trim(), legalName: newName.trim(), kyc } },
               } as any)
             }
           >

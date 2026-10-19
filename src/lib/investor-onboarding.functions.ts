@@ -59,6 +59,7 @@ export const chooseProfileFn = createServerFn({ method: "POST" })
           profileType: z.string().min(1),
           displayLabel: z.string().min(1),
           legalName: z.string().nullish(),
+          kyc: z.record(z.string(), z.string().max(500)).optional(),
         })
         .optional(),
     }).parse,
