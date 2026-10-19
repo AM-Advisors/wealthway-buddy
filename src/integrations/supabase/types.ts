@@ -8854,8 +8854,10 @@ export type Database = {
           id: string
           name: string
           next_run_on: string
+          outside_recipients: Json
           recipients: string[]
           report_type: string
+          sections: Json
           updated_at: string
           updated_by: string | null
         }
@@ -8867,8 +8869,10 @@ export type Database = {
           id?: string
           name: string
           next_run_on: string
+          outside_recipients?: Json
           recipients?: string[]
           report_type: string
+          sections?: Json
           updated_at?: string
           updated_by?: string | null
         }
@@ -8880,8 +8884,10 @@ export type Database = {
           id?: string
           name?: string
           next_run_on?: string
+          outside_recipients?: Json
           recipients?: string[]
           report_type?: string
+          sections?: Json
           updated_at?: string
           updated_by?: string | null
         }

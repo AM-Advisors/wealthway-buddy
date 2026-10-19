@@ -1996,6 +1996,13 @@
       "when": 1792433934569,
       "tag": "0284_report_card_sharing_and_compliance_schedules",
       "breakpoints": true
+    },
+    {
+      "idx": 285,
+      "version": "7",
+      "when": 1792435945837,
+      "tag": "0285_compliance_schedule_sections_outside_recipients",
+      "breakpoints": true
     }
   ]
 }
