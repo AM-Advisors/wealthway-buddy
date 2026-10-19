@@ -44,8 +44,10 @@ describe("profile document evidence scope", () => {
   });
 });
 describe("investors without an account", () => {
-  it("returns no evidence instead of failing", async () => {
-    const from = () => { throw new Error("should not query"); };
-    expect(await loadProfileDocumentEvidence({ from }, { id: "x", investment_profile_id: "p", investor_user_id: null })).toEqual([]);
+  it("returns only documents prepared for that profile", async () => {
+    const rows = [{ id: "a", investment_profile_id: "p", prepared_for_person_id: "x" }, { id: "b", investment_profile_id: "other", prepared_for_person_id: "x" }];
+    const chain: any = { select: () => chain, eq: () => chain, not: () => chain, order: async () => ({ data: rows, error: null }) };
+    const out = await loadProfileDocumentEvidence({ from: () => chain }, { id: "o", investment_profile_id: "p", investor_user_id: null });
+    expect(out.map((r: any) => r.id)).toEqual(["a"]);
   });
 });
