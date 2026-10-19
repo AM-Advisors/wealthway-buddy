@@ -1,4 +1,5 @@
 import { RELATED_REVIEW_MESSAGE } from "@/lib/related-person-model";
+import { PersonalInvestmentLinkCard } from "@/components/personal-investment-link";
 import { InvestorRecordDocuments } from "@/components/investor-document-review";
 import { InvestorDocumentAi } from "@/components/investor-document-ai";
 import { useState } from "react";
@@ -80,6 +81,7 @@ function InvestorRecordPage() {
       {tab === "overview" ? <div className="grid gap-4 md:grid-cols-2">
         <Card><CardHeader><CardTitle className="text-base">Investment</CardTitle></CardHeader><CardContent className="space-y-1 text-sm">
           <p>Amount: {money(inv.amountCents)}</p><p>Commitment: {money(inv.commitmentCents)}</p>{staff ? <p>Accepted: {money(inv.acceptedCents)}</p> : null}<p>Funded: {money(inv.fundedCents)}</p></CardContent></Card>
+        <PersonalInvestmentLinkCard onboardingId={onboardingId} />
         <Card className="md:col-span-2"><CardHeader><CardTitle className="text-base">Side letter</CardTitle></CardHeader><CardContent className="space-y-3 text-sm">
           {sideLetters === undefined ? <p className="text-muted-foreground">Loading side letters…</p>
             : sideLetters.length === 0 ? <p className="text-muted-foreground">No side letter for this investor. Negotiated terms can be recorded on the Fund's Side Letters tab.</p>
