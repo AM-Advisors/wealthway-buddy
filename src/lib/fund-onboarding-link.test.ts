@@ -95,13 +95,14 @@ describe("link management authorization", () => {
     await expect(s.setFundLinkEnabled(MGR_B, FUND_A, false)).rejects.toThrow(/Forbidden/);
     await expect(s.regenerateFundLink(OUTSIDER, FUND_A)).rejects.toThrow(/Forbidden/);
   });
-  it("a fund manager of that exact fund can view and copy it but not manage it", async () => {
+  it("a fund manager of that exact fund can create, disable and re-enable its link", async () => {
     const s = await srv();
-    await s.regenerateFundLink(STAFF, FUND_A);
-    const v = await s.getFundLink(MGR_A, FUND_A);
+    const v = await s.regenerateFundLink(MGR_A, FUND_A);
     expect(v.status).toBe("active");
     expect(v.url).toMatch(/\/join\/[A-Za-z0-9_-]{43}$/);
-    expect(v.canManage).toBe(false);
+    expect(v.canManage).toBe(true);
+    expect((await s.setFundLinkEnabled(MGR_A, FUND_A, false)).status).toBe("disabled");
+    expect((await s.setFundLinkEnabled(MGR_A, FUND_A, true)).status).toBe("active");
   });
 });
 
