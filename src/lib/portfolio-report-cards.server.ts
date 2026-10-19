@@ -46,3 +46,42 @@ export async function decideCard(userId:string,id:string,decision:string,reason:
 export async function attachCardEvidence(userId:string,input:any,client:any) { const db=await database();const c=checked<any>(await db.from('report_card_versions').select('*').eq('id',input.cardId).maybeSingle()); if(!c||c.author_id!==userId||c.kind==='investor')throw new Error('Only the assessment author can attach evidence.');await authorizeSubject(db,userId,c.kind,c.subject_type,c.subject_id,true,client);checked(await db.from('report_card_evidence').insert({card_id:c.id,file_name:input.fileName,content_type:input.contentType,content_base64:input.base64,uploaded_by:userId}));return {ok:true}; }
 export async function readCardEvidence(userId:string,id:string,client:any) { const db=await database();const e=checked<any>(await db.from('report_card_evidence').select('*').eq('id',id).maybeSingle());if(!e)throw new Error('Evidence not found.');const c=checked<any>(await db.from('report_card_versions').select('kind,subject_id').eq('id',e.card_id).maybeSingle());if(!c)throw new Error('Assessment not found.');const w=await cardWorkspace(userId,c.kind,c.subject_id,client);if(!w.cards.some(x=>x.id===e.card_id))throw new Error('Evidence access denied.');return {fileName:e.file_name,contentType:e.content_type,base64:e.content_base64}; }
 export async function saveCardConfiguration(userId:string,input:any) { const db=await database(); const rs=await roles(db,userId);if(!rs.some(r=>r==='admin'||r==='super_admin'))throw new Error('Administrator access required.');checked(await db.from('report_card_configuration_versions').insert({actor_id:userId,weights:input.weights,thresholds:input.thresholds,reason:input.reason}));return {ok:true}; }
+
+/* ------------------------------------------------------------ share links */
+import { shareLinkState, shareRefusal } from './report-card-share-model';
+async function sha256(text:string){ const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(text)); return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join(''); }
+async function cardPublished(db:any,id:string){ const r=checked<any[]>(await db.from('report_card_decisions').select('decision,created_at').eq('card_id',id).order('created_at',{ascending:false}).limit(1))??[]; return r[0]?.decision==='published'; }
+async function authorizeShare(db:any,userId:string,card:any){ if(await staff(db,userId,'prepare')) return; if(card.offering_id&&await manager(db,userId,card.offering_id)) return; throw new Error('Sharing requires reporting access for this card.'); }
+export async function createShareLink(userId:string,input:{cardId:string;days:number;label?:string|undefined}){ const db=await database();
+  const card=checked<any>(await db.from('report_card_versions').select('*').eq('id',input.cardId).maybeSingle()); if(!card) throw new Error('Report card not found.');
+  await authorizeShare(db,userId,card);
+  const refusal=shareRefusal({kind:card.kind,published:await cardPublished(db,card.id),days:input.days}); if(refusal) throw new Error(refusal);
+  const raw=new Uint8Array(32); crypto.getRandomValues(raw); const token=[...raw].map(x=>x.toString(16).padStart(2,'0')).join('');
+  checked(await db.from('report_card_share_links').insert({card_id:card.id,token_hash:await sha256(token),label:input.label??null,created_by:userId,expires_at:new Date(Date.now()+input.days*86400000).toISOString()}));
+  return {token};
+}
+export async function listShareLinks(userId:string,cardId:string){ const db=await database();
+  const card=checked<any>(await db.from('report_card_versions').select('*').eq('id',cardId).maybeSingle()); if(!card) throw new Error('Report card not found.'); await authorizeShare(db,userId,card);
+  const links=checked<any[]>(await db.from('report_card_share_links').select('id,label,expires_at,revoked_at,created_at').eq('card_id',cardId).order('created_at',{ascending:false}))??[];
+  const views=links.length?checked<any[]>(await db.from('report_card_share_views').select('link_id,outcome').in('link_id',links.map(l=>l.id))):[];
+  return {links:links.map(l=>({id:l.id,label:l.label,expiresAt:l.expires_at,createdAt:l.created_at,state:shareLinkState(l),views:(views??[]).filter((v:any)=>v.link_id===l.id&&v.outcome==='viewed').length}))};
+}
+export async function revokeShareLink(userId:string,linkId:string){ const db=await database();
+  const link=checked<any>(await db.from('report_card_share_links').select('*').eq('id',linkId).maybeSingle()); if(!link) throw new Error('Link not found.');
+  const card=checked<any>(await db.from('report_card_versions').select('*').eq('id',link.card_id).maybeSingle()); await authorizeShare(db,userId,card);
+  if(link.revoked_at) return {ok:true};
+  checked(await db.from('report_card_share_links').update({revoked_at:new Date().toISOString(),revoked_by:userId}).eq('id',linkId)); return {ok:true};
+}
+/** Public read for a share token. Returns only the published grade, summary and metric scores — never answers or evidence files. */
+export async function readSharedCard(token:string,userAgent:string|null){ const db=await database();
+  const link=checked<any>(await db.from('report_card_share_links').select('*').eq('token_hash',await sha256(token)).maybeSingle());
+  const state=shareLinkState(link);
+  if(state!=='active'){ if(link) await db.from('report_card_share_views').insert({link_id:link.id,outcome:state,user_agent:userAgent?.slice(0,300)??null}); return {state}; }
+  const card=checked<any>(await db.from('report_card_versions').select('*').eq('id',link.card_id).maybeSingle());
+  if(!card||card.kind==='investor'||!await cardPublished(db,card.id)){ await db.from('report_card_share_views').insert({link_id:link.id,outcome:'withdrawn',user_agent:userAgent?.slice(0,300)??null}); return {state:'revoked' as const}; }
+  const conf=await configuration(db);
+  const subject=card.subject_type==='fund'?checked<any>(await db.from('offerings').select('name').eq('id',card.subject_id).maybeSingle())?.name:card.subject_type==='client'?checked<any>(await db.from('clients').select('name').eq('id',card.subject_id).maybeSingle())?.name:'Harmonious administration';
+  await db.from('report_card_share_views').insert({link_id:link.id,outcome:'viewed',user_agent:userAgent?.slice(0,300)??null});
+  const metrics=(card.metrics??[]).map((m:any)=>({label:String(m.label),score:m.score===null?null:Number(m.score),weight:Number(m.weight??1),evidence:String(m.evidence??'').trim()?'recorded':''}));
+  return {state:'active' as const,card:{kind:card.kind,subject:subject??'Report card',periodStart:card.period_start,periodEnd:card.period_end,summary:card.summary,metrics:metrics.map((m:any)=>({label:m.label,score:m.score,weight:m.weight})),grade:assessmentGrade(metrics,conf.thresholds??DEFAULT_THRESHOLDS)},expiresAt:link.expires_at};
+}

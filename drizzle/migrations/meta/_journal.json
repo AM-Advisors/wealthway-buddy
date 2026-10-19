@@ -1989,6 +1989,13 @@
       "when": 1792432628180,
       "tag": "0283_portfolio_monitoring_and_report_cards",
       "breakpoints": true
+    },
+    {
+      "idx": 284,
+      "version": "7",
+      "when": 1792433934569,
+      "tag": "0284_report_card_sharing_and_compliance_schedules",
+      "breakpoints": true
     }
   ]
 }

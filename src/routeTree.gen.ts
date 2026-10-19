@@ -94,6 +94,7 @@ import { Route as InviteTokenRouteImport } from './routes/invite.$token'
 import { Route as JoinTokenRouteImport } from './routes/join.$token'
 import { Route as OnboardRefRouteImport } from './routes/onboard.$ref'
 import { Route as PostSlugRouteImport } from './routes/post.$slug'
+import { Route as ReportCardShareTokenRouteImport } from './routes/report-card-share.$token'
 import { Route as ResourcesIndexRouteImport } from './routes/resources.index'
 import { Route as ResourcesEinForLlcRouteImport } from './routes/resources.ein-for-llc'
 import { Route as ResourcesPeSoftwareBuyersGuideRouteImport } from './routes/resources.pe-software-buyers-guide'
@@ -253,6 +254,7 @@ import { Route as AuthenticatedOpsClientPortalLaunchRouteImport } from './routes
 import { Route as AuthenticatedOpsCloseRequestsRouteImport } from './routes/_authenticated/ops.close-requests'
 import { Route as AuthenticatedOpsCommandCenterRouteImport } from './routes/_authenticated/ops.command-center'
 import { Route as AuthenticatedOpsComplianceRouteImport } from './routes/_authenticated/ops.compliance'
+import { Route as AuthenticatedOpsComplianceSchedulesRouteImport } from './routes/_authenticated/ops.compliance-schedules'
 import { Route as AuthenticatedOpsDistributionsRouteImport } from './routes/_authenticated/ops.distributions'
 import { Route as AuthenticatedOpsDocumentTemplatesRouteImport } from './routes/_authenticated/ops.document-templates'
 import { Route as AuthenticatedOpsDocumentsRouteImport } from './routes/_authenticated/ops.documents'
@@ -903,6 +905,11 @@ const OnboardRefRoute = OnboardRefRouteImport.update({
 const PostSlugRoute = PostSlugRouteImport.update({
   id: '/post/$slug',
   path: '/post/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReportCardShareTokenRoute = ReportCardShareTokenRouteImport.update({
+  id: '/report-card-share/$token',
+  path: '/report-card-share/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResourcesIndexRoute = ResourcesIndexRouteImport.update({
@@ -1834,6 +1841,12 @@ const AuthenticatedOpsComplianceRoute =
   AuthenticatedOpsComplianceRouteImport.update({
     id: '/ops/compliance',
     path: '/ops/compliance',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedOpsComplianceSchedulesRoute =
+  AuthenticatedOpsComplianceSchedulesRouteImport.update({
+    id: '/ops/compliance-schedules',
+    path: '/ops/compliance-schedules',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedOpsDistributionsRoute =
@@ -3157,6 +3170,7 @@ export interface FileRoutesByFullPath {
   '/join/$token': typeof JoinTokenRoute
   '/onboard/$ref': typeof OnboardRefRoute
   '/post/$slug': typeof PostSlugRoute
+  '/report-card-share/$token': typeof ReportCardShareTokenRoute
   '/resources/ein-for-llc': typeof ResourcesEinForLlcRoute
   '/resources/pe-software-buyers-guide': typeof ResourcesPeSoftwareBuyersGuideRoute
   '/resources/reg-d-506b-vs-506c': typeof ResourcesRegD506bVs506cRoute
@@ -3311,6 +3325,7 @@ export interface FileRoutesByFullPath {
   '/ops/close-requests': typeof AuthenticatedOpsCloseRequestsRoute
   '/ops/command-center': typeof AuthenticatedOpsCommandCenterRoute
   '/ops/compliance': typeof AuthenticatedOpsComplianceRoute
+  '/ops/compliance-schedules': typeof AuthenticatedOpsComplianceSchedulesRoute
   '/ops/distributions': typeof AuthenticatedOpsDistributionsRoute
   '/ops/document-templates': typeof AuthenticatedOpsDocumentTemplatesRoute
   '/ops/documents': typeof AuthenticatedOpsDocumentsRoute
@@ -3610,6 +3625,7 @@ export interface FileRoutesByTo {
   '/join/$token': typeof JoinTokenRoute
   '/onboard/$ref': typeof OnboardRefRoute
   '/post/$slug': typeof PostSlugRoute
+  '/report-card-share/$token': typeof ReportCardShareTokenRoute
   '/resources/ein-for-llc': typeof ResourcesEinForLlcRoute
   '/resources/pe-software-buyers-guide': typeof ResourcesPeSoftwareBuyersGuideRoute
   '/resources/reg-d-506b-vs-506c': typeof ResourcesRegD506bVs506cRoute
@@ -3761,6 +3777,7 @@ export interface FileRoutesByTo {
   '/ops/close-requests': typeof AuthenticatedOpsCloseRequestsRoute
   '/ops/command-center': typeof AuthenticatedOpsCommandCenterRoute
   '/ops/compliance': typeof AuthenticatedOpsComplianceRoute
+  '/ops/compliance-schedules': typeof AuthenticatedOpsComplianceSchedulesRoute
   '/ops/distributions': typeof AuthenticatedOpsDistributionsRoute
   '/ops/document-templates': typeof AuthenticatedOpsDocumentTemplatesRoute
   '/ops/documents': typeof AuthenticatedOpsDocumentsRoute
@@ -4065,6 +4082,7 @@ export interface FileRoutesById {
   '/join/$token': typeof JoinTokenRoute
   '/onboard/$ref': typeof OnboardRefRoute
   '/post/$slug': typeof PostSlugRoute
+  '/report-card-share/$token': typeof ReportCardShareTokenRoute
   '/resources/ein-for-llc': typeof ResourcesEinForLlcRoute
   '/resources/pe-software-buyers-guide': typeof ResourcesPeSoftwareBuyersGuideRoute
   '/resources/reg-d-506b-vs-506c': typeof ResourcesRegD506bVs506cRoute
@@ -4219,6 +4237,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/close-requests': typeof AuthenticatedOpsCloseRequestsRoute
   '/_authenticated/ops/command-center': typeof AuthenticatedOpsCommandCenterRoute
   '/_authenticated/ops/compliance': typeof AuthenticatedOpsComplianceRoute
+  '/_authenticated/ops/compliance-schedules': typeof AuthenticatedOpsComplianceSchedulesRoute
   '/_authenticated/ops/distributions': typeof AuthenticatedOpsDistributionsRoute
   '/_authenticated/ops/document-templates': typeof AuthenticatedOpsDocumentTemplatesRoute
   '/_authenticated/ops/documents': typeof AuthenticatedOpsDocumentsRoute
@@ -4524,6 +4543,7 @@ export interface FileRouteTypes {
     | '/join/$token'
     | '/onboard/$ref'
     | '/post/$slug'
+    | '/report-card-share/$token'
     | '/resources/ein-for-llc'
     | '/resources/pe-software-buyers-guide'
     | '/resources/reg-d-506b-vs-506c'
@@ -4678,6 +4698,7 @@ export interface FileRouteTypes {
     | '/ops/close-requests'
     | '/ops/command-center'
     | '/ops/compliance'
+    | '/ops/compliance-schedules'
     | '/ops/distributions'
     | '/ops/document-templates'
     | '/ops/documents'
@@ -4977,6 +4998,7 @@ export interface FileRouteTypes {
     | '/join/$token'
     | '/onboard/$ref'
     | '/post/$slug'
+    | '/report-card-share/$token'
     | '/resources/ein-for-llc'
     | '/resources/pe-software-buyers-guide'
     | '/resources/reg-d-506b-vs-506c'
@@ -5128,6 +5150,7 @@ export interface FileRouteTypes {
     | '/ops/close-requests'
     | '/ops/command-center'
     | '/ops/compliance'
+    | '/ops/compliance-schedules'
     | '/ops/distributions'
     | '/ops/document-templates'
     | '/ops/documents'
@@ -5431,6 +5454,7 @@ export interface FileRouteTypes {
     | '/join/$token'
     | '/onboard/$ref'
     | '/post/$slug'
+    | '/report-card-share/$token'
     | '/resources/ein-for-llc'
     | '/resources/pe-software-buyers-guide'
     | '/resources/reg-d-506b-vs-506c'
@@ -5585,6 +5609,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/close-requests'
     | '/_authenticated/ops/command-center'
     | '/_authenticated/ops/compliance'
+    | '/_authenticated/ops/compliance-schedules'
     | '/_authenticated/ops/distributions'
     | '/_authenticated/ops/document-templates'
     | '/_authenticated/ops/documents'
@@ -5844,6 +5869,7 @@ export interface RootRouteChildren {
   JoinTokenRoute: typeof JoinTokenRoute
   OnboardRefRoute: typeof OnboardRefRoute
   PostSlugRoute: typeof PostSlugRoute
+  ReportCardShareTokenRoute: typeof ReportCardShareTokenRoute
   ResourcesEinForLlcRoute: typeof ResourcesEinForLlcRoute
   ResourcesPeSoftwareBuyersGuideRoute: typeof ResourcesPeSoftwareBuyersGuideRoute
   ResourcesRegD506bVs506cRoute: typeof ResourcesRegD506bVs506cRoute
@@ -6478,6 +6504,13 @@ declare module '@tanstack/react-router' {
       path: '/post/$slug'
       fullPath: '/post/$slug'
       preLoaderRoute: typeof PostSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/report-card-share/$token': {
+      id: '/report-card-share/$token'
+      path: '/report-card-share/$token'
+      fullPath: '/report-card-share/$token'
+      preLoaderRoute: typeof ReportCardShareTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/resources/': {
@@ -7591,6 +7624,13 @@ declare module '@tanstack/react-router' {
       path: '/ops/compliance'
       fullPath: '/ops/compliance'
       preLoaderRoute: typeof AuthenticatedOpsComplianceRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ops/compliance-schedules': {
+      id: '/_authenticated/ops/compliance-schedules'
+      path: '/ops/compliance-schedules'
+      fullPath: '/ops/compliance-schedules'
+      preLoaderRoute: typeof AuthenticatedOpsComplianceSchedulesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/ops/distributions': {
@@ -9541,6 +9581,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsCloseRequestsRoute: typeof AuthenticatedOpsCloseRequestsRoute
   AuthenticatedOpsCommandCenterRoute: typeof AuthenticatedOpsCommandCenterRoute
   AuthenticatedOpsComplianceRoute: typeof AuthenticatedOpsComplianceRoute
+  AuthenticatedOpsComplianceSchedulesRoute: typeof AuthenticatedOpsComplianceSchedulesRoute
   AuthenticatedOpsDistributionsRoute: typeof AuthenticatedOpsDistributionsRoute
   AuthenticatedOpsDocumentTemplatesRoute: typeof AuthenticatedOpsDocumentTemplatesRoute
   AuthenticatedOpsDocumentsRoute: typeof AuthenticatedOpsDocumentsRoute
@@ -9875,6 +9916,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsCloseRequestsRoute: AuthenticatedOpsCloseRequestsRoute,
   AuthenticatedOpsCommandCenterRoute: AuthenticatedOpsCommandCenterRoute,
   AuthenticatedOpsComplianceRoute: AuthenticatedOpsComplianceRoute,
+  AuthenticatedOpsComplianceSchedulesRoute:
+    AuthenticatedOpsComplianceSchedulesRoute,
   AuthenticatedOpsDistributionsRoute: AuthenticatedOpsDistributionsRoute,
   AuthenticatedOpsDocumentTemplatesRoute:
     AuthenticatedOpsDocumentTemplatesRoute,
@@ -10114,6 +10157,7 @@ const rootRouteChildren: RootRouteChildren = {
   JoinTokenRoute: JoinTokenRoute,
   OnboardRefRoute: OnboardRefRoute,
   PostSlugRoute: PostSlugRoute,
+  ReportCardShareTokenRoute: ReportCardShareTokenRoute,
   ResourcesEinForLlcRoute: ResourcesEinForLlcRoute,
   ResourcesPeSoftwareBuyersGuideRoute: ResourcesPeSoftwareBuyersGuideRoute,
   ResourcesRegD506bVs506cRoute: ResourcesRegD506bVs506cRoute,

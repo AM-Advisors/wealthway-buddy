@@ -8789,6 +8789,104 @@ export type Database = {
           },
         ]
       }
+      compliance_report_deliveries: {
+        Row: {
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          decision_reason: string | null
+          error: string | null
+          id: string
+          period_on: string
+          prepared_by: string | null
+          recipients: string[]
+          schedule_id: string
+          sent_at: string | null
+          snapshot: Json
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_reason?: string | null
+          error?: string | null
+          id?: string
+          period_on: string
+          prepared_by?: string | null
+          recipients: string[]
+          schedule_id: string
+          sent_at?: string | null
+          snapshot: Json
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_reason?: string | null
+          error?: string | null
+          id?: string
+          period_on?: string
+          prepared_by?: string | null
+          recipients?: string[]
+          schedule_id?: string
+          sent_at?: string | null
+          snapshot?: Json
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compliance_report_deliveries_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "compliance_report_schedules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      compliance_report_schedules: {
+        Row: {
+          active: boolean
+          created_at: string
+          created_by: string
+          frequency: string
+          id: string
+          name: string
+          next_run_on: string
+          recipients: string[]
+          report_type: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          created_by: string
+          frequency: string
+          id?: string
+          name: string
+          next_run_on: string
+          recipients?: string[]
+          report_type: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          created_by?: string
+          frequency?: string
+          id?: string
+          name?: string
+          next_run_on?: string
+          recipients?: string[]
+          report_type?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       compliance_requirements: {
         Row: {
           code: string
@@ -39711,6 +39809,82 @@ export type Database = {
             columns: ["card_id"]
             isOneToOne: false
             referencedRelation: "report_card_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      report_card_share_links: {
+        Row: {
+          card_id: string
+          created_at: string
+          created_by: string
+          expires_at: string
+          id: string
+          label: string | null
+          revoked_at: string | null
+          revoked_by: string | null
+          token_hash: string
+        }
+        Insert: {
+          card_id: string
+          created_at?: string
+          created_by: string
+          expires_at: string
+          id?: string
+          label?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          token_hash: string
+        }
+        Update: {
+          card_id?: string
+          created_at?: string
+          created_by?: string
+          expires_at?: string
+          id?: string
+          label?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          token_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_card_share_links_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "report_card_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      report_card_share_views: {
+        Row: {
+          created_at: string
+          id: string
+          link_id: string
+          outcome: string
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          link_id: string
+          outcome: string
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          link_id?: string
+          outcome?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_card_share_views_link_id_fkey"
+            columns: ["link_id"]
+            isOneToOne: false
+            referencedRelation: "report_card_share_links"
             referencedColumns: ["id"]
           },
         ]
