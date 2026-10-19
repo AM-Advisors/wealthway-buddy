@@ -1,5 +1,6 @@
 import { RELATED_REVIEW_MESSAGE } from "@/lib/related-person-model";
 import { PersonalInvestmentLinkCard } from "@/components/personal-investment-link";
+import { InvestorStepHistory } from "@/components/investor-step-history";
 import { InvestorRecordDocuments } from "@/components/investor-document-review";
 import { InvestorDocumentAi } from "@/components/investor-document-ai";
 import { useState } from "react";
@@ -19,7 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
-const TABS = ["overview", "investment", "profile", "onboarding", "readiness", "documents", "activity"] as const;
+const TABS = ["overview", "investment", "profile", "onboarding", "readiness", "documents", "activity", "history"] as const;
 type Tab = (typeof TABS)[number];
 
 export const Route = createFileRoute("/_authenticated/manager/fund/$fundId/investor/$onboardingId")({
@@ -78,6 +79,7 @@ function InvestorRecordPage() {
       </div>
       <div className="flex gap-1 overflow-x-auto border-b pb-1">{TABS.map((t) => <Button key={t} size="sm" variant={t === tab ? "default" : "ghost"} className="shrink-0" onClick={() => setTab(t)}>{prettyStatus(t)}</Button>)}</div>
 
+      {tab === "history" ? <InvestorStepHistory offeringId={fundId} onboardingId={onboardingId} /> : null}
       {tab === "overview" ? <div className="grid gap-4 md:grid-cols-2">
         <Card><CardHeader><CardTitle className="text-base">Investment</CardTitle></CardHeader><CardContent className="space-y-1 text-sm">
           <p>Amount: {money(inv.amountCents)}</p><p>Commitment: {money(inv.commitmentCents)}</p>{staff ? <p>Accepted: {money(inv.acceptedCents)}</p> : null}<p>Funded: {money(inv.fundedCents)}</p></CardContent></Card>
