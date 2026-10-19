@@ -1,5 +1,10 @@
 # Roadmap
 
+## V2.5 Portfolio and Report card
+- [ ] Compare V2.5 screens and workflows with current portfolio/reporting engines.
+- [ ] Add the requested views using canonical fund records and existing authorization/approval rules.
+- [ ] Run focused tests; authenticated walkthrough requires isolated synthetic QA access.
+
 ## Applicable investor-profile documents
 - [x] Require applicable profile documents, reuse profile-bound uploads across investments, retain provider identity checks and canonical verification rules.
 - [x] Add document Update and official tax-form Update; retain previous versions and separate investment signatures.
