@@ -36,3 +36,5 @@
 - Series/IRS use fund-setup-extras evidence + scoped listFiles — why: one completion source.
 
 - Investor entry uses investor-entry-path.ts; profile evidence uses investor_documents.investment_profile_id with retained originals and canonical requirement projection — why: collect once without approving KYC or reusing fund signatures.
+
+- Portfolio monitoring and Report Cards use portfolio-report-cards.server.ts with immutable version/evidence/decision storage, effective canonical marks, profile-owner-only risk answers and existing diligence/NDA checks — why: adapt V2.5 presentation without importing its financial or access engines.
