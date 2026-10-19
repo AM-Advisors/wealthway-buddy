@@ -1,13 +1,10 @@
-const { supabaseAdmin } = await import("./src/lib/../integrations/supabase/client.server");
+const { supabaseAdmin } = await import("./src/integrations/supabase/client.server");
 const db: any = supabaseAdmin;
-let n = 0; const of = globalThis.fetch; (globalThis as any).fetch = (...a: any[]) => { n++; return of(...(a as [any])); };
-const T = async (l: string, f: () => Promise<any>) => { const t = Date.now(), n0 = n; try { const r = await f(); console.log(l, Date.now() - t, "ms", n - n0, "requests"); return r; } catch (e: any) { console.log(l, "ERR", e.message); } };
-const { data: offs } = await db.from("offerings").select("id").limit(1000);
+const m: any = await import("./src/lib/investor-onboarding.server");
 const { data: onbs } = await db.from("investor_onboardings").select("*").not("stage", "in", "(declined,cancelled)").limit(5000);
-console.log("funds", offs.length, "onboardings", onbs.length);
-const { fundLaunchPercents } = await import("./src/lib/fund-launch-percent.server");
-await T("launchPercents", () => fundLaunchPercents(offs.map((o: any) => o.id)));
-const rmod: any = await import("./src/lib/ops-funds.server");
-const { computeReadinessFor } = await import("./src/lib/investor-onboarding.server").catch(() => ({} as any));
-if (computeReadinessFor) await T("readiness x" + Math.min(40, onbs.length), () => Promise.all(onbs.slice(0, 20).map((r: any) => computeReadinessFor(r))));
+let ok = 0, bad = 0;
+for (let i = 0; i < onbs.length; i += 10) {
+  await Promise.all(onbs.slice(i, i + 10).map(async (r: any) => { try { const { result } = await m.computeReadinessFor(r); await m.saveReadinessSummary(r, result); ok++; } catch { bad++; } }));
+}
+console.log("saved", ok, "failed", bad);
 process.exit(0);
