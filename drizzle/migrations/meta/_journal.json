@@ -2031,6 +2031,13 @@
       "when": 1792445128305,
       "tag": "0289_managers_upload_ein_letter",
       "breakpoints": true
+    },
+    {
+      "idx": 290,
+      "version": "7",
+      "when": 1792445636154,
+      "tag": "0290_onboarding_readiness_summary",
+      "breakpoints": true
     }
   ]
 }
