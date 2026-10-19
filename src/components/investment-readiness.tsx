@@ -1,3 +1,4 @@
+import { LoadError } from "@/components/load-error";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -432,7 +433,7 @@ export function ReadinessQueue({ initialTab, offeringId }: { initialTab?: QTab |
   const [tab, setTab] = useState<QTab>(initialTab ?? "harmonious");
   const [sel, setSel] = useState<any | null>(null);
   if (q.isPending) return <Skeleton className="h-64 w-full rounded-xl" />;
-  if (q.isError) return <p className="text-sm text-muted-foreground">Harmonious operations access is required.</p>;
+  if (q.isError) return <LoadError error={q.error} what="The work queue" onRetry={() => q.refetch()} />;
   const all = ((q.data ?? []) as any[]).filter((r) => !offeringId || r.offeringId === offeringId);
   if (offeringId && !all.length) return null;
   const counts = { harmonious: 0, investor: 0, fund_manager: 0, all: all.length } as Record<QTab, number>;
