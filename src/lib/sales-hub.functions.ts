@@ -128,3 +128,10 @@ export const saveCommissionRates = createServerFn({ method: "POST" }).middleware
 export const saveQuoteBdr = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ quoteId: z.string().uuid(), bdrId: z.string().uuid().nullable() }).parse(d))
   .handler(async ({ data, context }) => (await C()).setQuoteBdr(context.userId, data.quoteId, data.bdrId));
+
+export const recordCommissionPayouts = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ items: z.array(z.object({ lineId: z.string().uuid(), userId: z.string().uuid(), layer: z.string() })).min(1).max(500), payoutDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), reference: z.string().min(1).max(200), note: z.string().max(1000).nullish() }).parse(d))
+  .handler(async ({ data, context }) => (await C()).recordCommissionPayouts(context.userId, data.items, data.payoutDate, data.reference, data.note ?? null));
+export const reverseCommissionPayout = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ payoutId: z.string().uuid(), reason: z.string().min(1).max(1000) }).parse(d))
+  .handler(async ({ data, context }) => (await C()).reverseCommissionPayout(context.userId, data.payoutId, data.reason));

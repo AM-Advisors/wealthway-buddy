@@ -1,5 +1,5 @@
 /** Server-only commission tracking. Read-only projection over signed quotes and their invoices; never moves money. */
-import { COMMISSION_EDITORS, COMMISSION_VIEW_ALL, DEFAULT_RATES, isCapTableLine, splitLine, validRates, type CommissionRates } from "@/lib/commission-model";
+import { COMMISSION_EDITORS, COMMISSION_VIEW_ALL, DEFAULT_RATES, PAYOUT_RECORDERS, payoutDueDate, isCapTableLine, splitLine, validRates, type CommissionRates } from "@/lib/commission-model";
 import { names, salesActor } from "@/lib/sales-hub.server";
 
 const admin = async () => (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
@@ -55,9 +55,19 @@ export async function commissionReport(userId: string, from: string, to: string)
       for (const s of splits) {
         if (!viewAll && s.userId !== userId && !(isManager && s.userId && team.has(s.userId))) continue;
         rows.push({ quoteId: q.id, quoteNumber: q.quote_number, client: clientName.get(q.client_id) ?? "-", invoice: inv.number, paid, paidOn: inv.paid_on,
-          service: ln.label, capTable: isCapTableLine(ln.service_key), layer: s.layer, userId: s.userId, ratePct: s.ratePct, baseCents: base, amountCents: Math.round((base * s.ratePct) / 100) });
+          lineId: ln.id, paidCents: paid ? base : 0, service: ln.label, capTable: isCapTableLine(ln.service_key), layer: s.layer, userId: s.userId, ratePct: s.ratePct, baseCents: base, amountCents: Math.round((base * s.ratePct) / 100) });
       }
     }
+  }
+  const lineIds = [...new Set(rows.map((r) => r.lineId))];
+  const { data: pays } = lineIds.length ? await db.from("commission_payouts").select("id, invoice_line_id, user_id, layer, amount_cents, payout_date, reference, note, reversal_of, reason, created_at").in("invoice_line_id", lineIds) : { data: [] };
+  const payList = (pays ?? []) as any[];
+  const reversed = new Set(payList.filter((p) => p.reversal_of).map((p) => p.reversal_of));
+  for (const r of rows) {
+    const active = payList.find((p) => !p.reversal_of && !reversed.has(p.id) && p.invoice_line_id === r.lineId && p.user_id === r.userId && p.layer === r.layer);
+    r.payout = active ? { id: active.id, date: active.payout_date, reference: active.reference, note: active.note } : null;
+    r.status = active ? "paid_out" : r.paid ? "scheduled" : "not_earned";
+    r.payoutDue = r.paid && r.paidOn ? payoutDueDate(r.paidOn) : null;
   }
   const nm = await names(rows.map((r) => r.userId).filter(Boolean));
   for (const r of rows) r.name = r.userId ? nm.get(r.userId) ?? "Unknown" : "Unassigned";
@@ -73,6 +83,7 @@ export async function commissionReport(userId: string, from: string, to: string)
   return {
     rows, people: [...byPerson.values()].sort((x, y) => y.earnedCents - x.earnedCents), rates: current,
     history: hist.slice().reverse().map((h) => ({ ...h, setByName: hnm.get(h.set_by) ?? "Unknown" })),
+    canRecordPayout: a.roles.some((r: string) => PAYOUT_RECORDERS.includes(r)),
     canEdit: a.roles.some((r: string) => COMMISSION_EDITORS.includes(r)),
     quotes: qs.map((q) => ({ id: q.id, label: `${q.quote_number ?? ""} ${q.title ?? ""}`.trim(), bdrUserId: q.bdr_user_id, ownerUserId: q.owner_user_id })),
     bdrs: await (async () => { const ids = [...rolesOf].filter(([, rs]) => rs.includes("bdr")).map(([id]) => id); const m = await names(ids); return ids.map((id) => ({ id, name: m.get(id) ?? "BDR" })); })(),
@@ -100,5 +111,35 @@ export async function setQuoteBdr(userId: string, quoteId: string, bdrId: string
     if (!r) throw new Error("That person isn't a BDR.");
   }
   await db.from("sales_quotes").update({ bdr_user_id: bdrId }).eq("id", quoteId);
+  return { ok: true };
+}
+
+/** Records (never sends) commission payouts for scheduled rows. Amount is recomputed server-side. */
+export async function recordCommissionPayouts(userId: string, items: { lineId: string; userId: string; layer: string }[], payoutDate: string, reference: string, note: string | null) {
+  const a = await salesActor(userId);
+  if (!a.roles.some((r: string) => PAYOUT_RECORDERS.includes(r))) throw new Error("Only Finance, the CRO or the CEO can record payouts.");
+  if (!reference.trim()) throw new Error("Add a payroll reference.");
+  const rep = await commissionReport(userId, "1900-01-01", "2999-12-31");
+  const db = await admin();
+  const inserts = items.map((it) => {
+    const row = rep.rows.find((r: any) => r.lineId === it.lineId && r.userId === it.userId && r.layer === it.layer);
+    if (!row) throw new Error("A selected commission couldn't be found.");
+    if (row.status !== "scheduled") throw new Error("Only earned commissions that aren't already paid out can be recorded.");
+    return { quote_id: row.quoteId, invoice_line_id: row.lineId, user_id: row.userId, layer: row.layer, amount_cents: row.amountCents, payout_date: payoutDate, reference: reference.trim(), note, recorded_by: userId };
+  });
+  const { error } = await db.from("commission_payouts").insert(inserts);
+  if (error) throw new Error(error.message);
+  return { ok: true, count: inserts.length };
+}
+
+export async function reverseCommissionPayout(userId: string, payoutId: string, reason: string) {
+  const a = await salesActor(userId);
+  if (!a.roles.some((r: string) => PAYOUT_RECORDERS.includes(r))) throw new Error("Only Finance, the CRO or the CEO can reverse payouts.");
+  if (!reason.trim()) throw new Error("A reason is required.");
+  const db = await admin();
+  const { data: p } = await db.from("commission_payouts").select("*").eq("id", payoutId).is("reversal_of", null).maybeSingle();
+  if (!p) throw new Error("Payout not found.");
+  const { error } = await db.from("commission_payouts").insert({ quote_id: p.quote_id, invoice_line_id: p.invoice_line_id, user_id: p.user_id, layer: p.layer, amount_cents: -p.amount_cents, payout_date: new Date().toISOString().slice(0, 10), reference: p.reference, recorded_by: userId, reversal_of: p.id, reason: reason.trim() });
+  if (error) throw new Error(error.code === "23505" ? "That payout was already reversed." : error.message);
   return { ok: true };
 }
