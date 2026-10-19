@@ -7,9 +7,9 @@ export function portfolioSummary(rows: PortfolioPosition[]) {
 export function portfolioAttention(r: PortfolioPosition, asOf: string) {
   const reasons: string[]=[];
   if(r.valueCents === null) reasons.push('No effective valuation');
-  if(r.monitoring.watchlist) reasons.push('Watchlist');
-  if(r.monitoring.nextReportDue && r.monitoring.nextReportDue < asOf) reasons.push('Report overdue');
-  if(r.monitoring.riskRating === 'high' || r.monitoring.riskRating === 'critical') reasons.push('Elevated recorded risk');
-  for(const k of r.monitoring.kpis ?? []) if(k.threshold !== null && k.threshold !== undefined && (k.direction === 'above' ? k.value > k.threshold : k.value < k.threshold)) reasons.push(`${k.metric} threshold breached`);
+  if(r.monitoring["watchlist"]) reasons.push('Watchlist');
+  if(r.monitoring["nextReportDue"] && r.monitoring["nextReportDue"] < asOf) reasons.push('Report overdue');
+  if(r.monitoring["riskRating"] === 'high' || r.monitoring["riskRating"] === 'critical') reasons.push('Elevated recorded risk');
+  for(const k of r.monitoring["kpis"] ?? []) if(k.threshold !== null && k.threshold !== undefined && (k.direction === 'above' ? k.value > k.threshold : k.value < k.threshold)) reasons.push(`${k.metric} threshold breached`);
   return reasons;
 }

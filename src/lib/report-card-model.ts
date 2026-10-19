@@ -11,13 +11,13 @@ export function assessmentGrade(metrics: AssessmentMetric[], thresholds = DEFAUL
 }
 export function riskAssessment(answers: Record<string,number>) {
   if (RISK_QUESTIONS.some(q => !q.options.some(o => o.value === answers[q.id]))) throw new Error('Answer every risk question.');
-  const score = Math.round(RISK_QUESTIONS.reduce((s,q) => s+answers[q.id],0)/(RISK_QUESTIONS.length*4)*100);
+  const score = Math.round(RISK_QUESTIONS.reduce((s,q) => s+(answers[q.id]??0),0)/(RISK_QUESTIONS.length*4)*100);
   const profile = score < 40 ? 'Conservative' : score < 60 ? 'Balanced' : score < 80 ? 'Growth' : 'Aggressive';
   const actions = ['Review each fund’s strategy, fees and lock-up terms with your adviser before committing.'];
-  if (answers.liquidity <= 2 || answers.horizon === 1) actions.push('Review near-term cash needs against each investment’s redemption and lock-up terms.');
-  if (answers.experience <= 2) actions.push('Discuss private-market risks and possible losses with a qualified adviser.');
-  if (answers.concentration <= 2) actions.push('Review single-fund and single-manager concentration across your full portfolio.');
-  if (answers.esg >= 3) actions.push('Ask managers for evidence of their stated values-based investment policies.');
+  if ((answers["liquidity"]??0) <= 2 || answers["horizon"] === 1) actions.push('Review near-term cash needs against each investment’s redemption and lock-up terms.');
+  if ((answers["experience"]??0) <= 2) actions.push('Discuss private-market risks and possible losses with a qualified adviser.');
+  if ((answers["concentration"]??0) <= 2) actions.push('Review single-fund and single-manager concentration across your full portfolio.');
+  if ((answers["esg"]??0) >= 3) actions.push('Ask managers for evidence of their stated values-based investment policies.');
   return { score, profile, actions };
 }
 export function canReadAssessment(input: { kind: string; published: boolean; staff: boolean; manager: boolean; owner: boolean; investorVisible: boolean; diligenceAccess: boolean; ndaAccepted: boolean }) {
