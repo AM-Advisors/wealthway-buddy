@@ -43,3 +43,9 @@ describe("profile document evidence scope", () => {
     expect(from).not.toHaveBeenCalled();
   });
 });
+describe("investors without an account", () => {
+  it("returns no evidence instead of failing", async () => {
+    const from = () => { throw new Error("should not query"); };
+    expect(await loadProfileDocumentEvidence({ from }, { id: "x", investment_profile_id: "p", investor_user_id: null })).toEqual([]);
+  });
+});

@@ -1,3 +1,4 @@
+import { LoadError } from "@/components/load-error";
 import { setFundDemoFn } from "@/lib/staff-funds.functions";
 import { DeleteFundDialog } from "@/components/delete-fund-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -78,7 +79,7 @@ export function OpsFundsDashboard({ initialFilter }: { initialFilter?: FundFilte
       <div className="space-y-2">{Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-14 rounded-lg" />)}</div>
     </div>
   );
-  if (q.isError) return <p className="text-sm text-muted-foreground">Harmonious operations access is required.</p>;
+  if (q.isError) { console.error("ops funds dashboard failed", q.error); return <LoadError error={q.error} what="Funds" onRetry={() => q.refetch()} />; }
   const t = (q.data as any).totals;
   const shown = rows
     .filter((r) => showDemo || !r.isDemo)
