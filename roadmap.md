@@ -1,5 +1,8 @@
 # Roadmap
 
+## Broader V2.5 review
+- [ ] Compare investor/client and Operations tools; recommend useful additions without duplicate engines or legacy permissions.
+
 ## V2.5 Portfolio and Report card
 - [x] Compare V2.5 screens and workflows with current portfolio/reporting engines.
 - [x] Add Portfolio plus all three Report Card types: operational, investor risk/action plan, and diligence; reuse canonical records and existing authorization/approval rules.
