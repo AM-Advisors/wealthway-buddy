@@ -72,7 +72,7 @@ const OPS_SUB: Record<string, { title: string; url: string; always?: boolean }[]
   funds: [{ title: "Service engagements", url: "/ops/service-engagements" }, { title: "Locked edit approvals", url: "/ops/locked-edits", always: true }, { title: "EIN / SS-4 queue", url: "/ops/ss4" }, { title: "Documents & signatures", url: "/ops/documents" }, { title: "HubSpot tickets", url: "/ops/hubspot-tickets" }, { title: "HubSpot deal migration", url: "/ops/hubspot-deals" }, { title: "Client Portal Launch", url: "/ops/client-portal-launch" }, { title: "Migrations", url: "/ops/fund-migration/requests" }],
   investors: [{ title: "Investor onboarding & KYC", url: "/admin/investor-onboarding" }],
   capital: [{ title: "Banking", url: "/ops/banking" }, { title: "Distributions", url: "/ops/distributions" }, { title: "Capital calls & funding", url: "/admin/funding" }],
-  accounting: [{ title: "NAV", url: "/ops/nav" }, { title: "Financial reviews", url: "/ops/financial-reviews" }, { title: "Financials", url: "/ops/financials" }],
+  accounting: [{ title: "Portfolio", url: "/ops/portfolio" }, { title: "Report Cards", url: "/ops/report-cards" }, { title: "NAV", url: "/ops/nav" }, { title: "Financial reviews", url: "/ops/financial-reviews" }, { title: "Financials", url: "/ops/financials" }],
 };
 
 const FINANCE_IDS = ["capital", "accounting", "tax"];
