@@ -2,9 +2,11 @@
 
 ## V2.5 Portfolio and Report card
 - [x] Compare V2.5 screens and workflows with current portfolio/reporting engines.
-- [ ] Add Portfolio plus all three Report Card types: operational, investor risk/action plan, and diligence; reuse canonical records and existing authorization/approval rules.
-- [ ] Review the adaptation plan; no legacy sample grades, financial engines, or access rules will be imported.
-- [ ] Run focused tests; authenticated walkthrough requires isolated synthetic QA access.
+- [x] Add Portfolio plus all three Report Card types: operational, investor risk/action plan, and diligence; reuse canonical records and existing authorization/approval rules.
+- [x] Adapt over canonical marks and immutable assessment records; no legacy sample grades, financial engines, or access rules imported.
+- [x] Focused regression tests: 70 passed; preview compiles; public site opens with zero runtime errors.
+- [ ] Authenticated Portfolio save / assessment evidence / publication / investor NDA walkthrough — blocked: isolated synthetic QA access unavailable; no production records or messages changed.
+- [ ] Full V2.5 parity (multi-metric editor, visual concentration/cohort charts and share links) — deferred; current delivery provides monitoring, evidence-backed assessments, private risk questionnaires, revision history and JSON exports.
 
 ## Applicable investor-profile documents
 - [x] Require applicable profile documents, reuse profile-bound uploads across investments, retain provider identity checks and canonical verification rules.
