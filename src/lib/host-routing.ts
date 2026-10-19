@@ -55,6 +55,8 @@ const SHARED_PREFIXES = [
   "/og-",
   // onboard.harmonious.co investor onboarding portal: served on its own address.
   "/onboard/",
+  // Time-limited Report Card share links work on any Harmonious address.
+  "/report-card-share/",
 ];
 
 // Personal account pages belong to the application in which they are opened.

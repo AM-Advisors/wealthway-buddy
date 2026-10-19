@@ -1,0 +1,8 @@
+import { createServerFn } from '@tanstack/react-start';
+import { z } from 'zod';
+import { requireSupabaseAuth } from '@/lib/require-auth';
+const s = () => import('./compliance-schedules.server');
+const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
+export const getComplianceSchedules = createServerFn({ method: 'GET' }).middleware([requireSupabaseAuth]).handler(async ({ context }) => (await s()).listSchedules(context.userId));
+export const saveComplianceSchedule = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth]).inputValidator((d: unknown) => z.object({ id: z.string().uuid().optional(), name: z.string().trim().min(2).max(120), reportType: z.enum(['compliance_items_due', 'open_holds', 'combined']), frequency: z.enum(['weekly', 'monthly', 'quarterly']), recipients: z.array(z.string().email()).min(1).max(20), firstRunOn: date, active: z.boolean() }).parse(d)).handler(async ({ data, context }) => (await s()).saveSchedule(context.userId, data));
+export const decideComplianceDelivery = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth]).inputValidator((d: unknown) => z.object({ id: z.string().uuid(), decision: z.enum(['approved', 'rejected']), reason: z.string().trim().max(1000) }).parse(d)).handler(async ({ data, context }) => (await s()).decideDelivery(context.userId, data.id, data.decision, data.reason));
