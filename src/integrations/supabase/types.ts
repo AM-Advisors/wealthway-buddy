@@ -7629,6 +7629,62 @@ export type Database = {
           },
         ]
       }
+      commission_payouts: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          id: string
+          invoice_line_id: string
+          layer: string
+          note: string | null
+          payout_date: string
+          quote_id: string
+          reason: string | null
+          recorded_by: string
+          reference: string
+          reversal_of: string | null
+          user_id: string
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          id?: string
+          invoice_line_id: string
+          layer: string
+          note?: string | null
+          payout_date: string
+          quote_id: string
+          reason?: string | null
+          recorded_by: string
+          reference: string
+          reversal_of?: string | null
+          user_id: string
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          id?: string
+          invoice_line_id?: string
+          layer?: string
+          note?: string | null
+          payout_date?: string
+          quote_id?: string
+          reason?: string | null
+          recorded_by?: string
+          reference?: string
+          reversal_of?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commission_payouts_reversal_of_fkey"
+            columns: ["reversal_of"]
+            isOneToOne: false
+            referencedRelation: "commission_payouts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       commission_rate_versions: {
         Row: {
           created_at: string
