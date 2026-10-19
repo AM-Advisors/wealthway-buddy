@@ -8,10 +8,13 @@ export async function investorStepHistory(userId: string, offeringId: string, on
   const actor = await onboardingActor(userId);
   if (!canReadFundHistory(actor, offeringId)) throw new Error('Forbidden: you do not manage that fund.');
   const db = await database();
-  let obq = db.from('investor_onboardings').select('id,investor_user_id,investment_profile_id,investor_name,legal_name').eq('offering_id', offeringId);
+  let obq = db.from('investor_onboardings').select('id,investor_user_id,investment_profile_id').eq('offering_id', offeringId);
   if (onboardingId) obq = obq.eq('id', onboardingId);
   let obs = ok<any[]>(await obq.limit(1000)) ?? [];
   if (onboardingId && !obs.length) throw new Error('Investor not found in this fund.');
+  const pids = [...new Set(obs.map((o) => o.investment_profile_id).filter(Boolean))];
+  const profs = pids.length ? ok<any[]>(await db.from('investment_profiles').select('id,legal_name').in('id', pids)) ?? [] : [];
+  const profName = (id: string | null) => profs.find((p) => p.id === id)?.legal_name ?? null;
   const ids = obs.map((o) => o.id);
   if (!ids.length) return { entries: [], investors: [] };
   const profileIds = [...new Set(obs.map((o) => o.investment_profile_id).filter(Boolean))];
@@ -32,5 +35,5 @@ export async function investorStepHistory(userId: string, offeringId: string, on
   ]) : [{ data: [] }, { data: [] }];
   const names = new Map<string, string>(((people as any).data ?? []).map((p: any) => [p.user_id, p.legal_name || p.email]));
   const entries = normaliseSteps(raw, { viewerIsStaff: actor.isStaff, staffIds: new Set(((roles as any).data ?? []).map((r: any) => r.user_id)), investorIds: new Set(obs.map((o) => o.investor_user_id).filter(Boolean)), names });
-  return { entries, investors: obs.map((o) => ({ id: o.id, name: o.legal_name || o.investor_name || 'Investor' })) };
+  return { entries, investors: obs.map((o) => ({ id: o.id, name: profName(o.investment_profile_id) || 'Investor' })) };
 }
