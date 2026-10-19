@@ -1,8 +1,9 @@
 # Roadmap
 
 ## V2.5 Portfolio and Report card
-- [ ] Compare V2.5 screens and workflows with current portfolio/reporting engines.
-- [ ] Add the requested views using canonical fund records and existing authorization/approval rules.
+- [x] Compare V2.5 screens and workflows with current portfolio/reporting engines.
+- [ ] Add Portfolio plus all three Report Card types: operational, investor risk/action plan, and diligence; reuse canonical records and existing authorization/approval rules.
+- [ ] Review the adaptation plan; no legacy sample grades, financial engines, or access rules will be imported.
 - [ ] Run focused tests; authenticated walkthrough requires isolated synthetic QA access.
 
 ## Applicable investor-profile documents
