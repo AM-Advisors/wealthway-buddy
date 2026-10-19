@@ -155,6 +155,7 @@
 ## V2.5 migration (plan approved 2026-10-19)
 - [x] Phase 0: checked existing — audit log already existed (/admin/audit); extended rather than duplicated
 - [x] Phase 1: Record history tab (investor record changes, fund renames, client contact changes), staff-only, read-only
-- [ ] Phase 2: Portfolio exposure charts, multi-metric editor, controlled share links
-- [ ] Phase 3: Compliance report schedules (check existing compliance tables first)
+- [x] Phase 2: exposure charts (5 groupings + concentration), multi-measure scoring editor, expiring revocable share links with view log
+- [x] Phase 3: compliance report schedules (prepared by 5-min job, second-person approval, harmonious.co recipients only)
+- [ ] Signed-in walkthrough of Phases 1–3 (blocked: isolated QA access)
 - [ ] Later: cap-table scenarios, valuation sensitivity, client review screen
