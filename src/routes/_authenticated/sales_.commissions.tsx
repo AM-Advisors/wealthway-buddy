@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { getCommissions, saveCommissionRates, saveQuoteBdr } from "@/lib/sales-hub.functions";
 import { LAYER_LABEL, type CommissionLayer, type CommissionRates } from "@/lib/commission-model";
 import { Panel, PeriodFilter, Stat, money, usePeriod } from "@/components/sales/sales-ui";
+import { CommissionTracker } from "@/components/sales/commission-tracker";
 
 export const Route = createFileRoute("/_authenticated/sales_/commissions")({
   head: () => ({
@@ -80,25 +81,7 @@ function Commissions() {
         </Table>
       </Panel>
 
-      <Panel title="Detail">
-        <Table>
-          <TableHeader><TableRow><TableHead>Client / quote</TableHead><TableHead>Invoice</TableHead><TableHead>Service</TableHead><TableHead>Role share</TableHead><TableHead>Person</TableHead><TableHead className="text-right">Rate</TableHead><TableHead className="text-right">Amount</TableHead><TableHead>Status</TableHead></TableRow></TableHeader>
-          <TableBody>
-            {(d?.rows ?? []).map((r, i) => (
-              <TableRow key={i}>
-                <TableCell>{r.client}<div className="text-xs text-muted-foreground">{r.quoteNumber}</div></TableCell>
-                <TableCell>{r.invoice}</TableCell>
-                <TableCell>{r.service}{r.capTable && <Badge variant="secondary" className="ml-2">Cap Table</Badge>}</TableCell>
-                <TableCell>{LAYER_LABEL[r.layer as CommissionLayer]}</TableCell>
-                <TableCell>{r.name}</TableCell>
-                <TableCell className="text-right">{r.ratePct}%</TableCell>
-                <TableCell className="text-right">{money(r.amountCents)}</TableCell>
-                <TableCell>{r.paid ? <Badge>Earned</Badge> : <Badge variant="outline">Pending</Badge>}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </Panel>
+      <CommissionTracker rows={(d?.rows ?? []) as any} canRecord={Boolean(d?.canRecordPayout)} onChange={refresh} />
 
       {d && d.quotes.length > 0 && (
         <Panel title="BDR on signed deals">
