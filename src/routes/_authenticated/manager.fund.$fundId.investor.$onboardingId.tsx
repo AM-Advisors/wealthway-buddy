@@ -1,5 +1,6 @@
 import { RELATED_REVIEW_MESSAGE } from "@/lib/related-person-model";
 import { PersonalInvestmentLinkCard } from "@/components/personal-investment-link";
+import { UploadForInvestor } from "@/components/upload-for-investor";
 import { InvestorStepHistory } from "@/components/investor-step-history";
 import { InvestorRecordDocuments } from "@/components/investor-document-review";
 import { InvestorDocumentAi } from "@/components/investor-document-ai";
@@ -142,11 +143,11 @@ function InvestorRecordPage() {
         </CardHeader><CardContent className="grid gap-3 sm:grid-cols-2">
           {field("firstName", "Legal first name", p?.firstName)}{field("middleName", "Middle name", p?.middleName)}{field("lastName", "Last name", p?.lastName)}{field("preferredName", "Preferred name", p?.preferredName)}
           {field("email", "Email", p?.email)}{field("phone", "Phone", p?.phone)}{field("citizenship", "Citizenship", p?.citizenship)}
-          {staff ? field("dob", "Date of birth", (p as any)?.dateOfBirth, { type: "date" }) : null}
+          {field("dob", staff ? "Date of birth" : "Date of birth (entered values are visible to Harmonious only)", staff ? (p as any)?.dateOfBirth : undefined, { type: "date" })}
           {field("address1", "Residential address", p?.addressLine1)}{field("address2", "Address line 2", p?.addressLine2)}{field("city", "City", p?.city)}{field("region", "State / region", p?.region)}{field("postal", "Postal code", p?.postalCode)}{field("country", "Country", p?.country)}
           <Button className="sm:w-fit" disabled={data.overview.removed} onClick={() => save({ onboardingId, person: {
             firstName: edit['firstName'], middleName: edit['middleName'], lastName: edit['lastName'], preferredName: edit['preferredName'], email: edit['email'], phone: edit['phone'],
-            citizenship: edit['citizenship'], dateOfBirth: staff ? edit['dob'] : undefined, addressLine1: edit['address1'], addressLine2: edit['address2'], city: edit['city'], region: edit['region'], postalCode: edit['postal'], country: edit['country'],
+            citizenship: edit['citizenship'], dateOfBirth: edit["dob"] || undefined, addressLine1: edit['address1'], addressLine2: edit['address2'], city: edit['city'], region: edit['region'], postalCode: edit['postal'], country: edit['country'],
           } })}>{data.contactEditMode === "suggest" ? "Suggest change" : "Save contact"}</Button>
         </CardContent></Card>
         {data.profile ? <Card><CardHeader><CardTitle className="text-base">Investment Profile · {data.profile.typeLabel}</CardTitle></CardHeader><CardContent className="grid gap-3 sm:grid-cols-2">
@@ -166,7 +167,7 @@ function InvestorRecordPage() {
       {tab === "readiness" ? <Card><CardHeader><CardTitle className="text-base">{data.readiness.label}</CardTitle></CardHeader><CardContent><ul className="divide-y text-sm">{data.readiness.stages.map((s: any) => <li key={s.key} className="flex justify-between py-2"><span>{s.label}</span><span className="text-muted-foreground">{prettyStatus(s.status)}</span></li>)}</ul>
         <Link to="/manager/fund/$fundId/investors" params={{ fundId }} className="mt-3 inline-block text-sm text-primary hover:underline">Open Fund readiness</Link></CardContent></Card> : null}
 
-      {tab === "documents" ? <div className="space-y-4">{staff ? <InvestorDocumentAi onboardingId={onboardingId} /> : null}<InvestorRecordDocuments offeringId={fundId} onboardingId={onboardingId} /><Card><CardContent className="pt-6 text-sm text-muted-foreground">Values read from imported documents show up as suggested updates for Harmonious to review; they never overwrite this record automatically.
+      {tab === "documents" ? <div className="space-y-4">{!data.overview.removed ? <UploadForInvestor onboardingId={onboardingId} /> : null}{staff ? <InvestorDocumentAi onboardingId={onboardingId} /> : null}<InvestorRecordDocuments offeringId={fundId} onboardingId={onboardingId} /><Card><CardContent className="pt-6 text-sm text-muted-foreground">Values read from imported documents show up as suggested updates for Harmonious to review; they never overwrite this record automatically.
         <div className="mt-2"><Link to="/manager/fund/$fundId/documents" params={{ fundId }} className="text-primary hover:underline">Open Fund documents</Link></div></CardContent></Card></div> : null}
 
       {tab === "activity" ? <Card><CardContent className="pt-6">{data.activity.length ? <ul className="divide-y text-sm">{data.activity.map((a: any, i: number) => <li key={i} className="py-2"><p>{a.label}</p><p className="text-xs text-muted-foreground">{new Date(a.at).toLocaleString()} · {a.source}{a.field ? ` · ${a.field}: ${JSON.stringify(a.from)} → ${JSON.stringify(a.to)}` : ""}</p></li>)}</ul> : <p className="text-sm text-muted-foreground">No activity yet.</p>}</CardContent></Card> : null}
