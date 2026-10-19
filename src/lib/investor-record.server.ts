@@ -101,7 +101,7 @@ function personRow(p: PersonInput, actor: OnboardingActor) {
     city: p.city ?? undefined, region: p.region ?? undefined, postal_code: p.postalCode ?? undefined, country: p.country ?? undefined,
     mailing_address: p.mailingAddress ?? undefined,
     // Date of birth is Harmonious-only: fund managers never enter or see it.
-    ...(actor.isStaff && p.dateOfBirth ? { date_of_birth: p.dateOfBirth } : {}),
+    ...(p.dateOfBirth ? { date_of_birth: p.dateOfBirth } : {}),
   } as Record<string, unknown>, actor);
   return raw;
 }
@@ -573,11 +573,17 @@ export async function bulkCancel(userId: string, importId: string) {
 export async function claimPreparedRecords(userId: string): Promise<{ claimed: boolean; review?: boolean; reviewOfferingIds?: string[] }> {
   const { data: me } = await db().auth.admin.getUserById(userId);
   const email = normEmail(me?.user?.email);
-  const { data: unclaimed } = email ? await db().from("persons").select("id").is("user_id", null).ilike("email", email).limit(5) : { data: [] };
+  const { data: unclaimed } = email ? await db().from("persons").select("id").is("user_id", null).is("merged_into_person_id", null).ilike("email", email).limit(5) : { data: [] };
   const list = (unclaimed ?? []) as any[];
   const { data: own } = list.length ? await db().from("persons").select("id").eq("user_id", userId).maybeSingle() : { data: null };
   const plan = planClaim({ emailVerified: Boolean(email && me?.user?.email_confirmed_at), unclaimedCandidateIds: list.map((p) => p.id), ownPersonId: (own as any)?.id ?? null });
   if (plan.kind === "none") return { claimed: false };
+  if (plan.kind === "review" && email) {
+    // Exact duplicates (same email + legal name + DOB) merge automatically; anything else stays a review item.
+    const { sweepDuplicates } = await import("./person-merge.server");
+    const r = await sweepDuplicates(null, email).catch(() => ({ merged: 0 }));
+    if (r.merged) return claimPreparedRecords(userId);
+  }
   if (plan.kind === "review") {
     // Never merge and never duplicate: open one Harmonious resolution item per prepared investment.
     const { data: onb } = await db().from("investor_onboardings").select("id, offering_id").in("person_id", plan.candidateIds).is("investor_user_id", null).is("removed_at", null).limit(10);
@@ -592,6 +598,8 @@ export async function claimPreparedRecords(userId: string): Promise<{ claimed: b
   const { error } = await db().from("persons").update({ user_id: userId, updated_at: nowIso() }).eq("id", personId).is("user_id", null);
   if (error) return { claimed: false };
   await db().from("investment_profiles").update({ owner_user_id: userId }).eq("person_id", personId).is("owner_user_id", null);
+  // Documents a manager or Harmonious uploaded before the investor had an account now belong to them.
+  await db().from("investor_documents").update({ user_id: userId }).eq("prepared_for_person_id", personId);
   const { data: onbs } = await db().from("investor_onboardings").update({ investor_user_id: userId }).eq("person_id", personId).is("investor_user_id", null).select("id, offering_id");
   await logChanges(((onbs ?? []) as any[]).map((o) => ({ offeringId: o.offering_id, onboardingId: o.id, table: "persons", id: personId, field: "claimed", from: null, to: "account_linked", source: "investor" as EntrySource, actor: userId })));
   return { claimed: true };

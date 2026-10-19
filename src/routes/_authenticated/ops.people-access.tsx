@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { PossibleDuplicates } from "@/components/possible-duplicates";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useClientWorkspace } from "@/components/client-workspace";
 import { EmployeesPage } from "@/components/employees-panel";
@@ -50,7 +51,7 @@ function PeopleAccessPage() {
       <RecentSignIns />
       <Tabs value={current} onValueChange={(v) => navigate({ search: { tab: v as PeopleTab | "records" }, replace: true })}>
         <TabsList className="flex-wrap">{tabs.map((t) => <TabsTrigger key={t.id} value={t.id}>{t.title}</TabsTrigger>)}<TabsTrigger value="records">Details & ID checks</TabsTrigger></TabsList>
-        <TabsContent value="records"><PersonRecords /></TabsContent>
+        <TabsContent value="records" className="space-y-6"><PossibleDuplicates /><PersonRecords /></TabsContent>
         <TabsContent value="employees"><EmployeesPage /></TabsContent>
         <TabsContent value="others" className="space-y-4">
           <div className="flex flex-wrap gap-1">

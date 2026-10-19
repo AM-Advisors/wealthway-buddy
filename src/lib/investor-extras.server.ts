@@ -80,6 +80,40 @@ export async function uploadDoc(userId: string, input: { onboardingId: string; k
   return { ok: true };
 }
 
+/**
+ * Fund manager (own funds) or Harmonious uploads a document on the investor's
+ * behalf. Never marks anything reviewed or verified; originals are kept.
+ */
+export async function uploadDocFor(userId: string, input: { onboardingId: string; kind: OnboardingDocKind; fileName: string; contentType: string; base64: string }) {
+  const d = await db();
+  const { data: ob } = await d.from("investor_onboardings").select("id, offering_id, investor_user_id, application_id, investment_profile_id, person_id, removed_at").eq("id", input.onboardingId).maybeSingle();
+  if (!ob || ob.removed_at) throw new Error("This investment isn't available.");
+  const { onboardingActor } = await import("./investor-onboarding.server");
+  const actor = await onboardingActor(userId);
+  if (!actor.isStaff && !actor.managedOfferingIds.includes(ob.offering_id)) throw new Error("Forbidden: you do not manage that fund.");
+  if (!ob.investment_profile_id) throw new Error("Choose the investing profile first.");
+  const bytes = Buffer.from(input.base64, "base64");
+  if (bytes.length === 0) throw new Error("That file is empty.");
+  if (bytes.length > MAX_BYTES) throw new Error("Files can be up to 15 MB.");
+  const safe = input.fileName.replace(/[^\w.\- ]+/g, "_").slice(0, 120);
+  const owner = ob.investor_user_id ?? userId;
+  const path = `${owner}/onboarding/${ob.id}/${crypto.randomUUID()}-${safe}`;
+  const up = await d.storage.from(BUCKET).upload(path, bytes, { contentType: input.contentType || "application/octet-stream" });
+  if (up.error) throw new Error("Couldn't save that file. Please try again.");
+  const role = actor.isStaff ? "harmonious" : "manager";
+  const { error } = await d.from("investor_documents").insert({
+    onboarding_id: ob.id, application_id: ob.application_id, offering_id: ob.offering_id, user_id: owner, investment_profile_id: ob.investment_profile_id,
+    storage_path: path, file_name: safe, doc_kind: input.kind, uploaded_by: userId, uploaded_by_role: role,
+    prepared_for_person_id: ob.investor_user_id ? null : ob.person_id,
+  });
+  if (error) { await d.storage.from(BUCKET).remove([path]); throw new Error(error.message); }
+  await d.from("investment_profile_events").insert({ profile_id: ob.investment_profile_id, actor_id: userId, event: "supporting_document_uploaded_on_behalf", detail: { kind: input.kind, onboarding_id: ob.id, role } });
+  await d.from("investor_onboarding_events").insert({ onboarding_id: ob.id, offering_id: ob.offering_id, event: "document_uploaded_on_behalf", detail: { kind: input.kind }, actor_user_id: userId, actor_role: role });
+  const { reconcileReadinessForSubjects } = await import("./investor-onboarding.server");
+  await reconcileReadinessForSubjects({ investmentProfileId: ob.investment_profile_id }, "profile_document_uploaded").catch(() => null);
+  return { ok: true };
+}
+
 /** Only files Harmonious hasn't reviewed yet can be removed. */
 export async function deleteDoc(userId: string, onboardingId: string, id: string) {
   const { d } = await ownOnboarding(userId, onboardingId);

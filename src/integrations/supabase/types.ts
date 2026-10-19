@@ -26140,12 +26140,15 @@ export type Database = {
           note: string | null
           offering_id: string
           onboarding_id: string | null
+          prepared_for_person_id: string | null
           review_note: string | null
           review_status: string
           reviewed_at: string | null
           reviewed_by: string | null
           storage_path: string
           uploaded_at: string
+          uploaded_by: string | null
+          uploaded_by_role: string | null
           user_id: string
         }
         Insert: {
@@ -26161,12 +26164,15 @@ export type Database = {
           note?: string | null
           offering_id: string
           onboarding_id?: string | null
+          prepared_for_person_id?: string | null
           review_note?: string | null
           review_status?: string
           reviewed_at?: string | null
           reviewed_by?: string | null
           storage_path: string
           uploaded_at?: string
+          uploaded_by?: string | null
+          uploaded_by_role?: string | null
           user_id: string
         }
         Update: {
@@ -26182,12 +26188,15 @@ export type Database = {
           note?: string | null
           offering_id?: string
           onboarding_id?: string | null
+          prepared_for_person_id?: string | null
           review_note?: string | null
           review_status?: string
           reviewed_at?: string | null
           reviewed_by?: string | null
           storage_path?: string
           uploaded_at?: string
+          uploaded_by?: string | null
+          uploaded_by_role?: string | null
           user_id?: string
         }
         Relationships: [
@@ -36735,6 +36744,57 @@ export type Database = {
         }
         Relationships: []
       }
+      person_duplicate_flags: {
+        Row: {
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          decision_note: string | null
+          id: string
+          person_a: string
+          person_b: string
+          reason: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          id?: string
+          person_a: string
+          person_b: string
+          reason: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          id?: string
+          person_a?: string
+          person_b?: string
+          reason?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "person_duplicate_flags_person_a_fkey"
+            columns: ["person_a"]
+            isOneToOne: false
+            referencedRelation: "persons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "person_duplicate_flags_person_b_fkey"
+            columns: ["person_b"]
+            isOneToOne: false
+            referencedRelation: "persons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       person_kyc_requests: {
         Row: {
           aml_status: string | null
@@ -36780,6 +36840,36 @@ export type Database = {
           session_url?: string | null
           status?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      person_merge_events: {
+        Row: {
+          actor_user_id: string | null
+          created_at: string
+          id: string
+          kept_person_id: string
+          merged_person_id: string
+          moved: Json
+          rule: string
+        }
+        Insert: {
+          actor_user_id?: string | null
+          created_at?: string
+          id?: string
+          kept_person_id: string
+          merged_person_id: string
+          moved?: Json
+          rule: string
+        }
+        Update: {
+          actor_user_id?: string | null
+          created_at?: string
+          id?: string
+          kept_person_id?: string
+          merged_person_id?: string
+          moved?: Json
+          rule?: string
         }
         Relationships: []
       }
@@ -36850,6 +36940,9 @@ export type Database = {
           legal_last_name: string | null
           legal_middle_name: string | null
           mailing_address: Json | null
+          merged_at: string | null
+          merged_by: string | null
+          merged_into_person_id: string | null
           onboarding_reason: string | null
           onboarding_state: Database["public"]["Enums"]["onboarding_state"]
           phone: string | null
@@ -36888,6 +36981,9 @@ export type Database = {
           legal_last_name?: string | null
           legal_middle_name?: string | null
           mailing_address?: Json | null
+          merged_at?: string | null
+          merged_by?: string | null
+          merged_into_person_id?: string | null
           onboarding_reason?: string | null
           onboarding_state?: Database["public"]["Enums"]["onboarding_state"]
           phone?: string | null
@@ -36926,6 +37022,9 @@ export type Database = {
           legal_last_name?: string | null
           legal_middle_name?: string | null
           mailing_address?: Json | null
+          merged_at?: string | null
+          merged_by?: string | null
+          merged_into_person_id?: string | null
           onboarding_reason?: string | null
           onboarding_state?: Database["public"]["Enums"]["onboarding_state"]
           phone?: string | null
@@ -36942,7 +37041,15 @@ export type Database = {
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "persons_merged_into_person_id_fkey"
+            columns: ["merged_into_person_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       pitch_deck_slides: {
         Row: {
@@ -47792,6 +47899,10 @@ export type Database = {
           offering_id: string
           updated_at: string
         }[]
+      }
+      merge_persons: {
+        Args: { _actor: string; _drop: string; _keep: string; _rule: string }
+        Returns: Json
       }
       normalize_fund_name: { Args: { p: string }; Returns: string }
       offering_rp_identifier_meta: {
