@@ -41,3 +41,20 @@ describe('compliance schedules', () => {
     expect(s).toMatchObject({ openItems: 2, overdue: 1, dueNext30Days: 1, openHolds: 2 });
   });
 });
+
+import { filingDeadlines as _fd, kycAml as _kyc, redactForOutside as _red, validateOutsideRecipients as _vor } from './compliance-schedule-model';
+describe('compliance report sections and outside recipients', () => {
+  it('requires confirmation and a reason for outside addresses', () => {
+    expect(() => _vor([{ email: 'a@firm.com', reason: 'counsel', confirmed: false }])).toThrow();
+    expect(() => _vor([{ email: 'a@firm.com', reason: '', confirmed: true }])).toThrow();
+    expect(_vor([{ email: 'A@firm.com', reason: 'fund counsel', confirmed: true }])).toEqual([{ email: 'a@firm.com', reason: 'fund counsel' }]);
+  });
+  it('outside recipients see counts but no names', () => {
+    const s = _kyc([{ status: 'review', name: 'Calvin Jung' }, { status: 'approved', name: 'X' }]);
+    expect(s.count).toBe(1); expect(_red([s])[0]!.lines).toEqual([]);
+  });
+  it('lists overdue and next-30-day filings only', () => {
+    const r = _fd([{ label: 'Form D', category: null, status: 'open', due_date: '2026-10-01', filed_on: null, fund: 'Erebor' }, { label: 'K-1', category: null, status: 'open', due_date: '2027-03-01', filed_on: null, fund: 'Erebor' }], '2026-10-19');
+    expect(r.count).toBe(1); expect(r.lines[0]).toContain('overdue');
+  });
+});
