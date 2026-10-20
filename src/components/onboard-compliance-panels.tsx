@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { LoadError } from "@/components/load-error";
 import {
   certifyFn,
   certifyTaxFormFn,
@@ -315,8 +316,29 @@ export function EligibilityPanel({ onboardingId, done }: { onboardingId: string;
   );
 }
 
-/** Sign: review the populated official IRS form, then Certify & Sign. No countersignature. */
+/** Shared Sign forms: determine the applicable form before presenting certification. */
 export function TaxSignPanel({ onboardingId, done }: { onboardingId: string; done: () => void }) {
+  const q = useCompliance(onboardingId);
+  const qc = useQueryClient();
+  const refresh = () => {
+    void qc.invalidateQueries({ queryKey: ["onboard-compliance", onboardingId] });
+    done();
+  };
+  if (q.isPending) return <p className="text-sm text-muted-foreground">Loading your tax form…</p>;
+  if (q.error || !q.data) return <LoadError error={q.error} what="Your tax form" onRetry={() => void q.refetch()} audience="account" />;
+  if (q.data.tax.state === "not_applicable") return null;
+  return (
+    <section aria-label="Tax form" className="space-y-4">
+      {q.data.tax.state !== "valid" && q.data.taxIntake.state !== "valid" ? (
+        <TaxIntakeCard key={JSON.stringify(q.data.taxIntake.answers)} onboardingId={onboardingId} d={q.data} refresh={refresh} />
+      ) : null}
+      <TaxFormSignaturePanel onboardingId={onboardingId} done={done} />
+    </section>
+  );
+}
+
+/** Review the populated official IRS form, then Certify & Sign. No countersignature. */
+function TaxFormSignaturePanel({ onboardingId, done }: { onboardingId: string; done: () => void }) {
   const q = useCompliance(onboardingId);
   const qc = useQueryClient();
   const previewFn = useServerFn(previewTaxFormFn);
@@ -331,7 +353,10 @@ export function TaxSignPanel({ onboardingId, done }: { onboardingId: string; don
   useEffect(() => () => { if (previewUrl) URL.revokeObjectURL(previewUrl); }, [previewUrl]);
   const form = q.data?.tax.form;
   const preview = useMutation({
-    mutationFn: () => previewFn({ data: { onboardingId, formType: form!.formType, legalName, tin: tin || null, foreignTin: foreignTin || null } }),
+    mutationFn: () => {
+      if (!form) throw new Error("Complete your tax information first.");
+      return previewFn({ data: { onboardingId, formType: form.formType, legalName, tin: tin || null, foreignTin: foreignTin || null } });
+    },
     onSuccess: (r) => {
       const bytes = Uint8Array.from(atob(r.pdfBase64), (c) => c.charCodeAt(0));
       setPreviewUrl(URL.createObjectURL(new Blob([bytes], { type: "application/pdf" })));
@@ -339,8 +364,11 @@ export function TaxSignPanel({ onboardingId, done }: { onboardingId: string; don
     onError: (e: Error) => toast.error(e.message),
   });
   const sign = useMutation({
-    mutationFn: () => taxFn({ data: { onboardingId, formType: form!.formType, legalName, tin: tin || null, foreignTin: foreignTin || null, certifiedName: sig, acknowledgedRevision: form!.revision } }),
-    onSuccess: () => { toast.success(`${form!.title} signed`); setTin(""); setPreviewUrl(null); setUpdating(false); qc.invalidateQueries({ queryKey: ["onboard-compliance", onboardingId] }); done(); },
+    mutationFn: () => {
+      if (!form) throw new Error("Complete your tax information first.");
+      return taxFn({ data: { onboardingId, formType: form.formType, legalName, tin: tin || null, foreignTin: foreignTin || null, certifiedName: sig, acknowledgedRevision: form.revision } });
+    },
+    onSuccess: () => { toast.success(`${form?.title ?? "Tax form"} signed`); setTin(""); setForeignTin(""); setPreviewUrl(null); setUpdating(false); qc.invalidateQueries({ queryKey: ["onboard-compliance", onboardingId] }); done(); },
     onError: (e: Error) => toast.error(e.message),
   });
   if (!q.data) return null;
