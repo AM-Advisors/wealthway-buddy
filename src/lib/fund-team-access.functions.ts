@@ -30,6 +30,11 @@ async function isStaff(supabase: any, userId: string) {
   return ((data ?? []) as { role: string }[]).some((r) => ["admin", "super_admin"].includes(r.role));
 }
 
+/** A per-fund grant stays live while its granter is still a manager of that fund or still Harmonious staff. */
+async function granterStillAuthorized(db: any, granterId: string, offeringId: string) {
+  return (await isManagerOf(db, granterId, offeringId)) || (await isStaff(db, granterId));
+}
+
 async function logEvent(db: any, e: Record<string, unknown>) {
   await db.from("fund_team_grant_events").insert(e);
 }
@@ -56,6 +61,9 @@ export const listFundTeamGrants = createServerFn({ method: "GET" })
       .order("created_at", { ascending: false });
     const { data: mgrs } = await db.from("fund_managers").select("user_id").eq("offering_id", data.fundId);
     const mgrSet = new Set(((mgrs ?? []) as any[]).map((m) => m.user_id));
+    const granters = [...new Set(((rows ?? []) as any[]).map((g) => g.granted_by).filter(Boolean))];
+    const { data: staffRows } = granters.length ? await db.from("user_roles").select("user_id, role").in("user_id", granters).in("role", ["admin", "super_admin"]) : { data: [] };
+    for (const r of (staffRows ?? []) as any[]) mgrSet.add(r.user_id);
     const out: any[] = [];
     for (const g of [...((rows ?? []) as any[]), ...((scoped ?? []) as any[])]) {
       const scope = (g.scope as FundTeamScope) ?? "fund";
@@ -209,7 +217,7 @@ export const changeFundTeamAccess = createServerFn({ method: "POST" })
         .eq("id", g.id);
       await logEvent(db, { grant_id: g.id, offering_id: g.offering_id, event: "revoked", actor_user_id: context.userId, before_role: g.role, reason: data.reason });
     } else {
-      if (!manager && !(staff && g.scope && g.scope !== "fund")) throw new Error("Only a Fund Manager of this Fund can change roles.");
+      if (!manager && !staff) throw new Error("Only a Fund Manager of this Fund can change roles.");
       if (data.role !== "fund_viewer" && data.role !== "fund_assistant") throw new Error("Only Viewer or Assistant access can be granted.");
       // A role change re-grants under the current manager.
       await db.from("fund_team_grants").update({ role: data.role, granted_by: context.userId, status: "active", updated_at: new Date().toISOString() }).eq("id", g.id);
@@ -251,7 +259,7 @@ async function liveGrants(db: any, userId: string) {
     if (!isGrantLive(g)) continue;
     const scope = (g.scope as FundTeamScope) ?? "fund";
     if (scope === "fund") {
-      if (!(await isManagerOf(db, g.granted_by, g.offering_id))) continue; // granting manager removed → access paused
+      if (!(await granterStillAuthorized(db, g.granted_by, g.offering_id))) continue; // granting manager/staff removed → access paused
       if (!seen.has(g.offering_id)) { seen.add(g.offering_id); out.push(g); }
       continue;
     }

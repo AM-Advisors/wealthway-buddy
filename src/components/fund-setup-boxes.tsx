@@ -184,7 +184,8 @@ function BankForm({ offeringId, prior, letter, onSaved }: { offeringId: string; 
     if (!file && !letter) return void toast.error("Add the bank letter.");
     setBusy(true);
     try {
-      await save({ data: { offering_id: offeringId, bank_name: v.bankName, bank_address: prior["bank_address"] ?? "", account_name: v.accountName, account_number: v.account, routing_number: v.routing, swift: prior["swift"] ?? "", memo: prior["memo"] ?? "" } });
+      // Keep every other stored field (international set, intermediary, scope) - the save replaces the whole record.
+      await save({ data: { ...prior, offering_id: offeringId, bank_name: v.bankName, bank_address: prior["bank_address"] ?? "", account_name: v.accountName, account_number: v.account, routing_number: v.routing, swift: prior["swift"] ?? "", memo: prior["memo"] ?? "" } });
       if (file) await uploadLetter(upload, offeringId, file, "bank_letter", "Bank letter");
       toast.success("Banking saved"); onSaved();
     } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }

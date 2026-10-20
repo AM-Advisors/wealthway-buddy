@@ -24,6 +24,7 @@ import { template as documentsSent } from './documents-sent'
 import { template as statementReady } from './statement-ready'
 import { template as crmCampaign } from './crm-campaign'
 import { template as paymentReceived } from './payment-received'
+import { template as securityAlert } from './security-alert'
 
 
 
@@ -70,6 +71,8 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'statement-ready': statementReady,
   'crm-campaign': crmCampaign,
   'payment-received': paymentReceived,
+  'security-alert': securityAlert,
+  'ownership-update': ownershipUpdate,
 
 
 }

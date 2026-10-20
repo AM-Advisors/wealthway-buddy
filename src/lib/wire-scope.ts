@@ -39,8 +39,10 @@ export function instructionsForInvestor(details: Record<string, unknown> | null 
   const d = (details ?? {}) as Record<string, unknown>;
   const scope = wireScopeOf(d);
   const us = isUsCountry(investorCountry);
-  const showDomestic = scope === "domestic" || (scope === "both" && us !== false);
-  const showIntl = scope === "international" || (scope === "both" && us !== true);
+  // Older records keep one set of bank details (plus SWIFT) with no saved scope: show all of it to everyone.
+  const legacy = !["domestic", "international", "both"].includes(String(d["wire_scope"] ?? ""));
+  const showDomestic = scope === "domestic" || (scope === "both" && (legacy || us !== false));
+  const showIntl = scope === "international" || (scope === "both" && (legacy || us !== true));
   const pick = (keys: readonly string[]) =>
     Object.fromEntries(keys.filter((k) => String(d[k] ?? "").trim()).map((k) => [WIRE_FIELD_LABELS[k] ?? k, String(d[k])]));
   return {
