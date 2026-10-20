@@ -135,6 +135,17 @@ export async function getDocument(userId: string, id: string) {
   const { data: versions } = await db.from("sales_document_versions").select("version, source, created_by, created_at").eq("document_id", id).order("version", { ascending: false });
   const { data: events } = await db.from("sales_document_events").select("event, actor_id, detail, created_at").eq("document_id", id).order("created_at", { ascending: false }).limit(100);
   const quoteLines = doc.quote_id ? ((await db.from("sales_quote_lines").select("label, quantity, unit_cents, line_cents").eq("quote_id", doc.quote_id).order("sort_order")).data ?? []) : [];
+  let packet: any = null;
+  if (doc.quote_id) {
+    const { data: qt } = await db.from("sales_quotes").select("id, quote_number, version, status, total_cents, sow_id, msa_id").eq("id", doc.quote_id).maybeSingle();
+    if (qt) {
+      const [sow, msa] = await Promise.all([
+        qt.sow_id ? db.from("client_sows").select("id, status, client_signed_at, executed_at").eq("id", qt.sow_id).maybeSingle() : { data: null },
+        qt.msa_id ? db.from("client_msa_agreements").select("id, status, executed_at").eq("id", qt.msa_id).maybeSingle() : { data: null },
+      ]);
+      packet = { quote: qt, sow: sow.data, msa: msa.data };
+    }
+  }
   const { data: evs } = await db.from("marketing_email_events").select("kind, ip_hash, user_agent, occurred_at").eq("sales_document_id", id).order("occurred_at", { ascending: true }).limit(2000);
   const E = (evs ?? []) as any[];
   const engagement = { opens: E.filter((e) => e.kind === "open").length, clicks: E.filter((e) => e.kind === "click").length,
@@ -146,7 +157,7 @@ export async function getDocument(userId: string, id: string) {
   const n = (x: string | null) => (x ? nm.get(x) ?? "Team member" : null);
   return {
     doc: { ...doc, source_text: doc.source_text ? String(doc.source_text).slice(0, 2000) : null, ownerName: n(doc.owner_user_id), approvedByName: n(doc.approved_by) },
-    sections, quoteLines, engagement,
+    sections, quoteLines, engagement, packet,
     versions: ((versions ?? []) as any[]).map((v) => ({ ...v, byName: n(v.created_by) })),
     events: ((events ?? []) as any[]).map((e) => ({ ...e, byName: n(e.actor_id) })),
     assists: a.assists.map((x) => ({ ...x, requestedByName: n(x.requested_by), assigneeName: n(x.assignee_user_id) })),
