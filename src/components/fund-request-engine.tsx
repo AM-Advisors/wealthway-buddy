@@ -123,17 +123,7 @@ export function FundRequestEngine({ clientId: id, draft, mode = "client", client
       if (!quiet) toast.error(e?.message ?? "Could not save.");
     },
   });
-  // Autosave: once the form has any real content, quietly save a few seconds after the last edit
-  // so progress is never lost if the page is closed or the session drops.
   const hasContent = !!(r.fund_name.trim() || r.legal_name.trim() || r.signatory.name.trim() || r.signatory.email.trim());
-  useEffect(() => {
-    if (!id || !hasContent || dq.isLoading) return;
-    if (JSON.stringify(r) === lastSavedJson.current) return;
-    const t = setTimeout(() => {
-      if (!saveDraft.isPending && !send.isPending) saveDraft.mutate(true);
-    }, 2500);
-    return () => clearTimeout(t);
-  }, [r, id, hasContent, dq.isLoading, saveDraft.isPending, send.isPending]);
   const [payOpen, setPayOpen] = useState(false);
   const quote = useFundPayment(!staffMode && step === "review" && id ? { kind: "new_fund_request", clientId: id, request: r as any } : null);
   const send = useMutation({
