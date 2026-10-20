@@ -14,7 +14,6 @@ const unesc = (s: string) => s.replace(/&lt;/g, "<").replace(/&gt;/g, ">").repla
 // Explicit publisher identity blanks only; never replace optional clauses,
 // negotiated economics, investor details, dates or hard-coded jurisdictions.
 const publisherFields: Record<string, string> = {
-  nameofFund: "Fund Legal Name",
   nameoffund: "Fund Legal Name",
   nameofgeneralpartner: "General Partner Name",
   nameoffundmanager: "Fund Manager Name",
@@ -41,7 +40,7 @@ export function fillXml(xml: string, values: Record<string, string>, seen: { fil
       const label = t[1] ?? t[2];
       if (!label) continue;
       const publisherKey = t[2] ? publisherFields[normKey(label)] : undefined;
-      if (t[2] && !publisherKey) continue;
+      if (t[2] && !publisherKey) { seen.open.add(label.trim()); continue; }
       const key = normKey(publisherKey ?? label);
       const v = values[key];
       if (!v) { seen.open.add(label.trim()); continue; }

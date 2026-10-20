@@ -28,7 +28,7 @@ describe("publisher identity autofill", () => {
   });
   it("retains missing fund details and reports them for review", async () => {
     const r = await fill('<w:r><w:t>[name of general partner] {{Management Fee}}</w:t></w:r>', { "General Partner Name": null });
-    expect(r.open).toEqual(["name of general partner", "Management Fee"]);
+    expect(r.open.sort()).toEqual(["Management Fee", "name of general partner"]);
     expect(r.xml).toContain("[name of general partner]");
   });
 });
