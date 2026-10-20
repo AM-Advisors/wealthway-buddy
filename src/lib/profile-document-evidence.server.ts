@@ -19,3 +19,12 @@ export async function loadProfileDocumentEvidence(d: any, row: any) {
   return rows.filter((r) => r.user_id === row.investor_user_id &&
     (r.investment_profile_id === row.investment_profile_id || (r.investment_profile_id == null && r.onboarding_id === row.id)));
 }
+/** Same scope rules as loadProfileDocumentEvidence, applied to rows already read in one batch. */
+export function selectProfileDocumentEvidence(all: any[], row: any) {
+  if (!row.investment_profile_id) return [] as any[];
+  const picked = !row.investor_user_id
+    ? all.filter((r) => r.investment_profile_id === row.investment_profile_id && r.prepared_for_person_id != null)
+    : all.filter((r) => r.user_id === row.investor_user_id &&
+        (r.investment_profile_id === row.investment_profile_id || (r.investment_profile_id == null && r.onboarding_id === row.id)));
+  return picked.sort((a, b) => String(b.uploaded_at ?? "").localeCompare(String(a.uploaded_at ?? "")));
+}
