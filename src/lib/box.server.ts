@@ -414,6 +414,8 @@ export interface MultiSignerInput {
     order?: number;
     /** Correlates the Box signer back to our own signer row. */
     externalUserId: string;
+    /** Box emails this signer instead of issuing an embedded link (named signers such as a GP). */
+    emailOnly?: boolean;
     /**
      * Native Box Sign fields placed for this signer during preparation.
      * Box renders and enforces them; we never draw fields ourselves.
@@ -431,7 +433,7 @@ export async function createMultiSignerRequest(input: MultiSignerInput): Promise
       email: s.email,
       role: "signer",
       order: s.order ?? 1,
-      embed_url_external_user_id: s.externalUserId,
+      ...(s.emailOnly ? {} : { embed_url_external_user_id: s.externalUserId }),
       ...(s.name ? { name: s.name } : {}),
       ...(s.inputs && s.inputs.length ? { inputs: s.inputs } : {}),
     })),

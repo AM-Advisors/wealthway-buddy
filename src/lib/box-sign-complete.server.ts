@@ -255,7 +255,7 @@ async function syncSignerRows(signatureId: string, signRequestId: string) {
   const detail = await getSignRequestDetail(signRequestId);
   const now = new Date().toISOString();
   const byEmail = new Map(detail.signers.map((s) => [s.email, s]));
-  const investorSigned = rows.some((r: any) => r.role_key === "investor" && (r.status === "signed" || byEmail.get(String(r.signer_email).toLowerCase())?.decision === "signed"));
+  const investorSigned = rows.some((r: any) => (r.role_key === "investor" || r.role_key === "named_signer") && (r.status === "signed" || byEmail.get(String(r.signer_email).toLowerCase())?.decision === "signed"));
   for (const r of rows as any[]) {
     const remote = byEmail.get(String(r.signer_email ?? "").toLowerCase());
     let status = r.status as string;
