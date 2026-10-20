@@ -11,6 +11,7 @@ import { CapTablesCard } from "@/components/cap-table-billing";
 import { ClientCapDashboard } from "@/components/client-cap-dashboard";
 import { Progress } from "@/components/ui/progress";
 import { getClientHome } from "@/lib/client-fund-request.functions";
+import { LoadError } from "@/components/load-error";
 
 export const Route = createFileRoute("/_authenticated/client/home")({
   head: () => ({
@@ -32,7 +33,10 @@ function ClientHome() {
   const { data, clientId } = useClientPortal();
   const id = clientId ?? ((data?.client as any)?.id as string | undefined) ?? null;
   const load = useServerFn(getClientHome);
-  const q = useQuery({ queryKey: ["client-home", id], enabled: !!id, queryFn: () => load({ data: { clientId: id! } }) });
+  const q = useQuery({ queryKey: ["client-home", id], enabled: !!id, queryFn: () => {
+    if (!id) throw new Error("Choose a client account.");
+    return load({ data: { clientId: id } });
+  } });
   const invoices = ((data?.invoices ?? []) as any[]).filter((i) => i.status === "issued").length;
   const signoffs = (((data as any)?.serviceRequests ?? []) as any[]).filter((r) => r.status === "quoted").length;
   const h = q.data;
@@ -50,6 +54,8 @@ function ClientHome() {
 
       <CapTablesCard />
 
+      {q.isError ? <LoadError audience="account" error={q.error} what="Your funds and requests" onRetry={() => void q.refetch()} /> : null}
+
       <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
         {[
           { l: "Funds", v: h ? String(h.totals.funds) : "-" },
@@ -66,7 +72,8 @@ function ClientHome() {
         <Card>
           <CardHeader><CardTitle className="text-base">New fund requests</CardTitle><CardDescription>Funds and SPVs you've asked Harmonious to set up.</CardDescription></CardHeader>
           <CardContent className="space-y-2">
-            {!h?.requests.length && <p className="text-sm text-muted-foreground">No requests yet.</p>}
+            {q.isLoading ? <p role="status" className="text-sm text-muted-foreground">Loading requests…</p> : null}
+            {h && !h.requests.length && !q.isError && <p className="text-sm text-muted-foreground">No requests yet.</p>}
             {h?.requests.map((r) => (
               <div key={r.id} className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-3 text-sm">
                 <span className="font-medium">{r.name}</span>
@@ -96,7 +103,7 @@ function ClientHome() {
         <CardHeader><CardTitle className="text-base">Fund setup progress</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           {q.isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
-          {h && !h.funds.length && <p className="text-sm text-muted-foreground">No funds yet. Launch one above.</p>}
+          {h && !h.funds.length && !q.isError && <p className="text-sm text-muted-foreground">No funds yet. Launch one above.</p>}
           {h?.funds.map((f) => (
             <Link key={f.id} to="/client/funds/$fundId" params={{ fundId: f.id }} className="block rounded-md border p-3 hover:bg-muted">
               <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
