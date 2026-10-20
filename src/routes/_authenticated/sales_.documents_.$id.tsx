@@ -13,6 +13,7 @@ import {
 } from "@/lib/sales-documents.functions";
 import { DIRECTION_LABEL, KIND_LABEL, OUTCOMES, STATUS_LABEL, type DocDirection, type DocKind, type Section } from "@/lib/sales-documents-model";
 import { Panel, money } from "@/components/sales/sales-ui";
+import { draftQuoteAgreements, submitSalesQuote } from "@/lib/sales-hub.functions";
 
 export const Route = createFileRoute("/_authenticated/sales_/documents_/$id")({
   head: () => ({
@@ -124,6 +125,7 @@ function Editor() {
               <Button disabled={!dirty || !!busy} onClick={() => run("save", () => save({ data: { id, sections } }), doc.status === "approved" ? "Saved - needs approval again" : "Saved")}>Save</Button>
             </div>
           )}
+          {d.packet && <AgreementPacket packet={d.packet} onChange={refresh} />}
           {d.quoteLines.length > 0 && (
             <Panel title="Quote lines (source of prices)">
               <ul className="space-y-1 text-sm">{d.quoteLines.map((l: any, i: number) => <li key={i}>{l.label}: {l.quantity} x {money(l.unit_cents)} = {money(l.line_cents)}</li>)}</ul>
@@ -202,5 +204,30 @@ function Editor() {
         </div>
       </div>
     </div>
+  );
+}
+
+const PSTAT = (x: any, signed: boolean) => (signed ? "Signed" : x?.status ? String(x.status).replace(/_/g, " ") : "Not created");
+
+/** Quote, MSA and SOW in one place: approve once, then one packet goes to the agreement signing flow. */
+function AgreementPacket({ packet, onChange }: { packet: any; onChange: () => void }) {
+  const mk = useServerFn(draftQuoteAgreements);
+  const sub = useServerFn(submitSalesQuote);
+  const [busy, setBusy] = useState(false);
+  const { quote, sow, msa } = packet;
+  const go = async (fn: () => Promise<unknown>, ok: string) => { setBusy(true); try { await fn(); toast.success(ok); onChange(); } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); } };
+  return (
+    <Panel title="Agreement packet: quote, MSA and SOW">
+      <ul className="space-y-2 text-sm">
+        <li className="flex justify-between"><Link to="/sales/quotes/$id" params={{ id: quote.id }} className="font-medium hover:underline">Quote Q-{quote.quote_number} v{quote.version}</Link><span><Badge variant="outline">{String(quote.status).replace(/_/g, " ")}</Badge> {money(quote.total_cents)}</span></li>
+        <li className="flex justify-between"><span>Master Services Agreement</span><Badge variant="outline">{msa ? PSTAT(msa, !!msa.executed_at) : quote.sow_id ? "Already on file" : "Not created"}</Badge></li>
+        <li className="flex justify-between"><span>Statement of Work</span><Badge variant="outline">{PSTAT(sow, !!(sow?.executed_at || sow?.client_signed_at))}</Badge></li>
+      </ul>
+      <div className="mt-3 flex flex-wrap gap-2">
+        {["draft", "rejected"].includes(quote.status) && <Button size="sm" disabled={busy} onClick={() => go(() => sub({ data: { id: quote.id } }), "Quote sent for approval")}>Submit quote for approval</Button>}
+        {quote.status === "approved" && !quote.sow_id && <Button size="sm" disabled={busy} onClick={() => go(() => mk({ data: { id: quote.id } }), "MSA and SOW packet created")}>Create MSA + SOW packet</Button>}
+      </div>
+      <p className="mt-2 text-xs text-muted-foreground">The MSA is only added when the client has none on file. Both are built from these same service lines and are signed together in the agreement flow. Billing starts only after signing.</p>
+    </Panel>
   );
 }

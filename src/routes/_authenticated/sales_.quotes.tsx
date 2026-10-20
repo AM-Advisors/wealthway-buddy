@@ -37,7 +37,7 @@ function QuotesPage() {
   return (
     <main className="mx-auto max-w-6xl space-y-6 px-4 py-10">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <div><h1 className="text-3xl">Quotes</h1><p className="mt-1 text-sm text-muted-foreground">Draft → Approval → Sent → Signed. Approved quotes become SOW (and MSA) drafts in the existing agreement flow.</p></div>
+        <div><h1 className="text-3xl">Quotes</h1><p className="mt-1 text-sm text-muted-foreground">Draft → Approval → Sent → Signed. Approved quotes become SOW (and MSA) drafts in the existing agreement flow. To build a quote, proposal, MSA and SOW in one place, use <Link to="/sales/documents" className="underline">Proposals &amp; RFPs</Link>.</p></div>
         {q.data?.canDraft && <Button onClick={() => setBuilding(true)}>New quote</Button>}
       </div>
       {q.error && <p className="text-sm text-destructive">{(q.error as Error).message}</p>}
