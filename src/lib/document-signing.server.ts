@@ -360,7 +360,7 @@ export async function openSigningSession(
 
   // One signer row per required signer. Identity first: the person and their
   // investment profile, not just an email address.
-  await admin.from("document_signature_signers").upsert(
+  const signerWrite = await admin.from("document_signature_signers").upsert(
     [
       {
         signature_id: signatureId,
@@ -382,6 +382,7 @@ export async function openSigningSession(
     ],
     { onConflict: "signature_id,signer_email", ignoreDuplicates: false },
   );
+  if (signerWrite.error) throw new Error("The signer record could not be saved. Please try again.");
 
   await admin.from("signature_audit_events").insert({
     application_id: resolved.application.id,

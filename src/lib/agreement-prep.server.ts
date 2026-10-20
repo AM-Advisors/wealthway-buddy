@@ -499,7 +499,7 @@ export async function sendPreparedAgreement(
     ((matchedProfiles ?? []) as any[]).map((p) => [String(p.email).toLowerCase(), p.user_id]),
   );
 
-  await admin.from("document_signature_signers").upsert(
+  const signerWrite = await admin.from("document_signature_signers").upsert(
     ordered.map((s, index) => ({
       signature_id: signatureId,
       application_id: application.id,
@@ -520,6 +520,7 @@ export async function sendPreparedAgreement(
     })),
     { onConflict: "signature_id,signer_email", ignoreDuplicates: false },
   );
+  if (signerWrite.error) throw new Error("The signer record could not be saved. Please try again.");
 
   await admin.from("signature_audit_events").insert({
     application_id: application.id,
