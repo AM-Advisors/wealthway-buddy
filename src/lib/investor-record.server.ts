@@ -345,6 +345,80 @@ export async function updateInvestorRecord(userId: string, input: {
   return { changed: changes.length, suggested };
 }
 
+/* ------------------------------------------------- owners and signers */
+
+/**
+ * Owners, control persons and signers on the investor's profile. Managers edit
+ * directly inside the edit window (and only an unshared profile); otherwise
+ * only Harmonious. Removal ends the relationship; People are never deleted.
+ */
+export async function editRelatedParty(userId: string, input: {
+  onboardingId: string;
+  add?: RelatedInput;
+  update?: { relationshipId: string; role: string; ownershipPercent?: number | null; isSigner?: boolean };
+  removeId?: string;
+}) {
+  const { actor, row, role } = await assertOnboardingAccess(userId, input.onboardingId);
+  if (role === "investor") forbid("use Confirm Your Information to update your own details.");
+  if (row.removed_at) fail("This investor has been removed from the Fund.");
+  if (!row.investment_profile_id) fail("Choose how they are investing first.");
+  const direct = actor.isStaff || (await investorEditWindow(row) && await exclusiveRecord(row, "investment_profile_id"));
+  if (!direct) forbid("signing or funding has started; ask Harmonious to change owners and signers.");
+  const source = sourceFor(actor);
+  const base = { offeringId: row.offering_id, onboardingId: row.id, table: "investment_profile_relationships", source, actor: actor.userId };
+  const owned = async (id: string) => {
+    const { data } = await db().from("investment_profile_relationships").select("id, profile_id, role, ownership_percent, is_authorized_signer, status").eq("id", id).maybeSingle();
+    if (!data || data.profile_id !== row.investment_profile_id) forbid("that person isn't on this investor's profile.");
+    return data;
+  };
+  const pct = (v: number | null | undefined) => {
+    if (v == null) return null;
+    if (!(v >= 0 && v <= 100)) fail("Ownership must be between 0 and 100%.");
+    return v;
+  };
+  if (input.add) {
+    const r = input.add;
+    if (!RELATED_ROLES.has(r.role) || !r.firstName?.trim() || !r.lastName?.trim()) fail("Enter a first name, last name and role.");
+    const { addRelatedPerson } = await import("@/lib/related-person.server");
+    const res = await addRelatedPerson({ profileId: row.investment_profile_id, offeringId: row.offering_id, firstName: r.firstName, lastName: r.lastName, email: r.email ?? null, role: r.role, ownershipPercent: pct(r.ownershipPercent), isSigner: r.isSigner, actorUserId: actor.userId, entrySource: source });
+    await logChanges([{ ...base, id: res.relationshipId, field: `related:${r.role}`, from: null, to: `${r.firstName} ${r.lastName}` }]);
+    return { ok: true, underReview: res.underReview };
+  }
+  if (input.update) {
+    const u = input.update;
+    if (!RELATED_ROLES.has(u.role)) fail("Choose a valid role.");
+    const cur = await owned(u.relationshipId);
+    const next = { role: u.role, ownership_percent: pct(u.ownershipPercent), is_authorized_signer: Boolean(u.isSigner) || u.role === "authorized_signer" };
+    const { error } = await db().from("investment_profile_relationships").update(next).eq("id", cur.id);
+    if (error) fail(error.message);
+    await logChanges(Object.entries(next).filter(([f, v]) => !sameValue(cur[f], v)).map(([f, v]) => ({ ...base, id: cur.id, field: f, from: cur[f] ?? null, to: v })));
+    return { ok: true };
+  }
+  if (input.removeId) {
+    const cur = await owned(input.removeId);
+    const { error } = await db().from("investment_profile_relationships").update({ status: "removed" }).eq("id", cur.id);
+    if (error) fail(error.message);
+    await logChanges([{ ...base, id: cur.id, field: "status", from: cur.status, to: "removed" }]);
+    return { ok: true };
+  }
+  fail("Nothing to change.");
+}
+
+/**
+ * A fund manager or Harmonious adds the investor's first distribution bank
+ * details. They go through the existing payment-instruction workflow: masked,
+ * pending Harmonious verification, never used to send money by themselves.
+ */
+export async function addDistributionDestination(userId: string, input: { onboardingId: string; destination: any; label?: string | null }) {
+  const { row, role } = await assertOnboardingAccess(userId, input.onboardingId);
+  if (role === "investor") forbid("add your own payment details from Distributions.");
+  if (row.removed_at) fail("This investor has been removed from the Fund.");
+  if (!row.investor_user_id) fail("The investor needs to sign in once before distribution bank details can be saved.");
+  const { requestPaymentInstruction } = await import("@/lib/distributions.server");
+  await requestPaymentInstruction(userId, { investorUserId: row.investor_user_id, investmentProfileId: row.investment_profile_id ?? null, offeringId: row.offering_id, destination: input.destination, label: input.label ?? null });
+  return { ok: true };
+}
+
 /* ---------------------------------------------------------------- remove */
 
 export async function removeFromFund(userId: string, input: { onboardingId: string; reason?: string | null }) {

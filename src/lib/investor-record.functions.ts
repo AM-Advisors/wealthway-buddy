@@ -116,3 +116,30 @@ export const fetchGoogleSheetCsvFn = createServerFn({ method: "POST" }).middlewa
     if (!res.ok || /^\s*<(!doctype|html)/i.test(text)) throw new Error("Couldn't open that sheet. Set sharing to \"Anyone with the link can view\", or download it as Excel and upload the file.");
     return { csv: text.slice(0, 500_000) };
   });
+
+const relatedInput = z.object({ firstName: z.string().trim().min(1).max(80), lastName: z.string().trim().min(1).max(80), email: z.string().trim().email().max(255).nullable().optional(), role: z.string().max(40), ownershipPercent: z.number().min(0).max(100).nullable().optional(), isSigner: z.boolean().optional() });
+
+export const editRelatedPartyFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator(z.object({
+    onboardingId: uuid,
+    add: relatedInput.optional(),
+    update: z.object({ relationshipId: uuid, role: z.string().max(40), ownershipPercent: z.number().min(0).max(100).nullable().optional(), isSigner: z.boolean().optional() }).optional(),
+    removeId: uuid.optional(),
+  }).parse)
+  .handler(async ({ data, context }) => (await srv()).editRelatedParty(context.userId, data as any));
+
+export const addDistributionDestinationFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator(z.object({
+    onboardingId: uuid,
+    label: z.string().trim().max(80).nullable().optional(),
+    destination: z.object({
+      method: z.enum(["wire", "ach"]),
+      beneficiaryName: z.string().trim().min(1).max(160),
+      bankName: z.string().trim().min(1).max(160),
+      accountNumber: z.string().trim().regex(/^\d{4,17}$/, "Account number must be 4-17 digits."),
+      routingNumber: z.string().trim().regex(/^\d{9}$/, "Routing number must be 9 digits."),
+      country: z.string().trim().max(60).nullable().optional(),
+      currency: z.string().trim().max(3).nullable().optional(),
+    }),
+  }).parse)
+  .handler(async ({ data, context }) => (await srv()).addDistributionDestination(context.userId, data as any));
