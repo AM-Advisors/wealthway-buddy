@@ -132,6 +132,7 @@ export const refreshKycLinkFn = createServerFn({ method: "POST" }).middleware([r
       await d.from("persons").update({ kyc_status: "declined" }).eq("id", r.person_id);
     }
     await logPerson(r.person_id, context.userId, "kyc_link_refreshed", { status: dec.status });
+    if (kyc === "approved") { const { recheckTinsForPerson } = await import("@/lib/account-connect.server"); await recheckTinsForPerson(r.person_id); }
     return { status: kyc, aml };
   });
 
@@ -176,6 +177,7 @@ export const runDocumentCheckFn = createServerFn({ method: "POST" }).middleware(
     const { data: row, error } = await d.from("person_kyc_requests").insert({ person_id: p.id, mode: "document", document_type: data.documentType, session_id: idj.request_id ?? null, status: "completed", id_status: idStatus, aml_status: amlStatus, result_summary: summary, created_by: context.userId }).select("id").single();
     if (error) throw new Error(error.message);
     if (amlStatus) await d.from("persons").update({ aml_status: amlStatus, aml_screened_at: now }).eq("id", p.id);
+    if (amlStatus === "approved") { const { recheckTinsForPerson } = await import("@/lib/account-connect.server"); await recheckTinsForPerson(p.id); }
     await logPerson(p.id, context.userId, "document_check", { idStatus, amlStatus });
     return { id: row.id as string, idStatus, amlStatus, summary };
   });
