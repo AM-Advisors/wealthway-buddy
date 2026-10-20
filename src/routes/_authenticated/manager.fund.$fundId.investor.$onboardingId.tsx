@@ -118,8 +118,6 @@ function InvestorRecordPage() {
             <div><p className="font-medium">{prettyStatus(s.field)}</p><p className="text-muted-foreground">Harmonious record: {JSON.stringify(s.current)} · {SOURCE_LABELS[s.source as EntrySource] ?? s.source}: {JSON.stringify(s.proposed)}{s.status === "review_later" ? " · marked for later" : ""}</p></div>
             <div className="flex gap-1">{(["accept", "reject", "review_later"] as const).map((a) => <Button key={a} size="sm" variant={a === "accept" ? "default" : "outline"} onClick={async () => { try { await resolve({ data: { id: s.id, action: a } }); toast.success("Recorded"); refresh(); } catch (e) { toast.error((e as Error).message); } }}>{a === "review_later" ? "Review later" : prettyStatus(a)}</Button>)}</div>
           </div>)}</CardContent></Card> : null}
-        {data.profile ? <InvestorTaxIdCard onboardingId={onboardingId} last4={(data.profile as any).taxIdLast4} editable={!data.overview.removed && (data as any).profileEditMode === "direct"} onChanged={refresh} /> : null}
-        {!data.overview.removed ? <DistributionBankCard onboardingId={onboardingId} hasAccount={Boolean((data as any).investorHasAccount)} /> : null}
       </div> : null}
 
       {tab === "investment" ? <Card><CardContent className="grid gap-3 pt-6 sm:grid-cols-2">
@@ -160,6 +158,8 @@ function InvestorRecordPage() {
           <RelatedPartiesEditor onboardingId={onboardingId} related={data.related as any} editable={!data.overview.removed && (data as any).profileEditMode === "direct"} onChanged={refresh} />
           <p className="text-xs text-muted-foreground sm:col-span-2">Tax forms, ID images and verification evidence are never shown here.</p>
         </CardContent></Card> : null}
+        {data.profile ? <InvestorTaxIdCard onboardingId={onboardingId} last4={(data.profile as any).taxIdLast4} editable={!data.overview.removed && (data as any).profileEditMode === "direct"} onChanged={refresh} /> : null}
+        {!data.overview.removed ? <DistributionBankCard onboardingId={onboardingId} hasAccount={Boolean((data as any).investorHasAccount)} /> : null}
       </div> : null}
 
       {tab === "onboarding" ? <QuestionnaireCard q={(data as any).questionnaire} /> : null}
