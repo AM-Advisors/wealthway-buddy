@@ -1,6 +1,6 @@
 /**
- * Investor document review: the fund manager approves each investor's
- * signature documents before the investor can sign, and signed agreements are
+ * Investor document review: manager entry admits an investor to sign; otherwise
+ * the manager approves signature documents explicitly. Signed agreements are
  * listed back for the manager. Approvals are append-only and tied to the
  * document version in use - a new version needs a fresh approval.
  * Invited funds: an investor sees only funds whose invitation matches their
@@ -24,26 +24,45 @@ export function latestDecision(rows: any[], onboardingId: string, documentId: st
   return rows.find((r) => r.onboarding_id === onboardingId && r.offering_document_id === documentId && (r.version ?? null) === (version ?? null)) ?? null;
 }
 
-/** True only when the fund manager approved the current version for this investor. */
+/** Explicit current-version decisions win; manager entry avoids duplicate admission approval. */
 export async function approvedForSigning(db: any, applicationId: string, documentId: string) {
-  const [{ data: ob }, { data: doc }] = await Promise.all([
-    db.from("investor_onboardings").select("id").eq("application_id", applicationId).is("removed_at", null).maybeSingle(),
-    db.from("offering_documents").select("active_version").eq("id", documentId).maybeSingle(),
+  const [obResult, docResult] = await Promise.all([
+    db.from("investor_onboardings").select("id, offering_id, entry_source, created_by").eq("application_id", applicationId).is("removed_at", null).maybeSingle(),
+    db.from("offering_documents").select("offering_id, active_version, requires_signature").eq("id", documentId).maybeSingle(),
   ]);
-  if (!ob) return false;
-  const { data } = await db.from("investor_document_approvals").select("onboarding_id, offering_document_id, version, decision")
+  if (obResult.error || docResult.error) throw new Error("Document approval could not be checked. Please try again.");
+  const ob = obResult.data;
+  const doc = docResult.data;
+  if (!ob || !doc || ob.offering_id !== doc.offering_id || !doc.requires_signature) return false;
+  const { data, error } = await db.from("investor_document_approvals").select("onboarding_id, offering_document_id, version, decision")
     .eq("onboarding_id", ob.id).eq("offering_document_id", documentId).order("decided_at", { ascending: false });
-  return latestDecision(data ?? [], ob.id, documentId, doc?.active_version ?? null)?.decision === "approved";
+  if (error) throw new Error("Document approval could not be checked. Please try again.");
+  const decision = latestDecision(data ?? [], ob.id, documentId, doc.active_version ?? null);
+  if (decision) return decision.decision === "approved";
+  return managerEntryAdmitsSigning(db, ob);
+}
+
+/** Provenance alone is insufficient: the creator must still manage this exact fund. */
+async function managerEntryAdmitsSigning(db: any, ob: any): Promise<boolean> {
+  if (ob.entry_source !== "fund_manager" || !ob.created_by) return false;
+  const { data, error } = await db.from("fund_managers").select("user_id")
+    .eq("offering_id", ob.offering_id).eq("user_id", ob.created_by).maybeSingle();
+  if (error) throw new Error("Fund manager approval could not be checked. Please try again.");
+  return Boolean(data);
 }
 
 export async function listDocumentReviews(userId: string, offeringId: string) {
   await assertManager(userId, offeringId);
   const db = await admin();
   const [{ data: obs }, { data: docs }] = await Promise.all([
-    db.from("investor_onboardings").select("id, application_id, person_id, investor_user_id, stage").eq("offering_id", offeringId).is("removed_at", null),
+    db.from("investor_onboardings").select("id, application_id, person_id, investor_user_id, stage, entry_source, created_by").eq("offering_id", offeringId).is("removed_at", null),
     db.from("offering_documents").select("id, title, active_version, requires_signature").eq("offering_id", offeringId).eq("requires_signature", true).order("sort_order"),
   ]);
   const rows = (obs ?? []) as any[];
+  const creatorIds = [...new Set(rows.filter((r) => r.entry_source === "fund_manager").map((r) => r.created_by).filter(Boolean))];
+  const managers = creatorIds.length ? await db.from("fund_managers").select("user_id").eq("offering_id", offeringId).in("user_id", creatorIds) : { data: [], error: null };
+  if (managers.error) throw new Error("Fund manager approval could not be checked. Please try again.");
+  const managerIds = new Set((managers.data ?? []).map((r: any) => r.user_id));
   const personIds = rows.map((r) => r.person_id).filter(Boolean);
   const appIds = rows.map((r) => r.application_id).filter(Boolean);
   const [{ data: persons }, { data: decisions }, { data: sigs }] = await Promise.all([
@@ -67,7 +86,7 @@ export async function listDocumentReviews(userId: string, offeringId: string) {
           const sig = signed.find((s) => s.application_id === r.application_id && s.offering_document_id === d.id);
           return {
             documentId: d.id as string,
-            decision: (dec?.decision ?? null) as "approved" | "returned" | null,
+            decision: (dec?.decision ?? (r.entry_source === "fund_manager" && managerIds.has(r.created_by) ? "approved" : null)) as "approved" | "returned" | null,
             note: (dec?.note ?? null) as string | null,
             decidedAt: (dec?.decided_at ?? null) as string | null,
             signed: sig ? { signatureId: sig.id as string, signerName: sig.signer_name as string | null, signedAt: (sig.provider_completed_at ?? sig.signed_at) as string } : null,

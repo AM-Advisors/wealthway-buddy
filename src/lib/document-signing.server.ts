@@ -262,7 +262,7 @@ export async function openSigningSession(
   });
   if (refusal) throw new SigningRefusal(refusal);
 
-  // The fund manager approves each investor's documents before signing opens.
+  // Manager entry admits the investor; otherwise an explicit document approval is needed.
   // A live request already out for signature keeps working.
   if (resolved.signature?.provider_status !== "out_for_signature") {
     const { approvedForSigning } = await import("@/lib/investor-document-review.server");

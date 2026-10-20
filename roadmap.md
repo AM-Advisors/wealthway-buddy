@@ -1,5 +1,11 @@
 # Roadmap
 
+## Calvin subscription signing (2026-10-20)
+- [x] Inspect Calvin's current signing blockers: $500,000 subscription exists; manager-entry provenance was ignored by the separate document admission gate. No signing or emails performed.
+- [x] Treat same-fund manager entry as admission to sign; preserve explicit current-version returns and existing signer/verification controls; manager list uses the same admission facts. 32 focused tests passed; preview build OK.
+- [x] Read-only eligibility check: Calvin's creator still manages Erebor, subscription document matches, requires signature, and no current-version return exists.
+- [ ] Signed-in signing ceremony — blocked on isolated synthetic QA; Calvin's actual provider signing session was not created or tested.
+
 ## Thomas draft saving (2026-10-20)
 - [x] Confirm published save failures at 20:08 and 20:20; Thomas has fund-manager membership and approved account verification, no stored draft. Exact thrown error remains unavailable.
 - [x] Harden draft writes with scoped read-back/error checks, distinguish failed membership reads, and show unsaved/error feedback without refetch overwrites; 21 focused tests pass.
