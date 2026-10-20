@@ -8,14 +8,15 @@ export async function investmentDocumentSource(db: any, documentId: string, appl
   const [versions, investment, signature] = await Promise.all([
     db.from("offering_document_versions").select("id,version,file_path,file_name,target_onboarding_id,rollout_scope").eq("offering_document_id", doc.id),
     applicationId ? db.from("investor_onboardings").select("id,offering_id,investment_profile_id,person_id,requested_amount_cents").eq("application_id", applicationId).is("removed_at", null).maybeSingle() : { data: null },
-    applicationId ? db.from("document_signatures").select("signature_template_version,provider_sent_at,provider_completed_at").eq("application_id", applicationId).eq("offering_document_id", doc.id).maybeSingle() : { data: null },
+    applicationId ? db.from("document_signatures").select("signature_template_version,provider_sent_at,provider_completed_at,cancelled_at,provider_status").eq("application_id", applicationId).eq("offering_document_id", doc.id).maybeSingle() : { data: null },
   ]);
   if (versions.error || investment.error || signature.error) throw new Error("The investment agreement version could not be loaded.");
   const ob = investment.data;
   if (ob && ob.offering_id !== doc.offering_id) throw new Error("This agreement is not part of the investment.");
-  const pinned = signature.data?.provider_sent_at || signature.data?.provider_completed_at
+  const pinRequired = signature.data?.provider_completed_at || (signature.data?.provider_sent_at && !signature.data?.cancelled_at && signature.data?.provider_status !== "cancelled");
+  const pinned = pinRequired
     ? (versions.data ?? []).find((v: any) => v.version === signature.data.signature_template_version)?.id : null;
-  if ((signature.data?.provider_sent_at || signature.data?.provider_completed_at) && !pinned && versions.data?.length) throw new Error("The original signing version is unavailable. Contact your fund manager.");
+  if (pinRequired && !pinned && versions.data?.length) throw new Error("The original signing version is unavailable. Contact your fund manager.");
   const source = documentReadSource(doc, versions.data ?? [], ob?.id ?? null, pinned ?? null);
   if (source.kind === "text") return { ...source, bytes: null, filename: "document.pdf" };
   const download = await db.storage.from("offering-files").download(source.path);
