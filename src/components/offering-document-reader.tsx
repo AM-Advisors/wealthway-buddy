@@ -39,7 +39,7 @@ export function OfferingDocumentReader({ documentId, title, onReachedEnd }: { do
     if (doc?.kind === "text" && content.current && content.current.scrollHeight <= content.current.clientHeight + 24) onReachedEnd();
   }, [doc, onReachedEnd]);
   if (query.isPending) return <p className="text-sm text-muted-foreground">Opening the document…</p>;
-  if (query.error) return <LoadError error={query.error} onRetry={() => void query.refetch()} />;
+  if (query.error) return <div className="space-y-2"><p className="text-sm text-destructive">{query.error.message}</p><LoadError error={query.error} what={title} audience="account" onRetry={() => void query.refetch()} /></div>;
   if (!doc) return null;
   return <div className="min-w-0 space-y-3">
     {doc.url && <Button asChild size="sm" variant="outline"><a href={doc.url} target="_blank" rel="noreferrer">Open or download document</a></Button>}

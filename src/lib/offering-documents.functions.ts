@@ -17,14 +17,13 @@ export const readOfferingDocument = createServerFn({ method: "POST" })
     // The caller's RLS-protected read above authorizes the exact fund document.
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const db = supabaseAdmin as any;
-    const [versionResult, onboardingResult, signatureResult] = await Promise.all([
+    const [versionResult, onboardingResult] = await Promise.all([
       db.from("offering_document_versions").select("id, version, file_path, file_name, target_onboarding_id, rollout_scope").eq("offering_document_id", document.id),
       db.from("investor_onboardings").select("id, application_id").eq("offering_id", document.offering_id).eq("investor_user_id", userId).is("removed_at", null).maybeSingle(),
-      db.from("document_signatures").select("source_version_id, application_id, investor_applications!inner(user_id)").eq("offering_document_id", document.id).eq("investor_applications.user_id", userId).is("cancelled_at", null).is("superseded_by", null).maybeSingle(),
     ]);
-    if (versionResult.error || onboardingResult.error || signatureResult.error) throw new Error("The document version could not be loaded. Please try again.");
+    if (versionResult.error || onboardingResult.error) throw new Error("The document version could not be loaded. Please try again.");
     const { documentReadSource } = await import("@/lib/offering-document-reader");
-    const source = documentReadSource(document, versionResult.data ?? [], onboardingResult.data?.id ?? null, signatureResult.data?.source_version_id ?? null);
+    const source = documentReadSource(document, versionResult.data ?? [], onboardingResult.data?.id ?? null, null);
     const { logLegalDocumentView } = await import("./legal-doc-views.server");
     if (source.kind === "text") {
       await logLegalDocumentView(supabase, userId, document as any, "viewed");

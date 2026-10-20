@@ -11,7 +11,7 @@ describe("authoritative offering document reading", () => {
     expect(documentReadSource(doc, versions, "investor", "v1")).toMatchObject({ path: "agreement-v1.docx" });
   });
   it("uses only that investor's individual version", () => {
-    const individual = { ...versions[2], target_onboarding_id: "other", rollout_scope: "single" };
+    const individual = { id: "v3", version: 3, file_path: "agreement-v3.docx", file_name: "agreement-v3.docx", target_onboarding_id: "other", rollout_scope: "single" };
     expect(documentReadSource(doc, [...versions.slice(0, 2), individual], "investor", null)).toMatchObject({ path: "agreement-v2.docx" });
     expect(documentReadSource(doc, [...versions.slice(0, 2), individual], "other", null)).toMatchObject({ path: "agreement-v3.docx" });
   });
