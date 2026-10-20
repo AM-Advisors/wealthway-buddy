@@ -2,7 +2,7 @@ import { useStepView } from "@/hooks/use-step-view";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import {
@@ -12,7 +12,8 @@ import {
   getSignedDocumentUrl,
   subscriptionSchema,
 } from "@/lib/documents.functions";
-import { downloadOfferingDocument } from "@/lib/offering-documents.functions";
+import { downloadOfferingDocument, readOfferingDocument } from "@/lib/offering-documents.functions";
+import { OfferingDocumentReader } from "@/components/offering-document-reader";
 import { getSigningStates } from "@/lib/document-signing.functions";
 import { DocumentSignCard } from "@/components/document-sign-card";
 import { savePdf } from "@/lib/download-pdf";
@@ -75,12 +76,20 @@ export function DocumentsStep({ offeringId }: { offeringId?: string }) {
   const [activeDoc, setActiveDoc] = useState<string | null>(null);
   const [pdfBusy, setPdfBusy] = useState<string | null>(null);
   const getPdf = useServerFn(downloadOfferingDocument);
+  const readDoc = useServerFn(readOfferingDocument);
 
   const downloadPdf = async (documentId: string) => {
     setPdfBusy(documentId);
     try {
-      const res = await getPdf({ data: { document_id: documentId } });
-      savePdf(res.filename, res.base64);
+      const source = await readDoc({ data: { document_id: documentId } });
+      if (source.kind === "file" && source.url) {
+        const link = document.createElement("a");
+        link.href = source.url; link.target = "_blank"; link.rel = "noopener noreferrer";
+        link.download = source.filename ?? "document"; link.click();
+      } else {
+        const res = await getPdf({ data: { document_id: documentId } });
+        savePdf(res.filename, res.base64);
+      }
     } catch (err: any) {
       toast.error(err?.message ?? "Could not prepare the PDF.");
     } finally {
@@ -346,7 +355,7 @@ export function DocumentsStep({ offeringId }: { offeringId?: string }) {
                         disabled={pdfBusy === doc.id}
                         onClick={() => downloadPdf(doc.id)}
                       >
-                        {pdfBusy === doc.id ? "Preparing…" : "Download PDF"}
+                        {pdfBusy === doc.id ? "Preparing…" : "Download document"}
                       </Button>
                       <Button
                         type="button"
@@ -361,8 +370,9 @@ export function DocumentsStep({ offeringId }: { offeringId?: string }) {
                 </CardHeader>
                 {isOpen && (
                   <CardContent className="space-y-4">
-                    <ScrollDoc
-                      body={doc.body}
+                    <OfferingDocumentReader
+                      documentId={doc.id}
+                      title={doc.title}
                       onReachedEnd={() => setReviewed((r) => ({ ...r, [doc.id]: true }))}
                     />
                     {doc.requires_signature && !signature && (
@@ -437,28 +447,3 @@ export function DocumentsStep({ offeringId }: { offeringId?: string }) {
   );
 }
 
-function ScrollDoc({ body, onReachedEnd }: { body: string; onReachedEnd: () => void }) {
-  const ref = useRef<HTMLDivElement>(null);
-
-  function onScroll() {
-    const el = ref.current;
-    if (!el) return;
-    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 24) onReachedEnd();
-  }
-
-  useEffect(() => {
-    const el = ref.current;
-    if (el && el.scrollHeight <= el.clientHeight + 24) onReachedEnd();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  return (
-    <div
-      ref={ref}
-      onScroll={onScroll}
-      className="max-h-80 overflow-y-auto whitespace-pre-wrap rounded-md border bg-card p-4 text-sm leading-relaxed"
-    >
-      {body}
-    </div>
-  );
-}
