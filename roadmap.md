@@ -1,10 +1,11 @@
 # Roadmap
 
 ## Client and investor experience (2026-10-20)
-- [ ] Show loading and Retry instead of misleading empty states on client account/home and investor home/reports/signing.
-- [ ] Load only selected reporting sections; bound signing refreshes; target fund setup refreshes.
-- [ ] Align the public investor journey with the canonical four steps.
-- [ ] Run focused tests and public preview checks; authenticated walkthrough blocked on isolated synthetic QA access.
+- [x] Show loading and Retry instead of misleading empty states on client account/home and investor home/reports/signing.
+- [x] Load only selected reporting sections; bound signing refreshes; target fund setup refreshes.
+- [x] Align the public investor journey with the canonical four steps.
+- [x] Checks: 2,958 tests passed; preview build OK; public journey verified at desktop/phone with no horizontal overflow or runtime errors.
+- [ ] Authenticated client/investor walkthrough — blocked on isolated synthetic QA access; no production records changed.
 
 ## Additional reliability and performance review (2026-10-20)
 - [x] Inspect additional page-loading, background-job and disconnected-page defects beyond the prior review. New source-backed defects: work-area queues filter after global first-100 pagination and suppress errors; Home can render blank on query failure; session failures appear restricted; fund auxiliary failures appear empty. Daily reminder claims are non-atomic and suppress same-day recovery; paid-card replay cannot repair failed commission enqueue; payout inserts permit duplicate recordings (live nonunique index confirmed), report recalculates instead of honoring queued amounts/recipients, and Finance-only access conflicts with Sales gate. Notifications can duplicate deliveries or finish events after ignored query failures; readiness persistence errors are ignored.
