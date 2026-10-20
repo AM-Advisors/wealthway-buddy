@@ -131,7 +131,7 @@ export function FundRequestEngine({ clientId: id, draft, mode = "client", client
   const steps = visibleSteps(r);
   // "Fund Details" and "Entity & EIN" show as one "Fund" step in the sidebar.
   const uiSteps: { key: RequestStepKey; label: string }[] = steps.flatMap((s) => (s.key === "details" ? [{ key: "details" as RequestStepKey, label: "Fund" }] : s.key === "entity" ? [] : [s]));
-  const stepMissing = (k: RequestStepKey) => (k === "details" ? [...(missing.details ?? []), ...(missing.entity ?? [])] : missing[k]);
+  const stepMissing = (k: RequestStepKey): string[] => (k === "details" ? [...(missing.details ?? []), ...(missing.entity ?? [])] : missing[k] ?? []);
   const idx = Math.max(0, uiSteps.findIndex((s) => s.key === step));
   const go = (d: number) => setStep(uiSteps[Math.min(uiSteps.length - 1, Math.max(0, idx + d))]!.key);
   const spv = isSpv(r);
