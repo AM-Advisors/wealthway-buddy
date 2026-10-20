@@ -61,9 +61,12 @@ export const isHarmoniousSeries = (r: Pick<FundRequest, "vehicle_structure" | "s
 /** Legal name for a series under a Harmonious master: "{Fund name}, a series of {Master LLC}". */
 export const seriesLegalName = (r: Pick<FundRequest, "fund_name" | "vehicle_structure" | "series_home">) => {
   if (!isHarmoniousSeries(r) || !r.fund_name.trim()) return "";
-  const master = SERIES_HOMES.find((h) => h.value === r.series_home)?.label ?? "";
+  const master = SERIES_HOMES.find((h) => r.series_home === h.value)?.label ?? "";
   return `${r.fund_name.trim()}, a series of ${master}`;
 };
+/** Default entity (legal) name: the fund name itself, or the generated series name under a Harmonious master. */
+export const defaultLegalName = (r: Pick<FundRequest, "fund_name" | "vehicle_structure" | "series_home">) =>
+  seriesLegalName(r) || r.fund_name.trim();
 /** SS-4 is collected when an already-formed series under a Harmonious master has no EIN. */
 export const needsSs4 = (r: FundRequest) => isHarmoniousSeries(r) && r.already_formed === "yes" && r.has_ein === "no";
 

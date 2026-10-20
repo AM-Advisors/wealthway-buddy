@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { emptyRequest, flatAnswers, missingFields, offeringFieldsFor, setupPrefillFor } from "./fund-request-model";
+import { defaultLegalName, emptyRequest, flatAnswers, missingFields, offeringFieldsFor, setupPrefillFor } from "./fund-request-model";
 
 const filled = () => ({
   ...emptyRequest("venture_capital"),
@@ -17,6 +17,11 @@ describe("fund request", () => {
   it("defaults structure from the type", () => {
     expect(emptyRequest("spv").vehicle_structure).toBe("LLC");
     expect(emptyRequest("venture_capital").vehicle_structure).toBe("LP");
+  });
+  it("defaults the entity (legal) name to the fund name", () => {
+    expect(defaultLegalName({ ...emptyRequest("venture_capital"), fund_name: "Acme Ventures I" })).toBe("Acme Ventures I");
+    expect(defaultLegalName({ ...emptyRequest("spv"), fund_name: "Acme I", vehicle_structure: "Series LLC", series_home: "hcam_tx" })).toBe("Acme I, a series of HCAM TX");
+    expect(defaultLegalName({ ...emptyRequest("venture_capital"), fund_name: "  " })).toBe("");
   });
   it("reports missing required answers by step", () => {
     const m = missingFields(emptyRequest());

@@ -27,7 +27,7 @@ import {
   getFundRequestDraft, saveFundRequestDraft, submitFundRequest, uploadFundRequestFile,
 } from "@/lib/client-fund-request.functions";
 import {
-  CLASS_TERM_OPTIONS, FUND_KIND_TYPES, SERIES_HOMES, SERIES_NEW_ANNUAL_FEE, SS4_FIELDS, autoServices, HIDDEN_FUND_SERVICE_KEYS, SERVICE_BUNDLES, emptyRequest, entityDocKinds, isSeries, isSpv, visibleSteps, missingFields, needsSs4, seriesJurisdiction, seriesLegalName,
+  CLASS_TERM_OPTIONS, FUND_KIND_TYPES, SERIES_HOMES, SERIES_NEW_ANNUAL_FEE, SS4_FIELDS, autoServices, HIDDEN_FUND_SERVICE_KEYS, SERVICE_BUNDLES, defaultLegalName, emptyRequest, entityDocKinds, isSeries, isSpv, visibleSteps, missingFields, needsSs4, seriesJurisdiction, seriesLegalName,
   type FundRequest, type RequestStepKey,
 } from "@/lib/fund-request-model";
 import { categoryLabel, listServiceCatalog } from "@/lib/service-catalog.functions";
@@ -87,9 +87,9 @@ export function FundRequestEngine({ clientId: id, draft, mode = "client", client
     return { ...next, service_keys: Array.from(new Set([...p.service_keys.filter((x) => !autoServices(p).includes(x)), ...autoServices(next)])) };
   });
   const setFundName = (name: string) => setR((p) => {
-    const wasGenerated = seriesLegalName(p) && p.legal_name === seriesLegalName(p);
+    const wasGenerated = defaultLegalName(p) !== "" && p.legal_name === defaultLegalName(p);
     const withName = { ...p, fund_name: name };
-    const generated = seriesLegalName(withName);
+    const generated = defaultLegalName(withName);
     return generated && (wasGenerated || !p.legal_name.trim()) ? { ...withName, legal_name: generated } : withName;
   });
   // Prefill SS-4 lines we already know when the section first appears.
@@ -129,8 +129,11 @@ export function FundRequestEngine({ clientId: id, draft, mode = "client", client
 
   const missing = missingFields(r);
   const steps = visibleSteps(r);
-  const idx = Math.max(0, steps.findIndex((s) => s.key === step));
-  const go = (d: number) => setStep(steps[Math.min(steps.length - 1, Math.max(0, idx + d))]!.key);
+  // "Fund Details" and "Entity & EIN" show as one "Fund" step in the sidebar.
+  const uiSteps: { key: RequestStepKey; label: string }[] = steps.flatMap((s) => (s.key === "details" ? [{ key: "details" as RequestStepKey, label: "Fund" }] : s.key === "entity" ? [] : [s]));
+  const stepMissing = (k: RequestStepKey): string[] => (k === "details" ? [...(missing.details ?? []), ...(missing.entity ?? [])] : missing[k] ?? []);
+  const idx = Math.max(0, uiSteps.findIndex((s) => s.key === step));
+  const go = (d: number) => setStep(uiSteps[Math.min(uiSteps.length - 1, Math.max(0, idx + d))]!.key);
   const spv = isSpv(r);
 
   return (
@@ -147,7 +150,7 @@ export function FundRequestEngine({ clientId: id, draft, mode = "client", client
 
       <div className="flex flex-col gap-5 md:flex-row">
         <nav aria-label="Steps" className="flex gap-1 overflow-x-auto md:w-52 md:shrink-0 md:flex-col">
-          {steps.map((s, i) => (
+          {uiSteps.map((s, i) => (
             <button
               key={s.key}
               type="button"
@@ -159,15 +162,15 @@ export function FundRequestEngine({ clientId: id, draft, mode = "client", client
             >
               <span className="flex size-5 items-center justify-center rounded-full border text-xs">{i + 1}</span>
               {s.label}
-              {missing[s.key] ? <span className="ml-auto size-2 rounded-full bg-destructive" aria-label="Needs answers" /> : null}
+              {stepMissing(s.key).length ? <span className="ml-auto size-2 rounded-full bg-destructive" aria-label="Needs answers" /> : null}
             </button>
           ))}
         </nav>
 
         <Card className="min-w-0 flex-1">
           <CardHeader>
-            <CardTitle className="text-base">{steps[idx]!.label}</CardTitle>
-            {missing[step] && <CardDescription className="text-destructive">Still needed: {missing[step]!.join(", ")}</CardDescription>}
+            <CardTitle className="text-base">{uiSteps[idx]!.label}</CardTitle>
+            {stepMissing(step).length > 0 && <CardDescription className="text-destructive">Still needed: {stepMissing(step)!.join(", ")}</CardDescription>}
           </CardHeader>
           <CardContent className="space-y-4">
             {step === "details" && spv && (
@@ -177,7 +180,9 @@ export function FundRequestEngine({ clientId: id, draft, mode = "client", client
               </label>
             )}
             {step === "details" && (
-              <Grid>
+              <>
+                <h3 className="text-sm font-medium">Fund details</h3>
+                <Grid>
                 <F label="Fund or SPV type *">
                   <Pick value={r.kind} onChange={setKind} options={FUND_KIND_TYPES.map((k) => ({ value: k.value, label: k.label }))} />
                 </F>
@@ -193,16 +198,18 @@ export function FundRequestEngine({ clientId: id, draft, mode = "client", client
                   <Pick value={r.tax_preparer === "Harmonious" ? "Harmonious" : "Someone else"} onChange={(v) => set("tax_preparer", v === "Harmonious" ? "Harmonious" : "")} options={["Harmonious", "Someone else"]} />
                   {r.tax_preparer !== "Harmonious" && <Input className="mt-2" placeholder="Tax preparer name" value={r.tax_preparer} onChange={(e) => set("tax_preparer", e.target.value)} />}
                 </F>
-              </Grid>
+                </Grid>
+              </>
             )}
 
-            {step === "entity" && (
+            {step === "details" && (
               <>
+                <h3 className="text-sm font-medium">Entity & EIN</h3>
                 <Grid>
                   <F label="Legal name">
                     <Input value={r.legal_name} onChange={(e) => set("legal_name", e.target.value)} placeholder="e.g. Acme Ventures I, LP" />
-                    {seriesLegalName(r) && r.legal_name === seriesLegalName(r) && (
-                      <p className="mt-1 text-xs text-muted-foreground">Generated from the fund name and Master LLC - edit if needed.</p>
+                    {defaultLegalName(r) && r.legal_name === defaultLegalName(r) && (
+                      <p className="mt-1 text-xs text-muted-foreground">{seriesLegalName(r) ? "Generated from the fund name and Master LLC - edit if needed." : "Same as the fund name - edit if needed."}</p>
                     )}
                   </F>
                   <F label="Vehicle / entity structure *"><Pick value={r.vehicle_structure} onChange={(v) => setStructureOrExemption("vehicle_structure", v)} options={VEHICLE_STRUCTURES} /></F>
@@ -393,14 +400,14 @@ export function FundRequestEngine({ clientId: id, draft, mode = "client", client
 
             {step === "review" && (
               <div className="space-y-4">
-                {steps.filter((s) => s.key !== "review").map((s) => (
+                {uiSteps.filter((s) => s.key !== "review").map((s) => (
                   <div key={s.key} className="flex items-start justify-between gap-3 rounded-md border p-3 text-sm">
                     <div>
                       <p className="font-medium">{s.label}</p>
-                      <p className="text-xs text-muted-foreground">{missing[s.key] ? `Still needed: ${missing[s.key]!.join(", ")}` : "Ready"}</p>
+                      <p className="text-xs text-muted-foreground">{stepMissing(s.key).length > 0 ? `Still needed: ${stepMissing(s.key)!.join(", ")}` : "Ready"}</p>
                     </div>
                     <div className="flex items-center gap-2">
-                      {!missing[s.key] && <Check className="size-4 text-primary" />}
+                      {stepMissing(s.key).length === 0 && <Check className="size-4 text-primary" />}
                       <Button size="sm" variant="ghost" onClick={() => setStep(s.key)}>Edit</Button>
                     </div>
                   </div>

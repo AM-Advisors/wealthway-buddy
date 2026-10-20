@@ -4,6 +4,7 @@
 - [ ] Thomas Morgan preview sign-in — approval request was interrupted; no session created.
 - [x] Locate client new-fund entry: /client/funds/new; manager entry: /manager/request-fund. The My Funds screen shown has no Add action.
 - [x] Add a visible Add Fund or SPV button to My Funds using the existing client-mode fund request page; permissions and payment requirements unchanged.
+- [x] Fund setup: entity (legal) name defaults to the fund name; "Fund Details" and "Entity & EIN" combined into one "Fund" step in Add Fund or SPV.
 
 ## Login and session evidence (2026-10-20)
 - [x] Capture authenticated sessions before policy, identity and onboarding gates; correlate safe page/error evidence by server-verified session ID, deduplicate sign-ins and preserve append-only records.
