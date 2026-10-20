@@ -1937,6 +1937,8 @@ export async function claimOnboardInvitation(userId: string, reference: string) 
   if (mine) {
     // Already connected: close out the invitation so it never looks separated.
     if (inv.status === "pending") await db().from("fund_invitations").update({ status: "accepted", accepted_at: nowIso(), accepted_by: userId }).eq("id", inv.id).eq("status", "pending");
+    await db().from("investor_fund_access").upsert({ user_id: userId, offering_id: mine.offering_id, granted_by: inv.invited_by }, { onConflict: "user_id,offering_id" });
+    await db().from("user_roles").upsert({ user_id: userId, role: "investor" }, { onConflict: "user_id,role" });
     return { onboardingId: mine.id as string };
   }
   // A manager-added investment tied to this exact invitation: connect it to the
