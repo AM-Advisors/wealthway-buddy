@@ -1,6 +1,6 @@
 /** Operations → Funds dashboard. Staff only; read-only; built from canonical records. */
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { assertStaff, computeReadinessFor } from "@/lib/investor-onboarding.server";
+import { assertStaff } from "@/lib/investor-onboarding.server";
 import { fundMetrics, totals, type FundOnboardingFact } from "@/lib/ops-funds-model";
 
 const db = () => supabaseAdmin as any;
@@ -66,16 +66,15 @@ async function buildOpsFundsDashboard(userId: string, supabase: any) {
     .sort((a, b) => (saved.has(a.id) ? 1 : 0) - (saved.has(b.id) ? 1 : 0))
     .slice(0, REFRESH_LIMIT);
   const factsDone = (async () => {
-    const { saveReadinessSummary } = await import("@/lib/investor-onboarding.server");
-    for (let i = 0; i < stale.length; i += 5) {
-      await Promise.all(stale.slice(i, i + 5).map(async (row) => {
-        try {
-          const { result } = await computeReadinessFor(row);
-          await saveReadinessSummary(row, result);
-          saved.set(row.id, { close_ready: result.closeReady, terminal: result.terminal, blocked: result.items.some((x) => x.status === "blocked"), next_owner: result.nextAction?.owner ?? null });
-        } catch { /* keep the previous summary */ }
-      }));
-    }
+    const { saveReadinessSummary, readinessForMany } = await import("@/lib/investor-onboarding.server");
+    // One batched load for all stale rows (same code path as single readiness).
+    let all: Awaited<ReturnType<typeof readinessForMany>> = [];
+    try { all = await readinessForMany(stale); } catch { return; /* keep previous summaries */ }
+    await Promise.all(all.map(async ({ result }, idx) => {
+      const row = stale[idx];
+      await saveReadinessSummary(row, result);
+      saved.set(row.id, { close_ready: result.closeReady, terminal: result.terminal, blocked: result.items.some((x) => x.status === "blocked"), next_owner: result.nextAction?.owner ?? null });
+    }));
   })();
   const facts: FundOnboardingFact[] = [];
   const openTasks = ((tasks ?? []) as any[]).map((t) => ({ offeringId: t.offering_id, owner: t.owner }));

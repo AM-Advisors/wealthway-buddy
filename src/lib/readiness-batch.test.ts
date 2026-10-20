@@ -11,6 +11,7 @@ function query(table: string) {
   const q: any = {
     select: () => q,
     eq: (c: string, v: any) => (filters.push((r) => r[c] === v), q),
+    or: () => q,
     neq: (c: string, v: any) => (filters.push((r) => r[c] !== v), q),
     in: (c: string, vs: any[]) => (filters.push((r) => vs.includes(r[c])), q),
     is: (c: string, v: any) => (filters.push((r) => (r[c] ?? null) === v), q),
