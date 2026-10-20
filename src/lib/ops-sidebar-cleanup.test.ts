@@ -147,7 +147,7 @@ describe("process-based work areas keep per-screen access", () => {
   it("client success sees onboarding screens but not the investor directory's area page by default", async () => {
     const { opsWorkAreas } = await import("@/lib/ops-capabilities");
     const inv = opsWorkAreas(capabilitiesFor(["client_success"])).find((a) => a.id === "investors")!;
-    expect(inv.screens.map((s) => s.url)).toContain("/ops/funds"); // readiness now lives on each fund's Investors tab
+    expect(inv.screens.map((s) => s.url)).toContain("/admin/investor-onboarding"); // readiness now lives on each fund's Investors tab
     expect(inv.screens.map((s) => s.url)).not.toContain("/ops/readiness");
   });
 });
