@@ -73,7 +73,7 @@ export async function renderProposalPdf(doc: any, sections: Section[], lines: an
   if (lines.length) {
     ensure(200); y -= 10;
     eyebrow("Investment"); heading("Engagement fee");
-    const cols = [IN, IN + 250, IN + 340];
+    const cols = [IN, IN + 220, IN + 300];
     page.drawRectangle({ x: IN, y: y - 6, width: maxW, height: 22, color: c(NAVY) });
     ["SERVICE", "AMOUNT", "FREQUENCY"].forEach((h, i) => page.drawText(h, { x: cols[i]! + 8, y, size: 8, font: bold, color: rgb(1, 1, 1) }));
     y -= 28;
