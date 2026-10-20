@@ -59,6 +59,8 @@ export interface PortalAccess {
   roles: string[];
   /** True when the fund team invited this person but access has not been granted yet. */
   pending_invite: boolean;
+  /** Investment just connected on sign-in; the portal opens it. */
+  openOnboardingId?: string | null;
 }
 
 /**
@@ -136,7 +138,7 @@ export const getPortalAccess = createServerFn({ method: "GET" })
           .eq("id", inv.id);
       }
 
-      if (live.length > 0) {
+      if (live.length > 0 || openOnboardingId) {
         const { data: refreshed } = await supabase
           .from("user_roles")
           .select("role")
@@ -145,8 +147,8 @@ export const getPortalAccess = createServerFn({ method: "GET" })
       }
     }
 
-    if (roles.length > 0) {
-      return { allowed: true, email, roles, pending_invite: false };
+    if (roles.length > 0 || openOnboardingId) {
+      return { allowed: true, email, roles, pending_invite: false, openOnboardingId };
     }
 
     // No role: allowed only if an admin already gave them fund access or an application exists.
