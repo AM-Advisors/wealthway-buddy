@@ -184,13 +184,14 @@ async function bookFor(uid: string, fundId: string) {
   return String(nb.id);
 }
 
-export async function addAsset(uid: string, fundId: string, a: { issuerName: string; assetName: string; assetClass: AssetClass; instrument: string | null; acquisitionDate: string | null; costCents: number; statementLineId?: string | null | undefined }) {
+export async function addAsset(uid: string, fundId: string, a: { issuerName: string; assetName: string; assetClass: AssetClass; instrument: string | null; acquisitionDate: string | null; costCents: number; ownershipPct?: number | null | undefined; note?: string | null | undefined; statementLineId?: string | null | undefined }) {
   await assertFund(uid, fundId);
   const d = await db();
   const book = await bookFor(uid, fundId);
   const { data, error } = await d.from("portfolio_assets").insert({
     book_id: book, offering_id: fundId, issuer_name: a.issuerName, asset_name: a.assetName, asset_class: a.assetClass, instrument: a.instrument,
     acquisition_date: a.acquisitionDate, cost_basis_cents: a.costCents, created_by: uid,
+    ownership_pct: a.ownershipPct ?? null, note: a.note?.trim() || null,
     original_transaction_table: a.statementLineId ? "bank_statement_lines" : null, original_transaction_id: a.statementLineId ?? null,
   }).select("id").single();
   if (error) throw new Error("Couldn't add the asset.");

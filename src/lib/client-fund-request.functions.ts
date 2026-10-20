@@ -136,7 +136,7 @@ export const submitFundRequest = createServerFn({ method: "POST" })
       const { bootstrapFundSetup } = await import("@/lib/fund-setup.server");
       const setup = await bootstrapFundSetup(context.userId, {
         offeringId, clientId: data.clientId, structure: prefill.structure,
-        legalFundName: null, displayName: prefill.display_name,
+        legalFundName: r.legal_name.trim() || null, displayName: prefill.display_name,
       });
       const { structure: _s, ...rest } = prefill;
       await db.from("fund_setups").update(rest).eq("id", (setup as any).id);

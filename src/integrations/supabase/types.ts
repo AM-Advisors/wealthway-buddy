@@ -15588,6 +15588,7 @@ export type Database = {
           created_at: string
           created_by: string
           description: string | null
+          fund_types: string[] | null
           id: string
           title: string
         }
@@ -15597,6 +15598,7 @@ export type Database = {
           created_at?: string
           created_by: string
           description?: string | null
+          fund_types?: string[] | null
           id?: string
           title: string
         }
@@ -15606,6 +15608,7 @@ export type Database = {
           created_at?: string
           created_by?: string
           description?: string | null
+          fund_types?: string[] | null
           id?: string
           title?: string
         }
