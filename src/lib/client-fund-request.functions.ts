@@ -315,3 +315,29 @@ export const getClientHome = createServerFn({ method: "GET" })
         })),
     };
   });
+
+/** Operations: unsent Add Fund or SPV drafts across all clients (read-only list). */
+export const listStaffFundDrafts = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { requireOperations } = await import("@/lib/ops-access.functions");
+    await requireOperations(context, "funds", "see");
+    const db = await admin();
+    const { data, error } = await db.from("client_fund_intakes")
+      .select("id, client_id, created_by, details, created_at, updated_at, clients(name)")
+      .eq("status", "request_draft").order("updated_at", { ascending: false }).limit(200);
+    if (error) throw new Error("Draft funds could not be loaded.");
+    const rows = (data ?? []).filter((r: any) => r.details?._kind === KIND);
+    const ids = Array.from(new Set(rows.map((r: any) => r.created_by).filter(Boolean)));
+    const names = new Map<string, string>();
+    if (ids.length) {
+      const { data: profs } = await db.from("profiles").select("id, legal_name, email").in("id", ids);
+      for (const p of profs ?? []) names.set(String(p.id), p.legal_name || p.email || "");
+    }
+    return rows.map((r: any) => ({
+      id: String(r.id), clientId: String(r.client_id), clientName: r.clients?.name ?? "Unknown client",
+      fundName: String(r.details?.fund_name || r.details?.legal_name || "Untitled draft"),
+      kind: String(r.details?.kind || ""), startedBy: r.created_by ? names.get(String(r.created_by)) || "Unknown" : "Unknown",
+      createdAt: String(r.created_at), updatedAt: String(r.updated_at),
+    }));
+  });
