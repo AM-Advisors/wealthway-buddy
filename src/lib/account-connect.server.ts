@@ -201,6 +201,16 @@ export async function sweepUnconnected() {
       }
     }
   }
+  // Re-check shared tax IDs: they connect automatically once name and verification match.
+  const { data: fps } = await d.from("investment_profiles").select("id, tin_fingerprint").not("tin_fingerprint", "is", null).limit(5000);
+  const seen = new Map<string, string[]>();
+  for (const r of (fps ?? []) as any[]) seen.set(r.tin_fingerprint, [...(seen.get(r.tin_fingerprint) ?? []), r.id]);
+  let tinConnected = 0;
+  for (const [fp, ids] of seen) {
+    if (ids.length < 2) continue;
+    const res = await recognizeTin(ids[0]!, fp).catch(() => null);
+    if (res?.kind === "merge") tinConnected++;
+  }
   const { data: ids } = await d.rpc("list_unconnected_account_ids", { _limit: 200 });
   let connected = 0, review = 0;
   for (const r of (ids ?? []) as any[]) {
@@ -209,5 +219,19 @@ export async function sweepUnconnected() {
     if (res?.review) review++;
   }
   const { data: left } = await d.rpc("list_unconnected_account_ids", { _limit: 1000 });
-  return { checked: (ids ?? []).length, connected, review, stillUnconnected: (left ?? []).length, fingerprinted };
+  return { checked: (ids ?? []).length, connected, review, stillUnconnected: (left ?? []).length, fingerprinted, tinConnected };
+}
+
+/** Re-run tax-ID recognition for a person's profiles (call after KYC/KYB/AML clears). */
+export async function recheckTinsForPerson(personId: string) {
+  const d = await db();
+  const { data } = await d.from("investment_profiles").select("id, tin_fingerprint").eq("person_id", personId).not("tin_fingerprint", "is", null).limit(20);
+  for (const r of (data ?? []) as any[]) await recognizeTin(r.id, r.tin_fingerprint).catch((e) => console.error("[account-connect] tin recheck", (e as Error).message));
+}
+
+/** Same, for the profile whose business verification just cleared. */
+export async function recheckTinForProfile(profileId: string) {
+  const d = await db();
+  const { data } = await d.from("investment_profiles").select("tin_fingerprint").eq("id", profileId).maybeSingle();
+  if (data?.tin_fingerprint) await recognizeTin(profileId, data.tin_fingerprint).catch((e) => console.error("[account-connect] tin recheck", (e as Error).message));
 }
