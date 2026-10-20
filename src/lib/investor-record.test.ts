@@ -31,6 +31,7 @@ function q(name: string) {
     eq: (k: string, v: any) => { filters.push((r) => r[k] === v); return b; },
     ilike: (k: string, v: string) => { filters.push((r) => String(r[k] ?? "").toLowerCase() === String(v).toLowerCase()); return b; },
     is: (k: string, v: any) => { filters.push((r) => (r[k] ?? null) === v); return b; },
+    neq: (k: string, v: any) => { filters.push((r) => r[k] != null && r[k] !== v); return b; },
     in: (k: string, v: any[]) => { filters.push((r) => v.includes(r[k])); return b; },
     not: (k: string, opx: string, v: any) => {
       if (opx === "in") { const list = String(v).replace(/[()]/g, "").split(","); filters.push((r) => !list.includes(r[k])); }
