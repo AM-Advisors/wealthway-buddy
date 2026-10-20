@@ -1,0 +1,13 @@
+import { readFileSync } from "node:fs";
+import { createClient } from "@supabase/supabase-js";
+const m = JSON.parse(readFileSync(process.env.HOME + "/.cache/lovable-auth/session.json", "utf8"));
+const url = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL!;
+const key = process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_PUBLISHABLE_KEY!;
+const sb = createClient(url, key, { global: { headers: { Authorization: `Bearer ${m.session.access_token}` } }, auth: { persistSession: false } });
+const { opsFundsDashboard } = await import("@/lib/ops-funds.server");
+const t = Date.now();
+const r: any = await opsFundsDashboard(m.user_id, sb as any);
+const funds: any[] = r.funds ?? r.rows ?? r;
+const keys = Object.keys(funds[0] ?? {});
+const inv = funds.reduce((n, f) => n + Number(f.investorCount ?? f.investors ?? f.investorTotal ?? 0), 0);
+console.log(JSON.stringify({ secs: (Date.now() - t) / 1000, funds: funds.length, investorSum: inv, keys, top: Object.keys(r) }));
