@@ -196,6 +196,7 @@ export const matchBankLineToInvoice = createServerFn({ method: "POST" })
       .update({ status: "paid", paid_on: line.posted_on, payment_reference: reference })
       .eq("id", data.invoiceId);
     if (invoiceError) throw new Error(invoiceError.message);
+    await (await import("@/lib/billing-schedule.server")).onInvoicePaid(data.invoiceId);
 
     const { error: lineError } = await supabase
       .from("bank_transactions")

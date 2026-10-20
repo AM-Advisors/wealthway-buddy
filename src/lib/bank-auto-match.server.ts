@@ -126,6 +126,7 @@ export async function matchDeclaredPayments(
       .eq("id", hit.id)
       .eq("status", "issued");
     if (invoiceError) continue;
+    await (await import("@/lib/billing-schedule.server")).onInvoicePaid(hit.id);
 
     const { error: lineError } = await supabase
       .from("bank_transactions")
