@@ -1,6 +1,6 @@
 /** Server-only commission tracking. Read-only projection over signed quotes and their invoices; never moves money. */
 import { COMMISSION_EDITORS, COMMISSION_VIEW_ALL, DEFAULT_RATES, PAYOUT_RECORDERS, payoutDueDate, isCapTableLine, splitLine, validRates, type CommissionRates } from "@/lib/commission-model";
-import { names, salesActor } from "@/lib/sales-hub.server";
+import { names, salesActor as salesHubActor } from "@/lib/sales-hub.server";
 
 const admin = async () => (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
 
@@ -13,6 +13,17 @@ const ratesAt = (hist: Awaited<ReturnType<typeof rateHistory>>, at: string) => {
   for (const v of hist) if (v.effective_at <= at) r = { ...DEFAULT_RATES, ...v.rates };
   return r;
 };
+
+/** Sales staff use their Sales scope; Finance and leadership (no Sales role) still see every commission. */
+async function salesActor(userId: string) {
+  try { return await salesHubActor(userId); } catch (e) {
+    const db = await admin();
+    const { data } = await db.from("user_roles").select("role").eq("user_id", userId);
+    const roles = ((data ?? []) as any[]).map((r) => String(r.role));
+    if (!roles.some((r) => COMMISSION_VIEW_ALL.includes(r))) throw e;
+    return { userId, roles, scope: "all" as const, visible: null as string[] | null };
+  }
+}
 
 export async function commissionReport(userId: string, from: string, to: string) {
   const db = await admin();
@@ -63,12 +74,14 @@ export async function commissionReport(userId: string, from: string, to: string)
   const { data: pays } = lineIds.length ? await db.from("commission_payouts").select("id, invoice_line_id, user_id, layer, amount_cents, payout_date, reference, note, reversal_of, reason, created_at").in("invoice_line_id", lineIds) : { data: [] };
   const payList = (pays ?? []) as any[];
   const reversed = new Set(payList.filter((p) => p.reversal_of).map((p) => p.reversal_of));
-  const { data: queued } = lineIds.length ? await db.from("commission_payout_queue").select("invoice_line_id, user_id, layer, status, reason, due_on").in("invoice_line_id", lineIds) : { data: [] };
+  const { data: queued } = lineIds.length ? await db.from("commission_payout_queue").select("invoice_line_id, user_id, layer, status, reason, due_on, amount_cents").in("invoice_line_id", lineIds) : { data: [] };
   const queueOf = (r: any) => ((queued ?? []) as any[]).find((x) => x.invoice_line_id === r.lineId && (x.user_id ?? null) === (r.userId ?? null) && x.layer === r.layer);
   for (const r of rows) {
     const active = payList.find((p) => !p.reversal_of && !reversed.has(p.id) && p.invoice_line_id === r.lineId && p.user_id === r.userId && p.layer === r.layer);
     r.payout = active ? { id: active.id, date: active.payout_date, reference: active.reference, note: active.note } : null;
     const qd = queueOf(r);
+    // The amount queued when the invoice was paid is the commission of record.
+    if (qd && qd.amount_cents != null) r.amountCents = Number(qd.amount_cents);
     r.status = active ? "paid_out" : qd?.status === "cancelled" ? "cancelled" : r.paid ? "scheduled" : "not_earned";
     r.cancelReason = qd?.status === "cancelled" ? qd.reason : null;
     r.payoutDue = qd?.due_on ?? (r.paid && r.paidOn ? payoutDueDate(r.paidOn) : null);
@@ -131,15 +144,29 @@ export async function recordCommissionPayouts(userId: string, items: { lineId: s
     if (row.status !== "scheduled") throw new Error("Only earned commissions that aren't already paid out can be recorded.");
     return { quote_id: row.quoteId, invoice_line_id: row.lineId, user_id: row.userId, layer: row.layer, amount_cents: row.amountCents, payout_date: payoutDate, reference: reference.trim(), note, recorded_by: userId };
   });
-  const { data: made, error } = await db.from("commission_payouts").insert(inserts).select("id, invoice_line_id, user_id, layer");
-  if (error) throw new Error(error.message);
-  for (const p of (made ?? []) as any[]) {
-    let q = db.from("commission_payout_queue").update({ status: "confirmed", payout_id: p.id }).eq("invoice_line_id", p.invoice_line_id).eq("layer", p.layer).eq("status", "scheduled");
-    q = p.user_id ? q.eq("user_id", p.user_id) : q.is("user_id", null);
-    const { data: hit } = await q.select("id");
-    for (const h of (hit ?? []) as any[]) await db.from("commission_payout_queue_events").insert({ queue_id: h.id, event_kind: "confirmed", actor_id: userId, detail: { payout_id: p.id, payout_date: payoutDate, reference: reference.trim() } });
+  // Claim each queued row first (scheduled -> confirmed), so two people can't record the same payout twice.
+  let count = 0;
+  for (const ins of inserts) {
+    let q = db.from("commission_payout_queue").update({ status: "confirmed" }).eq("invoice_line_id", ins.invoice_line_id).eq("layer", ins.layer).eq("status", "scheduled");
+    q = ins.user_id ? q.eq("user_id", ins.user_id) : q.is("user_id", null);
+    const { data: hit, error: ce } = await q.select("id, amount_cents");
+    if (ce) throw new Error(ce.message);
+    const claimed = (hit ?? []) as any[];
+    if (!claimed.length) continue; // already confirmed by someone else, or not queued
+    const amount = claimed[0].amount_cents != null ? Number(claimed[0].amount_cents) : ins.amount_cents;
+    const { data: made, error } = await db.from("commission_payouts").insert({ ...ins, amount_cents: amount }).select("id").single();
+    if (error) {
+      for (const h of claimed) await db.from("commission_payout_queue").update({ status: "scheduled" }).eq("id", h.id);
+      throw new Error(error.message);
+    }
+    for (const h of claimed) {
+      await db.from("commission_payout_queue").update({ payout_id: made.id }).eq("id", h.id);
+      await db.from("commission_payout_queue_events").insert({ queue_id: h.id, event_kind: "confirmed", actor_id: userId, detail: { payout_id: made.id, payout_date: payoutDate, reference: reference.trim() } });
+    }
+    count++;
   }
-  return { ok: true, count: inserts.length };
+  if (!count) throw new Error("Those payouts were already recorded.");
+  return { ok: true, count };
 }
 
 export async function reverseCommissionPayout(userId: string, payoutId: string, reason: string) {
