@@ -114,10 +114,24 @@ export async function recordProfileTin(profileId: string, tin: string, ctx?: { o
   return recognizeTin(profileId, fp, ctx);
 }
 
+/** Legal name and whether KYC/KYB + AML both passed, for one investment profile. */
+async function profileIdentity(d: any, p: any): Promise<{ legalName: string | null; verified: boolean }> {
+  const { isEntityProfileType } = await import("@/lib/identity-model");
+  if (isEntityProfileType(p.profile_type)) {
+    const { data: ev } = await d.from("entity_verifications").select("legal_name, kyb_status, entity_aml_status").eq("profile_id", p.id).maybeSingle();
+    return { legalName: ev?.legal_name ?? p.legal_name ?? null, verified: ev?.kyb_status === "approved" && ev?.entity_aml_status === "approved" };
+  }
+  const per = p.persons ?? {};
+  const name = [per.legal_first_name, per.legal_last_name].filter(Boolean).join(" ") || null;
+  return { legalName: name, verified: per.kyc_status === "approved" && per.aml_status === "approved" };
+}
+
+const PROFILE_COLS = "id, owner_user_id, person_id, profile_type, legal_name, created_at, persons(email, user_id, legal_first_name, legal_last_name, kyc_status, aml_status, created_at)";
+
 async function recognizeTin(profileId: string, fp: string, ctx?: { offeringId?: string | null; onboardingId?: string | null }) {
   const d = await db();
-  const { data: self } = await d.from("investment_profiles").select("id, owner_user_id, person_id, persons(email)").eq("id", profileId).maybeSingle();
-  const { data: others } = await d.from("investment_profiles").select("id, owner_user_id, person_id, persons(email, user_id)").eq("tin_fingerprint", fp).neq("id", profileId).limit(10);
+  const { data: self } = await d.from("investment_profiles").select(PROFILE_COLS).eq("id", profileId).maybeSingle();
+  const { data: others } = await d.from("investment_profiles").select(PROFILE_COLS).eq("tin_fingerprint", fp).neq("id", profileId).limit(10);
   const rows = (others ?? []) as any[];
   if (!rows.length) return { kind: "none" as const };
   const ownerEmail = async (uid: string | null) => {
@@ -125,10 +139,33 @@ async function recognizeTin(profileId: string, fp: string, ctx?: { offeringId?: 
     const { data } = await d.auth.admin.getUserById(uid);
     return data?.user?.email_confirmed_at ? String(data.user.email ?? "") : null;
   };
-  const accountUserId = (self as any)?.owner_user_id ?? null;
+  const accountUserId = (self as any)?.owner_user_id ?? (self as any)?.persons?.user_id ?? null;
   const accountEmail = accountUserId ? await ownerEmail(accountUserId) : String((self as any)?.persons?.email ?? "") || null;
-  const matches = await Promise.all(rows.map(async (r) => ({ profileId: r.id, ownerUserId: r.owner_user_id ?? r.persons?.user_id ?? null, ownerVerifiedEmail: (await ownerEmail(r.owner_user_id ?? r.persons?.user_id ?? null)) ?? r.persons?.email ?? null })));
-  const decision = decideTinMatch({ matches, accountUserId, accountVerifiedEmail: accountEmail });
+  const selfId = self ? await profileIdentity(d, self) : { legalName: null, verified: false };
+  const matches = await Promise.all(rows.map(async (r) => {
+    const id = await profileIdentity(d, r);
+    return { profileId: r.id, ownerUserId: r.owner_user_id ?? r.persons?.user_id ?? null, ownerVerifiedEmail: (await ownerEmail(r.owner_user_id ?? r.persons?.user_id ?? null)) ?? r.persons?.email ?? null, legalName: id.legalName, verified: id.verified };
+  }));
+  const decision = decideTinMatch({ matches, accountUserId, accountVerifiedEmail: accountEmail, selfLegalName: selfId.legalName, selfVerified: selfId.verified });
+  if (decision.kind === "merge") {
+    const other = rows.find((r) => r.id === decision.profileId);
+    const a = self as any;
+    if (a?.person_id && other?.person_id && a.person_id !== other.person_id) {
+      // Keep the record with a sign-in account, otherwise the older one.
+      const aKeeps = a.persons?.user_id ? true : other.persons?.user_id ? false : String(a.persons?.created_at ?? a.created_at) <= String(other.persons?.created_at ?? other.created_at);
+      const keep = aKeeps ? a.person_id : other.person_id;
+      const drop = aKeeps ? other.person_id : a.person_id;
+      const r = await d.rpc("merge_persons", { _keep: keep, _drop: drop, _actor: null, _rule: "same_tin_name_verified" });
+      if (r.error) { console.error("[account-connect] tin merge failed", r.error.message); return { kind: "review" as const, profileIds: [decision.profileId] }; }
+    }
+    const uid = accountUserId ?? other?.owner_user_id ?? other?.persons?.user_id ?? null;
+    if (uid) {
+      await d.from("investment_profiles").update({ owner_user_id: uid }).in("id", [profileId, decision.profileId]).is("owner_user_id", null);
+      await connectAccount(uid).catch((e) => console.error("[account-connect] connect after tin merge", (e as Error).message));
+    }
+    return decision;
+  }
+
   if (decision.kind === "review") {
     let onboardingId = ctx?.onboardingId ?? null; let offeringId = ctx?.offeringId ?? null;
     if (!onboardingId) {
