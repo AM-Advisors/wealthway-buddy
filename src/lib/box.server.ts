@@ -157,7 +157,8 @@ export async function createSignRequest(input: CreateSignRequestInput): Promise<
       {
         email: input.signerEmail,
         role: "signer",
-        embed_url_external_user_id: input.externalId,
+        // A named signer (e.g. the GP) signs from Box's own email, never an embedded link handed to someone else.
+        ...((input as any).emailSigner ? {} : { embed_url_external_user_id: input.externalId }),
         ...(input.signerName ? { name: input.signerName } : {}),
       },
     ],
