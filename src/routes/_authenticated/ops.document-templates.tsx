@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
   addTemplateVersionFn, createTemplateFromFundFn, decideTemplateVersionFn, listTemplateSourcesFn,
-  listTemplatesFn, templateDownloadUrlFn, useTemplateInFundFn,
+  listTemplatesFn, setTemplateFundTypesFn, templateDownloadUrlFn, useTemplateInFundFn,
 } from "@/lib/fund-doc-templates.functions";
 
 export const Route = createFileRoute("/_authenticated/ops/document-templates")({
@@ -190,5 +190,30 @@ function TemplateCard({ t, funds }: { t: T; funds: { id: string; name: string }[
         ) : null}
       </CardContent>
     </Card>
+  );
+}
+
+const FUND_TYPE_OPTIONS = ["SPV", "Single asset SPV", "Venture capital", "Private equity", "Private credit", "Real estate", "Hedge Fund", "Fund of funds", "Other"];
+
+/** Which fund types get this template offered automatically ("Generate fund documents"). */
+function FundTypesEditor({ templateId, initial, onSaved }: { templateId: string; initial: string[]; onSaved: () => void }) {
+  const save = useServerFn(setTemplateFundTypesFn);
+  const [sel, setSel] = useState<string[]>(initial);
+  const [busy, setBusy] = useState(false);
+  const toggle = (x: string) => setSel((s) => (s.includes(x) ? s.filter((y) => y !== x) : [...s, x]));
+  const options = Array.from(new Set([...FUND_TYPE_OPTIONS, ...initial]));
+  return (
+    <div className="space-y-2 rounded-md border p-3 text-sm">
+      <p className="font-medium">Used for these fund types</p>
+      <div className="flex flex-wrap gap-2">
+        {options.map((x) => (
+          <Button key={x} type="button" size="sm" variant={sel.includes(x) ? "default" : "outline"} onClick={() => toggle(x)}>{x}</Button>
+        ))}
+      </div>
+      <Button size="sm" variant="outline" disabled={busy} onClick={async () => {
+        setBusy(true);
+        try { await save({ data: { templateId, fundTypes: sel } }); toast.success("Fund types saved."); onSaved(); } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
+      }}>Save fund types</Button>
+    </div>
   );
 }
