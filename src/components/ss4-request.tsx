@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { SignHereTag, useSignHere } from "@/components/signature-adopt-dialog";
+import { ThirdPartyBadge, ThirdPartyNote } from "@/components/third-party-badge";
 import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -248,6 +249,7 @@ export function Ss4SignView({ requestId }: { requestId: string }) {
         <Link to="/manager/fund/$fundId" params={{ fundId: d.offeringId }} className="text-xs text-muted-foreground hover:underline">← {d.fundName}</Link>
         <h1 className="mt-1 text-2xl font-semibold tracking-tight">Form SS-4: EIN application</h1>
         <p className="text-sm text-muted-foreground">Harmonious filled this in from your fund's details. Check every line, then sign at the bottom.</p>
+        <div className="mt-2 space-y-1"><ThirdPartyBadge provider="the IRS" /><ThirdPartyNote provider="The IRS" /></div>
       </div>
       {d.note && <div className="rounded-lg border bg-muted/40 p-4 text-sm"><span className="font-medium">Note from Harmonious: </span>{d.note}</div>}
 

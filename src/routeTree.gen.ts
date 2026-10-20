@@ -167,6 +167,7 @@ import { Route as AuthenticatedClientInvoicesRouteImport } from './routes/_authe
 import { Route as AuthenticatedClientPaymentsRouteImport } from './routes/_authenticated/client.payments'
 import { Route as AuthenticatedClientSetupOptionsRouteImport } from './routes/_authenticated/client.setup-options'
 import { Route as AuthenticatedClientSignOffsRouteImport } from './routes/_authenticated/client.sign-offs'
+import { Route as AuthenticatedClientStatementsOfWorkRouteImport } from './routes/_authenticated/client.statements-of-work'
 import { Route as AuthenticatedClientWiresRouteImport } from './routes/_authenticated/client.wires'
 import { Route as AuthenticatedDiligenceIndexRouteImport } from './routes/_authenticated/diligence.index'
 import { Route as AuthenticatedDiligenceOfferingIdRouteImport } from './routes/_authenticated/diligence.$offeringId'
@@ -1326,6 +1327,12 @@ const AuthenticatedClientSignOffsRoute =
   AuthenticatedClientSignOffsRouteImport.update({
     id: '/sign-offs',
     path: '/sign-offs',
+    getParentRoute: () => AuthenticatedClientRoute,
+  } as any)
+const AuthenticatedClientStatementsOfWorkRoute =
+  AuthenticatedClientStatementsOfWorkRouteImport.update({
+    id: '/statements-of-work',
+    path: '/statements-of-work',
     getParentRoute: () => AuthenticatedClientRoute,
   } as any)
 const AuthenticatedClientWiresRoute =
@@ -3243,6 +3250,7 @@ export interface FileRoutesByFullPath {
   '/client/payments': typeof AuthenticatedClientPaymentsRoute
   '/client/setup-options': typeof AuthenticatedClientSetupOptionsRoute
   '/client/sign-offs': typeof AuthenticatedClientSignOffsRoute
+  '/client/statements-of-work': typeof AuthenticatedClientStatementsOfWorkRoute
   '/client/wires': typeof AuthenticatedClientWiresRoute
   '/diligence/$offeringId': typeof AuthenticatedDiligenceOfferingIdRoute
   '/help/$slug': typeof AuthenticatedHelpSlugRoute
@@ -3695,6 +3703,7 @@ export interface FileRoutesByTo {
   '/client/payments': typeof AuthenticatedClientPaymentsRoute
   '/client/setup-options': typeof AuthenticatedClientSetupOptionsRoute
   '/client/sign-offs': typeof AuthenticatedClientSignOffsRoute
+  '/client/statements-of-work': typeof AuthenticatedClientStatementsOfWorkRoute
   '/client/wires': typeof AuthenticatedClientWiresRoute
   '/diligence/$offeringId': typeof AuthenticatedDiligenceOfferingIdRoute
   '/help/$slug': typeof AuthenticatedHelpSlugRoute
@@ -4155,6 +4164,7 @@ export interface FileRoutesById {
   '/_authenticated/client/payments': typeof AuthenticatedClientPaymentsRoute
   '/_authenticated/client/setup-options': typeof AuthenticatedClientSetupOptionsRoute
   '/_authenticated/client/sign-offs': typeof AuthenticatedClientSignOffsRoute
+  '/_authenticated/client/statements-of-work': typeof AuthenticatedClientStatementsOfWorkRoute
   '/_authenticated/client/wires': typeof AuthenticatedClientWiresRoute
   '/_authenticated/diligence/$offeringId': typeof AuthenticatedDiligenceOfferingIdRoute
   '/_authenticated/help/$slug': typeof AuthenticatedHelpSlugRoute
@@ -4616,6 +4626,7 @@ export interface FileRouteTypes {
     | '/client/payments'
     | '/client/setup-options'
     | '/client/sign-offs'
+    | '/client/statements-of-work'
     | '/client/wires'
     | '/diligence/$offeringId'
     | '/help/$slug'
@@ -5068,6 +5079,7 @@ export interface FileRouteTypes {
     | '/client/payments'
     | '/client/setup-options'
     | '/client/sign-offs'
+    | '/client/statements-of-work'
     | '/client/wires'
     | '/diligence/$offeringId'
     | '/help/$slug'
@@ -5527,6 +5539,7 @@ export interface FileRouteTypes {
     | '/_authenticated/client/payments'
     | '/_authenticated/client/setup-options'
     | '/_authenticated/client/sign-offs'
+    | '/_authenticated/client/statements-of-work'
     | '/_authenticated/client/wires'
     | '/_authenticated/diligence/$offeringId'
     | '/_authenticated/help/$slug'
@@ -7015,6 +7028,13 @@ declare module '@tanstack/react-router' {
       path: '/sign-offs'
       fullPath: '/client/sign-offs'
       preLoaderRoute: typeof AuthenticatedClientSignOffsRouteImport
+      parentRoute: typeof AuthenticatedClientRoute
+    }
+    '/_authenticated/client/statements-of-work': {
+      id: '/_authenticated/client/statements-of-work'
+      path: '/statements-of-work'
+      fullPath: '/client/statements-of-work'
+      preLoaderRoute: typeof AuthenticatedClientStatementsOfWorkRouteImport
       parentRoute: typeof AuthenticatedClientRoute
     }
     '/_authenticated/client/wires': {
@@ -9234,6 +9254,7 @@ interface AuthenticatedClientRouteChildren {
   AuthenticatedClientPaymentsRoute: typeof AuthenticatedClientPaymentsRoute
   AuthenticatedClientSetupOptionsRoute: typeof AuthenticatedClientSetupOptionsRoute
   AuthenticatedClientSignOffsRoute: typeof AuthenticatedClientSignOffsRoute
+  AuthenticatedClientStatementsOfWorkRoute: typeof AuthenticatedClientStatementsOfWorkRoute
   AuthenticatedClientWiresRoute: typeof AuthenticatedClientWiresRoute
   AuthenticatedClientIndexRoute: typeof AuthenticatedClientIndexRoute
   AuthenticatedClientServicesEngagementIdRoute: typeof AuthenticatedClientServicesEngagementIdRoute
@@ -9256,6 +9277,8 @@ const AuthenticatedClientRouteChildren: AuthenticatedClientRouteChildren = {
   AuthenticatedClientPaymentsRoute: AuthenticatedClientPaymentsRoute,
   AuthenticatedClientSetupOptionsRoute: AuthenticatedClientSetupOptionsRoute,
   AuthenticatedClientSignOffsRoute: AuthenticatedClientSignOffsRoute,
+  AuthenticatedClientStatementsOfWorkRoute:
+    AuthenticatedClientStatementsOfWorkRoute,
   AuthenticatedClientWiresRoute: AuthenticatedClientWiresRoute,
   AuthenticatedClientIndexRoute: AuthenticatedClientIndexRoute,
   AuthenticatedClientServicesEngagementIdRoute:

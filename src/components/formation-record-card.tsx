@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { ThirdPartyBadge } from "@/components/third-party-badge";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -37,6 +38,7 @@ export function FormationRecordCard({ offeringId }: { offeringId: string }) {
           <CardTitle className="text-base">Formation record</CardTitle>
           <Badge variant="secondary">{STATUS_LABELS[d.status]}</Badge>
         </div>
+        <ThirdPartyBadge provider="the state filing office" />
         <p className="text-sm text-muted-foreground">Everything about forming this Fund's entity in one place. Harmonious completes the formation; nothing is filed from here.</p>
       </CardHeader>
       <CardContent className="space-y-5">

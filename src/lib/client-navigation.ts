@@ -73,6 +73,7 @@ const COMPANY_NAV: ClientNavLink[] = [
   { title: "Transactions", url: "/client/cap-table/securities", icon: "money" },
   { title: "Documents", url: "/client/cap-table/documents", icon: "document" },
   { title: "Reports", url: "/client/cap-table/reports", icon: "report" },
+  { title: "Statements of work", url: "/client/statements-of-work", icon: "document" },
   { title: "Settings", url: "/client", icon: "settings" },
   { title: "Help", url: "/help", icon: "document" },
   { title: "Profile", url: "/profile", icon: "person" },

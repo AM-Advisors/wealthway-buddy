@@ -1,5 +1,6 @@
 import { useRouterState } from "@tanstack/react-router";
 import type { ReactNode } from "react";
+import { ThirdPartyBadge, ThirdPartyNote } from "@/components/third-party-badge";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -41,6 +42,8 @@ export function AccountKycGate({ children, onSignOut }: { children: ReactNode; o
         <div className="space-y-2">
           <h1 className="font-heading text-2xl text-primary">{body.title}</h1>
           <p className="text-sm text-muted-foreground">{body.text}</p>
+          <ThirdPartyBadge provider="Didit" />
+          <ThirdPartyNote provider="Didit" />
         </div>
         <ol className="grid gap-2 text-sm sm:grid-cols-2">
           {["Government ID", "Selfie match", "Residential address", "Sanctions & AML screening"].map((t, i) => (
