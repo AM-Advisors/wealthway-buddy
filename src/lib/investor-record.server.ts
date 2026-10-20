@@ -492,8 +492,8 @@ export async function investorRecordDetail(userId: string, onboardingId: string)
   const staff = role === "staff";
   const [{ data: person }, { data: profile }, { data: rel }, { data: changes }, { data: sugg }, { data: offering }] = await Promise.all([
     row.person_id ? db().from("persons").select("*").eq("id", row.person_id).maybeSingle() : db().from("persons").select("*").eq("user_id", row.investor_user_id).maybeSingle(),
-    row.investment_profile_id ? db().from("investment_profiles").select("id, profile_type, display_label, legal_name, details, entry_source").eq("id", row.investment_profile_id).maybeSingle() : { data: null },
-    row.investment_profile_id ? db().from("investment_profile_relationships").select("id, person_id, role, ownership_percent, is_authorized_signer, status, persons:person_id(legal_first_name, legal_last_name)").eq("profile_id", row.investment_profile_id) : { data: [] },
+    row.investment_profile_id ? db().from("investment_profiles").select("id, profile_type, display_label, legal_name, details, entry_source, tax_id_last4").eq("id", row.investment_profile_id).maybeSingle() : { data: null },
+    row.investment_profile_id ? db().from("investment_profile_relationships").select("id, person_id, role, ownership_percent, is_authorized_signer, status, persons:person_id(legal_first_name, legal_last_name)").eq("profile_id", row.investment_profile_id).neq("status", "removed") : { data: [] },
     db().from("investor_record_changes").select("field, source, subject_table, created_at, manager_visible, old_value, new_value").eq("onboarding_id", row.id).order("created_at", { ascending: false }).limit(100),
     db().from("investor_record_suggestions").select("*").eq("onboarding_id", row.id).in("status", ["open", "review_later"]).order("created_at", { ascending: false }),
     db().from("offerings").select("id, name").eq("id", row.offering_id).maybeSingle(),
@@ -520,7 +520,7 @@ export async function investorRecordDetail(userId: string, onboardingId: string)
     viewer: role, fund: offering,
     overview: { name: personName(person) ?? "Investor", stage: row.stage, enteredBy: row.entry_source, investorConfirmedAt: row.investor_confirmed_at, removed: Boolean(row.removed_at) },
     person: safePerson,
-    profile: profile ? { id: profile.id, type: formProfileType(profile.profile_type), typeLabel: PROFILE_TYPE_LABELS[formProfileType(profile.profile_type)], label: profile.display_label, legalName: profile.legal_name, details: profile.details ?? {} } : null,
+    profile: profile ? { id: profile.id, type: formProfileType(profile.profile_type), typeLabel: PROFILE_TYPE_LABELS[formProfileType(profile.profile_type)], label: profile.display_label, legalName: profile.legal_name, details: profile.details ?? {}, taxIdLast4: profile.tax_id_last4 ?? null } : null,
     related: ((rel ?? []) as any[]).map((r) => ({ underReview: reviewSet.has(r.id), id: r.id, name: `${r.persons?.legal_first_name ?? ""} ${r.persons?.legal_last_name ?? ""}`.trim(), role: r.role, ownershipPercent: r.ownership_percent, signer: r.is_authorized_signer, status: r.status })),
     investment: {
       amountCents: row.requested_amount_cents, commitmentCents: row.commitment_amount_cents, investmentDate: row.investment_date, unitCount: row.unit_count,
@@ -543,6 +543,8 @@ export async function investorRecordDetail(userId: string, onboardingId: string)
     pendingReviewCount: (sugg ?? []).length,
     contactEditMode: directContact ? "direct" as const : "suggest" as const,
     detailsEditMode: directEdits ? "direct" as const : "suggest" as const,
+    profileEditMode: (staff || (directEdits && row.investment_profile_id && await exclusiveRecord(row, "investment_profile_id"))) ? "direct" as const : "locked" as const,
+    investorHasAccount: Boolean(row.investor_user_id),
     claimState: claimState({ hasAccount: Boolean(row.investor_user_id), entrySource: row.entry_source }),
     actor: { isStaff: actor.isStaff },
   };
