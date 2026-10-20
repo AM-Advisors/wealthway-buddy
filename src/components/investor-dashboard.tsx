@@ -40,9 +40,9 @@ export function InvestorDashboard() {
   if (q.isPending) return <Skeleton className="h-40 rounded-xl" />;
   const d = q.data;
   if (q.isError || !d) return <LoadError audience="account" error={q.error} what="Your investments" onRetry={() => void q.refetch()} />;
-  if (!d.investments.length) return <InvitedFunds />;
+  if (!d.investments.length) return <><InvitedFunds /><StartFundCard /></>;
   const p = d.primary ?? d.investments[0];
-  if (!p) return <InvitedFunds />;
+  if (!p) return <><InvitedFunds /><StartFundCard /></>;
 
   return (
     <section className="space-y-4" aria-label="Your investments">
@@ -93,6 +93,18 @@ export function InvestorDashboard() {
           </CardContent>
         </Card>
       ) : null}
+      <StartFundCard />
     </section>
+  );
+}
+
+function StartFundCard() {
+  return (
+    <Card>
+      <CardHeader className="pb-2"><CardTitle className="text-base">Start your own fund or SPV</CardTitle>
+        <CardDescription>Manage your own fund with Harmonious. You'll sign our agreement, then pay a $2,500 setup fee.</CardDescription>
+      </CardHeader>
+      <CardContent><Button asChild variant="outline"><Link to="/start-fund">Get started</Link></Button></CardContent>
+    </Card>
   );
 }
