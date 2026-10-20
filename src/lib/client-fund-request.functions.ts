@@ -27,6 +27,12 @@ async function memberships(context: any) {
 async function requireMember(context: any, clientId: string, needSubmit = false) {
   const m = (await memberships(context)).find((r) => String(r.client_id) === clientId) as ({ client_id: string; client_role: string | null; can_approve: boolean | null; staff?: boolean } | undefined);
   if (!m) {
+    // A fund manager reaches the client through a fund they manage, even before
+    // a contact row exists - the portal already treats them as a member.
+    const { clientAccessIds } = await import("@/lib/client-membership");
+    if ((await clientAccessIds(context.supabase, context.userId)).includes(clientId)) {
+      return { client_id: clientId, client_role: "fund_manager", can_approve: true };
+    }
     // Operations staff and Account Managers use the same setup engine on a client's behalf.
     try {
       const { requireOperations } = await import("@/lib/ops-access.functions");

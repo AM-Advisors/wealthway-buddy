@@ -17,8 +17,9 @@ async function admin() {
 
 /** Works out the client and the a la carte keys on the server - never trusts a client-sent price. */
 export async function resolveTarget(context: any, t: Target) {
-  const { data: links } = await context.supabase.from("client_users").select("client_id").eq("user_id", context.userId);
-  const ids = ((links ?? []) as any[]).map((l) => String(l.client_id));
+  // Same membership rule as the client portal: direct contact or fund manager.
+  const { clientAccessIds } = await import("@/lib/client-membership");
+  const ids = await clientAccessIds(context.supabase, context.userId);
   const clientId = t.clientId ?? ids[0];
   if (!clientId || !ids.includes(clientId)) throw new Error("You aren't linked to this organisation.");
   const { coreServicesFor } = await import("@/lib/client-portal-model");
