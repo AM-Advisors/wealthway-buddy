@@ -48,3 +48,24 @@ export function MyPersonalInvestmentLinks({ onlyOnboardingId }: { onlyOnboarding
     </CardContent></Card>
   );
 }
+
+/** Compact per-row control: copies the investor's existing personal link, or creates one (no email sent). */
+export function PersonalLinkCopyButton({ onboardingId }: { onboardingId: string }) {
+  const load = useServerFn(getPersonalInvestmentLink), create = useServerFn(createPersonalInvestmentLink), copied = useServerFn(recordPersonalInvestmentLinkCopy), qc = useQueryClient();
+  const key = ["personal-investment-link", onboardingId];
+  const go = async () => {
+    try {
+      let d = await qc.fetchQuery({ queryKey: key, queryFn: () => load({ data: { onboardingId } }) });
+      if (!d.link) {
+        if (!d.canCreate) { toast.error(d.hasEmail ? "No personal link yet." : "Add the investor's email first."); return; }
+        await create({ data: { onboardingId } });
+        d = await qc.fetchQuery({ queryKey: key, queryFn: () => load({ data: { onboardingId } }), staleTime: 0 });
+      }
+      if (!d.link) return;
+      await navigator.clipboard?.writeText(d.link.url).catch(() => undefined);
+      toast.success("Personal link copied", { description: d.link.url });
+      void copied({ data: { onboardingId } }).catch(() => null);
+    } catch (e) { toast.error((e as Error).message); }
+  };
+  return <Button size="sm" variant="outline" className="whitespace-nowrap" onClick={go}>Copy link</Button>;
+}
