@@ -25,10 +25,10 @@ export async function resolveTarget(context: any, t: Target) {
   const { coreServicesFor } = await import("@/lib/client-portal-model");
   if (t.kind === "new_fund_request") {
     const { fundAddOnKeys } = await import("@/lib/fund-request-model");
-    return { clientId, addOnKeys: fundAddOnKeys(t.request as any), offeringId: null };
+    return { clientId, addOnKeys: fundAddOnKeys(t.request as any), offeringId: null, serviceLevel: (t.request as any)?.service_level ?? null };
   }
   const core = coreServicesFor(t.answers["vehicle_structure"], t.answers["offering_exemption"], t.answers["jurisdiction"]);
-  return { clientId, addOnKeys: t.serviceKeys.filter((k) => !core.includes(k)), offeringId: t.offeringId ?? null };
+  return { clientId, addOnKeys: t.serviceKeys.filter((k) => !core.includes(k)), offeringId: t.offeringId ?? null, serviceLevel: null as string | null };
 }
 
 export const quoteFundPayment = createServerFn({ method: "POST" })
@@ -37,7 +37,7 @@ export const quoteFundPayment = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const t = await resolveTarget(context, data);
     const { buildQuote } = await import("@/lib/fund-payments.server");
-    return buildQuote(await admin(), { clientId: t.clientId, kind: data.kind, addOnKeys: t.addOnKeys, offeringId: t.offeringId });
+    return buildQuote(await admin(), { clientId: t.clientId, kind: data.kind, addOnKeys: t.addOnKeys, offeringId: t.offeringId, serviceLevel: t.serviceLevel });
   });
 
 /** Records the payment and opens embedded card checkout for exactly the quoted items. */
@@ -49,7 +49,7 @@ export const startFundPayment = createServerFn({ method: "POST" })
     try { t = await resolveTarget(context, data.target); } catch (e) { return { error: (e as Error).message }; }
     const db = await admin();
     const { buildQuote, FUND_SETUP_PRICE_ID } = await import("@/lib/fund-payments.server");
-    const q = await buildQuote(db, { clientId: t.clientId, kind: data.target.kind, addOnKeys: t.addOnKeys, offeringId: t.offeringId });
+    const q = await buildQuote(db, { clientId: t.clientId, kind: data.target.kind, addOnKeys: t.addOnKeys, offeringId: t.offeringId, serviceLevel: t.serviceLevel });
     if (q.totalCents === 0) return { error: "Nothing to pay." };
     const { createStripeClient, getStripeErrorMessage } = await import("@/lib/stripe.server");
     try {
@@ -96,7 +96,7 @@ export const startOfflineFundPayment = createServerFn({ method: "POST" })
     try { t = await resolveTarget(context, data.target); } catch (e) { return { error: (e as Error).message }; }
     const db = await admin();
     const { buildQuote } = await import("@/lib/fund-payments.server");
-    const q = await buildQuote(db, { clientId: t.clientId, kind: data.target.kind, addOnKeys: t.addOnKeys, offeringId: t.offeringId });
+    const q = await buildQuote(db, { clientId: t.clientId, kind: data.target.kind, addOnKeys: t.addOnKeys, offeringId: t.offeringId, serviceLevel: t.serviceLevel });
     if (q.totalCents === 0) return { error: "Nothing to pay." };
     const { data: pay, error } = await db.from("fund_payments").insert({
       client_id: t.clientId, kind: data.target.kind, items: q.items, total_cents: q.totalCents,

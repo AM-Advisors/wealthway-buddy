@@ -301,12 +301,17 @@ async function writeEntity(sb: any, offeringId: string, patch: { ein?: string; s
 
 /** Records a real EIN (existing, or received from the IRS). An IRS letter is required. */
 export async function recordEin(sb: any, userId: string, input: { offeringId: string; ein: string; letterPath?: string | null | undefined; received: boolean }) {
-  // Clients record an existing EIN themselves; recording an IRS-issued EIN after Harmonious files stays with Harmonious.
-  if (input.received) await assertStaff(userId, input.offeringId); else await assertRead(userId, input.offeringId);
+  // Clients record an existing EIN themselves. An IRS-issued EIN is recorded by Harmonious, or by the fund's
+  // own managers on a Self Serve fund (IRS letter required as evidence).
+  const actor = await assertRead(userId, input.offeringId);
+  const o = await offering(input.offeringId);
+  const { managerMayComplete } = await import("@/lib/service-level");
+  const selfServe = !actor.isStaff && managerMayComplete((o as any).service_level, actor.offeringIds.includes(input.offeringId));
+  if (input.received && !actor.isStaff && !selfServe) forbid("only Harmonious can record the IRS-issued EIN for this fund's service level.");
+  if (input.received && selfServe && !input.letterPath) throw new Error("Upload the IRS EIN letter to record the EIN the IRS issued.");
   if (!validEin(input.ein)) throw new Error("Enter the 9-digit EIN.");
   if (input.letterPath && !input.letterPath.startsWith(`fund-setup-restricted/${input.offeringId}/`)) throw new Error("That file does not belong to this fund.");
-  const o = await offering(input.offeringId);
-  if (input.received && o.ein_workflow_status !== "submitted" && o.ein_workflow_status !== "needs_attention") {
+  if (input.received && !selfServe && o.ein_workflow_status !== "submitted" && o.ein_workflow_status !== "needs_attention") {
     throw new Error("Mark the SS-4 as submitted before recording the EIN the IRS issued.");
   }
   const digits = input.ein.replace(/\D/g, "");

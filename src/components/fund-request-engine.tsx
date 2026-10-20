@@ -1,4 +1,5 @@
 // Shared fund/SPV setup engine (moved from the client "Launch a new fund" page).
+import { SERVICE_LEVELS } from "@/lib/service-level";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
@@ -502,6 +503,19 @@ export function FundRequestEngine({ clientId: id, draft, mode = "client", client
                 <div className="rounded-md border bg-muted p-3 text-xs text-muted-foreground">
                   Sending creates your {spv ? "SPV" : "fund"} in Funds, closed to investors, and tells the Harmonious Operations team. Harmonious confirms every detail before launch. Nothing is filed or sent to investors automatically.
                 </div>
+                <F label="Service level">
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {SERVICE_LEVELS.map((l) => (
+                      <button type="button" key={l.key} onClick={() => set("service_level" as any, l.key)}
+                        className={`rounded-md border p-3 text-left text-sm ${(r.service_level ?? "self_serve") === l.key ? "border-primary bg-accent" : ""}`}>
+                        <span className="font-medium">{l.name}</span>
+                        <span className="float-right text-xs text-muted-foreground">{l.annualCents === 0 ? "Included" : l.annualCents == null ? "Custom quote" : `$${(l.annualCents / 100).toLocaleString()}/yr`}</span>
+                        <span className="block text-xs text-muted-foreground">{l.summary}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">Self Serve unless you pick and pay for another level. On Self Serve you can complete every setup step yourself. A paid level starts once payment is confirmed; Institutional starts once its quote is agreed.</p>
+                </F>
                 {quote.data && <PaymentSummary items={quote.data.items} total={quote.data.totalCents} />}
                 <p className="text-xs text-muted-foreground">The $2,500 setup fee and any add-ons are paid by card before the request is sent. Add-ons use your agreed SOW price where one is approved.</p>
                 {staffMode

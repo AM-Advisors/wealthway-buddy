@@ -62,11 +62,14 @@ export function setupFeeItem(waived: boolean): PayItem {
     : { key: "fund_setup_fee", name: "New fund setup fee", cents: FUND_SETUP_FEE_CENTS, source: "setup_fee" };
 }
 
-export async function buildQuote(db: any, args: { clientId: string; kind: "new_fund_request" | "service_request"; addOnKeys: string[]; offeringId?: string | null }) {
+export async function buildQuote(db: any, args: { clientId: string; kind: "new_fund_request" | "service_request"; addOnKeys: string[]; offeringId?: string | null; serviceLevel?: string | null }) {
   const addOns = await priceAddOns(db, args.clientId, [...new Set(args.addOnKeys)].sort(), args.offeringId);
   const items: PayItem[] = args.kind === "new_fund_request"
     ? [setupFeeItem(await hasSetupFeeWaiver(db, args.clientId)), ...addOns]
     : addOns;
+  const { serviceLevelItem } = await import("@/lib/service-level");
+  const lvl = args.kind === "new_fund_request" ? serviceLevelItem(args.serviceLevel) : null;
+  if (lvl) items.push(lvl);
   return { items, totalCents: totalOf(items) };
 }
 

@@ -116,7 +116,7 @@ export const submitFundRequest = createServerFn({ method: "POST" })
     // The $2,500 setup fee and any a la carte add-ons must be paid first (verified server-side).
     const { fundAddOnKeys } = await import("@/lib/fund-request-model");
     const pay = await import("@/lib/fund-payments.server");
-    const quote = await pay.buildQuote(db, { clientId: data.clientId, kind: "new_fund_request", addOnKeys: fundAddOnKeys(r) });
+    const quote = await pay.buildQuote(db, { clientId: data.clientId, kind: "new_fund_request", addOnKeys: fundAddOnKeys(r), serviceLevel: r.service_level ?? null });
     // Harmonious staff setting up a fund for a client are not charged here; billing follows the client's SOW.
     const payment = member.staff ? null : await pay.verifyPayment(db, { paymentId: data.paymentId, clientId: data.clientId, kind: "new_fund_request", expected: quote.items, usedFor: null, actorId: context.userId });
 
@@ -186,6 +186,18 @@ export const submitFundRequest = createServerFn({ method: "POST" })
           } as any).then(() => undefined, () => undefined);
         }
       }
+    }
+
+    // Service level: Self Serve unless a paid level was chosen and the payment is confirmed (wire/ACH waits for receipt).
+    if (offeringId) {
+      const { resolveLevelOnSubmit, normalizeServiceLevel } = await import("@/lib/service-level");
+      const lv = resolveLevelOnSubmit(r.service_level, payment ? { paid: !payment.awaiting } : null);
+      await db.from("offerings").update({ service_level: lv.active }).eq("id", offeringId);
+      const { error } = await db.from("fund_service_level_events").insert({
+        offering_id: offeringId, requested_level: normalizeServiceLevel(r.service_level), status: lv.status,
+        payment_id: payment?.id ?? null, effective_on: lv.status === "active" ? new Date().toISOString().slice(0, 10) : null, actor_id: context.userId,
+      });
+      if (error) console.warn("service level history not recorded:", error.message);
     }
 
     const details = { ...r, _kind: KIND, duplicate_review: duplicate, ...(payment?.awaiting ? { payment_pending: true } : {}) };

@@ -203,3 +203,10 @@
 - [ ] Smaller: null service keys, inputValidator warnings, portal profile identity fields, MSA/checklist first-save permissions
 ## Funds dashboard speed
 - [x] Batch readiness reads for the Funds dashboard; failed reads are logged, not thrown (approved)
+
+## Service level / full self-service (Oct 20)
+- [x] Service level choice in Add Fund or SPV, priced at checkout, active only once paid
+- [x] Self Serve managers record IRS-issued EIN with the IRS letter
+- [ ] Change service level later from fund Overview
+- [ ] Self Serve managers: mark banking complete, decide KYC "needs review", approve to fund, confirm money received (identity/money paths — needs careful review)
+- [ ] Show the "Record IRS-issued EIN" control to managers in Fund Setup; Help Center updates

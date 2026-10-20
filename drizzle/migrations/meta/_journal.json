@@ -2108,6 +2108,13 @@
       "when": 1792529534901,
       "tag": "0300_document_template_fund_types",
       "breakpoints": true
+    },
+    {
+      "idx": 301,
+      "version": "7",
+      "when": 1792530003246,
+      "tag": "0301_fund_service_levels",
+      "breakpoints": true
     }
   ]
 }
