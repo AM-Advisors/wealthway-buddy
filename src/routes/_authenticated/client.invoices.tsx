@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { downloadInvoice, printInvoice } from "@/components/invoice-document";
+import { InvoiceCardPay } from "@/components/invoice-card-pay";
 import { declareInvoicePayment, listMyInvoices, respondToInvoice } from "@/lib/invoices.functions";
 
 export const Route = createFileRoute("/_authenticated/client/invoices")({
@@ -277,6 +278,10 @@ function ClientInvoicesPage() {
                   !inv.client_payment_declared_at ? (
                     <div className="space-y-3 rounded-md border p-3">
                       <p className="text-sm font-medium">Step 2 - pay and confirm</p>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <InvoiceCardPay invoiceId={inv.id} number={inv.number} />
+                        <span className="text-xs text-muted-foreground">Or send a wire or ACH and confirm it below.</span>
+                      </div>
                       <p className="text-sm text-muted-foreground">
                         Send the payment from your fund's operating account using the remittance
                         details your Harmonious contact provided, then confirm it below so we can
