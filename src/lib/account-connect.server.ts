@@ -75,6 +75,20 @@ export async function connectAccount(userId: string): Promise<ConnectResult> {
     }
     if ((onbs ?? []).length) await d.from("user_roles").upsert({ user_id: userId, role: "investor" }, { onConflict: "user_id,role" });
   }
+
+  // 4. Every live investment on this account must carry fund access and the investor role.
+  const { data: mine } = await d.from("investor_onboardings").select("id, offering_id").eq("investor_user_id", userId).is("removed_at", null);
+  const offerings = [...new Set(((mine ?? []) as any[]).map((o) => o.offering_id as string))];
+  if (offerings.length) {
+    const { data: have } = await d.from("investor_fund_access").select("offering_id").eq("user_id", userId).in("offering_id", offerings);
+    const got = new Set(((have ?? []) as any[]).map((h) => h.offering_id));
+    for (const off of offerings.filter((o) => !got.has(o))) {
+      await d.from("investor_fund_access").upsert({ user_id: userId, offering_id: off, granted_by: null }, { onConflict: "user_id,offering_id" });
+      out.recordsLinked = true;
+      out.openOnboardingId = out.openOnboardingId ?? ((mine ?? []) as any[]).find((o) => o.offering_id === off)?.id ?? null;
+    }
+    await d.from("user_roles").upsert({ user_id: userId, role: "investor" }, { onConflict: "user_id,role" });
+  }
   return out;
 }
 
