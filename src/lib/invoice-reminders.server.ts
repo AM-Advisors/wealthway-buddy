@@ -50,20 +50,22 @@ export function reminderStage(dueDate: string, today: string) {
  */
 export async function claimReminderRun(today = todayIso()) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const db = supabaseAdmin as any;
+  const stamp = { last_run_on: today, last_run_at: new Date().toISOString() };
+  // One conditional write: only a run that moves last_run_on forward wins.
+  const { data: moved, error } = await db.from("scheduled_job_runs").update(stamp).eq("job_key", "invoice-reminders").lt("last_run_on", today).select("job_key");
+  if (error) return false;
+  if ((moved ?? []).length) return true;
+  // First ever run: the unique job_key makes a racing second insert fail.
+  const { error: ie } = await db.from("scheduled_job_runs").insert({ job_key: "invoice-reminders", ...stamp });
+  return !ie;
+}
 
-  const { data: existing } = await supabaseAdmin
-    .from("scheduled_job_runs")
-    .select("last_run_on")
-    .eq("job_key", "invoice-reminders")
-    .maybeSingle();
-
-  if (existing && String((existing as any).last_run_on) >= today) return false;
-
-  const { error } = await supabaseAdmin.from("scheduled_job_runs").upsert(
-    { job_key: "invoice-reminders", last_run_on: today, last_run_at: new Date().toISOString() },
-    { onConflict: "job_key" },
-  );
-  return !error;
+/** Lets a failed run be retried the same day. */
+export async function releaseReminderRun(today = todayIso()) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const y = new Date(Date.parse(`${today}T00:00:00Z`) - 86_400_000).toISOString().slice(0, 10);
+  await (supabaseAdmin as any).from("scheduled_job_runs").update({ last_run_on: y }).eq("job_key", "invoice-reminders").eq("last_run_on", today);
 }
 
 /**
