@@ -1,7 +1,7 @@
 /**
  * The one Harmonious address model (pure, no I/O).
  *
- * Google Places finds an address. Google Address Validation normalises and
+ * Google Places finds an address. Google Address Validation normalizes and
  * assesses it. Didit proof of address evidences that a person is connected to
  * it. Harmonious - and only Harmonious - decides the compliance state. These
  * are four different functions and they stay four different pieces of state.
@@ -68,7 +68,7 @@ export type AddressSource = (typeof ADDRESS_SOURCES)[number];
 
 export const ADDRESS_SOURCE_LABELS: Record<AddressSource, string> = {
   user_entered: "Entered by the user",
-  google_normalized: "Normalised by the address provider",
+  google_normalized: "Normalized by the address provider",
   didit_id: "Read from a government ID",
   didit_proof_of_address: "Read from a proof-of-address document",
   w9: "From Form W-9",
@@ -142,7 +142,7 @@ export type AddressRecordState = (typeof ADDRESS_STATE_VALUES)[number];
 export const ADDRESS_STATE_DISPLAY: Record<AddressRecordState, string> = {
   entered: "Address entered",
   located: "Address located",
-  normalized: "Address normalised",
+  normalized: "Address normalized",
   validated: "Address validated",
   validation_warning: "Validation warning",
   review_required: "Manual review",

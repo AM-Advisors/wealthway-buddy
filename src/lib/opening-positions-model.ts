@@ -40,7 +40,7 @@ export function openingTieOut(positions: { costBasisCents: number; openingFairVa
 }
 
 /**
- * Q1 unrealized movement is measured from the last RECOGNISED value. An opening
+ * Q1 unrealized movement is measured from the last RECOGNIZED value. An opening
  * position's fair value was recognized by the opening journal, so Q1 never re-books it.
  */
 export function unrealizedMovementCents(lastRecognizedCents: number | null, costCents: number, newValueCents: number) {
