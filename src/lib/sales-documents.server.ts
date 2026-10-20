@@ -341,3 +341,38 @@ export async function exportDocument(userId: string, id: string, format: "pdf" |
   let bin = ""; for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]!);
   return { base64: btoa(bin), fileName: `${a.doc.title.replace(/[^\w -]/g, "").trim() || "document"}${draft ? " (draft)" : ""}.${format}` };
 }
+
+/** Exact, normalized email lookup across CRM contacts, client contacts, clients and people. Sales staff only. */
+export async function lookupProspect(userId: string, rawEmail: string) {
+  const roles = await rolesOf(userId);
+  if (!roles.some((r) => SALES_DOC_ROLES.includes(r))) throw new Error("Only Sales staff can look up prospects.");
+  const email = rawEmail.trim().toLowerCase();
+  const db = await admin();
+  const [crm, cc, cl, pe] = await Promise.all([
+    db.from("crm_contacts").select("id, full_name, email, organization, title, phone").eq("scope", "harmonious").is("archived_at", null).ilike("email", email).limit(1).maybeSingle(),
+    db.from("client_contacts").select("id, client_id, full_name, email").ilike("email", email).limit(1).maybeSingle(),
+    db.from("clients").select("id, name").or(`primary_contact_email.ilike.${email},billing_contact_email.ilike.${email}`).limit(1).maybeSingle(),
+    db.from("persons").select("id, legal_first_name, legal_last_name, preferred_name").ilike("email", email).limit(1).maybeSingle(),
+  ]);
+  const clientId = cc.data?.client_id ?? cl.data?.id ?? null;
+  const client = clientId ? (await db.from("clients").select("id, name").eq("id", clientId).maybeSingle()).data : null;
+  const personName = pe.data ? (pe.data.preferred_name || [pe.data.legal_first_name, pe.data.legal_last_name].filter(Boolean).join(" ")) : null;
+  const found = !!(crm.data || cc.data || cl.data || pe.data);
+  return {
+    email, found,
+    contactId: (crm.data?.id as string | undefined) ?? null,
+    name: crm.data?.full_name ?? cc.data?.full_name ?? personName ?? null,
+    organization: crm.data?.organization ?? client?.name ?? null,
+    clientId, clientName: client?.name ?? null,
+    sources: [crm.data && "CRM contact", cc.data && "Client contact", cl.data && "Client", pe.data && "Account"].filter(Boolean) as string[],
+  };
+}
+
+/** Adds a Harmonious CRM prospect, reusing an existing contact with the same email. */
+export async function createProspect(userId: string, d: { email: string; fullName: string; organization?: string | null; title?: string | null; phone?: string | null }) {
+  const existing = await lookupProspect(userId, d.email);
+  if (existing.contactId) return { contactId: existing.contactId, reused: true };
+  const { saveContact } = await import("@/lib/crm.server");
+  const r = await saveContact(userId, { full_name: d.fullName, email: existing.email, organization: d.organization ?? null, title: d.title ?? null, phone: d.phone ?? null, source: "Proposals", tags: ["prospect"], scope: "harmonious", offering_id: null } as any);
+  return { contactId: r.id, reused: false };
+}
