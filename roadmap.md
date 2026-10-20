@@ -1,5 +1,10 @@
 # Roadmap
 
+## Current errors and page connections review (2026-10-20)
+- [ ] Review reported platform errors and run current unit checks.
+- [ ] Audit unknown destinations, disconnected pages and intentional redirects.
+- [ ] Report verified defects separately from unfinished features and signed-in checks blocked by isolated QA access.
+
 ## Broader V2.5 review
 - [x] Compared investor/client and Operations source with current equivalents; recommendations: unified record history, reviewed compliance-report schedules, cap-table financing scenarios, valuation sensitivity, consolidated client reviews, and remaining Portfolio/Report Card presentation improvements. No app features or source-project records imported.
 
