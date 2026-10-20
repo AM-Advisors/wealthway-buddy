@@ -254,9 +254,9 @@ export function ss4For(r: FundRequest): Record<string, string | boolean> | null 
   for (const f of SS4_FIELDS) { const v = String(r.ss4?.[f.key] ?? "").trim(); if (v) out[f.key] = v; }
   const sig = r.ss4_signature;
   if (sig?.agreed && sig.name.trim()) {
-    out.signed_by = sig.name.trim();
-    if (sig.title.trim()) out.signed_title = sig.title.trim();
-    if (sig.date) out.signed_date = sig.date;
+    out["signed_by"] = sig.name.trim();
+    if (sig.title.trim()) out["signed_title"] = sig.title.trim();
+    if (sig.date) out["signed_date"] = sig.date;
   }
   return out;
 }

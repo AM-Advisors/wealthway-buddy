@@ -72,9 +72,9 @@ describe("Master LLC, EIN and SS-4", () => {
     const signed = { ...r, ss4_signature: { name: "Thomas Morgan", title: "Managing Member", date: "2026-10-20", agreed: true } };
     expect(_missing(signed).entity!.join("|")).not.toMatch(/SS-4 signature/);
     const flat = _ss4(signed)!;
-    expect(flat.signed_by).toBe("Thomas Morgan");
-    expect(flat.signed_title).toBe("Managing Member");
-    expect(flat.signed_date).toBe("2026-10-20");
+    expect(flat["signed_by"]).toBe("Thomas Morgan");
+    expect(flat["signed_title"]).toBe("Managing Member");
+    expect(flat["signed_date"]).toBe("2026-10-20");
     expect(_ss4({ ...r, ss4_signature: { name: "Thomas Morgan", title: "", date: "", agreed: false } })).not.toHaveProperty("signed_by");
   });
   it("names a Harmonious series as 'a series of' the Master LLC", () => {
