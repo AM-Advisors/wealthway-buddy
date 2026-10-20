@@ -201,7 +201,9 @@ describe("claims, metrics, pricing, comparisons", () => {
   });
   it("publishes no metrics or prices until approved", () => {
     expect(APPROVED_METRICS).toEqual([]);
-    expect(hasPublishedPricing()).toBe(false);
+    // Website prices are published only once each item is marked approved.
+    expect(hasPublishedPricing()).toBe(true);
+    expect(PRICING.flatMap((sec: any) => sec.items ?? []).every((i: any) => i.approved === true)).toBe(true);
     expect(PRICING.map((s) => s.title)).toEqual(["SPVs", "Fund Administration", "Cap Tables", "Additional Services"]);
   });
   it("formats fixed, starting-at and custom prices", () => {

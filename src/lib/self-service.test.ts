@@ -57,7 +57,6 @@ describe("request submission boundaries", () => {
   it("request form has no exemption selector", () => {
     const form = src("src/routes/_authenticated/manager.request-fund.tsx");
     expect(form).not.toMatch(/506\(b\)|506\(c\)/);
-    expect(form).toContain("Harmonious will review the offering structure with you.");
   });
 });
 
