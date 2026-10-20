@@ -63,14 +63,38 @@ async function boxFetch(url: string, init: RequestInit = {}) {
   return res;
 }
 
-/** Uploads PDF bytes into the fund documents folder and returns the Box file id. */
+const DOCX_TYPE = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+
+/** Real file type from the bytes, never from a stored name: Box converts by extension. */
+export function sniffDocumentKind(bytes: Uint8Array): "pdf" | "docx" {
+  if (bytes.length >= 4 && bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46) return "pdf";
+  if (bytes.length >= 4 && bytes[0] === 0x50 && bytes[1] === 0x4b && bytes[2] === 0x03 && bytes[3] === 0x04) return "docx";
+  throw new Error("This agreement file is not a PDF or Word document, so it cannot be sent for signature.");
+}
+
+/** Gives a signing file the extension that matches its bytes and a unique suffix. */
+export function signingFileName(baseName: string, bytes: Uint8Array, now = Date.now()): string {
+  const kind = sniffDocumentKind(bytes);
+  const stem = baseName.replace(/\.(pdf|docx?)$/i, "").trim() || "Fund document";
+  return `${stem} - ${now.toString(36)}.${kind}`;
+}
+
+/**
+ * Uploads a signing file (PDF or Word) into the fund documents folder and
+ * returns the Box file id. Every upload is a new file: an earlier request's
+ * source file is never overwritten with a new version.
+ */
 export async function uploadFile(fileName: string, bytes: Uint8Array): Promise<string> {
+  const kind = sniffDocumentKind(bytes);
+  if (!fileName.toLowerCase().endsWith(`.${kind}`)) {
+    throw new Error("The agreement file type does not match its name, so it was not sent for signature.");
+  }
   const form = new FormData();
   form.append(
     "attributes",
     JSON.stringify({ name: fileName, parent: { id: boxFolderId() } }),
   );
-  form.append("file", new Blob([bytes as unknown as BlobPart], { type: /\.docx$/i.test(fileName) ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document" : "application/pdf" }), fileName);
+  form.append("file", new Blob([bytes as unknown as BlobPart], { type: kind === "docx" ? DOCX_TYPE : "application/pdf" }), fileName);
 
   const res = await fetch(`${UPLOAD}/files/content`, {
     method: "POST",
@@ -78,26 +102,6 @@ export async function uploadFile(fileName: string, bytes: Uint8Array): Promise<s
     body: form,
   });
   const text = await res.text();
-
-  // A same-named file already there: upload a new version instead.
-  if (res.status === 409) {
-    const conflictId = (JSON.parse(text) as any)?.context_info?.conflicts?.id as string | undefined;
-    if (conflictId) {
-      const versionForm = new FormData();
-      versionForm.append("attributes", JSON.stringify({ name: fileName }));
-      versionForm.append(
-        "file",
-        new Blob([bytes as unknown as BlobPart], { type: "application/pdf" }),
-        fileName,
-      );
-      const versionRes = await boxFetch(`${UPLOAD}/files/${conflictId}/content`, {
-        method: "POST",
-        body: versionForm,
-      });
-      const versionJson = (await versionRes.json()) as { entries: { id: string }[] };
-      return versionJson.entries[0]!.id;
-    }
-  }
 
   if (!res.ok) throw serviceError("Box", "upload", res.status);
   const json = JSON.parse(text) as { entries: { id: string }[] };
