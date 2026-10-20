@@ -89,6 +89,7 @@ export async function saveBasics(userId: string, d: ProfileBasics) {
     if (error) throw new Error("The tax number couldn't be stored securely.");
     patch["tax_id_type"] = type;
     patch["tax_id_last4"] = tin.slice(-4);
+    await (await import("@/lib/account-connect.server")).recordProfileTin(d.profileId, tin).catch((e) => console.error("[profile] tax ID match skipped", (e as Error).message));
   }
   const { error } = await db.from("investment_profiles").update(patch).eq("id", d.profileId);
   if (error) throw new Error(error.message);

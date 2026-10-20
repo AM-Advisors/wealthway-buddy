@@ -2385,6 +2385,8 @@ export async function createPersonalLink(userId: string, onboardingId: string) {
   const { error: linkErr } = await db().from("investor_onboardings").update({ invitation_id: inv.id }).eq("id", onboardingId).is("invitation_id", null);
   if (linkErr) fail(linkErr.message);
   await recordEvent({ onboardingId, offeringId: row.offering_id, event: "personal_link_created", subjectTable: "fund_invitations", subjectId: inv.id, detail: { emailSent: false }, actorUserId: actor.userId, actorRole: actor.isStaff ? "harmonious" : "manager" });
+  // If this person already has a verified account, connect it now.
+  await (await import("@/lib/account-connect.server")).connectEmail(email);
   return { link: await linkView({ ...row, invitation_id: inv.id }) };
 }
 export async function sendPersonalLink(userId: string, onboardingId: string) {

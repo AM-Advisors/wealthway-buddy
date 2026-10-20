@@ -246,6 +246,9 @@ export async function createInvestor(userId: string, input: {
   await logChanges(changes);
   await onbEvent(onboardingId, input.offeringId, "investor_record_created", actor, { source });
   await reconcileAfter([onboardingId], { actorUserId: actor.userId, trigger: "manual_investor_entry" });
+  const connect = await import("@/lib/account-connect.server");
+  if (input.taxId && profileId) await connect.recordProfileTin(profileId, input.taxId, { offeringId: input.offeringId, onboardingId }).catch((e) => console.error("[investor-record] tax ID match skipped", (e as Error).message));
+  if (!person.user_id) await connect.connectEmail(person.email);
   return { onboardingId: onboardingId!, personId: person.id as string, profileId: profileId! };
 }
 
@@ -298,6 +301,7 @@ export async function updateInvestorRecord(userId: string, input: {
     if (Object.keys(apply).length) {
       const { error } = await db().from("persons").update({ ...apply, updated_at: nowIso() }).eq("id", row.person_id);
       if (error) fail(error.message);
+      if (apply["email"] && !cur?.user_id) await (await import("@/lib/account-connect.server")).connectEmail(String(apply["email"]));
     }
   }
 
@@ -339,6 +343,7 @@ export async function updateInvestorRecord(userId: string, input: {
     const entity = /entity|trust|llc|corp|partnership/i.test(String(pr?.profile_type ?? ""));
     await db().from("investment_profiles").update({ tax_id_type: entity ? "ein" : tin.startsWith("9") ? "itin" : "ssn", tax_id_last4: tin.slice(-4) } as any).eq("id", row.investment_profile_id);
     changes.push({ offeringId: row.offering_id, onboardingId: row.id, table: "investment_profiles", id: row.investment_profile_id, field: "tax_id", from: pr?.tax_id_last4 ? `•••${pr.tax_id_last4}` : null, to: `•••${tin.slice(-4)}`, source, actor: actor.userId });
+    await (await import("@/lib/account-connect.server")).recordProfileTin(row.investment_profile_id, tin, { offeringId: row.offering_id, onboardingId: row.id }).catch((e) => console.error("[investor-record] tax ID match skipped", (e as Error).message));
   }
 
   if (input.investment) {
