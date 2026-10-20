@@ -1,3 +1,4 @@
+import { serviceError } from "@/lib/service-error";
 /**
  * Personal LinkedIn profile connection + delegated publishing. Server-only.
  * Tokens are AES-GCM encrypted at rest (LINKEDIN_TOKEN_KEY) and never returned to the browser.
@@ -94,7 +95,7 @@ export async function completeConnect(code: string, state: string) {
   if (!res.ok) {
     await db.from("linkedin_personal_accounts").update({ last_error: `Token exchange failed [${res.status}]`, updated_at: new Date().toISOString() }).eq("owner_user_id", userId);
     await event(db, { owner_user_id: userId, action: "authorization_failed", actor_id: userId, detail: { status: res.status } });
-    throw new Error(`LinkedIn sign-in failed [${res.status}]: ${text.slice(0, 200)}`);
+    throw serviceError("LinkedIn", "sign-in", res.status);
   }
   const t = JSON.parse(text);
   const scopes = String(t.scope ?? "");
@@ -307,9 +308,8 @@ async function publish(db: any, p: any, actorId: string, trigger: "manual" | "sc
     const token = await dec(a.token_ciphertext);
     const res = await fetch("https://api.linkedin.com/rest/posts", { method: "POST", headers: liHeaders(token, { "Content-Type": "application/json" }), body: JSON.stringify({ author: `urn:li:person:${a.member_sub}`, commentary: p.body, visibility: "PUBLIC", distribution: { feedDistribution: "MAIN_FEED", targetEntities: [], thirdPartyDistributionChannels: [] }, lifecycleState: "PUBLISHED", isReshareDisabledByAuthor: false }) });
     if (!res.ok) {
-      const body = (await res.text()).slice(0, 300);
       if (res.status === 401) await db.from("linkedin_personal_accounts").update({ status: "reauthorization_required", last_error: "LinkedIn rejected the saved authorization" }).eq("owner_user_id", a.owner_user_id);
-      throw new Error(`LinkedIn [${res.status}]: ${body}`);
+      throw serviceError("LinkedIn", "post", res.status);
     }
     const postId = res.headers.get("x-restli-id") ?? res.headers.get("x-linkedin-id");
     await db.from("linkedin_personal_posts").update({ status: "published", linkedin_post_id: postId, published_at: new Date().toISOString(), error: null }).eq("id", p.id);

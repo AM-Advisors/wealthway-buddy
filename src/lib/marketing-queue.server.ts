@@ -1,3 +1,4 @@
+import { serviceError } from "@/lib/service-error";
 /**
  * Controlled publishing queue + performance refresh. Server-only.
  * - Test mode (default): Facebook gets a nonpublic post, Instagram is validated only; nothing is public.
@@ -169,7 +170,7 @@ async function gscFetch(path: string, init?: RequestInit) {
   const k = process.env["LOVABLE_API_KEY"], c = process.env["GOOGLE_SEARCH_CONSOLE_API_KEY"];
   if (!k || !c) throw new Error("Search Console isn't connected.");
   const r = await fetch(`${GSC}${path}`, { ...init, headers: { Authorization: `Bearer ${k}`, "X-Connection-Api-Key": c, "Content-Type": "application/json" } });
-  if (!r.ok) throw new Error(`Search Console [${r.status}]: ${(await r.text()).slice(0, 300)}`);
+  if (!r.ok) throw serviceError("Search Console", "request", r.status);
   return r.json();
 }
 export async function searchProperties() {

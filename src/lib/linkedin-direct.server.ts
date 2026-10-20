@@ -1,3 +1,4 @@
+import { serviceError } from "@/lib/service-error";
 /**
  * Direct LinkedIn integration using the Harmonious developer app (LINKEDIN_CLIENT_ID / LINKEDIN_CLIENT_SECRET).
  * One company-wide token stored in public.linkedin_oauth (service role only). Posts go out as the company page only.
@@ -41,7 +42,7 @@ async function tokenRequest(body: Record<string, string>) {
     body: new URLSearchParams({ ...body, client_id: id, client_secret: secret }),
   });
   const text = await res.text();
-  if (!res.ok) { console.error(`LinkedIn token failed [${res.status}]: ${text}`); throw new Error(`LinkedIn sign-in failed [${res.status}]: ${text.slice(0, 300)}`); }
+  if (!res.ok) { console.error(`LinkedIn token failed [${res.status}]`); throw serviceError("LinkedIn", "sign-in", res.status); }
   return JSON.parse(text);
 }
 

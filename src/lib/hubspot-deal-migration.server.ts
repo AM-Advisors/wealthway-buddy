@@ -1,3 +1,4 @@
+import { serviceError } from "@/lib/service-error";
 /**
  * Server-only HubSpot deal migration. Reads HubSpot (portal Service Key, read
  * requests only — GET plus POST search/batch-read, which change nothing) and writes
@@ -35,9 +36,8 @@ async function hs(path: string, init?: { method: "POST"; body: unknown }) {
     body: init ? JSON.stringify(init.body) : null,
   });
   if (!res.ok && res.status !== 207) {
-    const t = await res.text();
-    console.error(`HubSpot ${path} failed [${res.status}]: ${t}`);
-    throw new Error(`HubSpot request failed [${res.status}]: ${t.slice(0, 300)}`);
+    console.error(`HubSpot request failed [${res.status}]`);
+    throw serviceError("HubSpot", "request", res.status);
   }
   return res.json() as Promise<any>;
 }

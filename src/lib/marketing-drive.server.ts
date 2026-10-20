@@ -1,3 +1,4 @@
+import { serviceError } from "@/lib/service-error";
 /**
  * Marketing Google Drive library: syncs one Marketing folder (read-only), lets the Marketing team
  * use its images/themes in posts, emails and campaigns, and share marketing sheets through tracked,
@@ -87,7 +88,7 @@ async function ensureCached(db: any, a: any): Promise<string> {
     ? `/drive/v3/files/${encodeURIComponent(a.drive_file_id)}/export?mimeType=${encodeURIComponent(exp)}`
     : `/drive/v3/files/${encodeURIComponent(a.drive_file_id)}?alt=media&supportsAllDrives=true`;
   const res = await fetch(`${GATEWAY}${path}`, { headers: headers() });
-  if (!res.ok) throw new Error(`Google Drive download failed [${res.status}]: ${(await res.text()).slice(0, 200)}`);
+  if (!res.ok) throw serviceError("Google Drive", "download", res.status);
   const buf = Buffer.from(await res.arrayBuffer());
   if (buf.length > MAX_BYTES) throw new Error("This file is over 25 MB; share it from Drive instead.");
   const type = exp ?? a.mime_type;

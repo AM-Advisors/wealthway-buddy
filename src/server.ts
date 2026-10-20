@@ -1,4 +1,9 @@
 import "./lib/error-capture";
+import { installSupabaseFailureLogging } from "./lib/supabase-fetch-log.server";
+import { installExternalCallLogging } from "./lib/ext-call-log.server";
+
+installSupabaseFailureLogging();
+installExternalCallLogging();
 
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";

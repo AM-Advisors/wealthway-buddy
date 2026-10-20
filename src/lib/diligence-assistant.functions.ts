@@ -170,11 +170,10 @@ ${corpus || "(no readable text could be extracted from the documents)"}`;
     });
 
     if (!res.ok) {
-      const body = await res.text();
       if (res.status === 429) throw new Error("The assistant is busy right now - try again shortly.");
       if (res.status === 402)
         throw new Error("The assistant is out of credits. Ask the fund team to top up.");
-      throw new Error(`The assistant could not answer right now. (${res.status}) ${body.slice(0, 200)}`);
+      throw new Error(`The assistant could not answer right now. (status ${res.status})`);
     }
 
     const payload: any = await res.json();

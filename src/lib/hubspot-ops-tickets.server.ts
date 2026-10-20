@@ -1,3 +1,4 @@
+import { serviceError } from "@/lib/service-error";
 /**
  * One-time import of HubSpot Operations tickets (shared portal connection).
  * "Funds" pipeline tickets become real Fund records (exact same-name match → link;
@@ -23,7 +24,7 @@ async function hs(p: string) {
   const lov = process.env["LOVABLE_API_KEY"], key = process.env["HUBSPOT_API_KEY"];
   if (!lov || !key) throw new Error("HubSpot isn't connected.");
   const res = await fetch(`${GW}${p}`, { headers: { Authorization: `Bearer ${lov}`, "X-Connection-Api-Key": key } });
-  if (!res.ok) { const b = await res.text(); console.error(`HubSpot [${res.status}]: ${b}`); throw new Error(`HubSpot request failed [${res.status}]: ${b.slice(0, 300)}`); }
+  if (!res.ok) { console.error(`HubSpot request failed [${res.status}]`); throw serviceError("HubSpot", "request", res.status); }
   return res.json() as Promise<any>;
 }
 

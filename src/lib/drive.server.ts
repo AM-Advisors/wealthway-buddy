@@ -1,3 +1,4 @@
+import { serviceError } from "@/lib/service-error";
 // Server-only: Google Drive filing for Harmonious funds and investors.
 // Drive is a repository; Harmonious records remain authoritative.
 
@@ -149,7 +150,7 @@ export const gatewayDrive: DriveClient & DriveInspector = {
       headers: headers({ "Content-Type": `multipart/related; boundary=${boundary}` }),
       body,
     });
-    if (!res.ok) throw new Error(`Google Drive upload failed [${res.status}]: ${(await res.text()).slice(0, 300)}`);
+    if (!res.ok) throw serviceError("Google Drive", "upload", res.status);
     return res.json();
   },
   async folderFacts(id) {

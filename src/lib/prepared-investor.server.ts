@@ -1,22 +1,49 @@
 import type { PreparedField } from "@/lib/investor-prep-model";
 import { type FieldProvenance, confirmedFacts, docApplies, effectiveResolverFacts, initialProvenance, mergeDocument, requiredMergeFields, reviewField, signatureConfig } from "@/lib/prepared-investor-workflow";
 
-/** Field provenance for one investment, rebuilt from the prepared draft + append-only review history. */
-export async function loadProvenance(db: any, onboarding: { id: string; offering_id: string; invitation_id: string | null }) {
-  if (!onboarding.invitation_id) return { draft: null as any, prov: {} as Record<string, FieldProvenance> };
-  const { data: draft } = await db.from("investor_prep_drafts").select("*")
-    .eq("invitation_id", onboarding.invitation_id).eq("offering_id", onboarding.offering_id).eq("status", "sent").maybeSingle();
-  if (!draft) return { draft: null as any, prov: {} as Record<string, FieldProvenance> };
-  const prov = initialProvenance(((draft as any).fields ?? {}) as Record<string, PreparedField>, (draft as any).sent_at ?? (draft as any).updated_at);
-  const { data: reviews } = await db.from("investor_prep_field_reviews").select("*").eq("onboarding_id", onboarding.id).order("created_at");
-  for (const r of (reviews ?? []) as any[]) {
-    const p = prov[r.field_key]; if (!p) continue;
-    prov[r.field_key] = reviewField(p, r.action === "confirm" ? { confirm: true } : { correct: r.new_value }, r.created_at);
+type ProvOnboarding = { id: string; offering_id: string; invitation_id: string | null };
+
+/** Field provenance for many investments in two reads. A failed read is logged and treated as no rows (the pre-batch behaviour). Single-row callers use the same path. */
+export async function loadProvenanceMany(db: any, obs: ProvOnboarding[]) {
+  const out = new Map<string, { draft: any; prov: Record<string, FieldProvenance> }>();
+  const invIds = [...new Set(obs.map((o) => o.invitation_id).filter((x): x is string => !!x))];
+  const drafts: any[] = [];
+  for (let i = 0; i < invIds.length; i += 100) {
+    const { data, error } = await db.from("investor_prep_drafts").select("*").in("invitation_id", invIds.slice(i, i + 100)).eq("status", "sent");
+    if (error) console.error(`Prepared draft read failed (treated as no rows): ${error.message}`);
+    else drafts.push(...((data ?? []) as any[]));
   }
-  return { draft, prov };
+  const draftFor = (o: ProvOnboarding) => {
+    const m = drafts.filter((d) => d.invitation_id === o.invitation_id && d.offering_id === o.offering_id);
+    return m.length === 1 ? m[0] : null; // maybeSingle semantics: ambiguous → none
+  };
+  const withDraft = obs.filter((o) => o.invitation_id && draftFor(o));
+  const reviews: any[] = [];
+  const obIds = withDraft.map((o) => o.id);
+  for (let i = 0; i < obIds.length; i += 100) {
+    const { data, error } = await db.from("investor_prep_field_reviews").select("*").in("onboarding_id", obIds.slice(i, i + 100)).order("created_at");
+    if (error) console.error(`Prepared review read failed (treated as no rows): ${error.message}`);
+    else reviews.push(...((data ?? []) as any[]));
+  }
+  for (const o of obs) {
+    const draft = o.invitation_id ? draftFor(o) : null;
+    if (!draft) { out.set(o.id, { draft: null as any, prov: {} }); continue; }
+    const prov = initialProvenance(((draft as any).fields ?? {}) as Record<string, PreparedField>, (draft as any).sent_at ?? (draft as any).updated_at);
+    for (const r of reviews.filter((x) => x.onboarding_id === o.id)) {
+      const p = prov[r.field_key]; if (!p) continue;
+      prov[r.field_key] = reviewField(p, r.action === "confirm" ? { confirm: true } : { correct: r.new_value }, r.created_at);
+    }
+    out.set(o.id, { draft, prov });
+  }
+  return out;
 }
 
-export async function loadConfirmedFacts(db: any, onboarding: { id: string; offering_id: string; invitation_id: string | null }) {
+/** Field provenance for one investment, rebuilt from the prepared draft + append-only review history. */
+export async function loadProvenance(db: any, onboarding: ProvOnboarding) {
+  return (await loadProvenanceMany(db, [onboarding])).get(onboarding.id)!;
+}
+
+export async function loadConfirmedFacts(db: any, onboarding: ProvOnboarding) {
   const { prov } = await loadProvenance(db, onboarding);
   return confirmedFacts(prov);
 }

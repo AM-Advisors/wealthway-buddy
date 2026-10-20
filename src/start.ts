@@ -4,6 +4,7 @@ import { renderErrorPage } from "./lib/error-page";
 import { attachSupabaseAuth } from "./lib/auth-attach";
 import { selfApprovalMiddleware } from "./lib/self-approval-client";
 import { canonicalRedirect } from "./lib/host-routing";
+import { fnTimingMiddleware } from "./lib/fn-timing-middleware";
 
 /**
  * Keeps each page on its own address: client pages on app.harmonious.co,
@@ -54,5 +55,5 @@ const csrfMiddleware = createCsrfMiddleware({
 
 export const startInstance = createStart(() => ({
   requestMiddleware: [canonicalHostMiddleware, errorMiddleware, csrfMiddleware],
-  functionMiddleware: [attachSupabaseAuth, selfApprovalMiddleware],
+  functionMiddleware: [attachSupabaseAuth, selfApprovalMiddleware, fnTimingMiddleware],
 }));

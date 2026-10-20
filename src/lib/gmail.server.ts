@@ -1,3 +1,4 @@
+import { serviceError } from "@/lib/service-error";
 /**
  * Gmail access for Harmonious staff. Server-only.
  *
@@ -293,7 +294,7 @@ export async function logMyGmailToCrm(userId: string, days = 14): Promise<{ scan
   if (!prof.ok) return { scanned: 0, logged: 0, connected: false };
   const me = String(((await prof.json()) as any).emailAddress ?? "").toLowerCase();
   const list = await call(`/gmail/v1/users/me/messages?maxResults=100&q=${encodeURIComponent(`newer_than:${days}d -in:chats`)}`);
-  if (!list.ok) throw new Error(`Gmail list failed [${list.status}]: ${(await list.text()).slice(0, 200)}`);
+  if (!list.ok) throw serviceError("Gmail", "list", list.status);
   const ids = (((await list.json()) as any).messages ?? []).map((m: any) => m.id as string);
   const msgs: { id: string; from: string[]; to: string[]; subject: string; snippet: string; date: string }[] = [];
   for (const id of ids) {

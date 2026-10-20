@@ -1,3 +1,4 @@
+import { serviceError } from "@/lib/service-error";
 /**
  * Marketing imports: ClickUp tasks → draft calendar items; HubSpot (each user's own
  * connection, read-only) → contacts, deals, email history and past marketing emails.
@@ -35,7 +36,7 @@ function cuKey() {
 }
 async function cu(path: string) {
   const res = await fetch(`${CU}${path}`, { headers: { Authorization: cuKey() } });
-  if (!res.ok) throw new Error(`ClickUp request failed [${res.status}]: ${(await res.text()).slice(0, 300)}`);
+  if (!res.ok) throw serviceError("ClickUp", "request", res.status);
   return res.json() as Promise<any>;
 }
 export function clickupConfigured() { return !!process.env["CLICKUP_API_KEY"]; }
@@ -104,9 +105,22 @@ async function clickupCampaignFor(db: any, at: string | null, actorId: string, c
   return id;
 }
 
+/** True when any incoming field differs from the stored row (timestamps compared as instants, arrays/objects by JSON). */
+function rowDiffers(stored: Record<string, any>, incoming: Record<string, unknown>) {
+  const norm = (k: string, v: unknown) => {
+    if (v === undefined || v === null) return null;
+    if (k === "scheduled_at") { const ms = new Date(v as string).getTime(); return Number.isNaN(ms) ? String(v) : ms; }
+    return typeof v === "object" ? stable(v) : v;
+  };
+  // Database JSON reorders object keys, so compare with sorted keys.
+  const stable = (v: unknown): string => Array.isArray(v) ? `[${v.map(stable).join(",")}]`
+    : v && typeof v === "object" ? `{${Object.keys(v).sort().map((k) => `${JSON.stringify(k)}:${stable((v as any)[k])}`).join(",")}}` : JSON.stringify(v ?? null);
+  return Object.keys(incoming).some((k) => norm(k, stored[k]) !== norm(k, incoming[k]));
+}
+
 async function importClickupSource(db: any, src: any, actorId: string) {
   const listIds = src.kind === "list" ? [src.ref_id] : (await listsInSpace(src.ref_id)).map((l) => l.id);
-  const r = { tasks: 0, created: 0, updated: 0, skipped: 0, contacts: 0 };
+  const r: { tasks: number; created: number; updated: number; skipped: number; contacts: number; unchanged?: number } = { tasks: 0, created: 0, updated: 0, skipped: 0, contacts: 0 };
   const campaigns = new Map<string, string | null>();
   for (const listId of listIds) {
     for (let page = 0; page < 20; page++) {
@@ -118,14 +132,17 @@ async function importClickupSource(db: any, src: any, actorId: string) {
         const { isEmail, channels } = classify(t);
         await upsertClickupContact(db, t, body, actorId, r);
         const table = isEmail ? "marketing_emails" : "marketing_posts";
-        const { data: existing } = await db.from(table).select("id, status, campaign_id").eq("external_source", "clickup").eq("external_id", String(t.id)).maybeSingle();
+        const cols = isEmail ? "id, status, campaign_id, name, subject, blocks, scheduled_at, external_url" : "id, status, campaign_id, title, body, channels, scheduled_at, external_url";
+        const { data: existing } = await db.from(table).select(cols).eq("external_source", "clickup").eq("external_id", String(t.id)).maybeSingle();
         if (existing && existing.status !== "draft") { r.skipped++; continue; }
         const campaign_id = existing?.campaign_id ?? (await clickupCampaignFor(db, at, actorId, campaigns));
         const row = isEmail
           ? { name: String(t.name).slice(0, 200), subject: String(t.name).slice(0, 200), blocks: body ? [{ type: "text", text: body }] : [], scheduled_at: at, campaign_id }
           : { title: String(t.name).slice(0, 200), body, channels, scheduled_at: at, campaign_id };
         if (existing) {
-          await db.from(table).update({ ...row, external_url: t.url ?? null, updated_at: new Date().toISOString() }).eq("id", existing.id);
+          const incoming: Record<string, unknown> = { ...row, external_url: t.url ?? null };
+          if (!rowDiffers(existing, incoming)) { r.unchanged = (r.unchanged ?? 0) + 1; continue; }
+          await db.from(table).update({ ...incoming, updated_at: new Date().toISOString() }).eq("id", existing.id);
           r.updated++;
         } else {
           const { error } = await db.from(table).insert({ ...row, status: "draft", author_id: actorId, external_source: "clickup", external_id: String(t.id), external_url: t.url ?? null });
@@ -191,9 +208,8 @@ async function hsGet(key: string | null, path: string) {
     : await hsSharedGet(path);
   if (key && await appUserReconnectRequired(res)) throw new Reconnect("Your HubSpot access needs to be renewed.");
   if (!res.ok) {
-    const body = await res.text();
-    console.error(`HubSpot request failed [${res.status}]: ${body}`);
-    throw new Error(`HubSpot request failed [${res.status}]: ${body.slice(0, 300)}`);
+    console.error(`HubSpot request failed [${res.status}]`);
+    throw serviceError("HubSpot", "request", res.status);
   }
   return res.json() as Promise<any>;
 }

@@ -287,7 +287,7 @@ export async function parseLinkedIn(userId: string, d: { text: string }) {
   });
   if (res.status === 429) throw new Error("Too many requests right now. Please try again in a minute.");
   if (res.status === 402) throw new Error("AI credits have run out for this workspace.");
-  if (!res.ok) { console.error("LinkedIn parse failed", res.status, await res.text()); throw new Error("Couldn't read that text. Try pasting a smaller section."); }
+  if (!res.ok) { console.error("LinkedIn parse failed", res.status); throw new Error("Couldn't read that text. Try pasting a smaller section."); }
   const json: any = await res.json();
   const args = (json.output ?? []).find((o: any) => o.type === "function_call")?.arguments;
   const parsed = args ? JSON.parse(args) : { messages: [] };

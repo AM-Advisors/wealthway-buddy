@@ -7,9 +7,8 @@ const GATEWAY = "https://connector-gateway.lovable.dev";
 const GRAPH = "https://graph.facebook.com/v21.0";
 
 async function fail(res: Response, what: string): Promise<never> {
-  const body = await res.text().catch(() => "");
-  console.error(`${what} failed [${res.status}]: ${body}`);
-  throw new Error(`${what} failed [${res.status}]: ${body.slice(0, 400)}`);
+  console.error(`${what} failed [${res.status}]`);
+  throw new Error(`${what} failed (status ${res.status}).`);
 }
 
 // The pasted company-token fallback (LINKEDIN_ORG_ACCESS_TOKEN) is retired: no active caller used it, and

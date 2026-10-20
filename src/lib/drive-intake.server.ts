@@ -1,3 +1,4 @@
+import { serviceError } from "@/lib/service-error";
 // Server-only wiring for Drive File Intake. Reads Drive (GET only) and writes
 // only to Harmonious storage and records.
 import type { DriveEnvironment, DriveRepository } from "@/lib/drive-policy";
@@ -91,7 +92,7 @@ export const gatewayRead: DriveReadPort & {
       ? `/drive/v3/files/${encodeURIComponent(facts.id)}/export?mimeType=${encodeURIComponent(exportMime)}`
       : `/drive/v3/files/${encodeURIComponent(facts.id)}?alt=media&supportsAllDrives=true`;
     const res = await fetch(`${GATEWAY}${path}`, { method: "GET", headers: headers() });
-    if (!res.ok) throw new Error(`Google Drive download failed [${res.status}]: ${(await res.text()).slice(0, 200)}`);
+    if (!res.ok) throw serviceError("Google Drive", "download", res.status);
     return new Uint8Array(await res.arrayBuffer());
   },
   async children(folderId) {
