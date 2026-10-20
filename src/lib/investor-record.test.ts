@@ -117,7 +117,10 @@ describe("manual entry", () => {
     const onb = tables["investor_onboardings"]![0]!;
     expect(onb.accepted_amount_cents).toBeUndefined();
     expect(onb.internal_notes).toBeUndefined();
-    expect(tables["persons"]![0]!.date_of_birth).toBeUndefined();
+  });
+  it("managers may enter a date of birth (approved; only Harmonious can see it once saved)", async () => {
+    await (await srv()).createInvestor(MGR_A, jane({ person: { firstName: "Jane", lastName: "Smith", email: "jane@example.com", dateOfBirth: "1980-01-01" } }));
+    expect(tables["persons"]![0]!.date_of_birth).toBe("1980-01-01");
   });
 });
 

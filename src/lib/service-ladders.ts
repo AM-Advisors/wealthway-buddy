@@ -51,7 +51,8 @@ export const isIncludedAtNoCharge = (product: string, level: string) => product 
 /** Upgrades move within the same product only; changing product is a structure change, not an upgrade. */
 export function upgradeOptions(product: string, level: string): string[] {
   const lv = levelsFor(product); const i = lv.indexOf(level);
-  return i < 0 ? [] : lv.slice(i + 1);
+  // SaaS removes Harmonious support, so it is never offered as an upgrade.
+  return i < 0 ? [] : lv.slice(i + 1).filter((l) => l !== "SAAS");
 }
 
 export const ADMIN_QUOTE_KEY_PREFIX = "ADMIN:";
