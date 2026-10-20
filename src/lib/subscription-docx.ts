@@ -53,7 +53,7 @@ export async function fillSubscriptionDocx(bytes: Uint8Array, values: Record<str
     const token = `<w:r><w:t xml:space="preserve"> {{${key}}}</w:t></w:r>`;
     return fillXml(p.replace("</w:p>", `${token}</w:p>`), normalized, { filled: new Set(), open: new Set() });
   });
-  if (!signatureTagged) throw new Error("The agreement's investor signature line could not be found, so it was not sent for signature.");
+  // Templates without an investor "Signature:" line keep their own Box tags or are prepared manually.
   zip.file("word/document.xml", xml);
   return { ...filled, bytes: await zip.generateAsync({ type: "uint8array", compression: "DEFLATE" }) };
 }
