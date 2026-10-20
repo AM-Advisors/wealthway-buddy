@@ -171,7 +171,13 @@ export async function useTemplateInFund(userId: string, input: { templateId: str
 }
 async function useTemplateInFundInner(userId: string, input: { templateId: string; version: number; offeringId: string }) {
   const { data: t } = await db().from("document_templates").select("*").eq("id", input.templateId).maybeSingle();
-  if (!t) throw new Error("Template not found.");
+  if (!t || t.archived_at) throw new Error("Template not found.");
+  const { data: fund, error: fundError } = await db().from("offerings").select("fund_type").eq("id", input.offeringId).maybeSingle();
+  if (fundError || !fund) throw new Error("Could not check the fund type.");
+  const { canonicalTemplateFundType } = await import("@/lib/fund-type-templates");
+  if (t.fund_types?.length && !t.fund_types.some((type: string) => canonicalTemplateFundType(type) === canonicalTemplateFundType(fund.fund_type ?? ""))) {
+    throw new Error("This template is not assigned to this fund type.");
+  }
   const { data: v } = await db().from("document_template_versions").select("*").eq("template_id", t.id).eq("version", input.version).maybeSingle();
   if (!v || v.status !== "approved") throw new Error("Only an approved template version can be used.");
   const category = (t.category in DOCUMENT_CATEGORY_LABELS ? t.category : "other") as DocumentCategory;
@@ -198,7 +204,7 @@ async function useTemplateInFundInner(userId: string, input: { templateId: strin
   const signing = await autoSigningSetup(userId, { documentId, version: fundVersion, category, title: String(t.title ?? ""), offeringId: input.offeringId });
   // First use only; existing active versions require an explicit rollout choice.
   const { data: document } = await db().from("offering_documents").select("active_version, usage").eq("id", documentId).maybeSingle();
-  if (document && document.active_version == null && (document.usage !== "signature" || signing.configured)) {
+  if (!autofill?.open.length && document && document.active_version == null && (document.usage !== "signature" || signing.configured)) {
     if (!document.usage) await setDocumentUsage(userId, { documentId, usage: "reference", applicability: {} });
     await activateDocumentVersion(userId, { documentId, version: fundVersion, scope: "new_only" });
   }
@@ -254,6 +260,7 @@ export async function fundTemplateValues(offeringId: string): Promise<Record<str
   const v: Record<string, string | null> = {
     "Fund Name": o.name, "Fund Legal Name": legal, "Legal Fund Name": legal, "Legal Name": legal,
     "Fund Manager": manager, "Fund Manager Name": manager, "Manager Name": manager, "Fund Adviser Name": manager,
+    "General Partner Name": o.gp_entity_name || null,
     "Management Fee": pct(fee?.management_fee_pct), "Carry Percent": pct(fee?.carry_pct), "Carry Amount": pct(fee?.carry_pct),
     "address": o.principal_address, "Manager Address": o.principal_address, "email": email, "Manager Email": email,
     "Address Line 1": ap.addressLine1, "Address Line 2": ap.addressLine2, "Address City": ap.addressCity, "Address State": ap.addressState, "Address ZIP": ap.addressZip,
