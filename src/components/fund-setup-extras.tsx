@@ -24,10 +24,10 @@ function useExtras(offeringId: string) {
   const load = useServerFn(getFundSetupExtrasFn);
   return useQuery({ queryKey: ["fund-setup-extras", offeringId], queryFn: () => load({ data: { offeringId } }) });
 }
-function useRefresh() {
+function useRefresh(offeringId: string) {
   const qc = useQueryClient();
   // Auto-completed tasks change the checklist and phase 3 views too.
-  return () => qc.invalidateQueries();
+  return () => invalidateFund(qc, offeringId);
 }
 
 // ---------------------------------------------------------------- Service providers
@@ -35,7 +35,7 @@ function useRefresh() {
 export function ServiceProvidersSection({ offeringId }: { offeringId: string }) {
   const { data } = useExtras(offeringId);
   const save = useServerFn(saveFundProvidersFn);
-  const refresh = useRefresh();
+  const refresh = useRefresh(offeringId);
   const [p, setP] = useState<any>({});
   const [busy, setBusy] = useState(false);
   useEffect(() => { if (data) setP({ ...data.providers, taxPreparerIsHarmonious: data.providers.taxPreparerIsHarmonious ?? false }); }, [data]);
@@ -151,7 +151,7 @@ export function RegulatoryFilingsCard({ offeringId, children }: { offeringId: st
   const { data } = useExtras(offeringId);
   const add = useServerFn(addRegulatoryFilingFn);
   const remove = useServerFn(removeRegulatoryFilingFn);
-  const refresh = useRefresh();
+  const refresh = useRefresh(offeringId);
   const empty = { type: "form_d", kind: "initial", state: "", accessionNumber: "", efdId: "", filingDate: "", notes: "" };
   const [f, setF] = useState<any>(empty);
   const [busy, setBusy] = useState(false);

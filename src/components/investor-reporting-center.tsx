@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -12,6 +12,7 @@ import { InvestorDistributions } from "@/components/investor-distributions";
 import { InvestorFinancialsPanel } from "@/components/investor-financials-panel";
 import { InvestorPerformancePanel } from "@/components/investor-performance-panel";
 import { InvestorStatementsPanel } from "@/components/investor-statements-panel";
+import { LoadError } from "@/components/load-error";
 
 export const REPORTING_SECTIONS = ["investments", "performance", "distributions", "statements", "financials", "reports", "documents"] as const;
 import {
@@ -60,7 +61,7 @@ function PackageView({ packageId }: { packageId: string }) {
 
   if (query.isLoading) return <p className="text-sm text-muted-foreground">Loading…</p>;
   const detail = query.data;
-  if (!detail) return null;
+  if (query.isError || !detail) return <LoadError audience="account" error={query.error} what="This reporting package" onRetry={() => void query.refetch()} />;
 
   return (
     <div className="space-y-3">
@@ -102,17 +103,23 @@ export function InvestorReportingCenter({ section }: { section?: string | undefi
   const loadCenter = useServerFn(getInvestorReportingCenter);
   const loadLibrary = useServerFn(getInvestorDocumentLibrary);
   const [open, setOpen] = useState<string | null>(null);
+  const requestedSection = section && (REPORTING_SECTIONS as readonly string[]).includes(section) ? section : "investments";
+  const [activeSection, setActiveSection] = useState(requestedSection);
+  useEffect(() => { setActiveSection(requestedSection); }, [requestedSection]);
 
   const summary = useQuery({
     queryKey: ["investor-reporting-summary"],
+    enabled: activeSection === "investments",
     queryFn: async (): Promise<any> => loadSummary({ data: {} }),
   });
   const center = useQuery({
     queryKey: ["investor-reporting-center"],
+    enabled: activeSection === "reports",
     queryFn: async (): Promise<any> => loadCenter({ data: {} }),
   });
   const library = useQuery({
     queryKey: ["investor-document-library"],
+    enabled: activeSection === "documents",
     queryFn: async (): Promise<any> => loadLibrary({ data: {} }),
   });
 
@@ -130,7 +137,7 @@ export function InvestorReportingCenter({ section }: { section?: string | undefi
         </p>
       </div>
 
-      <Tabs defaultValue={section && (REPORTING_SECTIONS as readonly string[]).includes(section) ? section : "investments"}>
+      <Tabs value={activeSection} onValueChange={setActiveSection}>
         <TabsList className="flex h-auto flex-wrap">
           <TabsTrigger value="investments">Your investments</TabsTrigger>
           <TabsTrigger value="performance">Performance</TabsTrigger>
@@ -157,7 +164,8 @@ export function InvestorReportingCenter({ section }: { section?: string | undefi
 
         <TabsContent value="investments" className="space-y-4 pt-4">
           {summary.isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> : null}
-          {!summary.isLoading && investments.length === 0 ? (
+          {summary.isError ? <LoadError audience="account" error={summary.error} what="Your investment reports" onRetry={() => void summary.refetch()} /> : null}
+          {summary.isSuccess && investments.length === 0 ? (
             <Card>
               <CardContent className="py-6 text-sm text-muted-foreground">
                 You do not have any investments with published reporting yet.
@@ -230,7 +238,8 @@ export function InvestorReportingCenter({ section }: { section?: string | undefi
 
         <TabsContent value="reports" className="space-y-4 pt-4">
           {center.isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> : null}
-          {!center.isLoading && profiles.length === 0 ? (
+          {center.isError ? <LoadError audience="account" error={center.error} what="Your reporting periods" onRetry={() => void center.refetch()} /> : null}
+          {center.isSuccess && profiles.length === 0 ? (
             <Card>
               <CardContent className="py-6 text-sm text-muted-foreground">
                 No reporting packages have been published to you yet.
@@ -250,9 +259,10 @@ export function InvestorReportingCenter({ section }: { section?: string | undefi
                     {(fund.periods ?? []).map((period: any) => (
                       <div key={period.packageId}>
                         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/60 py-2">
-                          <button
-                            type="button"
-                            className="text-left text-sm"
+                          <Button
+                            variant="ghost"
+                            className="h-auto justify-start whitespace-normal px-0 text-left text-sm"
+                            aria-expanded={open === period.packageId}
                             onClick={() =>
                               setOpen(open === period.packageId ? null : period.packageId)
                             }
@@ -261,7 +271,7 @@ export function InvestorReportingCenter({ section }: { section?: string | undefi
                             <span className="ml-2 text-xs text-muted-foreground">
                               v{period.version}
                             </span>
-                          </button>
+                          </Button>
                           <Badge variant="outline">{label(period.status)}</Badge>
                         </div>
                         {open === period.packageId ? (
@@ -280,7 +290,8 @@ export function InvestorReportingCenter({ section }: { section?: string | undefi
 
         <TabsContent value="documents" className="space-y-4 pt-4">
           {library.isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> : null}
-          {!library.isLoading && groups.length === 0 ? (
+          {library.isError ? <LoadError audience="account" error={library.error} what="Your document library" onRetry={() => void library.refetch()} /> : null}
+          {library.isSuccess && groups.length === 0 ? (
             <Card>
               <CardContent className="py-6 text-sm text-muted-foreground">
                 Your document library is empty.

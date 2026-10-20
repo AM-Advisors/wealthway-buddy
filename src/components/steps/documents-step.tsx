@@ -22,6 +22,8 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScopeNotice } from "@/components/fund-scope-section";
+import { LoadError } from "@/components/load-error";
+import { signingRefreshInterval } from "@/components/signing-refresh";
 import {
   Select,
   SelectContent,
@@ -57,7 +59,7 @@ export function DocumentsStep({ offeringId }: { offeringId?: string }) {
   const sign = useServerFn(signDocument);
   const downloadUrl = useServerFn(getSignedDocumentUrl);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["documents-step", offeringId ?? "active"],
     queryFn: () => load({ data: scope }),
   });
@@ -95,13 +97,13 @@ export function DocumentsStep({ offeringId }: { offeringId?: string }) {
     }
     if (data.subscription?.ownership_title) setTitle(data.subscription.ownership_title);
     if (data.subscription?.tax_classification) setTaxClass(data.subscription.tax_classification);
-    if (data.profile?.legal_name) {
-      setSignerName((n) => n || data.profile!.legal_name!);
+    const legalName = data.profile?.legal_name;
+    if (legalName) {
+      setSignerName((n) => n || legalName);
       setInitials(
         (i) =>
           i ||
-          data
-            .profile!.legal_name!.split(/\s+/)
+          legalName.split(/\s+/)
             .map((p: string) => p[0] ?? "")
             .join("")
             .toUpperCase(),
@@ -114,11 +116,13 @@ export function DocumentsStep({ offeringId }: { offeringId?: string }) {
 
   // Authoritative signing state, straight from the Box signature records.
   const loadSigning = useServerFn(getSigningStates);
-  const { data: signingData } = useQuery({
+  const signingQuery = useQuery({
     queryKey: ["signing-states", offeringId ?? "active"],
     queryFn: () => loadSigning({ data: scope }),
-    refetchInterval: 30_000,
+    enabled: Boolean(data) && !error,
+    refetchInterval: (query) => signingRefreshInterval({ error: query.state.error, ...query.state.data }),
   });
+  const signingData = signingQuery.data;
   const boxSigning = signingData?.provider === "box_sign";
   const signingByDoc = new Map(
     ((signingData?.documents ?? []) as any[]).map((d) => [d.documentId as string, d]),
@@ -206,8 +210,11 @@ export function DocumentsStep({ offeringId }: { offeringId?: string }) {
 
       {isLoading ? (
         <p className="mt-10 text-sm text-muted-foreground">Loading documents…</p>
+      ) : error || !data ? (
+        <LoadError audience="account" error={error} what="Your documents" onRetry={() => void refetch()} />
       ) : (
         <div className="mt-8 space-y-6">
+          {signingQuery.isError ? <LoadError audience="account" error={signingQuery.error} what="Signature status" onRetry={() => void signingQuery.refetch()} /> : null}
           <Card>
             <CardHeader>
               <CardTitle>Subscription particulars</CardTitle>

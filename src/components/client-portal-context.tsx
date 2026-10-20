@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 
 import { useClientWorkspace } from "@/components/client-workspace";
 import { getClientPortal, maybeSendClientWelcome } from "@/lib/client-portal.functions";
+import { LoadError } from "@/components/load-error";
 
 type ClientPortalContextValue = {
   data: any;
@@ -24,7 +25,7 @@ export function ClientPortalProvider({ children }: { children: ReactNode }) {
     if (activeClientId) setClientId(activeClientId);
   }, [activeClientId]);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["client-portal", clientId],
     queryFn: () => load({ data: { clientId } }),
     retry: false,
@@ -37,6 +38,9 @@ export function ClientPortalProvider({ children }: { children: ReactNode }) {
       sendWelcome({ data: { clientId: (data.client as any).id } } as any).catch(() => undefined);
     }
   }, [data?.client, sendWelcome]);
+
+  if (isLoading) return <p role="status" className="p-4 text-sm text-muted-foreground">Loading your account…</p>;
+  if (error || !data) return <LoadError audience="account" error={error} what="Your account" onRetry={() => void refetch()} />;
 
   return (
     <ClientPortalContext.Provider value={{ data, isLoading, clientId, setClientId }}>

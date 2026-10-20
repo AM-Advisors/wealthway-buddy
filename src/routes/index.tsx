@@ -16,7 +16,6 @@ export const Route = createFileRoute("/")({
       path: "/",
       title: "Fund Administration, SPVs & Cap Table Management | Harmonious",
       description: "Harmonious provides fund and SPV administration, investor onboarding, cap table management, fund accounting, reporting and private-market infrastructure for fund managers and founders.",
-      image: "https://onboard.harmonious.co/og-harmonious.jpg",
       
       
     }),
@@ -45,12 +44,10 @@ const PILLARS = [
 ] as const;
 
 const STEPS = [
-  ["01", "Identity", "Legal name, address, tax ID and government identification, verified."],
-  ["02", "Screening", "Source of funds and wealth, PEP and sanctions declarations."],
-  ["03", "Accreditation", "506(b) self-certification or 506(c) third-party evidence."],
-  ["04", "Documents", "Review the offering materials and sign them in the browser."],
-  ["05", "Funding", "Investors fund against the fund's own instructions; receipt is matched and reconciled."],
-  ["06", "Ownership", "Shares, ownership percentage and portfolio value, live in the portal."],
+  ["01", "About You", "Choose your investing profile and provide the personal or entity details that apply to you."],
+  ["02", "Verification", "Complete identity, screening and any accreditation requirements for your investment."],
+  ["03", "Sign", "Review the offering materials and sign the documents required for your investment."],
+  ["04", "Fund", "Use the fund's approved capital instructions; receipt is confirmed after funds are matched and reconciled."],
 ] as const;
 
 function Index() {
@@ -194,9 +191,9 @@ function Index() {
               The investor journey
             </p>
             <h2 className="mt-4 max-w-2xl text-3xl leading-tight sm:text-4xl">
-              Six Steps, One Guided Flow
+              Four Steps, One Guided Flow
             </h2>
-            <ol className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+            <ol className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
               {STEPS.map(([num, title, body]) => (
                 <li key={num} className="border-t border-foreground/15 pt-4">
                   <span className="font-mono text-xs text-accent-foreground/70">{num}</span>

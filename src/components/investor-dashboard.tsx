@@ -13,6 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { investorDashboardFn } from "@/lib/dashboards.functions";
 import { CLIENT_STEPS, FUNDING_STATE_LABELS, type FundingState } from "@/lib/dashboard-metrics";
 import { money } from "@/lib/status";
+import { LoadError } from "@/components/load-error";
 
 const WAITING: Record<string, string> = { harmonious: "Harmonious is reviewing - nothing needed from you right now.", fund_manager: "Waiting on the fund manager - nothing needed from you right now." };
 
@@ -38,8 +39,10 @@ export function InvestorDashboard() {
   const q = useQuery({ queryKey: ["investor-dashboard"], queryFn: () => load(), retry: false });
   if (q.isPending) return <Skeleton className="h-40 rounded-xl" />;
   const d = q.data;
-  if (q.isError || !d || !d.investments.length) return <InvitedFunds />;
-  const p = d.primary!;
+  if (q.isError || !d) return <LoadError audience="account" error={q.error} what="Your investments" onRetry={() => void q.refetch()} />;
+  if (!d.investments.length) return <InvitedFunds />;
+  const p = d.primary ?? d.investments[0];
+  if (!p) return <InvitedFunds />;
 
   return (
     <section className="space-y-4" aria-label="Your investments">
