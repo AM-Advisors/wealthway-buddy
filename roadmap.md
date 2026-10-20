@@ -2,7 +2,7 @@
 
 ## Fund document approval visibility (2026-10-20)
 - [x] Expose canonical offering-document approval and explicit publication on the fund Documents tab; investors see separate version approval/readiness labels without changing signatures or admission.
-- [ ] Run focused publication/approval checks and preview diagnostics.
+- [x] Run focused publication/approval checks: 78 passed, including assigned-manager approval, other-fund denial, truthful save failure, active/individual/retained version readiness; preview build OK.
 - [ ] Signed-in manager approval → investor read-back — blocked on isolated synthetic QA access; no real versions activated or messages sent.
 
 ## Investor tax forms (2026-10-20)
