@@ -33,19 +33,25 @@ export const HELP_CATALOG: HelpArticle[] = [
     { heading: "Stay safe", paragraphs: ["Harmonious never changes wire instructions by email. If you get an email that does, don't send money. Contact us through Messages first."] },
   ] }),
   c({ slug: "manager-set-up-fund", title: "Setting up a fund or SPV", summary: "Fill in fund details section by section and submit for review.", roles: ["fund_manager"], services: ["funds"], sections: [
-    { steps: ["Go to My Funds and select Add Fund or SPV.", "Complete Fund Details, Investors, Asset Details and Banking. Each section saves on its own.", "Once a section is complete it becomes a summary box. Use Edit to change it.", "Submit. Harmonious reviews your fund before it launches."] },
+    { steps: ["Go to My Funds and select Add Fund or SPV.", "Complete Fund Details, Investors, Asset Details and Banking. Each section saves on its own.", "Once a section is complete it becomes a summary box. Use Edit to change it.", "Fund details, entity type, formation state and registered agent save directly until an investor signs or funds.", "Launch the fund yourself from the fund's Overview once setup is complete."] },
   ] }),
   c({ slug: "manager-ein", title: "Getting your fund's EIN", summary: "Apply with the IRS yourself or have Harmonious prepare the SS-4.", roles: ["fund_manager"], services: ["funds", "tax"], sections: [
-    { steps: ["In the EIN section, pick who will get the EIN.", "If Harmonious prepares it, you'll get an SS-4 to confirm and sign.", "Once you have the EIN, enter it and upload the IRS letter."] },
+    { steps: ["In the EIN section, choose \"I already have an EIN\" or \"Have Harmonious obtain it\".", "If you already have one, enter it and upload the IRS letter. It's saved right away.", "If Harmonious obtains it, you'll get an SS-4 to confirm and sign. Harmonious records the number the IRS issues."] },
   ] }),
   c({ slug: "manager-templates", title: "Using Harmonious fund document templates", summary: "Generate the Operating Agreement, PPM and Subscription Agreement from your fund details.", roles: ["fund_manager"], services: ["funds", "signing"], sections: [
     { steps: ["Complete Fund Details. Any missing fields are highlighted.", "In Documents, choose Generate from template.", "Review the document, then choose the full document or signature pages only and set the signing order.", "Send it for signature."] },
   ] }),
   c({ slug: "manager-invite-investors", title: "Inviting investors to your fund", summary: "Share your investor link or send invitations.", roles: ["fund_manager"], services: ["funds"], sections: [
-    { steps: ["Open your fund and go to Investors.", "Copy the investor link, or add investors by email.", "Track each investor's progress through onboarding on the same page."] },
+    { steps: ["Open your fund and go to Investors.", "Create the fund's onboarding link yourself. You can replace it, turn it off or turn it back on at any time, and every change is recorded.", "Or add investors by email and give each one a personal investment link.", "Track each investor's progress through About You, Verification, Sign and Fund on the same page."] },
   ] }),
   c({ slug: "manager-banking", title: "Fund banking", summary: "Open the account yourself or with Harmonious, then add the bank letter.", roles: ["fund_manager"], services: ["banking", "funds"], sections: [
-    { steps: ["In Banking, choose who opens the account.", "Enter the bank details and upload the bank verification letter.", "Harmonious verifies the details before anyone uses them."] },
+    { steps: ["In Banking, choose how the fund's bank account will be handled.", "Enter the bank details and upload the bank verification letter.", "Harmonious verifies the details before anyone uses them."] },
+  ] }),
+  c({ slug: "manager-fund-team", title: "Adding teammates to your fund", summary: "Add or remove fund managers and invite teammates yourself.", roles: ["fund_manager"], services: ["funds"], sections: [
+    { steps: ["Open your fund and go to Team.", "Add a fund manager by entering their exact email address, or send a teammate invitation.", "Remove a manager from the same list. A fund always keeps at least one fund manager.", "Every change is recorded on the fund's history."] },
+  ] }),
+  c({ slug: "manager-investor-details", title: "Filling in an investor's details", summary: "Contact details, tax ID, owners and signers, and distribution bank details.", roles: ["fund_manager"], services: ["funds"], sections: [
+    { steps: ["Open the investor and go to Profile.", "Edit contact details, and owners, control persons and signers. Changes save directly until the investor signs or funds; after that they go to Harmonious.", "Enter the investor's tax ID. It's stored encrypted and only the last four digits are shown.", "Add distribution bank details once the investor has signed in. Harmonious verifies them before they can be used, and saving them never moves money."] },
   ] }),
   c({ slug: "cap-table-basics", title: "Cap Table basics", summary: "Stakeholders, securities and documents for your company.", roles: ["company"], services: ["cap_table"], sections: [
     { steps: ["Stakeholders lists everyone who holds equity.", "Transactions records issuances, transfers and exercises.", "Documents keeps the agreements for each security.", "Reports gives you a current ownership summary."] },
