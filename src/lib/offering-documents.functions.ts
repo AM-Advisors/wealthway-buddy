@@ -29,6 +29,13 @@ export const readOfferingDocument = createServerFn({ method: "POST" })
       await logLegalDocumentView(supabase, userId, document as any, "viewed");
       return { kind: "text" as const, body: source.body, url: null, filename: null };
     }
+    if (/\.docx$/i.test(source.filename) && onboardingResult.data?.application_id) {
+      const { investmentDocumentSource } = await import("@/lib/investment-document-source.server");
+      const personalized = await investmentDocumentSource(db, document.id, onboardingResult.data.application_id);
+      if (!personalized.bytes) throw new Error("The agreement file is unavailable.");
+      await logLegalDocumentView(supabase, userId, document as any, "viewed");
+      return { kind: "file" as const, body: null, url: `data:application/vnd.openxmlformats-officedocument.wordprocessingml.document;base64,${toBase64(personalized.bytes)}`, filename: source.filename };
+    }
     const signed = await supabaseAdmin.storage.from("offering-files").createSignedUrl(source.path, 300);
     if (signed.error || !signed.data?.signedUrl) throw new Error("The document file could not be opened. Please try again.");
     await logLegalDocumentView(supabase, userId, document as any, "viewed");

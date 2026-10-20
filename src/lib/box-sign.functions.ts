@@ -182,18 +182,22 @@ export const startBoxSigning = createServerFn({ method: "POST" })
       }
     }
 
+    const { investmentDocumentSource } = await import("@/lib/investment-document-source.server");
+    const snapshot = gateSnapshot ? await (supabaseAdmin as any).from("investor_document_snapshots").select("merge_values").eq("id", gateSnapshot.id).single() : { data: null };
+    const source = await investmentDocumentSource(supabaseAdmin, doc.id, application.id, snapshot.data?.merge_values);
     const { buildOfferingPdf } = await import("@/lib/offering-pdf.server");
-    const pdfBytes = await buildOfferingPdf({
+    const pdfBytes = source.bytes ?? await buildOfferingPdf({
       offeringName: offering?.name ?? "Harmonious",
       regType: offering?.reg_type ?? "506b",
       title: doc.title,
       docType: doc.doc_type,
-      body: doc.body,
+      body: source.kind === "text" ? source.body : doc.body,
       requiresSignature: Boolean(doc.requires_signature),
     });
 
     const safeTitle = doc.title.replace(/[^\w\- ]+/g, "").trim() || "Fund document";
-    const fileName = `${safeTitle} - ${profile.legal_name ?? profile.email} - ${application.id.slice(0, 8)}.pdf`;
+    const extension = /\.docx$/i.test(source.filename) ? "docx" : "pdf";
+    const fileName = `${safeTitle} - ${profile.legal_name ?? profile.email} - ${application.id.slice(0, 8)}.${extension}`;
     const fileId = await uploadFile(fileName, pdfBytes);
 
     // Dual-signature documents: investor signs first (order 1), then the fund's

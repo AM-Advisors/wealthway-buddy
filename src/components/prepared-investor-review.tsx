@@ -7,6 +7,7 @@ import { getMyDocumentsForReview, getMyPreparedInfo, markDocumentReviewed, revie
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { OfferingDocumentReader } from "@/components/offering-document-reader";
 
 const show = (k: string, v: unknown) =>
   v == null || v === "" ? "-" : k.endsWith("_cents") ? `$${(Number(v) / 100).toLocaleString("en-US")}` : String(v).replace(/_/g, " ");
@@ -89,6 +90,7 @@ export function ReviewPreparedDocuments({ onboardingId }: { onboardingId: string
   const mark = useServerFn(markDocumentReviewed);
   const q = useQuery({ queryKey: ["prepared-docs", onboardingId], queryFn: () => load({ data: { onboardingId } }) });
   const [open, setOpen] = useState<string | null>(null);
+  const [readDocument, setReadDocument] = useState<string | null>(null);
   const m = useMutation({
     mutationFn: (snapshotId: string) => mark({ data: { onboardingId, snapshotId } }),
     onSuccess: () => void qc.invalidateQueries({ queryKey: ["prepared-docs", onboardingId] }),
@@ -116,14 +118,10 @@ export function ReviewPreparedDocuments({ onboardingId }: { onboardingId: string
               <>
                 <Button size="sm" variant="ghost" onClick={() => setOpen(open === d.documentId ? null : d.documentId)}>{open === d.documentId ? "Hide" : "View completed document"}</Button>
                 {open === d.documentId ? (
-                  <dl className="grid gap-1 rounded bg-muted/40 p-3 text-sm sm:grid-cols-2">
-                    {Object.entries(d.values as Record<string, string>).filter(([, v]) => v).map(([k, v]) => (
-                      <div key={k}><dt className="text-xs text-muted-foreground">{k.replace(/_/g, " ")}</dt><dd className="break-words">{v}</dd></div>
-                    ))}
-                  </dl>
+                  <OfferingDocumentReader documentId={d.documentId} title={d.title} onReachedEnd={() => setReadDocument(d.documentId)} />
                 ) : null}
                 {d.blocker === "Please review the document before continuing to sign" && d.snapshotId ? (
-                  <Button size="sm" disabled={m.isPending || open !== d.documentId} onClick={() => m.mutate(d.snapshotId)}>I've reviewed this document</Button>
+                  <Button size="sm" disabled={m.isPending || open !== d.documentId || readDocument !== d.documentId} onClick={() => m.mutate(d.snapshotId)}>I've reviewed this document</Button>
                 ) : null}
               </>
             )}

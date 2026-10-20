@@ -32,4 +32,4 @@
 - Investor surfaces: /investment/$onboardingId workspace; /investor-reporting?section= canonical reports (old pages redirect); /admin/investors redirects to Ops Investor 360; capital reads onboardings with application history; funding/wire retain applications pending review — why: connected views without money-path changes.
 - LoadError handles failures; reports load active tabs; Sign shares TaxSignPanel and verified email; OfferingDocumentReader reads entitled files — why: reliability.
 - Drafts use persistFundRequestDraft with scoped read-back; failures retain answers — why: no loss.
-- Fund-type uploads/autofill: src/lib/AGENTS.md; models stay links — why: provenance.
+- Read/sign use investment-document-source.server; pinned files stay intact — why: provenance.

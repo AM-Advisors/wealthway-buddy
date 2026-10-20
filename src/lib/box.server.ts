@@ -70,7 +70,7 @@ export async function uploadFile(fileName: string, bytes: Uint8Array): Promise<s
     "attributes",
     JSON.stringify({ name: fileName, parent: { id: boxFolderId() } }),
   );
-  form.append("file", new Blob([bytes as unknown as BlobPart], { type: "application/pdf" }), fileName);
+  form.append("file", new Blob([bytes as unknown as BlobPart], { type: /\.docx$/i.test(fileName) ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document" : "application/pdf" }), fileName);
 
   const res = await fetch(`${UPLOAD}/files/content`, {
     method: "POST",

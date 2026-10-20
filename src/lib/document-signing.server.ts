@@ -207,13 +207,9 @@ async function ensureBoxSourceFile(
 ): Promise<{ fileId: string; versionId: string | null }> {
   const { uploadFile, fileVersionId } = await import("@/lib/box.server");
 
-  let bytes: Uint8Array | null = null;
-  if (resolved.document.file_path) {
-    const download = await admin.storage
-      .from("offering-files")
-      .download(resolved.document.file_path);
-    if (download.data) bytes = new Uint8Array(await download.data.arrayBuffer());
-  }
+  const { investmentDocumentSource } = await import("@/lib/investment-document-source.server");
+  const source = await investmentDocumentSource(admin, resolved.document.id, resolved.application.id);
+  let bytes = source.bytes;
 
   if (!bytes) {
     const { buildOfferingPdf } = await import("@/lib/offering-pdf.server");
@@ -222,14 +218,15 @@ async function ensureBoxSourceFile(
       regType: resolved.offering?.reg_type ?? "506b",
       title: resolved.document.title,
       docType: resolved.document.doc_type,
-      body: resolved.document.body,
+      body: source.kind === "text" ? source.body : resolved.document.body,
       requiresSignature: true,
     });
   }
 
   const safeTitle = resolved.document.title.replace(/[^\w\- ]+/g, "").trim() || "Fund document";
   const who = resolved.profile.legal_name ?? resolved.profile.email ?? "Investor";
-  const fileName = `${safeTitle} - ${who} - ${resolved.application.id.slice(0, 8)}.pdf`;
+  const extension = /\.docx$/i.test(source.filename) ? "docx" : "pdf";
+  const fileName = `${safeTitle} - ${who} - ${resolved.application.id.slice(0, 8)}.${extension}`;
 
   const fileId = await uploadFile(fileName, bytes);
   const versionId = await fileVersionId(fileId).catch(() => null);
@@ -268,7 +265,7 @@ export async function openSigningSession(
     hasSubscription: Boolean(resolved.subscription?.commitment_cents),
     requiresSignature: Boolean(resolved.document.requires_signature),
     isRequiredSigner,
-    signerStatus: mine?.status ?? "pending",
+    signerStatus: resolved.signature?.cancelled_at && !resolved.signers.some((s) => s.status === "signed") ? "pending" : mine?.status ?? "pending",
     providerConfigured: boxConfigured(),
   });
   if (refusal) throw new SigningRefusal(refusal);
@@ -344,6 +341,7 @@ export async function openSigningSession(
     provider_completed_at: null,
     provider_declined_at: null,
     cancelled_at: null,
+    signature_template_version: (await admin.from("offering_documents").select("signature_template_version").eq("id", resolved.document.id).single()).data?.signature_template_version ?? null,
     signed_at: now,
   };
 

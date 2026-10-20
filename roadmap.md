@@ -249,6 +249,7 @@
 - [x] Batch readiness reads for the Funds dashboard; failed reads are logged, not thrown (approved)
 
 ## Service level / full self-service (Oct 20)
+- [x] Erebor: supplied subscription v3 active; real read/sign source with investor autofill, unsigned incorrect Calvin request cancelled; signed history retained. Missing fund-signatory title and signed-in QA remain unverified.
 - [x] Service level choice in Add Fund or SPV, priced at checkout, active only once paid
 - [x] Self Serve managers record IRS-issued EIN with the IRS letter
 - [ ] Change service level later from fund Overview
