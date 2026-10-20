@@ -12,10 +12,10 @@ import { Panel, Stat, money } from "@/components/sales/sales-ui";
 type Row = {
   lineId: string; userId: string | null; layer: string; client: string; quoteNumber: string | null; invoice: string | null;
   service: string; capTable: boolean; baseCents: number; paidCents: number; paidOn: string | null; name: string; ratePct: number;
-  amountCents: number; status: "not_earned" | "scheduled" | "paid_out"; payoutDue: string | null;
+  amountCents: number; status: "not_earned" | "scheduled" | "paid_out" | "cancelled"; payoutDue: string | null; cancelReason?: string | null;
   payout: { id: string; date: string; reference: string; note: string | null } | null;
 };
-const STATUS: Record<Row["status"], string> = { not_earned: "Not earned yet", scheduled: "Scheduled", paid_out: "Paid out" };
+const STATUS: Record<Row["status"], string> = { not_earned: "Not earned yet", scheduled: "Scheduled", paid_out: "Paid out", cancelled: "Cancelled" };
 const key = (r: Row) => `${r.lineId}|${r.userId}|${r.layer}`;
 
 export function CommissionTracker({ rows, canRecord, onChange }: { rows: Row[]; canRecord: boolean; onChange: () => void }) {
@@ -102,7 +102,7 @@ export function CommissionTracker({ rows, canRecord, onChange }: { rows: Row[]; 
                 <TableCell className="text-right">{money(r.paidCents)}{r.paidOn && <div className="text-xs text-muted-foreground">{r.paidOn}</div>}</TableCell>
                 <TableCell>{r.name}<div className="text-xs text-muted-foreground">{LAYER_LABEL[r.layer as CommissionLayer]}</div></TableCell>
                 <TableCell className="text-right">{money(r.amountCents)}<div className="text-xs text-muted-foreground">{r.ratePct}%</div></TableCell>
-                <TableCell><Badge variant={r.status === "paid_out" ? "default" : "outline"}>{STATUS[r.status]}</Badge></TableCell>
+                <TableCell><Badge variant={r.status === "paid_out" ? "default" : "outline"}>{STATUS[r.status]}</Badge>{r.cancelReason ? <span className="block text-xs text-muted-foreground">{r.cancelReason}</span> : null}</TableCell>
                 <TableCell>{payoutCell(r)}</TableCell>
               </TableRow>
             ))}

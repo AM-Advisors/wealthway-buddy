@@ -74,7 +74,7 @@ export const roundRobinDeals = createServerFn({ method: "POST" }).middleware([re
   .handler(async ({ data, context }) => (await S()).roundRobin(context.userId, data));
 
 // ---------------- quotes
-const line = z.object({ serviceKey: z.string(), label: z.string(), quantity: z.number().min(0), unitCents: z.number().min(0), baselineUnitCents: z.number().min(0) });
+const line = z.object({ serviceKey: z.string(), label: z.string(), quantity: z.number().min(0), unitCents: z.number().min(0), baselineUnitCents: z.number().min(0), billingFrequency: z.enum(["one_time", "monthly", "quarterly", "annual"]).optional(), firstBillOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullish() });
 
 export const getQuoteCatalog = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ clientId: z.string().uuid().nullish() }).parse(d))

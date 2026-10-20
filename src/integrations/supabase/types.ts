@@ -7629,6 +7629,97 @@ export type Database = {
           },
         ]
       }
+      commission_payout_queue: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          due_on: string
+          id: string
+          invoice_id: string
+          invoice_line_id: string
+          layer: string
+          payout_id: string | null
+          quote_id: string | null
+          reason: string | null
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          due_on: string
+          id?: string
+          invoice_id: string
+          invoice_line_id: string
+          layer: string
+          payout_id?: string | null
+          quote_id?: string | null
+          reason?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          due_on?: string
+          id?: string
+          invoice_id?: string
+          invoice_line_id?: string
+          layer?: string
+          payout_id?: string | null
+          quote_id?: string | null
+          reason?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commission_payout_queue_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commission_payout_queue_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          detail: Json
+          event_kind: string
+          id: string
+          queue_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          detail?: Json
+          event_kind: string
+          id?: string
+          queue_id: string
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          detail?: Json
+          event_kind?: string
+          id?: string
+          queue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commission_payout_queue_events_queue_id_fkey"
+            columns: ["queue_id"]
+            isOneToOne: false
+            referencedRelation: "commission_payout_queue"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       commission_payouts: {
         Row: {
           amount_cents: number
@@ -28543,10 +28634,64 @@ export type Database = {
           },
         ]
       }
+      invoice_schedules: {
+        Row: {
+          active: boolean
+          amount_cents: number
+          client_id: string
+          created_at: string
+          frequency: string
+          id: string
+          label: string
+          line_index: number
+          next_due_on: string | null
+          service_key: string | null
+          sow_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          amount_cents: number
+          client_id: string
+          created_at?: string
+          frequency: string
+          id?: string
+          label: string
+          line_index: number
+          next_due_on?: string | null
+          service_key?: string | null
+          sow_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          amount_cents?: number
+          client_id?: string
+          created_at?: string
+          frequency?: string
+          id?: string
+          label?: string
+          line_index?: number
+          next_due_on?: string | null
+          service_key?: string | null
+          sow_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_schedules_sow_id_fkey"
+            columns: ["sow_id"]
+            isOneToOne: false
+            referencedRelation: "client_sows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoices: {
         Row: {
           approval_requested_at: string | null
           approval_status: string
+          card_session_id: string | null
           client_approved_at: string | null
           client_approved_by: string | null
           client_id: string
@@ -28566,8 +28711,10 @@ export type Database = {
           dispute_resolved_at: string | null
           dispute_resolved_by: string | null
           due_date: string | null
+          generated_by_schedule: boolean
           id: string
           issue_date: string | null
+          issue_self_reason: string | null
           issued_at: string | null
           issued_by: string | null
           net_days: number
@@ -28582,6 +28729,8 @@ export type Database = {
           rate_check: Json | null
           rate_override_reason: string | null
           rate_variance_cents: number
+          reviewed_at: string | null
+          reviewed_by: string | null
           sow_id: string | null
           status: string
           total_cents: number
@@ -28592,6 +28741,7 @@ export type Database = {
         Insert: {
           approval_requested_at?: string | null
           approval_status?: string
+          card_session_id?: string | null
           client_approved_at?: string | null
           client_approved_by?: string | null
           client_id: string
@@ -28611,8 +28761,10 @@ export type Database = {
           dispute_resolved_at?: string | null
           dispute_resolved_by?: string | null
           due_date?: string | null
+          generated_by_schedule?: boolean
           id?: string
           issue_date?: string | null
+          issue_self_reason?: string | null
           issued_at?: string | null
           issued_by?: string | null
           net_days?: number
@@ -28627,6 +28779,8 @@ export type Database = {
           rate_check?: Json | null
           rate_override_reason?: string | null
           rate_variance_cents?: number
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           sow_id?: string | null
           status?: string
           total_cents?: number
@@ -28637,6 +28791,7 @@ export type Database = {
         Update: {
           approval_requested_at?: string | null
           approval_status?: string
+          card_session_id?: string | null
           client_approved_at?: string | null
           client_approved_by?: string | null
           client_id?: string
@@ -28656,8 +28811,10 @@ export type Database = {
           dispute_resolved_at?: string | null
           dispute_resolved_by?: string | null
           due_date?: string | null
+          generated_by_schedule?: boolean
           id?: string
           issue_date?: string | null
+          issue_self_reason?: string | null
           issued_at?: string | null
           issued_by?: string | null
           net_days?: number
@@ -28672,6 +28829,8 @@ export type Database = {
           rate_check?: Json | null
           rate_override_reason?: string | null
           rate_variance_cents?: number
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           sow_id?: string | null
           status?: string
           total_cents?: number
@@ -41372,7 +41531,9 @@ export type Database = {
       sales_quote_lines: {
         Row: {
           baseline_unit_cents: number
+          billing_frequency: string
           created_at: string
+          first_bill_on: string | null
           id: string
           label: string
           line_cents: number
@@ -41384,7 +41545,9 @@ export type Database = {
         }
         Insert: {
           baseline_unit_cents?: number
+          billing_frequency?: string
           created_at?: string
+          first_bill_on?: string | null
           id?: string
           label: string
           line_cents: number
@@ -41396,7 +41559,9 @@ export type Database = {
         }
         Update: {
           baseline_unit_cents?: number
+          billing_frequency?: string
           created_at?: string
+          first_bill_on?: string | null
           id?: string
           label?: string
           line_cents?: number

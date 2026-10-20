@@ -428,6 +428,55 @@ export const reviewInvoiceRates = createServerFn({ method: "POST" })
     return await checkRates(context, data.id, (invoice as any).client_id);
   });
 
+/** Marks a draft reviewed. The reviewer can't also issue it. */
+export const markInvoiceReviewed = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const who = await requireContractAuthority(context);
+    const { data: invoice } = await context.supabase.from("invoices").select("id, status, client_id, created_by, reviewed_by").eq("id", data.id).maybeSingle();
+    if (!invoice) throw new Error("That invoice isn't available.");
+    if ((invoice as any).status !== "draft") throw new Error("Only a draft can be reviewed.");
+    if ((invoice as any).reviewed_by) throw new Error("This draft has already been reviewed.");
+    const { error } = await context.supabase.from("invoices").update({ reviewed_by: who.userId, reviewed_at: new Date().toISOString() }).eq("id", data.id).eq("status", "draft");
+    if (error) throw new Error(error.message);
+    await audit(context, who, { action: "draft reviewed", target: "draft", clientId: (invoice as any).client_id, next: { reviewed_by: who.userId } });
+    return { ok: true };
+  });
+
+/** Starts card checkout for an issued invoice. Only the client's own people can pay; the webhook marks it paid. */
+export const startInvoiceCardPayment = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid(), environment: z.enum(["sandbox", "live"]), returnUrl: z.string().url().max(2000) }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { data: links } = await context.supabase.from("client_users").select("client_id").eq("user_id", context.userId);
+    const mine = new Set(((links ?? []) as any[]).map((l) => l.client_id));
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const db = supabaseAdmin as any;
+    const { data: inv } = await db.from("invoices").select("id, client_id, number, status, total_cents").eq("id", data.id).maybeSingle();
+    if (!inv || !mine.has(inv.client_id)) return { error: "That invoice isn't available." };
+    if (inv.status !== "issued") return { error: inv.status === "paid" ? "This invoice is already paid." : "Only an issued invoice can be paid." };
+    if (!(Number(inv.total_cents) > 0)) return { error: "Nothing to pay." };
+    const origin = new URL(data.returnUrl).origin;
+    const { createStripeClient, getStripeErrorMessage } = await import("@/lib/stripe.server");
+    try {
+      const stripe = createStripeClient(data.environment);
+      const { data: { user } } = await context.supabase.auth.getUser();
+      const { customerForClient } = await import("@/lib/billing.server");
+      const customer = await customerForClient(stripe, inv.client_id, user?.email, context.userId);
+      const meta = { kind: "invoice_payment", invoiceId: inv.id, clientId: inv.client_id, userId: context.userId };
+      const session = await stripe.checkout.sessions.create({
+        mode: "payment", ui_mode: "embedded_page", redirect_on_completion: "if_required", return_url: `${origin}/client/invoices?invoice=${inv.id}`,
+        customer, metadata: meta, payment_intent_data: { description: `Invoice ${inv.number}`, metadata: meta },
+        line_items: [{ price_data: { currency: "usd", unit_amount: Number(inv.total_cents), product_data: { name: `Invoice ${inv.number}` } }, quantity: 1 }],
+      } as any);
+      await db.from("invoices").update({ card_session_id: session.id }).eq("id", inv.id).eq("status", "issued");
+      return { clientSecret: session.client_secret ?? "" };
+    } catch (e) {
+      return { error: getStripeErrorMessage(e) };
+    }
+  });
+
 /** Issue a draft: stamp the number, the issue date and the payment due date. */
 export const issueInvoice = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -438,6 +487,7 @@ export const issueInvoice = createServerFn({ method: "POST" })
         issueDate: z.string().min(4).max(20),
         netDays: z.number().int().min(0).max(180).default(30),
         overrideReason: z.string().max(500).optional().or(z.literal("")),
+        selfIssueReason: z.string().max(500).optional().or(z.literal("")),
       })
       .parse(d),
   )
@@ -450,6 +500,13 @@ export const issueInvoice = createServerFn({ method: "POST" })
       .maybeSingle();
     if (!invoice) throw new Error("That invoice isn't available.");
     if ((invoice as any).status !== "draft") throw new Error("This invoice has already been issued.");
+    const { issueBlocker } = await import("@/lib/invoice-schedule-model");
+    const blocked = issueBlocker({
+      issuerId: who.userId, createdBy: (invoice as any).created_by ?? null, reviewedBy: (invoice as any).reviewed_by ?? null,
+      generatedBySchedule: Boolean((invoice as any).generated_by_schedule), isSuperAdmin: who.roles.includes("super_admin"), selfReason: data.selfIssueReason,
+    });
+    if (blocked) throw new Error(blocked);
+    const selfIssued = who.userId === (invoice as any).created_by || who.userId === (invoice as any).reviewed_by;
 
     const total = await recalcTotal(context, data.id);
     if (total <= 0) throw new Error("An invoice needs at least one payable line before it is issued.");
@@ -486,8 +543,10 @@ export const issueInvoice = createServerFn({ method: "POST" })
         rate_variance_cents: rates.varianceCents,
         rate_override_reason: data.overrideReason || null,
         rate_check: rates.items as any,
+        issue_self_reason: selfIssued ? data.selfIssueReason || null : null,
       })
-      .eq("id", data.id);
+      .eq("id", data.id)
+      .eq("status", "draft");
     if (error) throw new Error(error.message);
 
 
@@ -510,7 +569,7 @@ export const issueInvoice = createServerFn({ method: "POST" })
       clientId: (invoice as any).client_id,
       offeringId: await invoiceOfferingId(context, data.id),
       previous: { status: "draft", number: (invoice as any).number ?? null, due_date: null },
-      next: { status: "issued", number, total_cents: total, due_date: dueDate },
+      next: { status: "issued", number, total_cents: total, due_date: dueDate, ...(selfIssued ? { self_issue_reason: data.selfIssueReason } : {}) },
     });
 
     const { notifyClientAdminsWith, money, CLIENT_PORTAL_BASE } = await import(
@@ -676,6 +735,7 @@ export const recordInvoicePayment = createServerFn({ method: "POST" })
       previous: { status: "issued", paid_on: null, reference: null },
       next: { status: "paid", paid_on: data.paidOn, reference: data.reference || null },
     });
+    await (await import("@/lib/billing-schedule.server")).onInvoicePaid(data.id);
     return { ok: true };
   });
 
@@ -705,6 +765,7 @@ export const voidInvoice = createServerFn({ method: "POST" })
       previous: { status: (invoice as any).status },
       next: { status: "void", reason: data.reason },
     });
+    await (await import("@/lib/commissions.server")).cancelInvoicePayouts(data.id, `Invoice voided: ${data.reason}`, who.userId);
     return { ok: true };
   });
 

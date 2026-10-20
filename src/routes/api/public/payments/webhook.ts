@@ -81,6 +81,14 @@ async function syncFundPayment(session: any, env: StripeEnv, outcome: "paid" | "
   await d.from("fund_payment_events").insert({ payment_id: p.id, event_kind: outcome, detail: { session: session.id } });
 }
 
+async function invoicePaid(session: any, env: StripeEnv) {
+  const id = session.metadata?.invoiceId;
+  if (!id) return;
+  const pi = typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id ?? null;
+  void env;
+  await (await import("@/lib/billing-schedule.server")).markInvoicePaidByCard(id, session.id, pi);
+}
+
 async function route(sub: any, env: StripeEnv, deleted = false) {
   if (sub.metadata?.kind === "whitelabel") return syncWhitelabel(sub, env, deleted);
   if (sub.metadata?.kind === "saas_order") {
@@ -107,14 +115,29 @@ export const Route = createFileRoute("/api/public/payments/webhook")({
               await route(event.data.object, rawEnv, true);
               break;
             case "checkout.session.completed":
+              if (event.data.object.metadata?.kind === "invoice_payment" && event.data.object.payment_status === "paid") await invoicePaid(event.data.object, rawEnv);
               if (event.data.object.metadata?.kind === "fund_payment" && event.data.object.payment_status !== "unpaid") await syncFundPayment(event.data.object, rawEnv, "paid");
               break;
             case "checkout.session.async_payment_succeeded":
+              if (event.data.object.metadata?.kind === "invoice_payment") await invoicePaid(event.data.object, rawEnv);
               if (event.data.object.metadata?.kind === "fund_payment") await syncFundPayment(event.data.object, rawEnv, "paid");
               break;
             case "checkout.session.async_payment_failed":
               if (event.data.object.metadata?.kind === "fund_payment") await syncFundPayment(event.data.object, rawEnv, "failed");
               break;
+            case "charge.refunded":
+            case "charge.dispute.created": {
+              const o = event.data.object;
+              const meta = o.metadata?.kind ? o.metadata : null;
+              let invoiceId: string | undefined = meta?.kind === "invoice_payment" ? meta.invoiceId : undefined;
+              if (!invoiceId && o.payment_intent) {
+                const { createStripeClient } = await import("@/lib/stripe.server");
+                const pi = await createStripeClient(rawEnv).paymentIntents.retrieve(typeof o.payment_intent === "string" ? o.payment_intent : o.payment_intent.id);
+                if (pi.metadata?.kind === "invoice_payment") invoiceId = pi.metadata.invoiceId;
+              }
+              if (invoiceId) await (await import("@/lib/billing-schedule.server")).onCardPaymentReversed(invoiceId, event.type === "charge.refunded" ? "Card payment refunded" : "Card payment disputed");
+              break;
+            }
             default:
               break;
           }

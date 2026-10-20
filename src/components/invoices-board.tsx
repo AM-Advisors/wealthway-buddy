@@ -23,6 +23,7 @@ import {
   deleteInvoiceLine,
   INVOICE_STATUSES,
   issueInvoice,
+  markInvoiceReviewed,
   raiseInvoiceWire,
   requestInvoiceApproval,
   listInvoices,
@@ -55,6 +56,7 @@ export function InvoicesBoard() {
   const saveLine = useServerFn(saveInvoiceLine);
   const removeLine = useServerFn(deleteInvoiceLine);
   const issue = useServerFn(issueInvoice);
+  const review = useServerFn(markInvoiceReviewed);
   const askApproval = useServerFn(requestInvoiceApproval);
   const raiseWire = useServerFn(raiseInvoiceWire);
   const pay = useServerFn(recordInvoicePayment);
@@ -154,15 +156,18 @@ export function InvoicesBoard() {
   });
 
   const issueMutation = useMutation({
-    mutationFn: (input: { id: string; netDays: number; overrideReason?: string }) =>
-      issue({
-        data: {
-          id: input.id,
-          issueDate: today(),
-          netDays: input.netDays,
-          overrideReason: input.overrideReason ?? "",
-        },
-      }),
+    mutationFn: async (input: { id: string; netDays: number; overrideReason?: string }) => {
+      const send = (selfIssueReason: string) => issue({ data: { id: input.id, issueDate: today(), netDays: input.netDays, overrideReason: input.overrideReason ?? "", selfIssueReason } });
+      try {
+        return await send("");
+      } catch (e: any) {
+        // Super Admins may issue their own draft with a permanently recorded reason.
+        if (!/Give a reason/.test(String(e?.message))) throw e;
+        const why = window.prompt("You prepared or reviewed this draft. Give a reason to issue it yourself; it's kept permanently.") ?? "";
+        if (!why.trim()) throw e;
+        return await send(why.trim());
+      }
+    },
     onSuccess: (res: any) => {
       toast.success(`Invoice ${res?.number} issued. Payment due ${res?.dueDate}.`);
       refresh();
@@ -581,6 +586,15 @@ export function InvoicesBoard() {
 
                     {canManage ? (
                       <div className="flex flex-wrap gap-2">
+                        {inv.status === "draft" && !inv.reviewed_by ? (
+                          <Button size="sm" variant="outline" onClick={async () => {
+                            try { await review({ data: { id: inv.id } }); toast.success("Marked reviewed. A different person issues it."); refresh(); }
+                            catch (e: any) { toast.error(e?.message ?? "Couldn't mark it reviewed."); }
+                          }}>Mark reviewed</Button>
+                        ) : null}
+                        {inv.status === "draft" && inv.generated_by_schedule ? (
+                          <span className="self-center text-xs text-muted-foreground">From billing schedule{inv.reviewed_by ? " · reviewed" : " · needs review"}</span>
+                        ) : null}
                         {inv.status === "draft" ? (
                           <Button
                             size="sm"
