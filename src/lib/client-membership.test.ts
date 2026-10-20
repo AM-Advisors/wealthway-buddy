@@ -17,6 +17,10 @@ function fakeSupabase(links: any[], managed: any[]) {
 }
 
 describe("clientAccessIds", () => {
+  it("reports an access lookup failure rather than treating the member as unauthorized", async () => {
+    const db = { from: () => ({ select: () => ({ eq: async () => ({ data: null, error: { message: "unavailable" } }) }) }) };
+    await expect(clientAccessIds(db, "u1")).rejects.toThrow("couldn't check your organization access");
+  });
   it("returns direct client memberships", async () => {
     const ids = await clientAccessIds(fakeSupabase([{ client_id: "c1" }], []), "u1");
     expect(ids).toEqual(["c1"]);

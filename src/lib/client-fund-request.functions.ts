@@ -17,10 +17,11 @@ async function admin() {
 
 /** The caller's client memberships, re-read every call. */
 async function memberships(context: any) {
-  const { data } = await context.supabase
+  const { data, error } = await context.supabase
     .from("client_users")
     .select("client_id, client_role, can_approve")
     .eq("user_id", context.userId);
+  if (error) throw new Error("We couldn't check your organization access. Keep this page open and try again.");
   return (data ?? []) as { client_id: string; client_role: string | null; can_approve: boolean | null }[];
 }
 
@@ -57,20 +58,8 @@ export const saveFundRequestDraft = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await requireMember(context, data.clientId);
     const db = await admin();
-    const details = { ...data.request, _kind: KIND };
-    if (data.draftId) {
-      const { data: row } = await db.from("client_fund_intakes").select("id, client_id, status").eq("id", data.draftId).maybeSingle();
-      if (!row || String(row.client_id) !== data.clientId || row.status !== "request_draft") throw new Error("Draft not found.");
-      await db.from("client_fund_intakes").update({ details }).eq("id", data.draftId);
-      return { id: data.draftId };
-    }
-    const { data: ins, error } = await db
-      .from("client_fund_intakes")
-      .insert({ client_id: data.clientId, status: "request_draft", details, created_by: context.userId })
-      .select("id")
-      .single();
-    if (error) throw new Error(error.message);
-    return { id: String(ins.id) };
+    const { persistFundRequestDraft } = await import("@/lib/fund-request-draft");
+    return persistFundRequestDraft(db, { ...data, userId: context.userId });
   });
 
 export const getFundRequestDraft = createServerFn({ method: "GET" })

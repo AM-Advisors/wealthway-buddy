@@ -52,9 +52,13 @@ export function FundRequestEngine({ clientId: id, draft, mode = "client", client
   const catalogueFn = useServerFn(listServiceCatalog);
   const catalogue = useQuery({ queryKey: ["service-catalogue"], queryFn: () => catalogueFn({ data: {} }) });
 
-  const dq = useQuery({ queryKey: ["fund-request-draft", draft], enabled: !!draft, queryFn: () => loadDraft({ data: { draftId: draft! } }) });
+  const dq = useQuery({ queryKey: ["fund-request-draft", draft], enabled: !!draft, queryFn: () => {
+    if (!draft) throw new Error("No draft selected.");
+    return loadDraft({ data: { draftId: draft } });
+  }, refetchOnWindowFocus: false, refetchOnReconnect: false });
   const lastSavedJson = useRef<string>("");
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
   useEffect(() => {
     if (dq.data?.request) {
       const loaded = { ...emptyRequest(), ...dq.data.request };
@@ -129,9 +133,11 @@ export function FundRequestEngine({ clientId: id, draft, mode = "client", client
       setDraftId(res.id);
       lastSavedJson.current = JSON.stringify(snapshot);
       setLastSavedAt(new Date());
+      setSaveError(null);
       if (!quiet) toast.success("Draft saved.");
     },
     onError: (e: any, quiet) => {
+      setSaveError(e?.message ?? "Could not save. Keep this page open and try again.");
       if (!quiet) toast.error(e?.message ?? "Could not save.");
     },
   });
@@ -156,13 +162,13 @@ export function FundRequestEngine({ clientId: id, draft, mode = "client", client
   // Autosave: once the form has any real content, quietly save a few seconds after the last edit
   // so progress is never lost if the page is closed or the session drops.
   useEffect(() => {
-    if (!id || !hasContent || dq.isLoading) return;
+    if (!id || !hasContent || dq.isLoading || saveError) return;
     if (JSON.stringify(r) === lastSavedJson.current) return;
     const t = setTimeout(() => {
       if (!saveDraft.isPending && !send.isPending) saveDraft.mutate(true);
     }, 2500);
     return () => clearTimeout(t);
-  }, [r, id, hasContent, dq.isLoading, saveDraft.isPending, send.isPending]);
+  }, [r, id, hasContent, dq.isLoading, saveDraft.isPending, send.isPending, saveError]);
 
   const missing = missingFields(r);
   const steps = visibleSteps(r);
@@ -183,12 +189,13 @@ export function FundRequestEngine({ clientId: id, draft, mode = "client", client
         </div>
         <div className="flex items-center gap-3">
           <p className="text-xs text-muted-foreground" role="status">
-            {saveDraft.isPending ? "Saving…" : lastSavedAt ? `Draft saved ${format(lastSavedAt, "h:mm a")} — changes save automatically` : "Changes save automatically as you go"}
+            {saveDraft.isPending ? "Saving…" : saveError ? "Changes not saved" : lastSavedAt && JSON.stringify(r) === lastSavedJson.current ? `Draft saved ${format(lastSavedAt, "h:mm a")}` : "Unsaved changes"}
           </p>
           <Button size="sm" variant="outline" disabled={saveDraft.isPending || !id} onClick={() => saveDraft.mutate(false)}>Save draft</Button>
         </div>
       </div>
       {clientPicker}
+      {saveError && <p role="alert" className="text-sm text-destructive">{saveError}</p>}
 
       <div className="flex flex-col gap-5 md:flex-row">
         <nav aria-label="Steps" className="flex gap-1 overflow-x-auto md:w-52 md:shrink-0 md:flex-col">

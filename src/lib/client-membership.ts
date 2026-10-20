@@ -5,10 +5,11 @@
  * check must use the same rule so managers are not bounced at the last step.
  */
 export async function clientAccessIds(supabase: any, userId: string): Promise<string[]> {
-  const [{ data: links }, { data: managed }] = await Promise.all([
+  const [{ data: links, error: linksError }, { data: managed, error: managedError }] = await Promise.all([
     supabase.from("client_users").select("client_id").eq("user_id", userId),
     supabase.from("fund_managers").select("offerings(client_id)").eq("user_id", userId),
   ]);
+  if (linksError || managedError) throw new Error("We couldn't check your organization access. Keep this page open and try again.");
   return [
     ...new Set([
       ...((links ?? []) as any[]).map((l) => String(l.client_id)),
