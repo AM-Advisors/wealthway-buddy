@@ -116,7 +116,7 @@ export const submitFundRequest = createServerFn({ method: "POST" })
     // The $2,500 setup fee and any a la carte add-ons must be paid first (verified server-side).
     const { fundAddOnKeys } = await import("@/lib/fund-request-model");
     const pay = await import("@/lib/fund-payments.server");
-    const quote = await pay.buildQuote(db, { clientId: data.clientId, kind: "new_fund_request", addOnKeys: fundAddOnKeys(r) });
+    const quote = await pay.buildQuote(db, { clientId: data.clientId, kind: "new_fund_request", addOnKeys: fundAddOnKeys(r), serviceLevel: r.service_level ?? null });
     // Harmonious staff setting up a fund for a client are not charged here; billing follows the client's SOW.
     const payment = member.staff ? null : await pay.verifyPayment(db, { paymentId: data.paymentId, clientId: data.clientId, kind: "new_fund_request", expected: quote.items, usedFor: null, actorId: context.userId });
 

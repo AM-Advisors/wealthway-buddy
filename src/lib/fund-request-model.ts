@@ -147,6 +147,8 @@ export type FundRequest = {
   managers: RequestPerson[];
   signatory: RequestPerson;
   service_keys: string[];
+  /** Fund service level (SLA); Self Serve unless a paid level is chosen and paid for. */
+  service_level?: string;
   /** Set when Management / Master LLC support is chosen: start setup of a new entity or transfer an existing one. */
   management_llc_path: "setup" | "transfer" | "";
   notes: string;
@@ -165,7 +167,7 @@ export function emptyRequest(kind = ""): FundRequest {
     gp_commitment: "", fund_term: "", investment_period: "",
     classes: [{ name: "Class A", fee: "", carry: "", hurdle: "", minimum: "" }],
     documents_path: "", documents: [], banking_path: "", bank_name: "",
-    managers: [], signatory: { name: "", email: "", title: "" }, service_keys: [], management_llc_path: "", notes: "",
+    managers: [], signatory: { name: "", email: "", title: "" }, service_keys: [], service_level: "self_serve", management_llc_path: "", notes: "",
   };
 }
 
