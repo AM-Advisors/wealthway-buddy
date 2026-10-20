@@ -51,7 +51,7 @@ export async function renderProposalPdf(doc: any, sections: Section[], lines: an
   y -= 30;
 
   // Scope of services
-  const body = sections.filter((s) => s !== summary && !/pric|fee|invest/i.test(`${s.key} ${s.title}`));
+  const body = sections.filter((s) => s !== summary && !/^(pricing|fees?|investment)\b/i.test(s.title) && !/^(pricing|fees|investment)$/i.test(s.key));
   if (body.length) {
     eyebrow("Scope of services"); heading("What we handle");
     body.forEach((s, i) => {
