@@ -22796,6 +22796,47 @@ export type Database = {
           },
         ]
       }
+      fund_service_level_events: {
+        Row: {
+          actor_id: string
+          created_at: string
+          effective_on: string | null
+          id: string
+          offering_id: string
+          payment_id: string | null
+          requested_level: string
+          status: string
+        }
+        Insert: {
+          actor_id: string
+          created_at?: string
+          effective_on?: string | null
+          id?: string
+          offering_id: string
+          payment_id?: string | null
+          requested_level: string
+          status: string
+        }
+        Update: {
+          actor_id?: string
+          created_at?: string
+          effective_on?: string | null
+          id?: string
+          offering_id?: string
+          payment_id?: string | null
+          requested_level?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_service_level_events_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fund_service_order_events: {
         Row: {
           actor_user_id: string | null
@@ -34884,6 +34925,7 @@ export type Database = {
           reg_type: Database["public"]["Enums"]["reg_type"]
           registered_agent: string | null
           rolling_closes: boolean | null
+          service_level: string
           service_tier: string
           share_price_cents: number
           signatory_capacity: string | null
@@ -34968,6 +35010,7 @@ export type Database = {
           reg_type: Database["public"]["Enums"]["reg_type"]
           registered_agent?: string | null
           rolling_closes?: boolean | null
+          service_level?: string
           service_tier?: string
           share_price_cents?: number
           signatory_capacity?: string | null
@@ -35052,6 +35095,7 @@ export type Database = {
           reg_type?: Database["public"]["Enums"]["reg_type"]
           registered_agent?: string | null
           rolling_closes?: boolean | null
+          service_level?: string
           service_tier?: string
           share_price_cents?: number
           signatory_capacity?: string | null
