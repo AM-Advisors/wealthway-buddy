@@ -336,7 +336,11 @@ export async function exportDocument(userId: string, id: string, format: "pdf" |
   const sections = a.doc.status === "draft" || a.doc.status === "with_marketing" || a.doc.status === "submitted" ? await latestSections(a.db, a.doc) : await approvedSections(a);
   const draft = !a.doc.approved_version;
   const { renderDocx, renderPdf } = await import("@/lib/sales-documents-render.server");
-  const bytes = format === "pdf" ? await renderPdf(a.doc, sections, draft) : await renderDocx(a.doc, sections, draft);
+  const quoteLines = a.doc.quote_id ? ((await a.db.from("sales_quote_lines").select("label, quantity, unit_cents, line_cents, billing_frequency").eq("quote_id", a.doc.quote_id).order("sort_order")).data ?? []) : [];
+  const { renderProposalPdf } = await import("@/lib/proposal-layout.server");
+  const bytes = format === "pdf"
+    ? (a.doc.kind === "proposal" ? await renderProposalPdf(a.doc, sections, quoteLines, draft) : await renderPdf(a.doc, sections, draft))
+    : await renderDocx(a.doc, sections, draft);
   await event(a.db, id, userId, "exported", { format, draft });
   let bin = ""; for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]!);
   return { base64: btoa(bin), fileName: `${a.doc.title.replace(/[^\w -]/g, "").trim() || "document"}${draft ? " (draft)" : ""}.${format}` };
