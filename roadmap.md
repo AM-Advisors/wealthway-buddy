@@ -1,5 +1,11 @@
 # Roadmap
 
+## Self Serve manager review screens (2026-10-20)
+- [x] Add Fund reviews to both manager Approvals entry points: KYC/KYB status with investor detail/edit, bank evidence and verified status, document admission approvals and reconciled receipts with statement upload/transaction labels. No final KYC/bank/funding approval permissions changed.
+- [x] 108 focused access/verification/document/banking checks passed; preview build OK.
+- [ ] Signed-in screen walkthrough — blocked on isolated synthetic QA; shared production backend is not permitted for browser tests.
+- Keep existing identity, receipt and banking final-approval permissions; no money movement or second-approval bypass.
+
 ## Website-sourced non-SPV fund templates (2026-10-20)
 - [x] Verify ILPA publisher PDFs and industry drafting permission; commercial app hosting permission not established. No complete verified debt/real-estate template; no company instruments or executed agreements relabeled.
 - [x] Add publisher download links with dated scope notices; canonical autofill recognizes publisher identity blanks, keeps GP separate from manager and preserves all unresolved legal terms. Enforce fund-type assignment on generation and prevent automatic activation with open blanks.

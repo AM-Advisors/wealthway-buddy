@@ -245,9 +245,12 @@ function Row({ k, v }: { k: string; v: React.ReactNode }) {
   return <div className="flex justify-between gap-3 py-1.5"><dt className="text-muted-foreground">{k}</dt><dd className="text-right break-words">{v || "-"}</dd></div>;
 }
 
-function InvestorSheet({ fundId, id, onClose }: { fundId: string; id: string | null; onClose: () => void }) {
+export function InvestorSheet({ fundId, id, onClose }: { fundId: string; id: string | null; onClose: () => void }) {
   const load = useServerFn(investorDetailFn);
-  const q = useQuery({ queryKey: ["fund-investor", fundId, id], queryFn: () => load({ data: { fundId, onboardingId: id! } }), enabled: !!id });
+  const q = useQuery({ queryKey: ["fund-investor", fundId, id], queryFn: () => {
+    if (!id) throw new Error("Select an investor to review.");
+    return load({ data: { fundId, onboardingId: id } });
+  }, enabled: !!id });
   const d = q.data;
   const pct = d && d.committedCents ? Math.min(100, Math.round(((d.receivedCents ?? 0) / d.committedCents) * 100)) : 0;
   return (
@@ -269,7 +272,7 @@ function InvestorSheet({ fundId, id, onClose }: { fundId: string; id: string | n
             </div>
           )}
         </div>
-        {q.isLoading ? <p className="p-6 text-sm text-muted-foreground">Loading…</p> : d && (
+        {q.isLoading ? <p className="p-6 text-sm text-muted-foreground">Loading…</p> : q.error ? <div role="alert" className="space-y-2 p-6"><p className="text-sm text-destructive">Investor details couldn’t load.</p><Button variant="outline" onClick={() => void q.refetch()}>Retry</Button></div> : d && (
           <div className="space-y-6 p-6 text-sm">
             {id && <PersonalInvestmentLinkCard onboardingId={id} />}
             {id && <InvestorEmailHistory onboardingId={id} />}

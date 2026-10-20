@@ -63,7 +63,7 @@ export function BankingTab({ fundId }: { fundId: string }) {
   );
 }
 
-function Transactions({ fundId, d }: { fundId: string; d: any }) {
+export function Transactions({ fundId, d }: { fundId: string; d: any }) {
   const qc = useQueryClient();
   const tag = useServerFn(tagTransactionFn);
   const m = useMutation({
