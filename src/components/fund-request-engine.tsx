@@ -400,14 +400,14 @@ export function FundRequestEngine({ clientId: id, draft, mode = "client", client
 
             {step === "review" && (
               <div className="space-y-4">
-                {steps.filter((s) => s.key !== "review").map((s) => (
+                {uiSteps.filter((s) => s.key !== "review").map((s) => (
                   <div key={s.key} className="flex items-start justify-between gap-3 rounded-md border p-3 text-sm">
                     <div>
                       <p className="font-medium">{s.label}</p>
-                      <p className="text-xs text-muted-foreground">{missing[s.key] ? `Still needed: ${missing[s.key]!.join(", ")}` : "Ready"}</p>
+                      <p className="text-xs text-muted-foreground">{stepMissing(s.key).length > 0 ? `Still needed: ${stepMissing(s.key)!.join(", ")}` : "Ready"}</p>
                     </div>
                     <div className="flex items-center gap-2">
-                      {!missing[s.key] && <Check className="size-4 text-primary" />}
+                      {stepMissing(s.key).length === 0 && <Check className="size-4 text-primary" />}
                       <Button size="sm" variant="ghost" onClick={() => setStep(s.key)}>Edit</Button>
                     </div>
                   </div>
