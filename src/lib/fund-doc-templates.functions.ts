@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/lib/require-auth";
+import { DOCUMENT_CATEGORIES } from "@/lib/offering-document-model";
 
 const eng = () => import("./fund-doc-templates.server");
 const uuid = z.string().uuid();
@@ -17,8 +18,12 @@ export const createTemplateFromFundFn = createServerFn({ method: "POST" }).middl
   .handler(async ({ data, context }) => (await eng()).createTemplateFromFund(context.userId, data));
 
 export const addTemplateVersionFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ templateId: uuid, note: z.string().max(1000).nullable().optional(), fileName: z.string().min(1).max(200), base64: z.string().min(1).max(28_000_000) }).parse(d))
+  .inputValidator((d) => z.object({ templateId: uuid, note: z.string().max(1000).nullable().optional(), fileName: z.string().min(1).max(200), base64: z.string().min(1).max(36_000_000) }).parse(d))
   .handler(async ({ data, context }) => (await eng()).addTemplateVersion(context.userId, data));
+
+export const createUploadedTemplateFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ title: z.string().trim().min(1).max(200), category: z.enum(DOCUMENT_CATEGORIES), fundTypes: z.array(z.string().trim().min(1).max(100)).min(1).max(20), fileName: z.string().min(1).max(200), base64: z.string().min(1).max(36_000_000), description: z.string().max(1000).nullable().optional() }).parse(d))
+  .handler(async ({ data, context }) => (await eng()).createUploadedTemplate(context.userId, data));
 
 export const decideTemplateVersionFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ templateId: uuid, version: z.number().int().min(1), decision: z.enum(["approve", "reject"]), note: z.string().max(1000).nullable().optional() }).parse(d))
