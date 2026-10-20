@@ -1,5 +1,10 @@
 # Roadmap
 
+## Thomas draft saving (2026-10-20)
+- [ ] Diagnose current draft-save failure without replacing Thomas's session or entered answers.
+- [ ] Fix draft saving and truthful save feedback; run focused regression tests.
+- [ ] Confirm signed-in saving in isolated QA — blocked if isolated synthetic QA is unavailable.
+
 ## Current account navigation requests (2026-10-20)
 - [ ] Thomas Morgan preview sign-in — approval request was interrupted; no session created.
 - [x] Locate client new-fund entry: /client/funds/new; manager entry: /manager/request-fund. The My Funds screen shown has no Add action.
