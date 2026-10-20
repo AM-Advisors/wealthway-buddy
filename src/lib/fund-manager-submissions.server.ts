@@ -35,7 +35,7 @@ export async function listSubmissions(userId: string, offeringId: string) {
 async function setupOnFile(offeringId: string) {
   const [{ data: bankTask }, { data: o }, { data: fee }, { data: docs }] = await Promise.all([
     db().from("fund_setup_tasks").select("status, fund_setups!inner(offering_id)").eq("fund_setups.offering_id", offeringId).eq("task_key", "banking_account").limit(1).maybeSingle(),
-    db().from("offerings").select("name, legal_entity_name, entity_type, state_formed, date_formed, principal_address, min_investment_cents, target_raise_cents, gp_entity_name, fund_signatory_person_id, signatory_title, fund_type, reg_type, offering_open_date, offering_close_date, rolling_closes").eq("id", offeringId).maybeSingle(),
+    db().from("offerings").select("name, legal_entity_name, entity_type, state_formed, registered_agent, date_formed, principal_address, min_investment_cents, target_raise_cents, gp_entity_name, fund_signatory_person_id, signatory_title, fund_type, reg_type, offering_open_date, offering_close_date, rolling_closes").eq("id", offeringId).maybeSingle(),
     db().from("fund_fee_terms").select("management_fee_pct, carry_pct, hurdle_pct, status").eq("offering_id", offeringId).in("status", ["active", "approved"]).order("created_at", { ascending: false }).limit(1).maybeSingle(),
     db().from("offering_documents").select("title, doc_type").eq("offering_id", offeringId).limit(50),
   ]);
@@ -48,7 +48,7 @@ async function setupOnFile(offeringId: string) {
   const s = (v: unknown) => (v == null ? "" : String(v));
   const addr = (await import("@/lib/address")).parseAddressParts(o?.principal_address);
   return {
-    fund_details: { legalName: s(o?.legal_entity_name), displayName: s(o?.name), entityType: s(o?.entity_type), jurisdiction: s(o?.state_formed), formationDate: s(o?.date_formed), principalAddress: s(o?.principal_address), addressLine1: addr.addressLine1, addressLine2: addr.addressLine2, addressCity: addr.addressCity, addressState: addr.addressState, addressZip: addr.addressZip, targetRaise: $(o?.target_raise_cents), minInvestment: $(o?.min_investment_cents), fundType: s(o?.fund_type), regType: s(o?.reg_type), gpName: s(o?.gp_entity_name), offeringOpenDate: s(o?.offering_open_date), offeringCloseDate: s(o?.offering_close_date), arbitrationCity: s(o?.arbitration_city), arbitrationState: s(o?.arbitration_state), rollingCloses: o?.rolling_closes == null ? "" : o.rolling_closes ? "yes" : "no" },
+    fund_details: { legalName: s(o?.legal_entity_name), displayName: s(o?.name), entityType: s(o?.entity_type), jurisdiction: s(o?.state_formed), registeredAgent: s(o?.registered_agent), formationDate: s(o?.date_formed), principalAddress: s(o?.principal_address), addressLine1: addr.addressLine1, addressLine2: addr.addressLine2, addressCity: addr.addressCity, addressState: addr.addressState, addressZip: addr.addressZip, targetRaise: $(o?.target_raise_cents), minInvestment: $(o?.min_investment_cents), fundType: s(o?.fund_type), regType: s(o?.reg_type), gpName: s(o?.gp_entity_name), offeringOpenDate: s(o?.offering_open_date), offeringCloseDate: s(o?.offering_close_date), arbitrationCity: s(o?.arbitration_city), arbitrationState: s(o?.arbitration_state), rollingCloses: o?.rolling_closes == null ? "" : o.rolling_closes ? "yes" : "no" },
     fees_team: { managementFeePercent: s(fee?.management_fee_pct), carryPercent: s(fee?.carry_pct), preferredReturnPercent: s(fee?.hurdle_pct), gpName: s(o?.gp_entity_name), signers: signer ? `${signer}${o?.signatory_title ? `, ${o.signatory_title}` : ""}` : "" },
     bank: {} as Record<string, string>,
     /** Wire instructions already saved on the fund record (banking task complete). */
@@ -146,7 +146,7 @@ async function apply(sb: any, userId: string, s: any): Promise<unknown> {
   if (s.section === "fund_details") {
     const fields: Record<string, unknown> = {};
     if (p.displayName) fields["displayName"] = String(p.displayName);
-    for (const k of ["entityType", "jurisdiction", "formationDate", "gpName", "regType", "fundType", "offeringOpenDate", "offeringCloseDate", "arbitrationCity", "arbitrationState"]) if (p[k]) fields[k] = String(p[k]);
+    for (const k of ["entityType", "jurisdiction", "registeredAgent", "formationDate", "gpName", "regType", "fundType", "offeringOpenDate", "offeringCloseDate", "arbitrationCity", "arbitrationState"]) if (p[k]) fields[k] = String(p[k]);
     // The address is edited as separate fields but stored as one line on the fund record.
     const partKeys = ["addressLine1", "addressLine2", "addressCity", "addressState", "addressZip"] as const;
     if (partKeys.some((k) => p[k])) {

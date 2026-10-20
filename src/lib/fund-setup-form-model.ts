@@ -37,6 +37,7 @@ export const FORM_SECTIONS: { id: string; title: string; fields: FieldDef[] }[] 
   { id: "jurisdiction", title: "Jurisdiction", fields: [
     { key: "country", label: "Country", disabled: true, fixed: "United States" },
     { key: "jurisdiction", label: "State", section: fd, required: true },
+    { key: "registeredAgent", label: "Registered agent", section: fd },
     { key: "addressLine1", label: "Address line 1", section: fd },
     { key: "addressLine2", label: "Address line 2", section: fd },
     { key: "addressCity", label: "City", section: fd },
