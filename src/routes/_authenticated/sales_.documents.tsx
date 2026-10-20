@@ -81,6 +81,7 @@ function Documents() {
               <select className={sel} value={f.direction} disabled={f.kind === "proposal"} onChange={(e) => setF({ ...f, direction: e.target.value as DocDirection })}>
                 {Object.entries(DIRECTION_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
               </select></label>
+            <div className="sm:col-span-2"><ProspectLookup onResolved={(p) => setF((cur) => ({ ...cur, contactId: p.contactId ?? cur.contactId, clientId: p.clientId ?? cur.clientId, recipientEmail: p.email, recipientName: p.name ?? cur.recipientName, title: cur.title || (p.organization ? `${p.organization} proposal` : cur.title) }))} /></div>
             <label className="space-y-1 text-sm sm:col-span-2"><span>Title</span><Input value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} placeholder="e.g. Fund administration proposal for Acme Ventures" /></label>
             {f.direction === "response" && (
               <div className="sm:col-span-2">
