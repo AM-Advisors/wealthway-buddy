@@ -133,7 +133,7 @@ export const Route = createFileRoute("/api/public/payments/webhook")({
               if (!invoiceId && o.payment_intent) {
                 const { createStripeClient } = await import("@/lib/stripe.server");
                 const pi = await createStripeClient(rawEnv).paymentIntents.retrieve(typeof o.payment_intent === "string" ? o.payment_intent : o.payment_intent.id);
-                if (pi.metadata?.kind === "invoice_payment") invoiceId = pi.metadata.invoiceId;
+                if (pi.metadata?.["kind"] === "invoice_payment") invoiceId = pi.metadata["invoiceId"];
               }
               if (invoiceId) await (await import("@/lib/billing-schedule.server")).onCardPaymentReversed(invoiceId, event.type === "charge.refunded" ? "Card payment refunded" : "Card payment disputed");
               break;

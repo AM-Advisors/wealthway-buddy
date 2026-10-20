@@ -41,7 +41,7 @@ export async function draftDueInvoices(asOf = today()) {
     const periods = duePeriods(s.frequency, s.next_due_on, asOf);
     for (const p of periods) {
       const key = `${s.sow_id}:${p.start}`;
-      const g = groups.get(key) ?? { sowId: s.sow_id, clientId: s.client_id, start: p.start, end: p.end, lines: [] };
+      const g = groups.get(key) ?? { sowId: s.sow_id, clientId: s.client_id, start: p.start, end: p.end, lines: [] as any[] };
       if (p.end > g.end) g.end = p.end;
       g.lines.push({ source: "schedule", source_ref: scheduleRef(s.id, p.start), service_key: s.service_key, label: s.label, quantity: 1, unit_cents: s.amount_cents, amount_cents: s.amount_cents, sort_order: g.lines.length });
       groups.set(key, g);
