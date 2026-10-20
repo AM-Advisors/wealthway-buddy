@@ -1,5 +1,5 @@
 /** Persist only an editable draft, and acknowledge only a row read back from the write. */
-export async function persistFundRequestDraft(db: any, input: { clientId: string; draftId?: string | null; request: Record<string, unknown>; userId: string }) {
+export async function persistFundRequestDraft(db: any, input: { clientId: string; draftId?: string | null | undefined; request: Record<string, unknown>; userId: string }) {
   const details = { ...input.request, _kind: "fund_request_v2" };
   if (input.draftId) {
     const { data, error } = await db.from("client_fund_intakes")
