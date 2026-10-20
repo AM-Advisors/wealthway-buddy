@@ -70,7 +70,7 @@ function fail(message: string): never {
 }
 
 /** Keyed fingerprint so a changed TIN is detectable without storing it. */
-async function tinFingerprint(tin: string): Promise<string> {
+export async function tinFingerprint(tin: string): Promise<string> {
   const key = process.env['SUPABASE_SERVICE_ROLE_KEY'];
   if (!key) throw new Error("Tax details can't be saved right now. Please try again later.");
   const enc = new TextEncoder();
