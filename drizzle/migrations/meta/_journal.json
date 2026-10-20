@@ -2087,6 +2087,13 @@
       "when": 1792513340634,
       "tag": "0297_marketing_job_runs_created_idx",
       "breakpoints": true
+    },
+    {
+      "idx": 298,
+      "version": "7",
+      "when": 1792517538513,
+      "tag": "0298_security_session_evidence_idempotency",
+      "breakpoints": true
     }
   ]
 }

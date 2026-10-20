@@ -42026,6 +42026,7 @@ export type Database = {
           created_at: string
           device_hash: string | null
           email: string | null
+          event_key: string | null
           event_type: string
           gps_declined: boolean
           id: string
@@ -42047,6 +42048,7 @@ export type Database = {
           created_at?: string
           device_hash?: string | null
           email?: string | null
+          event_key?: string | null
           event_type: string
           gps_declined?: boolean
           id?: string
@@ -42068,6 +42070,7 @@ export type Database = {
           created_at?: string
           device_hash?: string | null
           email?: string | null
+          event_key?: string | null
           event_type?: string
           gps_declined?: boolean
           id?: string

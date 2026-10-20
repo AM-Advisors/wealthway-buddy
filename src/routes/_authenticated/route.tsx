@@ -25,6 +25,7 @@ import { PortalTopbar } from "@/components/portal-topbar";
 import { PortalFooter } from "@/components/portal-footer";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { EditContextBanner } from "@/components/view-as";
+import { logSecurityEvent } from "@/lib/account-security.functions";
 
 export const Route = createFileRoute("/_authenticated")({
   head: () => ({ meta: [{ name: "robots", content: "noindex, nofollow" }] }),
@@ -57,6 +58,7 @@ function AuthenticatedLayout() {
   }, [queryClient, policyStatus, kycStatus, portalAccess]);
 
   async function signOut() {
+    await logSecurityEvent({ data: { eventType: "sign_out", action: "Explicit sign-out requested" } }).catch(() => {});
     await queryClient.cancelQueries();
     queryClient.clear();
     // Nothing about the last workspace, company or delegated context survives sign-out.
