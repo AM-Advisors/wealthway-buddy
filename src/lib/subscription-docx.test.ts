@@ -14,3 +14,8 @@ it("fills each investor's amount separately from the fund minimum and never sign
   expect(xml).toContain("<w:t>Signature:</w:t>");
   expect(xml).toContain("<w:t>Signatory’s Legal Name:</w:t>");
 });
+it("refuses to send an agreement where the investor would have to place their own signature", async () => {
+  const zip = new JSZip();
+  zip.file("word/document.xml", `<w:document><w:p><w:r><w:t>No signature lines here</w:t></w:r></w:p></w:document>`);
+  await expect(fillSubscriptionDocx(await zip.generateAsync({ type: "uint8array" }), {})).rejects.toThrow(/signature line/);
+});

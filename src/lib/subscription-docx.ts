@@ -53,7 +53,11 @@ export async function fillSubscriptionDocx(bytes: Uint8Array, values: Record<str
     const token = `<w:r><w:t xml:space="preserve"> {{${key}}}</w:t></w:r>`;
     return fillXml(p.replace("</w:p>", `${token}</w:p>`), normalized, { filled: new Set(), open: new Set() });
   });
-  // Templates without an investor "Signature:" line keep their own Box tags or are prepared manually.
+  // The investor must never place their own fields: require a Box signature tag
+  // (added here or already in the template) before the file can be sent.
+  if (!xml.includes(INVESTOR_SIGNATURE_TAG)) {
+    throw new Error("This agreement has no investor signature line ready. Harmonious has to fix the template before it can be signed.");
+  }
   zip.file("word/document.xml", xml);
-  return { ...filled, bytes: await zip.generateAsync({ type: "uint8array", compression: "DEFLATE" }) };
+  return { ...filled, signatureReady: true, bytes: await zip.generateAsync({ type: "uint8array", compression: "DEFLATE" }) };
 }
