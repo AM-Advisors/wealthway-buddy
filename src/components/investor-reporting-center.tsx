@@ -97,7 +97,7 @@ function PackageView({ packageId }: { packageId: string }) {
   );
 }
 
-export function InvestorReportingCenter({ section }: { section?: string } = {}) {
+export function InvestorReportingCenter({ section }: { section?: string | undefined } = {}) {
   const loadSummary = useServerFn(getInvestorDashboardSummary);
   const loadCenter = useServerFn(getInvestorReportingCenter);
   const loadLibrary = useServerFn(getInvestorDocumentLibrary);
