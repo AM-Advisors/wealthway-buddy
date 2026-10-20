@@ -3,6 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { acknowledgeDocumentFn, investorDocumentsFn } from "@/lib/fund-setup-canonical.functions";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 /** Investor Sign-stage list: only documents that apply to this investment, plain actions. */
@@ -27,7 +28,7 @@ export function InvestmentOfferingDocuments({ onboardingId }: { onboardingId: st
       <CardContent className="space-y-2">
         {q.data.map((d) => (
           <div key={d.id} className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-3">
-            <span className="text-sm">{d.title}{d.versionLabel && <span className="block text-xs text-muted-foreground">{d.versionLabel}</span>}</span>
+            <span className="text-sm">{d.title}{d.versionLabel && <span className="block text-xs text-muted-foreground">{d.versionLabel}</span>}<Badge variant="outline" className="mt-1">{d.approvalLabel}</Badge></span>
             {d.action === "Acknowledge" ? (
               <Button size="sm" onClick={() => acknowledge(d.id)}>I have reviewed this document</Button>
             ) : (

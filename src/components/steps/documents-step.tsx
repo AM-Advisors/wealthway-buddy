@@ -18,6 +18,7 @@ import { getSigningStates } from "@/lib/document-signing.functions";
 import { DocumentSignCard } from "@/components/document-sign-card";
 import { savePdf } from "@/lib/download-pdf";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -323,6 +324,7 @@ export function DocumentsStep({ offeringId }: { offeringId?: string }) {
                   key={doc.id}
                   documentId={doc.id}
                   title={doc.title}
+                  approvalLabel={doc.approvalLabel}
                   requiresSignature
                   offeringId={offeringId ?? data?.offering?.id}
                   signing={signingByDoc.get(doc.id)}
@@ -339,6 +341,7 @@ export function DocumentsStep({ offeringId }: { offeringId?: string }) {
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
                       <CardTitle>{doc.title}</CardTitle>
+                      <Badge variant="outline" className="mt-2">{doc.approvalLabel}</Badge>
                       <CardDescription>
                         {signature
                           ? `Signed ${new Date(signature.signed_at).toLocaleString()}`
