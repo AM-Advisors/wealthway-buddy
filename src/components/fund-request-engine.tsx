@@ -53,8 +53,14 @@ export function FundRequestEngine({ clientId: id, draft, mode = "client", client
   const catalogue = useQuery({ queryKey: ["service-catalogue"], queryFn: () => catalogueFn({ data: {} }) });
 
   const dq = useQuery({ queryKey: ["fund-request-draft", draft], enabled: !!draft, queryFn: () => loadDraft({ data: { draftId: draft! } }) });
+  const lastSavedJson = useRef<string>("");
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   useEffect(() => {
-    if (dq.data?.request) setR({ ...emptyRequest(), ...dq.data.request });
+    if (dq.data?.request) {
+      const loaded = { ...emptyRequest(), ...dq.data.request };
+      setR(loaded);
+      lastSavedJson.current = JSON.stringify(loaded);
+    }
   }, [dq.data]);
 
   const set = <K extends keyof FundRequest>(k: K, v: FundRequest[K]) => setR((p) => ({ ...p, [k]: v }));
@@ -101,15 +107,23 @@ export function FundRequestEngine({ clientId: id, draft, mode = "client", client
   }, [needsSs4(r)]);
 
   const saveDraft = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (quiet: boolean) => {
       if (!id) throw new Error("No client account selected.");
-      const res = await save({ data: { clientId: id, draftId, request: r as any } });
-      setDraftId(res.id);
-      return res;
+      const snapshot = r;
+      const res = await save({ data: { clientId: id, draftId, request: snapshot as any } });
+      return { res, snapshot, quiet };
     },
-    onSuccess: () => toast.success("Draft saved."),
-    onError: (e: any) => toast.error(e?.message ?? "Could not save."),
+    onSuccess: ({ res, snapshot, quiet }) => {
+      setDraftId(res.id);
+      lastSavedJson.current = JSON.stringify(snapshot);
+      setLastSavedAt(new Date());
+      if (!quiet) toast.success("Draft saved.");
+    },
+    onError: (e: any, quiet) => {
+      if (!quiet) toast.error(e?.message ?? "Could not save.");
+    },
   });
+  const hasContent = !!(r.fund_name.trim() || r.legal_name.trim() || r.signatory.name.trim() || r.signatory.email.trim());
   const [payOpen, setPayOpen] = useState(false);
   const quote = useFundPayment(!staffMode && step === "review" && id ? { kind: "new_fund_request", clientId: id, request: r as any } : null);
   const send = useMutation({
@@ -126,6 +140,17 @@ export function FundRequestEngine({ clientId: id, draft, mode = "client", client
     },
     onError: (e: any) => toast.error(e?.message ?? "Could not send."),
   });
+
+  // Autosave: once the form has any real content, quietly save a few seconds after the last edit
+  // so progress is never lost if the page is closed or the session drops.
+  useEffect(() => {
+    if (!id || !hasContent || dq.isLoading) return;
+    if (JSON.stringify(r) === lastSavedJson.current) return;
+    const t = setTimeout(() => {
+      if (!saveDraft.isPending && !send.isPending) saveDraft.mutate(true);
+    }, 2500);
+    return () => clearTimeout(t);
+  }, [r, id, hasContent, dq.isLoading, saveDraft.isPending, send.isPending]);
 
   const missing = missingFields(r);
   const steps = visibleSteps(r);
@@ -144,7 +169,12 @@ export function FundRequestEngine({ clientId: id, draft, mode = "client", client
           <h2 className="text-xl font-semibold tracking-tight">Launch a new fund or SPV</h2>
           <p className="text-sm text-muted-foreground">Follows the same steps Harmonious uses for Fund Setup. Save and come back any time.</p>
         </div>
-        <Button size="sm" variant="outline" disabled={saveDraft.isPending || !id} onClick={() => saveDraft.mutate()}>Save draft</Button>
+        <div className="flex items-center gap-3">
+          <p className="text-xs text-muted-foreground" role="status">
+            {saveDraft.isPending ? "Saving…" : lastSavedAt ? `Draft saved ${format(lastSavedAt, "h:mm a")} — changes save automatically` : "Changes save automatically as you go"}
+          </p>
+          <Button size="sm" variant="outline" disabled={saveDraft.isPending || !id} onClick={() => saveDraft.mutate(false)}>Save draft</Button>
+        </div>
       </div>
       {clientPicker}
 
