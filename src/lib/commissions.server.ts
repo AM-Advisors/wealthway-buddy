@@ -63,11 +63,15 @@ export async function commissionReport(userId: string, from: string, to: string)
   const { data: pays } = lineIds.length ? await db.from("commission_payouts").select("id, invoice_line_id, user_id, layer, amount_cents, payout_date, reference, note, reversal_of, reason, created_at").in("invoice_line_id", lineIds) : { data: [] };
   const payList = (pays ?? []) as any[];
   const reversed = new Set(payList.filter((p) => p.reversal_of).map((p) => p.reversal_of));
+  const { data: queued } = lineIds.length ? await db.from("commission_payout_queue").select("invoice_line_id, user_id, layer, status, reason, due_on").in("invoice_line_id", lineIds) : { data: [] };
+  const queueOf = (r: any) => ((queued ?? []) as any[]).find((x) => x.invoice_line_id === r.lineId && (x.user_id ?? null) === (r.userId ?? null) && x.layer === r.layer);
   for (const r of rows) {
     const active = payList.find((p) => !p.reversal_of && !reversed.has(p.id) && p.invoice_line_id === r.lineId && p.user_id === r.userId && p.layer === r.layer);
     r.payout = active ? { id: active.id, date: active.payout_date, reference: active.reference, note: active.note } : null;
-    r.status = active ? "paid_out" : r.paid ? "scheduled" : "not_earned";
-    r.payoutDue = r.paid && r.paidOn ? payoutDueDate(r.paidOn) : null;
+    const qd = queueOf(r);
+    r.status = active ? "paid_out" : qd?.status === "cancelled" ? "cancelled" : r.paid ? "scheduled" : "not_earned";
+    r.cancelReason = qd?.status === "cancelled" ? qd.reason : null;
+    r.payoutDue = qd?.due_on ?? (r.paid && r.paidOn ? payoutDueDate(r.paidOn) : null);
   }
   const nm = await names(rows.map((r) => r.userId).filter(Boolean));
   for (const r of rows) r.name = r.userId ? nm.get(r.userId) ?? "Unknown" : "Unassigned";
@@ -127,8 +131,14 @@ export async function recordCommissionPayouts(userId: string, items: { lineId: s
     if (row.status !== "scheduled") throw new Error("Only earned commissions that aren't already paid out can be recorded.");
     return { quote_id: row.quoteId, invoice_line_id: row.lineId, user_id: row.userId, layer: row.layer, amount_cents: row.amountCents, payout_date: payoutDate, reference: reference.trim(), note, recorded_by: userId };
   });
-  const { error } = await db.from("commission_payouts").insert(inserts);
+  const { data: made, error } = await db.from("commission_payouts").insert(inserts).select("id, invoice_line_id, user_id, layer");
   if (error) throw new Error(error.message);
+  for (const p of (made ?? []) as any[]) {
+    let q = db.from("commission_payout_queue").update({ status: "confirmed", payout_id: p.id }).eq("invoice_line_id", p.invoice_line_id).eq("layer", p.layer).eq("status", "scheduled");
+    q = p.user_id ? q.eq("user_id", p.user_id) : q.is("user_id", null);
+    const { data: hit } = await q.select("id");
+    for (const h of (hit ?? []) as any[]) await db.from("commission_payout_queue_events").insert({ queue_id: h.id, event_kind: "confirmed", actor_id: userId, detail: { payout_id: p.id, payout_date: payoutDate, reference: reference.trim() } });
+  }
   return { ok: true, count: inserts.length };
 }
 
@@ -142,4 +152,47 @@ export async function reverseCommissionPayout(userId: string, payoutId: string, 
   const { error } = await db.from("commission_payouts").insert({ quote_id: p.quote_id, invoice_line_id: p.invoice_line_id, user_id: p.user_id, layer: p.layer, amount_cents: -p.amount_cents, payout_date: new Date().toISOString().slice(0, 10), reference: p.reference, recorded_by: userId, reversal_of: p.id, reason: reason.trim() });
   if (error) throw new Error(error.code === "23505" ? "That payout was already reversed." : error.message);
   return { ok: true };
+}
+
+/**
+ * Queues each rep's commission for a paid invoice as Scheduled for quarter-end.
+ * Idempotent: a line/rep/layer is queued once. Records only; never sends money.
+ */
+export async function queueInvoicePayouts(invoiceId: string) {
+  const db = await admin();
+  const { data: inv } = await db.from("invoices").select("id, sow_id, status, paid_on, issue_date, voided_at").eq("id", invoiceId).maybeSingle();
+  if (!inv?.sow_id || inv.status !== "paid" || inv.voided_at) return { queued: 0 };
+  const { data: q } = await db.from("sales_quotes").select("id, owner_user_id, bdr_user_id").eq("sow_id", inv.sow_id).eq("status", "signed").maybeSingle();
+  if (!q?.owner_user_id) return { queued: 0 };
+  const paidOn = String(inv.paid_on ?? new Date().toISOString().slice(0, 10));
+  const rates = ratesAt(await rateHistory(db), paidOn + "T23:59:59Z");
+  const { data: roleRows } = await db.from("user_roles").select("user_id, role");
+  const rolesOf = new Map<string, string[]>();
+  for (const r of roleRows ?? []) rolesOf.set(r.user_id, [...(rolesOf.get(r.user_id) ?? []), r.role]);
+  const firstWith = (role: string) => [...rolesOf].find(([, rs]) => rs.includes(role))?.[0] ?? null;
+  const { data: rl } = await db.from("sales_reporting_lines").select("manager_user_id").eq("user_id", q.owner_user_id).maybeSingle();
+  const mgr = rl?.manager_user_id ?? null;
+  const managerId = mgr && (rolesOf.get(mgr) ?? []).includes("sales_management") ? mgr : null;
+  const { data: lines } = await db.from("invoice_lines").select("id, service_key, amount_cents").eq("invoice_id", invoiceId);
+  const due = payoutDueDate(paidOn);
+  let queued = 0;
+  for (const ln of (lines ?? []) as any[]) {
+    const base = Number(ln.amount_cents) || 0; if (base <= 0) continue;
+    for (const s of splitLine({ rates, capTable: isCapTableLine(ln.service_key), closerId: q.owner_user_id, closerRoles: rolesOf.get(q.owner_user_id) ?? [], bdrId: q.bdr_user_id, managerId, croId: firstWith("cro"), ceoId: firstWith("executive") })) {
+      const amount = Math.round((base * s.ratePct) / 100); if (amount <= 0) continue;
+      const { data: row, error } = await db.from("commission_payout_queue").insert({ invoice_id: invoiceId, invoice_line_id: ln.id, quote_id: q.id, user_id: s.userId, layer: s.layer, amount_cents: amount, due_on: due }).select("id").maybeSingle();
+      if (error) { if (error.code === "23505") continue; throw new Error(error.message); }
+      await db.from("commission_payout_queue_events").insert({ queue_id: row.id, event_kind: "scheduled", detail: { invoice_id: invoiceId, due_on: due, amount_cents: amount } });
+      queued++;
+    }
+  }
+  return { queued };
+}
+
+/** Cancels still-scheduled payouts for an invoice (void, failed or reversed payment). Paid-out records are untouched. */
+export async function cancelInvoicePayouts(invoiceId: string, reason: string, actorId: string | null) {
+  const db = await admin();
+  const { data: hit } = await db.from("commission_payout_queue").update({ status: "cancelled", reason }).eq("invoice_id", invoiceId).eq("status", "scheduled").select("id");
+  for (const h of (hit ?? []) as any[]) await db.from("commission_payout_queue_events").insert({ queue_id: h.id, event_kind: "cancelled", actor_id: actorId, detail: { reason } });
+  return { cancelled: (hit ?? []).length };
 }
