@@ -365,6 +365,18 @@ export async function sendReminders(uid: string, fundId: string, onboardingIds: 
     const step = reminderStep(r.stage, r.docs, r.wiring);
     if (!step) { results.push({ id, outcome: "skipped", reason: "Nothing outstanding" }); continue; }
     if (!r.email) { results.push({ id, outcome: "skipped", reason: "No email on file" }); continue; }
+    // Never invited (added by the manager, no account): a sign-in reminder can't help them.
+    // Send their personal invitation instead, through the same checked invite engine.
+    const { data: ob } = await d.from("investor_onboardings").select("invitation_id, investor_user_id").eq("id", id).maybeSingle();
+    if (ob && !ob.invitation_id && !ob.investor_user_id) {
+      try {
+        const io = await import("@/lib/investor-onboarding.server");
+        await io.createPersonalLink(uid, id);
+        const s = await io.sendPersonalLink(uid, id);
+        results.push(s.emailSent ? { id, outcome: "sent" } : { id, outcome: "failed", reason: "Invite email could not be sent" });
+      } catch (e) { results.push({ id, outcome: "failed", reason: (e as Error).message.slice(0, 300) }); }
+      continue;
+    }
     if (!reminderAllowed(last[id] ?? null)) { results.push({ id, outcome: "skipped", reason: "Reminded in the last 3 days" }); continue; }
     let delivery = "sent"; let note: string | null = null;
     try {
