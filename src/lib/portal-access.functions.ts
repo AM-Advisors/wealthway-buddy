@@ -77,73 +77,20 @@ export const getPortalAccess = createServerFn({ method: "GET" })
     let roles = ((roleRows ?? []) as any[]).map((r) => r.role as string);
 
     let openOnboardingId: string | null = null;
-    if (roles.length === 0 && email) {
-      // Claim any outstanding invitation for this address (mirrors the signup trigger,
-      // covering people who were invited after they created their account).
-      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      const { data: invites } = await supabaseAdmin
-        .from("fund_invitations")
-        .select("id, invite_role, offering_id, invited_by, status, expires_at, token")
-        .ilike("email", email)
-        .eq("status", "pending");
-
-      let live = ((invites ?? []) as any[]).filter(
-        (i) => !i.expires_at || new Date(i.expires_at) > new Date(),
-      );
-
-      // Investor invitations tied to an investment go through the same connection
-      // step as the personal link, so the prepared investment is linked, not orphaned.
-      const ids = live.filter((i) => i.invite_role !== "fund_manager").map((i) => i.id);
-      if (ids.length) {
-        const { data: bound } = await supabaseAdmin.from("investor_onboardings").select("invitation_id").in("invitation_id", ids);
-        const boundIds = new Set(((bound ?? []) as any[]).map((b) => b.invitation_id));
-        const { claimOnboardInvitation } = await import("@/lib/investor-onboarding.server");
-        for (const inv of live.filter((i) => boundIds.has(i.id))) {
-          try {
-            const r = await claimOnboardInvitation(userId, String(inv.token));
-            openOnboardingId = openOnboardingId ?? r.onboardingId;
-          } catch (e) {
-            console.error("[portal-access] invitation claim failed", (e as Error).message);
-          }
+    if (email) {
+      // Every sign-in runs the single connection engine: waiting invitations,
+      // records prepared under this verified email and unlinked investments.
+      const { connectAccount } = await import("@/lib/account-connect.server");
+      try {
+        const r = await connectAccount(userId);
+        // Only steer into an investment when the account had no access before.
+        if (roles.length === 0) openOnboardingId = r.openOnboardingId;
+        if (r.invitationsAccepted || r.recordsLinked) {
+          const { data: refreshed } = await supabase.from("user_roles").select("role").eq("user_id", userId);
+          roles = ((refreshed ?? []) as any[]).map((x) => x.role as string);
         }
-        live = live.filter((i) => !boundIds.has(i.id));
-        if (openOnboardingId) live = [];
-      }
-
-      for (const inv of live) {
-        if (inv.invite_role === "fund_manager") {
-          await supabaseAdmin
-            .from("fund_managers")
-            .upsert(
-              { user_id: userId, offering_id: inv.offering_id, granted_by: inv.invited_by },
-              { onConflict: "user_id,offering_id" },
-            );
-          await supabaseAdmin
-            .from("user_roles")
-            .upsert({ user_id: userId, role: "fund_manager" }, { onConflict: "user_id,role" });
-        } else {
-          await supabaseAdmin
-            .from("investor_fund_access")
-            .upsert(
-              { user_id: userId, offering_id: inv.offering_id, granted_by: inv.invited_by },
-              { onConflict: "user_id,offering_id" },
-            );
-          await supabaseAdmin
-            .from("user_roles")
-            .upsert({ user_id: userId, role: "investor" }, { onConflict: "user_id,role" });
-        }
-        await supabaseAdmin
-          .from("fund_invitations")
-          .update({ status: "accepted", accepted_at: new Date().toISOString(), accepted_by: userId })
-          .eq("id", inv.id);
-      }
-
-      if (live.length > 0 || openOnboardingId) {
-        const { data: refreshed } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", userId);
-        roles = ((refreshed ?? []) as any[]).map((r) => r.role as string);
+      } catch (e) {
+        console.error("[portal-access] account connection failed", (e as Error).message);
       }
     }
 

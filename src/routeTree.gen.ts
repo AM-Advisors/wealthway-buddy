@@ -432,6 +432,7 @@ import { Route as AuthenticatedSalesRepsIdRouteImport } from './routes/_authenti
 import { Route as ApiPublicEmailClickRouteImport } from './routes/api/public/email/click'
 import { Route as ApiPublicEmailOpenRouteImport } from './routes/api/public/email/open'
 import { Route as ApiPublicHooksBankAlertsRouteImport } from './routes/api/public/hooks/bank-alerts'
+import { Route as ApiPublicHooksConnectAccountsRouteImport } from './routes/api/public/hooks/connect-accounts'
 import { Route as ApiPublicHooksInvoiceRemindersRouteImport } from './routes/api/public/hooks/invoice-reminders'
 import { Route as ApiPublicIrsEfileAckRouteImport } from './routes/api/public/irs-efile/ack'
 import { Route as ApiPublicLinkedinCallbackRouteImport } from './routes/api/public/linkedin/callback'
@@ -2888,6 +2889,12 @@ const ApiPublicHooksBankAlertsRoute =
     path: '/api/public/hooks/bank-alerts',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksConnectAccountsRoute =
+  ApiPublicHooksConnectAccountsRouteImport.update({
+    id: '/api/public/hooks/connect-accounts',
+    path: '/api/public/hooks/connect-accounts',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksInvoiceRemindersRoute =
   ApiPublicHooksInvoiceRemindersRouteImport.update({
     id: '/api/public/hooks/invoice-reminders',
@@ -3525,6 +3532,7 @@ export interface FileRoutesByFullPath {
   '/api/public/email/click': typeof ApiPublicEmailClickRoute
   '/api/public/email/open': typeof ApiPublicEmailOpenRoute
   '/api/public/hooks/bank-alerts': typeof ApiPublicHooksBankAlertsRoute
+  '/api/public/hooks/connect-accounts': typeof ApiPublicHooksConnectAccountsRoute
   '/api/public/hooks/invoice-reminders': typeof ApiPublicHooksInvoiceRemindersRoute
   '/api/public/irs-efile/ack': typeof ApiPublicIrsEfileAckRoute
   '/api/public/linkedin/callback': typeof ApiPublicLinkedinCallbackRoute
@@ -3980,6 +3988,7 @@ export interface FileRoutesByTo {
   '/api/public/email/click': typeof ApiPublicEmailClickRoute
   '/api/public/email/open': typeof ApiPublicEmailOpenRoute
   '/api/public/hooks/bank-alerts': typeof ApiPublicHooksBankAlertsRoute
+  '/api/public/hooks/connect-accounts': typeof ApiPublicHooksConnectAccountsRoute
   '/api/public/hooks/invoice-reminders': typeof ApiPublicHooksInvoiceRemindersRoute
   '/api/public/irs-efile/ack': typeof ApiPublicIrsEfileAckRoute
   '/api/public/linkedin/callback': typeof ApiPublicLinkedinCallbackRoute
@@ -4445,6 +4454,7 @@ export interface FileRoutesById {
   '/api/public/email/click': typeof ApiPublicEmailClickRoute
   '/api/public/email/open': typeof ApiPublicEmailOpenRoute
   '/api/public/hooks/bank-alerts': typeof ApiPublicHooksBankAlertsRoute
+  '/api/public/hooks/connect-accounts': typeof ApiPublicHooksConnectAccountsRoute
   '/api/public/hooks/invoice-reminders': typeof ApiPublicHooksInvoiceRemindersRoute
   '/api/public/irs-efile/ack': typeof ApiPublicIrsEfileAckRoute
   '/api/public/linkedin/callback': typeof ApiPublicLinkedinCallbackRoute
@@ -4910,6 +4920,7 @@ export interface FileRouteTypes {
     | '/api/public/email/click'
     | '/api/public/email/open'
     | '/api/public/hooks/bank-alerts'
+    | '/api/public/hooks/connect-accounts'
     | '/api/public/hooks/invoice-reminders'
     | '/api/public/irs-efile/ack'
     | '/api/public/linkedin/callback'
@@ -5365,6 +5376,7 @@ export interface FileRouteTypes {
     | '/api/public/email/click'
     | '/api/public/email/open'
     | '/api/public/hooks/bank-alerts'
+    | '/api/public/hooks/connect-accounts'
     | '/api/public/hooks/invoice-reminders'
     | '/api/public/irs-efile/ack'
     | '/api/public/linkedin/callback'
@@ -5829,6 +5841,7 @@ export interface FileRouteTypes {
     | '/api/public/email/click'
     | '/api/public/email/open'
     | '/api/public/hooks/bank-alerts'
+    | '/api/public/hooks/connect-accounts'
     | '/api/public/hooks/invoice-reminders'
     | '/api/public/irs-efile/ack'
     | '/api/public/linkedin/callback'
@@ -5944,6 +5957,7 @@ export interface RootRouteChildren {
   ApiPublicEmailClickRoute: typeof ApiPublicEmailClickRoute
   ApiPublicEmailOpenRoute: typeof ApiPublicEmailOpenRoute
   ApiPublicHooksBankAlertsRoute: typeof ApiPublicHooksBankAlertsRoute
+  ApiPublicHooksConnectAccountsRoute: typeof ApiPublicHooksConnectAccountsRoute
   ApiPublicHooksInvoiceRemindersRoute: typeof ApiPublicHooksInvoiceRemindersRoute
   ApiPublicIrsEfileAckRoute: typeof ApiPublicIrsEfileAckRoute
   ApiPublicLinkedinCallbackRoute: typeof ApiPublicLinkedinCallbackRoute
@@ -8924,6 +8938,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksBankAlertsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/connect-accounts': {
+      id: '/api/public/hooks/connect-accounts'
+      path: '/api/public/hooks/connect-accounts'
+      fullPath: '/api/public/hooks/connect-accounts'
+      preLoaderRoute: typeof ApiPublicHooksConnectAccountsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/invoice-reminders': {
       id: '/api/public/hooks/invoice-reminders'
       path: '/api/public/hooks/invoice-reminders'
@@ -10268,6 +10289,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicEmailClickRoute: ApiPublicEmailClickRoute,
   ApiPublicEmailOpenRoute: ApiPublicEmailOpenRoute,
   ApiPublicHooksBankAlertsRoute: ApiPublicHooksBankAlertsRoute,
+  ApiPublicHooksConnectAccountsRoute: ApiPublicHooksConnectAccountsRoute,
   ApiPublicHooksInvoiceRemindersRoute: ApiPublicHooksInvoiceRemindersRoute,
   ApiPublicIrsEfileAckRoute: ApiPublicIrsEfileAckRoute,
   ApiPublicLinkedinCallbackRoute: ApiPublicLinkedinCallbackRoute,

@@ -1934,7 +1934,11 @@ export async function claimOnboardInvitation(userId: string, reference: string) 
   const others = ((bound ?? []) as any[]).filter((b) => b.investor_user_id && b.investor_user_id !== userId);
   if (others.length) fail("This invitation has already been used.");
   const mine = ((bound ?? []) as any[]).find((b) => b.investor_user_id === userId);
-  if (mine) return { onboardingId: mine.id as string };
+  if (mine) {
+    // Already connected: close out the invitation so it never looks separated.
+    if (inv.status === "pending") await db().from("fund_invitations").update({ status: "accepted", accepted_at: nowIso(), accepted_by: userId }).eq("id", inv.id).eq("status", "pending");
+    return { onboardingId: mine.id as string };
+  }
   // A manager-added investment tied to this exact invitation: connect it to the
   // invited (email-verified) account directly, never create a second investment.
   const prepared = ((bound ?? []) as any[]).find((b) => !b.investor_user_id && !b.removed_at);
@@ -2385,6 +2389,8 @@ export async function createPersonalLink(userId: string, onboardingId: string) {
   const { error: linkErr } = await db().from("investor_onboardings").update({ invitation_id: inv.id }).eq("id", onboardingId).is("invitation_id", null);
   if (linkErr) fail(linkErr.message);
   await recordEvent({ onboardingId, offeringId: row.offering_id, event: "personal_link_created", subjectTable: "fund_invitations", subjectId: inv.id, detail: { emailSent: false }, actorUserId: actor.userId, actorRole: actor.isStaff ? "harmonious" : "manager" });
+  // If this person already has a verified account, connect it now.
+  await (await import("@/lib/account-connect.server")).connectEmail(email);
   return { link: await linkView({ ...row, invitation_id: inv.id }) };
 }
 export async function sendPersonalLink(userId: string, onboardingId: string) {

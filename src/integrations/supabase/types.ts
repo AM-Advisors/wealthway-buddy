@@ -25569,6 +25569,7 @@ export type Database = {
           status: string
           tax_id_last4: string | null
           tax_id_type: string | null
+          tin_fingerprint: string | null
           updated_at: string
         }
         Insert: {
@@ -25593,6 +25594,7 @@ export type Database = {
           status?: string
           tax_id_last4?: string | null
           tax_id_type?: string | null
+          tin_fingerprint?: string | null
           updated_at?: string
         }
         Update: {
@@ -25617,6 +25619,7 @@ export type Database = {
           status?: string
           tax_id_last4?: string | null
           tax_id_type?: string | null
+          tin_fingerprint?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -48227,6 +48230,7 @@ export type Database = {
           status: string
         }[]
       }
+      find_verified_user_by_email: { Args: { _email: string }; Returns: string }
       fund_condition_context: { Args: { p_offering_id: string }; Returns: Json }
       fund_deletion_impact: { Args: { p_offering_id: string }; Returns: Json }
       fund_dependency_counts: {
@@ -48367,6 +48371,12 @@ export type Database = {
           user_id: string
         }[]
       }
+      list_unconnected_account_ids: {
+        Args: { _limit?: number }
+        Returns: {
+          user_id: string
+        }[]
+      }
       list_wire_instructions: {
         Args: never
         Returns: {
@@ -48406,6 +48416,14 @@ export type Database = {
           _source: string
         }
         Returns: string
+      }
+      profile_tax_ids_missing_fingerprint: {
+        Args: { _limit?: number }
+        Returns: {
+          ciphertext: string
+          iv: string
+          profile_id: string
+        }[]
       }
       purge_security_events: { Args: never; Returns: number }
       read_offering_rp_identifier: {
