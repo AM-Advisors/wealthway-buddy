@@ -28,3 +28,18 @@ describe("help center visibility", () => {
     expect(clientHelpRolesFor(["fund_manager"])).toContain("fund_manager");
   });
 });
+
+describe("self-service help articles", () => {
+  const want: Record<string, string> = {
+    "manager-launch-fund": "fund_manager", "manager-close-reopen-fund": "fund_manager", "manager-edit-before-signing": "fund_manager",
+    "manager-track-investors": "fund_manager", "manager-capital-method": "fund_manager", "manager-update-emails": "fund_manager",
+    "manager-deal-room": "fund_manager", "manager-sign-w9": "fund_manager", "client-statements-of-work": "fund_manager",
+    "investor-deal-room": "investor", "investor-profiles": "investor", "investor-profile-documents": "investor",
+    "investor-personal-link": "investor", "investor-going-back": "investor",
+  };
+  for (const [slug, role] of Object.entries(want)) it(`${slug} exists with steps for ${role}`, () => {
+    const a: any = (HELP_CATALOG as any[]).find((x) => x.slug === slug);
+    expect(a?.roles).toContain(role);
+    expect(a.sections.some((s: any) => s.steps?.length)).toBe(true);
+  });
+});
