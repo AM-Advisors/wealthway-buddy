@@ -28,9 +28,11 @@ describe("client navigation by workspace", () => {
       "My Funds",
       "Activity",
       "Reports",
+      "Report Cards",
       "Documents",
       "Tax",
       "Messages",
+      "Help",
       "Profile",
     ]);
   });
@@ -44,12 +46,15 @@ describe("client navigation by workspace", () => {
       "Messages",
       "Investors",
       "Capital",
+      "Portfolio",
       "Reports",
+      "Report Cards",
       "Financial reviews",
       "Documents",
       "Agreements",
       "Cap Table",
       "Settings",
+      "Help",
       "Profile",
     ]);
   });
@@ -64,12 +69,13 @@ describe("client navigation by workspace", () => {
       "Documents",
       "Reports",
       "Settings",
+      "Help",
       "Profile",
     ]);
   });
 
   it("gives a professional exactly the delegated menu", () => {
-    expect(titles("professional")).toEqual(["Home", "Clients", "Tasks", "Documents", "Profile"]);
+    expect(titles("professional")).toEqual(["Home", "Clients", "Tasks", "Documents", "Help", "Profile"]);
   });
 
   it("does not put fund-manager or internal destinations in the investor menu", () => {
