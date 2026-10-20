@@ -158,7 +158,7 @@ export const startBoxSigning = createServerFn({ method: "POST" })
 
     const { data: existing } = await supabaseAdmin
       .from("document_signatures")
-      .select("id, provider, provider_agreement_id, provider_status, snapshot_id")
+      .select("id, provider, provider_agreement_id, provider_status, snapshot_id, signer_email")
       .eq("application_id", application.id)
       .eq("offering_document_id", doc.id)
       .maybeSingle();
@@ -170,10 +170,11 @@ export const startBoxSigning = createServerFn({ method: "POST" })
       existing?.provider === "box_sign" &&
       existing.provider_agreement_id &&
       existing.provider_status === "out_for_signature" &&
+      String((existing as any).signer_email ?? "").toLowerCase() === signerEmail.toLowerCase() &&
       (!gateSnapshot || (existing as any).snapshot_id === gateSnapshot.id)
     ) {
       const live = await getSignRequest(existing.provider_agreement_id).catch(() => null);
-      if (namedSigner && (existing as any).signer_email_matches !== false) {
+      if (namedSigner) {
         return { url: null, agreementId: existing.provider_agreement_id, reused: true, sentTo: namedSigner.name };
       }
       if (live?.signingUrl) {
@@ -311,6 +312,7 @@ export const startBoxSigning = createServerFn({ method: "POST" })
       metadata: { sign_request_id: request.id, box_file_id: fileId, document_title: doc.title },
     });
 
+    if (namedSigner) return { url: null, agreementId: request.id, reused: false, sentTo: namedSigner.name };
     return { url: request.signingUrl, agreementId: request.id, reused: false };
   });
 
