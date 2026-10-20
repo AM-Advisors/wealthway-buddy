@@ -169,7 +169,12 @@ export function FundRequestEngine({ clientId: id, draft, mode = "client", client
           <h2 className="text-xl font-semibold tracking-tight">Launch a new fund or SPV</h2>
           <p className="text-sm text-muted-foreground">Follows the same steps Harmonious uses for Fund Setup. Save and come back any time.</p>
         </div>
-        <Button size="sm" variant="outline" disabled={saveDraft.isPending || !id} onClick={() => saveDraft.mutate()}>Save draft</Button>
+        <div className="flex items-center gap-3">
+          <p className="text-xs text-muted-foreground" role="status">
+            {saveDraft.isPending ? "Saving…" : lastSavedAt ? `Draft saved ${format(lastSavedAt, "h:mm a")} — changes save automatically` : "Changes save automatically as you go"}
+          </p>
+          <Button size="sm" variant="outline" disabled={saveDraft.isPending || !id} onClick={() => saveDraft.mutate(false)}>Save draft</Button>
+        </div>
       </div>
       {clientPicker}
 
