@@ -258,7 +258,8 @@ export async function fundTemplateValues(offeringId: string): Promise<Record<str
   const signer = fullName(sig);
   const email = sig?.email || c?.primary_contact_email || null;
   const v: Record<string, string | null> = {
-    "Fund Name": o.name, "Fund Legal Name": legal, "Legal Fund Name": legal, "Legal Name": legal,
+    "Fund Name": legal, "Fund Legal Name": legal, "Legal Fund Name": legal, "Legal Name": legal,
+    "Subscription Amount": o.min_investment_cents == null ? null : new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(o.min_investment_cents / 100),
     "Fund Manager": manager, "Fund Manager Name": manager, "Manager Name": manager, "Fund Adviser Name": manager,
     "General Partner Name": o.gp_entity_name || null,
     "Management Fee": pct(fee?.management_fee_pct), "Carry Percent": pct(fee?.carry_pct), "Carry Amount": pct(fee?.carry_pct),
