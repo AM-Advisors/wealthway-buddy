@@ -15,8 +15,9 @@ import { resolveSigning, signerRowFor, SigningRefusal } from "@/lib/document-sig
 
 type Row = Record<string, any>;
 
-function fakeDb(tables: Record<string, Row[]>) {
+function fakeDb(tables: Record<string, Row[]>, account: Row | null = { id: "user-a", email: "a@example.com", email_confirmed_at: "2026-10-20T10:00:00Z" }) {
   return {
+    auth: { getUser: async () => ({ data: { user: account }, error: null }) },
     from(table: string) {
       let rows = [...(tables[table] ?? [])];
       const api: any = {
@@ -110,6 +111,35 @@ describe("who may open a signing session", () => {
     expect(resolved.document.title).toBe("LPA");
     expect(resolved.investmentProfileId).toBe("profile-a");
     expect(resolved.signers).toHaveLength(1);
+  });
+
+  it("recognizes the verified signer without a legacy account profile", async () => {
+    const db = fakeDb({
+      investor_applications: [{ id: "app-a", offering_id: "fund-1", user_id: INVESTOR_A }],
+      offering_documents: [{ id: "doc-1", offering_id: "fund-1", requires_signature: true }],
+      investor_onboardings: [{ application_id: "app-a", investment_profile_id: "profile-a" }],
+    }, { id: INVESTOR_A, email: "calvinjungmd@gmail.com", email_confirmed_at: "2026-10-20T10:58:05Z" });
+    const resolved = await resolveSigning(db, db, INVESTOR_A, { applicationId: "app-a", offeringDocumentId: "doc-1" });
+    expect(resolved.profile.email).toBe("calvinjungmd@gmail.com");
+    expect(resolved.investmentProfileId).toBe("profile-a");
+  });
+
+  it("does not substitute an unverified email from the legacy profile", async () => {
+    const db = fakeDb({
+      investor_applications: [{ id: "app-a", offering_id: "fund-1", user_id: INVESTOR_A }],
+      offering_documents: [{ id: "doc-1", offering_id: "fund-1", requires_signature: true }],
+      profiles: [{ user_id: INVESTOR_A, email: "a@example.com" }],
+    }, { id: INVESTOR_A, email: "unverified@example.com", email_confirmed_at: null });
+    const resolved = await resolveSigning(db, db, INVESTOR_A, { applicationId: "app-a", offeringDocumentId: "doc-1" });
+    expect(resolved.profile.email).toBeNull();
+  });
+
+  it("refuses a different authenticated account even if the supplied application owner matches", async () => {
+    const db = fakeDb({
+      investor_applications: [{ id: "app-a", offering_id: "fund-1", user_id: INVESTOR_A }],
+      offering_documents: [{ id: "doc-1", offering_id: "fund-1", requires_signature: true }],
+    }, { id: INVESTOR_B, email: "b@example.com", email_confirmed_at: "2026-10-20T10:00:00Z" });
+    await expect(resolveSigning(db, db, INVESTOR_A, { applicationId: "app-a", offeringDocumentId: "doc-1" })).rejects.toThrow("Your signing account could not be verified");
   });
 
   it("matches the signer row on identity, not email alone", () => {
