@@ -12,6 +12,8 @@
 - [ ] Signed-in document read-through — blocked on isolated synthetic QA; real-investor flow untested.
 
 ## Calvin subscription signing (2026-10-20)
+- [x] Diagnose required-signer refusal: verified account exists but no legacy profiles row; signing now resolves its contact email from the server-verified account, without changing the investing party or assigned signers.
+- [x] Run signer-identity regression checks: 27 passed, including missing legacy profile, unverified email and wrong authenticated account; preview build OK. Real signing ceremony remains untested.
 - [x] Inspect Calvin's current signing blockers: $500,000 subscription exists; manager-entry provenance was ignored by the separate document admission gate. No signing or emails performed.
 - [x] Treat same-fund manager entry as admission to sign; preserve explicit current-version returns and existing signer/verification controls; manager list uses the same admission facts. 32 focused tests passed; preview build OK.
 - [x] Read-only eligibility check: Calvin's creator still manages Erebor, subscription document matches, requires signature, and no current-version return exists.

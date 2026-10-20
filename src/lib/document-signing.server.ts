@@ -88,7 +88,7 @@ export async function resolveSigning(
     throw new SigningRefusal("document_not_in_offering");
   }
 
-  const [{ data: offering }, { data: subscription }, { data: profile }, { data: onboarding }] =
+  const [{ data: offering }, { data: subscription }, { data: profile }, { data: onboarding }, accountResult] =
     await Promise.all([
       supabase
         .from("offerings")
@@ -106,7 +106,18 @@ export async function resolveSigning(
         .select("investment_profile_id")
         .eq("application_id", application.id)
         .maybeSingle(),
+      supabase.auth.getUser(),
     ]);
+
+  // The authenticated account is the signer contact, not the investing party.
+  // Manager-added investors may have no legacy profiles row at all.
+  const account = accountResult.data?.user;
+  if (accountResult.error || !account || account.id !== userId) {
+    throw new Error("Your signing account could not be verified. Please sign in again.");
+  }
+  const signerEmail = account.email_confirmed_at && account.email
+    ? String(account.email).trim().toLowerCase()
+    : null;
 
   const { data: signature } = await admin
     .from("document_signatures")
@@ -130,7 +141,7 @@ export async function resolveSigning(
     document,
     offering: offering ?? null,
     subscription: subscription ?? null,
-    profile: profile ?? { legal_name: null, email: null },
+    profile: { legal_name: profile?.legal_name ?? null, email: signerEmail },
     investmentProfileId: onboarding?.investment_profile_id ?? null,
     signature: signature ?? null,
     signers,
