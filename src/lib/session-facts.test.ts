@@ -33,7 +33,9 @@ function builder(table: string) {
   queryCount += 1;
   const filters: ((r: Row) => boolean)[] = [];
   let single = false;
-  const run = () => (tables[table] ?? []).filter((r: any) => filters.every((f) => f(r)));
+  // Client accounts referenced by memberships exist unless a test says otherwise.
+  const source = () => (table === "clients" && !tables.clients ? [{ id: "c1", name: "Acme" }] : tables[table] ?? []);
+  const run = () => source().filter((r: any) => filters.every((f) => f(r)));
   const api: any = {
     select: () => api,
     order: () => api,
