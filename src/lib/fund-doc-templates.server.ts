@@ -132,7 +132,7 @@ export async function addTemplateVersion(userId: string, input: { templateId: st
 }
 
 /** Fresh legal files enter the same pending-approval library as fund-derived templates. */
-export async function createUploadedTemplate(userId: string, input: { title: string; category: DocumentCategory; fundTypes: string[]; fileName: string; base64: string; description?: string | null }) {
+export async function createUploadedTemplate(userId: string, input: { title: string; category: DocumentCategory; fundTypes: string[]; fileName: string; base64: string; description?: string | null | undefined }) {
   await staff(userId);
   const { validateUpload } = await import("@/lib/upload-validation");
   const bytes = new Uint8Array(Buffer.from(input.base64, "base64"));

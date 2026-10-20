@@ -23,7 +23,7 @@ const input = { title: "Debt fund PPM", category: "ppm" as const, fundTypes: ["P
 beforeEach(() => Object.assign(state, { staff: true, writes: [], failUpload: false }));
 it("creates an assigned debt template without approving it", async () => {
   await expect(createUploadedTemplate("staff", input)).resolves.toEqual({ id: "template-1", version: 1 });
-  expect(state.writes[0].value.fund_types).toEqual(["Private credit"]);
+  expect(state.writes[0]?.value.fund_types).toEqual(["Private credit"]);
   const version = state.writes.find((x) => x.table === "document_template_versions");
   expect(version?.value.version).toBe(1);
   expect(version?.value.status).toBeUndefined(); // Database default remains pending_approval.
