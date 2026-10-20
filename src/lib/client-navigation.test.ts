@@ -68,6 +68,7 @@ describe("client navigation by workspace", () => {
       "Transactions",
       "Documents",
       "Reports",
+      "Statements of work",
       "Settings",
       "Help",
       "Profile",
@@ -76,6 +77,12 @@ describe("client navigation by workspace", () => {
 
   it("gives a professional exactly the delegated menu", () => {
     expect(titles("professional")).toEqual(["Home", "Clients", "Tasks", "Documents", "Help", "Profile"]);
+  });
+
+  it("company menu links statements of work and no Operations pages", () => {
+    const links = clientNavigation("company");
+    expect(links.some((l) => l.url === "/client/statements-of-work")).toBe(true);
+    expect(containsInternalLinks(links)).toBe(false);
   });
 
   it("does not put fund-manager or internal destinations in the investor menu", () => {

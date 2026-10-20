@@ -103,7 +103,7 @@ export function accessOpen(o: { payment_status: string; kyb_status: string; msa_
 // ---------- Menu gating ----------
 // Deny-by-default for gated clients: a path is either always allowed, tied to a purchase, or unpurchased.
 const ALWAYS = ["/home", "/manager", "/client/home", "/messages", "/manager/messages", "/client", "/profile", "/access", "/security", "/manager/agreements", "/client/agreements", "/plan/setup", "/plan/start", "/help"];
-const ALWAYS_PREFIX = ["/plan/", "/sign/", "/guides/", "/help/", "/client/agreements/", "/manager/messages/", "/manager/agreements/", "/client/inbox", "/client/invoices", "/client/payments", "/client/services", "/client/sign-offs", "/client/banking", "/client/wires", "/client/setup-options", "/client/add-cap-table"];
+const ALWAYS_PREFIX = ["/plan/", "/sign/", "/guides/", "/help/", "/client/agreements/", "/manager/messages/", "/manager/agreements/", "/client/inbox", "/client/invoices", "/client/statements-of-work", "/client/payments", "/client/services", "/client/sign-offs", "/client/banking", "/client/wires", "/client/setup-options", "/client/add-cap-table"];
 const NEEDS: { prefix: string; key: string }[] = [
   { prefix: "/client/cap-table", key: "cap_table" },
   { prefix: "/my-funds", key: "fund_platform" },
