@@ -265,7 +265,7 @@ export async function openSigningSession(
     hasSubscription: Boolean(resolved.subscription?.commitment_cents),
     requiresSignature: Boolean(resolved.document.requires_signature),
     isRequiredSigner,
-    signerStatus: mine?.status ?? "pending",
+    signerStatus: resolved.signature?.cancelled_at && !resolved.signers.some((s) => s.status === "signed") ? "pending" : mine?.status ?? "pending",
     providerConfigured: boxConfigured(),
   });
   if (refusal) throw new SigningRefusal(refusal);
@@ -341,6 +341,7 @@ export async function openSigningSession(
     provider_completed_at: null,
     provider_declined_at: null,
     cancelled_at: null,
+    signature_template_version: (await admin.from("offering_documents").select("signature_template_version").eq("id", resolved.document.id).single()).data?.signature_template_version ?? null,
     signed_at: now,
   };
 
