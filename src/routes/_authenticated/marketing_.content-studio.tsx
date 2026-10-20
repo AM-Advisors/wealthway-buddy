@@ -85,7 +85,7 @@ function ContentStudio() {
               <span className="mt-1 block text-[11px] text-muted-foreground">{SERIES_TEMPLATES[series]?.summary}</span></label>}
             <label className="text-xs">Guidance for the draft (optional)<input className={inp} value={guidance} onChange={(e) => setGuidance(e.target.value)} /></label>
             <div className="md:col-span-2 flex items-center gap-3"><Button disabled={busy || !ready} onClick={go}>{busy ? "Drafting…" : "Generate draft package"}</Button>
-              <span className="text-[11px] text-muted-foreground">Includes article, SEO, FAQs, structured data, captions, newsletter, graphic concepts, CTAs and labelled claims.</span></div>
+              <span className="text-[11px] text-muted-foreground">Includes article, SEO, FAQs, structured data, captions, newsletter, graphic concepts, CTAs and labeled claims.</span></div>
           </div>
         </>}
       </div>

@@ -2,7 +2,7 @@
  * A worked example of a cap table migration, shown on the public CapTable page.
  *
  * Everything here is invented sample data held in this file. It never touches a
- * real company, never reads or writes the database, and is clearly labelled as
+ * real company, never reads or writes the database, and is clearly labeled as
  * a sample so nobody mistakes it for their own record.
  */
 import { useState } from "react";

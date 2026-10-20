@@ -1573,7 +1573,7 @@ function EngagementTab({ offeringId }: { offeringId: string }) {
           <CardTitle>Who read each document</CardTitle>
           <CardDescription>
             Every time someone opens or downloads a document it is recorded here with their name
-            and the time. Your own team's opens are labelled so they don't look like investor
+            and the time. Your own team's opens are labeled so they don't look like investor
             interest.
           </CardDescription>
         </CardHeader>

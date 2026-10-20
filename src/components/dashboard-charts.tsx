@@ -1,5 +1,5 @@
 /**
- * Accessible dashboard visuals: labelled bars with visible values, keyboard/tap
+ * Accessible dashboard visuals: labeled bars with visible values, keyboard/tap
  * drill-down, and explicit empty / unavailable states. Color is never the only cue.
  */
 import type { ReactNode } from "react";
@@ -53,7 +53,7 @@ export function EmptyState({ children }: { children: ReactNode }) {
   return <p className="rounded-md border border-dashed px-3 py-6 text-center text-sm text-muted-foreground">{children}</p>;
 }
 
-/** Horizontal labelled bars. Each row is a button when drill-down exists. */
+/** Horizontal labeled bars. Each row is a button when drill-down exists. */
 export function BarList({ rows, onSelect, empty, ariaLabel }: { rows: Row[]; onSelect?: (key: string) => void; empty: string; ariaLabel: string }) {
   const total = rows.reduce((s, r) => s + r.count, 0);
   if (!total) return <EmptyState>{empty}</EmptyState>;

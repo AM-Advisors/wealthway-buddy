@@ -193,7 +193,7 @@ describe("company Action Center scope (server read model)", () => {
     expect(await load("stranger")).toHaveLength(0);
   });
 
-  it("a multi-company member sees both companies, each labelled", async () => {
+  it("a multi-company member sees both companies, each labeled", async () => {
     tables["client_users"] = [
       { user_id: "u2", client_id: "c1" },
       { user_id: "u2", client_id: "c2" },

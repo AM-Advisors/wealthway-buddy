@@ -570,7 +570,7 @@ async function evidenceVerdict(valuation: any, policy: { evidenceRequired: boole
 export async function waiveValuationEvidence(userId: string, input: { valuationId: string; reason: string }) {
   const { scope, valuation, asset } = await authorizeValuation(userId, input.valuationId);
   if (!scope.isAdmin) fail("Forbidden: only Harmonious can waive valuation evidence.");
-  if (valuation.evidence_basis === "synthetic_assumption") fail("A synthetic assumption is not waivable evidence; it stays labelled as a synthetic assumption.");
+  if (valuation.evidence_basis === "synthetic_assumption") fail("A synthetic assumption is not waivable evidence; it stays labeled as a synthetic assumption.");
   if (["effective", "superseded", "rejected"].includes(String(valuation.status))) fail("That valuation is complete; its evidence status is frozen.");
   const err = evidenceWaiverError({ reason: input.reason, waiverUserId: userId, preparedBy: valuation.prepared_by ? String(valuation.prepared_by) : null });
   if (err) fail(err);

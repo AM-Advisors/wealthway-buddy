@@ -62,7 +62,7 @@ describe("institutional controls", () => {
     expect(has(f, "administration", "manage_access")).toBe(false);
   });
 
-  it("live direct grants are labelled as direct grants", () => {
+  it("live direct grants are labeled as direct grants", () => {
     const f = blank({ roles: ["operations"], staffGrants: [{ capability: "manage_permissions", role_key: null, revoked_at: null }] });
     expect(effectivePermissions(f).find((p) => p.action === "manage_access")?.source).toBe("direct_grant");
   });

@@ -39,7 +39,7 @@ export function LegalDocumentReadership({ offeringId }: { offeringId: string }) 
         <CardTitle>Who opened the legal documents</CardTitle>
         <CardDescription>
           Each time an investor opens or downloads one of this fund's offering documents it is
-          recorded here with their name and the time. Your own team's opens are labelled.
+          recorded here with their name and the time. Your own team's opens are labeled.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">

@@ -313,7 +313,7 @@ export function classifyFundType(input: { fundType?: string | null; fundTypeOthe
 
 /**
  * Pilot M6: IRR is always annualized. Under the threshold (default 12 months
- * since the first cash flow) it is labelled and kept out of headline summaries.
+ * since the first cash flow) it is labeled and kept out of headline summaries.
  * The calculation itself is unchanged.
  */
 export function irrPresentation(input: { firstCashFlowDate: string | null; asOf: string; thresholdDays?: number }) {
@@ -686,7 +686,7 @@ export interface GrossNetResult {
 
 /**
  * Gross return is before the deductions the methodology names; net return is
- * after exactly those deductions, and nothing is labelled "net" otherwise.
+ * after exactly those deductions, and nothing is labeled "net" otherwise.
  */
 export function grossAndNetReturn(
   inputs: ReturnInputs,
@@ -984,7 +984,7 @@ export interface BenchmarkEntry {
 
 /**
  * Benchmarks are optional. A value is only ever reported for the exact period
- * it covers - a stale or missing value is labelled, never substituted.
+ * it covers - a stale or missing value is labeled, never substituted.
  */
 export function normaliseBenchmark(
   entry: Partial<BenchmarkEntry> & { name: string; source: string; periodStart: string; periodEnd: string },

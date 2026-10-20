@@ -37,7 +37,7 @@ export type ContentPackage = {
   schema_jsonld: string; cta: string;
   social: Record<"linkedin_company" | "linkedin_executive" | "facebook" | "instagram" | "x" | "email_subject" | "email_body", string>;
   graphics: Graphic[];
-  /** Every statement the package relies on, labelled by kind. Facts keep their source reference. */
+  /** Every statement the package relies on, labeled by kind. Facts keep their source reference. */
   claims?: PackageClaim[];
   /** Alternative calls to action for the editor to choose from. */
   cta_options?: string[];
@@ -57,7 +57,7 @@ export type PackageClaim = { text: string; kind: string; source_url: string; cor
 export const SERIES_TEMPLATES: Record<string, { summary: string; rules: string[] }> = {
   market_monday: { summary: "Timely news analysis: verified facts, market implications, one clear takeaway.", rules: [
     "Open with what happened, stated only from the source material, with its original publication date.",
-    "Then 'What it means' as clearly labelled analysis for fund managers and LPs.", "End with one practical takeaway."] },
+    "Then 'What it means' as clearly labeled analysis for fund managers and LPs.", "End with one practical takeaway."] },
   thesis_tuesday: { summary: "Evidence-based Harmonious perspective on private-market infrastructure, technology and operations.", rules: [
     "State the thesis as Harmonious analysis, not fact.", "Support it only with sourced facts; mark reasoning as analysis and any forecast as projection.",
     "Acknowledge one counterpoint or limitation."] },
