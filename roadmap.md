@@ -127,7 +127,6 @@
 - [x] One Operations Funds page + demo fund flag
 - [x] Setup: save by section; fix out-of-memory save failure
 
-<<<<<<< roadmap.md
 ## Self-serve SaaS sign-up
 - [x] Picker, click-through SOW under fixed MSA, card checkout, KYB review, purchase-gated menus
 - [ ] Switch existing clients to purchase-gated menus — waiting on user review of the impact report
@@ -190,7 +189,5 @@
 - [ ] Screens that show "empty" on failed loads; ops work-area 100-item filter; banking/SWIFT display; staff grants; Funds cache and removed-investor count
 - [ ] Speed: marketing sync rewrites + indexes, single-fund cap table, polling stop, narrow cache refresh, parallel readiness
 - [ ] Smaller: null service keys, inputValidator warnings, portal profile identity fields, MSA/checklist first-save permissions
-=======
 ## Funds dashboard speed
 - [x] Batch readiness reads for the Funds dashboard; failed reads are logged, not thrown (approved)
->>>>>>> /tmp/d
