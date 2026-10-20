@@ -39,6 +39,7 @@ interface Props {
   onDownload: () => void;
   onDownloadSigned?: (() => void) | undefined;
   downloading?: boolean;
+  approvalLabel?: string;
 }
 
 function formatWhen(value: string | null) {
@@ -63,6 +64,7 @@ export function DocumentSignCard({
   onDownload,
   onDownloadSigned,
   downloading,
+  approvalLabel,
 }: Props) {
   const queryClient = useQueryClient();
   const start = useServerFn(startSigningSession);
@@ -140,6 +142,7 @@ export function DocumentSignCard({
                     "Review only"
                   )}
                 </CardDescription>
+                {approvalLabel && <Badge variant="outline" className="mt-2">{approvalLabel}</Badge>}
               </div>
             </div>
             <Badge variant={executed ? "default" : requiresSignature ? "secondary" : "outline"}>

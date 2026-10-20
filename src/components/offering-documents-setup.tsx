@@ -195,6 +195,12 @@ function DocumentRow({ doc, data, offeringId, onChanged }: { doc: Doc; data: Dat
           {doc.resignOpen.length > 0 && <Badge variant="destructive">{doc.resignOpen.length} re-sign needed</Badge>}
           {pendingRequests.length > 0 && <Badge variant="secondary">{pendingRequests.length} change request(s)</Badge>}
           {latest && <Badge variant={latest.state === "ready_for_use" ? "default" : "secondary"}>{VERSION_STATE_LABELS[latest.state]}</Badge>}
+          {data.canEdit && latest?.approval === "uploaded_review_required" && !latest.approvedTemplate && (
+            <Button size="sm" variant="outline" disabled={busy} onClick={() => run(() => approve({ data: { documentId: doc.id, version: latest.version } }), "Document approved")}>Mark approved</Button>
+          )}
+          {(data.canEdit || doc.canConfigureTemplate) && latest && latest.approval !== "superseded" && !latest.isActive && latest.rolloutScope !== "single" && (
+            <Button size="sm" disabled={busy || !doc.usage || (needsSigning && latest.signingStatus !== "confirmed")} onClick={() => { setOpen(true); void startActivate(latest.version); }}>Approve and make available</Button>
+          )}
           {!data.canEdit && active && <Button size="sm" variant="outline" onClick={() => setShowRequest(!showRequest)}>Request a change</Button>}
           {data.canEdit && active && <Button size="sm" variant="outline" onClick={() => setOpen(true)}>Replace</Button>}
           {active && <Button size="sm" onClick={() => setSendOpen(true)}>Send</Button>}
@@ -283,7 +289,7 @@ function DocumentRow({ doc, data, offeringId, onChanged }: { doc: Doc; data: Dat
                 {(data.canEdit || doc.canConfigureTemplate) && v.approval !== "superseded" && (
                   <div className="mt-2 flex flex-wrap items-center gap-2">
                     {data.canEdit && v.approval === "uploaded_review_required" && !v.approvedTemplate && (
-                      <Button size="sm" variant="outline" disabled={busy} onClick={() => run(() => approve({ data: { documentId: doc.id, version: v.version } }), "Approved for use")}>Approve for use</Button>
+                      <Button size="sm" variant="outline" disabled={busy} onClick={() => run(() => approve({ data: { documentId: doc.id, version: v.version } }), "Approved for use")}>Mark approved</Button>
                     )}
                     {(v.approval === "approved" || v.approvedTemplate) && !v.isActive && v.rolloutScope !== "single" && (
                       <Button size="sm" disabled={busy || (needsSigning && v.signingStatus !== "confirmed")} onClick={() => startActivate(v.version)}>Use this version</Button>

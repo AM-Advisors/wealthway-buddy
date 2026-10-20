@@ -18,6 +18,7 @@ import { listTemplatesFn, templateAutofillCheckFn, useTemplateInFundFn } from "@
 import { FundTypeDocumentsCard } from "./fund-type-documents-card";
 import { fileToBase64, fmtDate } from "./shared";
 import { StandardFormsCard } from "./standard-forms-card";
+import { OfferingDocumentsSetup } from "@/components/offering-documents-setup";
 import { fundSigningContextFn, sendFileForSignatureFn, remindFileSignerFn } from "@/lib/fund-file-signing.functions";
 
 const STATUS: Record<string, string> = { draft: "Draft", out_for_signature: "Out for signature", signed: "Signed" };
@@ -106,6 +107,7 @@ export function DocumentsTab({ fundId }: { fundId: string }) {
   ];
   return (
     <div className="space-y-5">
+      <OfferingDocumentsSetup offeringId={fundId} onChanged={refresh} />
       <Card>
         <CardHeader className="flex-row items-start justify-between gap-3 space-y-0">
           <div>

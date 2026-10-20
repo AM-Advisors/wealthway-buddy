@@ -46,7 +46,7 @@ async function docRow(documentId: string) {
   return data;
 }
 /** Provenance is version-specific: a later upload never inherits the template exemption. */
-async function approvedTemplateVersions(offeringId: string): Promise<Set<string>> {
+export async function approvedTemplateVersions(offeringId: string): Promise<Set<string>> {
   const { data: uses, error } = await db().from("document_template_uses").select("offering_document_id, fund_version, template_id, template_version").eq("offering_id", offeringId);
   if (error) throw new Error(error.message);
   const ids = [...new Set((uses ?? []).map((u: any) => u.template_id))];
@@ -194,7 +194,8 @@ export async function approveDocumentVersion(userId: string, input: { documentId
   const v = await versionRow(d.id, input.version);
   if (v.approval_status !== "uploaded_review_required") throw new Error("Only a version awaiting review can be approved.");
   await (await import("@/lib/legal-name-gate.server")).assertLegalName({ offeringId: d.offering_id }, "offering_document_approval");
-  await db().from("offering_document_versions").update({ approval_status: "approved", approved_by: userId, approved_at: now() }).eq("id", v.id);
+  const { data: saved, error } = await db().from("offering_document_versions").update({ approval_status: "approved", approved_by: userId, approved_at: now() }).eq("id", v.id).eq("approval_status", "uploaded_review_required").select("id").maybeSingle();
+  if (error || !saved) throw new Error("Document approval could not be saved. Please refresh and try again.");
   await event(d.offering_id, d.id, v.version, "version_approved", userId);
   return { ok: true };
 }
@@ -422,11 +423,17 @@ export async function investorDocuments(userId: string, onboardingId: string) {
   const { data: row } = await db().from("investor_onboardings").select("id, offering_id, investor_user_id, investment_profile_id, application_id, offering_class_key").eq("id", onboardingId).maybeSingle();
   if (!row || row.investor_user_id !== userId) forbid("that investment isn't yours.");
   const { data: profile } = row.investment_profile_id ? await db().from("investment_profiles").select("profile_type").eq("id", row.investment_profile_id).maybeSingle() : { data: null };
-  const { data: docs } = await db().from("offering_documents").select("id, title, usage, applicability, active_version, requires_signature").eq("offering_id", row.offering_id).not("active_version", "is", null);
+  const { data: docs } = await db().from("offering_documents").select("id, title, usage, applicability, active_version, requires_signature").eq("offering_id", row.offering_id).is("removed_at", null);
   const applicable = ((docs ?? []) as any[]).filter((d) => documentApplies(d.applicability, { profileType: profile?.profile_type ?? null, classKey: row.offering_class_key ?? null }));
   const { data: acks } = await db().from("investment_document_acknowledgments").select("offering_document_id, version").eq("onboarding_id", row.id);
   const inv = await Promise.all(applicable.map(async (d) => (await investmentsForDocument(row.offering_id, d.id)).find((i) => i.onboardingId === row.id)));
   const ids = applicable.map((d) => d.id);
+  const { documentPublicationFor } = await import("./investor-document-publication.server");
+  const { data: retainedSignatures, error: signatureError } = row.application_id
+    ? await db().from("document_signatures").select("offering_document_id, signature_template_version").eq("application_id", row.application_id)
+    : { data: [], error: null };
+  if (signatureError) throw new Error("Document approval status could not be loaded. Please try again.");
+  const publication = await documentPublicationFor(db(), applicable, row.id, retainedSignatures ?? [], row.offering_id);
   const [{ data: singles }, { data: resign }] = await Promise.all([
     ids.length ? db().from("offering_document_versions").select("offering_document_id, version, target_onboarding_id").in("offering_document_id", ids).eq("rollout_scope", "single").eq("target_onboarding_id", row.id) : { data: [] },
     ids.length ? db().from("offering_document_resign_items").select("offering_document_id, from_version, to_version").eq("onboarding_id", row.id).eq("status", "open") : { data: [] },
@@ -439,7 +446,10 @@ export async function investorDocuments(userId: string, onboardingId: string) {
     return {
       id: d.id,
       title: d.title,
-      action: investorDocumentAction({ usage: d.usage, legacyRequiresSignature: d.requires_signature, acknowledged, execution: inv[i]?.execution ?? "not_sent" }),
+      approvalLabel: publication.get(d.id)?.label ?? "Awaiting document approval",
+      action: !publication.get(d.id)?.ready && (inv[i]?.execution ?? "not_sent") === "not_sent"
+        ? "Not yet available"
+        : investorDocumentAction({ usage: d.usage, legacyRequiresSignature: d.requires_signature, acknowledged, execution: inv[i]?.execution ?? "not_sent" }),
       versionLabel,
     };
   });

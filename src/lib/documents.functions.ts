@@ -69,12 +69,12 @@ export const getDocumentsStep = createServerFn({ method: "GET" })
           .maybeSingle(),
         supabase
           .from("offering_documents")
-          .select("id, title, doc_type, body, requires_signature, sort_order")
+          .select("id, title, doc_type, body, requires_signature, sort_order, active_version, usage")
           .eq("offering_id", application.offering_id)
           .order("sort_order", { ascending: true }),
         supabase
           .from("document_signatures")
-          .select("id, offering_document_id, signer_name, signed_at, document_hash, pdf_path")
+          .select("id, offering_document_id, signer_name, signed_at, document_hash, pdf_path, signature_template_version")
           .eq("application_id", application.id),
         supabase
           .from("subscriptions")
@@ -84,10 +84,15 @@ export const getDocumentsStep = createServerFn({ method: "GET" })
         supabase.from("profiles").select("legal_name, email").eq("user_id", userId).maybeSingle(),
       ]);
 
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { documentPublicationFor } = await import("./investor-document-publication.server");
+    const { data: onboarding, error: onboardingError } = await supabase.from("investor_onboardings").select("id").eq("application_id", application.id).eq("investor_user_id", userId).maybeSingle();
+    if (onboardingError) throw new Error("Document approval status could not be loaded. Please try again.");
+    const publication = await documentPublicationFor(supabaseAdmin, documents ?? [], onboarding?.id ?? null, signatures ?? [], application.offering_id);
     return {
       application,
       offering,
-      documents: documents ?? [],
+      documents: (documents ?? []).map((d) => ({ ...d, approvalLabel: publication.get(d.id)?.label ?? "Awaiting document approval" })),
       signatures: signatures ?? [],
       subscription,
       profile,
