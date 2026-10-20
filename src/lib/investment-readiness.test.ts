@@ -110,7 +110,8 @@ describe("audit and tasks", () => {
 
 describe("server wiring", () => {
   const src = readFileSync("src/lib/investor-onboarding.server.ts", "utf8");
-  const seg = src.slice(src.indexOf("investment readiness"));
+  // Readiness section only; personal-link helpers that follow it are separate.
+  const seg = src.slice(src.indexOf("investment readiness"), src.indexOf("export async function getPersonalLink"));
   it("uses the canonical access check and fund scoping", () => {
     expect(seg).toContain("assertOnboardingAccess(userId, onboardingId)");
     expect(seg).toContain('forbid("you do not manage that fund.")');
@@ -120,7 +121,7 @@ describe("server wiring", () => {
     expect(seg).not.toMatch(/from\("investor_onboardings"\)\.(update|insert|upsert)/);
     expect(seg).not.toMatch(/sendOnboardInvitationEmail|send.*Email\(/);
     const writes = [...seg.matchAll(/from\("([a-z_]+)"\)\.(insert|update|upsert)/g)].map((m) => m[1]);
-    expect(new Set(writes)).toEqual(new Set(["investment_readiness_events", "investment_readiness_tasks"]));
+    expect(new Set(writes)).toEqual(new Set(["investment_readiness_events", "investment_readiness_tasks", "onboarding_readiness_summaries"]));
   });
   it("close readiness is not available to investors", () => {
     expect(seg).toContain('forbid("close readiness is a fund view.")');

@@ -57,7 +57,8 @@ describe("no-scope rule", () => {
   });
   it("dry run never writes", () => {
     const src = readFileSync("src/lib/access-admin.functions.ts", "utf8");
-    const block = src.slice(src.indexOf("export const getLegacyCompatibility"));
+    const start = src.indexOf("export const getLegacyCompatibility");
+    const block = src.slice(start, src.indexOf("\nexport const", start + 1));
     expect(block).not.toMatch(/\.insert\(|\.update\(|\.delete\(/);
   });
 });
