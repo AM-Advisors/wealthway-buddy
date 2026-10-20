@@ -8,7 +8,10 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export const Route = createFileRoute("/_authenticated/ops/fund-setup/new")({
-  validateSearch: (s: Record<string, unknown>): { clientId?: string } => (typeof s["clientId"] === "string" ? { clientId: s["clientId"] } : {}),
+  validateSearch: (s: Record<string, unknown>): { clientId?: string; draft?: string } => ({
+    ...(typeof s["clientId"] === "string" ? { clientId: s["clientId"] } : {}),
+    ...(typeof s["draft"] === "string" ? { draft: s["draft"] } : {}),
+  }),
   head: () => ({ meta: [
     { title: "Add Fund or SPV - Harmonious" },
     { name: "description", content: "Set up a new fund or SPV for a client with the same guided steps clients use." },
@@ -43,7 +46,7 @@ function NewFundSetup() {
   );
   return (
     <main className="mx-auto max-w-5xl bg-background px-4 py-6">
-      <FundRequestEngine key={clientId || "none"} clientId={clientId || null} mode="staff" clientPicker={picker} backTo={{ to: "/ops/funds", label: "Funds" }} />
+      <FundRequestEngine key={`${clientId || "none"}:${search.draft ?? ""}`} clientId={clientId || null} draft={search.draft && clientId === search.clientId ? search.draft : undefined} mode="staff" clientPicker={picker} backTo={{ to: "/ops/funds", label: "Funds" }} />
     </main>
   );
 }
