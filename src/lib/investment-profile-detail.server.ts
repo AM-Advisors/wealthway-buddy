@@ -120,6 +120,9 @@ export async function saveFormation(userId: string, d: FormationInput) {
     kyb_status: "review", submitted_at: new Date().toISOString(), updated_at: new Date().toISOString(),
   }).eq("id", kyb.id);
   if (error) throw new Error(error.message);
+  // The investment profile holds the entity's legal name; keep it in step with the formation record.
+  const synced = await db.from("investment_profiles").update({ legal_name: d.legal_name.trim() }).eq("id", d.profileId);
+  if (synced.error) throw new Error(synced.error.message);
   await log(db, d.profileId, userId, "formation_submitted");
   return { ok: true };
 }
