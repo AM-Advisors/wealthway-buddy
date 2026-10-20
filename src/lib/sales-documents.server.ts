@@ -384,7 +384,7 @@ export async function lookupProspect(userId: string, rawEmail: string) {
 }
 
 /** Adds a Harmonious CRM prospect, reusing an existing contact with the same email. */
-export async function createProspect(userId: string, d: { email: string; fullName: string; organization?: string | null; title?: string | null; phone?: string | null }) {
+export async function createProspect(userId: string, d: { email: string; fullName: string; organization?: string | null | undefined; title?: string | null | undefined; phone?: string | null | undefined }) {
   const existing = await lookupProspect(userId, d.email);
   if (existing.contactId) return { contactId: existing.contactId, reused: true };
   const { saveContact } = await import("@/lib/crm.server");
