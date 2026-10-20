@@ -306,7 +306,10 @@ function DocumentsStep({ d, onboardingId, done }: { d: any; onboardingId: string
       await prepareFn({ data: { onboardingId } }).catch(() => null);
       return signFn({ data: { offering_document_id: docId, onboarding_id: onboardingId } });
     },
-    onSuccess: (r: any) => { if (r?.url) window.location.assign(r.url); },
+    onSuccess: (r: any) => {
+      if (r?.url) window.location.assign(r.url);
+      else if (r?.sentTo) { toast.success(`Sent to ${r.sentTo} to sign. They'll get an email from Box Sign.`); done(); }
+    },
     onError: (e) => toast.error(errText(e)),
   });
   const confirm = useMutation({ mutationFn: () => confirmFn({ data: { onboardingId, signerName: signer.trim() } }), onSuccess: done, onError: (e) => toast.error(errText(e)) });
