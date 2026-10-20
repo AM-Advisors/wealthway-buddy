@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { BILLING_FREQUENCIES } from "@/lib/invoice-schedule-model";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -91,7 +92,7 @@ function FromSow() {
   );
 }
 
-type Line = { serviceKey: string; label: string; quantity: number; unitCents: number; baselineUnitCents: number };
+type Line = { serviceKey: string; label: string; quantity: number; unitCents: number; baselineUnitCents: number; billingFrequency?: "one_time" | "monthly" | "quarterly" | "annual"; firstBillOn?: string | null };
 
 /** Product first, then only the levels valid for that product. */
 function AdminLevelPicker({ onAdd, lines }: { onAdd: (key: string) => void; lines: any[] }) {
@@ -154,7 +155,7 @@ export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; init
           <SelectContent>{(c.data?.lines ?? []).filter((l: any) => !String(l.serviceKey).startsWith(ADMIN_QUOTE_KEY_PREFIX) && !String(l.serviceKey).startsWith(SPV_TXN_KEY_PREFIX)).map((l: any) => <SelectItem key={l.serviceKey} value={l.serviceKey}>{l.label} · {money(l.baselineCents)}</SelectItem>)}</SelectContent></Select>
       </div>
       <Table className="mt-3">
-        <TableHeader><TableRow><TableHead>Service</TableHead><TableHead className="w-24">Qty</TableHead><TableHead className="w-36">Price ($)</TableHead><TableHead className="text-right">Rate card</TableHead><TableHead className="text-right">Line</TableHead><TableHead /></TableRow></TableHeader>
+        <TableHeader><TableRow><TableHead>Service</TableHead><TableHead className="w-24">Qty</TableHead><TableHead className="w-36">Price ($)</TableHead><TableHead className="w-32">Billed</TableHead><TableHead className="w-36">First bill</TableHead><TableHead className="text-right">Rate card</TableHead><TableHead className="text-right">Line</TableHead><TableHead /></TableRow></TableHeader>
         <TableBody>
           {(["one_time", "annual", "event"] as FeeGroup[]).flatMap((g) => {
             const model = (k: string) => (c.data?.lines ?? []).find((x: any) => x.serviceKey === k)?.pricingModel;
@@ -167,6 +168,8 @@ export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; init
               <TableCell>{l.label}</TableCell>
               <TableCell><Input inputMode="decimal" value={l.quantity} onChange={(e) => setLines(lines.map((x, j) => (j === i ? { ...x, quantity: Number(e.target.value) || 0 } : x)))} /></TableCell>
               <TableCell><Input inputMode="decimal" value={l.unitCents / 100} onChange={(e) => setLines(lines.map((x, j) => (j === i ? { ...x, unitCents: Math.round((Number(e.target.value) || 0) * 100) } : x)))} /></TableCell>
+              <TableCell><select aria-label="Billing frequency" className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm" value={l.billingFrequency ?? "one_time"} onChange={(e) => setLines(lines.map((x, j) => (j === i ? { ...x, billingFrequency: e.target.value as any } : x)))}>{BILLING_FREQUENCIES.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}</select></TableCell>
+              <TableCell><Input type="date" aria-label="First billing date" value={l.firstBillOn ?? ""} onChange={(e) => setLines(lines.map((x, j) => (j === i ? { ...x, firstBillOn: e.target.value || null } : x)))} /></TableCell>
               <TableCell className="text-right text-muted-foreground">{money(l.baselineUnitCents)}{l.unitCents < l.baselineUnitCents && <Badge variant="destructive" className="ml-1">Discount</Badge>}</TableCell>
               <TableCell className="text-right">{money(l.quantity * l.unitCents)}</TableCell>
               <TableCell><Button size="sm" variant="ghost" onClick={() => setLines(lines.filter((_, j) => j !== i))}>Remove</Button></TableCell>
