@@ -17,4 +17,13 @@ describe("cleared investor with tax questions still open", () => {
     const steps = journeySteps(reqs, { approvedToFund: false, fundingStatus: null } as any);
     expect(steps.find((s: any) => s.key === "sign")?.state).toBe("action_required");
   });
+  it("keeps Sign incomplete when the tax form is missing even after investment documents are signed", () => {
+    const signed = reqs.map((requirement: any) =>
+      ["subscription_questionnaire", "subscription_documents", "signature"].includes(requirement.key)
+        ? { ...requirement, state: "valid" }
+        : requirement,
+    );
+    const steps = journeySteps(signed, { approvedToFund: false, fundingStatus: null } as any);
+    expect(steps.find((step) => step.key === "sign")?.state).toBe("action_required");
+  });
 });

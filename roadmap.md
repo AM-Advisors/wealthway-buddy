@@ -1,5 +1,10 @@
 # Roadmap
 
+## Investor tax forms (2026-10-20)
+- [x] Include shared applicable tax intake, official form preview/signing and existing-form updates in the investment Sign step; both investor entry points share the same panel and saved profile facts.
+- [x] Three focused tax-step checks passed; latest preview diagnostics show build OK.
+- [ ] Signed-in form completion/read-back — blocked on isolated synthetic QA; no real tax information or signatures entered.
+
 ## PPM and Operating Agreement reading (2026-10-20)
 - [x] Read document now opens the active/individual uploaded PDF or Word file instead of empty metadata; Download uses the same source. Erebor OA v2 file exists; PPM uploads exist but no version is active, so show the activation requirement instead of blank content.
 - [x] 35 focused checks passed, latest preview build OK; synthetic uploaded Word pages rendered at desktop and current compact viewport. No real investor sessions or document changes.

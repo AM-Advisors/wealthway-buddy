@@ -33,6 +33,7 @@ import { cn } from "@/lib/utils";
 import { isReconciledFunding } from "@/lib/funding-status";
 import { WIRE_FIELD_LABELS } from "@/lib/wire-scope";
 import { FeeAcceptanceCard, OnboardingUploadsCard, useFeesAccepted } from "@/components/investor-onboarding-extras";
+import { TaxSignPanel } from "@/components/onboard-compliance-panels";
 
 const money = (cents: number | null | undefined) =>
   cents == null ? "-" : `$${(cents / 100).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
@@ -407,6 +408,8 @@ function Sign({ d, onboardingId, done }: { d: any; onboardingId: string; done: (
   const fees = useFeesAccepted(onboardingId);
 
   return (
+    <div className="space-y-5">
+    <TaxSignPanel onboardingId={onboardingId} done={done} />
     <Card>
       <CardHeader>
         <CardTitle>Review &amp; Sign</CardTitle>
@@ -477,6 +480,7 @@ function Sign({ d, onboardingId, done }: { d: any; onboardingId: string; done: (
         <p className="text-xs text-muted-foreground">A document shows as signed only once the signing service confirms it - this can take a minute.</p>
       </CardContent>
     </Card>
+    </div>
   );
 }
 
