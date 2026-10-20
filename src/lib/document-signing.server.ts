@@ -205,7 +205,7 @@ async function ensureBoxSourceFile(
   admin: any,
   resolved: ResolvedSigning,
 ): Promise<{ fileId: string; versionId: string | null }> {
-  const { uploadFile, fileVersionId } = await import("@/lib/box.server");
+  const { uploadFile, fileVersionId, signingFileName } = await import("@/lib/box.server");
 
   const { investmentDocumentSource } = await import("@/lib/investment-document-source.server");
   const source = await investmentDocumentSource(admin, resolved.document.id, resolved.application.id);
@@ -225,8 +225,7 @@ async function ensureBoxSourceFile(
 
   const safeTitle = resolved.document.title.replace(/[^\w\- ]+/g, "").trim() || "Fund document";
   const who = resolved.profile.legal_name ?? resolved.profile.email ?? "Investor";
-  const extension = /\.docx$/i.test(source.filename) ? "docx" : "pdf";
-  const fileName = `${safeTitle} - ${who} - ${resolved.application.id.slice(0, 8)}.${extension}`;
+  const fileName = signingFileName(`${safeTitle} - ${who} - ${resolved.application.id.slice(0, 8)}`, bytes);
 
   const fileId = await uploadFile(fileName, bytes);
   const versionId = await fileVersionId(fileId).catch(() => null);
