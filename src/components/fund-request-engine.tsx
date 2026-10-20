@@ -151,6 +151,7 @@ export function FundRequestEngine({ clientId: id, draft, mode = "client", client
       return submit({ data: { clientId: id, draftId, request: r as any, paymentId: paymentId ?? null } });
     },
     onSuccess: (res) => {
+      clearBackup(window.localStorage, backupKey(id, draft ?? null));
       toast.success(res.duplicate
         ? "Sent. Harmonious will check whether this matches a fund you already have."
         : "Sent to Harmonious. Your new fund is now in Funds while we set it up.");
