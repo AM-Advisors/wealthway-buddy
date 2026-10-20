@@ -29,8 +29,7 @@ describe("help center visibility", () => {
   });
 });
 
-describe("self-service help articles", async () => {
-  const { HELP_ARTICLES } = await import("@/lib/help-catalog");
+describe("self-service help articles", () => {
   const want: Record<string, string> = {
     "manager-launch-fund": "fund_manager", "manager-close-reopen-fund": "fund_manager", "manager-edit-before-signing": "fund_manager",
     "manager-track-investors": "fund_manager", "manager-capital-method": "fund_manager", "manager-update-emails": "fund_manager",
@@ -39,7 +38,7 @@ describe("self-service help articles", async () => {
     "investor-personal-link": "investor", "investor-going-back": "investor",
   };
   for (const [slug, role] of Object.entries(want)) it(`${slug} exists with steps for ${role}`, () => {
-    const a: any = (HELP_ARTICLES as any[]).find((x) => x.slug === slug);
+    const a: any = (HELP_CATALOG as any[]).find((x) => x.slug === slug);
     expect(a?.roles).toContain(role);
     expect(a.sections.some((s: any) => s.steps?.length)).toBe(true);
   });
