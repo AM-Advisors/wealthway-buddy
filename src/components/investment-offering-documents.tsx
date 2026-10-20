@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { acknowledgeDocumentFn, investorDocumentsFn } from "@/lib/fund-setup-canonical.functions";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { LoadError } from "@/components/load-error";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 /** Investor Sign-stage list: only documents that apply to this investment, plain actions. */
@@ -12,6 +13,8 @@ export function InvestmentOfferingDocuments({ onboardingId }: { onboardingId: st
   const load = useServerFn(investorDocumentsFn);
   const ack = useServerFn(acknowledgeDocumentFn);
   const q = useQuery({ queryKey: ["investment-offering-docs", onboardingId], queryFn: () => load({ data: { onboardingId } }) });
+  if (q.isLoading) return <p className="text-sm text-muted-foreground">Loading documents…</p>;
+  if (q.error) return <LoadError audience="account" error={q.error} what="Your documents" onRetry={() => void q.refetch()} />;
   if (!q.data?.length) return null;
   const acknowledge = async (documentId: string) => {
     try {

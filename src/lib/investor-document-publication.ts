@@ -7,8 +7,9 @@ export function investorDocumentPublication(input: {
   usage: DocumentUsage | null;
   requiresSignature: boolean;
   signingStatus: SigningConfigStatus | null;
+  approvedTemplate?: boolean;
 }) {
-  const approved = input.approval === "approved" || (input.published && input.approval === "superseded");
+  const approved = input.approval === "approved" || (input.approval === "uploaded_review_required" && input.approvedTemplate === true) || (input.published && input.approval === "superseded");
   const signature = input.usage ? input.usage === "signature" : input.requiresSignature;
   const ready = input.published && approved && (!signature || input.signingStatus === "confirmed");
   return {

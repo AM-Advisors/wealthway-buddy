@@ -46,7 +46,7 @@ async function docRow(documentId: string) {
   return data;
 }
 /** Provenance is version-specific: a later upload never inherits the template exemption. */
-async function approvedTemplateVersions(offeringId: string): Promise<Set<string>> {
+export async function approvedTemplateVersions(offeringId: string): Promise<Set<string>> {
   const { data: uses, error } = await db().from("document_template_uses").select("offering_document_id, fund_version, template_id, template_version").eq("offering_id", offeringId);
   if (error) throw new Error(error.message);
   const ids = [...new Set((uses ?? []).map((u: any) => u.template_id))];
@@ -433,7 +433,7 @@ export async function investorDocuments(userId: string, onboardingId: string) {
     ? await db().from("document_signatures").select("offering_document_id, signature_template_version").eq("application_id", row.application_id)
     : { data: [], error: null };
   if (signatureError) throw new Error("Document approval status could not be loaded. Please try again.");
-  const publication = await documentPublicationFor(db(), applicable, row.id, retainedSignatures ?? []);
+  const publication = await documentPublicationFor(db(), applicable, row.id, retainedSignatures ?? [], row.offering_id);
   const [{ data: singles }, { data: resign }] = await Promise.all([
     ids.length ? db().from("offering_document_versions").select("offering_document_id, version, target_onboarding_id").in("offering_document_id", ids).eq("rollout_scope", "single").eq("target_onboarding_id", row.id) : { data: [] },
     ids.length ? db().from("offering_document_resign_items").select("offering_document_id, from_version, to_version").eq("onboarding_id", row.id).eq("status", "open") : { data: [] },
@@ -447,7 +447,9 @@ export async function investorDocuments(userId: string, onboardingId: string) {
       id: d.id,
       title: d.title,
       approvalLabel: publication.get(d.id)?.label ?? "Awaiting document approval",
-      action: investorDocumentAction({ usage: d.usage, legacyRequiresSignature: d.requires_signature, acknowledged, execution: inv[i]?.execution ?? "not_sent" }),
+      action: !publication.get(d.id)?.ready && (inv[i]?.execution ?? "not_sent") === "not_sent"
+        ? "Not yet available"
+        : investorDocumentAction({ usage: d.usage, legacyRequiresSignature: d.requires_signature, acknowledged, execution: inv[i]?.execution ?? "not_sent" }),
       versionLabel,
     };
   });

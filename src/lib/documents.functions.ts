@@ -88,7 +88,7 @@ export const getDocumentsStep = createServerFn({ method: "GET" })
     const { documentPublicationFor } = await import("./investor-document-publication.server");
     const { data: onboarding, error: onboardingError } = await supabase.from("investor_onboardings").select("id").eq("application_id", application.id).eq("investor_user_id", userId).maybeSingle();
     if (onboardingError) throw new Error("Document approval status could not be loaded. Please try again.");
-    const publication = await documentPublicationFor(supabaseAdmin, documents ?? [], onboarding?.id ?? null, signatures ?? []);
+    const publication = await documentPublicationFor(supabaseAdmin, documents ?? [], onboarding?.id ?? null, signatures ?? [], application.offering_id);
     return {
       application,
       offering,
