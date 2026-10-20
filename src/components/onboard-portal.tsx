@@ -27,6 +27,7 @@ import { revealWireInstructionsFn } from "@/lib/fund-onboarding.functions";
 import { fundStepState, WIRE_FRAUD_WARNING } from "@/lib/fund-onboarding-model";
 import type { PortalStep, PortalStepView, PortalView } from "@/lib/onboard-portal-model";
 import { cn } from "@/lib/utils";
+import { kycFieldsFor } from "@/lib/kyc-fields";
 import { ConfirmYourInformation, ReviewPreparedDocuments } from "@/components/prepared-investor-review";
 import { CertificationsPanel, EligibilityPanel, TaxAndCompliancePanel, TaxSignPanel } from "@/components/onboard-compliance-panels";
 import { OnboardingUploadsCard } from "@/components/investor-onboarding-extras";
@@ -216,6 +217,9 @@ function ProfileChooser({ onboardingId, done }: { onboardingId: string; done: ()
   const [profileId, setProfileId] = useState("");
   const [type, setType] = useState("individual");
   const [name, setName] = useState("");
+  const [kyc, setKyc] = useState<Record<string, string>>({});
+  const fields = kycFieldsFor(type as any, false);
+  const kycMissing = fields.some((f) => f.required && !(kyc[f.key] ?? "").trim());
   const choose = useMutation({
     mutationFn: (v: any) => chooseFn({ data: v }),
     onSuccess: done,
@@ -251,10 +255,23 @@ function ProfileChooser({ onboardingId, done }: { onboardingId: string; done: ()
             <Label htmlFor="ob-name">{type === "individual" || type === "joint" ? "Full legal name" : "Legal name of the entity"}</Label>
             <Input id="ob-name" value={name} onChange={(e) => setName(e.target.value)} />
           </div>
+          {fields.map((f) => (
+            <div key={f.key}>
+              <Label htmlFor={`ob-kyc-${f.key}`}>{f.label}</Label>
+              <Input
+                id={`ob-kyc-${f.key}`}
+                type={f.kind === "date" ? "date" : "text"}
+                autoComplete="off"
+                value={kyc[f.key] ?? ""}
+                onChange={(e) => setKyc((k) => ({ ...k, [f.key]: e.target.value }))}
+              />
+            </div>
+          ))}
+          <p className="text-xs text-muted-foreground">We use these details to verify this profile once. We keep only the last four digits of ID numbers.</p>
           <Button
             className="w-full sm:w-auto"
-            disabled={name.trim().length < 2 || choose.isPending}
-            onClick={() => choose.mutate({ onboardingId, create: { profileType: type, displayLabel: name.trim(), legalName: name.trim() } })}
+            disabled={name.trim().length < 2 || kycMissing || choose.isPending}
+            onClick={() => choose.mutate({ onboardingId, create: { profileType: type, displayLabel: name.trim(), legalName: name.trim(), kyc } })}
           >
             Continue
           </Button>
