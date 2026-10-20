@@ -21,7 +21,7 @@ export async function resolveTarget(context: any, t: Target) {
   const { clientAccessIds } = await import("@/lib/client-membership");
   const ids = await clientAccessIds(context.supabase, context.userId);
   const clientId = t.clientId ?? ids[0];
-  if (!clientId || !ids.includes(clientId)) throw new Error("You aren't linked to this organisation.");
+  if (!clientId || !ids.includes(clientId)) throw new Error("You aren't linked to this organization.");
   const { coreServicesFor } = await import("@/lib/client-portal-model");
   if (t.kind === "new_fund_request") {
     const { fundAddOnKeys } = await import("@/lib/fund-request-model");

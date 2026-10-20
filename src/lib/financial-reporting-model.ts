@@ -132,7 +132,7 @@ export const DEFAULT_MAPPING_LINES: MappingLine[] = [
   { statement: "income_statement", section: "income", key: "other_income", label: "Other investment income", order: 30, match: { subtypes: ["investment_income"] } },
   // Operations - expenses
   { statement: "income_statement", section: "expenses", key: "management_fees", label: "Management fees", order: 110, match: { subtypes: ["management_fee"] } },
-  { statement: "income_statement", section: "expenses", key: "organizational_expenses", label: "Organisational expenses", order: 120, match: { subtypes: ["organizational_expense"] } },
+  { statement: "income_statement", section: "expenses", key: "organizational_expenses", label: "Organizational expenses", order: 120, match: { subtypes: ["organizational_expense"] } },
   { statement: "income_statement", section: "expenses", key: "tax_expense", label: "Taxes", order: 130, match: { subtypes: ["tax_adjustment", "withholding"] } },
   { statement: "income_statement", section: "expenses", key: "other_expenses", label: "Other operating expenses", order: 190, match: { types: ["expense"] } },
   // Operations - gains

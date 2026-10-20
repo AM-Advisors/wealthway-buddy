@@ -404,7 +404,7 @@ async function sendClientWelcome(input: {
         : `client-invite-${input.invitationId}`,
       templateData: {
         contactName: input.name || input.email,
-        clientName: (client as any)?.name || "your organisation",
+        clientName: (client as any)?.name || "your organization",
         roleLabel: roleEntry?.label ?? "Client contact",
         invitedByName: input.invitedByName,
         note: input.note,

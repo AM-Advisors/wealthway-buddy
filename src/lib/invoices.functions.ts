@@ -593,7 +593,7 @@ export const issueInvoice = createServerFn({ method: "POST" })
       (person) => ({
         contactName: person.name,
         clientName:
-          (clientRow as any)?.legal_name || (clientRow as any)?.name || "your organisation",
+          (clientRow as any)?.legal_name || (clientRow as any)?.name || "your organization",
         invoiceNumber: number,
         amount: money(total),
         issueDate: data.issueDate,
@@ -676,7 +676,7 @@ export const resendInvoiceEmail = createServerFn({ method: "POST" })
       (person) => ({
         contactName: person.name,
         clientName:
-          (clientRow as any)?.legal_name || (clientRow as any)?.name || "your organisation",
+          (clientRow as any)?.legal_name || (clientRow as any)?.name || "your organization",
         invoiceNumber: String((invoice as any).number ?? ""),
         amount: money(Number((invoice as any).total_cents ?? 0)),
         issueDate: String((invoice as any).issue_date ?? ""),

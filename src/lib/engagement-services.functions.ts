@@ -44,7 +44,7 @@ async function assertClientAccess(context: any, clientId: string) {
     .eq("user_id", context.userId)
     .eq("client_id", clientId)
     .maybeSingle();
-  if (!member) throw new Error("Forbidden: you don't have access to this organisation.");
+  if (!member) throw new Error("Forbidden: you don't have access to this organization.");
   return who;
 }
 

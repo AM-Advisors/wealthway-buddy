@@ -42,7 +42,7 @@ function AgreementsHome() {
         <CardHeader>
           <CardTitle className="text-base">No engagement yet</CardTitle>
           <CardDescription>
-            Once Harmonious sets up your organisation, your master agreement and statements of work
+            Once Harmonious sets up your organization, your master agreement and statements of work
             appear here.
           </CardDescription>
         </CardHeader>

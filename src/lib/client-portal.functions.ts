@@ -304,7 +304,7 @@ export const maybeSendClientWelcome = createServerFn({ method: "POST" })
       const result = await sendTemplateEmail("client-welcome", email, {
         templateData: {
           contactName: (profile?.legal_name as string | undefined) || "there",
-          clientName: (client?.name as string | undefined) || "your organisation",
+          clientName: (client?.name as string | undefined) || "your organization",
           portalUrl: `${origin}/client`,
           signOffUrl: `${origin}/sign-off`,
         },

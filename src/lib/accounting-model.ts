@@ -62,7 +62,7 @@ export const DEFAULT_FUND_CHART: ChartSeed[] = [
   { code: "4300", name: "Realised gain / loss", account_type: "income", subtype: "realized_gain", normal_balance: "credit" },
   { code: "4400", name: "Unrealised gain / loss", account_type: "income", subtype: "unrealized_gain", normal_balance: "credit" },
   { code: "5000", name: "Management fee expense", account_type: "expense", subtype: "management_fee", normal_balance: "debit" },
-  { code: "5100", name: "Organisational expenses", account_type: "expense", subtype: "organizational_expense", normal_balance: "debit" },
+  { code: "5100", name: "Organizational expenses", account_type: "expense", subtype: "organizational_expense", normal_balance: "debit" },
   { code: "5200", name: "Fund operating expenses", account_type: "expense", subtype: "other", normal_balance: "debit" },
   { code: "5300", name: "Tax adjustments", account_type: "expense", subtype: "tax_adjustment", normal_balance: "debit" },
 ];

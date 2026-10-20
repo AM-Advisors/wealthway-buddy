@@ -123,7 +123,7 @@ export const PRIVACY_POLICY: LegalDocument = {
       paragraphs: [
         "This Site is operated from, and Site User Information and Service User Information is stored in, the United States of America. We store Site User Information and Service User Information in cloud infrastructure located in the United States of America.",
         `Your information, including personal information, is processed at ${COMPANY} operating offices and in any other places where the parties involved in the processing are located. This means the information may be transferred to, and maintained on, computers located outside of the jurisdiction where you reside, and the data protection laws with which ${COMPANY} complies may differ from those in your jurisdiction. Your consent to this Privacy Policy followed by your submission of such personal data represents your agreement to that transfer.`,
-        "We will take all steps reasonably necessary to ensure that your personal information is treated securely and in accordance with this Privacy Policy, and no transfer of personal information will take place to an organisation or a country unless there are adequate controls in place, including the security of personal information.",
+        "We will take all steps reasonably necessary to ensure that your personal information is treated securely and in accordance with this Privacy Policy, and no transfer of personal information will take place to an organization or a country unless there are adequate controls in place, including the security of personal information.",
         "We will retain your personal information only for as long as is necessary for the purposes set out in this Privacy Policy. We will retain and use your personal information to the extent necessary to comply with our regulatory and legal obligations (for example, applicable anti-money laundering and counter-terrorist financing regulations), resolve disputes, and enforce our legal agreements and policies.",
         "We will also retain site usage information for internal analysis purposes. Site usage information is generally retained for a shorter period, except where the information is used to strengthen security or improve the functionality of our Services, or where we are legally obliged to retain it for longer.",
         "We maintain Site User Information and Service User Information for as long as needed for the business purposes for which it is collected, and in keeping with our record retention policies. In general, personal information relating to you is held for at least five years, as required by the regulators, after we cease providing you with our Services.",
@@ -132,7 +132,7 @@ export const PRIVACY_POLICY: LegalDocument = {
     {
       heading: "Security",
       paragraphs: [
-        `${COMPANY} maintains administrative, technical and physical safeguards (including technical and organisational measures) designed to protect personal information against accidental, unlawful or unauthorised destruction, loss, alteration, access, disclosure or use.`,
+        `${COMPANY} maintains administrative, technical and physical safeguards (including technical and organizational measures) designed to protect personal information against accidental, unlawful or unauthorised destruction, loss, alteration, access, disclosure or use.`,
         "We require that our service providers implement and maintain appropriate security practices and procedures. Nevertheless, please be aware that internet transmissions are never completely private or secure. If you have any questions about the security of your personal information, you can contact us at support@harmonious.co.",
       ],
     },
@@ -243,7 +243,7 @@ export const TERMS_OF_SERVICE: LegalDocument = {
       paragraphs: [
         "Access to the Platform is granted to named individuals. You are responsible for keeping sign-in credentials confidential, for the activity carried out under your account, and for telling us promptly if you believe an account has been compromised or a person should no longer have access.",
         "You agree not to share accounts, attempt to access data belonging to another client, interfere with the operation or security of the Platform, or use it to store or transmit unlawful material. We may suspend access where we reasonably believe these Terms have been breached or where continued access presents a security, legal or regulatory risk.",
-        "Roles and permissions in the Platform reflect the authority recorded for your organisation. Certain actions - including approving fees and authorising payment instructions - are restricted to people holding the relevant authority.",
+        "Roles and permissions in the Platform reflect the authority recorded for your organization. Certain actions - including approving fees and authorising payment instructions - are restricted to people holding the relevant authority.",
       ],
     },
     {

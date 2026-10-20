@@ -122,7 +122,7 @@ function ClientShell() {
             {isStaff ? (
               <>
                 <Button asChild size="sm">
-                  <Link to="/admin/contracts">Set up the organisation and engagement</Link>
+                  <Link to="/admin/contracts">Set up the organization and engagement</Link>
                 </Button>
                 <Button asChild size="sm" variant="outline">
                   <Link to="/admin/entities">Entities and engagements</Link>

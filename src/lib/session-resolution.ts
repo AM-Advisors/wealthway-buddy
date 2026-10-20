@@ -24,7 +24,7 @@ export type RelationshipFacts = {
   investmentProfileIds: string[];
   /** Positions held across funds. */
   investmentCount: number;
-  /** Client organisations this person belongs to as a staff member of the client. */
+  /** Client organizations this person belongs to as a staff member of the client. */
   clientIds: string[];
   /** Names for clientIds, alphabetical. Each becomes a separate workspace. */
   clientAccounts?: { id: string; name: string }[];

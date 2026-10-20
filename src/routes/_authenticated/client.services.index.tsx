@@ -122,7 +122,7 @@ function MyServices() {
       {(data?.clientWide ?? []).length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Across your organisation</CardTitle>
+            <CardTitle className="text-base">Across your organization</CardTitle>
             <CardDescription>Services that aren't tied to one entity.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">

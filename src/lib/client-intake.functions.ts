@@ -164,7 +164,7 @@ export const saveFundIntakeDraft = createServerFn({ method: "POST" })
     const main = who.memberships.find(
       (m) => String(m.client_id) === data.clientId && MAIN_CONTACT_ROLES.includes(String(m.client_role)),
     );
-    if (!main) throw new Error("Forbidden: only this organisation's main contacts can fill in its fund details.");
+    if (!main) throw new Error("Forbidden: only this organization's main contacts can fill in its fund details.");
 
     const { data: existing } = await context.supabase
       .from("client_fund_intakes")
@@ -207,7 +207,7 @@ export const submitFundIntake = createServerFn({ method: "POST" })
     const main = who.memberships.find(
       (m) => String(m.client_id) === data.clientId && MAIN_CONTACT_ROLES.includes(String(m.client_role)),
     );
-    if (!main) throw new Error("Forbidden: only this organisation's main contacts can fill in its fund details.");
+    if (!main) throw new Error("Forbidden: only this organization's main contacts can fill in its fund details.");
 
     const d = data.details;
     if (!d.fund_name.trim()) throw new Error("Please tell us the fund's name.");

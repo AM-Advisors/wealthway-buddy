@@ -90,7 +90,7 @@ export async function sendInvoiceReminders(today = todayIso()) {
       .select("id, legal_name, name")
       .in("id", clientIds);
     for (const c of (clients ?? []) as any[]) {
-      names.set(String(c.id), String(c.legal_name || c.name || "your organisation"));
+      names.set(String(c.id), String(c.legal_name || c.name || "your organization"));
     }
   }
 
@@ -107,7 +107,7 @@ export async function sendInvoiceReminders(today = todayIso()) {
       `invoice-reminder:${invoice.id}:${stage.key}`,
       (person) => ({
         contactName: person.name,
-        clientName: names.get(String(invoice.client_id)) ?? "your organisation",
+        clientName: names.get(String(invoice.client_id)) ?? "your organization",
         invoiceNumber: String(invoice.number ?? ""),
         amount: money(Number(invoice.total_cents ?? 0)),
         dueDate: String(invoice.due_date),

@@ -40,7 +40,7 @@ export function MsaGate({ children }: { children: ReactNode }) {
           Review and sign the Master Services Agreement
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          {data.clientName ? `${data.clientName} needs to accept` : "Your organisation needs to accept"}{" "}
+          {data.clientName ? `${data.clientName} needs to accept` : "Your organization needs to accept"}{" "}
           version {data.version} of the Harmonious Master Services Agreement before the portal
           opens. This takes a couple of minutes.
         </p>
