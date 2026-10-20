@@ -1,6 +1,7 @@
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 
 import { getPortalAccess } from "@/lib/portal-access.functions";
@@ -19,12 +20,18 @@ export function PortalGate({
   onSignOut: () => void | Promise<void>;
 }) {
   const fetchAccess = useServerFn(getPortalAccess);
-  const { data, isPending, isError } = useQuery({
+  const navigate = useNavigate();
+  const { data, isPending, isError, refetch, isFetching } = useQuery({
     queryKey: ["portal-access"],
     queryFn: () => fetchAccess(),
-    staleTime: 60_000,
+    staleTime: (q) => (q.state.data?.allowed ? 60_000 : 0),
     retry: 1,
   });
+
+  // An investment was just connected to this account: open it.
+  useEffect(() => {
+    if (data?.openOnboardingId) void navigate({ to: "/onboard/i/$onboardingId", params: { onboardingId: data.openOnboardingId } });
+  }, [data?.openOnboardingId, navigate]);
 
   if (isPending) {
     return (
@@ -34,7 +41,20 @@ export function PortalGate({
     );
   }
 
-  if (isError || !data?.allowed) {
+  if (isError) {
+    return (
+      <div className="flex min-h-[70vh] items-center justify-center px-4">
+        <div className="w-full max-w-md text-center">
+          <Logo variant="navy" className="mx-auto h-7 w-auto" />
+          <h1 className="mt-8 text-2xl">We couldn't check your access</h1>
+          <p className="mt-3 text-sm text-muted-foreground">Something went wrong on our side. Please try again.</p>
+          <Button className="mt-8 w-full" disabled={isFetching} onClick={() => void refetch()}>{isFetching ? "Checking…" : "Try again"}</Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!data?.allowed) {
     return (
       <div className="flex min-h-[70vh] items-center justify-center px-4">
         <div className="w-full max-w-md text-center">
@@ -53,9 +73,12 @@ export function PortalGate({
           </p>
           <p className="mt-3 text-sm text-muted-foreground">
             If you were invited under a different email address, sign in with that address instead.
-            Otherwise, reply to your fund contact and ask them to add you.
+            Otherwise, reply to your fund contact and ask them to add you. If you've just received an invitation, press Check again.
           </p>
-          <Button className="mt-8 w-full" variant="outline" onClick={() => void onSignOut()}>
+          <Button className="mt-8 w-full" disabled={isFetching} onClick={() => void refetch()}>
+            {isFetching ? "Checking…" : "Check again"}
+          </Button>
+          <Button className="mt-3 w-full" variant="outline" onClick={() => void onSignOut()}>
             Sign out
           </Button>
         </div>

@@ -1928,13 +1928,30 @@ export async function claimOnboardInvitation(userId: string, reference: string) 
   }
   const { data: bound } = await db()
     .from("investor_onboardings")
-    .select("id, investor_user_id")
+    .select("id, investor_user_id, person_id, offering_id, removed_at, persons(user_id, email)")
     .eq("invitation_id", inv.id)
     .limit(5);
   const others = ((bound ?? []) as any[]).filter((b) => b.investor_user_id && b.investor_user_id !== userId);
   if (others.length) fail("This invitation has already been used.");
   const mine = ((bound ?? []) as any[]).find((b) => b.investor_user_id === userId);
   if (mine) return { onboardingId: mine.id as string };
+  // A manager-added investment tied to this exact invitation: connect it to the
+  // invited (email-verified) account directly, never create a second investment.
+  const prepared = ((bound ?? []) as any[]).find((b) => !b.investor_user_id && !b.removed_at);
+  if (prepared) {
+    const { canLinkPreparedInvestment } = await import("@/lib/investor-onboarding-model");
+    if (!canLinkPreparedInvestment({ personUserId: prepared.persons?.user_id ?? null, personEmail: prepared.persons?.email ?? null }, { userId, email: me.user.email ?? null })) {
+      fail("We need to verify your existing investment record before you continue. Harmonious has been notified. You don't need to create another investment.");
+    }
+    const { error: linkErr } = await db().from("investor_onboardings").update({ investor_user_id: userId, last_activity_at: nowIso() }).eq("id", prepared.id).is("investor_user_id", null);
+    if (linkErr) fail(linkErr.message);
+    if (prepared.person_id && !prepared.persons?.user_id) await db().from("persons").update({ user_id: userId }).eq("id", prepared.person_id).is("user_id", null);
+    await db().from("investor_fund_access").upsert({ user_id: userId, offering_id: prepared.offering_id, granted_by: inv.invited_by }, { onConflict: "user_id,offering_id" });
+    await db().from("user_roles").upsert({ user_id: userId, role: "investor" }, { onConflict: "user_id,role" });
+    if (inv.status === "pending") await db().from("fund_invitations").update({ status: "accepted", accepted_at: nowIso(), accepted_by: userId, onboarding_status: "account_created" }).eq("id", inv.id);
+    await recordEvent({ onboardingId: prepared.id, offeringId: prepared.offering_id, event: "personal_link_claimed", subjectTable: "fund_invitations", subjectId: inv.id, actorUserId: userId, actorRole: "investor" });
+    return { onboardingId: prepared.id as string };
+  }
   const started = await startOnboarding(userId, { slugOrId: inv.offering_id, invitationToken: reference });
   if (!started.onboardingId) fail("We need to verify your existing investment record before you continue. Harmonious has been notified. You don't need to create another investment.");
   return { onboardingId: started.onboardingId };
