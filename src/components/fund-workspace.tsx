@@ -17,6 +17,7 @@ import { FundServicesTab } from "@/components/fund-services-tab";
 import { FundCommandCenter } from "@/components/fund-command-center";
 import { FundCalendar } from "@/components/fund-calendar";
 import { FundApprovals } from "@/components/fund-approvals";
+import { ManagerFundReviews } from "@/components/manager-fund-reviews";
 import { FundRequests } from "@/components/fund-requests";
 import { updateSetupTaskFn } from "@/lib/fund-setup.functions";
 import { Link } from "@tanstack/react-router";
@@ -294,7 +295,7 @@ export function FundWorkspace({ fundId, tab, onTab, mode = "client", extraTabs =
         {!merged && <TabsContent value="team"><TeamTab fundId={fundId} /></TabsContent>}
         <TabsContent value="overview"><FundCommandCenter fundId={fundId} onNavigate={(t) => onTab(t === "capital" ? "distributions" : t)} /></TabsContent>
         <TabsContent value="calendar"><FundCalendar fundId={fundId} /></TabsContent>
-        <TabsContent value="approvals"><FundApprovals fundId={fundId} /></TabsContent>
+        <TabsContent value="approvals">{tab === "approvals" && <div className="space-y-6">{!staff && <ManagerFundReviews fundId={fundId} />}<FundApprovals fundId={fundId} /></div>}</TabsContent>
         <TabsContent value="requests"><FundRequests fundId={fundId} /></TabsContent>
         <TabsContent value="services"><FundServicesTab fundId={fundId} /></TabsContent>
         <TabsContent value="documents"><DocumentsTab fundId={fundId} /></TabsContent>
