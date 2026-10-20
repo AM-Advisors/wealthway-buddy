@@ -32,4 +32,3 @@
 - Investor surfaces: /investment/$onboardingId workspace; /investor-reporting?section= canonical reports (old pages redirect); /admin/investors redirects to Ops Investor 360; capital reads onboardings with application history; funding/wire retain applications pending review — why: connected views without money-path changes.
 - Client/investor errors use LoadError; reports load active sections; signing polls pending only — why: truthful, bounded reads.
 - Draft writes use persistFundRequestDraft with client/status-scoped read-back; errors retain browser answers, never acknowledge saved — why: no silent progress loss.
-- New fund setup fee waivers live in client_setup_fee_waivers (append-only; revoke, never delete); buildQuote reads them server-side and only PRICE_APPROVER_ROLES may change them with a reason - why: pricing exceptions need CEO/CRO sign-off and a permanent trail.

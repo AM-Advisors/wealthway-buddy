@@ -260,3 +260,4 @@
 
 - Readiness reads go through loadReadinessInputs (investor-onboarding.server.ts): single and batch share one loader + pure compute; failed reads are logged and treated as no rows - why: Funds dashboard went from ~3,000 to ~60 reads per load without a second code path.
 - Server logging: supabase-fetch-log.server.ts (DB failures) and ext-call-log.server.ts (outside calls), both installed in src/server.ts, plus fn-timing-middleware.ts (server fns); failures/slow only, scrubbed, rate-limited, never bodies/keys - why: generated clients are uneditable; logging must never change behavior.
+- New fund setup fee waivers: client_setup_fee_waivers (append-only; revoke, never delete), read by buildQuote; only PRICE_APPROVER_ROLES change them, with a reason - why: pricing exceptions need CEO/CRO sign-off and a permanent trail.
