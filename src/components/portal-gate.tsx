@@ -7,6 +7,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { getPortalAccess } from "@/lib/portal-access.functions";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/Logo";
+import { ProfileStep } from "@/components/profile-step";
 
 /**
  * Authentication says "who you are"; this says "you were invited".
@@ -86,5 +87,5 @@ export function PortalGate({
     );
   }
 
-  return <>{children}</>;
+  return <ProfileStep>{children}</ProfileStep>;
 }

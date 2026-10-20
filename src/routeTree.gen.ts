@@ -71,6 +71,7 @@ import { Route as AuthenticatedSharesRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedSignOffRouteImport } from './routes/_authenticated/sign-off'
 import { Route as AuthenticatedSignatoryRouteImport } from './routes/_authenticated/signatory'
 import { Route as AuthenticatedStaffRouteImport } from './routes/_authenticated/staff'
+import { Route as AuthenticatedStartFundRouteImport } from './routes/_authenticated/start-fund'
 import { Route as AuthenticatedStatementsRouteImport } from './routes/_authenticated/statements'
 import { Route as AuthenticatedSubscriptionRouteImport } from './routes/_authenticated/subscription'
 import { Route as AuthenticatedTaxRouteImport } from './routes/_authenticated/tax'
@@ -790,6 +791,11 @@ const AuthenticatedSignatoryRoute = AuthenticatedSignatoryRouteImport.update({
 const AuthenticatedStaffRoute = AuthenticatedStaffRouteImport.update({
   id: '/staff',
   path: '/staff',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedStartFundRoute = AuthenticatedStartFundRouteImport.update({
+  id: '/start-fund',
+  path: '/start-fund',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedStatementsRoute = AuthenticatedStatementsRouteImport.update({
@@ -3183,6 +3189,7 @@ export interface FileRoutesByFullPath {
   '/sign-off': typeof AuthenticatedSignOffRoute
   '/signatory': typeof AuthenticatedSignatoryRoute
   '/staff': typeof AuthenticatedStaffRoute
+  '/start-fund': typeof AuthenticatedStartFundRoute
   '/statements': typeof AuthenticatedStatementsRoute
   '/subscription': typeof AuthenticatedSubscriptionRoute
   '/tax': typeof AuthenticatedTaxRoute
@@ -3643,6 +3650,7 @@ export interface FileRoutesByTo {
   '/sign-off': typeof AuthenticatedSignOffRoute
   '/signatory': typeof AuthenticatedSignatoryRoute
   '/staff': typeof AuthenticatedStaffRoute
+  '/start-fund': typeof AuthenticatedStartFundRoute
   '/statements': typeof AuthenticatedStatementsRoute
   '/subscription': typeof AuthenticatedSubscriptionRoute
   '/tax': typeof AuthenticatedTaxRoute
@@ -4105,6 +4113,7 @@ export interface FileRoutesById {
   '/_authenticated/sign-off': typeof AuthenticatedSignOffRoute
   '/_authenticated/signatory': typeof AuthenticatedSignatoryRoute
   '/_authenticated/staff': typeof AuthenticatedStaffRoute
+  '/_authenticated/start-fund': typeof AuthenticatedStartFundRoute
   '/_authenticated/statements': typeof AuthenticatedStatementsRoute
   '/_authenticated/subscription': typeof AuthenticatedSubscriptionRoute
   '/_authenticated/tax': typeof AuthenticatedTaxRoute
@@ -4571,6 +4580,7 @@ export interface FileRouteTypes {
     | '/sign-off'
     | '/signatory'
     | '/staff'
+    | '/start-fund'
     | '/statements'
     | '/subscription'
     | '/tax'
@@ -5031,6 +5041,7 @@ export interface FileRouteTypes {
     | '/sign-off'
     | '/signatory'
     | '/staff'
+    | '/start-fund'
     | '/statements'
     | '/subscription'
     | '/tax'
@@ -5492,6 +5503,7 @@ export interface FileRouteTypes {
     | '/_authenticated/sign-off'
     | '/_authenticated/signatory'
     | '/_authenticated/staff'
+    | '/_authenticated/start-fund'
     | '/_authenticated/statements'
     | '/_authenticated/subscription'
     | '/_authenticated/tax'
@@ -6409,6 +6421,13 @@ declare module '@tanstack/react-router' {
       path: '/staff'
       fullPath: '/staff'
       preLoaderRoute: typeof AuthenticatedStaffRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/start-fund': {
+      id: '/_authenticated/start-fund'
+      path: '/start-fund'
+      fullPath: '/start-fund'
+      preLoaderRoute: typeof AuthenticatedStartFundRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/statements': {
@@ -9546,6 +9565,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSignOffRoute: typeof AuthenticatedSignOffRoute
   AuthenticatedSignatoryRoute: typeof AuthenticatedSignatoryRoute
   AuthenticatedStaffRoute: typeof AuthenticatedStaffRoute
+  AuthenticatedStartFundRoute: typeof AuthenticatedStartFundRoute
   AuthenticatedStatementsRoute: typeof AuthenticatedStatementsRoute
   AuthenticatedSubscriptionRoute: typeof AuthenticatedSubscriptionRoute
   AuthenticatedTaxRoute: typeof AuthenticatedTaxRoute
@@ -9854,6 +9874,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSignOffRoute: AuthenticatedSignOffRoute,
   AuthenticatedSignatoryRoute: AuthenticatedSignatoryRoute,
   AuthenticatedStaffRoute: AuthenticatedStaffRoute,
+  AuthenticatedStartFundRoute: AuthenticatedStartFundRoute,
   AuthenticatedStatementsRoute: AuthenticatedStatementsRoute,
   AuthenticatedSubscriptionRoute: AuthenticatedSubscriptionRoute,
   AuthenticatedTaxRoute: AuthenticatedTaxRoute,
