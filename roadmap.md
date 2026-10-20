@@ -3,7 +3,8 @@
 ## Saved draft reconciliation (2026-10-20)
 - [x] Restore all draft-only signing, Box event tracking and Recent sign-ins layout changes using the draft reconciliation tools.
 - [x] Combine Box diagnostics, retry error clearing and investing-party name fallback with main's byte-based file naming, no-version-overwrite uploads and checked signer writes.
-- [ ] Run focused signing tests and review all three combined files against both saved versions; no live signing, messages or records authorized.
+- [x] All 31 focused signing checks passed; preview build OK. Reviewed box.server.ts, box-sign.functions.ts and document-signing.server.ts against both versions; verifier reports no dropped work and correctly leaves combined files for manual review.
+- [ ] Live signing read-back — blocked on isolated synthetic QA; no live signing, messages or records authorized.
 
 ## Self Serve manager review screens (2026-10-20)
 - [x] Add Fund reviews to both manager Approvals entry points: KYC/KYB status with investor detail/edit, bank evidence and verified status, document admission approvals and reconciled receipts with statement upload/transaction labels. No final KYC/bank/funding approval permissions changed.
