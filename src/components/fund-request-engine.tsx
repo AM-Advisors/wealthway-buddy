@@ -27,7 +27,7 @@ import {
   getFundRequestDraft, saveFundRequestDraft, submitFundRequest, uploadFundRequestFile,
 } from "@/lib/client-fund-request.functions";
 import {
-  CLASS_TERM_OPTIONS, FUND_KIND_TYPES, SERIES_HOMES, SERIES_NEW_ANNUAL_FEE, SS4_FIELDS, autoServices, HIDDEN_FUND_SERVICE_KEYS, SERVICE_BUNDLES, emptyRequest, entityDocKinds, isSeries, isSpv, visibleSteps, missingFields, needsSs4, seriesJurisdiction, seriesLegalName,
+  CLASS_TERM_OPTIONS, FUND_KIND_TYPES, SERIES_HOMES, SERIES_NEW_ANNUAL_FEE, SS4_FIELDS, autoServices, HIDDEN_FUND_SERVICE_KEYS, SERVICE_BUNDLES, defaultLegalName, emptyRequest, entityDocKinds, isSeries, isSpv, visibleSteps, missingFields, needsSs4, seriesJurisdiction, seriesLegalName,
   type FundRequest, type RequestStepKey,
 } from "@/lib/fund-request-model";
 import { categoryLabel, listServiceCatalog } from "@/lib/service-catalog.functions";
@@ -87,9 +87,9 @@ export function FundRequestEngine({ clientId: id, draft, mode = "client", client
     return { ...next, service_keys: Array.from(new Set([...p.service_keys.filter((x) => !autoServices(p).includes(x)), ...autoServices(next)])) };
   });
   const setFundName = (name: string) => setR((p) => {
-    const wasGenerated = seriesLegalName(p) && p.legal_name === seriesLegalName(p);
+    const wasGenerated = defaultLegalName(p) !== "" && p.legal_name === defaultLegalName(p);
     const withName = { ...p, fund_name: name };
-    const generated = seriesLegalName(withName);
+    const generated = defaultLegalName(withName);
     return generated && (wasGenerated || !p.legal_name.trim()) ? { ...withName, legal_name: generated } : withName;
   });
   // Prefill SS-4 lines we already know when the section first appears.
