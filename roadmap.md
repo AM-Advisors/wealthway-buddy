@@ -1,5 +1,12 @@
 # Roadmap
 
+## Website-sourced non-SPV fund templates (2026-10-20)
+- [x] Verify ILPA publisher PDFs and industry drafting permission; commercial app hosting permission not established. No complete verified debt/real-estate template; no company instruments or executed agreements relabeled.
+- [x] Add publisher download links with dated scope notices; canonical autofill recognizes publisher identity blanks, keeps GP separate from manager and preserves all unresolved legal terms. Enforce fund-type assignment on generation and prevent automatic activation with open blanks.
+- [ ] Import website models — blocked: publisher hosting/reuse permission and fund-specific legal suitability approval not established. No third-party legal files uploaded, approved or activated.
+- [x] Twenty-seven focused checks passed, including synthetic generated Word read-back, legal-name autofill, cross-type/pending/archived rejection and unresolved-term publication guard; preview build OK.
+- [ ] Signed-in generation/read-back — blocked on isolated QA; no real publication/signature performed.
+
 ## Equity, debt and real estate templates (2026-10-20)
 - [x] Research YC/NVCA (company-level instruments, not fund templates) and ILPA (equity-fund LPA/subscription references only); no verified official debt/real estate fund offering template. No third-party text copied or SPV documents relabeled.
 - [x] Add direct PDF/Word library upload with fund-type assignments and pending approval; preserve generation/signature path. Equity/debt/real estate aliases match canonical types; failed template reads offer Retry.

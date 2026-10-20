@@ -52,10 +52,10 @@ function TemplatesPage() {
           {q.data?.templates.length === 0 ? <p className="text-sm text-muted-foreground">No templates yet.</p> : q.data?.templates.map((t) => <TemplateCard key={t.id} t={t} funds={q.data?.funds ?? []} />)}
           <section className="space-y-3 border-t pt-5">
             <h2 className="font-heading text-lg font-semibold">Publisher references — not approved signing templates</h2>
-            {FUND_MODEL_SOURCES.map((source) => <a key={source.url} href={source.url} target="_blank" rel="noreferrer" className="block text-sm text-primary underline">{source.title}<span className="block text-xs text-muted-foreground">{source.scope}</span></a>)}
+            {FUND_MODEL_SOURCES.map((source) => <div key={source.url} className="space-y-1 text-sm"><a href={source.url} target="_blank" rel="noreferrer" className="text-primary underline">{source.title}</a><p className="text-xs text-muted-foreground">{source.scope}</p><a href={source.downloadUrl} target="_blank" rel="noreferrer" className="text-primary underline">Publisher PDF</a></div>)}
             <a href="https://www.ycombinator.com/documents" target="_blank" rel="noreferrer" className="block text-sm text-primary underline">YC SAFE — startup financing, not fund offering documents</a>
             <a href="https://nvca.org/model-legal-documents/" target="_blank" rel="noreferrer" className="block text-sm text-primary underline">NVCA — company financing, not fund formation documents</a>
-            <p className="text-sm text-muted-foreground">Debt and real estate fund legal templates: awaiting counsel-provided files.</p>
+            <p className="text-sm text-muted-foreground">No complete publisher-provided debt or real estate fund template was verified. Public examples and excerpts are not approved fund documents.</p>
           </section>
         </>
       )}
