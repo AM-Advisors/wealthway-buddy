@@ -1,0 +1,70 @@
+import { createServerFn } from "@tanstack/react-start";
+
+import { requireSupabaseAuth } from "@/lib/require-auth";
+import { STAFF_ROLES } from "@/lib/contracts.functions";
+
+/**
+ * Read-only billing pipeline for Operations, anchored on signed quotes:
+ * signed quote -> statement of work -> billing schedule -> invoices.
+ * Actions (approve SOW, review/issue/record payment) stay on their existing screens and server checks.
+ */
+export const getBillingPipeline = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const ctx = context as any;
+    const { data: roleRows } = await ctx.supabase.from("user_roles").select("role").eq("user_id", ctx.userId);
+    const roles = ((roleRows ?? []) as any[]).map((r) => String(r.role));
+    if (!roles.some((r) => (STAFF_ROLES as readonly string[]).includes(r))) {
+      throw new Error("Forbidden: this area is for the Harmonious team.");
+    }
+    const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
+    const { data: quotes } = await (db as any)
+      .from("sales_quotes")
+      .select("id, quote_number, version, title, client_id, sow_id, total_cents, signed_at, status")
+      .eq("status", "signed")
+      .order("signed_at", { ascending: false })
+      .limit(500);
+    const qs = (quotes ?? []) as any[];
+    const sowIds = [...new Set(qs.map((q) => q.sow_id).filter(Boolean))];
+    const clientIds = [...new Set(qs.map((q) => q.client_id).filter(Boolean))];
+    const none = ["00000000-0000-0000-0000-000000000000"];
+    const [clients, sows, schedules, invoices] = await Promise.all([
+      (db as any).from("clients").select("id, name").in("id", clientIds.length ? clientIds : none),
+      (db as any)
+        .from("client_sows")
+        .select("id, title, status, approval_status, client_status, client_signed_at, executed_at, effective_date")
+        .in("id", sowIds.length ? sowIds : none),
+      (db as any)
+        .from("invoice_schedules")
+        .select("sow_id, label, amount_cents, frequency, next_due_on, active")
+        .in("sow_id", sowIds.length ? sowIds : none),
+      (db as any)
+        .from("invoices")
+        .select("id, sow_id, number, status, approval_status, total_cents, issued_on, due_date, paid_at, period_start, period_end, generated_by_schedule")
+        .in("sow_id", sowIds.length ? sowIds : none)
+        .order("created_at", { ascending: false }),
+    ]);
+    const clientName = new Map(((clients.data ?? []) as any[]).map((c) => [c.id, c.name]));
+    const sowById = new Map(((sows.data ?? []) as any[]).map((s) => [s.id, s]));
+    const by = <T extends { sow_id: string }>(rows: T[]) => {
+      const m = new Map<string, T[]>();
+      for (const r of rows) m.set(r.sow_id, [...(m.get(r.sow_id) ?? []), r]);
+      return m;
+    };
+    const schedBy = by((schedules.data ?? []) as any[]);
+    const invBy = by((invoices.data ?? []) as any[]);
+    return {
+      quotes: qs.map((q) => ({
+        id: q.id,
+        number: q.quote_number,
+        version: q.version,
+        title: q.title,
+        clientName: clientName.get(q.client_id) ?? "Client",
+        totalCents: Number(q.total_cents ?? 0),
+        signedAt: q.signed_at,
+        sow: q.sow_id ? sowById.get(q.sow_id) ?? null : null,
+        schedules: q.sow_id ? schedBy.get(q.sow_id) ?? [] : [],
+        invoices: q.sow_id ? invBy.get(q.sow_id) ?? [] : [],
+      })),
+    };
+  });

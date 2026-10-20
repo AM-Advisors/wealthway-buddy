@@ -169,6 +169,8 @@ export const OPS_WORK_AREAS: OpsWorkArea[] = [
       { title: "Messages", url: "/ops/messages", description: "Questions from fund managers and investors", cap: "tasks", step: "Track" },
       { title: "Rate card", url: "/admin/pricing", description: "Standard pricing schedules", step: "Reference" },
       { title: "Rate proposals", url: "/admin/rate-proposals", description: "Proposed changes to the rate card", step: "Review" },
+      { title: "Client statements of work", url: "/ops/billing/sows", description: "Signed quotes, their statements of work and billing schedules", step: "Track" },
+      { title: "Client invoices", url: "/ops/billing/invoices", description: "Invoices by signed quote, with review and issue", step: "Track" },
       { title: "Unpaid invoices", url: "/admin/invoices", description: "Client invoices awaiting payment", step: "Track" },
       { title: "Incoming requests", url: "/admin/requests", description: "Requests from clients", cap: "tasks", step: "Track" },
       { title: "Clients and scope", url: "/admin/contracts", description: "Contract terms and engagement scope", step: "Reference" },
