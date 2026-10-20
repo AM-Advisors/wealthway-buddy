@@ -2,7 +2,7 @@
 
 ## Investor tax forms (2026-10-20)
 - [x] Include shared applicable tax intake, official form preview/signing and existing-form updates in the investment Sign step; both investor entry points share the same panel and saved profile facts.
-- [ ] Run focused tax-step checks and inspect preview diagnostics.
+- [x] Three focused tax-step checks passed; latest preview diagnostics show build OK.
 - [ ] Signed-in form completion/read-back — blocked on isolated synthetic QA; no real tax information or signatures entered.
 
 ## PPM and Operating Agreement reading (2026-10-20)
