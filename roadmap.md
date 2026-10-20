@@ -1,8 +1,9 @@
 # Roadmap
 
 ## Self Serve manager review screens (2026-10-20)
-- [ ] Add connected KYC, banking, investor approval and money-received screens to the manager fund workspace using canonical records and existing authorized actions.
-- [ ] Verify focused checks and preview diagnostics; signed-in walkthrough requires isolated synthetic QA.
+- [x] Add Fund reviews to both manager Approvals entry points: KYC/KYB status with investor detail/edit, bank evidence and verified status, document admission approvals and reconciled receipts with statement upload/transaction labels. No final KYC/bank/funding approval permissions changed.
+- [x] 108 focused access/verification/document/banking checks passed; preview build OK.
+- [ ] Signed-in screen walkthrough — blocked on isolated synthetic QA; shared production backend is not permitted for browser tests.
 - Keep existing identity, receipt and banking final-approval permissions; no money movement or second-approval bypass.
 
 ## Website-sourced non-SPV fund templates (2026-10-20)
