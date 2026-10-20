@@ -30,17 +30,17 @@ function Figure({ title, value }: { title: string; value: string }) {
   );
 }
 
-export function InvestorPerformancePanel() {
+export function InvestorPerformancePanel({ offeringId, embedded = false }: { offeringId?: string | null; embedded?: boolean } = {}) {
   const load = useServerFn(getInvestorPerformance);
   const query = useQuery({
     queryKey: ["investor-performance"],
     queryFn: async (): Promise<any> => load({ data: {} }),
   });
 
-  const investments = query.data?.investments ?? [];
+  const investments = (query.data?.investments ?? []).filter((i: any) => !offeringId || i.offeringId === offeringId);
 
   return (
-    <div className="space-y-4 p-4 sm:p-6">
+    <div className={embedded ? "space-y-4" : "space-y-4 p-4 sm:p-6"}>
       <div>
         <h1 className="text-xl font-semibold">Performance</h1>
         <p className="text-sm text-muted-foreground">
