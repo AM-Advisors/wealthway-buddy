@@ -1,7 +1,7 @@
 import { managerComplianceLabel, managerTaxLabel } from "@/lib/onboarding-compliance-model";
 import { managerFundingLabel } from "@/lib/fund-onboarding-model";
 import { profileDocumentRequirements, reusableProfileAccreditation } from "./profile-document-requirements";
-import { loadProfileDocumentEvidence, selectProfileDocumentEvidence } from "./profile-document-evidence.server";
+import { selectProfileDocumentEvidence } from "./profile-document-evidence.server";
 /**
  * Fund Administration Phase B - server-only investor onboarding engine.
  *
