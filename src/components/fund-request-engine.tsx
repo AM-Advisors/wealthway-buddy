@@ -129,8 +129,11 @@ export function FundRequestEngine({ clientId: id, draft, mode = "client", client
 
   const missing = missingFields(r);
   const steps = visibleSteps(r);
-  const idx = Math.max(0, steps.findIndex((s) => s.key === step));
-  const go = (d: number) => setStep(steps[Math.min(steps.length - 1, Math.max(0, idx + d))]!.key);
+  // "Fund Details" and "Entity & EIN" show as one "Fund" step in the sidebar.
+  const uiSteps = steps.flatMap((s) => (s.key === "details" ? [{ key: "details" as const, label: "Fund" }] : s.key === "entity" ? [] : [s]));
+  const stepMissing = (k: RequestStepKey) => (k === "details" ? [...(missing.details ?? []), ...(missing.entity ?? [])] : missing[k]);
+  const idx = Math.max(0, uiSteps.findIndex((s) => s.key === step));
+  const go = (d: number) => setStep(uiSteps[Math.min(uiSteps.length - 1, Math.max(0, idx + d))]!.key);
   const spv = isSpv(r);
 
   return (
@@ -147,7 +150,7 @@ export function FundRequestEngine({ clientId: id, draft, mode = "client", client
 
       <div className="flex flex-col gap-5 md:flex-row">
         <nav aria-label="Steps" className="flex gap-1 overflow-x-auto md:w-52 md:shrink-0 md:flex-col">
-          {steps.map((s, i) => (
+          {uiSteps.map((s, i) => (
             <button
               key={s.key}
               type="button"
@@ -159,15 +162,15 @@ export function FundRequestEngine({ clientId: id, draft, mode = "client", client
             >
               <span className="flex size-5 items-center justify-center rounded-full border text-xs">{i + 1}</span>
               {s.label}
-              {missing[s.key] ? <span className="ml-auto size-2 rounded-full bg-destructive" aria-label="Needs answers" /> : null}
+              {stepMissing(s.key).length ? <span className="ml-auto size-2 rounded-full bg-destructive" aria-label="Needs answers" /> : null}
             </button>
           ))}
         </nav>
 
         <Card className="min-w-0 flex-1">
           <CardHeader>
-            <CardTitle className="text-base">{steps[idx]!.label}</CardTitle>
-            {missing[step] && <CardDescription className="text-destructive">Still needed: {missing[step]!.join(", ")}</CardDescription>}
+            <CardTitle className="text-base">{uiSteps[idx]!.label}</CardTitle>
+            {stepMissing(step).length > 0 && <CardDescription className="text-destructive">Still needed: {stepMissing(step)!.join(", ")}</CardDescription>}
           </CardHeader>
           <CardContent className="space-y-4">
             {step === "details" && spv && (
