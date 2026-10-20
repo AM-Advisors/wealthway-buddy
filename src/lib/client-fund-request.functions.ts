@@ -331,8 +331,8 @@ export const listStaffFundDrafts = createServerFn({ method: "GET" })
     const ids = Array.from(new Set(rows.map((r: any) => r.created_by).filter(Boolean)));
     const names = new Map<string, string>();
     if (ids.length) {
-      const { data: profs } = await db.from("profiles").select("id, full_name, email").in("id", ids);
-      for (const p of profs ?? []) names.set(String(p.id), p.full_name || p.email || "");
+      const { data: profs } = await db.from("profiles").select("id, legal_name, email").in("id", ids);
+      for (const p of profs ?? []) names.set(String(p.id), p.legal_name || p.email || "");
     }
     return rows.map((r: any) => ({
       id: String(r.id), clientId: String(r.client_id), clientName: r.clients?.name ?? "Unknown client",
