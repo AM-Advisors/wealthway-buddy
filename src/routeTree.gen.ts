@@ -388,6 +388,8 @@ import { Route as AuthenticatedMarketingPostsIdRouteImport } from './routes/_aut
 import { Route as AuthenticatedMarketingStudioCalendarRouteImport } from './routes/_authenticated/marketing_.studio_.calendar'
 import { Route as AuthenticatedMarketingStudioResearchRouteImport } from './routes/_authenticated/marketing_.studio_.research'
 import { Route as AuthenticatedOpsAreasAreaRouteImport } from './routes/_authenticated/ops.areas.$area'
+import { Route as AuthenticatedOpsBillingInvoicesRouteImport } from './routes/_authenticated/ops.billing.invoices'
+import { Route as AuthenticatedOpsBillingSowsRouteImport } from './routes/_authenticated/ops.billing.sows'
 import { Route as AuthenticatedOpsClientsIndexRouteImport } from './routes/_authenticated/ops.clients.index'
 import { Route as AuthenticatedOpsClientsClientIdRouteImport } from './routes/_authenticated/ops.clients.$clientId'
 import { Route as AuthenticatedOpsClientsFoundersRouteImport } from './routes/_authenticated/ops.clients.founders'
@@ -2624,6 +2626,18 @@ const AuthenticatedOpsAreasAreaRoute =
     path: '/ops/areas/$area',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOpsBillingInvoicesRoute =
+  AuthenticatedOpsBillingInvoicesRouteImport.update({
+    id: '/ops/billing/invoices',
+    path: '/ops/billing/invoices',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedOpsBillingSowsRoute =
+  AuthenticatedOpsBillingSowsRouteImport.update({
+    id: '/ops/billing/sows',
+    path: '/ops/billing/sows',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOpsClientsIndexRoute =
   AuthenticatedOpsClientsIndexRouteImport.update({
     id: '/ops/clients/',
@@ -3467,6 +3481,8 @@ export interface FileRoutesByFullPath {
   '/marketing/studio/calendar': typeof AuthenticatedMarketingStudioCalendarRoute
   '/marketing/studio/research': typeof AuthenticatedMarketingStudioResearchRoute
   '/ops/areas/$area': typeof AuthenticatedOpsAreasAreaRoute
+  '/ops/billing/invoices': typeof AuthenticatedOpsBillingInvoicesRoute
+  '/ops/billing/sows': typeof AuthenticatedOpsBillingSowsRoute
   '/ops/clients/$clientId': typeof AuthenticatedOpsClientsClientIdRoute
   '/ops/clients/founders': typeof AuthenticatedOpsClientsFoundersRoute
   '/ops/clients/fund-managers': typeof AuthenticatedOpsClientsFundManagersRoute
@@ -3919,6 +3935,8 @@ export interface FileRoutesByTo {
   '/marketing/studio/calendar': typeof AuthenticatedMarketingStudioCalendarRoute
   '/marketing/studio/research': typeof AuthenticatedMarketingStudioResearchRoute
   '/ops/areas/$area': typeof AuthenticatedOpsAreasAreaRoute
+  '/ops/billing/invoices': typeof AuthenticatedOpsBillingInvoicesRoute
+  '/ops/billing/sows': typeof AuthenticatedOpsBillingSowsRoute
   '/ops/clients/$clientId': typeof AuthenticatedOpsClientsClientIdRoute
   '/ops/clients/founders': typeof AuthenticatedOpsClientsFoundersRoute
   '/ops/clients/fund-managers': typeof AuthenticatedOpsClientsFundManagersRoute
@@ -4381,6 +4399,8 @@ export interface FileRoutesById {
   '/_authenticated/marketing_/studio_/calendar': typeof AuthenticatedMarketingStudioCalendarRoute
   '/_authenticated/marketing_/studio_/research': typeof AuthenticatedMarketingStudioResearchRoute
   '/_authenticated/ops/areas/$area': typeof AuthenticatedOpsAreasAreaRoute
+  '/_authenticated/ops/billing/invoices': typeof AuthenticatedOpsBillingInvoicesRoute
+  '/_authenticated/ops/billing/sows': typeof AuthenticatedOpsBillingSowsRoute
   '/_authenticated/ops/clients/$clientId': typeof AuthenticatedOpsClientsClientIdRoute
   '/_authenticated/ops/clients/founders': typeof AuthenticatedOpsClientsFoundersRoute
   '/_authenticated/ops/clients/fund-managers': typeof AuthenticatedOpsClientsFundManagersRoute
@@ -4843,6 +4863,8 @@ export interface FileRouteTypes {
     | '/marketing/studio/calendar'
     | '/marketing/studio/research'
     | '/ops/areas/$area'
+    | '/ops/billing/invoices'
+    | '/ops/billing/sows'
     | '/ops/clients/$clientId'
     | '/ops/clients/founders'
     | '/ops/clients/fund-managers'
@@ -5295,6 +5317,8 @@ export interface FileRouteTypes {
     | '/marketing/studio/calendar'
     | '/marketing/studio/research'
     | '/ops/areas/$area'
+    | '/ops/billing/invoices'
+    | '/ops/billing/sows'
     | '/ops/clients/$clientId'
     | '/ops/clients/founders'
     | '/ops/clients/fund-managers'
@@ -5756,6 +5780,8 @@ export interface FileRouteTypes {
     | '/_authenticated/marketing_/studio_/calendar'
     | '/_authenticated/marketing_/studio_/research'
     | '/_authenticated/ops/areas/$area'
+    | '/_authenticated/ops/billing/invoices'
+    | '/_authenticated/ops/billing/sows'
     | '/_authenticated/ops/clients/$clientId'
     | '/_authenticated/ops/clients/founders'
     | '/_authenticated/ops/clients/fund-managers'
@@ -8577,6 +8603,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsAreasAreaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ops/billing/invoices': {
+      id: '/_authenticated/ops/billing/invoices'
+      path: '/ops/billing/invoices'
+      fullPath: '/ops/billing/invoices'
+      preLoaderRoute: typeof AuthenticatedOpsBillingInvoicesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ops/billing/sows': {
+      id: '/_authenticated/ops/billing/sows'
+      path: '/ops/billing/sows'
+      fullPath: '/ops/billing/sows'
+      preLoaderRoute: typeof AuthenticatedOpsBillingSowsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ops/clients/': {
       id: '/_authenticated/ops/clients/'
       path: '/ops/clients'
@@ -9690,6 +9730,8 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMarketingStudioCalendarRoute: typeof AuthenticatedMarketingStudioCalendarRoute
   AuthenticatedMarketingStudioResearchRoute: typeof AuthenticatedMarketingStudioResearchRoute
   AuthenticatedOpsAreasAreaRoute: typeof AuthenticatedOpsAreasAreaRoute
+  AuthenticatedOpsBillingInvoicesRoute: typeof AuthenticatedOpsBillingInvoicesRoute
+  AuthenticatedOpsBillingSowsRoute: typeof AuthenticatedOpsBillingSowsRoute
   AuthenticatedOpsClientsClientIdRoute: typeof AuthenticatedOpsClientsClientIdRoute
   AuthenticatedOpsClientsFoundersRoute: typeof AuthenticatedOpsClientsFoundersRoute
   AuthenticatedOpsClientsFundManagersRoute: typeof AuthenticatedOpsClientsFundManagersRoute
@@ -10048,6 +10090,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMarketingStudioResearchRoute:
     AuthenticatedMarketingStudioResearchRoute,
   AuthenticatedOpsAreasAreaRoute: AuthenticatedOpsAreasAreaRoute,
+  AuthenticatedOpsBillingInvoicesRoute: AuthenticatedOpsBillingInvoicesRoute,
+  AuthenticatedOpsBillingSowsRoute: AuthenticatedOpsBillingSowsRoute,
   AuthenticatedOpsClientsClientIdRoute: AuthenticatedOpsClientsClientIdRoute,
   AuthenticatedOpsClientsFoundersRoute: AuthenticatedOpsClientsFoundersRoute,
   AuthenticatedOpsClientsFundManagersRoute:
