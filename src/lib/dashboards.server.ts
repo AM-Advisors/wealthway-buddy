@@ -68,10 +68,14 @@ export async function opsDashboard(userId: string, filters: { clientId?: string 
     db().from("related_person_reviews").select("id").in("status", ["open", "review_later"]).limit(5000),
     clientIds.length ? db().from("clients").select("id, name").in("id", clientIds) : { data: [] },
   ]);
-  const built = await factsFor((onbs ?? []) as any[]);
-  const facts = built.map((b) => b.fact);
+  // Readiness, agreements and the trend are independent; load them together.
   const { agreementStatusForClients } = await import("@/lib/commercial-agreements.server");
-  const agreements: Map<string, any> = await agreementStatusForClients(clientIds).catch(() => new Map());
+  const [built, agreements, trendData] = await Promise.all([
+    factsFor((onbs ?? []) as any[]),
+    agreementStatusForClients(clientIds).catch(() => new Map()) as Promise<Map<string, any>>,
+    trendFor(filters.fundId || filters.clientId || filters.managerId ? ids : null, filters.range),
+  ]);
+  const facts = built.map((b) => b.fact);
   const k = kpis(facts);
   const ag = agreementCounts(clientIds.map((c) => agreements.get(c)?.overall));
   const items = attentionFromItems(facts);
@@ -99,7 +103,7 @@ export async function opsDashboard(userId: string, filters: { clientId?: string 
       agreementFollowUp: ag.follow_up + ag.needs_review, identityReview: items.identityReview,
       relatedPersonReview: (reviews ?? []).length, documentReview: items.documentReview, fundingReconciliation: items.fundingReconciliation,
     },
-    trend: await trendFor(filters.fundId || filters.clientId || filters.managerId ? ids : null, filters.range),
+    trend: trendData,
     funds,
     filterOptions: {
       clients: ((clients ?? []) as any[]).map((c) => ({ id: c.id, name: c.name })),

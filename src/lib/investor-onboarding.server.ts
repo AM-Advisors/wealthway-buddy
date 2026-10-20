@@ -1,7 +1,7 @@
 import { managerComplianceLabel, managerTaxLabel } from "@/lib/onboarding-compliance-model";
 import { managerFundingLabel } from "@/lib/fund-onboarding-model";
 import { profileDocumentRequirements, reusableProfileAccreditation } from "./profile-document-requirements";
-import { loadProfileDocumentEvidence } from "./profile-document-evidence.server";
+import { selectProfileDocumentEvidence } from "./profile-document-evidence.server";
 /**
  * Fund Administration Phase B - server-only investor onboarding engine.
  *
@@ -307,6 +307,13 @@ export async function loadReadinessInputs(rows: any[]) {
     latestPriors([...new Set(obIds)]),
     loadStage2Inputs(rows.filter((r) => r.investment_profile_id)),
   ]);
+  // Profile accreditations and uploaded profile documents, read once for every row.
+  const DOC_COLS = "id, file_name, doc_kind, uploaded_at, review_status, review_note, investment_profile_id, onboarding_id, user_id, prepared_for_person_id";
+  const [profAccs, docsByProfile, legacyDocs] = await Promise.all([
+    readIn(profIds, (c) => d.from("profile_accreditations").select("profile_id, status, verification_method, verified_at, expires_at, offering_id").in("profile_id", c)),
+    readIn(profIds, (c) => d.from("investor_documents").select(DOC_COLS).in("investment_profile_id", c)),
+    readIn(rows.filter((r) => r.investment_profile_id && r.investor_user_id).map((r) => r.id), (c) => d.from("investor_documents").select(DOC_COLS).is("investment_profile_id", null).in("onboarding_id", c)),
+  ]);
   const configs = await readIn(setups.map((s) => s.id), (c) => d.from("fund_eligibility_configs").select("*").in("setup_id", c).eq("status", "approved").order("version", { ascending: false }));
   const sigs = new Map<string, any>();
   for (const s of [...sigsA, ...sigsP]) if (!sigs.has(s.id)) sigs.set(s.id, s);
@@ -331,6 +338,8 @@ export async function loadReadinessInputs(rows: any[]) {
     provenance: prov,
     priors,
     stage2,
+    profileAccreditations: groupBy(profAccs, "profile_id"),
+    profileDocuments: [...docsByProfile, ...legacyDocs],
     strip,
   };
 }
@@ -389,9 +398,7 @@ async function gatherFacts(row: any, inputs?: ReadinessInputs) {
     ((ackRows ?? []) as any[]).map((a) => ({ documentId: String(a.offering_document_id), version: Number(a.version) })),
   );
 
-  const { data: profileAccreditations } = row.investment_profile_id
-    ? await db().from("profile_accreditations").select("status, verification_method, verified_at, expires_at, offering_id").eq("profile_id", row.investment_profile_id)
-    : { data: [] };
+  const profileAccreditations = row.investment_profile_id ? I.strip(I.profileAccreditations.get(String(row.investment_profile_id)), "profile_id") : [];
   const reusableAccreditation = reusableProfileAccreditation(profileAccreditations ?? [], row.offering_id);
   const accreditation = reusableAccreditation
     ? { ...reusableAccreditation, method: reusableAccreditation.verification_method }
@@ -491,7 +498,7 @@ async function gatherFacts(row: any, inputs?: ReadinessInputs) {
   });
 
   const { investorDocumentRank } = await import("@/lib/offering-document-model");
-  const uploads = await loadProfileDocumentEvidence(await db(), row);
+  const uploads = selectProfileDocumentEvidence(I.profileDocuments, row);
   const profileDocs = profileDocumentRequirements(eff.profileType ?? null, requirements,
     uploads.map((u) => ({ kind: u.doc_kind, status: u.review_status })), offering.accreditationMethod);
   const missingEntityDocs = profileDocs.filter((r) => r.kind !== "accreditation_proof" && !r.received);
