@@ -80,14 +80,6 @@ export function SecurityGate({ children, onSignOut }: { children: ReactNode; onS
     [log, onSignOut],
   );
 
-  // Sign-in event once per browser session after the second step passes.
-  useEffect(() => {
-    if (stage !== "ok") return;
-    if (sessionStorage.getItem("hm-signin-logged")) return;
-    sessionStorage.setItem("hm-signin-logged", "1");
-    void send("sign_in");
-  }, [stage, send]);
-
   if (stage === "loading")
     return <div className="flex min-h-screen items-center justify-center text-muted-foreground">Checking security…</div>;
   if (stage === "setup")
@@ -368,7 +360,7 @@ function ActivityTracker({
   const last = useRef(Date.now());
 
   useEffect(() => {
-    void send(SENSITIVE.test(pathname) ? "sensitive_action" : "page_view", { path: pathname, action: SENSITIVE.test(pathname) ? `viewed ${pathname}` : undefined });
+    if (SENSITIVE.test(pathname)) void send("sensitive_action", { path: pathname, action: "Sensitive page viewed" });
   }, [pathname, send]);
 
   useEffect(() => {

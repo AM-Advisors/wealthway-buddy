@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Download, RefreshCw } from "lucide-react";
 import { decideMfaReset, listSecurityActivity, requestMfaReset } from "@/lib/account-security.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/security-activity")({
@@ -29,32 +30,44 @@ function SecurityActivityPage() {
   const list = useServerFn(listSecurityActivity);
   const request = useServerFn(requestMfaReset);
   const decide = useServerFn(decideMfaReset);
-  const [f, setF] = useState({ email: "", ip: "", country: "", eventType: "" });
+  const [f, setF] = useState({ email: "", ip: "", country: "", eventType: "", sessionId: "" });
   const [page, setPage] = useState(0);
   const [reset, setReset] = useState({ email: "", reason: "", identityCheck: "" });
   const filters = Object.fromEntries(Object.entries(f).filter(([, v]) => v));
-  const { data, error } = useQuery({
+  const { data, error, isPending, refetch } = useQuery({
     queryKey: ["security-activity", filters, page],
     queryFn: () => list({ data: { ...filters, page } }),
   });
 
-  if (error) return <p className="p-6 text-sm text-muted-foreground">Only Super Administrators can view security activity.</p>;
+  if (error) return <div className="p-6"><p className="text-sm text-destructive">Security activity could not be loaded. Your account must have administrator access.</p><Button variant="outline" className="mt-3" onClick={() => void refetch()}>Try again</Button></div>;
+
+  function exportEvidence() {
+    if (!data) return;
+    const blob = new Blob([JSON.stringify({ exportedAt: new Date().toISOString(), filters, page, totalMatchingEvents: data.total, events: data.rows }, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `harmonious-security-evidence-page-${page + 1}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
 
   return (
     <div className="space-y-6 p-6">
-      <h1 className="font-heading text-2xl">Security activity</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3"><h1 className="font-heading text-2xl">Security activity</h1><div className="flex gap-2"><Button variant="outline" size="sm" onClick={() => void refetch()}><RefreshCw className="mr-2 size-4" />Refresh</Button><Button variant="outline" size="sm" disabled={!data?.rows.length} onClick={exportEvidence}><Download className="mr-2 size-4" />Export this page</Button></div></div>
       <Card>
-        <CardContent className="grid gap-2 pt-6 sm:grid-cols-5">
+        <CardContent className="grid gap-2 pt-6 sm:grid-cols-3">
           <Input placeholder="Email" value={f.email} onChange={(e) => { setPage(0); setF({ ...f, email: e.target.value }); }} />
           <Input placeholder="IP address" value={f.ip} onChange={(e) => { setPage(0); setF({ ...f, ip: e.target.value }); }} />
           <Input placeholder="Country (US)" value={f.country} onChange={(e) => { setPage(0); setF({ ...f, country: e.target.value }); }} />
           <select className="rounded-md border bg-background px-2 text-sm" value={f.eventType} onChange={(e) => { setPage(0); setF({ ...f, eventType: e.target.value }); }}>
             <option value="">All events</option>
-            {["sign_in", "sign_out", "page_view", "sensitive_action", "mfa_verified", "mfa_failed", "mfa_enrolled", "mfa_removed", "recovery_code_used", "session_timeout"].map((t) => (
+            {["sign_in", "sign_out", "page_view", "client_error", "sensitive_action", "mfa_verified", "mfa_failed", "mfa_enrolled", "mfa_removed", "recovery_code_used", "session_timeout"].map((t) => (
               <option key={t} value={t}>{t.replace(/_/g, " ")}</option>
             ))}
           </select>
-          <p className="self-center text-sm text-muted-foreground">{data?.total ?? 0} events</p>
+          <Input aria-label="Session ID" placeholder="Session ID" value={f.sessionId} onChange={(e) => { setPage(0); setF({ ...f, sessionId: e.target.value }); }} />
+          <p className="self-center text-sm text-muted-foreground">{isPending ? "Loading events…" : `${data?.total ?? 0} events`}</p>
         </CardContent>
       </Card>
 
@@ -62,7 +75,7 @@ function SecurityActivityPage() {
         <CardContent className="overflow-x-auto pt-6">
           <table className="w-full text-sm">
             <thead className="text-left text-xs text-muted-foreground">
-              <tr><th className="p-2">When</th><th>User</th><th>Event</th><th>Page / action</th><th>IP</th><th>Location</th><th>Precise</th></tr>
+              <tr><th className="p-2">When</th><th>User</th><th>Event</th><th>Page / action</th><th>Session / device</th><th>IP</th><th>Location</th><th>Precise</th></tr>
             </thead>
             <tbody>
               {(data?.rows ?? []).map((r: any) => (
@@ -70,7 +83,8 @@ function SecurityActivityPage() {
                   <td className="p-2 whitespace-nowrap">{new Date(r.created_at).toLocaleString()}</td>
                   <td>{r.email ?? r.user_id?.slice(0, 8) ?? "-"}</td>
                   <td><Badge variant="outline">{r.event_type.replace(/_/g, " ")}</Badge></td>
-                  <td className="max-w-[220px] truncate">{r.action ?? r.path ?? "-"}</td>
+                  <td className="min-w-40 max-w-[220px] break-words">{r.action ?? "-"}<div className="text-xs text-muted-foreground">{r.path}</div></td>
+                  <td className="min-w-40 max-w-64 break-words"><Button variant="link" size="sm" className="h-auto max-w-full whitespace-normal break-all p-0 text-xs" disabled={!r.session_id} onClick={() => { setPage(0); setF({ ...f, sessionId: r.session_id }); }}>{r.session_id ?? "Not recorded"}</Button><div className="mt-1 text-xs text-muted-foreground">{r.user_agent ?? "Device not recorded"}</div></td>
                   <td>{r.ip ?? "-"}</td>
                   <td>{[r.city, r.region, r.country].filter(Boolean).join(", ") || "-"}</td>
                   <td>
@@ -82,6 +96,7 @@ function SecurityActivityPage() {
                   </td>
                 </tr>
               ))}
+              {!isPending && !data?.rows.length && <tr><td colSpan={8} className="p-4 text-muted-foreground">No recorded events match these filters.</td></tr>}
             </tbody>
           </table>
           <div className="mt-4 flex gap-2">

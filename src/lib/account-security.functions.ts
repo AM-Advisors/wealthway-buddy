@@ -4,6 +4,7 @@ import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { requireSupabaseAuth, requireSupabaseAuthUnverified } from "@/lib/require-auth";
 import { randomToken, recordSecurityEvent, sha256, trackDeviceAndAlert } from "./account-security.server";
+import { signInEvidenceKey } from "./session-evidence";
 
 const EVENT_TYPES = [
   "sign_in",
@@ -17,6 +18,7 @@ const EVENT_TYPES = [
   "recovery_code_used",
   "session_timeout",
   "heartbeat",
+  "client_error",
 ] as const;
 
 const logSchema = z.object({
@@ -55,24 +57,26 @@ export const logSecurityEvent = createServerFn({ method: "POST" })
     const userId = context.userId;
     if (await isRevoked(userId, claims.iat)) return { signOut: true };
     if (data.eventType === "heartbeat") return { signOut: false };
-    const { geo, deviceHash } = await recordSecurityEvent({
+    const sessionId = claims.session_id ?? null;
+    const { geo, deviceHash, recorded, accepted } = await recordSecurityEvent({
       userId,
       email: claims.email ?? null,
       eventType: data.eventType,
-      action: data.action,
+      action: data.eventType === "sign_in" ? "Authenticated session observed" : data.eventType === "client_error" ? (/^Browser-reported (runtime error|unhandled rejection)( \((TypeError|RangeError|ReferenceError|SyntaxError|AbortError|NetworkError)\))?$/.test(data.action ?? "") ? data.action : "Browser-reported runtime error") : data.action,
       path: data.path,
       lat: data.lat,
       lng: data.lng,
       accuracy: data.accuracy,
       gpsDeclined: data.gpsDeclined,
       deviceId: data.deviceId,
-      sessionId: data.sessionId ?? claims.session_id ?? null,
+      sessionId,
+      eventKey: data.eventType === "sign_in" ? signInEvidenceKey(userId, sessionId) : null,
     });
-    if (data.eventType === "sign_in") {
+    if (data.eventType === "sign_in" && recorded) {
       const origin = new URL(getRequest()?.url ?? "https://app.harmonious.co").origin;
       await trackDeviceAndAlert({ userId, email: claims.email ?? null, deviceHash, geo, origin });
     }
-    return { signOut: false };
+    return { signOut: false, recorded: accepted };
   });
 
 /** The signed-in user's devices and recent sign-in / security history. */
@@ -195,6 +199,7 @@ export const listSecurityActivity = createServerFn({ method: "POST" })
         ip: z.string().max(100).optional(),
         country: z.string().max(10).optional(),
         eventType: z.string().max(60).optional(),
+        sessionId: z.string().max(100).optional(),
         page: z.number().int().min(0).max(1000).default(0),
       })
       .parse(d),
@@ -204,7 +209,7 @@ export const listSecurityActivity = createServerFn({ method: "POST" })
     let q = context.supabase
       .from("security_events")
       .select(
-        "id, user_id, email, event_type, action, path, ip, city, region, country, lat, lng, accuracy_m, location_source, gps_declined, user_agent, created_at",
+        "id, user_id, email, event_type, action, path, ip, city, region, country, lat, lng, accuracy_m, location_source, gps_declined, user_agent, session_id, created_at",
         { count: "exact" },
       )
       .order("created_at", { ascending: false })
@@ -213,6 +218,7 @@ export const listSecurityActivity = createServerFn({ method: "POST" })
     if (data.ip) q = q.eq("ip", data.ip);
     if (data.country) q = q.eq("country", data.country.toUpperCase());
     if (data.eventType) q = q.eq("event_type", data.eventType);
+    if (data.sessionId) q = q.eq("session_id", data.sessionId);
     const { data: rows, count, error } = await q;
     if (error) throw new Error(error.message);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");

@@ -15,6 +15,7 @@ import appCss from "../styles.css?url";
 import { Toaster } from "@/components/ui/sonner";
 import { SelfApprovalPrompt } from "@/components/self-approval-prompt";
 import { ActivityTracker } from "@/components/activity-tracker";
+import { SessionEvidenceTracker } from "@/components/session-evidence-tracker";
 import { THEME_BOOT_SCRIPT } from "@/lib/theme-mode";
 import { canonicalRedirect } from "@/lib/host-routing";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -146,6 +147,7 @@ function RootComponent() {
       <Toaster richColors position="top-center" />
       <SelfApprovalPrompt />
       <ActivityTracker />
+      <SessionEvidenceTracker />
     </QueryClientProvider>
   );
 }

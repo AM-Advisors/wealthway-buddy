@@ -1,5 +1,6 @@
 // Server-only helpers for account security logging and alerts.
 import { getRequest } from "@tanstack/react-start/server";
+import { evidencePath } from "./session-evidence";
 
 export type SecurityEventInput = {
   userId: string | null;
@@ -13,6 +14,7 @@ export type SecurityEventInput = {
   gpsDeclined?: boolean | undefined;
   deviceId?: string | null | undefined;
   sessionId?: string | null | undefined;
+  eventKey?: string | null | undefined;
 };
 
 export type RequestGeo = {
@@ -64,12 +66,12 @@ export async function recordSecurityEvent(input: SecurityEventInput) {
     const lat = num(input.lat);
     const lng = num(input.lng);
     const deviceHash = input.deviceId ? await sha256(`${input.userId ?? ""}:${input.deviceId}`) : null;
-    await supabaseAdmin.from("security_events").insert({
+    const { error } = await supabaseAdmin.from("security_events").insert({
       user_id: input.userId,
       email: input.email?.toLowerCase() ?? null,
       event_type: input.eventType.slice(0, 60),
       action: input.action?.slice(0, 200) ?? null,
-      path: input.path?.slice(0, 400) ?? null,
+      path: input.path ? evidencePath(input.path) : null,
       ip: geo.ip,
       city: geo.city,
       region: geo.region,
@@ -82,11 +84,14 @@ export async function recordSecurityEvent(input: SecurityEventInput) {
       user_agent: geo.userAgent,
       device_hash: deviceHash,
       session_id: input.sessionId?.slice(0, 100) ?? null,
+      ...(input.eventKey ? { event_key: input.eventKey } : {}),
     });
-    return { geo, deviceHash };
+    if (error?.code === "23505" && input.eventKey) return { geo, deviceHash, recorded: false, accepted: true };
+    if (error) throw new Error("Security evidence could not be saved.");
+    return { geo, deviceHash, recorded: true, accepted: true };
   } catch (e) {
     console.error("security event log failed", e);
-    return { geo: readRequestGeo(), deviceHash: null };
+    return { geo: readRequestGeo(), deviceHash: null, recorded: false, accepted: false };
   }
 }
 
