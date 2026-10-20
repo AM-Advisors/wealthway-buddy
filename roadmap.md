@@ -1,5 +1,10 @@
 # Roadmap
 
+## Equity, debt and real estate templates (2026-10-20)
+- [ ] Research YC and other official model-document sources, separating deal instruments from fund formation/offering templates and respecting reuse restrictions.
+- [ ] Connect fund-type assignments and direct template upload to the existing versioned approval/generation engine.
+- [ ] Validate type matching and upload rules; approved fund-specific legal files and isolated QA may remain blockers.
+
 ## Fund document approval visibility (2026-10-20)
 - [x] Expose canonical offering-document approval and explicit publication on the fund Documents tab; investors see separate version approval/readiness labels without changing signatures or admission.
 - [x] Run focused publication/approval checks: 78 passed, including assigned-manager approval, other-fund denial, truthful save failure, active/individual/retained version readiness; preview build OK.
