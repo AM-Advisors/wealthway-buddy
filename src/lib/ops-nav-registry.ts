@@ -1,6 +1,6 @@
 /**
  * Pure helpers for the Operations sidebar: one home per screen (no duplicates)
- * and the catalogue of individual items a Super Admin may grant someone.
+ * and the catalog of individual items a Super Admin may grant someone.
  * Display only - every page and action keeps its own server-side check.
  */
 import { OPS_WORK_AREAS, type OpsArea, type OpsCapability } from "@/lib/ops-capabilities";

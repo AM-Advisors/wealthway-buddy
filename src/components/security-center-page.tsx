@@ -10,7 +10,7 @@ import { ASSURANCE_LABEL, ACCESS_LEVEL_LABEL } from "@/lib/security-compliance-m
 import { requestTrustDocument, type PublicTrustItem } from "@/lib/trust-center-public.functions";
 
 /**
- * Harmonious Trust Center. Built-in copy describes product behaviour only;
+ * Harmonious Trust Center. Built-in copy describes product behavior only;
  * everything else (assurance status, extra sections, trust documents) appears
  * only after Harmonious approves and publishes it internally. No seals or logos.
  */

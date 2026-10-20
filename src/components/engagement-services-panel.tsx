@@ -123,7 +123,7 @@ export function EngagementServicesPanel({ engagementId }: { engagementId: string
       {canManage && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Add catalogue services</CardTitle>
+            <CardTitle className="text-base">Add catalog services</CardTitle>
             <CardDescription>
               Priced from the current published schedule and snapshotted onto this engagement.
             </CardDescription>

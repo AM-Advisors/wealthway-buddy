@@ -3,7 +3,7 @@
  * Admin from approving their own work may be waived only with a written
  * reason, which is stored append-only in self_approval_overrides BEFORE the
  * approval is retried (recordSelfApprovalFn). Database segregation-of-duties
- * triggers honour a matching override for 5 minutes. Everyone else keeps the
+ * triggers honor a matching override for 5 minutes. Everyone else keeps the
  * second-person rule.
  */
 import { SELF_APPROVAL_MARKER } from "@/lib/self-approval-shared";

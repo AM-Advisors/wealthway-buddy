@@ -1717,7 +1717,7 @@ export async function supersedeDistribution(userId: string, batchId: string, rea
 export async function cancelDistribution(userId: string, batchId: string, reason: string) {
   const batch = await batchRow(batchId);
   const { actor } = await assertCan(userId, String(batch.offering_id), "cancel");
-  if (!reason || reason.trim().length < 4) fail("Cancelling a distribution needs a reason.");
+  if (!reason || reason.trim().length < 4) fail("Canceling a distribution needs a reason.");
   return moveBatch(
     batch,
     "cancelled",

@@ -101,7 +101,7 @@ async function offeringRules(offeringId: string): Promise<{ regType: string | nu
 
 // ------------------------------------------------------- batched Stage 2 inputs
 
-/** Reads rows where `col` is in `ids`, 100 IDs per request, at most 4 requests at once. A failed read is logged to the server log and treated as no rows (the pre-batch behaviour), never thrown. */
+/** Reads rows where `col` is in `ids`, 100 IDs per request, at most 4 requests at once. A failed read is logged to the server log and treated as no rows (the pre-batch behavior), never thrown. */
 export async function readIn(ids: (string | null | undefined)[], run: (chunk: string[]) => any): Promise<any[]> {
   const uniq = [...new Set(ids.filter((x): x is string => typeof x === "string" && x.length > 0))];
   const chunks: string[][] = [];

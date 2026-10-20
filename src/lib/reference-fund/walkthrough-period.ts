@@ -144,7 +144,7 @@ export function matchDeposits(deposits: BankLine[], call: ReturnType<typeof capi
   return { decisions, funding, unmatched: decisions.filter((d) => d.how === "unmatched") };
 }
 
-/** Funding behaviour that is NOT a deposit: legitimately blocked or awaited. */
+/** Funding behavior that is NOT a deposit: legitimately blocked or awaited. */
 export const FUNDING_NOTES: Record<string, string> = {
   juniper: "Funding pending - wire expected after period end.",
   erik: "Blocked - AML review open; funding not accepted until cleared.",

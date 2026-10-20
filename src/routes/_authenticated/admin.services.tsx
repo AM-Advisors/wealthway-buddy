@@ -45,12 +45,12 @@ export const Route = createFileRoute("/_authenticated/admin/services")({
       {
         name: "description",
         content:
-          "Manage the Harmonious service catalogue, packages, standard pricing and the queue of client requests.",
+          "Manage the Harmonious service catalog, packages, standard pricing and the queue of client requests.",
       },
       { property: "og:title", content: "Services administration - Harmonious" },
       {
         property: "og:description",
-        content: "Service catalogue, packages, pricing and client requests.",
+        content: "Service catalog, packages, pricing and client requests.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -159,7 +159,7 @@ function ServicesAdmin() {
         <div>
           <h1 className="text-3xl">Services administration</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            The catalogue, packages and pricing behind every Harmonious engagement. New services are
+            The catalog, packages and pricing behind every Harmonious engagement. New services are
             configured here - no rebuild needed.
           </p>
         </div>
@@ -170,14 +170,14 @@ function ServicesAdmin() {
 
       {!canManage && (
         <p className="mb-4 text-sm text-muted-foreground">
-          You can view the catalogue. Changing it needs legal, compliance, finance, client success
+          You can view the catalog. Changing it needs legal, compliance, finance, client success
           or admin authority.
         </p>
       )}
 
-      <Tabs defaultValue="catalogue">
+      <Tabs defaultValue="catalog">
         <TabsList className="flex-wrap">
-          <TabsTrigger value="catalogue">Catalogue ({services.length})</TabsTrigger>
+          <TabsTrigger value="catalog">Catalog ({services.length})</TabsTrigger>
           <TabsTrigger value="packages">Packages ({catalogue.data.packages.length})</TabsTrigger>
           <TabsTrigger value="requests">
             Client requests ({requests.data?.requests.length ?? 0})
@@ -185,7 +185,7 @@ function ServicesAdmin() {
           <TabsTrigger value="payments">Wire & ACH payments</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="catalogue" className="mt-4 space-y-4">
+        <TabsContent value="catalog" className="mt-4 space-y-4">
           {SERVICE_CATEGORIES.filter((c) => services.some((s) => s.category === c.value)).map(
             (c) => (
               <Card key={c.value}>

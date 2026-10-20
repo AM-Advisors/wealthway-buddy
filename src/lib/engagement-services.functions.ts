@@ -193,7 +193,7 @@ export const getEngagementServices = createServerFn({ method: "GET" })
     };
   });
 
-/** Staff put catalogue services onto an engagement, snapshotting today's pricing. */
+/** Staff put catalog services onto an engagement, snapshotting today's pricing. */
 export const addServicesToEngagement = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
@@ -283,7 +283,7 @@ export const addServicesToEngagement = createServerFn({ method: "POST" })
 
 /**
  * Locks the engagement's proposed services to their executed commercial terms and
- * starts whatever delivery workflows the catalogue says each service launches.
+ * starts whatever delivery workflows the catalog says each service launches.
  */
 export const executeEngagementServices = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

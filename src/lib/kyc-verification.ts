@@ -336,7 +336,7 @@ const SEVERITY: Record<CheckStatus, number> = {
   declined: 4,
 };
 
-/** The least favourable of two statuses. */
+/** The least favorable of two statuses. */
 export function worst(a: CheckStatus, b: CheckStatus): CheckStatus {
   return SEVERITY[b] > SEVERITY[a] ? b : a;
 }

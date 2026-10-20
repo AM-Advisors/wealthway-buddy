@@ -90,7 +90,7 @@ export const ROLE_TEMPLATES: RoleTemplate[] = [
   { key: "client_operator", label: "Client Operator", category: "client", scopeTypes: ["client"], permissions: [...p("clients", ["view", "edit"]), ...p("documents", ["view", "edit"]), ...p("tasks", ["view", "edit"])] },
   { key: "client_approver", label: "Client Approver", category: "client", scopeTypes: ["client"], permissions: [...p("clients", ["view", "approve"]), ...p("documents", ["view"])] },
   { key: "client_viewer", label: "Client Viewer", category: "client", scopeTypes: ["client"], permissions: [...p("clients", ["view"]), ...p("companies", ["view"]), ...p("documents", ["view"])] },
-  // Mirrors today's client_gp behaviour exactly - no user/RBAC management, money or sensitive access.
+  // Mirrors today's client_gp behavior exactly - no user/RBAC management, money or sensitive access.
   { key: "client_principal", label: "Client Principal / GP", category: "client", scopeTypes: ["client"], permissions: [...p("clients", ["view", "prepare"]), ...p("companies", ["view", "edit", "approve"]), ...p("documents", ["view"])] },
   // Fund (scoped to one fund)
   { key: "fund_manager_admin", label: "Fund Manager Administrator", category: "fund", scopeTypes: ["fund"], permissions: [...p("funds", ["view", "edit", "prepare", "manage_access"]), ...p("investors", ["view", "prepare", "manage_access"]), ...p("documents", ["view", "edit"]), ...p("capital", ["view"]), ...p("reports", ["view"])] },

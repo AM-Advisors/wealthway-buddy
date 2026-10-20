@@ -91,7 +91,7 @@ async function requireAuthority(context: any) {
   const who = await whoIsStaff(context);
   if (!who.canManage) {
     throw new Error(
-      "Forbidden: changing the service catalogue needs legal, compliance, finance, client success or admin authority.",
+      "Forbidden: changing the service catalog needs legal, compliance, finance, client success or admin authority.",
     );
   }
   return who;

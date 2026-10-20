@@ -1,5 +1,5 @@
 /**
- * Form 1065 line detail (pure). Line catalogue by schedule, prefill from our own
+ * Form 1065 line detail (pure). Line catalog by schedule, prefill from our own
  * prepared return and K-1s, and tie checks. Amounts are integer cents.
  * Preparing detail never files or transmits anything.
  */

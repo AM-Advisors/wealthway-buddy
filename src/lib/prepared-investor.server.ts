@@ -3,7 +3,7 @@ import { type FieldProvenance, confirmedFacts, docApplies, effectiveResolverFact
 
 type ProvOnboarding = { id: string; offering_id: string; invitation_id: string | null };
 
-/** Field provenance for many investments in two reads. A failed read is logged and treated as no rows (the pre-batch behaviour). Single-row callers use the same path. */
+/** Field provenance for many investments in two reads. A failed read is logged and treated as no rows (the pre-batch behavior). Single-row callers use the same path. */
 export async function loadProvenanceMany(db: any, obs: ProvOnboarding[]) {
   const out = new Map<string, { draft: any; prov: Record<string, FieldProvenance> }>();
   const invIds = [...new Set(obs.map((o) => o.invitation_id).filter((x): x is string => !!x))];

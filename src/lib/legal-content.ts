@@ -112,7 +112,7 @@ export const PRIVACY_POLICY: LegalDocument = {
         "For fraud prevention: personal data will be furnished to third-party service providers for identity verification, criminal background checks and fraud prevention services.",
         "For AML screening: personal data will be furnished to third-party service providers to screen for criminal background, PEP status, global sanctions (OFAC, UN, HMT, EU and DFAT), adverse media and watchlists (Interpol, federal and state government agencies).",
         `For business transfers: we may share or transfer your personal data in connection with, or during negotiations of, any merger, sale of ${COMPANY} assets, financing, or acquisition of all or a portion of our business to another company.`,
-        "With affiliates: we may share your information with our affiliates, in which case we will require those affiliates to honour this Privacy Policy.",
+        "With affiliates: we may share your information with our affiliates, in which case we will require those affiliates to honor this Privacy Policy.",
         "With business partners: we may share your information with our business partners to offer you certain products, services or promotions.",
         "With regulators and law enforcement: we may share your personal information with the appropriate regulators, any financial dispute resolution scheme to which we subscribe, law enforcement bodies, regulatory agencies, courts, arbitration bodies and dispute resolution schemes, both in the jurisdiction where we are incorporated and internationally, as may be required by law.",
         "With other users: when you share personal information or otherwise interact in public areas with other users, such information may be viewed by those users.",
@@ -177,7 +177,7 @@ export const PRIVACY_POLICY: LegalDocument = {
         "If you are located in the EEA you have certain rights in relation to our processing of Site User Information and registration information as to which we are a \"controller\" under the EU General Data Protection Regulation (\"GDPR\"), as follows:",
       ],
       bullets: [
-        "Right to information: we will provide you with information about how we process your personal information. This Privacy Policy is designed in part to fulfil this obligation.",
+        "Right to information: we will provide you with information about how we process your personal information. This Privacy Policy is designed in part to fulfill this obligation.",
         "Right to access: you may request that we confirm whether we process personal information concerning you and, if so, give you access to that information and more detail about the associated processing activity.",
         "Right to data portability: where processing is automated and the legal basis is consent or performance of a contract, you may request a subset of your personal information in a structured, commonly used and machine-readable format, or ask us to send it directly to another controller.",
         "Right to rectification: if the personal information we process about you is inaccurate or incomplete, you may ask us to rectify or complete it.",

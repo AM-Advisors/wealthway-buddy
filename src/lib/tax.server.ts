@@ -14,7 +14,7 @@
  *  - a final form is never rewritten - corrections supersede it;
  *  - the preparer of a return can never approve it;
  *  - missing or expired W-8 documentation routes to review at the statutory
- *    rate, never to a favourable assumption;
+ *    rate, never to a favorable assumption;
  *  - the same authoritative payment can never be reported twice;
  *  - full TIN values never enter this layer: only the last four digits.
  */

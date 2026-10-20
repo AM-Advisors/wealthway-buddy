@@ -239,7 +239,7 @@ export function StaffCapTable() {
                 )}
                 {!canIssue && (
                   <p className="text-sm text-muted-foreground">
-                    You can view these records. Issuing or cancelling a certificate needs admin,
+                    You can view these records. Issuing or canceling a certificate needs admin,
                     operations, legal or fund administration authority.
                   </p>
                 )}
