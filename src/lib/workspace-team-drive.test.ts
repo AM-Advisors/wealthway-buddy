@@ -14,10 +14,10 @@ const DRV = "src/lib/investor-drive.functions.ts";
 describe("Fund Team - server authorization", () => {
   it("view is fund-scoped", () => expect(fnBody(INV, "getFundTeam")).toMatch(/assertFundAllowed\(ctx, data\.fundId\)/));
   for (const n of ["searchFundTeamCandidates", "addFundTeamMember", "removeFundTeamMember"]) {
-    it(`${n}: exact fund + Harmonious staff only (managers cannot grant authority)`, () => {
+    it(`${n}: exact fund + that fund's managers or Harmonious (approved self-service)`, () => {
       const b = fnBody(INV, n);
       expect(b).toMatch(/assertFundAllowed\(ctx, data\.fundId\)/);
-      expect(b).toMatch(/if \(!ctx\.isAdmin\) throw/);
+      expect(b).toMatch(/if \(!\(await canManageFundTeam\(ctx, context\.userId, data\.fundId\)\)\) throw/);
     });
   }
   it("add is duplicate-safe, audited through grantFundAccess, sends no email", () => {
@@ -26,6 +26,10 @@ describe("Fund Team - server authorization", () => {
     expect(b).toMatch(/grantFundAccess\(/);
     expect(b).toMatch(/offeringIds: \[data\.fundId\]/);
     expect(b).toMatch(/sendEmail: false/);
+  });
+  it("managers look up by exact email only and can't remove the last manager", () => {
+    expect(fnBody(INV, "searchFundTeamCandidates")).toMatch(/if \(ctx\.isAdmin\)/);
+    expect(fnBody(INV, "removeFundTeamMember")).toMatch(/at least one fund manager/);
   });
   it("remove affects only this fund's assignment; no account deletion", () => {
     const b = fnBody(INV, "removeFundTeamMember");
