@@ -254,4 +254,6 @@
 - [x] Self Serve managers record IRS-issued EIN with the IRS letter
 - [ ] Change service level later from fund Overview
 - [ ] Self Serve managers: mark banking complete, decide KYC "needs review", approve to fund, confirm money received (identity/money paths — needs careful review)
-- [ ] Show the "Record IRS-issued EIN" control to managers in Fund Setup; Help Center updates
+- [ ] Show the "Record IRS-issued EIN" control to managers in Fund Setup
+- [x] Manager Help Center: revised setup/EIN and new draft/service-level guidance, current prices derived from service-level source; awaits Operations article approval before client visibility
+- [x] Diagnose Calvin's document errors: Box creation accepted (201); ceremony reports sign_and_send permission; signer sync has mismatched upsert/index (42P10). No resend or investor changes; provider permission check and repair remain unverified.
