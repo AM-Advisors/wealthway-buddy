@@ -1,5 +1,10 @@
 # Roadmap
 
+## Website-sourced non-SPV fund templates (2026-10-20)
+- [ ] Verify publisher downloads and reuse terms; do not relabel company instruments or executed fund documents as legal templates.
+- [ ] Import only permitted fund models with source attribution, type assignment and pending legal approval; connect recognized blanks to canonical fund facts.
+- [ ] Verify generation and read-back with synthetic files; live signature/publication remains explicit and untested without isolated QA.
+
 ## Equity, debt and real estate templates (2026-10-20)
 - [x] Research YC/NVCA (company-level instruments, not fund templates) and ILPA (equity-fund LPA/subscription references only); no verified official debt/real estate fund offering template. No third-party text copied or SPV documents relabeled.
 - [x] Add direct PDF/Word library upload with fund-type assignments and pending approval; preserve generation/signature path. Equity/debt/real estate aliases match canonical types; failed template reads offer Retry.
