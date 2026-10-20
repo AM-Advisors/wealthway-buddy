@@ -21,7 +21,10 @@ export const Route = createFileRoute("/api/public/hooks/invoice-reminders")({
           if (!claimed) {
             return Response.json({ skipped: true, reason: "already ran today" });
           }
-          const result = await sendInvoiceReminders();
+          // Billing schedules ride the same daily run: drafts only, never issued or charged.
+          const sched = await import("@/lib/billing-schedule.server");
+          const schedules = await sched.syncSchedules().then(() => sched.draftDueInvoices()).catch((err) => { console.error("[invoice-schedule] failed", err); return { drafted: 0 }; });
+          const result = { ...(await sendInvoiceReminders()), scheduledDrafts: schedules.drafted };
           // Service renewal reminders for current clients ride the same daily run (email only, never charges).
           const { runPaymentReminders } = await import("@/lib/billing-records.server");
           const services = await runPaymentReminders().catch((err) => { console.error("[payment-reminders] failed", err); return { paymentReminders: 0 }; });
