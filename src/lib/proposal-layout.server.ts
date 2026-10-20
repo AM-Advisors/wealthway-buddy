@@ -11,7 +11,22 @@ const clean = (s: string) => String(s ?? "").replace(/[^\x09\x0A\x0D\x20-\x7E\xA
 const FREQ: Record<string, string> = { one_time: "one-time", monthly: "per month", quarterly: "per quarter, invoiced in advance", annual: "per year" };
 const usd = (c: number) => `$${(c / 100).toLocaleString("en-US", { maximumFractionDigits: c % 100 ? 2 : 0, minimumFractionDigits: c % 100 ? 2 : 0 })}`;
 
-export async function renderProposalPdf(doc: any, sections: Section[], lines: any[], draft: boolean): Promise<Uint8Array> {
+/** Internal reviewer notes ("[confirm: ...]") and quote bullets already shown in the fee table never reach the client copy. */
+export function clientSections(sections: Section[], hasLines: boolean): Section[] {
+  return sections.map((s) => ({
+    ...s,
+    body: String(s.body ?? "")
+      .split("\n")
+      .filter((l) => !/^\s*\[confirm:[^\]]*\]\s*$/i.test(l))
+      .filter((l) => !(hasLines && (/^\s*-\s.*=\s*\$[\d,.]+\s*$/.test(l) || /^\s*Total:\s*\$/.test(l) || /^\s*\(Pricing from the approved quote\.\)\s*$/i.test(l))))
+      .join("\n")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim(),
+  }));
+}
+
+export async function renderProposalPdf(doc: any, rawSections: Section[], lines: any[], draft: boolean): Promise<Uint8Array> {
+  const sections = clientSections(rawSections, lines.length > 0);
   const { PDFDocument, StandardFonts, rgb } = await import("pdf-lib");
   const pdf = await PDFDocument.create();
   const serif = await pdf.embedFont(StandardFonts.TimesRoman);
