@@ -10,8 +10,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { DOCUMENT_CATEGORIES, DOCUMENT_CATEGORY_LABELS, type DocumentCategory } from "@/lib/offering-document-model";
+import { FUND_MODEL_SOURCES, TEMPLATE_FUND_TYPES } from "@/lib/fund-type-templates";
 import {
-  addTemplateVersionFn, createTemplateFromFundFn, decideTemplateVersionFn, listTemplateSourcesFn,
+  addTemplateVersionFn, createUploadedTemplateFn, createTemplateFromFundFn, decideTemplateVersionFn, listTemplateSourcesFn,
   listTemplatesFn, setTemplateFundTypesFn, templateDownloadUrlFn, useTemplateInFundFn,
 } from "@/lib/fund-doc-templates.functions";
 
@@ -40,16 +43,63 @@ function TemplatesPage() {
     <div className="mx-auto max-w-5xl space-y-6 px-4 py-8">
       <header>
         <h1 className="font-heading text-2xl font-semibold">Document templates</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Turn one fund's document into a reusable template. Each version needs approval from a second Harmonious team member. Using a template adds it to a fund as a new version that still goes through that fund's review before investors see it.</p>
+        <p className="mt-1 text-sm text-muted-foreground">Versioned legal files · assigned fund types · approval history</p>
       </header>
       {q.isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> : q.error ? <p className="text-sm text-destructive">{(q.error as Error).message}</p> : (
         <>
-          <CreateFromFund funds={q.data!.funds} />
-          {q.data!.templates.length === 0 ? <p className="text-sm text-muted-foreground">No templates yet.</p> : q.data!.templates.map((t) => <TemplateCard key={t.id} t={t} funds={q.data!.funds} />)}
+          <UploadTemplate />
+          <CreateFromFund funds={q.data?.funds ?? []} />
+          {q.data?.templates.length === 0 ? <p className="text-sm text-muted-foreground">No templates yet.</p> : q.data?.templates.map((t) => <TemplateCard key={t.id} t={t} funds={q.data?.funds ?? []} />)}
+          <section className="space-y-3 border-t pt-5">
+            <h2 className="font-heading text-lg font-semibold">Publisher references — not approved signing templates</h2>
+            {FUND_MODEL_SOURCES.map((source) => <a key={source.url} href={source.url} target="_blank" rel="noreferrer" className="block text-sm text-primary underline">{source.title}<span className="block text-xs text-muted-foreground">{source.scope}</span></a>)}
+            <a href="https://www.ycombinator.com/documents" target="_blank" rel="noreferrer" className="block text-sm text-primary underline">YC SAFE — startup financing, not fund offering documents</a>
+            <a href="https://nvca.org/model-legal-documents/" target="_blank" rel="noreferrer" className="block text-sm text-primary underline">NVCA — company financing, not fund formation documents</a>
+            <p className="text-sm text-muted-foreground">Debt and real estate fund legal templates: awaiting counsel-provided files.</p>
+          </section>
         </>
       )}
     </div>
   );
+}
+
+async function templateFileBase64(file: File) {
+  if (file.size > 25 * 1024 * 1024) throw new Error("Files must be 25 MB or smaller.");
+  const buf = new Uint8Array(await file.arrayBuffer());
+  let bin = "";
+  for (let i = 0; i < buf.length; i += 0x8000) bin += String.fromCharCode(...buf.subarray(i, i + 0x8000));
+  return btoa(bin);
+}
+
+function UploadTemplate() {
+  const create = useServerFn(createUploadedTemplateFn);
+  const qc = useQueryClient();
+  const [title, setTitle] = useState("");
+  const [category, setCategory] = useState<DocumentCategory>("operating_agreement");
+  const [fundTypes, setFundTypes] = useState<string[]>([]);
+  const [file, setFile] = useState<File | null>(null);
+  const [busy, setBusy] = useState(false);
+  return <section className="space-y-3 border-b pb-5">
+    <h2 className="font-heading text-lg font-semibold">Upload a fund template</h2>
+    <div className="grid gap-3 sm:grid-cols-2">
+      <Input aria-label="Template name" placeholder="Template name" value={title} onChange={(e) => setTitle(e.target.value)} />
+      <select aria-label="Document category" className={sel} value={category} onChange={(e) => setCategory(e.target.value as DocumentCategory)}>{DOCUMENT_CATEGORIES.map((key) => <option key={key} value={key}>{DOCUMENT_CATEGORY_LABELS[key]}</option>)}</select>
+      <Input aria-label="Template file" type="file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+      <span className="self-center text-xs text-muted-foreground">PDF or Word · maximum 25 MB · approval required</span>
+    </div>
+    <fieldset className="space-y-2"><legend className="text-sm font-medium">Applicable fund types</legend><div className="flex flex-wrap gap-4">{TEMPLATE_FUND_TYPES.map((type) => <label key={type} className="flex items-center gap-2 text-sm"><Checkbox checked={fundTypes.includes(type)} onCheckedChange={(checked) => setFundTypes((old) => checked === true ? [...old, type] : old.filter((x) => x !== type))} />{type === "Private credit" ? "Private credit / debt" : type}</label>)}</div></fieldset>
+    <Button disabled={busy || !title.trim() || !file || !fundTypes.length} onClick={async () => {
+      if (!file) return;
+      setBusy(true);
+      try {
+        await create({ data: { title, category, fundTypes, fileName: file.name, base64: await templateFileBase64(file) } });
+        toast.success("Template uploaded and assigned — waiting for approval.");
+        setTitle(""); setFile(null); setFundTypes([]);
+        await qc.invalidateQueries({ queryKey: ["doc-templates"] });
+        await qc.invalidateQueries({ queryKey: ["fund-type-templates"] });
+      } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
+    }}>{busy ? "Uploading…" : "Upload and assign template"}</Button>
+  </section>;
 }
 
 function CreateFromFund({ funds }: { funds: { id: string; name: string }[] }) {
@@ -108,17 +158,15 @@ function TemplateCard({ t, funds }: { t: T; funds: { id: string; name: string }[
   const [file, setFile] = useState<File | null>(null);
   const [target, setTarget] = useState("");
   const [busy, setBusy] = useState(false);
-  const refresh = () => qc.invalidateQueries({ queryKey: ["doc-templates"] });
+  const refresh = () => Promise.all([qc.invalidateQueries({ queryKey: ["doc-templates"] }), qc.invalidateQueries({ queryKey: ["fund-type-templates"] })]);
   const run = async (fn: () => Promise<unknown>, ok: string) => {
     setBusy(true);
     try { await fn(); toast.success(ok); setNote(""); refresh(); } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
   };
   async function upload(): Promise<void> {
     if (!file) return undefined;
-    if (file.size > 20 * 1024 * 1024) { toast.error("Files must be 20 MB or smaller."); return; }
-    const buf = new Uint8Array(await file.arrayBuffer());
-    let bin = ""; for (let i = 0; i < buf.length; i += 0x8000) bin += String.fromCharCode(...buf.subarray(i, i + 0x8000));
-    await run(() => addVersion({ data: { templateId: t.id, fileName: file.name, base64: btoa(bin), note: note || null } }), "New version added - waiting for approval.");
+    if (file.size > 25 * 1024 * 1024) { toast.error("Files must be 25 MB or smaller."); return; }
+    await run(async () => addVersion({ data: { templateId: t.id, fileName: file.name, base64: await templateFileBase64(file), note: note || null } }), "New version added - waiting for approval.");
     setFile(null);
   }
   return (
@@ -143,7 +191,7 @@ function TemplateCard({ t, funds }: { t: T; funds: { id: string; name: string }[
                 </span>
               </div>
               {v.note ? <p className="text-xs text-muted-foreground">Change: {v.note}</p> : null}
-              {v.decidedBy ? <p className="text-xs text-muted-foreground">{STATUS[v.status]} by {v.decidedBy} on {new Date(v.decidedAt!).toLocaleDateString()}{v.decisionNote ? ` - "${v.decisionNote}"` : ""}</p> : null}
+              {v.decidedBy ? <p className="text-xs text-muted-foreground">{STATUS[v.status]} by {v.decidedBy}{v.decidedAt ? ` on ${new Date(v.decidedAt).toLocaleDateString()}` : ""}{v.decisionNote ? ` - "${v.decisionNote}"` : ""}</p> : null}
               {v.status === "pending_approval" && (v.mine && !isSuper ? (
                 <p className="text-xs text-muted-foreground">You added this version, so a different Harmonious team member must approve it.</p>
               ) : (
@@ -160,7 +208,7 @@ function TemplateCard({ t, funds }: { t: T; funds: { id: string; name: string }[
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2 rounded-md border p-3">
             <p className="text-sm font-medium">Upload a new version</p>
-            <Input type="file" accept="application/pdf" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+            <Input type="file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
             <Textarea rows={2} placeholder="What changed?" value={note} onChange={(e) => setNote(e.target.value)} />
             <Button size="sm" disabled={busy || !file} onClick={upload}>Add version</Button>
           </div>
@@ -171,7 +219,8 @@ function TemplateCard({ t, funds }: { t: T; funds: { id: string; name: string }[
               {funds.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
             </select>
             <Button size="sm" disabled={busy || !target || !t.currentApproved} onClick={() => run(async () => {
-              const r: any = await use({ data: { templateId: t.id, version: t.currentApproved!, offeringId: target } });
+              if (t.currentApproved == null) return;
+              const r: any = await use({ data: { templateId: t.id, version: t.currentApproved, offeringId: target } });
               if (r?.autofill) toast.message(`Filled ${r.autofill.filled.length} field${r.autofill.filled.length === 1 ? "" : "s"} from the fund`, { description: r.autofill.open.length ? `Still blank: ${r.autofill.open.join(", ")}` : "Every field was filled." });
             }, "Added to the fund as a new version for its review.")}>
               {t.currentApproved ? `Use approved v${t.currentApproved}` : "Needs an approved version"}
@@ -193,7 +242,7 @@ function TemplateCard({ t, funds }: { t: T; funds: { id: string; name: string }[
   );
 }
 
-const FUND_TYPE_OPTIONS = ["SPV", "Single asset SPV", "Venture capital", "Private equity", "Private credit", "Real estate", "Hedge Fund", "Fund of funds", "Other"];
+const FUND_TYPE_OPTIONS = TEMPLATE_FUND_TYPES;
 
 /** Which fund types get this template offered automatically ("Generate fund documents"). */
 function FundTypesEditor({ templateId, initial, onSaved }: { templateId: string; initial: string[]; onSaved: () => void }) {
@@ -207,7 +256,7 @@ function FundTypesEditor({ templateId, initial, onSaved }: { templateId: string;
       <p className="font-medium">Used for these fund types</p>
       <div className="flex flex-wrap gap-2">
         {options.map((x) => (
-          <Button key={x} type="button" size="sm" variant={sel.includes(x) ? "default" : "outline"} onClick={() => toggle(x)}>{x}</Button>
+          <label key={x} className="flex items-center gap-2"><Checkbox checked={sel.includes(x)} onCheckedChange={() => toggle(x)} />{x}</label>
         ))}
       </div>
       <Button size="sm" variant="outline" disabled={busy} onClick={async () => {

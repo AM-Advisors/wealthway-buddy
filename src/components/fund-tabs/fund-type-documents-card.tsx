@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { fundTypeTemplatesFn, generateFundTypeDocumentsFn } from "@/lib/fund-doc-templates.functions";
 import { invalidateFund } from "@/lib/fund-query-keys";
+import { LoadError } from "@/components/load-error";
+import { modelSourcesForFundType } from "@/lib/fund-type-templates";
 
 /** The fund documents assigned to this fund's type, generated in one step from the fund's details. */
 export function FundTypeDocumentsCard({ fundId }: { fundId: string }) {
@@ -23,19 +25,19 @@ export function FundTypeDocumentsCard({ fundId }: { fundId: string }) {
     },
     onError: (e: Error) => toast.error(e.message),
   });
-  if (q.isError) return null;
+  if (q.isError) return <LoadError what="Fund templates" error={q.error} onRetry={() => { void q.refetch(); }} audience="account" />;
   const d = q.data;
   const pending = (d?.templates ?? []).filter((t: { generated: boolean }) => !t.generated).length;
   return (
     <Card>
       <CardHeader>
         <CardTitle className="text-base">Fund documents{d?.fundType ? ` for a ${d.fundType}` : ""}</CardTitle>
-        <CardDescription>These are the Harmonious templates assigned to this type of fund. They are filled from your fund's details. After generating, sign them below in Harmonious fund template documents.</CardDescription>
+        <CardDescription>Approved templates assigned to this fund type</CardDescription>
       </CardHeader>
       <CardContent className="space-y-3 text-sm">
         {!d ? <p className="text-muted-foreground">Loading…</p>
           : !d.fundType ? <p className="text-muted-foreground">Set the fund type in Fund Setup to see its documents.</p>
-          : !d.templates.length ? <p className="text-muted-foreground">No templates are assigned to this fund type yet. Use Generate from template to pick one.</p> : (
+          : !d.templates.length ? <div className="space-y-2"><p className="text-muted-foreground">No approved legal templates are assigned to this fund type yet.</p>{modelSourcesForFundType(d.fundType).map((source) => <a key={source.url} href={source.url} target="_blank" rel="noreferrer" className="block text-primary underline">{source.title} — publisher reference, not ready to sign</a>)}</div> : (
             <>
               <ul className="divide-y rounded-md border">
                 {d.templates.map((t: { id: string; title: string; generated: boolean }) => (
