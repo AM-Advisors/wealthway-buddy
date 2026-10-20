@@ -16,8 +16,13 @@ const forbid = (m: string) => { throw new Error(`Forbidden: ${m}`); };
 
 async function factsFor(rows: any[]): Promise<{ fact: InvestmentFact; row: any; result: any }[]> {
   const out = [] as { fact: InvestmentFact; row: any; result: any }[];
-  for (const row of rows) {
-    const { result } = await computeReadinessFor(row);
+  // Bounded parallel batches: the old one-at-a-time loop made fund pages slow.
+  const results: any[] = new Array(rows.length);
+  for (let i = 0; i < rows.length; i += 8) {
+    await Promise.all(rows.slice(i, i + 8).map(async (row, j) => { results[i + j] = (await computeReadinessFor(row)).result; }));
+  }
+  for (const [idx, row] of rows.entries()) {
+    const result = results[idx];
     out.push({
       row, result,
       fact: {

@@ -255,3 +255,4 @@
 
 - Account connection: src/lib/account-connect.server.ts (connectAccount/connectEmail/recordProfileTin/sweepUnconnected) is the only engine linking invitations, accounts and investor records; verified exact email connects, tax-ID fingerprint alone only opens an account_link review — why: never separated, never cross-account access.
 - Signed-in investor start: ProfileStep (inside PortalGate) fills only blank login-person basics; investors start a fund via /start-fund → startOwnFund creates their own client org, after which the existing MsaGate and FundRequestEngine \$2,500 payment apply — why: MSA only for client members, one fund-creation path.
+- Person hub: profiles/crm_contacts/client_contacts/cap_stakeholders/ct_stakeholders carry person_id (account via persons.user_id, else unique exact email via unique_person_for_email + triggers); show identity from persons, never overwrite account names without a user decision — why: one record, no drift.

@@ -1,3 +1,4 @@
+import { invalidateFund } from "@/lib/fund-query-keys";
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -22,7 +23,7 @@ export function TemplateDocumentsCard({ fundId }: { fundId: string }) {
   const activate = useServerFn(activateDocumentVersionFn);
   const useVersion = useMutation({
     mutationFn: (d: any) => activate({ data: { documentId: d.id, version: d.version, scope: "new_only" } }),
-    onSuccess: () => { toast.success("Ready to send"); qc.invalidateQueries(); },
+    onSuccess: () => { toast.success("Ready to send"); void invalidateFund(qc, fundId); },
     onError: (e: Error) => toast.error(e.message),
   });
   const q = useQuery({ queryKey: ["fund-template-docs", fundId], queryFn: () => list({ data: { offeringId: fundId } }) as Promise<any[]> });
@@ -30,7 +31,7 @@ export function TemplateDocumentsCard({ fundId }: { fundId: string }) {
   const [sendFor, setSendFor] = useState<any | null>(null);
   const rm = useMutation({
     mutationFn: (d: any) => del({ data: { offeringId: fundId, documentId: d.id } }),
-    onSuccess: () => { toast.success("Deleted"); qc.invalidateQueries(); },
+    onSuccess: () => { toast.success("Deleted"); void invalidateFund(qc, fundId); },
     onError: (e: Error) => toast.error(e.message),
   });
   const statusFn = useServerFn(templateDocSendStatusFn);

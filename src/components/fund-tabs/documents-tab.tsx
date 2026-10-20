@@ -39,7 +39,7 @@ export function DocumentsTab({ fundId }: { fundId: string }) {
   const [made, setMade] = useState<{ title: string; signing: any; autofill: any } | null>(null);
   const useTpl = useMutation({
     mutationFn: (t: any) => applyTpl({ data: { templateId: t.id, version: t.currentApproved, offeringId: fundId } }).then((r: any) => ({ ...r, title: t.title })),
-    onSuccess: (r: any) => { setMode(null); setMade({ title: r.title, signing: r.signing, autofill: r.autofill }); qc.invalidateQueries(); },
+    onSuccess: (r: any) => { setMode(null); setMade({ title: r.title, signing: r.signing, autofill: r.autofill }); void invalidateFund(qc, fundId); },
     onError: (e: Error) => toast.error(e.message),
   });
   const checkFn = useServerFn(templateAutofillCheckFn);

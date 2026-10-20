@@ -1,0 +1,1 @@
+CREATE INDEX IF NOT EXISTS marketing_job_runs_created_idx ON public.marketing_job_runs(created_at DESC);
