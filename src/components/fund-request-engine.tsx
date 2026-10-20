@@ -141,6 +141,17 @@ export function FundRequestEngine({ clientId: id, draft, mode = "client", client
     onError: (e: any) => toast.error(e?.message ?? "Could not send."),
   });
 
+  // Autosave: once the form has any real content, quietly save a few seconds after the last edit
+  // so progress is never lost if the page is closed or the session drops.
+  useEffect(() => {
+    if (!id || !hasContent || dq.isLoading) return;
+    if (JSON.stringify(r) === lastSavedJson.current) return;
+    const t = setTimeout(() => {
+      if (!saveDraft.isPending && !send.isPending) saveDraft.mutate(true);
+    }, 2500);
+    return () => clearTimeout(t);
+  }, [r, id, hasContent, dq.isLoading, saveDraft.isPending, send.isPending]);
+
   const missing = missingFields(r);
   const steps = visibleSteps(r);
   // "Fund Details" and "Entity & EIN" show as one "Fund" step in the sidebar.
