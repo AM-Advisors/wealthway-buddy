@@ -6916,6 +6916,47 @@ export type Database = {
           },
         ]
       }
+      client_setup_fee_waivers: {
+        Row: {
+          client_id: string
+          granted_at: string
+          granted_by: string
+          id: string
+          reason: string
+          revoke_reason: string | null
+          revoked_at: string | null
+          revoked_by: string | null
+        }
+        Insert: {
+          client_id: string
+          granted_at?: string
+          granted_by: string
+          id?: string
+          reason: string
+          revoke_reason?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+        }
+        Update: {
+          client_id?: string
+          granted_at?: string
+          granted_by?: string
+          id?: string
+          reason?: string
+          revoke_reason?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_setup_fee_waivers_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_sow_funds: {
         Row: {
           added_at: string
