@@ -169,3 +169,10 @@
 - [x] Phase 3: compliance report schedules (prepared by 5-min job, second-person approval, harmonious.co recipients only)
 - [ ] Signed-in walkthrough of Phases 1–3 (blocked: isolated QA access)
 - [ ] Later: cap-table scenarios, valuation sensitivity, client review screen
+
+## Reliability fixes (2026-10-20 plan)
+- [x] Billing/commissions recovery (retry paid card invoices, schedule advance only on saved drafts, payout claim, Finance access, queued amounts, atomic retryable reminder run, all SOWs)
+- [x] Manager alert claim, progress email checks, valuation "returned" status
+- [ ] Screens that show "empty" on failed loads; ops work-area 100-item filter; banking/SWIFT display; staff grants; Funds cache and removed-investor count
+- [ ] Speed: marketing sync rewrites + indexes, single-fund cap table, polling stop, narrow cache refresh, parallel readiness
+- [ ] Smaller: null service keys, inputValidator warnings, portal profile identity fields, MSA/checklist first-save permissions
