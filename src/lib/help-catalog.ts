@@ -3,7 +3,7 @@ import type { HelpArticle } from "@/lib/help-articles";
 import { SERVICE_LEVELS } from "@/lib/service-level";
 
 const U = "2026-10-16";
-const c = (a: Omit<HelpArticle, "audience" | "version" | "updated"> & { version?: number }): HelpArticle => ({ audience: "client", version: 1, updated: U, ...a });
+const c = (a: Omit<HelpArticle, "audience" | "version" | "updated"> & { version?: number; updated?: string }): HelpArticle => ({ audience: "client", version: 1, updated: U, ...a });
 const s = (a: Omit<HelpArticle, "audience" | "version" | "updated"> & { version?: number }): HelpArticle => ({ audience: "staff", version: 1, updated: U, ...a });
 
 export const HELP_CATALOG: HelpArticle[] = [

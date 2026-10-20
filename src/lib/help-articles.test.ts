@@ -27,6 +27,20 @@ describe("help center visibility", () => {
   it("maps fund manager platform role", () => {
     expect(clientHelpRolesFor(["fund_manager"])).toContain("fund_manager");
   });
+  it("requires current-version approval for revised setup and EIN guidance", () => {
+    const approved = new Map([["manager-set-up-fund", 1], ["manager-ein", 1]]);
+    const reader = { audience: "client" as const, roles: ["fund_manager"] };
+    expect(articlesFor(HELP_CATALOG, reader, approved)).toHaveLength(0);
+    approved.set("manager-set-up-fund", 2);
+    approved.set("manager-ein", 2);
+    expect(articlesFor(HELP_CATALOG, reader, approved).map((a) => a.slug).sort()).toEqual(["manager-ein", "manager-set-up-fund"]);
+  });
+  it("keeps new service-level and draft guidance manager-only", () => {
+    const approved = new Map([["manager-service-level-pricing", 1], ["manager-save-fund-draft", 1]]);
+    const manager = articlesFor(HELP_CATALOG, { audience: "client", roles: ["fund_manager"] }, approved);
+    expect(manager.map((a) => a.slug).sort()).toEqual(["manager-save-fund-draft", "manager-service-level-pricing"]);
+    expect(articlesFor(HELP_CATALOG, { audience: "client", roles: ["investor"] }, approved)).toHaveLength(0);
+  });
 });
 
 describe("self-service help articles", () => {
