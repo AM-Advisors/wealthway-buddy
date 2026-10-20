@@ -23,6 +23,7 @@ import { FEATURE_LABELS, LEVELS, portalFeatures } from "@/lib/investor-levels";
 import { INVESTOR_TIERS } from "@/lib/product-pricing";
 import { fmtDate, usd } from "./shared";
 import { PersonalInvestmentLinkCard, PersonalLinkCopyButton } from "@/components/personal-investment-link";
+import { InvestorEmailHistory, InvestorHelpers, InvestorQuickEdit } from "@/components/investor-panel-extras";
 
 export function InvestorsTab({ fundId, workQueue }: { fundId: string; workQueue?: ReactNode }) {
   const load = useServerFn(investorGridFn);
@@ -271,6 +272,9 @@ function InvestorSheet({ fundId, id, onClose }: { fundId: string; id: string | n
         {q.isLoading ? <p className="p-6 text-sm text-muted-foreground">Loading…</p> : d && (
           <div className="space-y-6 p-6 text-sm">
             {id && <PersonalInvestmentLinkCard onboardingId={id} />}
+            {id && <InvestorEmailHistory onboardingId={id} />}
+            {id && <InvestorQuickEdit onboardingId={id} onSaved={() => q.refetch()} />}
+            {id && <InvestorHelpers onboardingId={id} />}
             <section className="grid grid-cols-2 gap-3">
               <div className="rounded-lg border p-3"><p className="text-xs text-muted-foreground">Committed</p><p className="text-lg font-semibold">{usd(d.committedCents)}</p></div>
               <div className="rounded-lg border p-3"><p className="text-xs text-muted-foreground">Received</p><p className="text-lg font-semibold">{usd(d.receivedCents)}</p>
