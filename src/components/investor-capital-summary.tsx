@@ -53,7 +53,7 @@ export function InvestorCapitalSummary({ compact = false, offeringId }: { compac
     );
   }
 
-  const funds = data ?? [];
+  const funds = (data ?? []).filter((f) => !offeringId || f.offeringId === offeringId);
   if (!funds.length) {
     return (
       <p className="text-sm text-muted-foreground">

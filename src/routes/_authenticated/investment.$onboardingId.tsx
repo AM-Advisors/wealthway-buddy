@@ -76,7 +76,7 @@ function InvestmentPage() {
           {tab === "overview" ? <InvestmentOfferingDocuments onboardingId={onboardingId} /> : null}
         </>
       ) : null}
-      {tab === "capital" ? <InvestorCapitalSummary /> : null}
+      {tab === "capital" ? <InvestorCapitalSummary offeringId={offeringId} /> : null}
       {tab === "performance" ? <InvestorPerformancePanel offeringId={offeringId} embedded /> : null}
       {tab === "reports" ? (
         <>
