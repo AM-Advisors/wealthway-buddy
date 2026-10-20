@@ -1,5 +1,10 @@
 # Roadmap
 
+## Current errors and page connections review (2026-10-20)
+- [x] Review reported platform errors and run current unit checks: 223 files / 2,955 tests passed; latest preview build OK. Recent database logs show two invalid valuation-status errors.
+- [x] Audit unknown destinations, disconnected pages and intentional redirects: reviewed destinations exist; investor reporting/admin redirects are intentional; investment Activity/Tax/statement links lose investment scope; investor dashboard/reporting/workspace suppress load errors.
+- [x] Report verified defects separately from unfinished features and signed-in checks blocked by isolated QA access. Source-backed defects: portal profile creation lacks required KYC inputs; MSA/checklist first inserts lack client/manager policies (live policies verified); security-alert unregistered; banking summary drops international instructions; legacy SWIFT filtering hides beneficiary/account fields; staff grants fail manager-only read checks; Funds cache stale for 60 seconds; null catalog service keys can break snapshots (13 live null keys, eligibility not established). Billing schedule can advance after failed draft; valuation queue queries asset_valuations for unsupported returned status (live enum verified). No application code, access, money paths or business data changed.
+
 ## Broader V2.5 review
 - [x] Compared investor/client and Operations source with current equivalents; recommendations: unified record history, reviewed compliance-report schedules, cap-table financing scenarios, valuation sensitivity, consolidated client reviews, and remaining Portfolio/Report Card presentation improvements. No app features or source-project records imported.
 
