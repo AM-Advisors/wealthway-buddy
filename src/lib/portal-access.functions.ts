@@ -74,19 +74,39 @@ export const getPortalAccess = createServerFn({ method: "GET" })
     const { data: roleRows } = await supabase.from("user_roles").select("role").eq("user_id", userId);
     let roles = ((roleRows ?? []) as any[]).map((r) => r.role as string);
 
+    let openOnboardingId: string | null = null;
     if (roles.length === 0 && email) {
       // Claim any outstanding invitation for this address (mirrors the signup trigger,
       // covering people who were invited after they created their account).
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       const { data: invites } = await supabaseAdmin
         .from("fund_invitations")
-        .select("id, invite_role, offering_id, invited_by, status, expires_at")
+        .select("id, invite_role, offering_id, invited_by, status, expires_at, token")
         .ilike("email", email)
         .eq("status", "pending");
 
-      const live = ((invites ?? []) as any[]).filter(
+      let live = ((invites ?? []) as any[]).filter(
         (i) => !i.expires_at || new Date(i.expires_at) > new Date(),
       );
+
+      // Investor invitations tied to an investment go through the same connection
+      // step as the personal link, so the prepared investment is linked, not orphaned.
+      const ids = live.filter((i) => i.invite_role !== "fund_manager").map((i) => i.id);
+      if (ids.length) {
+        const { data: bound } = await supabaseAdmin.from("investor_onboardings").select("invitation_id").in("invitation_id", ids);
+        const boundIds = new Set(((bound ?? []) as any[]).map((b) => b.invitation_id));
+        const { claimOnboardInvitation } = await import("@/lib/investor-onboarding.server");
+        for (const inv of live.filter((i) => boundIds.has(i.id))) {
+          try {
+            const r = await claimOnboardInvitation(userId, String(inv.token));
+            openOnboardingId = openOnboardingId ?? r.onboardingId;
+          } catch (e) {
+            console.error("[portal-access] invitation claim failed", (e as Error).message);
+          }
+        }
+        live = live.filter((i) => !boundIds.has(i.id));
+        if (openOnboardingId) live = [];
+      }
 
       for (const inv of live) {
         if (inv.invite_role === "fund_manager") {
