@@ -11,9 +11,15 @@ const today = () => new Date().toISOString().slice(0, 10);
 /** Creates schedules for approved SOWs that don't have them yet. Lines keep their signed frequency. */
 export async function syncSchedules() {
   const db = await admin();
-  const { data: sows } = await db.from("client_sows").select("id, client_id, effective_date, approved_at, generated_lines, approval_status").eq("approval_status", "approved").limit(500);
+  const sows: any[] = [];
+  for (let from = 0; ; from += 500) {
+    const { data, error } = await db.from("client_sows").select("id, client_id, effective_date, approved_at, generated_lines, approval_status").eq("approval_status", "approved").order("id").range(from, from + 499);
+    if (error) throw new Error(error.message);
+    sows.push(...(data ?? []));
+    if ((data ?? []).length < 500) break;
+  }
   let created = 0;
-  for (const sow of (sows ?? []) as any[]) {
+  for (const sow of sows) {
     const lines = Array.isArray(sow.generated_lines) ? sow.generated_lines : [];
     if (!lines.length) continue;
     const { data: existing } = await db.from("invoice_schedules").select("line_index").eq("sow_id", sow.id);
@@ -34,14 +40,17 @@ export async function syncSchedules() {
 /** Drafts one invoice per SOW per due date for every schedule line that has come due. */
 export async function draftDueInvoices(asOf = today()) {
   const db = await admin();
-  const { data: due } = await db.from("invoice_schedules").select("*").eq("active", true).lte("next_due_on", asOf).limit(1000);
-  const groups = new Map<string, { sowId: string; clientId: string; start: string; end: string; lines: any[] }>();
+  const { data: due, error: dueErr } = await db.from("invoice_schedules").select("*").eq("active", true).lte("next_due_on", asOf).limit(1000);
+  if (dueErr) throw new Error(dueErr.message);
+  const groups = new Map<string, { sowId: string; clientId: string; start: string; end: string; lines: any[]; scheduleIds: Set<string> }>();
+  const failed = new Set<string>();
   const advance: { id: string; next: string | null; frequency: BillingFrequency }[] = [];
   for (const s of (due ?? []) as any[]) {
     const periods = duePeriods(s.frequency, s.next_due_on, asOf);
     for (const p of periods) {
       const key = `${s.sow_id}:${p.start}`;
-      const g = groups.get(key) ?? { sowId: s.sow_id, clientId: s.client_id, start: p.start, end: p.end, lines: [] as any[] };
+      const g = groups.get(key) ?? { sowId: s.sow_id, clientId: s.client_id, start: p.start, end: p.end, lines: [] as any[], scheduleIds: new Set<string>() };
+      g.scheduleIds.add(s.id);
       if (p.end > g.end) g.end = p.end;
       g.lines.push({ source: "schedule", source_ref: scheduleRef(s.id, p.start), service_key: s.service_key, label: s.label, quantity: 1, unit_cents: s.amount_cents, amount_cents: s.amount_cents, sort_order: g.lines.length });
       groups.set(key, g);
@@ -53,7 +62,8 @@ export async function draftDueInvoices(asOf = today()) {
   for (const g of groups.values()) {
     // Skip lines already billed for this period (the unique source_ref guarantees it).
     const refs = g.lines.map((l) => l.source_ref);
-    const { data: billed } = await db.from("invoice_lines").select("source_ref").eq("source", "schedule").in("source_ref", refs);
+    const { data: billed, error: be } = await db.from("invoice_lines").select("source_ref").eq("source", "schedule").in("source_ref", refs);
+    if (be) { g.scheduleIds.forEach((id) => failed.add(id)); continue; }
     const done = new Set(((billed ?? []) as any[]).map((b) => b.source_ref));
     const lines = g.lines.filter((l) => !done.has(l.source_ref));
     if (!lines.length) continue;
@@ -62,12 +72,13 @@ export async function draftDueInvoices(asOf = today()) {
       client_id: g.clientId, sow_id: g.sowId, period_start: g.start, period_end: g.end, net_days: 30, status: "draft",
       total_cents: total, generated_by_schedule: true, note: "Prepared from the signed statement of work's billing schedule.",
     }).select("id").single();
-    if (error) continue;
+    if (error) { g.scheduleIds.forEach((id) => failed.add(id)); continue; }
     const { error: le } = await db.from("invoice_lines").insert(lines.map((l) => ({ ...l, invoice_id: inv.id })));
-    if (le) { await db.from("invoices").update({ status: "void", voided_at: new Date().toISOString(), void_reason: "Schedule lines were already billed." }).eq("id", inv.id); continue; }
+    if (le) { await db.from("invoices").update({ status: "void", voided_at: new Date().toISOString(), void_reason: "Schedule lines were already billed." }).eq("id", inv.id); g.scheduleIds.forEach((id) => failed.add(id)); continue; }
     drafted++;
   }
-  for (const a of advance) await db.from("invoice_schedules").update({ next_due_on: a.next, active: a.frequency !== "one_time" && !!a.next, updated_at: new Date().toISOString() }).eq("id", a.id);
+  // A schedule moves to its next date only when every draft it was part of saved.
+  for (const a of advance) if (!failed.has(a.id)) await db.from("invoice_schedules").update({ next_due_on: a.next, active: a.frequency !== "one_time" && !!a.next, updated_at: new Date().toISOString() }).eq("id", a.id);
   return { drafted };
 }
 
@@ -81,7 +92,9 @@ export async function onInvoicePaid(invoiceId: string) {
 export async function markInvoicePaidByCard(invoiceId: string, sessionId: string, paymentRef: string | null) {
   const db = await admin();
   const { data: inv } = await db.from("invoices").select("id, status, card_session_id, client_id, number").eq("id", invoiceId).maybeSingle();
-  if (!inv || inv.status === "paid") return;
+  if (!inv) return;
+  // A retry of an already-paid invoice still finishes queuing payouts (queuing is idempotent).
+  if (inv.status === "paid") { await onInvoicePaid(invoiceId); return; }
   if (inv.status !== "issued" || inv.card_session_id !== sessionId) return;
   const paidOn = today();
   await db.from("invoices").update({ status: "paid", paid_on: paidOn, payment_reference: paymentRef ?? sessionId, client_payment_method: "card", client_paid_on: paidOn }).eq("id", invoiceId).eq("status", "issued");

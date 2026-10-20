@@ -13,11 +13,13 @@ export const Route = createFileRoute("/api/public/hooks/invoice-reminders")({
         const unauthorized = requireInternalJob(request);
         if (unauthorized) return unauthorized;
 
+        let release: (() => Promise<void>) | null = null;
         try {
-          const { sendInvoiceReminders, claimReminderRun } = await import(
+          const { sendInvoiceReminders, claimReminderRun, releaseReminderRun } = await import(
             "@/lib/invoice-reminders.server"
           );
           const claimed = await claimReminderRun();
+          release = releaseReminderRun;
           if (!claimed) {
             return Response.json({ skipped: true, reason: "already ran today" });
           }
@@ -31,6 +33,7 @@ export const Route = createFileRoute("/api/public/hooks/invoice-reminders")({
           return Response.json({ ...result, ...services });
         } catch (err) {
           console.error("[invoice-reminders] failed", err);
+          if (release) await release().catch(() => null);
           return Response.json({ error: "reminder run failed" }, { status: 500 });
         }
       },

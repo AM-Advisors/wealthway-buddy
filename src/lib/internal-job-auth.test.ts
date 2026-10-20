@@ -83,6 +83,7 @@ describe("internal job authentication", () => {
 const mocks = vi.hoisted(() => ({
   sendInvoiceReminders: vi.fn(),
   claimReminderRun: vi.fn(),
+  releaseReminderRun: vi.fn(async () => {}),
   drainManagerAlerts: vi.fn(),
   drainProgressEmails: vi.fn(),
 }));
@@ -90,6 +91,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock("@/lib/invoice-reminders.server", () => ({
   sendInvoiceReminders: mocks.sendInvoiceReminders,
   claimReminderRun: mocks.claimReminderRun,
+  releaseReminderRun: mocks.releaseReminderRun,
 }));
 vi.mock("@/lib/manager-alerts.server", () => ({
   drainManagerAlerts: mocks.drainManagerAlerts,

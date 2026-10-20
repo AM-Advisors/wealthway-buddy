@@ -74,7 +74,7 @@ export async function drainProgressEmails(limit = 100) {
       if (!claimed?.length) continue
       const ids = claimed.map((r: any) => r.id)
       try {
-        const [{ data: onboarding }, { data: managers }, { data: recipient }, { data: investor }, { data: fund }, { data: pref }] = await Promise.all([
+        const results = await Promise.all([
           db.from('investor_onboardings').select('investor_user_id,offering_id,removed_at').eq('id', meta.onboarding_id).maybeSingle(),
           db.from('fund_managers').select('user_id').eq('offering_id', first.offering_id),
           db.from('profiles').select('email,legal_name').eq('user_id', meta.recipient_user_id).maybeSingle(),
@@ -82,6 +82,10 @@ export async function drainProgressEmails(limit = 100) {
           db.from('offerings').select('name').eq('id', first.offering_id).maybeSingle(),
           db.from('notification_preferences').select('alerts_enabled').eq('user_id', meta.recipient_user_id).maybeSingle(),
         ])
+        // Never mark an email sent when a check couldn't be read; release and retry later.
+        const lookupError = results.find((r: any) => r.error)?.error
+        if (lookupError) throw new Error(lookupError.message)
+        const [{ data: onboarding }, { data: managers }, { data: recipient }, { data: investor }, { data: fund }, { data: pref }] = results as any[]
         const allowed = onboarding && !onboarding.removed_at && onboarding.offering_id === first.offering_id && progressRecipientAllowed(meta.audience, meta.recipient_user_id, onboarding.investor_user_id, (managers ?? []).map((m: any) => m.user_id))
         if (frequency !== 'off' && allowed && recipient?.email && pref?.alerts_enabled !== false) {
           const { sendTemplateEmail } = await import('./email-templates/send-email')

@@ -567,7 +567,7 @@ async function accountingItems(s: any, lookup: Lookup, now: Date, fundId?: strin
       await s
         .from("asset_valuations")
         .select("id, offering_id, asset_name, status, valuation_date, updated_at")
-        .in("status", ["draft", "review", "returned"])
+        .in("status", ["draft", "review"])
         .limit(SOURCE_LIMIT),
     ),
   );
