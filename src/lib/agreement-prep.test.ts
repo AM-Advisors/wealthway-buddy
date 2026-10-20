@@ -339,6 +339,7 @@ const admin = {
 vi.mock("@/integrations/supabase/auth-middleware", () => ({ requireSupabaseAuth: {} }));
 vi.mock("@/lib/box.server", () => ({
   uploadFile: async () => "box-file-1",
+  signingFileName: (base: string) => `${base}.pdf`,
   fileVersionId: async () => "box-version-1",
   createMultiSignerRequest: async (input: any) => {
     (globalThis as any).__lastBoxRequest = input;

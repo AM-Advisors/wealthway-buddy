@@ -8,7 +8,7 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
-- Read nested AGENTS.md before edits; src/lib/AGENTS.md covers workflows/auth — why: scoped rules.
+- Read nested AGENTS.md before edits; src/lib/AGENTS.md covers workflows/auth, billing, signing, drafts — why: scoped rules.
 - Partition hosts/menus through host-routing.ts + navigation.ts; share fund engines — why: display grants no authority.
 - Never automate filings (except IRS e-filing of approved 1065s/K-1s per src/lib/AGENTS.md), tax payments, refunds, ACH/wire or provider money movement; server-side authorization only — why: user-mandated safety boundary.
 - Browser tests live in e2e/*.e2e.ts (Playwright, `bun run test:e2e`), run only against QA with synthetic sessions; helpers refuse production URLs — why: keep them out of unit runs and away from real data.
@@ -27,9 +27,5 @@
 - Closed funds: offerings.lifecycle_status (separate from is_open launch) changes only via close_fund/decide_fund_reopen DB functions; DB triggers refuse new onboardings/applications/invites/links on closed funds; reopening needs a different assigned fund manager (Super Admin self-approval with reason) — why: one enforced gate on every path.
 - Client self-service (fund managers of that exact fund): onboarding link create/replace/disable, banking path choice (not "not required"), EIN path + existing EIN with letter, fund-manager add/remove (exact-email lookup, never the last manager) and teammate invitations; IRS-issued EIN recording, bank verification, identity, money and pricing stay with Harmonious — why: user-approved self-service audit.
 - Ops Funds dashboard reads per-investor readiness from onboarding_readiness_summaries (written by reconcileInvestmentReadiness, refreshed a few stale rows per load), never live computeReadiness for every investor — why: the live loop exceeded Worker request/time limits.
-- Investor page self-service (tax ID, owners/signers via editRelatedParty, first distribution bank via addDistributionDestination → requestPaymentInstruction) follows the investor edit window; approved payment destinations change only by investor or Harmonious, and relationships are ended (status removed), never deleted — why: no widened money or identity authority.
-- Billing: signed SOW lines carry billing frequency into invoice_schedules; the daily invoice-reminders job drafts invoices only (one line per schedule period via source_ref); issuing needs a different person than the drafter/reviewer (Super Admin with reason); every "paid" path calls onInvoicePaid → commission_payout_queue, and void/refund/dispute cancels still-scheduled rows — why: maker-checker, no double billing, payouts recorded never sent.
 - Investor surfaces: /investment/$onboardingId workspace; /investor-reporting?section= canonical reports (old pages redirect); /admin/investors redirects to Ops Investor 360; capital reads onboardings with application history; funding/wire retain applications pending review — why: connected views without money-path changes.
 - LoadError handles failures; reports load active tabs; Sign shares TaxSignPanel and verified email; OfferingDocumentReader reads entitled files — why: reliability.
-- Drafts use persistFundRequestDraft with scoped read-back; failures retain answers — why: no loss.
-- Read/sign use investment-document-source.server; pinned files stay intact — why: provenance.

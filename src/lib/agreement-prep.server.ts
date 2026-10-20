@@ -300,7 +300,8 @@ async function ensureSourceFile(
   }
 
   const safeTitle = String(doc.title ?? "Fund document").replace(/[^\w\- ]+/g, "").trim();
-  const fileName = `${safeTitle || "Fund document"} - ${investorLabel} - ${applicationId.slice(0, 8)}.pdf`;
+  const { signingFileName } = await import("@/lib/box.server");
+  const fileName = signingFileName(`${safeTitle || "Fund document"} - ${investorLabel} - ${applicationId.slice(0, 8)}`, bytes);
   const fileId = await uploadFile(fileName, bytes);
   const versionId = await fileVersionId(fileId).catch(() => null);
   return { fileId, versionId };
@@ -498,7 +499,7 @@ export async function sendPreparedAgreement(
     ((matchedProfiles ?? []) as any[]).map((p) => [String(p.email).toLowerCase(), p.user_id]),
   );
 
-  await admin.from("document_signature_signers").upsert(
+  const signerWrite = await admin.from("document_signature_signers").upsert(
     ordered.map((s, index) => ({
       signature_id: signatureId,
       application_id: application.id,
@@ -519,6 +520,7 @@ export async function sendPreparedAgreement(
     })),
     { onConflict: "signature_id,signer_email", ignoreDuplicates: false },
   );
+  if (signerWrite.error) throw new Error("The signer record could not be saved. Please try again.");
 
   await admin.from("signature_audit_events").insert({
     application_id: application.id,
