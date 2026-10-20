@@ -7,6 +7,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Link } from "@tanstack/react-router";
+import { InvestorDistributions } from "@/components/investor-distributions";
+import { InvestorFinancialsPanel } from "@/components/investor-financials-panel";
+import { InvestorPerformancePanel } from "@/components/investor-performance-panel";
+import { InvestorStatementsPanel } from "@/components/investor-statements-panel";
+
+export const REPORTING_SECTIONS = ["investments", "performance", "distributions", "statements", "financials", "reports", "documents"] as const;
 import {
   getInvestorDashboardSummary,
   getInvestorDocumentLibrary,
@@ -90,7 +97,7 @@ function PackageView({ packageId }: { packageId: string }) {
   );
 }
 
-export function InvestorReportingCenter() {
+export function InvestorReportingCenter({ section }: { section?: string } = {}) {
   const loadSummary = useServerFn(getInvestorDashboardSummary);
   const loadCenter = useServerFn(getInvestorReportingCenter);
   const loadLibrary = useServerFn(getInvestorDocumentLibrary);
@@ -123,12 +130,30 @@ export function InvestorReportingCenter() {
         </p>
       </div>
 
-      <Tabs defaultValue="investments">
-        <TabsList>
+      <Tabs defaultValue={section && (REPORTING_SECTIONS as readonly string[]).includes(section) ? section : "investments"}>
+        <TabsList className="flex h-auto flex-wrap">
           <TabsTrigger value="investments">Your investments</TabsTrigger>
+          <TabsTrigger value="performance">Performance</TabsTrigger>
+          <TabsTrigger value="distributions">Distributions</TabsTrigger>
+          <TabsTrigger value="statements">Statements</TabsTrigger>
+          <TabsTrigger value="financials">Fund reports</TabsTrigger>
           <TabsTrigger value="reports">Reporting periods</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="performance" className="pt-4"><InvestorPerformancePanel embedded /></TabsContent>
+        <TabsContent value="distributions" className="space-y-3 pt-4">
+          <InvestorDistributions />
+          <Link to="/investor-reporting" search={{ section: "statements" }} className="text-sm underline">See your capital account statements</Link>
+        </TabsContent>
+        <TabsContent value="statements" className="space-y-3 pt-4">
+          <InvestorStatementsPanel />
+          <div className="flex gap-4 text-sm">
+            <Link to="/investor-reporting" search={{ section: "distributions" }} className="underline">See your distributions</Link>
+            <Link to="/capital" className="underline">Capital summary</Link>
+          </div>
+        </TabsContent>
+        <TabsContent value="financials" className="pt-4"><InvestorFinancialsPanel embedded /></TabsContent>
 
         <TabsContent value="investments" className="space-y-4 pt-4">
           {summary.isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> : null}
