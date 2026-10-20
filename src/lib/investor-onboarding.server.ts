@@ -2035,8 +2035,45 @@ export async function ensureVerificationApplication(row: { id: string; investor_
  * application behind this investment. Same session, webhook and
  * reconciliation paths - no second verification system.
  */
+/** True when the person's KYC and AML are both currently clear (same rule the readiness engine uses). */
+async function personCleared(personId: string | null) {
+  if (!personId) return false;
+  const { reuseState } = await import("@/lib/investor-onboarding-model");
+  const { data: p } = await db().from("persons").select("kyc_status, reverification_due_at, aml_status").eq("id", personId).maybeSingle();
+  if (!p) return false;
+  const now = nowIso();
+  return reuseState((p as any).kyc_status, (p as any).reverification_due_at, now) === "valid" && reuseState((p as any).aml_status, null, now) === "valid";
+}
+
+/**
+ * Reuses an identity check the investor already cleared (account check or an earlier investment).
+ * The provider's decision is re-read before anything is applied — a stored "approved" alone never clears a step.
+ */
+export async function reusePriorVerification(row: any, actorUserId: string | null) {
+  if (!row.person_id) return false;
+  if (await personCleared(row.person_id)) return true;
+  if (!row.investor_user_id) return false;
+  let sessionId: string | null = null;
+  const { data: acct } = await db().from("account_identity_checks").select("session_id").eq("user_id", row.investor_user_id).eq("status", "approved").not("session_id", "is", null).order("updated_at", { ascending: false }).limit(1);
+  sessionId = ((acct ?? []) as any[])[0]?.session_id ?? null;
+  if (!sessionId) {
+    const { data: kv } = await db().from("kyc_verifications").select("session_id").eq("person_id", row.person_id).eq("status", "approved").not("session_id", "is", null).order("created_at", { ascending: false }).limit(1);
+    sessionId = ((kv ?? []) as any[])[0]?.session_id ?? null;
+  }
+  if (!sessionId) return false;
+  if (!row.questionnaire_didit_session_id) await touch(row.id, { questionnaire_didit_session_id: sessionId });
+  const { autoApplyDiditForOnboarding } = await import("@/lib/didit-auto-apply.server");
+  try { await autoApplyDiditForOnboarding(row.id, actorUserId); } catch (e) { console.error("[verify-reuse]", (e as Error).message); return false; }
+  return personCleared(row.person_id);
+}
+
 export async function startInvestmentVerification(userId: string, onboardingId: string, origin: string, returnPath?: string | null) {
   const { row } = await assertInvestorOwns(userId, onboardingId);
+  if (await reusePriorVerification(row, userId)) {
+    if (["profile_selected", "verification"].includes(String(row.stage))) await touch(row.id, { stage: "verification" });
+    await recordEvent({ onboardingId: row.id, offeringId: row.offering_id, event: "verification_reused", actorUserId: userId, actorRole: "investor" } as any);
+    return { url: null as string | null, completed: true };
+  }
   let applicationId = row.application_id as string | null;
   if (!applicationId) {
     const { data } = await db()

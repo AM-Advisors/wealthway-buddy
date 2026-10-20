@@ -309,10 +309,12 @@ function AboutYou({ d, onboardingId, done }: { d: any; onboardingId: string; don
 
 function Verify({ d, onboardingId }: { d: any; onboardingId: string }) {
   const startFn = useServerFn(startInvestmentVerificationFn);
+  const qc = useQueryClient();
   const start = useMutation({
     mutationFn: () => startFn({ data: { onboardingId } }),
     onSuccess: (r: any) => {
       if (r?.url) window.location.assign(r.url);
+      else if (r?.completed) { toast.success("Your earlier verification was reused — this step is complete."); void qc.invalidateQueries(); }
     },
     onError: (e: any) => toast.error(String(e?.message ?? e).replace(/^Forbidden:\s*/, "")),
   });
