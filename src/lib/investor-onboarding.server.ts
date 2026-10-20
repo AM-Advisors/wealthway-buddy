@@ -2010,6 +2010,27 @@ export async function onboardPortalDetail(userId: string, onboardingId: string) 
 // ------------------------------------------------ verification (Didit)
 
 /**
+ * Manager-added investments have no legacy application, which verification
+ * sessions hang off. Create the one record (reusing any existing one) so
+ * verification can start. Changes nothing about signatures, money or results.
+ */
+export async function ensureVerificationApplication(row: { id: string; investor_user_id: string | null; offering_id: string }): Promise<string | null> {
+  if (!row.investor_user_id) return null;
+  const find = async () => {
+    const { data } = await db().from("investor_applications").select("id").eq("user_id", row.investor_user_id).eq("offering_id", row.offering_id).order("created_at", { ascending: true }).limit(1);
+    return (((data ?? []) as any[])[0]?.id as string | undefined) ?? null;
+  };
+  let id = await find();
+  if (!id) {
+    const { data, error } = await db().from("investor_applications").insert({ user_id: row.investor_user_id, offering_id: row.offering_id, source: "admin", current_step: "verification" }).select("id").single();
+    if (error) { console.error("ensureVerificationApplication", error); id = await find(); }
+    else id = (data as any).id;
+  }
+  if (id) await db().from("investor_onboardings").update({ application_id: id }).eq("id", row.id).is("application_id", null);
+  return id;
+}
+
+/**
  * Start (or resume) the existing Didit verification session for the
  * application behind this investment. Same session, webhook and
  * reconciliation paths - no second verification system.
@@ -2028,8 +2049,11 @@ export async function startInvestmentVerification(userId: string, onboardingId: 
     applicationId = ((data ?? []) as any[])[0]?.id ?? null;
     if (applicationId) await touch(row.id, { application_id: applicationId });
   }
+  if (!applicationId && row.investor_user_id) applicationId = await ensureVerificationApplication(row);
   if (!applicationId) {
-    fail("Harmonious is setting up verification for this investment. We'll email you when it's ready.");
+    const { notifyInvestorBlocked } = await import("@/lib/investor-blocked-notify.server");
+    await notifyInvestorBlocked({ onboardingId: row.id, offeringId: row.offering_id, investorUserId: row.investor_user_id ?? null, step: "Verification" });
+    fail("We couldn't start verification. Harmonious has been notified and will follow up. Please try again shortly.");
   }
   const { startVerificationSession } = await import("@/lib/kyc-verification.server");
   const result = await startVerificationSession({ applicationId, userId: row.investor_user_id, origin, ...(returnPath ? { returnPath } : {}) });
