@@ -53,8 +53,14 @@ export function FundRequestEngine({ clientId: id, draft, mode = "client", client
   const catalogue = useQuery({ queryKey: ["service-catalogue"], queryFn: () => catalogueFn({ data: {} }) });
 
   const dq = useQuery({ queryKey: ["fund-request-draft", draft], enabled: !!draft, queryFn: () => loadDraft({ data: { draftId: draft! } }) });
+  const lastSavedJson = useRef<string>("");
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   useEffect(() => {
-    if (dq.data?.request) setR({ ...emptyRequest(), ...dq.data.request });
+    if (dq.data?.request) {
+      const loaded = { ...emptyRequest(), ...dq.data.request };
+      setR(loaded);
+      lastSavedJson.current = JSON.stringify(loaded);
+    }
   }, [dq.data]);
 
   const set = <K extends keyof FundRequest>(k: K, v: FundRequest[K]) => setR((p) => ({ ...p, [k]: v }));
