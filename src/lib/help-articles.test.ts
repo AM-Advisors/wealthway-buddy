@@ -36,6 +36,7 @@ describe("self-service help articles", () => {
     "manager-deal-room": "fund_manager", "manager-sign-w9": "fund_manager", "client-statements-of-work": "fund_manager",
     "investor-deal-room": "investor", "investor-profiles": "investor", "investor-profile-documents": "investor",
     "investor-personal-link": "investor", "investor-going-back": "investor",
+    "investor-step-about-you": "investor", "investor-step-verification": "investor", "investor-step-sign": "investor", "investor-step-fund": "investor", "manager-entity-details": "fund_manager",
   };
   for (const [slug, role] of Object.entries(want)) it(`${slug} exists with steps for ${role}`, () => {
     const a: any = (HELP_CATALOG as any[]).find((x) => x.slug === slug);
