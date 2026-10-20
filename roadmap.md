@@ -1,5 +1,10 @@
 # Roadmap
 
+## Calvin subscription signing (2026-10-20)
+- [ ] Inspect Calvin's current signing blockers and manager-entry evidence without signing or sending emails.
+- [ ] Treat authorized manager entry as admission to sign; preserve verification, explicit returns and signer checks; add regression tests.
+- [ ] Validate signing eligibility read-back; signed-in ceremony requires isolated synthetic QA.
+
 ## Thomas draft saving (2026-10-20)
 - [x] Confirm published save failures at 20:08 and 20:20; Thomas has fund-manager membership and approved account verification, no stored draft. Exact thrown error remains unavailable.
 - [x] Harden draft writes with scoped read-back/error checks, distinguish failed membership reads, and show unsaved/error feedback without refetch overwrites; 21 focused tests pass.
