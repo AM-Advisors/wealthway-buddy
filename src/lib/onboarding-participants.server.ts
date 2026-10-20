@@ -38,7 +38,7 @@ export async function listParticipants(userId: string, onboardingId: string) {
   return { participants: ((data ?? []) as any[]).map((p) => ({ id: p.id, role: p.role as ParticipantRole, roleLabel: participantRoleLabel(p.role), name: p.full_name, email: p.email, title: p.title, status: p.status, assignedBy: p.assigned_by_role, createdAt: p.created_at, removedAt: p.removed_at })) };
 }
 
-export async function assignParticipant(userId: string, input: { onboardingId: string; role: ParticipantRole; fullName: string; email: string; title?: string | null }) {
+export async function assignParticipant(userId: string, input: { onboardingId: string; role: ParticipantRole; fullName: string; email: string; title?: string | null | undefined }) {
   const row = await onboarding(input.onboardingId);
   const { role } = await access(userId, row);
   if (!canAssignParticipant(role)) forbid("you cannot assign people to this investment.");
