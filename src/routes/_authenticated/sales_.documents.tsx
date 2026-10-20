@@ -198,7 +198,7 @@ function ProspectLookup({ onResolved }: { onResolved: (p: Prospect) => void }) {
   const [busy, setBusy] = useState(false);
   const [np, setNp] = useState({ fullName: "", organization: "", title: "", phone: "" });
   const check = async () => {
-    if (!/^\S+@\S+\.\S+$/.test(email.trim())) return toast.error("Enter a valid email.");
+    if (!/^\S+@\S+\.\S+$/.test(email.trim())) { toast.error("Enter a valid email."); return; }
     setBusy(true);
     try { const r = await look({ data: { email } }); setRes(r); if (r.found && r.contactId) onResolved(r); }
     catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
