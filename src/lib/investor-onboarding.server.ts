@@ -228,7 +228,11 @@ async function loadOfferingRequirements(offeringId: string): Promise<OfferingReq
       .limit(1);
     rules = ((configs ?? [])[0]?.rules ?? {}) as Record<string, any>;
   }
+  return requirementsFrom(offering, req, setup, rules);
+}
 
+/** Pure: offering requirements from already-read rows. Shared by single and batch readiness. */
+function requirementsFrom(offering: any, req: any, setup: any, rules: Record<string, any>): OfferingRequirements {
   return applyExemption({
     accreditationRequired: Boolean(req?.accreditation_required ?? rules['accreditationRequired'] ?? false),
     accreditationMethod: (req?.accreditation_verification ?? rules['accreditationMethod'] ?? null) as string | null,
@@ -266,34 +270,95 @@ async function offeringDocsCached(offeringId: string): Promise<any[]> {
 
 // ------------------------------------------------------------ facts
 
-async function gatherFacts(row: any) {
-  const offering = await offeringRequirements(row.offering_id);
+const onlyOne = (list: any[] | undefined) => (list && list.length === 1 ? list[0] : null); // maybeSingle semantics
 
-  const { data: person } = row.person_id
-    ? await db().from("persons").select("*").eq("id", row.person_id).maybeSingle()
-    : await db().from("persons").select("*").eq("user_id", row.investor_user_id).maybeSingle();
+/**
+ * Every read readiness needs, for many onboardings at once: one request per table (IDs chunked
+ * 100 at a time, at most 4 in flight). Throws on any failed read — never returns empty facts.
+ * Single-investor readiness calls this with one row, so both paths share one implementation.
+ */
+export async function loadReadinessInputs(rows: any[]) {
+  const { readIn, groupBy, loadStage2Inputs } = await import("@/lib/onboarding-compliance.server");
+  const { loadProvenanceMany } = await import("@/lib/prepared-investor.server");
+  const { latestPriors } = await import("@/lib/prior-subscription.server");
+  const d = db();
+  const offIds = rows.map((r) => r.offering_id);
+  const profIds = rows.map((r) => r.investment_profile_id);
+  const appIds = rows.map((r) => r.application_id);
+  const obIds = rows.map((r) => r.id);
+  const [offs, reqs, setups, pById, pByUser, profiles, evs, rels, accs, taxes, sigsA, sigsP, docs, acks, snaps, excs, prov, priors, stage2] = await Promise.all([
+    readIn(offIds, (c) => d.from("offerings").select("*").in("id", c)),
+    readIn(offIds, (c) => d.from("offering_requirements").select("*").in("offering_id", c)),
+    readIn(offIds, (c) => d.from("fund_setups").select("*").in("offering_id", c)),
+    readIn(rows.map((r) => r.person_id), (c) => d.from("persons").select("*").in("id", c)),
+    readIn(rows.filter((r) => !r.person_id).map((r) => r.investor_user_id), (c) => d.from("persons").select("*").in("user_id", c)),
+    readIn(profIds, (c) => d.from("investment_profiles").select("*").in("id", c)),
+    readIn(profIds, (c) => d.from("entity_verifications").select("*").in("profile_id", c)),
+    readIn(profIds, (c) => d.from("investment_profile_relationships").select("*").in("profile_id", c)),
+    readIn(appIds, (c) => d.from("accreditation_records").select("*").in("application_id", c)),
+    readIn(profIds, (c) => d.from("investor_tax_profiles").select("*").in("investment_profile_id", c)),
+    readIn(appIds, (c) => d.from("document_signatures").select("*").in("application_id", c)),
+    readIn(profIds, (c) => d.from("document_signatures").select("*").in("investment_profile_id", c)),
+    readIn(offIds, (c) => d.from("offering_documents").select("id, offering_id, title, doc_type, document_category, sort_order, requires_signature, applies_to, usage, applicability, active_version").in("offering_id", c)),
+    readIn(obIds, (c) => d.from("investment_document_acknowledgments").select("onboarding_id, offering_document_id, version").in("onboarding_id", c)),
+    readIn(obIds, (c) => d.from("investor_document_snapshots").select("id, onboarding_id, status").in("onboarding_id", c)),
+    readIn(obIds, (c) => d.from("investor_onboarding_exceptions").select("*").in("onboarding_id", c).eq("status", "open")),
+    loadProvenanceMany(d, rows),
+    latestPriors([...new Set(obIds)]),
+    loadStage2Inputs(rows.filter((r) => r.investment_profile_id)),
+  ]);
+  const configs = await readIn(setups.map((s) => s.id), (c) => d.from("fund_eligibility_configs").select("*").in("setup_id", c).eq("status", "approved").order("version", { ascending: false }));
+  const sigs = new Map<string, any>();
+  for (const s of [...sigsA, ...sigsP]) if (!sigs.has(s.id)) sigs.set(s.id, s);
+  const strip = (list: any[] | undefined, key: string) => (list ?? []).map((x) => { const y = { ...x }; delete y[key]; return y; });
+  return {
+    offerings: new Map(offs.map((o) => [String(o.id), o])),
+    requirements: groupBy(reqs, "offering_id"),
+    setups: groupBy(setups, "offering_id"),
+    configs: groupBy(configs, "setup_id"),
+    personsById: new Map(pById.map((p) => [String(p.id), p])),
+    personsByUser: groupBy(pByUser, "user_id"),
+    profiles: new Map(profiles.map((p) => [String(p.id), p])),
+    entities: groupBy(evs, "profile_id"),
+    related: groupBy(rels, "profile_id"),
+    accreditations: groupBy(accs, "application_id"),
+    taxProfiles: groupBy(taxes, "investment_profile_id"),
+    signatures: [...sigs.values()],
+    docs: groupBy(docs, "offering_id"),
+    acks: groupBy(acks, "onboarding_id"),
+    snaps: groupBy(snaps, "onboarding_id"),
+    exceptions: groupBy(excs, "onboarding_id"),
+    provenance: prov,
+    priors,
+    stage2,
+    strip,
+  };
+}
+export type ReadinessInputs = Awaited<ReturnType<typeof loadReadinessInputs>>;
+
+async function gatherFacts(row: any, inputs?: ReadinessInputs) {
+  const I = inputs ?? (await loadReadinessInputs([row]));
+  const off = I.offerings.get(String(row.offering_id)) ?? null;
+  const setup = onlyOne(I.setups.get(String(row.offering_id)));
+  const offering = requirementsFrom(
+    off,
+    onlyOne(I.requirements.get(String(row.offering_id))),
+    setup,
+    (setup?.id ? (I.configs.get(String(setup.id))?.[0]?.rules ?? {}) : {}) as Record<string, any>,
+  );
+
+  const person = row.person_id ? (I.personsById.get(String(row.person_id)) ?? null) : onlyOne(I.personsByUser.get(String(row.investor_user_id)));
 
   let profile: any = null;
   let entity: any = null;
   let related: any[] = [];
   if (row.investment_profile_id) {
-    const { data } = await db()
-      .from("investment_profiles")
-      .select("*")
-      .eq("id", row.investment_profile_id)
-      .maybeSingle();
-    profile = data;
-    const [{ data: ev }, { data: rel }] = await Promise.all([
-      db().from("entity_verifications").select("*").eq("profile_id", row.investment_profile_id).maybeSingle(),
-      db()
-        .from("investment_profile_relationships")
-        .select("*")
-        .eq("profile_id", row.investment_profile_id),
-    ]);
-    entity = ev;
-    related = (rel ?? []) as any[];
+    profile = I.profiles.get(String(row.investment_profile_id)) ?? null;
+    entity = onlyOne(I.entities.get(String(row.investment_profile_id)));
+    related = I.related.get(String(row.investment_profile_id)) ?? [];
   }
 
+<<<<<<< src/lib/investor-onboarding.server.ts
   const [{ data: accreditations }, { data: taxProfiles }, { data: signatures }] = await Promise.all([
     row.application_id
       ? db().from("accreditation_records").select("*").eq("application_id", row.application_id)
@@ -319,11 +384,19 @@ async function gatherFacts(row: any) {
       : Promise.resolve({ data: [] as any[] }),
   ]);
   const offeringDocs = await offeringDocsCached(row.offering_id);
+=======
+  const accreditations = row.application_id ? (I.accreditations.get(String(row.application_id)) ?? []) : [];
+  const taxProfiles = row.investment_profile_id ? (I.taxProfiles.get(String(row.investment_profile_id)) ?? []) : [];
+  const signatures = row.application_id || row.investment_profile_id
+    ? I.signatures.filter((s) => (row.application_id && s.application_id === row.application_id) || (row.investment_profile_id && s.investment_profile_id === row.investment_profile_id))
+    : [];
+  const offeringDocs = I.strip(I.docs.get(String(row.offering_id)), "offering_id");
+>>>>>>> /tmp/d
 
   // Investor-confirmed facts outrank prepared values; unreviewed prepared values never drive requirements.
-  const { loadConfirmedFacts } = await import("@/lib/prepared-investor.server");
-  const { effectiveResolverFacts, docApplies } = await import("@/lib/prepared-investor-workflow");
-  const confirmed = await loadConfirmedFacts(db(), row).catch(() => ({}));
+  // A failed provenance read now throws in the loader instead of silently dropping confirmed facts.
+  const { effectiveResolverFacts, docApplies, confirmedFacts } = await import("@/lib/prepared-investor-workflow");
+  const confirmed = confirmedFacts(I.provenance.get(String(row.id))?.prov ?? {});
   const eff = effectiveResolverFacts(
     { profileType: profile?.profile_type ?? null, requestedAmountCents: row.requested_amount_cents ?? null, country: person?.residence_country ?? null },
     confirmed,
@@ -338,9 +411,7 @@ async function gatherFacts(row: any) {
   const obligations = documentObligations(
     applicableDocs.map((d) => ({ id: String(d.id), usage: d.usage ?? null, legacyRequiresSignature: Boolean(d.requires_signature), activeVersion: d.active_version ?? null })),
   );
-  const { data: ackRows } = obligations.needsAck.length
-    ? await db().from("investment_document_acknowledgments").select("offering_document_id, version").eq("onboarding_id", row.id)
-    : { data: [] as any[] };
+  const ackRows = obligations.needsAck.length ? I.strip(I.acks.get(String(row.id)), "onboarding_id") : [];
   const acksDone = acknowledgmentsComplete(
     obligations.needsAck,
     ((ackRows ?? []) as any[]).map((a) => ({ documentId: String(a.offering_document_id), version: Number(a.version) })),
@@ -361,7 +432,7 @@ async function gatherFacts(row: any) {
     applicationId: (row.application_id ?? null) as string | null,
   };
   // A completion only counts for the document version that is still current.
-  const { data: snapRows } = await db().from("investor_document_snapshots").select("id, status").eq("onboarding_id", row.id);
+  const snapRows = I.snaps.get(String(row.id)) ?? [];
   const deadSnaps = new Set(((snapRows ?? []) as any[]).filter((x) => x.status === "stale" || x.status === "superseded").map((x) => x.id));
   const completedSignatures = ((signatures ?? []) as any[]).filter(
     (sig) => isAuthoritativeSignature(sig, docScope) && !(sig.snapshot_id && deadSnaps.has(sig.snapshot_id)),
@@ -395,7 +466,7 @@ async function gatherFacts(row: any) {
         person,
         nowIso: nowIso(),
         taxRequired: offering.taxDocumentRequired,
-      })
+      }, I.stage2)
     : null;
 
   const requirements = determineOnboardingRequirements({
@@ -2189,6 +2260,7 @@ export async function revealWireInstructions(userId: string, onboardingId: strin
 // ------------------------------------------------ investment readiness
 
 /** Read-only: compute the canonical readiness projection. Never writes anything. */
+<<<<<<< src/lib/investor-onboarding.server.ts
 async function confirmedPrior(onboardingId: string) {
   const { confirmedPriorSubscription } = await import("@/lib/prior-subscription.server");
   const p = await confirmedPriorSubscription(onboardingId);
@@ -2204,9 +2276,15 @@ export async function saveReadinessSummary(row: any, result: any) {
 }
 
 export async function computeReadinessFor(row: any, closeAmountCents?: number | null) {
+=======
+export async function computeReadinessFor(row: any, closeAmountCents?: number | null, inputs?: ReadinessInputs) {
+>>>>>>> /tmp/d
   const { computeReadiness } = await import("@/lib/investment-readiness");
-  const facts = await gatherFacts(row);
-  const exceptions = await openExceptions(row.id);
+  const I = inputs ?? (await loadReadinessInputs([row]));
+  const facts = await gatherFacts(row, I);
+  const exceptions = I.exceptions.get(String(row.id)) ?? [];
+  const prior = I.priors.get(String(row.id));
+  const confirmed = prior?.decision?.decision === "confirmed" ? prior : null;
   const result = computeReadiness({
     requirements: facts.requirements,
     stage: String(row.stage ?? ""),
@@ -2218,9 +2296,18 @@ export async function computeReadinessFor(row: any, closeAmountCents?: number | 
     exceptions: exceptions.map((e) => ({ severity: String(e.severity), owner: e.owner ?? null, type: e.exception_type ?? null })),
     requestedCloseDate: row.requested_close_date ?? null,
     closeAmountCents: closeAmountCents ?? null,
-    priorSubscription: await confirmedPrior(row.id),
+    priorSubscription: confirmed ? { fundedCents: confirmed.funded_cents, signedOn: confirmed.signed_on } : null,
   });
   return { result, facts };
+}
+
+/** Read-only batch: one load for all rows, then the same per-row compute as computeReadinessFor. */
+export async function readinessForMany(rows: any[]) {
+  if (!rows.length) return [] as Awaited<ReturnType<typeof computeReadinessFor>>[];
+  const I = await loadReadinessInputs(rows);
+  const out: Awaited<ReturnType<typeof computeReadinessFor>>[] = [];
+  for (const row of rows) out.push(await computeReadinessFor(row, null, I));
+  return out;
 }
 
 /**

@@ -49,10 +49,14 @@ async function buildOpsFundsDashboard(userId: string, supabase: any) {
   const setup = new Map(((setups ?? []) as any[]).map((s) => [s.offering_id, s]));
   const activeLink = new Set(((links ?? []) as any[]).map((l) => l.offering_id));
 
+<<<<<<< src/lib/ops-funds.server.ts
   // Per-investor readiness comes from saved summaries. Computing it live for every
   // investor made thousands of database calls and the page timed out. Only missing or
   // stale summaries (older than SUMMARY_TTL, oldest first) are refreshed, up to
   // REFRESH_LIMIT per load, so the page always stays within the server's limits.
+=======
+  // Readiness for every onboarding from one batched load (one read per table), then computed in memory.
+>>>>>>> /tmp/d
   const onbRows = (onbs ?? []) as any[];
   const ids = onbRows.map((r) => r.id);
   const saved = new Map<string, any>();
@@ -66,6 +70,7 @@ async function buildOpsFundsDashboard(userId: string, supabase: any) {
     .sort((a, b) => (saved.has(a.id) ? 1 : 0) - (saved.has(b.id) ? 1 : 0))
     .slice(0, REFRESH_LIMIT);
   const factsDone = (async () => {
+<<<<<<< src/lib/ops-funds.server.ts
     const { saveReadinessSummary } = await import("@/lib/investor-onboarding.server");
     for (let i = 0; i < stale.length; i += 5) {
       await Promise.all(stale.slice(i, i + 5).map(async (row) => {
@@ -76,6 +81,17 @@ async function buildOpsFundsDashboard(userId: string, supabase: any) {
         } catch { /* keep the previous summary */ }
       }));
     }
+=======
+    const { readinessForMany } = await import("@/lib/investor-onboarding.server");
+    const all = await readinessForMany(onbRows);
+    all.forEach(({ result }, idx) => {
+      const row = onbRows[idx];
+      facts.push({
+        offeringId: row.offering_id, stage: row.stage, closeReady: result.closeReady, terminal: result.terminal,
+        blocked: result.items.some((i) => i.status === "blocked"), nextOwner: result.nextAction?.owner ?? null, fundingStatus: row.funding_status ?? null,
+      } as FundOnboardingFact);
+    });
+>>>>>>> /tmp/d
   })();
   const facts: FundOnboardingFact[] = [];
   const openTasks = ((tasks ?? []) as any[]).map((t) => ({ offeringId: t.offering_id, owner: t.owner }));

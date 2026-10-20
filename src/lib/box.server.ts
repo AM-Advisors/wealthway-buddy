@@ -1,3 +1,4 @@
+import { serviceError } from "@/lib/service-error";
 // Server-only Box client: OAuth 2.0 client-credentials auth, file storage
 // and Box Sign requests. Never import from client components.
 
@@ -45,7 +46,7 @@ async function accessToken(): Promise<string> {
     }),
   });
   const text = await res.text();
-  if (!res.ok) throw new Error(`Box auth failed [${res.status}]: ${text}`);
+  if (!res.ok) throw serviceError("Box", "sign-in", res.status);
   const json = JSON.parse(text) as { access_token: string; expires_in: number };
   cachedToken = { value: json.access_token, expiresAt: Date.now() + json.expires_in * 1000 };
   return json.access_token;
@@ -56,9 +57,8 @@ async function boxFetch(url: string, init: RequestInit = {}) {
   headers.set("Authorization", `Bearer ${await accessToken()}`);
   const res = await fetch(url, { ...init, headers });
   if (!res.ok) {
-    const body = await res.text();
-    console.error(`[box] ${url} failed [${res.status}]: ${body}`);
-    throw new Error(`Box request failed [${res.status}]: ${body}`);
+    console.error(`[box] request failed [${res.status}]`);
+    throw serviceError("Box", "request", res.status);
   }
   return res;
 }
@@ -99,7 +99,7 @@ export async function uploadFile(fileName: string, bytes: Uint8Array): Promise<s
     }
   }
 
-  if (!res.ok) throw new Error(`Box upload failed [${res.status}]: ${text}`);
+  if (!res.ok) throw serviceError("Box", "upload", res.status);
   const json = JSON.parse(text) as { entries: { id: string }[] };
   return json.entries[0]!.id;
 }
@@ -215,7 +215,7 @@ export async function ensureSubfolder(name: string, parentId = boxFolderId()): P
     const existing = (JSON.parse(text) as any)?.context_info?.conflicts?.[0]?.id;
     if (existing) return String(existing);
   }
-  throw new Error(`Box folder create failed [${res.status}]: ${text}`);
+  throw serviceError("Box", "folder create", res.status);
 }
 
 /** Uploads arbitrary bytes into a specific Box folder. */
@@ -254,7 +254,7 @@ export async function uploadFileTo(
       return { id: entry.id, size: entry.size ?? bytes.length };
     }
   }
-  if (!res.ok) throw new Error(`Box upload failed [${res.status}]: ${text}`);
+  if (!res.ok) throw serviceError("Box", "upload", res.status);
   const json = JSON.parse(text) as { entries: { id: string; size?: number }[] };
   const entry = json.entries[0]!;
   return { id: entry.id, size: entry.size ?? bytes.length };
@@ -268,8 +268,7 @@ export async function temporaryDownloadUrl(fileId: string): Promise<string> {
   });
   const location = res.headers.get("location");
   if (location) return location;
-  const body = await res.text();
-  throw new Error(`Box download link failed [${res.status}]: ${body}`);
+  throw serviceError("Box", "download link", res.status);
 }
 
 /** Moves a Box file to trash. */
@@ -279,7 +278,7 @@ export async function deleteBoxFile(fileId: string): Promise<void> {
     headers: { Authorization: `Bearer ${await accessToken()}` },
   });
   if (!res.ok && res.status !== 404) {
-    throw new Error(`Box delete failed [${res.status}]: ${await res.text()}`);
+    throw serviceError("Box", "delete", res.status);
   }
 }
 

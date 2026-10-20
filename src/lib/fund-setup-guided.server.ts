@@ -1,3 +1,4 @@
+import { serviceError } from "@/lib/service-error";
 /**
  * Guided fund setup: one page for staff and fund managers.
  * Reads are allow-listed; every save goes through the canonical fund-setup services
@@ -204,7 +205,7 @@ async function listSetupFiles(folderId: string) {
     for (const id of queue.slice(0, 25)) {
       const q = new URLSearchParams({ q: `'${id}' in parents and trashed=false`, fields: "files(id,name,mimeType,size,modifiedTime)", pageSize: "200", supportsAllDrives: "true", includeItemsFromAllDrives: "true" });
       const r = await fetch(`${GATEWAY}/files?${q}`, { headers: h });
-      if (!r.ok) throw new Error(`Google Drive listing failed [${r.status}]: ${(await r.text()).slice(0, 200)}`);
+      if (!r.ok) throw serviceError("Google Drive", "listing", r.status);
       for (const f of ((await r.json()).files ?? []) as any[]) {
         if (f.mimeType === "application/vnd.google-apps.folder") next.push(f.id);
         else out.push(f);

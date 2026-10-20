@@ -99,6 +99,85 @@ async function offeringRules(offeringId: string): Promise<{ regType: string | nu
   return { regType: offering?.reg_type ?? null, rules };
 }
 
+// ------------------------------------------------------- batched Stage 2 inputs
+
+/** Reads rows where `col` is in `ids`, 100 IDs per request, at most 4 requests at once. A failed read is logged to the server log and treated as no rows (the pre-batch behaviour), never thrown. */
+export async function readIn(ids: (string | null | undefined)[], run: (chunk: string[]) => any): Promise<any[]> {
+  const uniq = [...new Set(ids.filter((x): x is string => typeof x === "string" && x.length > 0))];
+  const chunks: string[][] = [];
+  for (let i = 0; i < uniq.length; i += 100) chunks.push(uniq.slice(i, i + 100));
+  const out: any[] = [];
+  for (let i = 0; i < chunks.length; i += 4) {
+    const res = await Promise.all(chunks.slice(i, i + 4).map((c) => run(c)));
+    for (const r of res) {
+      if (r?.error) {
+        console.error(`Readiness read failed (treated as no rows): ${r.error.message ?? String(r.error)}`);
+        continue;
+      }
+      out.push(...((r?.data ?? []) as any[]));
+    }
+  }
+  return out;
+}
+
+export function groupBy(rows: any[], key: string): Map<string, any[]> {
+  const m = new Map<string, any[]>();
+  for (const r of rows) { const k = String(r[key]); const a = m.get(k); if (a) a.push(r); else m.set(k, [r]); }
+  return m;
+}
+
+export type Stage2Inputs = {
+  rules: Map<string, { regType: string | null; rules: Record<string, any> }>;
+  taxFacts: Map<string, any[]>;
+  forms: Map<string, any[]>;
+  badActor: Map<string, any[]>;
+  aml: Map<string, any[]>;
+  certs: Map<string, any[]>;
+  amounts: Map<string, any>;
+  managers: Set<string>;
+};
+
+/** One read per table for every onboarding. Same filters and ordering as the per-row reads. */
+export async function loadStage2Inputs(obs: Stage2Input["onboarding"][]): Promise<Stage2Inputs> {
+  const d = await db();
+  const obIds = obs.map((o) => o.id);
+  const offIds = obs.map((o) => o.offering_id);
+  const profIds = obs.map((o) => o.investment_profile_id);
+  const [offs, setups, facts, forms, qrs, certs, amounts, mgrs] = await Promise.all([
+    readIn(offIds, (c) => d.from("offerings").select("id, reg_type").in("id", c)),
+    readIn(offIds, (c) => d.from("fund_setups").select("id, offering_id").in("offering_id", c)),
+    readIn(profIds, (c) => d.from("investor_tax_facts").select("id, answers, created_at, investment_profile_id").in("investment_profile_id", c).is("superseded_by", null).order("created_at", { ascending: false })),
+    readIn(profIds, (c) => d.from("investor_tax_forms").select("id, investment_profile_id, form_type, classification, status, tin_fingerprint, legal_name, expires_on, certified_at").in("investment_profile_id", c)),
+    readIn(obIds, (c) => d.from("compliance_questionnaire_responses").select("id, onboarding_id, kind, review_status, superseded_by, created_at").in("onboarding_id", c).in("kind", ["bad_actor", "bsa_aml"]).is("superseded_by", null).order("created_at", { ascending: false })),
+    readIn(obIds, (c) => d.from("investor_certifications").select("onboarding_id, certification_key, certification_version, evidence, created_at").in("onboarding_id", c).order("created_at", { ascending: true })),
+    readIn(obIds, (c) => d.from("investor_onboardings").select("id, requested_amount_cents, accepted_amount_cents").in("id", c)),
+    readIn(offIds, (c) => d.from("fund_managers").select("offering_id, user_id").in("offering_id", c)),
+  ]);
+  const configs = await readIn(setups.map((s) => s.id), (c) => d.from("fund_eligibility_configs").select("setup_id, rules, version").in("setup_id", c).eq("status", "approved").order("version", { ascending: false }));
+  const cfgBySetup = groupBy(configs, "setup_id");
+  const setupByOff = new Map(setups.map((s) => [String(s.offering_id), s]));
+  const rules = new Map<string, { regType: string | null; rules: Record<string, any> }>();
+  for (const o of offIds) {
+    const off = offs.find((x) => x.id === o);
+    const s = setupByOff.get(o);
+    rules.set(o, { regType: off?.reg_type ?? null, rules: ((s && cfgBySetup.get(String(s.id))?.[0]?.rules) ?? {}) as Record<string, any> });
+  }
+  const strip = (rows: any[], keys: string[]) => rows.map((r) => { const x = { ...r }; for (const k of keys) delete x[k]; return x; });
+  const strippedQ = (k: string) => groupBy(qrs.filter((r) => r.kind === k).map((r) => ({ ...r })), "onboarding_id");
+  const ba = strippedQ("bad_actor");
+  const aml = strippedQ("bsa_aml");
+  for (const m of [ba, aml]) for (const [k, v] of m) m.set(k, strip(v, ["onboarding_id", "kind", ...(m === aml ? ["superseded_by"] : [])]));
+  const certMap = groupBy(certs, "onboarding_id");
+  for (const [k, v] of certMap) certMap.set(k, strip(v, ["onboarding_id"]));
+  const factMap = groupBy(facts, "investment_profile_id");
+  for (const [k, v] of factMap) factMap.set(k, strip(v, ["investment_profile_id"]));
+  return {
+    rules, taxFacts: factMap, forms: groupBy(forms, "investment_profile_id"), badActor: ba, aml, certs: certMap,
+    amounts: new Map(amounts.map((a) => [String(a.id), { requested_amount_cents: a.requested_amount_cents, accepted_amount_cents: a.accepted_amount_cents }])),
+    managers: new Set(mgrs.map((m) => `${m.offering_id}:${m.user_id}`)),
+  };
+}
+
 export function usPersonFrom(tax: any, person: any): boolean | null {
   const c = String(tax?.classification ?? "").toLowerCase();
   if (c === "foreign" || c.startsWith("foreign_")) return false;
@@ -144,13 +223,14 @@ export async function latestTaxFacts(profileId: string | null) {
 }
 
 /** Resolve Stage 2 + Stage 3 checklist entries for ONE investment. */
-export async function resolveStage2(input: Stage2Input) {
-  const d = await db();
+export async function resolveStage2(input: Stage2Input, pre?: Stage2Inputs) {
+  // Single and batch share this path: one onboarding is just a batch of one.
+  const p = pre ?? (await loadStage2Inputs([input.onboarding]));
   const profileId = input.onboarding.investment_profile_id;
-  const { regType, rules } = await offeringRules(input.onboarding.offering_id);
+  const { regType, rules } = p.rules.get(input.onboarding.offering_id) ?? { regType: null, rules: {} };
 
   // Tax: the investor's own factual answers (re-derived here, never trusted as stored) win over legacy records.
-  const facts = await latestTaxFacts(profileId);
+  const facts = (profileId ? (p.taxFacts.get(profileId)?.[0] ?? null) : null) as { id: string; answers: TaxIntakeAnswers } | null;
   const routing = facts
     ? routeTaxIntake(input.profileType, facts.answers ?? {})
     : resolveTaxForm({
@@ -158,13 +238,11 @@ export async function resolveStage2(input: Stage2Input) {
         usPerson: usPersonFrom(input.tax, input.person),
         claimsEffectivelyConnectedIncome: rules['taxFacts']?.eci ?? null,
       });
-  const [{ data: forms }, { data: responses }, { data: certs }, { data: amlRows }, { data: obRow }] = await Promise.all([
-    profileId ? d.from("investor_tax_forms").select("id, investment_profile_id, form_type, classification, status, tin_fingerprint, legal_name, expires_on, certified_at").eq("investment_profile_id", profileId) : { data: [] },
-    d.from("compliance_questionnaire_responses").select("id, review_status, superseded_by, created_at").eq("onboarding_id", input.onboarding.id).eq("kind", "bad_actor").is("superseded_by", null).order("created_at", { ascending: false }).limit(1),
-    d.from("investor_certifications").select("certification_key, certification_version, evidence, created_at").eq("onboarding_id", input.onboarding.id).order("created_at", { ascending: true }),
-    d.from("compliance_questionnaire_responses").select("id, review_status, created_at").eq("onboarding_id", input.onboarding.id).eq("kind", "bsa_aml").is("superseded_by", null).order("created_at", { ascending: false }).limit(1),
-    d.from("investor_onboardings").select("requested_amount_cents, accepted_amount_cents").eq("id", input.onboarding.id).maybeSingle(),
-  ]);
+  const forms = profileId ? (p.forms.get(profileId) ?? []) : [];
+  const responses = (p.badActor.get(input.onboarding.id) ?? []).slice(0, 1);
+  const certs = p.certs.get(input.onboarding.id) ?? [];
+  const amlRows = (p.aml.get(input.onboarding.id) ?? []).slice(0, 1);
+  const obRow = p.amounts.get(input.onboarding.id) ?? null;
   const eligResponses = ((certs ?? []) as any[]).filter((c) => String(c.certification_key ?? "").startsWith("eligibility:"));
 
   const taxClassificationState: { state: ChecklistStateT; reason?: string | undefined } = !input.taxRequired
@@ -179,7 +257,10 @@ export async function resolveStage2(input: Stage2Input) {
     : taxRequirementState({ required: input.taxRequired, routing, profileId, forms: (forms ?? []) as any[], nowIso: input.nowIso });
 
   const baConfig = (rules['badActor'] ?? null) as BadActorConfig | null;
-  const roles = await coveredRoles(input.onboarding.investor_user_id, input.onboarding.offering_id, baConfig);
+  const roleSet = new Set<string>();
+  if (p.managers.has(`${input.onboarding.offering_id}:${input.onboarding.investor_user_id}`)) roleSet.add("manager");
+  for (const cp of (baConfig as any)?.coveredPersons ?? []) if (cp?.userId === input.onboarding.investor_user_id) for (const r of cp.roles ?? []) roleSet.add(String(r));
+  const roles = [...roleSet];
   const baApplies = badActorApplies(baConfig, roles);
   const badActor = badActorRequirementState({ applies: baApplies, latest: (responses ?? [])[0] ?? null });
 

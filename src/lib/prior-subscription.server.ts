@@ -20,12 +20,17 @@ async function requireViewer(userId: string) {
   return roles.some((r) => ["super_admin", "admin", "operations", "executive"].includes(r));
 }
 
-/** Latest version per onboarding, with its decision. */
-async function latestPriors(onboardingIds: string[]) {
+/** Latest version per onboarding, with its decision. A failed read is logged and treated as no rows (the pre-batch behaviour). */
+export async function latestPriors(onboardingIds: string[]) {
   if (!onboardingIds.length) return new Map<string, any>();
   const db = await admin();
-  const { data } = await db.from("prior_subscriptions").select("*, prior_subscription_decisions(decision, decided_by, note, created_at)")
-    .in("onboarding_id", onboardingIds).order("version", { ascending: false });
+  const data: any[] = [];
+  for (let i = 0; i < onboardingIds.length; i += 100) {
+    const r = await db.from("prior_subscriptions").select("*, prior_subscription_decisions(decision, decided_by, note, created_at)")
+      .in("onboarding_id", onboardingIds.slice(i, i + 100)).order("version", { ascending: false });
+    if (r.error) console.error(`Prior subscription read failed (treated as no rows): ${r.error.message}`);
+    else data.push(...((r.data ?? []) as any[]));
+  }
   const m = new Map<string, any>();
   for (const p of (data ?? []) as any[]) if (!m.has(p.onboarding_id)) {
     const d = (p.prior_subscription_decisions ?? [])[0] ?? null;

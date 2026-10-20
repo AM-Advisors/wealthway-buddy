@@ -4,7 +4,7 @@
  * dashboard-metrics.ts. The browser receives aggregates, never raw evidence.
  */
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { assertStaff, computeReadinessFor, onboardingActor } from "@/lib/investor-onboarding.server";
+import { assertStaff, computeReadinessFor, onboardingActor, readinessForMany } from "@/lib/investor-onboarding.server";
 import {
   agreementCounts, attentionFromItems, bucketOf, capital, funnel, isActive, isFunded, kpis, managerReadiness,
   readinessDistribution, trend, clientStepIndex, fundingStateOf, managerBucketOf, funnelStageOf,
@@ -16,6 +16,7 @@ const forbid = (m: string) => { throw new Error(`Forbidden: ${m}`); };
 
 async function factsFor(rows: any[]): Promise<{ fact: InvestmentFact; row: any; result: any }[]> {
   const out = [] as { fact: InvestmentFact; row: any; result: any }[];
+<<<<<<< src/lib/dashboards.server.ts
   // Bounded parallel batches: the old one-at-a-time loop made fund pages slow.
   const results: any[] = new Array(rows.length);
   for (let i = 0; i < rows.length; i += 8) {
@@ -23,6 +24,13 @@ async function factsFor(rows: any[]): Promise<{ fact: InvestmentFact; row: any; 
   }
   for (const [idx, row] of rows.entries()) {
     const result = results[idx];
+=======
+  // One batched read for all rows (same code path as single readiness).
+  const all = await readinessForMany(rows);
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    const { result } = all[i]!;
+>>>>>>> /tmp/d
     out.push({
       row, result,
       fact: {
