@@ -1,5 +1,9 @@
 # Roadmap
 
+## PPM and Operating Agreement reading (2026-10-20)
+- [ ] Diagnose Read document showing no uploaded file and connect it to the authoritative document reader.
+- [ ] Verify reading/error handling with synthetic checks; signed-in real-fund checks need isolated QA.
+
 ## Calvin subscription signing (2026-10-20)
 - [x] Inspect Calvin's current signing blockers: $500,000 subscription exists; manager-entry provenance was ignored by the separate document admission gate. No signing or emails performed.
 - [x] Treat same-fund manager entry as admission to sign; preserve explicit current-version returns and existing signer/verification controls; manager list uses the same admission facts. 32 focused tests passed; preview build OK.
