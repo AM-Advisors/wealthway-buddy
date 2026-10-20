@@ -140,10 +140,6 @@ export const startBoxSigning = createServerFn({ method: "POST" })
         if (em && em !== String(profile.email).trim().toLowerCase()) namedSigner = { email: em, name: (p as any).full_name || em };
       }
     }
-    if (namedSigner && (doc as any).signing_mode === "dual") {
-      // Dual-signature documents keep the investor's embedded flow; the named signer path covers investor-only documents.
-      namedSigner = null;
-    }
     const signerEmail = namedSigner?.email ?? (profile.email as string);
     const signerName = namedSigner?.name ?? (profile.legal_name ?? profile.email);
 
@@ -229,11 +225,12 @@ export const startBoxSigning = createServerFn({ method: "POST" })
             externalId: `${application.id}:${doc.id}`,
             redirectUrl,
             signers: [
-              { email: profile.email as string, name: profile.legal_name ?? profile.email, order: 1, externalUserId: `${application.id}:${doc.id}:investor` },
+              // Order 1: the named signer (emailed by Box) or the investor; order 2: the fund's countersigner.
+              { email: signerEmail, name: signerName, order: 1, externalUserId: `${application.id}:${doc.id}:${namedSigner ? "named_signer" : "investor"}`, emailOnly: Boolean(namedSigner) },
               { email: countersigner.email, name: countersigner.name, order: 2, externalUserId: `${application.id}:${doc.id}:fund_manager` },
             ],
           });
-          const inv = detail.signers.find((x) => x.email === String(profile.email).toLowerCase());
+          const inv = namedSigner ? null : detail.signers.find((x) => x.email === String(profile.email).toLowerCase());
           return { id: detail.id, signingUrl: inv?.embedUrl ?? null };
         })()
       : await createSignRequest({
