@@ -10,4 +10,4 @@ const r: any = await opsFundsDashboard(m.user_id, sb as any);
 const funds: any[] = r.funds ?? r.rows ?? r;
 const keys = Object.keys(funds[0] ?? {});
 const inv = funds.reduce((n, f) => n + Number(f.investorCount ?? f.investors ?? f.investorTotal ?? 0), 0);
-console.log(JSON.stringify({ secs: (Date.now() - t) / 1000, funds: funds.length, investorSum: inv, keys, top: Object.keys(r) }));
+console.log(JSON.stringify({ totals: r.totals, m0: funds[0]?.metrics, msum: funds.reduce((n,f)=>n+Number(f.metrics?.investors ?? f.metrics?.total ?? 0),0), secs: (Date.now() - t) / 1000, funds: funds.length, investorSum: inv, keys, top: Object.keys(r) }));
