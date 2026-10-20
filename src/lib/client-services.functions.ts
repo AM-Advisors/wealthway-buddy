@@ -142,11 +142,9 @@ export const intentLabel = (v: string) =>
   REQUEST_INTENTS.find((i) => i.value === v)?.label ?? v;
 
 async function myClientIds(context: any) {
-  const { data } = await context.supabase
-    .from("client_users")
-    .select("client_id")
-    .eq("user_id", context.userId);
-  return ((data ?? []) as any[]).map((r) => String(r.client_id));
+  // Direct contact rows plus clients reached through a managed fund.
+  const { clientAccessIds } = await import("@/lib/client-membership");
+  return clientAccessIds(context.supabase, context.userId);
 }
 
 /** "Your Harmonious services": engagements grouped by the entity they cover. */
