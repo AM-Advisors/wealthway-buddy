@@ -46,7 +46,7 @@ export const scheduleRef = (scheduleId: string, periodStart: string) => `schedul
  * Maker-checker on issuing: the person who drafted or reviewed a draft can't
  * issue it. A Super Admin may, with a reason that is kept permanently.
  */
-export function issueBlocker(input: { issuerId: string; createdBy: string | null; reviewedBy: string | null; generatedBySchedule: boolean; isSuperAdmin: boolean; selfReason?: string | null }): string | null {
+export function issueBlocker(input: { issuerId: string; createdBy: string | null; reviewedBy: string | null; generatedBySchedule: boolean; isSuperAdmin: boolean; selfReason?: string | null | undefined }): string | null {
   const { issuerId, createdBy, reviewedBy, generatedBySchedule, isSuperAdmin } = input;
   if (generatedBySchedule && !reviewedBy) return "Someone needs to review this scheduled draft before it is issued.";
   const own = issuerId === createdBy || issuerId === reviewedBy;
