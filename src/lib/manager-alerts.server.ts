@@ -278,14 +278,22 @@ export async function drainManagerAlerts(limit = 25): Promise<{ processed: numbe
     .order("created_at", { ascending: true })
     .limit(limit);
 
-  const rows = ((pending ?? []) as any[]).filter((r) => !r.claimed_at || r.claimed_at < claimCutoff) as Row[];
-  if (rows.length === 0) return { processed: 0, sent: 0 };
+  const candidates = ((pending ?? []) as any[]).filter((r) => !r.claimed_at || r.claimed_at < claimCutoff) as Row[];
+  if (candidates.length === 0) return { processed: 0, sent: 0 };
 
   const now = new Date().toISOString();
-  await supabaseAdmin
+  // Conditional claim: only rows still unsent and unclaimed (or stale) are taken,
+  // so two overlapping drains never send the same alert.
+  const { data: won } = await supabaseAdmin
     .from("notification_events")
     .update({ claimed_at: now })
-    .in("id", rows.map((r) => r.id));
+    .in("id", candidates.map((r) => r.id))
+    .is("sent_at", null)
+    .or(`claimed_at.is.null,claimed_at.lt.${claimCutoff}`)
+    .select("id");
+  const wonIds = new Set(((won ?? []) as any[]).map((r) => r.id));
+  const rows = candidates.filter((r) => wonIds.has(r.id));
+  if (rows.length === 0) return { processed: 0, sent: 0 };
 
   let sent = 0;
 
