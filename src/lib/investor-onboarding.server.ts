@@ -358,40 +358,12 @@ async function gatherFacts(row: any, inputs?: ReadinessInputs) {
     related = I.related.get(String(row.investment_profile_id)) ?? [];
   }
 
-<<<<<<< src/lib/investor-onboarding.server.ts
-  const [{ data: accreditations }, { data: taxProfiles }, { data: signatures }] = await Promise.all([
-    row.application_id
-      ? db().from("accreditation_records").select("*").eq("application_id", row.application_id)
-      : Promise.resolve({ data: [] as any[] }),
-    row.investment_profile_id
-      ? db()
-          .from("investor_tax_profiles")
-          .select("*")
-          .eq("investment_profile_id", row.investment_profile_id)
-      : Promise.resolve({ data: [] as any[] }),
-    row.application_id || row.investment_profile_id
-      ? db()
-          .from("document_signatures")
-          .select("*")
-          .or(
-            [
-              row.application_id ? `application_id.eq.${row.application_id}` : null,
-              row.investment_profile_id ? `investment_profile_id.eq.${row.investment_profile_id}` : null,
-            ]
-              .filter(Boolean)
-              .join(","),
-          )
-      : Promise.resolve({ data: [] as any[] }),
-  ]);
-  const offeringDocs = await offeringDocsCached(row.offering_id);
-=======
   const accreditations = row.application_id ? (I.accreditations.get(String(row.application_id)) ?? []) : [];
   const taxProfiles = row.investment_profile_id ? (I.taxProfiles.get(String(row.investment_profile_id)) ?? []) : [];
   const signatures = row.application_id || row.investment_profile_id
     ? I.signatures.filter((s) => (row.application_id && s.application_id === row.application_id) || (row.investment_profile_id && s.investment_profile_id === row.investment_profile_id))
     : [];
   const offeringDocs = I.strip(I.docs.get(String(row.offering_id)), "offering_id");
->>>>>>> /tmp/d
 
   // Investor-confirmed facts outrank prepared values; unreviewed prepared values never drive requirements.
   // A failed provenance read now throws in the loader instead of silently dropping confirmed facts.
@@ -2260,7 +2232,6 @@ export async function revealWireInstructions(userId: string, onboardingId: strin
 // ------------------------------------------------ investment readiness
 
 /** Read-only: compute the canonical readiness projection. Never writes anything. */
-<<<<<<< src/lib/investor-onboarding.server.ts
 async function confirmedPrior(onboardingId: string) {
   const { confirmedPriorSubscription } = await import("@/lib/prior-subscription.server");
   const p = await confirmedPriorSubscription(onboardingId);
@@ -2275,10 +2246,7 @@ export async function saveReadinessSummary(row: any, result: any) {
   }).then(() => null, () => null);
 }
 
-export async function computeReadinessFor(row: any, closeAmountCents?: number | null) {
-=======
 export async function computeReadinessFor(row: any, closeAmountCents?: number | null, inputs?: ReadinessInputs) {
->>>>>>> /tmp/d
   const { computeReadiness } = await import("@/lib/investment-readiness");
   const I = inputs ?? (await loadReadinessInputs([row]));
   const facts = await gatherFacts(row, I);

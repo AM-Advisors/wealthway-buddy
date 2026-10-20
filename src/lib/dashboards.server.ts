@@ -16,21 +16,11 @@ const forbid = (m: string) => { throw new Error(`Forbidden: ${m}`); };
 
 async function factsFor(rows: any[]): Promise<{ fact: InvestmentFact; row: any; result: any }[]> {
   const out = [] as { fact: InvestmentFact; row: any; result: any }[];
-<<<<<<< src/lib/dashboards.server.ts
-  // Bounded parallel batches: the old one-at-a-time loop made fund pages slow.
-  const results: any[] = new Array(rows.length);
-  for (let i = 0; i < rows.length; i += 8) {
-    await Promise.all(rows.slice(i, i + 8).map(async (row, j) => { results[i + j] = (await computeReadinessFor(row)).result; }));
-  }
-  for (const [idx, row] of rows.entries()) {
-    const result = results[idx];
-=======
   // One batched read for all rows (same code path as single readiness).
   const all = await readinessForMany(rows);
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i];
     const { result } = all[i]!;
->>>>>>> /tmp/d
     out.push({
       row, result,
       fact: {
