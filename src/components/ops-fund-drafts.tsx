@@ -29,7 +29,7 @@ export function OpsFundDrafts() {
                   <tr><th className="py-2 pr-3">Fund</th><th className="pr-3">Client</th><th className="pr-3">Started by</th><th className="pr-3">Last saved</th><th /></tr>
                 </thead>
                 <tbody>
-                  {q.data.map((d) => (
+                  {q.data.map((d: { id: string; clientId: string; clientName: string; fundName: string; kind: string; startedBy: string; updatedAt: string }) => (
                     <tr key={d.id} className="border-t">
                       <td className="py-2 pr-3 font-medium">{d.fundName} {d.kind ? <Badge variant="secondary" className="ml-1 uppercase">{d.kind}</Badge> : null}</td>
                       <td className="pr-3">{d.clientName}</td>
