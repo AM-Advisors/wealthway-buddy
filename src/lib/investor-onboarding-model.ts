@@ -981,3 +981,19 @@ export function progressChecklist(
     locked: r.key === "funding" && !approvedToFund,
   }));
 }
+
+/**
+ * A manager-added investment tied to an invitation may be connected to the
+ * signed-in account only when its person record is unclaimed (or already this
+ * account) and any email on it matches the account's verified email.
+ */
+export function canLinkPreparedInvestment(
+  person: { personUserId: string | null; personEmail: string | null },
+  account: { userId: string; email: string | null },
+): boolean {
+  if (person.personUserId && person.personUserId !== account.userId) return false;
+  const a = String(account.email ?? "").trim().toLowerCase();
+  const p = String(person.personEmail ?? "").trim().toLowerCase();
+  if (!a) return false;
+  return !p || p === a;
+}
