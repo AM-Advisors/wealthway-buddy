@@ -308,7 +308,19 @@ export async function requestPaymentInstruction(
   const actor = await actorFor(userId);
   const ownerId = String(input.investorUserId ?? userId);
 
-  if (!actor.isStaff) {
+  // A fund manager may add a first distribution destination for an investor in a
+  // fund they manage. It still needs Harmonious verification, and changing an
+  // approved destination stays with the investor or Harmonious.
+  let managerEntry = false;
+  if (!actor.isStaff && ownerId !== actor.userId && input.offeringId) {
+    const { data: fm } = await db().from("fund_managers").select("id").eq("offering_id", input.offeringId).eq("user_id", actor.userId).maybeSingle();
+    const { data: inv } = fm
+      ? await db().from("investor_onboardings").select("id").eq("offering_id", input.offeringId).eq("investor_user_id", ownerId).is("removed_at", null).limit(1)
+      : { data: [] as any[] };
+    managerEntry = !!fm && (inv ?? []).length > 0;
+  }
+
+  if (!actor.isStaff && !managerEntry) {
     if (ownerId !== actor.userId) {
       forbid("you can only manage your own payment details.");
     }
@@ -338,6 +350,10 @@ export async function requestPaymentInstruction(
     ((current ?? []) as any[]).find(
       (r) => String(r.investment_profile_id ?? "") === String(profileId ?? ""),
     ) ?? null;
+
+  if (managerEntry && previous) {
+    forbid("this investor already has approved payment details; only the investor or Harmonious can change them.");
+  }
 
   const fingerprint = destinationFingerprint(input.destination);
   if (previous && String(previous.fingerprint) === fingerprint) {
@@ -417,7 +433,7 @@ export async function requestPaymentInstruction(
     toStatus: "pending_verification",
     detail: { changedFields, highRisk, newMasked: maskedAccount },
     actorUserId: actor.userId,
-    actorRole: actor.isStaff ? "harmonious" : "investor",
+    actorRole: actor.isStaff ? "harmonious" : managerEntry ? "fund_manager" : "investor",
   });
 
   // Any pending distribution on the previous destination must be revalidated.

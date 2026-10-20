@@ -244,7 +244,7 @@ const ADDRESS_FIELDS = new Set(["address_line1", "address_line2", "city", "regio
  * retain review. Later changes become reviewer suggestions.
  */
 export async function updateInvestorRecord(userId: string, input: {
-  onboardingId: string; person?: PersonInput; profile?: { legalName?: string | null; details?: Record<string, unknown> }; investment?: InvestmentInput;
+  onboardingId: string; person?: PersonInput; profile?: { legalName?: string | null; details?: Record<string, unknown> }; investment?: InvestmentInput; taxId?: string | null;
 }) {
   const { actor, row, role } = await assertOnboardingAccess(userId, input.onboardingId);
   if (role === "investor") forbid("use Confirm Your Information to update your own details.");
@@ -301,6 +301,22 @@ export async function updateInvestorRecord(userId: string, input: {
       const { error } = await db().from("investment_profiles").update({ ...apply, updated_at: nowIso() }).eq("id", row.investment_profile_id);
       if (error) fail(error.message);
     }
+  }
+
+  // Tax ID: encrypted through the canonical store; only the last four stay readable.
+  // Managers may enter it inside the edit window; afterwards it goes through Harmonious.
+  const tin = String(input.taxId ?? "").replace(/\D/g, "");
+  if (tin && row.investment_profile_id) {
+    if (tin.length !== 9) fail("The tax ID must be 9 digits.");
+    if (!profileDirect) forbid("this investor has signed or funded; ask Harmonious to update the tax ID.");
+    const { data: pr } = await db().from("investment_profiles").select("profile_type, tax_id_last4").eq("id", row.investment_profile_id).maybeSingle();
+    const { encryptTin } = await import("@/lib/irs-forms.server");
+    const enc = await encryptTin(tin);
+    const { error: te } = await db().rpc("store_profile_tax_id", { _profile: row.investment_profile_id, _ciphertext: enc.ciphertext, _iv: enc.iv, _key_version: enc.keyVersion, _actor: actor.userId } as any);
+    if (te) fail("The tax number couldn't be stored securely.");
+    const entity = /entity|trust|llc|corp|partnership/i.test(String(pr?.profile_type ?? ""));
+    await db().from("investment_profiles").update({ tax_id_type: entity ? "ein" : tin.startsWith("9") ? "itin" : "ssn", tax_id_last4: tin.slice(-4) } as any).eq("id", row.investment_profile_id);
+    changes.push({ offeringId: row.offering_id, onboardingId: row.id, table: "investment_profiles", id: row.investment_profile_id, field: "tax_id", from: pr?.tax_id_last4 ? `•••${pr.tax_id_last4}` : null, to: `•••${tin.slice(-4)}`, source, actor: actor.userId });
   }
 
   if (input.investment) {
