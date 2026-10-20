@@ -180,7 +180,9 @@ export function FundRequestEngine({ clientId: id, draft, mode = "client", client
               </label>
             )}
             {step === "details" && (
-              <Grid>
+              <>
+                <h3 className="text-sm font-medium">Fund details</h3>
+                <Grid>
                 <F label="Fund or SPV type *">
                   <Pick value={r.kind} onChange={setKind} options={FUND_KIND_TYPES.map((k) => ({ value: k.value, label: k.label }))} />
                 </F>
@@ -196,16 +198,18 @@ export function FundRequestEngine({ clientId: id, draft, mode = "client", client
                   <Pick value={r.tax_preparer === "Harmonious" ? "Harmonious" : "Someone else"} onChange={(v) => set("tax_preparer", v === "Harmonious" ? "Harmonious" : "")} options={["Harmonious", "Someone else"]} />
                   {r.tax_preparer !== "Harmonious" && <Input className="mt-2" placeholder="Tax preparer name" value={r.tax_preparer} onChange={(e) => set("tax_preparer", e.target.value)} />}
                 </F>
-              </Grid>
+                </Grid>
+              </>
             )}
 
-            {step === "entity" && (
+            {step === "details" && (
               <>
+                <h3 className="text-sm font-medium">Entity & EIN</h3>
                 <Grid>
                   <F label="Legal name">
                     <Input value={r.legal_name} onChange={(e) => set("legal_name", e.target.value)} placeholder="e.g. Acme Ventures I, LP" />
-                    {seriesLegalName(r) && r.legal_name === seriesLegalName(r) && (
-                      <p className="mt-1 text-xs text-muted-foreground">Generated from the fund name and Master LLC - edit if needed.</p>
+                    {defaultLegalName(r) && r.legal_name === defaultLegalName(r) && (
+                      <p className="mt-1 text-xs text-muted-foreground">{seriesLegalName(r) ? "Generated from the fund name and Master LLC - edit if needed." : "Same as the fund name - edit if needed."}</p>
                     )}
                   </F>
                   <F label="Vehicle / entity structure *"><Pick value={r.vehicle_structure} onChange={(v) => setStructureOrExemption("vehicle_structure", v)} options={VEHICLE_STRUCTURES} /></F>
