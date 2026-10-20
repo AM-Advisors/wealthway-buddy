@@ -131,6 +131,27 @@ export async function addTemplateVersion(userId: string, input: { templateId: st
   return { version };
 }
 
+/** Fresh legal files enter the same pending-approval library as fund-derived templates. */
+export async function createUploadedTemplate(userId: string, input: { title: string; category: DocumentCategory; fundTypes: string[]; fileName: string; base64: string; description?: string | null }) {
+  await staff(userId);
+  const { validateUpload } = await import("@/lib/upload-validation");
+  const bytes = new Uint8Array(Buffer.from(input.base64, "base64"));
+  validateUpload(bytes, input.fileName, { allowed: ["pdf", "docx"], maxBytes: 25 * 1024 * 1024, label: "Template file" });
+  const { data, error } = await db().from("document_templates").insert({
+    title: input.title.trim(), category: input.category, description: input.description?.trim() || null,
+    fund_types: Array.from(new Set(input.fundTypes.map((x) => x.trim()).filter(Boolean))), created_by: userId,
+  }).select("id").single();
+  if (error || !data) throw new Error("Could not create the template.");
+  try {
+    const { version } = await addTemplateVersion(userId, { templateId: data.id, fileName: input.fileName, base64: input.base64, note: "Initial uploaded template" });
+    return { id: String(data.id), version };
+  } catch (error) {
+    // Keep failed draft metadata for history, but do not offer an empty template.
+    await db().from("document_templates").update({ archived_at: now() }).eq("id", data.id);
+    throw error;
+  }
+}
+
 export async function decideTemplateVersion(userId: string, input: { templateId: string; version: number; decision: "approve" | "reject"; note?: string | null | undefined }) {
   await staff(userId);
   const { data: v } = await db().from("document_template_versions").select("id, status, created_by").eq("template_id", input.templateId).eq("version", input.version).maybeSingle();
@@ -325,12 +346,14 @@ export async function setTemplateFundTypes(userId: string, input: { templateId: 
 export async function fundTypeTemplates(userId: string, offeringId: string) {
   await staffOrManager(userId, offeringId);
   const { templatesForFundType } = await import("@/lib/fund-type-templates");
-  const [{ data: off }, { data: t }, { data: v }, { data: u }] = await Promise.all([
+  const results = await Promise.all([
     db().from("offerings").select("fund_type").eq("id", offeringId).maybeSingle(),
     db().from("document_templates").select("id, title, category, fund_types").is("archived_at", null),
     db().from("document_template_versions").select("template_id, version").eq("status", "approved").order("version", { ascending: false }),
     db().from("document_template_uses").select("template_id").eq("offering_id", offeringId),
   ]);
+  if (results.some((r) => r.error)) throw new Error("Could not load the assigned fund templates.");
+  const [{ data: off }, { data: t }, { data: v }, { data: u }] = results;
   const fundType = ((off as any)?.fund_type ?? null) as string | null;
   const used = new Set(((u ?? []) as any[]).map((x) => String(x.template_id)));
   const list = templatesForFundType(((t ?? []) as any[]).map((x) => ({
@@ -345,7 +368,8 @@ export async function generateFundTypeDocuments(userId: string, offeringId: stri
   const { templates } = await fundTypeTemplates(userId, offeringId);
   const made: { title: string; documentId: string; open: string[] }[] = [];
   for (const x of templates.filter((y) => !y.generated && y.approvedVersion != null)) {
-    const r = await useTemplateInFund(userId, { templateId: x.id, version: x.approvedVersion!, offeringId });
+    if (x.approvedVersion == null) continue;
+    const r = await useTemplateInFund(userId, { templateId: x.id, version: x.approvedVersion, offeringId });
     made.push({ title: x.title, documentId: String((r as any).documentId), open: ((r as any).autofill?.open ?? []) as string[] });
   }
   return { made };
