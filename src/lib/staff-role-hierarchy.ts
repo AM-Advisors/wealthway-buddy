@@ -51,11 +51,16 @@ export function actorRank(roles: readonly string[]): number {
   return Math.max(0, ...roles.map((r) => ROLE_RANK[r as ManagedRole] ?? 0));
 }
 
+const SALES_FAMILY: readonly ManagedRole[] = ["sales_management", "account_executive", "bdr", "sales", "account_manager"];
+
 /** Which managed roles this actor may grant or remove. */
 export function assignableRoles(actorRoles: readonly string[]): ManagedRole[] {
   const rank = actorRank(actorRoles);
   if (rank >= 100) return [...MANAGED_ROLES];
   if (rank < 70) return [];
+  // CRO and Sales Managers lead Sales only: they may assign Sales-family roles
+  // below their own, never Marketing, Compliance, approver or Leadership roles.
+  if (rank < 90) return MANAGED_ROLES.filter((r) => SALES_FAMILY.includes(r) && ROLE_RANK[r] < rank);
   // CEO may assign CEO; others only roles strictly below their own.
   return MANAGED_ROLES.filter((r) => r !== "super_admin" && (ROLE_RANK[r] < rank || (rank === 90 && r === "executive")));
 }

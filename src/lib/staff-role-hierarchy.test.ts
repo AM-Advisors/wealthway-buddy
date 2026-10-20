@@ -9,8 +9,14 @@ describe("staff role hierarchy", () => {
     expect(r).toContain("executive");
     expect(r).toContain("cro");
   });
-  it("CRO assigns below only", () => expect(assignableRoles(["cro"])).toEqual(["sales_management", "sales", "account_manager"]));
-  it("sales mgmt assigns sales and AM", () => expect(assignableRoles(["sales_management"])).toEqual(["sales", "account_manager"]));
+  it("CRO assigns below only", () => expect(assignableRoles(["cro"])).toEqual(["sales_management", "account_executive", "bdr", "sales", "account_manager"]));
+  it("sales mgmt assigns sales and AM", () => expect(assignableRoles(["sales_management"])).toEqual(["account_executive", "bdr", "sales", "account_manager"]));
+  it("Sales leaders never assign Marketing, Compliance or Leadership", () => {
+    for (const r of ["marketing_manager", "compliance_reviewer", "executive_approver", "leadership"]) {
+      expect(assignableRoles(["cro"])).not.toContain(r);
+      expect(assignableRoles(["sales_management"])).not.toContain(r);
+    }
+  });
   it("sales assigns nothing", () => expect(assignableRoles(["sales"])).toEqual([]));
   it("blocks self changes and last super admin", () => {
     const base = { actorId: "a", actorRoles: ["super_admin"], targetId: "b", role: "super_admin", action: "revoke" as const, superAdminCount: 1 };
