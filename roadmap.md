@@ -1,8 +1,10 @@
 # Roadmap
 
 ## PPM and Operating Agreement reading (2026-10-20)
-- [ ] Diagnose Read document showing no uploaded file and connect it to the authoritative document reader.
-- [ ] Verify reading/error handling with synthetic checks; signed-in real-fund checks need isolated QA.
+- [x] Read document now opens the active/individual uploaded PDF or Word file instead of empty metadata; Download uses the same source. Erebor OA v2 file exists; PPM uploads exist but no version is active, so show the activation requirement instead of blank content.
+- [x] 35 focused checks passed, latest preview build OK; synthetic uploaded Word pages rendered at desktop and current compact viewport. No real investor sessions or document changes.
+- [ ] Erebor PPM activation — manager must explicitly choose the version in Fund Documents; no version activated automatically.
+- [ ] Signed-in document read-through — blocked on isolated synthetic QA; real-investor flow untested.
 
 ## Calvin subscription signing (2026-10-20)
 - [x] Inspect Calvin's current signing blockers: $500,000 subscription exists; manager-entry provenance was ignored by the separate document admission gate. No signing or emails performed.
