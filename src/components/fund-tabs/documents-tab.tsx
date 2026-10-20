@@ -15,6 +15,7 @@ import { DOC_TEMPLATES, STARTER_NOTICE } from "@/lib/fund-doc-templates";
 import { deleteFundFileFn, generateFundDocFn, listFundFilesFn, setSignatureBoxesFn, uploadFundFileFn } from "@/lib/fund-tabs.functions";
 import { TemplateDocumentsCard } from "./template-documents-card";
 import { listTemplatesFn, templateAutofillCheckFn, useTemplateInFundFn } from "@/lib/fund-doc-templates.functions";
+import { FundTypeDocumentsCard } from "./fund-type-documents-card";
 import { fileToBase64, fmtDate } from "./shared";
 import { StandardFormsCard } from "./standard-forms-card";
 import { fundSigningContextFn, sendFileForSignatureFn, remindFileSignerFn } from "@/lib/fund-file-signing.functions";
@@ -146,6 +147,8 @@ export function DocumentsTab({ fundId }: { fundId: string }) {
           )}
         </CardContent>
       </Card>
+
+      <FundTypeDocumentsCard fundId={fundId} />
 
       <TemplateDocumentsCard fundId={fundId} />
 

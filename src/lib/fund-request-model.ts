@@ -237,6 +237,8 @@ export function offeringFieldsFor(r: FundRequest): Record<string, unknown> & { n
     min_investment_cents: dollarsToCents(r.minimum_investment) ?? 0,
     banking_path: r.banking_path || null,
     ein_path: einPathFor(r),
+    offering_close_date: /^\d{4}-\d{2}-\d{2}$/.test(r.expected_close ?? "") ? r.expected_close : null,
+    signatory_title: r.signatory?.title?.trim() || null,
   };
 }
 

@@ -29,10 +29,10 @@ export function AssetManager({ fundId, assets }: { fundId: string; assets: any[]
   const mark = useServerFn(recordAssetMarkFn);
   const decide = useServerFn(decideAssetMarkFn);
   const refresh = () => { void invalidateFund(qc, fundId); };
-  const [f, setF] = useState({ assetName: "", issuerName: "", assetClass: "private_preferred" as (typeof CLASSES)[number], instrument: "", acquisitionDate: today(), cost: "" });
+  const [f, setF] = useState({ assetName: "", issuerName: "", assetClass: "private_preferred" as (typeof CLASSES)[number], instrument: "", acquisitionDate: today(), cost: "", ownership: "", note: "" });
   const addM = useMutation({
-    mutationFn: () => add({ data: { fundId, assetName: f.assetName.trim(), issuerName: f.issuerName.trim() || f.assetName.trim(), assetClass: f.assetClass, instrument: f.instrument || null, acquisitionDate: f.acquisitionDate || null, costCents: toCents(f.cost) ?? 0 } }),
-    onSuccess: () => { toast.success("Asset added."); setF({ ...f, assetName: "", issuerName: "", instrument: "", cost: "" }); refresh(); },
+    mutationFn: () => add({ data: { fundId, assetName: f.assetName.trim(), issuerName: f.issuerName.trim() || f.assetName.trim(), assetClass: f.assetClass, instrument: f.instrument || null, acquisitionDate: f.acquisitionDate || null, costCents: toCents(f.cost) ?? 0, ownershipPct: f.ownership.trim() ? Number(f.ownership) : null, note: f.note.trim() || null } }),
+    onSuccess: () => { toast.success("Asset added."); setF({ ...f, assetName: "", issuerName: "", instrument: "", cost: "", ownership: "", note: "" }); refresh(); },
     onError: (e: Error) => toast.error(e.message),
   });
   const [mk, setMk] = useState<{ assetId: string; value: string; date: string; method: (typeof METHODS)[number]; note: string } | null>(null);
@@ -62,7 +62,10 @@ export function AssetManager({ fundId, assets }: { fundId: string; assets: any[]
           <div className="space-y-1"><Label className="text-xs">Instrument (optional)</Label><Input value={f.instrument} onChange={(e) => setF({ ...f, instrument: e.target.value })} placeholder="Preferred stock" /></div>
           <div className="space-y-1"><Label className="text-xs">Purchase date</Label><Input type="date" value={f.acquisitionDate} onChange={(e) => setF({ ...f, acquisitionDate: e.target.value })} /></div>
           <div className="space-y-1"><Label className="text-xs">Cost ($)</Label><Input inputMode="decimal" value={f.cost} onChange={(e) => setF({ ...f, cost: e.target.value })} placeholder="0" /></div>
+          <div className="space-y-1"><Label className="text-xs">Ownership % (optional)</Label><Input inputMode="decimal" value={f.ownership} onChange={(e) => setF({ ...f, ownership: e.target.value })} placeholder="2.5" /></div>
+          <div className="space-y-1 sm:col-span-2"><Label className="text-xs">Deal notes (optional)</Label><Input value={f.note} onChange={(e) => setF({ ...f, note: e.target.value })} placeholder="Round, lead investor, key terms" /></div>
         </div>
+        <p className="text-xs text-muted-foreground">Add the deal's documents in the Documents tab.</p>
         <Button disabled={!f.assetName.trim() || addM.isPending} onClick={() => addM.mutate()}>Add asset</Button>
 
         {assets.length > 0 && (
@@ -70,7 +73,7 @@ export function AssetManager({ fundId, assets }: { fundId: string; assets: any[]
             {assets.map((a) => (
               <div key={a.id} className="space-y-2 p-3 text-sm">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div><p className="font-medium">{a.asset_name}</p><p className="text-xs text-muted-foreground">Cost {usd(Number(a.cost_basis_cents ?? 0))} · Latest value {a.latestValueCents == null ? "not set" : `${usd(Number(a.latestValueCents))} (${fmtDate(a.latestValueDate)})`}</p></div>
+                  <div><p className="font-medium">{a.asset_name}</p><p className="text-xs text-muted-foreground">{a.ownership_pct != null ? `${Number(a.ownership_pct)}% owned · ` : ""}Cost {usd(Number(a.cost_basis_cents ?? 0))} · Latest value {a.latestValueCents == null ? "not set" : `${usd(Number(a.latestValueCents))} (${fmtDate(a.latestValueDate)})`}</p></div>
                   <Button size="sm" variant="outline" onClick={() => setMk({ assetId: a.id, value: "", date: today(), method: staff ? "third_party" : "manager_mark", note: "" })}>Record value</Button>
                 </div>
                 {a.pendingMark && (

@@ -131,6 +131,7 @@ function TemplateCard({ t, funds }: { t: T; funds: { id: string; name: string }[
         <CardDescription>{t.category} · used in {t.uses.length} fund(s)</CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
+        <FundTypesEditor templateId={t.id} initial={(t as any).fundTypes ?? []} onSaved={refresh} />
         <ul className="divide-y rounded-md border text-sm">
           {t.versions.map((v) => (
             <li key={v.version} className="space-y-2 p-3">

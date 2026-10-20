@@ -26,7 +26,7 @@ export const addFundAssetFn = createServerFn({ method: "POST" }).middleware([req
   .inputValidator(fund.extend({
     issuerName: z.string().trim().min(1).max(200), assetName: z.string().trim().min(1).max(200),
     assetClass: z.enum(["private_common", "private_preferred", "safe", "convertible_note", "debt", "fund_interest", "spv_interest", "real_estate", "digital_security", "cash_equivalent", "other"]),
-    instrument: z.string().max(100).nullable(), acquisitionDate: date.nullable(), costCents: z.number().int().min(0).max(1e13), statementLineId: uuid.nullish(),
+    instrument: z.string().max(100).nullable(), acquisitionDate: date.nullable(), costCents: z.number().int().min(0).max(1e13), ownershipPct: z.number().min(0).max(100).nullish(), note: z.string().max(2000).nullish(), statementLineId: uuid.nullish(),
   }).parse)
   .handler(async ({ data, context }) => (await srv()).addAsset(context.userId, data.fundId, data));
 

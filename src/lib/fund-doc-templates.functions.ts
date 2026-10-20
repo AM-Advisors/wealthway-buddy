@@ -47,3 +47,15 @@ export const removeFundTemplateDocumentFn = createServerFn({ method: "POST" }).m
 export const fundTemplateDocumentUrlFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ offeringId: uuid, versionId: uuid }).parse(d))
   .handler(async ({ data, context }) => (await eng()).fundTemplateDocumentUrl(context.userId, data));
+
+export const setTemplateFundTypesFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ templateId: uuid, fundTypes: z.array(z.string().max(100)).max(20) }).parse(d))
+  .handler(async ({ data, context }) => (await eng()).setTemplateFundTypes(context.userId, data));
+
+export const fundTypeTemplatesFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ offeringId: uuid }).parse(d))
+  .handler(async ({ data, context }) => (await eng()).fundTypeTemplates(context.userId, data.offeringId));
+
+export const generateFundTypeDocumentsFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ offeringId: uuid }).parse(d))
+  .handler(async ({ data, context }) => (await eng()).generateFundTypeDocuments(context.userId, data.offeringId));

@@ -38,14 +38,14 @@ export async function listTemplates(userId: string) {
     // Fund managers only see approved Harmonious templates they can use (no history, no other funds).
     if (!actor.offeringIds.length) forbid("you do not manage a fund.");
     const [{ data: t }, { data: v }] = await Promise.all([
-      db().from("document_templates").select("id, title, category, description").is("archived_at", null).order("created_at", { ascending: false }),
+      db().from("document_templates").select("id, title, category, description, fund_types").is("archived_at", null).order("created_at", { ascending: false }),
       db().from("document_template_versions").select("template_id, version, status").eq("status", "approved").order("version", { ascending: false }),
     ]);
     return {
       funds: [],
       templates: ((t ?? []) as any[]).map((tp) => ({
         id: tp.id as string, title: tp.title as string, category: (DOCUMENT_CATEGORY_LABELS as any)[tp.category] ?? tp.category, categoryKey: tp.category as string,
-        description: tp.description as string | null, currentApproved: (((v ?? []) as any[]).find((x) => x.template_id === tp.id)?.version ?? null) as number | null, versions: [], uses: [],
+        description: tp.description as string | null, fundTypes: (tp.fund_types ?? []) as string[], currentApproved: (((v ?? []) as any[]).find((x) => x.template_id === tp.id)?.version ?? null) as number | null, versions: [], uses: [],
       })).filter((x) => x.currentApproved != null),
     };
   }
@@ -71,7 +71,7 @@ export async function listTemplates(userId: string) {
       const approved = versions.find((x) => x.status === "approved");
       return {
         id: tp.id as string, title: tp.title as string, category: (DOCUMENT_CATEGORY_LABELS as any)[tp.category] ?? tp.category, categoryKey: tp.category as string,
-        description: tp.description as string | null, currentApproved: approved?.version ?? null, versions,
+        description: tp.description as string | null, fundTypes: (tp.fund_types ?? []) as string[], currentApproved: approved?.version ?? null, versions,
         uses: ((u ?? []) as any[]).filter((x) => x.template_id === tp.id).map((x) => ({ fund: fundName.get(x.offering_id) ?? "Fund", templateVersion: x.template_version, fundVersion: x.fund_version, at: x.used_at })),
       };
     }),
@@ -309,4 +309,44 @@ export async function templateDownloadUrl(userId: string, input: { templateId: s
   const { data, error } = await supabaseAdmin.storage.from(BUCKET).createSignedUrl(v.file_path, 300);
   if (error) throw new Error(error.message);
   return { url: data.signedUrl };
+}
+
+
+/** Staff assign which fund types a template is used for. */
+export async function setTemplateFundTypes(userId: string, input: { templateId: string; fundTypes: string[] }) {
+  await staff(userId);
+  const clean = Array.from(new Set(input.fundTypes.map((x) => x.trim()).filter(Boolean)));
+  const { error } = await db().from("document_templates").update({ fund_types: clean.length ? clean : null }).eq("id", input.templateId);
+  if (error) throw new Error("Could not save the fund types.");
+  return { ok: true };
+}
+
+/** Approved templates assigned to this fund's type, and whether each was already generated for it. */
+export async function fundTypeTemplates(userId: string, offeringId: string) {
+  await staffOrManager(userId, offeringId);
+  const { templatesForFundType } = await import("@/lib/fund-type-templates");
+  const [{ data: off }, { data: t }, { data: v }, { data: u }] = await Promise.all([
+    db().from("offerings").select("fund_type").eq("id", offeringId).maybeSingle(),
+    db().from("document_templates").select("id, title, category, fund_types").is("archived_at", null),
+    db().from("document_template_versions").select("template_id, version").eq("status", "approved").order("version", { ascending: false }),
+    db().from("document_template_uses").select("template_id").eq("offering_id", offeringId),
+  ]);
+  const fundType = ((off as any)?.fund_type ?? null) as string | null;
+  const used = new Set(((u ?? []) as any[]).map((x) => String(x.template_id)));
+  const list = templatesForFundType(((t ?? []) as any[]).map((x) => ({
+    id: String(x.id), title: String(x.title), fundTypes: (x.fund_types ?? []) as string[],
+    approvedVersion: (((v ?? []) as any[]).find((y) => y.template_id === x.id)?.version ?? null) as number | null,
+  })), fundType);
+  return { fundType, templates: list.map((x) => ({ ...x, generated: used.has(x.id) })) };
+}
+
+/** Generate every assigned template not yet generated for this fund (same path as using one template). */
+export async function generateFundTypeDocuments(userId: string, offeringId: string) {
+  const { templates } = await fundTypeTemplates(userId, offeringId);
+  const made: { title: string; documentId: string; open: string[] }[] = [];
+  for (const x of templates.filter((y) => !y.generated && y.approvedVersion != null)) {
+    const r = await useTemplateInFund(userId, { templateId: x.id, version: x.approvedVersion!, offeringId });
+    made.push({ title: x.title, documentId: String((r as any).documentId), open: ((r as any).autofill?.open ?? []) as string[] });
+  }
+  return { made };
 }
