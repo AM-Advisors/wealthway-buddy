@@ -1,4 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { acknowledgeDocumentFn, investorDocumentsFn } from "@/lib/fund-setup-canonical.functions";
@@ -34,9 +35,13 @@ export function InvestmentOfferingDocuments({ onboardingId }: { onboardingId: st
             <span className="text-sm">{d.title}{d.versionLabel && <span className="block text-xs text-muted-foreground">{d.versionLabel}</span>}<Badge variant="outline" className="mt-1">{d.approvalLabel}</Badge></span>
             {d.action === "Acknowledge" ? (
               <Button size="sm" onClick={() => acknowledge(d.id)}>I have reviewed this document</Button>
-            ) : (
-              <span className="text-sm text-muted-foreground">{d.action}</span>
-            )}
+            ) : d.action ? (
+              <Button asChild size="sm" variant={d.action.includes("Sign") ? "default" : "outline"}>
+                <Link to="/investment/$onboardingId" params={{ onboardingId }} search={{ tab: "onboarding", step: "sign" }}>
+                  {d.action}
+                </Link>
+              </Button>
+            ) : null}
           </div>
         ))}
       </CardContent>
