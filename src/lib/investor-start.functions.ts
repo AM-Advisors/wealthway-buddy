@@ -4,7 +4,7 @@ import { z } from "zod";
 import { requireSupabaseAuth, requireSupabaseAuthUnverified } from "@/lib/require-auth";
 import { missingProfileFields, planStartFund, profileFillPatch, PROFILE_FIELDS } from "@/lib/investor-start-model";
 
-const STAFF_ROLES = ["admin", "super_admin", "operations", "account_manager", "staff"];
+const STAFF_ROLES = ["admin", "super_admin", "operations", "client_success", "fund_administration", "finance", "executive", "cro", "sales", "marketing_manager", "marketing_specialist"];
 
 async function admin() {
   return (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
