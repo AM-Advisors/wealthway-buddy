@@ -49,10 +49,23 @@ export function totalOf(items: PayItem[]) {
   return items.reduce((s, i) => s + i.cents, 0);
 }
 
+/** True when Harmonious (CEO/CRO/Super Admin) waived the new fund setup fee for this client. */
+export async function hasSetupFeeWaiver(db: any, clientId: string): Promise<boolean> {
+  const { data, error } = await db.from("client_setup_fee_waivers").select("id").eq("client_id", clientId).is("revoked_at", null).limit(1);
+  if (error) throw new Error("We couldn't check this client's pricing. Please try again.");
+  return (data ?? []).length > 0;
+}
+
+export function setupFeeItem(waived: boolean): PayItem {
+  return waived
+    ? { key: "fund_setup_fee", name: "New fund setup fee (waived by Harmonious)", cents: 0, source: "setup_fee" }
+    : { key: "fund_setup_fee", name: "New fund setup fee", cents: FUND_SETUP_FEE_CENTS, source: "setup_fee" };
+}
+
 export async function buildQuote(db: any, args: { clientId: string; kind: "new_fund_request" | "service_request"; addOnKeys: string[]; offeringId?: string | null }) {
   const addOns = await priceAddOns(db, args.clientId, [...new Set(args.addOnKeys)].sort(), args.offeringId);
   const items: PayItem[] = args.kind === "new_fund_request"
-    ? [{ key: "fund_setup_fee", name: "New fund setup fee", cents: FUND_SETUP_FEE_CENTS, source: "setup_fee" }, ...addOns]
+    ? [setupFeeItem(await hasSetupFeeWaiver(db, args.clientId)), ...addOns]
     : addOns;
   return { items, totalCents: totalOf(items) };
 }
