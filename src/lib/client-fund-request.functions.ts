@@ -188,6 +188,18 @@ export const submitFundRequest = createServerFn({ method: "POST" })
       }
     }
 
+    // Service level: Self Serve unless a paid level was chosen and the payment is confirmed (wire/ACH waits for receipt).
+    if (offeringId) {
+      const { resolveLevelOnSubmit, normalizeServiceLevel } = await import("@/lib/service-level");
+      const lv = resolveLevelOnSubmit(r.service_level, payment ? { paid: !payment.awaiting } : null);
+      await db.from("offerings").update({ service_level: lv.active }).eq("id", offeringId);
+      const { error } = await db.from("fund_service_level_events").insert({
+        offering_id: offeringId, requested_level: normalizeServiceLevel(r.service_level), status: lv.status,
+        payment_id: payment?.id ?? null, effective_on: lv.status === "active" ? new Date().toISOString().slice(0, 10) : null, actor_id: context.userId,
+      });
+      if (error) console.warn("service level history not recorded:", error.message);
+    }
+
     const details = { ...r, _kind: KIND, duplicate_review: duplicate, ...(payment?.awaiting ? { payment_pending: true } : {}) };
     const intakeRow = {
       client_id: data.clientId, offering_id: offeringId, details, status: "submitted",
