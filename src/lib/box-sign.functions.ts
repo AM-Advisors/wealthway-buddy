@@ -126,6 +126,27 @@ export const startBoxSigning = createServerFn({ method: "POST" })
       .maybeSingle();
     if (!profile?.email) throw new Error("Add your email to your profile before signing.");
 
+    // Named signer from "Completed by" (e.g. the GP of an investing fund or family office):
+    // they receive the signature request by email; the investor never receives their signing link.
+    let namedSigner: { email: string; name: string } | null = null;
+    {
+      const { supabaseAdmin: ns } = await import("@/integrations/supabase/client.server");
+      const { data: obr } = await ns.from("investor_onboardings").select("id").eq("application_id", application.id)
+        .not("stage", "in", "(closed,declined,cancelled)").maybeSingle();
+      if (obr) {
+        const { data: p } = await ns.from("onboarding_participants").select("full_name, email, removed_at")
+          .eq("onboarding_id", (obr as any).id).eq("role", "signer").is("removed_at", null).limit(1).maybeSingle();
+        const em = String((p as any)?.email ?? "").trim().toLowerCase();
+        if (em && em !== String(profile.email).trim().toLowerCase()) namedSigner = { email: em, name: (p as any).full_name || em };
+      }
+    }
+    if (namedSigner && (doc as any).signing_mode === "dual") {
+      // Dual-signature documents keep the investor's embedded flow; the named signer path covers investor-only documents.
+      namedSigner = null;
+    }
+    const signerEmail = namedSigner?.email ?? (profile.email as string);
+    const signerName = namedSigner?.name ?? (profile.legal_name ?? profile.email);
+
     const { data: subscription } = await supabase
       .from("subscriptions")
       .select("commitment_cents")
@@ -152,6 +173,9 @@ export const startBoxSigning = createServerFn({ method: "POST" })
       (!gateSnapshot || (existing as any).snapshot_id === gateSnapshot.id)
     ) {
       const live = await getSignRequest(existing.provider_agreement_id).catch(() => null);
+      if (namedSigner && (existing as any).signer_email_matches !== false) {
+        return { url: null, agreementId: existing.provider_agreement_id, reused: true, sentTo: namedSigner.name };
+      }
       if (live?.signingUrl) {
         await supabaseAdmin
           .from("document_signatures")
@@ -213,8 +237,9 @@ export const startBoxSigning = createServerFn({ method: "POST" })
         })()
       : await createSignRequest({
       fileId,
-      signerEmail: profile.email,
-      signerName: profile.legal_name ?? profile.email,
+      signerEmail,
+      signerName,
+      ...(namedSigner ? { emailSigner: true } : {}),
       documentName: `${offering?.name ?? "Harmonious"} - ${doc.title}`,
       message: `Please review and sign ${doc.title} for ${offering?.name ?? "the fund"}.`,
       externalId: `${application.id}:${doc.id}`,
@@ -225,8 +250,8 @@ export const startBoxSigning = createServerFn({ method: "POST" })
     const row = {
       application_id: application.id,
       offering_document_id: doc.id,
-      signer_name: profile.legal_name ?? profile.email,
-      signer_email: profile.email,
+      signer_name: signerName,
+      signer_email: signerEmail,
       signature_type: "box_sign",
       signature_value: request.id,
       consent_electronic: true,
@@ -234,7 +259,7 @@ export const startBoxSigning = createServerFn({ method: "POST" })
       provider: "box_sign",
       provider_agreement_id: request.id,
       provider_status: "out_for_signature",
-      provider_signing_url: request.signingUrl,
+      provider_signing_url: namedSigner ? null : request.signingUrl,
       provider_source_file_id: fileId,
       provider_last_event_at: now,
       provider_sent_at: now,
@@ -269,7 +294,7 @@ export const startBoxSigning = createServerFn({ method: "POST" })
     if (signatureId) {
       await supabaseAdmin.from("document_signature_signers").delete().eq("signature_id", signatureId).neq("status", "signed");
       const base = { signature_id: signatureId, application_id: application.id, offering_document_id: doc.id, offering_id: doc.offering_id, required: true, status: "sent", sent_at: now };
-      const rows: any[] = [{ ...base, role_key: "investor", signing_order: 1, signer_user_id: userId, signer_email: profile.email, signer_name: profile.legal_name ?? profile.email }];
+      const rows: any[] = [{ ...base, role_key: namedSigner ? "named_signer" : "investor", signing_order: 1, signer_user_id: namedSigner ? null : userId, signer_email: signerEmail, signer_name: signerName }];
       if (countersigner) rows.push({ ...base, role_key: "fund_manager", signing_order: 2, status: "waiting", sent_at: null, signer_user_id: countersigner.user_id, signer_email: countersigner.email, signer_name: countersigner.name });
       await supabaseAdmin.from("document_signature_signers").insert(rows);
     }
