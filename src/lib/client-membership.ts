@@ -13,8 +13,8 @@ export async function clientAccessIds(supabase: any, userId: string): Promise<st
     ...new Set([
       ...((links ?? []) as any[]).map((l) => String(l.client_id)),
       ...((managed ?? []) as any[])
-        .map((m) => String(m.offerings?.client_id))
-        .filter((id) => id && id !== "null"),
+        .map((m) => m.offerings?.client_id)
+        .filter((id): id is string => typeof id === "string" && id.length > 0),
     ]),
   ];
 }
