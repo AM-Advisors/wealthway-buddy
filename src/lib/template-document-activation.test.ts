@@ -42,14 +42,17 @@ describe("server template activation", () => {
     await expect(activateDocumentVersion("manager-2", { documentId: "doc-1", version: 1 })).rejects.toThrow("you do not manage that fund");
     expect(state.updates).toHaveLength(0);
   });
-  it("never grants the exemption to a later custom upload", async () => {
+  // Managers approve their own custom uploads by putting them in use, but only
+  // once the fund's legal name is confirmed; nothing is written before that.
+  it("a later custom upload goes through the manager self-approval gate", async () => {
     state.templateVersion = 2;
-    await expect(activateDocumentVersion("manager-1", { documentId: "doc-1", version: 1 })).rejects.toThrow("only Harmonious");
+    await expect(activateDocumentVersion("manager-1", { documentId: "doc-1", version: 1 })).rejects.toThrow("Legal Name");
     expect(state.updates).toHaveLength(0);
   });
-  it("requires the source template to be approved", async () => {
+  it("an unapproved source template is treated as a custom upload", async () => {
     state.approved = false;
-    await expect(activateDocumentVersion("manager-1", { documentId: "doc-1", version: 1 })).rejects.toThrow("only Harmonious");
+    await expect(activateDocumentVersion("manager-1", { documentId: "doc-1", version: 1 })).rejects.toThrow("Legal Name");
+    expect(state.updates).toHaveLength(0);
   });
   it("keeps the signing-setup guard", async () => {
     state.signing = "needs_review";

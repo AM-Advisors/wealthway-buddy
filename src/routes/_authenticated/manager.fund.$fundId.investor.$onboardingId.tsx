@@ -1,9 +1,9 @@
-import { RELATED_REVIEW_MESSAGE } from "@/lib/related-person-model";
 import { PersonalInvestmentLinkCard } from "@/components/personal-investment-link";
 import { UploadForInvestor } from "@/components/upload-for-investor";
 import { InvestorStepHistory } from "@/components/investor-step-history";
 import { InvestorRecordDocuments } from "@/components/investor-document-review";
 import { InvestorDocumentAi } from "@/components/investor-document-ai";
+import { DistributionBankCard, InvestorTaxIdCard, RelatedPartiesEditor } from "@/components/investor-record-extras";
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -155,10 +155,11 @@ function InvestorRecordPage() {
           {data.profile.type === "entity" || data.profile.type === "trust" ? field("jurisdiction", "Jurisdiction", (data.profile.details as any).jurisdiction) : null}
           {data.profile.type === "ira" ? field("custodianName", "Custodian", (data.profile.details as any).custodianName) : null}
           <Button className="sm:w-fit" disabled={data.overview.removed} onClick={() => save({ onboardingId, profile: { legalName: edit['legalName'], details: Object.fromEntries(["jurisdiction", "custodianName"].filter((k) => edit[k] !== undefined).map((k) => [k, edit[k]!])) } })}>Save profile</Button>
-          <div className="sm:col-span-2"><p className="text-sm font-medium">Owners, control persons & signers</p>
-            {data.related.length ? <ul className="mt-1 space-y-1 text-sm">{data.related.map((r) => <li key={r.id}>{r.name} · {prettyStatus(r.role)}{r.ownershipPercent != null ? ` · ${r.ownershipPercent}%` : ""}{r.signer ? " · signer" : ""}{(r as any).underReview ? <span className="block text-xs text-muted-foreground">{RELATED_REVIEW_MESSAGE}</span> : null}</li>)}</ul> : <p className="text-sm text-muted-foreground">None recorded.</p>}</div>
-          <p className="text-xs text-muted-foreground sm:col-span-2">Tax IDs, tax forms, ID images and verification evidence are never shown here. The investor provides them securely.</p>
+          <RelatedPartiesEditor onboardingId={onboardingId} related={data.related as any} editable={!data.overview.removed && (data as any).profileEditMode === "direct"} onChanged={refresh} />
+          <p className="text-xs text-muted-foreground sm:col-span-2">Tax forms, ID images and verification evidence are never shown here.</p>
         </CardContent></Card> : null}
+        {data.profile ? <InvestorTaxIdCard onboardingId={onboardingId} last4={(data.profile as any).taxIdLast4} editable={!data.overview.removed && (data as any).profileEditMode === "direct"} onChanged={refresh} /> : null}
+        {!data.overview.removed ? <DistributionBankCard onboardingId={onboardingId} hasAccount={Boolean((data as any).investorHasAccount)} /> : null}
       </div> : null}
 
       {tab === "onboarding" ? <QuestionnaireCard q={(data as any).questionnaire} /> : null}

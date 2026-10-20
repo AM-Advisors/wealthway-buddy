@@ -263,6 +263,10 @@ function builder(table: string) {
       rows = rows.filter((r) => r[col] === val);
       return api;
     },
+    is: (col: string, val: unknown) => {
+      rows = rows.filter((r) => (r[col] ?? null) === val);
+      return api;
+    },
     then: (resolve: any) => resolve({ data: rows, error: null }),
   };
   return api;

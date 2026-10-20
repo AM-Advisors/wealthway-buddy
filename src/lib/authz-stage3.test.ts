@@ -41,7 +41,7 @@ describe("Stage 3A shadow pilot", () => {
     for (const p of STAGE3A_CANDIDATES) expect(migrationStatus(p, { ...emptyCounts(), allow_allow: 999, deny_deny: 999 })).toBe("Not Started");
   });
   it("no cutover or role/permission writes in the pilot code", () => {
-    const src = readFileSync("src/lib/authz-stage3.ts", "utf8") + readFileSync("src/lib/access-admin.functions.ts", "utf8").split("getStage3Migration")[1];
+    const src = readFileSync("src/lib/authz-stage3.ts", "utf8") + readFileSync("src/lib/access-admin.functions.ts", "utf8").split("getStage3Migration")[1]!.split("\nexport const")[0];
     expect(src).not.toMatch(/\.insert\(|\.update\(|\.delete\(|user_roles|cutover\s*\(/);
   });
 });

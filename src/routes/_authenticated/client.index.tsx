@@ -5,6 +5,7 @@ import { CapTablesCard } from "@/components/cap-table-billing";
 
 import { AttentionCenter } from "@/components/attention-center";
 import { ClientDashboard } from "@/components/client-dashboard";
+import { ClientSowPanel } from "@/components/client-sow-panel";
 
 import { useClientPortal } from "@/components/client-portal-context";
 import { getClientRecords } from "@/lib/client-records.functions";
@@ -77,6 +78,12 @@ function ClientOverviewPage() {
       <div className="mt-4">
         <Link to="/client/setup-options" className="text-sm font-medium text-primary underline">Client setup options (white-label branding)</Link>
       </div>
+
+      {((data?.sows ?? []) as any[]).length > 0 && (
+        <div className="mt-6">
+          <ClientSowPanel sows={(data?.sows ?? []) as any[]} />
+        </div>
+      )}
 
       <div className="mt-6">
         <AttentionCenter workspace="company" />

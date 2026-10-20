@@ -407,9 +407,11 @@ function latestRoleList(fn: string): string[] | null {
 describe("database helpers agree with the application's intended staff semantics", () => {
   const staff = [...OPS_STAFF_ROLES].sort();
 
-  it("is_any_staff recognizes exactly the ten staff roles the resolver uses", () => {
+  it("is_any_staff recognizes the staff roles the resolver uses, except view-only Leadership", () => {
+    // Leadership is a view-only app role; the database helper deliberately does
+    // not widen row access for it.
     const list = latestRoleList("is_any_staff");
-    if (list) expect(list).toEqual(staff);
+    if (list) expect(list).toEqual(staff.filter((r) => r !== "leadership"));
   });
 
   it("ct_is_staff is a subset of the staff roles (narrower by design)", () => {

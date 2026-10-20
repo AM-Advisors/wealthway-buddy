@@ -244,7 +244,7 @@ const ADDRESS_FIELDS = new Set(["address_line1", "address_line2", "city", "regio
  * retain review. Later changes become reviewer suggestions.
  */
 export async function updateInvestorRecord(userId: string, input: {
-  onboardingId: string; person?: PersonInput; profile?: { legalName?: string | null; details?: Record<string, unknown> }; investment?: InvestmentInput;
+  onboardingId: string; person?: PersonInput; profile?: { legalName?: string | null; details?: Record<string, unknown> }; investment?: InvestmentInput; taxId?: string | null;
 }) {
   const { actor, row, role } = await assertOnboardingAccess(userId, input.onboardingId);
   if (role === "investor") forbid("use Confirm Your Information to update your own details.");
@@ -303,6 +303,22 @@ export async function updateInvestorRecord(userId: string, input: {
     }
   }
 
+  // Tax ID: encrypted through the canonical store; only the last four stay readable.
+  // Managers may enter it inside the edit window; afterwards it goes through Harmonious.
+  const tin = String(input.taxId ?? "").replace(/\D/g, "");
+  if (tin && row.investment_profile_id) {
+    if (tin.length !== 9) fail("The tax ID must be 9 digits.");
+    if (!profileDirect) forbid("this investor has signed or funded; ask Harmonious to update the tax ID.");
+    const { data: pr } = await db().from("investment_profiles").select("profile_type, tax_id_last4").eq("id", row.investment_profile_id).maybeSingle();
+    const { encryptTin } = await import("@/lib/irs-forms.server");
+    const enc = await encryptTin(tin);
+    const { error: te } = await db().rpc("store_profile_tax_id", { _profile: row.investment_profile_id, _ciphertext: enc.ciphertext, _iv: enc.iv, _key_version: enc.keyVersion, _actor: actor.userId } as any);
+    if (te) fail("The tax number couldn't be stored securely.");
+    const entity = /entity|trust|llc|corp|partnership/i.test(String(pr?.profile_type ?? ""));
+    await db().from("investment_profiles").update({ tax_id_type: entity ? "ein" : tin.startsWith("9") ? "itin" : "ssn", tax_id_last4: tin.slice(-4) } as any).eq("id", row.investment_profile_id);
+    changes.push({ offeringId: row.offering_id, onboardingId: row.id, table: "investment_profiles", id: row.investment_profile_id, field: "tax_id", from: pr?.tax_id_last4 ? `•••${pr.tax_id_last4}` : null, to: `•••${tin.slice(-4)}`, source, actor: actor.userId });
+  }
+
   if (input.investment) {
     if (["closed", "declined", "cancelled"].includes(String(row.stage))) fail("This investment can no longer be changed.");
     const patch = investmentRow(input.investment, actor);
@@ -327,6 +343,80 @@ export async function updateInvestorRecord(userId: string, input: {
   await logChanges(changes);
   if (changes.length) await reconcileAfter([row.id], { actorUserId: actor.userId, trigger: "investor_record_updated" });
   return { changed: changes.length, suggested };
+}
+
+/* ------------------------------------------------- owners and signers */
+
+/**
+ * Owners, control persons and signers on the investor's profile. Managers edit
+ * directly inside the edit window (and only an unshared profile); otherwise
+ * only Harmonious. Removal ends the relationship; People are never deleted.
+ */
+export async function editRelatedParty(userId: string, input: {
+  onboardingId: string;
+  add?: RelatedInput;
+  update?: { relationshipId: string; role: string; ownershipPercent?: number | null; isSigner?: boolean };
+  removeId?: string;
+}) {
+  const { actor, row, role } = await assertOnboardingAccess(userId, input.onboardingId);
+  if (role === "investor") forbid("use Confirm Your Information to update your own details.");
+  if (row.removed_at) fail("This investor has been removed from the Fund.");
+  if (!row.investment_profile_id) fail("Choose how they are investing first.");
+  const direct = actor.isStaff || (await investorEditWindow(row) && await exclusiveRecord(row, "investment_profile_id"));
+  if (!direct) forbid("signing or funding has started; ask Harmonious to change owners and signers.");
+  const source = sourceFor(actor);
+  const base = { offeringId: row.offering_id, onboardingId: row.id, table: "investment_profile_relationships", source, actor: actor.userId };
+  const owned = async (id: string) => {
+    const { data } = await db().from("investment_profile_relationships").select("id, profile_id, role, ownership_percent, is_authorized_signer, status").eq("id", id).maybeSingle();
+    if (!data || data.profile_id !== row.investment_profile_id) forbid("that person isn't on this investor's profile.");
+    return data;
+  };
+  const pct = (v: number | null | undefined) => {
+    if (v == null) return null;
+    if (!(v >= 0 && v <= 100)) fail("Ownership must be between 0 and 100%.");
+    return v;
+  };
+  if (input.add) {
+    const r = input.add;
+    if (!RELATED_ROLES.has(r.role) || !r.firstName?.trim() || !r.lastName?.trim()) fail("Enter a first name, last name and role.");
+    const { addRelatedPerson } = await import("@/lib/related-person.server");
+    const res = await addRelatedPerson({ profileId: row.investment_profile_id, offeringId: row.offering_id, firstName: r.firstName, lastName: r.lastName, email: r.email ?? null, role: r.role, ownershipPercent: pct(r.ownershipPercent), isSigner: r.isSigner, actorUserId: actor.userId, entrySource: source });
+    await logChanges([{ ...base, id: res.relationshipId, field: `related:${r.role}`, from: null, to: `${r.firstName} ${r.lastName}` }]);
+    return { ok: true, underReview: res.underReview };
+  }
+  if (input.update) {
+    const u = input.update;
+    if (!RELATED_ROLES.has(u.role)) fail("Choose a valid role.");
+    const cur = await owned(u.relationshipId);
+    const next = { role: u.role, ownership_percent: pct(u.ownershipPercent), is_authorized_signer: Boolean(u.isSigner) || u.role === "authorized_signer" };
+    const { error } = await db().from("investment_profile_relationships").update(next).eq("id", cur.id);
+    if (error) fail(error.message);
+    await logChanges(Object.entries(next).filter(([f, v]) => !sameValue(cur[f], v)).map(([f, v]) => ({ ...base, id: cur.id, field: f, from: cur[f] ?? null, to: v })));
+    return { ok: true };
+  }
+  if (input.removeId) {
+    const cur = await owned(input.removeId);
+    const { error } = await db().from("investment_profile_relationships").update({ status: "removed" }).eq("id", cur.id);
+    if (error) fail(error.message);
+    await logChanges([{ ...base, id: cur.id, field: "status", from: cur.status, to: "removed" }]);
+    return { ok: true };
+  }
+  fail("Nothing to change.");
+}
+
+/**
+ * A fund manager or Harmonious adds the investor's first distribution bank
+ * details. They go through the existing payment-instruction workflow: masked,
+ * pending Harmonious verification, never used to send money by themselves.
+ */
+export async function addDistributionDestination(userId: string, input: { onboardingId: string; destination: any; label?: string | null }) {
+  const { row, role } = await assertOnboardingAccess(userId, input.onboardingId);
+  if (role === "investor") forbid("add your own payment details from Distributions.");
+  if (row.removed_at) fail("This investor has been removed from the Fund.");
+  if (!row.investor_user_id) fail("The investor needs to sign in once before distribution bank details can be saved.");
+  const { requestPaymentInstruction } = await import("@/lib/distributions.server");
+  await requestPaymentInstruction(userId, { investorUserId: row.investor_user_id, investmentProfileId: row.investment_profile_id ?? null, offeringId: row.offering_id, destination: input.destination, label: input.label ?? null });
+  return { ok: true };
 }
 
 /* ---------------------------------------------------------------- remove */
@@ -402,8 +492,8 @@ export async function investorRecordDetail(userId: string, onboardingId: string)
   const staff = role === "staff";
   const [{ data: person }, { data: profile }, { data: rel }, { data: changes }, { data: sugg }, { data: offering }] = await Promise.all([
     row.person_id ? db().from("persons").select("*").eq("id", row.person_id).maybeSingle() : db().from("persons").select("*").eq("user_id", row.investor_user_id).maybeSingle(),
-    row.investment_profile_id ? db().from("investment_profiles").select("id, profile_type, display_label, legal_name, details, entry_source").eq("id", row.investment_profile_id).maybeSingle() : { data: null },
-    row.investment_profile_id ? db().from("investment_profile_relationships").select("id, person_id, role, ownership_percent, is_authorized_signer, status, persons:person_id(legal_first_name, legal_last_name)").eq("profile_id", row.investment_profile_id) : { data: [] },
+    row.investment_profile_id ? db().from("investment_profiles").select("id, profile_type, display_label, legal_name, details, entry_source, tax_id_last4").eq("id", row.investment_profile_id).maybeSingle() : { data: null },
+    row.investment_profile_id ? db().from("investment_profile_relationships").select("id, person_id, role, ownership_percent, is_authorized_signer, status, persons:person_id(legal_first_name, legal_last_name)").eq("profile_id", row.investment_profile_id).neq("status", "removed") : { data: [] },
     db().from("investor_record_changes").select("field, source, subject_table, created_at, manager_visible, old_value, new_value").eq("onboarding_id", row.id).order("created_at", { ascending: false }).limit(100),
     db().from("investor_record_suggestions").select("*").eq("onboarding_id", row.id).in("status", ["open", "review_later"]).order("created_at", { ascending: false }),
     db().from("offerings").select("id, name").eq("id", row.offering_id).maybeSingle(),
@@ -430,7 +520,7 @@ export async function investorRecordDetail(userId: string, onboardingId: string)
     viewer: role, fund: offering,
     overview: { name: personName(person) ?? "Investor", stage: row.stage, enteredBy: row.entry_source, investorConfirmedAt: row.investor_confirmed_at, removed: Boolean(row.removed_at) },
     person: safePerson,
-    profile: profile ? { id: profile.id, type: formProfileType(profile.profile_type), typeLabel: PROFILE_TYPE_LABELS[formProfileType(profile.profile_type)], label: profile.display_label, legalName: profile.legal_name, details: profile.details ?? {} } : null,
+    profile: profile ? { id: profile.id, type: formProfileType(profile.profile_type), typeLabel: PROFILE_TYPE_LABELS[formProfileType(profile.profile_type)], label: profile.display_label, legalName: profile.legal_name, details: profile.details ?? {}, taxIdLast4: profile.tax_id_last4 ?? null } : null,
     related: ((rel ?? []) as any[]).map((r) => ({ underReview: reviewSet.has(r.id), id: r.id, name: `${r.persons?.legal_first_name ?? ""} ${r.persons?.legal_last_name ?? ""}`.trim(), role: r.role, ownershipPercent: r.ownership_percent, signer: r.is_authorized_signer, status: r.status })),
     investment: {
       amountCents: row.requested_amount_cents, commitmentCents: row.commitment_amount_cents, investmentDate: row.investment_date, unitCount: row.unit_count,
@@ -453,6 +543,8 @@ export async function investorRecordDetail(userId: string, onboardingId: string)
     pendingReviewCount: (sugg ?? []).length,
     contactEditMode: directContact ? "direct" as const : "suggest" as const,
     detailsEditMode: directEdits ? "direct" as const : "suggest" as const,
+    profileEditMode: (staff || (directEdits && row.investment_profile_id && await exclusiveRecord(row, "investment_profile_id"))) ? "direct" as const : "locked" as const,
+    investorHasAccount: Boolean(row.investor_user_id),
     claimState: claimState({ hasAccount: Boolean(row.investor_user_id), entrySource: row.entry_source }),
     actor: { isStaff: actor.isStaff },
   };

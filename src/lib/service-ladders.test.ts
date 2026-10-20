@@ -4,8 +4,8 @@ import { serviceLevelLabel } from "./service-engagement-labels";
 
 describe("separate SPV and Fund ladders", () => {
   it("only valid levels per product", () => {
-    expect(levelsFor("SPV_ADMINISTRATION")).toEqual(["CORE", "PLUS", "WHITE_GLOVE"]);
-    expect(levelsFor("FUND_ADMINISTRATION")).toEqual(["CORE", "FUND_ADMINISTRATION", "WHITE_GLOVE", "INSTITUTIONAL"]);
+    expect(levelsFor("SPV_ADMINISTRATION")).toEqual(["SELF_SERVE", "CORE", "PLUS", "WHITE_GLOVE", "SAAS"]);
+    expect(levelsFor("FUND_ADMINISTRATION")).toEqual(["SELF_SERVE", "CORE", "FUND_ADMINISTRATION", "WHITE_GLOVE", "INSTITUTIONAL", "SAAS"]);
     expect(isValidCombination("SPV_ADMINISTRATION", "FUND_ADMINISTRATION")).toBe(false);
     expect(isValidCombination("FUND_ADMINISTRATION", "PLUS")).toBe(false);
   });
