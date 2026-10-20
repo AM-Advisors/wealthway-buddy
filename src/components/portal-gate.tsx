@@ -1,6 +1,6 @@
 import { useEffect, type ReactNode } from "react";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 
@@ -22,6 +22,7 @@ export function PortalGate({
 }) {
   const fetchAccess = useServerFn(getPortalAccess);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { data, isPending, isError, refetch, isFetching } = useQuery({
     queryKey: ["portal-access"],
     queryFn: () => fetchAccess(),
@@ -29,10 +30,14 @@ export function PortalGate({
     retry: 1,
   });
 
-  // An investment was just connected to this account: open it.
+  // An investment was just connected to this account: open it once.
+  // Clear the one-time hint from the cache first so returning to the portal doesn't redirect again.
   useEffect(() => {
-    if (data?.openOnboardingId) void navigate({ to: "/onboard/i/$onboardingId", params: { onboardingId: data.openOnboardingId } });
-  }, [data?.openOnboardingId, navigate]);
+    const id = data?.openOnboardingId;
+    if (!id) return;
+    queryClient.setQueryData(["portal-access"], (prev: typeof data) => (prev ? { ...prev, openOnboardingId: null } : prev));
+    void navigate({ to: "/onboard/i/$onboardingId", params: { onboardingId: id }, replace: true });
+  }, [data?.openOnboardingId, navigate, queryClient]);
 
   if (isPending) {
     return (
