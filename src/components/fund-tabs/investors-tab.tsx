@@ -56,7 +56,8 @@ export function InvestorsTab({ fundId, workQueue }: { fundId: string; workQueue?
       const res = await remind({ data: { fundId, onboardingIds: picked } });
       const sent = res.filter((x) => x.outcome === "sent").length;
       const other = res.length - sent;
-      toast.success(`${sent} reminder${sent === 1 ? "" : "s"} sent${other ? `, ${other} skipped or failed` : ""}.`);
+      const why = res.filter((x) => x.outcome !== "sent").map((x) => `${rows.find((r) => r.id === x.id)?.name ?? "Investor"}: ${x.reason ?? x.outcome}`).join("; ");
+      toast.success(`${sent} reminder${sent === 1 ? "" : "s"} sent${other ? `, ${other} not sent` : ""}.`, why ? { description: why, duration: 12000 } : undefined);
       setPicked([]);
       await lq.refetch();
     } catch (e) { toast.error((e as Error).message); } finally { setSending(false); }
