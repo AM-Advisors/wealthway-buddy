@@ -18,7 +18,7 @@ export const createTemplateFromFundFn = createServerFn({ method: "POST" }).middl
   .handler(async ({ data, context }) => (await eng()).createTemplateFromFund(context.userId, data));
 
 export const addTemplateVersionFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ templateId: uuid, note: z.string().max(1000).nullable().optional(), fileName: z.string().min(1).max(200), base64: z.string().min(1).max(28_000_000) }).parse(d))
+  .inputValidator((d) => z.object({ templateId: uuid, note: z.string().max(1000).nullable().optional(), fileName: z.string().min(1).max(200), base64: z.string().min(1).max(36_000_000) }).parse(d))
   .handler(async ({ data, context }) => (await eng()).addTemplateVersion(context.userId, data));
 
 export const createUploadedTemplateFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])

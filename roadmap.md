@@ -1,9 +1,11 @@
 # Roadmap
 
 ## Equity, debt and real estate templates (2026-10-20)
-- [ ] Research YC and other official model-document sources, separating deal instruments from fund formation/offering templates and respecting reuse restrictions.
-- [ ] Connect fund-type assignments and direct template upload to the existing versioned approval/generation engine.
-- [ ] Validate type matching and upload rules; approved fund-specific legal files and isolated QA may remain blockers.
+- [x] Research YC/NVCA (company-level instruments, not fund templates) and ILPA (equity-fund LPA/subscription references only); no verified official debt/real estate fund offering template. No third-party text copied or SPV documents relabeled.
+- [x] Add direct PDF/Word library upload with fund-type assignments and pending approval; preserve generation/signature path. Equity/debt/real estate aliases match canonical types; failed template reads offer Retry.
+- [x] Nineteen focused checks passed for type matching, staff-only upload, failed/unsupported upload, approval and activation guards.
+- [ ] Populate approved equity/debt/real estate legal files — blocked: counsel-approved files not supplied; public model references do not establish suitability or approval.
+- [ ] Signed-in upload → approval → fund generation/read-back — blocked on isolated synthetic QA access; no real documents activated or sent.
 
 ## Fund document approval visibility (2026-10-20)
 - [x] Expose canonical offering-document approval and explicit publication on the fund Documents tab; investors see separate version approval/readiness labels without changing signatures or admission.
