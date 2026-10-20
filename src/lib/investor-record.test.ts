@@ -476,3 +476,51 @@ describe("roster presentation", () => {
     expect(rosterReadiness(rd[1])).toBe("needs_attention");
   });
 });
+
+vi.mock("@/lib/irs-forms.server", () => ({ encryptTin: async () => ({ ciphertext: "c", iv: "i", keyVersion: 1 }) }));
+
+describe("manager-entered tax ID, owners and signers", () => {
+  it("a manager saves a tax ID before signing; only the last four are kept readable", async () => {
+    const s = await srv();
+    const r = await s.createInvestor(STAFF, jane());
+    await s.updateInvestorRecord(MGR_A, { onboardingId: r.onboardingId, taxId: "123456789" });
+    const pr = tables["investment_profiles"][0];
+    expect(pr.tax_id_last4).toBe("6789");
+    const log = tables["investor_record_changes"].find((c) => c.field === "tax_id");
+    expect(JSON.stringify(log)).not.toContain("123456789");
+  });
+  it("after an investor signs, a manager can't change the tax ID", async () => {
+    const s = await srv();
+    const r = await s.createInvestor(STAFF, jane());
+    tables["fund_file_signatures"] = [{ onboarding_id: r.onboardingId, signer_role: "investor", status: "signed" }];
+    await expect(s.updateInvestorRecord(MGR_A, { onboardingId: r.onboardingId, taxId: "123456789" })).rejects.toThrow(/Forbidden/);
+  });
+  it("a manager edits and removes an owner before signing; the person is never deleted", async () => {
+    const s = await srv();
+    const r = await s.createInvestor(STAFF, jane());
+    const profileId = tables["investment_profiles"][0].id;
+    tables["investment_profile_relationships"] = [{ id: "rel-1", profile_id: profileId, person_id: "p-x", role: "beneficial_owner", ownership_percent: 10, is_authorized_signer: false, status: "active" }];
+    await s.editRelatedParty(MGR_A, { onboardingId: r.onboardingId, update: { relationshipId: "rel-1", role: "control_person", ownershipPercent: 30, isSigner: true } });
+    expect(tables["investment_profile_relationships"][0]).toMatchObject({ role: "control_person", ownership_percent: 30, is_authorized_signer: true });
+    await s.editRelatedParty(MGR_A, { onboardingId: r.onboardingId, removeId: "rel-1" });
+    expect(tables["investment_profile_relationships"][0].status).toBe("removed");
+    expect(tables["investor_record_changes"].some((c) => c.field === "status" && c.actor_user_id === MGR_A)).toBe(true);
+  });
+  it("after an investor signs, a manager can't change owners or signers", async () => {
+    const s = await srv();
+    const r = await s.createInvestor(STAFF, jane());
+    tables["fund_file_signatures"] = [{ onboarding_id: r.onboardingId, signer_role: "investor", status: "signed" }];
+    await expect(s.editRelatedParty(MGR_A, { onboardingId: r.onboardingId, removeId: "rel-1" })).rejects.toThrow(/Forbidden/);
+  });
+  it("ownership must be between 0 and 100%", async () => {
+    const s = await srv();
+    const r = await s.createInvestor(STAFF, jane());
+    tables["investment_profile_relationships"] = [{ id: "rel-1", profile_id: tables["investment_profiles"][0].id, role: "owner", status: "active" }];
+    await expect(s.editRelatedParty(MGR_A, { onboardingId: r.onboardingId, update: { relationshipId: "rel-1", role: "owner", ownershipPercent: 140 } })).rejects.toThrow(/between 0 and 100/);
+  });
+  it("distribution bank details need the investor to have signed in", async () => {
+    const s = await srv();
+    const r = await s.createInvestor(STAFF, jane());
+    await expect(s.addDistributionDestination(MGR_A, { onboardingId: r.onboardingId, destination: { method: "wire" } })).rejects.toThrow(/sign in once/);
+  });
+});
