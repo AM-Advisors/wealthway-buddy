@@ -1,9 +1,9 @@
-import { RELATED_REVIEW_MESSAGE } from "@/lib/related-person-model";
 import { PersonalInvestmentLinkCard } from "@/components/personal-investment-link";
 import { UploadForInvestor } from "@/components/upload-for-investor";
 import { InvestorStepHistory } from "@/components/investor-step-history";
 import { InvestorRecordDocuments } from "@/components/investor-document-review";
 import { InvestorDocumentAi } from "@/components/investor-document-ai";
+import { DistributionBankCard, InvestorTaxIdCard, RelatedPartiesEditor } from "@/components/investor-record-extras";
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -118,6 +118,8 @@ function InvestorRecordPage() {
             <div><p className="font-medium">{prettyStatus(s.field)}</p><p className="text-muted-foreground">Harmonious record: {JSON.stringify(s.current)} · {SOURCE_LABELS[s.source as EntrySource] ?? s.source}: {JSON.stringify(s.proposed)}{s.status === "review_later" ? " · marked for later" : ""}</p></div>
             <div className="flex gap-1">{(["accept", "reject", "review_later"] as const).map((a) => <Button key={a} size="sm" variant={a === "accept" ? "default" : "outline"} onClick={async () => { try { await resolve({ data: { id: s.id, action: a } }); toast.success("Recorded"); refresh(); } catch (e) { toast.error((e as Error).message); } }}>{a === "review_later" ? "Review later" : prettyStatus(a)}</Button>)}</div>
           </div>)}</CardContent></Card> : null}
+        {data.profile ? <InvestorTaxIdCard onboardingId={onboardingId} last4={(data.profile as any).taxIdLast4} editable={!data.overview.removed && (data as any).profileEditMode === "direct"} onChanged={refresh} /> : null}
+        {!data.overview.removed ? <DistributionBankCard onboardingId={onboardingId} hasAccount={Boolean((data as any).investorHasAccount)} /> : null}
       </div> : null}
 
       {tab === "investment" ? <Card><CardContent className="grid gap-3 pt-6 sm:grid-cols-2">
@@ -155,9 +157,8 @@ function InvestorRecordPage() {
           {data.profile.type === "entity" || data.profile.type === "trust" ? field("jurisdiction", "Jurisdiction", (data.profile.details as any).jurisdiction) : null}
           {data.profile.type === "ira" ? field("custodianName", "Custodian", (data.profile.details as any).custodianName) : null}
           <Button className="sm:w-fit" disabled={data.overview.removed} onClick={() => save({ onboardingId, profile: { legalName: edit['legalName'], details: Object.fromEntries(["jurisdiction", "custodianName"].filter((k) => edit[k] !== undefined).map((k) => [k, edit[k]!])) } })}>Save profile</Button>
-          <div className="sm:col-span-2"><p className="text-sm font-medium">Owners, control persons & signers</p>
-            {data.related.length ? <ul className="mt-1 space-y-1 text-sm">{data.related.map((r) => <li key={r.id}>{r.name} · {prettyStatus(r.role)}{r.ownershipPercent != null ? ` · ${r.ownershipPercent}%` : ""}{r.signer ? " · signer" : ""}{(r as any).underReview ? <span className="block text-xs text-muted-foreground">{RELATED_REVIEW_MESSAGE}</span> : null}</li>)}</ul> : <p className="text-sm text-muted-foreground">None recorded.</p>}</div>
-          <p className="text-xs text-muted-foreground sm:col-span-2">Tax IDs, tax forms, ID images and verification evidence are never shown here. The investor provides them securely.</p>
+          <RelatedPartiesEditor onboardingId={onboardingId} related={data.related as any} editable={!data.overview.removed && (data as any).profileEditMode === "direct"} onChanged={refresh} />
+          <p className="text-xs text-muted-foreground sm:col-span-2">Tax forms, ID images and verification evidence are never shown here.</p>
         </CardContent></Card> : null}
       </div> : null}
 
