@@ -4,6 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 
 import { HelpTip } from "@/components/help-tip";
+import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { filterMyFunds, MY_FUNDS_FILTERS, type MyFundsFilter } from "@/lib/client-portal-model";
@@ -33,9 +35,14 @@ function MyFundsPage() {
   const shown = filterMyFunds(funds, filter);
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6 p-4 md:p-6">
-      <div>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
         <h1 className="text-2xl font-semibold tracking-tight">My Funds</h1>
         <p className="mt-1 text-sm text-muted-foreground">Funds and SPVs you manage or invest in.</p>
+        </div>
+        <Button asChild>
+          <Link to="/manager/request-fund"><Plus className="size-4" aria-hidden="true" />Add Fund or SPV</Link>
+        </Button>
       </div>
       <div role="tablist" aria-label="Filter by fund type" className="flex flex-wrap gap-2">
         {MY_FUNDS_FILTERS.map((f) => (
