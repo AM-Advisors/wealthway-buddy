@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ThirdPartyBadge, ThirdPartyNote } from "@/components/third-party-badge";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 
@@ -42,7 +43,8 @@ export function BankingChoice({ offeringId, onChanged }: { offeringId: string; o
 
   return (
     <div className="space-y-3">
-      <p className="text-sm font-medium">Who is setting up the bank account?</p>
+      <p className="flex flex-wrap items-center gap-2 text-sm font-medium">Who is setting up the bank account? <ThirdPartyBadge provider="the bank" /></p>
+      <ThirdPartyNote provider="The bank" />
       <div className="flex flex-col gap-2 sm:flex-row">
         <button type="button" className={opt(by === "fund")} disabled={choose.isPending} onClick={() => choose.mutate("fund")}>
           The fund manager<span className="block text-xs font-normal text-muted-foreground">You open the account and add wire instructions.</span>

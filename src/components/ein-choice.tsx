@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ThirdPartyBadge, ThirdPartyNote } from "@/components/third-party-badge";
 import { useServerFn } from "@tanstack/react-start";
 import { ExternalLink } from "lucide-react";
 import { toast } from "sonner";
@@ -46,7 +47,7 @@ export function EinChoice({ offeringId, onChanged }: { offeringId: string; onCha
   return (
     <div className="space-y-3">
       <div className="rounded-xl border bg-background px-4 py-3 text-sm"><EinField fundId={offeringId} /></div>
-      <p className="text-sm font-medium">Who is getting the EIN?</p>
+      <p className="flex flex-wrap items-center gap-2 text-sm font-medium">Who is getting the EIN? <ThirdPartyBadge provider="the IRS" /></p>
       <div className="flex flex-col gap-2 sm:flex-row">
         <button type="button" className={opt(by === "fund")} disabled={choose.isPending} onClick={() => choose.mutate("fund")}>
           The fund manager<span className="block text-xs font-normal text-muted-foreground">Apply online with the IRS, then enter the EIN here.</span>
