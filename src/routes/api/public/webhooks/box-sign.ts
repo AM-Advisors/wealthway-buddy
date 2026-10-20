@@ -67,6 +67,8 @@ export const Route = createFileRoute("/api/public/webhooks/box-sign")({
             trigger,
             sign_request_id: signRequestId,
             delivered_at: body?.created_at ? new Date(body.created_at).toISOString() : null,
+            // Minimal, non-personal payload so failures are inspectable in Ops → Webhook log.
+            payload: { trigger, source_type: body?.source?.type ?? null, source_status: body?.source?.status ?? null },
           });
         if (dedupeError) {
           console.log("[box-sign] duplicate webhook ignored", trigger, signRequestId);
@@ -93,6 +95,7 @@ export const Route = createFileRoute("/api/public/webhooks/box-sign")({
             console.log("[box-sign] webhook nda", trigger, signRequestId, nda.status);
           } else {
             console.log("[box-sign] webhook", trigger, signRequestId, result.status);
+            await supabaseAdmin.from("box_sign_webhook_events").update({ outcome: String(body?.source?.status ?? result.status), processed_at: new Date().toISOString() }).eq("provider_event_id", deliveryId);
             if (result.signatureId) {
               const { data: sig } = await supabaseAdmin.from("document_signatures").select("application_id, investment_profile_id").eq("id", result.signatureId).maybeSingle();
               const { reconcileReadinessForSubjects } = await import("@/lib/investor-onboarding.server");
@@ -101,6 +104,7 @@ export const Route = createFileRoute("/api/public/webhooks/box-sign")({
           }
         } catch (e) {
           console.error("[box-sign] webhook processing failed", e);
+          await supabaseAdmin.from("box_sign_webhook_events").update({ outcome: "processing_failed" }).eq("provider_event_id", deliveryId).then(() => undefined, () => undefined);
         }
 
         try {

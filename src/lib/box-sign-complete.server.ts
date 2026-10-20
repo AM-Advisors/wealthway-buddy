@@ -43,6 +43,12 @@ export async function syncBoxSignRequest(
     provider_status: mapped,
     provider_last_event_at: now,
   };
+  // Keep Box's own failure reason (e.g. error_converting) so staff and retries can see why.
+  if (rawStatus.toLowerCase().startsWith("error")) {
+    patch["provider_error"] = rawStatus;
+    patch["box_error"] = rawStatus;
+    console.error("[box-sign] request failed in Box", signRequestId, rawStatus);
+  }
 
   // First time Box tells us the signer opened the document, stamp it once.
   const alreadyViewed = (signature as any).provider_viewed_at as string | null;

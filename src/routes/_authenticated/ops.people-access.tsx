@@ -74,12 +74,18 @@ function RecentSignIns() {
   const q = useQuery({ queryKey: ["people-directory"], queryFn: useServerFn(getPeopleDirectory), retry: false });
   const recent = ((q.data?.people ?? []) as any[]).filter((p) => p.lastSignIn).sort((a, b) => String(b.lastSignIn).localeCompare(String(a.lastSignIn))).slice(0, 8);
   if (!recent.length) return null;
+  const half = Math.ceil(recent.length / 2);
+  const cols = [recent.slice(0, half), recent.slice(half)].filter((c) => c.length);
   return (
     <section className="rounded-xl border p-4">
       <p className="mb-2 text-sm font-medium">Recent sign-ins</p>
-      <ul className="grid gap-1 text-sm sm:grid-cols-2">
-        {recent.map((p) => <li key={p.id} className="flex justify-between gap-2"><span className="truncate">{p.name || p.email}</span><span className="shrink-0 text-muted-foreground">{new Date(p.lastSignIn).toLocaleString([], { dateStyle: "medium", timeStyle: "short" })}</span></li>)}
-      </ul>
+      <div className="grid text-sm sm:grid-cols-2 sm:divide-x">
+        {cols.map((col, i) => (
+          <ul key={i} className={`divide-y ${i === 0 ? "sm:pr-4" : "sm:pl-4"}`}>
+            {col.map((p) => <li key={p.id} className="flex justify-between gap-2 py-1.5"><span className="truncate">{p.name || p.email}</span><span className="shrink-0 text-muted-foreground">{new Date(p.lastSignIn).toLocaleString([], { dateStyle: "medium", timeStyle: "short" })}</span></li>)}
+          </ul>
+        ))}
+      </div>
     </section>
   );
 }

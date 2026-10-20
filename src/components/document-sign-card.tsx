@@ -244,11 +244,26 @@ export function DocumentSignCard({
           <footer className="sticky bottom-0 z-10 flex flex-wrap items-center justify-between gap-2 border-t bg-background px-4 py-3">
             <p className="text-xs text-muted-foreground">
               Your signature is recorded by Box and confirmed back to Harmonious. Closing this
-              window does not sign the agreement.
+              window does not sign the agreement. If Box shows an error, press Try again.
             </p>
-            <Button type="button" variant="outline" size="sm" onClick={() => void closeSession()}>
-              Done
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                disabled={opening || checking}
+                onClick={async () => {
+                  // Re-checks Box first; a failed request is replaced with a fresh one.
+                  await closeSession();
+                  await openSession();
+                }}
+              >
+                Try again
+              </Button>
+              <Button type="button" variant="outline" size="sm" onClick={() => void closeSession()}>
+                Done
+              </Button>
+            </div>
           </footer>
         </DialogContent>
       </Dialog>
