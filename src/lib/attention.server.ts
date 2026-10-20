@@ -922,7 +922,7 @@ async function companyItems(ctx: Ctx, n: Names): Promise<AttentionItem[]> {
  * A professional sees one section per delegation, never a blended list. Each
  * client's items are fetched only after `canAct` proves this delegation carries
  * the matching read permission, and the delegation id travels with every item
- * so nothing can be shown outside the context that authorised it.
+ * so nothing can be shown outside the context that authorized it.
  */
 async function professionalItems(ctx: Ctx): Promise<AttentionItem[]> {
   const s = ctx.supabase;

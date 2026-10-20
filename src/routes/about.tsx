@@ -50,7 +50,7 @@ const WHAT_WE_DO: readonly [string, string][] = [
   ],
   [
     "Payment facilitation",
-    "Payment instructions recorded against verified beneficiaries, checked, approved by two authorised people, then matched back to invoices and investor deposits.",
+    "Payment instructions recorded against verified beneficiaries, checked, approved by two authorized people, then matched back to invoices and investor deposits.",
   ],
   [
     "Compliance and regulatory support",

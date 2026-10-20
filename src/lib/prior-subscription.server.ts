@@ -20,7 +20,7 @@ async function requireViewer(userId: string) {
   return roles.some((r) => ["super_admin", "admin", "operations", "executive"].includes(r));
 }
 
-/** Latest version per onboarding, with its decision. A failed read is logged and treated as no rows (the pre-batch behaviour). */
+/** Latest version per onboarding, with its decision. A failed read is logged and treated as no rows (the pre-batch behavior). */
 export async function latestPriors(onboardingIds: string[]) {
   if (!onboardingIds.length) return new Map<string, any>();
   const db = await admin();

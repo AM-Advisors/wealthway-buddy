@@ -4,7 +4,7 @@
  * Platform sign-offs vs documents, Fund vs SPV setup schemas, request groups,
  * My Funds projection/filters, the investor-safe Fund view and workspace
  * categories. Navigation built from these is a courtesy: every Fund is still
- * authorised server-side from the person's actual relationships.
+ * authorized server-side from the person's actual relationships.
  */
 
 /* ======================================== platform agreements vs documents */

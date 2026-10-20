@@ -40,7 +40,7 @@ async function mappingsFor(bookId: string) {
 /** Refuse before any record exists when the entry date falls in a sealed period. */
 async function assertOpenPeriod(bookId: string, date: string) {
   const { data } = await db().from("accounting_periods").select("status").eq("book_id", bookId).lte("period_start", date).gte("period_end", date).maybeSingle();
-  if (data && ["closed", "locked"].includes(String(data.status))) fail("That accounting period is closed. Reopen it with an authorised adjustment first.");
+  if (data && ["closed", "locked"].includes(String(data.status))) fail("That accounting period is closed. Reopen it with an authorized adjustment first.");
 }
 
 async function draftFrom(userId: string, offeringId: string, bookId: string, lines: Line[], meta: { date: string; memo: string; source: string; table: string; id: string }) {

@@ -36,7 +36,7 @@ export const TRANSACTION_TYPE_LABELS: Record<CashTransactionType, string> = {
   distribution: "Distribution paid",
   management_fee: "Management fee",
   fund_expense: "Fund expense",
-  organizational_expense: "Organisational expense",
+  organizational_expense: "Organizational expense",
   portfolio_investment: "Portfolio investment",
   investment_proceeds: "Investment proceeds",
   interest_income: "Interest",

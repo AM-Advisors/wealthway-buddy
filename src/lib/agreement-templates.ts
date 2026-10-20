@@ -168,7 +168,7 @@ export const MSA_SECTIONS: { no: string; title: string; body: string }[] = [
   {
     no: "7",
     title: "Representations",
-    body: `Each party represents that it is duly organised and in good standing, that it has authority to enter into this Agreement, and that its performance will comply with applicable law. The Client represents that its offering is conducted in reliance on a valid exemption and that it has obtained its own legal and tax advice.`,
+    body: `Each party represents that it is duly organized and in good standing, that it has authority to enter into this Agreement, and that its performance will comply with applicable law. The Client represents that its offering is conducted in reliance on a valid exemption and that it has obtained its own legal and tax advice.`,
   },
   {
     no: "8",

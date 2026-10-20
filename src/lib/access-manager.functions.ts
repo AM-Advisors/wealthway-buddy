@@ -131,7 +131,7 @@ export const grantReadOnlyAccess = createServerFn({ method: "POST" })
     for (const cap of data.capabilities) {
       if (requiresSignedAuthority(cap as any)) {
         throw new Error(
-          "signed_authority_required: banking, wire, signing and payment permissions need a signed authorisation and cannot be granted yet.",
+          "signed_authority_required: banking, wire, signing and payment permissions need a signed authorization and cannot be granted yet.",
         );
       }
       if (!ACTIVATED.includes(cap as any)) {

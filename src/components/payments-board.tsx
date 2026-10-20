@@ -121,7 +121,7 @@ export function PaymentsBoard({ purposes }: { purposes?: string[] } = {}) {
           <CardTitle>Payments</CardTitle>
           <CardDescription>
             Harmonious facilitates payments on instruction. Nothing leaves or is collected until the
-            beneficiary is verified, compliance has cleared it and two authorised people have
+            beneficiary is verified, compliance has cleared it and two authorized people have
             approved it.
           </CardDescription>
         </CardHeader>

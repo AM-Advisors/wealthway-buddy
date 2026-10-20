@@ -282,7 +282,7 @@ export const submitIntakeRequest = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     const clientIds = await myClientIds(context);
-    if (clientIds.length === 0) throw new Error("You aren't linked to an organisation yet.");
+    if (clientIds.length === 0) throw new Error("You aren't linked to an organization yet.");
     const clientId = clientIds[0] as string;
 
     // A la carte add-ons are paid in full upfront at the approved SOW price (server-verified).

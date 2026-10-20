@@ -4,7 +4,7 @@
  * Withholding is decided only by adviser-approved rules. When no approved
  * rule matches the investor's tax status and the distribution character, the
  * line is WITHHOLDING REVIEW REQUIRED: nothing is withheld automatically and
- * final approval is blocked until an authorised reviewer records a decision.
+ * final approval is blocked until an authorized reviewer records a decision.
  */
 export type InvestorTaxStatus = "us_person" | "foreign_person" | "backup_subject" | "undocumented";
 

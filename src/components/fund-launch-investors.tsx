@@ -45,7 +45,7 @@ export function FundLaunchInvestors({ fundId, items }: { fundId: string; items: 
           <div key={c.label} className={`rounded-lg border p-3 text-sm ${c.done ? "border-primary bg-primary/5" : ""}`}>{c.done ? "✓ " : ""}{c.label}</div>
         ))}</div>
         {!d.launched && <p className="text-xs text-muted-foreground">Launching uses the normal approval on <Link to="/ops/fund/$fundId" params={{ fundId }} className="text-primary underline">Fund Setup</Link>. Before launch, "Send onboarding" invites existing investors to their current record only.</p>}
-        <p className="text-xs text-muted-foreground">Investors who signed and funded before Harmonious can be marked as a prior subscription. A second staff member confirms it. They still complete About You and identity verification, then skip Sign and Fund. Prior funding is labelled "Funded (prior, off-platform)" and is never counted as money Harmonious reconciled.</p>
+        <p className="text-xs text-muted-foreground">Investors who signed and funded before Harmonious can be marked as a prior subscription. A second staff member confirms it. They still complete About You and identity verification, then skip Sign and Fund. Prior funding is labeled "Funded (prior, off-platform)" and is never counted as money Harmonious reconciled.</p>
         {!d.investors.length && <p className="text-sm text-muted-foreground">No investors yet. Accept investor suggestions in Step 3.</p>}
         {d.investors.length > 0 && (
           <div className="overflow-x-auto">

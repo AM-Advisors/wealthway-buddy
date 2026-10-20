@@ -141,7 +141,7 @@ function Body() {
             <CardDescription>
               {workspace!.company!.isDemo
                 ? "This is the demo company. Switch to your own company in Settings to record a transfer."
-                : "An authorised signatory on your account can record and decide transfer requests."}
+                : "An authorized signatory on your account can record and decide transfer requests."}
             </CardDescription>
           </CardHeader>
         </Card>
@@ -629,7 +629,7 @@ function ConsentDialog({
         <DialogHeader>
           <DialogTitle>Company consent</DialogTitle>
           <DialogDescription>
-            Record the company's decision on this transfer, and who authorised it.
+            Record the company's decision on this transfer, and who authorized it.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-3">

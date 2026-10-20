@@ -222,7 +222,7 @@ describe("schedule of investments", () => {
     methodology: "market_comparable",
   };
 
-  it("shows cost, fair value, unrealised gain and share of NAV", () => {
+  it("shows cost, fair value, unrealized gain and share of NAV", () => {
     const schedule = scheduleOfInvestments("2026-03-31", [holding], 1_200_000);
     expect(schedule.rows[0]!.unrealizedGainCents).toBe(200_000);
     expect(schedule.rows[0]!.pctOfNav).toBe(50);

@@ -816,7 +816,7 @@ describe("confirmation codes and step-up hardening", () => {
     ).rejects.toThrow(/Forbidden/);
   });
 
-  it("a verified challenge is useless once the licence expires", async () => {
+  it("a verified challenge is useless once the license expires", async () => {
     const d = delegation();
     authorityDoc(d);
     const { challengeId } = await beginSigningStepUp(PRO_A, {

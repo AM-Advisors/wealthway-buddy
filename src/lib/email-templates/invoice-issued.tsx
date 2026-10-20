@@ -36,7 +36,7 @@ interface InvoiceIssuedProps {
 
 function InvoiceIssued({
   contactName = 'there',
-  clientName = 'your organisation',
+  clientName = 'your organization',
   invoiceNumber = 'HRM-0000-0000',
   amount = '$0.00',
   issueDate = '',

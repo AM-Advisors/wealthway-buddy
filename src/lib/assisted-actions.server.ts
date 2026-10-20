@@ -157,7 +157,7 @@ export async function prepareDraft(actorUserId: string | null | undefined, input
 
   const capability = DRAFT_TYPE_CAPABILITY[draftType];
   if (!ctx.capabilities.includes(capability)) {
-    throw new Error("Forbidden: this authorisation does not allow that.");
+    throw new Error("Forbidden: this authorization does not allow that.");
   }
 
   const target = await resolveTarget(ctx, draftType, input.targetId ?? null);
@@ -241,7 +241,7 @@ export async function recordAssistedUpload(
   const ctx = await loadDelegatedContext(actorUserId, input.delegationId);
   if (!ctx) throw new Error("Forbidden: that delegated access is not available.");
   if (!ctx.capabilities.includes("upload_documents")) {
-    throw new Error("Forbidden: this authorisation does not allow uploads.");
+    throw new Error("Forbidden: this authorization does not allow uploads.");
   }
 
   const targetId =

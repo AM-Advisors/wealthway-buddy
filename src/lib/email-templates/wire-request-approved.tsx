@@ -32,7 +32,7 @@ interface WireRequestApprovedProps {
 
 function WireRequestApproved({
   contactName = 'there',
-  clientName = 'your organisation',
+  clientName = 'your organization',
   fundName = 'your fund',
   amount = '$0.00',
   purpose = 'Wire',

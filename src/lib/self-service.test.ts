@@ -71,7 +71,7 @@ describe("bulk investors", () => {
     expect(rows[0]!.amountCents).toBe(10_000_000);
     expect(rows[1]!.errors).toContain("Duplicate email in this file");
     expect(rows[2]!.errors).toContain("Email address is not valid");
-    expect(rows[3]!.errors).toEqual(expect.arrayContaining(["Amount must be a positive number", "Investor type not recognised"]));
+    expect(rows[3]!.errors).toEqual(expect.arrayContaining(["Amount must be a positive number", "Investor type not recognized"]));
     expect(rows[4]!.errors).toContain("Already invited to this fund");
   });
   it("sends one at a time through the email-bound invitation", () => {

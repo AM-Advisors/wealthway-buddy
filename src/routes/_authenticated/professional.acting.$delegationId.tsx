@@ -162,7 +162,7 @@ function DelegatedClient() {
         )}
       </WorkspaceSection>
 
-      <WorkspaceSection title="Banking" description="Last four digits only, and only when separately authorised.">
+      <WorkspaceSection title="Banking" description="Last four digits only, and only when separately authorized.">
         {view.banking.length === 0 ? (
           <Empty>Not in scope.</Empty>
         ) : (

@@ -80,6 +80,6 @@ export const AUTHORITY_LABELS: Record<string, string> = {
   view: "View only",
   assist: "Assist",
   limited_proxy: "Limited proxy",
-  authorized_signatory: "Authorised signatory",
+  authorized_signatory: "Authorized signatory",
   transaction_authority: "Transaction authority",
 };

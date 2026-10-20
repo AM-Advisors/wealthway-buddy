@@ -146,7 +146,7 @@ export function RaisePaymentCard({
                 ) : (
                   <>
                     <SelectItem value="expense">Fund expense</SelectItem>
-                    <SelectItem value="fee">Harmonious fee (authorised)</SelectItem>
+                    <SelectItem value="fee">Harmonious fee (authorized)</SelectItem>
                     <SelectItem value="transfer">Transfer between accounts</SelectItem>
                     <SelectItem value="other">Other</SelectItem>
                   </>
@@ -207,7 +207,7 @@ export function RaisePaymentCard({
           {submit.isPending || busy ? "Raising…" : "Raise for approval"}
         </Button>
         <p className="text-xs text-muted-foreground">
-          Two authorised people must approve, the beneficiary must be verified and compliance must
+          Two authorized people must approve, the beneficiary must be verified and compliance must
           clear it before anything is sent.
         </p>
       </CardContent>

@@ -514,7 +514,7 @@ export const issueInvoice = createServerFn({ method: "POST" })
     const rates = await checkRates(context, data.id, (invoice as any).client_id);
     if (rates.varianceCents > 0 && !data.overrideReason) {
       throw new Error(
-        "This invoice bills above the client's contracted rate. Record the written authorisation for the difference before issuing it.",
+        "This invoice bills above the client's contracted rate. Record the written authorization for the difference before issuing it.",
       );
     }
 
@@ -593,7 +593,7 @@ export const issueInvoice = createServerFn({ method: "POST" })
       (person) => ({
         contactName: person.name,
         clientName:
-          (clientRow as any)?.legal_name || (clientRow as any)?.name || "your organisation",
+          (clientRow as any)?.legal_name || (clientRow as any)?.name || "your organization",
         invoiceNumber: number,
         amount: money(total),
         issueDate: data.issueDate,
@@ -676,7 +676,7 @@ export const resendInvoiceEmail = createServerFn({ method: "POST" })
       (person) => ({
         contactName: person.name,
         clientName:
-          (clientRow as any)?.legal_name || (clientRow as any)?.name || "your organisation",
+          (clientRow as any)?.legal_name || (clientRow as any)?.name || "your organization",
         invoiceNumber: String((invoice as any).number ?? ""),
         amount: money(Number((invoice as any).total_cents ?? 0)),
         issueDate: String((invoice as any).issue_date ?? ""),
@@ -908,7 +908,7 @@ export const raiseInvoiceWire = createServerFn({ method: "POST" })
     const rates = await checkRates(context, data.id, inv.client_id);
     if (rates.varianceCents > 0 && !inv.rate_override_reason) {
       throw new Error(
-        "This invoice is above the contracted rate and has no recorded authorisation. Fix the rate before collecting payment.",
+        "This invoice is above the contracted rate and has no recorded authorization. Fix the rate before collecting payment.",
       );
     }
 

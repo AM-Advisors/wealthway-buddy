@@ -119,7 +119,7 @@ function MigrationBody() {
             <CardDescription>
               {data.isDemo
                 ? "Switch to your own company in Settings to import your records."
-                : "Ask an authorised signatory at your company to run the import."}
+                : "Ask an authorized signatory at your company to run the import."}
             </CardDescription>
           </CardHeader>
         </Card>
@@ -400,17 +400,17 @@ function BatchPanel({
       <Dialog open={acceptOpen} onOpenChange={setAcceptOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>More shares issued than authorised</DialogTitle>
+            <DialogTitle>More shares issued than authorized</DialogTitle>
             <DialogDescription>
               This file leaves {fmtNumber(overAuthorized)} shares issued beyond what those share
-              classes are authorised to have. You can still record it, but please say why. Your
+              classes are authorized to have. You can still record it, but please say why. Your
               reason is kept with the batch in the history.
             </DialogDescription>
           </DialogHeader>
           <Textarea
             value={overageReason}
             onChange={(event) => setOverageReason(event.target.value)}
-            placeholder="For example: the board approved an increase in authorised shares on 3 March; the filing is being updated."
+            placeholder="For example: the board approved an increase in authorized shares on 3 March; the filing is being updated."
             rows={4}
           />
           <DialogFooter>
@@ -451,7 +451,7 @@ function ComingAcross({ batch }: { batch: Batch }) {
               <span>
                 {fmtNumber(c.fileIssued)} shares
                 {c.reserved ? ` · ${fmtNumber(c.reserved)} reserved` : ""}
-                {c.authorized ? ` · ${fmtNumber(c.authorized)} authorised` : ""}
+                {c.authorized ? ` · ${fmtNumber(c.authorized)} authorized` : ""}
               </span>
             </li>
           ))}
@@ -531,7 +531,7 @@ function ReconcilePanel({
   return (
     <div className="space-y-3 rounded-lg border p-3">
       <div>
-        <p className="text-sm font-medium">Authorised, issued and outstanding</p>
+        <p className="text-sm font-medium">Authorized, issued and outstanding</p>
         <p className="text-sm text-muted-foreground">
           We read what we can from your file. Correct any number to match your current provider -
           we show the difference so nothing goes across unnoticed.
@@ -543,7 +543,7 @@ function ReconcilePanel({
             <TableRow>
               <TableHead>Share class</TableHead>
               <TableHead className="text-right">In the file</TableHead>
-              <TableHead className="text-right">Authorised</TableHead>
+              <TableHead className="text-right">Authorized</TableHead>
               <TableHead className="text-right">Issued</TableHead>
               <TableHead className="text-right">Outstanding</TableHead>
               <TableHead className="text-right">Difference</TableHead>
@@ -605,7 +605,7 @@ function ReconcilePanel({
       </p>
       {batch.overageReason ? (
         <p className="text-sm text-muted-foreground">
-          Recorded over authorised shares. Reason given: {batch.overageReason}
+          Recorded over authorized shares. Reason given: {batch.overageReason}
         </p>
       ) : null}
       {editable ? (

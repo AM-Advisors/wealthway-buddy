@@ -57,7 +57,7 @@ function ClientAccessManager() {
         <div>
           <h1 className="text-3xl">Who can see my information</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Advisers, lawyers and accountants only see what you authorise here, and only for as long
+            Advisers, lawyers and accountants only see what you authorize here, and only for as long
             as you allow it.
           </p>
         </div>
@@ -104,7 +104,7 @@ function ClientAccessManager() {
                   <dd>{g.lastActivityAt ? new Date(g.lastActivityAt).toLocaleString() : "-"}</dd>
                 </div>
                 <div>
-                  <dt className="text-muted-foreground">Authorisation document</dt>
+                  <dt className="text-muted-foreground">Authorization document</dt>
                   <dd>{g.authorityDocument ?? "None"}</dd>
                 </div>
               </dl>

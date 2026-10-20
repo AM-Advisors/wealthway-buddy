@@ -40,7 +40,7 @@ const FUND_CATEGORIES: DiligenceCategory[] = [
   { value: "cap_table", label: "Capitalization", required: false, section: "The vehicle", hint: "Live capitalization / LP register kept in the platform - no upload needed." },
   { value: "strategy", label: "Strategy & market", required: false, section: "The vehicle", hint: "Investment thesis, pipeline, target market." },
   { value: "financials", label: "Financial statements", required: true, section: "Numbers", hint: "Audited or reviewed statements for the vehicle." },
-  { value: "track_record", label: "Track record & performance", required: true, section: "Numbers", hint: "Realised and unrealised performance, prior funds." },
+  { value: "track_record", label: "Track record & performance", required: true, section: "Numbers", hint: "Realized and unrealized performance, prior funds." },
   { value: "tax", label: "Tax & K-1 samples", required: false, section: "Numbers" },
   { value: "team", label: "Team & bios", required: true, section: "People & controls", hint: "Principals, key-person terms, org chart." },
   { value: "compliance", label: "Compliance & policies", required: false, section: "People & controls", hint: "Form ADV, valuation and AML policies." },

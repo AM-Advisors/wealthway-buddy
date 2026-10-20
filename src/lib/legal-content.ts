@@ -46,7 +46,7 @@ export const PRIVACY_POLICY: LegalDocument = {
       paragraphs: [
         "In connection with the operation of the Site or providing Services, we may collect and use the following Site User Information about you.",
         "Information you provide: we may ask you to provide us with certain Personally Identifiable Information (PII) and Non-Public Personal Information (NPPI) by using our Site or by corresponding with us by phone or e-mail concerning the Site, or by using interactive features that we may include on the Site for the purpose of receiving and responding to your comments, inquiries, or expressions of interest in our products and services, or providing services.",
-        "Personally Identifiable Information (PII) and Non-Public Personal Information (NPPI) includes, but is not limited to: full name, facial biometrics, date of birth, social security number, tax ID, nationality, passport, national identity card, driver license, gender, marital status, signature, name of employer, address of employer, business nature of employer, occupation, residential address, residential phone number, personal mobile phone number, personal e-mail address, business address, business mobile phone number, business phone number, business e-mail address, legal representative or authorised signatory, business scope, financial situation, certificate of incorporation, certificate of incumbency, memorandum and articles of incorporation, bank account information, source of funds, source of wealth and annual income.",
+        "Personally Identifiable Information (PII) and Non-Public Personal Information (NPPI) includes, but is not limited to: full name, facial biometrics, date of birth, social security number, tax ID, nationality, passport, national identity card, driver license, gender, marital status, signature, name of employer, address of employer, business nature of employer, occupation, residential address, residential phone number, personal mobile phone number, personal e-mail address, business address, business mobile phone number, business phone number, business e-mail address, legal representative or authorized signatory, business scope, financial situation, certificate of incorporation, certificate of incumbency, memorandum and articles of incorporation, bank account information, source of funds, source of wealth and annual income.",
       ],
     },
     {
@@ -100,7 +100,7 @@ export const PRIVACY_POLICY: LegalDocument = {
     {
       heading: "Sharing of data",
       paragraphs: [
-        `We do not sell or otherwise share personal information about you, except as described in this Privacy Policy. We may share personal information with third parties who perform services for us or on our behalf, and we may share Site User Information and Service User Information with third-party distributors and other business partners to enable them to provide you with ${COMPANY} Services. These third parties are not authorised by ${COMPANY} to use or disclose your personal information except as necessary to perform services to or on behalf of ${COMPANY} or to comply with legal requirements, and they are subject to confidentiality and non-disclosure obligations in our agreements with them to protect your personal information.`,
+        `We do not sell or otherwise share personal information about you, except as described in this Privacy Policy. We may share personal information with third parties who perform services for us or on our behalf, and we may share Site User Information and Service User Information with third-party distributors and other business partners to enable them to provide you with ${COMPANY} Services. These third parties are not authorized by ${COMPANY} to use or disclose your personal information except as necessary to perform services to or on behalf of ${COMPANY} or to comply with legal requirements, and they are subject to confidentiality and non-disclosure obligations in our agreements with them to protect your personal information.`,
         "Except where disclosure of your personal information is required by law or requested by you, we will generally require any third party which receives, or has access to, your personal information to protect it and to use it only to carry out the services they are performing for you or for us, unless otherwise required or permitted by law.",
         "If you are located in the EU, the following also applies: we have concluded data processing agreements with each relevant service provider in accordance with the EU General Data Protection Regulation. Beyond that, we only share or disclose your personal information to the extent required to provide the Services or to sell or transfer the relevant business or assets, either on the basis of our legitimate interests or with your prior express consent.",
         "You should note that you are not obliged to give your personal information to us. If you choose not to do so, we may not be able to provide our Services, or your access to our Services may be limited. We may share your personal information in the following situations:",
@@ -108,11 +108,11 @@ export const PRIVACY_POLICY: LegalDocument = {
       bullets: [
         "Receiving and sending text messages: we use Twilio's services to receive and send text messages from and to you. Twilio terms of service: https://www.twilio.com/legal/tos. Messaging policy: https://www.twilio.com/legal/messaging-policy",
         "Anti-bot service: we use the hCaptcha anti-bot service provided by Intuition Machines, Inc. (\"IMI\") to check whether data entered on our website has been entered by a human or an automated program. hCaptcha evaluates information such as IP address, time spent on the site and mouse movements, and forwards that data to IMI. Processing is based on Art. 6(1)(f) GDPR: our legitimate interest in protecting the site from abusive automated crawling and spam. Terms: https://hcaptcha.com/terms. Privacy policy: https://hcaptcha.com/privacy/",
-        "For service monitoring: we may share your personal information with service providers to monitor and analyse the use of our Services.",
+        "For service monitoring: we may share your personal information with service providers to monitor and analyze the use of our Services.",
         "For fraud prevention: personal data will be furnished to third-party service providers for identity verification, criminal background checks and fraud prevention services.",
         "For AML screening: personal data will be furnished to third-party service providers to screen for criminal background, PEP status, global sanctions (OFAC, UN, HMT, EU and DFAT), adverse media and watchlists (Interpol, federal and state government agencies).",
         `For business transfers: we may share or transfer your personal data in connection with, or during negotiations of, any merger, sale of ${COMPANY} assets, financing, or acquisition of all or a portion of our business to another company.`,
-        "With affiliates: we may share your information with our affiliates, in which case we will require those affiliates to honour this Privacy Policy.",
+        "With affiliates: we may share your information with our affiliates, in which case we will require those affiliates to honor this Privacy Policy.",
         "With business partners: we may share your information with our business partners to offer you certain products, services or promotions.",
         "With regulators and law enforcement: we may share your personal information with the appropriate regulators, any financial dispute resolution scheme to which we subscribe, law enforcement bodies, regulatory agencies, courts, arbitration bodies and dispute resolution schemes, both in the jurisdiction where we are incorporated and internationally, as may be required by law.",
         "With other users: when you share personal information or otherwise interact in public areas with other users, such information may be viewed by those users.",
@@ -123,7 +123,7 @@ export const PRIVACY_POLICY: LegalDocument = {
       paragraphs: [
         "This Site is operated from, and Site User Information and Service User Information is stored in, the United States of America. We store Site User Information and Service User Information in cloud infrastructure located in the United States of America.",
         `Your information, including personal information, is processed at ${COMPANY} operating offices and in any other places where the parties involved in the processing are located. This means the information may be transferred to, and maintained on, computers located outside of the jurisdiction where you reside, and the data protection laws with which ${COMPANY} complies may differ from those in your jurisdiction. Your consent to this Privacy Policy followed by your submission of such personal data represents your agreement to that transfer.`,
-        "We will take all steps reasonably necessary to ensure that your personal information is treated securely and in accordance with this Privacy Policy, and no transfer of personal information will take place to an organisation or a country unless there are adequate controls in place, including the security of personal information.",
+        "We will take all steps reasonably necessary to ensure that your personal information is treated securely and in accordance with this Privacy Policy, and no transfer of personal information will take place to an organization or a country unless there are adequate controls in place, including the security of personal information.",
         "We will retain your personal information only for as long as is necessary for the purposes set out in this Privacy Policy. We will retain and use your personal information to the extent necessary to comply with our regulatory and legal obligations (for example, applicable anti-money laundering and counter-terrorist financing regulations), resolve disputes, and enforce our legal agreements and policies.",
         "We will also retain site usage information for internal analysis purposes. Site usage information is generally retained for a shorter period, except where the information is used to strengthen security or improve the functionality of our Services, or where we are legally obliged to retain it for longer.",
         "We maintain Site User Information and Service User Information for as long as needed for the business purposes for which it is collected, and in keeping with our record retention policies. In general, personal information relating to you is held for at least five years, as required by the regulators, after we cease providing you with our Services.",
@@ -132,7 +132,7 @@ export const PRIVACY_POLICY: LegalDocument = {
     {
       heading: "Security",
       paragraphs: [
-        `${COMPANY} maintains administrative, technical and physical safeguards (including technical and organisational measures) designed to protect personal information against accidental, unlawful or unauthorised destruction, loss, alteration, access, disclosure or use.`,
+        `${COMPANY} maintains administrative, technical and physical safeguards (including technical and organizational measures) designed to protect personal information against accidental, unlawful or unauthorized destruction, loss, alteration, access, disclosure or use.`,
         "We require that our service providers implement and maintain appropriate security practices and procedures. Nevertheless, please be aware that internet transmissions are never completely private or secure. If you have any questions about the security of your personal information, you can contact us at support@harmonious.co.",
       ],
     },
@@ -177,11 +177,11 @@ export const PRIVACY_POLICY: LegalDocument = {
         "If you are located in the EEA you have certain rights in relation to our processing of Site User Information and registration information as to which we are a \"controller\" under the EU General Data Protection Regulation (\"GDPR\"), as follows:",
       ],
       bullets: [
-        "Right to information: we will provide you with information about how we process your personal information. This Privacy Policy is designed in part to fulfil this obligation.",
+        "Right to information: we will provide you with information about how we process your personal information. This Privacy Policy is designed in part to fulfill this obligation.",
         "Right to access: you may request that we confirm whether we process personal information concerning you and, if so, give you access to that information and more detail about the associated processing activity.",
         "Right to data portability: where processing is automated and the legal basis is consent or performance of a contract, you may request a subset of your personal information in a structured, commonly used and machine-readable format, or ask us to send it directly to another controller.",
         "Right to rectification: if the personal information we process about you is inaccurate or incomplete, you may ask us to rectify or complete it.",
-        "Right to erasure: you may request deletion where the processing is based on consent and that consent is withdrawn; where you object and there are no overriding legitimate interests; where the information was unlawfully processed; or where erasure is required to comply with a legal obligation. The right of erasure does not apply where further retention is necessary for compliance with legal or regulatory obligations, or for the establishment, exercise or defence of legal claims.",
+        "Right to erasure: you may request deletion where the processing is based on consent and that consent is withdrawn; where you object and there are no overriding legitimate interests; where the information was unlawfully processed; or where erasure is required to comply with a legal obligation. The right of erasure does not apply where further retention is necessary for compliance with legal or regulatory obligations, or for the establishment, exercise or defense of legal claims.",
         "Right to restriction: you may request that we temporarily restrict processing in certain situations, for example if you contest the accuracy of your personal information.",
         "Right to objection: in certain circumstances you may object to continued processing. We will only continue if there are compelling legitimate grounds that override your interests, rights and freedoms, or the processing is necessary to establish, enforce or defend legal claims.",
         "Right to lodge a complaint: we prefer to resolve data protection concerns directly with you, but you have the right to submit a complaint to a supervisory authority in the EEA country where you reside, work, or suspect an infringement has occurred.",
@@ -219,7 +219,7 @@ export const TERMS_OF_SERVICE: LegalDocument = {
   blocks: [
     {
       paragraphs: [
-        `These Terms of Service ("Terms") govern your access to and use of the Harmonious portal, websites and related applications (the "Platform") operated by ${COMPANY} ("Harmonious", "we", "us"). By creating an account, signing in, or using the Platform you agree to these Terms. If you are accepting on behalf of an entity, you confirm you are authorised to bind that entity.`,
+        `These Terms of Service ("Terms") govern your access to and use of the Harmonious portal, websites and related applications (the "Platform") operated by ${COMPANY} ("Harmonious", "we", "us"). By creating an account, signing in, or using the Platform you agree to these Terms. If you are accepting on behalf of an entity, you confirm you are authorized to bind that entity.`,
       ],
     },
     {
@@ -243,7 +243,7 @@ export const TERMS_OF_SERVICE: LegalDocument = {
       paragraphs: [
         "Access to the Platform is granted to named individuals. You are responsible for keeping sign-in credentials confidential, for the activity carried out under your account, and for telling us promptly if you believe an account has been compromised or a person should no longer have access.",
         "You agree not to share accounts, attempt to access data belonging to another client, interfere with the operation or security of the Platform, or use it to store or transmit unlawful material. We may suspend access where we reasonably believe these Terms have been breached or where continued access presents a security, legal or regulatory risk.",
-        "Roles and permissions in the Platform reflect the authority recorded for your organisation. Certain actions - including approving fees and authorising payment instructions - are restricted to people holding the relevant authority.",
+        "Roles and permissions in the Platform reflect the authority recorded for your organization. Certain actions - including approving fees and authorizing payment instructions - are restricted to people holding the relevant authority.",
       ],
     },
     {
@@ -278,7 +278,7 @@ export const TERMS_OF_SERVICE: LegalDocument = {
     {
       heading: "8. Money movement controls",
       paragraphs: [
-        "Payment instructions raised through the Platform are subject to Harmonious's verification and approval controls, including beneficiary verification, callback confirmation, compliance checks and approval by two separate authorised people. Harmonious may decline or delay an instruction that does not clear those controls, that falls outside your active scope, or that is subject to a compliance hold.",
+        "Payment instructions raised through the Platform are subject to Harmonious's verification and approval controls, including beneficiary verification, callback confirmation, compliance checks and approval by two separate authorized people. Harmonious may decline or delay an instruction that does not clear those controls, that falls outside your active scope, or that is subject to a compliance hold.",
       ],
     },
     {

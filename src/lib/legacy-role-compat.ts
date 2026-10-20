@@ -1,7 +1,7 @@
 /**
  * RBAC Stage 2.5 - legacy client role compatibility (pure, dry-run only).
  *
- * The effective behaviour of client_gp / client_readonly today comes from the
+ * The effective behavior of client_gp / client_readonly today comes from the
  * per-client client_users.client_role value, read by these code paths:
  *  - cap-certificates / founder-cap-table: canEdit (≠ readonly), canApprove/canSign (client_gp ∈ approvers)
  *  - captable.functions setup: non-readonly members may set up their company's cap table

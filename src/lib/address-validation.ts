@@ -93,7 +93,7 @@ export function stateForEntry(input: {
     case "validated":
       return { state: "validated", reason: `Validated by ${input.validation.provider}.` };
     case "normalized":
-      return { state: "normalized", reason: `Normalised by ${input.validation.provider}.` };
+      return { state: "normalized", reason: `Normalized by ${input.validation.provider}.` };
     default:
       return {
         state: "review_required",
@@ -201,7 +201,7 @@ export function evaluateProofOfAddress(input: {
 /** Investor-facing wording for an address state. */
 export const ADDRESS_STATE_LABELS: Record<AddressState, string> = {
   entered: "Entered",
-  normalized: "Normalised",
+  normalized: "Normalized",
   validated: "Validated",
   proof_required: "Proof of address required",
   proof_pending: "Proof of address in review",

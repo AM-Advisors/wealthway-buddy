@@ -121,7 +121,7 @@ export function isRestrictedEvidence(name: string, description?: string | null):
 
 /**
  * Relabelling cannot make a broadly shared file secure. Investor Restricted
- * content arriving from the broad Fund repository, and anything labelled
+ * content arriving from the broad Fund repository, and anything labeled
  * Harmonious Restricted, needs an explicit acknowledgement that the copy goes
  * to private Harmonious storage and the Drive original stays as broad as it was.
  */

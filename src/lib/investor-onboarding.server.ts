@@ -1434,7 +1434,7 @@ export async function raiseException(
   },
 ) {
   const actor = await assertStaff(userId);
-  if (!isExceptionType(input.type)) fail("That is not a recognised exception.");
+  if (!isExceptionType(input.type)) fail("That is not a recognized exception.");
   const { data, error } = await db()
     .from("investor_onboarding_exceptions")
     .insert({

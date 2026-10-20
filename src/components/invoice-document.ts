@@ -54,7 +54,7 @@ export function invoicePdfSpec(invoice: any): PdfDocSpec {
     subtitle: COMPANY.tagline,
     badge: STATUS[invoice?.status] ?? invoice?.status ?? "",
     meta: [
-      { label: "Billed to", value: String(invoice?.client_name ?? "Your organisation") },
+      { label: "Billed to", value: String(invoice?.client_name ?? "Your organization") },
       {
         label: "Period",
         value: `${invoice?.period_start ?? "-"} to ${invoice?.period_end ?? "-"}`,

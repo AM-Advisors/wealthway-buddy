@@ -146,7 +146,7 @@ export function MsaSigningPanel({
             <CardTitle className="text-base">Sign</CardTitle>
             <CardDescription>
               Click the yellow Sign here tag to type, draw or upload your signature. It binds your
-              organisation to this agreement.
+              organization to this agreement.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -168,7 +168,7 @@ export function MsaSigningPanel({
             <label className="flex items-start gap-2 text-sm">
               <Checkbox checked={confirmed} onCheckedChange={(v) => setConfirmed(v === true)} />
               <span>
-                I have authority to sign for my organisation and I accept this agreement as written.
+                I have authority to sign for my organization and I accept this agreement as written.
               </span>
             </label>
             {!allRead && (

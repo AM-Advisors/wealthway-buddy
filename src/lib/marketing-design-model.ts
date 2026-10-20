@@ -103,7 +103,7 @@ export function chartProblems(c: ChartLayer): string[] {
   if (c.data.some((d) => !d.label.trim() || !Number.isFinite(d.value))) out.push("Every chart point needs a label and a number.");
   if (c.chart === "donut" && c.data.some((d) => d.value < 0)) out.push("Donut values can't be negative.");
   if (!c.source_url) out.push("Quantitative charts need a source link.");
-  if (/sec\.gov/i.test(c.source_url) && !c.issuer_reported) out.push("Form D amounts must be labelled issuer-reported, not verified fundraising totals.");
+  if (/sec\.gov/i.test(c.source_url) && !c.issuer_reported) out.push("Form D amounts must be labeled issuer-reported, not verified fundraising totals.");
   return out;
 }
 

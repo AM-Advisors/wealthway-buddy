@@ -304,7 +304,7 @@ export function RoomKycApplication({ offeringId }: { offeringId: string }) {
               <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="passport">Passport</SelectItem>
-                <SelectItem value="drivers_license">Driver's licence</SelectItem>
+                <SelectItem value="drivers_license">Driver's license</SelectItem>
                 <SelectItem value="state_id">State ID</SelectItem>
               </SelectContent>
             </Select>
@@ -386,7 +386,7 @@ export function RoomKycApplication({ offeringId }: { offeringId: string }) {
               <SelectContent>
                 <SelectItem value="income">Income over $200k ($300k with spouse)</SelectItem>
                 <SelectItem value="net_worth">Net worth over $1m, excluding my home</SelectItem>
-                <SelectItem value="professional_certification">Series 7, 65 or 82 licence</SelectItem>
+                <SelectItem value="professional_certification">Series 7, 65 or 82 license</SelectItem>
                 <SelectItem value="entity_assets">Entity with over $5m in assets</SelectItem>
                 <SelectItem value="knowledgeable_employee">Knowledgeable employee of the fund</SelectItem>
               </SelectContent>
@@ -409,9 +409,9 @@ export function RoomKycApplication({ offeringId }: { offeringId: string }) {
           </label>
 
           <div className="space-y-2">
-            <Label htmlFor="licence">Professional licence (if any)</Label>
+            <Label htmlFor="license">Professional license (if any)</Label>
             <Input
-              id="licence"
+              id="license"
               maxLength={120}
               value={acc["professional_license"] ?? ""}
               onChange={(e) => setAcc((a) => ({ ...a, professional_license: e.target.value }))}

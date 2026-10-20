@@ -22,7 +22,7 @@ interface ClientWelcomeProps {
 
 function ClientWelcome({
   contactName = 'there',
-  clientName = 'your organisation',
+  clientName = 'your organization',
   portalUrl = 'https://app.harmonious.co/client',
   signOffUrl = 'https://app.harmonious.co/sign-off',
 }: ClientWelcomeProps) {
@@ -121,7 +121,7 @@ function ClientWelcome({
           </Text>
 
           <Section style={{ backgroundColor: '#f8fbfd', border: '1px solid #e6ecf3', padding: '20px' }}>
-            <Text style={label}>Organisation</Text>
+            <Text style={label}>Organization</Text>
             <Text style={{ ...value, margin: 0 }}>{clientName}</Text>
           </Section>
 

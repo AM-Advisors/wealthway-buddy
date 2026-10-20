@@ -7,7 +7,7 @@ import { assertCapOnboarding } from "@/lib/cap-onboarding.functions";
 
 /** Cap table management for founder clients: their own stakeholders, share
  *  holdings and transfers between holders. Harmonious keeps the record and the
- *  audit trail; the client's own authorised people approve each transfer. */
+ *  audit trail; the client's own authorized people approve each transfer. */
 
 export const SECURITY_TYPES = [
   { value: "common", label: "Common shares" },

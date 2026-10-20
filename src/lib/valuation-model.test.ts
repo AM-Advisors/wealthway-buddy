@@ -169,36 +169,36 @@ describe("exceptions", () => {
 });
 
 describe("ledger impact", () => {
-  it("debits the asset and credits unrealised gain when value rises", () => {
+  it("debits the asset and credits unrealized gain when value rises", () => {
     const journal = unrealizedJournal(1_000_000, 1_500_000, policy);
     expect(journal?.lines[0]).toMatchObject({ accountCode: "1110", debitCents: 500_000 });
     expect(journal?.lines[1]).toMatchObject({ accountCode: "4400", creditCents: 500_000 });
     expect(journalBalances(journal)).toBe(true);
   });
 
-  it("debits unrealised loss and credits the asset when value falls", () => {
+  it("debits unrealized loss and credits the asset when value falls", () => {
     const journal = unrealizedJournal(1_500_000, 1_000_000, policy);
     expect(journal?.lines[0]).toMatchObject({ accountCode: "4400", debitCents: 500_000 });
     expect(journal?.lines[1]).toMatchObject({ accountCode: "1110", creditCents: 500_000 });
   });
 
-  it("does not recognise the same gain twice when a valuation is recomputed", () => {
+  it("does not recognize the same gain twice when a valuation is recomputed", () => {
     // First recognition of the move up to 1,500,000.
     const first = unrealizedJournal(1_000_000, 1_500_000, policy);
     expect(first?.lines[0]?.debitCents).toBe(500_000);
-    // Superseded and recomputed at the same value: nothing left to recognise.
+    // Superseded and recomputed at the same value: nothing left to recognize.
     expect(unrealizedJournal(1_500_000, 1_500_000, policy)).toBeNull();
-    // A revision to 1,600,000 recognises only the incremental 100,000.
+    // A revision to 1,600,000 recognizes only the incremental 100,000.
     expect(unrealizedJournal(1_500_000, 1_600_000, policy)?.lines[0]?.debitCents).toBe(100_000);
   });
 
-  it("prepares nothing where the fund's policy turns unrealised marking off", () => {
+  it("prepares nothing where the fund's policy turns unrealized marking off", () => {
     expect(unrealizedJournal(1_000_000, 2_000_000, { ...policy, unrealizedPolicyEnabled: false })).toBeNull();
   });
 });
 
 describe("realizations", () => {
-  it("relieves cost and recognises gain without zeroing the position", () => {
+  it("relieves cost and recognizes gain without zeroing the position", () => {
     const result = realization({
       quantityHeld: 100,
       quantitySold: 25,
@@ -210,12 +210,12 @@ describe("realizations", () => {
     expect(result.remainingQuantity).toBe(75);
     expect(result.remainingCostBasisCents).toBe(750_000);
     expect(result.isFullDisposition).toBe(false);
-    // The remaining 75 units keep their own unrealised mark - realisation
+    // The remaining 75 units keep their own unrealized mark - realization
     // never sets the asset's fair value to zero.
     expect(unrealizedJournal(750_000, 900_000, policy)?.lines[0]?.debitCents).toBe(150_000);
   });
 
-  it("books a realised loss and balances the disposition journal", () => {
+  it("books a realized loss and balances the disposition journal", () => {
     const result = realization({
       quantityHeld: 100,
       quantitySold: 100,

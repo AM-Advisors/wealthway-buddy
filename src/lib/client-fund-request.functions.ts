@@ -37,11 +37,11 @@ async function requireMember(context: any, clientId: string, needSubmit = false)
     try {
       const { requireOperations } = await import("@/lib/ops-access.functions");
       await requireOperations(context, "funds", "prepare");
-    } catch { throw new Error("You aren't a member of this organisation."); }
+    } catch { throw new Error("You aren't a member of this organization."); }
     return { client_id: clientId, client_role: "harmonious_staff", can_approve: true, staff: true };
   }
   if (needSubmit && !(m.can_approve || MAIN_CONTACT_ROLES.includes(String(m.client_role)))) {
-    throw new Error("Only this organisation's main contacts can send a new fund request.");
+    throw new Error("Only this organization's main contacts can send a new fund request.");
   }
   return m;
 }

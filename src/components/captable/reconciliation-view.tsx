@@ -113,7 +113,7 @@ function ReconciliationBody() {
       <div>
         <h3 className="text-lg font-semibold tracking-tight">Reconciliation</h3>
         <p className="text-sm text-muted-foreground">
-          Every share class in a file you have uploaded, side by side: authorised, issued,
+          Every share class in a file you have uploaded, side by side: authorized, issued,
           outstanding and fully diluted. Flag anything that does not look right - a batch cannot be
           recorded while a flag is still open.
         </p>
@@ -203,7 +203,7 @@ function BatchReconciliation({
             <TableHeader>
               <TableRow>
                 <TableHead>Share class</TableHead>
-                <TableHead className="text-right">Authorised</TableHead>
+                <TableHead className="text-right">Authorized</TableHead>
                 <TableHead className="text-right">Issued</TableHead>
                 <TableHead className="text-right">Outstanding</TableHead>
                 <TableHead className="text-right">Reserved</TableHead>
@@ -236,7 +236,7 @@ function BatchReconciliation({
                     <TableCell className="text-sm">
                       {row.overAuthorizedBy > 0 ? (
                         <span className="text-destructive">
-                          Over authorised by {fmtNumber(row.overAuthorizedBy)}
+                          Over authorized by {fmtNumber(row.overAuthorizedBy)}
                         </span>
                       ) : row.outstandingDifference !== 0 ? (
                         <span className="text-muted-foreground">
@@ -296,12 +296,12 @@ function BatchReconciliation({
         {summary.totals.overAuthorized > 0 ? (
           <p className="text-sm text-destructive">
             {fmtNumber(summary.totals.overAuthorized)} shares are issued beyond what these classes
-            are authorised to have. You will be asked for a reason before this batch is recorded.
+            are authorized to have. You will be asked for a reason before this batch is recorded.
           </p>
         ) : null}
         {batch.overageReason ? (
           <p className="text-sm text-muted-foreground">
-            Recorded over authorised shares. Reason given: {batch.overageReason}
+            Recorded over authorized shares. Reason given: {batch.overageReason}
           </p>
         ) : null}
       </CardContent>
@@ -372,7 +372,7 @@ function ExceptionDialog({
           rows={4}
           placeholder={
             target?.mode === "raise"
-              ? "For example: our board approved 2,000,000 authorised shares, not 1,500,000."
+              ? "For example: our board approved 2,000,000 authorized shares, not 1,500,000."
               : "For example: confirmed against the signed board consent of 3 March."
           }
         />

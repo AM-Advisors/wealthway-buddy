@@ -37,7 +37,7 @@ export function capacityForRole(key: string): SignerCapacity {
   return (SIGNER_ROLES.find((r) => r.key === key)?.capacity ?? "other") as SignerCapacity;
 }
 
-/** Stable colour slot so each signer's fields are visually distinct. */
+/** Stable color slot so each signer's fields are visually distinct. */
 export function roleColorIndex(roles: readonly { key: string }[], key: string): number {
   const index = roles.findIndex((r) => r.key === key);
   return index < 0 ? 0 : index % 6;

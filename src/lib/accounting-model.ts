@@ -45,7 +45,7 @@ export type ChartSeed = {
 export const DEFAULT_FUND_CHART: ChartSeed[] = [
   { code: "1000", name: "Cash at bank", account_type: "asset", subtype: "cash", normal_balance: "debit" },
   { code: "1100", name: "Investments at cost", account_type: "asset", subtype: "investments", normal_balance: "debit" },
-  { code: "1110", name: "Unrealised appreciation", account_type: "asset", subtype: "unrealized_gain", normal_balance: "debit" },
+  { code: "1110", name: "Unrealized appreciation", account_type: "asset", subtype: "unrealized_gain", normal_balance: "debit" },
   { code: "1200", name: "Subscriptions receivable", account_type: "asset", subtype: "receivable", normal_balance: "debit" },
   { code: "2000", name: "Accounts payable", account_type: "liability", subtype: "payable", normal_balance: "credit" },
   { code: "2100", name: "Accrued expenses", account_type: "liability", subtype: "accrued_expense", normal_balance: "credit" },
@@ -59,10 +59,10 @@ export const DEFAULT_FUND_CHART: ChartSeed[] = [
   { code: "4000", name: "Investment income", account_type: "income", subtype: "investment_income", normal_balance: "credit" },
   { code: "4100", name: "Interest income", account_type: "income", subtype: "interest", normal_balance: "credit" },
   { code: "4200", name: "Dividend income", account_type: "income", subtype: "dividend", normal_balance: "credit" },
-  { code: "4300", name: "Realised gain / loss", account_type: "income", subtype: "realized_gain", normal_balance: "credit" },
-  { code: "4400", name: "Unrealised gain / loss", account_type: "income", subtype: "unrealized_gain", normal_balance: "credit" },
+  { code: "4300", name: "Realized gain / loss", account_type: "income", subtype: "realized_gain", normal_balance: "credit" },
+  { code: "4400", name: "Unrealized gain / loss", account_type: "income", subtype: "unrealized_gain", normal_balance: "credit" },
   { code: "5000", name: "Management fee expense", account_type: "expense", subtype: "management_fee", normal_balance: "debit" },
-  { code: "5100", name: "Organisational expenses", account_type: "expense", subtype: "organizational_expense", normal_balance: "debit" },
+  { code: "5100", name: "Organizational expenses", account_type: "expense", subtype: "organizational_expense", normal_balance: "debit" },
   { code: "5200", name: "Fund operating expenses", account_type: "expense", subtype: "other", normal_balance: "debit" },
   { code: "5300", name: "Tax adjustments", account_type: "expense", subtype: "tax_adjustment", normal_balance: "debit" },
 ];
@@ -80,7 +80,7 @@ const PERIOD_TRANSITIONS: Record<PeriodStatus, PeriodStatus[]> = {
   locked: ["open"], // reopening a locked period requires a reason and admin authority
 };
 
-/** Statuses that refuse new postings until an authorised reopen happens. */
+/** Statuses that refuse new postings until an authorized reopen happens. */
 export const SEALED_PERIOD_STATUSES: PeriodStatus[] = ["closed", "locked"];
 
 export function canTransitionPeriod(from: PeriodStatus, to: PeriodStatus) {

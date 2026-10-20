@@ -2,7 +2,7 @@
  * A worked example of a cap table migration, shown on the public CapTable page.
  *
  * Everything here is invented sample data held in this file. It never touches a
- * real company, never reads or writes the database, and is clearly labelled as
+ * real company, never reads or writes the database, and is clearly labeled as
  * a sample so nobody mistakes it for their own record.
  */
 import { useState } from "react";
@@ -63,7 +63,7 @@ const SAMPLES: Record<Provider, Sample> = {
   carta: {
     label: "Carta",
     fileName: "acme-labs-carta-export.csv",
-    detected: "Carta stakeholder and securities export, 5 columns recognised",
+    detected: "Carta stakeholder and securities export, 5 columns recognized",
     columns: [
       ["Stakeholder Name", "Shareholder"],
       ["Security Type", "Instrument"],
@@ -112,7 +112,7 @@ const SAMPLES: Record<Provider, Sample> = {
       {
         klass: "Series A",
         status: "resolved",
-        raised: "Series A issued equals authorised, leaving nothing spare",
+        raised: "Series A issued equals authorized, leaving nothing spare",
         reason: "Checked against the Series A financing documents.",
         resolution: "Correct - the round was fully allocated at close. Settled by the founder.",
       },
@@ -121,7 +121,7 @@ const SAMPLES: Record<Provider, Sample> = {
   pulley: {
     label: "Pulley",
     fileName: "acme-labs-pulley-securities.xlsx",
-    detected: "Pulley securities export, 5 columns recognised",
+    detected: "Pulley securities export, 5 columns recognized",
     columns: [
       ["Holder", "Shareholder"],
       ["Type", "Instrument"],
@@ -154,7 +154,7 @@ const SAMPLES: Record<Provider, Sample> = {
       {
         klass: "Series A",
         status: "open",
-        raised: "Issued shares exceed authorised by 1,800,000",
+        raised: "Issued shares exceed authorized by 1,800,000",
         reason: "The duplicated Harbourline grant is counted twice in the file.",
       },
     ],
@@ -225,7 +225,7 @@ export function DemoMigration() {
           <CardHeader>
             <CardTitle className="text-base">What the file said</CardTitle>
             <CardDescription>
-              The provider is recognised from the column headings, then each heading is matched to
+              The provider is recognized from the column headings, then each heading is matched to
               what it means here.
             </CardDescription>
           </CardHeader>
@@ -288,7 +288,7 @@ export function DemoMigration() {
         <CardHeader>
           <CardTitle className="text-base">Reconciliation</CardTitle>
           <CardDescription>
-            Authorised, issued, outstanding and fully diluted shares are compared class by class
+            Authorized, issued, outstanding and fully diluted shares are compared class by class
             before anything goes live.
           </CardDescription>
         </CardHeader>
@@ -297,7 +297,7 @@ export function DemoMigration() {
             <TableHeader>
               <TableRow>
                 <TableHead>Share class</TableHead>
-                <TableHead className="text-right">Authorised</TableHead>
+                <TableHead className="text-right">Authorized</TableHead>
                 <TableHead className="text-right">Issued</TableHead>
                 <TableHead className="text-right">Outstanding</TableHead>
                 <TableHead className="text-right">Reserved</TableHead>
@@ -313,7 +313,7 @@ export function DemoMigration() {
                       {line.name}
                       {over ? (
                         <Badge variant="destructive" className="ml-2">
-                          Over authorised by {fmt(line.issued - line.authorized)}
+                          Over authorized by {fmt(line.issued - line.authorized)}
                         </Badge>
                       ) : null}
                     </TableCell>

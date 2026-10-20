@@ -63,13 +63,13 @@ const STAFF = [
   "tax",
 ];
 
-/** Roles allowed to authorise a movement of money. */
+/** Roles allowed to authorize a movement of money. */
 const APPROVERS = ["admin", "super_admin", "finance", "operations", "compliance", "executive"];
 
 export const PAYMENT_PURPOSES = [
   { value: "distribution", label: "Distribution to investors" },
   { value: "expense", label: "Fund expense" },
-  { value: "fee", label: "Harmonious fee (authorised)" },
+  { value: "fee", label: "Harmonious fee (authorized)" },
   { value: "return_of_capital", label: "Return of capital" },
   { value: "transfer", label: "Transfer between accounts" },
   { value: "other", label: "Other" },
@@ -185,7 +185,7 @@ export const createPaymentInstruction = createServerFn({ method: "POST" })
 
     if (data.purpose === "fee" && !data.authorizationReference) {
       throw new Error(
-        "A fee payment needs the written client authorisation reference before it can be raised.",
+        "A fee payment needs the written client authorization reference before it can be raised.",
       );
     }
 
@@ -273,7 +273,7 @@ export const decidePaymentInstruction = createServerFn({ method: "POST" })
     const roles = await requireStaff(context);
     const canApprove = roles.some((r) => APPROVERS.includes(r));
     if (data.decision === "approved" && !canApprove) {
-      throw new Error("Forbidden: your role cannot authorise a movement of money.");
+      throw new Error("Forbidden: your role cannot authorize a movement of money.");
     }
 
     const { data: instruction } = await context.supabase

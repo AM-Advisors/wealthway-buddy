@@ -76,7 +76,7 @@ describe("returning from Google grants nothing the backend has not granted", () 
     return facts;
   }
 
-  it("restores an authorised client deep link", () => {
+  it("restores an authorized client deep link", () => {
     expect(resolveDestination(investor(), "/investments").path).toBe("/investments");
   });
 

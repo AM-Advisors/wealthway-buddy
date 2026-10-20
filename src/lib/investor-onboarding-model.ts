@@ -81,7 +81,7 @@ export function isOnboardingStage(value: unknown): value is OnboardingStage {
 }
 
 export function stageTransitionError(from: unknown, to: unknown): string | null {
-  if (!isOnboardingStage(from) || !isOnboardingStage(to)) return "That onboarding stage is not recognised.";
+  if (!isOnboardingStage(from) || !isOnboardingStage(to)) return "That onboarding stage is not recognized.";
   if (from === to) return null;
   if (!STAGE_TRANSITIONS[from].includes(to)) {
     return `An investment cannot move from ${STAGE_LABELS[from]} to ${STAGE_LABELS[to]}.`;
@@ -833,7 +833,7 @@ export function signatureTransitionError(from: string, to: string): string | nul
   const order = SIGNATURE_STATES as readonly string[];
   const a = order.indexOf(from);
   const b = order.indexOf(to);
-  if (a < 0 || b < 0) return "That signature state is not recognised.";
+  if (a < 0 || b < 0) return "That signature state is not recognized.";
   if (b < a) return "A signature cannot move backwards.";
   return null;
 }

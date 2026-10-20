@@ -375,7 +375,7 @@ export function DistributionsWorkspace() {
   );
 }
 
-/** Small helper so each action shares the same toast and refresh behaviour. */
+/** Small helper so each action shares the same toast and refresh behavior. */
 function useMutationLike(fn: (input: any) => Promise<any>, success: string, refresh: () => void) {
   const mutation = useMutation({
     mutationFn: (input: any) => fn({ data: input } as any),

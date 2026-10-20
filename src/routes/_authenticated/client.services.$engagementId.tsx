@@ -68,7 +68,7 @@ function EngagementReview() {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">{data.engagement.title}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {data.entities.map((e) => e.legalName).join(", ") || "Across your organisation"}
+            {data.entities.map((e) => e.legalName).join(", ") || "Across your organization"}
             {data.engagement.effectiveDate
               ? ` · from ${date(data.engagement.effectiveDate)}`
               : ""}

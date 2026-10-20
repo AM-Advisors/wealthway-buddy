@@ -1,5 +1,5 @@
 /**
- * Accessible dashboard visuals: labelled bars with visible values, keyboard/tap
+ * Accessible dashboard visuals: labeled bars with visible values, keyboard/tap
  * drill-down, and explicit empty / unavailable states. Color is never the only cue.
  */
 import type { ReactNode } from "react";
@@ -53,7 +53,7 @@ export function EmptyState({ children }: { children: ReactNode }) {
   return <p className="rounded-md border border-dashed px-3 py-6 text-center text-sm text-muted-foreground">{children}</p>;
 }
 
-/** Horizontal labelled bars. Each row is a button when drill-down exists. */
+/** Horizontal labeled bars. Each row is a button when drill-down exists. */
 export function BarList({ rows, onSelect, empty, ariaLabel }: { rows: Row[]; onSelect?: (key: string) => void; empty: string; ariaLabel: string }) {
   const total = rows.reduce((s, r) => s + r.count, 0);
   if (!total) return <EmptyState>{empty}</EmptyState>;
@@ -126,7 +126,7 @@ export function TrendChart({ data }: { data: { bucket: string; started: number; 
 
 const PALETTE: string[] = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)", "var(--primary)"];
 
-/** Donut with a visible legend (label, count, percent) - colour is never the only cue. */
+/** Donut with a visible legend (label, count, percent) - color is never the only cue. */
 export function DonutChart({ rows, ariaLabel, empty, onSelect }: { rows: Row[]; ariaLabel: string; empty: string; onSelect?: (key: string) => void }) {
   const data = rows.filter((r) => r.count > 0);
   if (!data.length) return <EmptyState>{empty}</EmptyState>;

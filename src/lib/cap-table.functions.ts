@@ -432,7 +432,7 @@ async function assertCanManage(supabase: any, offeringId: string) {
   if (!data) throw new Error("Forbidden: you do not manage this fund.");
 }
 
-/** Builds one fund's editable cap table. Callers must authorise first. */
+/** Builds one fund's editable cap table. Callers must authorize first. */
 async function buildFundCapTable(supabaseAdmin: any, data: { offering_id: string }) {
   {
 

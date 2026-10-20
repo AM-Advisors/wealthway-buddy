@@ -13,7 +13,7 @@ import { requireSupabaseAuth } from "@/lib/require-auth";
 
 export const CLIENT_CONTACT_ROLES = [
   { value: "client_gp", label: "General partner / principal", note: "Sees everything for the client." },
-  { value: "client_signatory", label: "Authorised signatory", note: "Signs agreements and approvals." },
+  { value: "client_signatory", label: "Authorized signatory", note: "Signs agreements and approvals." },
   { value: "client_finance", label: "Finance", note: "Invoices and payment approvals." },
   { value: "client_legal", label: "Legal", note: "Agreements and scope." },
   { value: "client_compliance", label: "Compliance", note: "Compliance records and holds." },
@@ -404,7 +404,7 @@ async function sendClientWelcome(input: {
         : `client-invite-${input.invitationId}`,
       templateData: {
         contactName: input.name || input.email,
-        clientName: (client as any)?.name || "your organisation",
+        clientName: (client as any)?.name || "your organization",
         roleLabel: roleEntry?.label ?? "Client contact",
         invitedByName: input.invitedByName,
         note: input.note,

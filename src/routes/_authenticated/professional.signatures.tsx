@@ -40,7 +40,7 @@ function AuthorizedSignatures() {
             <ul className="list-inside list-disc text-muted-foreground">
               {(expiring?.delegations ?? []).map((d: any) => (
                 <li key={d.id}>
-                  A client authorisation ends {new Date(d.expires_at).toLocaleDateString()}.
+                  A client authorization ends {new Date(d.expires_at).toLocaleDateString()}.
                 </li>
               ))}
               {(expiring?.documents ?? []).map((d: any) => (
@@ -92,12 +92,12 @@ function AuthorizedSignatures() {
 export const Route = createFileRoute("/_authenticated/professional/signatures")({
   head: () => ({
     meta: [
-      { title: "Authorised signatures - Harmonious" },
+      { title: "Authorized signatures - Harmonious" },
       {
         name: "description",
         content: "Every document you signed on a client's behalf, and authority that expires soon.",
       },
-      { property: "og:title", content: "Authorised signatures - Harmonious" },
+      { property: "og:title", content: "Authorized signatures - Harmonious" },
       { property: "og:description", content: "Delegated signature history and expiring authority." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

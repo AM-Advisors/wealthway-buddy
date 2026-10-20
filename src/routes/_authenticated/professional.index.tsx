@@ -20,7 +20,7 @@ function MyClients() {
     >
 
       {clients.length === 0 ? (
-        <Empty>No client has authorised you yet.</Empty>
+        <Empty>No client has authorized you yet.</Empty>
       ) : (
         <ul className="space-y-3">
           {clients.map((c: any) => {

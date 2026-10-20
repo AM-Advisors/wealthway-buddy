@@ -9,7 +9,7 @@ export function maskEmail(email: string | null | undefined): string {
 export type RelationshipEdge = { userId: string; kind: "fund_manager" | "investor" | "delegate"; offeringId: string | null; detail?: string };
 const KIND_LABEL = { fund_manager: "Fund manager", investor: "Investor", delegate: "Delegated professional" } as const;
 
-/** One row per person; each reason they appear is kept and labelled. */
+/** One row per person; each reason they appear is kept and labeled. */
 export function mergeRelationships(edges: RelationshipEdge[], people: Map<string, { name: string | null; email: string }>, fundName: Map<string, string>) {
   const out = new Map<string, { userId: string; name: string; email: string; relationships: { kind: RelationshipEdge["kind"]; label: string; fund: string | null }[] }>();
   for (const e of edges) {

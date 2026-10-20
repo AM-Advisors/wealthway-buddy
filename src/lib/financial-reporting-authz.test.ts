@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
  * Adversarial authorization tests for financial statement reporting.
  *
  * Every id here arrives "from the browser". The server must re-read the record
- * and authorise against the fund it actually belongs to, never against what the
+ * and authorize against the fund it actually belongs to, never against what the
  * caller claims, and no single person may prepare, review, approve and publish
  * the same set of statements.
  */

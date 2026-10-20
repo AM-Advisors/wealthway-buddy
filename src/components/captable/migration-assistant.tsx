@@ -3,7 +3,7 @@
  * client is, which files we were sent, then a read-back of everything found -
  * and drops in several exports at once: shareholders, grants, rounds and a list
  * of documents. Each file is read in the browser, sorted by what it looks like,
- * and can be re-labelled by hand before anything is sent.
+ * and can be re-labeled by hand before anything is sent.
  *
  * Nothing reaches the live cap table here. Each file becomes a reviewable batch
  * on one concierge case, and the founder still approves the prepared work.
@@ -183,7 +183,7 @@ export function MigrationAssistant({ onStarted }: { onStarted: (caseId: string) 
         <CardDescription>
           Bring in the client's own Carta, Pulley, AngelList or spreadsheet exports - shareholders,
           grants, rounds and their document list - in one pass. Each file is sorted for you and can
-          be re-labelled before it is sent. The founder still approves everything before it is
+          be re-labeled before it is sent. The founder still approves everything before it is
           recorded.
         </CardDescription>
         <div className="flex flex-wrap gap-2 pt-2">

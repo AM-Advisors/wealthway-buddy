@@ -35,7 +35,7 @@ function MoneyMovement() {
         Harmonious facilitates payments on written instruction from the client. It does not hold
         client or investor money as a bank, custodian, escrow agent or trustee. Every movement is
         checked against the client's active statement of work, verified, cleared by compliance and
-        approved by two authorised people.
+        approved by two authorized people.
       </p>
 
       <Tabs defaultValue="wires" className="mt-6">

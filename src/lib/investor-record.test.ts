@@ -1,4 +1,4 @@
-// @ts-nocheck - in-memory fakes of the service-role client; runtime behaviour is what is under test.
+// @ts-nocheck - in-memory fakes of the service-role client; runtime behavior is what is under test.
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   activityFor, bulkSummary, classifyBulk, committable, createNewBlocker, dbProfileType, maskEmail, parseCsv, planIncoming,
@@ -95,7 +95,7 @@ const jane = (over: Record<string, unknown> = {}) => ({
 beforeEach(() => { for (const k of Object.keys(tables)) delete tables[k]; reconciled.length = 0; for (const k of Object.keys(authUsers)) delete authUsers[k]; });
 
 describe("manual entry", () => {
-  it("Operations manually creates an investor without an account, labelled as Harmonious", async () => {
+  it("Operations manually creates an investor without an account, labeled as Harmonious", async () => {
     const r = await (await srv()).createInvestor(STAFF, jane());
     const onb = tables["investor_onboardings"]![0]!;
     expect(onb.investor_user_id).toBeNull();

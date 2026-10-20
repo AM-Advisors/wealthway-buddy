@@ -327,10 +327,10 @@ export function evidenceGateError(status: EvidenceStatus, ctx: { syntheticFund?:
       : "Synthetic valuation assumptions are allowed only on isolated TEST/DEMO funds; real funds need supporting evidence.";
   }
   return status === "evidence_required"
-    ? "Valuation evidence is required: attach evidence or have an authorised reviewer waive it with a reason."
+    ? "Valuation evidence is required: attach evidence or have an authorized reviewer waive it with a reason."
     : null;
 }
-/** The value already recognised plus cost added by purchases after that mark. */
+/** The value already recognized plus cost added by purchases after that mark. */
 export function movementBasisCents(input: { lastRecognizedCents: number | null; costBasisCents: number; costAddedSinceRecognizedCents: number }) {
   if (input.lastRecognizedCents === null) return input.costBasisCents;
   return input.lastRecognizedCents + input.costAddedSinceRecognizedCents;
@@ -436,16 +436,16 @@ export type ValuationJournalLine = { accountCode: string; debitCents?: number; c
 export type ValuationJournal = { memo: string; lines: ValuationJournalLine[] } | null;
 
 /**
- * The unrealised mark-to-market entry for the *movement* between the last
- * recognised value and this one. A zero movement produces no entry at all,
- * which is what keeps a superseded-and-recomputed valuation from recognising
+ * The unrealized mark-to-market entry for the *movement* between the last
+ * recognized value and this one. A zero movement produces no entry at all,
+ * which is what keeps a superseded-and-recomputed valuation from recognizing
  * the same gain twice.
  */
 export function unrealizedJournal(
   priorRecognizedCents: number | null,
   newValueCents: number,
   policy: ValuationPolicy = DEFAULT_VALUATION_POLICY,
-  memo = "Unrealised valuation movement",
+  memo = "Unrealized valuation movement",
 ): ValuationJournal {
   if (!policy.unrealizedPolicyEnabled) return null;
   const delta = newValueCents - (priorRecognizedCents ?? 0);
@@ -487,9 +487,9 @@ export type RealizationResult = {
 };
 
 /**
- * A disposition relieves cost and recognises a realised result. It never sets
+ * A disposition relieves cost and recognizes a realized result. It never sets
  * the asset's fair value to zero - the remaining position keeps its own
- * unrealised marks.
+ * unrealized marks.
  */
 export function realization(input: RealizationInput): RealizationResult {
   const { quantityHeld, quantitySold, costBasisCents, proceedsCents } = input;

@@ -244,7 +244,7 @@ export const cancelCertificate = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const me = await who(context, data.clientId);
     if (!me.canSign) {
-      throw new Error("Cancelling a certificate needs signing authority on this account.");
+      throw new Error("Canceling a certificate needs signing authority on this account.");
     }
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: cert } = await supabaseAdmin

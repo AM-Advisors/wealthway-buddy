@@ -90,7 +90,7 @@ export function ClientOffboardingPanel() {
         <p className="text-sm text-muted-foreground">
           {c.openAmounts === 0
             ? "No amounts are currently marked outstanding."
-            : `${c.openAmounts} amount${c.openAmounts === 1 ? "" : "s"} still to settle, totalling ${(
+            : `${c.openAmounts} amount${c.openAmounts === 1 ? "" : "s"} still to settle, totaling ${(
                 c.openAmountCents / 100
               ).toLocaleString("en-US", { style: "currency", currency: "USD" })}.`}
         </p>

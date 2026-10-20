@@ -490,7 +490,7 @@ function Audits({ d }: { d: Data }) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between"><h1 className="text-2xl">Audits & Assessments</h1>{can ? <Button size="sm" onClick={() => setEdit({ framework_key: d.frameworks[0]?.key, audit_type: "readiness", scope_id: d.scopes[0]?.id ?? null, period_start: null, period_end: null, assessor: "", status: "planned", result: "none", report_evidence_id: null, notes: "" })}>Add assessment</Button> : null}</div>
-      <p className="text-sm text-muted-foreground">Harmonious is never labelled certified here. A Report Issued or Certified result can only be recorded by an authorized administrator with the external report attached as evidence.</p>
+      <p className="text-sm text-muted-foreground">Harmonious is never labeled certified here. A Report Issued or Certified result can only be recorded by an authorized administrator with the external report attached as evidence.</p>
       {!d.audits.length ? <p className="text-sm text-muted-foreground">No assessments recorded.</p> : null}
       {d.audits.map((a: any) => (
         <div key={a.id} className="rounded-md border p-3 text-sm">

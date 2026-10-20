@@ -9,7 +9,7 @@
  * Financial-control rules preserved here:
  *  - posted entries are never rewritten; corrections are reversing entries;
  *  - the same person cannot both approve and post an entry (maker-checker);
- *  - closed and locked periods refuse postings until an authorised reopen;
+ *  - closed and locked periods refuse postings until an authorized reopen;
  *  - one bank transaction can only ever produce one posted journal entry.
  */
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
@@ -283,7 +283,7 @@ export async function draftJournalEntry(
 
   const period = await periodFor(input.bookId, input.entryDate);
   if (period && SEALED_PERIOD_STATUSES.includes(period.status as PeriodStatus)) {
-    fail("That accounting period is closed. Reopen it with an authorised adjustment first.");
+    fail("That accounting period is closed. Reopen it with an authorized adjustment first.");
   }
 
   // Accounts must belong to this book - no borrowing another fund's chart.
@@ -382,7 +382,7 @@ export async function advanceJournalEntry(
         .eq("id", entry.period_id)
         .maybeSingle();
       if (period && SEALED_PERIOD_STATUSES.includes(period.status as PeriodStatus)) {
-        fail("That accounting period is closed. Reopen it with an authorised adjustment first.");
+        fail("That accounting period is closed. Reopen it with an authorized adjustment first.");
       }
     }
   }

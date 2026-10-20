@@ -60,8 +60,8 @@ export const STATEMENT_LABELS: Record<StatementKind, string> = {
   general_ledger: "General ledger detail",
   journal_register: "Journal register",
   cash_activity: "Cash activity",
-  realized_gains: "Realised gain / loss",
-  unrealized_gains: "Unrealised gain / loss",
+  realized_gains: "Realized gain / loss",
+  unrealized_gains: "Unrealized gain / loss",
   expense_detail: "Expense detail",
   management_fee_detail: "Management fee detail",
   investor_capital_reconciliation: "Investor capital reconciliation",
@@ -132,12 +132,12 @@ export const DEFAULT_MAPPING_LINES: MappingLine[] = [
   { statement: "income_statement", section: "income", key: "other_income", label: "Other investment income", order: 30, match: { subtypes: ["investment_income"] } },
   // Operations - expenses
   { statement: "income_statement", section: "expenses", key: "management_fees", label: "Management fees", order: 110, match: { subtypes: ["management_fee"] } },
-  { statement: "income_statement", section: "expenses", key: "organizational_expenses", label: "Organisational expenses", order: 120, match: { subtypes: ["organizational_expense"] } },
+  { statement: "income_statement", section: "expenses", key: "organizational_expenses", label: "Organizational expenses", order: 120, match: { subtypes: ["organizational_expense"] } },
   { statement: "income_statement", section: "expenses", key: "tax_expense", label: "Taxes", order: 130, match: { subtypes: ["tax_adjustment", "withholding"] } },
   { statement: "income_statement", section: "expenses", key: "other_expenses", label: "Other operating expenses", order: 190, match: { types: ["expense"] } },
   // Operations - gains
-  { statement: "income_statement", section: "gains", key: "realized_gain", label: "Net realised gain / loss", order: 210, match: { subtypes: ["realized_gain"] } },
-  { statement: "income_statement", section: "gains", key: "unrealized_gain", label: "Net change in unrealised appreciation", order: 220, match: { subtypes: ["unrealized_gain"] } },
+  { statement: "income_statement", section: "gains", key: "realized_gain", label: "Net realized gain / loss", order: 210, match: { subtypes: ["realized_gain"] } },
+  { statement: "income_statement", section: "gains", key: "unrealized_gain", label: "Net change in unrealized appreciation", order: 220, match: { subtypes: ["unrealized_gain"] } },
 ];
 
 export const DEFAULT_MAPPING: StatementMapping = {

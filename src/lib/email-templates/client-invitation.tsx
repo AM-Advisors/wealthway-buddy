@@ -27,7 +27,7 @@ interface ClientInvitationProps {
 
 function ClientInvitation({
   contactName = 'there',
-  clientName = 'your organisation',
+  clientName = 'your organization',
   roleLabel = 'Client contact',
   invitedByName = 'The Harmonious team',
   note = '',
@@ -95,7 +95,7 @@ function ClientInvitation({
           </Text>
 
           <Section style={{ backgroundColor: '#f8fbfd', border: '1px solid #e6ecf3', padding: '20px' }}>
-            <Text style={label}>Organisation</Text>
+            <Text style={label}>Organization</Text>
             <Text style={value}>{clientName}</Text>
             <Text style={label}>Your role</Text>
             <Text style={canApprove || note ? value : { ...value, margin: 0 }}>{roleLabel}</Text>
@@ -167,7 +167,7 @@ function ClientInvitation({
 export const template = {
   component: ClientInvitation,
   subject: (data: Record<string, any>) =>
-    `Your Harmonious portal access for ${data?.['clientName'] || 'your organisation'}`,
+    `Your Harmonious portal access for ${data?.['clientName'] || 'your organization'}`,
   displayName: 'Client contact invitation',
   previewData: {
     contactName: 'Jordan',

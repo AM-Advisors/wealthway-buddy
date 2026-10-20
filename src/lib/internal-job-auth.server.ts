@@ -36,7 +36,7 @@ export function internalJobSecret(): string | null {
     if (!value) continue;
     const trimmed = value.trim();
     if (trimmed.length < 16) continue;
-    // Defence in depth: a client-distributable key must never act as a
+    // Defense in depth: a client-distributable key must never act as a
     // privileged-job credential, however it got into the environment.
     if (CLIENT_KEY_PREFIXES.some((p) => trimmed.startsWith(p))) continue;
     return trimmed;

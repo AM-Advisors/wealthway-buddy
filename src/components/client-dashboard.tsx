@@ -341,7 +341,7 @@ export function ClientDashboard({
           <CardHeader>
             <CardTitle className="text-base">Money in flight</CardTitle>
             <CardDescription>
-              Harmonious facilitates payments and keeps the records; two authorised people check
+              Harmonious facilitates payments and keeps the records; two authorized people check
               every movement before funds leave.
             </CardDescription>
           </CardHeader>

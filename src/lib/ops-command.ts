@@ -1,6 +1,6 @@
 // Operations Command Center — pure rules (prioritization, SLA status, capacity,
 // service limits, package identity, investor exceptions). Server code only
-// gathers source rows; every judgement lives here so it is unit-tested.
+// gathers source rows; every judgment lives here so it is unit-tested.
 
 import { ladderLevel } from "@/lib/service-ladders";
 

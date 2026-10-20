@@ -188,7 +188,7 @@ export const updateCapTableLead = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-/** Plan names shown on the public product page, straight from the catalogue. */
+/** Plan names shown on the public product page, straight from the catalog. */
 export const getPublicCapPlans = createServerFn({ method: "GET" }).handler(async () => {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data } = await supabaseAdmin

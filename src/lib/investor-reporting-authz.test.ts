@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
- * Adversarial tests for the investor reporting centre.
+ * Adversarial tests for the investor reporting center.
  *
  * Every id here arrives "from the browser". The server must re-read the record,
- * authorise against the fund and investor it truly belongs to, keep one
+ * authorize against the fund and investor it truly belongs to, keep one
  * person's investment profiles separate, and never rewrite a published package.
  */
 
@@ -290,10 +290,10 @@ describe("investor isolation", () => {
   });
 
   it("keeps Individual and Trust packages separate", async () => {
-    const centre = await server.investorReportingCenter(INVESTOR);
-    const labels = centre.profiles.map((p: any) => p.profileLabel).sort();
+    const center = await server.investorReportingCenter(INVESTOR);
+    const labels = center.profiles.map((p: any) => p.profileLabel).sort();
     expect(labels).toEqual(["Amy Family Trust", "Amy Individual"]);
-    expect(centre.profiles).toHaveLength(2);
+    expect(center.profiles).toHaveLength(2);
   });
 
   it("records an auditable portal open, not an email guess", async () => {

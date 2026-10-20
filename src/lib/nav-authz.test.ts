@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
  * Adversarial authorization tests for the NAV engine.
  *
  * Every id here arrives "from the browser". The server must re-read the NAV
- * version and authorise against the fund it actually belongs to, so swapping
+ * version and authorize against the fund it actually belongs to, so swapping
  * a NAV id or a fund id never crosses a boundary, and no single person can
  * prepare, review, approve and publish the same NAV.
  */

@@ -205,7 +205,7 @@ async function sendSms(to: string, body: string) {
   try {
     sid = String(JSON.parse(text)?.sid ?? "");
   } catch {
-    /* Twilio answered something we don't recognise; treat it as undelivered below. */
+    /* Twilio answered something we don't recognize; treat it as undelivered below. */
   }
   if (!sid) {
     console.error(`Twilio text returned no message id: ${text.slice(0, 300)}`);

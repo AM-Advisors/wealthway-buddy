@@ -533,7 +533,7 @@ describe("provider confirmation", () => {
     expect(result.mismatches.join(" ")).toMatch(/destination/i);
   });
 
-  it("returns and failures are recognised as such", () => {
+  it("returns and failures are recognized as such", () => {
     const base = {
       providerPaymentId: "pay_1",
       reportedAmountCents: 500_000,

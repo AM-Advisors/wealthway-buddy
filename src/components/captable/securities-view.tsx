@@ -68,7 +68,7 @@ function Body() {
             <CardDescription>
               {company.isDemo
                 ? "This is the demo company. Switch to your own company in Settings to record securities."
-                : "Your account is set to view only. An authorised signatory on your account can record securities."}
+                : "Your account is set to view only. An authorized signatory on your account can record securities."}
             </CardDescription>
           </CardHeader>
         </Card>
@@ -91,7 +91,7 @@ function Body() {
                 <TableRow>
                   <TableHead>Class</TableHead>
                   <TableHead>Kind</TableHead>
-                  <TableHead className="text-right">Authorised</TableHead>
+                  <TableHead className="text-right">Authorized</TableHead>
                   <TableHead className="text-right">Price</TableHead>
                   <TableHead className="text-right">Preference</TableHead>
                   <TableHead className="text-right">Conversion</TableHead>

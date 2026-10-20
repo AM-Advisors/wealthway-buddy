@@ -296,7 +296,7 @@ async function notifyApprovedWireRequest(
       `wire-request-approved:${requestId}`,
       (person) => ({
         contactName: person.name,
-        clientName: clientRow?.legal_name || clientRow?.name || "your organisation",
+        clientName: clientRow?.legal_name || clientRow?.name || "your organization",
         fundName: offering.name || "your fund",
         amount: money(Number(before?.amount_cents ?? 0)),
         purpose: PURPOSE_LABEL[String(before?.purpose ?? "other")] ?? "Wire",

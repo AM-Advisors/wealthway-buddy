@@ -604,7 +604,7 @@ export function InvoicesBoard() {
                               );
                               const overrideReason = offRate
                                 ? (window.prompt(
-                                    "Any line above the contracted rate needs the client's written authorisation. Reference it here (leave blank if every line is on the rate card).",
+                                    "Any line above the contracted rate needs the client's written authorization. Reference it here (leave blank if every line is on the rate card).",
                                   ) ?? "")
                                 : "";
                               issueMutation.mutate({
@@ -693,7 +693,7 @@ export function InvoicesBoard() {
                     ) : null}
                     {inv.rate_override_reason ? (
                       <p className="text-sm text-muted-foreground">
-                        Above-rate authorisation: {inv.rate_override_reason}
+                        Above-rate authorization: {inv.rate_override_reason}
                       </p>
                     ) : null}
                     {inv.status === "void" ? (

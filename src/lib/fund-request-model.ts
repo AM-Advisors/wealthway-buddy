@@ -307,7 +307,7 @@ export function flatAnswers(r: FundRequest): Record<string, string> {
   return out;
 }
 
-/** Bundled offerings: one choice covering several catalogue components. */
+/** Bundled offerings: one choice covering several catalog components. */
 export const SERVICE_BUNDLES: Record<string, { label: string; includes: string[] }> = {
   investor_onboarding: {
     label: "Investor Onboarding",
@@ -318,7 +318,7 @@ export const SERVICE_BUNDLES: Record<string, { label: string; includes: string[]
     includes: ["Federal partnership return", "State partnership return", "Schedule K-1 coordination", "Form 1042-S coordination"],
   },
 };
-/** Catalogue keys never offered separately on a Fund request (bundled, included everywhere, or not offered). */
+/** Catalog keys never offered separately on a Fund request (bundled, included everywhere, or not offered). */
 export const HIDDEN_FUND_SERVICE_KEYS = [
   "kyc", "kyb", "aml_screening", "sanctions_screening", "beneficial_owner_screening", "tax_doc_collection",
   "investor_records", "investor_inquiries", "tax_1065", "tax_state", "tax_1042s",

@@ -29,10 +29,10 @@ function RequestFund() {
   const [picked, setPicked] = useState("");
   const clientId = picked || clients[0]?.id || null;
   if (options.isPending) return <main className="mx-auto max-w-5xl p-6 text-sm text-muted-foreground">Loading…</main>;
-  if (!clients.length) return <main className="mx-auto max-w-5xl p-6 text-sm">Your login isn't linked to a client organisation yet. Ask Harmonious to add you.</main>;
+  if (!clients.length) return <main className="mx-auto max-w-5xl p-6 text-sm">Your login isn't linked to a client organization yet. Ask Harmonious to add you.</main>;
   const picker = clients.length > 1 ? (
     <div className="max-w-md space-y-1">
-      <Label>Organisation</Label>
+      <Label>Organization</Label>
       <Select value={clientId ?? ""} onValueChange={setPicked}>
         <SelectTrigger><SelectValue /></SelectTrigger>
         <SelectContent>{clients.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>

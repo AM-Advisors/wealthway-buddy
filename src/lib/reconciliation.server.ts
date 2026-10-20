@@ -3,7 +3,7 @@
  *
  * The bank statement stays the authoritative record of cash. Everything here
  * proposes, routes and records; nothing moves money and nothing is posted
- * without an authorised human approval at each gate:
+ * without an authorized human approval at each gate:
  *
  *   bank transaction → classification → Harmonious review → manager/client
  *   approval where configured → reconciled → journal prepared → accounting

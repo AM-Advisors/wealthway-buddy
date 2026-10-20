@@ -225,7 +225,7 @@ describe("signer capacity and review", () => {
     expect(review.problems.some((p) => /Choose who signs as GP \/ Manager/.test(p.message))).toBe(true);
   });
 
-  it("summarises the send when everything is in place", () => {
+  it("summarizes the send when everything is in place", () => {
     const review = buildSendReview({
       agreementTitle: "Limited Partnership Agreement",
       investorName: "One LLC",
