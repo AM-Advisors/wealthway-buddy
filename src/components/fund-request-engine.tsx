@@ -105,6 +105,18 @@ export function FundRequestEngine({ clientId: id, draft, mode = "client", client
     const fill = Object.fromEntries(Object.entries(known).filter(([k, v]) => v && !r.ss4?.[k]));
     if (Object.keys(fill).length) setR((p) => ({ ...p, ss4: { ...fill, ...p.ss4 } }));
   }, [needsSs4(r)]);
+  // Prefill the SS-4 signature from the signatory and today's date; any manual edit is kept.
+  useEffect(() => {
+    if (!needsSs4(r)) return;
+    setR((p) => {
+      const sig = p.ss4_signature;
+      const name = sig.name.trim() || p.signatory.name;
+      const title = sig.title.trim() || p.signatory.title;
+      const date = sig.date || format(new Date(), "yyyy-MM-dd");
+      if (name === sig.name && title === sig.title && date === sig.date) return p;
+      return { ...p, ss4_signature: { ...sig, name, title, date } };
+    });
+  }, [needsSs4(r), r.signatory.name, r.signatory.title]);
 
   const saveDraft = useMutation({
     mutationFn: async (quiet: boolean) => {
@@ -288,6 +300,18 @@ export function FundRequestEngine({ clientId: id, draft, mode = "client", client
                     {SS4_FIELDS.filter((f) => f.long).map((f) => (
                       <F key={f.key} label={f.label}><Textarea value={r.ss4?.[f.key] ?? ""} onChange={(e) => set("ss4", { ...r.ss4, [f.key]: e.target.value })} /></F>
                     ))}
+                    <div className="space-y-3 rounded-md border bg-muted/40 p-3">
+                      <p className="text-sm font-medium">Sign the SS-4</p>
+                      <Grid>
+                        <F label="Signature (type your full legal name) *"><Input value={r.ss4_signature.name} onChange={(e) => set("ss4_signature", { ...r.ss4_signature, name: e.target.value })} /></F>
+                        <F label="Title *"><Input value={r.ss4_signature.title} onChange={(e) => set("ss4_signature", { ...r.ss4_signature, title: e.target.value })} placeholder="e.g. Managing Member" /></F>
+                        <F label="Date"><Input value={r.ss4_signature.date} readOnly disabled /></F>
+                      </Grid>
+                      <label className="flex items-start gap-2 text-xs text-muted-foreground">
+                        <Checkbox className="mt-0.5" checked={r.ss4_signature.agreed} onCheckedChange={(c) => set("ss4_signature", { ...r.ss4_signature, agreed: c === true })} />
+                        <span>Under penalties of perjury, I declare that I have examined this application and, to the best of my knowledge and belief, it is true, correct and complete. Harmonious reviews the signed application before anything is submitted to the IRS.</span>
+                      </label>
+                    </div>
                   </div>
                 )}
                 <DocUploads clientId={id} kinds={entityDocKinds(r)} docs={r.documents} onChange={(d) => set("documents", d)} />

@@ -66,6 +66,17 @@ describe("Master LLC, EIN and SS-4", () => {
     expect(_needs({ ...r, series_home: "own" })).toBe(false);
     expect(_ss4({ ...r, ss4: { legal_name: "X", responsible_party_tin: "123" } })).not.toHaveProperty("responsible_party_tin");
   });
+  it("requires the SS-4 signature and carries it to Fund Setup", () => {
+    const r = { ...base(), series_home: "hcam_tx", already_formed: "yes" as const, has_ein: "no" as const };
+    expect(_missing(r).entity!.join("|")).toMatch(/SS-4 signature/);
+    const signed = { ...r, ss4_signature: { name: "Thomas Morgan", title: "Managing Member", date: "2026-10-20", agreed: true } };
+    expect(_missing(signed).entity!.join("|")).not.toMatch(/SS-4 signature/);
+    const flat = _ss4(signed)!;
+    expect(flat["signed_by"]).toBe("Thomas Morgan");
+    expect(flat["signed_title"]).toBe("Managing Member");
+    expect(flat["signed_date"]).toBe("2026-10-20");
+    expect(_ss4({ ...r, ss4_signature: { name: "Thomas Morgan", title: "", date: "", agreed: false } })).not.toHaveProperty("signed_by");
+  });
   it("names a Harmonious series as 'a series of' the Master LLC", () => {
     expect(_sln({ ...base(), series_home: "hcam_tx" })).toBe("Test, a series of HCAM TX");
     expect(_sln({ ...base(), fund_name: "Acme I", series_home: "am_spv" })).toBe("Acme I, a series of AM SPV Fund Management");

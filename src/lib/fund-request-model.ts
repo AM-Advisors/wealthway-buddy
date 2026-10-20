@@ -99,6 +99,10 @@ export const SS4_FIELDS: { key: string; label: string; required?: boolean; long?
 ];
 const blankSeries = (): SeriesInfo => ({ legal_name: "", jurisdiction: "", date_formed: "", contact_name: "", contact_email: "", notes: "" });
 
+/** Client's declaration on the SS-4: typed name, title, date and the perjury declaration. */
+export type Ss4Signature = { name: string; title: string; date: string; agreed: boolean };
+export const blankSs4Signature = (): Ss4Signature => ({ name: "", title: "", date: "", agreed: false });
+
 export type RequestClass = { name: string; fee: string; carry: string; hurdle: string; minimum: string };
 export type RequestPerson = { name: string; email: string; title: string };
 export type RequestDocument = { kind: string; fileName: string; path: string };
@@ -126,6 +130,7 @@ export type FundRequest = {
   series_fee_ack: boolean;
   ein_obtained_by: "harmonious" | "client" | "";
   ss4: Record<string, string>;
+  ss4_signature: Ss4Signature;
   offering_exemption: string;
   investor_eligibility: string;
   management_fee: string;
@@ -155,7 +160,7 @@ export function emptyRequest(kind = ""): FundRequest {
     bank_or_custodian: "", counsel: "", auditor: "", tax_preparer: "Harmonious",
     legal_name: "", vehicle_structure: kind ? defaultVehicle(kind === "spv" ? "launch_spv" : "launch_fund", kind) : "",
     jurisdiction: "", already_formed: "", date_formed: "", has_ein: "",
-    series_home: "", series_existing: blankSeries(), series_new: blankSeries(), series_fee_ack: false, ein_obtained_by: "", ss4: {},
+    series_home: "", series_existing: blankSeries(), series_new: blankSeries(), series_fee_ack: false, ein_obtained_by: "", ss4: {}, ss4_signature: blankSs4Signature(),
     offering_exemption: "", investor_eligibility: "", management_fee: "", carried_interest: "", preferred_return: "",
     gp_commitment: "", fund_term: "", investment_period: "",
     classes: [{ name: "Class A", fee: "", carry: "", hurdle: "", minimum: "" }],
@@ -195,6 +200,8 @@ export function missingFields(r: FundRequest): Partial<Record<RequestStepKey, st
   if (needsSs4(r)) {
     const miss = SS4_FIELDS.filter((f) => f.required && !String(r.ss4?.[f.key] ?? "").trim());
     if (miss.length) add("entity", `SS-4: ${miss.map((f) => f.label.replace(/^[\dab]+\.\s*/, "")).join(", ")}`);
+    const sig = r.ss4_signature;
+    if (!sig?.name.trim() || !sig?.title.trim() || !sig?.agreed) add("entity", "SS-4 signature (name, title and declaration)");
   }
   if (!r.offering_exemption) add("economics", "Offering exemption");
   if (!isSimplified(r) && (r.service_keys ?? []).includes("management_llc") && !r.management_llc_path) add("services", "Management / Master LLC: set up a new entity or transfer an existing one");
@@ -245,6 +252,12 @@ export function ss4For(r: FundRequest): Record<string, string | boolean> | null 
   if (!needsSs4(r)) return null;
   const out: Record<string, string | boolean> = { is_llc: true, llc_us_organized: true, entity_kind: "partnership" };
   for (const f of SS4_FIELDS) { const v = String(r.ss4?.[f.key] ?? "").trim(); if (v) out[f.key] = v; }
+  const sig = r.ss4_signature;
+  if (sig?.agreed && sig.name.trim()) {
+    out["signed_by"] = sig.name.trim();
+    if (sig.title.trim()) out["signed_title"] = sig.title.trim();
+    if (sig.date) out["signed_date"] = sig.date;
+  }
   return out;
 }
 
