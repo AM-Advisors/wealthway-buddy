@@ -1,6 +1,6 @@
 /**
  * My Funds, investor-safe Fund view and Platform Agreements.
- * Every Fund is authorised from the caller's own relationship rows
+ * Every Fund is authorized from the caller's own relationship rows
  * (exact fund_managers rows, own positions/applications) - never email,
  * a broad role or Client membership.
  */

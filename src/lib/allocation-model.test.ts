@@ -291,7 +291,7 @@ describe("controls", () => {
     expect(adjustmentApprovalError({ status: "pending", requested_by: "amy" }, "ben")).toBeNull();
   });
 
-  it("refuses a transfer to the same position or without authorisation", () => {
+  it("refuses a transfer to the same position or without authorization", () => {
     expect(
       transferError({
         fromPositionId: "a",

@@ -1,7 +1,7 @@
 /**
  * Google as the primary address lookup and validation provider.
  *
- * Google finds and standardises an address. Didit evidences that the person is
+ * Google finds and standardizes an address. Didit evidences that the person is
  * connected to it. Harmonious decides the compliance state. These tests hold
  * that separation in place.
  */

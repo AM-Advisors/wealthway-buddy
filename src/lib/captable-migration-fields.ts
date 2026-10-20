@@ -14,7 +14,7 @@ export const MIGRATION_FIELDS = [
   { key: "cliffMonths", label: "Cliff (months)" },
   { key: "durationMonths", label: "Vesting length (months)" },
   { key: "frequency", label: "Vesting frequency" },
-  { key: "authorizedShares", label: "Authorised shares for this class" },
+  { key: "authorizedShares", label: "Authorized shares for this class" },
   { key: "roundName", label: "Funding round / financing" },
   { key: "roundDate", label: "Round date" },
   { key: "roundPricePerShare", label: "Round price per share" },

@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
  * Adversarial authorization tests for the valuation layer.
  *
  * Every id in these tests comes "from the browser": the point is that the
- * server re-reads the record and authorises against the fund it actually
+ * server re-reads the record and authorizes against the fund it actually
  * belongs to, so substituting an asset, valuation or fund id never crosses a
  * boundary.
  */
@@ -312,7 +312,7 @@ describe("who may decide", () => {
     ).rejects.toThrow(/cannot become effective/i);
   });
 
-  it("keeps the ledger and realisations away from fund managers", async () => {
+  it("keeps the ledger and realizations away from fund managers", async () => {
     await expect(prepareValuationJournal(MANAGER_A, VAL_A_EFFECTIVE)).rejects.toThrow(
       /Harmonious valuation authority/i,
     );

@@ -295,7 +295,7 @@ export const signSs4RequestFn = createServerFn({ method: "POST" })
 
     await (async () => (await import("@/lib/ops-slack-notify.server")).notifySubmission({ kind: "ss4_signed", title: `Form SS-4 signed by ${data.signerName} - ready for staff to file by hand`, offeringId: r.offering_id, submittedBy: context.userId, ref: r.id, path: `/ops/fund/${r.offering_id}?tab=setup`, completed: true }))().catch(() => null);
 
-    // Keep the fund's SS-4 answers and current form in step (manager-authorised RPCs, EIN untouched).
+    // Keep the fund's SS-4 answers and current form in step (manager-authorized RPCs, EIN untouched).
     try {
       const { data: detail } = await context.supabase.rpc("get_offering_entity_details", { p_offering_id: r.offering_id }).maybeSingle();
       await context.supabase.rpc("save_offering_entity_details", { p_offering_id: r.offering_id, p_has_ein: Boolean((detail as any)?.has_ein), p_ein: String((detail as any)?.ein ?? ""), p_ss4: form as any });

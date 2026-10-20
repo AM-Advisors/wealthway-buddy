@@ -50,7 +50,7 @@ const STEPS = ["Fund basics", "Offering terms", "Key people", "Banking and tax"]
 
 const PEOPLE: Array<{ key: keyof Details; label: string; note: string }> = [
   { key: "general_partner", label: "General partner / principal", note: "Who runs the fund." },
-  { key: "signatory", label: "Authorised signatory", note: "Who signs on behalf of the fund." },
+  { key: "signatory", label: "Authorized signatory", note: "Who signs on behalf of the fund." },
   { key: "lawyer", label: "Lawyer", note: "Your own counsel - Harmonious does not act as your lawyer." },
   { key: "accountant", label: "Accountant", note: "Your own accountant or tax preparer." },
   { key: "bank_contact", label: "Bank contact", note: "Who you speak to at the fund's bank." },

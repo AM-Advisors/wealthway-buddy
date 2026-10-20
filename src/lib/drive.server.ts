@@ -625,7 +625,7 @@ export async function fileExecutedSignature(signatureId: string, deps: Deps = {}
       targets = filingTargets(text);
     }
     if (!mapping || mapping.status !== "active") return { filed: 0 };
-    // Defence in depth: the mapping must sit in the repository the router chose.
+    // Defense in depth: the mapping must sit in the repository the router chose.
     if ((mapping.repository ?? "fund") !== route.repository) {
       throw new Error(`Refusing to file: destination is in the ${mapping.repository} repository, expected ${route.repository}.`);
     }

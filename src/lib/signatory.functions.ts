@@ -3,7 +3,7 @@
  * acceptance, authority documents and authorized signing.
  *
  * Every handler re-derives authority from stored records. Nothing trusts an id,
- * a scope or an "I am authorised" claim sent by the browser.
+ * a scope or an "I am authorized" claim sent by the browser.
  */
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";

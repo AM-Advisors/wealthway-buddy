@@ -128,7 +128,7 @@ describe("old addresses keep working", () => {
     ).toBe(`${APP}/manager/fund/abc?tab=capital#calls`);
   });
 
-  it("leaves an address it does not recognise exactly where it is", () => {
+  it("leaves an address it does not recognize exactly where it is", () => {
     expect(canonicalRedirect({ url: "https://portal.harmonious.co/dashboard" })).toBeNull();
   });
 });

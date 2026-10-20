@@ -213,7 +213,7 @@ export function CapTableRequestDialog({ open, provider, onOpenChange }: Props) {
                 aria-label="Confirm authority"
               />
               <span className="text-muted-foreground">
-                I am authorised to act for this company and to share its ownership information with
+                I am authorized to act for this company and to share its ownership information with
                 Harmonious.
               </span>
             </label>

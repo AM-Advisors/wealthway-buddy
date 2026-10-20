@@ -193,7 +193,7 @@ export function canonicalRedirect(
 
   const onLegacy = legacyHosts.includes(host);
   const known = onLegacy || host === clientHost || host === opsHost;
-  // An address we don't recognise (a custom domain, a staging host) is left
+  // An address we don't recognize (a custom domain, a staging host) is left
   // alone rather than bounced somewhere it may not be able to come back from.
   if (!known) return null;
 

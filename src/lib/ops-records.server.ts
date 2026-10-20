@@ -455,7 +455,7 @@ export async function fundTab(context: any, data: { id: string; tab: string }) {
           .limit(50),
       ]);
       const accountRows = rows(accounts);
-      // Distributions are summarised here; the money itself stays authoritative
+      // Distributions are summarized here; the money itself stays authoritative
       // in the payment, reconciliation and journal records.
       const batches = rows(
         await s
@@ -901,7 +901,7 @@ export async function investorTab(context: any, data: { id: string; tab: string 
             reviewReason: a.review_reason,
             comparison: comparison?.result ?? null,
             differences: Array.isArray(comparison?.differences) ? comparison.differences : [],
-            // Side-by-side normalised components for authorised compliance staff.
+            // Side-by-side normalised components for authorized compliance staff.
             sideBySide: comparison?.left && comparison?.right
               ? { onFile: comparison.left, proofOfAddress: comparison.right }
               : null,

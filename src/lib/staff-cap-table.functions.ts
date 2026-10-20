@@ -189,7 +189,7 @@ export const staffCreateCertificate = createServerFn({ method: "POST" })
     return created;
   });
 
-/** Issues a draft certificate, naming the company signatory who authorised it. */
+/** Issues a draft certificate, naming the company signatory who authorized it. */
 export const staffIssueCertificate = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>

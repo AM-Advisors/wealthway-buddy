@@ -24,7 +24,7 @@ const FIELDS = [
   ["jurisdiction", "Jurisdiction"],
   ["business_identifier", "Business identifier (EIN)"],
   ["registration_number", "Registration number"],
-  ["license_number", "Licence number"],
+  ["license_number", "License number"],
   ["primary_contact_name", "Primary contact"],
   ["primary_contact_email", "Contact email"],
   ["primary_contact_phone", "Contact phone"],
@@ -66,7 +66,7 @@ function OrganizationVerification() {
     <div className="space-y-6">
       <p className="text-sm text-muted-foreground">
         Verification confirms who your firm is. It does not grant any authority on its own - what you
-        may do always comes from a client's authorisation.
+        may do always comes from a client's authorization.
       </p>
 
       {orgs.map((org) => {

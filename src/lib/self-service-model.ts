@@ -128,7 +128,7 @@ export function parseInvestorCsv(text: string, existingEmails: readonly string[]
       if (!Number.isFinite(n) || n <= 0) errors.push("Amount must be a positive number");
       else amountCents = Math.round(n * 100);
     }
-    if (!TYPES.has(type)) errors.push("Investor type not recognised");
+    if (!TYPES.has(type)) errors.push("Investor type not recognized");
     if (email && seen.has(email)) errors.push("Duplicate email in this file");
     if (email && existing.has(email)) errors.push("Already invited to this fund");
     if (email) seen.add(email);

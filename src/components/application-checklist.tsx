@@ -23,7 +23,7 @@ function requiredKinds(taxClassification: string, regType: string | null) {
 const KIND_LABEL = new Map(UPLOAD_KINDS.map((k) => [k.value as string, k.label as string]));
 
 const KIND_HINT: Record<string, string> = {
-  identification: "A clear photo or scan of your passport or driver's licence.",
+  identification: "A clear photo or scan of your passport or driver's license.",
   proof_of_address: "A utility bill or bank statement from the last 90 days.",
   tax_form: "W-9 if you are a US taxpayer, W-8BEN if you are not.",
   entity_formation: "Certificate of formation, operating agreement, and who may sign.",

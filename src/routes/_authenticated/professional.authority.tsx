@@ -123,7 +123,7 @@ function AuthorityDocuments() {
     <div className="space-y-6">
       <p className="text-sm text-muted-foreground">
         Signing on a client's behalf always needs written legal authority on file - a power of
-        attorney, resolution, trustee authorisation or similar. Uploading one is not enough: Harmonious
+        attorney, resolution, trustee authorization or similar. Uploading one is not enough: Harmonious
         reviews it, and signing only becomes possible once it is accepted.
       </p>
 
@@ -134,7 +134,7 @@ function AuthorityDocuments() {
         <CardContent className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1">
-              <Label className="text-xs">Client authorisation</Label>
+              <Label className="text-xs">Client authorization</Label>
               <Select value={delegationId} onValueChange={setDelegationId}>
                 <SelectTrigger>
                   <SelectValue placeholder="Choose" />
@@ -270,7 +270,7 @@ export const Route = createFileRoute("/_authenticated/professional/authority")({
       {
         name: "description",
         content:
-          "Submit powers of attorney, resolutions and trustee authorisations that permit delegated signing.",
+          "Submit powers of attorney, resolutions and trustee authorizations that permit delegated signing.",
       },
       { property: "og:title", content: "Authority documents - Harmonious" },
       { property: "og:description", content: "Documented legal authority for delegated signing." },

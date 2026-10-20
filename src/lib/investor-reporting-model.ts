@@ -1,7 +1,7 @@
 /**
- * Pure rules for the investor reporting centre.
+ * Pure rules for the investor reporting center.
  *
- * The reporting centre is a *distribution* layer. It never calculates NAV,
+ * The reporting center is a *distribution* layer. It never calculates NAV,
  * performance, capital accounts or financial statements: it assembles records
  * that are already approved or published, freezes the exact versions it used,
  * and decides who may see which section.

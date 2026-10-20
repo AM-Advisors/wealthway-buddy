@@ -387,7 +387,7 @@ export const withdrawCapExercise = createServerFn({ method: "POST" })
 /* ------------------------------------------------------- company-side desks */
 
 /**
- * Employee equity centre / investor management, depending on the audience.
+ * Employee equity center / investor management, depending on the audience.
  * One holder per row with their grants, vesting, acceptance and permissions.
  */
 export const getCapHolderDesk = createServerFn({ method: "GET" })

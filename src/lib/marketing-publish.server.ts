@@ -86,7 +86,7 @@ async function metaTarget(id: string): Promise<{ token: string; id: string }> {
       if (byPage?.access_token) return { token: byPage.access_token, id };
       const byIg = pages.find((p) => p.instagram_business_account?.id === id);
       if (byIg?.access_token) return { token: byIg.access_token, id };
-      // A single managed page with Instagram: use it when the configured id isn't recognised.
+      // A single managed page with Instagram: use it when the configured id isn't recognized.
       const withIg = pages.filter((p) => p.instagram_business_account?.id && p.access_token);
       if (withIg.length === 1 && !pages.some((p) => p.id === id)) {
         return { token: withIg[0].access_token, id: withIg[0].instagram_business_account.id };

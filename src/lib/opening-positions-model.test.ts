@@ -9,7 +9,7 @@ describe("takeover opening positions (permanent)", () => {
   it("date must match opening", () => expect(openingPositionError({ ...p, asOfDate: "2026-01-01" }, j, "b")).toMatch(/as-of/));
   it("preparer cannot approve own", () => expect(openingDecisionError("a", "a", "prepared")).toMatch(/cannot approve/));
   it("decided cannot be re-decided", () => expect(openingDecisionError("a", "b", "approved")).toMatch(/already/));
-  it("Walkthrough opening ties: cost 7.5M, FV 8.25M, unrealised 750k", () => {
+  it("Walkthrough opening ties: cost 7.5M, FV 8.25M, unrealized 750k", () => {
     const t = openingTieOut([{ costBasisCents: 3e8, openingFairValueCents: 3.5e8 }, { costBasisCents: 2.5e8, openingFairValueCents: 2.75e8 }, { costBasisCents: 2e8, openingFairValueCents: 2e8 }], { investmentCostCents: 7.5e8, unrealizedCents: 7.5e7 });
     expect(t.ties).toBe(true);
   });

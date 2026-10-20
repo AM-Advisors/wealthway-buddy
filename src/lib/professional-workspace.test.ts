@@ -245,7 +245,7 @@ describe("professional workspace", () => {
     expect(docsOnly.documents).toHaveLength(0);
   });
 
-  it("shows no banking at all until a signed authorisation exists", async () => {
+  it("shows no banking at all until a signed authorization exists", async () => {
     delegation({ delegate_user_id: PRO_B, authority_level: "limited_proxy" }, [
       "view_investments",
       "view_banking_info",

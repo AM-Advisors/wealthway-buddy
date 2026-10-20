@@ -82,7 +82,7 @@ export const ADDRESS_SOURCE_LABELS: Record<AddressSource, string> = {
 /**
  * Authority ranking. A lower-authority source never overwrites a
  * higher-authority record - a difference in formatting is a comparison to
- * review, not a licence to replace a legal or documentary address.
+ * review, not a license to replace a legal or documentary address.
  */
 const SOURCE_AUTHORITY: Record<AddressSource, number> = {
   google_normalized: 1,
@@ -328,7 +328,7 @@ export function stateForVerdict(
         };
       }
       if (verdict === "normalized") {
-        return { state: "normalized", reason: "Standardised by the address validation provider." };
+        return { state: "normalized", reason: "Standardized by the address validation provider." };
       }
       if (verdict === "located") {
         return { state: "located", reason: "Found by the address provider but not fully confirmed." };

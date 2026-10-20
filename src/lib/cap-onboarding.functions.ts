@@ -7,7 +7,7 @@ import { requireSupabaseAuth } from "@/lib/require-auth";
  *
  *  Before a founder records any shares we ask them to confirm the company
  *  itself: legal name, how and where it was formed, how many shares the company
- *  is authorised to issue, and who signs certificates. Harmonious records what
+ *  is authorized to issue, and who signs certificates. Harmonious records what
  *  the company tells us - we do not verify or advise on it. */
 
 export const CAP_ENTITY_TYPES = [
@@ -145,7 +145,7 @@ export const completeCapOnboarding = createServerFn({ method: "POST" })
     if (!row.company_legal_name) missing.push("company legal name");
     if (!row.entity_type) missing.push("entity type");
     if (!row.state_formed) missing.push("where it was formed");
-    if (!row.authorized_shares) missing.push("authorised shares");
+    if (!row.authorized_shares) missing.push("authorized shares");
     if (!row.signatory_name) missing.push("who signs certificates");
     if (!row.acknowledged) missing.push("confirmation that these details are correct");
     if (missing.length) throw new Error(`Still needed: ${missing.join(", ")}.`);

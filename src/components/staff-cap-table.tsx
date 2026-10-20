@@ -417,7 +417,7 @@ export function StaffCapTable() {
           <DialogHeader>
             <DialogTitle>Issue {issuing?.certificate_no}</DialogTitle>
             <DialogDescription>
-              Name the company signatory who authorised this certificate and record the instruction
+              Name the company signatory who authorized this certificate and record the instruction
               you received. Harmonious issues it on their behalf.
             </DialogDescription>
           </DialogHeader>

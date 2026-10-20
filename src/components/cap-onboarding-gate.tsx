@@ -178,7 +178,7 @@ function CapOnboardingForm({
     if (!form.company_legal_name.trim()) m.push("company legal name");
     if (!form.entity_type) m.push("entity type");
     if (!form.state_formed.trim()) m.push("where it was formed");
-    if (!(num(form.authorized_shares) > 0)) m.push("authorised shares");
+    if (!(num(form.authorized_shares) > 0)) m.push("authorized shares");
     if (!form.signatory_name.trim()) m.push("who signs certificates");
     if (!form.acknowledged) m.push("your confirmation");
     return m;
@@ -328,9 +328,9 @@ function CapOnboardingForm({
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="cap-authorised">Authorised shares</Label>
+              <Label htmlFor="cap-authorized">Authorized shares</Label>
               <Input
-                id="cap-authorised"
+                id="cap-authorized"
                 inputMode="numeric"
                 value={form.authorized_shares}
                 onChange={(e) => set({ authorized_shares: e.target.value })}
@@ -540,7 +540,7 @@ function CapOnboardingForm({
 
             {overAuthorized && (
               <p className="text-sm text-destructive">
-                These shares add up to more than the {authorized.toLocaleString()} authorised shares
+                These shares add up to more than the {authorized.toLocaleString()} authorized shares
                 you entered. Check the numbers before you finish.
               </p>
             )}
@@ -555,7 +555,7 @@ function CapOnboardingForm({
               <Row label="Formed in" value={form.state_formed} />
               <Row label="Date formed" value={form.date_formed} />
               <Row
-                label="Authorised shares"
+                label="Authorized shares"
                 value={authorized > 0 ? authorized.toLocaleString() : ""}
               />
               <Row label="Financial year end" value={form.fiscal_year_end} />

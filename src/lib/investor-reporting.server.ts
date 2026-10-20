@@ -1,7 +1,7 @@
 /**
- * Server-only investor reporting centre.
+ * Server-only investor reporting center.
  *
- * This layer distributes work that other engines already authorised:
+ * This layer distributes work that other engines already authorized:
  *   approved NAV → published financial statements → finalized capital accounts
  *   → published investor statements → published performance → published documents.
  *
@@ -63,7 +63,7 @@ async function authorizeFund(userId: string, offeringId: string) {
   return scope;
 }
 
-/** Re-read the package and authorise against the fund it truly belongs to. */
+/** Re-read the package and authorize against the fund it truly belongs to. */
 async function authorizePackage(userId: string, packageId: string) {
   const { data: pkg } = await db()
     .from("investor_packages")
@@ -1011,7 +1011,7 @@ async function allowedSections(
 }
 
 /**
- * The investor reporting centre: investment profile → fund → period.
+ * The investor reporting center: investment profile → fund → period.
  * Profiles are never merged, even when one person controls all of them.
  */
 export async function investorReportingCenter(userId: string, options: ViewerOptions = {}) {

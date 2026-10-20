@@ -63,7 +63,7 @@ export function CapTableSettings() {
             <Detail label="Entity type" value={company.entityType ?? "-"} />
             <Detail label="Jurisdiction" value={company.jurisdiction ?? "-"} />
             <Detail label="Incorporated" value={fmtDate(company.incorporationDate)} />
-            <Detail label="Authorised shares" value={fmtNumber(company.authorizedShares)} />
+            <Detail label="Authorized shares" value={fmtNumber(company.authorizedShares)} />
             <Detail label="Par value" value={company.parValue === null ? "-" : String(company.parValue)} />
             <Detail label="Fiscal year end" value={company.fiscalYearEnd ?? "-"} />
             <Detail label="Currency" value={company.currency} />

@@ -172,7 +172,7 @@ export function ClientWireRequestsPanel({
               </div>
               <p className="text-xs text-muted-foreground">
                 Submitting sends this to Harmonious for review. No money moves until the checks pass
-                and two authorised approvals are recorded.
+                and two authorized approvals are recorded.
               </p>
               <Button
                 size="sm"

@@ -32,7 +32,7 @@ export async function prepareOpeningPosition(userId: string, i: {
   return { id: data.id as string, status: data.status as string, existing: false };
 }
 
-/** Approval creates the subledger asset + an opening valuation recognised by the opening journal. No new journal. */
+/** Approval creates the subledger asset + an opening valuation recognized by the opening journal. No new journal. */
 export async function decideOpeningPosition(userId: string, id: string, approve: boolean, reason: string) {
   await assertAdmin(userId);
   const { data: p } = await db().from("portfolio_opening_positions").select("*").eq("id", id).maybeSingle();
@@ -59,7 +59,7 @@ export async function decideOpeningPosition(userId: string, id: string, approve:
     methodology: "other", methodology_note: "Prior administrator carrying value at takeover", source_type: "other", source: p.source_reference, source_date: p.as_of_date,
     change_cents: p.opening_fair_value_cents - p.cost_basis_cents, prepared_by: p.prepared_by, prepared_by_role: "harmonious",
     reviewed_by: userId, reviewed_at: now, approved_by: userId, approved_at: now, effective_at: now,
-    // Recognised by the posted opening journal: Q1 movement is measured from this value, never from cost.
+    // Recognized by the posted opening journal: Q1 movement is measured from this value, never from cost.
     recognized_by_journal_id: p.opening_journal_id,
     evidence_status: p.evidence_status === "present" ? "present" : "missing",
     note: p.evidence_status === "missing_in_source" ? "Opening valuation evidence MISSING IN SOURCE - follow-up open; does not satisfy any later valuation" : null,

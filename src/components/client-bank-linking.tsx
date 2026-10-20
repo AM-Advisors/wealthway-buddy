@@ -198,7 +198,7 @@ export function ClientBankLinking() {
             Link the account your fund pays from and the wires or ACH payments you send are matched
             to your invoices automatically - you no longer wait for someone at Harmonious to record
             them by hand. Harmonious never moves money from a linked account; it only reads the
-            deposits so payments can be recognised.
+            deposits so payments can be recognized.
           </CardDescription>
         </CardHeader>
 

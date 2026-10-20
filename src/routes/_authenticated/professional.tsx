@@ -54,7 +54,7 @@ function ProfessionalLayout() {
       <header>
         <h1 className="text-3xl">Professional workspace</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          You only see clients who have authorised you. Being seated at a firm on its own shows
+          You only see clients who have authorized you. Being seated at a firm on its own shows
           nothing.
         </p>
       </header>
@@ -90,12 +90,12 @@ export const Route = createFileRoute("/_authenticated/professional")({
       {
         name: "description",
         content:
-          "Clients who have authorised you, with the profiles, funds, investments, documents and status their delegation covers.",
+          "Clients who have authorized you, with the profiles, funds, investments, documents and status their delegation covers.",
       },
       { property: "og:title", content: "Professional workspace - Harmonious" },
       {
         property: "og:description",
-        content: "Delegated, read-only access to the clients who authorised you.",
+        content: "Delegated, read-only access to the clients who authorized you.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

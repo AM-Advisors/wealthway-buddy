@@ -60,7 +60,7 @@ function MyCredentials() {
   return (
     <div className="space-y-6">
       <p className="text-sm text-muted-foreground">
-        Your licence or registration says who you are professionally. It never creates authority over
+        Your license or registration says who you are professionally. It never creates authority over
         a client's affairs on its own.
       </p>
 
@@ -157,7 +157,7 @@ export const Route = createFileRoute("/_authenticated/professional/credentials")
       { title: "My credentials - Harmonious" },
       {
         name: "description",
-        content: "Record and verify your professional licence, bar admission or registration.",
+        content: "Record and verify your professional license, bar admission or registration.",
       },
       { property: "og:title", content: "My credentials - Harmonious" },
       { property: "og:description", content: "Professional credentials held with Harmonious." },

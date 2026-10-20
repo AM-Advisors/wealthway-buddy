@@ -65,7 +65,7 @@ export type CredentialType = (typeof CREDENTIAL_TYPES)[number];
 
 export const CREDENTIAL_LABELS: Record<CredentialType, string> = {
   attorney_bar: "Attorney - bar admission",
-  cpa_license: "CPA licence",
+  cpa_license: "CPA license",
   investment_adviser_registration: "Investment adviser registration",
   broker_dealer_affiliation: "Broker-dealer affiliation",
   trustee_fiduciary_capacity: "Trustee / fiduciary capacity",
@@ -124,11 +124,11 @@ export const AUTHORITY_DOCUMENT_LABELS: Record<AuthorityDocumentType, string> = 
   corporate_resolution: "Corporate resolution",
   board_consent: "Board consent",
   member_consent: "Member consent",
-  trustee_authorization: "Trustee authorisation",
+  trustee_authorization: "Trustee authorization",
   operating_agreement_authority: "Operating agreement authority",
   investment_management_authority: "Investment management authority",
   advisory_authority: "Advisory authority",
-  other_authorization: "Other authorisation",
+  other_authorization: "Other authorization",
 };
 
 export const AUTHORITY_REVIEW_STATUSES = [
@@ -242,17 +242,17 @@ export const DENY_CODES = {
 
 export const DENY_MESSAGES: Record<string, string> = {
   not_signed_in: "You are not signed in.",
-  no_live_delegation: "There is no live authorisation for this.",
+  no_live_delegation: "There is no live authorization for this.",
   delegation_not_accepted: "You have not accepted this delegation yet.",
   delegation_renewal_required: "This delegation changed and must be accepted again.",
   organization_membership_inactive: "Your seat at this firm is not active.",
   organization_not_verified: "This firm has not completed Harmonious verification.",
   professional_credential_required: "A verified professional credential is required to sign.",
-  authority_level_insufficient: "This authorisation does not carry signing authority.",
-  sign_capability_not_granted: "Signing was not granted on this authorisation.",
+  authority_level_insufficient: "This authorization does not carry signing authority.",
+  sign_capability_not_granted: "Signing was not granted on this authorization.",
   authority_document_required: "An accepted authority document is required before signing.",
   authority_document_scope_mismatch: "The authority document does not cover this.",
-  out_of_scope: "This is outside the authorised scope.",
+  out_of_scope: "This is outside the authorized scope.",
   document_type_not_authorised: "This document type is not covered by the authority.",
   transaction_authority_disabled: "Money movement is never available through delegated authority.",
   step_up_authentication_required: "Confirm your identity again before signing.",

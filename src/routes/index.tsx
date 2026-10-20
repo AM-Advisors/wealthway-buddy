@@ -161,7 +161,7 @@ function Index() {
             <p className="mt-4 max-w-2xl text-muted-foreground">
               Control how your private shares move. Verify ownership, document exposure and maintain
               the record. Already on Carta or Pulley? Your history comes with you - export the file,
-              we recognise the format, and you approve every row before it is recorded.
+              we recognize the format, and you approve every row before it is recorded.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <Button asChild>

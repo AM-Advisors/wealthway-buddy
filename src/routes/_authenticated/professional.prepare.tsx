@@ -92,7 +92,7 @@ function PreparePage() {
         description="You prepare; your client reviews and decides. Nothing here changes their record until they approve it, and verification results are never yours to set."
       >
         {clients.length === 0 ? (
-          <Empty>No client has authorised you to prepare anything yet.</Empty>
+          <Empty>No client has authorized you to prepare anything yet.</Empty>
         ) : (
           <div className="space-y-4 text-sm">
             <div className="grid gap-3 sm:grid-cols-2">
@@ -131,7 +131,7 @@ function PreparePage() {
                   <SelectTrigger>
                     <SelectValue
                       placeholder={
-                        availableTypes.length ? "Choose" : "This client has not authorised preparing"
+                        availableTypes.length ? "Choose" : "This client has not authorized preparing"
                       }
                     />
                   </SelectTrigger>

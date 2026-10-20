@@ -4,7 +4,7 @@
  * become draft entries that still need second-person approval.
  */
 
-/** Marker we stamp on every entry we export, so a re-import is recognised as ours. */
+/** Marker we stamp on every entry we export, so a re-import is recognized as ours. */
 export const HMS_MARKER = "[HMS:";
 export const hmsTag = (entryId: string) => `${HMS_MARKER}${entryId.slice(0, 8)}]`;
 

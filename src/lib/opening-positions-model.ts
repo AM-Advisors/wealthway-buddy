@@ -26,7 +26,7 @@ export function openingDecisionError(preparedBy: string, deciderId: string, stat
   return null;
 }
 
-/** Subledger must tie to the GL on cost, fair value and unrealised, to the cent. */
+/** Subledger must tie to the GL on cost, fair value and unrealized, to the cent. */
 export function openingTieOut(positions: { costBasisCents: number; openingFairValueCents: number }[], gl: { investmentCostCents: number; unrealizedCents: number }) {
   const cost = positions.reduce((s, p) => s + p.costBasisCents, 0);
   const fv = positions.reduce((s, p) => s + p.openingFairValueCents, 0);
@@ -40,8 +40,8 @@ export function openingTieOut(positions: { costBasisCents: number; openingFairVa
 }
 
 /**
- * Q1 unrealised movement is measured from the last RECOGNISED value. An opening
- * position's fair value was recognised by the opening journal, so Q1 never re-books it.
+ * Q1 unrealized movement is measured from the last RECOGNISED value. An opening
+ * position's fair value was recognized by the opening journal, so Q1 never re-books it.
  */
 export function unrealizedMovementCents(lastRecognizedCents: number | null, costCents: number, newValueCents: number) {
   return newValueCents - (lastRecognizedCents ?? costCents);

@@ -121,7 +121,7 @@ function Body() {
             <CardDescription>
               {workspace!.company!.isDemo
                 ? "This is the demo company. Switch to your own company in Settings to record a financing."
-                : "An authorised signatory on your account can record rounds and investments."}
+                : "An authorized signatory on your account can record rounds and investments."}
             </CardDescription>
           </CardHeader>
         </Card>

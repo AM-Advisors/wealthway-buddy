@@ -17,18 +17,18 @@ export const Route = createFileRoute("/api/public/crm-unsubscribe")({
     handlers: {
       GET: async ({ request }) => {
         const t = new URL(request.url).searchParams.get("t");
-        if (!valid(t)) return page("Link not recognised", "<p>This unsubscribe link isn't valid.</p>");
+        if (!valid(t)) return page("Link not recognized", "<p>This unsubscribe link isn't valid.</p>");
         return page("Unsubscribe", `<p>Stop receiving these emails?</p><form method="post"><input type="hidden" name="t" value="${t}"><button type="submit">Unsubscribe</button></form>`);
       },
       POST: async ({ request }) => {
         const form = await request.formData();
         const t = form.get("t");
-        if (typeof t !== "string" || !valid(t)) return page("Link not recognised", "<p>This unsubscribe link isn't valid.</p>");
+        if (typeof t !== "string" || !valid(t)) return page("Link not recognized", "<p>This unsubscribe link isn't valid.</p>");
         const { unsubscribeByToken } = await import("@/lib/crm.server");
         const ok = await unsubscribeByToken(t);
         return ok
           ? page("You're unsubscribed", "<p>You won't receive these emails any more.</p>")
-          : page("Link not recognised", "<p>This unsubscribe link isn't valid.</p>");
+          : page("Link not recognized", "<p>This unsubscribe link isn't valid.</p>");
       },
     },
   },

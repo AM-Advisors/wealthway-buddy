@@ -776,7 +776,7 @@ async function loadWithholdingRules(offeringId: string): Promise<PolicyRule[]> {
 }
 
 /**
- * Pilot M2: an authorised reviewer (never the preparer) records the final
+ * Pilot M2: an authorized reviewer (never the preparer) records the final
  * withholding for a review-required line, with a reason. Totals are re-derived.
  */
 export async function decideLineWithholding(userId: string, input: { lineId: string; amountCents: number; reason: string }) {
@@ -1564,7 +1564,7 @@ async function refreshBatchTotals(batchId: string) {
   return balance;
 }
 
-/** Second authorised Harmonious human. This is the gate before any money moves. */
+/** Second authorized Harmonious human. This is the gate before any money moves. */
 /** Pilot M11: an independent reviewer approves using an older basis, with a reason. */
 export async function approveStaleBasis(userId: string, batchId: string, reason: string) {
   const actor = await assertStaff(userId, "review");
@@ -2058,7 +2058,7 @@ export async function recordProviderEvent(input: {
           : correlation.mismatches.some((m) => m.includes("amount"))
             ? "provider_amount_mismatch"
             : "provider_unknown_event",
-      detail: correlation.mismatches.join(" ") || "Unrecognised provider event.",
+      detail: correlation.mismatches.join(" ") || "Unrecognized provider event.",
       raisedBy: actorUserId ?? "00000000-0000-0000-0000-000000000000",
     });
     return { duplicate: false, eventId: String(event.id), status: correlation.status, applied: false };

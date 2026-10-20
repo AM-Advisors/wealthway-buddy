@@ -29,7 +29,7 @@ const SYNONYMS: Record<FieldKey, string[]> = {
   cliffMonths: ["cliff", "cliff months", "vesting cliff", "cliff (months)"],
   durationMonths: ["vesting period", "vesting months", "vesting duration", "duration", "vesting length", "vesting term"],
   frequency: ["vesting frequency", "frequency", "vesting interval", "vests"],
-  authorizedShares: ["authorized", "authorised", "authorized shares", "authorised shares", "shares authorized", "class authorized", "authorized amount"],
+  authorizedShares: ["authorized", "authorized", "authorized shares", "authorized shares", "shares authorized", "class authorized", "authorized amount"],
   roundName: ["round", "round name", "financing", "financing round", "funding round", "series name", "transaction name", "deal"],
   roundDate: ["round date", "closing date", "close date", "financing date", "transaction date"],
   roundPricePerShare: ["round price per share", "round pps", "financing price", "round price"],
@@ -248,7 +248,7 @@ type ExistingWorld = {
 
 /**
  * Everything the founder needs to sign off on: which share classes and rounds
- * come across, and whether authorised, issued and outstanding shares agree.
+ * come across, and whether authorized, issued and outstanding shares agree.
  */
 function buildSummary(
   rows: Array<{ mapped: MappedRow; status: string }>,
@@ -700,7 +700,7 @@ export const cancelCapMigration = createServerFn({ method: "POST" })
   });
 
 /**
- * The founder's own authorised / issued / outstanding numbers, kept alongside
+ * The founder's own authorized / issued / outstanding numbers, kept alongside
  * the batch so the difference against the file is part of what they sign off.
  */
 export const setCapMigrationReconciliation = createServerFn({ method: "POST" })
@@ -899,7 +899,7 @@ export const importCapMigration = createServerFn({ method: "POST" })
     const overageReason = data.overageReason?.trim() || null;
     if (over.length && !overageReason) {
       throw new Error(
-        `More shares are issued than authorised in ${over
+        `More shares are issued than authorized in ${over
           .map((c) => c.name)
           .join(", ")}. Give a reason to record this batch anyway.`,
       );
@@ -1065,7 +1065,7 @@ export const importCapMigration = createServerFn({ method: "POST" })
         overageReason,
       },
       reason: overageReason
-        ? `Migration accepted with more shares issued than authorised: ${overageReason}`
+        ? `Migration accepted with more shares issued than authorized: ${overageReason}`
         : "Migration accepted onto the cap table",
     });
 

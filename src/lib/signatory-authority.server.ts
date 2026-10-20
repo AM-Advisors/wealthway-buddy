@@ -37,7 +37,7 @@ import {
 
 const db = () => supabaseAdmin as any;
 
-const message = (code: string) => DENY_MESSAGES[code] ?? "Not authorised.";
+const message = (code: string) => DENY_MESSAGES[code] ?? "Not authorized.";
 
 export interface SignTarget {
   /** The investment profile / entity the signature is made for. */
@@ -277,7 +277,7 @@ export async function resolveSignatoryAuthority(
   return {
     allowed: true,
     code: "authorized",
-    reason: "Authorised to sign.",
+    reason: "Authorized to sign.",
     delegation,
     organization,
     authorityDocument,
@@ -847,7 +847,7 @@ export async function requireRenewedAcceptance(delegationId: string, reason: str
   });
 
   await notify(row.delegate_user_id, "professional", "acceptance_required", {
-    message: "An authorisation you hold changed and must be accepted again before you can act.",
+    message: "An authorization you hold changed and must be accepted again before you can act.",
     delegationId: row.id,
   });
 }
@@ -984,7 +984,7 @@ export async function submitAuthorityDocument(
     input.storagePath.includes("..") ||
     input.storagePath.length > 600
   ) {
-    throw new Error("Forbidden: that file location does not belong to this authorisation.");
+    throw new Error("Forbidden: that file location does not belong to this authorization.");
   }
 
 

@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
  * Adversarial tests for Fund Administration Phase A.
  *
  * Every id here arrives "from the browser". The server must re-read the
- * record, authorise against the fund it truly belongs to, keep Harmonious
+ * record, authorize against the fund it truly belongs to, keep Harmonious
  * controls out of client hands, and never open a fund to investors without an
  * explicit Harmonious approval.
  */

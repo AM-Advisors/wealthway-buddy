@@ -51,7 +51,7 @@ export const DELIVERY_WORKFLOWS = [
   { value: "fund_onboarding", label: "Fund onboarding", path: "/admin/setup" },
   { value: "kyc_aml_setup", label: "KYC/AML verification setup", path: "/onboarding/compliance" },
   { value: "cap_table_onboarding", label: "Cap table onboarding", path: "/client/cap-table" },
-  { value: "migration_center", label: "Migration centre", path: "/client/cap-table/migration" },
+  { value: "migration_center", label: "Migration center", path: "/client/cap-table/migration" },
   {
     value: "entity_information",
     label: "Entity information collection",

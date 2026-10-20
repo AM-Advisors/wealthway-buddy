@@ -85,7 +85,7 @@ export function migrationSteps(facts: WizardFacts): WizardStep[] {
     detail: openFlags
       ? `${fmtNumber(openFlags)} flagged share ${openFlags === 1 ? "class" : "classes"} to settle`
       : confirmed || recorded
-        ? "Authorised, issued and outstanding shares agreed"
+        ? "Authorized, issued and outstanding shares agreed"
         : "Check the share totals against the file",
   };
 

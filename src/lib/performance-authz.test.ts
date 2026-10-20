@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
  * Adversarial authorization tests for performance reporting.
  *
  * Every id here arrives "from the browser". The server must re-read the record
- * and authorise against the fund it actually belongs to, one person may not
+ * and authorize against the fund it actually belongs to, one person may not
  * prepare, review, approve and publish the same numbers, and a published
  * performance report is never rewritten.
  */

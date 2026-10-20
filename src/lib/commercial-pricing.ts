@@ -1,7 +1,7 @@
 /**
  * Phase 3.10 commercial model - pure rules, no I/O.
  *
- * Pricing resolves: current rate card → valid Client Pricing → authorised
+ * Pricing resolves: current rate card → valid Client Pricing → authorized
  * Fund adjustment → Fund Pricing Snapshot. Commercial states are Harmonious
  * account-management facts and never feed Fund Setup or investor readiness.
  */

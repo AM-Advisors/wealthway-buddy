@@ -612,15 +612,15 @@ export function makerCheckerError(
   switch (next.step) {
     case "reviewed":
       if (preparers.includes(me)) {
-        return "The person who prepared or requested this distribution cannot review it. A second authorised person is required.";
+        return "The person who prepared or requested this distribution cannot review it. A second authorized person is required.";
       }
       return null;
     case "final_approved":
       if (preparers.includes(me)) {
-        return "The person who prepared or requested this distribution cannot give the final approval. A second authorised person is required.";
+        return "The person who prepared or requested this distribution cannot give the final approval. A second authorized person is required.";
       }
       if (preparers.length === 0 && by("reviewed").includes(me)) {
-        return "A second authorised person is required for final approval.";
+        return "A second authorized person is required for final approval.";
       }
       return null;
     case "executed": {

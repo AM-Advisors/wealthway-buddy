@@ -215,7 +215,7 @@ describe("delegated scope", () => {
     expect(canActMock).not.toHaveBeenCalled();
   });
 
-  it("tags each item with the delegation that authorised it", async () => {
+  it("tags each item with the delegation that authorized it", async () => {
     tables["delegations"] = [delegation()];
     adminTables["profiles"] = [{ user_id: "client-user", legal_name: "Client Person" }];
     adminTables["investor_applications"] = [

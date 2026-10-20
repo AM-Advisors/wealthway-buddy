@@ -77,7 +77,7 @@ async function authorizeFund(userId: string, offeringId: string) {
   return scope;
 }
 
-/** Re-read the run server-side and authorise against the fund it truly belongs to. */
+/** Re-read the run server-side and authorize against the fund it truly belongs to. */
 async function authorizeRun(userId: string, runId: string) {
   const { data: run } = await db().from("performance_runs").select("*").eq("id", runId).maybeSingle();
   if (!run) fail("Performance report not found.");

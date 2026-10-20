@@ -514,7 +514,7 @@ export const issueInvoice = createServerFn({ method: "POST" })
     const rates = await checkRates(context, data.id, (invoice as any).client_id);
     if (rates.varianceCents > 0 && !data.overrideReason) {
       throw new Error(
-        "This invoice bills above the client's contracted rate. Record the written authorisation for the difference before issuing it.",
+        "This invoice bills above the client's contracted rate. Record the written authorization for the difference before issuing it.",
       );
     }
 
@@ -908,7 +908,7 @@ export const raiseInvoiceWire = createServerFn({ method: "POST" })
     const rates = await checkRates(context, data.id, inv.client_id);
     if (rates.varianceCents > 0 && !inv.rate_override_reason) {
       throw new Error(
-        "This invoice is above the contracted rate and has no recorded authorisation. Fix the rate before collecting payment.",
+        "This invoice is above the contracted rate and has no recorded authorization. Fix the rate before collecting payment.",
       );
     }
 

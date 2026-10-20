@@ -191,7 +191,7 @@ export const CLIENT_ACTION_REQUIRED: Partial<Record<AssistedDraftType, string>> 
   kyc_support:
     "Client action required - identity verification must be completed by the client in person.",
   kyb_support:
-    "Client action required - the authorised person must confirm the entity check themselves.",
+    "Client action required - the authorized person must confirm the entity check themselves.",
   accreditation:
     "Client action required - the client must attest to their accreditation; verification stays with Harmonious.",
   investment:

@@ -43,7 +43,7 @@ const MIGRATION_STEPS = [
   ],
   [
     "02",
-    "We recognise the format",
+    "We recognize the format",
     "The file is read, the provider is detected from its column headings and each column is mapped to the right field. Anything unclear is flagged rather than guessed.",
   ],
   [
@@ -123,7 +123,7 @@ function CapTableLanding() {
           <h2 className="max-w-2xl text-3xl leading-tight sm:text-4xl">Your History Comes With You</h2>
           <p className="mt-4 max-w-2xl text-muted-foreground">
             Moving providers should not cost you your record. Carta, Pulley, AngelList and plain
-            spreadsheets are all recognised from the file you already hold.
+            spreadsheets are all recognized from the file you already hold.
           </p>
           <ol className="mt-12 grid gap-8 md:grid-cols-3">
             {MIGRATION_STEPS.map(([num, title, body]) => (

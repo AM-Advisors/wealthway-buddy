@@ -95,7 +95,7 @@ function OverviewBody() {
           value={fmtNumber(m.fullyDiluted)}
           hint="Includes granted equity and the unallocated option pool"
         />
-        <Stat label="Issued & outstanding" help="outstanding_shares" value={fmtNumber(m.outstandingShares)} hint={`${fmtPercent(issuedPct)} of authorised`} />
+        <Stat label="Issued & outstanding" help="outstanding_shares" value={fmtNumber(m.outstandingShares)} hint={`${fmtPercent(issuedPct)} of authorized`} />
         <Stat label="Authorized shares" help="authorized_shares" value={fmtNumber(m.authorizedShares)} />
         <Stat
           label="Options available"
@@ -126,7 +126,7 @@ function OverviewBody() {
             <HealthRow
               label="Cap table reconciled"
               ok={m.outstandingShares <= m.authorizedShares}
-              detail={`${fmtNumber(m.outstandingShares)} outstanding against ${fmtNumber(m.authorizedShares)} authorised`}
+              detail={`${fmtNumber(m.outstandingShares)} outstanding against ${fmtNumber(m.authorizedShares)} authorized`}
             />
             <HealthRow
               label="Unverified securities"
@@ -144,7 +144,7 @@ function OverviewBody() {
               detail={`${fmtNumber(m.missingDocuments)} position${m.missingDocuments === 1 ? "" : "s"} without a reference document`}
             />
             <div className="pt-4">
-              <p className="mb-1 text-xs text-muted-foreground">Authorised shares issued</p>
+              <p className="mb-1 text-xs text-muted-foreground">Authorized shares issued</p>
               <Progress value={Math.min(issuedPct, 100)} />
             </div>
           </CardContent>

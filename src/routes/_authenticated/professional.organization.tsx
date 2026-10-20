@@ -37,7 +37,7 @@ function Organization() {
         </ul>
       )}
       <p className="mt-4 text-xs text-muted-foreground">
-        Active client authorisations: {data?.activeDelegations ?? 0}
+        Active client authorizations: {data?.activeDelegations ?? 0}
       </p>
     </WorkspaceSection>
   );

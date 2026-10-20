@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
  * Adversarial tests for the investor allocation engine.
  *
  * Every id here arrives "from the browser". The server must re-read the run,
- * position or statement and authorise against the fund it actually belongs to;
+ * position or statement and authorize against the fund it actually belongs to;
  * managers must never author allocations; one person must never prepare,
  * review, approve and finalize; and nothing finalizes unless investor capital
  * reconciles to the fund exactly.

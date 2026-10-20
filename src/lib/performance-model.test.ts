@@ -121,7 +121,7 @@ describe("IRR", () => {
 });
 
 describe("multiples", () => {
-  it("computes MOIC from realised and remaining value", () => {
+  it("computes MOIC from realized and remaining value", () => {
     const result = multipleOnInvestedCapital({
       investedCapitalCents: 1_000_000,
       realizedValueCents: 400_000,

@@ -190,7 +190,7 @@ function AgreementsHome() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <MessageSquare className="h-4 w-4 text-primary" />
-              Change centre
+              Change center
             </CardTitle>
             <CardDescription>
               {data.changeCount} change {data.changeCount === 1 ? "request is" : "requests are"} in

@@ -524,7 +524,7 @@ function VerificationForm({
             />
             <span>
               I confirm the uploaded evidence is authentic, current, and relates to me or the
-              investing entity, and I authorise the fund to verify it.
+              investing entity, and I authorize the fund to verify it.
             </span>
           </label>
           {errors["attests"] && (

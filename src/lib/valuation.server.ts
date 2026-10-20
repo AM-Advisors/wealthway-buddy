@@ -2,7 +2,7 @@
  * Server-only portfolio valuation governance.
  *
  * Nothing here trusts an asset, fund or valuation id from the browser: every
- * record is re-read server-side and the caller is authorised against the fund
+ * record is re-read server-side and the caller is authorized against the fund
  * the record actually belongs to. Fund managers propose and acknowledge;
  * Harmonious approves and makes effective. Approved valuations only *prepare*
  * a journal - posting still runs through the existing accounting workflow.
@@ -192,7 +192,7 @@ type AssetRow = {
   realized_gain_cents: number | null;
 };
 
-/** Resolve the asset from the database and authorise against its real fund. */
+/** Resolve the asset from the database and authorize against its real fund. */
 async function authorizeAsset(userId: string, assetId: string) {
   const scope = await reviewerScope(userId);
   const { data, error } = await db()
@@ -322,7 +322,7 @@ export async function listPortfolioAssets(userId: string, offeringId?: string) {
 
 // -------------------------------------------------------------- valuations
 
-/** The last valuation whose movement has already been recognised in the GL. */
+/** The last valuation whose movement has already been recognized in the GL. */
 /** True only for an isolated TEST/DEMO fund (its client is flagged is_test_demo). */
 export async function isSyntheticFund(offeringId: string): Promise<boolean> {
   const { data: o } = await db().from("offerings").select("client_id").eq("id", offeringId).maybeSingle();
@@ -408,7 +408,7 @@ export async function proposeValuation(
   },
 ) {
   const { scope, asset } = await authorizeAsset(userId, input.assetId);
-  if (asset.status === "realized") fail("This position is fully realised and cannot be re-marked.");
+  if (asset.status === "realized") fail("This position is fully realized and cannot be re-marked.");
   const evidenceBasis: EvidenceBasis = input.evidenceBasis ?? "supporting_evidence";
   if (evidenceBasis === "synthetic_assumption") {
     if (!(await isSyntheticFund(String(asset.offering_id)))) fail("Synthetic valuation assumptions are allowed only on isolated TEST/DEMO funds.");
@@ -521,7 +521,7 @@ export async function addValuationEvidence(
   return data;
 }
 
-/** A short-lived authorised link. The bucket itself is unreadable by sessions. */
+/** A short-lived authorized link. The bucket itself is unreadable by sessions. */
 export async function evidenceLink(userId: string, evidenceId: string) {
   const scope = await reviewerScope(userId);
   const { data } = await db()
@@ -566,7 +566,7 @@ async function evidenceVerdict(valuation: any, policy: { evidenceRequired: boole
   return { status, count, syntheticFund };
 }
 
-/** Pilot M9: an authorised reviewer (not the preparer) waives required evidence, with a reason. */
+/** Pilot M9: an authorized reviewer (not the preparer) waives required evidence, with a reason. */
 export async function waiveValuationEvidence(userId: string, input: { valuationId: string; reason: string }) {
   const { scope, valuation, asset } = await authorizeValuation(userId, input.valuationId);
   if (!scope.isAdmin) fail("Forbidden: only Harmonious can waive valuation evidence.");
@@ -782,10 +782,10 @@ async function accountIds(bookId: string, codes: string[]) {
 }
 
 /**
- * Prepare - never post - the unrealised movement behind an effective
+ * Prepare - never post - the unrealized movement behind an effective
  * valuation. The movement is measured against the last value already
- * recognised in the ledger, so recomputing or superseding a valuation cannot
- * recognise the same gain twice.
+ * recognized in the ledger, so recomputing or superseding a valuation cannot
+ * recognize the same gain twice.
  */
 export async function prepareValuationJournal(userId: string, valuationId: string) {
   await assertHarmonious(userId);
@@ -801,8 +801,8 @@ export async function prepareValuationJournal(userId: string, valuationId: strin
   }
   const policy = await policyFor(asset.offering_id, asset.asset_class);
   // The first mark is measured against cost: cost already sits in investments at
-  // cost, so only appreciation above it is unrealised.
-  // Later purchases add cost at cost, so they join the recognised basis rather
+  // cost, so only appreciation above it is unrealized.
+  // Later purchases add cost at cost, so they join the recognized basis rather
   // than being measured as gain.
   const last = await lastRecognizedRow(asset.id);
   const recognized = movementBasisCents({
@@ -816,7 +816,7 @@ export async function prepareValuationJournal(userId: string, valuationId: strin
     recognized,
     Number(valuation.value_cents),
     policy,
-    `${synthetic ? `[${SYNTHETIC_ASSUMPTION_LABEL}] ` : ""}Unrealised movement - ${asset.issuer_name} ${asset.asset_name}${synthetic ? " (not independently verified)" : ""}`,
+    `${synthetic ? `[${SYNTHETIC_ASSUMPTION_LABEL}] ` : ""}Unrealized movement - ${asset.issuer_name} ${asset.asset_name}${synthetic ? " (not independently verified)" : ""}`,
   );
   if (!journal) return { journalEntryId: null, created: false, reason: "no_movement" as const };
 
@@ -863,7 +863,7 @@ export async function prepareValuationJournal(userId: string, valuationId: strin
 
 // ------------------------------------------------------------ realizations
 
-/** Record a sale or disposition. Separate from unrealised marking. */
+/** Record a sale or disposition. Separate from unrealized marking. */
 export async function recordRealization(
   userId: string,
   input: {
@@ -878,7 +878,7 @@ export async function recordRealization(
 ) {
   await assertHarmonious(userId);
   const { asset } = await authorizeAsset(userId, input.assetId);
-  if (asset.status === "realized") fail("This position is already fully realised.");
+  if (asset.status === "realized") fail("This position is already fully realized.");
   const remainingCost = asset.cost_basis_cents - (asset.realized_cost_basis_cents ?? 0);
   const result = realization({
     quantityHeld: asset.quantity,

@@ -43,7 +43,7 @@ describe("QuickBooks exchange", () => {
     const m = currentMappings([{ qbo_account_name: "Checking", account_id: "a", created_at: "2026-01-01" }, { qbo_account_name: "checking ", account_id: "b", created_at: "2026-02-01" }]);
     expect(m.get("checking")).toBe("b");
   });
-  it("exports with our marker so re-imports are recognised", () => {
+  it("exports with our marker so re-imports are recognized", () => {
     const out = toQboJournalCsv([{ id: "abcdef1234", entryNo: 3, date: "2026-03-31", memo: "Fee", lines: [{ accountName: "Checking", debitCents: 100, creditCents: 0 }, { accountName: "Fees", debitCents: 0, creditCents: 100 }] }]);
     const back = parseQboJournalCsv(out).txns[0]!;
     expect(classifyInbound(back, new Map([["checking", "c"], ["fees", "e"]]), new Set()).outcome).toBe("skipped_ours");

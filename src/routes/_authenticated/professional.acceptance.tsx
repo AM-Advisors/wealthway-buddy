@@ -148,13 +148,13 @@ function AwaitingAcceptance() {
 export const Route = createFileRoute("/_authenticated/professional/acceptance")({
   head: () => ({
     meta: [
-      { title: "Authorisations awaiting acceptance - Harmonious" },
+      { title: "Authorizations awaiting acceptance - Harmonious" },
       {
         name: "description",
-        content: "Review and accept the authorisations clients have granted you.",
+        content: "Review and accept the authorizations clients have granted you.",
       },
-      { property: "og:title", content: "Authorisations awaiting acceptance - Harmonious" },
-      { property: "og:description", content: "Accept client authorisations before acting." },
+      { property: "og:title", content: "Authorizations awaiting acceptance - Harmonious" },
+      { property: "og:description", content: "Accept client authorizations before acting." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex" },

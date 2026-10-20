@@ -482,8 +482,8 @@ export type AllocationReconciliation = {
 
 const RECONCILIATION_LABELS: Record<keyof FundTotals, string> = {
   investmentIncomeCents: "Net investment income",
-  realizedGainCents: "Realised gain/loss",
-  unrealizedGainCents: "Unrealised gain/loss",
+  realizedGainCents: "Realized gain/loss",
+  unrealizedGainCents: "Unrealized gain/loss",
   managementFeesCents: "Management fees",
   fundExpensesCents: "Fund expenses",
   carriedInterestCents: "Carried interest",
@@ -720,7 +720,7 @@ export function managementFee(
   };
 }
 
-/** The fee charged to investors must equal the fee the ledger recognised. */
+/** The fee charged to investors must equal the fee the ledger recognized. */
 export function feeReconciles(calculatedCents: number, ledgerCents: number, toleranceCents = 0) {
   return Math.abs(calculatedCents - ledgerCents) <= Math.abs(toleranceCents);
 }
@@ -996,7 +996,7 @@ export function transferError(request: TransferRequest): string | null {
     return "A transfer must move capital, commitment or both.";
   }
   if (!(request.authorizationReference ?? "").trim()) {
-    return "Record the authorisation for this transfer.";
+    return "Record the authorization for this transfer.";
   }
   if (!request.effectiveDate) return "A transfer needs an effective date.";
   return null;
