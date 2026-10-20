@@ -27,8 +27,9 @@ export const JOURNEY_STEP_LABELS: Record<JourneyStep, string> = {
 /** Which internal requirements sit underneath each investor-facing step. */
 export const STEP_REQUIREMENTS: Record<JourneyStep, readonly RequirementKey[]> = {
   about: ["account", "investment_profile", "beneficial_owners", "investment_amount"],
-  verify: ["identity_verification", "entity_verification", "aml", "eligibility", "accreditation", "tax_documentation"],
-  sign: ["subscription_questionnaire", "subscription_documents", "signature"],
+  verify: ["identity_verification", "entity_verification", "aml", "eligibility", "accreditation"],
+  // The tax form comes from the tax questions answered in Sign, so it is completed there (never a Verification blocker).
+  sign: ["subscription_questionnaire", "tax_documentation", "subscription_documents", "signature"],
   fund: ["funding"],
 };
 
