@@ -33,3 +33,4 @@
 - LoadError handles failures; reports load active tabs; Sign shares TaxSignPanel and verified email; OfferingDocumentReader reads entitled files — why: reliability.
 - Drafts use persistFundRequestDraft with scoped read-back; failures retain answers — why: no loss.
 - Read/sign use investment-document-source.server; pinned files stay intact — why: provenance.
+- Box signing files are named from their actual bytes (signingFileName) with a unique suffix, never versioned over an earlier source; signer rows key on lowercased (signature_id, signer_email) — why: mislabeled Word files failed Box conversion and blocked signing.
