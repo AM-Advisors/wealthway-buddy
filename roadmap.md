@@ -1,9 +1,9 @@
 # Roadmap
 
 ## Login and session evidence (2026-10-20)
-- [ ] Capture authenticated sessions before policy, identity and onboarding gates; correlate safe page/error evidence by server-verified session ID.
-- [ ] Expose session filtering and evidence export in Security activity, preserving current authorization and immutable history.
-- [ ] Run focused regressions; signed-in UI read-back requires isolated synthetic QA.
+- [x] Capture authenticated sessions before policy, identity and onboarding gates; correlate safe page/error evidence by server-verified session ID, deduplicate sign-ins and preserve append-only records.
+- [x] Expose session filtering and current-page evidence export in Security activity, preserving current authorization; record explicit sign-out requests in both portal shells.
+- [ ] Signed-in UI read-back — blocked on isolated synthetic QA; shared production backend is not permitted for browser tests.
 
 ## Client and investor experience (2026-10-20)
 - [x] Show loading and Retry instead of misleading empty states on client account/home and investor home/reports/signing.

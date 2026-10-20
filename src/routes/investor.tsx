@@ -7,6 +7,7 @@ import { PolicyGate } from "@/components/policy-gate";
 import { AccountKycGate } from "@/components/account-kyc-gate";
 import { SecurityGate } from "@/components/security-gate";
 import { Button } from "@/components/ui/button";
+import { logSecurityEvent } from "@/lib/account-security.functions";
 
 /**
  * The investor portal: its own sign-in and its own shell. It never renders the
@@ -32,6 +33,7 @@ function InvestorLayout() {
   const qc = useQueryClient();
 
   async function signOut() {
+    await logSecurityEvent({ data: { eventType: "sign_out", action: "Explicit sign-out requested" } }).catch(() => {});
     await qc.cancelQueries();
     qc.clear();
     clearStoredClientContext();

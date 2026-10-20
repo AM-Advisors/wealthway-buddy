@@ -58,7 +58,7 @@ export const logSecurityEvent = createServerFn({ method: "POST" })
     if (await isRevoked(userId, claims.iat)) return { signOut: true };
     if (data.eventType === "heartbeat") return { signOut: false };
     const sessionId = claims.session_id ?? null;
-    const { geo, deviceHash, recorded } = await recordSecurityEvent({
+    const { geo, deviceHash, recorded, accepted } = await recordSecurityEvent({
       userId,
       email: claims.email ?? null,
       eventType: data.eventType,
@@ -76,7 +76,7 @@ export const logSecurityEvent = createServerFn({ method: "POST" })
       const origin = new URL(getRequest()?.url ?? "https://app.harmonious.co").origin;
       await trackDeviceAndAlert({ userId, email: claims.email ?? null, deviceHash, geo, origin });
     }
-    return { signOut: false };
+    return { signOut: false, recorded: accepted };
   });
 
 /** The signed-in user's devices and recent sign-in / security history. */

@@ -86,12 +86,12 @@ export async function recordSecurityEvent(input: SecurityEventInput) {
       session_id: input.sessionId?.slice(0, 100) ?? null,
       ...(input.eventKey ? { event_key: input.eventKey } : {}),
     });
-    if (error?.code === "23505" && input.eventKey) return { geo, deviceHash, recorded: false };
+    if (error?.code === "23505" && input.eventKey) return { geo, deviceHash, recorded: false, accepted: true };
     if (error) throw new Error("Security evidence could not be saved.");
-    return { geo, deviceHash, recorded: true };
+    return { geo, deviceHash, recorded: true, accepted: true };
   } catch (e) {
     console.error("security event log failed", e);
-    return { geo: readRequestGeo(), deviceHash: null, recorded: false };
+    return { geo: readRequestGeo(), deviceHash: null, recorded: false, accepted: false };
   }
 }
 
