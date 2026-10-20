@@ -99,6 +99,10 @@ export const SS4_FIELDS: { key: string; label: string; required?: boolean; long?
 ];
 const blankSeries = (): SeriesInfo => ({ legal_name: "", jurisdiction: "", date_formed: "", contact_name: "", contact_email: "", notes: "" });
 
+/** Client's declaration on the SS-4: typed name, title, date and the perjury declaration. */
+export type Ss4Signature = { name: string; title: string; date: string; agreed: boolean };
+export const blankSs4Signature = (): Ss4Signature => ({ name: "", title: "", date: "", agreed: false });
+
 export type RequestClass = { name: string; fee: string; carry: string; hurdle: string; minimum: string };
 export type RequestPerson = { name: string; email: string; title: string };
 export type RequestDocument = { kind: string; fileName: string; path: string };
@@ -126,6 +130,7 @@ export type FundRequest = {
   series_fee_ack: boolean;
   ein_obtained_by: "harmonious" | "client" | "";
   ss4: Record<string, string>;
+  ss4_signature: Ss4Signature;
   offering_exemption: string;
   investor_eligibility: string;
   management_fee: string;
