@@ -1,9 +1,10 @@
 # Roadmap
 
 ## Thomas draft saving (2026-10-20)
-- [ ] Diagnose current draft-save failure without replacing Thomas's session or entered answers.
-- [ ] Fix draft saving and truthful save feedback; run focused regression tests.
-- [ ] Confirm signed-in saving in isolated QA — blocked if isolated synthetic QA is unavailable.
+- [x] Confirm published save failures at 20:08 and 20:20; Thomas has fund-manager membership and approved account verification, no stored draft. Exact thrown error remains unavailable.
+- [x] Harden draft writes with scoped read-back/error checks, distinguish failed membership reads, and show unsaved/error feedback without refetch overwrites; 21 focused tests pass.
+- [ ] Resolve Thomas's observed failure — blocked on the exact error from Save draft; cannot access his already-open browser form or change its session remotely.
+- [ ] Confirm signed-in saving in isolated QA — blocked on isolated synthetic QA access; no production test writes or session changes.
 
 ## Current account navigation requests (2026-10-20)
 - [ ] Thomas Morgan preview sign-in — approval request was interrupted; no session created.
