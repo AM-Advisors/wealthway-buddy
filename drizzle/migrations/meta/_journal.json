@@ -2115,6 +2115,13 @@
       "when": 1792530003246,
       "tag": "0301_fund_service_levels",
       "breakpoints": true
+    },
+    {
+      "idx": 302,
+      "version": "7",
+      "when": 1792535293168,
+      "tag": "0302_signer_email_unique_plain",
+      "breakpoints": true
     }
   ]
 }
