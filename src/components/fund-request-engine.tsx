@@ -31,6 +31,7 @@ import {
   type FundRequest, type RequestStepKey,
 } from "@/lib/fund-request-model";
 import { categoryLabel, listServiceCatalog } from "@/lib/service-catalog.functions";
+import { backupKey, clearBackup, readBackup, saveStatusText, shouldOfferRestore, writeBackup, type LocalBackup } from "@/lib/fund-request-local-backup";
 
 const DOC_KINDS = ["Subscription agreement", "Operating agreement / LPA", "PPM", "Side letter", "Other"];
 
@@ -159,16 +160,30 @@ export function FundRequestEngine({ clientId: id, draft, mode = "client", client
     onError: (e: any) => toast.error(e?.message ?? "Could not send."),
   });
 
-  // Autosave: once the form has any real content, quietly save a few seconds after the last edit
-  // so progress is never lost if the page is closed or the session drops.
+  // Browser safety copy: survives refreshes even when saving to Harmonious fails.
+  const bKey = backupKey(id, draft ?? null);
+  const [restoreOffer, setRestoreOffer] = useState<LocalBackup<FundRequest> | null>(null);
   useEffect(() => {
-    if (!id || !hasContent || dq.isLoading || saveError) return;
-    if (JSON.stringify(r) === lastSavedJson.current) return;
+    if (dq.isLoading) return;
+    const b = readBackup<FundRequest>(window.localStorage, bKey);
+    if (shouldOfferRestore(b, lastSavedJson.current || JSON.stringify(emptyRequest()))) setRestoreOffer(b);
+  }, [bKey, dq.isLoading]);
+  useEffect(() => {
+    if (!hasContent || restoreOffer) return;
+    if (JSON.stringify(r) === lastSavedJson.current) { clearBackup(window.localStorage, bKey); return; }
+    writeBackup(window.localStorage, bKey, r);
+  }, [r, bKey, hasContent, restoreOffer]);
+
+  // Autosave: once the form has any real content, quietly save a few seconds after the last edit;
+  // after a failure keep retrying every 15 seconds.
+  useEffect(() => {
+    if (!id || !hasContent || dq.isLoading || restoreOffer) return;
+    if (JSON.stringify(r) === lastSavedJson.current && !saveError) return;
     const t = setTimeout(() => {
       if (!saveDraft.isPending && !send.isPending) saveDraft.mutate(true);
-    }, 2500);
+    }, saveError ? 15000 : 2500);
     return () => clearTimeout(t);
-  }, [r, id, hasContent, dq.isLoading, saveDraft.isPending, send.isPending, saveError]);
+  }, [r, id, hasContent, dq.isLoading, saveDraft.isPending, send.isPending, saveError, restoreOffer]);
 
   const missing = missingFields(r);
   const steps = visibleSteps(r);
@@ -188,14 +203,23 @@ export function FundRequestEngine({ clientId: id, draft, mode = "client", client
           <p className="text-sm text-muted-foreground">Follows the same steps Harmonious uses for Fund Setup. Save and come back any time.</p>
         </div>
         <div className="flex items-center gap-3">
-          <p className="text-xs text-muted-foreground" role="status">
-            {saveDraft.isPending ? "Saving…" : saveError ? "Changes not saved" : lastSavedAt && JSON.stringify(r) === lastSavedJson.current ? `Draft saved ${format(lastSavedAt, "h:mm a")}` : "Unsaved changes"}
+          <p className={cn("text-xs", saveError ? "text-destructive" : "text-muted-foreground")} role="status">
+            {saveStatusText({ pending: saveDraft.isPending, error: saveError, savedLabel: lastSavedAt ? format(lastSavedAt, "h:mm a") : null, dirty: JSON.stringify(r) !== lastSavedJson.current })}
           </p>
           <Button size="sm" variant="outline" disabled={saveDraft.isPending || !id} onClick={() => saveDraft.mutate(false)}>Save draft</Button>
         </div>
       </div>
       {clientPicker}
-      {saveError && <p role="alert" className="text-sm text-destructive">{saveError}</p>}
+      {restoreOffer && (
+        <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-accent bg-accent/10 p-3 text-sm">
+          <span>We found answers you entered on this device on {format(parseISO(restoreOffer.savedAt), "MMM d 'at' h:mm a")} that weren't saved yet.</span>
+          <div className="flex gap-2">
+            <Button size="sm" onClick={() => { setR({ ...emptyRequest(), ...restoreOffer.request }); setRestoreOffer(null); }}>Restore my answers</Button>
+            <Button size="sm" variant="ghost" onClick={() => { clearBackup(window.localStorage, bKey); setRestoreOffer(null); }}>Discard</Button>
+          </div>
+        </div>
+      )}
+      {saveError && <p role="alert" className="text-sm text-destructive">Not saved yet: {saveError} Your answers are kept on this device and we'll keep retrying.</p>}
 
       <div className="flex flex-col gap-5 md:flex-row">
         <nav aria-label="Steps" className="flex gap-1 overflow-x-auto md:w-52 md:shrink-0 md:flex-col">
