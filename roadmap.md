@@ -1,5 +1,10 @@
 # Roadmap
 
+## Additional reliability and performance review (2026-10-20)
+- [ ] Inspect additional page-loading, background-job and disconnected-page defects beyond the prior review.
+- [ ] Compare source candidates with database health, query statistics and bounded runtime logs; report measurement limits.
+- [ ] Summarize priorities without changing application behavior, records, schedules or instance sizing.
+
 ## Current errors and page connections review (2026-10-20)
 - [x] Review reported platform errors and run current unit checks: 223 files / 2,955 tests passed; latest preview build OK. Recent database logs show two invalid valuation-status errors.
 - [x] Audit unknown destinations, disconnected pages and intentional redirects: reviewed destinations exist; investor reporting/admin redirects are intentional; investment Activity/Tax/statement links lose investment scope; investor dashboard/reporting/workspace suppress load errors.
