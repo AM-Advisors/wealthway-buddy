@@ -25,3 +25,12 @@ describe("wire instructions by scope and investor location", () => {
     expect(r.international).not.toBeNull();
   });
 });
+
+import { instructionsForInvestor as _ifi } from "./wire-scope";
+describe("older records without a saved scope", () => {
+  it("shows the account and routing numbers to overseas investors", () => {
+    const r = _ifi({ bank_name: "B", account_number: "123", routing_number: "021", swift: "ABCDUS33" }, "Germany");
+    expect(r.domestic?.["Account number"]).toBe("123");
+    expect(r.international?.["SWIFT / BIC"]).toBe("ABCDUS33");
+  });
+});
