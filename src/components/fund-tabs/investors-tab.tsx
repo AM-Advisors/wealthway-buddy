@@ -89,9 +89,6 @@ export function InvestorsTab({ fundId, workQueue }: { fundId: string; workQueue?
   });
   return (
     <div className="space-y-6">
-    <FundOnboardingLinkCard fundId={fundId} />
-    <InvestorLevelsCard fundId={fundId} />
-    {workQueue}
     <Card>
       <CardHeader className="flex-row items-start justify-between gap-3 space-y-0">
         <div>
@@ -126,7 +123,7 @@ export function InvestorsTab({ fundId, workQueue }: { fundId: string; workQueue?
           <div className="overflow-x-auto">
             <table className="w-full min-w-[1300px] text-sm">
               <thead className="text-left text-xs text-muted-foreground">
-                <tr><th className="w-8 py-2"><input type="checkbox" aria-label="Select all investors" checked={allPicked} onChange={(e) => toggleAll(e.target.checked)} /></th><th className="py-2">Name</th><th>Progress</th><th>Class</th><th>Investing as</th><th>Missing info</th><th>Email</th><th>Phone</th><th className="text-right">Committed</th><th className="text-right">Received</th><th>KYC/KYB & AML</th><th>Fund documents</th><th>Wiring</th><th>Investor readiness</th><th>Latest activity</th></tr>
+                <tr><th className="w-8 py-2"><input type="checkbox" aria-label="Select all investors" checked={allPicked} onChange={(e) => toggleAll(e.target.checked)} /></th><th className="py-2">Name</th><th>Personal link</th><th>Progress</th><th>Class</th><th>Investing as</th><th>Missing info</th><th>Email</th><th>Phone</th><th className="text-right">Committed</th><th className="text-right">Received</th><th>KYC/KYB & AML</th><th>Fund documents</th><th>Wiring</th><th>Investor readiness</th><th>Latest activity</th></tr>
               </thead>
               <tbody>
                 {rows.map((r) => (
@@ -135,6 +132,7 @@ export function InvestorsTab({ fundId, workQueue }: { fundId: string; workQueue?
                       <input type="checkbox" aria-label={`Select ${r.name}`} title={canRemind(r) ? "Select for reminders and bulk actions" : "Select for bulk actions (no reminder due)"} checked={picked.includes(r.id)} onChange={(e) => setPicked((p) => e.target.checked ? [...p, r.id] : p.filter((x) => x !== r.id))} />
                     </td>
                     <td className="py-2"><p className="font-medium">{r.name}</p>{r.profileName && <p className="text-xs text-muted-foreground">{r.profileName}</p>}</td>
+                    <td onClick={(e) => e.stopPropagation()}><PersonalLinkCopyButton onboardingId={r.id} /></td>
                     <td><StepChips steps={r.steps} /><p className="mt-0.5 text-[11px] text-muted-foreground">{(() => { const c = currentStep(r.steps); return c ? `${c.label}: ${STEP_STATE_LABELS[c.state]}` : "All steps complete"; })()}</p></td>
                     <td>{r.classLabel ?? <span className="text-muted-foreground">-</span>}</td>
                     <td>{r.assetLabel ?? <span className="text-muted-foreground">-</span>}</td>
@@ -181,6 +179,9 @@ export function InvestorsTab({ fundId, workQueue }: { fundId: string; workQueue?
         </DialogContent>
       </Dialog>
     </Card>
+    <FundOnboardingLinkCard fundId={fundId} />
+    <InvestorLevelsCard fundId={fundId} />
+    {workQueue}
     {(dupQ.data?.duplicates?.length ?? 0) > 0 && <DuplicatesCard fundId={fundId} groups={dupQ.data!.duplicates} staff={dupQ.data!.staff} onMerged={() => { void q.refetch(); void dupQ.refetch(); }} />}
     </div>
   );
