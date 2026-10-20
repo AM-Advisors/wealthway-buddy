@@ -1845,7 +1845,7 @@ export async function inviteInvestor(
  * The one onboarding email. Only the opaque invitation reference travels in
  * the link - never KYC, profile, bank or document identifiers.
  */
-export async function sendOnboardInvitationEmail(invitation: any, offering: any, actorUserId: string) {
+export async function sendOnboardInvitationEmail(invitation: any, offering: any, actorUserId: string, log?: { onboardingId: string }) {
   try {
     const { onboardInvitationUrl } = await import("@/lib/onboard-portal-model");
     const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
@@ -1864,9 +1864,17 @@ export async function sendOnboardInvitationEmail(invitation: any, offering: any,
       },
     });
     await db().from("fund_invitations").update({ last_sent_at: nowIso() }).eq("id", invitation.id);
+    if (log) {
+      const { logInvestorEmail } = await import("@/lib/investor-emails.server");
+      await logInvestorEmail({ onboardingId: log.onboardingId, offeringId: invitation.offering_id, kind: "invitation", subject: `Complete your investment onboarding for ${offering?.name ?? "the fund"}`, recipient: invitation.email, messageId: (result as any)?.messageId ?? null, sentBy: actorUserId });
+    }
     return Boolean((result as any)?.sent);
   } catch (e) {
     console.error("[onboard] invitation email failed", (e as Error).message);
+    if (log) {
+      const { logInvestorEmail } = await import("@/lib/investor-emails.server");
+      await logInvestorEmail({ onboardingId: log.onboardingId, offeringId: invitation.offering_id, kind: "invitation", recipient: invitation.email, sentBy: actorUserId, outcome: "failed", note: (e as Error).message.slice(0, 300) });
+    }
     return false;
   }
 }
@@ -2369,7 +2377,7 @@ export async function sendPersonalLink(userId: string, onboardingId: string) {
   const { data: inv } = await db().from("fund_invitations").select("*").eq("id", row.invitation_id).maybeSingle();
   if (!inv || (inv.expires_at && inv.expires_at < nowIso())) fail("This link has expired. Ask Harmonious to replace it.");
   const { data: offering } = await db().from("offerings").select("*").eq("id", row.offering_id).maybeSingle();
-  const sent = await sendOnboardInvitationEmail(inv, offering, actor.userId);
+  const sent = await sendOnboardInvitationEmail(inv, offering, actor.userId, { onboardingId });
   await recordEvent({ onboardingId, offeringId: row.offering_id, event: "personal_link_emailed", subjectTable: "fund_invitations", subjectId: inv.id, detail: { emailSent: sent }, actorUserId: actor.userId, actorRole: actor.isStaff ? "harmonious" : "manager" });
   return { emailSent: Boolean(sent) };
 }

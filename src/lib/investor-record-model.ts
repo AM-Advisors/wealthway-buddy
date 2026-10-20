@@ -5,10 +5,10 @@ import { resolvePerson } from "@/lib/person-resolution";
  * approves compliance, or moves money; the server applies these decisions.
  */
 
-export type EntrySource = "investor" | "fund_manager" | "harmonious" | "document" | "provider" | "bulk";
+export type EntrySource = "investor" | "fund_manager" | "harmonious" | "document" | "provider" | "bulk" | "preparer";
 export const SOURCE_LABELS: Record<EntrySource, string> = {
   investor: "Investor", fund_manager: "Fund Manager", harmonious: "Harmonious",
-  document: "Imported document", provider: "Provider", bulk: "Bulk import",
+  document: "Imported document", provider: "Provider", bulk: "Bulk import", preparer: "Assigned preparer",
 };
 
 export const PROFILE_TYPES = ["individual", "joint", "entity", "trust", "ira"] as const;

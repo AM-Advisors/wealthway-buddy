@@ -26534,6 +26534,54 @@ export type Database = {
           },
         ]
       }
+      investor_email_sends: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          message_id: string | null
+          note: string | null
+          offering_id: string
+          onboarding_id: string
+          outcome: string
+          recipient_email: string
+          sent_at: string
+          sent_by: string | null
+          source: string
+          subject: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind: string
+          message_id?: string | null
+          note?: string | null
+          offering_id: string
+          onboarding_id: string
+          outcome?: string
+          recipient_email: string
+          sent_at?: string
+          sent_by?: string | null
+          source?: string
+          subject?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          message_id?: string | null
+          note?: string | null
+          offering_id?: string
+          onboarding_id?: string
+          outcome?: string
+          recipient_email?: string
+          sent_at?: string
+          sent_by?: string | null
+          source?: string
+          subject?: string | null
+        }
+        Relationships: []
+      }
       investor_emails: {
         Row: {
           application_id: string
@@ -34990,6 +35038,63 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      onboarding_participants: {
+        Row: {
+          assigned_by: string
+          assigned_by_role: string
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          offering_id: string
+          onboarding_id: string
+          removed_at: string | null
+          removed_by: string | null
+          role: string
+          status: string
+          title: string | null
+          token: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          assigned_by: string
+          assigned_by_role: string
+          created_at?: string
+          email: string
+          full_name: string
+          id?: string
+          offering_id: string
+          onboarding_id: string
+          removed_at?: string | null
+          removed_by?: string | null
+          role: string
+          status?: string
+          title?: string | null
+          token: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          assigned_by?: string
+          assigned_by_role?: string
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          offering_id?: string
+          onboarding_id?: string
+          removed_at?: string | null
+          removed_by?: string | null
+          role?: string
+          status?: string
+          title?: string | null
+          token?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
       }
       onboarding_readiness_summaries: {
         Row: {
