@@ -73,6 +73,7 @@ function InvestorRecordPage() {
           <h2 className="mt-1 text-xl">{data.overview.name}</h2>
           <p className="text-sm text-muted-foreground">{data.profile?.label ?? "No investing profile yet"} · {prettyStatus(data.overview.stage)} · Entered by {SOURCE_LABELS[data.overview.enteredBy as EntrySource] ?? "Investor"}{data.overview.investorConfirmedAt ? " · confirmed by investor" : ""}</p></div>
         <div className="flex flex-wrap gap-2">
+          {staff && data.overview.investorUserId ? <Button asChild size="sm" variant="outline"><Link to="/ops/investors/$investorId" params={{ investorId: data.overview.investorUserId }}>Open Investor 360</Link></Button> : null}
           {data.overview.removed ? <Badge variant="destructive">Removed from Fund</Badge> : null}
           <Badge variant={data.claimState === "prepared" ? "outline" : "secondary"}>{CLAIM_STATE_LABELS[data.claimState]}</Badge>
           {data.pendingReviewCount ? <Badge variant="secondary">{data.pendingReviewCount} awaiting Harmonious review</Badge> : null}

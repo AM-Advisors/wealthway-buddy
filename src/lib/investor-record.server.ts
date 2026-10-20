@@ -518,7 +518,7 @@ export async function investorRecordDetail(userId: string, onboardingId: string)
   } : null;
   return {
     viewer: role, fund: offering,
-    overview: { name: personName(person) ?? "Investor", stage: row.stage, enteredBy: row.entry_source, investorConfirmedAt: row.investor_confirmed_at, removed: Boolean(row.removed_at) },
+    overview: { name: personName(person) ?? "Investor", stage: row.stage, enteredBy: row.entry_source, investorConfirmedAt: row.investor_confirmed_at, removed: Boolean(row.removed_at), investorUserId: actor.isStaff ? row.investor_user_id ?? null : null },
     person: safePerson,
     profile: profile ? { id: profile.id, type: formProfileType(profile.profile_type), typeLabel: PROFILE_TYPE_LABELS[formProfileType(profile.profile_type)], label: profile.display_label, legalName: profile.legal_name, details: profile.details ?? {}, taxIdLast4: profile.tax_id_last4 ?? null } : null,
     related: ((rel ?? []) as any[]).map((r) => ({ underReview: reviewSet.has(r.id), id: r.id, name: `${r.persons?.legal_first_name ?? ""} ${r.persons?.legal_last_name ?? ""}`.trim(), role: r.role, ownershipPercent: r.ownership_percent, signer: r.is_authorized_signer, status: r.status })),
