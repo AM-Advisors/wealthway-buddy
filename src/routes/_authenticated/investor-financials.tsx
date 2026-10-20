@@ -1,24 +1,19 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
-import { InvestorFinancialsPanel } from "@/components/investor-financials-panel";
-
+// Retired page: kept so saved links forward to the matching section of Reports.
 export const Route = createFileRoute("/_authenticated/investor-financials")({
   head: () => ({
     meta: [
       { title: "Fund reports - Harmonious" },
-      {
-        name: "description",
-        content: "Financial reports published to you for the funds you are invested in.",
-      },
+      { name: "description", content: "Fund reports now live under Reports in the Harmonious portal." },
       { property: "og:title", content: "Fund reports - Harmonious" },
-      {
-        property: "og:description",
-        content: "Published fund financial reports for your investments.",
-      },
+      { property: "og:description", content: "Fund reports now live under Reports." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex" },
     ],
   }),
-  component: InvestorFinancialsPanel,
+  beforeLoad: () => {
+    throw redirect({ to: "/investor-reporting", search: { section: "financials" }, replace: true });
+  },
 });

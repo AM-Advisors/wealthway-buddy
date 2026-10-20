@@ -36,7 +36,7 @@ function Figure({ label, value, hint }: { label: string; value: string; hint?: s
  * committed, what the fund has received, the units recorded for them and what
  * has been distributed. Compact mode is the summary shown on the dashboard.
  */
-export function InvestorCapitalSummary({ compact = false }: { compact?: boolean }) {
+export function InvestorCapitalSummary({ compact = false, offeringId }: { compact?: boolean; offeringId?: string | null }) {
   const load = useServerFn(getMyCapitalSummary);
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["my-capital-summary"],
@@ -53,7 +53,7 @@ export function InvestorCapitalSummary({ compact = false }: { compact?: boolean 
     );
   }
 
-  const funds = data ?? [];
+  const funds = (data ?? []).filter((f) => !offeringId || f.offeringId === offeringId);
   if (!funds.length) {
     return (
       <p className="text-sm text-muted-foreground">
@@ -197,7 +197,7 @@ export function InvestorCapitalSummary({ compact = false }: { compact?: boolean 
                 <Separator />
                 <div className="space-y-2">
                   <p className="text-sm font-medium">Capital account statements</p>
-                  <CapitalStatementPanel applicationId={fund.applicationId} />
+                  {fund.source === "current" ? null : <CapitalStatementPanel applicationId={fund.applicationId} />}
                 </div>
               </>
             ) : null}

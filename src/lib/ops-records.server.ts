@@ -396,6 +396,7 @@ export async function fundTab(context: any, data: { id: string; tab: string }) {
       return {
         investors: onboardings.map((o: any) => ({
           onboardingId: o.id,
+          offering_id: data.id,
           investorUserId: o.investor_user_id,
           person: names.get(o.investor_user_id) ?? "Unnamed person",
           profileId: o.investment_profile_id,

@@ -6,14 +6,15 @@ import { getInvestorFinancials } from "@/lib/financial-reporting.functions";
 
 const label = (value: string) => value.replaceAll("_", " ");
 
-export function InvestorFinancialsPanel() {
+export function InvestorFinancialsPanel({ offeringId, embedded = false }: { offeringId?: string | null; embedded?: boolean } = {}) {
   const load = useServerFn(getInvestorFinancials);
   const query = useQuery({ queryKey: ["investor-financials"], queryFn: () => load() });
-  const data: any = query.data ?? { funds: [], reports: [] };
+  const raw: any = query.data ?? { funds: [], reports: [] };
+  const data: any = { ...raw, reports: (raw.reports ?? []).filter((r: any) => !offeringId || r.offering_id === offeringId) };
   const nameById = new Map((data.funds ?? []).map((f: any) => [f.id, f.name]));
 
   return (
-    <main className="mx-auto w-full max-w-3xl px-4 py-8">
+    <main className={embedded ? "w-full" : "mx-auto w-full max-w-3xl px-4 py-8"}>
       <h1 className="text-2xl font-semibold">Fund financial reports</h1>
       <p className="mt-1 text-sm text-muted-foreground">
         Published reports for the funds you are invested in. Internal accounting records are not

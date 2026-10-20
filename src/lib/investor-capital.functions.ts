@@ -34,6 +34,8 @@ export type InvestorCapitalFund = {
   valuation: { asOf: string; navCents: number; myShareCents: number | null } | null;
   statementCount: number;
   latestStatementDate: string | null;
+  /** "current" = from the investor's onboarding record (no legacy application). */
+  source?: "legacy" | "current";
 };
 
 /** Every fund the signed-in investor holds, with their capital account figures. */
@@ -49,7 +51,23 @@ export const getMyCapitalSummary = createServerFn({ method: "GET" })
       .order("created_at", { ascending: false });
 
     const active = ((apps ?? []) as any[]).filter((a) => !EXCLUDED_STATUSES.has(String(a.status)));
-    if (!active.length) return [];
+    // Current onboardings are the source of truth; legacy applications remain for history.
+    const { data: onboardings } = await supabase
+      .from("investor_onboardings")
+      .select("id, offering_id, stage, commitment_amount_cents, requested_amount_cents, funded_amount_cents, removed_at")
+      .eq("investor_user_id", userId);
+    const current = currentOnlyOnboardings((onboardings ?? []) as any[], active);
+    const withCurrent = async (legacy: InvestorCapitalFund[]) => {
+      if (!current.length) return legacy;
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: offs } = await supabaseAdmin
+        .from("offerings")
+        .select("id, name, legal_entity_name, reg_type, share_price_cents")
+        .in("id", current.map((o) => String(o.offering_id)));
+      const byId = new Map(((offs ?? []) as any[]).map((o) => [String(o.id), o]));
+      return [...legacy, ...current.map((o) => currentFund(o, byId.get(String(o.offering_id))))];
+    };
+    if (!active.length) return withCurrent([]);
 
     const applicationIds = active.map((a) => String(a.id));
     const offeringIds = Array.from(new Set(active.map((a) => String(a.offering_id))));
@@ -144,7 +162,7 @@ export const getMyCapitalSummary = createServerFn({ method: "GET" })
       statementsByApp.set(key, [...(statementsByApp.get(key) ?? []), row]);
     }
 
-    return active.map((app) => {
+    const legacyFunds: InvestorCapitalFund[] = active.map((app) => {
       const offeringId = String(app.offering_id);
       const applicationId = String(app.id);
       const offering = offeringById.get(offeringId) ?? {};
@@ -218,6 +236,28 @@ export const getMyCapitalSummary = createServerFn({ method: "GET" })
         latestStatementDate: (statementRows[0]?.statement_date ??
           statementRows[0]?.created_at ??
           null) as string | null,
+        source: "legacy" as const,
       };
     });
+    return withCurrent(legacyFunds);
   });
+
+/** Onboardings (not removed) in funds where the investor has no active legacy application. */
+export function currentOnlyOnboardings(onboardings: any[], activeApps: any[]): any[] {
+  const legacyFunds = new Set(activeApps.map((a) => String(a.offering_id)));
+  return onboardings.filter((o) => !o.removed_at && !legacyFunds.has(String(o.offering_id)));
+}
+
+export function currentFund(o: any, offering: any = {}): InvestorCapitalFund {
+  const commitmentCents = Number(o.commitment_amount_cents ?? o.requested_amount_cents ?? 0);
+  const contributedCents = Number(o.funded_amount_cents ?? 0);
+  return {
+    applicationId: String(o.id), offeringId: String(o.offering_id), fundName: String(offering?.name ?? "Fund"),
+    legalEntityName: offering?.legal_entity_name ?? null, regType: offering?.reg_type ?? null,
+    status: String(o.stage ?? "pending"), closingDate: null, commitmentCents, contributedCents,
+    outstandingCents: Math.max(0, commitmentCents - contributedCents), shares: null, shareClass: null, ownershipPct: null,
+    sharePriceCents: offering?.share_price_cents == null ? null : Number(offering.share_price_cents),
+    fundDistributionsCents: 0, myDistributionsCents: null, distributions: [], valuation: null,
+    statementCount: 0, latestStatementDate: null, source: "current",
+  };
+}

@@ -45,6 +45,7 @@ describe("client navigation by workspace", () => {
       "Contacts & deals",
       "Messages",
       "Investors",
+      "Investor onboarding",
       "Capital",
       "Portfolio",
       "Reports",
@@ -116,6 +117,7 @@ describe("contextual workspaces", () => {
   it("puts investment detail behind tabs, not extra menu items", () => {
     expect(investmentWorkspaceTabs("inv-1").map((t) => t.title)).toEqual([
       "Overview",
+      "Onboarding steps",
       "Capital",
       "Activity",
       "Performance",

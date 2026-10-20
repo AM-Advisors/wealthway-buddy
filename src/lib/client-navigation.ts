@@ -1,3 +1,4 @@
+import { INVESTMENT_TABS } from "@/lib/investment-workspace";
 /**
  * Navigation for the client application (app.harmonious.co).
  *
@@ -52,6 +53,7 @@ const FUND_MANAGER_NAV: ClientNavLink[] = [
   { title: "Contacts & deals", url: "/manager/crm", icon: "people" },
   { title: "Messages", url: "/manager/messages", icon: "message" },
   { title: "Investors", url: "/manager/investors", icon: "people" },
+  { title: "Investor onboarding", url: "/manager/investor-onboarding", icon: "people" },
   { title: "Capital", url: "/manager/capital", icon: "money" },
   { title: "Portfolio", url: "/manager/portfolio", icon: "pie" },
   { title: "Reports", url: "/manager/reporting", icon: "report" },
@@ -114,15 +116,7 @@ export function containsInternalLinks(links: ClientNavLink[]): boolean {
 /** Tabs shown when an investor opens one of their investments. */
 export function investmentWorkspaceTabs(investmentId: string): ContextualTab[] {
   const base = `/investment/${investmentId}`;
-  return [
-    { id: "overview", title: "Overview", url: base },
-    { id: "capital", title: "Capital", url: `${base}?tab=capital` },
-    { id: "activity", title: "Activity", url: `${base}?tab=activity` },
-    { id: "performance", title: "Performance", url: `${base}?tab=performance` },
-    { id: "reports", title: "Reports", url: `${base}?tab=reports` },
-    { id: "documents", title: "Documents", url: `${base}?tab=documents` },
-    { id: "tax", title: "Tax", url: `${base}?tab=tax` },
-  ];
+  return INVESTMENT_TABS.map((t) => ({ id: t.id, title: t.title, url: t.id === "overview" ? base : `${base}?tab=${t.id}` }));
 }
 
 export type FundCapability =
