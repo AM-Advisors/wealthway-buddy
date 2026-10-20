@@ -52,12 +52,24 @@ async function accessToken(): Promise<string> {
   return json.access_token;
 }
 
+/** Logs Box diagnostics without tokens or document contents. */
+async function logBoxError(label: string, res: Response) {
+  let detail: Record<string, unknown> = {};
+  try {
+    const json = (await res.clone().json()) as any;
+    detail = { code: json?.code ?? null, message: json?.message ?? null, request_id: json?.request_id ?? null };
+  } catch {
+    // Non-JSON responses still retain the HTTP status.
+  }
+  console.error(`[box] ${label} failed [${res.status}]`, JSON.stringify(detail));
+}
+
 async function boxFetch(url: string, init: RequestInit = {}) {
   const headers = new Headers(init.headers);
   headers.set("Authorization", `Bearer ${await accessToken()}`);
   const res = await fetch(url, { ...init, headers });
   if (!res.ok) {
-    console.error(`[box] request failed [${res.status}]`);
+    await logBoxError("request", res);
     throw serviceError("Box", "request", res.status);
   }
   return res;
@@ -101,9 +113,11 @@ export async function uploadFile(fileName: string, bytes: Uint8Array): Promise<s
     headers: { Authorization: `Bearer ${await accessToken()}` },
     body: form,
   });
+  if (!res.ok) {
+    await logBoxError("upload", res);
+    throw serviceError("Box", "upload", res.status);
+  }
   const text = await res.text();
-
-  if (!res.ok) throw serviceError("Box", "upload", res.status);
   const json = JSON.parse(text) as { entries: { id: string }[] };
   return json.entries[0]!.id;
 }

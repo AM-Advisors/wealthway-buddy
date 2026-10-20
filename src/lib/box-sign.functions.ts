@@ -266,6 +266,8 @@ export const startBoxSigning = createServerFn({ method: "POST" })
       provider_last_event_at: now,
       provider_sent_at: now,
       provider_viewed_at: null,
+      provider_error: null,
+      box_error: null,
       signed_at: now,
       signing_mode: dual ? "dual" : "investor_only",
       signature_template_version: Number((doc as any).signature_template_version ?? 1),

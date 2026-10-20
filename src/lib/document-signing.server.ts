@@ -264,7 +264,8 @@ export async function openSigningSession(
     hasSubscription: Boolean(resolved.subscription?.commitment_cents),
     requiresSignature: Boolean(resolved.document.requires_signature),
     isRequiredSigner,
-    signerStatus: resolved.signature?.cancelled_at && !resolved.signers.some((s) => s.status === "signed") ? "pending" : mine?.status ?? "pending",
+    // A cancelled or provider-failed request can restart only before anyone signs.
+    signerStatus: (resolved.signature?.cancelled_at || resolved.signature?.provider_error || (["error", "cancelled"].includes(String(mine?.status)) && resolved.signature?.provider_status === "cancelled")) && !resolved.signers.some((s) => s.status === "signed") ? "pending" : mine?.status ?? "pending",
     providerConfigured: boxConfigured(),
   });
   if (refusal) throw new SigningRefusal(refusal);
@@ -301,7 +302,12 @@ export async function openSigningSession(
   const capacity: SignerCapacity =
     requiredCapacities(resolved.subscription?.tax_classification)[0] ?? "individual";
 
-  const signerName = resolved.profile.legal_name ?? resolved.profile.email;
+  let partyName: string | null = null;
+  if (resolved.investmentProfileId) {
+    const { data: investmentProfile } = await admin.from("investment_profiles").select("legal_name").eq("id", resolved.investmentProfileId).maybeSingle();
+    partyName = String(investmentProfile?.legal_name ?? "").trim() || null;
+  }
+  const signerName = resolved.profile.legal_name ?? partyName ?? resolved.profile.email;
   const detail = await createMultiSignerRequest({
     fileId,
     documentName: `${resolved.offering?.name ?? "Harmonious"} - ${resolved.document.title}`,
@@ -339,6 +345,8 @@ export async function openSigningSession(
     provider_sent_at: now,
     provider_completed_at: null,
     provider_declined_at: null,
+    provider_error: null,
+    box_error: null,
     cancelled_at: null,
     signature_template_version: (await admin.from("offering_documents").select("signature_template_version").eq("id", resolved.document.id).single()).data?.signature_template_version ?? null,
     signed_at: now,
