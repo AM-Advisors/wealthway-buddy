@@ -254,4 +254,6 @@
 - [x] Self Serve managers record IRS-issued EIN with the IRS letter
 - [ ] Change service level later from fund Overview
 - [ ] Self Serve managers: mark banking complete, decide KYC "needs review", approve to fund, confirm money received (identity/money paths — needs careful review)
-- [ ] Show the "Record IRS-issued EIN" control to managers in Fund Setup; Help Center updates
+- [ ] Show the "Record IRS-issued EIN" control to managers in Fund Setup
+- [ ] Manager Help Center: fund setup, EIN recording and service-level pricing
+- [ ] Diagnose Calvin's document processing / sign_and_send permission errors; preserve signatures and account authority
