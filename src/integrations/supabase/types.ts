@@ -4048,6 +4048,7 @@ export type Database = {
           id: string
           name: string
           notes: string | null
+          person_id: string | null
           updated_at: string
         }
         Insert: {
@@ -4059,6 +4060,7 @@ export type Database = {
           id?: string
           name: string
           notes?: string | null
+          person_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -4070,6 +4072,7 @@ export type Database = {
           id?: string
           name?: string
           notes?: string | null
+          person_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -4078,6 +4081,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cap_stakeholders_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
             referencedColumns: ["id"]
           },
         ]
@@ -10027,6 +10037,7 @@ export type Database = {
           offering_id: string | null
           organization: string | null
           owner_user_id: string
+          person_id: string | null
           phone: string | null
           scope: string
           source: string | null
@@ -10051,6 +10062,7 @@ export type Database = {
           offering_id?: string | null
           organization?: string | null
           owner_user_id: string
+          person_id?: string | null
           phone?: string | null
           scope: string
           source?: string | null
@@ -10075,6 +10087,7 @@ export type Database = {
           offering_id?: string | null
           organization?: string | null
           owner_user_id?: string
+          person_id?: string | null
           phone?: string | null
           scope?: string
           source?: string | null
@@ -10095,6 +10108,13 @@ export type Database = {
             columns: ["offering_id"]
             isOneToOne: false
             referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_contacts_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
             referencedColumns: ["id"]
           },
         ]
@@ -11979,6 +11999,7 @@ export type Database = {
           id: string
           name: string
           notes: string | null
+          person_id: string | null
           stakeholder_type: string
           title: string | null
           updated_at: string
@@ -11992,6 +12013,7 @@ export type Database = {
           id?: string
           name: string
           notes?: string | null
+          person_id?: string | null
           stakeholder_type?: string
           title?: string | null
           updated_at?: string
@@ -12005,6 +12027,7 @@ export type Database = {
           id?: string
           name?: string
           notes?: string | null
+          person_id?: string | null
           stakeholder_type?: string
           title?: string | null
           updated_at?: string
@@ -12016,6 +12039,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "ct_companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ct_stakeholders_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
             referencedColumns: ["id"]
           },
         ]
@@ -39225,6 +39255,7 @@ export type Database = {
           investor_type: Database["public"]["Enums"]["investor_type"] | null
           is_test_demo: boolean
           legal_name: string | null
+          person_id: string | null
           phone: string | null
           postal_code: string | null
           region: string | null
@@ -39247,6 +39278,7 @@ export type Database = {
           investor_type?: Database["public"]["Enums"]["investor_type"] | null
           is_test_demo?: boolean
           legal_name?: string | null
+          person_id?: string | null
           phone?: string | null
           postal_code?: string | null
           region?: string | null
@@ -39269,6 +39301,7 @@ export type Database = {
           investor_type?: Database["public"]["Enums"]["investor_type"] | null
           is_test_demo?: boolean
           legal_name?: string | null
+          person_id?: string | null
           phone?: string | null
           postal_code?: string | null
           region?: string | null
@@ -39283,6 +39316,13 @@ export type Database = {
             columns: ["active_persona_id"]
             isOneToOne: false
             referencedRelation: "investor_personas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
             referencedColumns: ["id"]
           },
         ]
@@ -48583,6 +48623,7 @@ export type Database = {
         }
         Returns: Json
       }
+      unique_person_for_email: { Args: { _email: string }; Returns: string }
       withdraw_service_request: {
         Args: { _request_id: string }
         Returns: undefined
