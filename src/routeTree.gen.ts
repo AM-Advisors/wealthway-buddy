@@ -336,6 +336,7 @@ import { Route as LovableEmailEventsRouteImport } from './routes/lovable/email/e
 import { Route as OauthGoogleReturnRouteImport } from './routes/oauth/google/return'
 import { Route as OauthHubspotReturnRouteImport } from './routes/oauth/hubspot/return'
 import { Route as OnboardIOnboardingIdRouteImport } from './routes/onboard.i.$onboardingId'
+import { Route as OnboardPrepareTokenRouteImport } from './routes/onboard.prepare.$token'
 import { Route as AuthenticatedAdminContractsIndexRouteImport } from './routes/_authenticated/admin.contracts.index'
 import { Route as AuthenticatedAdminContractsClientIdRouteImport } from './routes/_authenticated/admin.contracts.$clientId'
 import { Route as AuthenticatedAdminEngagementsEngagementIdRouteImport } from './routes/_authenticated/admin.engagements.$engagementId'
@@ -2314,6 +2315,11 @@ const OnboardIOnboardingIdRoute = OnboardIOnboardingIdRouteImport.update({
   path: '/onboard/i/$onboardingId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OnboardPrepareTokenRoute = OnboardPrepareTokenRouteImport.update({
+  id: '/onboard/prepare/$token',
+  path: '/onboard/prepare/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedAdminContractsIndexRoute =
   AuthenticatedAdminContractsIndexRouteImport.update({
     id: '/admin/contracts/',
@@ -3427,6 +3433,7 @@ export interface FileRoutesByFullPath {
   '/oauth/google/return': typeof OauthGoogleReturnRoute
   '/oauth/hubspot/return': typeof OauthHubspotReturnRoute
   '/onboard/i/$onboardingId': typeof OnboardIOnboardingIdRoute
+  '/onboard/prepare/$token': typeof OnboardPrepareTokenRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/client/': typeof AuthenticatedClientIndexRoute
   '/diligence/': typeof AuthenticatedDiligenceIndexRoute
@@ -3882,6 +3889,7 @@ export interface FileRoutesByTo {
   '/oauth/google/return': typeof OauthGoogleReturnRoute
   '/oauth/hubspot/return': typeof OauthHubspotReturnRoute
   '/onboard/i/$onboardingId': typeof OnboardIOnboardingIdRoute
+  '/onboard/prepare/$token': typeof OnboardPrepareTokenRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/client': typeof AuthenticatedClientIndexRoute
   '/diligence': typeof AuthenticatedDiligenceIndexRoute
@@ -4345,6 +4353,7 @@ export interface FileRoutesById {
   '/oauth/google/return': typeof OauthGoogleReturnRoute
   '/oauth/hubspot/return': typeof OauthHubspotReturnRoute
   '/onboard/i/$onboardingId': typeof OnboardIOnboardingIdRoute
+  '/onboard/prepare/$token': typeof OnboardPrepareTokenRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/client/': typeof AuthenticatedClientIndexRoute
   '/_authenticated/diligence/': typeof AuthenticatedDiligenceIndexRoute
@@ -4809,6 +4818,7 @@ export interface FileRouteTypes {
     | '/oauth/google/return'
     | '/oauth/hubspot/return'
     | '/onboard/i/$onboardingId'
+    | '/onboard/prepare/$token'
     | '/admin/'
     | '/client/'
     | '/diligence/'
@@ -5264,6 +5274,7 @@ export interface FileRouteTypes {
     | '/oauth/google/return'
     | '/oauth/hubspot/return'
     | '/onboard/i/$onboardingId'
+    | '/onboard/prepare/$token'
     | '/admin'
     | '/client'
     | '/diligence'
@@ -5726,6 +5737,7 @@ export interface FileRouteTypes {
     | '/oauth/google/return'
     | '/oauth/hubspot/return'
     | '/onboard/i/$onboardingId'
+    | '/onboard/prepare/$token'
     | '/_authenticated/admin/'
     | '/_authenticated/client/'
     | '/_authenticated/diligence/'
@@ -5928,6 +5940,7 @@ export interface RootRouteChildren {
   OauthGoogleReturnRoute: typeof OauthGoogleReturnRoute
   OauthHubspotReturnRoute: typeof OauthHubspotReturnRoute
   OnboardIOnboardingIdRoute: typeof OnboardIOnboardingIdRoute
+  OnboardPrepareTokenRoute: typeof OnboardPrepareTokenRoute
   ApiPublicEmailClickRoute: typeof ApiPublicEmailClickRoute
   ApiPublicEmailOpenRoute: typeof ApiPublicEmailOpenRoute
   ApiPublicHooksBankAlertsRoute: typeof ApiPublicHooksBankAlertsRoute
@@ -8239,6 +8252,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OnboardIOnboardingIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/onboard/prepare/$token': {
+      id: '/onboard/prepare/$token'
+      path: '/onboard/prepare/$token'
+      fullPath: '/onboard/prepare/$token'
+      preLoaderRoute: typeof OnboardPrepareTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/admin/contracts/': {
       id: '/_authenticated/admin/contracts/'
       path: '/admin/contracts'
@@ -10244,6 +10264,7 @@ const rootRouteChildren: RootRouteChildren = {
   OauthGoogleReturnRoute: OauthGoogleReturnRoute,
   OauthHubspotReturnRoute: OauthHubspotReturnRoute,
   OnboardIOnboardingIdRoute: OnboardIOnboardingIdRoute,
+  OnboardPrepareTokenRoute: OnboardPrepareTokenRoute,
   ApiPublicEmailClickRoute: ApiPublicEmailClickRoute,
   ApiPublicEmailOpenRoute: ApiPublicEmailOpenRoute,
   ApiPublicHooksBankAlertsRoute: ApiPublicHooksBankAlertsRoute,
