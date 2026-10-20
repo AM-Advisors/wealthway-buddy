@@ -4,7 +4,7 @@ import { fillSubscriptionDocx } from "./subscription-docx";
 
 it("fills each investor's amount separately from the fund minimum and never signs", async () => {
   const zip = new JSZip();
-  zip.file("word/document.xml", `<w:document><w:p><w:r><w:t>Minimum: {{Subscription Amount}}</w:t></w:r></w:p><w:p><w:r><w:t>Subscription Amount:</w:t></w:r></w:p><w:p><w:r><w:t>Subscriber's Legal Name:</w:t></w:r></w:p><w:p><w:r><w:t>Signature:</w:t></w:r></w:p><w:p><w:r><w:t>ACCEPTANCE OF</w:t></w:r></w:p><w:p><w:r><w:t>Signatory’s Legal Name:</w:t></w:r></w:p></w:document>`);
+  zip.file("word/document.xml", `<w:document><w:p><w:r><w:t>ACCEPTANCE OF SUBSCRIPTION (table of contents)</w:t></w:r></w:p><w:p><w:r><w:t>Minimum: {{Subscription Amount}}</w:t></w:r></w:p><w:p><w:r><w:t>Subscription Amount:</w:t></w:r></w:p><w:p><w:r><w:t>Subscriber's Legal Name:</w:t></w:r></w:p><w:p><w:r><w:t>Signature:</w:t></w:r></w:p><w:p><w:r><w:t>ACCEPTANCE OF</w:t></w:r></w:p><w:p><w:r><w:t>Signatory’s Legal Name:</w:t></w:r></w:p></w:document>`);
   const r = await fillSubscriptionDocx(await zip.generateAsync({ type: "uint8array" }), { "Subscription Amount": "$25,000.00", "Investor Subscription Amount": "$500,000.00", "Subscriber Legal Name": "Calvin Jung", "Investor Signer Name": "Calvin Jung" });
   const out = await JSZip.loadAsync(r.bytes);
   const xml = await out.file("word/document.xml")?.async("string");

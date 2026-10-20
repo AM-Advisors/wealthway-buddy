@@ -16,9 +16,11 @@ export async function fillSubscriptionDocx(bytes: Uint8Array, values: Record<str
   const normalized: Record<string, string> = {};
   for (const [key, value] of Object.entries(values)) if (value?.trim()) normalized[normKey(key)] = value.trim();
   let acceptance = false;
+  let subscriberPage = false;
   const xml = (await file.async("string")).replace(/<w:p[ >][\s\S]*?<\/w:p>/g, (p) => {
     const text = [...p.matchAll(/<w:t(?:\s[^>]*)?>([\s\S]*?)<\/w:t>/g)].map((m) => m[1]).join("").replace(/&apos;|&#39;|&#x27;/gi, "'").replace(/&#x2019;|&#8217;/gi, "’");
-    if (text.includes("ACCEPTANCE OF")) acceptance = true;
+    if (normKey(text) === "subscriptionamount") subscriberPage = true;
+    if (subscriberPage && text.includes("ACCEPTANCE OF")) acceptance = true;
     if (acceptance || !text.trim().endsWith(":")) return p;
     const key = fields[normKey(text)];
     const value = key ? normalized[normKey(key)] : null;
