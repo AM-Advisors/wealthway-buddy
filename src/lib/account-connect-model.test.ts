@@ -23,3 +23,26 @@ describe("account connection rules", () => {
     expect(decideTinMatch({ matches: [{ profileId: "p1", ownerUserId: "me", ownerVerifiedEmail: null }], accountUserId: "me", accountVerifiedEmail: null }).kind).toBe("same_account");
   });
 });
+
+import { normalizeLegalName } from "./account-connect-model";
+describe("same tax ID + name + verified auto-connect", () => {
+  const base = { accountUserId: null, accountVerifiedEmail: null, selfLegalName: "Calvin Jung", selfVerified: true };
+  const other = { profileId: "p2", ownerUserId: "u2", ownerVerifiedEmail: "x@y.com", legalName: "calvin  jung", verified: true };
+  it("merges when tax ID, name and verification all match", () => {
+    expect(decideTinMatch({ ...base, matches: [other] })).toEqual({ kind: "merge", profileId: "p2" });
+  });
+  it("reviews when the name differs", () => {
+    expect(decideTinMatch({ ...base, matches: [{ ...other, legalName: "Edward Belsey" }] }).kind).toBe("review");
+  });
+  it("reviews when either side is not verified", () => {
+    expect(decideTinMatch({ ...base, matches: [{ ...other, verified: false }] }).kind).toBe("review");
+    expect(decideTinMatch({ ...base, selfVerified: false, matches: [other] }).kind).toBe("review");
+  });
+  it("reviews when it would combine two different accounts", () => {
+    expect(decideTinMatch({ ...base, accountUserId: "u1", matches: [other] }).kind).toBe("review");
+  });
+  it("ignores case, punctuation and suffix dots", () => {
+    expect(normalizeLegalName("Acme Holdings, L.L.C.")).toBe(normalizeLegalName("ACME holdings LLC"));
+    expect(normalizeLegalName("Thomas Morgan Jr.")).toBe(normalizeLegalName("thomas morgan jr"));
+  });
+});
