@@ -87,9 +87,16 @@ export function CreateInvestor({ fundId, isStaff, onDone }: { fundId: string; is
       <CardHeader><CardTitle className="text-base">Create New Investor</CardTitle>
         <p className="text-sm text-muted-foreground">We search existing Harmonious records first so nobody is entered twice. Only name, email, how they invest and amount are needed to start.</p></CardHeader>
       <CardContent className="space-y-5">
+        {!chosen?.profileId ? (
+          <div className="flex flex-wrap gap-2" role="group" aria-label="Investor kind">
+            <Button type="button" size="sm" variant={type === "entity" ? "outline" : "default"} onClick={() => set("profileType")("individual")}>Individual</Button>
+            <Button type="button" size="sm" variant={type === "entity" ? "default" : "outline"} onClick={() => set("profileType")("entity")}>Business / organization</Button>
+          </div>
+        ) : null}
+        {type === "entity" ? <p className="text-xs text-muted-foreground">For another fund, LLC, corporation, partnership or family office. Enter the contact person below; the invitation is addressed to the business, which completes business verification (entity documents, owners and signers, entity W-9).</p> : null}
         <div className="grid gap-3 sm:grid-cols-2">
-          {field("firstName", "Legal first name")}{field("lastName", "Last name")}
-          {field("email", "Email", { type: "email" })}{type !== "individual" ? field("entityName", type === "trust" ? "Trust name" : "Legal investor / entity name") : null}
+          {field("firstName", type === "entity" ? "Contact first name" : "Legal first name")}{field("lastName", type === "entity" ? "Contact last name" : "Last name")}
+          {field("email", type === "entity" ? "Contact email" : "Email", { type: "email" })}{type !== "individual" ? field("entityName", type === "trust" ? "Trust name" : "Legal business / entity name") : null}
         </div>
         <Button variant="outline" size="sm" onClick={runSearch}>Search existing investors</Button>
 

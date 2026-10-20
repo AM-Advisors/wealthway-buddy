@@ -23,6 +23,22 @@ import { exclusiveRecord, investorEditWindow } from "@/lib/manager-edit-window.s
 
 const db = () => supabaseAdmin as any;
 const nowIso = () => new Date().toISOString();
+
+/**
+ * Access for record edits. An assigned preparer acts only on that one investment,
+ * only inside the edit window (before signing or funding), and only for profile
+ * details and owners/signers - never amounts, notes, verification, signing or money.
+ */
+async function recordAccess(userId: string, onboardingId: string, preparerId?: string | null) {
+  if (!preparerId) return { ...(await assertOnboardingAccess(userId, onboardingId)), preparer: false };
+  const { activePreparer } = await import("@/lib/onboarding-participants.server");
+  const p = await activePreparer(userId, preparerId, onboardingId);
+  const { data: row } = await db().from("investor_onboardings").select("*").eq("id", onboardingId).maybeSingle();
+  if (!row) fail("That investment was not found.");
+  if (!(await investorEditWindow(row))) forbid("signing or funding has started; the investor's details can no longer be changed by a preparer.");
+  const actor: OnboardingActor = { userId: p.userId, isStaff: false, managedOfferingIds: [row.offering_id] };
+  return { actor, row, role: "manager" as const, preparer: true };
+}
 function fail(m: string): never { throw new Error(m); }
 const TERMINAL = "(closed,declined,cancelled)";
 
@@ -245,11 +261,17 @@ const ADDRESS_FIELDS = new Set(["address_line1", "address_line2", "city", "regio
  */
 export async function updateInvestorRecord(userId: string, input: {
   onboardingId: string; person?: PersonInput; profile?: { legalName?: string | null; details?: Record<string, unknown> }; investment?: InvestmentInput; taxId?: string | null;
+  preparerId?: string | null;
 }) {
-  const { actor, row, role } = await assertOnboardingAccess(userId, input.onboardingId);
+  const { actor, row, role, preparer } = await recordAccess(userId, input.onboardingId, input.preparerId);
   if (role === "investor") forbid("use Confirm Your Information to update your own details.");
   if (row.removed_at) fail("This investor has been removed from the Fund.");
-  const source = sourceFor(actor);
+  if (preparer) {
+    // Preparers supply details only: never amounts or notes, and never the sign-in email.
+    delete (input as any).investment;
+    if (input.person) delete (input.person as any).email;
+  }
+  const source: EntrySource = preparer ? "preparer" : sourceFor(actor);
   const changes: Change[] = []; let suggested = 0;
   const direct = actor.isStaff || await investorEditWindow(row);
   const personDirect = actor.isStaff || (direct && await exclusiveRecord(row, "person_id"));
@@ -357,14 +379,15 @@ export async function editRelatedParty(userId: string, input: {
   add?: RelatedInput;
   update?: { relationshipId: string; role: string; ownershipPercent?: number | null; isSigner?: boolean };
   removeId?: string;
+  preparerId?: string | null;
 }) {
-  const { actor, row, role } = await assertOnboardingAccess(userId, input.onboardingId);
+  const { actor, row, role, preparer } = await recordAccess(userId, input.onboardingId, input.preparerId);
   if (role === "investor") forbid("use Confirm Your Information to update your own details.");
   if (row.removed_at) fail("This investor has been removed from the Fund.");
   if (!row.investment_profile_id) fail("Choose how they are investing first.");
   const direct = actor.isStaff || (await investorEditWindow(row) && await exclusiveRecord(row, "investment_profile_id"));
   if (!direct) forbid("signing or funding has started; ask Harmonious to change owners and signers.");
-  const source = sourceFor(actor);
+  const source: EntrySource = preparer ? "preparer" : sourceFor(actor);
   const base = { offeringId: row.offering_id, onboardingId: row.id, table: "investment_profile_relationships", source, actor: actor.userId };
   const owned = async (id: string) => {
     const { data } = await db().from("investment_profile_relationships").select("id, profile_id, role, ownership_percent, is_authorized_signer, status").eq("id", id).maybeSingle();

@@ -2052,6 +2052,13 @@
       "when": 1792459152664,
       "tag": "0292_invoice_schedule_and_payout_queue",
       "breakpoints": true
+    },
+    {
+      "idx": 293,
+      "version": "7",
+      "when": 1792510187787,
+      "tag": "0293_investor_email_sends_and_participants",
+      "breakpoints": true
     }
   ]
 }

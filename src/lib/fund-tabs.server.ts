@@ -378,14 +378,18 @@ export async function sendReminders(uid: string, fundId: string, onboardingIds: 
       continue;
     }
     if (!reminderAllowed(last[id] ?? null)) { results.push({ id, outcome: "skipped", reason: "Reminded in the last 3 days" }); continue; }
-    let delivery = "sent"; let note: string | null = null;
+    let delivery = "sent"; let note: string | null = null; let messageId: string | null = null;
+    const subject = `Reminder: next step for ${fundRow?.name ?? "your investment"}`;
     try {
-      await sendTemplateEmail("investor-message", r.email, {
+      const sent = await sendTemplateEmail("investor-message", r.email, {
         idempotencyKey: `reminder-${id}-${new Date().toISOString().slice(0, 10)}`,
-        templateData: { investorName: r.name, offeringName: fundRow?.name ?? "Your fund", subject: `Reminder: next step for ${fundRow?.name ?? "your investment"}`, body: `${STEP_COPY[step]}\n\nSign in: ${link}` },
+        templateData: { investorName: r.name, offeringName: fundRow?.name ?? "Your fund", subject, body: `${STEP_COPY[step]}\n\nSign in: ${link}` },
       });
+      messageId = (sent as any)?.messageId ?? null;
     } catch (e) { delivery = "failed"; note = (e as Error).message.slice(0, 300); }
     await d.from("investor_reminders").insert({ offering_id: fundId, onboarding_id: id, step, sent_by: uid, recipient_email: r.email, delivery, delivery_note: note });
+    const { logInvestorEmail } = await import("@/lib/investor-emails.server");
+    await logInvestorEmail({ onboardingId: id, offeringId: fundId, kind: "reminder", subject, recipient: r.email, messageId, sentBy: uid, outcome: note ? "failed" : "sent", note });
     results.push(note ? { id, outcome: "failed", reason: note } : { id, outcome: "sent" });
   }
   return results;

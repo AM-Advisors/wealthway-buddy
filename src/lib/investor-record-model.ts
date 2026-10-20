@@ -5,16 +5,16 @@ import { resolvePerson } from "@/lib/person-resolution";
  * approves compliance, or moves money; the server applies these decisions.
  */
 
-export type EntrySource = "investor" | "fund_manager" | "harmonious" | "document" | "provider" | "bulk";
+export type EntrySource = "investor" | "fund_manager" | "harmonious" | "document" | "provider" | "bulk" | "preparer";
 export const SOURCE_LABELS: Record<EntrySource, string> = {
   investor: "Investor", fund_manager: "Fund Manager", harmonious: "Harmonious",
-  document: "Imported document", provider: "Provider", bulk: "Bulk import",
+  document: "Imported document", provider: "Provider", bulk: "Bulk import", preparer: "Assigned preparer",
 };
 
 export const PROFILE_TYPES = ["individual", "joint", "entity", "trust", "ira"] as const;
 export type ProfileType = (typeof PROFILE_TYPES)[number];
 export const PROFILE_TYPE_LABELS: Record<ProfileType, string> = {
-  individual: "Individual", joint: "Joint", entity: "Entity", trust: "Trust", ira: "IRA / Retirement",
+  individual: "Individual", joint: "Joint", entity: "Business / organization (fund, LLC, corporation, family office)", trust: "Trust", ira: "IRA / Retirement",
 };
 export function isProfileType(v: unknown): v is ProfileType { return PROFILE_TYPES.includes(v as ProfileType); }
 export const ENTITY_TYPES = ["llc", "corporation", "partnership", "family_office", "foundation", "other_entity"] as const;
