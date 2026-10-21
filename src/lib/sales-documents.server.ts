@@ -397,18 +397,40 @@ export async function sendDocument(userId: string, id: string, d: { subject: str
   return { ok: true };
 }
 
-/** The client's people who can receive this document: the linked contact plus CRM contacts at the same organization. */
+/** The client's people who can receive this document: the linked contact, CRM contacts at the same organization,
+ *  and — for current clients — the client's active saved contacts (ids prefixed "client:" until first send). */
 export async function listClientTeam(userId: string, id: string) {
   const a = await access(userId, id);
-  if (!a.doc.contact_id) return [] as { contactId: string; name: string; email: string; title: string | null }[];
-  const { data: main } = await a.db.from("crm_contacts").select("id, full_name, email, title, organization").eq("id", a.doc.contact_id).maybeSingle();
-  let rows: any[] = main ? [main] : [];
-  const org = String(main?.organization ?? "").trim();
-  if (org) {
-    const { data } = await a.db.from("crm_contacts").select("id, full_name, email, title, organization").eq("scope", "harmonious").is("archived_at", null).ilike("organization", org).limit(50);
-    rows = [...rows, ...((data ?? []) as any[]).filter((x) => x.id !== main!.id)];
+  let rows: any[] = [];
+  if (a.doc.contact_id) {
+    const { data: main } = await a.db.from("crm_contacts").select("id, full_name, email, title, organization").eq("id", a.doc.contact_id).maybeSingle();
+    rows = main ? [main] : [];
+    const org = String(main?.organization ?? "").trim();
+    if (org) {
+      const { data } = await a.db.from("crm_contacts").select("id, full_name, email, title, organization").eq("scope", "harmonious").is("archived_at", null).ilike("organization", org).limit(50);
+      rows = [...rows, ...((data ?? []) as any[]).filter((x) => x.id !== main!.id)];
+    }
   }
-  return rows.filter((x) => x.email).map((x) => ({ contactId: String(x.id), name: String(x.full_name || x.email), email: String(x.email).toLowerCase(), title: x.title ?? null }));
+  const out = rows.filter((x) => x.email).map((x) => ({ contactId: String(x.id), name: String(x.full_name || x.email), email: String(x.email).toLowerCase(), title: x.title ?? null }));
+  if (a.doc.client_id) {
+    const { data: cc } = await a.db.from("client_contacts").select("id, full_name, email, title, status, deactivated_at").eq("client_id", a.doc.client_id).is("deactivated_at", null).limit(50);
+    for (const c of (cc ?? []) as any[]) {
+      const email = String(c.email ?? "").trim().toLowerCase();
+      if (!email || out.some((o) => o.email === email)) continue;
+      const { data: crm } = await a.db.from("crm_contacts").select("id").eq("scope", "harmonious").is("archived_at", null).ilike("email", email).limit(1).maybeSingle();
+      out.push({ contactId: crm?.id ? String(crm.id) : `client:${c.id}`, name: String(c.full_name || email), email, title: c.title ?? null });
+    }
+  }
+  return out;
+}
+
+/** Turns a "client:<id>" team entry into a CRM contact (reusing one with the same email) so the email can be logged. */
+async function ensureCrmContact(userId: string, db: any, clientId: string, entry: { contactId: string; name: string; email: string; title: string | null }) {
+  if (!entry.contactId.startsWith("client:")) return entry.contactId;
+  const { data: cl } = await db.from("clients").select("name").eq("id", clientId).maybeSingle();
+  const { saveContact } = await import("@/lib/crm.server");
+  const r: any = await saveContact(userId, { full_name: entry.name, email: entry.email, organization: cl?.name ?? null, title: entry.title, phone: null, source: "Client contacts", tags: ["client"], scope: "harmonious", offering_id: null } as any);
+  return String(r?.id ?? r?.contact?.id);
 }
 
 /** A view-only review link for the approved version, for Sales staff to share by hand. No sign button; signing still goes through the emailed per-person link. */
