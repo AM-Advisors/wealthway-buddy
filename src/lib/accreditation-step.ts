@@ -20,5 +20,5 @@ export function selfCertificationAllowed(exemption: string | null | undefined): 
 
 /** Accreditation that is already done (or under review) needs nothing from the investor. */
 export function accreditationStepDone(state: string | null | undefined): boolean {
-  return state === "valid" || state === "not_applicable" || state === "pending";
+  return state === "valid" || state === "not_applicable" || state === "review_required";
 }
