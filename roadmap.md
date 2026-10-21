@@ -1,5 +1,9 @@
 # Roadmap
 
+## Verified investor details (2026-10-21)
+- [ ] Read citizenship and birthday from approved identity checks and tax-ID last four from the investing profile; align details and missing-info warnings.
+- [ ] Run focused synthetic read-back checks; signed-in browser check blocked on isolated QA access.
+
 ## Investment amount minimum (2026-10-21)
 - [x] Show the fund's minimum under the Investment amount field on the investor About You step, read from the same offering minimum the server checks the saved amount against; no line when the fund sets none.
 - [x] Three focused checks passed (minimum appears directly under the amount box, absent when no minimum is set); preview build OK.

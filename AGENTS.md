@@ -31,3 +31,4 @@
 - LoadError handles failures; reports load active tabs; Sign shares TaxSignPanel and verified email; OfferingDocumentReader reads entitled files — why: reliability.
 - Investor self-service in assertInvestorOwns checks investor_user_id against the authenticated actor, independently of staff/read-view role precedence; profile ownership and terminal-state guards remain — why: staff may invest personally without completing another investor's onboarding.
 - Investor-grid class applicability reads offerings.has_multiple_classes and is shared by details and missing-info requests — why: presentation must use the canonical fund setting, never infer classes from investor rows.
+- Investor detail identity projects approved person-linked checks and investing-profile tax-ID last four; entity IDs never fall back to the signer — why: reuse verification without exposing or mixing identifiers.

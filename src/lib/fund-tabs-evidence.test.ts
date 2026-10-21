@@ -16,7 +16,7 @@ vi.mock("@/integrations/supabase/client.server", () => ({ supabaseAdmin: {
   },
   storage: { from: (bucket: string) => ({ createSignedUrl: async (path: string) => { mock.urls(bucket, path); return { data: { signedUrl: `https://synthetic.test/${bucket}/${path}` } }; } }) },
 } }));
-import { investorGrid, listFiles } from "./fund-tabs.server";
+import { investorDetail, investorGrid, listFiles } from "./fund-tabs.server";
 import { einComplete } from "./fund-setup-complete";
 
 describe("shared IRS evidence read-back", () => {
@@ -42,6 +42,45 @@ describe("shared IRS evidence read-back", () => {
   it("ordinary fund viewers never receive restricted setup evidence", async () => {
     expect(await listFiles("series-fund", false)).toEqual([]);
     expect(mock.urls).not.toHaveBeenCalled();
+  });
+});
+
+describe("verified investor identity read-back", () => {
+  beforeEach(() => {
+    mock.tables = {
+      offerings: [{ id: "fund", has_multiple_classes: false }],
+      investor_onboardings: [{ id: "investor", offering_id: "fund", person_id: "person", investment_profiles: { profile_type: "individual", tax_id_last4: "6789" } }],
+      persons: [{ id: "person", date_of_birth: null, citizenship_country: null }],
+      kyc_verifications: [{ person_id: "person", status: "approved", completed_at: "2026-10-21", verified_date_of_birth: "1990-02-03", decision: { id_verification: { nationality: "US", document_number: "not-a-tax-id" } } }],
+    };
+  });
+  it("uses approved verification birthday in details and missing-info warnings", async () => {
+    const row = await investorDetail("fund", "investor");
+    expect(row.dateOfBirth).toBe("1990-02-03");
+    expect(row.missing).not.toContain("Date of birth");
+  });
+  it("uses verified nationality for citizenship", async () => {
+    expect((await investorDetail("fund", "investor")).citizenship).toBe("US");
+  });
+  it("reuses the investing profile tax ID without returning a full ID", async () => {
+    const row = await investorDetail("fund", "investor");
+    expect(row.taxIdLast4).toBe("6789");
+    expect(row.missing).not.toContain("Tax ID");
+    expect(JSON.stringify(row)).not.toContain("not-a-tax-id");
+  });
+  it("does not use pending verification as verified identity", async () => {
+    mock.tables["kyc_verifications"] = [{ person_id: "person", status: "pending", completed_at: "2026-10-21", verified_date_of_birth: "1990-02-03", decision: { id_verification: { nationality: "US" } } }];
+    const [row] = await investorGrid("fund");
+    expect(row?.dateOfBirth).toBeNull();
+    expect(row?.citizenship).toBeNull();
+    expect(row?.missing).toContain("Date of birth");
+  });
+  it("does not use a business signer's personal tax ID as the business EIN", async () => {
+    mock.tables["persons"] = [{ id: "person", tax_id_last4: "1234" }];
+    mock.tables["investor_onboardings"] = [{ id: "investor", offering_id: "fund", person_id: "person", investment_profiles: { profile_type: "llc" } }];
+    const [row] = await investorGrid("fund");
+    expect(row?.taxIdLast4).toBeNull();
+    expect(row?.missing).toContain("Tax ID");
   });
 });
 
