@@ -62,7 +62,7 @@ describe('investor approval event emails', () => {
   it('notifies the investor after authorized Harmonious approval', async () => {
     await sendInvestorApprovalNotice(fixture({ approved_to_fund_by: 'authorized-staff', stage: 'awaiting_funds' }), { onboardingId: 'investment', action: 'fund', ref: 'staff-approval' })
     expect(send.mock.calls[0]?.[1]).toBe('investor@example.com')
-    expect(send.mock.calls[0]?.[2]?.templateData.instructionsAvailable).toBe(true)
+    expect(send.mock.calls[0]?.[2]?.['templateData'].instructionsAvailable).toBe(true)
   })
   it('does not claim instructions are available when the canonical funding read is locked', async () => {
     funding.mockResolvedValueOnce({ unlocked: false, instructions: null } as any)
