@@ -17,7 +17,7 @@ import { ChevronDown, ChevronRight } from "lucide-react";
 import { FundOnboardingLinkCard } from "@/components/fund-onboarding-link";
 import { approveToFundFn, fundReadinessFn } from "@/lib/investor-onboarding.functions";
 import { STAGE_LABELS, type OnboardingStage } from "@/lib/investor-onboarding-model";
-import { investorDetailFn, investorGridFn, lastRemindersFn, sendInvestorRemindersFn, managerInvestorSignedCopyFn, managerInvestorTaxFormFn } from "@/lib/fund-tabs.functions";
+import { investorDetailFn, investorGridFn, lastRemindersFn, sendInvestorRemindersFn, managerInvestorSignedCopyFn, managerInvestorTaxFormFn, sendSubscriptionSignNoticeFn } from "@/lib/fund-tabs.functions";
 import { bulkSendKycLinksFn, bulkSetClassFn, listInvestorDuplicatesFn, mergeInvestorsFn, requestMissingInfoFn } from "@/lib/investor-bulk.functions";
 import { reminderAllowed, reminderStep } from "@/lib/fund-health";
 import { toast } from "sonner";
@@ -255,6 +255,8 @@ export function InvestorSheet({ fundId, id, onClose }: { fundId: string; id: str
   const approve = useServerFn(approveToFundFn);
   const downloadSigned = useServerFn(managerInvestorSignedCopyFn);
   const openTaxForm = useServerFn(managerInvestorTaxFormFn);
+  const sendSign = useServerFn(sendSubscriptionSignNoticeFn);
+  const [sendingSign, setSendingSign] = useState(false);
   const [downloading, setDownloading] = useState<string | null>(null);
   const [approving, setApproving] = useState(false);
   const [questionnaireFor, setQuestionnaireFor] = useState<string | null>(null);
@@ -374,6 +376,21 @@ export function InvestorSheet({ fundId, id, onClose }: { fundId: string; id: str
                 }}>{approving ? "Approving…" : "Approve subscription"}</Button>}
               </section>
             )}
+
+            <section className="rounded-lg border p-3">
+              <h4 className="mb-1 font-medium">Subscription Agreement</h4>
+              <p className="text-muted-foreground">Email the investor a link that opens the signing step of their investment.</p>
+              <Button size="sm" variant="outline" className="mt-2" disabled={sendingSign} onClick={async () => {
+                if (!id) return;
+                setSendingSign(true);
+                try {
+                  const r = await sendSign({ data: { fundId, onboardingId: id } });
+                  if (r.sent) toast.success("Signing email sent to the investor");
+                  else toast.message(r.reason === "recipient_suppressed" ? "This investor has turned off emails, so it wasn't sent." : "The email wasn't sent.");
+                } catch (error) { toast.error(error instanceof Error ? error.message : "The email could not be sent."); }
+                finally { setSendingSign(false); }
+              }}>{sendingSign ? "Sending…" : "Email signing link"}</Button>
+            </section>
 
             {d.missing.length > 0 && (
               <section className="rounded-lg border border-destructive/40 bg-destructive/5 p-3">
