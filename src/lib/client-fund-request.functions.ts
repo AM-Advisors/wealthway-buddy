@@ -286,7 +286,7 @@ export const getClientHome = createServerFn({ method: "GET" })
     ]);
     const setupIds = ((setups ?? []) as any[]).map((s) => s.id);
     const { data: tasks } = setupIds.length
-      ? await db.from("fund_setup_tasks").select("setup_id, status, responsible_party").in("setup_id", setupIds)
+      ? await db.from("fund_setup_tasks").select("setup_id, status, responsible_party").in("setup_id", setupIds).eq("blocking", true)
       : { data: [] };
     const done = (s: string) => ["complete", "completed", "done", "not_applicable", "waived"].includes(String(s));
     const bySetup = new Map<string, { total: number; done: number; harmonious: number }>();

@@ -129,10 +129,11 @@ export const getClientFund = createServerFn({ method: "GET" })
     const { data: setup } = await db.from("fund_setups").select("id, stage, launch_state").eq("offering_id", data.fundId).maybeSingle();
     const [{ data: tasks }, { data: letters }] = await Promise.all([
       setup
-        ? db.from("fund_setup_tasks").select("id, label, description, section, status, responsible_party, response, notes, due_date, sort_order").eq("setup_id", setup.id).order("sort_order")
+        ? db.from("fund_setup_tasks").select("id, label, description, section, status, responsible_party, response, notes, due_date, sort_order, blocking").eq("setup_id", setup.id).eq("blocking", true).order("sort_order")
         : Promise.resolve({ data: [] }),
       db.from("side_letters").select("status").eq("offering_id", data.fundId),
     ]);
+    // Optional (non-blocking) tasks such as naming outside service providers never affect setup %.
     const all = (tasks ?? []) as any[];
     const done = (t: any) => ["complete", "completed", "done", "not_applicable", "waived"].includes(String(t.status));
     const percent = all.length ? Math.round((all.filter(done).length / all.length) * 100) : null;
