@@ -297,15 +297,34 @@ export const getMyPortfolioValue = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
-    const { data: apps } = await supabase
-      .from("investor_applications")
-      .select("id, offering_id, status")
-      .eq("user_id", userId);
+    const [appsResult, onboardingResult] = await Promise.all([
+      supabase
+        .from("investor_applications")
+        .select("id, offering_id, status")
+        .eq("user_id", userId),
+      supabase
+        .from("investor_onboardings")
+        .select("id, offering_id, stage, commitment_amount_cents, funded_amount_cents, application_id")
+        .eq("investor_user_id", userId)
+        .is("removed_at", null)
+        .not("stage", "in", "(declined,cancelled)"),
+    ]);
 
-    const active = ((apps ?? []) as { id: string; offering_id: string; status: string }[]).filter(
+    const active = ((appsResult.data ?? []) as { id: string; offering_id: string; status: string }[]).filter(
       (a) => !EXCLUDED_STATUSES.has(a.status),
     );
-    if (active.length === 0) return [] as MyPortfolioValue[];
+    // Canonical onboarding investments without a legacy application row still
+    // count as holdings; skip ones already represented by an application.
+    const activeAppIds = new Set(active.map((a) => a.id));
+    const onboardingOnly = ((onboardingResult.data ?? []) as {
+      id: string;
+      offering_id: string;
+      stage: string;
+      commitment_amount_cents: number | null;
+      funded_amount_cents: number | null;
+      application_id: string | null;
+    }[]).filter((o) => !o.application_id || !activeAppIds.has(o.application_id));
+    if (active.length === 0 && onboardingOnly.length === 0) return [] as MyPortfolioValue[];
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const offeringIds = Array.from(new Set(active.map((a) => a.offering_id)));
@@ -355,6 +374,34 @@ export const getMyPortfolioValue = createServerFn({ method: "GET" })
         pct_of_committed: you.pct_of_committed,
         equity_value_cents: valuedByPrice ? Math.round(shares! * price!) : you.funded_cents,
         valued_by: valuedByPrice ? "share_price" : "capital",
+      });
+    }
+
+    // Aggregate onboarding-only investments per offering so a fund never
+    // appears twice, and value them at received capital.
+    const onboardingTotals = new Map<string, { commitment: number; funded: number }>();
+    for (const o of onboardingOnly) {
+      const cur = onboardingTotals.get(o.offering_id) ?? { commitment: 0, funded: 0 };
+      cur.commitment += Number(o.commitment_amount_cents ?? 0);
+      cur.funded += Number(o.funded_amount_cents ?? 0);
+      onboardingTotals.set(o.offering_id, cur);
+    }
+    for (const [offeringId, totals] of onboardingTotals) {
+      const offering = offeringById.get(offeringId);
+      if (!offering) continue;
+      const price = offering.share_price_cents != null ? Number(offering.share_price_cents) : null;
+      rows.push({
+        offering_id: offering.id,
+        offering_name: offering.name,
+        reg_type: offering.reg_type ?? null,
+        share_price_cents: price,
+        shares: null,
+        share_class: "LP interest",
+        commitment_cents: totals.commitment,
+        funded_cents: totals.funded,
+        pct_of_committed: totals.commitment > 0 ? Math.min(100, (totals.funded / totals.commitment) * 100) : 0,
+        equity_value_cents: totals.funded,
+        valued_by: "capital",
       });
     }
     return rows;
