@@ -11,6 +11,7 @@ export async function emailFundSignatory(db: any, actorId: string, input: { offe
   const { data: manager, error: managerError } = await db.from('fund_managers').select('id').eq('offering_id', input.offeringId).eq('user_id', signer.signer_user_id).maybeSingle();
   if (managerError || !manager) throw new Error('The signatory is no longer assigned to this fund.');
   const investorSignedAt = (rows ?? []).find((r: any) => r.role_key !== 'fund_manager' && r.status === 'signed')?.signed_at ?? (sig.provider_status === 'completed' ? sig.provider_completed_at : null);
+  if (!investorSignedAt) throw new Error('The investor must finish signing first.');
   const { managerApprovedSigned } = await import('@/lib/investor-document-review.server');
   if (!(await managerApprovedSigned(db, ob.id, sig.offering_document_id, investorSignedAt))) throw new Error('Approve the investor’s signed document before emailing the signatory.');
   const requestId = String(signer.provider_signer_id ?? '').startsWith('cs:') ? String(signer.provider_signer_id).slice(3) : sig.provider_agreement_id;
@@ -19,12 +20,15 @@ export async function emailFundSignatory(db: any, actorId: string, input: { offe
   const detail = await box.getSignRequestDetail(requestId);
   const pending = detail.signers.filter(s => s.decision !== 'signed');
   // Resend addresses every outstanding signer: never send an investor another request.
-  if (pending.length !== 1 || pending[0]?.email.toLowerCase() !== signer.signer_email.toLowerCase() || !['created','sent','out_for_signature','signer_signed','signer_viewed'].includes(detail.status)) throw new Error('This request is not ready for a signatory-only email. Refresh signing status first.');
+  if (pending.length !== 1 || pending[0]?.email.toLowerCase() !== signer.signer_email.toLowerCase() || !['sent','out_for_signature','signer_signed','signer_viewed'].includes(detail.status)) throw new Error('This request is not ready for a signatory-only email. Refresh signing status first.');
   const { data: doc } = await db.from('offering_documents').select('title').eq('id', sig.offering_document_id).maybeSingle();
   const { sendSigningReminder } = await import('@/lib/signing-reminder.server');
   return sendSigningReminder(actorId, {
     offeringId: input.offeringId, reminderKey: `fund-signatory:${sig.id}:${signer.id}`, documentTitle: doc?.title ?? 'Subscription Agreement',
     recipientEmail: signer.signer_email, recipientName: signer.signer_name ?? 'Fund signatory', recipientUserId: signer.signer_user_id,
-    path: `/manager/countersign/${signer.id}`, steps: [], nativeSend: () => box.resendSignRequest(requestId),
+    path: `/manager/countersign/${signer.id}`, steps: ['Open your assigned document and sign the fund acceptance section.'],
+    // Existing embedded requests cannot be converted safely. Email the exact protected
+    // document instead; native-email requests use the original service email ceremony.
+    ...(pending[0]?.externalUserId ? {} : { nativeSend: () => box.resendSignRequest(requestId) }),
   });
 }
