@@ -7349,6 +7349,7 @@ export type Database = {
           referral_source: string | null
           relationship_owner_id: string | null
           saas_only: boolean
+          show_sales_rep_to_client: boolean
           status: string
           updated_at: string
           website: string | null
@@ -7389,6 +7390,7 @@ export type Database = {
           referral_source?: string | null
           relationship_owner_id?: string | null
           saas_only?: boolean
+          show_sales_rep_to_client?: boolean
           status?: string
           updated_at?: string
           website?: string | null
@@ -7429,6 +7431,7 @@ export type Database = {
           referral_source?: string | null
           relationship_owner_id?: string | null
           saas_only?: boolean
+          show_sales_rep_to_client?: boolean
           status?: string
           updated_at?: string
           website?: string | null
