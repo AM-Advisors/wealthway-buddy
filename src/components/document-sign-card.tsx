@@ -125,7 +125,7 @@ export function DocumentSignCard({
                 )}
               </div>
               <div>
-                <CardTitle className="flex flex-wrap items-center gap-2 text-base">{title} <ThirdPartyBadge provider="Box Sign" /></CardTitle>
+                <CardTitle className="flex flex-wrap items-center gap-2 text-base">{title}</CardTitle>
                 <CardDescription>
                   {executed ? (
                     <>

@@ -42,8 +42,10 @@ export function AccountKycGate({ children, onSignOut }: { children: ReactNode; o
         <div className="space-y-2">
           <h1 className="font-heading text-2xl text-primary">{body.title}</h1>
           <p className="text-sm text-muted-foreground">{body.text}</p>
-          <ThirdPartyBadge provider="Didit" />
-          <ThirdPartyNote provider="Didit" />
+          <p className="text-xs text-muted-foreground">
+            Identity verification is performed by an independent verification service. Harmonious
+            prepares and tracks your verification but cannot guarantee its timing or outcome.
+          </p>
         </div>
         <ol className="grid gap-2 text-sm sm:grid-cols-2">
           {["Government ID", "Selfie match", "Residential address", "Sanctions & AML screening"].map((t, i) => (

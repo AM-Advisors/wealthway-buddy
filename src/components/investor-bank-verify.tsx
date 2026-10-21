@@ -44,8 +44,7 @@ export function InvestorBankVerify({ onboardingId }: { onboardingId: string }) {
       ) : (
         <>
           {v?.status === "name_mismatch" && <p className="text-destructive">The last account you linked isn&apos;t in the investing party&apos;s name. Link an account in that name, or contact the fund team.</p>}
-          <ThirdPartyBadge provider="Plaid" />
-          <p className="text-muted-foreground">Sign in to your bank securely through Plaid to confirm the account is yours. Harmonious only keeps the result, never your account number, and never takes money from it.</p>
+          <p className="text-muted-foreground">Sign in to your bank through our secure connection to confirm the account is yours. Harmonious only keeps the result, never your account number, and never takes money from it.</p>
           <Button size="sm" variant="outline" disabled={begin.isPending || done.isPending} onClick={() => begin.mutate()}>{done.isPending ? "Checking…" : "Verify my bank"}</Button>
         </>
       )}
