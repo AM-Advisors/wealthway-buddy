@@ -318,7 +318,7 @@ export function InvestorSheet({ fundId, id, onClose }: { fundId: string; id: str
                     finally { setDownloading(null); }
                   }}>{downloading === doc.id ? "Opening…" : "Download signed copy"}</Button> : <span className="text-muted-foreground">Signed copy pending</span>}
                 </div>) : <p className="text-muted-foreground">No submitted signed documents yet.</p>}
-                {d.reviewEvidence.acknowledgments.map((doc) => <div key={doc.id} className="border-b pb-2"><p className="font-medium">{doc.title}</p><p className="text-xs text-muted-foreground">Version {doc.version} · {fmtDate(doc.acknowledgedAt)} · Acknowledged and agreed</p></div>)}
+                {d.reviewEvidence.acknowledgments.map((doc: { id: string; title: string; version: number; acknowledgedAt: string }) => <div key={doc.id} className="border-b pb-2"><p className="font-medium">{doc.title}</p><p className="text-xs text-muted-foreground">Version {doc.version} · {fmtDate(doc.acknowledgedAt)} · Acknowledged and agreed</p></div>)}
               </section>
               <section className="space-y-3" aria-label="Investor questionnaire">
                 <h4 className="font-medium">Investor questionnaire</h4>
