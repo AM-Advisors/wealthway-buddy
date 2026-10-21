@@ -1,10 +1,18 @@
 // SIMULATED (pure model) tests — no database, no live APIs.
 import { describe, expect, it } from "vitest";
-import { JOBS, isStale, missedSlots, overallStatus, postStatusAfter, shouldRun, slotKey } from "./marketing-jobs-model";
+import { JOBS, isStale, missedSlots, overallStatus, postStatusAfter, shouldRun, slotKey, staleJobRun } from "./marketing-jobs-model";
 
-const job = (k: string) => JOBS.find((j) => j.key === k)!;
+const job = (k: string) => { const found = JOBS.find((j) => j.key === k); if (!found) throw new Error("Unknown synthetic job"); return found; };
 
 describe("scheduler", () => {
+  it("marks stale running records for display only, leaving their outcome unchanged", () => {
+    const run = { status: "running", started_at: "2026-10-21T10:00:00Z" };
+    expect(staleJobRun(run, new Date("2026-10-21T11:00:00Z"))).toBe(false);
+    expect(staleJobRun(run, new Date("2026-10-21T11:00:01Z"))).toBe(true);
+    expect(run.status).toBe("running");
+    expect(staleJobRun({ ...run, status: "completed" }, new Date("2026-10-21T12:00:00Z"))).toBe(false);
+    expect(staleJobRun({ status: "running", started_at: "invalid" }, new Date())).toBe(false);
+  });
   it("one slot key per 5-minute window (duplicate prevention)", () => {
     expect(slotKey(job("publishing_queue"), new Date("2026-10-08T10:03:10Z"))).toBe("2026-10-08T10:00");
     expect(slotKey(job("publishing_queue"), new Date("2026-10-08T10:04:59Z"))).toBe("2026-10-08T10:00");

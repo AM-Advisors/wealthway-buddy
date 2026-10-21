@@ -1,0 +1,11 @@
+import { vi } from "vitest";
+import net from "node:net";
+import tls from "node:tls";
+import http from "node:http";
+import https from "node:https";
+const blocked = () => { throw new Error("BLOCKED: this offline diagnostic check cannot contact live services."); };
+vi.stubGlobal("fetch", blocked);
+vi.spyOn(net.Socket.prototype, "connect").mockImplementation(blocked);
+vi.spyOn(tls, "connect").mockImplementation(blocked);
+vi.spyOn(http, "request").mockImplementation(blocked);
+vi.spyOn(https, "request").mockImplementation(blocked);

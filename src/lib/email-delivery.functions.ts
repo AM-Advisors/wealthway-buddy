@@ -1,22 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/lib/require-auth";
+import { authorizeEmailDiagnostics } from "@/lib/email-diagnostic-access";
+import { assertDiagnosticReads } from "@/lib/diagnostic-read";
 
 const schema = z.object({
   recipient: z.string().trim().email().max(255).optional(),
   limit: z.number().int().min(1).max(100).optional(),
 });
-
-async function assertAdmin(supabase: any, userId: string) {
-  const { data, error } = await supabase
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", userId)
-    .in("role", ["admin", "fund_manager"]);
-  if (error) throw new Error(error.message);
-  if (!data || data.length === 0) throw new Error("Reviewers only.");
-}
-
 
 export type DeliveryLogEvent = {
   timestamp: string;
@@ -32,7 +23,7 @@ export const listDeliveryLog = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => schema.parse(data ?? {}))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    await assertAdmin(supabase, userId);
+    await authorizeEmailDiagnostics(supabase, userId, data);
 
     const apiKey = process.env["LOVABLE_API_KEY"];
     if (!apiKey) {
@@ -87,40 +78,13 @@ const detailsSchema = z.object({
   applicationId: z.string().uuid().optional(),
 });
 
-function pickSmtpResponse(payload: any): string | null {
-  if (!payload || typeof payload !== "object") return null;
-  const keys = [
-    "smtp_response",
-    "diagnostic_code",
-    "response",
-    "reason",
-    "description",
-    "detail",
-    "message",
-    "error",
-  ];
-  const scan = (obj: any, depth: number): string | null => {
-    if (!obj || typeof obj !== "object" || depth > 3) return null;
-    for (const k of keys) {
-      const v = obj[k];
-      if (typeof v === "string" && v.trim().length > 0) return v.trim();
-    }
-    for (const v of Object.values(obj)) {
-      const found = scan(v, depth + 1);
-      if (found) return found;
-    }
-    return null;
-  };
-  return scan(payload, 0);
-}
-
 /** Last-known provider response and message headers for a recipient's most recent onboarding email. */
 export const getDeliveryDetails = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => detailsSchema.parse(data))
   .handler(async ({ data, context }): Promise<DeliveryDetails> => {
     const { supabase, userId } = context;
-    await assertAdmin(supabase, userId);
+    await authorizeEmailDiagnostics(supabase, userId, data);
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
@@ -134,7 +98,7 @@ export const getDeliveryDetails = createServerFn({ method: "POST" })
       .limit(1);
     if (data.applicationId) emailQuery = emailQuery.eq("application_id", data.applicationId);
 
-    const [{ data: emailRows }, { data: eventRows }] = await Promise.all([
+    const responses = await Promise.all([
       emailQuery,
       supabaseAdmin
         .from("email_delivery_events")
@@ -144,6 +108,9 @@ export const getDeliveryDetails = createServerFn({ method: "POST" })
         .limit(1),
     ]);
 
+    assertDiagnosticReads(responses);
+    const emailRows = responses[0].data;
+    const eventRows = responses[1].data;
     const sent: any = emailRows?.[0] ?? null;
     const event: any = eventRows?.[0] ?? null;
 
@@ -173,12 +140,7 @@ export const getDeliveryDetails = createServerFn({ method: "POST" })
       { label: "Purpose", value: "transactional" },
     ];
 
-    const smtpResponse =
-      pickSmtpResponse(event?.payload) ??
-      (typeof sent?.delivery_detail === "string" ? sent.delivery_detail : null) ??
-      (typeof sent?.provider_error === "string" ? sent.provider_error : null) ??
-      logEvent?.status ??
-      null;
+    const smtpResponse = null; // Unrestricted provider text is not a diagnostic field.
 
     const lastResponse =
       event || logEvent || sent
@@ -199,7 +161,7 @@ export const getDeliveryDetails = createServerFn({ method: "POST" })
       recipient: data.recipient,
       headers,
       lastResponse,
-      rawPayload: event?.payload ? JSON.stringify(event.payload, null, 2).slice(0, 4000) : null,
+      rawPayload: null,
       error: null,
     };
   });
@@ -224,7 +186,7 @@ export const listEmailClicks = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => clickSchema.parse(data ?? {}))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    await assertAdmin(supabase, userId);
+    await authorizeEmailDiagnostics(supabase, userId, data);
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     let query = supabaseAdmin

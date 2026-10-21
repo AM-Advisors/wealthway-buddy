@@ -1,5 +1,6 @@
 /** Scheduler bookkeeping: run each job at most once per slot, record status/stage, detect missed slots. Server-only. */
-import { JOBS, missedSlots, shouldRun, slotKey, type JobDef, type JobStatus } from "@/lib/marketing-jobs-model";
+import { JOBS, missedSlots, shouldRun, slotKey, staleJobRun, type JobDef, type JobStatus } from "@/lib/marketing-jobs-model";
+import { assertDiagnosticReads } from "@/lib/diagnostic-read";
 
 const admin = async () => (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
 
@@ -51,11 +52,14 @@ export async function recordMissed(now: Date) {
 
 export async function jobHealth() {
   const db = await admin();
-  const { data } = await db.from("marketing_job_runs").select("job_key, slot_key, status, started_at, finished_at, failed_stage, error, catch_up").gte("created_at", new Date(Date.now() - 48 * 3600_000).toISOString()).order("slot_key", { ascending: false }).limit(2000);
+  const result = await db.from("marketing_job_runs").select("job_key, slot_key, status, started_at, finished_at, failed_stage, catch_up").gte("created_at", new Date(Date.now() - 48 * 3600_000).toISOString()).order("slot_key", { ascending: false }).limit(2000);
+  const running = await db.from("marketing_job_runs").select("job_key, slot_key, status, started_at, finished_at, failed_stage, catch_up").eq("status", "running").order("started_at", { ascending: true }).limit(1000);
+  assertDiagnosticReads([result, running]);
+  const data = result.data;
   const rows = (data ?? []) as any[];
   return JOBS.map((j) => {
     const mine = rows.filter((r) => r.job_key === j.key);
     const last = mine.find((r) => r.status !== "missed");
-    return { key: j.key, label: j.label, last: last ?? null, missed: mine.filter((r) => r.status === "missed").length, failed: mine.filter((r) => r.status === "failed" || r.status === "partial").length };
+    return { key: j.key, label: j.label, last: last ?? null, staleRunning: (running.data ?? []).filter((r: any) => r.job_key === j.key && staleJobRun(r, new Date())).length, missed: mine.filter((r) => r.status === "missed").length, failed: mine.filter((r) => r.status === "failed" || r.status === "partial").length };
   });
 }

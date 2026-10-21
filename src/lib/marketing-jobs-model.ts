@@ -4,6 +4,13 @@
  */
 export type JobStatus = "scheduled" | "running" | "completed" | "partial" | "failed" | "missed" | "skipped" | "blocked";
 
+/** Display-only: a stale run is not automatically failed or replayed. */
+export const STALE_JOB_RUN_MS = 3600_000;
+export function staleJobRun(run: { status: string; started_at?: string | null; slot_key?: string | null }, now: Date): boolean {
+  const at = Date.parse(run.started_at ?? run.slot_key ?? "");
+  return run.status === "running" && Number.isFinite(at) && now.getTime() - at > STALE_JOB_RUN_MS;
+}
+
 export type JobDef = {
   key: string;
   label: string;

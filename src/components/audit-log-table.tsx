@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 
 import { Badge } from "@/components/ui/badge";
+import { LoadError } from "@/components/load-error";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -85,7 +86,7 @@ export function AuditLogTable({
   const [search, setSearch] = useState("");
   const [applied, setApplied] = useState("");
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["audit-log", name, range, fund, applied],
     queryFn: () =>
       load({
@@ -112,7 +113,7 @@ export function AuditLogTable({
           <Button
             variant="outline"
             size="sm"
-            disabled={entries.length === 0}
+            disabled={isLoading || !!error || entries.length === 0}
             onClick={() => download(entries, name)}
           >
             Download
@@ -176,15 +177,13 @@ export function AuditLogTable({
       <CardContent className="space-y-3">
         {isLoading ? <p className="text-sm text-muted-foreground">Loading records…</p> : null}
         {error ? (
-          <p className="text-sm text-muted-foreground">
-            {(error as any)?.message ?? "This trail isn't available to you."}
-          </p>
+          <LoadError error={error} what="Audit records" onRetry={() => { void refetch(); }} />
         ) : null}
         {!isLoading && !error && entries.length === 0 ? (
           <p className="text-sm text-muted-foreground">Nothing recorded for this period.</p>
         ) : null}
 
-        {entries.map((entry) => (
+        {!error && !isLoading && entries.map((entry) => (
           <div key={entry.id} className="rounded-lg border p-4 space-y-1">
             <div className="flex flex-wrap items-center gap-2">
               <Badge variant="outline">{entry.category}</Badge>
