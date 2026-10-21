@@ -39,7 +39,8 @@ import { cn } from "@/lib/utils";
 import { isReconciledFunding } from "@/lib/funding-status";
 import { WIRE_FIELD_LABELS } from "@/lib/wire-scope";
 import { FeeAcceptanceCard, OnboardingUploadsCard, useFeesAccepted } from "@/components/investor-onboarding-extras";
-import { FinancialBackgroundPanel, TaxSignPanel } from "@/components/onboard-compliance-panels";
+import { CertificationsPanel, FinancialBackgroundPanel, TaxSignPanel } from "@/components/onboard-compliance-panels";
+import { buildSignTasks, taskForError, type SignTaskKey, type SignTaskState } from "@/lib/sign-step-tasks";
 
 const money = (cents: number | null | undefined) =>
   cents == null ? "-" : `$${(cents / 100).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
@@ -513,69 +514,86 @@ function AccreditationStep({ d, onboardingId, questionnaireDone, done }: { d: an
   );
 }
 
+const TASK_BADGE: Record<SignTaskState, { label: string; variant: "default" | "outline" | "secondary" }> = {
+  complete: { label: "Complete", variant: "default" },
+  todo: { label: "To do", variant: "outline" },
+  review: { label: "Under review", variant: "secondary" },
+  locked: { label: "Locked", variant: "secondary" },
+};
+
 function Sign({ d, onboardingId, done }: { d: any; onboardingId: string; done: () => void }) {
   const questionnaireFn = useServerFn(saveQuestionnaireFn);
   const prepareFn = useServerFn(prepareSubscriptionDocumentsFn);
   const confirmFn = useServerFn(recordSubscriptionSignatureFn);
   const [signer, setSigner] = useState("");
+  const [open, setOpen] = useState<SignTaskKey | null>(null);
+  const [userPicked, setUserPicked] = useState(false);
   const saveQ = useAction(questionnaireFn, "Answers saved.", done);
   const prepare = useAction(prepareFn, null, done);
-  const confirm = useAction(confirmFn, "Thank you. Harmonious will now review your subscription.", done);
+  const confirmFnWrapped = useServerFn(confirmFn as any) as any;
+  const confirm = useMutation({
+    mutationFn: (v: any) => confirmFnWrapped(v),
+    onSuccess: () => { toast.success("Thank you. Harmonious will now review your subscription."); done(); },
+    onError: (e: any) => {
+      const msg = String(e?.message ?? e).replace(/^Forbidden:\s*/, "");
+      toast.error(msg);
+      const k = taskForError(msg, tasks);
+      if (k) go(k);
+    },
+  });
   const ackFn = useServerFn(acknowledgeDocumentFn);
   const ack = useAction(ackFn, "Acknowledged and agreed.", done);
   const docs: any[] = d.documents ?? [];
-  const questionnaireDone = (d.requirements ?? []).find((r: any) => r.key === "subscription_questionnaire")?.state !== "missing";
-  const signed = (d.requirements ?? []).find((r: any) => r.key === "signature")?.state === "valid";
-  const taxState = (d.requirements ?? []).find((r: any) => r.key === "tax_documentation")?.state;
-  const taxReady = !taxState || taxState === "valid" || taxState === "not_applicable" || signed;
   const fees = useFeesAccepted(onboardingId);
+  const signed = (d.requirements ?? []).find((r: any) => r.key === "signature")?.state === "valid";
+  const questionnaireDone = (d.requirements ?? []).find((r: any) => r.key === "subscription_questionnaire")?.state !== "missing";
+  const tasks = buildSignTasks({
+    requirements: d.requirements ?? [],
+    hasQuestionnaire: !!(d.questionnaire && (d.questionnaire.questions ?? []).length),
+    documents: docs,
+    feesRequired: !!fees.q.data?.terms,
+    feesAccepted: fees.ok,
+    submitted: !!d.executedSnapshot,
+  });
+  const doneCount = tasks.filter((t) => t.state === "complete").length;
+  const firstOpen = tasks.find((t) => t.state === "todo" || t.state === "review")?.key ?? null;
+  const current = userPicked ? open : firstOpen;
 
-  return (
-    <div className="space-y-5">
-    <Card>
-      <CardHeader>
-        <CardTitle>Review &amp; Sign</CardTitle>
-        <CardDescription>These are the documents required for this investment.</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-5">
-        {d.questionnaire && (d.questionnaire.questions ?? []).length ? (
-          <QuestionnaireForm d={d} onboardingId={onboardingId} done={questionnaireDone} locked={signed} onSave={(answers, submit) => saveQ.mutate({ data: { onboardingId, answers, submit } } as any)} saving={saveQ.isPending} />
-        ) : null}
+  const go = (k: SignTaskKey) => {
+    setUserPicked(true);
+    setOpen(k);
+    requestAnimationFrame(() => document.getElementById(`sign-task-${k}`)?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  };
+  // After a save, move on to the next unfinished task automatically.
+  const completeKey = tasks.map((t) => `${t.key}:${t.state}`).join("|");
+  useEffect(() => { setUserPicked(false); }, [completeKey]);
 
-        <AccreditationStep d={d} onboardingId={onboardingId} questionnaireDone={questionnaireDone} done={done} />
-        <FinancialBackgroundPanel onboardingId={onboardingId} done={done} />
-
-        <TaxSignPanel onboardingId={onboardingId} done={done} locked={!questionnaireDone} subscriberName={(d.questionnaireLocked?.name_of_subscriber ?? (d.questionnaireResponses ?? {}).name_of_subscriber ?? null) as string | null} />
-
-        <FeeAcceptanceCard onboardingId={onboardingId} />
-
-        <div className="space-y-2">
-          <h3 className="text-sm font-semibold">Subscription documents</h3>
-          {!questionnaireDone ? (
-            <p className="text-sm text-muted-foreground">Submit the questionnaire above to unlock your subscription documents.</p>
-          ) : !taxReady ? (
-            <p className="text-sm text-muted-foreground">Sign your IRS tax form above to unlock your subscription documents.</p>
-          ) : (
+  const body = (k: SignTaskKey) => {
+    switch (k) {
+      case "subscription_questionnaire":
+        return <QuestionnaireForm d={d} onboardingId={onboardingId} done={questionnaireDone} locked={signed} onSave={(answers, submit) => saveQ.mutate({ data: { onboardingId, answers, submit } } as any)} saving={saveQ.isPending} />;
+      case "accreditation":
+        return <AccreditationStep d={d} onboardingId={onboardingId} questionnaireDone={questionnaireDone} done={done} />;
+      case "bsa_aml":
+        return <FinancialBackgroundPanel onboardingId={onboardingId} done={done} />;
+      case "tax_documentation":
+        return <TaxSignPanel onboardingId={onboardingId} done={done} locked={!questionnaireDone} subscriberName={(d.questionnaireLocked?.name_of_subscriber ?? (d.questionnaireResponses ?? {}).name_of_subscriber ?? null) as string | null} />;
+      case "certifications":
+        return <CertificationsPanel onboardingId={onboardingId} done={done} />;
+      case "fees":
+        return <FeeAcceptanceCard onboardingId={onboardingId} />;
+      case "subscription_documents":
+        return (
+          <div className="space-y-3">
             <ol className="space-y-2">
-              {docs.map((doc, i) => {
-                const status = doc.signed
-                  ? "Signed"
-                  : doc.requiresSignature
-                    ? "To sign"
-                    : doc.requiresAcknowledgment
-                      ? doc.acknowledged ? "Acknowledged" : "To acknowledge"
-                      : "To review";
+              {docs.map((doc) => {
+                const status = doc.signed ? "Signed" : doc.requiresSignature ? "To sign" : doc.requiresAcknowledgment ? (doc.acknowledged ? "Acknowledged" : "To acknowledge") : "To review";
                 const complete = doc.signed || (doc.requiresAcknowledgment && doc.acknowledged);
                 return (
                   <li key={doc.id} className="flex items-center justify-between gap-3 rounded-md border p-3 text-sm">
-                    <span className="flex items-center gap-3">
-                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium">{i + 1}</span>
-                      <span>{doc.title}</span>
-                    </span>
+                    <span>{doc.title}</span>
                     {doc.requiresAcknowledgment && !doc.acknowledged && !doc.signed ? (
-                      <Button size="sm" disabled={ack.isPending} onClick={() => ack.mutate({ data: { onboardingId, documentId: doc.id } } as any)}>
-                        I acknowledge and agree
-                      </Button>
+                      <Button size="sm" disabled={ack.isPending} onClick={() => ack.mutate({ data: { onboardingId, documentId: doc.id } } as any)}>I acknowledge and agree</Button>
                     ) : (
                       <Badge variant={complete ? "default" : "outline"}>{status}</Badge>
                     )}
@@ -584,38 +602,83 @@ function Sign({ d, onboardingId, done }: { d: any; onboardingId: string; done: (
               })}
               {docs.length === 0 ? <li className="text-sm text-muted-foreground">The fund's documents are being prepared. We'll let you know when they're ready.</li> : null}
             </ol>
-          )}
-        </div>
-
-        {!questionnaireDone || docs.length === 0 ? null : !signed && !fees.ok ? (
-          <p className="text-sm text-muted-foreground">Accept the fund's fees above to review and sign your documents.</p>
-        ) : !signed ? (
-          <Button
-            asChild
-            onClick={() => {
-              if (!d.documentTemplateVersion) prepare.mutate({ data: { onboardingId } } as any);
-            }}
-          >
-            <Link to="/fund/$offeringId/documents" params={{ offeringId: d.offering.id }}>Review &amp; Sign Documents</Link>
-          </Button>
-        ) : !d.executedSnapshot ? (
-          <div className="space-y-3 rounded-md border p-4">
-            <p className="text-sm">All documents are signed. Confirm who signed to send your subscription to Harmonious.</p>
+            {!signed && docs.some((x) => x.requiresSignature && !x.signed) ? (
+              <Button asChild onClick={() => { if (!d.documentTemplateVersion) prepare.mutate({ data: { onboardingId } } as any); }}>
+                <Link to="/fund/$offeringId/documents" params={{ offeringId: d.offering.id }}>Review &amp; Sign Documents</Link>
+              </Button>
+            ) : null}
+            <p className="text-xs text-muted-foreground">A document shows as signed only once the signing service confirms it - this can take a minute.</p>
+          </div>
+        );
+      case "submit": {
+        if (d.executedSnapshot) return <p className="text-sm text-muted-foreground">Signed and submitted. Copies are in your Documents.</p>;
+        const left = tasks.filter((t) => t.key !== "submit" && t.state !== "complete");
+        if (left.length) {
+          return (
+            <div className="space-y-2 text-sm">
+              <p>Finish these first:</p>
+              <ul className="space-y-1">
+                {left.map((t) => (
+                  <li key={t.key}><Button variant="link" className="h-auto p-0" onClick={() => go(t.key)}>{t.label}</Button></li>
+                ))}
+              </ul>
+            </div>
+          );
+        }
+        return (
+          <div className="space-y-3">
+            <p className="text-sm">Everything is done. Confirm who signed to send your subscription to Harmonious.</p>
             <div className="max-w-sm">
               <Label htmlFor="signer">Signer's full legal name</Label>
               <Input id="signer" value={signer} onChange={(e) => setSigner(e.target.value)} />
             </div>
-            <Button disabled={signer.trim().length < 2} onClick={() => confirm.mutate({ data: { onboardingId, signerName: signer.trim() } } as any)}>
-              Submit subscription
-            </Button>
+            <Button disabled={signer.trim().length < 2 || confirm.isPending} onClick={() => confirm.mutate({ data: { onboardingId, signerName: signer.trim() } })}>Submit subscription</Button>
           </div>
-        ) : (
-          <p className="text-sm text-muted-foreground">Signed and submitted. Copies are in your Documents.</p>
-        )}
-        <p className="text-xs text-muted-foreground">A document shows as signed only once the signing service confirms it - this can take a minute.</p>
+        );
+      }
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader className="sticky top-0 z-10 rounded-t-lg border-b bg-card">
+        <div className="flex items-center justify-between gap-3">
+          <CardTitle>Review &amp; Sign</CardTitle>
+          <span className="text-sm text-muted-foreground">{doneCount} of {tasks.length} done</span>
+        </div>
+        <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+          <div className="h-full bg-primary transition-all" style={{ width: `${tasks.length ? (doneCount / tasks.length) * 100 : 0}%` }} />
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-2 pt-4">
+        {tasks.map((t, i) => {
+          const isOpen = current === t.key;
+          const b = TASK_BADGE[t.state];
+          return (
+            <section key={t.key} id={`sign-task-${t.key}`} className={cn("scroll-mt-24 rounded-md border", isOpen && "border-primary")}>
+              <button
+                type="button"
+                className="flex min-h-14 w-full items-center justify-between gap-3 p-3 text-left"
+                aria-expanded={isOpen}
+                onClick={() => (isOpen ? (setUserPicked(true), setOpen(null)) : go(t.key))}
+              >
+                <span className="flex items-center gap-3">
+                  <span className={cn("flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-medium", t.state === "complete" ? "bg-primary text-primary-foreground" : "bg-muted")}>
+                    {t.state === "complete" ? <Check className="h-4 w-4" /> : i + 1}
+                  </span>
+                  <span>
+                    <span className="block text-sm font-medium">{t.label}</span>
+                    {t.detail ? <span className="block text-xs text-muted-foreground">{t.detail}</span> : null}
+                  </span>
+                </span>
+                <Badge variant={b.variant}>{b.label}</Badge>
+              </button>
+              {isOpen ? <div className="border-t p-3">{body(t.key)}</div> : null}
+            </section>
+          );
+        })}
       </CardContent>
     </Card>
-    </div>
   );
 }
 
