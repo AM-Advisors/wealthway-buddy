@@ -3,6 +3,7 @@
 ## Portfolio and personal wealth services (2026-10-21)
 - [x] Add both services to the shared catalog and current-client service options; fund add-on pricing requires a real published rate or approved quote, not the catalog's zero default. Standalone/fund preferences retain history, never activate charges.
 - [x] Provide owner-only personal holdings, dated corrections, multi-currency separate totals, exports and personal risk Report Cards through the existing engine, without a fund.
+- [x] 109 focused privacy, history, pricing and navigation checks passed; preview build OK. Compared official wealth-platform offerings and identified aggregation, liquidity, ownership and professional collaboration opportunities.
 - [ ] Pricing and standalone paid activation — blocked on approved prices and commercial terms; no prices invented or subscriptions started.
 - [ ] Signed-in read-back — blocked on isolated synthetic QA; shared production browser tests prohibited.
 
