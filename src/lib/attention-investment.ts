@@ -25,7 +25,7 @@ export function investmentAttentionStep(
       ? { step: "fund", status: "We're confirming your transfer with the bank.", waiting: true }
       : { step: "fund", status: "Funding required", waiting: false };
   }
-  if (stage === "harmonious_review") return { step: "sign", status: "Harmonious is reviewing your subscription.", waiting: true };
+  if (stage === "harmonious_review") return { step: "sign", status: "Your fund manager is reviewing your subscription.", waiting: true };
   if (stage === "signature" || stage === "subscription") return { step: "sign", status: "Documents to review and sign", waiting: false };
   if (["verification", "eligibility", "tax"].includes(stage)) return { step: "verify", status: "Verification to complete", waiting: false };
   return { step: "about", status: "Tell us who is investing", waiting: false };

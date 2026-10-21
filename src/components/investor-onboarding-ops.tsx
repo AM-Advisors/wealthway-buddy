@@ -5,7 +5,6 @@ import { toast } from "sonner";
 
 import {
   acceptSubscriptionFn,
-  approveToFundFn,
   closeInvestmentFn,
   raiseExceptionFn,
   resolveExceptionFn,
@@ -26,7 +25,6 @@ export function InvestorOnboardingOps() {
   const qc = useQueryClient();
   const queueFn = useServerFn(reviewQueueFn);
   const detailFn = useServerFn(reviewDetailFn);
-  const approveFn = useServerFn(approveToFundFn);
   const acceptFn = useServerFn(acceptSubscriptionFn);
   const closeFn = useServerFn(closeInvestmentFn);
   const raiseFn = useServerFn(raiseExceptionFn);
@@ -57,7 +55,6 @@ export function InvestorOnboardingOps() {
       onError: (e: any) => toast.error(String(e?.message ?? e).replace(/^Forbidden:\s*/, "")),
     });
 
-  const approve = act(approveFn, "Approved to fund.");
   const accept = act(acceptFn, "Subscription accepted.");
   const close = act(closeFn, "Investment closed and admitted.");
   const raise = act(raiseFn, "Issue raised.");
@@ -132,12 +129,7 @@ export function InvestorOnboardingOps() {
               </div>
 
               <div className="flex flex-wrap gap-2">
-                <Button
-                  disabled={!d.canApproveToFund}
-                  onClick={() => approve.mutate({ data: { onboardingId: selected } })}
-                >
-                  Approve to fund
-                </Button>
+                {d.onboarding?.stage === "harmonious_review" && <p className="text-sm text-muted-foreground">Awaiting the fund manager’s subscription approval.</p>}
                 <Button
                   variant="outline"
                   onClick={() =>

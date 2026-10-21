@@ -7,6 +7,10 @@ describe("investorSteps", () => {
   it("has exactly About You, Verification, Sign, Fund in order", () => expect(investorSteps(base).map((s) => s.label)).toEqual(["About You", "Verification", "Sign", "Fund"]));
   it("a declined identity check needs attention", () => expect(investorSteps({ ...base, kyc: "declined" })[1]!.state).toBe("blocked"));
   it("in-review identity check sits with Harmonious", () => expect(investorSteps({ ...base, kyc: "in_review" })[1]!.state).toBe("waiting_harmonious"));
+  it("submitted subscription review belongs to the fund manager", () => {
+    const sign = investorSteps({ ...base, stage: "harmonious_review" })[2];
+    expect(sign?.state).toBe("waiting_manager");
+  });
   it("fund is complete only when reconciled", () => {
     expect(investorSteps({ ...base, funding: "pending_reconciliation" })[3]!.state).toBe("waiting_harmonious");
     expect(investorSteps({ ...base, funding: "funded" })[3]!.state).toBe("complete");

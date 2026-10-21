@@ -231,6 +231,7 @@ function DuplicatesCard({ fundId, groups, staff, onMerged }: { fundId: string; g
 
 const STATE_DOT: Record<StepState, string> = {
   complete: "bg-primary text-primary-foreground", in_progress: "border-2 border-primary text-primary",
+  waiting_manager: "border-2 border-accent bg-accent/20 text-foreground",
   waiting_harmonious: "border-2 border-accent bg-accent/20 text-foreground", blocked: "bg-destructive text-destructive-foreground", not_started: "bg-muted text-muted-foreground",
 };
 function StepChips({ steps }: { steps: StepStatus[] }) {
