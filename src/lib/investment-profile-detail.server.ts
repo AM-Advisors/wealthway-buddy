@@ -6,6 +6,7 @@
  */
 import { encryptTin } from "@/lib/irs-forms.server";
 import { isEntityProfileType } from "@/lib/identity-model";
+import { currentProfileTaxDetails } from "@/lib/profile-tax-details.server";
 
 const admin = async () => (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
 const blank = (v?: string | null) => (v && v.trim() ? v.trim() : null);
@@ -37,12 +38,13 @@ export async function profileDetail(userId: string, profileId: string) {
       return { name: d.name, path: d.path, uploaded_at: d.uploaded_at, url: data?.signedUrl ?? null };
     }));
   const isEntity = isEntityProfileType(profile.profile_type);
+  const signedTax = (await currentProfileTaxDetails(db, [profileId])).get(profileId);
   return {
     profile: {
       id: profile.id, profile_type: profile.profile_type, display_label: profile.display_label, legal_name: profile.legal_name,
       status: profile.status, phone: profile.phone, address_line1: profile.address_line1, address_line2: profile.address_line2,
       city: profile.city, region: profile.region, postal_code: profile.postal_code, country: profile.country,
-      tax_id_type: profile.tax_id_type, tax_id_last4: profile.tax_id_last4,
+      tax_id_type: signedTax?.type ?? profile.tax_id_type, tax_id_last4: signedTax?.last4 ?? profile.tax_id_last4,
     },
     isEntity,
     owners: ((rels ?? []) as any[]).map((r) => ({
