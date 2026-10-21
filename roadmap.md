@@ -1,5 +1,10 @@
 # Roadmap
 
+## Investor certification publication (2026-10-21)
+- [x] Confirm all five canonical certification statements are approved and effective; show the exact approved wording in Review & certify instead of headings and an unconditional pending notice. Unapproved statements cannot be certified.
+- [ ] Verify focused approval/effective-version checks and preview diagnostics.
+- [ ] Signed-in read-back — blocked on isolated synthetic QA access; shared production browser testing remains prohibited.
+
 ## Investor submitted signed copies (2026-10-21)
 - [x] Add owner-only signed document archive on investment Documents with recorded versions, dates, retained replacements and private downloads after submission.
 - [x] Focused signed-copy ownership/version and document-source tests passed; preview build OK. Internal typed signatures included without treating pending external requests as completed.

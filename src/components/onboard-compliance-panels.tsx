@@ -437,6 +437,7 @@ export function CertificationsPanel({ onboardingId, done }: { onboardingId: stri
     onError: (e: Error) => toast.error(e.message),
   });
   if (!q.data || q.data.certifications.missing.length === 0) return null;
+  const certifications = q.data.certifications;
   return (
     <Card>
       <CardHeader>
@@ -444,15 +445,18 @@ export function CertificationsPanel({ onboardingId, done }: { onboardingId: stri
         <CardDescription>Confirm each statement separately before signing your fund documents.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
-        <Pending />
+        {certifications.required.some((c) => !c.approvedWording) && <Pending />}
         <div><Label>Your full name</Label><Input value={name} onChange={(e) => setName(e.target.value)} maxLength={200} /></div>
-        {q.data.certifications.required.map((c) => {
-          const missing = q.data!.certifications.missing.includes(c.key as any);
+        {certifications.required.map((c) => {
+          const missing = certifications.missing.includes(c.key as any);
           return (
             <div key={c.key} className="flex flex-col gap-2 rounded-md border p-3 sm:flex-row sm:items-center sm:justify-between">
-              <span className="text-sm">{c.heading}</span>
+              <div className="min-w-0 flex-1 space-y-2">
+                <p className="text-sm font-medium">{c.heading}</p>
+                {c.approvedWording && <p className="whitespace-pre-wrap break-words text-sm text-muted-foreground">{c.approvedWording}</p>}
+              </div>
               {missing ? (
-                <Button size="sm" disabled={m.isPending || name.trim().length < 2} onClick={() => m.mutate(c.key)}>I certify</Button>
+                <Button size="sm" className="shrink-0" disabled={!c.approvedWording || m.isPending || name.trim().length < 2} onClick={() => m.mutate(c.key)}>I certify</Button>
               ) : (
                 <span className="text-sm text-muted-foreground">Certified</span>
               )}
