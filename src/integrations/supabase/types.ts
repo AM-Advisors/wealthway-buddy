@@ -29949,6 +29949,53 @@ export type Database = {
           },
         ]
       }
+      legal_wording_events: {
+        Row: {
+          actor_user_id: string | null
+          effective_date: string
+          event: string
+          id: string
+          occurred_at: string
+          requirement_key: string
+          title_snapshot: string
+          version: number
+          wording_snapshot: string
+          wording_version_id: string
+        }
+        Insert: {
+          actor_user_id?: string | null
+          effective_date: string
+          event: string
+          id?: string
+          occurred_at?: string
+          requirement_key: string
+          title_snapshot: string
+          version: number
+          wording_snapshot: string
+          wording_version_id: string
+        }
+        Update: {
+          actor_user_id?: string | null
+          effective_date?: string
+          event?: string
+          id?: string
+          occurred_at?: string
+          requirement_key?: string
+          title_snapshot?: string
+          version?: number
+          wording_snapshot?: string
+          wording_version_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "legal_wording_events_wording_version_id_fkey"
+            columns: ["wording_version_id"]
+            isOneToOne: false
+            referencedRelation: "legal_wording_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       legal_wording_versions: {
         Row: {
           approved_at: string | null
@@ -29959,6 +30006,7 @@ export type Database = {
           id: string
           requirement_key: string
           retired_at: string | null
+          retired_by: string | null
           status: string
           title: string
           version: number
@@ -29973,6 +30021,7 @@ export type Database = {
           id?: string
           requirement_key: string
           retired_at?: string | null
+          retired_by?: string | null
           status?: string
           title: string
           version: number
@@ -29987,6 +30036,7 @@ export type Database = {
           id?: string
           requirement_key?: string
           retired_at?: string | null
+          retired_by?: string | null
           status?: string
           title?: string
           version?: number
