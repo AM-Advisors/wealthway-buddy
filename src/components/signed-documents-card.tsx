@@ -38,10 +38,10 @@ export function SignedDocumentsCard({ offeringId }: { offeringId: string }) {
   const archiveMutation = useMutation({
     mutationFn: (signatureId: string) => archiveToBox({ data: { signature_id: signatureId } }),
     onSuccess: () => {
-      toast.success("Filed in Box.");
+      toast.success("Filed.");
       void queryClient.invalidateQueries({ queryKey: ["fund-signed-documents", offeringId] });
     },
-    onError: (e: any) => toast.error(e?.message ?? "Could not file this copy in Box."),
+    onError: (e: any) => toast.error(e?.message ?? "Could not file this copy."),
   });
 
   const data = query.data as any;
@@ -56,7 +56,7 @@ export function SignedDocumentsCard({ offeringId }: { offeringId: string }) {
             ? "Loading signed copies…"
             : documents.length === 0
               ? "No documents have been signed in this fund yet."
-              : `${documents.length} signed copy${documents.length === 1 ? "" : " records"} · ${data.inBox} filed in Box${
+              : `${documents.length} signed copy${documents.length === 1 ? "" : " records"} · ${data.inBox} filed${
                   data.awaiting ? ` · ${data.awaiting} awaiting signature` : ""
                 }`}
         </CardDescription>
@@ -77,17 +77,17 @@ export function SignedDocumentsCard({ offeringId }: { offeringId: string }) {
                       doc.openedAt ? ` · opened ${when(doc.openedAt)}` : " · not opened yet"
                     }`
                   : `signed ${when(doc.signedAt)}`}
-                {doc.inBox ? ` · filed in Box ${when(doc.boxUploadedAt)}` : ""}
-                {doc.boxError ? ` · Box error: ${doc.boxError}` : ""}
+                {doc.inBox ? ` · filed ${when(doc.boxUploadedAt)}` : ""}
+                {doc.boxError ? ` · filing error: ${doc.boxError}` : ""}
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
               {doc.pending ? (
                 <Badge variant="outline">{doc.openedAt ? "Opened, not signed" : "Awaiting signature"}</Badge>
               ) : doc.inBox ? (
-                <Badge variant="default">In Box</Badge>
+                <Badge variant="default">Filed</Badge>
               ) : (
-                <Badge variant="secondary">Not in Box yet</Badge>
+                <Badge variant="secondary">Not filed yet</Badge>
               )}
               {!doc.pending && doc.hasPdf && (
                 <Button

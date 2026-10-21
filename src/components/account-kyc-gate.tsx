@@ -1,6 +1,5 @@
 import { useRouterState } from "@tanstack/react-router";
 import type { ReactNode } from "react";
-import { ThirdPartyBadge, ThirdPartyNote } from "@/components/third-party-badge";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";

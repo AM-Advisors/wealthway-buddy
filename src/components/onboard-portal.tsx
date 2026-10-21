@@ -325,7 +325,7 @@ function DocumentsStep({ d, onboardingId, done }: { d: any; onboardingId: string
     },
     onSuccess: (r: any) => {
       if (r?.url) window.location.assign(r.url);
-      else if (r?.sentTo) { toast.success(`Sent to ${r.sentTo} to sign. They'll get an email from Box Sign.`); done(); }
+      else if (r?.sentTo) { toast.success(`Sent to ${r.sentTo} to sign. They'll get an email with a secure signing link.`); done(); }
     },
     onError: (e) => toast.error(errText(e)),
   });

@@ -695,7 +695,7 @@ export function AgreementPreparation({ offeringId }: { offeringId?: string }) {
             <div className="flex flex-wrap items-center justify-between gap-2 border-t px-5 py-3">
               <span className="text-xs text-muted-foreground">
                 {fields.length} field{fields.length === 1 ? "" : "s"} · {roles.length} signer
-                {roles.length === 1 ? "" : "s"} · Box Sign runs the signing ceremony
+                {roles.length === 1 ? "" : "s"} · Secure signing runs the ceremony
               </span>
               <div className="flex flex-wrap gap-2">
                 <Button variant="outline" onClick={storeTemplate} disabled={busy || problems.length > 0}>

@@ -5,7 +5,6 @@ import { usePlaidLink } from "react-plaid-link";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { ThirdPartyBadge } from "@/components/third-party-badge";
 import { finishInvestorBankVerifyFn, investorBankVerifyStatusFn, startInvestorBankVerifyFn } from "@/lib/investor-bank-verify.functions";
 
 /** Investor confirms the bank they'll send from is real and in their name. Read-only; no money moves. */

@@ -66,7 +66,7 @@ function CountersignPage() {
                 <p className="text-sm text-muted-foreground">{q.data.reason}</p>
               )}
               <p className="text-xs text-muted-foreground">
-                You'll only see the document and the fields assigned to you. The document becomes fully executed once Box confirms both signatures.
+                You'll only see the document and the fields assigned to you. The document becomes fully executed once both signatures are confirmed.
               </p>
             </>
           )}

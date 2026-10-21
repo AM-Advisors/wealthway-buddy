@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { ThirdPartyBadge } from "@/components/third-party-badge";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { CheckCircle2, FileText, Loader2, X } from "lucide-react";
