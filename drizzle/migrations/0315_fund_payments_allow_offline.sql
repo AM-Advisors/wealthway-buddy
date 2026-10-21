@@ -1,0 +1,2 @@
+ALTER TABLE public.fund_payments DROP CONSTRAINT fund_payments_environment_check;
+ALTER TABLE public.fund_payments ADD CONSTRAINT fund_payments_environment_check CHECK (environment = ANY (ARRAY['sandbox'::text, 'live'::text, 'offline'::text]));

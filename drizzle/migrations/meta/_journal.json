@@ -2206,6 +2206,13 @@
       "when": 1792610442019,
       "tag": "0314_released_wire_details_for_server",
       "breakpoints": true
+    },
+    {
+      "idx": 315,
+      "version": "7",
+      "when": 1792615594537,
+      "tag": "0315_fund_payments_allow_offline",
+      "breakpoints": true
     }
   ]
 }
