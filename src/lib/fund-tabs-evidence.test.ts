@@ -59,14 +59,14 @@ describe("investor class applicability", () => {
     expect(row?.missing.includes("Class")).toBe(false);
   });
   it("requires a missing class when the fund has multiple classes", async () => {
-    mock.tables.offerings = [{ id: "fund", has_multiple_classes: true }];
+    mock.tables["offerings"] = [{ id: "fund", has_multiple_classes: true }];
     const [row] = await investorGrid("fund");
     expect(row?.classApplicable).toBe(true);
     expect(row?.missing.includes("Class")).toBe(true);
   });
   it("does not flag an assigned class in a multiple-class fund", async () => {
-    mock.tables.offerings = [{ id: "fund", has_multiple_classes: true }];
-    mock.tables.investor_onboardings[0].offering_class_key = "class_a";
+    mock.tables["offerings"] = [{ id: "fund", has_multiple_classes: true }];
+    mock.tables["investor_onboardings"] = [{ id: "investor", offering_id: "fund", person_id: "person", offering_class_key: "class_a" }];
     const [row] = await investorGrid("fund");
     expect(row?.classApplicable).toBe(true);
     expect(row?.missing.includes("Class")).toBe(false);
