@@ -1,3 +1,4 @@
+import { SalesDealDocsTabs } from "@/components/sales-deal-docs-tabs";
 import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { BILLING_FREQUENCIES } from "@/lib/invoice-schedule-model";
@@ -36,6 +37,7 @@ function QuotesPage() {
   const [building, setBuilding] = useState(false);
   return (
     <main className="mx-auto max-w-6xl space-y-6 px-4 py-10">
+      <SalesDealDocsTabs />
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div><h1 className="text-3xl">Quotes</h1><p className="mt-1 text-sm text-muted-foreground">Draft → Approval → Sent → Signed. Approved quotes become SOW (and MSA) drafts in the existing agreement flow. To build a quote, proposal, MSA and SOW in one place, use <Link to="/sales/documents" className="underline">Proposals &amp; RFPs</Link>.</p></div>
         {q.data?.canDraft && <Button onClick={() => setBuilding(true)}>New quote</Button>}
