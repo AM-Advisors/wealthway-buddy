@@ -107,7 +107,7 @@ export const getStaffFundSetup = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     const { roles } = await staff(context);
     const db = (await import("@/integrations/supabase/client.server")).supabaseAdmin;
-    const { data: fund, error } = await db.from("offerings").select("id,name,fund_type,client_id,consolidated_into").eq("id", data.offeringId).maybeSingle();
+    const { data: fund, error } = await db.from("offerings").select("id,name,fund_type,client_id,consolidated_into,is_open").eq("id", data.offeringId).maybeSingle();
     if (error || !fund) throw new Error("Fund not found.");
     const [{ data: client }, { data: setup }] = await Promise.all([
       fund.client_id ? db.from("clients").select("name").eq("id", fund.client_id).maybeSingle() : Promise.resolve({ data: null }),
@@ -137,7 +137,7 @@ export const getStaffFundSetup = createServerFn({ method: "POST" })
       name: fund.name, fundType: fund.fund_type, clientName: client?.name ?? null,
       retired: Boolean(fund.consolidated_into), formationStep: formation?.step ?? null,
       launchState: canSeeOperations ? setup?.launch_state ?? null : null, setupStage: canSeeOperations ? setup?.stage ?? null : null,
-      hasSetup: Boolean(setup), setupId: (setup?.id ?? null) as string | null, approvalCount: approvalCount ?? 0, approvals, isPreparer,
+      setupFinished: Boolean((fund as any).is_open) || setup?.launch_state === "launched", hasSetup: Boolean(setup), setupId: (setup?.id ?? null) as string | null, approvalCount: approvalCount ?? 0, approvals, isPreparer,
       evidence: { formation: Boolean(formation?.formation_document_id), certificate: Boolean(formation?.certificate_document_id), einLetter: Boolean(formation?.ein_letter_document_id) },
       tasks: (tasks ?? []).filter((t) => t.blocking).map((t) => ({ id: t.id, key: t.task_key as string, label: t.label, status: t.status as string })),
       conditions: (conditions ?? []).filter((c) => c.required).map((c) => ({ id: c.id, key: c.condition_key as string, label: c.label, satisfied: c.satisfied })),
