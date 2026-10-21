@@ -12,6 +12,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import { FundOnboardingLinkCard } from "@/components/fund-onboarding-link";
 import { approveToFundFn, fundReadinessFn } from "@/lib/investor-onboarding.functions";
 import { STAGE_LABELS, type OnboardingStage } from "@/lib/investor-onboarding-model";
@@ -255,6 +257,8 @@ export function InvestorSheet({ fundId, id, onClose }: { fundId: string; id: str
   const openTaxForm = useServerFn(managerInvestorTaxFormFn);
   const [downloading, setDownloading] = useState<string | null>(null);
   const [approving, setApproving] = useState(false);
+  const [questionnaireFor, setQuestionnaireFor] = useState<string | null>(null);
+  const questionnaireOpen = !!id && questionnaireFor === id;
   const q = useQuery({ queryKey: ["fund-investor", fundId, id], queryFn: () => {
     if (!id) throw new Error("Select an investor to review.");
     return load({ data: { fundId, onboardingId: id } });
@@ -331,12 +335,17 @@ export function InvestorSheet({ fundId, id, onClose }: { fundId: string; id: str
                 </div>)}
                 {d.reviewEvidence.acknowledgments.map((doc: { id: string; title: string; version: number; acknowledgedAt: string }) => <div key={doc.id} className="border-b pb-2"><p className="font-medium">{doc.title}</p><p className="text-xs text-muted-foreground">Version {doc.version} · {fmtDate(doc.acknowledgedAt)} · Acknowledged and agreed</p></div>)}
               </section>
-              <section className="space-y-3" aria-label="Investor questionnaire">
-                <h4 className="font-medium">Investor questionnaire</h4>
-                {d.reviewEvidence.questionnaireSubmittedAt ? <>
-                  <p className="text-xs text-muted-foreground">Submitted {fmtDate(d.reviewEvidence.questionnaireSubmittedAt)}</p>
-                  <dl className="space-y-3">{d.reviewEvidence.questionnaire.map((answer) => <div key={answer.key} className="border-b pb-2"><dt className="break-words text-muted-foreground">{answer.label}</dt><dd className="mt-1 whitespace-pre-line break-words">{answer.answer}</dd></div>)}</dl>
-                </> : <p className="text-muted-foreground">Questionnaire has not been submitted.</p>}
+              <section aria-label="Investor questionnaire">
+                <Collapsible open={questionnaireOpen} onOpenChange={(o) => setQuestionnaireFor(o ? id : null)} className="rounded-lg border">
+                  <CollapsibleTrigger className="flex w-full items-center gap-2 p-3 text-left transition-colors hover:bg-muted/50">
+                    {questionnaireOpen ? <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />}
+                    <span className="flex-1 font-medium">Investor questionnaire</span>
+                    <span className="shrink-0 text-xs text-muted-foreground">{d.reviewEvidence.questionnaireSubmittedAt ? `${d.reviewEvidence.questionnaire.length} answers · Submitted ${fmtDate(d.reviewEvidence.questionnaireSubmittedAt)}` : "Not submitted"}</span>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="px-3 pb-3">
+                    {d.reviewEvidence.questionnaireSubmittedAt ? <dl className="space-y-3 border-t pt-3">{d.reviewEvidence.questionnaire.map((answer) => <div key={answer.key} className="border-b pb-2"><dt className="break-words text-muted-foreground">{answer.label}</dt><dd className="mt-1 whitespace-pre-line break-words">{answer.answer}</dd></div>)}</dl> : <p className="border-t pt-3 text-muted-foreground">Questionnaire has not been submitted.</p>}
+                  </CollapsibleContent>
+                </Collapsible>
               </section>
               <section className="space-y-2" aria-label="Accreditation">
                 <h4 className="font-medium">Accreditation</h4>
