@@ -37,13 +37,25 @@ export async function dashboard(userId: string, days: number) {
   });
   const { data: srows } = settings?.site_url ? await db.from("marketing_search_rows").select("page, query, day, clicks, impressions, position").eq("site_url", settings.site_url).gte("day", since.slice(0, 10)).limit(20000) : { data: [] };
   const search = (srows ?? []) as SearchRow[];
-  let properties: string[] = []; let propError: string | null = null;
-  try { properties = await (await import("@/lib/marketing-queue.server")).searchProperties(); } catch (e) { propError = (e as Error).message; }
   const ga4 = !!process.env["GOOGLE_ANALYTICS_API_KEY"];
   return {
-    perf, search, settings, properties, propError, ga4,
+    perf, search, settings, ga4,
     leads: { total: (leads ?? []).length, attributed: ((leads ?? []) as any[]).filter((l) => l.utm_source).length, rows: leads ?? [] },
     attempts: attempts ?? [], queue: queue.data ?? [], targets: targets ?? [],
     recommendations: weeklyRecommendations(perf, search, new Date().toISOString()),
   };
+}
+
+/** Verified Search Console properties, loaded separately so a slow Google response never blocks the page. */
+export async function searchPropertyList(userId: string) {
+  const db = await admin();
+  const { data: r } = await db.from("user_roles").select("role").eq("user_id", userId);
+  if (!((r ?? []) as any[]).some((x) => MARKETING_ACCESS.includes(x.role))) throw new Error("Marketing access required.");
+  try {
+    const list = await Promise.race([
+      (await import("@/lib/marketing-queue.server")).searchProperties(),
+      new Promise<never>((_, rej) => setTimeout(() => rej(new Error("Search Console is slow to respond. Try again shortly.")), 8000)),
+    ]);
+    return { properties: list, propError: null as string | null };
+  } catch (e) { return { properties: [] as string[], propError: (e as Error).message }; }
 }

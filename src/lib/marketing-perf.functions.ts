@@ -19,3 +19,5 @@ export const returnToTestPublishing = createServerFn({ method: "POST" }).middlew
 export const chooseSearchProperty = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ siteUrl: z.string().min(3).max(300) }).parse(d))
   .handler(async ({ data, context }) => (await q()).chooseProperty(context.userId, data.siteUrl));
+export const getSearchProperties = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => (await import("@/lib/marketing-perf.server")).searchPropertyList(context.userId));
