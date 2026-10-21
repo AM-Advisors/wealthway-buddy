@@ -1,6 +1,6 @@
 /** Server-only Proposals / RFPs / RFQs. Maker-checker approval; prices only from the linked quote; versions append-only. */
 import {
-  MARKETING_HELPERS, OUTCOMES, SALES_DOC_APPROVERS, SALES_DOC_ROLES, defaultSections, sectionsText,
+  MARKETING_HELPERS, OUTCOMES, SALES_DOC_APPROVERS, SALES_DOC_ROLES, defaultSections, sectionsText, applyLockedSections, lockedKeys,
   type DocDirection, type DocKind, type Section,
 } from "@/lib/sales-documents-model";
 
@@ -50,9 +50,19 @@ async function access(userId: string, documentId: string) {
 async function latestSections(db: any, doc: any): Promise<Section[]> {
   if (!doc.current_version) return defaultSections(doc.kind, doc.direction);
   const { data } = await db.from("sales_document_versions").select("sections").eq("document_id", doc.id).eq("version", doc.current_version).maybeSingle();
-  return (data?.sections ?? []) as Section[];
+  return applyLockedSections(doc.kind, doc.direction, (data?.sections ?? []) as Section[], await lockFacts(db, doc));
 }
-async function writeVersion(db: any, doc: any, sections: Section[], userId: string, source: string) {
+async function lockFacts(db: any, doc: any) {
+  const [client, contact, lines] = await Promise.all([
+    doc.client_id ? db.from("clients").select("name").eq("id", doc.client_id).maybeSingle() : { data: null },
+    doc.contact_id ? db.from("crm_contacts").select("full_name, organization").eq("id", doc.contact_id).maybeSingle() : { data: null },
+    doc.quote_id ? db.from("sales_quote_lines").select("label, quantity, unit_cents, line_cents, billing_frequency").eq("quote_id", doc.quote_id).order("sort_order") : { data: [] },
+  ]);
+  return { organization: client.data?.name ?? contact.data?.organization ?? null, contactName: doc.recipient_name ?? contact.data?.full_name ?? null, lines: (lines.data ?? []) as any[] };
+}
+async function writeVersion(db: any, doc: any, rawSections: Section[], userId: string, source: string) {
+  // Summary, pricing and About Harmonious are always platform-generated; any typed or AI text for them is replaced.
+  const sections = applyLockedSections(doc.kind, doc.direction, rawSections, await lockFacts(db, doc));
   const v = (doc.current_version ?? 0) + 1;
   const { error } = await db.from("sales_document_versions").insert({ document_id: doc.id, version: v, sections, source, created_by: userId });
   if (error) throw new Error(error.message);
@@ -132,6 +142,7 @@ export async function getDocument(userId: string, id: string) {
   const a = await access(userId, id);
   const { db, doc } = a;
   const sections = await latestSections(db, doc);
+  const lockedSectionKeys = lockedKeys(doc.kind, doc.direction);
   const { data: versions } = await db.from("sales_document_versions").select("version, source, created_by, created_at").eq("document_id", id).order("version", { ascending: false });
   const { data: events } = await db.from("sales_document_events").select("event, actor_id, detail, created_at").eq("document_id", id).order("created_at", { ascending: false }).limit(100);
   const quoteLines = doc.quote_id ? ((await db.from("sales_quote_lines").select("label, quantity, unit_cents, line_cents").eq("quote_id", doc.quote_id).order("sort_order")).data ?? []) : [];
@@ -157,7 +168,7 @@ export async function getDocument(userId: string, id: string) {
   const n = (x: string | null) => (x ? nm.get(x) ?? "Team member" : null);
   return {
     doc: { ...doc, source_text: doc.source_text ? String(doc.source_text).slice(0, 2000) : null, ownerName: n(doc.owner_user_id), approvedByName: n(doc.approved_by) },
-    sections, quoteLines, engagement, packet,
+    sections, lockedSectionKeys, quoteLines, engagement, packet,
     versions: ((versions ?? []) as any[]).map((v) => ({ ...v, byName: n(v.created_by) })),
     events: ((events ?? []) as any[]).map((e) => ({ ...e, byName: n(e.actor_id) })),
     assists: a.assists.map((x) => ({ ...x, requestedByName: n(x.requested_by), assigneeName: n(x.assignee_user_id) })),
@@ -196,14 +207,6 @@ export async function uploadSource(userId: string, id: string, file: { name: str
   return { chars: text.length };
 }
 
-function pricingBody(lines: any[]) {
-  if (!lines.length) return "";
-  const money = (c: number) => `$${(Number(c) / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  const rows = lines.map((l) => `- ${l.label}: ${l.quantity} x ${money(l.unit_cents)} = ${money(l.line_cents)}`);
-  const total = lines.reduce((s, l) => s + Number(l.line_cents || 0), 0);
-  return `${rows.join("\n")}\nTotal: ${money(total)}\n(Pricing from the approved quote.)`;
-}
-
 export async function draftWithAi(userId: string, id: string, brief: string | null) {
   const a = await access(userId, id);
   if (!a.canEdit) throw new Error("You can't edit this document right now.");
@@ -222,9 +225,7 @@ export async function draftWithAi(userId: string, id: string, brief: string | nu
     sourceText: doc.source_text, sections: current,
   });
   // Prices are never AI-written: the pricing section is filled from the quote lines.
-  const priceKey = doc.direction === "response" ? (doc.kind === "rfq" ? "pricing" : "services") : null;
-  const sections = out.map((s) => (priceKey && s.key === priceKey && quoteLines.length ? { ...s, body: `${s.body.replace(/\$[\d,.]+/g, "").trim()}\n\n${pricingBody(quoteLines)}`.trim() } : s));
-  const v = await writeVersion(db, doc, sections, userId, "ai_draft");
+  const v = await writeVersion(db, doc, out, userId, "ai_draft");
   await event(db, id, userId, "ai_drafted", { version: v });
   return { version: v };
 }
