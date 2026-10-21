@@ -14,3 +14,15 @@ describe("assigned preparers", () => {
     expect(canAssignParticipant(null)).toBe(false);
   });
 });
+
+import { allowsMultipleContacts as amc, participantRoleLabel as prl } from "./onboarding-participants-model";
+describe("points of contact", () => {
+  it("only joint, entity and trust investments get extra contacts", () => {
+    expect(amc("individual")).toBe(false);
+    expect(amc("ira")).toBe(false);
+    expect(amc("joint")).toBe(true);
+    expect(amc("llc")).toBe(true);
+    expect(amc("trust")).toBe(true);
+  });
+  it("contacts are labeled view only", () => { expect(prl("contact")).toBe("Point of contact (view only)"); });
+});

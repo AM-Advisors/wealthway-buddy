@@ -2248,6 +2248,13 @@
       "when": 1792622082690,
       "tag": "0320_client_acceptance_auto_invoice_remittance",
       "breakpoints": true
+    },
+    {
+      "idx": 321,
+      "version": "7",
+      "when": 1792623207818,
+      "tag": "0321_participant_contact_role",
+      "breakpoints": true
     }
   ]
 }

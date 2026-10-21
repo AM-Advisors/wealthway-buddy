@@ -1,0 +1,2 @@
+ALTER TABLE public.onboarding_participants DROP CONSTRAINT onboarding_participants_role_check;
+ALTER TABLE public.onboarding_participants ADD CONSTRAINT onboarding_participants_role_check CHECK (role = ANY (ARRAY['preparer'::text, 'signer'::text, 'contact'::text]));
