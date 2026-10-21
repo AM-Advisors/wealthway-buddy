@@ -242,8 +242,8 @@ export function DocumentSignCard({
 
           <footer className="sticky bottom-0 z-10 flex flex-wrap items-center justify-between gap-2 border-t bg-background px-4 py-3">
             <p className="text-xs text-muted-foreground">
-              Your signature is recorded by Box and confirmed back to Harmonious. Closing this
-              window does not sign the agreement. If Box shows an error, press Try again.
+              Your signature is recorded securely and confirmed by Harmonious. Closing this
+              window does not sign the agreement. If you see an error, press Try again.
             </p>
             <div className="flex items-center gap-2">
               <Button
