@@ -12,7 +12,7 @@ const UNPAID = process.env["E2E_CAPTABLE_UNPAID_SESSION"];
 test.beforeAll(() => refuseProduction());
 
 test("cap-table-only client sees only Cap Table", async ({ page }) => {
-  test.skip(!(await signInAs(page, CAP_ONLY)), "E2E_CAPTABLE_SESSION not set");
+  await signInAs(page, CAP_ONLY);
   await page.goto("/client/home");
   const menu = page.getByTestId("client-sidebar");
   await expect(menu.getByRole("link", { name: "Cap Table" }).first()).toBeVisible();
@@ -27,7 +27,7 @@ test("cap-table-only client sees only Cap Table", async ({ page }) => {
 });
 
 test("unpaid order keeps the menu locked", async ({ page }) => {
-  test.skip(!(await signInAs(page, UNPAID)), "E2E_CAPTABLE_UNPAID_SESSION not set");
+  await signInAs(page, UNPAID);
   await page.goto("/client/cap-table");
   await expect(page.getByRole("heading", { name: "Not in your plan" })).toBeVisible();
 });

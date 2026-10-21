@@ -1,5 +1,5 @@
 /** Display-only filtering. Originals stay in their canonical history tables. */
-const sensitive = /accountnumber|bankaccount|beneficiaryaccount|routing|swift|iban|ssn|(^|_)tin|taxid|tax_id|ein$|passport|birth|dob|token|secret|password|authorization|cookie|email|phone|address|signature|payload|url/i;
+const sensitive = /account_?number|bank_?account|beneficiary_?account|routing|swift|iban|ssn|(^|_)tin|tax_?id|ein$|passport|birth|dob|token|secret|password|authorization|cookie|email|phone|address|signature|payload|url/i;
 const freeText = /note|reason|description|message|summary|detail|comment|error|response|body|subject|remediation|explanation/i;
 const safeString = /^(id|.*_id|name|legal_name|legal_entity_name|fund_name|previous_name|new_name|status|.*_status|event|event_type|event_kind|action|kind|type|.*_type|section|field|method|currency|direction|purpose|source|source_kind|basis|frequency|role|.*_role|.*_at|.*_on|.*_date|effective_date|classification|reg_type|decision|result|previous|next|from|to|trigger|outcome|version|label)$/i;
 export function filterDiagnostic(value: unknown, key = "", depth = 0, seen = new WeakSet<object>()): unknown {

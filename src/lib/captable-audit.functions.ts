@@ -81,7 +81,11 @@ export const getCapAuditHistory = createServerFn({ method: "GET" })
     ]);
 
     assertDiagnosticReads(initialReads);
-    const [company, stakeholders, securities, documents, classes] = initialReads.map(r => r.data);
+    const company = initialReads[0]?.data;
+    const stakeholders = initialReads[1]?.data;
+    const securities = initialReads[2]?.data;
+    const documents = initialReads[3]?.data;
+    const classes = initialReads[4]?.data;
     if (!company) {
       return { company: null, stakeholders: [], entries: [], documents: [], summary: null };
     }

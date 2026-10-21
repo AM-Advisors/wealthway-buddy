@@ -27,7 +27,6 @@ test.describe("public pages", () => {
 });
 
 test.describe("non-staff are refused staff screens", () => {
-  test.skip(!SESSIONS.investor, "E2E_INVESTOR_SESSION not set");
   for (const path of ["/ops/email-health", "/ops/webhook-log", "/ops/system-status"]) {
     test(path, async ({ page }) => {
       await signInAs(page, SESSIONS.investor);
@@ -38,7 +37,6 @@ test.describe("non-staff are refused staff screens", () => {
 });
 
 test.describe("fund manager scope", () => {
-  test.skip(!SESSIONS.manager, "E2E_MANAGER_SESSION not set");
   test("sees only their own funds' financial reviews", async ({ page }) => {
     await signInAs(page, SESSIONS.manager);
     await page.goto("/manager/financial-reviews");
@@ -48,7 +46,6 @@ test.describe("fund manager scope", () => {
 });
 
 test.describe("staff", () => {
-  test.skip(!SESSIONS.staff, "E2E_STAFF_SESSION not set");
   test("can open the health screens", async ({ page }) => {
     await signInAs(page, SESSIONS.staff);
     await page.goto("/ops/system-status");

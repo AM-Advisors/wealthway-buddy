@@ -174,7 +174,6 @@ export const listMoneyAudit = createServerFn({ method: "GET" })
         detail: joinDetail([
           r.expected_date ? `Expected ${dateOnly(r.expected_date)}` : null,
           null,
-          null ? `Review: ${null}` : null,
           r.reviewed_at ? `Reviewed ${dateOnly(r.reviewed_at)}` : null,
         ]),
         amountCents: r.amount_cents ?? null,
@@ -197,7 +196,6 @@ export const listMoneyAudit = createServerFn({ method: "GET" })
           c.sending_account_last4 ? `Account •••• ${c.sending_account_last4}` : null,
           c.sent_on ? `Sent ${dateOnly(c.sent_on)}` : null,
           null,
-          null ? `Review: ${null}` : null,
         ]),
         amountCents: c.amount_cents ?? null,
         status: c.status ?? null,
@@ -298,7 +296,7 @@ export const listDistributionAudit = createServerFn({ method: "GET" })
       fundName: d.offering_id ? (fundName.get(d.offering_id) ?? null) : null,
       category: "Distribution",
       summary: `${d.kind ?? "Distribution"} paid ${dateOnly(d.paid_on) ?? ""}`.trim(),
-      detail: null ?? null,
+      detail: null,
       amountCents: d.amount_cents ?? null,
       status: null,
     }));
@@ -340,20 +338,7 @@ export const listInvestorCheckAudit = createServerFn({ method: "GET" })
 
     const rows: AuditEntry[] = [];
 
-    const plain = (value: unknown): string | null => {
-      return value == null ? null : diagnosticText(value);
-      /*
-      if (value === null || value === undefined) return null;
-      if (typeof value === "string") return value || null;
-      if (typeof value === "number" || typeof value === "boolean") return String(value);
-      if (typeof value === "object") {
-        const entries = Object.entries(value as Record<string, unknown>)
-          .filter(([, v]) => v !== null && v !== undefined && typeof v !== "object")
-          .map(([k, v]) => `${k.replace(/_/g, " ")}: ${v}`);
-        return entries.length ? entries.join(", ") : null;
-      }
-      return null; */
-    };
+    const plain = (value: unknown): string | null => value == null ? null : diagnosticText(value);
 
     for (const k of (kyc.data ?? []) as any[]) {
       const w = who(k.application_id);
@@ -516,13 +501,10 @@ export const listHoldAudit = createServerFn({ method: "GET" })
           ? (clientName.get(h.client_id) ?? null)
           : null,
       category: "Compliance hold",
-      summary: `${String(h.scope ?? "").replace(/_/g, " ")} paused - ${String(null ?? "").replace(/_/g, " ")}`,
+      summary: `${String(h.scope ?? "").replace(/_/g, " ")} paused`,
       detail: joinDetail([
         h.placed_at ? `Placed ${dateOnly(h.placed_at)}` : null,
         h.cleared_at ? `Cleared ${dateOnly(h.cleared_at)}` : null,
-        null ? `Resolves with: ${null}` : null,
-        null ? `Client sees: ${null}` : null,
-        null ? `Internal: ${null}` : null,
       ]),
       amountCents: null,
       status: h.status ?? null,
@@ -656,7 +638,6 @@ export const listRecordChangeAudit = createServerFn({ method: "GET" })
         detail: joinDetail([
           `Before: ${short(e.previous_name)}`,
           e.effective_date ? `Effective: ${e.effective_date}` : null,
-          null ? `Reason: ${null}` : null,
         ]),
         amountCents: null,
         status: null,
