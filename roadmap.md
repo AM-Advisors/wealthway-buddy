@@ -1,9 +1,10 @@
 # Roadmap
 
 ## Portfolio and personal wealth services (2026-10-21)
-- [ ] Offer Portfolio and Report Cards independently and as fund add-ons using canonical service selections.
-- [ ] Provide private individual wealth holdings and evidence-based report cards without creating a fund or granting fund authority.
-- [ ] Verify focused ownership/service rules and report competitive opportunities; signed-in QA requires an isolated synthetic environment.
+- [x] Add both services to the shared catalog and current-client service options; fund add-on pricing requires a real published rate or approved quote, not the catalog's zero default. Standalone/fund preferences retain history, never activate charges.
+- [x] Provide owner-only personal holdings, dated corrections, multi-currency separate totals, exports and personal risk Report Cards through the existing engine, without a fund.
+- [ ] Pricing and standalone paid activation — blocked on approved prices and commercial terms; no prices invented or subscriptions started.
+- [ ] Signed-in read-back — blocked on isolated synthetic QA; shared production browser tests prohibited.
 
 ## Alyssa review evidence (2026-10-21)
 - [x] Connect saved signed copies, acknowledgments and questionnaire to the fund manager's investor detail; show the owner's signed archive below the submitted journey too.

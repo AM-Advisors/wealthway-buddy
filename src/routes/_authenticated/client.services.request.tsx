@@ -247,11 +247,12 @@ function RequestRouter() {
           )}
           <div className="space-y-2">
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{core.length > 0 ? "Add-ons (à la carte)" : "Services"}</p>
-            {addOns.slice(0, 24).map((s) => <ServiceRow key={s.id} s={s} checked={picked.includes(s.key)} onToggle={() => toggle(s.key)} />)}
+            {addOns.map((s) => <ServiceRow key={s.id} s={s} checked={picked.includes(s.key)} onToggle={() => toggle(s.key)} />)}
           </div>
         </CardContent>
       </Card>
 
+      {quote.error && <p role="alert" className="text-sm text-destructive">{quote.error.message}</p>}
       {quote.data && quote.data.totalCents > 0 && (
         <div className="space-y-1">
           <p className="text-sm font-medium">Add-ons are paid in full before the request is sent</p>

@@ -439,6 +439,7 @@ export function FundRequestEngine({ clientId: id, draft, mode = "client", client
 
             {step === "services" && (
               <div className="space-y-4">
+                <Button asChild variant="outline" size="sm"><Link to="/wealth">Portfolio & Report Card service preferences</Link></Button>
                 {(["core", "addon"] as const).map((group) => {
                   const core = autoServices(r);
                   const list = (catalogue.data?.services ?? []).filter((s: any) =>
@@ -516,6 +517,7 @@ export function FundRequestEngine({ clientId: id, draft, mode = "client", client
                   </div>
                   <p className="mt-1 text-xs text-muted-foreground">Self Serve unless you pick and pay for another level. On Self Serve you can complete every setup step yourself. A paid level starts once payment is confirmed; Institutional starts once its quote is agreed.</p>
                 </F>
+                {quote.error && <p role="alert" className="text-sm text-destructive">{quote.error.message}</p>}
                 {quote.data && <PaymentSummary items={quote.data.items} total={quote.data.totalCents} />}
                 <p className="text-xs text-muted-foreground">The $2,500 setup fee and any add-ons are paid by card before the request is sent. Add-ons use your agreed SOW price where one is approved.</p>
                 {staffMode
