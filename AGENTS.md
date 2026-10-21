@@ -31,5 +31,6 @@
 - LoadError handles failures; reports load active tabs; Sign shares TaxSignPanel and verified email; OfferingDocumentReader reads entitled files — why: reliability.
 - Investor workspace context shares the journey's authorized onboarding read; document readers carry the investment ID and recheck ownership before version selection — why: legacy fund joins and multiple investments must not hide details or select another investment's file.
 - Investor self-service in assertInvestorOwns checks investor_user_id against the authenticated actor, independently of staff/read-view role precedence; profile ownership and terminal-state guards remain — why: staff may invest personally without completing another investor's onboarding.
-- Investor-grid class applicability reads offerings.has_multiple_classes and is shared by details and missing-info requests — why: presentation must use the canonical fund setting, never infer classes from investor rows.
+- Investor classes use offerings.has_multiple_classes — why: no inferred classes.
+- approveToFund requires exact-fund managers; own investment needs another manager — why: fund-owned admission, money/identity unchanged.
 - Investor details use approved identity checks and profile-tax-details.server for current signed W-9/W-8 last four/type; entities never use signer IDs — why: reuse evidence, no decryption or duplicate entry.
