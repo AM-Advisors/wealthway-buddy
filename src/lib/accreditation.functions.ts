@@ -123,10 +123,9 @@ export const submitSelfCertification = createServerFn({ method: "POST" })
       pre_existing_relationship: data.pre_existing_relationship,
       attested_at: now,
       attested_signature: data.attested_signature,
-      // An administrator signs off on accreditation before the wire step,
-      // so a self-certification lands in review rather than auto-approving.
-      status: "review" as const,
-      verified_at: null,
+      // 506(b): the investor's own certification completes accreditation; no reviewer.
+      status: "approved" as const,
+      verified_at: now,
       updated_at: now,
     };
 
@@ -149,12 +148,12 @@ export const submitSelfCertification = createServerFn({ method: "POST" })
 
     const { error: appError } = await supabase
       .from("investor_applications")
-      .update({ accreditation_status: "review", current_step: "documents", updated_at: now })
+      .update({ accreditation_status: "approved", current_step: "documents", updated_at: now })
       .eq("id", application.id);
     if (appError) throw new Error(appError.message);
 
     void (await import("@/lib/manager-alerts.server")).drainManagerAlerts().catch(() => {});
-    return { ok: true, status: "review" as const };
+    return { ok: true, status: "approved" as const };
   });
 
 export const submitVerificationRequest = createServerFn({ method: "POST" })
