@@ -1,7 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/lib/require-auth";
-import { activeApplicationId } from "@/lib/active-application";
+import { activeApplicationId, applicationIdForOffering } from "@/lib/active-application";
+
+const onboardingRef = z.string().uuid().optional();
 
 export const accreditation506bSchema = z.object({
   basis: z.enum([
@@ -21,6 +23,7 @@ export const accreditation506bSchema = z.object({
     .max(600),
   attested_signature: z.string().trim().min(2, "Type your full legal name").max(120),
   attests: z.literal(true),
+  onboarding_id: onboardingRef,
 });
 
 export const accreditation506cSchema = z.object({
@@ -30,22 +33,41 @@ export const accreditation506cSchema = z.object({
   verifier_role: z.enum(["cpa", "attorney", "investment_adviser", "broker_dealer", ""]).optional(),
   attested_signature: z.string().trim().min(2, "Type your full legal name").max(120),
   attests: z.literal(true),
+  onboarding_id: onboardingRef,
 });
 
 export const evidenceSchema = z.object({
   storage_path: z.string().trim().min(3).max(400),
   file_name: z.string().trim().min(1).max(200),
   doc_kind: z.enum(["w2", "tax_return", "brokerage_statement", "credit_report", "verification_letter", "other"]),
+  onboarding_id: onboardingRef,
 });
 
 type AppRow = { id: string; kyc_status: string; aml_status: string };
 
-async function loadApplication(supabase: any, userId: string): Promise<AppRow> {
+/**
+ * The application for the investment the investor came from. The onboarding ID
+ * only narrows to a fund the signed-in investor owns; otherwise the active account is used.
+ */
+async function resolveApplicationId(supabase: any, userId: string, onboardingId?: string | null): Promise<string> {
+  if (onboardingId) {
+    const { data: onb } = await supabase
+      .from("investor_onboardings")
+      .select("offering_id")
+      .eq("id", onboardingId)
+      .eq("investor_user_id", userId)
+      .maybeSingle();
+    if (onb?.offering_id) return applicationIdForOffering(supabase, userId, onb.offering_id as string);
+  }
+  return activeApplicationId(supabase, userId);
+}
+
+async function loadApplication(supabase: any, userId: string, onboardingId?: string | null): Promise<AppRow> {
   const { data, error } = await supabase
     .from("investor_applications")
     .select("id, kyc_status, aml_status")
     .eq("user_id", userId)
-    .eq("id", await activeApplicationId(supabase, userId))
+    .eq("id", await resolveApplicationId(supabase, userId, onboardingId))
     .maybeSingle();
   if (error) throw new Error(error.message);
   if (!data) throw new Error("No application found. Reload and try again.");
@@ -57,14 +79,15 @@ async function loadApplication(supabase: any, userId: string): Promise<AppRow> {
 
 export const getAccreditation = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .inputValidator((d: unknown) => z.object({ onboardingId: onboardingRef }).parse(d ?? {}))
+  .handler(async ({ data: input, context }) => {
     const { supabase, userId } = context;
 
     const { data: application } = await supabase
       .from("investor_applications")
       .select("id, kyc_status, aml_status, accreditation_status, current_step, offering_id")
       .eq("user_id", userId)
-      .eq("id", await activeApplicationId(supabase, userId))
+      .eq("id", await resolveApplicationId(supabase, userId, input.onboardingId))
       .maybeSingle();
 
     if (!application) return { application: null, offering: null, record: null, documents: [] };
@@ -95,7 +118,7 @@ export const submitSelfCertification = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => accreditation506bSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const application = await loadApplication(supabase, userId);
+    const application = await loadApplication(supabase, userId, data.onboarding_id);
 
     const qualifies =
       data.income_last_two_years ||
@@ -117,6 +140,7 @@ export const submitSelfCertification = createServerFn({ method: "POST" })
       method: data.basis,
       questionnaire: {
         ...data,
+        onboarding_id: undefined,
         submitted_at: now,
       },
       qualifies: true,
@@ -161,7 +185,7 @@ export const submitVerificationRequest = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => accreditation506cSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const application = await loadApplication(supabase, userId);
+    const application = await loadApplication(supabase, userId, data.onboarding_id);
 
     const { count } = await supabase
       .from("accreditation_documents")
@@ -221,7 +245,7 @@ export const recordEvidence = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => evidenceSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const application = await loadApplication(supabase, userId);
+    const application = await loadApplication(supabase, userId, data.onboarding_id);
 
     if (!data.storage_path.startsWith(`${userId}/`)) {
       throw new Error("Invalid upload path.");
