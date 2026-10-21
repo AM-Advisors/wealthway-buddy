@@ -159,13 +159,10 @@ async function assertFundable(
       "Your accredited investor status must be confirmed before the fund can accept capital.",
     );
   }
-  // A fund manager signs off on the whole file before funding opens.
-  if (app.manager_review_status && app.manager_review_status !== "approved") {
-    throw new Error(
-      app.manager_review_status === "declined"
-        ? "Your fund manager sent your application back. Check your portal for what is needed."
-        : "Your fund manager is completing a final review of your application. Funding opens once it is approved.",
-    );
+  // Once signed and clear, funding is open; a pending manager review does not
+  // block it. Only a declined file stops funding. Harmonious still confirms receipt.
+  if (app.manager_review_status === "declined") {
+    throw new Error("Your fund manager sent your application back. Check your portal for what is needed.");
   }
   // The client's agreement conditions have to hold before capital moves.
   if (app.offering_id) {
@@ -252,7 +249,8 @@ export const getFunding = createServerFn({ method: "GET" })
       acknowledgements,
       wireConfirmations: wireConfirmations ?? [],
       reference: referenceCode(application.id),
-      fundProgress: await fundProgress(application.offering_id, offeringRow?.target_raise_cents ?? null),
+      // Investors never see fund-wide totals or how many others invested.
+      fundProgress: null,
     };
   });
 

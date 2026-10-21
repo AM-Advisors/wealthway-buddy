@@ -170,7 +170,8 @@ export function FundingStep({ offeringId }: { offeringId?: string }) {
   const ready =
     app?.kyc_status === "approved" &&
     app?.documents_status === "approved" &&
-    app?.accreditation_status === "approved";
+    app?.accreditation_status === "approved" &&
+    app?.manager_review_status !== "declined";
   const acks = (data?.acknowledgements ?? {}) as Record<string, any>;
   const wireAck = acks["wire"] && acks["wire"].current ? acks["wire"] : null;
   const achAck = acks["ach"] && acks["ach"].current ? acks["ach"] : null;
