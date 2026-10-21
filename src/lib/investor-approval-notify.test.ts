@@ -10,6 +10,7 @@ function fixture(over: Record<string, any> = {}) {
   const rows: Record<string, any[]> = {
     investor_onboardings: [{ id: 'investment', offering_id: 'fund', investor_user_id: 'investor', person_id: 'person', stage: 'harmonious_review', approved_to_fund_at: '2026-10-21', approved_to_fund_by: 'manager', ...over }],
     fund_managers: [{ user_id: 'manager' }, { user_id: 'second-manager' }],
+    user_roles: [{ user_id: 'authorized-staff', role: 'admin' }],
     offerings: [{ name: 'Synthetic Fund' }], persons: [{ legal_first_name: 'Test', legal_last_name: 'Investor' }],
   }
   return {
@@ -57,6 +58,11 @@ describe('investor approval event emails', () => {
   it('refuses funding notices approved by an unrelated actor', async () => {
     await sendInvestorApprovalNotice(fixture({ approved_to_fund_by: 'staff' }), { onboardingId: 'investment', action: 'fund', ref: 'approval' })
     expect(send).not.toHaveBeenCalled()
+  })
+  it('notifies the investor after authorized Harmonious approval', async () => {
+    await sendInvestorApprovalNotice(fixture({ approved_to_fund_by: 'authorized-staff', stage: 'awaiting_funds' }), { onboardingId: 'investment', action: 'fund', ref: 'staff-approval' })
+    expect(send.mock.calls[0]?.[1]).toBe('investor@example.com')
+    expect(send.mock.calls[0]?.[2]?.['templateData'].instructionsAvailable).toBe(true)
   })
   it('does not claim instructions are available when the canonical funding read is locked', async () => {
     funding.mockResolvedValueOnce({ unlocked: false, instructions: null } as any)

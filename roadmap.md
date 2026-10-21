@@ -1,5 +1,10 @@
 # Roadmap
 
+## Harmonious investor approval and Calvin executed copy (2026-10-21)
+- [x] Permit existing authorized Harmonious investor-operations staff to approve admission alongside exact-fund managers; preserve readiness and own-investment safeguards, audit actor and investor notices.
+- [x] 59 focused authorization/document/email checks passed; preview build OK. Signed-in approval walkthrough remains blocked on isolated synthetic QA, not performed on real investors.
+- [x] Retrieved original completed signing-service PDF; Calvin's $500,000 signature and Thomas's acceptance both dated October 21, 2026; saved unchanged to Files.
+
 ## Wealth paid activation and pricing (2026-10-21)
 - [x] Confirm Portfolio and Report Cards have no published rate-card price; catalog values are zero placeholders, not free services.
 - [x] Record quarterly or annual billing preference.
@@ -7,7 +12,7 @@
 - [ ] Pricing page and paid activation — waiting on approved dollar prices and service terms; no charges or subscriptions started.
 
 ## Thomas signing request (2026-10-21)
-- [ ] Thomas must personally countersign Calvin's subscription using his assigned signing link; no signature may be adopted or applied by the assistant on his behalf.
+- [x] Thomas personally countersigned at 17:27:41 UTC October 21, 2026; completed original PDF verified. No signature applied by the assistant.
 
 ## Direct fund-signatory email (2026-10-21)
 - [x] Add Email signatory to sign on approved outstanding fund signatures; native requests resend the existing signing email, embedded requests email the exact protected countersign page, never convert or recreate signatures.

@@ -303,13 +303,20 @@ describe("Harmonious-only controls", () => {
     await expect(server.approveToFund(MANAGER_A, { onboardingId: OB1 })).rejects.toThrow(/not complete/);
     expect(updates("investor_onboardings")).toHaveLength(0);
   });
-  it("refuses staff-only or another fund's manager subscription approval", async () => {
-    await expect(server.approveToFund(STAFF, { onboardingId: OB1 })).rejects.toThrow(/Only a fund manager/);
-    await expect(server.approveToFund(MANAGER_B, { onboardingId: OB1 })).rejects.toThrow(/Only a fund manager/);
+  it("allows authorized Harmonious staff through admission authorization while retaining readiness checks", async () => {
+    await expect(server.approveToFund(STAFF, { onboardingId: OB1 })).rejects.toThrow(/not complete/);
+    expect(updates("investor_onboardings")).toHaveLength(0);
+  });
+  it("refuses another fund's manager subscription approval", async () => {
+    await expect(server.approveToFund(MANAGER_B, { onboardingId: OB1 })).rejects.toThrow(/Only authorized Harmonious/);
     expect(updates("investor_onboardings")).toHaveLength(0);
   });
   it("requires another fund manager for the manager's own investment", async () => {
-    await expect(server.approveToFund(MANAGER_A, { onboardingId: "manager-investment" })).rejects.toThrow(/Another assigned fund manager/);
+    await expect(server.approveToFund(MANAGER_A, { onboardingId: "manager-investment" })).rejects.toThrow(/Another authorized reviewer/);
+    expect(updates("investor_onboardings")).toHaveLength(0);
+  });
+  it("refuses Harmonious staff approving their own investment", async () => {
+    await expect(server.approveToFund(STAFF, { onboardingId: "staff-investment" })).rejects.toThrow(/Another authorized reviewer/);
     expect(updates("investor_onboardings")).toHaveLength(0);
   });
 
