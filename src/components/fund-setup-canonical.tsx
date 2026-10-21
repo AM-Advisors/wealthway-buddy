@@ -18,6 +18,8 @@ import {
   CANONICAL_SECTION_LABELS,
   SECTION_STATUS_LABELS,
   FUND_TYPES,
+  FEE_FREQUENCY_CHOICES,
+  FEE_FREQUENCY_LABEL,
   type FundClass,
   type EconomicTerms,
   type EconomicTermKey,
