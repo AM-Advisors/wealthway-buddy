@@ -915,9 +915,13 @@ export async function releaseBankingInstructions(userId: string, setupId: string
     subjectTable: "fund_banking_setups",
     subjectId: record.id,
     event: "banking_instructions_released",
+    detail: { version: before.latestVersion },
     actorUserId: userId,
     actorRole: "harmonious",
   });
+  // Approved investors waiting on banking get one "instructions available" email.
+  try { await notifyInvestorsInstructionsAvailable(relSetup.offering_id, before.latestVersion); }
+  catch { console.error("[banking-release] investor notice unavailable"); }
   return data;
 }
 

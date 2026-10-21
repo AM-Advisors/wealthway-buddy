@@ -1285,10 +1285,13 @@ export async function fundingInstructions(userId: string, onboardingId: string) 
     ? await db().from("fund_banking_setups").select("*").eq("setup_id", setup.id).maybeSingle()
     : { data: null };
 
-  if (!banking || banking.status !== "account_active" || !banking.investor_instructions_released) {
+  const { wireReleaseState } = await import("@/lib/wire-release.server");
+  const { wireReleaseBlocker } = await import("@/lib/wire-release");
+  const release = await wireReleaseState(row.offering_id);
+  if (!banking || !release.available || !details || Object.keys(details).length === 0) {
     return {
       unlocked: false,
-      reasons: ["The fund's banking instructions have not been released yet."],
+      reasons: [wireReleaseBlocker(release) ?? "The fund's banking instructions have not been released yet."],
       instructions: null,
     };
   }
