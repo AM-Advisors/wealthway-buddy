@@ -59,11 +59,30 @@ export async function checkInvoiceRates(db: any, invoiceId: string, clientId: st
     } else if (kind === "card") {
       // The invoice freezes the standard amount at preparation; no later card repricing.
       cents = Number(l.unit_cents);
+    } else if (l.source === "fund_fee" && l.offering_id) {
+      // Same application override and fund columns used on the investment balance page.
+      cents = null;
     } else if (l.pricing_id) {
       const price = rows(pricing).find((p: any) => p.id === l.pricing_id);
       if (price) cents = Number(price.contracted_cents ?? price.standard_cents);
     }
-    return invoiceRateCheck(l, cents === null ? null : Number(cents));
+    return { line: l, cents };
   });
-  return { items, varianceCents: items.reduce((sum: number, i: any) => sum + Math.max(0, i.varianceCents), 0) };
+  const checks = [];
+  for (const { line, cents: resolved } of items) {
+    let cents = resolved;
+    if (line.source === "fund_fee" && line.offering_id) {
+      const fund = rows(await db.from("offerings").select("wire_fee_cents, closing_cost_cents, share_price_cents")
+        .eq("id", line.offering_id).eq("client_id", clientId))[0];
+      if (fund && line.service_key === "closing_cost") cents = fund.closing_cost_cents;
+      if (fund && line.service_key === "wire_fee") {
+        const applicationId = String(line.source_ref ?? "").split(":")[1];
+        const app = rows(await db.from("investor_applications").select("wire_fee_cents").eq("id", applicationId).eq("offering_id", line.offering_id))[0];
+        if (app) cents = app.wire_fee_cents ?? fund.wire_fee_cents;
+      }
+      if (fund && line.service_key === "subscription") cents = Number(fund.share_price_cents) > 0 ? Number(fund.share_price_cents) : Number(line.unit_cents);
+    }
+    checks.push(invoiceRateCheck(line, cents === null || cents === undefined ? null : Number(cents)));
+  }
+  return { items: checks, varianceCents: checks.reduce((sum, i) => sum + Math.max(0, i.varianceCents), 0) };
 }

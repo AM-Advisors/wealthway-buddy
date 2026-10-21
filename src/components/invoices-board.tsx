@@ -63,6 +63,7 @@ export function InvoicesBoard() {
   const cancel = useServerFn(voidInvoice);
 
   const [clientId, setClientId] = useState("");
+  const [offeringId, setOfferingId] = useState("all");
   const [periodStart, setPeriodStart] = useState(monthStart());
   const [periodEnd, setPeriodEnd] = useState(today());
   const [netDays, setNetDays] = useState("30");
@@ -90,8 +91,8 @@ export function InvoicesBoard() {
   };
 
   const previewQuery = useQuery({
-    queryKey: ["invoice-preview", clientId, periodStart, periodEnd],
-    queryFn: () => preview({ data: { clientId, periodStart, periodEnd } }),
+    queryKey: ["invoice-preview", clientId, offeringId, periodStart, periodEnd],
+    queryFn: () => preview({ data: { clientId, offeringId: offeringId === "all" ? null : offeringId, periodStart, periodEnd } }),
     enabled: Boolean(clientId) && Boolean(periodStart) && Boolean(periodEnd),
     retry: false,
   });
@@ -101,6 +102,7 @@ export function InvoicesBoard() {
       create({
         data: {
           clientId,
+          offeringId: offeringId === "all" ? null : offeringId,
           periodStart,
           periodEnd,
           netDays: Number(netDays || 30),
@@ -311,7 +313,7 @@ export function InvoicesBoard() {
           <div className="grid gap-3 md:grid-cols-4">
             <div className="space-y-1">
               <Label>Client</Label>
-              <Select value={clientId} onValueChange={setClientId}>
+              <Select value={clientId} onValueChange={(value) => { setClientId(value); setOfferingId("all"); }}>
                 <SelectTrigger>
                   <SelectValue placeholder="Choose a client" />
                 </SelectTrigger>
@@ -320,6 +322,18 @@ export function InvoicesBoard() {
                     <SelectItem key={c.id} value={c.id}>
                       {c.name}
                     </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label>Fund</Label>
+              <Select value={offeringId} onValueChange={setOfferingId} disabled={!clientId}>
+                <SelectTrigger><SelectValue placeholder="All client services" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All client services</SelectItem>
+                  {(data?.funds ?? []).filter((fund: any) => fund.client_id === clientId).map((fund: any) => (
+                    <SelectItem key={fund.id} value={fund.id}>{fund.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
