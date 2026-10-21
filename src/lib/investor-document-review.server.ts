@@ -103,7 +103,7 @@ export async function listDocumentReviews(userId: string, offeringId: string) {
             note: (dec?.note ?? null) as string | null,
             decidedAt: (dec?.decided_at ?? null) as string | null,
             countersignSignerId: (sig ? mySigner.get(sig.id) ?? null : null) as string | null,
-            signed: sig ? { signatureId: sig.id as string, signerName: sig.signer_name as string | null, signedAt: (sig.provider_completed_at ?? sig.signed_at) as string } : null,
+            signed: sig ? { hasCopy: Boolean(sig.pdf_path), signatureId: sig.id as string, signerName: sig.signer_name as string | null, signedAt: (sig.provider_completed_at ?? sig.signed_at) as string } : null,
           };
         }),
       };

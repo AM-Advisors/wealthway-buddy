@@ -66,7 +66,7 @@ function DocRow({ offeringId, onboardingId, title, version, d, readOnly }: { off
           {d.signed && d.decision === "approved" && d.countersignSignerId && !readOnly ? (
             <Button size="sm" onClick={() => navigate({ to: "/manager/countersign/$signerId", params: { signerId: d.countersignSignerId } })}>Sign now</Button>
           ) : null}
-          {d.signed ? <SignedCopyButton offeringId={offeringId} signatureId={d.signed.signatureId} /> : null}
+          {d.signed?.hasCopy ? <SignedCopyButton offeringId={offeringId} signatureId={d.signed.signatureId} /> : null}
           {d.signed && !readOnly && !d.decision ? (
             <>
               {d.countersignSignerId ? (
