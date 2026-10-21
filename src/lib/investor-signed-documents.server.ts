@@ -11,7 +11,7 @@ export async function investorSignedDocuments(db: any, userId: string, onboardin
     .eq("application_id", row.application_id).order("signed_at", { ascending: false });
   if (signaturesError) throw new Error("Your signed documents could not be loaded. Please try again.");
   const completed = (signatures ?? []).filter((s: any) => !s.cancelled_at &&
-    (s.provider_status === "completed" || (!s.provider && s.signed_at)));
+    (s.provider_status === "completed" || ((!s.provider || s.provider === "internal" || s.provider === "native") && s.signed_at)));
   const ids = [...new Set(completed.map((s: any) => s.offering_document_id).filter(Boolean))];
   const { data: documents, error: documentError } = ids.length
     ? await db.from("offering_documents").select("id, title").in("id", ids)

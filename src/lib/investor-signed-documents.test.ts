@@ -40,4 +40,8 @@ describe("investor submitted signed copies", () => {
     const docs = await investorSignedDocuments(database({ document_signatures: [{ id: "old", application_id: "application", offering_document_id: "document", signature_template_version: 1, provider_status: "completed", pdf_path: "old.pdf", superseded_by: "new" }] }), "owner", "investment");
     expect(docs[0]?.version).toBe(1); expect(docs[0]?.replaced).toBe(true);
   });
+  it("includes completed internal typed signatures without an external completion status", async () => {
+    const docs = await investorSignedDocuments(database({ document_signatures: [{ id: "typed", application_id: "application", offering_document_id: "document", provider: "internal", signed_at: "2026-10-21T14:00:00Z", pdf_path: "typed.pdf", signature_template_version: 2 }] }), "owner", "investment");
+    expect(docs[0]?.id).toBe("typed"); expect(docs[0]?.hasCopy).toBe(true);
+  });
 });

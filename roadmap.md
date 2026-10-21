@@ -2,7 +2,7 @@
 
 ## Investor submitted signed copies (2026-10-21)
 - [x] Add owner-only signed document archive on investment Documents with recorded versions, dates, retained replacements and private downloads after submission.
-- [ ] Run focused signed-copy ownership/version tests and confirm preview checks.
+- [x] Focused signed-copy ownership/version and document-source tests passed; preview build OK. Internal typed signatures included without treating pending external requests as completed.
 - [ ] Signed-in read-back — blocked on isolated synthetic QA access.
 
 ## Investor page visibility (2026-10-21)
