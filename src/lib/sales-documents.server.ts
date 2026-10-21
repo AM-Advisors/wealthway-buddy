@@ -352,12 +352,19 @@ export async function sendDocument(userId: string, id: string, d: { subject: str
   if (extra.some((e) => !emailRe.test(e))) throw new Error("One of the extra CC addresses isn't a valid email.");
   const ccAll = [...new Set([...(d.ccUserIds ?? []).map((u) => allowed.find((o) => o.userId === u)?.email).filter((e): e is string => !!e), ...extra])];
   if (!a.isOwner || (a.doc.status !== "approved" && !a.execDirect)) throw new Error("Only an approved document can be sent, by its owner.");
-  if (!a.doc.contact_id) throw new Error("Link a contact with an email address before sending.");
+  if (!a.doc.contact_id && !d.toContactIds?.length) throw new Error("Choose who to send to, or link a contact with an email address.");
   const team = await listClientTeam(userId, id);
-  const toIds = d.toContactIds?.length ? d.toContactIds : [a.doc.contact_id];
-  const to = toIds.map((c) => team.find((t) => t.contactId === c)).filter((t): t is NonNullable<typeof t> => !!t);
-  if (to.length !== toIds.length) throw new Error("One of the selected recipients isn't on this client's team.");
-  const signerIds = new Set(d.signerContactIds ?? (d.toContactIds ? [] : [a.doc.contact_id]));
+  let toIds = d.toContactIds?.length ? d.toContactIds : [a.doc.contact_id as string];
+  const picked = toIds.map((c) => team.find((t) => t.contactId === c));
+  if (picked.some((t) => !t)) throw new Error("One of the selected recipients isn't on this client's team.");
+  // Current-client contacts become CRM contacts on first send so the email is logged like any other.
+  const resolved = new Map<string, string>();
+  for (const t of picked as NonNullable<(typeof picked)[number]>[]) resolved.set(t.contactId, await ensureCrmContact(userId, a.db, a.doc.client_id, t));
+  const to = (picked as NonNullable<(typeof picked)[number]>[]).map((t) => ({ ...t, contactId: resolved.get(t.contactId)! }));
+  const rawSigners = d.signerContactIds ?? (d.toContactIds ? [] : [a.doc.contact_id as string]);
+  if (rawSigners.some((s) => !toIds.includes(s))) throw new Error("Signers must be among the people you're sending to.");
+  toIds = toIds.map((c) => resolved.get(c) ?? c);
+  const signerIds = new Set(rawSigners.map((s) => resolved.get(s) ?? s));
   if ([...signerIds].some((s) => !toIds.includes(s))) throw new Error("Signers must be among the people you're sending to.");
   if (!signerIds.size) throw new Error("Choose at least one person who can sign.");
   const cc = ccAll.filter((e) => !to.some((t) => t.email === e));
