@@ -76,6 +76,6 @@ describe("manager accreditation evidence", () => {
     });
     const evidence = await investorReviewEvidence(db, "manager", "fund", "investment");
     expect(evidence?.accreditation?.status).toBe("Awaiting review");
-    expect(evidence?.accreditation?.documents.map((d) => d.name)).toEqual(["proof.pdf"]);
+    expect(evidence?.accreditation?.documents.map((d: { name: string }) => d.name)).toEqual(["proof.pdf"]);
   });
 });

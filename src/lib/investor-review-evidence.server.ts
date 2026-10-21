@@ -60,7 +60,7 @@ async function loadAccreditation(db: any, applicationId: string | null) {
   const r = rec.data;
   if (!r) return null;
   const q = (r.questionnaire ?? {}) as Record<string, unknown>;
-  const relationship = [q.relationship_type, q.relationship_duration].filter((v) => typeof v === "string" && v).join(" · ") || r.pre_existing_relationship || null;
+  const relationship = [q["relationship_type"], q["relationship_duration"]].filter((v) => typeof v === "string" && v).join(" · ") || r.pre_existing_relationship || null;
   return {
     regType: r.reg_type as string,
     basis: typeof r.method === "string" ? r.method.replace(/_/g, " ") : null,
