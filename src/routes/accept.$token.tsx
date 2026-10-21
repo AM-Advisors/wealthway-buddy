@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -134,7 +134,7 @@ function Remittance({ token, method }: { token: string; method: "wire" | "ach" }
     ["SWIFT", r.swiftCode], ["Bank address", r.bankAddress], ["Beneficiary address", r.beneficiaryAddress], ["Reference", q.data?.reference ?? null]];
   return (
     <div className="rounded-md border p-3 text-sm">
-      <dl className="grid grid-cols-[10rem_1fr] gap-y-1">{rows.filter(([, v]) => v).map(([k, v]) => <><dt key={`${k}-k`} className="text-muted-foreground">{k}</dt><dd key={`${k}-v`} className="font-mono">{v}</dd></>)}</dl>
+      <dl className="grid grid-cols-[10rem_1fr] gap-y-1">{rows.filter(([, v]) => v).map(([k, v]) => <Fragment key={k}><dt className="text-muted-foreground">{k}</dt><dd className="font-mono">{v}</dd></Fragment>)}</dl>
       {r.referenceNote && <p className="mt-2 text-muted-foreground">{r.referenceNote}</p>}
       {!r.revealed && <Button size="sm" variant="outline" className="mt-3" onClick={() => setReveal(true)}>Show full details</Button>}
       <p className="mt-2 text-xs text-muted-foreground">Always confirm instructions by phone with your Harmonious contact before sending money. Harmonious never changes payment details by email.</p>

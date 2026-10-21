@@ -81,6 +81,7 @@ import { Route as AuthenticatedViewAsRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedWealthRouteImport } from './routes/_authenticated/wealth'
 import { Route as AuthenticatedWireRouteImport } from './routes/_authenticated/wire'
 import { Route as AuthenticatedWireConfirmationRouteImport } from './routes/_authenticated/wire-confirmation'
+import { Route as AcceptTokenRouteImport } from './routes/accept.$token'
 import { Route as AuthIndexRouteImport } from './routes/auth.index'
 import { Route as AuthForgotRouteImport } from './routes/auth.forgot'
 import { Route as AuthRegisterRouteImport } from './routes/auth.register'
@@ -847,6 +848,11 @@ const AuthenticatedWireConfirmationRoute =
     path: '/wire-confirmation',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AcceptTokenRoute = AcceptTokenRouteImport.update({
+  id: '/accept/$token',
+  path: '/accept/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthIndexRoute = AuthIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -3205,6 +3211,7 @@ export interface FileRoutesByFullPath {
   '/wealth': typeof AuthenticatedWealthRoute
   '/wire': typeof AuthenticatedWireRoute
   '/wire-confirmation': typeof AuthenticatedWireConfirmationRoute
+  '/accept/$token': typeof AcceptTokenRoute
   '/auth/forgot': typeof AuthForgotRoute
   '/auth/register': typeof AuthRegisterRoute
   '/cap-claim/$token': typeof CapClaimTokenRoute
@@ -3667,6 +3674,7 @@ export interface FileRoutesByTo {
   '/wealth': typeof AuthenticatedWealthRoute
   '/wire': typeof AuthenticatedWireRoute
   '/wire-confirmation': typeof AuthenticatedWireConfirmationRoute
+  '/accept/$token': typeof AcceptTokenRoute
   '/auth/forgot': typeof AuthForgotRoute
   '/auth/register': typeof AuthRegisterRoute
   '/cap-claim/$token': typeof CapClaimTokenRoute
@@ -4131,6 +4139,7 @@ export interface FileRoutesById {
   '/_authenticated/wealth': typeof AuthenticatedWealthRoute
   '/_authenticated/wire': typeof AuthenticatedWireRoute
   '/_authenticated/wire-confirmation': typeof AuthenticatedWireConfirmationRoute
+  '/accept/$token': typeof AcceptTokenRoute
   '/auth/forgot': typeof AuthForgotRoute
   '/auth/register': typeof AuthRegisterRoute
   '/cap-claim/$token': typeof CapClaimTokenRoute
@@ -4599,6 +4608,7 @@ export interface FileRouteTypes {
     | '/wealth'
     | '/wire'
     | '/wire-confirmation'
+    | '/accept/$token'
     | '/auth/forgot'
     | '/auth/register'
     | '/cap-claim/$token'
@@ -5061,6 +5071,7 @@ export interface FileRouteTypes {
     | '/wealth'
     | '/wire'
     | '/wire-confirmation'
+    | '/accept/$token'
     | '/auth/forgot'
     | '/auth/register'
     | '/cap-claim/$token'
@@ -5524,6 +5535,7 @@ export interface FileRouteTypes {
     | '/_authenticated/wealth'
     | '/_authenticated/wire'
     | '/_authenticated/wire-confirmation'
+    | '/accept/$token'
     | '/auth/forgot'
     | '/auth/register'
     | '/cap-claim/$token'
@@ -5947,6 +5959,7 @@ export interface RootRouteChildren {
   SpvRoute: typeof SpvRoute
   SpvsRoute: typeof SpvsRoute
   TermsRoute: typeof TermsRoute
+  AcceptTokenRoute: typeof AcceptTokenRoute
   CapClaimTokenRoute: typeof CapClaimTokenRoute
   ClassroomImgSplatRoute: typeof ClassroomImgSplatRoute
   FundSlugRoute: typeof FundSlugRoute
@@ -6504,6 +6517,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/wire-confirmation'
       preLoaderRoute: typeof AuthenticatedWireConfirmationRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/accept/$token': {
+      id: '/accept/$token'
+      path: '/accept/$token'
+      fullPath: '/accept/$token'
+      preLoaderRoute: typeof AcceptTokenRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/auth/': {
       id: '/auth/'
@@ -10297,6 +10317,7 @@ const rootRouteChildren: RootRouteChildren = {
   SpvRoute: SpvRoute,
   SpvsRoute: SpvsRoute,
   TermsRoute: TermsRoute,
+  AcceptTokenRoute: AcceptTokenRoute,
   CapClaimTokenRoute: CapClaimTokenRoute,
   ClassroomImgSplatRoute: ClassroomImgSplatRoute,
   FundSlugRoute: FundSlugRoute,
