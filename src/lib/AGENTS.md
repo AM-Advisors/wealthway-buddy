@@ -237,6 +237,7 @@
 - Optional secondary_phone lives on persons, staff-edited via person-records and normalized by person-phones.ts; View account reads both secondary contacts, while authentication and SMS code senders never read secondary_phone - why: one contact record without granting access through an alternate number.
 
 - Portfolio monitoring and Report Cards use portfolio-report-cards.server.ts with immutable version/evidence/decision storage, effective canonical marks, profile-owner-only risk answers and existing diligence/NDA checks — why: adapt V2.5 presentation without importing its financial or access engines.
+- Wealth service selections are append-only commercial intent; purchases use catalog/quote/SOW pricing. Personal holdings are owner-only observations, never fund marks/books; individual risk cards reuse Report Cards — why: standalone wealth without financial or access duplication.
 - Report Card share links: report-card-share-model.ts + share functions in portfolio-report-cards.server.ts (hashed token, ≤30 days, revocable, every view logged, published non-investor cards only, no evidence files) - why: controlled external sharing.
 - Compliance report schedules: compliance-schedules.server.ts; the 5-minute internal job only prepares snapshots, a different staff member approves before the branded email sends; harmonious.co recipients only - why: maker-checker, reports never file or pay.
 

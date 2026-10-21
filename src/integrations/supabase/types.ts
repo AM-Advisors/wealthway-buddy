@@ -37543,6 +37543,62 @@ export type Database = {
           },
         ]
       }
+      personal_wealth_observations: {
+        Row: {
+          archived: boolean
+          as_of: string
+          asset_class: string
+          cost_cents: number | null
+          created_at: string
+          currency: string
+          holding_id: string
+          id: string
+          name: string
+          owner_user_id: string
+          source_note: string
+          supersedes_id: string | null
+          value_cents: number | null
+        }
+        Insert: {
+          archived?: boolean
+          as_of: string
+          asset_class: string
+          cost_cents?: number | null
+          created_at?: string
+          currency?: string
+          holding_id: string
+          id?: string
+          name: string
+          owner_user_id: string
+          source_note: string
+          supersedes_id?: string | null
+          value_cents?: number | null
+        }
+        Update: {
+          archived?: boolean
+          as_of?: string
+          asset_class?: string
+          cost_cents?: number | null
+          created_at?: string
+          currency?: string
+          holding_id?: string
+          id?: string
+          name?: string
+          owner_user_id?: string
+          source_note?: string
+          supersedes_id?: string | null
+          value_cents?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personal_wealth_observations_supersedes_id_fkey"
+            columns: ["supersedes_id"]
+            isOneToOne: true
+            referencedRelation: "personal_wealth_observations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       persons: {
         Row: {
           address_line1: string | null
@@ -47826,6 +47882,38 @@ export type Database = {
           },
           {
             foreignKeyName: "waterfall_terms_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wealth_service_selections: {
+        Row: {
+          created_at: string
+          id: string
+          offering_id: string | null
+          owner_user_id: string
+          services: string[]
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          offering_id?: string | null
+          owner_user_id: string
+          services?: string[]
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          offering_id?: string | null
+          owner_user_id?: string
+          services?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wealth_service_selections_offering_id_fkey"
             columns: ["offering_id"]
             isOneToOne: false
             referencedRelation: "offerings"

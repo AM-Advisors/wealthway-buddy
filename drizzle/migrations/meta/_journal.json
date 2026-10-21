@@ -2157,6 +2157,13 @@
       "when": 1792577624148,
       "tag": "0307_legal_wording_retired_by_actor",
       "breakpoints": true
+    },
+    {
+      "idx": 308,
+      "version": "7",
+      "when": 1792601125101,
+      "tag": "0308_wealth_service_selections_and_personal_observations",
+      "breakpoints": true
     }
   ]
 }

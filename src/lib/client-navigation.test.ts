@@ -27,6 +27,8 @@ describe("client navigation by workspace", () => {
       "Home",
       "My Funds",
       "Activity",
+      "Portfolio",
+      "Wealth & services",
       "Reports",
       "Report Cards",
       "Documents",
@@ -48,6 +50,7 @@ describe("client navigation by workspace", () => {
       "Investor onboarding",
       "Capital",
       "Portfolio",
+      "Wealth & services",
       "Reports",
       "Report Cards",
       "Financial reviews",
@@ -63,6 +66,7 @@ describe("client navigation by workspace", () => {
   it("gives a company user exactly the company menu", () => {
     expect(titles("company")).toEqual([
       "Home",
+      "Wealth & services",
       "Funds",
       "Cap Table",
       "Stakeholders",

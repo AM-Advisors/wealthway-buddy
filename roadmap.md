@@ -1,5 +1,12 @@
 # Roadmap
 
+## Portfolio and personal wealth services (2026-10-21)
+- [x] Add both services to the shared catalog and current-client service options; fund add-on pricing requires a real published rate or approved quote, not the catalog's zero default. Standalone/fund preferences retain history, never activate charges.
+- [x] Provide owner-only personal holdings, dated corrections, multi-currency separate totals, exports and personal risk Report Cards through the existing engine, without a fund.
+- [x] 109 focused privacy, history, pricing and navigation checks passed; preview build OK. Compared official wealth-platform offerings and identified aggregation, liquidity, ownership and professional collaboration opportunities.
+- [ ] Pricing and standalone paid activation — blocked on approved prices and commercial terms; no prices invented or subscriptions started.
+- [ ] Signed-in read-back — blocked on isolated synthetic QA; shared production browser tests prohibited.
+
 ## Alyssa review evidence (2026-10-21)
 - [x] Connect saved signed copies, acknowledgments and questionnaire to the fund manager's investor detail; show the owner's signed archive below the submitted journey too.
 - [x] 26 focused evidence, ownership and download checks passed. Saved Alyssa subscription v3, PPM v1/OA v2 acknowledgments and submitted questionnaire confirmed; no signatures or approval changed.
