@@ -45,7 +45,7 @@ async function requireStaff(context: any) {
     .from("user_roles")
     .select("role")
     .eq("user_id", context.userId);
-  if (error) throw new Error(error.message);
+  assertDiagnosticReads([{ error }]);
   const roles = ((data ?? []) as any[]).map((r) => String(r.role));
   if (!roles.some((r) => (STAFF_ROLES as readonly string[]).includes(r))) {
     throw new Error("Forbidden: the audit log is for the Harmonious team.");
@@ -82,10 +82,7 @@ const money = (cents: number | null | undefined) =>
     ? null
     : (cents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" });
 
-const mask = (value: string | null | undefined) => {
-  const v = String(value ?? "").replace(/\s/g, "");
-  return v.length > 4 ? `•••• ${v.slice(-4)}` : v || null;
-};
+const mask = (value: string | null | undefined) => diagnosticText(value, "bank_account");
 
 const dateOnly = (v: string | null | undefined) =>
   v ? new Date(v).toLocaleDateString("en-US", { dateStyle: "medium" }) : null;
@@ -190,7 +187,7 @@ export const listMoneyAudit = createServerFn({ method: "GET" })
         actor: personName.get(c.reviewed_by ?? investor ?? "") ?? null,
         fundName: fund ? (fundName.get(fund) ?? null) : null,
         category: "Wire confirmation",
-        summary: `Investor wire confirmation${c.bank_reference ? ` ref ${c.bank_reference}` : ""}`,
+        summary: "Investor wire confirmation",
         detail: joinDetail([
           c.sending_bank_name,
           c.sending_account_last4 ? `Account •••• ${c.sending_account_last4}` : null,
@@ -222,7 +219,7 @@ export const listMoneyAudit = createServerFn({ method: "GET" })
           i.callback_status ? `Callback: ${i.callback_status}` : null,
           i.compliance_status ? `Compliance: ${i.compliance_status}` : null,
           i.bank_status ? `Bank: ${i.bank_status}` : null,
-          i.pause_reason ? `Paused: ${i.pause_reason}` : null,
+          i.pause_reason ? "Pause reason recorded (withheld)" : null,
           null,
         ]),
         amountCents: i.amount_cents ?? null,
@@ -254,9 +251,9 @@ export const listMoneyAudit = createServerFn({ method: "GET" })
         actor: personName.get(investor ?? "") ?? null,
         fundName: fund ? (fundName.get(fund) ?? null) : null,
         category: "Investor payment",
-        summary: `${p.method === "ach" ? "ACH" : "Wire"} payment${p.reference_code ? ` ref ${p.reference_code}` : ""}`,
+        summary: `${p.method === "ach" ? "ACH" : "Wire"} payment`,
         detail: joinDetail([
-          p.provider ? `Provider ${p.provider}` : null,
+          null,
           p.bank_last4 ? `Account •••• ${p.bank_last4}` : null,
           p.expected_date ? `Expected ${dateOnly(p.expected_date)}` : null,
           p.confirmed_at ? `Confirmed ${dateOnly(p.confirmed_at)}` : null,
@@ -287,7 +284,7 @@ export const listDistributionAudit = createServerFn({ method: "GET" })
     if (since) query = query.gte("created_at", since);
     if (data.offeringId) query = query.eq("offering_id", data.offeringId);
     const { data: rows, error } = await query;
-    if (error) throw new Error(error.message);
+    assertDiagnosticReads([{ error }]);
 
     const entries: AuditEntry[] = ((rows ?? []) as any[]).map((d) => ({
       id: `distribution-${d.id}`,
@@ -348,7 +345,7 @@ export const listInvestorCheckAudit = createServerFn({ method: "GET" })
         actor: w.person,
         fundName: w.fund,
         category: "Identity verification",
-        summary: `Identity check with ${k.provider ?? "provider"}`,
+        summary: "Identity check recorded",
         detail: joinDetail([
           plain(k.decision) ? `Provider decision: ${plain(k.decision)}` : null,
           plain(k.result) ? `Result: ${plain(k.result)}` : null,
@@ -399,7 +396,7 @@ export const listInvestorCheckAudit = createServerFn({ method: "GET" })
         actor: w.person,
         fundName: w.fund,
         category: "Screening",
-        summary: `Screening with ${a.provider ?? "provider"}`,
+        summary: "Screening recorded",
         detail: joinDetail([
           `${matches} potential match${matches === 1 ? "" : "es"} returned by the provider`,
           a.completed_at ? `Completed ${dateOnly(a.completed_at)}` : null,
@@ -454,7 +451,7 @@ export const listFilingAudit = createServerFn({ method: "GET" })
     if (since) query = query.gte("created_at", since);
     if (data.offeringId) query = query.eq("offering_id", data.offeringId);
     const { data: rows, error } = await query;
-    if (error) throw new Error(error.message);
+    assertDiagnosticReads([{ error }]);
 
     const entries: AuditEntry[] = ((rows ?? []) as any[]).map((f) => ({
       id: `filing-${f.id}`,
@@ -462,7 +459,7 @@ export const listFilingAudit = createServerFn({ method: "GET" })
       actor: f.owner_name ?? personName.get(f.created_by) ?? null,
       fundName: f.offering_id ? (fundName.get(f.offering_id) ?? null) : null,
       category: f.category ? `Filing - ${f.category}` : "Filing",
-      summary: f.label ?? f.key ?? "Compliance item",
+      summary: "Compliance item recorded",
       detail: joinDetail([
         f.due_date ? `Due ${dateOnly(f.due_date)}` : null,
         f.filed_on ? `Filed ${dateOnly(f.filed_on)}` : null,
@@ -489,7 +486,7 @@ export const listHoldAudit = createServerFn({ method: "GET" })
     if (since) query = query.gte("created_at", since);
     if (data.offeringId) query = query.eq("offering_id", data.offeringId);
     const { data: rows, error } = await query;
-    if (error) throw new Error(error.message);
+    assertDiagnosticReads([{ error }]);
 
     const entries: AuditEntry[] = ((rows ?? []) as any[]).map((h) => ({
       id: `hold-${h.id}`,
@@ -526,7 +523,7 @@ export const listScopeAudit = createServerFn({ method: "GET" })
     if (since) query = query.gte("created_at", since);
     if (data.offeringId) query = query.eq("offering_id", data.offeringId);
     const { data: rows, error } = await query;
-    if (error) throw new Error(error.message);
+    assertDiagnosticReads([{ error }]);
 
     const short = (v: unknown) => {
       if (v === null || v === undefined) return null;
@@ -544,7 +541,7 @@ export const listScopeAudit = createServerFn({ method: "GET" })
           ? (clientName.get(e.client_id) ?? null)
           : null,
       category: e.area ? `Scope - ${e.area}` : "Scope",
-      summary: `${e.action ?? "changed"}${e.target ? ` - ${e.target}` : ""}`,
+      summary: diagnosticText(e.action ?? "changed", "action"),
       detail: joinDetail([
         e.actor_role ? `As ${e.actor_role}` : null,
         e.approval ? `Approval: ${e.approval}` : null,
@@ -564,7 +561,7 @@ export const listAuditFunds = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     await requireStaff(context);
     const { data, error } = await context.supabase.from("offerings").select("id, name").order("name");
-    if (error) throw new Error(error.message);
+    assertDiagnosticReads([{ error }]);
     return { funds: (data ?? []) as { id: string; name: string }[] };
   });
 
