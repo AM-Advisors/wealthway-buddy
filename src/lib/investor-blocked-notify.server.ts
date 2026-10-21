@@ -155,7 +155,7 @@ export async function notifySideLetterRequired(n: { onboardingId: string; offeri
     await notifySubmission({ kind: "side_letter_required", title: `Side letter required - ${investor} committed ${n.commitment}, below the ${n.minimum} minimum.`, offeringId: n.offeringId, ref: n.onboardingId, once: true, path: `/ops/fund/${n.offeringId}` });
     await emailFundManagers(db, n.offeringId, `side-letter:${n.onboardingId}`, {
       headline: "A side letter is required",
-      intro: `${investor} committed ${n.commitment}, below this fund's ${n.minimum} minimum. A side letter is required to accept it. Harmonious will confirm the side-letter fee; the side letter is prepared once it is paid.`,
+      intro: `${investor} committed ${n.commitment}, below this fund's ${n.minimum} minimum. A side letter is required to accept it. The side letter costs $1,500: pay it under Approvals and the side letter is generated as soon as payment is confirmed.`,
       details: [{ label: "Investor", value: investor }, { label: "Commitment", value: n.commitment }, { label: "Minimum", value: n.minimum }],
     });
   } catch (e) { console.error("side letter notify", e); }
