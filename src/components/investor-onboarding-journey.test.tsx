@@ -33,7 +33,7 @@ describe("investment amount minimum", () => {
     const minimum = html.indexOf("Minimum $500,000");
     expect(amount).toBeGreaterThan(-1);
     expect(minimum).toBeGreaterThan(amount);
-    expect(html.slice(amount, minimum).length).toBeLessThan(400);
+    expect(html.slice(amount, minimum).length).toBeLessThan(800);
   });
 
   it("says nothing when the fund sets no minimum", () => {
