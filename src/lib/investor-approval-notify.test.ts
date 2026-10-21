@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-const send = vi.hoisted(() => vi.fn(async () => ({ sent: true })))
+const send = vi.hoisted(() => vi.fn(async (_template: string, _recipient: string, _options: Record<string, any>) => ({ sent: true })))
 const funding = vi.hoisted(() => vi.fn(async () => ({ unlocked: true, instructions: { account: 'private-account' } })))
 vi.mock('@/lib/email-templates/send-email', () => ({ sendTemplateEmail: send }))
 vi.mock('@/lib/investor-onboarding.server', () => ({ fundingInstructions: funding }))
