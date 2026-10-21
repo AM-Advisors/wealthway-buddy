@@ -50,7 +50,7 @@ async function access(userId: string, documentId: string) {
 async function latestSections(db: any, doc: any): Promise<Section[]> {
   if (!doc.current_version) return defaultSections(doc.kind, doc.direction);
   const { data } = await db.from("sales_document_versions").select("sections").eq("document_id", doc.id).eq("version", doc.current_version).maybeSingle();
-  return (data?.sections ?? []) as Section[];
+  return applyLockedSections(doc.kind, doc.direction, (data?.sections ?? []) as Section[], await lockFacts(db, doc));
 }
 async function lockFacts(db: any, doc: any) {
   const [client, contact, lines] = await Promise.all([
@@ -207,14 +207,6 @@ export async function uploadSource(userId: string, id: string, file: { name: str
   return { chars: text.length };
 }
 
-function pricingBody(lines: any[]) {
-  if (!lines.length) return "";
-  const money = (c: number) => `$${(Number(c) / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  const rows = lines.map((l) => `- ${l.label}: ${l.quantity} x ${money(l.unit_cents)} = ${money(l.line_cents)}`);
-  const total = lines.reduce((s, l) => s + Number(l.line_cents || 0), 0);
-  return `${rows.join("\n")}\nTotal: ${money(total)}\n(Pricing from the approved quote.)`;
-}
-
 export async function draftWithAi(userId: string, id: string, brief: string | null) {
   const a = await access(userId, id);
   if (!a.canEdit) throw new Error("You can't edit this document right now.");
@@ -233,8 +225,6 @@ export async function draftWithAi(userId: string, id: string, brief: string | nu
     sourceText: doc.source_text, sections: current,
   });
   // Prices are never AI-written: the pricing section is filled from the quote lines.
-  const priceKey = doc.direction === "response" ? (doc.kind === "rfq" ? "pricing" : "services") : null;
-  void priceKey;
   const v = await writeVersion(db, doc, out, userId, "ai_draft");
   await event(db, id, userId, "ai_drafted", { version: v });
   return { version: v };
