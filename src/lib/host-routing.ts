@@ -59,6 +59,8 @@ const SHARED_PREFIXES = [
   "/onboard/",
   // Time-limited Report Card share links work on any Harmonious address.
   "/report-card-share/",
+  // Client sign-and-approve links for quotes, proposals, RFPs and RFQs.
+  "/accept/",
 ];
 
 // Personal account pages belong to the application in which they are opened.
