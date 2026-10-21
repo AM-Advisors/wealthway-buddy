@@ -211,7 +211,7 @@ export async function getDocument(userId: string, id: string) {
     assists: a.assists.map((x) => ({ ...x, requestedByName: n(x.requested_by), assigneeName: n(x.assignee_user_id) })),
     perms: {
       canEdit: a.canEdit, canApprove: a.canApprove && doc.owner_user_id !== userId && !((versions ?? []) as any[]).some((v) => v.created_by === userId && v.source !== "created"),
-      isOwner: a.isOwner, isMarketing: a.isMarketing, canRequestHelp: a.isOwner && !a.activeAssist && ["draft", "approved"].includes(doc.status),
+      isOwner: a.isOwner, isMarketing: a.isMarketing, canRequestHelp: false,
       canSubmit: a.isOwner && doc.status === "draft", canSend: a.isOwner && doc.status === "approved", canOutcome: a.isOwner && doc.status === "sent",
       canExport: doc.status !== "draft" || a.salesSee, userId,
     },
@@ -267,15 +267,8 @@ export async function draftWithAi(userId: string, id: string, brief: string | nu
   return { version: v };
 }
 
-export async function requestHelp(userId: string, id: string, d: { note: string; sections: string[]; dueDate: string | null }) {
-  void d; throw new Error("Marketing help is no longer part of proposals.");
-  const a = await access(userId, id);
-  if (!a.isOwner) throw new Error("Only the document owner can ask Marketing for help.");
-  if (a.activeAssist) throw new Error("Marketing already has an open request on this document.");
-  await a.db.from("sales_document_assist_requests").insert({ document_id: id, requested_by: userId, note: d.note, sections: d.sections, due_date: d.dueDate });
-  await a.db.from("sales_documents").update({ status: "with_marketing", updated_at: new Date().toISOString() }).eq("id", id);
-  await event(a.db, id, userId, "marketing_requested", { sections: d.sections, due: d.dueDate });
-  return { ok: true };
+export async function requestHelp(_userId: string, _id: string, _d: { note: string; sections: string[]; dueDate: string | null }): Promise<{ ok: true }> {
+  throw new Error("Marketing help is no longer part of proposals.");
 }
 
 export async function marketingQueue(userId: string) {
