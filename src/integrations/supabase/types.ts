@@ -15230,6 +15230,8 @@ export type Database = {
           consent_electronic: boolean
           document_author: string | null
           document_hash: string
+          executed_at: string | null
+          executed_pdf_path: string | null
           id: string
           initials: string | null
           investment_profile_id: string | null
@@ -15280,6 +15282,8 @@ export type Database = {
           consent_electronic?: boolean
           document_author?: string | null
           document_hash: string
+          executed_at?: string | null
+          executed_pdf_path?: string | null
           id?: string
           initials?: string | null
           investment_profile_id?: string | null
@@ -15330,6 +15334,8 @@ export type Database = {
           consent_electronic?: boolean
           document_author?: string | null
           document_hash?: string
+          executed_at?: string | null
+          executed_pdf_path?: string | null
           id?: string
           initials?: string | null
           investment_profile_id?: string | null

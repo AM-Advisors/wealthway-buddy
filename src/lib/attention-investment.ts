@@ -23,9 +23,9 @@ export function investmentAttentionStep(
       ["bank_transaction_detected", "reconciliation_pending", "partially_funded"].includes(String(row.funding_status));
     return pending
       ? { step: "fund", status: "We're confirming your transfer with the bank.", waiting: true }
-      : { step: "fund", status: "Funding required", waiting: false };
+      : { step: "fund", status: "Funding instructions are ready. Open Fund to send your investment.", waiting: false };
   }
-  if (stage === "harmonious_review") return { step: "sign", status: "Your fund manager is reviewing your subscription.", waiting: true };
+  if (stage === "harmonious_review") return { step: "sign", status: "Waiting on your fund manager to approve and sign. No action needed from you.", waiting: true };
   if (stage === "signature" || stage === "subscription") return { step: "sign", status: "Documents to review and sign", waiting: false };
   if (["verification", "eligibility", "tax"].includes(stage)) return { step: "verify", status: "Verification to complete", waiting: false };
   return { step: "about", status: "Tell us who is investing", waiting: false };

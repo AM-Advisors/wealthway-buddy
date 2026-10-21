@@ -31,9 +31,10 @@ export function InvestorSignedDocuments({ onboardingId }: { onboardingId: string
       <div className="min-w-0 space-y-1">
         <p className="break-words font-medium">{d.title}</p>
         <p className="text-sm text-muted-foreground">{d.version != null ? `Version ${d.version}` : "Version not recorded"}{d.snapshotVersion != null ? ` · Signed record ${d.snapshotVersion}` : ""}{d.signedAt ? ` · ${new Date(d.signedAt).toLocaleDateString("en-US")}` : ""}</p>
+        {d.fullyExecuted && <Badge>Fully executed{d.executedAt ? ` · ${new Date(d.executedAt).toLocaleDateString("en-US")}` : ""}</Badge>}
         {d.replaced && <Badge variant="outline">Replaced · retained copy</Badge>}
       </div>
-      {d.hasCopy ? <Button size="sm" variant="outline" disabled={busy !== null} onClick={() => void open(d.id)}><Download className="mr-2 h-4 w-4" />{busy === d.id ? "Opening…" : "Download signed copy"}</Button> : <span className="text-sm text-muted-foreground">Signed copy pending</span>}
+      {d.hasCopy ? <Button size="sm" variant="outline" disabled={busy !== null} onClick={() => void open(d.id)}><Download className="mr-2 h-4 w-4" />{busy === d.id ? "Opening…" : d.fullyExecuted ? "Download fully executed copy" : "Download signed copy"}</Button> : <span className="text-sm text-muted-foreground">Signed copy pending</span>}
     </div>)}
   </section>;
 }

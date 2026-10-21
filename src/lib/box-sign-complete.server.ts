@@ -103,7 +103,17 @@ export async function syncBoxSignRequest(
   });
 
   if (mapped === "completed") {
+    // Same-envelope dual signing: the final file already carries the fund acceptance.
+    const { data: fundSigner } = await supabaseAdmin.from("document_signature_signers")
+      .select("signer_user_id, status, signed_at").eq("signature_id", signature.id).eq("role_key", "fund_manager").maybeSingle();
+    if (fundSigner?.status === "signed" && patch["pdf_path"]) {
+      await supabaseAdmin.from("document_signatures").update({ executed_pdf_path: patch["pdf_path"] as string, executed_at: fundSigner.signed_at ?? now } as never).eq("id", signature.id);
+    }
     await advanceApplication(signature.application_id);
+    if (fundSigner?.status === "signed" && fundSigner.signer_user_id) {
+      const { releaseFundingAfterCountersign } = await import("@/lib/fund-countersign-complete.server");
+      await releaseFundingAfterCountersign(supabaseAdmin, signature.application_id, fundSigner.signer_user_id);
+    }
     if (!signature.provider_completed_at) {
       await notifyManagers(signature.id, signature.application_id, signature.offering_document_id);
     }

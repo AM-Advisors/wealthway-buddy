@@ -88,7 +88,15 @@ export const Route = createFileRoute("/api/public/webhooks/box-sign")({
           );
           const { syncBoxSignRequest } = await import("@/lib/box-sign-complete.server");
           const result = await syncBoxSignRequest(signRequestId, opts);
-          if (result.status === "unknown_sign_request") {
+          const { data: csSigner } = result.status === "unknown_sign_request"
+            ? await supabaseAdmin.from("document_signature_signers").select("id").eq("provider_signer_id", `cs:${signRequestId}`).maybeSingle()
+            : { data: null };
+          if (csSigner) {
+            // Fund countersign-only request: save the fully executed copy and release funding when clear.
+            const { completeFundCountersign } = await import("@/lib/fund-countersign-complete.server");
+            const cs = await completeFundCountersign(supabaseAdmin, { signerRowId: csSigner.id, requestId: signRequestId });
+            await supabaseAdmin.from("box_sign_webhook_events").update({ outcome: cs.completed ? "countersigned" : "countersign_pending", processed_at: new Date().toISOString() }).eq("provider_event_id", deliveryId);
+          } else if (result.status === "unknown_sign_request") {
             // Not a fund document - it may be a diligence-room NDA.
             const { syncNdaSignRequest } = await import("@/lib/nda-sign-complete.server");
             const nda = await syncNdaSignRequest(signRequestId, opts);

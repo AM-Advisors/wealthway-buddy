@@ -67,6 +67,7 @@ function DocRow({ offeringId, onboardingId, title, version, d, readOnly }: { off
           {d.signed && d.decision === "approved" && d.countersignSignerId && !readOnly ? (
             <Button size="sm" onClick={() => navigate({ to: "/manager/countersign/$signerId", params: { signerId: d.countersignSignerId } })}>Sign now</Button>
           ) : null}
+          {(d.signed as any)?.fullyExecuted ? <Badge>Fully executed</Badge> : null}
           {d.signed?.hasCopy ? <SignedCopyButton offeringId={offeringId} signatureId={d.signed.signatureId} /> : null}
           {d.signed && d.hasPendingFundSignature && d.decision === 'approved' && !readOnly ? <Button size="sm" variant="outline" disabled={busy} onClick={async () => {
             setBusy(true);

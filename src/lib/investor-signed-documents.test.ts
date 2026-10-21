@@ -24,7 +24,7 @@ function database(overrides: Record<string, any> = {}) {
 }
 describe("investor submitted signed copies", () => {
   it("shows the recorded signed version, not the current fund template", async () => {
-    expect(await investorSignedDocuments(database(), "owner", "investment")).toEqual([{ id: "signed", title: "Subscription Agreement", version: 3, snapshotVersion: 2, signedAt: "2026-10-21T14:00:00Z", hasCopy: true, replaced: false }]);
+    expect(await investorSignedDocuments(database(), "owner", "investment")).toEqual([{ id: "signed", title: "Subscription Agreement", version: 3, snapshotVersion: 2, signedAt: "2026-10-21T14:00:00Z", hasCopy: true, replaced: false, fullyExecuted: false, executedAt: null }]);
   });
   it("does not expose signed copies before submission", async () => {
     expect(await investorSignedDocuments(database({ investor_onboardings: [{ id: "investment", investor_user_id: "owner", application_id: "application", executed_snapshot: null }] }), "owner", "investment")).toEqual([]);

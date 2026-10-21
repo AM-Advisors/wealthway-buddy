@@ -234,20 +234,11 @@ export const countersignDetailFn = createServerFn({ method: "POST" })
     // Countersign-only request: used when the investor's signing finished without the fund on it.
     const csRequestId = String(me.provider_signer_id ?? "").startsWith("cs:") ? String(me.provider_signer_id).slice(3) : null;
     let myStatus = String(me.status ?? "");
-    if (csRequestId && myStatus !== "signed") {
-      const detail = await box.getSignRequestDetail(csRequestId).catch(() => null);
-      const mine = detail?.signers.find((x) => x.email === String(me.signer_email ?? "").toLowerCase());
-      if (detail && mine?.decision === "signed") {
-        const signedAt = mine.signedAt ?? new Date().toISOString();
-        if (detail.signedFileId && sig?.pdf_path) {
-          const bytes = await box.downloadFile(detail.signedFileId);
-          const path = String(sig.pdf_path).replace(/\.pdf$/i, "") + "-countersigned.pdf";
-          await db.storage.from("signed-documents").upload(path, bytes, { contentType: "application/pdf", upsert: false }).catch(() => null);
-          await db.from("offering_document_events").insert({ offering_id: me.offering_id, offering_document_id: me.offering_document_id, event: "fund_countersigned", actor_user_id: context.userId, detail: { signatureId: me.signature_id, countersignedPath: path, requestId: csRequestId } }).then(() => null, () => null);
-        }
-        await db.from("document_signature_signers").update({ status: "signed", signed_at: signedAt, last_event_at: signedAt }).eq("id", me.id).neq("status", "signed");
-        myStatus = "signed";
-      }
+    if (csRequestId) {
+      // Idempotent: also backfills the executed copy and releases funding if the webhook missed it.
+      const { completeFundCountersign } = await import("@/lib/fund-countersign-complete.server");
+      const done = await completeFundCountersign(db, { signerRowId: me.id, requestId: csRequestId }).catch(() => ({ completed: false }));
+      if (done.completed) myStatus = "signed";
     }
     const { canCountersign, signingStage } = await import("@/lib/fund-onboarding-model");
     const stage = signingStage({
