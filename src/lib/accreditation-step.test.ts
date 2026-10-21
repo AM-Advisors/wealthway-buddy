@@ -20,3 +20,9 @@ describe("accreditation step", () => {
     expect(accreditationStepDone("missing")).toBe(false);
   });
 });
+
+import { accreditationOutcome } from "@/lib/accreditation-step";
+describe("who checks accreditation", () => {
+  it("506(b) needs no reviewer", () => expect(accreditationOutcome("506b")).toBe("approved"));
+  it("506(c) waits for the fund manager or Harmonious", () => expect(accreditationOutcome("506c")).toBe("review"));
+});

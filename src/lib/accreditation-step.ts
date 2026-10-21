@@ -22,3 +22,8 @@ export function selfCertificationAllowed(exemption: string | null | undefined): 
 export function accreditationStepDone(state: string | null | undefined): boolean {
   return state === "valid" || state === "not_applicable" || state === "review_required";
 }
+
+/** 506(b): the investor's confirmation completes accreditation. 506(c): paperwork waits for the fund manager or Harmonious. */
+export function accreditationOutcome(exemption: string | null | undefined): "approved" | "review" {
+  return selfCertificationAllowed(exemption) ? "approved" : "review";
+}
