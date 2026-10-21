@@ -27,6 +27,7 @@ import { INVESTOR_TIERS } from "@/lib/product-pricing";
 import { fmtDate, usd } from "./shared";
 import { PersonalInvestmentLinkCard, PersonalLinkCopyButton } from "@/components/personal-investment-link";
 import { InvestorEmailHistory, InvestorHelpers, InvestorQuickEdit } from "@/components/investor-panel-extras";
+import { InvestorPeopleAndContacts } from "@/components/investor-people-contacts";
 import { InvestorPriorVerification } from "@/components/investor-prior-verification";
 import { PriorSignedDocuments } from "@/components/prior-signed-documents";
 
@@ -295,6 +296,7 @@ export function InvestorSheet({ fundId, id, onClose }: { fundId: string; id: str
             {id && <InvestorQuickEdit onboardingId={id} onSaved={() => q.refetch()} />}
             {id && <InvestorPriorVerification onboardingId={id} onSaved={() => q.refetch()} />}
             {id && <InvestorHelpers onboardingId={id} />}
+            {id && <InvestorPeopleAndContacts onboardingId={id} onSaved={() => q.refetch()} />}
             <section className="grid grid-cols-2 gap-3">
               <div className="rounded-lg border p-3"><p className="text-xs text-muted-foreground">Committed</p><p className="text-lg font-semibold">{usd(d.committedCents)}</p></div>
               <div className="rounded-lg border p-3"><p className="text-xs text-muted-foreground">Received</p><p className="text-lg font-semibold">{usd(d.receivedCents)}</p>
