@@ -64,6 +64,6 @@ describe("manager tax form list", () => {
       { id: "c", form_type: "w8ben", certified_at: "2020-01-01", expires_on: "2023-12-31", document_path: "p" },
     ], "2026-10-21");
     expect(out.map((f) => [f.id, f.label])).toEqual([["a", "W-9"]]);
-    expect(JSON.stringify(out)).not.toContain("\\"p\\"");
+    expect(out[0]).not.toHaveProperty("document_path");
   });
 });
