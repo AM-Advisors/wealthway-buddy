@@ -15,7 +15,7 @@ export const Route = createFileRoute("/_authenticated/ops/banking")({
       { property: "og:title", content: "Banking requests - Harmonious operations" },
       {
         property: "og:description",
-        content: "Track Mercury, Texas Capital and Customers Bank account openings.",
+        content: "Track fund bank account openings.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

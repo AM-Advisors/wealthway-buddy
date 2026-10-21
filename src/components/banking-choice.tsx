@@ -9,9 +9,9 @@ import { getBankingChoiceFn, requestBankSetup, setBankingChoiceFn } from "@/lib/
 
 const BANKS = [
   { value: "texas_capital", label: "Texas Capital Bank" },
-  { value: "mercury", label: "Mercury" },
+  { value: "mercury", label: "Online business bank" },
 ] as const;
-const BANK_LABEL: Record<string, string> = { texas_capital: "Texas Capital Bank", mercury: "Mercury", customers: "Customers Bank" };
+const BANK_LABEL: Record<string, string> = { texas_capital: "Texas Capital Bank", mercury: "Online business bank", customers: "Customers Bank" };
 
 /** Who opens the fund's bank account; if Harmonious, which bank. */
 export function BankingChoice({ offeringId, onChanged }: { offeringId: string; onChanged?: () => void }) {

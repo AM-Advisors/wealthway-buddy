@@ -12,10 +12,10 @@ import { fileToBase64 } from "@/components/fund-tabs/shared";
 
 const STATUS: Record<string, string> = {
   application_started: "Application started",
-  submitted: "Submitted to Mercury",
-  approved: "Approved by Mercury",
-  needs_info: "Mercury needs more info",
-  declined: "Declined by Mercury",
+  submitted: "Submitted to the bank",
+  approved: "Approved by the bank",
+  needs_info: "The bank needs more info",
+  declined: "Declined by the bank",
 };
 
 /** Mercury: Harmonious pre-fills the application; the manager reviews and submits it on Mercury. */
@@ -37,16 +37,16 @@ export function MercuryApplicationCard({ fundId }: { fundId: string }) {
       return start({ data: { offering_id: fundId, address: { address1: a.address1, address2: a.address2 || undefined, city: a.city, region: a.region, postalCode: a.postalCode }, phone: a.phone || undefined, website: a.website || undefined, formationDoc, confirmed: true } as any });
     },
     onSuccess: (r) => {
-      toast.success("Your Mercury application is ready. Finish it on Mercury.");
+      toast.success("Your bank application is ready. Finish it with the bank.");
       window.open(r.signupLink, "_blank", "noopener,noreferrer");
       void qc.invalidateQueries({ queryKey: ["mercury-readiness", fundId] });
       void qc.invalidateQueries({ queryKey: ["fund-entity", fundId] });
     },
-    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : "Could not send to Mercury."),
+    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : "Could not send to the bank."),
   });
 
   if (q.isLoading) return <p className="text-sm text-muted-foreground">Checking your fund's details…</p>;
-  if (q.error || !q.data) return <p className="text-sm text-destructive">Couldn't load the Mercury application.</p>;
+  if (q.error || !q.data) return <p className="text-sm text-destructive">Couldn't load the bank application.</p>;
   const r = q.data;
   if (!r.configured) return null;
 
@@ -54,11 +54,11 @@ export function MercuryApplicationCard({ fundId }: { fundId: string }) {
     return (
       <div className="space-y-2 rounded-md border p-3">
         <div className="flex items-center justify-between gap-2">
-          <p className="text-sm font-medium">Mercury application</p>
+          <p className="text-sm font-medium">Bank application</p>
           <Badge variant="secondary">{STATUS[r.existing.status] ?? r.existing.status}</Badge>
         </div>
-        <p className="text-xs text-muted-foreground">Mercury reviews and decides. Harmonious never submits the application or moves money.</p>
-        <Button asChild size="sm"><a href={r.existing.signupLink} target="_blank" rel="noopener noreferrer">Continue your Mercury application</a></Button>
+        <p className="text-xs text-muted-foreground">The bank reviews and decides. Harmonious never submits the application or moves money.</p>
+        <Button asChild size="sm"><a href={r.existing.signupLink} target="_blank" rel="noopener noreferrer">Continue your bank application</a></Button>
       </div>
     );
   }
@@ -69,9 +69,9 @@ export function MercuryApplicationCard({ fundId }: { fundId: string }) {
   return (
     <div className="space-y-3 rounded-md border p-3">
       <div>
-        <p className="text-sm font-medium">Open with Mercury</p>
+        <p className="text-sm font-medium">Open with the bank</p>
         <p className="text-xs text-muted-foreground">
-          We'll pre-fill Mercury's application for {r.legalName || "your fund"}. You review it and submit it on Mercury. ID photos and Social Security numbers are entered directly with Mercury, never sent by Harmonious.
+          We'll pre-fill the bank's application for {r.legalName || "your fund"}. You review it and submit it with the bank. ID photos and Social Security numbers are entered directly with the bank, never sent by Harmonious.
         </p>
       </div>
       {r.missing.length > 0 && (
@@ -109,10 +109,10 @@ export function MercuryApplicationCard({ fundId }: { fundId: string }) {
       )}
       <label className="flex items-start gap-2 text-xs">
         <Checkbox checked={confirmed} onCheckedChange={(v) => setConfirmed(v === true)} />
-        Send my fund's details to Mercury so they can pre-fill the application.
+        Send my fund's details to the bank so they can pre-fill the application.
       </label>
       <Button size="sm" disabled={!ok || m.isPending} onClick={() => m.mutate()}>
-        {m.isPending ? "Sending…" : "Start Mercury application"}
+        {m.isPending ? "Sending…" : "Start bank application"}
       </Button>
     </div>
   );
