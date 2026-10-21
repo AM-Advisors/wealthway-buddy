@@ -81,11 +81,12 @@ async function investorItems(ctx: Ctx, n: Names): Promise<AttentionItem[]> {
     ),
   );
   const approvedFunds = (investments as any[]).filter((i) => i.approved_to_fund_at).map((i) => i.offering_id as string);
-  const release = approvedFunds.length
-    ? await safely(async () => (await import("@/lib/wire-release.server")).wireReleaseStates(approvedFunds)).catch(() => null)
-    : null;
+  let release: Map<string, { available: boolean }> | null = null;
+  if (approvedFunds.length) {
+    try { release = await (await import("@/lib/wire-release.server")).wireReleaseStates(approvedFunds); } catch { release = null; }
+  }
   for (const inv of investments as any[]) {
-    const rel = release instanceof Map ? release.get(inv.offering_id) : undefined;
+    const rel = release?.get(inv.offering_id);
     const step = investmentAttentionStep({ ...inv, instructions_available: rel?.available === true });
     if (!step) continue;
     const fundName = n.funds.get(inv.offering_id) ?? null;
