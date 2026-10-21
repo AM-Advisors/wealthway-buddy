@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { INVESTMENT_TABS, normalizeInvestmentTab } from "@/lib/investment-workspace";
+import { LoadError } from "@/components/load-error";
 
 export const Route = createFileRoute("/_authenticated/investment/$onboardingId")({
   head: () => ({
@@ -43,15 +44,19 @@ function InvestmentPage() {
   const ctx = useQuery({
     queryKey: ["investment-context", onboardingId],
     queryFn: async () => {
-      const { data } = await (supabase as any)
+      const { data, error } = await (supabase as any)
         .from("investor_onboardings")
         .select("offering_id, offerings(name)")
         .eq("id", onboardingId)
         .maybeSingle();
+      if (error) throw new Error("Your investment details could not be loaded. Please try again.");
+      if (!data) throw new Error("This investment is not available to this account.");
       return { offeringId: (data?.offering_id as string) ?? null, fundName: (data?.offerings?.name as string) ?? null };
     },
   });
   const offeringId = ctx.data?.offeringId ?? null;
+  if (ctx.isPending) return <main className="mx-auto max-w-3xl px-4 py-10"><p className="text-sm text-muted-foreground">Loading your investment…</p></main>;
+  if (ctx.error) return <main className="mx-auto max-w-3xl px-4 py-10"><LoadError audience="account" error={ctx.error} what="Your investment details" onRetry={() => void ctx.refetch()} /></main>;
 
   return (
     <main className="mx-auto max-w-3xl space-y-6 px-4 py-10">

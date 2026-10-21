@@ -1,5 +1,10 @@
 # Roadmap
 
+## Investor page visibility (2026-10-21)
+- [ ] Restore document reading from the investor Documents tab, including completed documents; surface failed reads instead of empty information.
+- [ ] Verify existing client-perspective wording and preserve account/permission boundaries; run focused checks.
+- [ ] Signed-in read-back — blocked on isolated QA access.
+
 ## Verified investor details (2026-10-21)
 - [x] Read citizenship and birthday from approved identity checks and tax-ID last four from the investing profile; align details and missing-info warnings.
 - [x] Ten focused synthetic read-back checks passed; preview build OK.

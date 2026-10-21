@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/lib/require-auth";
 
-const inputSchema = z.object({ document_id: z.string().uuid() });
+const inputSchema = z.object({ document_id: z.string().uuid(), onboarding_id: z.string().uuid().optional() });
 
 /** Read the entitled source file, not a PDF rendered from an empty metadata body. */
 export const readOfferingDocument = createServerFn({ method: "POST" })
@@ -17,11 +17,15 @@ export const readOfferingDocument = createServerFn({ method: "POST" })
     // The caller's RLS-protected read above authorizes the exact fund document.
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const db = supabaseAdmin as any;
+    let onboardingQuery = db.from("investor_onboardings").select("id, application_id").eq("offering_id", document.offering_id).eq("investor_user_id", userId).is("removed_at", null);
+    if (data.onboarding_id) onboardingQuery = onboardingQuery.eq("id", data.onboarding_id);
+    else onboardingQuery = onboardingQuery.order("created_at", { ascending: false }).limit(1);
     const [versionResult, onboardingResult] = await Promise.all([
       db.from("offering_document_versions").select("id, version, file_path, file_name, target_onboarding_id, rollout_scope").eq("offering_document_id", document.id),
-      db.from("investor_onboardings").select("id, application_id").eq("offering_id", document.offering_id).eq("investor_user_id", userId).is("removed_at", null).maybeSingle(),
+      onboardingQuery.maybeSingle(),
     ]);
     if (versionResult.error || onboardingResult.error) throw new Error("The document version could not be loaded. Please try again.");
+    if (data.onboarding_id && !onboardingResult.data) throw new Error("This document is not available for that investment.");
     const { documentReadSource } = await import("@/lib/offering-document-reader");
     const source = documentReadSource(document, versionResult.data ?? [], onboardingResult.data?.id ?? null, null);
     const { logLegalDocumentView } = await import("./legal-doc-views.server");

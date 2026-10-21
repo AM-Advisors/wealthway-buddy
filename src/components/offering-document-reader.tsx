@@ -5,9 +5,9 @@ import { readOfferingDocument } from "@/lib/offering-documents.functions";
 import { Button } from "@/components/ui/button";
 import { LoadError } from "@/components/load-error";
 
-export function OfferingDocumentReader({ documentId, title, onReachedEnd }: { documentId: string; title: string; onReachedEnd: () => void }) {
+export function OfferingDocumentReader({ documentId, onboardingId, title, onReachedEnd }: { documentId: string; onboardingId?: string; title: string; onReachedEnd: () => void }) {
   const load = useServerFn(readOfferingDocument);
-  const query = useQuery({ queryKey: ["offering-document-read", documentId], queryFn: () => load({ data: { document_id: documentId } }), retry: false, staleTime: 0 });
+  const query = useQuery({ queryKey: ["offering-document-read", documentId, onboardingId ?? null], queryFn: () => load({ data: { document_id: documentId, onboarding_id: onboardingId } }), retry: false, staleTime: 0 });
   const content = useRef<HTMLDivElement>(null);
   const [renderError, setRenderError] = useState(false);
   const [rendering, setRendering] = useState(false);

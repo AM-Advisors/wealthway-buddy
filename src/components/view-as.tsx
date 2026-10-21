@@ -47,7 +47,7 @@ export function ViewAsPicker({ onboardingId, offeringId, label = "View as…" }:
 
 /** Only the server-confirmed related people; no roles are listed that don't exist. */
 export function PerspectiveList({ items, onPick }: { items: any[]; onPick: (p: any) => void }) {
-  if (!items.length) return <div><p className="text-sm font-medium">No client perspective is available yet</p><p className="text-xs text-muted-foreground">This record is not linked to a fund or investment yet. Open it from a fund to preview the fund manager view.</p></div>;
+  if (!items.length) return <div><p className="text-sm font-medium">No eligible account is available to preview</p><p className="text-xs text-muted-foreground">The record may exist without a linked account eligible for this read-only view.</p></div>;
   return (
     <>
       {items.map((p) => (
