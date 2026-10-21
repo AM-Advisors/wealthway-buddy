@@ -37,12 +37,39 @@ export async function investorReviewEvidence(db: any, userId: string, fundId: st
   const questionnaire = row.questionnaire_submitted_at ? questions
     .filter((q) => questionVisible(q, answers) && !SENSITIVE_TITLE.test(`${q.key} ${q.label}`))
     .map((q) => ({ key: q.key, label: q.label, answer: displayAnswer(answers[q.key]) })) : [];
+  const accreditation = await loadAccreditation(db, row.application_id);
   return {
     signedDocuments,
     acknowledgments: (ackResult.data ?? []).map((a: any) => ({ id: a.id as string, title: documentResult.data?.find((d: any) => d.id === a.offering_document_id)?.title ?? "Fund document", version: a.version as number, acknowledgedAt: a.acknowledged_at as string })),
     questionnaire,
     questionnaireSubmittedAt: row.questionnaire_submitted_at as string | null,
     taxForms: currentTaxForms(taxResult.data ?? []),
+    accreditation,
+  };
+}
+
+const ACCREDITATION_STATUS: Record<string, string> = { approved: "Verified", pending: "Awaiting review", in_review: "Awaiting review", rejected: "Sent back", not_started: "Not started", expired: "Expired" };
+
+async function loadAccreditation(db: any, applicationId: string | null) {
+  if (!applicationId) return null;
+  const [rec, docs] = await Promise.all([
+    db.from("accreditation_records").select("reg_type, method, status, attested_at, verified_at, expires_at, pre_existing_relationship, questionnaire").eq("application_id", applicationId).maybeSingle(),
+    db.from("accreditation_documents").select("id, doc_kind, file_name, uploaded_at").eq("application_id", applicationId),
+  ]);
+  if (rec.error || docs.error) throw new Error("Accreditation could not be loaded.");
+  const r = rec.data;
+  if (!r) return null;
+  const q = (r.questionnaire ?? {}) as Record<string, unknown>;
+  const relationship = [q.relationship_type, q.relationship_duration].filter((v) => typeof v === "string" && v).join(" · ") || r.pre_existing_relationship || null;
+  return {
+    regType: r.reg_type as string,
+    basis: typeof r.method === "string" ? r.method.replace(/_/g, " ") : null,
+    status: ACCREDITATION_STATUS[r.status] ?? String(r.status).replace(/_/g, " "),
+    attestedAt: r.attested_at as string | null,
+    verifiedAt: r.verified_at as string | null,
+    expiresAt: r.expires_at as string | null,
+    relationship: relationship as string | null,
+    documents: (docs.data ?? []).map((d: any) => ({ id: d.id as string, name: d.file_name as string, kind: String(d.doc_kind).replace(/_/g, " "), uploadedAt: d.uploaded_at as string })),
   };
 }
 
