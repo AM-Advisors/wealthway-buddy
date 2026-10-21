@@ -107,34 +107,73 @@ export function InvestorOnboardingJourney({
   const amount = d.acceptedAmountCents ?? d.requestedAmountCents;
   const complete = isReconciledFunding(d.fundingStatus);
 
+  const h = investorHomeSummary(steps);
+  const showTopContinue = !!h.nextStep && h.nextStep !== current && h.nextStep !== next;
+
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="text-3xl">Complete your investment in {d.offering?.name ?? "this Fund"}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+      <header className="space-y-1">
+        <h2 className="text-2xl font-semibold">Complete your investment</h2>
+        <p className="text-sm text-muted-foreground">
           {d.profileLabel ? `Investing as ${d.profileLabel}` : "Investing profile not chosen yet"}{amount ? ` · ${money(amount)}` : ""}
         </p>
       </header>
 
-      {(() => {
-        const h = investorHomeSummary(steps);
-        return (
-          <Card>
-            <CardContent className="space-y-3 pt-6">
-              <div className="flex items-center justify-between text-sm"><span className="font-medium">Progress</span><span className="text-muted-foreground">{h.progressPercent}%</span></div>
-              <div className="h-2 overflow-hidden rounded-full bg-muted"><div className="h-full bg-primary" style={{ width: `${h.progressPercent}%` }} /></div>
-              {h.complete ? null : h.caughtUp ? (
+      <Card>
+        <CardContent className="space-y-5 pt-6">
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-sm"><span className="font-medium">Progress</span><span className="text-muted-foreground">{h.progressPercent}%</span></div>
+            <div className="h-2 overflow-hidden rounded-full bg-muted"><div className="h-full bg-primary transition-all" style={{ width: `${h.progressPercent}%` }} /></div>
+          </div>
+
+          <ol className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+            <li>
+              <button
+                type="button"
+                onClick={() => setActive("review")}
+                className={cn(
+                  "flex h-full w-full flex-col rounded-md border p-3 text-left text-sm transition-colors",
+                  current === "review" ? "border-primary bg-primary/5" : "hover:bg-muted/50",
+                )}
+              >
+                <span className="font-medium">Review the deal</span>
+                <span className="mt-1 line-clamp-2 text-xs text-muted-foreground">Fund, terms and documents</span>
+              </button>
+            </li>
+            {steps.map((s, i) => (
+              <li key={s.key}>
+                <button
+                  type="button"
+                  title={s.message}
+                  disabled={s.state === "locked" && i > reachedIndex}
+                  onClick={() => setActive(s.key)}
+                  className={cn(
+                    "flex h-full w-full flex-col rounded-md border p-3 text-left text-sm transition-colors disabled:opacity-50",
+                    current === s.key ? "border-primary bg-primary/5" : "hover:bg-muted/50",
+                  )}
+                >
+                  <span className="flex items-center gap-2 font-medium">
+                    {s.state === "complete" ? <Check className="h-4 w-4 text-primary" /> : <span className="text-muted-foreground">{i + 1}.</span>}
+                    {s.label}
+                  </span>
+                  <span className="mt-1 line-clamp-2 text-xs text-muted-foreground">{s.message}</span>
+                </button>
+              </li>
+            ))}
+          </ol>
+
+          {h.complete ? null : (
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-4">
+              {h.caughtUp ? (
                 <div><p className="font-medium">You're caught up</p><p className="text-sm text-muted-foreground">{h.waitingOn}</p></div>
               ) : (
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div><p className="text-xs uppercase tracking-wide text-muted-foreground">Next action</p><p className="font-medium">{h.nextAction}</p></div>
-                  {h.nextStep && h.nextStep !== current ? <Button size="sm" onClick={() => setActive(h.nextStep!)}>Continue</Button> : null}
-                </div>
+                <div><p className="text-xs uppercase tracking-wide text-muted-foreground">Next action</p><p className="font-medium">{h.nextAction}</p></div>
               )}
-            </CardContent>
-          </Card>
-        );
-      })()}
+              {showTopContinue ? <Button size="sm" onClick={() => setActive(h.nextStep!)}>Continue</Button> : null}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {complete ? (
         <Card>
@@ -147,41 +186,6 @@ export function InvestorOnboardingJourney({
           </CardContent>
         </Card>
       ) : null}
-
-      <ol className="grid grid-cols-2 gap-2 sm:grid-cols-5">
-        <li>
-          <button
-            type="button"
-            onClick={() => setActive("review")}
-            className={cn(
-              "w-full rounded-md border p-3 text-left text-sm transition-colors",
-              current === "review" ? "border-primary bg-primary/5" : "hover:bg-muted/50",
-            )}
-          >
-            <span className="font-medium">Review the deal</span>
-            <span className="mt-1 block text-xs text-muted-foreground">Fund, terms and documents</span>
-          </button>
-        </li>
-        {steps.map((s, i) => (
-          <li key={s.key}>
-            <button
-              type="button"
-              disabled={s.state === "locked" && i > reachedIndex}
-              onClick={() => setActive(s.key)}
-              className={cn(
-                "w-full rounded-md border p-3 text-left text-sm transition-colors disabled:opacity-50",
-                current === s.key ? "border-primary bg-primary/5" : "hover:bg-muted/50",
-              )}
-            >
-              <span className="flex items-center gap-2 font-medium">
-                {s.state === "complete" ? <Check className="h-4 w-4 text-primary" /> : <span className="text-muted-foreground">{i + 1}.</span>}
-                {s.label}
-              </span>
-              <span className="mt-1 block text-xs text-muted-foreground">{s.message}</span>
-            </button>
-          </li>
-        ))}
-      </ol>
 
       {current === "review" ? <DealReview slug={d.offering?.slug ?? d.offering?.id} /> : null}
       {current === "about" ? <AboutYou d={d} onboardingId={onboardingId} done={refresh} /> : null}
