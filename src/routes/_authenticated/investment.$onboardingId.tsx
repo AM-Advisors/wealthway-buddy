@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 
 import { ConfirmYourInformation } from "@/components/confirm-your-information";
 import { InvestmentOfferingDocuments } from "@/components/investment-offering-documents";
@@ -9,8 +10,9 @@ import { InvestorOnboardingJourney } from "@/components/investor-onboarding-jour
 import { InvestorPerformancePanel } from "@/components/investor-performance-panel";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { supabase } from "@/integrations/supabase/client";
+import { onboardingDetailFn } from "@/lib/investor-onboarding.functions";
 import { INVESTMENT_TABS, normalizeInvestmentTab } from "@/lib/investment-workspace";
+import { LoadError } from "@/components/load-error";
 
 export const Route = createFileRoute("/_authenticated/investment/$onboardingId")({
   head: () => ({
@@ -39,25 +41,22 @@ function InvestmentPage() {
   const { onboardingId } = Route.useParams();
   const search = Route.useSearch();
   const tab = normalizeInvestmentTab(search.tab, search.step);
-  // RLS: investors read only their own onboarding row.
+  const load = useServerFn(onboardingDetailFn);
+  // Reuse the canonical authorized read used by the journey, not a separate
+  // fund join whose visibility depends on legacy application/access records.
   const ctx = useQuery({
-    queryKey: ["investment-context", onboardingId],
-    queryFn: async () => {
-      const { data } = await (supabase as any)
-        .from("investor_onboardings")
-        .select("offering_id, offerings(name)")
-        .eq("id", onboardingId)
-        .maybeSingle();
-      return { offeringId: (data?.offering_id as string) ?? null, fundName: (data?.offerings?.name as string) ?? null };
-    },
+    queryKey: ["onboarding", onboardingId],
+    queryFn: () => load({ data: { onboardingId } }),
   });
-  const offeringId = ctx.data?.offeringId ?? null;
+  const offeringId = ctx.data?.offering?.id ?? null;
+  if (ctx.isPending) return <main className="mx-auto max-w-3xl px-4 py-10"><p className="text-sm text-muted-foreground">Loading your investment…</p></main>;
+  if (ctx.error) return <main className="mx-auto max-w-3xl px-4 py-10"><LoadError audience="account" error={ctx.error} what="Your investment details" onRetry={() => void ctx.refetch()} /></main>;
 
   return (
     <main className="mx-auto max-w-3xl space-y-6 px-4 py-10">
       <header className="space-y-1">
         <Link to="/home" className="text-sm text-muted-foreground underline">My investments</Link>
-        <h1 className="text-2xl font-semibold">{ctx.data?.fundName ?? "Your investment"}</h1>
+        <h1 className="text-2xl font-semibold">{ctx.data?.offering?.name ?? "Your investment"}</h1>
       </header>
       <nav className="flex flex-wrap gap-1 border-b pb-2" aria-label="Investment sections">
         {INVESTMENT_TABS.map((t) => (

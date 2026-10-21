@@ -420,12 +420,16 @@ export async function decideChangeRequest(userId: string, input: { id: string; d
 
 /** Documents that apply to the caller's own Investment, with a plain action label. */
 export async function investorDocuments(userId: string, onboardingId: string) {
-  const { data: row } = await db().from("investor_onboardings").select("id, offering_id, investor_user_id, investment_profile_id, application_id, offering_class_key").eq("id", onboardingId).maybeSingle();
+  const { data: row, error: rowError } = await db().from("investor_onboardings").select("id, offering_id, investor_user_id, investment_profile_id, application_id, offering_class_key").eq("id", onboardingId).maybeSingle();
+  if (rowError) throw new Error("Your investment could not be loaded. Please try again.");
   if (!row || row.investor_user_id !== userId) forbid("that investment isn't yours.");
-  const { data: profile } = row.investment_profile_id ? await db().from("investment_profiles").select("profile_type").eq("id", row.investment_profile_id).maybeSingle() : { data: null };
-  const { data: docs } = await db().from("offering_documents").select("id, title, usage, applicability, active_version, requires_signature").eq("offering_id", row.offering_id).is("removed_at", null);
+  const { data: profile, error: profileError } = row.investment_profile_id ? await db().from("investment_profiles").select("profile_type").eq("id", row.investment_profile_id).maybeSingle() : { data: null, error: null };
+  if (profileError) throw new Error("Your investing profile could not be loaded. Please try again.");
+  const { data: docs, error: docsError } = await db().from("offering_documents").select("id, title, usage, applicability, active_version, requires_signature").eq("offering_id", row.offering_id).is("removed_at", null);
+  if (docsError) throw new Error("Your documents could not be loaded. Please try again.");
   const applicable = ((docs ?? []) as any[]).filter((d) => documentApplies(d.applicability, { profileType: profile?.profile_type ?? null, classKey: row.offering_class_key ?? null }));
-  const { data: acks } = await db().from("investment_document_acknowledgments").select("offering_document_id, version").eq("onboarding_id", row.id);
+  const { data: acks, error: acksError } = await db().from("investment_document_acknowledgments").select("offering_document_id, version").eq("onboarding_id", row.id);
+  if (acksError) throw new Error("Document acknowledgments could not be loaded. Please try again.");
   const inv = await Promise.all(applicable.map(async (d) => (await investmentsForDocument(row.offering_id, d.id)).find((i) => i.onboardingId === row.id)));
   const ids = applicable.map((d) => d.id);
   const { documentPublicationFor } = await import("./investor-document-publication.server");
@@ -434,10 +438,11 @@ export async function investorDocuments(userId: string, onboardingId: string) {
     : { data: [], error: null };
   if (signatureError) throw new Error("Document approval status could not be loaded. Please try again.");
   const publication = await documentPublicationFor(db(), applicable, row.id, retainedSignatures ?? [], row.offering_id);
-  const [{ data: singles }, { data: resign }] = await Promise.all([
+  const [{ data: singles, error: singlesError }, { data: resign, error: resignError }] = await Promise.all([
     ids.length ? db().from("offering_document_versions").select("offering_document_id, version, target_onboarding_id").in("offering_document_id", ids).eq("rollout_scope", "single").eq("target_onboarding_id", row.id) : { data: [] },
     ids.length ? db().from("offering_document_resign_items").select("offering_document_id, from_version, to_version").eq("onboarding_id", row.id).eq("status", "open") : { data: [] },
   ]);
+  if (singlesError || resignError) throw new Error("Your document versions could not be loaded. Please try again.");
   return applicable.map((d, i) => {
     const applied = appliedVersionFor(row.id, d.active_version, ((singles ?? []) as any[]).filter((x) => x.offering_document_id === d.id).map((x) => ({ targetOnboardingId: x.target_onboarding_id, version: x.version })));
     const rs = ((resign ?? []) as any[]).find((x) => x.offering_document_id === d.id);
@@ -447,6 +452,7 @@ export async function investorDocuments(userId: string, onboardingId: string) {
       id: d.id,
       title: d.title,
       approvalLabel: publication.get(d.id)?.label ?? "Awaiting document approval",
+      canRead: publication.get(d.id)?.ready === true || (inv[i]?.execution ?? "not_sent") !== "not_sent",
       action: !publication.get(d.id)?.ready && (inv[i]?.execution ?? "not_sent") === "not_sent"
         ? "Not yet available"
         : investorDocumentAction({ usage: d.usage, legacyRequiresSignature: d.requires_signature, acknowledged, execution: inv[i]?.execution ?? "not_sent" }),
