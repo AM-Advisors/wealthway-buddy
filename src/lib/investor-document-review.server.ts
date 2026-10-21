@@ -86,7 +86,7 @@ export async function listDocumentReviews(userId: string, offeringId: string) {
           const sig = signed.find((s) => s.application_id === r.application_id && s.offering_document_id === d.id);
           return {
             documentId: d.id as string,
-            decision: (sig ? dec?.decision ?? null : null) as "approved" | "returned" | null,
+            decision: (sig && dec && dec.decided_at >= (sig.provider_completed_at ?? sig.signed_at) ? dec.decision : null) as "approved" | "returned" | null,
             note: (dec?.note ?? null) as string | null,
             decidedAt: (dec?.decided_at ?? null) as string | null,
             signed: sig ? { signatureId: sig.id as string, signerName: sig.signer_name as string | null, signedAt: (sig.provider_completed_at ?? sig.signed_at) as string } : null,
@@ -105,11 +105,13 @@ export function decisionRefusal(input: { investorSigned: boolean; decision: "app
 }
 
 /** Countersigning opens only after the manager approved this investor's signed document. */
-export async function managerApprovedSigned(db: any, onboardingId: string, documentId: string) {
+export async function managerApprovedSigned(db: any, onboardingId: string, documentId: string, investorSignedAt: string | null) {
+  if (!investorSignedAt) return false;
   const { data: doc } = await db.from("offering_documents").select("active_version").eq("id", documentId).maybeSingle();
-  const { data } = await db.from("investor_document_approvals").select("onboarding_id, offering_document_id, version, decision")
+  const { data } = await db.from("investor_document_approvals").select("onboarding_id, offering_document_id, version, decision, decided_at")
     .eq("onboarding_id", onboardingId).eq("offering_document_id", documentId).order("decided_at", { ascending: false });
-  return latestDecision(data ?? [], onboardingId, documentId, doc?.active_version ?? null)?.decision === "approved";
+  const dec = latestDecision(data ?? [], onboardingId, documentId, doc?.active_version ?? null);
+  return dec?.decision === "approved" && dec.decided_at >= investorSignedAt;
 }
 
 /** After the investor signs: approve (opens countersignature) or decline (pauses the investment). "returned" = declined. */
