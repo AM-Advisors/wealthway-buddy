@@ -35,7 +35,7 @@ function AcceptPage() {
   const sign = useServerFn(signAcceptance);
   const qc = useQueryClient();
   const q = useQuery({ queryKey: ["accept", token], queryFn: () => view({ data: { token } }), retry: false });
-  const [name, setName] = useState(""); const [title, setTitle] = useState(""); const [agree, setAgree] = useState(false); const [msaAgree, setMsaAgree] = useState(false);
+  const [name, setName] = useState(""); const [title, setTitle] = useState(""); const [agree, setAgree] = useState(false); const [msaAgree, setMsaAgree] = useState(false); const [showMsa, setShowMsa] = useState(false);
   const [method, setMethod] = useState<Method>("wire"); const [busy, setBusy] = useState(false);
 
   if (q.isLoading) return <Shell><p className="text-muted-foreground">Loading…</p></Shell>;
@@ -90,14 +90,19 @@ function AcceptPage() {
               <div><Label htmlFor="st">Title (optional)</Label><Input id="st" value={title} onChange={(e) => setTitle(e.target.value)} /></div>
             </div>
             {d.msa && (
-              <div className="rounded-md border p-3">
-                <p className="font-heading font-semibold text-primary">Master Services Agreement (version {d.msa.version})</p>
-                <p className="mb-2 text-xs text-muted-foreground">You accept this once. You'll only be asked again if Harmonious updates it and assigns the new version to you.</p>
-                <div className="max-h-64 space-y-2 overflow-y-auto rounded bg-muted/40 p-2 text-xs">
-                  {d.msa.sections.map((x, i) => <div key={i}><p className="font-semibold">{x.no ? `${x.no}. ` : ""}{x.title}</p><p className="whitespace-pre-wrap">{x.body}</p></div>)}
+              <label className="flex items-start gap-2 text-sm"><input type="checkbox" className="mt-1" checked={msaAgree} onChange={(e) => setMsaAgree(e.target.checked)} />
+                <span>I have read and accept the <button type="button" className="font-medium text-primary underline" onClick={() => setShowMsa(true)}>Master Services Agreement and terms and conditions</button> (version {d.msa.version}) on behalf of my organization.</span></label>
+            )}
+            {d.msa && showMsa && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4" onClick={() => setShowMsa(false)}>
+                <div className="flex max-h-[85vh] w-full max-w-2xl flex-col rounded-lg border bg-card p-4 shadow-lg" onClick={(e) => e.stopPropagation()}>
+                  <div className="mb-2 flex items-center justify-between"><p className="font-heading font-semibold text-primary">Master Services Agreement · version {d.msa.version}</p>
+                    <Button size="sm" variant="outline" onClick={() => setShowMsa(false)}>Close</Button></div>
+                  <div className="space-y-3 overflow-y-auto text-sm">
+                    {d.msa.sections.map((x, i) => <div key={i}><p className="font-semibold">{x.no ? `${x.no}. ` : ""}{x.title}</p><p className="whitespace-pre-wrap">{x.body}</p></div>)}
+                  </div>
+                  <p className="mt-2 text-xs text-muted-foreground">You accept this once. You'll only be asked again if Harmonious updates it and assigns the new version to you.</p>
                 </div>
-                <label className="mt-2 flex items-start gap-2 text-sm"><input type="checkbox" className="mt-1" checked={msaAgree} onChange={(e) => setMsaAgree(e.target.checked)} />
-                  <span>I have read and accept the Master Services Agreement on behalf of my organization.</span></label>
               </div>
             )}
             <MethodPicker value={method} onChange={setMethod} />

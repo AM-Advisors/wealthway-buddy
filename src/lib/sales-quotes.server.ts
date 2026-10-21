@@ -182,7 +182,7 @@ export async function createAgreements(userId: string, id: string) {
 }
 
 /** Creates the SOW/MSA drafts for an approved quote (idempotent). Caller has already checked visibility/status. */
-async function draftAgreements(userId: string, q: any) {
+export async function draftAgreements(userId: string, q: any) {
   const db = await admin();
   if (q.sow_id) return { sowId: q.sow_id as string };
   const { data: lines } = await db.from("sales_quote_lines").select("*").eq("quote_id", q.id).order("sort_order");
