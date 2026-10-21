@@ -62,12 +62,30 @@ const DOC_KINDS = [
   { value: "other", label: "Other" },
 ] as const;
 
+const RELATIONSHIP_TYPES = [
+  "Personal friend or family member",
+  "Current or former colleague",
+  "Prior business or professional relationship",
+  "Invested with the manager before",
+  "Introduced by someone the manager knows well",
+  "Other",
+] as const;
+const RELATIONSHIP_LENGTHS = ["Less than 1 year", "1-3 years", "3-5 years", "More than 5 years"] as const;
+
+function describeRelationship(r: { type: string; length: string; details: string }): { ok: true; text: string } | { ok: false; error: string } {
+  if (!r.type) return { ok: false, error: "Select how you know the fund manager" };
+  if (!r.length) return { ok: false, error: "Select how long you have known the fund manager" };
+  const details = r.details.trim();
+  if (r.type === "Other" && details.length < 3) return { ok: false, error: "Add a short description of your relationship" };
+  return { ok: true, text: [r.type, `Known ${r.length.toLowerCase()}`, details].filter(Boolean).join(" · ") };
+}
+
 function AccreditationPage() {
   useStepView("accreditation");
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const load = useServerFn(getAccreditation);
-  const { data, isLoading } = useQuery({ queryKey: ["accreditation"], queryFn: () => load() });
+  const { data, isLoading } = useQuery({ queryKey: ["accreditation"], queryFn: () => load({ data: { onboardingId: currentOnboardingId() } }) });
 
   const regType = data?.offering?.reg_type ?? "506b";
   const locked = data?.application?.kyc_status === "not_started";
@@ -149,12 +167,19 @@ function SelfCertificationForm() {
     attested_signature: "",
     attests: false,
   });
+  const [rel, setRel] = useState({ type: "", length: "", details: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const parsed = accreditation506bSchema.safeParse(form);
+    const relationship = describeRelationship(rel);
+    if (!relationship.ok) {
+      setErrors({ pre_existing_relationship: relationship.error });
+      toast.error(relationship.error);
+      return;
+    }
+    const parsed = accreditation506bSchema.safeParse({ ...form, pre_existing_relationship: relationship.text });
     if (!parsed.success) {
       const flat: Record<string, string> = {};
       for (const issue of parsed.error.issues) {
@@ -168,7 +193,7 @@ function SelfCertificationForm() {
     setErrors({});
     setBusy(true);
     try {
-      await submit({ data: parsed.data });
+      await submit({ data: { ...parsed.data, onboarding_id: currentOnboardingId() } });
       toast.success("Accreditation recorded.");
       if (!returnToPortal()) navigate({ to: "/onboarding/documents" });
     } catch (err) {
@@ -259,16 +284,28 @@ function SelfCertificationForm() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-2">
-          <Label htmlFor="pre_existing_relationship">
-            Describe how and when you came to know the fund manager
+          <Label htmlFor="relationship_type">How do you know the fund manager?</Label>
+          <Select value={rel.type} onValueChange={(v) => setRel((r) => ({ ...r, type: v }))}>
+            <SelectTrigger id="relationship_type"><SelectValue placeholder="Select a relationship" /></SelectTrigger>
+            <SelectContent>
+              {RELATIONSHIP_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Label htmlFor="relationship_length">How long have you known them?</Label>
+          <Select value={rel.length} onValueChange={(v) => setRel((r) => ({ ...r, length: v }))}>
+            <SelectTrigger id="relationship_length"><SelectValue placeholder="Select a length of time" /></SelectTrigger>
+            <SelectContent>
+              {RELATIONSHIP_LENGTHS.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Label htmlFor="relationship_details">
+            Details {rel.type === "Other" ? "(required)" : "(optional)"}
           </Label>
           <Textarea
-            id="pre_existing_relationship"
-            maxLength={600}
-            value={form.pre_existing_relationship}
-            onChange={(e) =>
-              setForm((f) => ({ ...f, pre_existing_relationship: e.target.value }))
-            }
+            id="relationship_details"
+            maxLength={400}
+            value={rel.details}
+            onChange={(e) => setRel((r) => ({ ...r, details: e.target.value }))}
           />
           {errors["pre_existing_relationship"] && (
             <p className="text-xs text-destructive">{errors["pre_existing_relationship"]}</p>
@@ -356,7 +393,7 @@ function VerificationForm({
       const path = `${uid}/${crypto.randomUUID()}-${file.name.replace(/[^\w.\-]/g, "_")}`;
       const { error } = await supabase.storage.from("accreditation-docs").upload(path, file);
       if (error) throw new Error(error.message);
-      await record({ data: { storage_path: path, file_name: file.name, doc_kind: docKind as never } });
+      await record({ data: { storage_path: path, file_name: file.name, doc_kind: docKind as never, onboarding_id: currentOnboardingId() } });
       toast.success("Document uploaded.");
       onUploaded();
     } catch (err) {
@@ -383,7 +420,7 @@ function VerificationForm({
     setErrors({});
     setBusy(true);
     try {
-      await submit({ data: parsed.data });
+      await submit({ data: { ...parsed.data, onboarding_id: currentOnboardingId() } });
       toast.success("Verification submitted for review.");
       if (!returnToPortal()) navigate({ to: "/onboarding/documents" });
     } catch (err) {
@@ -543,6 +580,17 @@ function VerificationForm({
       </div>
     </form>
   );
+}
+
+/** The investment the investor came from, so the step saves to that fund's application. */
+function currentOnboardingId(): string | undefined {
+  const q = new URLSearchParams(window.location.search);
+  const uuid = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+  const direct = q.get("onboarding");
+  if (direct && uuid.test(direct)) return direct.match(uuid)![0];
+  const back = q.get("return") ?? "";
+  const m = /\/(?:onboard\/i|investment)\/([0-9a-f-]{36})/i.exec(back);
+  return m?.[1];
 }
 
 /** Sent here from onboard.harmonious.co: go back to that exact investment. */
