@@ -54,8 +54,8 @@ export const webhookLogFn = createServerFn({ method: "POST" })
     ]);
     const events = [
       ...((didit.data ?? []) as any[]).map((r) => ({ id: `d-${r.event_id}`, source: "Identity check", kind: r.webhook_type, status: r.status ?? (r.processed_at ? "processed" : "received"), detail: trim(r.error), at: r.received_at, processedAt: r.processed_at })),
-      ...((box.data ?? []) as any[]).map((r) => ({ id: `b-${r.id}`, source: "Box Sign", kind: r.trigger ?? "event", status: r.outcome ?? (r.processed_at ? "processed" : "received"), detail: null, at: r.received_at, processedAt: r.processed_at })),
-      ...((plaid.data ?? []) as any[]).map((r) => ({ id: `p-${r.id}`, source: "Plaid", kind: `${r.webhook_type}/${r.webhook_code}`, status: r.status, detail: trim(r.detail), at: r.received_at, processedAt: r.processed_at, attempts: r.attempts })),
+      ...((box.data ?? []) as any[]).map((r) => ({ id: `b-${r.id}`, source: "E-signature", kind: r.trigger ?? "event", status: r.outcome ?? (r.processed_at ? "processed" : "received"), detail: null, at: r.received_at, processedAt: r.processed_at })),
+      ...((plaid.data ?? []) as any[]).map((r) => ({ id: `p-${r.id}`, source: "Bank linking", kind: `${r.webhook_type}/${r.webhook_code}`, status: r.status, detail: trim(r.detail), at: r.received_at, processedAt: r.processed_at, attempts: r.attempts })),
     ].sort((a, b) => String(b.at).localeCompare(String(a.at)));
     return { events };
   });
