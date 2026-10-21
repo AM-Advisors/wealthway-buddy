@@ -41,7 +41,7 @@ async function loadRecord(db: any, kind: AcceptKind, id: string): Promise<Loaded
   const { data: lines } = d.quote_id ? await db.from("sales_quote_lines").select("*").eq("quote_id", d.quote_id).order("sort_order") : { data: [] };
   return { kind, id, version: v, title: d.title, clientId: d.client_id ?? q?.client_id ?? null, offeringId: q?.offering_id ?? null, quoteId: d.quote_id,
     ownerId: d.owner_user_id, dealId: d.deal_id, status: d.status, approvedVersion: d.approved_version, recipientEmail: d.sent_to ?? d.recipient_email ?? null,
-    sections: ((ver?.sections ?? []) as any[]).filter((s) => s.key !== "summary_note" || String(s.body ?? "").trim()).map((s) => ({ title: String(s.title ?? ""), body: String(s.body ?? "") })),
+    sections: ((ver?.sections ?? []) as any[]).filter((s) => s.key !== "terms" && (s.key !== "summary_note" || String(s.body ?? "").trim())).map((s) => ({ title: String(s.title ?? ""), body: String(s.body ?? "") })),
     lines: lines ?? [] };
 }
 
@@ -99,7 +99,30 @@ export async function viewForToken(token: string) {
   };
 }
 
-async function createInvoiceFromAcceptance(db: any, r: Loaded, acc: any) {
+/**
+ * Connects the signed quote/proposal/RFP/RFQ to its SOW: drafts the SOW from the quote if none exists, then records the
+ * client's signature on it (name, title, time, IP). Execution and Harmonious approval stay with the existing SOW review flow.
+ */
+async function linkSowToAcceptance(db: any, r: Loaded, acc: any): Promise<string | null> {
+  if (!r.quoteId || !r.clientId) return null;
+  try {
+    const { data: q } = await db.from("sales_quotes").select("*").eq("id", r.quoteId).maybeSingle();
+    if (!q) return null;
+    let sowId: string | null = q.sow_id ?? null;
+    if (!sowId && q.client_id && r.ownerId) sowId = (await (await import("@/lib/sales-quotes.server")).draftAgreements(r.ownerId, q)).sowId;
+    if (!sowId) return null;
+    const { data: sow } = await db.from("client_sows").select("id, client_signed_at, executed_at").eq("id", sowId).maybeSingle();
+    if (sow && !sow.client_signed_at && !sow.executed_at) {
+      await db.from("client_sows").update({
+        client_signature_name: acc.signer_name, client_signature_title: acc.signer_title ?? null, client_signed_at: acc.accepted_at ?? new Date().toISOString(),
+        client_signature_ip: acc.ip ?? null, client_signature_user_agent: acc.user_agent ?? null, client_signed_user_id: acc.signer_user_id ?? null, client_status: "signed",
+      }).eq("id", sowId);
+    }
+    return sowId;
+  } catch (e) { console.error("SOW link failed", e); return null; }
+}
+
+async function createInvoiceFromAcceptance(db: any, r: Loaded, acc: any, sowId: string | null = null) {
   const lines = invoiceLinesFromQuote(r.lines);
   if (!r.clientId) return { error: "No client account is linked yet; Harmonious will issue the invoice." };
   if (!lines.length) return { error: "No priced quote is linked; Harmonious will issue the invoice." };
@@ -115,7 +138,7 @@ async function createInvoiceFromAcceptance(db: any, r: Loaded, acc: any) {
     const { count } = await db.from("invoices").select("id", { count: "exact", head: true }).not("number", "is", null).like("number", `HRM-${year}-%`);
     const number = `HRM-${year}-${String((count ?? 0) + 1 + attempt).padStart(4, "0")}`;
     const { data, error } = await db.from("invoices").insert({
-      client_id: r.clientId, offering_id: r.offeringId, sales_quote_id: r.quoteId, sales_document_id: r.kind === "quote" ? null : r.id, acceptance_key: key,
+      client_id: r.clientId, offering_id: r.offeringId, sales_quote_id: r.quoteId, sow_id: sowId, sales_document_id: r.kind === "quote" ? null : r.id, acceptance_key: key,
       number, status: "issued", issue_date: today, due_date: due, net_days: 30, period_start: today, period_end: today, total_cents: total,
       note: `Issued automatically when ${acc.signer_name} signed ${r.title} (version ${r.version}).`,
       issued_at: new Date().toISOString(), approval_status: "approved", client_approved_at: acc.accepted_at, client_signer_name: acc.signer_name,
@@ -180,8 +203,9 @@ export async function acceptByToken(d: { token: string; signerName: string; sign
       await db.from("sales_stage_events").insert({ deal_id: r.dealId, to_stage: "contract_won", note: `Client signed ${r.title}`, actor_id: null }).then(() => null, () => null);
     }
   }
+  const sowId = await linkSowToAcceptance(db, r, acc);
   if (!acc.invoice_id) {
-    const inv = await createInvoiceFromAcceptance(db, r, acc);
+    const inv = await createInvoiceFromAcceptance(db, r, acc, sowId);
     if ("id" in inv && inv.id) {
       await db.from("sales_acceptances").update({ invoice_id: inv.id, invoice_error: null }).eq("id", acc.id);
       acc.invoice_id = inv.id;
