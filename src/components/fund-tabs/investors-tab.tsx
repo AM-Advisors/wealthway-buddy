@@ -27,6 +27,7 @@ import { INVESTOR_TIERS } from "@/lib/product-pricing";
 import { fmtDate, usd } from "./shared";
 import { PersonalInvestmentLinkCard, PersonalLinkCopyButton } from "@/components/personal-investment-link";
 import { InvestorEmailHistory, InvestorHelpers, InvestorQuickEdit } from "@/components/investor-panel-extras";
+import { InvestorPriorVerification } from "@/components/investor-prior-verification";
 import { PriorSignedDocuments } from "@/components/prior-signed-documents";
 
 export function InvestorsTab({ fundId, workQueue }: { fundId: string; workQueue?: ReactNode }) {
@@ -292,6 +293,7 @@ export function InvestorSheet({ fundId, id, onClose }: { fundId: string; id: str
             {id && <PersonalInvestmentLinkCard onboardingId={id} />}
             {id && <InvestorEmailHistory onboardingId={id} />}
             {id && <InvestorQuickEdit onboardingId={id} onSaved={() => q.refetch()} />}
+            {id && <InvestorPriorVerification onboardingId={id} onSaved={() => q.refetch()} />}
             {id && <InvestorHelpers onboardingId={id} />}
             <section className="grid grid-cols-2 gap-3">
               <div className="rounded-lg border p-3"><p className="text-xs text-muted-foreground">Committed</p><p className="text-lg font-semibold">{usd(d.committedCents)}</p></div>
