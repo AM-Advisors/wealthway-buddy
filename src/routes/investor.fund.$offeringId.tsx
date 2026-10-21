@@ -60,7 +60,7 @@ function InvestorFund() {
   const navigate = Route.useNavigate();
   const load = useServerFn(getMyPortfolioValue);
   const { data, isLoading } = useQuery({ queryKey: ["my-portfolio-value"], queryFn: () => load() });
-  const fund = (((data as any)?.funds ?? []) as any[]).find((f) => f.offering_id === offeringId);
+  const fund = (((Array.isArray(data) ? data : (data as any)?.funds) ?? []) as any[]).find((f) => f.offering_id === offeringId);
   const loadStatus = useServerFn(investorFundStatusFn);
   const status = useQuery({
     queryKey: ["investor-fund-status", offeringId],

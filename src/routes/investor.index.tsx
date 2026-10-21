@@ -29,7 +29,7 @@ function money(cents: number | null | undefined) {
 function InvestorHome() {
   const load = useServerFn(getMyPortfolioValue);
   const { data, isLoading } = useQuery({ queryKey: ["my-portfolio-value"], queryFn: () => load() });
-  const funds: any[] = ((data as any)?.funds ?? []) as any[];
+  const funds: any[] = ((Array.isArray(data) ? data : (data as any)?.funds) ?? []) as any[];
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 px-4 py-10">
