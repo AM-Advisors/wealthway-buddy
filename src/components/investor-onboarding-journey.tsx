@@ -475,6 +475,8 @@ function Sign({ d, onboardingId, done }: { d: any; onboardingId: string; done: (
   const docs: any[] = d.documents ?? [];
   const questionnaireDone = (d.requirements ?? []).find((r: any) => r.key === "subscription_questionnaire")?.state !== "missing";
   const signed = (d.requirements ?? []).find((r: any) => r.key === "signature")?.state === "valid";
+  const taxState = (d.requirements ?? []).find((r: any) => r.key === "tax_documentation")?.state;
+  const taxReady = !taxState || taxState === "valid" || taxState === "not_applicable" || signed;
   const fees = useFeesAccepted(onboardingId);
 
   return (
@@ -497,6 +499,8 @@ function Sign({ d, onboardingId, done }: { d: any; onboardingId: string; done: (
           <h3 className="text-sm font-semibold">Subscription documents</h3>
           {!questionnaireDone ? (
             <p className="text-sm text-muted-foreground">Submit the questionnaire above to unlock your subscription documents.</p>
+          ) : !taxReady ? (
+            <p className="text-sm text-muted-foreground">Sign your IRS tax form above to unlock your subscription documents.</p>
           ) : (
             <ol className="space-y-2">
               {docs.map((doc, i) => {
