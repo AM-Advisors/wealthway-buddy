@@ -38,6 +38,11 @@ describe("which application a page belongs to", () => {
     expect(surfaceForPath("/manager/fund/abc")).toBe("client");
   });
 
+  it("keeps the staff Client View on the Operations address so its sign-in session matches", () => {
+    expect(surfaceForPath("/view-as")).toBe("ops");
+    expect(canonicalRedirect({ url: `${OPS}/view-as?page=%2Fmy-funds` })).toBeNull();
+  });
+
   it("leaves sign-in, machine endpoints and tracking alone", () => {
     for (const path of [
       "/auth",

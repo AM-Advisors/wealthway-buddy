@@ -27,7 +27,9 @@ export const LEGACY_ADMIN_ORIGIN = "https://app.harmoniouscapitaladmin.com";
 export const LEGACY_ORIGINS = [LEGACY_ORIGIN, LEGACY_ADMIN_ORIGIN];
 
 /** Sections that belong to Harmonious Operations. */
-export const OPS_PREFIXES = ["/ops", "/admin", "/staff", "/sales", "/marketing", "/account-manager"];
+// "/view-as" is the staff-only read-only Client View; it is bound to the staff
+// sign-in that started it, so it must stay on the Operations address.
+export const OPS_PREFIXES = ["/ops", "/admin", "/staff", "/sales", "/marketing", "/account-manager", "/view-as"];
 
 /**
  * Paths that belong to neither application in particular: sign-in and its
