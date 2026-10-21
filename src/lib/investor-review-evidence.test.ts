@@ -67,3 +67,15 @@ describe("manager tax form list", () => {
     expect(out[0]).not.toHaveProperty("document_path");
   });
 });
+
+describe("manager accreditation evidence", () => {
+  it("shows the investor's accreditation for that investment only", async () => {
+    const { db } = fixture({
+      accreditation_records: [{ application_id: "application", reg_type: "506c", method: "income", status: "pending", attested_at: "2026-10-20", questionnaire: {} }, { application_id: "another-application", status: "approved", questionnaire: {} }],
+      accreditation_documents: [{ id: "doc", application_id: "application", doc_kind: "tax_return", file_name: "proof.pdf", uploaded_at: "2026-10-20" }],
+    });
+    const evidence = await investorReviewEvidence(db, "manager", "fund", "investment");
+    expect(evidence?.accreditation?.status).toBe("Awaiting review");
+    expect(evidence?.accreditation?.documents.map((d) => d.name)).toEqual(["proof.pdf"]);
+  });
+});
