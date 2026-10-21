@@ -5,7 +5,7 @@ interface Props {
   name?: string
   fundName?: string
   investorName?: string
-  action?: 'review' | 'sign' | 'fund'
+  action?: 'review' | 'sign' | 'fund' | 'approve_sign'
   instructionsAvailable?: boolean
   portalUrl?: string
 }
@@ -31,7 +31,7 @@ function InvestmentApproval({ name = 'there', fundName = 'your fund', investorNa
 
 export const template = {
   component: InvestmentApproval,
-  subject: (data: Record<string, any>) => `${data['action'] === 'fund' ? 'Investment confirmed' : data['action'] === 'sign' ? 'Countersignature needed' : 'Investor review and approval needed'} — ${data['fundName'] ?? 'your fund'}`,
+  subject: (data: Record<string, any>) => `${data['action'] === 'fund' ? 'Investment confirmed' : data['action'] === 'sign' ? 'Countersignature needed' : data['action'] === 'approve_sign' ? 'Approve and sign investor documents' : 'Investor review and approval needed'} — ${data['fundName'] ?? 'your fund'}`,
   displayName: 'Investment review and funding confirmation',
   previewData: { name: 'Jordan', investorName: 'Alex Investor', fundName: 'Example Fund', action: 'fund', instructionsAvailable: true, portalUrl: 'https://app.harmonious.co/investor' },
 } satisfies TemplateEntry
