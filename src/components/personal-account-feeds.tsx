@@ -25,7 +25,7 @@ export function PersonalAccountFeeds() {
     setBusy(true);
     try {
       const result = await finish({ data: { publicToken, consentId: pending.consentId } });
-      if (result.ok) toast.success('Account connected and portfolio updated');
+      if (result.ok) toast.success(result.omitted ? 'Portfolio updated; some accounts had unsupported currencies.' : 'Account connected and portfolio updated');
       else toast.error(result.message ?? 'Your connection was saved; account information is not available yet.');
       await invalidate();
     } catch (e) { toast.error(e instanceof Error ? e.message : 'Account connection could not be completed.'); }
@@ -57,6 +57,7 @@ export function PersonalAccountFeeds() {
     {isPending ? <p>Loading connected accounts…</p> : error ? <p role="alert" className="text-destructive">{error.message}</p> : null}
     {data && !data.configured ? <p className="text-muted-foreground">Account feeds are awaiting connection setup.</p> : null}
     {data?.testMode ? <Badge variant="outline">Test connections only · live feeds not enabled</Badge> : null}
+    {data?.history.length ? <details className="text-sm"><summary className="cursor-pointer text-primary">Account snapshot history</summary><div className="max-h-64 overflow-auto py-3">{data.history.map((a, i) => <div key={a.id ?? i} className="flex flex-wrap justify-between gap-2 border-b py-2"><span>{a.account_name} · {new Date(a.observed_at).toLocaleString('en-US')}</span><span>{money(a.current_balance_cents, a.currency)}</span></div>)}</div></details> : null}
     {data && !data.connections.some(c => c.status !== 'disconnected') ? <p className="text-sm text-muted-foreground">No bank or brokerage accounts connected.</p> : null}
     {data?.snapshots.length ? <div className="flex flex-wrap gap-8 border-y py-4">{feedTotals(data.snapshots).map(t => <div key={t.currency}><p className="text-sm text-muted-foreground">Connected account value · {t.currency}</p><p className="text-2xl">{money(t.valueCents, t.currency)}</p></div>)}</div> : null}
     {data?.connections.filter(c => c.status !== 'disconnected').map(c => <div key={c.id} className="space-y-3 border-b pb-5">

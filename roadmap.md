@@ -1,9 +1,10 @@
 # Roadmap
 
 ## Read-only account aggregation (2026-10-21)
-- [ ] Extend owner-authorized account linking for personal bank balances and brokerage holdings, isolated from fund books and payments.
-- [ ] Connect source-dated account snapshots to Portfolio with refresh, reconnect and disconnect states.
-- [ ] Verify scope, read-only boundaries, snapshot history and synthetic QA; identify live product-access blockers.
+- [x] Owner-only encrypted bank/brokerage connections, consent history and immutable snapshots, isolated from fund books and payments.
+- [x] Connect source-dated balances and securities to Portfolio and Wealth; manual refresh, verified webhook refresh, reconnect, disconnect and retained history.
+- [ ] Live feeds — existing credentials use sandbox; production account/product access and institution coverage remain unverified. No production switch performed.
+- [ ] Signed-in QA — blocked on an isolated QA environment with a synthetic investor session; no real user account used for testing.
 
 ## Portfolio and personal wealth services (2026-10-21)
 - [x] Add both services to the shared catalog and current-client service options; fund add-on pricing requires a real published rate or approved quote, not the catalog's zero default. Standalone/fund preferences retain history, never activate charges.
