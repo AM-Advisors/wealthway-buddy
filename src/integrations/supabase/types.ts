@@ -41450,6 +41450,36 @@ export type Database = {
           },
         ]
       }
+      sales_controlled_texts: {
+        Row: {
+          body: string
+          created_at: string
+          created_by: string
+          id: string
+          reason: string | null
+          text_key: string
+          version: number
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          created_by: string
+          id?: string
+          reason?: string | null
+          text_key: string
+          version: number
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          reason?: string | null
+          text_key?: string
+          version?: number
+        }
+        Relationships: []
+      }
       sales_document_assist_requests: {
         Row: {
           assignee_user_id: string | null

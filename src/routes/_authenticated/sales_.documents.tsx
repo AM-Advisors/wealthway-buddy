@@ -6,8 +6,9 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { createSalesDocument, createSalesProspect, getSalesDocumentOptions, listSalesDocuments, lookupSalesProspect } from "@/lib/sales-documents.functions";
+import { createSalesDocument, createSalesProspect, getSalesDocumentOptions, listSalesDocuments, lookupSalesProspect, getAboutHarmoniousText, saveAboutHarmoniousText } from "@/lib/sales-documents.functions";
 import { getQuoteCatalog, saveSalesQuote } from "@/lib/sales-hub.functions";
 import { BILLING_FREQUENCIES } from "@/lib/invoice-schedule-model";
 import { money } from "@/components/sales/sales-ui";
@@ -140,7 +141,40 @@ function Documents() {
           {!q.isLoading && !docs.length && <TableRow><TableCell colSpan={6} className="text-muted-foreground">{q.error ? (q.error as Error).message : "No documents yet."}</TableCell></TableRow>}
         </TableBody>
       </Table>
+      <AboutHarmoniousEditor />
     </div>
+  );
+}
+
+/** The one controlled About Harmonious paragraph every proposal uses. Only Marketing saves new versions. */
+function AboutHarmoniousEditor() {
+  const load = useServerFn(getAboutHarmoniousText);
+  const save = useServerFn(saveAboutHarmoniousText);
+  const q = useQuery({ queryKey: ["about-harmonious"], queryFn: () => load(), retry: false });
+  const [draft, setDraft] = useState<string | null>(null);
+  const [reason, setReason] = useState("");
+  const [busy, setBusy] = useState(false);
+  if (q.error || !q.data) return null;
+  const d = q.data;
+  const body = draft ?? d.body;
+  const submit = async () => {
+    setBusy(true);
+    try { const r = await save({ data: { body, reason: reason.trim() || null } }); toast.success(`Saved as version ${r.version}. Every proposal now uses it.`); setDraft(null); setReason(""); await q.refetch(); }
+    catch (e) { toast.error(e instanceof Error ? e.message : "Couldn't save."); }
+    finally { setBusy(false); }
+  };
+  return (
+    <Panel title="About Harmonious wording">
+      <p className="mb-2 text-sm text-muted-foreground">Every proposal uses this exact paragraph. {d.canEdit ? "Saving a change updates all proposals that haven't been approved yet." : "Only Marketing can change it."}</p>
+      {d.canEdit ? (
+        <>
+          <Textarea rows={7} value={body} onChange={(e) => setDraft(e.target.value)} />
+          <Input className="mt-2" placeholder="Reason for the change (optional)" value={reason} onChange={(e) => setReason(e.target.value)} />
+          <Button className="mt-2" disabled={busy || draft === null || body.trim().length < 20 || body.trim() === d.body} onClick={submit}>{busy ? "Saving…" : "Save wording"}</Button>
+        </>
+      ) : <p className="whitespace-pre-wrap text-sm">{d.body}</p>}
+      <p className="mt-3 text-xs text-muted-foreground">{d.isDefault ? "Starting wording — Marketing hasn't saved a version yet." : d.history.map((h: any) => `v${h.version} by ${h.byName}, ${new Date(h.at).toLocaleDateString()}${h.reason ? ` (${h.reason})` : ""}`).join(" · ")}</p>
+    </Panel>
   );
 }
 
