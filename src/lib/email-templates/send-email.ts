@@ -79,7 +79,7 @@ export async function sendTemplateEmail(
       to: recipient,
       from: `"${SITE_NAME}" <noreply@harmonious.co>`,
       sender_domain: 'notify.harmonious.co',
-      subject, html, text, label: templateName,
+      subject, html, text, label: templateName, purpose: 'transactional', idempotency_key: options.idempotencyKey || crypto.randomUUID(),
       ...(options.replyTo ? { reply_to: options.replyTo } : {}),
     }, { apiKey, ...(options.idempotencyKey ? { idempotencyKey: options.idempotencyKey } : {}) }).catch((error: unknown) => {
       if (error && typeof error === 'object' && 'code' in error && error.code === 'recipient_suppressed') {
