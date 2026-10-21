@@ -1,8 +1,8 @@
 # Roadmap
 
 ## Investor page visibility (2026-10-21)
-- [ ] Restore document reading from the investor Documents tab, including completed documents; surface failed reads instead of empty information.
-- [ ] Verify existing client-perspective wording and preserve account/permission boundaries; run focused checks.
+- [x] Restore document reading from the investor Documents tab, including completed documents; surface failed reads instead of empty information and share canonical journey context.
+- [x] Correct misleading empty client-perspective wording without changing eligibility; 28 focused document/workspace checks passed. Exact existing-client association failure not reproduced.
 - [ ] Signed-in read-back — blocked on isolated QA access.
 
 ## Verified investor details (2026-10-21)
