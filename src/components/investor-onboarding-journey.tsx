@@ -7,7 +7,7 @@ import { Check } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { recordMyUpload } from "@/lib/investor-uploads.functions";
-import { questionVisible } from "@/lib/investor-onboarding-model";
+import { HIGH_RISK_REVIEW_MESSAGE, highRiskYes, questionVisible } from "@/lib/investor-onboarding-model";
 
 import {
   chooseProfileFn,
@@ -448,6 +448,9 @@ function QuestionnaireForm({ d, done, locked, onSave, saving }: { d: any; onboar
               )}
             </div>
           ))}
+          {highRiskYes(questions, answers).length > 0 ? (
+            <div role="status" className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm">{HIGH_RISK_REVIEW_MESSAGE}</div>
+          ) : null}
           <p className="text-xs text-muted-foreground">Don't enter your tax ID or bank account numbers here. Harmonious asks for them in separate, protected steps.</p>
           {!locked ? (
             <div className="flex flex-wrap gap-2">

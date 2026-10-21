@@ -835,7 +835,8 @@ export async function saveQuestionnaire(
   const { applyLocked } = await import("@/lib/subscription-prefill");
   const locks = await subscriptionLocks(row, (questionnaire?.questions ?? []) as Question[]);
   const questions = locks.questions;
-  const answers = applyLocked(input.answers, locks.locked, questions.map((q) => q.key));
+  const { stripHiddenAnswers, highRiskYes } = await import("@/lib/investor-onboarding-model");
+  const answers = stripHiddenAnswers(questions, applyLocked(input.answers, locks.locked, questions.map((q) => q.key)));
 
   if (input.submit) {
     const waiting = questions.find((q) => q.locked && q.required && locks.locked[q.key] == null);
