@@ -2,7 +2,7 @@
 
 ## Signed tax-form details (2026-10-21)
 - [x] Confirm Alyssa's W-9 is certified; connect profile and fund investor tax details to current profile-bound signed forms without exposing full identifiers or changing signatures.
-- [ ] Run focused regression checks and confirm preview diagnostics.
+- [x] Eighteen focused regression checks passed; masked tax-form evidence is read without modifying signed records or either encrypted vault.
 - [ ] Signed-in read-back — blocked on isolated synthetic QA access; shared production browser testing remains prohibited.
 
 ## Investor certification publication (2026-10-21)
