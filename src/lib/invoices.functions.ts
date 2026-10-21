@@ -167,7 +167,7 @@ export const previewInvoice = createServerFn({ method: "POST" })
 
 async function collectLines(
   context: any,
-  data: { clientId: string; periodStart: string; periodEnd: string; offeringId?: string | null; sowId?: string | null },
+  data: { clientId: string; periodStart: string; periodEnd: string; offeringId?: string | null | undefined; sowId?: string | null | undefined },
 ) {
   const { collectInvoiceRates } = await import("@/lib/invoice-pricing.server");
   const rates = await collectInvoiceRates(context.supabase, data);

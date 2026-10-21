@@ -6,7 +6,7 @@ const rows = (result: any) => {
 };
 
 /** Called only after the invoice endpoint checks existing staff authority. */
-export async function collectInvoiceRates(db: any, data: { clientId: string; periodStart: string; periodEnd: string; offeringId?: string | null; sowId?: string | null }) {
+export async function collectInvoiceRates(db: any, data: { clientId: string; periodStart: string; periodEnd: string; offeringId?: string | null | undefined; sowId?: string | null | undefined }) {
   const [pricing, entitlements, sows, versions, billed] = await Promise.all([
     db.from("client_pricing").select("*").eq("client_id", data.clientId),
     db.from("service_entitlements").select("*").eq("client_id", data.clientId),
@@ -31,7 +31,7 @@ export async function collectInvoiceRates(db: any, data: { clientId: string; per
   ]);
   const snaps = rows(snapshots);
   const snapshotLines = snaps.length ? rows(await admin.from("fund_pricing_snapshot_lines").select("*").in("snapshot_id", snaps.map((s: any) => s.id))) : [];
-  return invoiceRateLines({ ...data, pricing: prices, entitlements: scopes, sows: rows(sows), catalog: rows(catalog),
+  return invoiceRateLines({ ...data, offeringId: data.offeringId ?? null, sowId: data.sowId ?? null, pricing: prices, entitlements: scopes, sows: rows(sows), catalog: rows(catalog),
     snapshots: snaps, snapshotLines, schedules: rows(schedules), approverRoles: rows(roles), billedRefs: rows(billed).map((l: any) => l.source_ref) });
 }
 

@@ -365,6 +365,9 @@ export function InvoicesBoard() {
             <Textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} />
           </div>
 
+          {clientId && previewQuery.error ? (
+            <p role="alert" className="text-sm text-destructive">{previewQuery.error.message}</p>
+          ) : null}
           {clientId && previewData ? (
             <div className="rounded-md border p-3 text-sm">
               {previewData.lines.length === 0 ? (
@@ -393,8 +396,7 @@ export function InvoicesBoard() {
                   </div>
                   {previewData.skipped > 0 ? (
                     <p className="mt-2 text-xs text-muted-foreground">
-                      {previewData.skipped} contracted fee(s) left off because the service isn't
-                      active in the client's scope.
+                      {previewData.skipped} service obligation(s) excluded because they use scheduled billing or were already invoiced.
                     </p>
                   ) : null}
                 </>
@@ -403,7 +405,7 @@ export function InvoicesBoard() {
           ) : null}
 
           <Button
-            disabled={!canManage || !clientId || createMutation.isPending}
+            disabled={!canManage || !clientId || createMutation.isPending || previewQuery.isFetching || Boolean(previewQuery.error) || !previewData?.lines.length}
             onClick={() => createMutation.mutate()}
           >
             Prepare draft invoice
