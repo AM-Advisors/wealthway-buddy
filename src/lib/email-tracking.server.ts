@@ -198,3 +198,17 @@ export async function verifyProposalView(token: string): Promise<{ documentId: s
   if (diff !== 0) return null;
   try { const p = JSON.parse(new TextDecoder().decode(fromB64url(payload))); return p.d && Number.isInteger(p.v) ? { documentId: String(p.d), version: Number(p.v) } : null; } catch { return null; }
 }
+
+/** Client sign-and-approve link: binds kind, record, version and recipient email. */
+export async function signAcceptToken(p: { kind: string; id: string; version: number; email: string }): Promise<string> {
+  const payload = b64url(enc.encode(JSON.stringify({ a: 1, k: p.kind, i: p.id, v: p.version, e: p.email.toLowerCase() })));
+  return `${payload}.${await sign(payload)}`;
+}
+export async function verifyAcceptToken(token: string): Promise<{ kind: string; id: string; version: number; email: string } | null> {
+  const dot = token.lastIndexOf("."); if (dot <= 0) return null;
+  const payload = token.slice(0, dot); const provided = token.slice(dot + 1); const expected = await sign(payload);
+  if (provided.length !== expected.length) return null;
+  let diff = 0; for (let i = 0; i < expected.length; i += 1) diff |= provided.charCodeAt(i) ^ expected.charCodeAt(i);
+  if (diff !== 0) return null;
+  try { const p = JSON.parse(new TextDecoder().decode(fromB64url(payload))); return p.a === 1 && p.i && Number.isInteger(p.v) ? { kind: String(p.k), id: String(p.i), version: Number(p.v), email: String(p.e ?? "") } : null; } catch { return null; }
+}
