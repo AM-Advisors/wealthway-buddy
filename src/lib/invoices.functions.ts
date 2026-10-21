@@ -666,6 +666,7 @@ export const recordInvoicePayment = createServerFn({ method: "POST" })
       .maybeSingle();
     if (!invoice) throw new Error("That invoice isn't available.");
     if ((invoice as any).status !== "issued") throw new Error("Only an issued invoice can be paid.");
+    if (data.paidOn > new Date().toISOString().slice(0, 10)) throw new Error("The payment date can't be in the future.");
     const { error } = await context.supabase
       .from("invoices")
       .update({ status: "paid", paid_on: data.paidOn, payment_reference: data.reference || null })
