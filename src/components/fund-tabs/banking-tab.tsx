@@ -16,6 +16,7 @@ import { LEDGER_CATEGORIES } from "@/lib/fund-doc-templates";
 import { addLedgerEntryFn, fundBooksFn, tagTransactionFn, voidLedgerEntryFn } from "@/lib/fund-tabs.functions";
 import { fmtDate, toCents, usd } from "./shared";
 import { StatementUpload } from "./statement-upload";
+import { FundBankingReview } from "@/components/fund-setup-phase3";
 
 const NONE = "__none";
 
@@ -52,6 +53,7 @@ export function BankingTab({ fundId }: { fundId: string }) {
         </CardHeader>
         <CardContent><WireFromBankForm fundId={fundId} allowPrefill={mode === "connect"} /></CardContent>
       </Card>
+      <FundBankingReview offeringId={fundId} />
       {q.isLoading ? <p className="text-sm text-muted-foreground">Loading books…</p> : q.error || !d ? <p className="text-sm text-destructive">{(q.error as Error)?.message ?? "Couldn't load the books."}</p> : (
         <>
           <StatementUpload fundId={fundId} investors={d.investors ?? []} />
