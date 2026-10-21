@@ -473,7 +473,7 @@ function QuestionnaireForm({ d, done, locked, onSave, saving }: { d: any; onboar
 function AccreditationStep({ d, onboardingId, questionnaireDone, done }: { d: any; onboardingId: string; questionnaireDone: boolean; done: () => void }) {
   const req = (d.requirements ?? []).find((r: any) => r.key === "accreditation");
   const confirmFn = useServerFn(confirmAccreditationStepFn);
-  const confirm = useAction(confirmFn, "Accreditation sent for confirmation.", done);
+  const confirm = useAction(confirmFn, "Accreditation confirmed.", done);
   const [name, setName] = useState(String((d.questionnaireResponses ?? {}).name_of_subscriber ?? ""));
   if (!req || req.state === "not_applicable") return null;
   const category = (d.questionnaireResponses ?? {})[ACCREDITATION_QUESTION_KEY] as string | undefined;
@@ -489,7 +489,7 @@ function AccreditationStep({ d, onboardingId, questionnaireDone, done }: { d: an
       {req.state === "valid" ? (
         <p className="text-sm text-muted-foreground">Your accredited investor status is verified. Nothing more is needed.</p>
       ) : req.state === "review_required" ? (
-        <p className="text-sm text-muted-foreground">Harmonious is confirming your accredited investor status. You can keep signing in the meantime.</p>
+        <p className="text-sm text-muted-foreground">Your accreditation paperwork is being verified by the fund manager or Harmonious. You can keep signing in the meantime.</p>
       ) : !questionnaireDone || !category ? (
         <p className="text-sm text-muted-foreground">Submit the questionnaire above; your accredited-investor answer carries over here.</p>
       ) : !selfCert ? (
