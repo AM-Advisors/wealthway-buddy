@@ -78,7 +78,14 @@ export async function listDocumentReviews(userId: string, offeringId: string) {
     : { data: [] };
   const mySigner = new Map(((mySignerRows ?? []) as any[]).map((r) => [r.signature_id, r.id as string]));
   const docList = (docs ?? []) as any[];
-  const signed = ((sigs ?? []) as any[]).filter((s) => !s.cancelled_at && !s.superseded_by && (s.provider_status === "completed" || s.signed_at) && s.pdf_path);
+  const liveSigs = ((sigs ?? []) as any[]).filter((s) => !s.cancelled_at && !s.superseded_by);
+  const { data: invSignedRows } = liveSigs.length
+    ? await db.from("document_signature_signers").select("signature_id, signed_at").in("signature_id", liveSigs.map((s) => s.id)).neq("role_key", "fund_manager").eq("status", "signed")
+    : { data: [] };
+  const invSignedAt = new Map(((invSignedRows ?? []) as any[]).map((r) => [r.signature_id, r.signed_at as string]));
+  // Signed = completed with a stored copy, or the investor's part is signed and waiting on the fund.
+  const signed = liveSigs.filter((s) => ((s.provider_status === "completed" || s.signed_at) && s.pdf_path) || invSignedAt.has(s.id))
+    .map((s) => (invSignedAt.has(s.id) && !s.provider_completed_at ? { ...s, provider_completed_at: invSignedAt.get(s.id) } : s));
   return {
     documents: docList.map((d) => ({ id: d.id as string, title: d.title as string, version: d.active_version as number | null })),
     investors: rows.map((r) => {
