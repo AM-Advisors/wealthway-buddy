@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { acknowledgeDocumentFn } from "@/lib/fund-setup-canonical.functions";
 import { InvestorBankVerify } from "@/components/investor-bank-verify";
 import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -475,6 +476,8 @@ function Sign({ d, onboardingId, done }: { d: any; onboardingId: string; done: (
   const saveQ = useAction(questionnaireFn, "Answers saved.", done);
   const prepare = useAction(prepareFn, null, done);
   const confirm = useAction(confirmFn, "Thank you. Harmonious will now review your subscription.", done);
+  const ackFn = useServerFn(acknowledgeDocumentFn);
+  const ack = useAction(ackFn, "Acknowledged and agreed.", done);
   const docs: any[] = d.documents ?? [];
   const questionnaireDone = (d.requirements ?? []).find((r: any) => r.key === "subscription_questionnaire")?.state !== "missing";
   const signed = (d.requirements ?? []).find((r: any) => r.key === "signature")?.state === "valid";
@@ -521,7 +524,13 @@ function Sign({ d, onboardingId, done }: { d: any; onboardingId: string; done: (
                       <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium">{i + 1}</span>
                       <span>{doc.title}</span>
                     </span>
-                    <Badge variant={complete ? "default" : "outline"}>{status}</Badge>
+                    {doc.requiresAcknowledgment && !doc.acknowledged && !doc.signed ? (
+                      <Button size="sm" disabled={ack.isPending} onClick={() => ack.mutate({ data: { onboardingId, documentId: doc.id } } as any)}>
+                        I acknowledge and agree
+                      </Button>
+                    ) : (
+                      <Badge variant={complete ? "default" : "outline"}>{status}</Badge>
+                    )}
                   </li>
                 );
               })}
