@@ -360,8 +360,9 @@ export const matchBankTransaction = createServerFn({ method: "POST" })
       note: row.name as string,
     });
 
+    const sync = await (await import("@/lib/receipt-sync.server")).syncReceiptToInvestment(userId, { applicationId: data.applicationId, bankTransactionId: data.transactionId });
     void (await import("@/lib/manager-alerts.server")).drainManagerAlerts().catch(() => {});
-    return { ok: true, message: "Deposit matched and funding marked received." };
+    return { ok: true, message: sync.note ? `Deposit matched. ${sync.note}` : "Deposit matched and funding marked received." };
   });
 
 /** Removes the bank connection for this fund. */

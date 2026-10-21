@@ -637,6 +637,9 @@ export const decideWireAsReviewer = createServerFn({ method: "POST" })
       note: data.notes || null,
     });
 
+    if (data.outcome === "approved") {
+      await (await import("@/lib/receipt-sync.server")).syncReceiptToInvestment(userId, { applicationId: data.applicationId });
+    }
     void (await import("@/lib/manager-alerts.server")).drainManagerAlerts().catch(() => {});
     if (data.outcome === "approved") {
       await (await import("@/lib/ownership-email.server")).notifyOwnershipChange(
