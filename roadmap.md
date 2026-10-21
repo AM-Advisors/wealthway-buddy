@@ -1,5 +1,11 @@
 # Roadmap
 
+## Diagnostic repairs — narrow phase 1 (2026-10-21)
+- [ ] Block authenticated/mutating checks without proven backend isolation and synthetic reviewer sessions.
+- [ ] Repair existing health/audit failed reads, recursive display filtering, email diagnostic authorization, and stale job display.
+- [ ] Run offline targeted checks; report blocked end-to-end checks and separate retention proposal.
+- Retention, webhook replay, payment atomicity, drafts and broad telemetry remain unchanged.
+
 ## Invoice pricing consistency (2026-10-21)
 - [x] Align manual invoice preparation and rate review with scoped frozen fund/contracted rates; preserve issued invoices and existing approvals; conflicting frozen terms stop preparation.
 - [x] 32 focused invoice pricing, schedule and commercial pricing checks passed; no invoices issued, sent or charged.
