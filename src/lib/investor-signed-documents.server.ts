@@ -1,5 +1,6 @@
 /** Owner-scoped archive: no manager or staff role may substitute for ownership. */
-export async function investorSignedDocuments(db: any, userId: string, onboardingId: string) {
+type SignedDocument = { id: string; title: string; version: number | null; snapshotVersion: number | null; signedAt: string | null; hasCopy: boolean; replaced: boolean };
+export async function investorSignedDocuments(db: any, userId: string, onboardingId: string): Promise<SignedDocument[]> {
   const { data: row, error } = await db.from("investor_onboardings")
     .select("id, investor_user_id, application_id, executed_snapshot, removed_at").eq("id", onboardingId).maybeSingle();
   if (error) throw new Error("Your submitted documents could not be loaded. Please try again.");
