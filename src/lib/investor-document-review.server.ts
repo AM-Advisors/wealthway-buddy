@@ -160,7 +160,7 @@ export async function decideDocument(userId: string, input: { offeringId: string
       .in('status', ['waiting', 'sent', 'viewed']).order('signing_order').limit(1).maybeSingle() : { data: null };
     if (signer?.signer_user_id && signer.signer_user_id !== userId) {
       const { notifyInvestorApproval } = await import('@/lib/investor-approval-notify.server');
-      await notifyInvestorApproval({ onboardingId: ob.id, action: 'sign', ref: `countersign:${signer.signature_id}`, signerUserId: signer.signer_user_id });
+      await notifyInvestorApproval({ onboardingId: ob.id, action: 'sign', ref: `countersign:${signer.signature_id}`, signerUserId: signer.signer_user_id, signerRowId: signer.id });
     }
     } catch { console.error('[investor-approval-notice] countersign notification unavailable'); }
   }

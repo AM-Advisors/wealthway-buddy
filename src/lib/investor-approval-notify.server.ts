@@ -1,5 +1,5 @@
 /** Single-recipient event notices. No queue, credentials, bank details or approval writes. */
-export async function notifyInvestorApproval(input: { onboardingId: string; action: 'review' | 'sign' | 'fund'; ref: string; signerUserId?: string | null }) {
+export async function notifyInvestorApproval(input: { onboardingId: string; action: 'review' | 'sign' | 'fund' | 'approve_sign'; ref: string; signerUserId?: string | null; signerRowId?: string | null }) {
   try {
     const { supabaseAdmin: db } = await import('@/integrations/supabase/client.server')
     await sendInvestorApprovalNotice(db, input)
@@ -9,7 +9,7 @@ export async function notifyInvestorApproval(input: { onboardingId: string; acti
   }
 }
 
-export async function sendInvestorApprovalNotice(db: any, input: { onboardingId: string; action: 'review' | 'sign' | 'fund'; ref: string; signerUserId?: string | null }) {
+export async function sendInvestorApprovalNotice(db: any, input: { onboardingId: string; action: 'review' | 'sign' | 'fund' | 'approve_sign'; ref: string; signerUserId?: string | null; signerRowId?: string | null }) {
   const { data: ob, error } = await db.from('investor_onboardings')
     .select('id, offering_id, investor_user_id, person_id, assigned_to, stage, approved_to_fund_at, approved_to_fund_by, removed_at')
     .eq('id', input.onboardingId).maybeSingle()
@@ -19,10 +19,23 @@ export async function sendInvestorApprovalNotice(db: any, input: { onboardingId:
   const { data: managers, error: managerError } = await db.from('fund_managers').select('user_id').eq('offering_id', ob.offering_id).order('user_id')
   if (managerError) throw new Error('Manager notification facts unavailable')
   const managerIds = (managers ?? []).map((m: any) => m.user_id).filter((id: string) => id && id !== ob.investor_user_id)
+  // When the investor finishes signing, the fund's countersigner gets one "approve & sign" link.
+  // The usual review notice still goes to the responsible manager unless that is the same person.
+  let countersigner: { userId: string; rowId: string } | null = null
+  if (input.action === 'review' && input.ref.startsWith('signature:')) {
+    const { data: cs } = await db.from('document_signature_signers').select('id, signer_user_id')
+      .eq('signature_id', input.ref.slice('signature:'.length)).eq('role_key', 'fund_manager')
+      .in('status', ['waiting', 'sent', 'viewed']).order('signing_order').limit(1).maybeSingle()
+    if (cs?.signer_user_id && managerIds.includes(cs.signer_user_id)) {
+      countersigner = { userId: cs.signer_user_id, rowId: cs.id }
+      await sendInvestorApprovalNotice(db, { onboardingId: input.onboardingId, action: 'approve_sign', ref: input.ref, signerUserId: cs.signer_user_id, signerRowId: cs.id })
+    }
+  }
   // One responsible manager per event, not a broadcast. Assigned manager wins.
   const recipientId = input.action === 'fund' ? ob.investor_user_id
-    : input.action === 'sign' ? (managerIds.includes(input.signerUserId) ? input.signerUserId : null)
+    : input.action === 'sign' || input.action === 'approve_sign' ? (managerIds.includes(input.signerUserId) ? input.signerUserId : null)
     : managerIds.includes(ob.assigned_to) ? ob.assigned_to : managerIds[0]
+  if (countersigner && recipientId === countersigner.userId) return { sent: true }
   if (!recipientId || (input.action === 'fund' && !managerIds.includes(ob.approved_to_fund_by))) return { sent: false }
   const { data: auth, error: authError } = await db.auth.admin.getUserById(recipientId)
   if (authError) throw new Error('Recipient unavailable')
@@ -49,6 +62,8 @@ export async function sendInvestorApprovalNotice(db: any, input: { onboardingId:
       investorName: [person?.legal_first_name, person?.legal_last_name].filter(Boolean).join(' ') || 'An investor',
       fundName: fund.name, action: input.action, instructionsAvailable,
       portalUrl: input.action === 'fund' ? `https://app.harmonious.co/investment/${ob.id}?step=fund`
+        : input.action === 'sign' && input.signerRowId ? `https://app.harmonious.co/manager/countersign/${input.signerRowId}`
+        : input.action === 'approve_sign' ? `https://app.harmonious.co/manager/fund/${ob.offering_id}/documents`
         : `https://app.harmonious.co/manager/fund/${ob.offering_id}/approvals`,
     },
   })
