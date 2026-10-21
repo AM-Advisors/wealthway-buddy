@@ -24,7 +24,7 @@ describe("recursive diagnostic filtering", () => {
     expect(input.note).toBe("private");
   });
   it("handles cycles and bounds diagnostic arrays", () => {
-    const cycle: Record<string, unknown> = { status: "approved" }; cycle.self = cycle;
+    const cycle: Record<string, unknown> = { status: "approved" }; cycle['self'] = cycle;
     expect(diagnosticText(cycle)).toContain("[withheld]");
     expect((filterDiagnostic(Array.from({ length: 60 }, () => ({ status: "ok" }))) as unknown[]).length).toBe(50);
   });
