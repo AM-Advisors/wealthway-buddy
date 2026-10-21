@@ -25,4 +25,10 @@ describe("controlled proposal sections", () => {
     const o = applyLockedSections("rfq", "response", typed, { ...facts, about: "Marketing approved wording for Harmonious." });
     expect(o.find((s) => s.key === "about")!.body).toBe("Marketing approved wording for Harmonious.");
   });
+  it("reps' summary note stays editable, sits under the summary and is capped at 300 characters", () => {
+    const o = applyLockedSections("rfq", "response", [...typed, { key: "summary_note", title: "x", body: "Looking forward to working with you. ".repeat(20) }], facts);
+    expect(o[1]!.key).toBe("summary_note");
+    expect(o[1]!.body.startsWith("Looking forward")).toBe(true);
+    expect(o[1]!.body.length).toBe(300);
+  });
 });
