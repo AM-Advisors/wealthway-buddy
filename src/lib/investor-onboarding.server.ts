@@ -943,7 +943,13 @@ export async function recordSubscriptionSignature(
   userId: string,
   input: { onboardingId: string; signerName: string; capacity?: string | null },
 ) {
-  const { actor, row } = await assertInvestorOwns(userId, input.onboardingId);
+  let { actor, row } = await assertInvestorOwns(userId, input.onboardingId);
+  // Documents signed straight from the Documents page skip the prepare click;
+  // record the document versions now instead of refusing the submission.
+  if (!row.document_template_version && !row.executed_snapshot) {
+    await prepareSubscriptionDocuments(userId, input.onboardingId);
+    ({ actor, row } = await assertInvestorOwns(userId, input.onboardingId));
+  }
   if (!row.document_template_version) fail("Your documents have not been prepared yet.");
   if (row.executed_snapshot) fail("This subscription has already been executed.");
 
