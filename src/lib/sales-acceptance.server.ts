@@ -151,9 +151,8 @@ export async function acceptByToken(d: { token: string; signerName: string; sign
     } else acc = data;
     const now = new Date().toISOString();
     if (r.quoteId) await db.from("sales_quotes").update({ status: "signed", signed_at: now, updated_at: now }).eq("id", r.quoteId).in("status", ["approved", "sent"]);
-    if (r.kind !== "quote") await db.from("sales_documents").update({ status: "won", updated_at: now }).eq("id", r.id).then(() => null, () => null);
     if (r.dealId) {
-      await db.from("crm_deals").update({ sales_stage: "contract_won", stage_changed_at: now }).eq("id", r.dealId);
+      await db.from("crm_deals").update({ sales_stage: "contract_won", stage: "won", stage_changed_at: now }).eq("id", r.dealId);
       await db.from("sales_stage_events").insert({ deal_id: r.dealId, to_stage: "contract_won", note: `Client signed ${r.title}`, actor_id: null }).then(() => null, () => null);
     }
   }

@@ -25,7 +25,7 @@ export function invoiceLinesFromQuote(lines: QuoteLine[]) {
   return lines
     .filter((l) => Number(l.line_cents) > 0)
     .map((l, i) => ({
-      source: "sales_acceptance",
+      source: "manual",
       service_key: l.service_key ?? "quote",
       label: l.label,
       quantity: Math.max(1, Math.round(Number(l.quantity) || 1)),
