@@ -24,7 +24,7 @@ export function WealthWorkspace() {
   const [scope,setScope]=useState('personal'), [selection,setSelection]=useState<WealthServiceKey[]|null>(null), [date,setDate]=useState(today()), [busy,setBusy]=useState(false);
   const [editing,setEditing]=useState<WealthObservation|null>(null), [open,setOpen]=useState(false), [form,setForm]=useState(blank());
   const latest=data.selections.find(s=>(s.offering_id??'personal')===scope);
-  const selected=selection??(latest?.services??[]);
+  const selected: WealthServiceKey[]=selection??(latest?.services??[]).filter((k: string): k is WealthServiceKey=>k==='portfolio'||k==='report_cards');
   const owner=data.history[0]?.owner_user_id??'';
   const rows=currentWealthHoldings(data.history,owner,date);
   const currencies=[...new Set(rows.map(r=>r.currency))];
