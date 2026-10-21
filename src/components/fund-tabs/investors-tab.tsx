@@ -15,7 +15,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { FundOnboardingLinkCard } from "@/components/fund-onboarding-link";
 import { approveToFundFn, fundReadinessFn } from "@/lib/investor-onboarding.functions";
 import { STAGE_LABELS, type OnboardingStage } from "@/lib/investor-onboarding-model";
-import { investorDetailFn, investorGridFn, lastRemindersFn, sendInvestorRemindersFn } from "@/lib/fund-tabs.functions";
+import { investorDetailFn, investorGridFn, lastRemindersFn, sendInvestorRemindersFn, managerInvestorSignedCopyFn } from "@/lib/fund-tabs.functions";
 import { bulkSendKycLinksFn, bulkSetClassFn, listInvestorDuplicatesFn, mergeInvestorsFn, requestMissingInfoFn } from "@/lib/investor-bulk.functions";
 import { reminderAllowed, reminderStep } from "@/lib/fund-health";
 import { toast } from "sonner";
@@ -251,6 +251,8 @@ function Row({ k, v }: { k: string; v: React.ReactNode }) {
 export function InvestorSheet({ fundId, id, onClose }: { fundId: string; id: string | null; onClose: () => void }) {
   const load = useServerFn(investorDetailFn);
   const approve = useServerFn(approveToFundFn);
+  const downloadSigned = useServerFn(managerInvestorSignedCopyFn);
+  const [downloading, setDownloading] = useState<string | null>(null);
   const [approving, setApproving] = useState(false);
   const q = useQuery({ queryKey: ["fund-investor", fundId, id], queryFn: () => {
     if (!id) throw new Error("Select an investor to review.");
@@ -303,7 +305,31 @@ export function InvestorSheet({ fundId, id, onClose }: { fundId: string; id: str
               <p className="mt-2 text-xs text-muted-foreground">See the History tab for who completed each step and when.</p>
             </section>
 
-            {d.openItems.length > 0 && (
+            {d.reviewEvidence && <>
+              <section className="space-y-3" aria-label="Signed fund documents">
+                <h4 className="font-medium">Signed fund documents</h4>
+                {d.reviewEvidence.signedDocuments.length ? d.reviewEvidence.signedDocuments.map((doc) => <div key={doc.id} className="flex flex-wrap items-center justify-between gap-2 border-b pb-3">
+                  <div className="min-w-0"><p className="break-words font-medium">{doc.title}</p><p className="text-xs text-muted-foreground">{doc.version != null ? `Version ${doc.version}` : "Version not recorded"} · {fmtDate(doc.signedAt)}{doc.replaced ? " · Replaced, retained copy" : " · Signed"}</p></div>
+                  {doc.hasCopy ? <Button size="sm" variant="outline" disabled={downloading !== null} onClick={async () => {
+                    if (!id) return;
+                    setDownloading(doc.id);
+                    try { const result = await downloadSigned({ data: { fundId, onboardingId: id, signatureId: doc.id } }); const link = document.createElement("a"); link.href = result.url; link.download = ""; link.rel = "noreferrer"; link.click(); }
+                    catch (error) { toast.error(error instanceof Error ? error.message : "The signed copy could not be opened."); }
+                    finally { setDownloading(null); }
+                  }}>{downloading === doc.id ? "Opening…" : "Download signed copy"}</Button> : <span className="text-muted-foreground">Signed copy pending</span>}
+                </div>) : <p className="text-muted-foreground">No submitted signed documents yet.</p>}
+                {d.reviewEvidence.acknowledgments.map((doc) => <div key={doc.id} className="border-b pb-2"><p className="font-medium">{doc.title}</p><p className="text-xs text-muted-foreground">Version {doc.version} · {fmtDate(doc.acknowledgedAt)} · Acknowledged and agreed</p></div>)}
+              </section>
+              <section className="space-y-3" aria-label="Investor questionnaire">
+                <h4 className="font-medium">Investor questionnaire</h4>
+                {d.reviewEvidence.questionnaireSubmittedAt ? <>
+                  <p className="text-xs text-muted-foreground">Submitted {fmtDate(d.reviewEvidence.questionnaireSubmittedAt)}</p>
+                  <dl className="space-y-3">{d.reviewEvidence.questionnaire.map((answer) => <div key={answer.key} className="border-b pb-2"><dt className="break-words text-muted-foreground">{answer.label}</dt><dd className="mt-1 whitespace-pre-line break-words">{answer.answer}</dd></div>)}</dl>
+                </> : <p className="text-muted-foreground">Questionnaire has not been submitted.</p>}
+              </section>
+            </>}
+
+            {(d.openItems.length > 0 || d.canApproveSubscription) && (
               <section className="rounded-lg border border-primary/40 bg-primary/5 p-3">
                 <h4 className="mb-1 font-medium">Open items</h4>
                 <ul className="list-disc space-y-0.5 pl-5">{d.openItems.map((t: string) => <li key={t}>{t}</li>)}</ul>
