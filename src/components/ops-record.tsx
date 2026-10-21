@@ -438,7 +438,7 @@ function InvestorListTable({ records: all }: { records: InvestorListRow[] }) {
   const access = useAccessStatus(emails);
   const [show, setShow] = useState<"current" | "archived" | "test">("current");
   const acc = (r: InvestorListRow) => (r.subtitle ? access.data?.[r.subtitle.toLowerCase()] : undefined);
-  const records = all.filter((r) => show === "archived" ? acc(r)?.status === "archived" : show === "test" ? acc(r)?.isTestDemo : acc(r)?.status !== "archived");
+  const records = all.filter((r) => show === "archived" ? acc(r)?.status === "archived" : show === "test" ? acc(r)?.isTestDemo : acc(r)?.status !== "archived" && !acc(r)?.isTestDemo);
   const tabs = access.data ? <div className="mb-2 flex gap-1">{(["current", "archived", "test"] as const).map((v) => <button key={v} onClick={() => setShow(v)} className={`rounded border px-3 py-1 text-xs ${show === v ? "bg-primary text-primary-foreground" : ""}`}>{v === "current" ? "Current" : v === "archived" ? "Archived" : "Test/Demo"}</button>)}</div> : null;
   if (!records.length) {
     return <div>{tabs}<p className="text-sm text-muted-foreground">No investors match.</p></div>;
@@ -564,7 +564,7 @@ function ClientGrid({ type, records: all }: { type: OpsRecordType; records: any[
   const meta = new Map(((dir.data?.clients ?? []) as any[]).map((c) => [c.id, c]));
   const records = type !== "client" ? all : all.filter((r) => {
     const m = meta.get(r.id);
-    return show === "archived" ? m?.status === "archived" : show === "test" ? m?.is_test_demo : m?.status !== "archived";
+    return show === "archived" ? m?.status === "archived" : show === "test" ? m?.is_test_demo : m?.status !== "archived" && !m?.is_test_demo;
   });
   return (
     <div className="space-y-2">
