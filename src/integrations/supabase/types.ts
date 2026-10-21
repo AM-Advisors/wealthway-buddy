@@ -35586,6 +35586,57 @@ export type Database = {
         }
         Relationships: []
       }
+      outside_subscription_marks: {
+        Row: {
+          action: string
+          actor_role: string
+          actor_user_id: string
+          created_at: string
+          id: string
+          note: string | null
+          offering_id: string
+          onboarding_id: string
+          signed_on: string | null
+        }
+        Insert: {
+          action: string
+          actor_role: string
+          actor_user_id: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          offering_id: string
+          onboarding_id: string
+          signed_on?: string | null
+        }
+        Update: {
+          action?: string
+          actor_role?: string
+          actor_user_id?: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          offering_id?: string
+          onboarding_id?: string
+          signed_on?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "outside_subscription_marks_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "outside_subscription_marks_onboarding_id_fkey"
+            columns: ["onboarding_id"]
+            isOneToOne: false
+            referencedRelation: "investor_onboardings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       partnership_return_details: {
         Row: {
           answers: Json

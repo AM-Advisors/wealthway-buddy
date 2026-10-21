@@ -135,3 +135,15 @@ describe("server wiring", () => {
     expect(seg).toContain('forbid("close readiness is a fund view.")');
   });
 });
+
+describe("subscription signed outside the platform", () => {
+  it("completes the signature step once Harmonious has loaded the copy", () => {
+    expect(item(computeReadiness(input({ outsideSubscription: { signedOn: "2026-09-01" } }, reqs({ sig: false }))), "signature").status).toBe("complete");
+  });
+  it("leaves signature open without it", () => {
+    expect(item(computeReadiness(input({ outsideSubscription: null }, reqs({ sig: false }))), "signature").status).toBe("needs_investor");
+  });
+  it("never completes funding", () => {
+    expect(item(computeReadiness(input({ outsideSubscription: { signedOn: "2026-09-01" } }, reqs({ sig: false }))), "funding").status).not.toBe("complete");
+  });
+});

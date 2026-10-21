@@ -341,6 +341,7 @@ export async function loadReadinessInputs(rows: any[]) {
     exceptions: groupBy(excs, "onboarding_id"),
     provenance: prov,
     priors,
+    outside: await (await import("@/lib/prior-signed-documents.server")).outsideSubscriptionStates(d, obIds),
     stage2,
     profileAccreditations: groupBy(profAccs, "profile_id"),
     profileDocuments: [...docsByProfile, ...legacyDocs],
@@ -2393,6 +2394,7 @@ export async function computeReadinessFor(row: any, closeAmountCents?: number | 
     requestedCloseDate: row.requested_close_date ?? null,
     closeAmountCents: closeAmountCents ?? null,
     priorSubscription: confirmed ? { fundedCents: confirmed.funded_cents, signedOn: confirmed.signed_on } : null,
+    outsideSubscription: (() => { const o = I.outside?.get(String(row.id)); return o?.complete && o.signedOn ? { signedOn: o.signedOn } : null; })(),
   });
   return { result, facts };
 }

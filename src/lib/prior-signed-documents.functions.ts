@@ -24,3 +24,10 @@ export const recordPriorDocFn = createServerFn({ method: "POST" }).middleware([r
 export const openPriorDocFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator(base.extend({ documentId: z.string().uuid() }).parse)
   .handler(async ({ data, context }) => (await srv()).openPriorDoc(await db(), context.userId, data));
+
+export const outsideSubscriptionFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator(base.parse)
+  .handler(async ({ data, context }) => (await srv()).outsideSubscriptionState(await db(), context.userId, data));
+
+export const markOutsideSubscriptionFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator(base.extend({ marked: z.boolean(), signedOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullish(), note: z.string().max(500).nullish() }).parse)
+  .handler(async ({ data, context }) => (await srv()).markOutsideSubscription(await db(), context.userId, data));
