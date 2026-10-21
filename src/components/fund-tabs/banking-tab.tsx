@@ -75,6 +75,8 @@ export function FundBooks({ fundId }: { fundId: string }) {
 
 export function Transactions({ fundId, d }: { fundId: string; d: any }) {
   const qc = useQueryClient();
+  const [show, setShow] = useState<"all" | "unmatched" | "investor" | "asset">("all");
+  const rows = (d.transactions as any[]).filter((t) => show === "all" ? true : show === "unmatched" ? !t.tag?.onboarding_id && !t.tag?.asset_label && !t.matched_invoice_id && !t.matched_application_id : show === "investor" ? !!t.tag?.onboarding_id : !!t.tag?.asset_label);
   const tag = useServerFn(tagTransactionFn);
   const m = useMutation({
     mutationFn: (v: { id: string; onboardingId: string | null; assetLabel: string | null }) => tag({ data: { fundId, bankTransactionId: v.id, onboardingId: v.onboardingId, assetLabel: v.assetLabel } }),
@@ -86,13 +88,20 @@ export function Transactions({ fundId, d }: { fundId: string; d: any }) {
         <CardTitle className="text-base">Bank transactions</CardTitle>
         <CardDescription>Assign incoming wires to the investor they came from and outgoing payments to the asset they were for. Assigning is a label only; Harmonious still reconciles funding.</CardDescription>
       </CardHeader>
-      <CardContent>
-        {d.transactions.length === 0 ? <p className="py-6 text-center text-sm text-muted-foreground">No transactions yet. Connect the bank above.</p> : (
+      <CardContent className="space-y-3">
+        {d.transactions.length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            {([["all", "All"], ["unmatched", "Unmatched"], ["investor", "Matched to an investor"], ["asset", "Matched to an asset"]] as const).map(([v, l]) => (
+              <Button key={v} size="sm" variant={show === v ? "default" : "outline"} onClick={() => setShow(v)}>{l}</Button>
+            ))}
+          </div>
+        )}
+        {d.transactions.length === 0 ? <p className="py-6 text-center text-sm text-muted-foreground">No transactions yet. Apply a statement or add one below.</p> : rows.length === 0 ? <p className="py-4 text-sm text-muted-foreground">Nothing in this view.</p> : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[760px] text-sm">
               <thead className="text-left text-xs text-muted-foreground"><tr><th className="py-2">Date</th><th>Description</th><th className="text-right">Amount</th><th>Investor</th><th>Asset</th></tr></thead>
               <tbody>
-                {d.transactions.map((t: any) => (
+                {rows.map((t: any) => (
                   <tr key={t.id} className="border-t">
                     <td className="py-2 whitespace-nowrap">{fmtDate(t.posted_on)}</td>
                     <td>{t.name || t.description || "-"}</td>
@@ -120,7 +129,7 @@ export function Transactions({ fundId, d }: { fundId: string; d: any }) {
   );
 }
 
-function Ledger({ fundId, d }: { fundId: string; d: any }) {
+export function Ledger({ fundId, d }: { fundId: string; d: any }) {
   const qc = useQueryClient();
   const add = useServerFn(addLedgerEntryFn);
   const voidFn = useServerFn(voidLedgerEntryFn);
