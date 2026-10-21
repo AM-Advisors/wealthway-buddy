@@ -1,3 +1,4 @@
+import { SalesDealDocsTabs } from "@/components/sales-deal-docs-tabs";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -63,6 +64,7 @@ function Documents() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-4 md:p-6">
+      <SalesDealDocsTabs />
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="font-heading text-2xl font-semibold">Proposals & RFPs</h1>

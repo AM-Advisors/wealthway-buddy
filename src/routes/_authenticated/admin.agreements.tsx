@@ -1,3 +1,4 @@
+import { SalesDealDocsTabs } from "@/components/sales-deal-docs-tabs";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
@@ -71,6 +72,7 @@ function AdminAgreementsPage() {
   if (isLoading || !data) {
     return (
       <main className="mx-auto max-w-6xl px-4 py-10">
+      <SalesDealDocsTabs />
         <Skeleton className="h-64 w-full" />
       </main>
     );

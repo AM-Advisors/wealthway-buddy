@@ -1,3 +1,4 @@
+import { SalesDealDocsTabs } from "@/components/sales-deal-docs-tabs";
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -48,6 +49,7 @@ function SowTemplates() {
   const { caps, me, templates } = q.data as any;
   return (
     <div className="space-y-4 p-6">
+      <SalesDealDocsTabs />
       <header>
         <h1 className="font-heading text-2xl font-semibold">SOW templates</h1>
         <p className="text-sm text-muted-foreground">Draft SOWs use the latest approved, current version for the engagement type. Drafts and retired versions are never used. Executed SOWs stay on the version they were signed under.</p>
