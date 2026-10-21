@@ -73,3 +73,33 @@ export const addLiabilityFn = createServerFn({ method: "POST" }).middleware([req
 export const settleLiabilityFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator(fund.extend({ id: uuid, settledOn: date }).parse)
   .handler(async ({ data, context }) => (await srv()).settleLiability(context.userId, data.fundId, data.id, data.settledOn));
+
+const cents = z.number().int().min(0).max(1e13);
+const dir = z.enum(["in", "out"]);
+
+export const createManualStatementFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator(fund.extend({ bankName: z.string().max(120).nullable(), accountMask: z.string().max(20).nullable(), periodStart: date, periodEnd: date, openingCents: z.number().int().min(-1e13).max(1e13), closingCents: z.number().int().min(-1e13).max(1e13) }).parse)
+  .handler(async ({ data, context }) => (await srv()).createManualStatement(context.userId, data.fundId, data));
+
+export const addManualLineFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator(fund.extend({ uploadId: uuid, postedOn: date, description: z.string().trim().min(1).max(500), amountCents: cents, direction: dir, category: z.string().max(60).nullable() }).parse)
+  .handler(async ({ data, context }) => (await srv()).addManualLine(context.userId, data.fundId, data));
+
+export const removeManualLineFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator(fund.extend({ lineId: uuid }).parse)
+  .handler(async ({ data, context }) => (await srv()).removeManualLine(context.userId, data.fundId, data.lineId));
+
+export const addManualTransactionFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator(fund.extend({ postedOn: date, description: z.string().trim().min(1).max(500), amountCents: cents, direction: dir, reference: z.string().max(120).nullable(), category: z.string().max(60).nullable(), onboardingId: uuid.nullable() }).parse)
+  .handler(async ({ data, context }) => (await srv()).addManualTransaction(context.userId, data.fundId, data));
+
+export const uploadBillCopyFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator(fund.extend({ expenseId: uuid, fileName: z.string().min(1).max(200), contentType: z.string().max(120), base64: z.string().max(28_000_000) }).parse)
+  .handler(async ({ data, context }) => (await srv()).uploadBillCopy(context.userId, data.fundId, data));
+
+export const openBillCopyFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator(fund.extend({ expenseId: uuid }).parse)
+  .handler(async ({ data, context }) => (await srv()).openBillCopy(context.userId, data.fundId, data.expenseId));
+
+export const accountingSummaryFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator(fund.parse)
+  .handler(async ({ data, context }) => (await srv()).accountingSummary(context.userId, data.fundId));
