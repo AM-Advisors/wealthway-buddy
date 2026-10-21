@@ -2,7 +2,7 @@
 
 ## Investor certification publication (2026-10-21)
 - [x] Confirm all five canonical certification statements are approved and effective; show the exact approved wording in Review & certify instead of headings and an unconditional pending notice. Unapproved statements cannot be certified.
-- [ ] Verify focused approval/effective-version checks and preview diagnostics.
+- [x] 47 focused approval/effective-version, certification and investor-type checks passed; preview build OK.
 - [ ] Signed-in read-back — blocked on isolated synthetic QA access; shared production browser testing remains prohibited.
 
 ## Investor submitted signed copies (2026-10-21)
