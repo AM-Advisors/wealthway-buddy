@@ -410,7 +410,7 @@ export async function editRelatedParty(userId: string, input: {
     const { addRelatedPerson } = await import("@/lib/related-person.server");
     const res = await addRelatedPerson({ profileId: row.investment_profile_id, offeringId: row.offering_id, firstName: r.firstName, lastName: r.lastName, email: r.email ?? null, role: r.role, ownershipPercent: pct(r.ownershipPercent), isSigner: r.isSigner, actorUserId: actor.userId, entrySource: source });
     await logChanges([{ ...base, id: res.relationshipId, field: `related:${r.role}`, from: null, to: `${r.firstName} ${r.lastName}` }]);
-    return { ok: true, underReview: res.underReview };
+    return { ok: true, underReview: res.underReview, relationshipId: res.relationshipId };
   }
   if (input.update) {
     const u = input.update;
