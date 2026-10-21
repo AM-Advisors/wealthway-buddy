@@ -39164,6 +39164,76 @@ export type Database = {
         }
         Relationships: []
       }
+      prior_signed_documents: {
+        Row: {
+          created_at: string
+          document_kind: string
+          file_name: string
+          id: string
+          note: string | null
+          offering_id: string
+          onboarding_id: string
+          replaces_id: string | null
+          signed_on: string
+          storage_path: string
+          title: string
+          uploaded_by: string
+          uploaded_by_role: string
+        }
+        Insert: {
+          created_at?: string
+          document_kind: string
+          file_name: string
+          id?: string
+          note?: string | null
+          offering_id: string
+          onboarding_id: string
+          replaces_id?: string | null
+          signed_on: string
+          storage_path: string
+          title: string
+          uploaded_by: string
+          uploaded_by_role: string
+        }
+        Update: {
+          created_at?: string
+          document_kind?: string
+          file_name?: string
+          id?: string
+          note?: string | null
+          offering_id?: string
+          onboarding_id?: string
+          replaces_id?: string | null
+          signed_on?: string
+          storage_path?: string
+          title?: string
+          uploaded_by?: string
+          uploaded_by_role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prior_signed_documents_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prior_signed_documents_onboarding_id_fkey"
+            columns: ["onboarding_id"]
+            isOneToOne: false
+            referencedRelation: "investor_onboardings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prior_signed_documents_replaces_id_fkey"
+            columns: ["replaces_id"]
+            isOneToOne: false
+            referencedRelation: "prior_signed_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       prior_subscription_decisions: {
         Row: {
           created_at: string
