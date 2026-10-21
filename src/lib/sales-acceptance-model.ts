@@ -47,7 +47,7 @@ export function clientRemittance<T extends { status: string; account_number: str
 }
 
 /** Maker-checker for payment instructions; Super Admins may self-approve with a reason. */
-export function remittanceApprovalBlocker(a: { approverId: string; preparedBy: string; isSuperAdmin: boolean; reason?: string | null }): string | null {
+export function remittanceApprovalBlocker(a: { approverId: string; preparedBy: string; isSuperAdmin: boolean; reason?: string | null | undefined }): string | null {
   if (a.approverId !== a.preparedBy) return null;
   if (!a.isSuperAdmin) return "A different person must approve payment instructions.";
   return (a.reason ?? "").trim().length >= 5 ? null : "Give a reason to approve your own entry.";

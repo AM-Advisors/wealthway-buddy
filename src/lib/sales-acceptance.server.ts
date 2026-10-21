@@ -118,7 +118,7 @@ async function createInvoiceFromAcceptance(db: any, r: Loaded, acc: any) {
 }
 
 /** Client signs & approves. Idempotent: signing twice never creates a second acceptance or invoice. */
-export async function acceptByToken(d: { token: string; signerName: string; signerTitle?: string | null; agree: boolean; paymentMethod: "card" | "wire" | "ach"; ip: string | null; ua: string | null; userId?: string | null }) {
+export async function acceptByToken(d: { token: string; signerName: string; signerTitle?: string | null | undefined; agree: boolean; paymentMethod: "card" | "wire" | "ach"; ip: string | null; ua: string | null; userId?: string | null | undefined }) {
   if (!d.agree) throw new Error("Tick the box to approve and agree.");
   if (d.signerName.trim().length < 2) throw new Error("Type your full name to sign.");
   const t = await fromToken(d.token);
@@ -231,14 +231,14 @@ export async function listRemittance(userId: string) {
   const { data: views } = await db.from("remittance_view_events").select("via, revealed, occurred_at, invoice_id").order("occurred_at", { ascending: false }).limit(20);
   return { versions: ((data ?? []) as any[]).map((r) => ({ ...clientRemittance({ ...r, status: "approved" }, false)!, status: r.status })), recentViews: views ?? [] };
 }
-export async function prepareRemittance(userId: string, d: { method: "wire" | "ach"; bankName: string; accountName: string; accountNumber: string; routingNumber: string; swiftCode?: string | null; bankAddress?: string | null; beneficiaryAddress?: string | null; referenceNote?: string | null }) {
+export async function prepareRemittance(userId: string, d: { method: "wire" | "ach"; bankName: string; accountName: string; accountNumber: string; routingNumber: string; swiftCode?: string | null | undefined; bankAddress?: string | null | undefined; beneficiaryAddress?: string | null | undefined; referenceNote?: string | null | undefined }) {
   const db = await admin(); await remitEditor(db, userId);
   const { error } = await db.from("harmonious_remittance_versions").insert({ method: d.method, bank_name: d.bankName, account_name: d.accountName, account_number: d.accountNumber.replace(/\s+/g, ""),
     routing_number: d.routingNumber.replace(/\s+/g, ""), swift_code: d.swiftCode || null, bank_address: d.bankAddress || null, beneficiary_address: d.beneficiaryAddress || null, reference_note: d.referenceNote || null, prepared_by: userId });
   if (error) throw new Error(error.message);
   return { ok: true };
 }
-export async function decideRemittance(userId: string, d: { id: string; approve: boolean; reason?: string | null }) {
+export async function decideRemittance(userId: string, d: { id: string; approve: boolean; reason?: string | null | undefined }) {
   const db = await admin(); const roles = await remitEditor(db, userId);
   const { data: row } = await db.from("harmonious_remittance_versions").select("*").eq("id", d.id).maybeSingle();
   if (!row || row.status !== "draft") throw new Error("Only a waiting version can be decided.");
