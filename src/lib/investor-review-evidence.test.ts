@@ -55,3 +55,15 @@ describe("private investor review evidence", () => {
     expect(download).toHaveBeenCalledWith("signed.pdf", 300, { download: true });
   });
 });
+import { currentTaxForms } from "./investor-review-evidence.server";
+describe("manager tax form list", () => {
+  it("shows the latest certified W-9 and drops expired W-8s", () => {
+    const out = currentTaxForms([
+      { id: "a", form_type: "w9", certified_at: "2026-10-20", document_path: "p" },
+      { id: "b", form_type: "w9", certified_at: "2026-01-01", document_path: "p" },
+      { id: "c", form_type: "w8ben", certified_at: "2020-01-01", expires_on: "2023-12-31", document_path: "p" },
+    ], "2026-10-21");
+    expect(out.map((f) => [f.id, f.label])).toEqual([["a", "W-9"]]);
+    expect(JSON.stringify(out)).not.toContain("\\"p\\"");
+  });
+});

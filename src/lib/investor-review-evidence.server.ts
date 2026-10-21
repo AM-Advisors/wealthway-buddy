@@ -13,15 +13,21 @@ export async function investorReviewEvidence(db: any, userId: string, fundId: st
   const staff = (roles.data ?? []).some((r: any) => ["admin", "super_admin", "operations", "fund_administration", "legal", "compliance"].includes(r.role));
   if (!staff && !managers.data?.length) return null;
   const { data: row, error } = await db.from("investor_onboardings")
-    .select("id, offering_id, application_id, executed_snapshot, questionnaire_version, questionnaire_submitted_at, questionnaire_responses, removed_at")
+    .select("id, offering_id, application_id, investment_profile_id, executed_snapshot, questionnaire_version, questionnaire_submitted_at, questionnaire_responses, removed_at")
     .eq("id", onboardingId).eq("offering_id", fundId).maybeSingle();
   if (error) throw new Error("Investor review evidence could not be loaded.");
   if (!row || row.removed_at) throw new Error("That investor is not available in this fund.");
-  const [signedDocuments, ackResult, questionResult] = await Promise.all([
+  const [signedDocuments, ackResult, questionResult, taxResult] = await Promise.all([
     row.executed_snapshot && row.application_id ? submittedSignedDocuments(db, row.application_id) : Promise.resolve([]),
     db.from("investment_document_acknowledgments").select("id, offering_document_id, version, acknowledged_at").eq("onboarding_id", onboardingId),
     row.questionnaire_version ? db.from("offering_questionnaires").select("questions").eq("offering_id", fundId).eq("version", row.questionnaire_version) : Promise.resolve({ data: [], error: null }),
+    row.investment_profile_id
+      ? db.from("investor_tax_forms").select("id, form_type, certified_at, expires_on, document_path")
+        .eq("investment_profile_id", row.investment_profile_id).eq("status", "certified").is("superseded_by", null)
+        .order("certified_at", { ascending: false })
+      : Promise.resolve({ data: [], error: null }),
   ]);
+  if (taxResult.error) throw new Error("Signed tax forms could not be loaded.");
   if (ackResult.error || questionResult.error) throw new Error("Investor questionnaire and acknowledgments could not be loaded.");
   const ids = (ackResult.data ?? []).map((a: any) => a.offering_document_id);
   const documentResult = ids.length ? await db.from("offering_documents").select("id, title").in("id", ids) : { data: [], error: null };
@@ -36,6 +42,7 @@ export async function investorReviewEvidence(db: any, userId: string, fundId: st
     acknowledgments: (ackResult.data ?? []).map((a: any) => ({ id: a.id as string, title: documentResult.data?.find((d: any) => d.id === a.offering_document_id)?.title ?? "Fund document", version: a.version as number, acknowledgedAt: a.acknowledged_at as string })),
     questionnaire,
     questionnaireSubmittedAt: row.questionnaire_submitted_at as string | null,
+    taxForms: currentTaxForms(taxResult.data ?? []),
   };
 }
 
@@ -53,5 +60,35 @@ export async function managerInvestorSignedCopy(db: any, userId: string, input: 
   if (error || !data?.pdf_path) throw new Error("The signed copy could not be loaded.");
   const result = await db.storage.from("signed-documents").createSignedUrl(data.pdf_path, 300, { download: true });
   if (result.error || !result.data?.signedUrl) throw new Error("The signed copy could not be opened.");
+  return { url: result.data.signedUrl as string };
+}
+const TAX_FORM_LABEL: Record<string, string> = { w9: "W-9", w8ben: "W-8BEN", w8bene: "W-8BEN-E", w8eci: "W-8ECI", w8imy: "W-8IMY", w8exp: "W-8EXP" };
+
+/** Latest certified, unexpired form per type; never exposes the storage path or tax ID. */
+export function currentTaxForms(rows: any[], today = new Date().toISOString().slice(0, 10)) {
+  const seen = new Set<string>();
+  const out: { id: string; label: string; certifiedAt: string | null; hasCopy: boolean }[] = [];
+  for (const r of rows) {
+    if (r.expires_on && r.expires_on < today) continue;
+    if (seen.has(r.form_type)) continue;
+    seen.add(r.form_type);
+    out.push({ id: r.id, label: TAX_FORM_LABEL[r.form_type] ?? String(r.form_type).toUpperCase(), certifiedAt: r.certified_at ?? null, hasCopy: !!r.document_path });
+  }
+  return out;
+}
+
+/** Signed W-9/W-8 for this exact investment; same manager/staff check, logged as tax-evidence access. */
+export async function managerInvestorTaxForm(db: any, userId: string, input: { fundId: string; onboardingId: string; taxFormId: string }) {
+  const evidence = await investorReviewEvidence(db, userId, input.fundId, input.onboardingId);
+  if (!evidence?.taxForms.some((f) => f.id === input.taxFormId && f.hasCopy)) throw new Error("That tax form is not available for this investment.");
+  const { data, error } = await db.from("investor_tax_forms").select("id, investment_profile_id, document_path").eq("id", input.taxFormId).maybeSingle();
+  if (error || !data?.document_path) throw new Error("The signed tax form could not be loaded.");
+  const logged = await db.from("tax_evidence_access_events").insert({
+    actor_user_id: userId, tax_form_id: data.id, investment_profile_id: data.investment_profile_id,
+    access_kind: "document", purpose: "Fund manager investor review", actor_role: "fund_manager",
+  });
+  if (logged.error) throw new Error("The signed tax form could not be opened.");
+  const result = await db.storage.from("tax-forms").createSignedUrl(data.document_path, 300, { download: true });
+  if (result.error || !result.data?.signedUrl) throw new Error("The signed tax form could not be opened.");
   return { url: result.data.signedUrl as string };
 }
