@@ -3,7 +3,7 @@ export type SignTaskKey =
   | "subscription_questionnaire" | "accreditation" | "bsa_aml" | "tax_documentation"
   | "certifications" | "fees" | "subscription_documents" | "submit";
 export type SignTaskState = "complete" | "todo" | "review" | "locked";
-export type SignTask = { key: SignTaskKey; label: string; state: SignTaskState; detail?: string };
+export type SignTask = { key: SignTaskKey; label: string; state: SignTaskState; detail?: string | undefined };
 
 type Req = { key: string; state: string };
 type Doc = { signed?: boolean; requiresSignature?: boolean; requiresAcknowledgment?: boolean; acknowledged?: boolean };
