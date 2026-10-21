@@ -353,3 +353,151 @@ export async function settleLiability(uid: string, fundId: string, id: string, s
   if (error) throw new Error("Couldn't update the liability.");
   return { ok: true };
 }
+
+// ---------------------------------------------------------------- hand entry (Harmonious staff only)
+
+async function assertStaffFund(uid: string, fundId: string) {
+  await assertFund(uid, fundId);
+  if (!(await isStaff(uid))) throw new Error("Only Harmonious staff can enter the fund's books.");
+}
+const todayIso = () => new Date().toISOString().slice(0, 10);
+
+/** Start a hand-typed statement (draft until applied with the same tie-out check as uploads). */
+export async function createManualStatement(uid: string, fundId: string, s: { bankName: string | null; accountMask: string | null; periodStart: string; periodEnd: string; openingCents: number; closingCents: number }) {
+  await assertStaffFund(uid, fundId);
+  const { pastDateError } = await import("@/lib/fund-books-model");
+  const e = pastDateError(s.periodEnd, todayIso(), "The period end");
+  if (e) throw new Error(e);
+  if (s.periodStart > s.periodEnd) throw new Error("The period start must be on or before the period end.");
+  const d = await db();
+  const { data, error } = await d.from("bank_statement_uploads").insert({
+    offering_id: fundId, file_name: `Typed statement ${s.periodStart} to ${s.periodEnd}`, storage_path: `manual/${fundId}/${crypto.randomUUID()}`, status: "parsed",
+    bank_name: s.bankName, account_mask: s.accountMask ? s.accountMask.replace(/\D/g, "").slice(-4) || null : null,
+    period_start: s.periodStart, period_end: s.periodEnd, opening_balance_cents: s.openingCents, closing_balance_cents: s.closingCents,
+    uploaded_by: uid, entered_manually: true, entered_by: uid,
+  }).select("id").single();
+  if (error) throw new Error("Couldn't save the statement.");
+  return { id: String(data.id) };
+}
+
+async function draftStatement(fundId: string, uploadId: string) {
+  const d = await db();
+  const { data: u } = await d.from("bank_statement_uploads").select("*").eq("id", uploadId).eq("offering_id", fundId).maybeSingle();
+  if (!u) throw new Error("Statement not found.");
+  if ((u as any).status === "applied") throw new Error("This statement is already applied. Corrections are made with reversing entries.");
+  return u as any;
+}
+
+export async function addManualLine(uid: string, fundId: string, l: { uploadId: string; postedOn: string; description: string; amountCents: number; direction: "in" | "out"; category: string | null }) {
+  await assertStaffFund(uid, fundId);
+  const u = await draftStatement(fundId, l.uploadId);
+  const { manualLineError } = await import("@/lib/fund-books-model");
+  const e = manualLineError(l, { start: u.period_start, end: u.period_end }, todayIso());
+  if (e) throw new Error(e);
+  if (l.category && !STATEMENT_CATEGORIES.includes(l.category)) throw new Error("Pick a category from the list.");
+  const d = await db();
+  const { data: last } = await d.from("bank_statement_lines").select("line_no").eq("upload_id", l.uploadId).order("line_no", { ascending: false }).limit(1);
+  const { data: existing } = await d.from("bank_transactions").select("id, posted_on, amount_cents, direction, name").eq("offering_id", fundId).eq("posted_on", l.postedOn);
+  const key = dedupeKey(l.postedOn, l.amountCents, l.direction, l.description);
+  const dup = ((existing ?? []) as any[]).find((t) => dedupeKey(String(t.posted_on), Math.abs(Number(t.amount_cents)), t.direction === "inflow" || t.direction === "in" ? "in" : "out", String(t.name ?? "")) === key);
+  const { error } = await d.from("bank_statement_lines").insert({
+    upload_id: l.uploadId, offering_id: fundId, line_no: Number(((last ?? [])[0] as any)?.line_no ?? 0) + 1, posted_on: l.postedOn, description: l.description.trim().slice(0, 500),
+    amount_cents: l.amountCents, direction: l.direction, suggested_category: l.category ?? ruleCategory(l.description, l.direction), confirmed_category: l.category, duplicate_of: dup?.id ?? null, skip: !!dup,
+  });
+  if (error) throw new Error("Couldn't save the line.");
+  return { ok: true, duplicate: !!dup };
+}
+
+export async function removeManualLine(uid: string, fundId: string, lineId: string) {
+  await assertStaffFund(uid, fundId);
+  const d = await db();
+  const { data: l } = await d.from("bank_statement_lines").select("id, upload_id, applied_tx_id").eq("id", lineId).eq("offering_id", fundId).maybeSingle();
+  if (!l) throw new Error("Line not found.");
+  if ((l as any).applied_tx_id) throw new Error("This line is already applied.");
+  const u = await draftStatement(fundId, (l as any).upload_id);
+  if (!u.entered_manually) throw new Error("Lines read from an uploaded statement are skipped, not removed.");
+  await d.from("bank_statement_lines").delete().eq("id", lineId);
+  return { ok: true };
+}
+
+/** One-off bank line not on a statement yet. Record only - nothing is moved. */
+export async function addManualTransaction(uid: string, fundId: string, t: { postedOn: string; description: string; amountCents: number; direction: "in" | "out"; reference: string | null; category: string | null; onboardingId: string | null }) {
+  await assertStaffFund(uid, fundId);
+  const { manualLineError } = await import("@/lib/fund-books-model");
+  const e = manualLineError(t, { start: null, end: null }, todayIso());
+  if (e) throw new Error(e);
+  if (t.category && !STATEMENT_CATEGORIES.includes(t.category)) throw new Error("Pick a category from the list.");
+  const d = await db();
+  if (t.onboardingId) { const { data } = await d.from("investor_onboardings").select("id").eq("id", t.onboardingId).eq("offering_id", fundId).maybeSingle(); if (!data) throw new Error("That investor is not in this fund."); }
+  const key = dedupeKey(t.postedOn, t.amountCents, t.direction, t.description);
+  const { data: dup } = await d.from("bank_transactions").select("id").eq("offering_id", fundId).eq("dedupe_key", key).maybeSingle();
+  if (dup) throw new Error("DUPLICATE - REVIEW REQUIRED: this bank line is already recorded.");
+  const { data: tx, error } = await d.from("bank_transactions").insert({
+    offering_id: fundId, plaid_transaction_id: `manual:${crypto.randomUUID()}`, posted_on: t.postedOn,
+    amount_cents: t.direction === "in" ? t.amountCents : -t.amountCents, name: t.description.trim().slice(0, 500), description: "Entered by Harmonious",
+    direction: t.direction, currency: "USD", dedupe_key: key, reference: t.reference || "manual",
+  }).select("id").single();
+  if (error) throw new Error(error.code === "23505" ? "DUPLICATE - REVIEW REQUIRED: this bank line is already recorded." : "Couldn't record the bank line.");
+  if (t.onboardingId) await d.from("fund_transaction_tags").upsert({ bank_transaction_id: tx.id, offering_id: fundId, onboarding_id: t.onboardingId, asset_label: null, tagged_by: uid, updated_at: new Date().toISOString() });
+  if (t.category && statementLineBooksAction({ category: t.category, alreadyBooked: false }) === "ledger") {
+    await d.from("fund_ledger_entries").insert({ offering_id: fundId, entry_date: t.postedOn, description: t.description, category: t.category, direction: t.direction, amount_cents: t.amountCents, bank_transaction_id: tx.id, created_by: uid });
+  }
+  return { id: String(tx.id) };
+}
+
+/** Attach a copy of a fund bill (private storage). Replacing is refused once one is attached. */
+export async function uploadBillCopy(uid: string, fundId: string, f: { expenseId: string; fileName: string; contentType: string; base64: string }) {
+  await assertStaffFund(uid, fundId);
+  const d = await db();
+  const { data: e } = await d.from("fund_expense_records").select("id, bill_copy_path").eq("id", f.expenseId).eq("offering_id", fundId).maybeSingle();
+  if (!e) throw new Error("Bill not found.");
+  if ((e as any).bill_copy_path) throw new Error("A copy is already attached to this bill.");
+  const bytes = Buffer.from(f.base64, "base64");
+  if (bytes.byteLength > 20 * 1024 * 1024) throw new Error("Files must be 20 MB or smaller.");
+  const path = `fund-bills/${fundId}/${f.expenseId}/${f.fileName.replace(/[^a-zA-Z0-9._-]+/g, "_")}`;
+  const up = await d.storage.from(BUCKET).upload(path, bytes, { contentType: f.contentType || "application/octet-stream", upsert: false });
+  if (up.error) throw new Error("Upload failed. Please try again.");
+  await d.from("fund_expense_records").update({ bill_copy_path: path }).eq("id", f.expenseId);
+  await d.from("fund_accounting_events").insert({ offering_id: fundId, record_table: "fund_expense_records", record_id: f.expenseId, action: "bill copy attached", actor_user_id: uid } as any);
+  return { ok: true };
+}
+
+export async function openBillCopy(uid: string, fundId: string, expenseId: string) {
+  await assertFund(uid, fundId);
+  const d = await db();
+  const { data: e } = await d.from("fund_expense_records").select("bill_copy_path").eq("id", expenseId).eq("offering_id", fundId).maybeSingle();
+  if (!(e as any)?.bill_copy_path) throw new Error("No copy attached.");
+  const { data, error } = await d.storage.from(BUCKET).createSignedUrl((e as any).bill_copy_path, 120);
+  if (error || !data) throw new Error("Couldn't open the copy.");
+  await d.from("fund_accounting_events").insert({ offering_id: fundId, record_table: "fund_expense_records", record_id: expenseId, action: "bill copy opened", actor_user_id: uid } as any);
+  return { url: data.signedUrl };
+}
+
+/** Read-only summary of the entered records. */
+export async function accountingSummary(uid: string, fundId: string) {
+  const { staff } = await assertFund(uid, fundId);
+  const d = await db();
+  const [ups, txs, tags, exps, sets, invs] = await Promise.all([
+    d.from("bank_statement_uploads").select("status, period_end, closing_balance_cents").eq("offering_id", fundId),
+    d.from("bank_transactions").select("id, amount_cents, matched_invoice_id, matched_application_id").eq("offering_id", fundId).limit(10000),
+    d.from("fund_transaction_tags").select("bank_transaction_id").eq("offering_id", fundId),
+    d.from("fund_expense_records").select("id, amount_cents, payment_mode, status, bank_transaction_id").eq("offering_id", fundId),
+    d.from("fund_payable_settlements").select("expense_id, amount_cents, status, bank_transaction_id").eq("offering_id", fundId),
+    staff ? d.from("invoices").select("status, total_cents").eq("offering_id", fundId) : Promise.resolve({ data: [] as any[] }),
+  ]);
+  const applied = ((ups.data ?? []) as any[]).filter((u) => u.status === "applied" && u.closing_balance_cents != null).sort((a, b) => String(b.period_end).localeCompare(String(a.period_end)));
+  const linked = new Set([...((tags.data ?? []) as any[]).map((t) => t.bank_transaction_id), ...((exps.data ?? []) as any[]).map((e) => e.bank_transaction_id), ...((sets.data ?? []) as any[]).map((s) => s.bank_transaction_id)].filter(Boolean).map(String));
+  const tx = (txs.data ?? []) as any[];
+  const settled = new Map<string, number>();
+  for (const s of (sets.data ?? []) as any[]) if (s.expense_id && s.status !== "rejected") settled.set(s.expense_id, (settled.get(s.expense_id) ?? 0) + Number(s.amount_cents));
+  const unpaid = ((exps.data ?? []) as any[]).filter((e) => e.payment_mode === "accrued" && e.status !== "rejected" && (settled.get(e.id) ?? 0) < Number(e.amount_cents));
+  const open = ((invs.data ?? []) as any[]).filter((i) => i.status === "issued");
+  return {
+    statementCashCents: applied[0] ? Number(applied[0].closing_balance_cents) : null, statementAsOf: applied[0]?.period_end ?? null,
+    bankLinesCashCents: tx.reduce((s, t) => s + Number(t.amount_cents), 0), bankLines: tx.length,
+    unmatchedLines: tx.filter((t) => !t.matched_invoice_id && !t.matched_application_id && !linked.has(String(t.id))).length,
+    draftStatements: ((ups.data ?? []) as any[]).filter((u) => u.status !== "applied").length,
+    unpaidBills: unpaid.length, unpaidBillsCents: unpaid.reduce((s, e) => s + Number(e.amount_cents) - (settled.get(e.id) ?? 0), 0),
+    openInvoices: staff ? open.length : null, openInvoicesCents: staff ? open.reduce((s, i) => s + Number(i.total_cents), 0) : null, staff,
+  };
+}
