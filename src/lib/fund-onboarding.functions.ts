@@ -210,7 +210,7 @@ export const countersignDetailFn = createServerFn({ method: "POST" })
     const db = await admin();
     const { data: me } = await db
       .from("document_signature_signers")
-      .select("id, signature_id, offering_id, offering_document_id, signer_user_id, role_key, status")
+      .select("id, signature_id, offering_id, offering_document_id, signer_user_id, signer_email, signer_name, role_key, status, provider_signer_id")
       .eq("id", data.signerId)
       .maybeSingle();
     if (!me || me.signer_user_id !== context.userId || me.role_key !== "fund_manager") {
@@ -225,39 +225,74 @@ export const countersignDetailFn = createServerFn({ method: "POST" })
     if (!rel) throw new Error("Forbidden: you are no longer assigned to this fund.");
 
     const [{ data: sig }, { data: doc }, { data: offering }, { data: investorRow }] = await Promise.all([
-      db.from("document_signatures").select("provider_agreement_id, provider_status, signing_mode").eq("id", me.signature_id).maybeSingle(),
+      db.from("document_signatures").select("application_id, provider_agreement_id, provider_status, signing_mode, pdf_path").eq("id", me.signature_id).maybeSingle(),
       db.from("offering_documents").select("title").eq("id", me.offering_document_id).maybeSingle(),
       db.from("offerings").select("name").eq("id", me.offering_id).maybeSingle(),
-      db.from("document_signature_signers").select("signer_name, status").eq("signature_id", me.signature_id).eq("role_key", "investor").maybeSingle(),
+      db.from("document_signature_signers").select("signer_name, status, signed_at").eq("signature_id", me.signature_id).or("role_key.is.null,role_key.neq.fund_manager").order("signing_order").limit(1).maybeSingle(),
     ]);
+    const box = await import("@/lib/box.server");
+    // Countersign-only request: used when the investor's signing finished without the fund on it.
+    const csRequestId = String(me.provider_signer_id ?? "").startsWith("cs:") ? String(me.provider_signer_id).slice(3) : null;
+    let myStatus = String(me.status ?? "");
+    if (csRequestId && myStatus !== "signed") {
+      const detail = await box.getSignRequestDetail(csRequestId).catch(() => null);
+      const mine = detail?.signers.find((x) => x.email === String(me.signer_email ?? "").toLowerCase());
+      if (detail && mine?.decision === "signed") {
+        const signedAt = mine.signedAt ?? new Date().toISOString();
+        if (detail.signedFileId && sig?.pdf_path) {
+          const bytes = await box.downloadFile(detail.signedFileId);
+          const path = String(sig.pdf_path).replace(/\.pdf$/i, "") + "-countersigned.pdf";
+          await db.storage.from("signed-documents").upload(path, bytes, { contentType: "application/pdf", upsert: false }).catch(() => null);
+          await db.from("offering_document_events").insert({ offering_id: me.offering_id, offering_document_id: me.offering_document_id, event: "fund_countersigned", actor_user_id: context.userId, detail: { signatureId: me.signature_id, countersignedPath: path, requestId: csRequestId } }).then(() => null, () => null);
+        }
+        await db.from("document_signature_signers").update({ status: "signed", signed_at: signedAt, last_event_at: signedAt }).eq("id", me.id).neq("status", "signed");
+        myStatus = "signed";
+      }
+    }
     const { canCountersign, signingStage } = await import("@/lib/fund-onboarding-model");
     const stage = signingStage({
       mode: "dual",
       providerStatus: sig?.provider_status ?? null,
       signers: [
         { role: "investor", order: 1, status: String(investorRow?.status ?? "") },
-        { role: "fund_manager", order: 2, status: String(me.status ?? "") },
+        { role: "fund_manager", order: 2, status: myStatus },
       ],
     });
-    const baseGate = canCountersign({ mode: (sig?.signing_mode ?? "dual") as any, stage, hasFundAuthority: true });
+    // A fund_manager signer row means a countersignature is required, whatever the original request mode.
+    const baseGate = canCountersign({ mode: "dual", stage, hasFundAuthority: true });
     // Countersign only after the manager approved the investor's signed document.
     let gate = baseGate;
     if (baseGate.allowed) {
-      const { data: sigRow } = await db.from("document_signatures").select("application_id").eq("id", me.signature_id).maybeSingle();
-      const { data: ob } = sigRow?.application_id ? await db.from("investor_onboardings").select("id").eq("application_id", sigRow.application_id).is("removed_at", null).maybeSingle() : { data: null };
-      const { data: invSigned } = await db.from("document_signature_signers").select("signed_at").eq("signature_id", me.signature_id).eq("role_key", "investor").maybeSingle();
+      const { data: ob } = sig?.application_id ? await db.from("investor_onboardings").select("id").eq("application_id", sig.application_id).is("removed_at", null).maybeSingle() : { data: null };
       const { managerApprovedSigned } = await import("@/lib/investor-document-review.server");
-      if (!ob || !(await managerApprovedSigned(db, ob.id, me.offering_document_id, invSigned?.signed_at ?? null))) {
+      if (!ob || !(await managerApprovedSigned(db, ob.id, me.offering_document_id, investorRow?.signed_at ?? null))) {
         gate = { allowed: false, reason: "Approve this investor's signed document under Approvals first. Your countersignature opens after you approve." } as any;
       }
     }
     let url: string | null = null;
     if (data.open && gate.allowed && sig?.provider_agreement_id) {
-      const { data: profile } = await db.from("profiles").select("email").eq("user_id", context.userId).maybeSingle();
-      const { getSignRequestDetail } = await import("@/lib/box.server");
-      const detail = await getSignRequestDetail(sig.provider_agreement_id);
-      url = detail.signers.find((s) => s.email === String(profile?.email ?? "").toLowerCase())?.embedUrl ?? null;
-      if (!url) throw new Error("Box hasn't opened your signing step yet. Try again in a moment.");
+      const email = String(me.signer_email ?? "").toLowerCase();
+      let requestId = csRequestId;
+      if (!requestId && String(sig.provider_status ?? "").toLowerCase() === "completed") {
+        // The investor's request is finished; send the signed copy to the fund signatory alone.
+        const original = await box.getSignRequestDetail(sig.provider_agreement_id);
+        if (!original.signedFileId) throw new Error("The investor's signed copy isn't ready yet. Try again in a moment.");
+        const created = await box.createMultiSignerRequest({
+          fileId: original.signedFileId,
+          documentName: `${offering?.name ?? "Harmonious"} - ${doc?.title ?? "Fund document"} (fund countersignature)`,
+          externalId: `${me.signature_id}:countersign`,
+          redirectUrl: `https://app.harmonious.co/manager/countersign/${me.id}`,
+          signers: [{ email, name: me.signer_name ?? null, order: 1, externalUserId: `${me.signature_id}:fund_manager` }],
+        });
+        requestId = created.id;
+        await db.from("document_signature_signers").update({ provider_signer_id: `cs:${created.id}`, status: "sent", sent_at: new Date().toISOString() }).eq("id", me.id);
+        url = created.signers.find((x) => x.email === email)?.embedUrl ?? null;
+      }
+      if (!url) {
+        const detail = await box.getSignRequestDetail(requestId ?? sig.provider_agreement_id);
+        url = detail.signers.find((x) => x.email === email)?.embedUrl ?? null;
+      }
+      if (!url) throw new Error("Your signing step isn't open yet. Try again in a moment.");
     }
     return {
       fundName: offering?.name ?? "Fund",
