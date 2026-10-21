@@ -9,7 +9,9 @@ export function currentFinancialRecords(rows:WealthFinancialRecord[], owner:stri
   return eligible.filter(r=>!replaced.has(r.id)&&!r.archived);
 }
 export function wealthSummary(personal:WealthObservation[],accounts:AccountSnapshot[],funds:WealthFund[],debts:WealthFinancialRecord[],excluded:Set<string>) {
-  const assets=[...personal.map(r=>({id:`personal:${r.id}`,name:r.name,currency:r.currency,value:r.value_cents,group:r.asset_class==='cash'?'Cash':'Personal assets'})),...accounts.map(r=>({id:`account:${r.connection_id}:${r.provider_account_id}`,name:r.account_name,currency:r.currency,value:r.current_balance_cents,group:r.account_type==='depository'?'Cash':'Brokerage'})),...funds.map((r,i)=>({id:`fund:${r.offering_id}:${i}`,name:r.offering_name,currency:'USD',value:r.equity_value_cents,group:'Fund investments'}))].filter(r=>!excluded.has(r.id));
+  const capitalFunds=new Set<string>();
+  const ownedFunds=funds.filter(r=>{if(r.valued_by!=='capital')return true;if(capitalFunds.has(r.offering_id))return false;capitalFunds.add(r.offering_id);return true;});
+  const assets=[...personal.map(r=>({id:`personal:${r.id}`,name:r.name,currency:r.currency,value:r.value_cents,group:r.asset_class==='cash'?'Cash':'Personal assets'})),...accounts.map(r=>({id:`account:${r.connection_id}:${r.provider_account_id}`,name:r.account_name,currency:r.currency,value:r.current_balance_cents,group:r.account_type==='depository'?'Cash':'Brokerage'})),...ownedFunds.map((r,i)=>({id:`fund:${r.offering_id}:${i}`,name:r.offering_name,currency:'USD',value:r.equity_value_cents,group:'Fund investments'}))].filter(r=>!excluded.has(r.id));
   return {assets,totals:[...new Set([...assets.map(r=>r.currency),...debts.map(r=>r.currency)])].map(currency=>{
     const rows=assets.filter(r=>r.currency===currency),liabilities=debts.filter(r=>r.currency===currency&&r.kind==='liability').reduce((n,r)=>n+r.amount_cents,0);
     const known=rows.reduce((n,r)=>n+(r.value??0),0),missing=rows.filter(r=>r.value===null).length;
@@ -17,7 +19,7 @@ export function wealthSummary(personal:WealthObservation[],accounts:AccountSnaps
   })};
 }
 export function cashFlowMonths(rows:WealthCash[],currency:string,end:string,count=6) {
-  const [year,month]=end.split('-').map(Number);
+  const [year=2026,month=1]=end.split('-').map(Number);
   return Array.from({length:count},(_,i)=>{
     const d=new Date(Date.UTC(year,month-1-(count-1-i),1)),key=d.toISOString().slice(0,7);
     const selected=rows.filter(r=>r.currency===currency&&r.date.slice(0,7)===key&&r.date.slice(0,10)<=end);
