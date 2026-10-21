@@ -3,6 +3,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { usePlaidLink } from "react-plaid-link";
 import { finishBankConnection } from "@/lib/bank-feed.functions";
+import { finishPersonalAccountFeed } from '@/lib/account-aggregation.functions';
 
 export const Route = createFileRoute("/plaid-oauth")({
   ssr: false,
@@ -12,19 +13,30 @@ export const Route = createFileRoute("/plaid-oauth")({
 
 function PlaidOAuth() {
   const finish = useServerFn(finishBankConnection);
+  const finishPersonal = useServerFn(finishPersonalAccountFeed);
   const navigate = useNavigate();
-  const [saved] = useState(() => { try { return JSON.parse(localStorage.getItem("plaid-oauth") ?? "null"); } catch { return null; } });
+  const [saved, setSaved] = useState<{ kind?: string; linkToken?: string; consentId?: string; fundId?: string; back?: string; createdAt?: number } | null>(null);
   const [msg, setMsg] = useState("Finishing your bank connection…");
   const back = typeof saved?.back === "string" && saved.back.startsWith("/") ? saved.back : "/my-funds";
   const { open, ready } = usePlaidLink({
     token: saved?.linkToken ?? null,
     receivedRedirectUri: window.location.href,
     onSuccess: async (publicToken) => {
-      try { await finish({ data: { fundId: saved.fundId, publicToken } }); localStorage.removeItem("plaid-oauth"); navigate({ to: back as any }); }
+      try {
+        if (saved?.kind === 'personal' && saved.consentId) {
+          const result = await finishPersonal({ data: { consentId: saved.consentId, publicToken } });
+          if (!result.ok) setMsg(result.message ?? 'The connection was saved; account information is not available yet.');
+          localStorage.removeItem('plaid-oauth');
+          await navigate({ to: '/wealth' });
+        } else if (saved?.fundId && publicToken) {
+          await finish({ data: { fundId: saved.fundId, publicToken } }); localStorage.removeItem("plaid-oauth"); navigate({ to: back as any });
+        } else setMsg('This account sign-in has expired. Connect again from your portfolio.');
+      }
       catch (e) { setMsg(e instanceof Error ? e.message : "Could not save the connection."); }
     },
     onExit: () => navigate({ to: back as any }),
   });
-  useEffect(() => { if (!saved) setMsg("This bank sign-in has expired. Go back to the fund and connect again."); else if (ready) open(); }, [ready, open, saved]);
+  useEffect(() => { try { const value = JSON.parse(localStorage.getItem('plaid-oauth') ?? 'null'); if (value?.createdAt && Date.now() - value.createdAt > 30 * 60_000) { localStorage.removeItem('plaid-oauth'); return; } setSaved(value); } catch { setSaved(null); } }, []);
+  useEffect(() => { if (!saved) setMsg("This account sign-in has expired. Go back to your portfolio and connect again."); else if (ready) open(); }, [ready, open, saved]);
   return <main className="mx-auto max-w-md p-10 text-center text-sm text-muted-foreground">{msg}</main>;
 }

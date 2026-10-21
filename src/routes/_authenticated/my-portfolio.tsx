@@ -8,6 +8,7 @@ import { getMyPortfolioValue } from "@/lib/cap-table.functions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { PersonalAccountFeeds } from '@/components/personal-account-feeds';
 
 export const Route = createFileRoute("/_authenticated/my-portfolio")({
   head: () => ({
@@ -16,12 +17,12 @@ export const Route = createFileRoute("/_authenticated/my-portfolio")({
       {
         name: "description",
         content:
-          "The value of your holdings in each Harmonious fund: shares, price per share, committed capital and money received.",
+          "Your private bank balances, brokerage positions and Harmonious fund holdings, with source-dated account snapshots.",
       },
       { property: "og:title", content: "My Portfolio Value - Harmonious" },
       {
         property: "og:description",
-        content: "Shares, price per share and equity value for each of your fund positions.",
+        content: "Private bank and brokerage account feeds alongside your Harmonious fund positions.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -87,6 +88,7 @@ function MyPortfolio() {
         </Button>
       </div>
 
+      <PersonalAccountFeeds />
       {isLoading ? (
         <p className="mt-10 text-sm text-muted-foreground">Loading your holdings…</p>
       ) : funds.length === 0 ? (

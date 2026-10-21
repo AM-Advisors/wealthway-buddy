@@ -37543,6 +37543,151 @@ export type Database = {
           },
         ]
       }
+      personal_account_connection_events: {
+        Row: {
+          action: string
+          connection_id: string | null
+          created_at: string
+          detail: Json
+          id: string
+          owner_user_id: string
+        }
+        Insert: {
+          action: string
+          connection_id?: string | null
+          created_at?: string
+          detail?: Json
+          id?: string
+          owner_user_id: string
+        }
+        Update: {
+          action?: string
+          connection_id?: string | null
+          created_at?: string
+          detail?: Json
+          id?: string
+          owner_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personal_account_connection_events_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "personal_account_connections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      personal_account_connections: {
+        Row: {
+          access_token_ciphertext: string
+          consent_version: string
+          consented_at: string
+          created_at: string
+          disconnected_at: string | null
+          feed_kind: string
+          id: string
+          institution_name: string | null
+          last_synced_at: string | null
+          owner_user_id: string
+          provider_item_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          access_token_ciphertext: string
+          consent_version: string
+          consented_at?: string
+          created_at?: string
+          disconnected_at?: string | null
+          feed_kind: string
+          id?: string
+          institution_name?: string | null
+          last_synced_at?: string | null
+          owner_user_id: string
+          provider_item_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          access_token_ciphertext?: string
+          consent_version?: string
+          consented_at?: string
+          created_at?: string
+          disconnected_at?: string | null
+          feed_kind?: string
+          id?: string
+          institution_name?: string | null
+          last_synced_at?: string | null
+          owner_user_id?: string
+          provider_item_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      personal_account_snapshots: {
+        Row: {
+          account_mask: string | null
+          account_name: string
+          account_subtype: string | null
+          account_type: string
+          available_balance_cents: number | null
+          connection_id: string
+          created_at: string
+          currency: string
+          current_balance_cents: number | null
+          holdings: Json
+          id: string
+          observed_at: string
+          owner_user_id: string
+          provider_account_id: string
+          provider_as_of: string | null
+        }
+        Insert: {
+          account_mask?: string | null
+          account_name: string
+          account_subtype?: string | null
+          account_type: string
+          available_balance_cents?: number | null
+          connection_id: string
+          created_at?: string
+          currency: string
+          current_balance_cents?: number | null
+          holdings?: Json
+          id?: string
+          observed_at?: string
+          owner_user_id: string
+          provider_account_id: string
+          provider_as_of?: string | null
+        }
+        Update: {
+          account_mask?: string | null
+          account_name?: string
+          account_subtype?: string | null
+          account_type?: string
+          available_balance_cents?: number | null
+          connection_id?: string
+          created_at?: string
+          currency?: string
+          current_balance_cents?: number | null
+          holdings?: Json
+          id?: string
+          observed_at?: string
+          owner_user_id?: string
+          provider_account_id?: string
+          provider_as_of?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personal_account_snapshots_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "personal_account_connections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       personal_wealth_observations: {
         Row: {
           archived: boolean

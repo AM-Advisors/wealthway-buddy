@@ -42,6 +42,10 @@ async function bankLink(itemId: string) {
 
 export async function processPlaidWebhook(delivery: Delivery): Promise<PlaidProcessResult> {
   const { webhookType, webhookCode, itemId } = delivery;
+  // Personal items never enter fund matching, accounting or payment paths.
+  const { processPersonalAccountFeedWebhook } = await import('./account-aggregation.server');
+  const personal = await processPersonalAccountFeedWebhook(itemId, webhookType, webhookCode);
+  if (personal) return personal;
 
   if (webhookType === "ITEM" && webhookCode === "ERROR") {
     const link = await bankLink(itemId);
