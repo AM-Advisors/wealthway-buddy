@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { assignFundToClient, listClients, saveClient } from "@/lib/contracts.functions";
+import { SOW_STAGE_LABEL, sowStage } from "@/lib/sow-stage";
 
 export function ClientsBoard() {
   const load = useServerFn(listClients);
@@ -145,6 +146,21 @@ export function ClientsBoard() {
                 {client.sows.length} statement{client.sows.length === 1 ? "" : "s"} of work ·{" "}
                 {client.funds.length} fund{client.funds.length === 1 ? "" : "s"}
               </p>
+              {client.sows.length > 0 && (
+                <ul className="space-y-1">
+                  {client.sows.map((s: any) => {
+                    const st = sowStage(s);
+                    return (
+                      <li key={s.id} className="flex items-center justify-between gap-2 text-xs">
+                        <span className="truncate">{s.title}</span>
+                        <Badge variant={st === "executed" ? "default" : st === "proposed" ? "secondary" : "outline"}>
+                          {SOW_STAGE_LABEL[st]}
+                        </Badge>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
               <div className="flex flex-wrap gap-1">
                 {client.funds.map((f: any) => (
                   <Badge key={f.id} variant="outline">

@@ -138,7 +138,7 @@ export const listClients = createServerFn({ method: "GET" })
     const [{ data: clients }, { data: funds }, { data: sows }] = await Promise.all([
       context.supabase.from("clients").select("*").order("name"),
       context.supabase.from("offerings").select("id, name, client_id, reg_type, is_open"),
-      context.supabase.from("client_sows").select("id, client_id, title, status, sow_type"),
+      context.supabase.from("client_sows").select("id, client_id, title, status, sow_type, executed_at, client_status, approval_status"),
     ]);
     return {
       clients: (clients ?? []).map((c: any) => ({
