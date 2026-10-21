@@ -1,10 +1,10 @@
 # Roadmap
 
 ## Isolated diagnostic QA provisioning review (2026-10-21)
-- [ ] Inspect existing development-backend/draft provisioning options and costs without production changes; identify fictional fixtures and reusable harness.
+- [x] Inspect existing development-backend/draft provisioning options and costs without production changes; independent Cloud remix documented, draft isolation unavailable here, scheduler safety during remix unverified. Findings in docs/diagnostic-qa-provisioning-review.md.
 - [ ] Prove independent backend, actual frontend binding and synthetic staff/manager/investor authority; run existing preflight before authenticated checks — blocked until isolation exists.
 - [ ] Verify failed-read/retry, audit filtering, recipient authorization and stale-job screens only after preflight passes; report passed/failed/blocked separately.
-- [ ] Track email-message association and hardcoded diagnostic header defects explicitly; repairs deferred outside this validation phase.
+- [x] Track email-message association and hardcoded diagnostic header defects explicitly: src/lib/email-delivery.functions.ts:91-156 independently selects recipient-wide events/logs and supplies literal From/domain/Purpose; src/components/application-review.tsx labels them Message headers. Both confirmed by source, unrepaired and not client-ready.
 - Phase one accepted as offline-verified only, not fully verified or client-ready; no client/investor resolution messages before affected-flow verification. Webhook recovery, payments, drafts and retention excluded.
 
 ## Diagnostic repairs — narrow phase 1 (2026-10-21)
