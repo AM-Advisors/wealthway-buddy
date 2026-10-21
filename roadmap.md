@@ -1,5 +1,10 @@
 # Roadmap
 
+## Investor approval emails (2026-10-21)
+- [ ] Notify the assigned fund manager when investor review, approval or countersigning is required.
+- [ ] Email the investor after manager funding approval with a platform link, never bank details in email.
+- [ ] Run focused trigger/recipient/idempotency checks; real-user delivery requires a real approval event, not a test approval.
+
 ## Fund-manager subscription approval (2026-10-21)
 - [x] Replace staff-only subscription admission with exact-fund manager approval; retain identity, banking and receipt reconciliation controls. Own investment requires another assigned manager.
 - [x] Show Fund manager review and a manager-only approval action on investor details; update stale approval task wording and remove obsolete Operations approval button.
