@@ -63,6 +63,22 @@ export async function acceptLinkFor(kind: AcceptKind, id: string, version: numbe
   return `${TRACKING_BASE}/accept/${encodeURIComponent(await signAcceptToken({ kind, id, version, email }))}`;
 }
 
+/** The MSA this client must accept when signing, or null if they've already signed it and nothing newer was assigned. */
+async function msaForClient(db: any, clientId: string | null) {
+  const { msaRequirement } = await import("@/lib/sales-documents-model");
+  const today = new Date().toISOString().slice(0, 10);
+  const { data: cur } = await db.from("msa_versions").select("id").eq("status", "published").lte("effective_date", today).order("effective_date", { ascending: false }).limit(1).maybeSingle();
+  const { data: ags } = clientId ? await db.from("client_msa_agreements").select("msa_version_id, executed_at, created_at").eq("client_id", clientId) : { data: [] };
+  const vid = msaRequirement((ags ?? []) as any[], cur?.id ?? null);
+  if (!vid) return null;
+  const [{ data: v }, { data: secs }] = await Promise.all([
+    db.from("msa_versions").select("id, version, effective_date").eq("id", vid).maybeSingle(),
+    db.from("msa_sections").select("section_no, title, body").eq("msa_version_id", vid).order("sort_order"),
+  ]);
+  if (!v) return null;
+  return { versionId: v.id as string, version: String(v.version), effectiveDate: v.effective_date as string | null, sections: ((secs ?? []) as any[]).map((x) => ({ no: String(x.section_no ?? ""), title: String(x.title ?? ""), body: String(x.body ?? "") })) };
+}
+
 /** What the client sees on the sign page. Token-gated; no bank details here. */
 export async function viewForToken(token: string) {
   const t = await fromToken(token);
@@ -76,7 +92,7 @@ export async function viewForToken(token: string) {
     kind: r.kind, title: r.title, version: t.version, clientName: client?.legal_name || client?.name || null,
     stale: r.kind !== "quote" && r.approvedVersion !== t.version,
     blocker: acc ? null : signBlocker(r.kind, r.status, r.approvedVersion, t.version),
-    sections: r.sections, lines: lines.map((l) => ({ label: l.label, quantity: l.quantity, amountCents: l.amount_cents })),
+    sections: (r.sections as any[]).filter((x) => x?.key !== "terms"), msa: acc ? null : await msaForClient(db, r.clientId), lines: lines.map((l) => ({ label: l.label, quantity: l.quantity, amountCents: l.amount_cents })),
     totalCents: lines.reduce((s, l) => s + l.amount_cents, 0),
     accepted: acc ? { signerName: acc.signer_name, acceptedAt: acc.accepted_at, paymentMethod: acc.payment_method, invoiceError: acc.invoice_error } : null,
     invoice: inv ? { number: inv.number, totalCents: Number(inv.total_cents), dueDate: inv.due_date, status: inv.status } : null,
@@ -118,7 +134,7 @@ async function createInvoiceFromAcceptance(db: any, r: Loaded, acc: any) {
 }
 
 /** Client signs & approves. Idempotent: signing twice never creates a second acceptance or invoice. */
-export async function acceptByToken(d: { token: string; signerName: string; signerTitle?: string | null | undefined; agree: boolean; paymentMethod: "card" | "wire" | "ach"; ip: string | null; ua: string | null; userId?: string | null | undefined }) {
+export async function acceptByToken(d: { token: string; signerName: string; signerTitle?: string | null | undefined; agree: boolean; msaAgree?: boolean | undefined; msaVersionId?: string | null | undefined; paymentMethod: "card" | "wire" | "ach"; ip: string | null; ua: string | null; userId?: string | null | undefined }) {
   if (!d.agree) throw new Error("Tick the box to approve and agree.");
   if (d.signerName.trim().length < 2) throw new Error("Type your full name to sign.");
   const t = await fromToken(d.token);
@@ -137,6 +153,8 @@ export async function acceptByToken(d: { token: string; signerName: string; sign
     }
   }
   let acc = prior;
+  const msa = prior ? null : await msaForClient(db, r.clientId);
+  if (msa && (!d.msaAgree || d.msaVersionId !== msa.versionId)) throw new Error("Please read and accept the Master Services Agreement to continue.");
   if (!acc) {
     const hash = await sha256(JSON.stringify({ k: r.kind, i: r.id, v: t.version, s: r.sections, l: r.lines.map((l) => [l.label, l.quantity, l.line_cents]) }));
     const { data, error } = await db.from("sales_acceptances").insert({
@@ -150,6 +168,12 @@ export async function acceptByToken(d: { token: string; signerName: string; sign
       else { console.error("acceptance insert", error); throw new Error("We couldn't record your signature. Please try again."); }
     } else acc = data;
     const now = new Date().toISOString();
+    if (msa && r.clientId && data) {
+      // One signature per MSA version per client. A newer version is only asked for once Harmonious assigns it.
+      const { data: ex } = await db.from("client_msa_agreements").select("id, executed_at").eq("client_id", r.clientId).eq("msa_version_id", msa.versionId).maybeSingle();
+      if (ex && !ex.executed_at) await db.from("client_msa_agreements").update({ status: "executed", client_approved_at: now, executed_at: now, updated_at: now }).eq("id", ex.id);
+      else if (!ex) await db.from("client_msa_agreements").insert({ client_id: r.clientId, msa_version_id: msa.versionId, status: "executed", client_approved_at: now, executed_at: now });
+    }
     if (r.quoteId) await db.from("sales_quotes").update({ status: "signed", signed_at: now, updated_at: now }).eq("id", r.quoteId).in("status", ["approved", "sent"]);
     if (r.dealId) {
       await db.from("crm_deals").update({ sales_stage: "contract_won", stage: "won", stage_changed_at: now }).eq("id", r.dealId);

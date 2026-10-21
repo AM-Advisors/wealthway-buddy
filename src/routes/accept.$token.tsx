@@ -35,7 +35,7 @@ function AcceptPage() {
   const sign = useServerFn(signAcceptance);
   const qc = useQueryClient();
   const q = useQuery({ queryKey: ["accept", token], queryFn: () => view({ data: { token } }), retry: false });
-  const [name, setName] = useState(""); const [title, setTitle] = useState(""); const [agree, setAgree] = useState(false);
+  const [name, setName] = useState(""); const [title, setTitle] = useState(""); const [agree, setAgree] = useState(false); const [msaAgree, setMsaAgree] = useState(false);
   const [method, setMethod] = useState<Method>("wire"); const [busy, setBusy] = useState(false);
 
   if (q.isLoading) return <Shell><p className="text-muted-foreground">Loading…</p></Shell>;
@@ -44,7 +44,7 @@ function AcceptPage() {
 
   const submit = async () => {
     setBusy(true);
-    try { const r = await sign({ data: { token, signerName: name, signerTitle: title || undefined, agree: true, paymentMethod: method } }); qc.setQueryData(["accept", token], r); toast.success("Signed"); }
+    try { const r = await sign({ data: { token, signerName: name, signerTitle: title || undefined, agree: true, msaAgree: d.msa ? msaAgree : undefined, msaVersionId: d.msa?.versionId ?? null, paymentMethod: method } }); qc.setQueryData(["accept", token], r); toast.success("Signed"); }
     catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
   };
 
@@ -89,10 +89,21 @@ function AcceptPage() {
               <div><Label htmlFor="sn">Full name</Label><Input id="sn" value={name} onChange={(e) => setName(e.target.value)} /></div>
               <div><Label htmlFor="st">Title (optional)</Label><Input id="st" value={title} onChange={(e) => setTitle(e.target.value)} /></div>
             </div>
+            {d.msa && (
+              <div className="rounded-md border p-3">
+                <p className="font-heading font-semibold text-primary">Master Services Agreement (version {d.msa.version})</p>
+                <p className="mb-2 text-xs text-muted-foreground">You accept this once. You'll only be asked again if Harmonious updates it and assigns the new version to you.</p>
+                <div className="max-h-64 space-y-2 overflow-y-auto rounded bg-muted/40 p-2 text-xs">
+                  {d.msa.sections.map((x, i) => <div key={i}><p className="font-semibold">{x.no ? `${x.no}. ` : ""}{x.title}</p><p className="whitespace-pre-wrap">{x.body}</p></div>)}
+                </div>
+                <label className="mt-2 flex items-start gap-2 text-sm"><input type="checkbox" className="mt-1" checked={msaAgree} onChange={(e) => setMsaAgree(e.target.checked)} />
+                  <span>I have read and accept the Master Services Agreement on behalf of my organization.</span></label>
+              </div>
+            )}
             <MethodPicker value={method} onChange={setMethod} />
             <label className="flex items-start gap-2 text-sm"><input type="checkbox" className="mt-1" checked={agree} onChange={(e) => setAgree(e.target.checked)} />
               <span>I approve and agree to this {KIND[d.kind]?.toLowerCase() ?? "document"} on behalf of my organization. Typing my name is my electronic signature.</span></label>
-            <Button className="w-full" disabled={busy || !agree || name.trim().length < 2} onClick={submit}>Sign and approve</Button>
+            <Button className="w-full" disabled={busy || !agree || (!!d.msa && !msaAgree) || name.trim().length < 2} onClick={submit}>Sign and approve</Button>
           </CardContent>
         </Card>
       )}
