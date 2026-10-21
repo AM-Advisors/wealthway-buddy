@@ -1,5 +1,10 @@
 # Roadmap
 
+## Saved-profile selection (2026-10-21)
+- [x] Correct staff/investor role collision on “Use this” using record ownership, retaining profile ownership and closed-investment guards across investor self-service.
+- [x] Reproduced four failures before the correction; all 53 focused synthetic checks now pass; preview build OK.
+- [ ] Signed-in walkthrough — blocked: isolated QA unavailable; no shared-production browser tests or real investor changes performed.
+
 ## Saved draft reconciliation (2026-10-20)
 - [x] Restore all draft-only signing, Box event tracking and Recent sign-ins layout changes using the draft reconciliation tools.
 - [x] Combine Box diagnostics, retry error clearing and investing-party name fallback with main's byte-based file naming, no-version-overwrite uploads and checked signer writes.
