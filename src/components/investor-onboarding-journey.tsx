@@ -496,7 +496,7 @@ function AccreditationStep({ d, onboardingId, questionnaireDone, done }: { d: an
       ) : !selfCert ? (
         <div className="space-y-2 text-sm">
           <p>This fund requires verified accreditation. Upload proof (tax returns, statements) or a verification letter.</p>
-          <Button asChild size="sm"><Link to="/onboarding/accreditation">Upload proof</Link></Button>
+          <Button asChild size="sm"><a href={`/onboarding/accreditation?onboarding=${onboardingId}`}>Upload proof</a></Button>
         </div>
       ) : (
         <div className="space-y-3 text-sm">
