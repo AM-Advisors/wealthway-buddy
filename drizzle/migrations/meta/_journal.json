@@ -2129,6 +2129,13 @@
       "when": 1792541123589,
       "tag": "0303_controlled_about_harmonious",
       "breakpoints": true
+    },
+    {
+      "idx": 304,
+      "version": "7",
+      "when": 1792572735359,
+      "tag": "0304_side_letter_fund_payment_kind",
+      "breakpoints": true
     }
   ]
 }

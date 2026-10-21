@@ -43451,6 +43451,7 @@ export type Database = {
           document_reference: string | null
           effective_date: string | null
           expiry_date: string | null
+          fee_payment_id: string | null
           id: string
           investor_label: string
           mfn_enabled: boolean
@@ -43470,6 +43471,7 @@ export type Database = {
           document_reference?: string | null
           effective_date?: string | null
           expiry_date?: string | null
+          fee_payment_id?: string | null
           id?: string
           investor_label: string
           mfn_enabled?: boolean
@@ -43489,6 +43491,7 @@ export type Database = {
           document_reference?: string | null
           effective_date?: string | null
           expiry_date?: string | null
+          fee_payment_id?: string | null
           id?: string
           investor_label?: string
           mfn_enabled?: boolean
