@@ -68,7 +68,7 @@ function DocRow({ offeringId, onboardingId, title, version, d, readOnly }: { off
             <Button size="sm" onClick={() => navigate({ to: "/manager/countersign/$signerId", params: { signerId: d.countersignSignerId } })}>Sign now</Button>
           ) : null}
           {d.signed?.hasCopy ? <SignedCopyButton offeringId={offeringId} signatureId={d.signed.signatureId} /> : null}
-          {d.signed && d.decision === 'approved' && !readOnly ? <Button size="sm" variant="outline" disabled={busy} onClick={async () => {
+          {d.signed && d.hasPendingFundSignature && d.decision === 'approved' && !readOnly ? <Button size="sm" variant="outline" disabled={busy} onClick={async () => {
             setBusy(true);
             try { await emailSignatory({ data: { offeringId, signatureId: d.signed.signatureId } }); toast.success('Signing email requested for the fund signatory.'); }
             catch (e) { toast.error((e as Error).message); }
