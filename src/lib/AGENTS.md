@@ -238,6 +238,7 @@
 
 - Portfolio monitoring and Report Cards use portfolio-report-cards.server.ts with immutable version/evidence/decision storage, effective canonical marks, profile-owner-only risk answers and existing diligence/NDA checks — why: adapt V2.5 presentation without importing its financial or access engines.
 - Wealth service selections are append-only commercial intent; purchases use catalog/quote/SOW pricing. Personal holdings are owner-only observations, never fund marks/books; individual risk cards reuse Report Cards — why: standalone wealth without financial or access duplication.
+- Personal bank/brokerage feeds use account-aggregation.* with encrypted owner-only connections and immutable snapshots; verified webhooks resolve personal items before fund processing, and account totals never add their security positions again — why: read-only personal aggregation must never post fund books, move money or double-count holdings.
 - Report Card share links: report-card-share-model.ts + share functions in portfolio-report-cards.server.ts (hashed token, ≤30 days, revocable, every view logged, published non-investor cards only, no evidence files) - why: controlled external sharing.
 - Compliance report schedules: compliance-schedules.server.ts; the 5-minute internal job only prepares snapshots, a different staff member approves before the branded email sends; harmonious.co recipients only - why: maker-checker, reports never file or pay.
 

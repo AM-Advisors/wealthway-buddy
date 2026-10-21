@@ -2164,6 +2164,13 @@
       "when": 1792601125101,
       "tag": "0308_wealth_service_selections_and_personal_observations",
       "breakpoints": true
+    },
+    {
+      "idx": 309,
+      "version": "7",
+      "when": 1792602064111,
+      "tag": "0309_personal_account_aggregation",
+      "breakpoints": true
     }
   ]
 }

@@ -1,5 +1,10 @@
 # Roadmap
 
+## Read-only account aggregation (2026-10-21)
+- [ ] Extend owner-authorized account linking for personal bank balances and brokerage holdings, isolated from fund books and payments.
+- [ ] Connect source-dated account snapshots to Portfolio with refresh, reconnect and disconnect states.
+- [ ] Verify scope, read-only boundaries, snapshot history and synthetic QA; identify live product-access blockers.
+
 ## Portfolio and personal wealth services (2026-10-21)
 - [x] Add both services to the shared catalog and current-client service options; fund add-on pricing requires a real published rate or approved quote, not the catalog's zero default. Standalone/fund preferences retain history, never activate charges.
 - [x] Provide owner-only personal holdings, dated corrections, multi-currency separate totals, exports and personal risk Report Cards through the existing engine, without a fund.
