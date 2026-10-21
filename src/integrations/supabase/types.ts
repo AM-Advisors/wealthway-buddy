@@ -48970,6 +48970,7 @@ export type Database = {
         Args: { _key: string; _token: string }
         Returns: undefined
       }
+      released_wire_details: { Args: { p_offering_id: string }; Returns: Json }
       remove_bank_link: { Args: { p_offering_id: string }; Returns: undefined }
       rename_offering: {
         Args: {
