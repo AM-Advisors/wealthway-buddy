@@ -35,7 +35,8 @@ export async function listParticipants(userId: string, onboardingId: string) {
   const row = await onboarding(onboardingId);
   await access(userId, row);
   const { data } = await db().from("onboarding_participants").select("id, role, full_name, email, title, status, assigned_by_role, created_at, removed_at").eq("onboarding_id", onboardingId).order("created_at");
-  return { participants: ((data ?? []) as any[]).map((p) => ({ id: p.id, role: p.role as ParticipantRole, roleLabel: participantRoleLabel(p.role), name: p.full_name, email: p.email, title: p.title, status: p.status, assignedBy: p.assigned_by_role, createdAt: p.created_at, removedAt: p.removed_at })) };
+  const { data: pr } = row.investment_profile_id ? await db().from("investment_profiles").select("profile_type").eq("id", row.investment_profile_id).maybeSingle() : { data: null };
+  return { profileType: (pr?.profile_type ?? null) as string | null, multipleContacts: allowsMultipleContacts(pr?.profile_type), participants: ((data ?? []) as any[]).map((p) => ({ id: p.id, role: p.role as ParticipantRole, roleLabel: participantRoleLabel(p.role), name: p.full_name, email: p.email, title: p.title, status: p.status, assignedBy: p.assigned_by_role, createdAt: p.created_at, removedAt: p.removed_at })) };
 }
 
 export async function assignParticipant(userId: string, input: { onboardingId: string; role: ParticipantRole; fullName: string; email: string; title?: string | null | undefined }) {
