@@ -1,6 +1,6 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { onboardingActor, forbid } from "@/lib/investor-onboarding.server";
-import { canAssignParticipant, participantRoleLabel, type ParticipantRole } from "@/lib/onboarding-participants-model";
+import { allowsMultipleContacts, canAssignParticipant, participantRoleLabel, type ParticipantRole } from "@/lib/onboarding-participants-model";
 
 // Server-only. People who help complete an investment for the investor:
 // a preparer (fills details, uploads, owners/signers) and the named signer.
@@ -63,13 +63,11 @@ export async function assignParticipant(userId: string, input: { onboardingId: s
   const { ONBOARD_ORIGIN } = await import("@/lib/onboard-portal-model");
   const subject = input.role === "preparer" ? `You've been asked to help complete an investment in ${fund}`
     : input.role === "contact" ? `You've been added as a point of contact for an investment in ${fund}`
-    : input.signPageUrl ? `Please sign the signature page for an investment in ${fund}` : `You've been named signer for an investment in ${fund}`;
+    : `You've been named signer for an investment in ${fund}`;
   const body = input.role === "preparer"
     ? `${investor} has asked you to fill in their investor details for ${fund}. Sign in with this email address to start:\n\n${ONBOARD_ORIGIN}/onboard/prepare/${token}\n\nYou can enter details, owners and signers, and upload documents. Identity checks, signing and funding stay with the investor and their signer.`
     : input.role === "contact"
     ? `You've been added as a point of contact for ${investor}'s investment in ${fund}. Sign in with this email address to see the investment and its progress:\n\n${ONBOARD_ORIGIN}/onboard/contact/${token}\n\nThis access is view only.`
-    : input.signPageUrl
-    ? `You've been named a signer for ${investor}'s investment in ${fund}. Sign in with this email address to review and sign the signature page:\n\n${input.signPageUrl}`
     : `You've been named the signer for ${investor}'s investment in ${fund}. Once the details are complete, you'll review them and sign the subscription documents.`;
   let messageId: string | null = null; let note: string | null = null;
   try {
