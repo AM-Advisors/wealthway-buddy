@@ -7,6 +7,7 @@ const env = z.enum(["sandbox", "live"]);
 const target = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("new_fund_request"), clientId: z.string().uuid(), request: z.record(z.string(), z.any()) }),
   z.object({ kind: z.literal("service_request"), clientId: z.string().uuid().optional(), answers: z.record(z.string(), z.string()).default({}), serviceKeys: z.array(z.string()).max(100), offeringId: z.string().uuid().nullable().optional() }),
+  z.object({ kind: z.literal("side_letter"), onboardingId: z.string().uuid() }),
 ]);
 type Target = z.infer<typeof target>;
 
@@ -16,7 +17,12 @@ async function admin() {
 }
 
 /** Works out the client and the a la carte keys on the server - never trusts a client-sent price. */
-export async function resolveTarget(context: any, t: Target) {
+export async function resolveTarget(context: any, t: Target): Promise<{ clientId: string; addOnKeys: string[]; offeringId: string | null; serviceLevel: string | null; onboardingId?: string }> {
+  if (t.kind === "side_letter") {
+    const { resolveSideLetterTarget } = await import("@/lib/side-letter-fee.server");
+    const r = await resolveSideLetterTarget(context.userId, t.onboardingId);
+    return { clientId: r.clientId, addOnKeys: [], offeringId: r.offeringId, serviceLevel: null, onboardingId: r.onboardingId };
+  }
   // Same membership rule as the client portal: direct contact or fund manager.
   const { clientAccessIds } = await import("@/lib/client-membership");
   const ids = await clientAccessIds(context.supabase, context.userId);
@@ -31,13 +37,22 @@ export async function resolveTarget(context: any, t: Target) {
   return { clientId, addOnKeys: t.serviceKeys.filter((k) => !core.includes(k)), offeringId: t.offeringId ?? null, serviceLevel: null as string | null };
 }
 
+async function quoteFor(db: any, kind: Target["kind"], t: Awaited<ReturnType<typeof resolveTarget>>) {
+  if (kind === "side_letter") {
+    const { sideLetterItems } = await import("@/lib/side-letter-fee.server");
+    const items = sideLetterItems(t.onboardingId!);
+    return { items, totalCents: items.reduce((a, i) => a + i.cents, 0) };
+  }
+  const { buildQuote } = await import("@/lib/fund-payments.server");
+  return buildQuote(db, { clientId: t.clientId, kind, addOnKeys: t.addOnKeys, offeringId: t.offeringId, serviceLevel: t.serviceLevel });
+}
+
 export const quoteFundPayment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => target.parse(d))
   .handler(async ({ data, context }) => {
     const t = await resolveTarget(context, data);
-    const { buildQuote } = await import("@/lib/fund-payments.server");
-    return buildQuote(await admin(), { clientId: t.clientId, kind: data.kind, addOnKeys: t.addOnKeys, offeringId: t.offeringId, serviceLevel: t.serviceLevel });
+    return quoteFor(await admin(), data.kind, t);
   });
 
 /** Records the payment and opens embedded card checkout for exactly the quoted items. */
@@ -48,8 +63,8 @@ export const startFundPayment = createServerFn({ method: "POST" })
     let t;
     try { t = await resolveTarget(context, data.target); } catch (e) { return { error: (e as Error).message }; }
     const db = await admin();
-    const { buildQuote, FUND_SETUP_PRICE_ID } = await import("@/lib/fund-payments.server");
-    const q = await buildQuote(db, { clientId: t.clientId, kind: data.target.kind, addOnKeys: t.addOnKeys, offeringId: t.offeringId, serviceLevel: t.serviceLevel });
+    const { FUND_SETUP_PRICE_ID } = await import("@/lib/fund-payments.server");
+    const q = await quoteFor(db, data.target.kind, t);
     if (q.totalCents === 0) return { error: "Nothing to pay." };
     const { createStripeClient, getStripeErrorMessage } = await import("@/lib/stripe.server");
     try {
@@ -61,7 +76,12 @@ export const startFundPayment = createServerFn({ method: "POST" })
       if (error) return { error: error.message };
       const lines: any[] = [];
       for (const i of q.items.filter((x) => x.cents > 0)) {
-        if (i.key === "fund_setup_fee") {
+        if (i.key === "side_letter_fee") {
+          const { SIDE_LETTER_PRICE_ID } = await import("@/lib/side-letter-fee");
+          const prices = await stripe.prices.list({ lookup_keys: [SIDE_LETTER_PRICE_ID] });
+          if (!prices.data[0]) return { error: "The side letter price isn't available yet." };
+          lines.push({ price: prices.data[0].id, quantity: 1 });
+        } else if (i.key === "fund_setup_fee") {
           const prices = await stripe.prices.list({ lookup_keys: [FUND_SETUP_PRICE_ID] });
           if (!prices.data[0]) return { error: "The setup fee price isn't available yet." };
           lines.push({ price: prices.data[0].id, quantity: 1 });
@@ -76,7 +96,7 @@ export const startFundPayment = createServerFn({ method: "POST" })
       const session = await stripe.checkout.sessions.create({
         mode: "payment", ui_mode: "embedded_page", redirect_on_completion: "if_required",
         return_url: data.returnUrl, customer, line_items: lines, metadata: meta,
-        payment_intent_data: { description: data.target.kind === "new_fund_request" ? "New fund setup and add-ons" : "A la carte services", metadata: meta },
+        payment_intent_data: { description: data.target.kind === "new_fund_request" ? "New fund setup and add-ons" : data.target.kind === "side_letter" ? "Side letter" : "A la carte services", metadata: meta },
         managed_payments: { enabled: true },
       } as any);
       await db.from("fund_payments").update({ stripe_session_id: session.id }).eq("id", pay.id);
@@ -92,11 +112,11 @@ export const startOfflineFundPayment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ target, method: z.enum(["wire", "ach"]) }).parse(d))
   .handler(async ({ data, context }): Promise<{ paymentId: string; reference: string; totalCents: number } | { error: string }> => {
+    if (data.target.kind === "side_letter") return { error: "Side letters are paid by card." };
     let t;
     try { t = await resolveTarget(context, data.target); } catch (e) { return { error: (e as Error).message }; }
     const db = await admin();
-    const { buildQuote } = await import("@/lib/fund-payments.server");
-    const q = await buildQuote(db, { clientId: t.clientId, kind: data.target.kind, addOnKeys: t.addOnKeys, offeringId: t.offeringId, serviceLevel: t.serviceLevel });
+    const q = await quoteFor(db, data.target.kind, t);
     if (q.totalCents === 0) return { error: "Nothing to pay." };
     const { data: pay, error } = await db.from("fund_payments").insert({
       client_id: t.clientId, kind: data.target.kind, items: q.items, total_cents: q.totalCents,
@@ -207,6 +227,8 @@ export const getFundPayment = createServerFn({ method: "POST" })
           }).eq("id", row.id).eq("status", "pending").select("id");
           if (upd?.length) await db.from("fund_payment_events").insert({ payment_id: row.id, event_kind: "paid", detail: { session: s.id, via: "status_check" } });
           row.status = "paid";
+          const { generateSideLetterForPayment } = await import("@/lib/side-letter-fee.server");
+          await generateSideLetterForPayment(row.id).catch((e) => console.error("[side letter]", e));
         }
       } catch (e) {
         console.warn("fund payment status check failed", e);

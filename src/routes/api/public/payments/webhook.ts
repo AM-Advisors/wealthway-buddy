@@ -79,6 +79,10 @@ async function syncFundPayment(session: any, env: StripeEnv, outcome: "paid" | "
     updated_at: new Date().toISOString(),
   }).eq("id", p.id);
   await d.from("fund_payment_events").insert({ payment_id: p.id, event_kind: outcome, detail: { session: session.id } });
+  if (outcome === "paid") {
+    const { generateSideLetterForPayment } = await import("@/lib/side-letter-fee.server");
+    await generateSideLetterForPayment(p.id).catch((e) => console.error("[side letter]", e));
+  }
 }
 
 async function invoicePaid(session: any, env: StripeEnv) {
