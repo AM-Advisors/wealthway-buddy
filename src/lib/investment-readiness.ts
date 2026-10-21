@@ -154,6 +154,8 @@ export interface ReadinessInput {
   closeAmountCents?: number | null;
   /** A staff-confirmed (maker-checker) subscription signed and funded before Harmonious. Never reconciled money. */
   priorSubscription?: { fundedCents: number; signedOn: string } | null;
+  /** Subscription Agreement signed outside the platform, copy loaded by Harmonious. Completes Sign only, never funding. */
+  outsideSubscription?: { signedOn: string } | null;
 }
 
 export interface StageSummary {
@@ -263,6 +265,9 @@ export function computeReadiness(input: ReadinessInput): ReadinessResult {
     if (input.priorSubscription && stage === "subscription" && m.status !== "complete" && m.status !== "not_applicable") {
       m = { status: "complete", owner: null, action: null };
       reason = `Signed before Harmonious on ${input.priorSubscription.signedOn} (prior subscription confirmed).`;
+    } else if (input.outsideSubscription && stage === "subscription" && m.status !== "complete" && m.status !== "not_applicable") {
+      m = { status: "complete", owner: null, action: null };
+      reason = `Signed outside the platform on ${input.outsideSubscription.signedOn}; copy loaded by Harmonious.`;
     }
     items.push({
       key: r.key,

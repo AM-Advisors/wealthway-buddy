@@ -72,6 +72,7 @@ export async function recordPriorDoc(db: any, userId: string, input: { fundId: s
     uploaded_by: userId, uploaded_by_role: role, replaces_id: input.replacesId ?? null,
   }).select("id").single();
   if (error) throw new Error("The document could not be saved.");
+  if (input.kind === "subscription_agreement") await reconcileOutside(input.onboardingId, userId);
   await db.from("investor_onboarding_events").insert({ onboarding_id: input.onboardingId, offering_id: input.fundId, event: "prior_signed_document_loaded", actor_user_id: userId, actor_role: role, detail: { document_id: data.id, kind: input.kind, replaces: input.replacesId ?? null } }).then(() => null, () => null);
   return { id: data.id as string };
 }
@@ -84,4 +85,61 @@ export async function openPriorDoc(db: any, userId: string, input: { fundId: str
   const r = await db.storage.from(BUCKET).createSignedUrl(data.storage_path, 300, { download: true });
   if (r.error || !r.data?.signedUrl) throw new Error("The document could not be opened.");
   return { url: r.data.signedUrl as string };
+}
+
+/**
+ * Subscription Agreement completed outside the platform. Staff or the fund's managers mark it;
+ * it counts as signed only once Harmonious has loaded the copy. Never touches funding.
+ */
+export async function outsideSubscriptionStates(db: any, onboardingIds: string[]) {
+  const out = new Map<string, { marked: boolean; signedOn: string | null; copyLoaded: boolean; complete: boolean }>();
+  if (!onboardingIds.length) return out;
+  const ids = [...new Set(onboardingIds)];
+  const marks: any[] = []; const docs: any[] = [];
+  for (let i = 0; i < ids.length; i += 100) {
+    const c = ids.slice(i, i + 100);
+    const [m, d] = await Promise.all([
+      db.from("outside_subscription_marks").select("onboarding_id, action, signed_on, created_at").in("onboarding_id", c).order("created_at", { ascending: false }),
+      db.from("prior_signed_documents").select("id, onboarding_id, replaces_id, uploaded_by_role, document_kind").in("onboarding_id", c).eq("document_kind", "subscription_agreement"),
+    ]);
+    if (m.error || d.error) { console.error("outside subscription read failed (treated as none)"); continue; }
+    marks.push(...(m.data ?? [])); docs.push(...(d.data ?? []));
+  }
+  const replaced = new Set(docs.map((d) => d.replaces_id).filter(Boolean));
+  for (const id of ids) {
+    const latest = marks.find((m) => m.onboarding_id === id);
+    const marked = latest?.action === "marked";
+    const copyLoaded = docs.some((d) => d.onboarding_id === id && d.uploaded_by_role === "harmonious" && !replaced.has(d.id));
+    out.set(id, { marked, signedOn: marked ? latest.signed_on : null, copyLoaded, complete: marked && copyLoaded });
+  }
+  return out;
+}
+
+export async function outsideSubscriptionState(db: any, userId: string, input: { fundId: string; onboardingId: string }) {
+  const role = await access(db, userId, input.fundId, input.onboardingId);
+  return { ...(await outsideSubscriptionStates(db, [input.onboardingId])).get(input.onboardingId)!, isHarmonious: role === "harmonious" };
+}
+
+export async function markOutsideSubscription(db: any, userId: string, input: { fundId: string; onboardingId: string; marked: boolean; signedOn?: string | null | undefined; note?: string | null | undefined }) {
+  const role = await access(db, userId, input.fundId, input.onboardingId);
+  if (input.marked) {
+    if (!input.signedOn) throw new Error("Enter the date it was signed.");
+    if (new Date(input.signedOn) > new Date()) throw new Error("The signed date can't be in the future.");
+  } else if (!(input.note ?? "").trim()) throw new Error("Give a reason for undoing this.");
+  const { data: ob } = await db.from("investor_onboardings").select("executed_snapshot").eq("id", input.onboardingId).maybeSingle();
+  if (input.marked && ob?.executed_snapshot) throw new Error("This investor already signed on the platform.");
+  const { error } = await db.from("outside_subscription_marks").insert({
+    offering_id: input.fundId, onboarding_id: input.onboardingId, action: input.marked ? "marked" : "withdrawn",
+    signed_on: input.marked ? input.signedOn : null, note: input.note?.trim() || null, actor_user_id: userId, actor_role: role,
+  });
+  if (error) throw new Error("This could not be saved.");
+  await reconcileOutside(input.onboardingId, userId);
+  return { ok: true };
+}
+
+export async function reconcileOutside(onboardingId: string, userId: string) {
+  try {
+    const { reconcileInvestmentReadiness } = await import("@/lib/investor-onboarding.server");
+    await reconcileInvestmentReadiness(onboardingId, { actorUserId: userId, trigger: "outside_subscription" });
+  } catch (e) { console.error("outside subscription reconcile", e); }
 }
