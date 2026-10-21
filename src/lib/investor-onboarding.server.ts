@@ -350,6 +350,18 @@ export async function loadReadinessInputs(rows: any[]) {
 }
 export type ReadinessInputs = Awaited<ReturnType<typeof loadReadinessInputs>>;
 
+/**
+ * True only when identity sessions exist for the person and none was ever
+ * submitted to the provider (no decision, no liveness, no face match, no name).
+ * Such a check has nothing for compliance to review, so the investor must be
+ * able to start again instead of waiting forever.
+ */
+export function kycNeverSubmitted(list: any[] | undefined): boolean {
+  if (!list || list.length === 0) return false;
+  const touched = (v: unknown) => v != null && !["", "not_started", "none"].includes(String(v).toLowerCase());
+  return list.every((k) => !touched(k.provider_decision) && !touched(k.liveness_status) && !touched(k.face_match_status) && !k.verified_full_name && !k.completed_at);
+}
+
 async function gatherFacts(row: any, inputs?: ReadinessInputs) {
   const I = inputs ?? (await loadReadinessInputs([row]));
   const off = I.offerings.get(String(row.offering_id)) ?? null;
@@ -472,6 +484,7 @@ async function gatherFacts(row: any, inputs?: ReadinessInputs) {
       amlStatus: person?.aml_status ?? null,
       amlCompletedAt: person?.aml_screened_at ?? null,
       countryOfResidence: eff.country,
+      kycUnfinished: kycNeverSubmitted(person?.id ? I.kycByPerson?.get(String(person.id)) : undefined),
     },
     profile: profile
       ? {
