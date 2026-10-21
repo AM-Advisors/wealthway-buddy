@@ -1,5 +1,8 @@
 # Roadmap
 
+## Thomas countersigning screenshot (2026-10-21)
+- [ ] Confirm Calvin's current countersigning location and provide a screenshot if authorized read-only access permits it.
+
 ## Combined wealth dashboard (2026-10-21)
 - [ ] Combine owned fund investments, personal holdings and connected balances without treating managed funds as personal assets or double-counting securities.
 - [ ] Net worth by currency with recorded debts; dated cash-flow view using canonical investor activity and owner-recorded personal activity.
