@@ -127,3 +127,22 @@ export function applyLockedSections(kind: DocKind, direction: DocDirection, sect
   for (const k of keys) if (!out.some((s) => s.key === k)) out.push({ key: k, title: k === "about" ? "About Harmonious" : k === "pricing" ? "Pricing" : k === "terms" ? termsTitle(f.msa ?? null) : "Summary", body: gen[k] ?? "" });
   return out;
 }
+
+/** Sections shown in a proposal/RFP/RFQ before signing. The MSA ("terms") is shown only at the sign-and-invoice step. */
+export const proposalVisibleSections = <T extends { key: string }>(sections: T[]): T[] => sections.filter((s) => s.key !== "terms");
+
+/** "What we handle" lists only the services selected on the quote (unique labels, in order). */
+export function selectedServiceLabels(lines: { label: string }[]): string[] {
+  return [...new Set(lines.map((l) => String(l.label ?? "").trim()).filter(Boolean))];
+}
+
+/**
+ * Which MSA version (if any) the client must sign. A client signs the MSA once.
+ * They sign again only when Harmonious assigns them a newer version (an agreement row not yet executed).
+ */
+export function msaRequirement(agreements: { msa_version_id: string; executed_at: string | null; created_at: string }[], currentPublishedId: string | null): string | null {
+  const pending = [...agreements].filter((a) => !a.executed_at).sort((a, b) => b.created_at.localeCompare(a.created_at))[0];
+  if (pending) return pending.msa_version_id;
+  if (agreements.some((a) => a.executed_at)) return null;
+  return currentPublishedId;
+}

@@ -367,7 +367,8 @@ export async function sendDocument(userId: string, id: string, d: { subject: str
     await event(a.db, id, userId, "approved", { version: a.doc.current_version, note: "Sent directly by CRO/CEO without separate approval" });
     a.doc.approved_version = a.doc.current_version; a.doc.status = "approved";
   }
-  const sections = (await approvedSections(a)).filter((s) => s.key !== "summary_note" || s.body.trim());
+  const { proposalVisibleSections } = await import("@/lib/sales-documents-model");
+  const sections = proposalVisibleSections((await approvedSections(a)).filter((s) => s.key !== "summary_note" || s.body.trim()));
   const version = a.doc.approved_version ?? a.doc.current_version;
   const key = `prop:${id}`;
   const { signProposalView, buildTrackedUrl, buildOpenPixelUrl } = await import("@/lib/email-tracking.server");

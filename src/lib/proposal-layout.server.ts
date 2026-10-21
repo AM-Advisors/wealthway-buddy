@@ -26,7 +26,8 @@ export function clientSections(sections: Section[], hasLines: boolean): Section[
 }
 
 export async function renderProposalPdf(doc: any, rawSections: Section[], lines: any[], draft: boolean): Promise<Uint8Array> {
-  const sections = clientSections(rawSections, lines.length > 0);
+  const { proposalVisibleSections, selectedServiceLabels } = await import("@/lib/sales-documents-model");
+  const sections = proposalVisibleSections(clientSections(rawSections, lines.length > 0));
   const { PDFDocument, StandardFonts, rgb } = await import("pdf-lib");
   const pdf = await PDFDocument.create();
   const serif = await pdf.embedFont(StandardFonts.TimesRoman);
@@ -68,11 +69,15 @@ export async function renderProposalPdf(doc: any, rawSections: Section[], lines:
   y -= 30;
 
   // Scope of services
-  const body = sections.filter((s) => s !== summary && s.key !== "summary_note" && !/^(pricing|fees?|investment)\b/i.test(s.title) && !/^(pricing|fees|investment)$/i.test(s.key));
+  // "What we handle" lists only the services selected on the quote; without a quote, the written scope sections.
+  const services = selectedServiceLabels(lines);
+  const body = services.length
+    ? services.map((label) => ({ key: "service", title: label, body: "", question: undefined } as unknown as Section))
+    : sections.filter((s) => s !== summary && s.key !== "summary_note" && s.key !== "about" && !/^(pricing|fees?|investment)\b/i.test(s.title) && !/^(pricing|fees|investment)$/i.test(s.key));
   if (body.length) {
     eyebrow("Scope of services"); heading("What we handle");
     body.forEach((s, i) => {
-      ensure(140);
+      ensure(services.length ? 70 : 140);
       page.drawLine({ start: { x: IN, y: y + 10 }, end: { x: W - IN, y: y + 10 }, thickness: 0.6, color: c(RULE) });
       y -= 30;
       page.drawCircle({ x: IN + 18, y: y - 4, size: 18, color: c(NAVY) });
@@ -81,8 +86,8 @@ export async function renderProposalPdf(doc: any, rawSections: Section[], lines:
       y -= 44;
       text(s.title, serif, 18, NAVY, 8);
       if (s.question) text(`Question: ${s.question}`, sans, 9, MUTED, 4);
-      text(s.body || " ", sans, 10.5, MUTED, 5);
-      y -= 18;
+      if (s.body) text(s.body, sans, 10.5, MUTED, 5);
+      y -= services.length ? 4 : 18;
     });
   }
 
@@ -113,7 +118,7 @@ export async function renderProposalPdf(doc: any, rawSections: Section[], lines:
     for (const f of ["monthly", "quarterly", "annual"]) if (billed[f]) { text(`Billed ${BW[f]}: ${usd(billed[f]!)} ${f === "quarterly" ? "every 3 months" : f === "annual" ? "once a year" : "every month"}`, sans, 10, INK, 6, cols[0]! + 8); }
     if (oneTime) text(`One-time fees: ${usd(oneTime)}, billed once when you sign`, sans, 10, INK, 6, cols[0]! + 8);
     y -= 6;
-    text("How to get started: accept this proposal, sign the MSA and SOW we send you, and your first invoice follows. You can pay each invoice online by card.", sans, 10, MUTED, 6, cols[0]! + 8);
+    text("How to get started: sign and approve this proposal. When you sign, you'll also accept our Master Services Agreement (only the first time, or when it's updated), and your invoice follows. You can pay each invoice online by card.", sans, 10, MUTED, 6, cols[0]! + 8);
     y -= 30;
   }
 
