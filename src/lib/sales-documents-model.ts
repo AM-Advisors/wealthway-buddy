@@ -44,6 +44,9 @@ export function lockedKeys(kind: DocKind, direction: DocDirection): string[] {
 const money = (c: number) => `$${(Number(c) / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const FREQ_WORD: Record<string, string> = { one_time: "one-time", monthly: "per month", quarterly: "per quarter", annual: "per year" };
 
+export const SUMMARY_NOTE_TITLE = "Note from your Harmonious contact";
+export const SUMMARY_NOTE_MAX = 300;
+
 export function pricingText(lines: LockFacts["lines"]): string {
   if (!lines.length) return "Pricing will appear here once services are added to the quote.";
   const rows = lines.map((l) => `- ${l.label}: ${l.quantity} x ${money(l.unit_cents)} = ${money(l.line_cents)}${l.billing_frequency && FREQ_WORD[l.billing_frequency] ? ` ${FREQ_WORD[l.billing_frequency]}` : ""}`);
@@ -70,6 +73,14 @@ export function applyLockedSections(kind: DocKind, direction: DocDirection, sect
     }
     return s;
   });
+  // Reps may add one short note under the summary; it's editable and still goes through approval.
+  if (keys.includes("summary")) {
+    const idx = out.findIndex((s) => s.key === "summary_note");
+    const note = idx >= 0 ? { ...out.splice(idx, 1)[0]!, title: SUMMARY_NOTE_TITLE } : { key: "summary_note", title: SUMMARY_NOTE_TITLE, body: "" };
+    note.body = note.body.replace(/\s+/g, " ").trim().slice(0, SUMMARY_NOTE_MAX);
+    const at = out.findIndex((s) => s.key === "summary");
+    out.splice(at >= 0 ? at + 1 : 0, 0, note);
+  }
   for (const k of keys) if (!out.some((s) => s.key === k)) out.push({ key: k, title: k === "about" ? "About Harmonious" : k === "pricing" ? "Pricing" : "Summary", body: gen[k] ?? "" });
   return out;
 }

@@ -343,7 +343,7 @@ export async function sendDocument(userId: string, id: string, d: { subject: str
   const a = await access(userId, id);
   if (!a.isOwner || a.doc.status !== "approved") throw new Error("Only an approved document can be sent, by its owner.");
   if (!a.doc.contact_id) throw new Error("Link a contact with an email address before sending.");
-  const sections = await approvedSections(a);
+  const sections = (await approvedSections(a)).filter((s) => s.key !== "summary_note" || s.body.trim());
   const { data: contact } = await a.db.from("crm_contacts").select("email").eq("id", a.doc.contact_id).maybeSingle();
   if (!contact?.email) throw new Error("This contact has no email address.");
   const recipient = String(contact.email).toLowerCase();
@@ -378,13 +378,14 @@ export async function setOutcome(userId: string, id: string, outcome: string) {
 export async function exportDocument(userId: string, id: string, format: "pdf" | "docx") {
   const a = await access(userId, id);
   const sections = a.doc.status === "draft" || a.doc.status === "with_marketing" || a.doc.status === "submitted" ? await latestSections(a.db, a.doc) : await approvedSections(a);
+  const shown = sections.filter((s) => s.key !== "summary_note" || s.body.trim());
   const draft = !a.doc.approved_version;
   const { renderDocx } = await import("@/lib/sales-documents-render.server");
   const quoteLines = a.doc.quote_id ? ((await a.db.from("sales_quote_lines").select("label, quantity, unit_cents, line_cents, billing_frequency").eq("quote_id", a.doc.quote_id).order("sort_order")).data ?? []) : [];
   const { renderProposalPdf } = await import("@/lib/proposal-layout.server");
   const bytes = format === "pdf"
-    ? await renderProposalPdf(a.doc, sections, quoteLines, draft)
-    : await renderDocx(a.doc, sections, draft);
+    ? await renderProposalPdf(a.doc, shown, quoteLines, draft)
+    : await renderDocx(a.doc, shown, draft);
   await event(a.db, id, userId, "exported", { format, draft });
   let bin = ""; for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]!);
   return { base64: btoa(bin), fileName: `${a.doc.title.replace(/[^\w -]/g, "").trim() || "document"}${draft ? " (draft)" : ""}.${format}` };
