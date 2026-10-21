@@ -1,9 +1,14 @@
 # Roadmap
 
+## Invoice pricing consistency (2026-10-21)
+- [x] Align manual invoice preparation and rate review with scoped frozen fund/contracted rates; preserve issued invoices and existing approvals; conflicting frozen terms stop preparation.
+- [x] 32 focused invoice pricing, schedule and commercial pricing checks passed; no invoices issued, sent or charged.
+- [ ] Signed-in invoice preparation/read-back blocked on isolated synthetic QA; no production test invoices created.
+
 ## Reviewer QA walkthrough (2026-10-21)
 - [x] Start separate Investor reviewer QA draft; verify backend isolation before any synthetic records or invitations.
-- [ ] Provide an isolated, signed-in Harmonious reviewer path for checking every canonical investor step, without impersonation or production test writes — implementation underway in the QA draft.
-- [ ] Add QA-only browser coverage and a step-by-step reviewer verification record; validate against synthetic QA access.
+- [ ] Provide an isolated, signed-in Harmonious reviewer path for checking every canonical investor step — blocked: the draft shares live records; no safe QA link yet.
+- [ ] Validate QA-only browser coverage and reviewer verification record against synthetic QA access — blocked on independently isolated backend and reviewer account; draft hardening not accepted or published.
 
 ## Investor checklist consistency (2026-10-21)
 - [x] Replace legacy verification, upload and signature checks with the exact investment's canonical journey; share its query cache and scoped step links. Unlinked commitments show no invented checklist.
