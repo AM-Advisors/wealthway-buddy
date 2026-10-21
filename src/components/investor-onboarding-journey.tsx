@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { acknowledgeDocumentFn } from "@/lib/fund-setup-canonical.functions";
+import { confirmAccreditationStepFn } from "@/lib/accreditation-step.functions";
+import { ACCREDITATION_QUESTION_KEY, selfCertificationAllowed } from "@/lib/accreditation-step";
 import { InvestorBankVerify } from "@/components/investor-bank-verify";
 import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -468,6 +470,49 @@ function QuestionnaireForm({ d, done, locked, onSave, saving }: { d: any; onboar
   );
 }
 
+function AccreditationStep({ d, onboardingId, questionnaireDone, done }: { d: any; onboardingId: string; questionnaireDone: boolean; done: () => void }) {
+  const req = (d.requirements ?? []).find((r: any) => r.key === "accreditation");
+  const confirmFn = useServerFn(confirmAccreditationStepFn);
+  const confirm = useAction(confirmFn, "Accreditation sent for confirmation.", done);
+  const [name, setName] = useState(String((d.questionnaireResponses ?? {}).name_of_subscriber ?? ""));
+  if (!req || req.state === "not_applicable") return null;
+  const category = (d.questionnaireResponses ?? {})[ACCREDITATION_QUESTION_KEY] as string | undefined;
+  const selfCert = selfCertificationAllowed(d.exemption);
+  return (
+    <div className="space-y-2 rounded-md border p-4">
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="text-sm font-semibold">Accreditation</h3>
+        <Badge variant={req.state === "valid" ? "default" : "outline"}>
+          {req.state === "valid" ? "Verified" : req.state === "review_required" ? "Under review" : "To confirm"}
+        </Badge>
+      </div>
+      {req.state === "valid" ? (
+        <p className="text-sm text-muted-foreground">Your accredited investor status is verified. Nothing more is needed.</p>
+      ) : req.state === "review_required" ? (
+        <p className="text-sm text-muted-foreground">Harmonious is confirming your accredited investor status. You can keep signing in the meantime.</p>
+      ) : !questionnaireDone || !category ? (
+        <p className="text-sm text-muted-foreground">Submit the questionnaire above; your accredited-investor answer carries over here.</p>
+      ) : !selfCert ? (
+        <div className="space-y-2 text-sm">
+          <p>This fund requires verified accreditation. Upload proof (tax returns, statements) or a verification letter.</p>
+          <Button asChild size="sm"><Link to="/onboarding/accreditation">Upload proof</Link></Button>
+        </div>
+      ) : (
+        <div className="space-y-3 text-sm">
+          <p><span className="text-muted-foreground">From your questionnaire:</span> {category}</p>
+          <div className="max-w-sm">
+            <Label htmlFor="acc-sign">Type your full legal name to confirm</Label>
+            <Input id="acc-sign" value={name} onChange={(e) => setName(e.target.value)} />
+          </div>
+          <Button size="sm" disabled={name.trim().length < 2 || confirm.isPending} onClick={() => confirm.mutate({ data: { onboardingId, signature: name.trim() } } as any)}>
+            I confirm I am an accredited investor
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function Sign({ d, onboardingId, done }: { d: any; onboardingId: string; done: () => void }) {
   const questionnaireFn = useServerFn(saveQuestionnaireFn);
   const prepareFn = useServerFn(prepareSubscriptionDocumentsFn);
@@ -496,6 +541,8 @@ function Sign({ d, onboardingId, done }: { d: any; onboardingId: string; done: (
         {d.questionnaire && (d.questionnaire.questions ?? []).length ? (
           <QuestionnaireForm d={d} onboardingId={onboardingId} done={questionnaireDone} locked={signed} onSave={(answers, submit) => saveQ.mutate({ data: { onboardingId, answers, submit } } as any)} saving={saveQ.isPending} />
         ) : null}
+
+        <AccreditationStep d={d} onboardingId={onboardingId} questionnaireDone={questionnaireDone} done={done} />
 
         <TaxSignPanel onboardingId={onboardingId} done={done} locked={!questionnaireDone} subscriberName={(d.questionnaireLocked?.name_of_subscriber ?? (d.questionnaireResponses ?? {}).name_of_subscriber ?? null) as string | null} />
 
