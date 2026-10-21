@@ -7,18 +7,21 @@ Every proposal and RFQ response will be filled in by the platform from the quote
 **Summary (locked):** Same fixed sentence built from the quote and the prospect, e.g. "Harmonious proposes White Glove Fund Administration for Roas Capital Management, prepared for Ross Vincent Mahoney." The optional one-line "Note from your Harmonious contact" stays underneath.
 
 **Pricing (locked):** Built only from the quote lines:
+
 - Each line shows the service, quantity, unit price, line amount and how often it's billed.
 - A total is shown for each billing frequency. Today everything is added into one total, which is misleading when the lines are billed on different schedules.
 - An annual-equivalent total is shown as well.
 - The note "Pricing from the approved quote" stays.
 
 **Terms (locked, now the MSA):** The Terms section is replaced by the MSA that is currently published (v3.0, effective Jan. 1, 2026). Its 12 numbered sections appear in order, from Services framework to General terms. The heading reads "Terms — Master Services Agreement v3.0".
+
 - When Legal publishes a new MSA version, drafts pick it up automatically.
 - Approved proposals keep the version they were approved with.
 
 **About Harmonious (locked):** One standard paragraph, the same in every document. Marketing can no longer edit it. Only a Super Admin can update it, with a reason, and the version history is kept for good.
 
 **Marketing removed from proposals:**
+
 - The "Ask Marketing for help" panel and "Waiting for Marketing" panel are removed from the proposal page.
 - The About Harmonious editor is removed from the Proposals & RFPs list. A small Super Admin-only version replaces it.
 - Marketing roles lose read and edit access to proposals.
@@ -26,6 +29,7 @@ Every proposal and RFQ response will be filled in by the platform from the quote
 - Past Marketing requests stay in History; nothing is deleted.
 
 **AI first draft:**
+
 - On RFQ responses, the AI first draft box is hidden, because every section is now standard.
 - On longer proposals, AI may still draft only the "What we handle" service descriptions. Prices are never AI-written.
 
