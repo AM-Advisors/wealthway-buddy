@@ -34,7 +34,6 @@ export function MsaSigningPanel({
     queryFn: () => loadMsa({ data: { clientId } }),
   });
 
-  const [read, setRead] = useState<Record<string, boolean>>({});
   const [name, setName] = useState("");
   const [title, setTitle] = useState("");
   const sig = useSignHere(name);
@@ -65,9 +64,8 @@ export function MsaSigningPanel({
 
   const executed = Boolean(data.agreement?.executedAt);
   const clientSigned = !executed && data.agreement?.status === "client_signed";
-  const allRead = data.sections.every((s) => read[s.id]);
   const canSign =
-    allRead && confirmed && name.trim().length > 1 && title.trim() && sig.signed;
+    confirmed && name.trim().length > 1 && title.trim() && sig.signed;
 
   return (
     <div className="space-y-6">
@@ -92,15 +90,6 @@ export function MsaSigningPanel({
               <p className="whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
                 {section.body}
               </p>
-              {!executed && !clientSigned && (
-                <label className="flex items-center gap-2 text-sm">
-                  <Checkbox
-                    checked={Boolean(read[section.id])}
-                    onCheckedChange={(v) => setRead((prev) => ({ ...prev, [section.id]: v === true }))}
-                  />
-                  I have read this section
-                </label>
-              )}
             </CardContent>
           </Card>
         ))}
@@ -117,7 +106,6 @@ export function MsaSigningPanel({
                 {s.name}
                 {s.title ? `, ${s.title}` : ""} · {s.side === "client" ? "Client" : "Harmonious"} ·{" "}
                 {new Date(s.signedAt).toLocaleString("en-US")}
-                {s.version ? ` · ${s.version}` : ""}
               </p>
             ))}
           </CardContent>
@@ -133,7 +121,7 @@ export function MsaSigningPanel({
           <CardContent className="space-y-1">
             {data.history.map((h) => (
               <p key={h.id} className="text-sm text-muted-foreground">
-                {h.version} · executed {new Date(h.executedAt).toLocaleDateString("en-US")}
+                Executed {new Date(h.executedAt).toLocaleDateString("en-US")}
               </p>
             ))}
           </CardContent>
@@ -168,14 +156,10 @@ export function MsaSigningPanel({
             <label className="flex items-start gap-2 text-sm">
               <Checkbox checked={confirmed} onCheckedChange={(v) => setConfirmed(v === true)} />
               <span>
-                I have authority to sign for my organization and I accept this agreement as written.
+                I have had the opportunity to review this agreement, I have authority to sign for
+                my organization, and I accept this agreement as written.
               </span>
             </label>
-            {!allRead && (
-              <p className="text-xs text-muted-foreground">
-                Confirm you've read every section before signing.
-              </p>
-            )}
             <Button disabled={!canSign || mutation.isPending} onClick={() => mutation.mutate()}>
               <Check className="mr-2 h-4 w-4" />
               {mutation.isPending ? "Recording…" : "Sign agreement"}
