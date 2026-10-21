@@ -696,11 +696,11 @@ async function fundManagerItems(ctx: Ctx, n: Names): Promise<AttentionItem[]> {
   for (const c of countersign as any[]) {
     if (!managedIds.has(c.offering_id)) continue;
     // Approve or decline first; the countersignature opens only after approval.
-    const approved = await safely(async () => {
+    const approved = await (async () => { try {
       const { data: inv } = await (adminDb as any).from("document_signature_signers").select("signed_at").eq("signature_id", c.signature_id).eq("role_key", "investor").maybeSingle();
       const { data: ob } = await (adminDb as any).from("investor_onboardings").select("id").eq("application_id", c.application_id).is("removed_at", null).maybeSingle();
-      return ob ? managerApprovedSigned(adminDb, ob.id, c.offering_document_id, inv?.signed_at ?? null) : false;
-    });
+      return ob ? await managerApprovedSigned(adminDb, ob.id, c.offering_document_id, inv?.signed_at ?? null) : false;
+    } catch { return false; } })();
     if (approved !== true) {
       out.push(buildAttentionItem({
         id: `manager-signed-review:${c.id}`, source: "manager.countersign", workspace: "fund_manager", group: "needs_you", severity: "action",
