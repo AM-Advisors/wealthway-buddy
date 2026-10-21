@@ -37,6 +37,7 @@ const INVESTOR_NAV: ClientNavLink[] = [
   { title: "Home", url: "/home", icon: "home" },
   { title: "My Funds", url: "/my-funds", icon: "building" },
   { title: "Activity", url: "/activity", icon: "history" },
+  { title: "Portfolio", url: "/my-portfolio", icon: "pie" },
   { title: "Reports", url: "/investor-reporting", icon: "report" },
   { title: "Report Cards", url: "/investor-report-cards", icon: "report" },
   { title: "Documents", url: "/documents", icon: "document" },
