@@ -159,7 +159,9 @@ function parseSignRequest(json: any): BoxSignRequest {
   return {
     id: String(json?.id ?? ""),
     status: String(json?.status ?? "unknown"),
-    signingUrl: signer?.embed_url ?? signer?.iframeable_embed_url ?? null,
+    // The in-app signing window must use the iframe-ready address; the plain
+    // address asks the browser for storage access and opens the provider's site.
+    signingUrl: signer?.iframeable_embed_url ?? signer?.embed_url ?? null,
     signedFileId: json?.sign_files?.files?.[0]?.id ?? null,
     viewed,
     viewedAt: finalizedAt ? new Date(finalizedAt).toISOString() : null,
