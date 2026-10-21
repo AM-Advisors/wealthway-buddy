@@ -1,5 +1,11 @@
 # Roadmap
 
+## Investor approval emails (2026-10-21)
+- [x] Notify one responsible exact-fund manager after investor signing/submission; notify a separate assigned manager-signatory after document approval. Canonical completion avoids duplicate legacy notices.
+- [x] Email the verified owning investor after manager funding approval with a platform link, never bank details; claim instructions are available only when the canonical funding read confirms it.
+- [x] 83 focused notification, managed-send, recipient/idempotency and signing checks passed; preview build OK. No new email queue or schema changes.
+- [ ] Real-user delivery and signed-in walkthrough — blocked on isolated synthetic QA; no test approval recorded or unsolicited email sent to Alyssa.
+
 ## Fund-manager subscription approval (2026-10-21)
 - [x] Replace staff-only subscription admission with exact-fund manager approval; retain identity, banking and receipt reconciliation controls. Own investment requires another assigned manager.
 - [x] Show Fund manager review and a manager-only approval action on investor details; update stale approval task wording and remove obsolete Operations approval button.

@@ -152,6 +152,18 @@ export async function decideDocument(userId: string, input: { offeringId: string
   });
   if (error) throw new Error(error.message);
   await db.from("offering_document_events").insert({ offering_id: input.offeringId, offering_document_id: doc.id, version: doc.active_version, event: input.decision === "approved" ? "approved_for_investor" : "returned_for_investor", actor_user_id: userId, detail: { onboardingId: ob.id, afterSigning: true } }).then(() => null, () => null);
+  if (input.decision === 'approved') {
+    try {
+    const signatureIds = ((sigs ?? []) as any[]).filter((s) => !s.cancelled_at && !s.superseded_by).map((s) => s.id);
+    const { data: signer } = signatureIds.length ? await db.from('document_signature_signers')
+      .select('id, signature_id, signer_user_id').in('signature_id', signatureIds).eq('role_key', 'fund_manager')
+      .in('status', ['waiting', 'sent', 'viewed']).order('signing_order').limit(1).maybeSingle() : { data: null };
+    if (signer?.signer_user_id && signer.signer_user_id !== userId) {
+      const { notifyInvestorApproval } = await import('@/lib/investor-approval-notify.server');
+      await notifyInvestorApproval({ onboardingId: ob.id, action: 'sign', ref: `countersign:${signer.signature_id}`, signerUserId: signer.signer_user_id });
+    }
+    } catch { console.error('[investor-approval-notice] countersign notification unavailable'); }
+  }
   if (input.decision === "returned") {
     const { data: ex } = await db.from("investor_onboarding_exceptions")
       .insert({ onboarding_id: ob.id, exception_type: "manager_declined_documents", severity: "blocking", owner: "harmonious", detail: `Fund manager declined ${doc.title}: ${note}`, raised_by: userId })

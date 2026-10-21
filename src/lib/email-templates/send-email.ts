@@ -17,6 +17,8 @@ export type SendTemplateEmailResult =
   | { sent: false; reason: 'recipient_suppressed' }
 
 export interface SendTemplateEmailOptions {
+  /** New approval notices use managed single-recipient delivery; legacy sends are unchanged. */
+  managed?: boolean
   templateData?: Record<string, any>
   /** Dedupes retries of the same logical send; defaults to a random UUID (no dedupe). */
   idempotencyKey?: string
@@ -43,7 +45,7 @@ export async function sendTemplateEmail(
     throw new Error('LOVABLE_API_KEY is not configured')
   }
   const brevoKey = process.env['BREVO_API_KEY']
-  if (!brevoKey) {
+  if (!brevoKey && !options.managed) {
     throw new Error('BREVO_API_KEY is not configured')
   }
 
@@ -70,6 +72,26 @@ export async function sendTemplateEmail(
       ? template.subject(templateData)
       : template.subject
 
+  let messageId: string | null = null
+  if (options.managed) {
+    const { sendLovableEmail } = await import('@lovable.dev/email-js')
+    const result = await sendLovableEmail({
+      to: recipient,
+      from: `"${SITE_NAME}" <noreply@harmonious.co>`,
+      sender_domain: 'notify.harmonious.co',
+      subject, html, text, label: templateName,
+      ...(options.replyTo ? { reply_to: options.replyTo } : {}),
+    }, { apiKey, ...(options.idempotencyKey ? { idempotencyKey: options.idempotencyKey } : {}) }).catch((error: unknown) => {
+      if (error && typeof error === 'object' && 'code' in error && error.code === 'recipient_suppressed') {
+        return { success: false, status: 'recipient_suppressed', message_id: undefined }
+      }
+      throw error
+    })
+    if (result.status === 'recipient_suppressed' || result.status === 'suppressed') return { sent: false, reason: 'recipient_suppressed' }
+    if (!result.success) throw new Error('The approval email could not be sent.')
+    messageId = result.message_id ?? null
+  } else {
+  if (!brevoKey) throw new Error('BREVO_API_KEY is not configured')
   const response = await fetch(`${BREVO_GATEWAY_URL}/smtp/email`, {
     method: 'POST',
     headers: {
@@ -101,7 +123,8 @@ export async function sendTemplateEmail(
   }
 
   const payload = await response.json() as { messageId?: string }
-  const messageId = payload.messageId ?? null
+  messageId = payload.messageId ?? null
+  }
   if (options.auditTarget) {
     const { recordUserEmail } = await import('@/lib/user-email-audit.server')
     await recordUserEmail(options.auditTarget, { sent: true, messageId })

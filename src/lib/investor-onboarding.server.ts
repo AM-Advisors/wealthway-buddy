@@ -1005,6 +1005,8 @@ export async function recordSubscriptionSignature(
     actorRole: "investor",
   });
   await syncInvitation(row);
+  const { notifyInvestorApproval } = await import('@/lib/investor-approval-notify.server');
+  await notifyInvestorApproval({ onboardingId: row.id, action: 'review', ref: `submitted:${row.id}` });
   return { executed: snapshot };
 }
 
@@ -1500,6 +1502,8 @@ export async function approveToFund(userId: string, input: { onboardingId: strin
   });
   await touch(row.id, { stage: "awaiting_funds" });
   await syncInvitation(row);
+  const { notifyInvestorApproval } = await import('@/lib/investor-approval-notify.server');
+  await notifyInvestorApproval({ onboardingId: row.id, action: 'fund', ref: `approved:${row.id}` });
   return { approved: true, acceptedAmountCents: accepted };
 }
 

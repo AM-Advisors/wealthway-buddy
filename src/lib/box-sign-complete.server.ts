@@ -167,6 +167,12 @@ async function notifyManagers(signatureId: string, applicationId: string, offeri
   try {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
+    // Canonical investments already notify on the investor's signed transition,
+    // before the fund countersigns; completion must not send a duplicate.
+    const { data: onboarding } = await supabaseAdmin.from('investor_onboardings')
+      .select('id').eq('application_id', applicationId).is('removed_at', null).maybeSingle();
+    if (onboarding) return;
+
     const { data: application } = await supabaseAdmin
       .from("investor_applications")
       .select("id, user_id, offering_id, commitment_cents")
@@ -279,5 +285,14 @@ async function syncSignerRows(signatureId: string, signRequestId: string) {
         ...(status === "sent" ? { sent_at: now } : {}),
       } as never)
       .eq("id", r.id);
+    if (status === 'signed' && r.role_key !== 'fund_manager') {
+      const { data: sig } = await supabaseAdmin.from('document_signatures').select('application_id').eq('id', signatureId).maybeSingle();
+      const { data: ob } = sig?.application_id ? await supabaseAdmin.from('investor_onboardings')
+        .select('id').eq('application_id', sig.application_id).is('removed_at', null).maybeSingle() : { data: null };
+      if (ob) {
+        const { notifyInvestorApproval } = await import('@/lib/investor-approval-notify.server');
+        await notifyInvestorApproval({ onboardingId: ob.id, action: 'review', ref: `signature:${signatureId}` });
+      }
+    }
   }
 }
