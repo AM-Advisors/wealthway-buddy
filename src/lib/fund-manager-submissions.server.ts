@@ -60,7 +60,9 @@ async function setupOnFile(offeringId: string) {
 
 export async function submit(userId: string, input: { offeringId: string; section: "fund_details" | "fees_team" | "bank" | "document"; docKind?: SubmissionDocKind | null; payload: Record<string, unknown>; file?: { name: string; base64: string } | null }) {
   const actor = await actorFor(userId, input.offeringId);
-  const directSetup = !actor.isStaff && (input.section === "fund_details" || input.section === "fees_team") && await fundEditWindow(input.offeringId);
+  // Fund details never need Harmonious approval. Fees change directly only before any investor
+  // signs; afterwards they need Harmonious approval (or new fund documents).
+  const directSetup = !actor.isStaff && (input.section === "fund_details" || (input.section === "fees_team" && await fundEditWindow(input.offeringId)));
   if ((input.section === "document" || input.section === "bank") && !input.file) throw new Error("Attach the file.");
   if (input.section === "document" && !input.docKind) throw new Error("Choose the document type.");
   if (input.section === "document" && input.docKind === "ein_letter" && !/^\d{2}-?\d{7}$/.test(String(input.payload["ein"] ?? "").trim())) throw new Error("Enter the 9-digit EIN shown on the letter.");
@@ -92,6 +94,10 @@ export async function submit(userId: string, input: { offeringId: string; sectio
       await (await import("@/lib/fund-setup-extras.server")).autoCompleteAfterSave({ offeringId: input.offeringId }).catch(() => null);
       return { id: data.id, applied: true };
     } catch (e) {
+      if (input.section === "fund_details") {
+        await db().from("fund_manager_submissions").update({ status: "withdrawn" }).eq("id", data.id);
+        throw e;
+      }
       console.error("self-serve apply failed; sending to review", e);
     }
   }
