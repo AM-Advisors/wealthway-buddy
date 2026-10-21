@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 
 import { ConfirmYourInformation } from "@/components/confirm-your-information";
 import { InvestmentOfferingDocuments } from "@/components/investment-offering-documents";
+import { InvestorSignedDocuments } from "@/components/investor-signed-documents";
 import { InvestorCapitalSummary } from "@/components/investor-capital-summary";
 import { InvestorFinancialsPanel } from "@/components/investor-financials-panel";
 import { InvestorOnboardingJourney } from "@/components/investor-onboarding-journey";
@@ -82,7 +83,7 @@ function InvestmentPage() {
           <Jump to="statements" label="Capital account statements and distributions" />
         </>
       ) : null}
-      {tab === "documents" ? <InvestmentOfferingDocuments onboardingId={onboardingId} /> : null}
+      {tab === "documents" ? <><InvestorSignedDocuments onboardingId={onboardingId} /><InvestmentOfferingDocuments onboardingId={onboardingId} /></> : null}
       {tab === "activity" ? <Card><CardContent className="p-4 text-sm">See every step and payment in <Link to="/activity" className="underline">Activity</Link>.</CardContent></Card> : null}
       {tab === "tax" ? <Card><CardContent className="p-4 text-sm">Your K-1s and tax forms are in <Link to="/tax" className="underline">Tax</Link>.</CardContent></Card> : null}
     </main>
