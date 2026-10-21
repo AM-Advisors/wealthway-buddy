@@ -311,10 +311,12 @@ export async function loadReadinessInputs(rows: any[]) {
   ]);
   // Profile accreditations and uploaded profile documents, read once for every row.
   const DOC_COLS = "id, file_name, doc_kind, uploaded_at, review_status, review_note, investment_profile_id, onboarding_id, user_id, prepared_for_person_id";
-  const [profAccs, docsByProfile, legacyDocs] = await Promise.all([
+  const personIds = [...new Set([...pById, ...pByUser].map((p: any) => String(p.id)))];
+  const [profAccs, docsByProfile, legacyDocs, kycRows] = await Promise.all([
     readIn(profIds, (c) => d.from("profile_accreditations").select("profile_id, status, verification_method, verified_at, expires_at, offering_id").in("profile_id", c)),
     readIn(profIds, (c) => d.from("investor_documents").select(DOC_COLS).in("investment_profile_id", c)),
     readIn(rows.filter((r) => r.investment_profile_id && r.investor_user_id).map((r) => r.id), (c) => d.from("investor_documents").select(DOC_COLS).is("investment_profile_id", null).in("onboarding_id", c)),
+    readIn(personIds, (c) => d.from("kyc_verifications").select("person_id, provider_decision, liveness_status, face_match_status, verified_full_name, completed_at").in("person_id", c)),
   ]);
   const configs = await readIn(setups.map((s) => s.id), (c) => d.from("fund_eligibility_configs").select("*").in("setup_id", c).eq("status", "approved").order("version", { ascending: false }));
   const sigs = new Map<string, any>();
@@ -342,10 +344,23 @@ export async function loadReadinessInputs(rows: any[]) {
     stage2,
     profileAccreditations: groupBy(profAccs, "profile_id"),
     profileDocuments: [...docsByProfile, ...legacyDocs],
+    kycByPerson: groupBy(kycRows, "person_id"),
     strip,
   };
 }
 export type ReadinessInputs = Awaited<ReturnType<typeof loadReadinessInputs>>;
+
+/**
+ * True only when identity sessions exist for the person and none was ever
+ * submitted to the provider (no decision, no liveness, no face match, no name).
+ * Such a check has nothing for compliance to review, so the investor must be
+ * able to start again instead of waiting forever.
+ */
+export function kycNeverSubmitted(list: any[] | undefined): boolean {
+  if (!list || list.length === 0) return false;
+  const touched = (v: unknown) => v != null && !["", "not_started", "none"].includes(String(v).toLowerCase());
+  return list.every((k) => !touched(k.provider_decision) && !touched(k.liveness_status) && !touched(k.face_match_status) && !k.verified_full_name && !k.completed_at);
+}
 
 async function gatherFacts(row: any, inputs?: ReadinessInputs) {
   const I = inputs ?? (await loadReadinessInputs([row]));
@@ -469,6 +484,7 @@ async function gatherFacts(row: any, inputs?: ReadinessInputs) {
       amlStatus: person?.aml_status ?? null,
       amlCompletedAt: person?.aml_screened_at ?? null,
       countryOfResidence: eff.country,
+      kycUnfinished: kycNeverSubmitted(person?.id ? I.kycByPerson?.get(String(person.id)) : undefined),
     },
     profile: profile
       ? {

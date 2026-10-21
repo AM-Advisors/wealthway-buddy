@@ -253,6 +253,8 @@ export interface PersonFacts {
   amlStatus?: string | null;
   amlCompletedAt?: string | null;
   countryOfResidence?: string | null;
+  /** Identity sessions exist but none was ever submitted to the provider. */
+  kycUnfinished?: boolean;
 }
 
 export interface ProfileFacts {
@@ -353,10 +355,13 @@ export function determineOnboardingRequirements(input: DeterminationInput): Requ
     add("investment_profile", "valid");
   }
 
-  add(
-    "identity_verification",
-    offering.kycRequired ? reuseState(person.kycStatus, person.kycExpiresAt, nowIso) : "not_applicable",
-  );
+  if (!offering.kycRequired) add("identity_verification", "not_applicable");
+  else {
+    const kyc = reuseState(person.kycStatus, person.kycExpiresAt, nowIso);
+    // "In review" with nothing ever submitted is an unfinished check: let the investor start again.
+    if (kyc === "review_required" && person.kycUnfinished) add("identity_verification", "missing", "Your identity check wasn't finished.");
+    else add("identity_verification", kyc);
+  }
 
   if (!isEntity) {
     add("entity_verification", "not_applicable");
