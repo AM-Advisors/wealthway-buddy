@@ -893,10 +893,16 @@ export async function releaseBankingInstructions(userId: string, setupId: string
   const error = canReleaseBankingInstructions(record);
   if (error) fail(error);
   await (await import("@/lib/legal-name-gate.server")).assertLegalName({ setupId }, "funding_instruction_release");
+  const { data: relSetup } = await db().from("fund_setups").select("offering_id").eq("id", setupId).maybeSingle();
+  if (!relSetup?.offering_id) fail("Fund setup is unavailable.");
+  const { wireReleaseState, notifyInvestorsInstructionsAvailable } = await import("@/lib/wire-release.server");
+  const before = await wireReleaseState(relSetup.offering_id);
+  if (!before.verified || before.latestVersion == null) fail("Verify the current bank instructions before releasing them.");
   const { data } = await db()
     .from("fund_banking_setups")
     .update({
       investor_instructions_released: true,
+      investor_instructions_released_version: before.latestVersion,
       investor_instructions_released_by: userId,
       investor_instructions_released_at: nowIso(),
       updated_at: nowIso(),
@@ -909,9 +915,13 @@ export async function releaseBankingInstructions(userId: string, setupId: string
     subjectTable: "fund_banking_setups",
     subjectId: record.id,
     event: "banking_instructions_released",
+    detail: { version: before.latestVersion },
     actorUserId: userId,
     actorRole: "harmonious",
   });
+  // Approved investors waiting on banking get one "instructions available" email.
+  try { await notifyInvestorsInstructionsAvailable(relSetup.offering_id, before.latestVersion); }
+  catch { console.error("[banking-release] investor notice unavailable"); }
   return data;
 }
 

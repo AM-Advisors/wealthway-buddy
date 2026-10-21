@@ -19117,6 +19117,7 @@ export type Database = {
           investor_instructions_released: boolean
           investor_instructions_released_at: string | null
           investor_instructions_released_by: string | null
+          investor_instructions_released_version: number | null
           notes: string | null
           relationship_contact: string | null
           setup_id: string
@@ -19135,6 +19136,7 @@ export type Database = {
           investor_instructions_released?: boolean
           investor_instructions_released_at?: string | null
           investor_instructions_released_by?: string | null
+          investor_instructions_released_version?: number | null
           notes?: string | null
           relationship_contact?: string | null
           setup_id: string
@@ -19153,6 +19155,7 @@ export type Database = {
           investor_instructions_released?: boolean
           investor_instructions_released_at?: string | null
           investor_instructions_released_by?: string | null
+          investor_instructions_released_version?: number | null
           notes?: string | null
           relationship_contact?: string | null
           setup_id?: string
@@ -48904,6 +48907,10 @@ export type Database = {
           on_file: boolean
         }[]
       }
+      offering_wire_release_state: {
+        Args: { p_offering_id: string }
+        Returns: Json
+      }
       post_distribution_payment_atomic: {
         Args: {
           _actor: string
@@ -48963,6 +48970,7 @@ export type Database = {
         Args: { _key: string; _token: string }
         Returns: undefined
       }
+      released_wire_details: { Args: { p_offering_id: string }; Returns: Json }
       remove_bank_link: { Args: { p_offering_id: string }; Returns: undefined }
       rename_offering: {
         Args: {

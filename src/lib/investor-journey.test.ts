@@ -186,7 +186,7 @@ describe("Action Center deep links", () => {
     expect(investmentAttentionStep({ id: "i", stage: "started" })!.step).toBe("about");
     expect(investmentAttentionStep({ id: "i", stage: "verification" })!.step).toBe("verify");
     expect(investmentAttentionStep({ id: "i", stage: "signature" })!.step).toBe("sign");
-    expect(investmentAttentionStep({ id: "i", stage: "awaiting_funds", approved_to_fund_at: NOW })).toMatchObject({ step: "fund", waiting: false });
+    expect(investmentAttentionStep({ id: "i", stage: "awaiting_funds", approved_to_fund_at: NOW, instructions_available: true })).toMatchObject({ step: "fund", waiting: false });
     expect(investmentAttentionStep({ id: "i", stage: "funded", funding_status: "funded" })).toBeNull();
     const att = read("src/lib/attention.server.ts");
     expect(att).toContain("href: `/investment/${inv.id}?step=${step.step}`");

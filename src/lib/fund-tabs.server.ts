@@ -51,6 +51,7 @@ export async function investorGrid(fundId: string) {
   const { data: fund, error: fundError } = await (await db()).from("offerings").select("has_multiple_classes").eq("id", fundId).maybeSingle();
   if (fundError) throw new Error("Fund class settings could not be loaded. Please try again.");
   const classApplicable = fund?.has_multiple_classes === true;
+  const fundRelease = await (await import("@/lib/wire-release.server")).wireReleaseState(fundId).catch(() => ({ available: false }));
   const { data } = await (await db()).from("investor_onboardings")
     .select("id, stage, funding_status, commitment_amount_cents, accepted_amount_cents, requested_amount_cents, funded_amount_cents, approved_to_fund_at, funding_released_at, executed_snapshot, last_activity_at, updated_at, person_id, investment_profile_id, application_id, investor_user_id, offering_class_key, questionnaire_submitted_at, investment_profiles(legal_name, profile_type, tax_id_last4)")
     .eq("offering_id", fundId).is("removed_at", null).order("created_at");
@@ -83,7 +84,7 @@ export async function investorGrid(fundId: string) {
     const taxIdLast4 = taxDetails.get(o.investment_profile_id)?.last4 || o.investment_profiles?.tax_id_last4 || (!entity ? p.tax_id_last4 : null) || null;
     const kyc = p.kyc_status ?? "not_started";
     const aml = p.aml_status ?? "not_started";
-    const funding = canonicalFundingState({ fundingStatus: o.funding_status, approvedToFund: !!o.approved_to_fund_at, instructionsReleased: !!o.funding_released_at });
+    const funding = canonicalFundingState({ fundingStatus: o.funding_status, approvedToFund: !!o.approved_to_fund_at, instructionsReleased: !!o.approved_to_fund_at && fundRelease.available });
     const kycOk = ["verified", "approved", "passed", "clear"].includes(kyc) && ["clear", "passed", "approved", "verified"].includes(aml);
     const committedCents = o.commitment_amount_cents ?? o.accepted_amount_cents ?? o.requested_amount_cents ?? null;
     const docs = docStatus(o);

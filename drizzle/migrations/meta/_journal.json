@@ -2192,6 +2192,20 @@
       "when": 1792610106428,
       "tag": "0312_open_launched_funds",
       "breakpoints": true
+    },
+    {
+      "idx": 313,
+      "version": "7",
+      "when": 1792610191692,
+      "tag": "0313_wire_release_single_rule",
+      "breakpoints": true
+    },
+    {
+      "idx": 314,
+      "version": "7",
+      "when": 1792610442019,
+      "tag": "0314_released_wire_details_for_server",
+      "breakpoints": true
     }
   ]
 }

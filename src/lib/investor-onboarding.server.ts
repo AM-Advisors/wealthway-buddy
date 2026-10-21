@@ -1266,8 +1266,9 @@ export async function fundingInstructions(userId: string, onboardingId: string) 
   });
   if (!gate.allowed) return { unlocked: false, reasons: gate.reasons, instructions: null };
 
-  const { data: wire } = await db().rpc("get_wire_instructions", { p_offering_id: row.offering_id });
-  const rawDetails = Array.isArray(wire) ? (wire[0]?.details ?? null) : ((wire as any)?.details ?? null);
+  // Server read of the released version only (investor access already checked above).
+  const { data: wire } = await db().rpc("released_wire_details", { p_offering_id: row.offering_id });
+  const rawDetails = (wire as Record<string, unknown> | null) ?? null;
   // Show only the instructions that apply: USA-only, international-only, or (for "both") by where the investor is located.
   const { instructionsForInvestor, DOMESTIC_WIRE_FIELDS, INTL_WIRE_FIELDS } = await import("@/lib/wire-scope");
   const { data: prof } = row.investment_profile_id ? await db().from("investment_profiles").select("country").eq("id", row.investment_profile_id).maybeSingle() : { data: null };
@@ -1285,10 +1286,13 @@ export async function fundingInstructions(userId: string, onboardingId: string) 
     ? await db().from("fund_banking_setups").select("*").eq("setup_id", setup.id).maybeSingle()
     : { data: null };
 
-  if (!banking || banking.status !== "account_active" || !banking.investor_instructions_released) {
+  const { wireReleaseState } = await import("@/lib/wire-release.server");
+  const { wireReleaseBlocker } = await import("@/lib/wire-release");
+  const release = await wireReleaseState(row.offering_id);
+  if (!banking || !release.available || !details || Object.keys(details).length === 0) {
     return {
       unlocked: false,
-      reasons: ["The fund's banking instructions have not been released yet."],
+      reasons: [wireReleaseBlocker(release) ?? "The fund's banking instructions have not been released yet."],
       instructions: null,
     };
   }

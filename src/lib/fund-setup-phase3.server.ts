@@ -159,6 +159,7 @@ export async function phase3Overview(sb: any, userId: string, offeringId: string
       harmoniousStatus: o.harmonious_bank_status as HarmoniousBankStatus | null,
       versions: actor.isStaff ? versions : versions.map((v) => ({ ...v, rejectionReason: null, ownershipExplanation: null })),
       releasable: bankInstructionsReleasable(versions),
+      release: await (await import("@/lib/wire-release.server")).wireReleaseState(offeringId).catch(async () => (await import("@/lib/wire-release")).EMPTY_WIRE_RELEASE),
       section: banking,
     },
     ein: {
