@@ -41,7 +41,7 @@ export function OpsFundPage({ fundId, tab = "setup", onTab }: { fundId: string; 
     <Button variant="ghost" size="sm" asChild><Link to="/ops/funds">← Funds</Link></Button>
     {tab === "setup" && !d.retired && d.canUseOperations && <ManagerLaunchCard fundId={fundId} />}
     {tab === "setup" && !d.retired && d.canUseOperations && <FundStatusCard fundId={fundId} />}
-    {next && !d.retired && d.canSeeOperations && (
+    {next && !d.retired && !d.setupFinished && d.canSeeOperations && (
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-primary/30 bg-primary/5 px-4 py-3">
         <div className="min-w-0"><p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Next step</p><p className="font-medium">{next.label}</p></div>
         <Button size="sm" onClick={() => { onTab(next.tab); setTimeout(() => document.getElementById("fund-workspace-tabs")?.scrollIntoView({ behavior: "smooth" }), 50); }}>{next.tab === "setup" ? "Go to Setup" : "Go to Investors"}</Button>
