@@ -21,8 +21,7 @@ export async function syncReceiptToInvestment(
     // No bank transaction to post: flag it so Operations matches the deposit, rather than inferring "funded".
     await engine.raiseException(userId, {
       onboardingId: ob.id,
-      type: "receipt_needs_bank_match",
-      severity: "warning",
+      type: "funding_mismatch",
       detail: "A wire was confirmed on the application. Match the bank deposit to finish recording funding.",
     });
     return { synced: false, note: "Match the bank deposit to finish recording funding on the investment." };
