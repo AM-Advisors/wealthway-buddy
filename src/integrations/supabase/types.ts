@@ -19117,6 +19117,7 @@ export type Database = {
           investor_instructions_released: boolean
           investor_instructions_released_at: string | null
           investor_instructions_released_by: string | null
+          investor_instructions_released_version: number | null
           notes: string | null
           relationship_contact: string | null
           setup_id: string
@@ -19135,6 +19136,7 @@ export type Database = {
           investor_instructions_released?: boolean
           investor_instructions_released_at?: string | null
           investor_instructions_released_by?: string | null
+          investor_instructions_released_version?: number | null
           notes?: string | null
           relationship_contact?: string | null
           setup_id: string
@@ -19153,6 +19155,7 @@ export type Database = {
           investor_instructions_released?: boolean
           investor_instructions_released_at?: string | null
           investor_instructions_released_by?: string | null
+          investor_instructions_released_version?: number | null
           notes?: string | null
           relationship_contact?: string | null
           setup_id?: string
@@ -48903,6 +48906,10 @@ export type Database = {
           last4: string
           on_file: boolean
         }[]
+      }
+      offering_wire_release_state: {
+        Args: { p_offering_id: string }
+        Returns: Json
       }
       post_distribution_payment_atomic: {
         Args: {
