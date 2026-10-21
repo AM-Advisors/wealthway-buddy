@@ -225,6 +225,7 @@ function AboutYou({ d, onboardingId, done }: { d: any; onboardingId: string; don
     if (!profileId && list.length > 0) setProfileId(list[0].id);
   }, [profileId, list]);
   const owners = (d.requirements ?? []).find((r: any) => r.key === "beneficial_owners");
+  const minimum = Number(d.offering?.minInvestmentCents ?? 0);
 
   return (
     <Card>
