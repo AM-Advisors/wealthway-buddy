@@ -1,7 +1,20 @@
 import { duePeriods, isFrequency } from "@/lib/invoice-schedule-model";
 import { PRICING_AUTHORITY_ROLES } from "@/lib/commercial-pricing";
 
-type Row = Record<string, any>;
+type Row = {
+  id?: any; service_key?: any; serviceKey?: any; status?: any; user_id?: any; role?: any;
+  offering_id?: any; effective_date?: any; termination_date?: any; sow_id?: any;
+  superseded_at?: any; created_at?: any; snapshot_id?: any; pass_through?: any;
+  generated_lines?: any; first_bill_on?: any; approved_at?: any; approved_by?: any;
+  expires_on?: any; contracted_cents?: any; standard_cents?: any; amount_cents?: any;
+  final_cents?: any; pricing_model?: any; billing_frequency?: any; quantity?: any;
+  unit_cents?: any; label?: any; sow?: any; index?: any;
+};
+export type InvoiceRateLine = {
+  source: string; source_ref: string; service_key: string; label: string; description: string;
+  quantity: number; unit_cents: number; amount_cents: number; pricing_id: string | null;
+  expense_id: null; offering_id: string | null; sort_order: number;
+};
 export type InvoicePricingInput = {
   periodStart: string; periodEnd: string; offeringId?: string | null; sowId?: string | null;
   pricing: Row[]; entitlements: Row[]; sows: Row[]; catalog: Row[];
@@ -19,7 +32,7 @@ export function invoiceRateLines(input: InvoicePricingInput) {
   const approved = new Set(input.approverRoles.filter(r => (PRICING_AUTHORITY_ROLES as readonly string[]).includes(r.role)).map(r => r.user_id));
   const billed = new Set(input.billedRefs);
   const seen = new Set<string>();
-  const lines: Row[] = [];
+  const lines: InvoiceRateLine[] = [];
   let skipped = 0;
   for (const entitlement of input.entitlements) {
     const fund = entitlement.offering_id ?? null;
@@ -33,12 +46,12 @@ export function invoiceRateLines(input: InvoicePricingInput) {
     if (seen.has(identity)) continue;
     seen.add(identity);
     // Scheduled service obligations are billed only through their existing period identity.
-    if (input.schedules.some(s => s.service_key === key && (!sowId || s.sow_id === sowId))) { skipped++; continue; }
+    if (input.schedules.some(s => s.service_key === key && (!sowId || s.sow_id === sowId) && (!entitlement.sow_id || s.sow_id === entitlement.sow_id))) { skipped++; continue; }
     const snapshot = scope ? input.snapshots.find(s => s.offering_id === scope && !s.superseded_at && s.created_at?.slice(0, 10) <= periodStart) : null;
     if (snapshot && snapshot.status !== "approved") throw new Error("This fund's pricing still needs approval before invoicing.");
     const frozen = snapshot ? input.snapshotLines.find(l => l.snapshot_id === snapshot.id && l.service_key === key && !l.pass_through) : null;
     const applicableSows = sows.filter(s => !entitlement.sow_id || s.id === entitlement.sow_id);
-    const contracted = applicableSows.flatMap(s => (Array.isArray(s.generated_lines) ? s.generated_lines : []).map((l: Row, index: number) => ({ ...l, sow: s, index })))
+    const contracted: Row[] = applicableSows.flatMap(s => (Array.isArray(s.generated_lines) ? s.generated_lines : []).map((l: Row, index: number): Row => ({ ...l, sow: s, index })))
       .filter(l => (l.service_key ?? l.serviceKey) === key && (!l.offering_id || l.offering_id === scope) && (!l.first_bill_on || l.first_bill_on <= periodStart));
     if (contracted.length > 1) throw new Error(`More than one active agreement prices ${key}. Reconcile the agreements before invoicing.`);
     const contract = contracted[0];

@@ -50,15 +50,17 @@ export async function checkInvoiceRates(db: any, invoiceId: string, clientId: st
   const items = lines.filter((l: any) => l.source !== "expense").map((l: any) => {
     const [kind, id, index] = String(l.source_ref ?? "").split(":");
     let cents: number | null = null;
-    if (kind === "schedule") cents = rows(schedules).find((s: any) => s.id === id)?.amount_cents ?? null;
+    if (kind === "schedule") {
+      const amount = rows(schedules).find((s: any) => s.id === id)?.amount_cents;
+      cents = amount == null ? null : Number(amount) / Number(l.quantity ?? 1);
+    }
     else if (kind === "snapshot") cents = frozen.find((s: any) => s.id === id)?.final_cents ?? null;
     else if (kind === "sow") {
       const sow = rows(sows).find((s: any) => s.id === id);
       const term = sow?.generated_lines?.[Number(index)];
       if (term) cents = Number(term.unit_cents ?? Number(term.amount_cents) / Number(term.quantity ?? 1));
     } else if (kind === "card") {
-      // The invoice freezes the standard amount at preparation; no later card repricing.
-      cents = Number(l.unit_cents);
+      cents = null;
     } else if (l.source === "fund_fee" && l.offering_id) {
       // Same application override and fund columns used on the investment balance page.
       cents = null;
@@ -71,6 +73,11 @@ export async function checkInvoiceRates(db: any, invoiceId: string, clientId: st
   const checks = [];
   for (const { line, cents: resolved } of items) {
     let cents = resolved;
+    if (String(line.source_ref ?? "").startsWith("card:")) {
+      const itemId = String(line.source_ref).split(":")[1];
+      const item = rows(await db.from("pricing_items").select("amount_cents").eq("id", itemId))[0];
+      if (item) cents = Number(item.amount_cents);
+    }
     if (line.source === "fund_fee" && line.offering_id) {
       const fund = rows(await db.from("offerings").select("wire_fee_cents, closing_cost_cents, share_price_cents")
         .eq("id", line.offering_id).eq("client_id", clientId))[0];
