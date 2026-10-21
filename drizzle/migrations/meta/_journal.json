@@ -2143,6 +2143,13 @@
       "when": 1792573774800,
       "tag": "0305_erebor_operating_agreement_acknowledgment",
       "breakpoints": true
+    },
+    {
+      "idx": 306,
+      "version": "7",
+      "when": 1792577539776,
+      "tag": "0306_legal_wording_audit_history",
+      "breakpoints": true
     }
   ]
 }
