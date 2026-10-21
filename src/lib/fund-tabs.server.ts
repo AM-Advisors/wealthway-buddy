@@ -6,6 +6,7 @@
  * files anything or sends email.
  */
 import { investorSteps } from "@/lib/investor-step-status";
+import { currentProfileTaxDetails } from "@/lib/profile-tax-details.server";
 import { canonicalFundingState, CANONICAL_FUNDING_LABELS, isReconciledFunding } from "@/lib/funding-status";
 
 export const STAFF_ROLES = ["admin", "super_admin", "operations", "fund_administration", "legal", "compliance"];
@@ -51,7 +52,7 @@ export async function investorGrid(fundId: string) {
   if (fundError) throw new Error("Fund class settings could not be loaded. Please try again.");
   const classApplicable = fund?.has_multiple_classes === true;
   const { data } = await (await db()).from("investor_onboardings")
-    .select("id, stage, funding_status, commitment_amount_cents, accepted_amount_cents, requested_amount_cents, funded_amount_cents, approved_to_fund_at, funding_released_at, executed_snapshot, last_activity_at, updated_at, person_id, application_id, investor_user_id, offering_class_key, questionnaire_submitted_at, investment_profiles(legal_name, profile_type, tax_id_last4)")
+    .select("id, stage, funding_status, commitment_amount_cents, accepted_amount_cents, requested_amount_cents, funded_amount_cents, approved_to_fund_at, funding_released_at, executed_snapshot, last_activity_at, updated_at, person_id, investment_profile_id, application_id, investor_user_id, offering_class_key, questionnaire_submitted_at, investment_profiles(legal_name, profile_type, tax_id_last4)")
     .eq("offering_id", fundId).is("removed_at", null).order("created_at");
   // No foreign key from investor_onboardings.person_id, so persons are loaded separately.
   const ids = [...new Set(((data ?? []) as any[]).map((o) => o.person_id).filter(Boolean))];
@@ -59,6 +60,8 @@ export async function investorGrid(fundId: string) {
     ? await (await db()).from("persons").select("id, legal_first_name, legal_last_name, preferred_name, email, phone, kyc_status, aml_status, date_of_birth, citizenship_country, address_line1, city, postal_code, tax_id_last4").in("id", ids)
     : { data: [] as any[] };
   const byId = new Map(((people ?? []) as any[]).map((p) => [p.id, p]));
+  const profileIds = [...new Set(((data ?? []) as any[]).map((o) => o.investment_profile_id).filter(Boolean))] as string[];
+  const taxDetails = await currentProfileTaxDetails(await db(), profileIds);
   const { data: checks, error: checksError } = ids.length
     ? await (await db()).from("kyc_verifications").select("person_id, verified_date_of_birth, decision, completed_at").in("person_id", ids).eq("status", "approved").order("completed_at", { ascending: false })
     : { data: [] as any[], error: null };
@@ -77,7 +80,7 @@ export async function investorGrid(fundId: string) {
     // Nationality is citizenship; an ID's issuing country is not citizenship.
     const citizenship = identity?.nationality || p.citizenship_country || null;
     // An entity's EIN must never fall back to its signer's personal tax ID.
-    const taxIdLast4 = o.investment_profiles?.tax_id_last4 || (!entity ? p.tax_id_last4 : null) || null;
+    const taxIdLast4 = taxDetails.get(o.investment_profile_id)?.last4 || o.investment_profiles?.tax_id_last4 || (!entity ? p.tax_id_last4 : null) || null;
     const kyc = p.kyc_status ?? "not_started";
     const aml = p.aml_status ?? "not_started";
     const funding = canonicalFundingState({ fundingStatus: o.funding_status, approvedToFund: !!o.approved_to_fund_at, instructionsReleased: !!o.funding_released_at });

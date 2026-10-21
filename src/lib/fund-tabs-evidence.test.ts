@@ -75,6 +75,25 @@ describe("verified investor identity read-back", () => {
     expect(row?.citizenship).toBeNull();
     expect(row?.missing).toContain("Date of birth");
   });
+  it.each(["w9", "w8ben", "w8bene"])("reads tax ID from the profile's certified %s without duplicate entry", async (formType) => {
+    mock.tables["investor_onboardings"] = [{ id: "investor", offering_id: "fund", person_id: "person", investment_profile_id: "profile", investment_profiles: { profile_type: "individual", tax_id_last4: null } }];
+    mock.tables["investor_tax_forms"] = [{ investment_profile_id: "profile", form_type: formType, status: "certified", certified_at: "2026-10-21", tin_last4: "4321", superseded_by: null }];
+    const row = await investorDetail("fund", "investor");
+    expect(row.taxIdLast4).toBe("4321");
+    expect(row.missing).not.toContain("Tax ID");
+  });
+  it("ignores unsigned, superseded, expired and other-profile tax forms", async () => {
+    mock.tables["investor_onboardings"] = [{ id: "investor", offering_id: "fund", person_id: "person", investment_profile_id: "profile", investment_profiles: { profile_type: "individual", tax_id_last4: null } }];
+    mock.tables["investor_tax_forms"] = [
+      { investment_profile_id: "profile", status: "draft", tin_last4: "1111" },
+      { investment_profile_id: "profile", status: "certified", certified_at: "2020-01-01", expires_on: "2020-12-31", tin_last4: "2222" },
+      { investment_profile_id: "profile", status: "certified", certified_at: "2026-10-21", superseded_by: "replacement", tin_last4: "3333" },
+      { investment_profile_id: "other", status: "certified", certified_at: "2026-10-21", tin_last4: "4444" },
+    ];
+    const row = await investorDetail("fund", "investor");
+    expect(row.taxIdLast4).toBeNull();
+    expect(row.missing).toContain("Tax ID");
+  });
   it("does not use a business signer's personal tax ID as the business EIN", async () => {
     mock.tables["persons"] = [{ id: "person", tax_id_last4: "1234" }];
     mock.tables["investor_onboardings"] = [{ id: "investor", offering_id: "fund", person_id: "person", investment_profiles: { profile_type: "llc" } }];
