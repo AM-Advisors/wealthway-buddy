@@ -270,14 +270,7 @@ export async function openSigningSession(
   });
   if (refusal) throw new SigningRefusal(refusal);
 
-  // Manager entry admits the investor; otherwise an explicit document approval is needed.
-  // A live request already out for signature keeps working.
-  if (resolved.signature?.provider_status !== "out_for_signature") {
-    const { approvedForSigning } = await import("@/lib/investor-document-review.server");
-    if (!(await approvedForSigning(admin, resolved.application.id, resolved.document.id))) {
-      throw new Error("Your fund manager is reviewing this document. You'll be able to sign once they approve it.");
-    }
-  }
+  // Investors always sign first; the fund manager approves or declines after they finish.
 
   if (!resolved.profile.email) throw new SigningRefusal("not_a_required_signer");
 
@@ -466,6 +459,11 @@ export async function syncSignersFromBox(
 
     await admin.from("document_signature_signers").update(patch).eq("id", row.id);
     updated += 1;
+    if (status === "signed" && row.role_key !== "fund_manager" && row.offering_id) {
+      const { data: doc } = await admin.from("offering_documents").select("title").eq("id", signature.offering_document_id).maybeSingle();
+      const { notifyInvestorSignedForReview } = await import("@/lib/investor-blocked-notify.server");
+      await notifyInvestorSignedForReview({ offeringId: row.offering_id, investorUserId: row.signer_user_id ?? null, documentTitle: doc?.title ?? "their document", signatureId: signature.id });
+    }
   }
 
   if (detail.signedFileId) {

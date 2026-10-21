@@ -752,9 +752,16 @@ export async function setInvestmentAmount(
 ) {
   const { actor, row } = await assertInvestorOwns(userId, input.onboardingId);
   const offering = await offeringRequirements(row.offering_id);
-  const problem = amountError(input.amountCents, offering);
+  // Below the minimum is accepted with a side letter; the maximum and basic checks still apply.
+  const { sideLetterRequired } = await import("@/lib/investor-onboarding-model");
+  const problem = amountError(input.amountCents, { ...offering, minInvestmentCents: null } as any);
   if (problem) fail(problem);
   await touch(row.id, { requested_amount_cents: input.amountCents });
+  if (sideLetterRequired(input.amountCents, offering.minInvestmentCents ?? null)) {
+    const usd = (c: number) => `$${(c / 100).toLocaleString("en-US")}`;
+    const { notifySideLetterRequired } = await import("@/lib/investor-blocked-notify.server");
+    await notifySideLetterRequired({ onboardingId: row.id, offeringId: row.offering_id, investorUserId: row.investor_user_id ?? null, commitment: usd(input.amountCents), minimum: usd(Number(offering.minInvestmentCents)) });
+  }
   await recordEvent({
     onboardingId: row.id,
     offeringId: row.offering_id,

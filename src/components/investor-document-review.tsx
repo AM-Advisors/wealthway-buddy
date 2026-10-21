@@ -38,7 +38,7 @@ function DocRow({ offeringId, onboardingId, title, version, d, readOnly }: { off
     setBusy(true);
     try {
       await decide({ data: { offeringId, onboardingId, documentId: d.documentId, decision, note: decision === "returned" ? note : null } });
-      toast.success(decision === "approved" ? "Approved - the investor can now sign." : "Returned to the investor with your note.");
+      toast.success(decision === "approved" ? "Approved - your countersignature is now open." : "Declined - the investment is paused and Harmonious has been told.");
       setReturning(false); setNote("");
       qc.invalidateQueries({ queryKey: ["doc-reviews", offeringId] });
     } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
@@ -50,25 +50,26 @@ function DocRow({ offeringId, onboardingId, title, version, d, readOnly }: { off
           <p className="text-sm font-medium">{title}{version ? <span className="text-muted-foreground"> · v{version}</span> : null}</p>
           {d.signed ? (
             <p className="text-xs text-muted-foreground">Signed{d.signed.signerName ? ` by ${d.signed.signerName}` : ""} on {new Date(d.signed.signedAt).toLocaleDateString()}</p>
-          ) : d.decision === "returned" && d.note ? (
-            <p className="text-xs text-muted-foreground">Returned: {d.note}</p>
+          ) : null}
+          {d.signed && d.decision === "returned" && d.note ? (
+            <p className="text-xs text-muted-foreground">Declined: {d.note}</p>
           ) : null}
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          {d.signed ? <Badge>Signed</Badge> : d.decision === "approved" ? <Badge variant="secondary">Approved to sign</Badge> : d.decision === "returned" ? <Badge variant="outline">Returned</Badge> : <Badge variant="outline">Waiting for your approval</Badge>}
+          {!d.signed ? <Badge variant="outline">Investor hasn't signed yet</Badge> : d.decision === "approved" ? <Badge>Approved</Badge> : d.decision === "returned" ? <Badge variant="destructive">Declined</Badge> : <Badge variant="secondary">Signed - awaiting your decision</Badge>}
           {d.signed ? <SignedCopyButton offeringId={offeringId} signatureId={d.signed.signatureId} /> : null}
-          {!d.signed && !readOnly && d.decision !== "approved" ? (
+          {d.signed && !readOnly && !d.decision ? (
             <>
               <Button size="sm" disabled={busy} onClick={() => act("approved")}>Approve</Button>
-              <Button size="sm" variant="outline" disabled={busy} onClick={() => setReturning((v) => !v)}>Return</Button>
+              <Button size="sm" variant="outline" disabled={busy} onClick={() => setReturning((v) => !v)}>Decline</Button>
             </>
           ) : null}
         </div>
       </div>
       {returning ? (
         <div className="space-y-2">
-          <Textarea placeholder="What needs to change?" value={note} onChange={(e) => setNote(e.target.value)} />
-          <Button size="sm" variant="outline" disabled={busy || !note.trim()} onClick={() => act("returned")}>Send back</Button>
+          <Textarea placeholder="Why are you declining?" value={note} onChange={(e) => setNote(e.target.value)} />
+          <Button size="sm" variant="outline" disabled={busy || !note.trim()} onClick={() => act("returned")}>Decline investment documents</Button>
         </div>
       ) : null}
     </li>
@@ -81,8 +82,8 @@ export function InvestorDocumentReview({ offeringId }: { offeringId: string }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">Investor document approval &amp; signed agreements</CardTitle>
-        <CardDescription>Approve each investor's documents before they sign. Signed agreements are stored here for you to download.</CardDescription>
+        <CardTitle className="text-lg">Signed investor documents - approve or decline</CardTitle>
+        <CardDescription>Investors sign first. Once they finish, approve or decline here; your countersignature opens after you approve.</CardDescription>
       </CardHeader>
       <CardContent>
         {isLoading ? <p className="text-sm text-muted-foreground">Loading…</p>

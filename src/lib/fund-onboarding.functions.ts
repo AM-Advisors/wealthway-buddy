@@ -239,7 +239,18 @@ export const countersignDetailFn = createServerFn({ method: "POST" })
         { role: "fund_manager", order: 2, status: String(me.status ?? "") },
       ],
     });
-    const gate = canCountersign({ mode: (sig?.signing_mode ?? "dual") as any, stage, hasFundAuthority: true });
+    const baseGate = canCountersign({ mode: (sig?.signing_mode ?? "dual") as any, stage, hasFundAuthority: true });
+    // Countersign only after the manager approved the investor's signed document.
+    let gate = baseGate;
+    if (baseGate.allowed) {
+      const { data: sigRow } = await db.from("document_signatures").select("application_id").eq("id", me.signature_id).maybeSingle();
+      const { data: ob } = sigRow?.application_id ? await db.from("investor_onboardings").select("id").eq("application_id", sigRow.application_id).is("removed_at", null).maybeSingle() : { data: null };
+      const { data: invSigned } = await db.from("document_signature_signers").select("signed_at").eq("signature_id", me.signature_id).eq("role_key", "investor").maybeSingle();
+      const { managerApprovedSigned } = await import("@/lib/investor-document-review.server");
+      if (!ob || !(await managerApprovedSigned(db, ob.id, me.offering_document_id, invSigned?.signed_at ?? null))) {
+        gate = { allowed: false, reason: "Approve this investor's signed document under Approvals first. Your countersignature opens after you approve." } as any;
+      }
+    }
     let url: string | null = null;
     if (data.open && gate.allowed && sig?.provider_agreement_id) {
       const { data: profile } = await db.from("profiles").select("email").eq("user_id", context.userId).maybeSingle();

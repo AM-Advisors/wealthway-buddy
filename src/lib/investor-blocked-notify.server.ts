@@ -95,3 +95,68 @@ export async function notifyHighRiskDisclosure(n: { onboardingId: string; offeri
     console.error("high-risk notify", e);
   }
 }
+
+/** Shared: email every manager of the fund once per idempotency ref. */
+async function emailFundManagers(db: any, offeringId: string, ref: string, data: { headline: string; intro: string; details: { label: string; value: string }[] }) {
+  const [{ data: fund }, { data: mgrs }] = await Promise.all([
+    db.from("offerings").select("name").eq("id", offeringId).maybeSingle(),
+    db.from("fund_managers").select("user_id").eq("offering_id", offeringId),
+  ]);
+  const ids = ((mgrs ?? []) as any[]).map((m) => m.user_id).filter(Boolean);
+  if (!ids.length) return;
+  const { data: people } = await db.from("profiles").select("legal_name, email").in("user_id", ids);
+  const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+  for (const p of (people ?? []) as any[]) {
+    if (!p.email) continue;
+    try {
+      await sendTemplateEmail("manager-alert", p.email, {
+        idempotencyKey: `${ref}:${String(p.email).toLowerCase()}`,
+        templateData: { managerName: p.legal_name || "there", ...data, offeringName: fund?.name ?? "your fund", portalUrl: `https://app.harmonious.co/manager/fund/${offeringId}/approvals` },
+      });
+    } catch (e) { console.error("manager email", e); }
+  }
+}
+
+async function investorName(db: any, userId: string | null) {
+  if (!userId) return "An investor";
+  const { data } = await db.from("profiles").select("legal_name").eq("user_id", userId).maybeSingle();
+  return data?.legal_name || "An investor";
+}
+
+/** One notice per signature: the investor finished signing; the manager can now approve or decline. */
+export async function notifyInvestorSignedForReview(n: { offeringId: string; investorUserId: string | null; documentTitle: string; signatureId: string }) {
+  try {
+    const { supabaseAdmin: db } = (await import("@/integrations/supabase/client.server")) as any;
+    const investor = await investorName(db, n.investorUserId);
+    await emailFundManagers(db, n.offeringId, `investor-signed:${n.signatureId}`, {
+      headline: "An investor signed - approve or decline",
+      intro: `${investor} signed ${n.documentTitle}. Review it under Approvals and approve or decline. Your countersignature opens after you approve.`,
+      details: [{ label: "Investor", value: investor }, { label: "Document", value: n.documentTitle }],
+    });
+  } catch (e) { console.error("investor signed notify", e); }
+}
+
+/** Manager declined signed documents: tell Harmonious once. */
+export async function notifyDocumentsDeclined(n: { onboardingId: string; offeringId: string; investorUserId: string | null; documentTitle: string; ref: string }) {
+  try {
+    const { supabaseAdmin: db } = (await import("@/integrations/supabase/client.server")) as any;
+    const investor = await investorName(db, n.investorUserId);
+    const { notifySubmission } = await import("@/lib/ops-slack-notify.server");
+    await notifySubmission({ kind: "manager_declined_documents", title: `Fund manager declined ${n.documentTitle} - ${investor}. Investment paused.`, offeringId: n.offeringId, ref: n.ref, once: true, path: `/ops/fund/${n.offeringId}` });
+  } catch (e) { console.error("decline notify", e); }
+}
+
+/** Commitment below the fund minimum: Harmonious and the fund team learn a side letter is required. */
+export async function notifySideLetterRequired(n: { onboardingId: string; offeringId: string; investorUserId: string | null; commitment: string; minimum: string }) {
+  try {
+    const { supabaseAdmin: db } = (await import("@/integrations/supabase/client.server")) as any;
+    const investor = await investorName(db, n.investorUserId);
+    const { notifySubmission } = await import("@/lib/ops-slack-notify.server");
+    await notifySubmission({ kind: "side_letter_required", title: `Side letter required - ${investor} committed ${n.commitment}, below the ${n.minimum} minimum.`, offeringId: n.offeringId, ref: n.onboardingId, once: true, path: `/ops/fund/${n.offeringId}` });
+    await emailFundManagers(db, n.offeringId, `side-letter:${n.onboardingId}`, {
+      headline: "A side letter is required",
+      intro: `${investor} committed ${n.commitment}, below this fund's ${n.minimum} minimum. A side letter is required to accept it. Harmonious will confirm the side-letter fee; the side letter is prepared once it is paid.`,
+      details: [{ label: "Investor", value: investor }, { label: "Commitment", value: n.commitment }, { label: "Minimum", value: n.minimum }],
+    });
+  } catch (e) { console.error("side letter notify", e); }
+}

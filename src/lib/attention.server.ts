@@ -684,15 +684,32 @@ async function fundManagerItems(ctx: Ctx, n: Names): Promise<AttentionItem[]> {
     rows(
       await s
         .from("document_signature_signers")
-        .select("id, offering_id, status, updated_at, application_id")
+        .select("id, signature_id, offering_id, offering_document_id, status, updated_at, application_id")
         .eq("signer_user_id", ctx.userId)
         .eq("role_key", "fund_manager")
         .eq("status", "sent")
         .limit(LIMIT),
     ),
   );
+  const { supabaseAdmin: adminDb } = await import("@/integrations/supabase/client.server");
+  const { managerApprovedSigned } = await import("@/lib/investor-document-review.server");
   for (const c of countersign as any[]) {
     if (!managedIds.has(c.offering_id)) continue;
+    // Approve or decline first; the countersignature opens only after approval.
+    const approved = await (async () => { try {
+      const { data: inv } = await (adminDb as any).from("document_signature_signers").select("signed_at").eq("signature_id", c.signature_id).eq("role_key", "investor").maybeSingle();
+      const { data: ob } = await (adminDb as any).from("investor_onboardings").select("id").eq("application_id", c.application_id).is("removed_at", null).maybeSingle();
+      return ob ? await managerApprovedSigned(adminDb, ob.id, c.offering_document_id, inv?.signed_at ?? null) : false;
+    } catch { return false; } })();
+    if (approved !== true) {
+      out.push(buildAttentionItem({
+        id: `manager-signed-review:${c.id}`, source: "manager.countersign", workspace: "fund_manager", group: "needs_you", severity: "action",
+        title: `Investor signed - approve or decline - ${fundName(c.offering_id) ?? "Fund"}`, workflowState: "awaiting_fund_manager",
+        status: "The investor has signed. Approve or decline under Approvals.", sourceTable: "document_signature_signers", sourceId: c.id,
+        href: `/manager/fund/${c.offering_id}/approvals`, at: c.updated_at ?? null, fundName: fundName(c.offering_id),
+      }));
+      continue;
+    }
     out.push(
       buildAttentionItem({
         id: `manager-countersign:${c.id}`,
@@ -1118,8 +1135,11 @@ async function preparedManagerItems(ctx: Ctx, fundIds: string[], fundName: (id: 
   const { data: mine } = await db.from("document_signature_signers").select("id, signature_id, application_id, offering_id, offering_document_id, status")
     .eq("signer_user_id", ctx.userId).eq("role_key", "fund_manager").in("status", ["waiting", "sent"]).in("offering_id", fundIds).limit(LIMIT);
   for (const m of (mine ?? []) as any[]) {
-    const { data: inv } = await db.from("document_signature_signers").select("status").eq("signature_id", m.signature_id).eq("role_key", "investor").maybeSingle();
+    const { data: inv } = await db.from("document_signature_signers").select("status, signed_at").eq("signature_id", m.signature_id).eq("role_key", "investor").maybeSingle();
     if ((inv as any)?.status !== "signed") continue;
+    const { data: ob } = await db.from("investor_onboardings").select("id").eq("application_id", m.application_id).is("removed_at", null).maybeSingle();
+    const { managerApprovedSigned } = await import("@/lib/investor-document-review.server");
+    if (!ob || !(await managerApprovedSigned(db, (ob as any).id, m.offering_document_id, (inv as any)?.signed_at ?? null))) continue;
     const { data: doc } = await db.from("offering_documents").select("title, countersigner_user_id").eq("id", m.offering_document_id).maybeSingle();
     if ((doc as any)?.countersigner_user_id !== ctx.userId) continue;
     out.push(buildAttentionItem({

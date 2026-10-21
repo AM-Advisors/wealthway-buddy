@@ -86,7 +86,7 @@ export async function listDocumentReviews(userId: string, offeringId: string) {
           const sig = signed.find((s) => s.application_id === r.application_id && s.offering_document_id === d.id);
           return {
             documentId: d.id as string,
-            decision: (dec?.decision ?? (r.entry_source === "fund_manager" && managerIds.has(r.created_by) ? "approved" : null)) as "approved" | "returned" | null,
+            decision: (sig && dec && dec.decided_at >= (sig.provider_completed_at ?? sig.signed_at) ? dec.decision : null) as "approved" | "returned" | null,
             note: (dec?.note ?? null) as string | null,
             decidedAt: (dec?.decided_at ?? null) as string | null,
             signed: sig ? { signatureId: sig.id as string, signerName: sig.signer_name as string | null, signedAt: (sig.provider_completed_at ?? sig.signed_at) as string } : null,
@@ -97,23 +97,54 @@ export async function listDocumentReviews(userId: string, offeringId: string) {
   };
 }
 
+/** Pure: a manager decides only after the investor has signed; declining needs a reason. */
+export function decisionRefusal(input: { investorSigned: boolean; decision: "approved" | "returned"; note: string | null }): string | null {
+  if (!input.investorSigned) return "The investor hasn't finished signing this document yet.";
+  if (input.decision === "returned" && !input.note) return "Add a reason for declining.";
+  return null;
+}
+
+/** Countersigning opens only after the manager approved this investor's signed document. */
+export async function managerApprovedSigned(db: any, onboardingId: string, documentId: string, investorSignedAt: string | null) {
+  if (!investorSignedAt) return false;
+  const { data: doc } = await db.from("offering_documents").select("active_version").eq("id", documentId).maybeSingle();
+  const { data } = await db.from("investor_document_approvals").select("onboarding_id, offering_document_id, version, decision, decided_at")
+    .eq("onboarding_id", onboardingId).eq("offering_document_id", documentId).order("decided_at", { ascending: false });
+  const dec = latestDecision(data ?? [], onboardingId, documentId, doc?.active_version ?? null);
+  return dec?.decision === "approved" && dec.decided_at >= investorSignedAt;
+}
+
+/** After the investor signs: approve (opens countersignature) or decline (pauses the investment). "returned" = declined. */
 export async function decideDocument(userId: string, input: { offeringId: string; onboardingId: string; documentId: string; decision: "approved" | "returned"; note?: string | null | undefined }) {
   await assertManager(userId, input.offeringId);
   const db = await admin();
   const [{ data: ob }, { data: doc }] = await Promise.all([
-    db.from("investor_onboardings").select("id, offering_id").eq("id", input.onboardingId).is("removed_at", null).maybeSingle(),
-    db.from("offering_documents").select("id, offering_id, active_version, requires_signature").eq("id", input.documentId).maybeSingle(),
+    db.from("investor_onboardings").select("id, offering_id, application_id, investor_user_id").eq("id", input.onboardingId).is("removed_at", null).maybeSingle(),
+    db.from("offering_documents").select("id, title, offering_id, active_version, requires_signature").eq("id", input.documentId).maybeSingle(),
   ]);
   if (!ob || ob.offering_id !== input.offeringId) forbid("that investor isn't in this fund.");
   if (!doc || doc.offering_id !== input.offeringId || !doc.requires_signature) forbid("that document isn't a signature document for this fund.");
   const note = input.note?.trim() || null;
-  if (input.decision === "returned" && !note) throw new Error("Add a note explaining what needs to change.");
+  const { data: sigs } = ob.application_id
+    ? await db.from("document_signatures").select("id, provider_status, signed_at, cancelled_at, superseded_by").eq("application_id", ob.application_id).eq("offering_document_id", doc.id)
+    : { data: [] };
+  const { data: invSigned } = await db.from("document_signature_signers").select("id").in("signature_id", ((sigs ?? []) as any[]).filter((s) => !s.cancelled_at && !s.superseded_by).map((s) => s.id).concat(["00000000-0000-0000-0000-000000000000"])).neq("role_key", "fund_manager").eq("status", "signed").limit(1);
+  const investorSigned = ((sigs ?? []) as any[]).some((s) => !s.cancelled_at && !s.superseded_by && s.provider_status === "completed") || Boolean((invSigned ?? []).length);
+  const refusal = decisionRefusal({ investorSigned, decision: input.decision, note });
+  if (refusal) throw new Error(refusal);
   const { error } = await db.from("investor_document_approvals").insert({
     offering_id: input.offeringId, onboarding_id: ob.id, offering_document_id: doc.id, version: doc.active_version ?? null,
     decision: input.decision, note, decided_by: userId,
   });
   if (error) throw new Error(error.message);
-  await db.from("offering_document_events").insert({ offering_id: input.offeringId, offering_document_id: doc.id, version: doc.active_version, event: input.decision === "approved" ? "approved_for_investor" : "returned_for_investor", actor_user_id: userId, detail: { onboardingId: ob.id } }).then(() => null, () => null);
+  await db.from("offering_document_events").insert({ offering_id: input.offeringId, offering_document_id: doc.id, version: doc.active_version, event: input.decision === "approved" ? "approved_for_investor" : "returned_for_investor", actor_user_id: userId, detail: { onboardingId: ob.id, afterSigning: true } }).then(() => null, () => null);
+  if (input.decision === "returned") {
+    const { data: ex } = await db.from("investor_onboarding_exceptions")
+      .insert({ onboarding_id: ob.id, exception_type: "manager_declined_documents", severity: "blocking", owner: "harmonious", detail: `Fund manager declined ${doc.title}: ${note}`, raised_by: userId })
+      .select("id").single().then((r: any) => r, () => ({ data: null }));
+    const { notifyDocumentsDeclined } = await import("@/lib/investor-blocked-notify.server");
+    await notifyDocumentsDeclined({ onboardingId: ob.id, offeringId: input.offeringId, investorUserId: ob.investor_user_id ?? null, documentTitle: doc.title, ref: ex?.id ?? `${ob.id}:${doc.id}` });
+  }
   return { ok: true };
 }
 
