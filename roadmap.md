@@ -1,5 +1,12 @@
 # Roadmap
 
+## Isolated diagnostic QA provisioning review (2026-10-21)
+- [ ] Inspect existing development-backend/draft provisioning options and costs without production changes; identify fictional fixtures and reusable harness.
+- [ ] Prove independent backend, actual frontend binding and synthetic staff/manager/investor authority; run existing preflight before authenticated checks — blocked until isolation exists.
+- [ ] Verify failed-read/retry, audit filtering, recipient authorization and stale-job screens only after preflight passes; report passed/failed/blocked separately.
+- [ ] Track email-message association and hardcoded diagnostic header defects explicitly; repairs deferred outside this validation phase.
+- Phase one accepted as offline-verified only, not fully verified or client-ready; no client/investor resolution messages before affected-flow verification. Webhook recovery, payments, drafts and retention excluded.
+
 ## Diagnostic repairs — narrow phase 1 (2026-10-21)
 - [x] Current backend metadata confirms production/no development instance; preflight blocks before navigation without reviewed isolation and synthetic sessions.
 - [x] Repair existing health/audit failed reads, recursive display filtering, email diagnostic authorization, and stale job display; no business outcomes changed.
