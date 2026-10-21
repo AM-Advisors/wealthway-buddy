@@ -512,6 +512,12 @@ export function outstandingRequirements(
 
 // ------------------------------------------------------------- amounts
 
+/** A commitment below the fund minimum is accepted only with a side letter. */
+export function sideLetterRequired(amountCents: number, minInvestmentCents: number | null | undefined): boolean {
+  const min = Number(minInvestmentCents ?? 0);
+  return min > 0 && Number.isFinite(amountCents) && amountCents > 0 && amountCents < min;
+}
+
 export function amountError(amountCents: number, offering: OfferingRequirements): string | null {
   if (!Number.isFinite(amountCents) || amountCents <= 0) return "Enter the amount you would like to invest.";
   if (!Number.isInteger(amountCents)) return "Enter a whole amount.";
