@@ -35,7 +35,7 @@ export const ABOUT_HARMONIOUS =
 
 export type MsaFacts = { version: string; effectiveDate: string | null; sections: { section_no: string; title: string; body: string }[] } | null;
 export const NO_MSA_TERMS = "Terms will be provided in the Master Services Agreement.";
-export const termsTitle = (msa: MsaFacts) => msa ? `Terms — Master Services Agreement ${msa.version}` : "Terms";
+export const termsTitle = (msa: MsaFacts) => msa ? "Terms — Master Services Agreement" : "Terms";
 
 export type LockFacts = { msa?: MsaFacts; about?: string | null; organization: string | null; contactName: string | null; lines: { label: string; quantity: number; unit_cents: number; line_cents: number; billing_frequency?: string | null }[] };
 
@@ -93,7 +93,7 @@ export function pricingText(lines: LockFacts["lines"]): string {
 
 export function termsText(msa: MsaFacts | undefined): string {
   if (!msa || !msa.sections.length) return NO_MSA_TERMS;
-  const head = `These terms are the Harmonious Master Services Agreement ${msa.version}${msa.effectiveDate ? `, effective ${msa.effectiveDate}` : ""}.`;
+  const head = "These terms are the Harmonious Master Services Agreement.";
   return [head, ...msa.sections.map((x) => `${x.section_no}. ${x.title}\n${x.body.trim()}`)].join("\n\n");
 }
 

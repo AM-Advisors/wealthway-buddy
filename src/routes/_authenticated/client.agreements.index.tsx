@@ -86,9 +86,9 @@ function AgreementsHome() {
             </CardTitle>
             <CardDescription>
               {msa.executedAt && !msa.needsReview
-                ? `Version ${msa.acceptedVersion} executed ${date(msa.executedAt)}. Nothing to do.`
+                ? `Executed ${date(msa.executedAt)}. Nothing to do.`
                 : msa.currentVersion
-                  ? `Version ${msa.currentVersion} is waiting for your review.`
+                  ? "The current agreement is waiting for your review."
                   : "No master agreement has been published yet."}
             </CardDescription>
           </div>

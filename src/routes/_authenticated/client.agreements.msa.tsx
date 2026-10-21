@@ -44,8 +44,7 @@ function MsaPage() {
           <h1 className="text-2xl font-semibold tracking-tight">Master Services Agreement</h1>
           {data && (
             <p className="text-sm text-muted-foreground">
-              Version {data.version.version} · effective{" "}
-              {new Date(data.version.effectiveDate).toLocaleDateString("en-US")}
+              Effective {new Date(data.version.effectiveDate).toLocaleDateString("en-US")}
             </p>
           )}
         </div>

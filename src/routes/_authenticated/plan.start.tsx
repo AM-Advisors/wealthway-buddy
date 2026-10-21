@@ -120,7 +120,7 @@ function PlanStart() {
           <Card>
             <CardHeader><CardTitle className="text-lg">Statement of Work</CardTitle></CardHeader>
             <CardContent className="space-y-4 text-sm">
-              <p>This Statement of Work is entered into under the {HARMONIOUS_LEGAL_NAME} Master Services Agreement ({SAAS_MSA_VERSION}). Prices are fixed for the term below and billed {interval === "annual" ? "yearly" : "quarterly"} by card.</p>
+              <p>This Statement of Work is entered into under the {HARMONIOUS_LEGAL_NAME} Master Services Agreement. Prices are fixed for the term below and billed {interval === "annual" ? "yearly" : "quarterly"} by card.</p>
               <Totals priced={priced} per={per} />
               <details className="rounded-md border p-3" open>
                 <summary className="cursor-pointer font-medium">Master Services Agreement (standard terms)</summary>
