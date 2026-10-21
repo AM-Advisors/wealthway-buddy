@@ -861,7 +861,35 @@ export async function saveQuestionnaire(
     actorUserId: actor.userId,
     actorRole: "investor",
   });
-  return { saved: true };
+  const flagged = input.submit ? highRiskYes(questions, answers) : [];
+  if (flagged.length) await holdForHighRiskDisclosure(row, actor.userId, flagged);
+  return { saved: true, underReview: flagged.length > 0 };
+}
+
+export const HIGH_RISK_DETAIL_PREFIX = "Investor answered Yes to high-risk question";
+
+/** A bad-actor "Yes" opens one blocking compliance issue and tells Harmonious and the fund team. */
+async function holdForHighRiskDisclosure(row: any, actorUserId: string, flagged: { number: number }[]) {
+  const nums = flagged.map((f) => f.number).join(", ");
+  const { data: open } = await db()
+    .from("investor_onboarding_exceptions")
+    .select("id, detail")
+    .eq("onboarding_id", row.id)
+    .eq("status", "open")
+    .eq("exception_type", "aml_review");
+  if (((open ?? []) as any[]).some((e) => String(e.detail ?? "").startsWith(HIGH_RISK_DETAIL_PREFIX))) return;
+  const detail = `${HIGH_RISK_DETAIL_PREFIX}${flagged.length > 1 ? "s" : ""} ${nums}. May not be eligible to invest; Harmonious must review before signing or funding.`;
+  const { data: ex, error } = await db()
+    .from("investor_onboarding_exceptions")
+    .insert({ onboarding_id: row.id, exception_type: "aml_review", severity: "blocking", owner: "harmonious", detail, raised_by: actorUserId })
+    .select("id")
+    .single();
+  if (error) { console.error("[high-risk hold]", error.message); return; }
+  await recordEvent({ onboardingId: row.id, offeringId: row.offering_id, event: "exception_raised", toStatus: "aml_review", subjectTable: "investor_onboarding_exceptions", subjectId: ex.id, detail: { reason: "high_risk_disclosure", questions: nums }, actorUserId, actorRole: "investor" });
+  try {
+    const { notifyHighRiskDisclosure } = await import("@/lib/investor-blocked-notify.server");
+    await notifyHighRiskDisclosure({ onboardingId: row.id, offeringId: row.offering_id, investorUserId: row.investor_user_id ?? null, questions: nums, ref: ex.id });
+  } catch (e) { console.error("[high-risk notify]", (e as Error).message); }
 }
 
 /**
@@ -877,6 +905,9 @@ export async function prepareSubscriptionDocuments(userId: string, onboardingId:
     (r) => !["subscription_documents", "signature", "funding"].includes(r.key),
   );
   if (missing.length > 0) fail(`${missing[0]!.label} must be completed first.`);
+  if ((await openExceptions(row.id)).some((e: any) => e.severity === "blocking")) {
+    fail("Your investment is under review. We'll notify you about next steps.");
+  }
 
   const { data: documents } = await db()
     .from("offering_documents")
