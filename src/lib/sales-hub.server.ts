@@ -209,7 +209,7 @@ export async function logOutreach(userId: string, d: { contactId: string; channe
   return { ok: true };
 }
 
-export async function sendOutreach(userId: string, d: { contactId: string; channel: "email" | "text" | "whatsapp"; subject?: string | null | undefined; body: string; html?: string | undefined; serviceKey?: string | null | undefined; visibility: "team" | "private" }) {
+export async function sendOutreach(userId: string, d: { contactId: string; channel: "email" | "text" | "whatsapp"; subject?: string | null | undefined; body: string; html?: string | undefined; cc?: string[] | undefined; serviceKey?: string | null | undefined; visibility: "team" | "private" }) {
   const a = await salesActor(userId);
   const c = await loadContact(a, d.contactId);
   const db = await admin();
@@ -222,7 +222,7 @@ export async function sendOutreach(userId: string, d: { contactId: string; chann
     // Send from the rep's own connected Google inbox when they have one;
     // otherwise fall back to the shared Harmonious sender.
     const { sendGmailAsUser } = await import("@/lib/gmail.server");
-    const gmailId = await sendGmailAsUser(userId, { to: c.email, subject: d.subject || "Following up", body: d.body, html: d.html }).catch((e) => {
+    const gmailId = await sendGmailAsUser(userId, { to: c.email, cc: d.cc, subject: d.subject || "Following up", body: d.body, html: d.html }).catch((e) => {
       console.error("Gmail outreach send failed", e);
       return null;
     });
@@ -235,6 +235,10 @@ export async function sendOutreach(userId: string, d: { contactId: string; chann
         res = await sendTemplateEmail("crm-campaign", c.email, { templateData: { subject: d.subject || "Following up", body: d.body, fundName: null } });
       } catch (e) { console.error("Sales email failed", e); throw new Error("The email couldn't be sent. Please try again."); }
       if (!res.sent) throw new Error("This address is on the do-not-email list.");
+      // Shared sender has no Cc header: send each copied teammate their own copy.
+      for (const cc of d.cc ?? []) {
+        await sendTemplateEmail("crm-campaign", cc, { templateData: { subject: `(Copy) ${d.subject || "Following up"}`, body: `Copy of the email sent to ${c.email}:\n\n${d.body}`, fundName: null } }).catch((e) => console.error("Sales cc failed", e));
+      }
     }
   } else {
     if (!c.phone) throw new Error("This contact has no phone number.");

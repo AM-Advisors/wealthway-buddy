@@ -344,8 +344,10 @@ async function approvedSections(a: Awaited<ReturnType<typeof access>>) {
   return (data?.sections ?? []) as Section[];
 }
 
-export async function sendDocument(userId: string, id: string, d: { subject: string; message: string }) {
+export async function sendDocument(userId: string, id: string, d: { subject: string; message: string; ccUserIds?: string[] | undefined }) {
   const a = await access(userId, id);
+  const allowed = await listCcOptions(userId);
+  const cc = [...new Set((d.ccUserIds ?? []).map((u) => allowed.find((o) => o.userId === u)?.email).filter((e): e is string => !!e))];
   if (!a.isOwner || (a.doc.status !== "approved" && !a.execDirect)) throw new Error("Only an approved document can be sent, by its owner.");
   if (a.execDirect) {
     const now = new Date().toISOString();
@@ -370,9 +372,9 @@ export async function sendDocument(userId: string, id: string, d: { subject: str
     + sections.map((s) => `<h3 style="color:#142647;font-family:Rubik,Arial,sans-serif;margin:20px 0 6px">${esc(s.title)}</h3>${s.question ? `<p style="color:#666"><em>Question: ${esc(s.question)}</em></p>` : ""}${para(s.body || "")}`).join("")
     + `<img src="${pixel}" width="1" height="1" alt="" style="display:none"/></body></html>`;
   const { sendOutreach } = await import("@/lib/sales-hub.server");
-  await sendOutreach(userId, { contactId: a.doc.contact_id, channel: "email", subject: d.subject, body: `${d.message}\n\nView the full document: ${link}\n\n---\n${a.doc.title}\n\n${sectionsText(sections)}`, html, visibility: "team" });
+  await sendOutreach(userId, { contactId: a.doc.contact_id, channel: "email", subject: d.subject, body: `${d.message}\n\nView the full document: ${link}\n\n---\n${a.doc.title}\n\n${sectionsText(sections)}`, html, cc, visibility: "team" });
   await a.db.from("sales_documents").update({ status: "sent", sent_at: new Date().toISOString(), sent_to: recipient, updated_at: new Date().toISOString() }).eq("id", id);
-  await event(a.db, id, userId, "sent", { version: a.doc.approved_version });
+  await event(a.db, id, userId, "sent", { version: a.doc.approved_version, cc });
   return { ok: true };
 }
 
@@ -435,4 +437,18 @@ export async function createProspect(userId: string, d: { email: string; fullNam
   const { saveContact } = await import("@/lib/crm.server");
   const r = await saveContact(userId, { full_name: d.fullName, email: existing.email, organization: d.organization ?? null, title: d.title ?? null, phone: d.phone ?? null, source: "Proposals", tags: ["prospect"], scope: "harmonious", offering_id: null } as any);
   return { contactId: r.id, reused: false };
+}
+
+/** Harmonious Sales team members who may be copied on a proposal/RFP/RFQ email. Sales staff only. */
+export async function listCcOptions(userId: string) {
+  const { salesActor } = await import("@/lib/sales-hub.server");
+  await salesActor(userId);
+  const db = await admin();
+  const roles = ["sales", "sales_management", "cro", "account_executive", "bdr", "account_manager", "executive"];
+  const { data: r } = await db.from("user_roles").select("user_id").in("role", roles);
+  const ids = [...new Set(((r ?? []) as any[]).map((x) => String(x.user_id)))];
+  if (!ids.length) return [] as { userId: string; name: string; email: string }[];
+  const { data: p } = await db.from("profiles").select("user_id, legal_name, email").in("user_id", ids);
+  return ((p ?? []) as any[]).filter((x) => x.email).map((x) => ({ userId: String(x.user_id), name: String(x.legal_name || x.email), email: String(x.email).toLowerCase() }))
+    .sort((a, b) => a.name.localeCompare(b.name));
 }
