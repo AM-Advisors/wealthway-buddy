@@ -34,10 +34,16 @@ function DocRow({ offeringId, onboardingId, title, version, d, readOnly }: { off
   const [returning, setReturning] = useState(false);
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
-  const act = async (decision: "approved" | "returned") => {
+  const navigate = useNavigate();
+  const act = async (decision: "approved" | "returned", thenSign = false) => {
     setBusy(true);
     try {
       await decide({ data: { offeringId, onboardingId, documentId: d.documentId, decision, note: decision === "returned" ? note : null } });
+      if (thenSign && d.countersignSignerId) {
+        toast.success("Approved - opening your signature now.");
+        navigate({ to: "/manager/countersign/$signerId", params: { signerId: d.countersignSignerId } });
+        return;
+      }
       toast.success(decision === "approved" ? "Approved - your countersignature is now open." : "Declined - the investment is paused and Harmonious has been told.");
       setReturning(false); setNote("");
       qc.invalidateQueries({ queryKey: ["doc-reviews", offeringId] });
@@ -57,10 +63,17 @@ function DocRow({ offeringId, onboardingId, title, version, d, readOnly }: { off
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {!d.signed ? <Badge variant="outline">Investor hasn't signed yet</Badge> : d.decision === "approved" ? <Badge>Approved</Badge> : d.decision === "returned" ? <Badge variant="destructive">Declined</Badge> : <Badge variant="secondary">Signed - awaiting your decision</Badge>}
-          {d.signed ? <SignedCopyButton offeringId={offeringId} signatureId={d.signed.signatureId} /> : null}
+          {d.signed && d.decision === "approved" && d.countersignSignerId && !readOnly ? (
+            <Button size="sm" onClick={() => navigate({ to: "/manager/countersign/$signerId", params: { signerId: d.countersignSignerId } })}>Sign now</Button>
+          ) : null}
+          {d.signed?.hasCopy ? <SignedCopyButton offeringId={offeringId} signatureId={d.signed.signatureId} /> : null}
           {d.signed && !readOnly && !d.decision ? (
             <>
-              <Button size="sm" disabled={busy} onClick={() => act("approved")}>Approve</Button>
+              {d.countersignSignerId ? (
+                <Button size="sm" disabled={busy} onClick={() => act("approved", true)}>Approve &amp; sign</Button>
+              ) : (
+                <Button size="sm" disabled={busy} onClick={() => act("approved")}>Approve</Button>
+              )}
               <Button size="sm" variant="outline" disabled={busy} onClick={() => setReturning((v) => !v)}>Decline</Button>
             </>
           ) : null}
