@@ -45,8 +45,8 @@ describe("aggregateOnboardingHoldings", () => {
       new Map([["fund-1", offering]]),
     );
     expect(rows).toHaveLength(1);
-    expect(rows[0].commitment_cents).toBe(75000000);
-    expect(rows[0].funded_cents).toBe(10000000);
+    expect(rows[0]!.commitment_cents).toBe(75000000);
+    expect(rows[0]!.funded_cents).toBe(10000000);
   });
 
   it("skips onboarding rows whose fund is unknown", () => {
@@ -59,9 +59,9 @@ describe("aggregateOnboardingHoldings", () => {
       [onboarding({ commitment_amount_cents: null, funded_amount_cents: null })],
       new Map([["fund-1", offering]]),
     );
-    expect(rows[0].commitment_cents).toBe(0);
-    expect(rows[0].equity_value_cents).toBe(0);
-    expect(rows[0].pct_of_committed).toBe(0);
+    expect(rows[0]!.commitment_cents).toBe(0);
+    expect(rows[0]!.equity_value_cents).toBe(0);
+    expect(rows[0]!.pct_of_committed).toBe(0);
   });
 
   it("does not show investments that have not reached the signature stage", () => {

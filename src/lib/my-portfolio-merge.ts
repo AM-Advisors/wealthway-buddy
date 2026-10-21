@@ -83,10 +83,8 @@ export function aggregateOnboardingHoldings(
  * The server function returns a plain array; older consumers read `data.funds`.
  * Accept both shapes so a populated response is never rendered as empty.
  */
-export function portfolioRowsFromResponse(
-  data: unknown,
-): { offering_id: string; offering_name?: string }[] {
-  if (Array.isArray(data)) return data as { offering_id: string }[];
+export function portfolioRowsFromResponse<T = any>(data: unknown): T[] {
+  if (Array.isArray(data)) return data as T[];
   const funds = (data as { funds?: unknown } | null)?.funds;
-  return Array.isArray(funds) ? (funds as { offering_id: string }[]) : [];
+  return Array.isArray(funds) ? (funds as T[]) : [];
 }
