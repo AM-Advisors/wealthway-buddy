@@ -22,7 +22,6 @@ import { FundRequests } from "@/components/fund-requests";
 import { updateSetupTaskFn } from "@/lib/fund-setup.functions";
 import { Link } from "@tanstack/react-router";
 import { CloseRequestReview } from "@/components/close-request-review";
-import { FundPayments } from "@/components/fund-payments";
 import { FundDistributions } from "@/components/fund-distributions";
 import { listAllCloseRequests } from "@/lib/fund-close-requests.functions";
 import { useServerFn } from "@tanstack/react-start";
@@ -42,7 +41,8 @@ import { CapitalTieReport } from "@/components/investor-share-panel";
 import { FundUpdatesPanel } from "@/components/investor-onboarding-extras";
 import { DocumentsTab } from "@/components/fund-tabs/documents-tab";
 import { AuditHistoryTab } from "@/components/fund-tabs/audit-history-tab";
-import { BankingTab, FundBooks } from "@/components/fund-tabs/banking-tab";
+import { BankingTab } from "@/components/fund-tabs/banking-tab";
+import { AccountingWorkspace } from "@/components/fund-tabs/accounting-workspace";
 import { RequestCloseDialog } from "@/components/fund-tabs/request-close-dialog";
 import { fundRegulatoryFn } from "@/lib/fund-regulatory.functions";
 import { nextDeadline } from "@/lib/fund-health";
@@ -307,9 +307,7 @@ export function FundWorkspace({ fundId, tab, onTab, mode = "client", extraTabs =
         <TabsContent value="investors" className="space-y-4">{staff && migrationApplies(f.fund_origin) && <FundMigrationStatus fundId={fundId} />}{staff && migrationApplies(f.fund_origin) && <MigrationPaymentsCard fundId={fundId} />}<InvestorsTab fundId={fundId} workQueue={staff ? <ReadinessQueue offeringId={fundId} initialTab="all" /> : undefined} /><CapitalTieReport offeringId={fundId} /><FundUpdatesPanel fundId={fundId} /></TabsContent>
 
 
-        <TabsContent value="accounting" className="space-y-5"><FundBooks fundId={fundId} />
-{staff && <Card><CardHeader><CardTitle className="text-base">Harmonious: fees, invoices and payments received</CardTitle><CardDescription>Bill fees, issue invoices and record wire/ACH receipts for this fund. Nothing is charged or moved automatically.</CardDescription></CardHeader><CardContent><FundPayments fundId={fundId} backTo="admin" /></CardContent></Card>}
-<AccountTab fundId={fundId} fundName={String(f.name ?? "Fund")} taxDocs={td?.taxDocs ?? []} /></TabsContent>
+        <TabsContent value="accounting"><AccountingWorkspace fundId={fundId} staff={staff} extra={<AccountTab fundId={fundId} fundName={String(f.name ?? "Fund")} taxDocs={td?.taxDocs ?? []} />} /></TabsContent>
 
         <TabsContent value="assets" className="space-y-5">
           {!!td?.assets.length && (

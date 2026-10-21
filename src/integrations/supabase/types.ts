@@ -3356,6 +3356,8 @@ export type Database = {
           bank_name: string | null
           closing_balance_cents: number | null
           created_at: string
+          entered_by: string | null
+          entered_manually: boolean
           file_name: string
           id: string
           offering_id: string
@@ -3374,6 +3376,8 @@ export type Database = {
           bank_name?: string | null
           closing_balance_cents?: number | null
           created_at?: string
+          entered_by?: string | null
+          entered_manually?: boolean
           file_name: string
           id?: string
           offering_id: string
@@ -3392,6 +3396,8 @@ export type Database = {
           bank_name?: string | null
           closing_balance_cents?: number | null
           created_at?: string
+          entered_by?: string | null
+          entered_manually?: boolean
           file_name?: string
           id?: string
           offering_id?: string
@@ -20276,6 +20282,7 @@ export type Database = {
           amount_cents: number
           bank_line_id: string | null
           bank_transaction_id: string | null
+          bill_copy_path: string | null
           book_id: string
           category: string
           created_at: string
@@ -20308,6 +20315,7 @@ export type Database = {
           amount_cents: number
           bank_line_id?: string | null
           bank_transaction_id?: string | null
+          bill_copy_path?: string | null
           book_id: string
           category: string
           created_at?: string
@@ -20340,6 +20348,7 @@ export type Database = {
           amount_cents?: number
           bank_line_id?: string | null
           bank_transaction_id?: string | null
+          bill_copy_path?: string | null
           book_id?: string
           category?: string
           created_at?: string

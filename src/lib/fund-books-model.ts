@@ -120,3 +120,22 @@ export function statementLineBooksAction(i: { category: string; alreadyBooked: b
   if (i.alreadyBooked) return "skip";
   return i.category === "Transfer (not income)" ? "skip" : "ledger";
 }
+
+/** A past-dated record (paid on / posted on) must be a real date and not in the future. */
+export function pastDateError(dateStr: string | null | undefined, today: string, label = "The date"): string | null {
+  if (!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return `${label} is required.`;
+  if (dateStr > today) return `${label} can't be in the future.`;
+  return null;
+}
+
+/** Validate a hand-entered statement line before saving it. */
+export function manualLineError(l: { postedOn: string; description: string; amountCents: number; direction: string }, period: { start: string | null; end: string | null }, today: string): string | null {
+  const d = pastDateError(l.postedOn, today, "The line date");
+  if (d) return d;
+  if (period.start && l.postedOn < period.start) return "The line date is before the statement period.";
+  if (period.end && l.postedOn > period.end) return "The line date is after the statement period.";
+  if (!l.description.trim()) return "Add a description.";
+  if (!Number.isInteger(l.amountCents) || l.amountCents <= 0) return "Enter an amount above zero.";
+  if (l.direction !== "in" && l.direction !== "out") return "Choose money in or money out.";
+  return null;
+}

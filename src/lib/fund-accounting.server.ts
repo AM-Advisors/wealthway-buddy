@@ -268,6 +268,8 @@ export async function prepareExpense(userId: string, i: {
   paidOn: string | null; sourceReference: string; evidenceReference: string | null; bankLineId: string | null; bankTransactionId?: string | null | undefined;
 }) {
   const { bookId } = await authorizeFund(userId, i.offeringId);
+  { const { pastDateError } = await import("@/lib/fund-books-model"); const today = new Date().toISOString().slice(0, 10);
+    if (i.paymentMode === "paid") { const pe = pastDateError(i.paidOn, today, "The paid date"); if (pe) fail(pe); } }
   const err = expenseError(i);
   if (err) fail(err);
   if (i.paymentMode === "accrued" && (i.bankLineId || i.bankTransactionId)) fail("An accrued expense has no cash movement.");
@@ -304,6 +306,7 @@ export async function prepareSettlement(userId: string, i: {
   amountCents: number; paidOn: string; sourceReference: string; idempotencyKey: string; bankLineId: string | null; bankTransactionId?: string | null | undefined;
 }) {
   const { bookId } = await authorizeFund(userId, i.offeringId);
+  { const { pastDateError } = await import("@/lib/fund-books-model"); const pe = pastDateError(i.paidOn, new Date().toISOString().slice(0, 10), "The paid date"); if (pe) fail(pe); }
   if (!i.expenseId && !i.openingLiabilityReference?.trim()) fail("Name the accrued expense or the opening liability being settled.");
   const { data: existing } = await db().from("fund_payable_settlements").select("id").eq("offering_id", i.offeringId).eq("idempotency_key", i.idempotencyKey).maybeSingle();
   if (existing) return { id: String(existing.id), duplicate: true };
