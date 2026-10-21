@@ -12,9 +12,9 @@ export function einComplete(input: { status: string | null | undefined; hasLette
   return input.status === "recorded" && (input.hasLetter || input.hasSignedW9 === true);
 }
 
-/** Banking box is complete with a bank name, an account on file and the bank letter. */
-export function bankComplete(input: { bankName?: string | null | undefined; accountMasked?: string | null | undefined; hasLetter: boolean }) {
-  return !!input.bankName?.trim() && !!input.accountMasked?.replace(/\D/g, "").length && input.hasLetter;
+/** Banking box is complete with a bank name and an account on file; the bank letter is optional. */
+export function bankComplete(input: { bankName?: string | null | undefined; accountMasked?: string | null | undefined; hasLetter?: boolean }) {
+  return !!input.bankName?.trim() && !!input.accountMasked?.replace(/\D/g, "").length;
 }
 
 /** Staff bank entry: both numbers typed twice and matching; routing is 9 digits. */
