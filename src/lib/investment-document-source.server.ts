@@ -3,7 +3,7 @@ import { fillSubscriptionDocx } from "./subscription-docx";
 
 /** Called only after the caller has authorized this document and investment. */
 export async function investmentDocumentSource(db: any, documentId: string, applicationId: string | null, snapshotValues?: Record<string, string>) {
-  const { data: doc, error } = await db.from("offering_documents").select("id, offering_id, body, file_path, active_version, document_category").eq("id", documentId).single();
+  const { data: doc, error } = await db.from("offering_documents").select("id, offering_id, body, file_path, active_version, document_category, signing_mode, countersigner_user_id").eq("id", documentId).single();
   if (error || !doc) throw new Error("The agreement could not be loaded.");
   const [versions, investment, signature] = await Promise.all([
     db.from("offering_document_versions").select("id,version,file_path,file_name,target_onboarding_id,rollout_scope").eq("offering_document_id", doc.id),
@@ -45,6 +45,7 @@ export async function investmentDocumentSource(db: any, documentId: string, appl
       "Tax Classification": taxForm, "IRS Form": taxForm, "Subscriber Tax Form": taxForm,
       "Subscriber Type": locked[PREFILL_KEYS.businessType] ?? null,
       __investor_is_entity: isEntity ? "1" : null,
+      __fund_countersigns: doc.signing_mode === "dual" && doc.countersigner_user_id && doc.countersigner_user_id !== ob.investor_user_id ? "1" : null,
       "Subscriber Legal Name": snapshotValues?.["entity_legal_name"] || snapshotValues?.["investor_legal_name"] || name,
       "Investor Subscription Amount": snapshotValues?.["commitment_amount"] || amount,
       "Investor Signer Name": snapshotValues?.["signer_name"] || (profile.data?.profile_type === "individual" ? name : null),

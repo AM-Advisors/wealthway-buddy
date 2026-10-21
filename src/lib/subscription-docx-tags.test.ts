@@ -23,3 +23,19 @@ describe("subscription signature page Box fields", () => {
     expect(xml).not.toContain("{{Signature}}");
   });
 });
+
+describe("fund countersignature placement", () => {
+  it("puts the fund signatory's fields in the Acceptance of Subscription block, not on the investor's lines", async () => {
+    const body = [para("Subscription Amount:"), para("Signature:"), para("Date:"), para("ACCEPTANCE OF SUBSCRIPTION"), para("Signature: {{Signature}}"), para("Date: {{Date}}")].join("");
+    const xml = await xmlOf((await fillSubscriptionDocx(await docx(body), { __fund_countersigns: "1" })).bytes);
+    const accept = xml.indexOf("ACCEPTANCE OF");
+    expect(xml.indexOf("[[s|2]]")).toBeGreaterThan(accept);
+    expect(xml.indexOf("[[d|2]]")).toBeGreaterThan(accept);
+    expect(xml.indexOf("[[s|1]]")).toBeLessThan(accept);
+  });
+  it("adds no fund fields when the document has no countersignature", async () => {
+    const body = [para("Subscription Amount:"), para("Signature:"), para("ACCEPTANCE OF SUBSCRIPTION"), para("Signature:")].join("");
+    const xml = await xmlOf((await fillSubscriptionDocx(await docx(body), {})).bytes);
+    expect(xml).not.toContain("[[s|2]]");
+  });
+});
