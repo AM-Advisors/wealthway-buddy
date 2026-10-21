@@ -26,6 +26,13 @@ export const managerInvestorSignedCopyFn = createServerFn({ method: "POST" }).mi
     return (await import("./investor-review-evidence.server")).managerInvestorSignedCopy(await s.db(), context.userId, data);
   });
 
+export const managerInvestorTaxFormFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator(fund.extend({ onboardingId: uuid, taxFormId: uuid }).parse)
+  .handler(async ({ data, context }) => {
+    const s = await srv();
+    return (await import("./investor-review-evidence.server")).managerInvestorTaxForm(await s.db(), context.userId, data);
+  });
+
 export const fundTeamFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator(fund.parse)
   .handler(async ({ data, context }) => { const s = await srv(); const a = await s.assertFund(context.userId, data.fundId); return { ...(await s.team(data.fundId)), staff: a.staff, me: context.userId }; });
 

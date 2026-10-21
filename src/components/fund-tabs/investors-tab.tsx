@@ -15,7 +15,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { FundOnboardingLinkCard } from "@/components/fund-onboarding-link";
 import { approveToFundFn, fundReadinessFn } from "@/lib/investor-onboarding.functions";
 import { STAGE_LABELS, type OnboardingStage } from "@/lib/investor-onboarding-model";
-import { investorDetailFn, investorGridFn, lastRemindersFn, sendInvestorRemindersFn, managerInvestorSignedCopyFn } from "@/lib/fund-tabs.functions";
+import { investorDetailFn, investorGridFn, lastRemindersFn, sendInvestorRemindersFn, managerInvestorSignedCopyFn, managerInvestorTaxFormFn } from "@/lib/fund-tabs.functions";
 import { bulkSendKycLinksFn, bulkSetClassFn, listInvestorDuplicatesFn, mergeInvestorsFn, requestMissingInfoFn } from "@/lib/investor-bulk.functions";
 import { reminderAllowed, reminderStep } from "@/lib/fund-health";
 import { toast } from "sonner";
@@ -252,6 +252,7 @@ export function InvestorSheet({ fundId, id, onClose }: { fundId: string; id: str
   const load = useServerFn(investorDetailFn);
   const approve = useServerFn(approveToFundFn);
   const downloadSigned = useServerFn(managerInvestorSignedCopyFn);
+  const openTaxForm = useServerFn(managerInvestorTaxFormFn);
   const [downloading, setDownloading] = useState<string | null>(null);
   const [approving, setApproving] = useState(false);
   const q = useQuery({ queryKey: ["fund-investor", fundId, id], queryFn: () => {
@@ -318,6 +319,16 @@ export function InvestorSheet({ fundId, id, onClose }: { fundId: string; id: str
                     finally { setDownloading(null); }
                   }}>{downloading === doc.id ? "Opening…" : "Download signed copy"}</Button> : <span className="text-muted-foreground">Signed copy pending</span>}
                 </div>) : <p className="text-muted-foreground">No submitted signed documents yet.</p>}
+                {(d.reviewEvidence.taxForms ?? []).map((tf: { id: string; label: string; certifiedAt: string | null; hasCopy: boolean }) => <div key={tf.id} className="flex flex-wrap items-center justify-between gap-2 border-b pb-3">
+                  <div className="min-w-0"><p className="font-medium">Tax form ({tf.label})</p><p className="text-xs text-muted-foreground">{tf.certifiedAt ? `${fmtDate(tf.certifiedAt)} · ` : ""}Signed</p></div>
+                  {tf.hasCopy ? <Button size="sm" variant="outline" disabled={downloading !== null} onClick={async () => {
+                    if (!id) return;
+                    setDownloading(tf.id);
+                    try { const result = await openTaxForm({ data: { fundId, onboardingId: id, taxFormId: tf.id } }); const link = document.createElement("a"); link.href = result.url; link.download = ""; link.rel = "noreferrer"; link.click(); }
+                    catch (error) { toast.error(error instanceof Error ? error.message : "The signed tax form could not be opened."); }
+                    finally { setDownloading(null); }
+                  }}>{downloading === tf.id ? "Opening…" : `Download ${tf.label}`}</Button> : <span className="text-muted-foreground">Signed copy pending</span>}
+                </div>)}
                 {d.reviewEvidence.acknowledgments.map((doc: { id: string; title: string; version: number; acknowledgedAt: string }) => <div key={doc.id} className="border-b pb-2"><p className="font-medium">{doc.title}</p><p className="text-xs text-muted-foreground">Version {doc.version} · {fmtDate(doc.acknowledgedAt)} · Acknowledged and agreed</p></div>)}
               </section>
               <section className="space-y-3" aria-label="Investor questionnaire">
