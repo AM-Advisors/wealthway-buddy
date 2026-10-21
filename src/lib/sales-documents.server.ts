@@ -344,40 +344,70 @@ async function approvedSections(a: Awaited<ReturnType<typeof access>>) {
   return (data?.sections ?? []) as Section[];
 }
 
-export async function sendDocument(userId: string, id: string, d: { subject: string; message: string; ccUserIds?: string[] | undefined }) {
+export async function sendDocument(userId: string, id: string, d: { subject: string; message: string; ccUserIds?: string[] | undefined; toContactIds?: string[] | undefined; signerContactIds?: string[] | undefined; extraCc?: string[] | undefined }) {
   const a = await access(userId, id);
   const allowed = await listCcOptions(userId);
-  const cc = [...new Set((d.ccUserIds ?? []).map((u) => allowed.find((o) => o.userId === u)?.email).filter((e): e is string => !!e))];
+  const emailRe = /^[^\s@<>,;]+@[^\s@<>,;]+\.[^\s@<>,;]+$/;
+  const extra = (d.extraCc ?? []).map((e) => e.trim().toLowerCase()).filter(Boolean);
+  if (extra.some((e) => !emailRe.test(e))) throw new Error("One of the extra CC addresses isn't a valid email.");
+  const ccAll = [...new Set([...(d.ccUserIds ?? []).map((u) => allowed.find((o) => o.userId === u)?.email).filter((e): e is string => !!e), ...extra])];
   if (!a.isOwner || (a.doc.status !== "approved" && !a.execDirect)) throw new Error("Only an approved document can be sent, by its owner.");
+  if (!a.doc.contact_id) throw new Error("Link a contact with an email address before sending.");
+  const team = await listClientTeam(userId, id);
+  const toIds = d.toContactIds?.length ? d.toContactIds : [a.doc.contact_id];
+  const to = toIds.map((c) => team.find((t) => t.contactId === c)).filter((t): t is NonNullable<typeof t> => !!t);
+  if (to.length !== toIds.length) throw new Error("One of the selected recipients isn't on this client's team.");
+  const signerIds = new Set(d.signerContactIds ?? (d.toContactIds ? [] : [a.doc.contact_id]));
+  if ([...signerIds].some((s) => !toIds.includes(s))) throw new Error("Signers must be among the people you're sending to.");
+  if (!signerIds.size) throw new Error("Choose at least one person who can sign.");
+  const cc = ccAll.filter((e) => !to.some((t) => t.email === e));
   if (a.execDirect) {
     const now = new Date().toISOString();
     await a.db.from("sales_documents").update({ status: "approved", approved_version: a.doc.current_version, approved_by: userId, approved_at: now, updated_at: now }).eq("id", id);
     await event(a.db, id, userId, "approved", { version: a.doc.current_version, note: "Sent directly by CRO/CEO without separate approval" });
     a.doc.approved_version = a.doc.current_version; a.doc.status = "approved";
   }
-  if (!a.doc.contact_id) throw new Error("Link a contact with an email address before sending.");
   const sections = (await approvedSections(a)).filter((s) => s.key !== "summary_note" || s.body.trim());
-  const { data: contact } = await a.db.from("crm_contacts").select("email").eq("id", a.doc.contact_id).maybeSingle();
-  if (!contact?.email) throw new Error("This contact has no email address.");
-  const recipient = String(contact.email).toLowerCase();
+  const version = a.doc.approved_version ?? a.doc.current_version;
   const key = `prop:${id}`;
   const { signProposalView, buildTrackedUrl, buildOpenPixelUrl } = await import("@/lib/email-tracking.server");
-  const view = await signProposalView(id, a.doc.approved_version ?? a.doc.current_version);
-  const link = await buildTrackedUrl({ url: view, recipient, template: key, label: "View document" });
-  const pixel = await buildOpenPixelUrl({ recipient, template: key });
   const { acceptLinkFor } = await import("@/lib/sales-acceptance.server");
-  const signUrl = await acceptLinkFor(a.doc.kind, id, a.doc.approved_version ?? a.doc.current_version, recipient);
+  const { sendOutreach } = await import("@/lib/sales-hub.server");
+  const view = await signProposalView(id, version);
   const esc = (t: string) => t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   const para = (t: string) => esc(t).split(/\n{2,}/).map((p) => `<p style="margin:0 0 12px">${p.replace(/\n/g, "<br/>")}</p>`).join("");
-  const html = `<!doctype html><html><body style="font-family:Poppins,Arial,sans-serif;color:#221F20;line-height:1.5">${para(d.message)}`
-    + `<p style="margin:20px 0"><a href="${link}" style="background:#142647;color:#ffffff;padding:10px 18px;border-radius:6px;text-decoration:none">View ${esc(a.doc.title)}</a> &nbsp; <a href="${signUrl}" style="background:#5DC6D1;color:#142647;padding:10px 18px;border-radius:6px;text-decoration:none">Sign &amp; approve</a></p>`
-    + sections.map((s) => `<h3 style="color:#142647;font-family:Rubik,Arial,sans-serif;margin:20px 0 6px">${esc(s.title)}</h3>${s.question ? `<p style="color:#666"><em>Question: ${esc(s.question)}</em></p>` : ""}${para(s.body || "")}`).join("")
-    + `<img src="${pixel}" width="1" height="1" alt="" style="display:none"/></body></html>`;
-  const { sendOutreach } = await import("@/lib/sales-hub.server");
-  await sendOutreach(userId, { contactId: a.doc.contact_id, channel: "email", subject: d.subject, body: `${d.message}\n\nView the full document: ${link}\nSign & approve: ${signUrl}\n\n---\n${a.doc.title}\n\n${sectionsText(sections)}`, html, cc, visibility: "team" });
-  await a.db.from("sales_documents").update({ status: "sent", sent_at: new Date().toISOString(), sent_to: recipient, updated_at: new Date().toISOString() }).eq("id", id);
-  await event(a.db, id, userId, "sent", { version: a.doc.approved_version, cc });
+  const signerNames = to.filter((t) => signerIds.has(t.contactId)).map((t) => t.name);
+  for (const [i, r] of to.entries()) {
+    const recipient = r.email;
+    const canSign = signerIds.has(r.contactId);
+    const link = await buildTrackedUrl({ url: view, recipient, template: key, label: "View document" });
+    const pixel = await buildOpenPixelUrl({ recipient, template: key });
+    const signUrl = canSign ? await acceptLinkFor(a.doc.kind, id, version, recipient) : null;
+    const note = canSign ? "" : `<p style="color:#666">For your review. ${esc(signerNames.join(", "))} can sign and approve.</p>`;
+    const html = `<!doctype html><html><body style="font-family:Poppins,Arial,sans-serif;color:#221F20;line-height:1.5">${para(d.message)}`
+      + `<p style="margin:20px 0"><a href="${link}" style="background:#142647;color:#ffffff;padding:10px 18px;border-radius:6px;text-decoration:none">View ${esc(a.doc.title)}</a>${signUrl ? ` &nbsp; <a href="${signUrl}" style="background:#5DC6D1;color:#142647;padding:10px 18px;border-radius:6px;text-decoration:none">Sign &amp; approve</a>` : ""}</p>${note}`
+      + sections.map((s) => `<h3 style="color:#142647;font-family:Rubik,Arial,sans-serif;margin:20px 0 6px">${esc(s.title)}</h3>${s.question ? `<p style="color:#666"><em>Question: ${esc(s.question)}</em></p>` : ""}${para(s.body || "")}`).join("")
+      + `<img src="${pixel}" width="1" height="1" alt="" style="display:none"/></body></html>`;
+    const body = `${d.message}\n\nView the full document: ${link}\n${signUrl ? `Sign & approve: ${signUrl}` : `For your review. ${signerNames.join(", ")} can sign and approve.`}\n\n---\n${a.doc.title}\n\n${sectionsText(sections)}`;
+    await sendOutreach(userId, { contactId: r.contactId, channel: "email", subject: d.subject, body, html, cc: i === 0 ? cc : [], visibility: "team" });
+  }
+  await a.db.from("sales_documents").update({ status: "sent", sent_at: new Date().toISOString(), sent_to: to.map((t) => t.email).join(", "), updated_at: new Date().toISOString() }).eq("id", id);
+  await event(a.db, id, userId, "sent", { version, cc, to: to.map((t) => t.email), signers: to.filter((t) => signerIds.has(t.contactId)).map((t) => t.email) });
   return { ok: true };
+}
+
+/** The client's people who can receive this document: the linked contact plus CRM contacts at the same organization. */
+export async function listClientTeam(userId: string, id: string) {
+  const a = await access(userId, id);
+  if (!a.doc.contact_id) return [] as { contactId: string; name: string; email: string; title: string | null }[];
+  const { data: main } = await a.db.from("crm_contacts").select("id, full_name, email, title, organization").eq("id", a.doc.contact_id).maybeSingle();
+  let rows: any[] = main ? [main] : [];
+  const org = String(main?.organization ?? "").trim();
+  if (org) {
+    const { data } = await a.db.from("crm_contacts").select("id, full_name, email, title, organization").eq("scope", "harmonious").is("archived_at", null).ilike("organization", org).limit(50);
+    rows = [...rows, ...((data ?? []) as any[]).filter((x) => x.id !== main!.id)];
+  }
+  return rows.filter((x) => x.email).map((x) => ({ contactId: String(x.id), name: String(x.full_name || x.email), email: String(x.email).toLowerCase(), title: x.title ?? null }));
 }
 
 export async function setOutcome(userId: string, id: string, outcome: string) {
@@ -451,6 +481,13 @@ export async function listCcOptions(userId: string) {
   const ids = [...new Set(((r ?? []) as any[]).map((x) => String(x.user_id)))];
   if (!ids.length) return [] as { userId: string; name: string; email: string }[];
   const { data: p } = await db.from("profiles").select("user_id, legal_name, email").in("user_id", ids);
-  return ((p ?? []) as any[]).filter((x) => x.email).map((x) => ({ userId: String(x.user_id), name: String(x.legal_name || x.email), email: String(x.email).toLowerCase() }))
+  const rows = ((p ?? []) as any[]).filter((x) => x.email);
+  // Staff accounts without a profile row (e.g. McKay) still need to be selectable: fall back to their sign-in email.
+  for (const uid of ids.filter((u) => !rows.some((x) => String(x.user_id) === u))) {
+    const { data: u } = await db.auth.admin.getUserById(uid);
+    const em = u?.user?.email;
+    if (em) rows.push({ user_id: uid, legal_name: (u.user.user_metadata as any)?.full_name ?? null, email: em });
+  }
+  return rows.map((x) => ({ userId: String(x.user_id), name: String(x.legal_name || x.email), email: String(x.email).toLowerCase() }))
     .sort((a, b) => a.name.localeCompare(b.name));
 }

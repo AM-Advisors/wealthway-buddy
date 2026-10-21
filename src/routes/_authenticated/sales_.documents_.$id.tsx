@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
   decideSalesDocument, draftSalesDocumentWithAi, exportSalesDocument, getSalesDocument,
-  saveSalesDocumentSections, sendSalesDocument, listSalesCcOptions, setSalesDocumentOutcome, submitSalesDocument, uploadSalesDocumentSource,
+  saveSalesDocumentSections, sendSalesDocument, listSalesCcOptions, listSalesClientTeam, setSalesDocumentOutcome, submitSalesDocument, uploadSalesDocumentSource,
 } from "@/lib/sales-documents.functions";
 import { DIRECTION_LABEL, KIND_LABEL, OUTCOMES, STATUS_LABEL, type DocDirection, type DocKind, type Section } from "@/lib/sales-documents-model";
 import { Panel, money } from "@/components/sales/sales-ui";
@@ -45,6 +45,11 @@ function Editor() {
   const ccLoad = useServerFn(listSalesCcOptions);
   const ccOpts = useQuery({ queryKey: ["sales-cc-options"], queryFn: () => ccLoad() });
   const [ccIds, setCcIds] = useState<string[]>([]);
+  const teamLoad = useServerFn(listSalesClientTeam);
+  const team = useQuery({ queryKey: ["sales-client-team", id], queryFn: () => teamLoad({ data: { id } }) });
+  const [toIds, setToIds] = useState<string[] | null>(null);
+  const [signerIds, setSignerIds] = useState<string[] | null>(null);
+  const [extraCc, setExtraCc] = useState("");
   const outcome = useServerFn(setSalesDocumentOutcome);
   const exp = useServerFn(exportSalesDocument);
   const q = useQuery({ queryKey: ["sales-document", id], queryFn: () => load({ data: { id } }) });
@@ -161,7 +166,44 @@ function Editor() {
                     {ccOpts.data && !ccOpts.data.length && <p className="text-xs text-muted-foreground">No Sales team members found.</p>}
                   </div>
                 </div>
-                <Button className="w-full" disabled={!!busy || !doc.contact_id || (p.directSend && dirty)} onClick={() => run("send", () => send({ data: { id, subject, message, ccUserIds: ccIds } }), "Sent")}>Email to {doc.recipient_name ?? "contact"}</Button>
+                {(() => {
+                  const def = doc.contact_id ? [doc.contact_id as string] : [];
+                  const to = toIds ?? def; const signers = (signerIds ?? def).filter((s) => to.includes(s));
+                  const tog = (list: string[], v: string, on: boolean) => on ? [...new Set([...list, v])] : list.filter((x) => x !== v);
+                  const extras = extraCc.split(/[\s,;]+/).map((e) => e.trim()).filter(Boolean);
+                  return (<>
+                    <div className="rounded-md border p-2">
+                      <p className="mb-1 text-xs font-medium text-muted-foreground">Send to (client's team)</p>
+                      <div className="max-h-36 space-y-1 overflow-y-auto">
+                        {(team.data ?? []).map((t) => (
+                          <label key={t.contactId} className="flex items-center gap-2 text-sm">
+                            <input type="checkbox" checked={to.includes(t.contactId)} onChange={(e) => setToIds(tog(to, t.contactId, e.target.checked))} />
+                            <span>{t.name}</span><span className="truncate text-xs text-muted-foreground">{t.title ? `${t.title} · ` : ""}{t.email}</span>
+                          </label>
+                        ))}
+                        {team.data && !team.data.length && <p className="text-xs text-muted-foreground">No client contacts with an email yet.</p>}
+                      </div>
+                      <p className="mt-1 text-xs text-muted-foreground">People at the same organization in your contacts show here. Each gets their own email.</p>
+                    </div>
+                    <div className="rounded-md border p-2">
+                      <p className="mb-1 text-xs font-medium text-muted-foreground">Who can sign and approve</p>
+                      <div className="space-y-1">
+                        {(team.data ?? []).filter((t) => to.includes(t.contactId)).map((t) => (
+                          <label key={t.contactId} className="flex items-center gap-2 text-sm">
+                            <input type="checkbox" checked={signers.includes(t.contactId)} onChange={(e) => setSignerIds(tog(signers, t.contactId, e.target.checked))} />
+                            <span>{t.name}</span>
+                          </label>
+                        ))}
+                      </div>
+                      <p className="mt-1 text-xs text-muted-foreground">Only these people get a Sign &amp; approve button. Everyone else gets a view-only copy.</p>
+                    </div>
+                    <div className="rounded-md border p-2">
+                      <p className="mb-1 text-xs font-medium text-muted-foreground">CC anyone else (optional)</p>
+                      <Input value={extraCc} onChange={(e) => setExtraCc(e.target.value)} placeholder="name@company.com, other@company.com" />
+                    </div>
+                    <Button className="w-full" disabled={!!busy || !doc.contact_id || !to.length || !signers.length || (p.directSend && dirty)} onClick={() => run("send", () => send({ data: { id, subject, message, ccUserIds: ccIds, toContactIds: to, signerContactIds: signers, extraCc: extras } }), "Sent")}>Email to {to.length} {to.length === 1 ? "person" : "people"}</Button>
+                  </>);
+                })()}
               </div>
             )}
             {p.canOutcome && (
