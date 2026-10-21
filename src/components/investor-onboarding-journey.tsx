@@ -205,7 +205,7 @@ export function InvestorOnboardingJourney({
   );
 }
 
-function AboutYou({ d, onboardingId, done }: { d: any; onboardingId: string; done: () => void }) {
+export function AboutYou({ d, onboardingId, done }: { d: any; onboardingId: string; done: () => void }) {
   const profilesFn = useServerFn(eligibleProfilesFn);
   const chooseFn = useServerFn(chooseProfileFn);
   const amountFn = useServerFn(setInvestmentAmountFn);
