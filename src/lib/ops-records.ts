@@ -35,16 +35,16 @@ export const RECORD_TABS: Record<OpsRecordType, OpsRecordTab[]> = {
   client: [
     { id: "overview", title: "Overview", area: "clients" },
     { id: "contacts", title: "People", area: "clients" },
-    { id: "services", title: "Services & Pricing", area: "clients" },
+    { id: "services", title: "Services, Pricing & Contracts", area: "clients" },
     { id: "funds", title: "Funds & SPVs", area: "funds" },
     { id: "companies", title: "Companies / Cap Tables", area: "companies" },
-    { id: "contracts", title: "Contracts & SOWs", area: "clients" },
     { id: "documents", title: "Documents", area: "documents" },
     { id: "tasks", title: "Tasks & Activity", area: "tasks" },
     // Kept so existing deep links still open; not shown in the tab bar.
     { id: "relationships", title: "Relationships", area: "clients", hidden: true },
     { id: "investors", title: "Investors", area: "investors", hidden: true },
     { id: "activity", title: "Activity", area: "clients", hidden: true },
+    { id: "contracts", title: "Contracts & SOWs", area: "clients", hidden: true },
   ],
   fund: [
     { id: "overview", title: "Overview", area: "funds" },

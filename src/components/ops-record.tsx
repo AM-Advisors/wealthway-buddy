@@ -393,12 +393,17 @@ export function OpsRecordPage({ type, id }: { type: OpsRecordType; id: string })
         ))}
       </div>
 
-      {type === "client" && active === "contracts" ? (
-        <ClientContractsPanel clientId={id} />
+      {type === "client" && (active === "services" || active === "contracts") ? (
+        <div className="space-y-6">
+          <ClientServicesPricingPanel clientId={id} />
+          <div id="client-contracts" className="space-y-2">
+            <h3 className="text-base font-semibold">Contracts & SOWs</h3>
+            <p className="text-xs text-muted-foreground">The SOWs and agreements that make the services above Contracted once fully executed.</p>
+            <ClientContractsPanel clientId={id} />
+          </div>
+        </div>
       ) : type === "client" && active === "contacts" ? (
         <ClientPeoplePanel clientId={id} />
-      ) : type === "client" && active === "services" ? (
-        <ClientServicesPricingPanel clientId={id} />
       ) : type === "client" && active === "funds" ? (
         <ClientFundsPanel clientId={id} />
       ) : type === "fund" && active === "side-letters" ? (

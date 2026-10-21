@@ -59,9 +59,9 @@ describe("client editing and permissions", () => {
     const d = diffClient({ legal_name: "A LLC", phone: "1" }, { legal_name: "B LLC", phone: "1", ein: "x" });
     expect(d).toEqual([{ field: "legal_name", before: "A LLC", after: "B LLC" }]);
   });
-  it("Client 360 is organized into the eight sections, keeping old deep links", () => {
+  it("Client 360 is organized into the seven sections, keeping old deep links", () => {
     const visible = RECORD_TABS.client.filter((t) => !t.hidden).map((t) => t.title);
-    expect(visible).toEqual(["Overview", "People", "Services & Pricing", "Funds & SPVs", "Companies / Cap Tables", "Contracts & SOWs", "Documents", "Tasks & Activity"]);
+    expect(visible).toEqual(["Overview", "People", "Services, Pricing & Contracts", "Funds & SPVs", "Companies / Cap Tables", "Documents", "Tasks & Activity"]);
     expect(RECORD_TABS.client.map((t) => t.id)).toEqual(expect.arrayContaining(["relationships", "activity", "investors", "contacts", "contracts"]));
   });
 });
