@@ -225,6 +225,7 @@ function AboutYou({ d, onboardingId, done }: { d: any; onboardingId: string; don
     if (!profileId && list.length > 0) setProfileId(list[0].id);
   }, [profileId, list]);
   const owners = (d.requirements ?? []).find((r: any) => r.key === "beneficial_owners");
+  const minimum = Number(d.offering?.minInvestmentCents ?? 0);
 
   return (
     <Card>
@@ -313,6 +314,9 @@ function AboutYou({ d, onboardingId, done }: { d: any; onboardingId: string; don
           <div>
             <Label htmlFor="amount">Investment amount (USD)</Label>
             <Input id="amount" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} />
+            {minimum > 0 ? (
+              <p className="mt-1 text-xs text-muted-foreground">Minimum {money(minimum)}.</p>
+            ) : null}
           </div>
           <Button
             variant="outline"
