@@ -47,18 +47,19 @@ function QuotesPage() {
       {q.data?.canDraft && <FromSow />}
       <Panel title="All quotes">
         <Table>
-          <TableHeader><TableRow><TableHead>Quote</TableHead><TableHead>Client</TableHead><TableHead>Owner</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Total</TableHead></TableRow></TableHeader>
+          <TableHeader><TableRow><TableHead>Quote</TableHead><TableHead>Client</TableHead><TableHead>Fund</TableHead><TableHead>Owner</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Total</TableHead></TableRow></TableHeader>
           <TableBody>
             {(q.data?.quotes ?? []).map((r: any) => (
               <TableRow key={r.id}>
                 <TableCell><Link to="/sales/quotes/$id" params={{ id: r.id }} className="font-medium text-foreground hover:underline">Q-{r.quote_number} v{r.version} · {r.title}</Link></TableCell>
                 <TableCell>{r.clientName ?? "-"}</TableCell>
+                <TableCell>{r.fundName ?? "-"}</TableCell>
                 <TableCell>{r.ownerName}</TableCell>
                 <TableCell><Badge variant={r.status === "signed" ? "default" : "secondary"}>{QUOTE_STATUS_LABEL[r.status] ?? r.status}</Badge>{r.needs_exec_approval && r.status === "pending_approval" && <Badge variant="outline" className="ml-1">CEO/CRO</Badge>}</TableCell>
                 <TableCell className="text-right">{money(r.total_cents)}</TableCell>
               </TableRow>
             ))}
-            {q.data && !q.data.quotes.length && <TableRow><TableCell colSpan={5} className="text-muted-foreground">No quotes yet.</TableCell></TableRow>}
+            {q.data && !q.data.quotes.length && <TableRow><TableCell colSpan={6} className="text-muted-foreground">No quotes yet.</TableCell></TableRow>}
           </TableBody>
         </Table>
       </Panel>
@@ -120,9 +121,10 @@ function AdminLevelPicker({ onAdd, lines }: { onAdd: (key: string) => void; line
   );
 }
 
-export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; initial?: { id: string; title: string; clientId: string | null; validUntil: string | null; notes: string | null; lines: Line[] } }) {
+export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; initial?: { id: string; title: string; clientId: string | null; offeringId?: string | null; validUntil: string | null; notes: string | null; lines: Line[] } }) {
   const nav = useNavigate();
   const [clientId, setClientId] = useState<string | null>(initial?.clientId ?? null);
+  const [offeringId, setOfferingId] = useState<string | null>(initial?.offeringId ?? null);
   const [title, setTitle] = useState(initial?.title ?? "");
   const [validUntil, setValidUntil] = useState(initial?.validUntil ?? "");
   const [notes, setNotes] = useState(initial?.notes ?? "");
@@ -131,7 +133,7 @@ export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; init
   const c = useQuery({ queryKey: ["quote-catalog", clientId], queryFn: () => cat({ data: { clientId } }) });
   const save = useServerFn(saveSalesQuote);
   const m = useMutation({
-    mutationFn: () => save({ data: { id: initial?.id ?? null, title, clientId, validUntil: validUntil || null, notes: notes || null, lines } }),
+    mutationFn: () => save({ data: { id: initial?.id ?? null, title, clientId, offeringId, validUntil: validUntil || null, notes: notes || null, lines } }),
     onSuccess: (r) => { toast.success("Quote saved"); onCancel(); nav({ to: "/sales/quotes/$id", params: { id: r.id } }); },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -143,11 +145,15 @@ export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; init
   };
   return (
     <Panel title={initial ? "Edit quote" : "New quote"}>
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-4">
         <Input placeholder="Quote title" value={title} onChange={(e) => setTitle(e.target.value)} />
-        <Select value={clientId ?? "none"} onValueChange={(v) => setClientId(v === "none" ? null : v)}>
+        <Select value={clientId ?? "none"} onValueChange={(v) => { setClientId(v === "none" ? null : v); setOfferingId(null); }}>
           <SelectTrigger><SelectValue placeholder="Client" /></SelectTrigger>
           <SelectContent><SelectItem value="none">Choose client…</SelectItem>{(c.data?.clients ?? []).map((cl: any) => <SelectItem key={cl.id} value={cl.id}>{cl.legal_name}</SelectItem>)}</SelectContent>
+        </Select>
+        <Select value={offeringId ?? "none"} onValueChange={(v) => setOfferingId(v === "none" ? null : v)} disabled={!clientId}>
+          <SelectTrigger aria-label="Fund"><SelectValue placeholder="Fund" /></SelectTrigger>
+          <SelectContent><SelectItem value="none">{clientId && !(c.data?.funds ?? []).length ? "No funds for this client" : "No fund (client-wide)"}</SelectItem>{(c.data?.funds ?? []).map((o: any) => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}</SelectContent>
         </Select>
         <Input type="date" aria-label="Valid until" value={validUntil} onChange={(e) => setValidUntil(e.target.value)} />
       </div>

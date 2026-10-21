@@ -68,6 +68,9 @@ export function InvoicesBoard() {
   const [periodEnd, setPeriodEnd] = useState(today());
   const [netDays, setNetDays] = useState("30");
   const [note, setNote] = useState("");
+  const [payState, setPayState] = useState<"due" | "paid">("due");
+  const [paidOn, setPaidOn] = useState(today());
+  const [paidRef, setPaidRef] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [clientFilter, setClientFilter] = useState("all");
   const [openId, setOpenId] = useState<string | null>(null);
@@ -107,11 +110,15 @@ export function InvoicesBoard() {
           periodEnd,
           netDays: Number(netDays || 30),
           note,
+          alreadyPaidOn: payState === "paid" ? paidOn : null,
+          alreadyPaidReference: payState === "paid" ? paidRef : "",
         },
       }),
     onSuccess: (res: any) => {
       toast.success("Draft invoice prepared.");
       setNote("");
+      setPayState("due");
+      setPaidRef("");
       setOpenId(res?.id ?? null);
       refresh();
     },
@@ -178,8 +185,8 @@ export function InvoicesBoard() {
   });
 
   const payMutation = useMutation({
-    mutationFn: (input: { id: string; reference: string }) =>
-      pay({ data: { id: input.id, paidOn: today(), reference: input.reference } }),
+    mutationFn: (input: { id: string; reference: string; paidOn?: string }) =>
+      pay({ data: { id: input.id, paidOn: input.paidOn || today(), reference: input.reference } }),
     onSuccess: () => {
       toast.success("Payment recorded.");
       refresh();
@@ -360,6 +367,23 @@ export function InvoicesBoard() {
               />
             </div>
           </div>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="space-y-1">
+              <Label>Payment</Label>
+              <Select value={payState} onValueChange={(v) => setPayState(v as "due" | "paid")}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="due">Needs to be paid</SelectItem>
+                  <SelectItem value="paid">Already paid in the past</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {payState === "paid" ? <>
+              <div className="space-y-1"><Label>Date paid</Label><Input type="date" max={today()} value={paidOn} onChange={(e) => setPaidOn(e.target.value)} /></div>
+              <div className="space-y-1"><Label>Payment reference (optional)</Label><Input value={paidRef} onChange={(e) => setPaidRef(e.target.value)} /></div>
+            </> : null}
+          </div>
+          {payState === "paid" ? <p className="text-xs text-muted-foreground">When this invoice is issued it is recorded as paid on that date, and the client isn't asked to pay. Nothing is charged or collected.</p> : null}
           <div className="space-y-1">
             <Label>Note on the invoice (optional)</Label>
             <Textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} />
@@ -666,9 +690,12 @@ export function InvoicesBoard() {
                           <Button
                             size="sm"
                             onClick={() => {
+                              const when = window.prompt("Date paid (YYYY-MM-DD)", today());
+                              if (when === null) return;
+                              if (!/^\d{4}-\d{2}-\d{2}$/.test(when.trim()) || when.trim() > today()) { toast.error("Enter a date like 2026-10-01, not in the future."); return; }
                               const reference =
                                 window.prompt("Payment reference (optional)") ?? "";
-                              payMutation.mutate({ id: inv.id, reference });
+                              payMutation.mutate({ id: inv.id, reference, paidOn: when.trim() });
                             }}
                           >
                             Record payment

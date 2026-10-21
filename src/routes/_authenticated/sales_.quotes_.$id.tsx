@@ -68,7 +68,7 @@ function QuotePage() {
       </div>
 
       {editing ? (
-        <QuoteBuilder onCancel={() => { setEditing(false); qc.invalidateQueries({ queryKey: ["sales-quote", id] }); }} initial={{ id, title: d.quote.title, clientId: d.quote.client_id, validUntil: d.quote.valid_until, notes: d.quote.notes,
+        <QuoteBuilder onCancel={() => { setEditing(false); qc.invalidateQueries({ queryKey: ["sales-quote", id] }); }} initial={{ id, title: d.quote.title, clientId: d.quote.client_id, offeringId: (d.quote as any).offering_id ?? null, validUntil: d.quote.valid_until, notes: d.quote.notes,
           lines: d.lines.map((l: any) => ({ serviceKey: l.service_key, label: l.label, quantity: Number(l.quantity), unitCents: Number(l.unit_cents), baselineUnitCents: Number(l.baseline_unit_cents), billingFrequency: l.billing_frequency ?? "one_time", firstBillOn: l.first_bill_on ?? null })) }} />
       ) : (
         <Panel title="Services">

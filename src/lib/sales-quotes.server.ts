@@ -17,7 +17,8 @@ export async function quoteCatalog(userId: string, clientId: string | null) {
   const db = await admin();
   const { data: clients } = await db.from("clients").select("id, legal_name").order("legal_name");
   const adminLevels = await adminCatalog();
-  return { versionId, adminLevels, lines: [...adminLevels, ...lines].map((l: any) => ({ serviceKey: l.serviceKey, label: l.label, baselineCents: l.baselineCents, source: l.baselineSource, pricingModel: l.pricingModel })), clients: (clients ?? []) as any[] };
+  const { data: funds } = clientId ? await db.from("offerings").select("id, name").eq("client_id", clientId).order("name") : { data: [] };
+  return { funds: (funds ?? []) as any[], versionId, adminLevels, lines: [...adminLevels, ...lines].map((l: any) => ({ serviceKey: l.serviceKey, label: l.label, baselineCents: l.baselineCents, source: l.baselineSource, pricingModel: l.pricingModel })), clients: (clients ?? []) as any[] };
 }
 
 /** Administration levels as quote lines, keyed by product + level, from current pricing versions. */
@@ -75,7 +76,10 @@ export async function listQuotes(userId: string) {
   const cids = [...new Set(rows.map((r) => r.client_id).filter(Boolean))];
   const clients = cids.length ? ((await db.from("clients").select("id, legal_name").in("id", cids)).data ?? []) as any[] : [];
   const cn = new Map(clients.map((c) => [c.id, c.legal_name]));
-  return { canDraft: canDraftQuote(a.roles), quotes: rows.map((r) => ({ ...r, ownerName: nm.get(r.owner_user_id) ?? "", clientName: cn.get(r.client_id) ?? null })) };
+  const oids = [...new Set(rows.map((r) => r.offering_id).filter(Boolean))];
+  const offs = oids.length ? ((await db.from("offerings").select("id, name").in("id", oids)).data ?? []) as any[] : [];
+  const on = new Map(offs.map((o) => [o.id, o.name]));
+  return { canDraft: canDraftQuote(a.roles), quotes: rows.map((r) => ({ ...r, ownerName: nm.get(r.owner_user_id) ?? "", clientName: cn.get(r.client_id) ?? null, fundName: on.get(r.offering_id) ?? null })) };
 }
 
 export async function getQuote(userId: string, id: string) {
@@ -102,7 +106,7 @@ export async function getQuote(userId: string, id: string) {
   };
 }
 
-export async function saveQuote(userId: string, d: { id?: string | null | undefined; title: string; clientId?: string | null | undefined; contactId?: string | null | undefined; dealId?: string | null | undefined; validUntil?: string | null | undefined; notes?: string | null | undefined; lines: QuoteLineInput[] }) {
+export async function saveQuote(userId: string, d: { id?: string | null | undefined; title: string; clientId?: string | null | undefined; contactId?: string | null | undefined; dealId?: string | null | undefined; offeringId?: string | null | undefined; validUntil?: string | null | undefined; notes?: string | null | undefined; lines: QuoteLineInput[] }) {
   const a = await salesActor(userId);
   if (!canDraftQuote(a.roles)) throw new Error("Your role can't draft quotes.");
   if (!d.lines.length) throw new Error("Add at least one service.");
@@ -114,9 +118,13 @@ export async function saveQuote(userId: string, d: { id?: string | null | undefi
   // Baseline and label always come from the live rate card, never from the browser.
   const priced = priceQuote(d.lines.map((l) => { const c: any = card.get(l.serviceKey); return { serviceKey: l.serviceKey, label: c.label, quantity: Math.max(0, Number(l.quantity) || 0), unitCents: Math.max(0, Math.round(l.unitCents)), baselineUnitCents: c.baselineCents }; }));
   const db = await admin();
+  if (d.offeringId) {
+    const { data: o } = await db.from("offerings").select("client_id").eq("id", d.offeringId).maybeSingle();
+    if (!o || !d.clientId || o.client_id !== d.clientId) throw new Error("That fund doesn't belong to the chosen client.");
+  }
   const now = new Date().toISOString();
   let id = d.id ?? null;
-  const row = { title: d.title.trim() || "Quote", client_id: d.clientId || null, contact_id: d.contactId || null, deal_id: d.dealId || null,
+  const row = { title: d.title.trim() || "Quote", client_id: d.clientId || null, contact_id: d.contactId || null, deal_id: d.dealId || null, offering_id: d.offeringId || null,
     valid_until: d.validUntil || null, notes: d.notes || null, total_cents: priced.totalCents, baseline_cents: priced.baselineCents,
     needs_exec_approval: priced.needsExecApproval, pricing_version_id: base.versionId, updated_at: now };
   if (id) {
