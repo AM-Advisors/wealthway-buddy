@@ -81,7 +81,12 @@ export async function sendTemplateEmail(
       sender_domain: 'notify.harmonious.co',
       subject, html, text, label: templateName,
       ...(options.replyTo ? { reply_to: options.replyTo } : {}),
-    }, { apiKey, ...(options.idempotencyKey ? { idempotencyKey: options.idempotencyKey } : {}) })
+    }, { apiKey, ...(options.idempotencyKey ? { idempotencyKey: options.idempotencyKey } : {}) }).catch((error: unknown) => {
+      if (error && typeof error === 'object' && 'code' in error && error.code === 'recipient_suppressed') {
+        return { success: false, status: 'recipient_suppressed', message_id: undefined }
+      }
+      throw error
+    })
     if (result.status === 'recipient_suppressed' || result.status === 'suppressed') return { sent: false, reason: 'recipient_suppressed' }
     if (!result.success) throw new Error('The approval email could not be sent.')
     messageId = result.message_id ?? null
