@@ -79,8 +79,13 @@ const tables: Record<string, any[]> = {
   investment_profiles: [
     { id: "profile-1", owner_user_id: INV1, profile_type: "individual", display_label: "Investor One" },
     { id: "profile-2", owner_user_id: INV2, profile_type: "individual", display_label: "Investor Two" },
+    { id: "profile-staff", owner_user_id: STAFF, profile_type: "individual", display_label: "Staff Investor" },
+    { id: "profile-manager", owner_user_id: MANAGER_A, profile_type: "individual", display_label: "Manager Investor" },
   ],
   investor_onboardings: [
+    onboarding({ id: "staff-investment", offering_id: FUND_A, investor_user_id: STAFF }),
+    onboarding({ id: "manager-investment", offering_id: FUND_A, investor_user_id: MANAGER_A }),
+    onboarding({ id: "staff-closed", offering_id: FUND_A, investor_user_id: STAFF, stage: "closed" }),
     onboarding({ id: OB1, offering_id: FUND_A, investor_user_id: INV1, investment_profile_id: "profile-1" }),
     onboarding({
       id: OB1B,
@@ -190,6 +195,45 @@ const updates = (table: string) => writes.filter((w) => w.table === table && w.o
 const inserts = (table: string) => writes.filter((w) => w.table === table && w.op === "insert");
 
 describe("investor isolation", () => {
+  it("lets a staff member select their own profile for their own investment", async () => {
+    const result = await server.chooseProfile(STAFF, { onboardingId: "staff-investment", profileId: "profile-staff" });
+    expect(result.profileId).toBe("profile-staff");
+    expect(updates("investor_onboardings")[0]?.payload.investment_profile_id).toBe("profile-staff");
+    expect(inserts("investor_onboarding_events")[0]?.payload.actor_role).toBe("investor");
+  });
+
+  it("lets a fund manager select their own profile for their own investment", async () => {
+    const result = await server.chooseProfile(MANAGER_A, { onboardingId: "manager-investment", profileId: "profile-manager" });
+    expect(result.profileId).toBe("profile-manager");
+    expect(updates("investor_onboardings")[0]?.payload.investment_profile_id).toBe("profile-manager");
+  });
+
+  it("refuses staff selecting a profile on another investor's behalf", async () => {
+    await expect(server.chooseProfile(STAFF, { onboardingId: OB1, profileId: "profile-staff" })).rejects.toThrow(/only the investor/);
+    expect(updates("investor_onboardings")).toHaveLength(0);
+  });
+
+  it("refuses managers selecting a profile on another investor's behalf", async () => {
+    await expect(server.chooseProfile(MANAGER_A, { onboardingId: OB1, profileId: "profile-manager" })).rejects.toThrow(/only the investor/);
+    expect(updates("investor_onboardings")).toHaveLength(0);
+  });
+
+  it("refuses another person's profile even when the investor is staff", async () => {
+    await expect(server.chooseProfile(STAFF, { onboardingId: "staff-investment", profileId: "profile-1" })).rejects.toThrow(/profile is not yours/);
+    expect(updates("investor_onboardings")).toHaveLength(0);
+  });
+
+  it("keeps closed investments locked for staff acting as investors", async () => {
+    await expect(server.chooseProfile(STAFF, { onboardingId: "staff-closed", profileId: "profile-staff" })).rejects.toThrow(/no longer be changed/);
+    expect(updates("investor_onboardings")).toHaveLength(0);
+  });
+
+  it("lets a staff investor save their own investment amount", async () => {
+    const result = await server.setInvestmentAmount(STAFF, { onboardingId: "staff-investment", amountCents: 500_000 });
+    expect(result.requestedAmountCents).toBe(500_000);
+    expect(updates("investor_onboardings")[0]?.payload.requested_amount_cents).toBe(500_000);
+  });
+
   it("refuses one investor access to another investor's investment", async () => {
     await expect(server.onboardingDetail(INV2, OB1)).rejects.toThrow(/Forbidden/);
   });

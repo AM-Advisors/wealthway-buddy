@@ -1,5 +1,9 @@
 # Roadmap
 
+## Saved-profile selection (2026-10-21)
+- [ ] Correct staff/investor role collision on “Use this” using record ownership, retaining profile ownership and closed-investment guards.
+- [ ] Run synthetic ownership regression checks; signed-in walkthrough requires isolated QA, unavailable on the shared production backend.
+
 ## Saved draft reconciliation (2026-10-20)
 - [x] Restore all draft-only signing, Box event tracking and Recent sign-ins layout changes using the draft reconciliation tools.
 - [x] Combine Box diagnostics, retry error clearing and investing-party name fallback with main's byte-based file naming, no-version-overwrite uploads and checked signer writes.
