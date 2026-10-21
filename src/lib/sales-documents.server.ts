@@ -1,6 +1,6 @@
 /** Server-only Proposals / RFPs / RFQs. Maker-checker approval; prices only from the linked quote; versions append-only. */
 import {
-  MARKETING_HELPERS, OUTCOMES, SALES_DOC_APPROVERS, SALES_DOC_ROLES, defaultSections, sectionsText, applyLockedSections, lockedKeys,
+  MARKETING_HELPERS, OUTCOMES, SALES_DOC_APPROVERS, SALES_DOC_ROLES, defaultSections, sectionsText, applyLockedSections, lockedKeys, ABOUT_HARMONIOUS,
   type DocDirection, type DocKind, type Section,
 } from "@/lib/sales-documents-model";
 
@@ -52,13 +52,45 @@ async function latestSections(db: any, doc: any): Promise<Section[]> {
   const { data } = await db.from("sales_document_versions").select("sections").eq("document_id", doc.id).eq("version", doc.current_version).maybeSingle();
   return applyLockedSections(doc.kind, doc.direction, (data?.sections ?? []) as Section[], await lockFacts(db, doc));
 }
+async function currentAbout(db: any): Promise<string | null> {
+  const { data } = await db.from("sales_controlled_texts").select("body").eq("text_key", "about_harmonious").order("version", { ascending: false }).limit(1).maybeSingle();
+  return data?.body ?? null;
+}
+const ABOUT_EDITORS = [...MARKETING_HELPERS, "super_admin"];
+
+/** Controlled About Harmonious wording: everyone in Sales/Marketing reads it; only Marketing saves new versions. */
+export async function getAboutHarmonious(userId: string) {
+  const roles = await rolesOf(userId);
+  if (!roles.some((r) => SALES_DOC_ROLES.includes(r) || ABOUT_EDITORS.includes(r))) throw new Error("Not available for your role.");
+  const db = await admin();
+  const { data } = await db.from("sales_controlled_texts").select("version, body, reason, created_by, created_at").eq("text_key", "about_harmonious").order("version", { ascending: false }).limit(20);
+  const rows = (data ?? []) as any[];
+  const { names } = await import("@/lib/sales-hub.server");
+  const nm = await names(rows.map((r) => r.created_by));
+  return { body: rows[0]?.body ?? ABOUT_HARMONIOUS, isDefault: !rows.length, canEdit: roles.some((r) => ABOUT_EDITORS.includes(r)),
+    history: rows.map((r) => ({ version: r.version, reason: r.reason, at: r.created_at, byName: nm.get(r.created_by) ?? "Team member" })) };
+}
+export async function saveAboutHarmonious(userId: string, body: string, reason: string | null) {
+  const roles = await rolesOf(userId);
+  if (!roles.some((r) => ABOUT_EDITORS.includes(r))) throw new Error("Only Marketing can change the About Harmonious wording.");
+  const db = await admin();
+  const text = body.trim();
+  if (text.length < 20) throw new Error("The wording is too short.");
+  const { data: last } = await db.from("sales_controlled_texts").select("version, body").eq("text_key", "about_harmonious").order("version", { ascending: false }).limit(1).maybeSingle();
+  if (last?.body === text) return { version: last.version as number };
+  const version = (last?.version ?? 0) + 1;
+  const { error } = await db.from("sales_controlled_texts").insert({ text_key: "about_harmonious", version, body: text, reason, created_by: userId });
+  if (error) throw new Error("The wording couldn't be saved. Please try again.");
+  return { version };
+}
+
 async function lockFacts(db: any, doc: any) {
   const [client, contact, lines] = await Promise.all([
     doc.client_id ? db.from("clients").select("name").eq("id", doc.client_id).maybeSingle() : { data: null },
     doc.contact_id ? db.from("crm_contacts").select("full_name, organization").eq("id", doc.contact_id).maybeSingle() : { data: null },
     doc.quote_id ? db.from("sales_quote_lines").select("label, quantity, unit_cents, line_cents, billing_frequency").eq("quote_id", doc.quote_id).order("sort_order") : { data: [] },
   ]);
-  return { organization: client.data?.name ?? contact.data?.organization ?? null, contactName: doc.recipient_name ?? contact.data?.full_name ?? null, lines: (lines.data ?? []) as any[] };
+  return { about: await currentAbout(db), organization: client.data?.name ?? contact.data?.organization ?? null, contactName: doc.recipient_name ?? contact.data?.full_name ?? null, lines: (lines.data ?? []) as any[] };
 }
 async function writeVersion(db: any, doc: any, rawSections: Section[], userId: string, source: string) {
   // Summary, pricing and About Harmonious are always platform-generated; any typed or AI text for them is replaced.

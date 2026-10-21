@@ -58,3 +58,9 @@ export const lookupSalesProspect = createServerFn({ method: "POST" }).middleware
 export const createSalesProspect = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ email: z.string().trim().email().max(255), fullName: z.string().trim().min(2).max(200), organization: z.string().trim().max(200).nullish(), title: z.string().trim().max(200).nullish(), phone: z.string().trim().max(40).nullish() }).parse(d))
   .handler(async ({ data, context }) => (await S()).createProspect(context.userId, data));
+
+export const getAboutHarmoniousText = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => (await S()).getAboutHarmonious(context.userId));
+export const saveAboutHarmoniousText = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ body: z.string().trim().min(20).max(6000), reason: z.string().max(500).nullish() }).parse(d))
+  .handler(async ({ data, context }) => (await S()).saveAboutHarmonious(context.userId, data.body, data.reason ?? null));
