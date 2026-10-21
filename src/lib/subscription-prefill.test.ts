@@ -21,8 +21,8 @@ describe("subscription prefill", () => {
   it("locked values override what the browser sent", () => {
     const locked = lockedAnswers({ verifiedName: "Calvin Jung", commitmentCents: 50_000_000, email: "c@x.com", phone: "1", profileType: "individual", taxFormType: "w9" });
     const out = applyLocked({ name_of_subscriber: "Someone Else", subscription_amount: "$1" }, locked, Object.keys(locked));
-    expect(out.name_of_subscriber).toBe("Calvin Jung");
-    expect(out.subscription_amount).toBe("$500,000.00");
+    expect(out["name_of_subscriber"]).toBe("Calvin Jung");
+    expect(out["subscription_amount"]).toBe("$500,000.00");
   });
   it("question 16 shows and is required only after a No on the funding bank questions", () => {
     expect(questionVisible(q16, { [FATF]: "Yes", [CUSTOMER]: "Yes" })).toBe(false);
