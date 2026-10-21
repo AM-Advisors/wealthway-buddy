@@ -1,6 +1,6 @@
 const { supabaseAdmin: d } = (await import("@/integrations/supabase/client.server")) as any;
 const PID="1abe97b5-fc53-45db-a583-5f63a1c629e6"; const key=process.env.DIDIT_API_KEY!.trim();
-const a=await fetch("https://verification.didit.me/v2/aml/",{method:"POST",headers:{"content-type":"application/json","x-api-key":key},body:JSON.stringify({full_name:"Ross Vincent Mahoney",date_of_birth:"1996-03-26",nationality:"USA"})});
+const a=await fetch("https://verification.didit.me/v2/aml/",{method:"POST",headers:{"content-type":"application/json","x-api-key":key},body:JSON.stringify({full_name:"Ross Vincent Mahoney",date_of_birth:"1996-03-26",nationality:"US"})});
 const t=await a.text(); if(!a.ok){console.log("FAIL",a.status,t.slice(0,400));process.exit(1);}
 const x=JSON.parse(t); const m=x.aml??x; const hits=Number(m.total_hits??(m.hits?.length??0))||0; const s=String(m.status??"").toLowerCase();
 const amlStatus = s==="declined"?"declined": (s==="in review"||hits>0)?"review": s==="approved"?"approved":"pending";
