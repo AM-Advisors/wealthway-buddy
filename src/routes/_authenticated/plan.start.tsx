@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { HARMONIOUS_LEGAL_NAME, MSA_SECTIONS } from "@/lib/agreement-templates";
 import { INVESTOR_TIERS, investorTierFor } from "@/lib/product-pricing";
 import { signSaasOrderFn } from "@/lib/saas-orders.functions";
-import { alaCarteCatalog, CAP_TIERS, INVESTOR_SERVICING_KEYS, priceOrder, SAAS_MSA_VERSION, SERVICING_KEYS, type CapTier, type InvestorServicingKey, type OrderInterval, type ServicingKey } from "@/lib/saas-order-model";
+import { alaCarteCatalog, CAP_TIERS, INVESTOR_SERVICING_KEYS, priceOrder, SERVICING_KEYS, type CapTier, type InvestorServicingKey, type OrderInterval, type ServicingKey } from "@/lib/saas-order-model";
 
 const TITLE = "Build your plan - Harmonious";
 const DESC = "Pick the Harmonious services you need, agree to the Statement of Work and start right away.";
@@ -120,7 +120,7 @@ function PlanStart() {
           <Card>
             <CardHeader><CardTitle className="text-lg">Statement of Work</CardTitle></CardHeader>
             <CardContent className="space-y-4 text-sm">
-              <p>This Statement of Work is entered into under the {HARMONIOUS_LEGAL_NAME} Master Services Agreement ({SAAS_MSA_VERSION}). Prices are fixed for the term below and billed {interval === "annual" ? "yearly" : "quarterly"} by card.</p>
+              <p>This Statement of Work is entered into under the {HARMONIOUS_LEGAL_NAME} Master Services Agreement. Prices are fixed for the term below and billed {interval === "annual" ? "yearly" : "quarterly"} by card.</p>
               <Totals priced={priced} per={per} />
               <details className="rounded-md border p-3" open>
                 <summary className="cursor-pointer font-medium">Master Services Agreement (standard terms)</summary>
