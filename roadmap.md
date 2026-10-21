@@ -1,5 +1,10 @@
 # Roadmap
 
+## Portfolio and personal wealth services (2026-10-21)
+- [ ] Offer Portfolio and Report Cards independently and as fund add-ons using canonical service selections.
+- [ ] Provide private individual wealth holdings and evidence-based report cards without creating a fund or granting fund authority.
+- [ ] Verify focused ownership/service rules and report competitive opportunities; signed-in QA requires an isolated synthetic environment.
+
 ## Alyssa review evidence (2026-10-21)
 - [x] Connect saved signed copies, acknowledgments and questionnaire to the fund manager's investor detail; show the owner's signed archive below the submitted journey too.
 - [x] 26 focused evidence, ownership and download checks passed. Saved Alyssa subscription v3, PPM v1/OA v2 acknowledgments and submitted questionnaire confirmed; no signatures or approval changed.
