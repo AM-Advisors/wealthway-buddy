@@ -127,8 +127,18 @@ export async function listLegalWording(userId: string) {
   const roles = await staffRoles(userId);
   if (!WORDING_AUTHORS.some((r) => roles.includes(r))) fail("Forbidden: legal or compliance access is required.");
   const d = await db();
-  const { data } = await d.from("legal_wording_versions").select("*").order("requirement_key").order("version", { ascending: false });
-  return { rows: data ?? [], canApprove: WORDING_APPROVERS.some((r) => roles.includes(r)), me: userId };
+  const [{ data }, { data: events }] = await Promise.all([
+    d.from("legal_wording_versions").select("*").order("requirement_key").order("version", { ascending: false }),
+    d.from("legal_wording_events").select("id, wording_version_id, event, actor_user_id, occurred_at").order("occurred_at", { ascending: true }).limit(5000),
+  ]);
+  const ids = [...new Set(((events ?? []) as any[]).map((e) => e.actor_user_id).filter(Boolean))];
+  const { data: people } = ids.length ? await d.from("profiles").select("id, email").in("id", ids) : { data: [] };
+  const who = new Map(((people ?? []) as any[]).map((p) => [p.id, p.email]));
+  const history = ((events ?? []) as any[]).map((e) => ({
+    ...e,
+    actor: e.actor_user_id === "00000000-0000-0000-0000-000000000000" ? "Harmonious (system draft)" : who.get(e.actor_user_id) ?? (e.actor_user_id ? "Staff member" : "Unknown"),
+  }));
+  return { rows: data ?? [], history, canApprove: WORDING_APPROVERS.some((r) => roles.includes(r)), me: userId };
 }
 
 export async function createWordingDraft(userId: string, input: { requirementKey: string; title: string; wording: string; effectiveDate: string }) {
@@ -157,11 +167,11 @@ export async function decideWording(userId: string, input: { id: string; action:
     const { error } = await d.from("legal_wording_versions").update({ status: "approved", approved_by: userId, approved_at: now }).eq("id", w.id);
     if (error) fail(error.message);
     // Earlier approved versions retire; records already certified keep their pinned version.
-    await d.from("legal_wording_versions").update({ status: "retired", retired_at: now })
+    await d.from("legal_wording_versions").update({ status: "retired", retired_at: now, retired_by: userId })
       .eq("requirement_key", w.requirement_key).eq("status", "approved").neq("id", w.id);
   } else {
     if (w.status !== "approved") fail("Only approved wording can be retired.");
-    await d.from("legal_wording_versions").update({ status: "retired", retired_at: now }).eq("id", w.id);
+    await d.from("legal_wording_versions").update({ status: "retired", retired_at: now, retired_by: userId }).eq("id", w.id);
   }
   return { ok: true };
 }

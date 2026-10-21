@@ -252,6 +252,13 @@ function WordingBoard() {
             </span>
           </div>
           <p className="mt-2 whitespace-pre-wrap text-muted-foreground">{w.wording}</p>
+          <ul className="mt-2 space-y-0.5 border-t pt-2 text-xs text-muted-foreground" aria-label="Version history">
+            {((q.data as any).history ?? []).filter((h: any) => h.wording_version_id === w.id).map((h: any) => (
+              <li key={h.id}>
+                <span className="font-medium capitalize text-foreground">{h.event}</span> by {h.actor} on {new Date(h.occurred_at).toLocaleString()}
+              </li>
+            ))}
+          </ul>
         </div>
       ))}
     </div>
