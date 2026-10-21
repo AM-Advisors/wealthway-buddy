@@ -33,7 +33,8 @@ export const finishPersonalAccountFeed = createServerFn({ method: 'POST' }).midd
     const consent = await supabaseAdmin.from('personal_account_connection_events').select('*').eq('id', data.consentId).eq('owner_user_id', context.userId).eq('action', 'consented').gte('created_at', new Date(Date.now() - 30 * 60_000).toISOString()).maybeSingle();
     if (consent.error || !consent.data) throw new Error('Your account consent expired. Please connect again.');
     const detail = consent.data.detail as { kind?: string; version?: string };
-    if (!['bank', 'brokerage'].includes(detail.kind ?? '') || detail.version !== ACCOUNT_FEED_CONSENT_VERSION) throw new Error('Please confirm the current account consent.');
+    const kind = detail.kind;
+    if ((kind !== 'bank' && kind !== 'brokerage') || detail.version !== ACCOUNT_FEED_CONSENT_VERSION) throw new Error('Please confirm the current account consent.');
     const { ownedFeedConnection, encryptConnectionKey, appendFeedEvent, refreshOwnedAccountFeed } = await import('./account-aggregation.server');
     let connectionId = consent.data.connection_id;
     if (connectionId) await ownedFeedConnection(context.userId, connectionId);
@@ -44,7 +45,7 @@ export const finishPersonalAccountFeed = createServerFn({ method: 'POST' }).midd
       try {
         const item = await provider.readAccountFeedItem(exchanged.access_token);
         if (item.item.item_id !== exchanged.item_id) throw new Error('Account connection could not be confirmed.');
-        const inserted = await supabaseAdmin.from('personal_account_connections').insert({ owner_user_id: context.userId, feed_kind: detail.kind, provider_item_id: exchanged.item_id, access_token_ciphertext: encryptConnectionKey(exchanged.access_token), consent_version: ACCOUNT_FEED_CONSENT_VERSION }).select('id').single();
+        const inserted = await supabaseAdmin.from('personal_account_connections').insert({ owner_user_id: context.userId, feed_kind: kind, provider_item_id: exchanged.item_id, access_token_ciphertext: encryptConnectionKey(exchanged.access_token), consent_version: ACCOUNT_FEED_CONSENT_VERSION }).select('id').single();
         if (inserted.error) throw new Error('This account connection already exists or could not be saved.');
         connectionId = inserted.data.id;
       } catch (e) { await provider.revokeAccountFeed(exchanged.access_token).catch(() => null); throw e; }

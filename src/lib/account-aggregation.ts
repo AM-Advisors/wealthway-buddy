@@ -52,6 +52,7 @@ export function latestFeedSnapshots(rows: AccountSnapshot[], ownerId: string, th
   const active = new Map(connections.filter(c => c.status !== 'disconnected').map(c => [c.id, c]));
   const eligible = rows.filter(r => feedOwnerAllowed(ownerId, r.owner_user_id) && active.has(r.connection_id) && r.observed_at <= through);
   const newest = new Map<string, string>();
+  for (const c of active.values()) if (c.last_synced_at && c.last_synced_at <= through) newest.set(c.id, c.last_synced_at);
   for (const r of eligible) if ((newest.get(r.connection_id) ?? '') < r.observed_at) newest.set(r.connection_id, r.observed_at);
   return eligible.filter(r => r.observed_at === newest.get(r.connection_id));
 }
