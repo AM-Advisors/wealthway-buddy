@@ -8,9 +8,11 @@ describe("fund setup boxes", () => {
     expect(einComplete({ status: "in_review", hasLetter: true })).toBe(false);
     expect(formatEin("123456789")).toBe("12-3456789");
   });
-  it("banking needs bank name, account and the bank letter", () => {
+  it("banking needs bank name and account; the bank letter is optional", () => {
     expect(bankComplete({ bankName: "Mercury", accountMasked: "••••1234", hasLetter: true })).toBe(true);
-    expect(bankComplete({ bankName: "Mercury", accountMasked: "••••1234", hasLetter: false })).toBe(false);
+    expect(bankComplete({ bankName: "Mercury", accountMasked: "••••1234", hasLetter: false })).toBe(true);
+    expect(bankComplete({ bankName: "", accountMasked: "••••1234" })).toBe(false);
+    expect(bankComplete({ bankName: "Mercury", accountMasked: "" })).toBe(false);
   });
   it("a manager-signed W-9 substitutes for the IRS letter but not the recorded EIN", () => {
     expect(einComplete({ status: "recorded", hasLetter: false, hasSignedW9: true })).toBe(true);

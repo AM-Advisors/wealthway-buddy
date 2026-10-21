@@ -143,12 +143,12 @@ export function BankBox({ offeringId, isStaff, onChanged }: { offeringId: string
   const [showChoice, setShowChoice] = useState(false);
   const letter = latest(files.data as any[], "bank_letter");
   const det = ((wire.data as any)?.details ?? {}) as Record<string, string>;
-  const done = bankComplete({ bankName: det["bank_name"], accountMasked: det["account_number"], hasLetter: !!letter });
+  const done = bankComplete({ bankName: det["bank_name"], accountMasked: det["account_number"] });
   const refresh = () => { void invalidateFund(qc, offeringId); onChanged?.(); };
   if (wire.isPending || files.isPending) return <div className="h-24 animate-pulse rounded-2xl bg-muted" />;
   const form = isStaff
     ? <BankForm offeringId={offeringId} prior={det} letter={letter} onSaved={() => { setEditing(false); refresh(); }} />
-    : <div className="space-y-3"><p className="text-sm text-muted-foreground">Send your bank name, account name and the bank letter. Harmonious enters and verifies the full numbers.</p><SubmitForm offeringId={offeringId} section="bank" onDone={() => { setEditing(false); refresh(); }} /></div>;
+    : <div className="space-y-3"><p className="text-sm text-muted-foreground">Send your bank name, account name and wire instructions. The bank letter is optional. Harmonious enters and verifies the full numbers.</p><SubmitForm offeringId={offeringId} section="bank" onDone={() => { setEditing(false); refresh(); }} /></div>;
   if (done) return (
     <>
       <SummaryBox title="Banking" onEdit={() => setEditing(true)} rows={[
@@ -181,7 +181,6 @@ function BankForm({ offeringId, prior, letter, onSaved }: { offeringId: string; 
   const go = async () => {
     const err = validateBankEntry(v);
     if (err) return void toast.error(err);
-    if (!file && !letter) return void toast.error("Add the bank letter.");
     setBusy(true);
     try {
       // Keep every other stored field (international set, intermediary, scope) - the save replaces the whole record.
@@ -195,7 +194,7 @@ function BankForm({ offeringId, prior, letter, onSaved }: { offeringId: string; 
       <div className="grid gap-3 sm:grid-cols-2">{f("bankName", "Bank name")}{f("accountName", "Account name")}</div>
       <div className="grid gap-3 sm:grid-cols-2">{f("account", "Account number", true, "password")}{f("account2", "Confirm account number", true)}</div>
       <div className="grid gap-3 sm:grid-cols-2">{f("routing", "Routing number", true, "password")}{f("routing2", "Confirm routing number", true)}</div>
-      <LetterPicker label="bank letter" file={file} setFile={setFile} existing={letter} />
+      <LetterPicker label="Bank letter (optional)" file={file} setFile={setFile} existing={letter} />
       <div className="flex justify-end"><Button size="sm" disabled={busy} onClick={go}>{busy ? "Saving…" : "Save banking"}</Button></div>
     </div>
   );
