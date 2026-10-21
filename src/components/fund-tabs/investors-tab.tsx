@@ -27,6 +27,7 @@ import { INVESTOR_TIERS } from "@/lib/product-pricing";
 import { fmtDate, usd } from "./shared";
 import { PersonalInvestmentLinkCard, PersonalLinkCopyButton } from "@/components/personal-investment-link";
 import { InvestorEmailHistory, InvestorHelpers, InvestorQuickEdit } from "@/components/investor-panel-extras";
+import { PriorSignedDocuments } from "@/components/prior-signed-documents";
 
 export function InvestorsTab({ fundId, workQueue }: { fundId: string; workQueue?: ReactNode }) {
   const load = useServerFn(investorGridFn);
@@ -337,6 +338,7 @@ export function InvestorSheet({ fundId, id, onClose }: { fundId: string; id: str
                 </div>)}
                 {d.reviewEvidence.acknowledgments.map((doc: { id: string; title: string; version: number; acknowledgedAt: string }) => <div key={doc.id} className="border-b pb-2"><p className="font-medium">{doc.title}</p><p className="text-xs text-muted-foreground">Version {doc.version} · {fmtDate(doc.acknowledgedAt)} · Acknowledged and agreed</p></div>)}
               </section>
+              {id && <PriorSignedDocuments fundId={fundId} onboardingId={id} />}
               <section aria-label="Investor questionnaire">
                 <Collapsible open={questionnaireOpen} onOpenChange={(o) => setQuestionnaireFor(o ? id : null)} className="rounded-lg border">
                   <CollapsibleTrigger className="flex w-full items-center gap-2 p-3 text-left transition-colors hover:bg-muted/50">
