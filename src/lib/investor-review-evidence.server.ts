@@ -83,9 +83,9 @@ function displayAnswer(value: unknown): string {
 export async function managerInvestorSignedCopy(db: any, userId: string, input: { fundId: string; onboardingId: string; signatureId: string }) {
   const evidence = await investorReviewEvidence(db, userId, input.fundId, input.onboardingId);
   if (!evidence?.signedDocuments.some((d) => d.id === input.signatureId && d.hasCopy)) throw new Error("That signed copy is not available for this investment.");
-  const { data, error } = await db.from("document_signatures").select("pdf_path").eq("id", input.signatureId).maybeSingle();
+  const { data, error } = await db.from("document_signatures").select("pdf_path, executed_pdf_path").eq("id", input.signatureId).maybeSingle();
   if (error || !data?.pdf_path) throw new Error("The signed copy could not be loaded.");
-  const result = await db.storage.from("signed-documents").createSignedUrl(data.pdf_path, 300, { download: true });
+  const result = await db.storage.from("signed-documents").createSignedUrl(data.executed_pdf_path ?? data.pdf_path, 300, { download: true });
   if (result.error || !result.data?.signedUrl) throw new Error("The signed copy could not be opened.");
   return { url: result.data.signedUrl as string };
 }

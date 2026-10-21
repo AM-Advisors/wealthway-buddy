@@ -1,5 +1,5 @@
 /** Owner-scoped archive: no manager or staff role may substitute for ownership. */
-type SignedDocument = { id: string; title: string; version: number | null; snapshotVersion: number | null; signedAt: string | null; hasCopy: boolean; replaced: boolean };
+type SignedDocument = { id: string; title: string; version: number | null; snapshotVersion: number | null; signedAt: string | null; hasCopy: boolean; replaced: boolean; fullyExecuted: boolean; executedAt: string | null };
 export async function investorSignedDocuments(db: any, userId: string, onboardingId: string): Promise<SignedDocument[]> {
   const { data: row, error } = await db.from("investor_onboardings")
     .select("id, investor_user_id, application_id, executed_snapshot, removed_at").eq("id", onboardingId).maybeSingle();
@@ -12,7 +12,7 @@ export async function investorSignedDocuments(db: any, userId: string, onboardin
 /** Shared evidence read; callers must authorize the exact investment first. */
 export async function submittedSignedDocuments(db: any, applicationId: string): Promise<SignedDocument[]> {
   const { data: signatures, error: signaturesError } = await db.from("document_signatures")
-    .select("id, offering_document_id, signature_template_version, snapshot_version, signed_at, provider_completed_at, provider_status, provider, pdf_path, cancelled_at, superseded_by")
+    .select("id, offering_document_id, signature_template_version, snapshot_version, signed_at, provider_completed_at, provider_status, provider, pdf_path, executed_pdf_path, executed_at, cancelled_at, superseded_by")
     .eq("application_id", applicationId).order("signed_at", { ascending: false });
   if (signaturesError) throw new Error("Your signed documents could not be loaded. Please try again.");
   const completed = (signatures ?? []).filter((s: any) => !s.cancelled_at &&
@@ -30,15 +30,17 @@ export async function submittedSignedDocuments(db: any, applicationId: string): 
     signedAt: (s.provider_completed_at ?? s.signed_at) as string | null,
     hasCopy: Boolean(s.pdf_path),
     replaced: Boolean(s.superseded_by),
+    fullyExecuted: Boolean(s.executed_pdf_path),
+    executedAt: (s.executed_at ?? null) as string | null,
   }));
 }
 
 export async function investorSignedCopy(db: any, userId: string, input: { onboardingId: string; signatureId: string }) {
   const documents = await investorSignedDocuments(db, userId, input.onboardingId);
   if (!documents.some((d: any) => d.id === input.signatureId && d.hasCopy)) throw new Error("That signed copy is not available for this investment.");
-  const { data: signature, error } = await db.from("document_signatures").select("pdf_path").eq("id", input.signatureId).maybeSingle();
+  const { data: signature, error } = await db.from("document_signatures").select("pdf_path, executed_pdf_path").eq("id", input.signatureId).maybeSingle();
   if (error || !signature?.pdf_path) throw new Error("Your signed copy could not be loaded.");
-  const result = await db.storage.from("signed-documents").createSignedUrl(signature.pdf_path, 300, { download: true });
+  const result = await db.storage.from("signed-documents").createSignedUrl(signature.executed_pdf_path ?? signature.pdf_path, 300, { download: true });
   if (result.error || !result.data?.signedUrl) throw new Error("Your signed copy could not be opened. Please try again.");
   return { url: result.data.signedUrl as string };
 }

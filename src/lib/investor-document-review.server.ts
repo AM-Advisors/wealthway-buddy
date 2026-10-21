@@ -68,7 +68,7 @@ export async function listDocumentReviews(userId: string, offeringId: string) {
   const [{ data: persons }, { data: decisions }, { data: sigs }] = await Promise.all([
     personIds.length ? db.from("persons").select("id, email, preferred_name, legal_first_name, legal_last_name").in("id", personIds) : { data: [] },
     rows.length ? db.from("investor_document_approvals").select("*").in("onboarding_id", rows.map((r) => r.id)).order("decided_at", { ascending: false }) : { data: [] },
-    appIds.length ? db.from("document_signatures").select("id, application_id, offering_document_id, signer_name, provider_status, provider_completed_at, signed_at, pdf_path, cancelled_at, superseded_by").in("application_id", appIds) : { data: [] },
+    appIds.length ? db.from("document_signatures").select("id, application_id, offering_document_id, signer_name, provider_status, provider_completed_at, signed_at, pdf_path, executed_pdf_path, executed_at, cancelled_at, superseded_by").in("application_id", appIds) : { data: [] },
   ]);
   const pMap = new Map(((persons ?? []) as any[]).map((p) => [p.id, p]));
   // Where this manager is also the fund signatory, approval and countersigning happen in one step.
@@ -105,7 +105,7 @@ export async function listDocumentReviews(userId: string, offeringId: string) {
             decidedAt: (dec?.decided_at ?? null) as string | null,
             countersignSignerId: (sig ? mySigner.get(sig.id) ?? null : null) as string | null,
             hasPendingFundSignature: Boolean(sig && pendingFundSignatures.has(sig.id)),
-            signed: sig ? { hasCopy: Boolean(sig.pdf_path), signatureId: sig.id as string, signerName: sig.signer_name as string | null, signedAt: (sig.provider_completed_at ?? sig.signed_at) as string } : null,
+            signed: sig ? { hasCopy: Boolean(sig.pdf_path), signatureId: sig.id as string, signerName: sig.signer_name as string | null, signedAt: (sig.provider_completed_at ?? sig.signed_at) as string, fullyExecuted: Boolean(sig.executed_pdf_path), executedAt: (sig.executed_at ?? null) as string | null } : null,
           };
         }),
       };
@@ -179,11 +179,11 @@ export async function decideDocument(userId: string, input: { offeringId: string
 export async function signedCopyUrl(userId: string, input: { offeringId: string; signatureId: string }) {
   await assertManager(userId, input.offeringId);
   const db = await admin();
-  const { data: sig } = await db.from("document_signatures").select("id, application_id, pdf_path, offering_document_id").eq("id", input.signatureId).maybeSingle();
+  const { data: sig } = await db.from("document_signatures").select("id, application_id, pdf_path, executed_pdf_path, offering_document_id").eq("id", input.signatureId).maybeSingle();
   if (!sig?.pdf_path) throw new Error("No signed copy is stored for that agreement yet.");
   const { data: app } = await db.from("investor_applications").select("offering_id").eq("id", sig.application_id).maybeSingle();
   if (app?.offering_id !== input.offeringId) forbid("that agreement isn't for this fund.");
-  const { data, error } = await db.storage.from("signed-documents").createSignedUrl(sig.pdf_path, 300, { download: true });
+  const { data, error } = await db.storage.from("signed-documents").createSignedUrl(sig.executed_pdf_path ?? sig.pdf_path, 300, { download: true });
   if (error || !data) throw new Error("Couldn't open the signed copy.");
   return { url: data.signedUrl as string };
 }
