@@ -1,5 +1,9 @@
 # Roadmap
 
+## Investor checklist consistency (2026-10-21)
+- [ ] Replace legacy verification, upload and signature checks with the exact investment's canonical journey; share its query cache and scoped step links.
+- [ ] Run focused consistency regressions; signed-in read-back requires isolated synthetic QA and must not use shared production records.
+
 ## Missing banking controls (2026-10-21)
 - [x] Expose existing bank ownership/verification, stepwise account status and investor release actions beside saved instructions on fund Banking and Setup; preserve existing server checks, no real approval or release performed.
 - [x] 31 focused banking/access tests passed; preview build OK.
