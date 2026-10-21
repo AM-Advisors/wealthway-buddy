@@ -338,6 +338,7 @@ import { Route as InvestorFundOfferingIdRouteImport } from './routes/investor.fu
 import { Route as LovableEmailEventsRouteImport } from './routes/lovable/email/events'
 import { Route as OauthGoogleReturnRouteImport } from './routes/oauth/google/return'
 import { Route as OauthHubspotReturnRouteImport } from './routes/oauth/hubspot/return'
+import { Route as OnboardContactTokenRouteImport } from './routes/onboard.contact.$token'
 import { Route as OnboardIOnboardingIdRouteImport } from './routes/onboard.i.$onboardingId'
 import { Route as OnboardPrepareTokenRouteImport } from './routes/onboard.prepare.$token'
 import { Route as AuthenticatedAdminContractsIndexRouteImport } from './routes/_authenticated/admin.contracts.index'
@@ -2330,6 +2331,11 @@ const OauthHubspotReturnRoute = OauthHubspotReturnRouteImport.update({
   path: '/oauth/hubspot/return',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OnboardContactTokenRoute = OnboardContactTokenRouteImport.update({
+  id: '/onboard/contact/$token',
+  path: '/onboard/contact/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OnboardIOnboardingIdRoute = OnboardIOnboardingIdRouteImport.update({
   id: '/onboard/i/$onboardingId',
   path: '/onboard/i/$onboardingId',
@@ -3467,6 +3473,7 @@ export interface FileRoutesByFullPath {
   '/lovable/email/events': typeof LovableEmailEventsRoute
   '/oauth/google/return': typeof OauthGoogleReturnRoute
   '/oauth/hubspot/return': typeof OauthHubspotReturnRoute
+  '/onboard/contact/$token': typeof OnboardContactTokenRoute
   '/onboard/i/$onboardingId': typeof OnboardIOnboardingIdRoute
   '/onboard/prepare/$token': typeof OnboardPrepareTokenRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
@@ -3928,6 +3935,7 @@ export interface FileRoutesByTo {
   '/lovable/email/events': typeof LovableEmailEventsRoute
   '/oauth/google/return': typeof OauthGoogleReturnRoute
   '/oauth/hubspot/return': typeof OauthHubspotReturnRoute
+  '/onboard/contact/$token': typeof OnboardContactTokenRoute
   '/onboard/i/$onboardingId': typeof OnboardIOnboardingIdRoute
   '/onboard/prepare/$token': typeof OnboardPrepareTokenRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
@@ -4397,6 +4405,7 @@ export interface FileRoutesById {
   '/lovable/email/events': typeof LovableEmailEventsRoute
   '/oauth/google/return': typeof OauthGoogleReturnRoute
   '/oauth/hubspot/return': typeof OauthHubspotReturnRoute
+  '/onboard/contact/$token': typeof OnboardContactTokenRoute
   '/onboard/i/$onboardingId': typeof OnboardIOnboardingIdRoute
   '/onboard/prepare/$token': typeof OnboardPrepareTokenRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
@@ -4867,6 +4876,7 @@ export interface FileRouteTypes {
     | '/lovable/email/events'
     | '/oauth/google/return'
     | '/oauth/hubspot/return'
+    | '/onboard/contact/$token'
     | '/onboard/i/$onboardingId'
     | '/onboard/prepare/$token'
     | '/admin/'
@@ -5328,6 +5338,7 @@ export interface FileRouteTypes {
     | '/lovable/email/events'
     | '/oauth/google/return'
     | '/oauth/hubspot/return'
+    | '/onboard/contact/$token'
     | '/onboard/i/$onboardingId'
     | '/onboard/prepare/$token'
     | '/admin'
@@ -5796,6 +5807,7 @@ export interface FileRouteTypes {
     | '/lovable/email/events'
     | '/oauth/google/return'
     | '/oauth/hubspot/return'
+    | '/onboard/contact/$token'
     | '/onboard/i/$onboardingId'
     | '/onboard/prepare/$token'
     | '/_authenticated/admin/'
@@ -6002,6 +6014,7 @@ export interface RootRouteChildren {
   LovableEmailEventsRoute: typeof LovableEmailEventsRoute
   OauthGoogleReturnRoute: typeof OauthGoogleReturnRoute
   OauthHubspotReturnRoute: typeof OauthHubspotReturnRoute
+  OnboardContactTokenRoute: typeof OnboardContactTokenRoute
   OnboardIOnboardingIdRoute: typeof OnboardIOnboardingIdRoute
   OnboardPrepareTokenRoute: typeof OnboardPrepareTokenRoute
   ApiPublicEmailClickRoute: typeof ApiPublicEmailClickRoute
@@ -8330,6 +8343,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OauthHubspotReturnRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/onboard/contact/$token': {
+      id: '/onboard/contact/$token'
+      path: '/onboard/contact/$token'
+      fullPath: '/onboard/contact/$token'
+      preLoaderRoute: typeof OnboardContactTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/onboard/i/$onboardingId': {
       id: '/onboard/i/$onboardingId'
       path: '/onboard/i/$onboardingId'
@@ -10370,6 +10390,7 @@ const rootRouteChildren: RootRouteChildren = {
   LovableEmailEventsRoute: LovableEmailEventsRoute,
   OauthGoogleReturnRoute: OauthGoogleReturnRoute,
   OauthHubspotReturnRoute: OauthHubspotReturnRoute,
+  OnboardContactTokenRoute: OnboardContactTokenRoute,
   OnboardIOnboardingIdRoute: OnboardIOnboardingIdRoute,
   OnboardPrepareTokenRoute: OnboardPrepareTokenRoute,
   ApiPublicEmailClickRoute: ApiPublicEmailClickRoute,
