@@ -1423,6 +1423,9 @@ export async function launchFund(userId: string, setupId: string) {
     .select("*")
     .single();
 
+  // A launched fund is open to its invited investors; the public page stays a separate switch.
+  await db().from("offerings").update({ is_open: true }).eq("id", setup.offering_id);
+
   // Lock the reviewed regulatory configuration at launch.
   await db()
     .from("fund_regulatory_configs")
