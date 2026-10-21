@@ -684,15 +684,32 @@ async function fundManagerItems(ctx: Ctx, n: Names): Promise<AttentionItem[]> {
     rows(
       await s
         .from("document_signature_signers")
-        .select("id, offering_id, status, updated_at, application_id")
+        .select("id, signature_id, offering_id, offering_document_id, status, updated_at, application_id")
         .eq("signer_user_id", ctx.userId)
         .eq("role_key", "fund_manager")
         .eq("status", "sent")
         .limit(LIMIT),
     ),
   );
+  const { supabaseAdmin: adminDb } = await import("@/integrations/supabase/client.server");
+  const { managerApprovedSigned } = await import("@/lib/investor-document-review.server");
   for (const c of countersign as any[]) {
     if (!managedIds.has(c.offering_id)) continue;
+    // Approve or decline first; the countersignature opens only after approval.
+    const approved = await safely(async () => {
+      const { data: inv } = await (adminDb as any).from("document_signature_signers").select("signed_at").eq("signature_id", c.signature_id).eq("role_key", "investor").maybeSingle();
+      const { data: ob } = await (adminDb as any).from("investor_onboardings").select("id").eq("application_id", c.application_id).is("removed_at", null).maybeSingle();
+      return ob ? managerApprovedSigned(adminDb, ob.id, c.offering_document_id, inv?.signed_at ?? null) : false;
+    });
+    if (approved !== true) {
+      out.push(buildAttentionItem({
+        id: `manager-signed-review:${c.id}`, source: "manager.countersign", workspace: "fund_manager", group: "needs_you", severity: "action",
+        title: `Investor signed - approve or decline - ${fundName(c.offering_id) ?? "Fund"}`, workflowState: "awaiting_fund_manager",
+        status: "The investor has signed. Approve or decline under Approvals.", sourceTable: "document_signature_signers", sourceId: c.id,
+        href: `/manager/fund/${c.offering_id}/approvals`, at: c.updated_at ?? null, fundName: fundName(c.offering_id),
+      }));
+      continue;
+    }
     out.push(
       buildAttentionItem({
         id: `manager-countersign:${c.id}`,
