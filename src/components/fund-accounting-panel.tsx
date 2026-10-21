@@ -6,8 +6,10 @@ import { toast } from "sonner";
 
 import {
   accountingOverviewFn, decideExpenseFn, decideFeeTermFn, decideInvestmentFn, decideSettlementFn, feePreviewFn, listMappingsFn,
-  postExpenseFn, postInvestmentFn, postSettlementFn, prepareExpenseFn, prepareInvestmentFn, reverseInvestmentFn, setMappingFn,
+  postExpenseFn, postInvestmentFn, postSettlementFn, prepareExpenseFn, prepareSettlementFn, prepareInvestmentFn, reverseInvestmentFn, setMappingFn,
 } from "@/lib/fund-accounting.functions";
+import { openBillCopyFn, uploadBillCopyFn } from "@/lib/fund-books.functions";
+import { fileToBase64 } from "@/components/fund-tabs/shared";
 import { EXPENSE_CATEGORIES } from "@/lib/fund-accounting-model";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -129,13 +131,14 @@ function Investments({ offeringId, d }: { offeringId: string; d: any }) {
   );
 }
 
-function Expenses({ offeringId, d }: { offeringId: string; d: any }) {
+export function Expenses({ offeringId, d }: { offeringId: string; d: any }) {
   const act = useAct(offeringId);
   const prepare = useServerFn(prepareExpenseFn), decide = useServerFn(decideExpenseFn), post = useServerFn(postExpenseFn);
-  const [f, setF] = useState({ category: "legal", vendor: "", description: "", invoice: "", date: "", amount: "", mode: "paid", paidOn: "", source: "", evidence: "" });
+  const upload = useServerFn(uploadBillCopyFn), openCopy = useServerFn(openBillCopyFn);
+  const [f, setF] = useState({ category: "legal", vendor: "", description: "", invoice: "", invoiceDate: "", date: "", amount: "", mode: "paid", paidOn: "", source: "", evidence: "" });
   const set = (k: string) => (e: any) => setF({ ...f, [k]: e.target.value });
   const submit = () => act(() => prepare({ data: {
-    offeringId, category: f.category, vendor: f.vendor, description: f.description, invoiceNumber: f.invoice || null, invoiceDate: null,
+    offeringId, category: f.category, vendor: f.vendor, description: f.description, invoiceNumber: f.invoice || null, invoiceDate: f.invoiceDate || null,
     serviceStart: null, serviceEnd: null, expenseDate: f.date, amountCents: toCents(f.amount), paymentMode: f.mode as any,
     paidOn: f.mode === "paid" ? f.paidOn || null : null, sourceReference: f.source, evidenceReference: f.evidence || null, bankLineId: null,
   } }), "Prepared for review");
@@ -146,17 +149,18 @@ function Expenses({ offeringId, d }: { offeringId: string; d: any }) {
           {EXPENSE_CATEGORIES.map((c) => <option key={c.key} value={c.key}>{c.label}</option>)}
         </select>
         <select className="h-9 rounded-md border bg-background px-2 text-sm" value={f.mode} onChange={set("mode")}>
-          <option value="paid">Paid</option><option value="accrued">Accrued (not yet paid)</option>
+          <option value="accrued">Needs to be paid</option><option value="paid">Already paid</option>
         </select>
         <Input placeholder="Vendor" value={f.vendor} onChange={set("vendor")} />
         <Input placeholder="Description" value={f.description} onChange={set("description")} />
         <Input placeholder="Invoice number" value={f.invoice} onChange={set("invoice")} />
+        <label className="text-xs text-muted-foreground">Invoice date<Input type="date" value={f.invoiceDate} onChange={set("invoiceDate")} /></label>
         <Input placeholder="Amount ($)" value={f.amount} onChange={set("amount")} />
-        <Input type="date" aria-label="Expense date" value={f.date} onChange={set("date")} />
-        {f.mode === "paid" && <Input type="date" aria-label="Paid on" value={f.paidOn} onChange={set("paidOn")} />}
+        <label className="text-xs text-muted-foreground">Expense date<Input type="date" value={f.date} onChange={set("date")} /></label>
+        {f.mode === "paid" && <label className="text-xs text-muted-foreground">Paid on<Input type="date" max={new Date().toISOString().slice(0, 10)} value={f.paidOn} onChange={set("paidOn")} /></label>}
         <Input placeholder="Source reference" value={f.source} onChange={set("source")} />
         <Input placeholder="Evidence reference" value={f.evidence} onChange={set("evidence")} />
-        <div className="sm:col-span-2"><Button onClick={submit}>Prepare expense</Button></div>
+        <div className="sm:col-span-2"><Button onClick={submit}>Prepare bill for review</Button></div>
       </CardContent></Card>
       {d.expenses.map((r: any) => (
         <Card key={r.id}><CardContent className="space-y-2 p-4">
@@ -166,6 +170,11 @@ function Expenses({ offeringId, d }: { offeringId: string; d: any }) {
           </div>
           <p className="text-sm text-muted-foreground">{r.description}{r.invoice_number ? ` · Invoice ${r.invoice_number}` : ""} · {r.expense_date}{r.paid_on ? ` · Paid ${r.paid_on}` : ""}</p>
           <Lineage row={r} />
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            {r.bill_copy_path
+              ? <Button size="sm" variant="outline" onClick={() => openCopy({ data: { fundId: offeringId, expenseId: r.id } }).then((x) => window.open(x.url, "_blank", "noopener")).catch((e: Error) => toast.error(e.message))}>Open bill copy</Button>
+              : <label className="cursor-pointer rounded-md border px-2 py-1">Attach bill copy<input type="file" className="hidden" accept=".pdf,image/*" onChange={async (e) => { const file = e.target.files?.[0]; e.target.value = ""; if (!file) return; act(async () => upload({ data: { fundId: offeringId, expenseId: r.id, fileName: file.name, contentType: file.type, base64: await fileToBase64(file) } }), "Bill copy attached"); }} /></label>}
+          </div>
           <DecisionButtons row={r} decide={decide} post={post} act={act} />
         </CardContent></Card>
       ))}
@@ -173,16 +182,23 @@ function Expenses({ offeringId, d }: { offeringId: string; d: any }) {
   );
 }
 
-function Payables({ offeringId, d }: { offeringId: string; d: any }) {
+export function Payables({ offeringId, d }: { offeringId: string; d: any }) {
   const act = useAct(offeringId);
-  const decide = useServerFn(decideSettlementFn), post = useServerFn(postSettlementFn);
+  const decide = useServerFn(decideSettlementFn), post = useServerFn(postSettlementFn), prepare = useServerFn(prepareSettlementFn);
+  const pay = (e: any) => {
+    const paidOn = window.prompt("Date paid (YYYY-MM-DD)", new Date().toISOString().slice(0, 10));
+    if (!paidOn) return;
+    const ref = window.prompt("Payment reference (check number, wire reference)") ?? "";
+    if (!ref.trim()) { toast.error("A payment reference is required."); return; }
+    act(() => prepare({ data: { offeringId, expenseId: e.id, liabilityPurpose: "accrued_expenses", openingLiabilityReference: null, amountCents: Number(e.amount_cents), paidOn: paidOn.trim(), sourceReference: ref.trim(), idempotencyKey: `bill|${e.id}|${paidOn.trim()}|${ref.trim()}`, bankLineId: null } }), "Payment prepared for review");
+  };
   const accrued = d.expenses.filter((e: any) => e.payment_mode === "accrued" && e.status === "posted");
   return (
     <div className="space-y-4">
       <Card><CardContent className="space-y-1 p-4 text-sm">
         <p className="font-medium">Open accrued expenses</p>
         {accrued.length === 0 && <p className="text-muted-foreground">None.</p>}
-        {accrued.map((e: any) => <p key={e.id}>{e.vendor} · {money(e.amount_cents)} · {e.expense_date}</p>)}
+        {accrued.map((e: any) => <div key={e.id} className="flex flex-wrap items-center justify-between gap-2"><span>{e.vendor} · {money(e.amount_cents)} · {e.expense_date}</span><Button size="sm" variant="outline" onClick={() => pay(e)}>Record payment</Button></div>)}
         <p className="pt-2 text-xs text-muted-foreground">Settling a payable records the payment against the liability. It never records the expense again. Opening liabilities from the prior administrator are settled the same way.</p>
       </CardContent></Card>
       {d.settlements.map((r: any) => (
