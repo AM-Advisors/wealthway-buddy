@@ -153,6 +153,8 @@ export const previewInvoice = createServerFn({ method: "POST" })
     z
       .object({
         clientId: z.string().uuid(),
+        offeringId: z.string().uuid().nullable().optional(),
+        sowId: z.string().uuid().nullable().optional(),
         periodStart: z.string().min(4).max(20),
         periodEnd: z.string().min(4).max(20),
       })
@@ -165,71 +167,23 @@ export const previewInvoice = createServerFn({ method: "POST" })
 
 async function collectLines(
   context: any,
-  data: { clientId: string; periodStart: string; periodEnd: string },
+  data: { clientId: string; periodStart: string; periodEnd: string; offeringId?: string | null; sowId?: string | null },
 ) {
-  const [{ data: pricing }, { data: entitlements }, { data: expenses }, { data: sows }] =
-    await Promise.all([
-      context.supabase.from("client_pricing").select("*").eq("client_id", data.clientId),
-      context.supabase.from("service_entitlements").select("*").eq("client_id", data.clientId),
-      context.supabase
-        .from("pass_through_expenses")
-        .select("*")
-        .eq("client_id", data.clientId)
-        .eq("billing_status", "unbilled")
-        .gte("incurred_on", data.periodStart)
-        .lte("incurred_on", data.periodEnd),
-      context.supabase
-        .from("client_sows")
-        .select("id, title, status")
-        .eq("client_id", data.clientId)
-        .eq("status", "active"),
-    ]);
-
-  const activeServices = new Set(
-    ((entitlements ?? []) as any[])
-      .filter((e) => ["included", "active"].includes(String(e.status)))
-      .map((e) => String(e.service_key)),
-  );
-
-  const rateLines = ((pricing ?? []) as any[])
-    .filter((p) => activeServices.has(String(p.service_key)))
-    .filter((p) => !p.effective_date || p.effective_date <= data.periodEnd)
-    .map((p, index) => ({
-      source: "rate" as const,
-      service_key: p.service_key,
-      label: p.label ?? p.service_key,
-      description: p.pricing_model ? `Contracted rate - ${p.pricing_model}` : "Contracted rate",
-      quantity: 1,
-      unit_cents: Number(p.contracted_cents ?? p.standard_cents ?? 0),
-      amount_cents: Number(p.contracted_cents ?? p.standard_cents ?? 0),
-      pricing_id: p.id,
-      expense_id: null,
-      offering_id: null,
-      sort_order: index,
-    }));
-
-  const expenseLines = ((expenses ?? []) as any[]).map((e, index) => ({
-    source: "expense" as const,
-    service_key: null,
-    label: e.description,
-    description: `Third-party cost incurred ${e.incurred_on}`,
-    quantity: 1,
-    unit_cents: Number(e.amount_cents ?? 0),
-    amount_cents: Number(e.amount_cents ?? 0),
-    pricing_id: null,
-    expense_id: e.id,
-    offering_id: e.offering_id ?? null,
-    sort_order: rateLines.length + index,
-  }));
-
-  const lines = [...rateLines, ...expenseLines];
-  return {
-    lines,
-    totalCents: lines.reduce((s, l) => s + l.amount_cents, 0),
-    activeSow: (sows ?? [])[0] ?? null,
-    skipped: ((pricing ?? []) as any[]).filter((p) => !activeServices.has(String(p.service_key)))
-      .length,
-  };
+  const { collectInvoiceRates } = await import("@/lib/invoice-pricing.server");
+  const rates = await collectInvoiceRates(context.supabase, data);
+  const { data: expenses, error } = await context.supabase.from("pass_through_expenses").select("*")
+    .eq("client_id", data.clientId).eq("billing_status", "unbilled")
+    .gte("incurred_on", data.periodStart).lte("incurred_on", data.periodEnd);
+  if (error) throw new Error("Invoice expenses couldn't be loaded. Please retry.");
+  const expenseLines = ((expenses ?? []) as any[])
+    .filter(e => !data.offeringId || e.offering_id === data.offeringId)
+    .map((e, index) => ({ source: "expense", service_key: null, label: e.description,
+      description: `Third-party cost incurred ${e.incurred_on}`, quantity: 1,
+      unit_cents: Number(e.amount_cents ?? 0), amount_cents: Number(e.amount_cents ?? 0),
+      pricing_id: null, expense_id: e.id, offering_id: e.offering_id ?? null,
+      sort_order: rates.lines.length + index }));
+  const lines = [...rates.lines, ...expenseLines];
+  return { ...rates, lines, totalCents: lines.reduce((sum, l) => sum + l.amount_cents, 0) };
 }
 
 /** Create a draft invoice from the client's contracted fees and active services. */
@@ -240,6 +194,7 @@ export const createInvoice = createServerFn({ method: "POST" })
       .object({
         clientId: z.string().uuid(),
         sowId: z.string().uuid().nullable().optional(),
+        offeringId: z.string().uuid().nullable().optional(),
         periodStart: z.string().min(4).max(20),
         periodEnd: z.string().min(4).max(20),
         netDays: z.number().int().min(0).max(180).default(30),
@@ -372,45 +327,8 @@ export const deleteInvoiceLine = createServerFn({ method: "POST" })
 
 /** Compare every billed line with the client's contracted rate card. */
 async function checkRates(context: any, invoiceId: string, clientId: string) {
-  const [{ data: lines }, { data: pricing }] = await Promise.all([
-    context.supabase.from("invoice_lines").select("*").eq("invoice_id", invoiceId),
-    context.supabase.from("client_pricing").select("*").eq("client_id", clientId),
-  ]);
-  const rateById = new Map(((pricing ?? []) as any[]).map((p) => [p.id, p]));
-  const rateByKey = new Map(((pricing ?? []) as any[]).map((p) => [String(p.service_key), p]));
-
-  // Fund fees agreed after a draft was raised have no pricing_id on the line.
-  // Fall back to the same rate lookup the fund fee screens use so the check
-  // compares like with like instead of treating the line as off rate card.
-  const { resolveClientRates } = await import("@/lib/fee-rates.server");
-  const fundRates = await resolveClientRates(context.supabase, clientId);
-
-  const items = ((lines ?? []) as any[])
-    .filter((l) => l.source !== "expense")
-    .map((l) => {
-      const fallback =
-        l.service_key && (fundRates as any)[String(l.service_key)]
-          ? rateById.get(String((fundRates as any)[String(l.service_key)].id))
-          : null;
-      const rate = l.pricing_id
-        ? rateById.get(l.pricing_id)
-        : l.service_key
-          ? (rateByKey.get(String(l.service_key)) ?? fallback)
-          : null;
-      const contracted = rate ? Number(rate.contracted_cents ?? rate.standard_cents ?? 0) : null;
-      const billed = Number(l.amount_cents ?? 0) ;
-      const expected = contracted === null ? null : contracted * Number(l.quantity ?? 1);
-      return {
-        label: l.label as string,
-        billedCents: billed,
-        contractedCents: expected,
-        varianceCents: expected === null ? billed : billed - expected,
-        offRateCard: expected === null,
-      };
-    });
-
-  const variance = items.reduce((s, i) => s + Math.max(0, i.varianceCents), 0);
-  return { items, varianceCents: variance };
+  const { checkInvoiceRates } = await import("@/lib/invoice-pricing.server");
+  return checkInvoiceRates(context.supabase, invoiceId, clientId);
 }
 
 /** Everything that must be true before money is asked for or moved. */
