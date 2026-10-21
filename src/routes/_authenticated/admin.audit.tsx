@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 
 import { AuditLogTable } from "@/components/audit-log-table";
+import { LoadError } from "@/components/load-error";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   listAuditFunds,
@@ -48,12 +49,14 @@ export const Route = createFileRoute("/_authenticated/admin/audit")({
 
 function AuditLogPage() {
   const loadFunds = useServerFn(listAuditFunds);
-  const { data } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["audit-funds"],
     queryFn: () => loadFunds(),
     retry: false,
   });
   const funds = (data?.funds ?? []) as { id: string; name: string }[];
+  if (isLoading) return <p className="p-6 text-muted-foreground">Loading audit funds…</p>;
+  if (error) return <LoadError error={error} what="Audit funds" onRetry={() => { void refetch(); }} />;
 
   return (
     <main className="mx-auto w-full max-w-6xl space-y-6 p-4 md:p-6">

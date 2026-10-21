@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 
 import { emailHealthFn, systemStatusFn, webhookLogFn } from "@/lib/ops-health.functions";
+import { LoadError } from "@/components/load-error";
 
 const PROBLEM = /bounce|fail|complain|suppress|reject|error|dead/i;
 
@@ -47,7 +48,7 @@ export function EmailHealth() {
           ))}
         </div>
       ) : null}
-      {q.isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> : q.error ? <p className="text-sm text-destructive">{(q.error as Error).message}</p> : events.length === 0 ? <p className="text-sm text-muted-foreground">No matching delivery updates.</p> : (
+      {q.isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> : q.error ? <LoadError error={q.error} what="Email delivery records" onRetry={() => { void q.refetch(); }} /> : events.length === 0 ? <p className="text-sm text-muted-foreground">No matching delivery updates.</p> : (
         <div className="overflow-x-auto rounded-md border">
           <table className="w-full text-sm">
             <thead className="bg-muted/50 text-left"><tr><th className="p-2">When</th><th className="p-2">Update</th><th className="p-2">Recipient</th><th className="p-2">Message</th></tr></thead>
@@ -75,7 +76,7 @@ export function WebhookLog() {
           {["all", "Identity check", "E-signature", "Bank linking"].map((s) => <option key={s} value={s}>{s === "all" ? "All sources" : s}</option>)}
         </select>
       </div>
-      {q.isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> : q.error ? <p className="text-sm text-destructive">{(q.error as Error).message}</p> : events.length === 0 ? <p className="text-sm text-muted-foreground">No updates in this period.</p> : (
+      {q.isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> : q.error ? <LoadError error={q.error} what="Webhook records" onRetry={() => { void q.refetch(); }} /> : events.length === 0 ? <p className="text-sm text-muted-foreground">No updates in this period.</p> : (
         <div className="overflow-x-auto rounded-md border">
           <table className="w-full text-sm">
             <thead className="bg-muted/50 text-left"><tr><th className="p-2">Received</th><th className="p-2">Source</th><th className="p-2">Type</th><th className="p-2">Status</th><th className="p-2">Processed</th><th className="p-2">Detail</th></tr></thead>

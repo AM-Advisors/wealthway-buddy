@@ -1,5 +1,5 @@
 /** Authorization precedes all privileged diagnostic reads. */
-export async function authorizeEmailDiagnostics(db: any, userId: string, input: { recipient?: string; applicationId?: string }) {
+export async function authorizeEmailDiagnostics(db: any, userId: string, input: { recipient?: string | undefined; applicationId?: string | undefined }) {
   const roles = await db.from("user_roles").select("role").eq("user_id", userId);
   if (roles.error) throw new Error("Email diagnostic access could not be checked.");
   if ((roles.data ?? []).some((r: { role: string }) => r.role === "admin" || r.role === "super_admin")) return { admin: true };

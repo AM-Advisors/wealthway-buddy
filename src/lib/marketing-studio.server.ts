@@ -163,7 +163,7 @@ export async function dashboardSignals(userId: string) {
     db.from("marketing_research_ideas").select("id, title, series_key, idea_date, converted_item_id").is("converted_item_id", null).order("idea_date", { ascending: false }).limit(5),
     db.from("marketing_search_rows").select("query, clicks, impressions").gte("day", since.slice(0, 10)).limit(5000),
     db.from("marketing_post_metrics").select("metrics, captured_on").gte("captured_on", since.slice(0, 10)).limit(2000),
-    (await import("@/lib/marketing-jobs.server")).jobHealth().catch(() => []),
+    (await import("@/lib/marketing-jobs.server")).jobHealth().then(rows => ({ rows, error: null }), () => ({ rows: [], error: "Scheduled job records could not be loaded." })),
   ]);
   const q = new Map<string, { clicks: number; impressions: number }>();
   for (const r of (search.data ?? []) as any[]) { const c = q.get(r.query) ?? { clicks: 0, impressions: 0 }; c.clicks += r.clicks ?? 0; c.impressions += r.impressions ?? 0; q.set(r.query, c); }
@@ -176,6 +176,7 @@ export async function dashboardSignals(userId: string) {
     social: (metrics.data ?? []).length ? { state: engagement == null ? "no_data" : "ok", engagement, snapshots: (metrics.data ?? []).length } : { state: "not_measured", engagement: null, snapshots: 0 },
     traffic: { state: "not_connected" as const },
     leads: { state: "not_measured" as const },
-    jobs,
+    jobs: jobs.rows,
+    jobsError: jobs.error,
   };
 }

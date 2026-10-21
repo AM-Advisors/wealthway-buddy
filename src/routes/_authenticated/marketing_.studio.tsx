@@ -120,12 +120,13 @@ function StudioDashboard() {
       </div>
 
       <Panel title="Scheduled jobs (last 48 hours)">
-        {S?.jobs?.length ? <ul className="divide-y text-sm">{S.jobs.map((j: any) => (
+        {sig.error ? <p role="alert" className="text-sm text-destructive">Scheduled job records could not be loaded.</p> : S?.jobsError ? <p role="alert" className="text-sm text-destructive">{S.jobsError}</p> : S?.jobs?.length ? <ul className="divide-y text-sm">{S.jobs.map((j: any) => (
           <li key={j.key} className="flex flex-wrap items-center gap-2 py-1.5">
             <span className="min-w-0 flex-1">{j.label}</span>
             <span className="text-xs">{j.last ? `${JOB_LABEL[j.last.status] ?? j.last.status}${j.last.catch_up ? " (catch-up)" : ""}${j.last.failed_stage ? ` at ${j.last.failed_stage}` : ""} · ${new Date(j.last.started_at ?? j.last.slot_key).toLocaleString("en-US", { timeZone: tz })}` : "No runs recorded yet"}</span>
             {j.missed > 0 && <span className="rounded bg-destructive/10 px-1.5 text-xs text-destructive">{j.missed} missed</span>}
             {j.failed > 0 && <span className="rounded bg-destructive/10 px-1.5 text-xs text-destructive">{j.failed} failed/partial</span>}
+            {j.staleRunning > 0 && <span className="text-xs text-destructive">{j.staleRunning} still marked running for over an hour (including older runs)</span>}
           </li>))}</ul> : <Empty t={sig.isLoading ? "Loading…" : "No runs recorded yet"} />}
       </Panel>
 
