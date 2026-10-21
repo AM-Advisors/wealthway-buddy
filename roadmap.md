@@ -1,5 +1,15 @@
 # Roadmap
 
+## Thomas countersigning screenshot (2026-10-21)
+- [x] Located My Funds → CORPS Erebor → Investors → Calvin → Documents & signed agreements → Approve & sign; recorded Thomas signer remains sent with no signed_at.
+- [ ] Signing-screen screenshot blocked by account authenticator setup in Alyssa's own authorized session; no Thomas impersonation or security bypass performed.
+
+## Combined wealth dashboard (2026-10-21)
+- [x] Combine owned fund investments, personal holdings and connected balances; securities are not added to brokerage balances twice and sandbox balances are excluded.
+- [x] Net worth by currency with append-only debt corrections; dated cash flow from posted fund receipts and owner-recorded personal activity, plus summary export.
+- [x] 69 focused wealth/account/distribution checks passed; preview build OK.
+- [ ] Signed-in dashboard QA requires an isolated synthetic environment; live feeds remain sandbox-only and no financial data was changed for testing.
+
 ## Read-only account aggregation (2026-10-21)
 - [x] Owner-only encrypted bank/brokerage connections, consent history and immutable snapshots, isolated from fund books and payments.
 - [x] Connect source-dated balances and securities to Portfolio and Wealth; manual refresh, verified webhook refresh, reconnect, disconnect and retained history.

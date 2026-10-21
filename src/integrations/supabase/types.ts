@@ -37688,6 +37688,59 @@ export type Database = {
           },
         ]
       }
+      personal_wealth_financial_records: {
+        Row: {
+          amount_cents: number
+          archived: boolean
+          created_at: string
+          currency: string
+          effective_date: string
+          id: string
+          kind: string
+          name: string
+          owner_user_id: string
+          record_id: string
+          source_note: string
+          supersedes_id: string | null
+        }
+        Insert: {
+          amount_cents: number
+          archived?: boolean
+          created_at?: string
+          currency?: string
+          effective_date: string
+          id?: string
+          kind: string
+          name: string
+          owner_user_id: string
+          record_id: string
+          source_note: string
+          supersedes_id?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          archived?: boolean
+          created_at?: string
+          currency?: string
+          effective_date?: string
+          id?: string
+          kind?: string
+          name?: string
+          owner_user_id?: string
+          record_id?: string
+          source_note?: string
+          supersedes_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personal_wealth_financial_records_supersedes_id_fkey"
+            columns: ["supersedes_id"]
+            isOneToOne: true
+            referencedRelation: "personal_wealth_financial_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       personal_wealth_observations: {
         Row: {
           archived: boolean
