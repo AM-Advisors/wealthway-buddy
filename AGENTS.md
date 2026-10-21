@@ -34,3 +34,4 @@
 - Investor classes use offerings.has_multiple_classes — why: no inferred classes.
 - approveToFund allows admin staff/exact-fund managers, never self — why: staff approve, signatories sign; money/identity unchanged.
 - Investor details use approved identity checks and profile-tax-details.server for current signed W-9/W-8 last four/type; entities never use signer IDs — why: reuse evidence, no decryption or duplicate entry.
+- Investor wire-instruction availability comes only from offering_wire_release_state via src/lib/wire-release(.server).ts (verified + account active + released for the current version); release emails approved investors once per version; legacy receipt confirmations hand off through receipt-sync.server.ts — why: one rule, no disagreeing screens.
