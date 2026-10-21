@@ -21,9 +21,6 @@ import { FundBankingReview } from "@/components/fund-setup-phase3";
 const NONE = "__none";
 
 export function BankingTab({ fundId }: { fundId: string }) {
-  const load = useServerFn(fundBooksFn);
-  const q = useQuery({ queryKey: ["fund-books", fundId], queryFn: () => load({ data: { fundId } }) });
-  const d = q.data;
   const [mode, setMode] = useState<"upload" | "connect">("upload");
   return (
     <div className="space-y-5">
@@ -54,6 +51,17 @@ export function BankingTab({ fundId }: { fundId: string }) {
         <CardContent><WireFromBankForm fundId={fundId} allowPrefill={mode === "connect"} /></CardContent>
       </Card>
       <FundBankingReview offeringId={fundId} />
+    </div>
+  );
+}
+
+/** Day-to-day books after setup: statements, transactions and bookkeeping (lives under Accounting, not Fund Setup). */
+export function FundBooks({ fundId }: { fundId: string }) {
+  const load = useServerFn(fundBooksFn);
+  const q = useQuery({ queryKey: ["fund-books", fundId], queryFn: () => load({ data: { fundId } }) });
+  const d = q.data;
+  return (
+    <div className="space-y-5">
       {q.isLoading ? <p className="text-sm text-muted-foreground">Loading books…</p> : q.error || !d ? <p className="text-sm text-destructive">{(q.error as Error)?.message ?? "Couldn't load the books."}</p> : (
         <>
           <StatementUpload fundId={fundId} investors={d.investors ?? []} />
