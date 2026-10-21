@@ -3,6 +3,7 @@
  * immutable, versioned records. Only called from authenticated server
  * functions after the caller's access to the onboarding is checked.
  */
+import { usPersonFromVerification } from "@/lib/subscription-prefill";
 import {
   BAD_ACTOR_QUESTIONNAIRE_VERSION,
   BAD_ACTOR_WORDING_STATUS,
@@ -344,8 +345,6 @@ async function raiseOpsException(onboardingId: string, type: string, detail: str
     raised_by: userId,
   });
 }
-
-import { usPersonFromVerification } from "@/lib/subscription-prefill";
 
 async function loadFacts(d: any, ob: any, userId: string) {
   const [{ data: tax }, { data: person }] = await Promise.all([

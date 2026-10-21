@@ -479,7 +479,6 @@ function Sign({ d, onboardingId, done }: { d: any; onboardingId: string; done: (
 
   return (
     <div className="space-y-5">
-    <TaxSignPanel onboardingId={onboardingId} done={done} />
     <Card>
       <CardHeader>
         <CardTitle>Review &amp; Sign</CardTitle>
@@ -489,6 +488,8 @@ function Sign({ d, onboardingId, done }: { d: any; onboardingId: string; done: (
         {d.questionnaire && (d.questionnaire.questions ?? []).length ? (
           <QuestionnaireForm d={d} onboardingId={onboardingId} done={questionnaireDone} locked={signed} onSave={(answers, submit) => saveQ.mutate({ data: { onboardingId, answers, submit } } as any)} saving={saveQ.isPending} />
         ) : null}
+
+        <TaxSignPanel onboardingId={onboardingId} done={done} locked={!questionnaireDone} subscriberName={(d.questionnaireLocked?.name_of_subscriber ?? (d.questionnaireResponses ?? {}).name_of_subscriber ?? null) as string | null} />
 
         <FeeAcceptanceCard onboardingId={onboardingId} />
 
