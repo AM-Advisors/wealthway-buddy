@@ -385,6 +385,19 @@ export async function openSigningSession(
   );
   if (signerWrite.error) throw new Error("The signer record could not be saved. Please try again.");
 
+  // The fund signatory always countersigns dual documents after the investor; they sign the investor's signed copy.
+  const { data: dualDoc } = await admin.from("offering_documents").select("signing_mode, countersigner_user_id").eq("id", resolved.document.id).maybeSingle();
+  if (dualDoc?.signing_mode === "dual" && dualDoc.countersigner_user_id && dualDoc.countersigner_user_id !== userId) {
+    const { data: cs } = await admin.from("profiles").select("email, legal_name").eq("user_id", dualDoc.countersigner_user_id).maybeSingle();
+    if (cs?.email) {
+      await admin.from("document_signature_signers").upsert([{
+        signature_id: signatureId, application_id: resolved.application.id, offering_document_id: resolved.document.id,
+        offering_id: resolved.application.offering_id, signer_user_id: dualDoc.countersigner_user_id, signer_email: String(cs.email).toLowerCase(),
+        signer_name: cs.legal_name ?? cs.email, role_key: "fund_manager", signing_order: 2, required: true, status: "waiting", last_event_at: now,
+      }], { onConflict: "signature_id,signer_email", ignoreDuplicates: true });
+    }
+  }
+
   await admin.from("signature_audit_events").insert({
     application_id: resolved.application.id,
     signature_id: signatureId,
