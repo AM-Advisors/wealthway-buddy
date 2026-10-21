@@ -1,0 +1,2 @@
+ALTER TABLE public.clients ADD COLUMN IF NOT EXISTS show_sales_rep_to_client boolean NOT NULL DEFAULT false;
+COMMENT ON COLUMN public.clients.show_sales_rep_to_client IS 'When true, the client''s assigned Sales Team Member is shown to the client as their Sales Representative.';

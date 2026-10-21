@@ -42,8 +42,10 @@ export const getHarmoniousTeam = createServerFn({ method: "GET" })
     const events = await history(data.clientId ? { client_id: data.clientId } : { offering_id: data.offeringId! });
     const sc = await setupScope(data.clientId ? { clientId: data.clientId } : { offeringId: data.offeringId! });
     const n = await names([...team.map((m) => m.userId), ...events.flatMap((e) => [e.prior_user_id, e.new_user_id, e.changed_by])]);
+    const cid = data.clientId ?? (await (await admin()).from("offerings").select("client_id").eq("id", data.offeringId!).maybeSingle()).data?.client_id ?? null;
+    const showSalesRep = cid ? !!(await (await admin()).from("clients").select("show_sales_rep_to_client").eq("id", cid).maybeSingle()).data?.show_sales_rep_to_client : false;
     return {
-      scope: data.clientId ? "client" : "fund",
+      scope: data.clientId ? "client" : "fund", showSalesRep, canToggleSalesRep: !!data.clientId && canManageRole("sales", roles, sc.underway),
       followUp: teamFollowUp(team),
       members: team.map((m) => ({ ...m, name: m.userId ? n.get(m.userId) ?? "Staff member" : null, canManage: canManageRole(m.role, roles, sc.underway) })),
       setupUnderway: sc.underway,
@@ -105,6 +107,19 @@ export const setClientTeamMember = createServerFn({ method: "POST" })
     return { changed: true };
   });
 
+/** Choose whether the client sees their Sales Team Member as their Sales Representative. Same people who may assign Sales. */
+export const setShowSalesRep = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ clientId: uuid, show: z.boolean() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const roles = await requireStaff(context);
+    const sc = await setupScope({ clientId: data.clientId });
+    if (!canManageRole("sales", roles, sc.underway)) throw new Error("Only Sales leadership can change this.");
+    const { error } = await (await admin()).from("clients").update({ show_sales_rep_to_client: data.show, updated_at: new Date().toISOString() }).eq("id", data.clientId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 /** Override one assignment for one Fund, or reset it to the Client (userId null). */
 export const setFundTeamOverride = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -132,7 +147,9 @@ export const getMyHarmoniousContacts = createServerFn({ method: "GET" })
     const { data: visible } = await context.supabase.from("offerings").select("id").eq("id", data.offeringId).maybeSingle();
     if (!visible) return { contacts: [] };
     const { loadFundTeam } = await import("@/lib/harmonious-team.server");
-    const contacts = clientFacingContacts((await loadFundTeam(data.offeringId)).team);
+    const ft = await loadFundTeam(data.offeringId);
+    const show = ft.clientId ? !!(await (await admin()).from("clients").select("show_sales_rep_to_client").eq("id", ft.clientId).maybeSingle()).data?.show_sales_rep_to_client : false;
+    const contacts = clientFacingContacts(ft.team, show);
     const n = await names(contacts.map((c) => c.userId));
     return { contacts: contacts.map((c) => ({ role: c.role, name: n.get(c.userId) ?? "Harmonious" })) };
   });
