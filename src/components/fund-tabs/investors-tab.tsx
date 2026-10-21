@@ -34,6 +34,7 @@ export function InvestorsTab({ fundId, workQueue }: { fundId: string; workQueue?
   const [open, setOpen] = useState<string | null>(null);
   const [invite, setInvite] = useState(false);
   const rows = q.data ?? [];
+  const classApplicable = rows.some((r) => r.classApplicable);
   const loadLast = useServerFn(lastRemindersFn);
   const remind = useServerFn(sendInvestorRemindersFn);
   const lq = useQuery({ queryKey: ["fund-reminders", fundId], queryFn: () => loadLast({ data: { fundId } }) });
@@ -104,7 +105,7 @@ export function InvestorsTab({ fundId, workQueue }: { fundId: string; workQueue?
             <DropdownMenuTrigger asChild><Button size="sm" variant="outline" disabled={!picked.length || sending}>Actions{picked.length ? ` (${picked.length})` : ""}</Button></DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={sendKyc}>Send identity-check links</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setClassOpen(true)}>Set class…</DropdownMenuItem>
+              {classApplicable && <DropdownMenuItem onClick={() => setClassOpen(true)}>Set class…</DropdownMenuItem>}
               <DropdownMenuItem onClick={requestMissing}>Ask manager for missing info</DropdownMenuItem>
               <DropdownMenuItem onClick={() => remindItem("w9")}>Send reminder: W-9 / W-8</DropdownMenuItem>
               <DropdownMenuItem onClick={() => remindItem("questionnaire")}>Send reminder: investor questionnaire</DropdownMenuItem>
@@ -126,7 +127,7 @@ export function InvestorsTab({ fundId, workQueue }: { fundId: string; workQueue?
           <div className="overflow-x-auto">
             <table className="w-full min-w-[1300px] text-sm">
               <thead className="text-left text-xs text-muted-foreground">
-                <tr><th className="w-8 py-2"><input type="checkbox" aria-label="Select all investors" checked={allPicked} onChange={(e) => toggleAll(e.target.checked)} /></th><th className="py-2">Name</th><th>Personal link</th><th>Progress</th><th>Class</th><th>Investing as</th><th>Missing info</th><th>Email</th><th>Phone</th><th className="text-right">Committed</th><th className="text-right">Received</th><th>KYC/KYB & AML</th><th>Fund documents</th><th>Wiring</th><th>Investor readiness</th><th>Latest activity</th></tr>
+                <tr><th className="w-8 py-2"><input type="checkbox" aria-label="Select all investors" checked={allPicked} onChange={(e) => toggleAll(e.target.checked)} /></th><th className="py-2">Name</th><th>Personal link</th><th>Progress</th>{classApplicable && <th>Class</th>}<th>Investing as</th><th>Missing info</th><th>Email</th><th>Phone</th><th className="text-right">Committed</th><th className="text-right">Received</th><th>KYC/KYB & AML</th><th>Fund documents</th><th>Wiring</th><th>Investor readiness</th><th>Latest activity</th></tr>
               </thead>
               <tbody>
                 {rows.map((r) => (
@@ -137,7 +138,7 @@ export function InvestorsTab({ fundId, workQueue }: { fundId: string; workQueue?
                     <td className="py-2"><p className="font-medium">{r.name}</p>{r.profileName && <p className="text-xs text-muted-foreground">{r.profileName}</p>}</td>
                     <td onClick={(e) => e.stopPropagation()}><PersonalLinkCopyButton onboardingId={r.id} /></td>
                     <td><StepChips steps={r.steps} /><p className="mt-0.5 text-[11px] text-muted-foreground">{(() => { const c = currentStep(r.steps); return c ? `${c.label}: ${STEP_STATE_LABELS[c.state]}` : "All steps complete"; })()}</p></td>
-                    <td>{r.classLabel ?? <span className="text-muted-foreground">-</span>}</td>
+                    {classApplicable && <td>{r.classLabel ?? <span className="text-muted-foreground">-</span>}</td>}
                     <td>{r.assetLabel ?? <span className="text-muted-foreground">-</span>}</td>
                     <td className="max-w-[220px]">{r.missing.length === 0 ? <Badge variant="secondary">Complete</Badge> : (
                       <span title={r.missing.join(", ")} className="text-xs"><Badge variant="outline" className="mr-1 border-destructive/50 text-destructive">{r.missing.length} missing</Badge>{r.missing.slice(0, 2).join(", ")}{r.missing.length > 2 ? "…" : ""}</span>
@@ -322,7 +323,7 @@ export function InvestorSheet({ fundId, id, onClose }: { fundId: string; id: str
             <section>
               <h4 className="mb-1 font-medium">Investment</h4>
               <dl className="divide-y">
-                <Row k="Class" v={d.classLabel} /><Row k="Investing as" v={d.assetLabel} /><Row k="Tax ID" v={d.taxIdLast4 ? `•••• ${d.taxIdLast4}` : null} />
+                {d.classApplicable && <Row k="Class" v={d.classLabel} />}<Row k="Investing as" v={d.assetLabel} /><Row k="Tax ID" v={d.taxIdLast4 ? `•••• ${d.taxIdLast4}` : null} />
                 <Row k="Investment date" v={d.investmentDate ? fmtDate(d.investmentDate) : null} />
                 <Row k="Stage" v={<span className="capitalize">{d.stage.replace(/_/g, " ")}</span>} />
                 <Row k="Latest activity" v={fmtDate(d.lastActivity)} />

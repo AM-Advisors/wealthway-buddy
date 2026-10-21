@@ -47,6 +47,9 @@ export async function anyInvestorSigned(fundId: string) {
 /* ---------------- Investors ---------------- */
 
 export async function investorGrid(fundId: string) {
+  const { data: fund, error: fundError } = await (await db()).from("offerings").select("has_multiple_classes").eq("id", fundId).maybeSingle();
+  if (fundError) throw new Error("Fund class settings could not be loaded. Please try again.");
+  const classApplicable = fund?.has_multiple_classes === true;
   const { data } = await (await db()).from("investor_onboardings")
     .select("id, stage, funding_status, commitment_amount_cents, accepted_amount_cents, requested_amount_cents, funded_amount_cents, approved_to_fund_at, funding_released_at, executed_snapshot, last_activity_at, updated_at, person_id, application_id, investor_user_id, offering_class_key, questionnaire_submitted_at, investment_profiles(legal_name, profile_type)")
     .eq("offering_id", fundId).is("removed_at", null).order("created_at");
@@ -68,7 +71,7 @@ export async function investorGrid(fundId: string) {
     const docs = docStatus(o);
     // Display-only checklist of what the fund manager still needs to collect.
     const missing: string[] = [];
-    if (!o.offering_class_key) missing.push("Class");
+    if (classApplicable && !o.offering_class_key) missing.push("Class");
     if (!o.investment_profiles?.profile_type) missing.push("Investing as (asset type)");
     if (!p.email) missing.push("Email");
     if (!p.phone) missing.push("Phone");
@@ -85,6 +88,7 @@ export async function investorGrid(fundId: string) {
       profileName: o.investment_profiles?.legal_name ?? null,
       email: p.email ?? null,
       phone: p.phone ?? null,
+      classApplicable,
       classLabel: human(o.offering_class_key),
       assetLabel: human(o.investment_profiles?.profile_type),
       missing,

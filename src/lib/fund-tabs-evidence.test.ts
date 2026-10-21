@@ -7,6 +7,7 @@ vi.mock("@/integrations/supabase/client.server", () => ({ supabaseAdmin: {
     const q: any = {
       select: () => q, eq: (key: string, value: unknown) => { filters.push((r) => r[key] === value); return q; },
       is: (key: string, value: unknown) => { filters.push((r) => (r[key] ?? null) === value); return q; },
+      in: (key: string, values: unknown[]) => { filters.push((r) => values.includes(r[key])); return q; },
       order: () => q,
       maybeSingle: async () => ({ data: (mock.tables[table] ?? []).filter((r) => filters.every((f) => f(r)))[0] ?? null }),
       then: (resolve: any) => Promise.resolve({ data: (mock.tables[table] ?? []).filter((r) => filters.every((f) => f(r))) }).then(resolve),
@@ -15,7 +16,7 @@ vi.mock("@/integrations/supabase/client.server", () => ({ supabaseAdmin: {
   },
   storage: { from: (bucket: string) => ({ createSignedUrl: async (path: string) => { mock.urls(bucket, path); return { data: { signedUrl: `https://synthetic.test/${bucket}/${path}` } }; } }) },
 } }));
-import { listFiles } from "./fund-tabs.server";
+import { investorGrid, listFiles } from "./fund-tabs.server";
 import { einComplete } from "./fund-setup-complete";
 
 describe("shared IRS evidence read-back", () => {
@@ -41,5 +42,33 @@ describe("shared IRS evidence read-back", () => {
   it("ordinary fund viewers never receive restricted setup evidence", async () => {
     expect(await listFiles("series-fund", false)).toEqual([]);
     expect(mock.urls).not.toHaveBeenCalled();
+  });
+});
+
+describe("investor class applicability", () => {
+  beforeEach(() => {
+    mock.tables = {
+      offerings: [{ id: "fund", has_multiple_classes: false }],
+      investor_onboardings: [{ id: "investor", offering_id: "fund", person_id: "person", offering_class_key: null }],
+      persons: [{ id: "person" }],
+    };
+  });
+  it("does not require a class for a fund without multiple classes", async () => {
+    const [row] = await investorGrid("fund");
+    expect(row?.classApplicable).toBe(false);
+    expect(row?.missing.includes("Class")).toBe(false);
+  });
+  it("requires a missing class when the fund has multiple classes", async () => {
+    mock.tables["offerings"] = [{ id: "fund", has_multiple_classes: true }];
+    const [row] = await investorGrid("fund");
+    expect(row?.classApplicable).toBe(true);
+    expect(row?.missing.includes("Class")).toBe(true);
+  });
+  it("does not flag an assigned class in a multiple-class fund", async () => {
+    mock.tables["offerings"] = [{ id: "fund", has_multiple_classes: true }];
+    mock.tables["investor_onboardings"] = [{ id: "investor", offering_id: "fund", person_id: "person", offering_class_key: "class_a" }];
+    const [row] = await investorGrid("fund");
+    expect(row?.classApplicable).toBe(true);
+    expect(row?.missing.includes("Class")).toBe(false);
   });
 });
