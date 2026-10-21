@@ -7,7 +7,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { MkPage, mkHead } from "@/components/marketing-ui";
-import { approveLivePublishing, chooseSearchProperty, getPerformance, getPublishingMode, requestLivePublishing, returnToTestPublishing } from "@/lib/marketing-perf.functions";
+import { approveLivePublishing, chooseSearchProperty, getPerformance, getPublishingMode, getSearchProperties, requestLivePublishing, returnToTestPublishing } from "@/lib/marketing-perf.functions";
 import { compare, fmt, rate, type PostPerf } from "@/lib/marketing-perf-model";
 
 export const Route = createFileRoute("/_authenticated/marketing_/performance")({
@@ -22,7 +22,7 @@ function Page() {
   const [days, setDays] = useState(30);
   const [tab, setTab] = useState<"queue" | "dashboard" | "search" | "weekly">("queue");
   const load = useServerFn(getPerformance), mode = useServerFn(getPublishingMode);
-  const q = useQuery({ queryKey: ["perf", days], queryFn: () => load({ data: { days } }) });
+  const q = useQuery({ queryKey: ["perf", days], queryFn: () => load({ data: { days } }), retry: 1 });
   const mq = useQuery({ queryKey: ["pub-mode"], queryFn: () => mode() });
   const d: any = q.data;
   return (
@@ -33,7 +33,9 @@ function Page() {
           {(["queue", "dashboard", "search", "weekly"] as const).map((t) => <button key={t} onClick={() => setTab(t)} className={`px-3 py-2 text-sm ${tab === t ? "border-b-2 border-primary font-semibold" : "text-muted-foreground"}`}>{{ queue: "Queue & log", dashboard: "Social performance", search: "Search & website", weekly: "Weekly recommendations" }[t]}</button>)}
           <select className="ml-auto rounded-md border border-input bg-background px-2 py-1 text-xs" value={days} onChange={(e) => setDays(Number(e.target.value))}>{[7, 30, 90].map((n) => <option key={n} value={n}>Last {n} days</option>)}</select>
         </div>
-        {!d ? <p className="text-sm text-muted-foreground">{q.error ? (q.error as Error).message : "Loading…"}</p> : <>
+        {!d ? (q.error
+          ? <div className="space-y-2 rounded-md border border-destructive p-3 text-sm"><p className="text-destructive">This page couldn't load: {(q.error as Error).message}</p><Button size="sm" variant="outline" onClick={() => q.refetch()}>Try again</Button></div>
+          : <p className="text-sm text-muted-foreground">Loading…</p>) : <>
           {tab === "queue" && <Queue d={d} />}
           {tab === "dashboard" && <Social perf={d.perf} />}
           {tab === "search" && <Search d={d} />}
@@ -114,6 +116,10 @@ function Social({ perf }: { perf: PostPerf[] }) {
 function Search({ d }: { d: any }) {
   const tz = useOrgTz();
   const qc = useQueryClient(); const choose = useServerFn(chooseSearchProperty);
+  const propsFn = useServerFn(getSearchProperties);
+  const pq = useQuery({ queryKey: ["perf-search-props"], queryFn: () => propsFn(), retry: 1 });
+  const properties: string[] = pq.data?.properties ?? [];
+  const propError: string | null = pq.data?.propError ?? (pq.error ? (pq.error as Error).message : null);
   const [pick, setPick] = useState("");
   const rows = d.search as any[];
   const clicks = rows.length ? rows.reduce((a, r) => a + r.clicks, 0) : null, imps = rows.length ? rows.reduce((a, r) => a + r.impressions, 0) : null;
@@ -123,11 +129,11 @@ function Search({ d }: { d: any }) {
   return <div className="space-y-4">
     <section className="space-y-2 rounded-md border border-border p-3">
       <h3 className="text-sm font-semibold">Google Search Console</h3>
-      {d.propError ? <p className="text-xs text-destructive">{d.propError}</p> : <>
+      {propError ? <div className="flex items-center gap-2"><p className="text-xs text-muted-foreground">Search Console: Not available — {propError}</p><Button size="sm" variant="outline" onClick={() => pq.refetch()}>Try again</Button></div> : <>
         <p className="text-xs">Property: <b>{d.settings?.site_url ?? "none chosen"}</b>{d.settings?.last_refresh_at ? ` · refreshed ${fmtInTz(d.settings.last_refresh_at, tz)}` : ""}{d.settings?.last_error ? ` · last error: ${d.settings.last_error}` : ""}</p>
-        <div className="flex gap-2"><select className="rounded-md border border-input bg-background px-2 py-1 text-xs" value={pick} onChange={(e) => setPick(e.target.value)}><option value="">Choose a verified property…</option>{d.properties.map((p: string) => <option key={p}>{p}</option>)}</select>
+        <div className="flex gap-2"><select className="rounded-md border border-input bg-background px-2 py-1 text-xs" value={pick} onChange={(e) => setPick(e.target.value)}><option value="">Choose a verified property…</option>{properties.map((p: string) => <option key={p}>{p}</option>)}</select>
           <Button size="sm" variant="outline" disabled={!pick} onClick={async () => { try { await choose({ data: { siteUrl: pick } }); toast.success("Property saved and refreshed"); qc.invalidateQueries({ queryKey: ["perf"] }); } catch (e: any) { toast.error(e.message); } }}>Use this property</Button></div>
-        {!d.properties.some((p: string) => p.includes("harmonious.co") && !p.includes("onboard")) && <p className="text-[11px] text-muted-foreground">harmonious.co itself isn't a verified property on this Google account, so article search data for the main site is Not available until it's verified.</p>}
+        {!pq.isLoading && !properties.some((p: string) => p.includes("harmonious.co") && !p.includes("onboard")) && <p className="text-[11px] text-muted-foreground">harmonious.co itself isn't a verified property on this Google account, so article search data for the main site is Not available until it's verified.</p>}
       </>}
       <div className="grid grid-cols-2 gap-2 md:grid-cols-4 text-xs">
         <div>Search impressions: <b>{fmt(imps)}</b></div><div>Search clicks: <b>{fmt(clicks)}</b></div><div>Search CTR: <b>{fmt(rate(clicks, imps), true)}</b></div><div>Keywords tracked: <b>{rows.length ? kw.size : NA}</b></div>
