@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
   decideSalesDocument, draftSalesDocumentWithAi, exportSalesDocument, getSalesDocument,
-  saveSalesDocumentSections, sendSalesDocument, setSalesDocumentOutcome, submitSalesDocument, uploadSalesDocumentSource,
+  saveSalesDocumentSections, sendSalesDocument, listSalesCcOptions, setSalesDocumentOutcome, submitSalesDocument, uploadSalesDocumentSource,
 } from "@/lib/sales-documents.functions";
 import { DIRECTION_LABEL, KIND_LABEL, OUTCOMES, STATUS_LABEL, type DocDirection, type DocKind, type Section } from "@/lib/sales-documents-model";
 import { Panel, money } from "@/components/sales/sales-ui";
@@ -42,6 +42,9 @@ function Editor() {
   const submit = useServerFn(submitSalesDocument);
   const decide = useServerFn(decideSalesDocument);
   const send = useServerFn(sendSalesDocument);
+  const ccLoad = useServerFn(listSalesCcOptions);
+  const ccOpts = useQuery({ queryKey: ["sales-cc-options"], queryFn: () => ccLoad() });
+  const [ccIds, setCcIds] = useState<string[]>([]);
   const outcome = useServerFn(setSalesDocumentOutcome);
   const exp = useServerFn(exportSalesDocument);
   const q = useQuery({ queryKey: ["sales-document", id], queryFn: () => load({ data: { id } }) });
@@ -146,7 +149,19 @@ function Editor() {
                 {!doc.contact_id && <p className="text-sm text-muted-foreground">Link a contact to email it, or download the PDF/Word file.</p>}
                 <Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Subject" />
                 <Textarea rows={3} value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Short cover note" />
-                <Button className="w-full" disabled={!!busy || !doc.contact_id || (p.directSend && dirty)} onClick={() => run("send", () => send({ data: { id, subject, message } }), "Sent")}>Email to {doc.recipient_name ?? "contact"}</Button>
+                <div className="rounded-md border p-2">
+                  <p className="mb-1 text-xs font-medium text-muted-foreground">CC Sales team members (optional)</p>
+                  <div className="max-h-36 space-y-1 overflow-y-auto">
+                    {(ccOpts.data ?? []).map((o) => (
+                      <label key={o.userId} className="flex items-center gap-2 text-sm">
+                        <input type="checkbox" checked={ccIds.includes(o.userId)} onChange={(e) => setCcIds((c) => e.target.checked ? [...c, o.userId] : c.filter((x) => x !== o.userId))} />
+                        <span>{o.name}</span><span className="truncate text-xs text-muted-foreground">{o.email}</span>
+                      </label>
+                    ))}
+                    {ccOpts.data && !ccOpts.data.length && <p className="text-xs text-muted-foreground">No Sales team members found.</p>}
+                  </div>
+                </div>
+                <Button className="w-full" disabled={!!busy || !doc.contact_id || (p.directSend && dirty)} onClick={() => run("send", () => send({ data: { id, subject, message, ccUserIds: ccIds } }), "Sent")}>Email to {doc.recipient_name ?? "contact"}</Button>
               </div>
             )}
             {p.canOutcome && (
