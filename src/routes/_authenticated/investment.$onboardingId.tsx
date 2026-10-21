@@ -73,7 +73,6 @@ function InvestmentPage() {
         <>
           <InvestorOnboardingJourney onboardingId={onboardingId} requestedStep={search.step} />
           {tab === "onboarding" ? <ConfirmYourInformation onboardingId={onboardingId} /> : null}
-          {tab === "overview" ? <InvestmentOfferingDocuments onboardingId={onboardingId} /> : null}
         </>
       ) : null}
       {tab === "capital" ? <InvestorCapitalSummary offeringId={offeringId} /> : null}
