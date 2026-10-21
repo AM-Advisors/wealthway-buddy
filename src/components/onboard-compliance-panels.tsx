@@ -265,6 +265,15 @@ export function TaxAndCompliancePanel({ onboardingId, done }: { onboardingId: st
   );
 }
 
+/** Sign step (app): the financial background questions only, when still owed. */
+export function FinancialBackgroundPanel({ onboardingId, done }: { onboardingId: string; done: () => void }) {
+  const q = useCompliance(onboardingId);
+  const qc = useQueryClient();
+  const refresh = () => { qc.invalidateQueries({ queryKey: ["onboard-compliance", onboardingId] }); done(); };
+  if (!q.data) return null;
+  return <AmlCard onboardingId={onboardingId} d={q.data} refresh={refresh} />;
+}
+
 const OUTCOME_LABEL: Record<string, string> = {
   satisfied: "Satisfied",
   needs_review: "Needs Review",
