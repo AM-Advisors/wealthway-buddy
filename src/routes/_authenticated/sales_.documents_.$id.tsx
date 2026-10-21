@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
   decideSalesDocument, draftSalesDocumentWithAi, exportSalesDocument, getSalesDocument,
-  saveSalesDocumentSections, sendSalesDocument, listSalesCcOptions, listSalesClientTeam, setSalesDocumentOutcome, submitSalesDocument, uploadSalesDocumentSource,
+  saveSalesDocumentSections, sendSalesDocument, listSalesCcOptions, listSalesClientTeam, shareSalesDocumentLink, setSalesDocumentOutcome, submitSalesDocument, uploadSalesDocumentSource,
 } from "@/lib/sales-documents.functions";
 import { DIRECTION_LABEL, KIND_LABEL, OUTCOMES, STATUS_LABEL, type DocDirection, type DocKind, type Section } from "@/lib/sales-documents-model";
 import { Panel, money } from "@/components/sales/sales-ui";
@@ -65,6 +65,21 @@ function Editor() {
     setBusy(label);
     try { await fn(); toast.success(ok); refresh(); } catch (e) { toast.error((e as Error).message); } finally { setBusy(null); }
   };
+  const shareFn = useServerFn(shareSalesDocumentLink);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const preview = async () => {
+    setBusy("preview");
+    try {
+      const r = await exp({ data: { id, format: "pdf" } });
+      const bytes = Uint8Array.from(atob(r.base64), (c) => c.charCodeAt(0));
+      setPreviewUrl(URL.createObjectURL(new Blob([bytes], { type: "application/pdf" })));
+    } catch (e) { toast.error((e as Error).message); } finally { setBusy(null); }
+  };
+  const copyLink = async () => {
+    setBusy("link");
+    try { const r = await shareFn({ data: { id } }); await navigator.clipboard.writeText(r.url); toast.success(`Review link copied (version ${r.version})`); }
+    catch (e) { toast.error((e as Error).message); } finally { setBusy(null); }
+  };
   const download = async (format: "pdf" | "docx") => {
     setBusy(format);
     try {
@@ -89,11 +104,22 @@ function Editor() {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Badge>{STATUS_LABEL[doc.status] ?? doc.status}</Badge>
+          <Button size="sm" disabled={!!busy} onClick={preview}>{busy === "preview" ? "Loading..." : "Preview"}</Button>
+          {doc.approved_version && <Button variant="outline" size="sm" disabled={!!busy} onClick={copyLink}>Copy review link</Button>}
           <Button variant="outline" size="sm" disabled={!!busy} onClick={() => download("pdf")}>PDF</Button>
           <Button variant="outline" size="sm" disabled={!!busy} onClick={() => download("docx")}>Word</Button>
         </div>
       </div>
 
+      {previewUrl && (
+        <div className="fixed inset-0 z-50 flex flex-col bg-background/95 p-4">
+          <div className="mb-2 flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">{dirty ? "Preview of the last saved version. Save to see your latest edits." : doc.approved_version ? "This is what the client will see." : "Draft preview, marked as a draft until approved."}</p>
+            <Button size="sm" variant="outline" onClick={() => { URL.revokeObjectURL(previewUrl); setPreviewUrl(null); }}>Close preview</Button>
+          </div>
+          <iframe title="Proposal preview" src={previewUrl} className="w-full flex-1 rounded-md border" />
+        </div>
+      )}
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
         <div className="space-y-4">
           {p.canEdit && doc.kind !== "rfq" && (

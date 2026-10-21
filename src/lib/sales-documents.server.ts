@@ -410,6 +410,16 @@ export async function listClientTeam(userId: string, id: string) {
   return rows.filter((x) => x.email).map((x) => ({ contactId: String(x.id), name: String(x.full_name || x.email), email: String(x.email).toLowerCase(), title: x.title ?? null }));
 }
 
+/** A view-only review link for the approved version, for Sales staff to share by hand. No sign button; signing still goes through the emailed per-person link. */
+export async function shareLink(userId: string, id: string) {
+  const a = await access(userId, id);
+  if (!a.doc.approved_version) throw new Error("Approve the document first. Only an approved version can be shared.");
+  const { signProposalView } = await import("@/lib/email-tracking.server");
+  const url = await signProposalView(id, a.doc.approved_version);
+  await event(a.db, id, userId, "link_copied", { version: a.doc.approved_version });
+  return { url, version: a.doc.approved_version as number };
+}
+
 export async function setOutcome(userId: string, id: string, outcome: string) {
   const a = await access(userId, id);
   if (!a.isOwner) throw new Error("Only the owner can record the outcome.");
