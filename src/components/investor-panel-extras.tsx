@@ -102,9 +102,12 @@ export function InvestorHelpers({ onboardingId }: { onboardingId: string }) {
 }
 
 const FIELDS: { k: string; label: string; group: "person" | "profile" | "investment" }[] = [
-  { k: "firstName", label: "Legal first name", group: "person" }, { k: "lastName", label: "Last name", group: "person" },
+  { k: "firstName", label: "Legal first name", group: "person" }, { k: "middleName", label: "Middle name", group: "person" },
+  { k: "lastName", label: "Last name", group: "person" },
   { k: "email", label: "Email", group: "person" }, { k: "phone", label: "Phone", group: "person" },
-  { k: "addressLine1", label: "Street address", group: "person" }, { k: "city", label: "City", group: "person" },
+  { k: "dateOfBirth", label: "Date of birth (YYYY-MM-DD)", group: "person" }, { k: "citizenship", label: "Citizenship", group: "person" },
+  { k: "addressLine1", label: "Street address", group: "person" }, { k: "addressLine2", label: "Apt / suite", group: "person" },
+  { k: "city", label: "City", group: "person" },
   { k: "region", label: "State / region", group: "person" }, { k: "postalCode", label: "Postal code", group: "person" },
   { k: "country", label: "Country", group: "person" }, { k: "legalName", label: "Entity / business legal name", group: "profile" },
   { k: "jurisdiction", label: "Entity jurisdiction", group: "profile" }, { k: "amount", label: "Commitment (USD)", group: "investment" },
