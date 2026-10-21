@@ -1,0 +1,16 @@
+import { describe,it,expect } from 'vitest';
+import { wealthSummary,currentFinancialRecords,cashFlowMonths,type WealthFinancialRecord } from './wealth-dashboard';
+import type { AccountSnapshot } from './account-aggregation';
+const debt:WealthFinancialRecord={id:'d',record_id:'r',owner_user_id:'alice',supersedes_id:null,kind:'liability',name:'Mortgage',currency:'USD',amount_cents:20000,effective_date:'2026-01-01',source_note:'Statement',archived:false,created_at:'2026-01-01'};
+const account:AccountSnapshot={connection_id:'a',owner_user_id:'alice',provider_account_id:'x',account_name:'Brokerage',account_mask:null,account_type:'investment',account_subtype:null,currency:'USD',current_balance_cents:50000,available_balance_cents:1000,holdings:[{securityId:'s',name:'Security',ticker:null,quantity:1,valueCents:40000,costCents:30000,currency:'USD',priceAsOf:null}],provider_as_of:null,observed_at:'2026-10-21'};
+describe('combined wealth',()=>{
+ it('net worth subtracts debt from account and owned fund value, not commitments',()=>{const s=wealthSummary([],[account],[{offering_id:'f',offering_name:'Fund',equity_value_cents:10000,funded_cents:10000,commitment_cents:500000,valued_by:'capital'}],[debt],new Set());expect(s.totals[0]?.netWorthCents).toBe(40000);});
+ it('brokerage securities are not added again',()=>expect(wealthSummary([],[account],[],[],new Set()).totals[0]?.assetsCents).toBe(50000));
+ it('currencies never combine into a fictitious total',()=>expect(wealthSummary([],[account,{...account,currency:'EUR',current_balance_cents:30000}],[],[],new Set()).totals.map(t=>[t.currency,t.assetsCents])).toEqual([['USD',50000],['EUR',30000]]));
+ it('excludes a marked duplicate from the summary',()=>expect(wealthSummary([],[account],[],[],new Set(['account:a:x'])).totals).toEqual([]));
+ it('missing values produce a partial summary rather than fabricated zero valuation',()=>expect(wealthSummary([],[{...account,current_balance_cents:null}],[],[],new Set()).totals[0]?.missing).toBe(1));
+ it('never returns another owner debt or cash records',()=>expect(currentFinancialRecords([debt],'bob','2026-12-31')).toEqual([]));
+ it('debt corrections replace rather than add to prior balances',()=>expect(currentFinancialRecords([debt,{...debt,id:'d2',supersedes_id:'d',amount_cents:15000,effective_date:'2026-02-01'}],'alice','2026-03-01').map(r=>r.amount_cents)).toEqual([15000]));
+ it('cash flow uses actual inflows minus actual outflows and excludes future dates',()=>{const r=cashFlowMonths([{id:'i',name:'Income',currency:'USD',amountCents:30000,date:'2026-10-10',direction:'inflow',source:'Personal record'},{id:'o',name:'Expense',currency:'USD',amountCents:10000,date:'2026-10-11',direction:'outflow',source:'Personal record'},{id:'future',name:'Future',currency:'USD',amountCents:999,date:'2026-10-31',direction:'inflow',source:'Personal record'}],'USD','2026-10-21',1);expect(r[0]?.net).toBe(20000);});
+ it('cash-flow months cross year boundaries in order',()=>expect(cashFlowMonths([],'USD','2026-02-10',3).map(m=>m.month)).toEqual(['2025-12','2026-01','2026-02']));
+});
