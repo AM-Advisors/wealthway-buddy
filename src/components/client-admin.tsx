@@ -72,7 +72,7 @@ export function ClientOverviewActions({ clientId, goTo }: { clientId: string; go
       {has("link_funds") ? <Button size="sm" variant="outline" onClick={() => goTo("funds")}>+ Add Fund/SPV</Button> : null}
       <Button size="sm" variant="outline" onClick={() => goTo("companies")}>+ Add Company/Cap Table</Button>
       {has("manage_services") ? <Button size="sm" variant="outline" onClick={() => goTo("services")}>+ Add Services</Button> : null}
-      {has("manage_sows") ? <Button size="sm" variant="outline" onClick={() => goTo("contracts")}>Upload Contract</Button> : null}
+      {has("manage_sows") ? <Button size="sm" variant="outline" onClick={() => goTo("services")}>Upload Contract</Button> : null}
       {has("manage_sows") ? <Button size="sm" variant="outline" onClick={() => goTo("services")}>Create/Review SOW</Button> : null}
       {editing ? <EditClientDialog clientId={clientId} initial={q.data.client} staff={q.data.staff} onClose={() => setEditing(false)} /> : null}
     </div>
