@@ -259,7 +259,8 @@ export const getFunding = createServerFn({ method: "GET" })
  * Reads across every application in the fund, so it runs with elevated
  * access after we have already confirmed the caller belongs to the fund.
  */
-async function fundProgress(offeringId: string, targetCents: number | null) {
+// Staff-only figures; not returned to investors.
+export async function fundProgress(offeringId: string, targetCents: number | null) {
   try {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
