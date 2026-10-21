@@ -44,6 +44,7 @@ import { RequiredHere } from "@/components/fund-setup-checklist";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { BankInstructionRelease } from "@/components/bank-instruction-release";
 
 type D = Awaited<ReturnType<typeof phase3OverviewFn>>;
 
@@ -100,7 +101,16 @@ export function FundSetupPhase3({ offeringId, onChanged, hideBanking = false, sh
 
 // ------------------------------------------------------------------ Banking
 
-function BankingCard({ d, offeringId, onChanged }: { d: D; offeringId: string; onChanged: () => void }) {
+export function FundBankingReview({ offeringId }: { offeringId: string }) {
+  const qc = useQueryClient();
+  const load = useServerFn(phase3OverviewFn);
+  const q = useQuery({ queryKey: ["fund-setup-p3", offeringId], queryFn: () => load({ data: { offeringId } }) });
+  if (q.isPending) return <p className="text-sm text-muted-foreground">Loading bank review…</p>;
+  if (q.isError) return <p role="alert" className="text-sm text-destructive">{q.error.message}</p>;
+  return <BankingCard d={q.data} offeringId={offeringId} onChanged={() => { void invalidateFund(qc, offeringId); }} reviewOnly />;
+}
+
+function BankingCard({ d, offeringId, onChanged, reviewOnly = false }: { d: D; offeringId: string; onChanged: () => void; reviewOnly?: boolean }) {
   const setPath = useServerFn(setBankingPathFn);
   const setStatus = useServerFn(setHarmoniousBankStatusFn);
   const save = useServerFn(saveBankDetailsFn);
@@ -125,14 +135,14 @@ function BankingCard({ d, offeringId, onChanged }: { d: D; offeringId: string; o
     <Card id="setup-banking" className="scroll-mt-32">
       <CardHeader>
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <CardTitle className="text-base">Banking</CardTitle>
+          <CardTitle className="text-base">{reviewOnly ? "Bank review & investor release" : "Banking"}</CardTitle>
           <OwnerTag owner={b.section.owner} />
         </div>
         {b.section.next && <p className="text-sm text-muted-foreground">Next: {b.section.next}</p>}
       </CardHeader>
       <CardContent className="space-y-4">
-        <RequiredHere section="setup-banking" />
-        <div className="space-y-2">
+        {!reviewOnly && <RequiredHere section="setup-banking" />}
+        {!reviewOnly && <div className="space-y-2">
           <p className="text-sm font-medium">How will this Fund's bank account be handled?</p>
           <div className="flex flex-wrap gap-2">
             {(Object.keys(BANKING_PATH_LABELS) as BankingPath[]).map((p) => (
@@ -147,9 +157,9 @@ function BankingCard({ d, offeringId, onChanged }: { d: D; offeringId: string; o
               <Button size="sm" variant="ghost" disabled={busy || !reason.trim()} onClick={() => run(() => setPath({ data: { offeringId, path: "not_required", reason } }), "Marked not required")}>Mark banking not required</Button>
             </div>
           )}
-        </div>
+        </div>}
 
-        {b.path === "harmonious" && (
+        {!reviewOnly && b.path === "harmonious" && (
           <div className="space-y-2">
             <p className="text-sm font-medium">Establish Bank Account</p>
             <div className="flex flex-wrap gap-1">
@@ -162,7 +172,7 @@ function BankingCard({ d, offeringId, onChanged }: { d: D; offeringId: string; o
           </div>
         )}
 
-        {(b.path === "client" || b.path === "harmonious") && (
+        {(reviewOnly || current || b.path === "client" || b.path === "harmonious") && (
           <>
             <div className="space-y-1">
               <p className="text-sm font-medium">Wire instructions</p>
@@ -184,7 +194,7 @@ function BankingCard({ d, offeringId, onChanged }: { d: D; offeringId: string; o
                 </div>
               ))}
               <p className="text-xs text-muted-foreground">
-                {b.releasable ? "Investors can receive the current verified instructions." : "Investors don't receive funding instructions until the current version is verified."}
+                {b.releasable ? "Current instructions verified. Investor release status is shown below." : "Investors don't receive funding instructions until the current version is verified."}
               </p>
             </div>
 
@@ -208,7 +218,7 @@ function BankingCard({ d, offeringId, onChanged }: { d: D; offeringId: string; o
               </div>
             )}
 
-            {d.canEdit && (
+            {d.canEdit && !reviewOnly && (
               <div className="space-y-2 rounded-md border p-3">
                 <p className="text-sm font-medium">{current ? "Enter new instructions (creates a new version)" : "Enter bank details"}</p>
                 <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={intl} onChange={(e) => setIntl(e.target.checked)} /> International account</label>
@@ -227,7 +237,9 @@ function BankingCard({ d, offeringId, onChanged }: { d: D; offeringId: string; o
           </>
         )}
 
-        {d.canEdit && (
+        {!d.canEdit && <p className="text-sm text-muted-foreground">A Harmonious banking reviewer must verify and release these instructions.</p>}
+        {d.canEdit && <BankInstructionRelease offeringId={offeringId} verified={b.releasable} onChanged={onChanged} />}
+        {d.canEdit && !reviewOnly && (
           <div className="space-y-2 border-t pt-4">
             <p className="text-sm font-medium">Bank account review</p>
             <p className="text-xs text-muted-foreground">Bank change requests for this Fund waiting on Harmonious review.</p>

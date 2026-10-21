@@ -30,6 +30,7 @@ import { ManagerBankingSummary } from "@/components/manager-banking-summary";
 import { PaymentMethodsCard } from "@/components/payment-methods-card";
 import { BANK_CHOICES, getFundEntity, requestBankSetup } from "@/lib/fund-entity.functions";
 import { MercuryApplicationCard } from "@/components/mercury-application-card";
+import { FundBankingReview } from "@/components/fund-setup-phase3";
 
 import { ALL_WIRE_FIELDS, DOMESTIC_WIRE_FIELDS, INTL_WIRE_FIELDS, WIRE_FIELD_LABELS, wireScopeOf } from "@/lib/wire-scope";
 
@@ -297,6 +298,7 @@ export function FundBanking({ fundId, backTo }: { fundId: string; backTo: "admin
             </Card>
           </div>
 
+          <FundBankingReview offeringId={fundId} />
           <div className="mt-6">
             <BankFeedPanel fundId={fundId} />
           </div>
