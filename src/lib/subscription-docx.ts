@@ -25,6 +25,7 @@ export async function fillSubscriptionDocx(bytes: Uint8Array, values: Record<str
   };
   const normalized: Record<string, string> = {};
   for (const [key, value] of Object.entries(values)) if (value?.trim()) normalized[normKey(key)] = value.trim();
+  const investorIsEntity = values["__investor_is_entity"] === "1";
   let acceptance = false;
   let subscriberPage = false;
   let signatureTagged = false;
@@ -39,6 +40,8 @@ export async function fillSubscriptionDocx(bytes: Uint8Array, values: Record<str
       return p.replace(/\{\{[^}<]*\}\}/g, "");
     }
     if (!text.trim().endsWith(":")) return p;
+    // Title applies only to a business subscriber: individuals get no title line.
+    if (key0 === "signatorytitle" && !investorIsEntity) return "";
     if (key0 === "signature" && !signatureTagged) {
       signatureTagged = true;
       return p.replace("</w:p>", `${BOX_TAG_RUN(INVESTOR_SIGNATURE_TAG, 48)}</w:p>`);

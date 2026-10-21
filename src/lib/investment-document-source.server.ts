@@ -7,7 +7,7 @@ export async function investmentDocumentSource(db: any, documentId: string, appl
   if (error || !doc) throw new Error("The agreement could not be loaded.");
   const [versions, investment, signature] = await Promise.all([
     db.from("offering_document_versions").select("id,version,file_path,file_name,target_onboarding_id,rollout_scope").eq("offering_document_id", doc.id),
-    applicationId ? db.from("investor_onboardings").select("id,offering_id,investment_profile_id,person_id,requested_amount_cents").eq("application_id", applicationId).is("removed_at", null).maybeSingle() : { data: null },
+    applicationId ? db.from("investor_onboardings").select("id,offering_id,investment_profile_id,person_id,investor_user_id,requested_amount_cents,accepted_amount_cents").eq("application_id", applicationId).is("removed_at", null).maybeSingle() : { data: null },
     applicationId ? db.from("document_signatures").select("signature_template_version,provider_sent_at,provider_completed_at,cancelled_at,provider_status").eq("application_id", applicationId).eq("offering_document_id", doc.id).maybeSingle() : { data: null },
   ]);
   if (versions.error || investment.error || signature.error) throw new Error("The investment agreement version could not be loaded.");
@@ -29,14 +29,26 @@ export async function investmentDocumentSource(db: any, documentId: string, appl
     ]);
     if (profile.error || person.error) throw new Error("Investor agreement details could not be loaded.");
     const name = profile.data?.legal_name || [person.data?.legal_first_name, person.data?.legal_middle_name, person.data?.legal_last_name].filter(Boolean).join(" ");
-    const amount = ob.requested_amount_cents == null ? null : new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(ob.requested_amount_cents / 100);
+    const commitmentCents = ob.accepted_amount_cents ?? ob.requested_amount_cents ?? null;
+    const amount = commitmentCents == null ? null : new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(commitmentCents / 100);
     const { fundTemplateValues } = await import("./fund-doc-templates.server");
+    const { subscriptionLocks } = await import("./investor-onboarding.server");
+    const { PREFILL_KEYS } = await import("./subscription-prefill");
+    const { locked } = await subscriptionLocks(ob, []);
+    const taxForm = locked[PREFILL_KEYS.irsForm] ?? null;
+    const isEntity = Boolean(profile.data?.profile_type) && !["individual", "joint"].includes(String(profile.data?.profile_type));
+    const fund = await fundTemplateValues(doc.offering_id);
     const result = await fillSubscriptionDocx(bytes, {
-      ...await fundTemplateValues(doc.offering_id),
+      ...fund,
+      // Investor's own commitment from About You, never the fund minimum.
+      "Subscription Amount": snapshotValues?.["commitment_amount"] || amount,
+      "Tax Classification": taxForm, "IRS Form": taxForm, "Subscriber Tax Form": taxForm,
+      "Subscriber Type": locked[PREFILL_KEYS.businessType] ?? null,
+      __investor_is_entity: isEntity ? "1" : null,
       "Subscriber Legal Name": snapshotValues?.["entity_legal_name"] || snapshotValues?.["investor_legal_name"] || name,
       "Investor Subscription Amount": snapshotValues?.["commitment_amount"] || amount,
       "Investor Signer Name": snapshotValues?.["signer_name"] || (profile.data?.profile_type === "individual" ? name : null),
-      "Investor Signer Title": snapshotValues?.["signer_title"] || null,
+      "Investor Signer Title": isEntity ? snapshotValues?.["signer_title"] || null : null,
     });
     bytes = result.bytes;
   }
