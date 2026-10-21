@@ -152,7 +152,7 @@ export function BankBox({ offeringId, isStaff, onChanged }: { offeringId: string
   if (done) return (
     <>
       <SummaryBox title="Banking" onEdit={() => setEditing(true)} rows={[
-        ["Bank", det["bank_name"]], ["Account name", det["account_name"]], ["Account", <span className="font-mono">{det["account_number"]}</span>],
+        ["Bank", det["bank_name"]], ["Bank address", det["bank_address"]], ["Account name", det["account_name"]], ["Beneficiary address", det["beneficiary_address"]], ["Account", <span className="font-mono">{det["account_number"]}</span>],
         ["Routing", <span className="font-mono">{det["routing_number"] ? `•••••${String(det["routing_number"]).slice(-4)}` : ""}</span>],
         ["Bank letter", letter?.url ? <a className="inline-flex items-center gap-1 text-primary underline" href={letter.url} target="_blank" rel="noreferrer"><FileText className="h-3.5 w-3.5" />{letter.file_name ?? letter.title}</a> : letter?.file_name],
       ]} note="Full numbers are stored encrypted and shown masked." />
@@ -172,7 +172,7 @@ export function BankBox({ offeringId, isStaff, onChanged }: { offeringId: string
 function BankForm({ offeringId, prior, letter, onSaved }: { offeringId: string; prior: Record<string, string>; letter: any; onSaved: () => void }) {
   const save = useServerFn(saveManagedWireInstructions);
   const upload = useServerFn(uploadFundFileFn);
-  const [v, setV] = useState({ bankName: prior["bank_name"] ?? "", accountName: prior["account_name"] ?? "", account: "", account2: "", routing: "", routing2: "" });
+  const [v, setV] = useState({ bankName: prior["bank_name"] ?? "", accountName: prior["account_name"] ?? "", bankAddress: prior["bank_address"] ?? "", beneficiaryAddress: prior["beneficiary_address"] ?? "", account: "", account2: "", routing: "", routing2: "" });
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
   const f = (k: keyof typeof v, label: string, mono = false, type = "text") => (
@@ -184,7 +184,7 @@ function BankForm({ offeringId, prior, letter, onSaved }: { offeringId: string; 
     setBusy(true);
     try {
       // Keep every other stored field (international set, intermediary, scope) - the save replaces the whole record.
-      await save({ data: { ...prior, offering_id: offeringId, bank_name: v.bankName, bank_address: prior["bank_address"] ?? "", account_name: v.accountName, account_number: v.account, routing_number: v.routing, swift: prior["swift"] ?? "", memo: prior["memo"] ?? "" } });
+      await save({ data: { ...prior, offering_id: offeringId, bank_name: v.bankName, bank_address: v.bankAddress, beneficiary_address: v.beneficiaryAddress, account_name: v.accountName, account_number: v.account, routing_number: v.routing, swift: prior["swift"] ?? "", memo: prior["memo"] ?? "" } });
       if (file) await uploadLetter(upload, offeringId, file, "bank_letter", "Bank letter");
       toast.success("Banking saved"); onSaved();
     } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
@@ -192,6 +192,7 @@ function BankForm({ offeringId, prior, letter, onSaved }: { offeringId: string; 
   return (
     <div className="space-y-3">
       <div className="grid gap-3 sm:grid-cols-2">{f("bankName", "Bank name")}{f("accountName", "Account name")}</div>
+      <div className="grid gap-3 sm:grid-cols-2">{f("bankAddress", "Bank address")}{f("beneficiaryAddress", "Beneficiary address")}</div>
       <div className="grid gap-3 sm:grid-cols-2">{f("account", "Account number", true, "password")}{f("account2", "Confirm account number", true)}</div>
       <div className="grid gap-3 sm:grid-cols-2">{f("routing", "Routing number", true, "password")}{f("routing2", "Confirm routing number", true)}</div>
       <LetterPicker label="Bank letter (optional)" file={file} setFile={setFile} existing={letter} />

@@ -36,7 +36,7 @@ function toBase64(file: File): Promise<string> {
 export const FIELDS: Record<Exclude<Section, "document">, [string, string, string?][]> = {
   fund_details: [["legalName", "Legal fund name"], ["displayName", "Display name"], ["entityType", "Entity type (e.g. LLC, LP)"], ["jurisdiction", "Formation state"], ["formationDate", "Formation date", "date"], ["addressLine1", "Address line 1"], ["addressLine2", "Address line 2"], ["addressCity", "City"], ["addressState", "State (address)"], ["addressZip", "ZIP code"], ["targetRaise", "Target raise ($)", "number"], ["minInvestment", "Minimum investment ($)", "number"]],
   fees_team: [["managementFeePercent", "Management fee (% per year)", "number"], ["carryPercent", "Carried interest (%)", "number"], ["preferredReturnPercent", "Preferred return (%)", "number"], ["gpName", "General partner / manager entity"], ["signers", "Signers & team (name, title, email — one per line)", "textarea"]],
-  bank: [["bankName", "Bank name"], ["accountLast4", "Account number — last 4 only"], ["notes", "Notes"]],
+  bank: [["bankName", "Bank name"], ["bankAddress", "Bank address"], ["beneficiaryAddress", "Beneficiary address"], ["accountLast4", "Account number — last 4 only"], ["notes", "Notes"]],
 };
 
 export function FundManagerSetupLoader({ offeringId, compact = false }: { offeringId: string; compact?: boolean }) {

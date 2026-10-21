@@ -1,7 +1,7 @@
 /** Which wire instructions a fund offers and which ones a given investor should see. Pure, browser-safe. */
 export type WireScope = "domestic" | "international" | "both";
 
-export const DOMESTIC_WIRE_FIELDS = ["bank_name", "bank_address", "account_name", "account_number", "routing_number", "memo"] as const;
+export const DOMESTIC_WIRE_FIELDS = ["bank_name", "bank_address", "account_name", "beneficiary_address", "account_number", "routing_number", "memo"] as const;
 export const INTL_WIRE_FIELDS = [
   "intl_bank_name", "intl_account_name", "intl_account_number", "swift",
   "intermediary_bank", "intermediary_swift", "intermediary_routing", "intermediary_account", "intl_memo",
@@ -9,7 +9,7 @@ export const INTL_WIRE_FIELDS = [
 export const ALL_WIRE_FIELDS = ["wire_scope", ...DOMESTIC_WIRE_FIELDS, ...INTL_WIRE_FIELDS] as const;
 
 export const WIRE_FIELD_LABELS: Record<string, string> = {
-  bank_name: "Receiving bank", bank_address: "Bank address", account_name: "Account name", account_number: "Account number",
+  bank_name: "Receiving bank", bank_address: "Bank address", account_name: "Account name", beneficiary_address: "Beneficiary address", account_number: "Account number",
   routing_number: "Routing number (ABA)", memo: "Reference / memo",
   intl_bank_name: "Receiving bank", intl_account_name: "Beneficiary name", intl_account_number: "Account number", swift: "SWIFT / BIC",
   intermediary_bank: "Intermediary bank", intermediary_swift: "Intermediary SWIFT", intermediary_routing: "Intermediary routing (ABA)",

@@ -501,6 +501,7 @@ function FundStep({ d, onboardingId, done }: { d: any; onboardingId: string; don
             {([
               ["Bank name", wire.instructions?.bankName ?? wire.instructions?.details?.bank_name],
               ["Bank address", wire.instructions?.details?.bank_address],
+              ["Beneficiary address", wire.instructions?.details?.beneficiary_address],
               ["Routing / ABA", wire.instructions?.details?.routing_number],
               ["Account number", wire.instructions?.details?.account_number],
               ["Account name", wire.instructions?.details?.account_name],
