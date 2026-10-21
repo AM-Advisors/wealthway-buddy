@@ -21,7 +21,7 @@ export const Route = createFileRoute("/_authenticated/sales_/documents_/$id")({
       { title: "Document editor - Harmonious Sales" },
       { name: "description", content: "Edit, approve and send a proposal, RFP or RFQ." },
       { property: "og:title", content: "Document editor - Harmonious Sales" },
-      { property: "og:description", content: "Draft with AI, get Marketing help, approve and send." },
+      { property: "og:description", content: "Standardized proposal built from the quote and MSA; approve and send." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex" },
@@ -92,7 +92,7 @@ function Editor() {
 
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
         <div className="space-y-4">
-          {p.canEdit && (
+          {p.canEdit && doc.kind !== "rfq" && (
             <Panel title="AI first draft">
               <Textarea rows={3} placeholder="Optional brief: what the prospect cares about, tone, anything to stress" value={brief} onChange={(e) => setBrief(e.target.value)} />
               <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -141,24 +141,6 @@ function Editor() {
               {dirty && <p className="mt-1 text-xs text-muted-foreground">Save your edits first.</p>}
             </Panel>
           )}
-          {p.canRequestHelp && (
-            <Panel title="Ask Marketing for help">
-              <Textarea rows={3} placeholder="What do you need? (wording, branding, visuals...)" value={helpNote} onChange={(e) => setHelpNote(e.target.value)} />
-              <div className="mt-2 space-y-1 text-sm">
-                {sections.map((s) => (
-                  <label key={s.key} className="flex items-center gap-2"><input type="checkbox" checked={helpKeys.includes(s.key)} onChange={(e) => setHelpKeys((k) => (e.target.checked ? [...k, s.key] : k.filter((x) => x !== s.key)))} />{s.title}</label>
-                ))}
-              </div>
-              <Input className="mt-2" type="date" value={helpDue} onChange={(e) => setHelpDue(e.target.value)} />
-              <Button className="mt-2" disabled={!!busy || helpNote.trim().length < 3} onClick={() => run("help", () => help({ data: { id, note: helpNote, sections: helpKeys, dueDate: helpDue || null } }), "Sent to Marketing")}>Request Marketing help</Button>
-            </Panel>
-          )}
-          {p.isOwner && d.assists.some((x: any) => x.status === "open") && (
-            <Panel title="Waiting for Marketing">
-              <Button variant="outline" size="sm" onClick={() => run("cancel", () => giveBack({ data: { id: d.assists.find((x: any) => x.status === "open")!.id, note: "Cancelled by rep" } }), "Request cancelled")}>Cancel request</Button>
-            </Panel>
-          )}
-
           <Panel title="Approval & sending">
             {p.canSubmit && <Button className="w-full" disabled={!!busy || dirty} onClick={() => run("submit", () => submit({ data: { id } }), "Submitted for approval")}>Submit for approval</Button>}
             {doc.status === "submitted" && !p.canApprove && <p className="text-sm text-muted-foreground">Waiting for a Sales Manager or the CRO (not the writer).</p>}

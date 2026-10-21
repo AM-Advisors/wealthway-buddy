@@ -76,6 +76,7 @@ export async function saveAboutHarmonious(userId: string, body: string, reason: 
   const db = await admin();
   const text = body.trim();
   if (text.length < 20) throw new Error("The wording is too short.");
+  if (!reason || reason.trim().length < 3) throw new Error("Give a reason for the change.");
   const { data: last } = await db.from("sales_controlled_texts").select("version, body").eq("text_key", "about_harmonious").order("version", { ascending: false }).limit(1).maybeSingle();
   if (last?.body === text) return { version: last.version as number };
   const version = (last?.version ?? 0) + 1;
