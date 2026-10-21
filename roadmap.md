@@ -1,5 +1,10 @@
 # Roadmap
 
+## Alyssa review evidence (2026-10-21)
+- [x] Connect saved signed copies, acknowledgments and questionnaire to the fund manager's investor detail; show the owner's signed archive below the submitted journey too.
+- [x] 26 focused evidence, ownership and download checks passed. Saved Alyssa subscription v3, PPM v1/OA v2 acknowledgments and submitted questionnaire confirmed; no signatures or approval changed.
+- [ ] Signed-in read-back — blocked on isolated synthetic QA; shared-production browser testing prohibited.
+
 ## Investor approval emails (2026-10-21)
 - [x] Notify one responsible exact-fund manager after investor signing/submission; notify a separate assigned manager-signatory after document approval. Canonical completion avoids duplicate legacy notices.
 - [x] Email the verified owning investor after manager funding approval with a platform link, never bank details; claim instructions are available only when the canonical funding read confirms it.
