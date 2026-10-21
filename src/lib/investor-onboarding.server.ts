@@ -795,19 +795,21 @@ export async function subscriptionLocks(row: any, questions: Question[]) {
   const { resolveTaxForm } = await import("@/lib/onboarding-compliance-model");
   const { usPersonFrom } = await import("@/lib/onboarding-compliance.server");
   const [{ data: person }, { data: acct }, { data: profile }, { data: tax }] = await Promise.all([
-    row.person_id ? db().from("persons").select("id, email, phone, tax_residency_country, residence_country").eq("id", row.person_id).maybeSingle() : Promise.resolve({ data: null }),
+    row.person_id ? db().from("persons").select("id, email, phone, tax_residency_country, residence_country, citizenship_country").eq("id", row.person_id).maybeSingle() : Promise.resolve({ data: null }),
     db().from("profiles").select("email, phone").eq("user_id", row.investor_user_id).maybeSingle(),
-    row.investment_profile_id ? db().from("investment_profiles").select("profile_type, legal_name").eq("id", row.investment_profile_id).maybeSingle() : Promise.resolve({ data: null }),
+    row.investment_profile_id ? db().from("investment_profiles").select("profile_type, legal_name, country").eq("id", row.investment_profile_id).maybeSingle() : Promise.resolve({ data: null }),
     row.investment_profile_id ? db().from("investor_tax_profiles").select("*").eq("investment_profile_id", row.investment_profile_id).order("created_at", { ascending: false }).limit(1).maybeSingle() : Promise.resolve({ data: null }),
   ]) as any[];
   const { data: kyc } = person?.id
-    ? await db().from("kyc_verifications").select("verified_full_name, status, completed_at").eq("person_id", person.id).eq("status", "approved").not("completed_at", "is", null).order("completed_at", { ascending: false }).limit(1)
+    ? await db().from("kyc_verifications").select("verified_full_name, status, completed_at, document_issuing_country").eq("person_id", person.id).eq("status", "approved").not("completed_at", "is", null).order("completed_at", { ascending: false }).limit(1)
     : { data: [] as any[] };
   const k = ((kyc ?? []) as any[])[0] ?? null;
   const profileType = (profile?.profile_type ?? null) as string | null;
   const isIndividual = profileType === "individual" || profileType === "joint";
   const verifiedName = isIndividual ? (k?.verified_full_name ?? null) : k ? (profile?.legal_name ?? null) : null;
-  const routing = resolveTaxForm({ profileType, usPerson: k ? usPersonFrom(tax, person) : null });
+  const { usPersonFromVerification } = await import("@/lib/subscription-prefill");
+  const usPerson = k ? (usPersonFromVerification({ isIndividual, citizenshipCountry: person?.citizenship_country, documentCountry: k.document_issuing_country, entityCountry: profile?.country }) ?? usPersonFrom(tax, person)) : null;
+  const routing = resolveTaxForm({ profileType, usPerson });
   const locked = lockedAnswers({
     verifiedName,
     commitmentCents: (row.accepted_amount_cents ?? row.requested_amount_cents ?? null) as number | null,

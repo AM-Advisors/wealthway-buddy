@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { applyLocked, businessTypeFor, irsFormOptionFor, lockedAnswers, IDENTITY_DOCS_KEY } from "@/lib/subscription-prefill";
+import { usPersonFromVerification, applyLocked, businessTypeFor, irsFormOptionFor, lockedAnswers, IDENTITY_DOCS_KEY } from "@/lib/subscription-prefill";
 import { highRiskYes, stripHiddenAnswers, questionVisible, validateQuestionnaire, type Question } from "@/lib/investor-onboarding-model";
 import standard from "@/lib/standard-investor-questionnaire.json";
 
@@ -46,5 +46,12 @@ describe("subscription prefill", () => {
     expect(bad.map((q) => Q.indexOf(q) + 1)).toEqual([17, 18, 19, 20, 21, 22, 23, 24]);
     expect(highRiskYes(Q, Object.fromEntries(bad.map((q) => [q.key, "No"])))).toEqual([]);
     expect(highRiskYes(Q, { [bad[3]!.key]: "Yes" }).map((f) => f.number)).toEqual([20]);
+  });
+  it("question 9 follows Verification: U.S. citizen W-9, otherwise W-8 by person or business", () => {
+    expect(usPersonFromVerification({ isIndividual: true, citizenshipCountry: "US" })).toBe(true);
+    expect(usPersonFromVerification({ isIndividual: true, documentCountry: "USA" })).toBe(true);
+    expect(usPersonFromVerification({ isIndividual: true, citizenshipCountry: "CA", documentCountry: "US" })).toBe(false);
+    expect(usPersonFromVerification({ isIndividual: false, entityCountry: "KY" })).toBe(false);
+    expect(usPersonFromVerification({ isIndividual: true })).toBeNull();
   });
 });
