@@ -4,6 +4,18 @@ import { requireSupabaseAuth } from "@/lib/require-auth";
 
 const svc = () => import("@/lib/investor-document-review.server");
 
+export const emailFundSignatoryFn = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ offeringId: z.string().uuid(), signatureId: z.string().uuid() }).parse)
+  .handler(async ({ data, context }) => {
+    const { setupActor } = await import('@/lib/fund-setup.server');
+    const actor = await setupActor(context.userId);
+    if (!actor.isStaff && !actor.offeringIds.includes(data.offeringId)) throw new Error('You do not manage this fund.');
+    const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+    const { emailFundSignatory } = await import('@/lib/fund-signing-email.server');
+    return emailFundSignatory(supabaseAdmin, context.userId, data);
+  });
+
 export const listDocumentReviewsFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ offeringId: z.string().uuid() }).parse)

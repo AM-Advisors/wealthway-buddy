@@ -74,9 +74,10 @@ export async function listDocumentReviews(userId: string, offeringId: string) {
   // Where this manager is also the fund signatory, approval and countersigning happen in one step.
   const sigIds = ((sigs ?? []) as any[]).map((s) => s.id);
   const { data: mySignerRows } = sigIds.length
-    ? await db.from("document_signature_signers").select("id, signature_id, status").in("signature_id", sigIds).eq("role_key", "fund_manager").eq("signer_user_id", userId).in("status", ["waiting", "sent", "viewed"])
+    ? await db.from("document_signature_signers").select("id, signature_id, signer_user_id, status").in("signature_id", sigIds).eq("role_key", "fund_manager").in("status", ["waiting", "sent", "viewed"])
     : { data: [] };
-  const mySigner = new Map(((mySignerRows ?? []) as any[]).map((r) => [r.signature_id, r.id as string]));
+  const mySigner = new Map(((mySignerRows ?? []) as any[]).filter(r => r.signer_user_id === userId).map((r) => [r.signature_id, r.id as string]));
+  const pendingFundSignatures = new Set(((mySignerRows ?? []) as any[]).map(r => r.signature_id));
   const docList = (docs ?? []) as any[];
   const liveSigs = ((sigs ?? []) as any[]).filter((s) => !s.cancelled_at && !s.superseded_by);
   const { data: invSignedRows } = liveSigs.length
@@ -103,6 +104,7 @@ export async function listDocumentReviews(userId: string, offeringId: string) {
             note: (dec?.note ?? null) as string | null,
             decidedAt: (dec?.decided_at ?? null) as string | null,
             countersignSignerId: (sig ? mySigner.get(sig.id) ?? null : null) as string | null,
+            hasPendingFundSignature: Boolean(sig && pendingFundSignatures.has(sig.id)),
             signed: sig ? { hasCopy: Boolean(sig.pdf_path), signatureId: sig.id as string, signerName: sig.signer_name as string | null, signedAt: (sig.provider_completed_at ?? sig.signed_at) as string } : null,
           };
         }),

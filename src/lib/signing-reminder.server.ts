@@ -12,6 +12,7 @@ const DAY = 86400_000;
 export async function sendSigningReminder(actorId: string, input: {
   offeringId?: string | null; clientId?: string | null; contextName?: string | null; reminderKey: string; documentTitle: string; recipientEmail: string; recipientName: string;
   recipientUserId?: string | null; path: string; steps: string[]; override?: { reason: string } | null;
+  nativeSend?: () => Promise<void>;
 }) {
   const d = supabaseAdmin as any;
   const since = new Date(Date.now() - DAY).toISOString();
@@ -28,7 +29,7 @@ export async function sendSigningReminder(actorId: string, input: {
   if (!userId) { const { data: p } = await d.from("profiles").select("user_id").ilike("email", input.recipientEmail).maybeSingle(); userId = p?.user_id ?? null; }
   let firstTime = false;
   let ctaUrl = `${PORTAL_ORIGIN}${input.path}`;
-  if (userId) {
+  if (userId && !input.nativeSend) {
     const { data: u } = await d.auth.admin.getUserById(userId);
     if (!u?.user?.last_sign_in_at) {
       const { setPasswordLink } = await import("@/lib/account-invite.server");
@@ -41,7 +42,7 @@ export async function sendSigningReminder(actorId: string, input: {
   const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
   const { secondaryCcFor } = await import("@/lib/person-emails.server");
   const secondary = await secondaryCcFor(input.recipientEmail);
-  const r: any = await sendTemplateEmail("signing-reminder", input.recipientEmail, {
+  const r: any = input.nativeSend ? await input.nativeSend().then(() => ({ sent: true })) : await sendTemplateEmail("signing-reminder", input.recipientEmail, {
     cc: secondary ? ["operations@harmonious.co", secondary] : "operations@harmonious.co", inboxForAnyUser: true,
     templateData: { recipientName: input.recipientName.split(/\s+/)[0] || "there", documentTitle: input.documentTitle, fundName: input.contextName ?? o?.name ?? "your fund", steps: input.steps, requestedBy: me?.legal_name ?? undefined, ctaUrl, firstTime },
   });
@@ -49,7 +50,7 @@ export async function sendSigningReminder(actorId: string, input: {
   await d.from("document_reminders").insert({ reminder_key: input.reminderKey, client_id: input.clientId ?? null, offering_id: input.offeringId ?? null, document_title: input.documentTitle, recipient_email: input.recipientEmail, sent_by: actorId, delivered: sent, override_reason: hit ? input.override?.reason ?? null : null, message_id: r?.messageId ?? null, inbox_message_id: r?.inboxMessageId ?? null, recipient_user_id: userId });
   const { logFundAudit } = await import("@/lib/fund-audit.server");
   if (input.offeringId) await logFundAudit(actorId, {
-    offeringId: input.offeringId!, eventType: "signing_reminder_sent",
+    offeringId: input.offeringId, eventType: "signing_reminder_sent",
     summary: `${sent ? "Signing reminder sent" : "Signing reminder could not be delivered"} to ${input.recipientName} (${input.recipientEmail}) for ${input.documentTitle}${hit ? " — Super Admin override" : ""}`,
     values: { reminderKey: input.reminderKey, document: input.documentTitle, recipient: input.recipientEmail, link: firstTime ? "Personal set-password link" : "Direct link", ...(hit ? { overrideReason: input.override?.reason } : {}) },
   });

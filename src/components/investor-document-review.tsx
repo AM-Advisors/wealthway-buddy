@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  decideDocumentFn, listDocumentReviewsFn, myInvitedFundsFn, signedCopyUrlFn, startInvitedFundFn,
+  decideDocumentFn, emailFundSignatoryFn, listDocumentReviewsFn, myInvitedFundsFn, signedCopyUrlFn, startInvitedFundFn,
 } from "@/lib/investor-document-review.functions";
 import { money } from "@/lib/status";
 
@@ -30,6 +30,7 @@ function SignedCopyButton({ offeringId, signatureId }: { offeringId: string; sig
 
 function DocRow({ offeringId, onboardingId, title, version, d, readOnly }: { offeringId: string; onboardingId: string; title: string; version: number | null; d: any; readOnly?: boolean }) {
   const decide = useServerFn(decideDocumentFn);
+  const emailSignatory = useServerFn(emailFundSignatoryFn);
   const qc = useQueryClient();
   const [returning, setReturning] = useState(false);
   const [note, setNote] = useState("");
@@ -67,6 +68,12 @@ function DocRow({ offeringId, onboardingId, title, version, d, readOnly }: { off
             <Button size="sm" onClick={() => navigate({ to: "/manager/countersign/$signerId", params: { signerId: d.countersignSignerId } })}>Sign now</Button>
           ) : null}
           {d.signed?.hasCopy ? <SignedCopyButton offeringId={offeringId} signatureId={d.signed.signatureId} /> : null}
+          {d.signed && d.hasPendingFundSignature && d.decision === 'approved' && !readOnly ? <Button size="sm" variant="outline" disabled={busy} onClick={async () => {
+            setBusy(true);
+            try { await emailSignatory({ data: { offeringId, signatureId: d.signed.signatureId } }); toast.success('Signing email requested for the fund signatory.'); }
+            catch (e) { toast.error((e as Error).message); }
+            finally { setBusy(false); }
+          }}>Email signatory to sign</Button> : null}
           {d.signed && !readOnly && !d.decision ? (
             <>
               {d.countersignSignerId ? (
@@ -110,7 +117,8 @@ export function InvestorDocumentReview({ offeringId }: { offeringId: string }) {
                   <p className="font-medium">{inv.name}</p>
                   <ul className="divide-y">
                     {inv.documents.map((d) => {
-                      const doc = data.documents.find((x) => x.id === d.documentId)!;
+                      const doc = data.documents.find((x) => x.id === d.documentId);
+                      if (!doc) return null;
                       return <DocRow key={d.documentId} offeringId={offeringId} onboardingId={inv.onboardingId} title={doc.title} version={doc.version} d={d} />;
                     })}
                   </ul>
@@ -134,7 +142,8 @@ export function InvestorRecordDocuments({ offeringId, onboardingId }: { offering
         {isLoading ? <p className="text-sm text-muted-foreground">Loading…</p>
           : !inv || !inv.documents.length ? <p className="text-sm text-muted-foreground">No signature documents for this investor yet.</p>
           : <ul className="divide-y">{inv.documents.map((d) => {
-              const doc = data!.documents.find((x) => x.id === d.documentId)!;
+              const doc = data?.documents.find((x) => x.id === d.documentId);
+              if (!doc) return null;
               return <DocRow key={d.documentId} offeringId={offeringId} onboardingId={onboardingId} title={doc.title} version={doc.version} d={d} />;
             })}</ul>}
       </CardContent>

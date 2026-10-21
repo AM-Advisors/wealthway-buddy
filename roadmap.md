@@ -9,6 +9,11 @@
 ## Thomas signing request (2026-10-21)
 - [ ] Thomas must personally countersign Calvin's subscription using his assigned signing link; no signature may be adopted or applied by the assistant on his behalf.
 
+## Direct fund-signatory email (2026-10-21)
+- [x] Add Email signatory to sign on approved outstanding fund signatures; native requests resend the existing signing email, embedded requests email the exact protected countersign page, never convert or recreate signatures.
+- [x] 50 focused signing/approval/email checks passed; preview build OK; no real emails or signatures applied.
+- [ ] Signed-in delivery walkthrough blocked: isolated synthetic QA sessions unavailable; native email inbox delivery remains unverified.
+
 ## Thomas countersigning screenshot (2026-10-21)
 - [x] Located My Funds → CORPS Erebor → Investors → Calvin → Documents & signed agreements → Approve & sign; recorded Thomas signer remains sent with no signed_at.
 - [ ] Signing-screen screenshot blocked by account authenticator setup in Alyssa's own authorized session; no Thomas impersonation or security bypass performed.
