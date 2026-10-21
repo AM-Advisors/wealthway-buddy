@@ -1135,7 +1135,7 @@ async function preparedManagerItems(ctx: Ctx, fundIds: string[], fundName: (id: 
   const { data: mine } = await db.from("document_signature_signers").select("id, signature_id, application_id, offering_id, offering_document_id, status")
     .eq("signer_user_id", ctx.userId).eq("role_key", "fund_manager").in("status", ["waiting", "sent"]).in("offering_id", fundIds).limit(LIMIT);
   for (const m of (mine ?? []) as any[]) {
-    const { data: inv } = await db.from("document_signature_signers").select("status, signed_at").eq("signature_id", m.signature_id).eq("role_key", "investor").maybeSingle();
+    const { data: inv } = await db.from("document_signature_signers").select("status, signed_at").eq("signature_id", m.signature_id).or("role_key.is.null,role_key.in.(investor,named_signer)").order("signing_order").limit(1).maybeSingle();
     if ((inv as any)?.status !== "signed") continue;
     const { data: ob } = await db.from("investor_onboardings").select("id").eq("application_id", m.application_id).is("removed_at", null).maybeSingle();
     const { managerApprovedSigned } = await import("@/lib/investor-document-review.server");
@@ -1145,7 +1145,7 @@ async function preparedManagerItems(ctx: Ctx, fundIds: string[], fundName: (id: 
     out.push(buildAttentionItem({
       id: `manager-countersign:${m.signature_id}`, source: "manager.countersign", workspace: "fund_manager", group: "needs_you", severity: "action",
       title: `Countersign ${(doc as any)?.title ?? "investment document"}`, workflowState: "awaiting_fund_manager", status: "The investor has signed. Your signature is required.",
-      sourceTable: "document_signatures", sourceId: m.signature_id, href: `/manager/${m.application_id}`, at: null, fundName: fundName(m.offering_id),
+      sourceTable: "document_signatures", sourceId: m.signature_id, href: `/manager/countersign/${m.id}`, at: null, fundName: fundName(m.offering_id),
     }));
   }
   return out;
