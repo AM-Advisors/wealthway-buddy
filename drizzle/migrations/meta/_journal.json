@@ -2171,6 +2171,13 @@
       "when": 1792602064111,
       "tag": "0309_personal_account_aggregation",
       "breakpoints": true
+    },
+    {
+      "idx": 310,
+      "version": "7",
+      "when": 1792602938838,
+      "tag": "0310_personal_wealth_cash_and_debt_records",
+      "breakpoints": true
     }
   ]
 }
