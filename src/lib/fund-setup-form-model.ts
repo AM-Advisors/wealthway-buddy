@@ -48,7 +48,8 @@ export const FORM_SECTIONS: { id: string; title: string; fields: FieldDef[] }[] 
     { key: "rollingCloses", label: "Rolling closes", section: fd, options: [["yes", "Yes"], ["no", "No"]] },
   ] },
   { id: "fees", title: "Fees & Terms", fields: [
-    { key: "managementFeePercent", label: "Management fee (% per year)", section: ft, type: "number" },
+    { key: "managementFeePercent", label: "Management fee (%)", section: ft, type: "number" },
+    { key: "managementFeeFrequency", label: "Management fee charged", section: ft, options: [["annual", "Per year"], ["per_capital_call", "Per capital call"], ["one_time", "One time"]] },
     { key: "carryPercent", label: "Carried interest (%)", section: ft, type: "number" },
     { key: "preferredReturnPercent", label: "Preferred return (%)", section: ft, type: "number" },
   ] },

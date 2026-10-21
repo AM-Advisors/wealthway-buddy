@@ -79,7 +79,10 @@ export function structureForFundType(fundType: string | null | undefined): strin
 }
 
 export const FEE_BASES = ["committed_capital", "invested_capital", "nav", "flat"] as const;
-export const FEE_FREQUENCIES = ["one_time", "annual", "quarterly", "monthly"] as const;
+export const FEE_FREQUENCIES = ["annual", "per_capital_call", "one_time", "quarterly", "monthly"] as const;
+/** Choices offered for new entries; quarterly/monthly remain readable on older funds. */
+export const FEE_FREQUENCY_CHOICES = [["annual", "Per year"], ["per_capital_call", "Per capital call"], ["one_time", "One time"]] as const;
+export const FEE_FREQUENCY_LABEL: Record<string, string> = { annual: "Per year", per_capital_call: "Per capital call", one_time: "One time", quarterly: "Quarterly", monthly: "Monthly" };
 
 export type ManagementFee = {
   ratePercent: number | null;
