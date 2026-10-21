@@ -176,6 +176,11 @@ export const updateBankingFn = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => (await engine()).updateBanking(context.userId, data));
 
+export const markExistingAccountActiveFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ setupId: z.string().min(1), reason: z.string().min(10).max(500) }).parse)
+  .handler(async ({ data, context }) => (await engine()).markExistingAccountActive(context.userId, context.supabase, data));
+
 export const releaseBankingInstructionsFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(idInput.parse)

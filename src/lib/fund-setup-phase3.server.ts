@@ -70,7 +70,7 @@ async function offering(offeringId: string) {
   return data;
 }
 
-async function bankVersions(sb: any, offeringId: string) {
+export async function bankVersions(sb: any, offeringId: string) {
   const { data, error } = await sb.rpc("list_bank_instruction_versions", { p_offering_id: offeringId });
   if (error) throw new Error("Bank instructions couldn't be loaded.");
   return ((data ?? []) as any[]).map((v) => ({

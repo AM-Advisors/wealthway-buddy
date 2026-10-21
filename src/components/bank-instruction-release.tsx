@@ -4,7 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { fundSetupDetailFn, launchStatusFn, releaseBankingInstructionsFn, updateBankingFn } from "@/lib/fund-setup.functions";
+import { fundSetupDetailFn, launchStatusFn, releaseBankingInstructionsFn, updateBankingFn, markExistingAccountActiveFn } from "@/lib/fund-setup.functions";
 import { BANKING_STATUSES, type BankingStatus } from "@/lib/fund-setup-model";
 import { invalidateFund } from "@/lib/fund-query-keys";
 
@@ -24,6 +24,7 @@ export function BankInstructionRelease({ offeringId, verified, onChanged }: { of
   const loadDetail = useServerFn(fundSetupDetailFn);
   const update = useServerFn(updateBankingFn);
   const release = useServerFn(releaseBankingInstructionsFn);
+  const markActive = useServerFn(markExistingAccountActiveFn);
   const [busy, setBusy] = useState(false);
   const setup = useQuery({ queryKey: ["bank-release-setup", offeringId], queryFn: () => loadSetup({ data: { offeringId } }) });
   const setupId = setup.data?.setupId;
@@ -51,6 +52,16 @@ export function BankInstructionRelease({ offeringId, verified, onChanged }: { of
       if (!window.confirm(`Confirm: ${LABELS[next]}. Only record a status confirmed by the bank.`)) return;
       void run(() => update({ data: { setupId, status: next } }), "Account status updated.");
     }}>{busy ? "Saving…" : ACTIONS[next]}</Button>}
+    {status !== "account_active" && <div className="space-y-1 rounded-md border border-dashed p-3">
+      <p className="text-sm font-medium">Already using this account?</p>
+      <p className="text-xs text-muted-foreground">If the account already exists and is in use, mark it active in one step. Requires verified instructions and a reason.</p>
+      <Button size="sm" variant="secondary" disabled={busy || !verified} onClick={() => {
+        const reason = window.prompt("Why is this account already active? (e.g. existing account in use for the master fund)")?.trim();
+        if (!reason) return;
+        if (reason.length < 10) { toast.error("Please give a little more detail (at least 10 characters)."); return; }
+        void run(() => markActive({ data: { setupId, reason } }), "Account marked active.");
+      }}>{busy ? "Saving…" : "Existing account is active"}</Button>
+    </div>}
     {status === "account_active" && !released && <Button size="sm" disabled={busy || !verified} onClick={() => {
       if (!window.confirm("Release the current verified wire instructions to eligible investors?")) return;
       void run(() => release({ data: { setupId } }), "Wire instructions released to eligible investors.");
