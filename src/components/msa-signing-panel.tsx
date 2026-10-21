@@ -106,7 +106,6 @@ export function MsaSigningPanel({
                 {s.name}
                 {s.title ? `, ${s.title}` : ""} · {s.side === "client" ? "Client" : "Harmonious"} ·{" "}
                 {new Date(s.signedAt).toLocaleString("en-US")}
-                {s.version ? ` · ${s.version}` : ""}
               </p>
             ))}
           </CardContent>
@@ -122,7 +121,7 @@ export function MsaSigningPanel({
           <CardContent className="space-y-1">
             {data.history.map((h) => (
               <p key={h.id} className="text-sm text-muted-foreground">
-                {h.version} · executed {new Date(h.executedAt).toLocaleDateString("en-US")}
+                Executed {new Date(h.executedAt).toLocaleDateString("en-US")}
               </p>
             ))}
           </CardContent>
