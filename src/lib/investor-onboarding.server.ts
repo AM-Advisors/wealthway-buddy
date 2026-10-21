@@ -132,11 +132,13 @@ export async function assertOnboardingAccess(userId: string, onboardingId: strin
 
 async function assertInvestorOwns(userId: string, onboardingId: string) {
   const access = await assertOnboardingAccess(userId, onboardingId);
-  if (access.role !== "investor") forbid("only the investor can complete their own onboarding.");
+  // Staff access takes precedence in read views, but does not erase ownership
+  // when that same person completes their own investment as an investor.
+  if (access.row.investor_user_id !== access.actor.userId) forbid("only the investor can complete their own onboarding.");
   if (["closed", "declined", "cancelled"].includes(String(access.row.stage))) {
     fail("This investment can no longer be changed.");
   }
-  return access;
+  return { ...access, role: "investor" as const };
 }
 
 async function recordEvent(input: {
