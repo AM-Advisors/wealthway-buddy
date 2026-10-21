@@ -79,6 +79,23 @@ async function msaForClient(db: any, clientId: string | null) {
   return { versionId: v.id as string, version: String(v.version), effectiveDate: v.effective_date as string | null, sections: ((secs ?? []) as any[]).map((x) => ({ no: String(x.section_no ?? ""), title: String(x.title ?? ""), body: String(x.body ?? "") })) };
 }
 
+/** The Harmonious person shown to the client: their assigned Sales Representative when chosen, else the document's owner. */
+async function salesContactFor(db: any, clientId: string | null, ownerId: string | null) {
+  let uid = ownerId;
+  if (clientId) {
+    const { data: c } = await db.from("clients").select("show_sales_rep_to_client").eq("id", clientId).maybeSingle();
+    if (c?.show_sales_rep_to_client) {
+      const { data: t } = await db.from("client_team_assignments").select("user_id").eq("client_id", clientId).eq("team_role", "sales").maybeSingle();
+      if (t?.user_id) uid = t.user_id;
+    }
+  }
+  if (!uid) return null;
+  const { data: p } = await db.from("profiles").select("legal_name, email").eq("user_id", uid).maybeSingle();
+  let email = p?.email ?? null; let name = p?.legal_name ?? null;
+  if (!email) { const { data: u } = await db.auth.admin.getUserById(uid); email = u?.user?.email ?? null; name = name ?? (u?.user?.user_metadata as any)?.full_name ?? null; }
+  return email ? { userId: uid as string, name: String(name || email), email: String(email) } : null;
+}
+
 /** What the client sees on the sign page. Token-gated; no bank details here. */
 export async function viewForToken(token: string) {
   const t = await fromToken(token);
@@ -92,6 +109,7 @@ export async function viewForToken(token: string) {
     kind: r.kind, title: r.title, version: t.version, clientName: client?.legal_name || client?.name || null,
     stale: r.kind !== "quote" && r.approvedVersion !== t.version,
     blocker: acc ? null : signBlocker(r.kind, r.status, r.approvedVersion, t.version),
+    salesContact: await salesContactFor(db, r.clientId, r.ownerId).then((c) => c && { name: c.name, email: c.email }),
     sections: (r.sections as any[]).filter((x) => x?.key !== "terms"), msa: acc ? null : await msaForClient(db, r.clientId), lines: lines.map((l) => ({ label: l.label, quantity: l.quantity, amountCents: l.amount_cents })),
     totalCents: lines.reduce((s, l) => s + l.amount_cents, 0),
     accepted: acc ? { signerName: acc.signer_name, acceptedAt: acc.accepted_at, paymentMethod: acc.payment_method, invoiceError: acc.invoice_error } : null,
@@ -226,11 +244,13 @@ async function notifyAfterSign(db: any, r: Loaded, acc: any, inv: { id: string; 
       lines: (billed ?? []).map((l: any) => ({ label: String(l.label), amount: money(Number(l.amount_cents)) })),
       payUrl: `${CLIENT_PORTAL_BASE}/client/invoices?invoice=${inv.id}`, note: "",
     }));
-    if (r.ownerId) {
-      const { data: owner } = await db.from("profiles").select("email").eq("user_id", r.ownerId).maybeSingle();
-      if (owner?.email) {
+    const rep = await salesContactFor(db, r.clientId, r.ownerId);
+    const { data: ownerRow } = r.ownerId ? await db.from("profiles").select("email").eq("user_id", r.ownerId).maybeSingle() : { data: null };
+    for (const to of [...new Set([ownerRow?.email, rep?.email].filter(Boolean) as string[])]) {
+      const owner = { email: to };
+      if (owner.email) {
         const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
-        await sendTemplateEmail("crm-campaign", owner.email, { idempotencyKey: `accept-owner:${acc.id}`, templateData: {
+        await sendTemplateEmail("crm-campaign", owner.email, { idempotencyKey: `accept-owner:${acc.id}:${owner.email}`, templateData: {
           subject: `Signed: ${r.title}`, body: `${acc.signer_name} signed and approved ${r.title} (version ${r.version}). Invoice ${inv.number} was issued automatically. Payment method chosen: ${acc.payment_method ?? "not chosen"}.`, fundName: null } });
       }
     }

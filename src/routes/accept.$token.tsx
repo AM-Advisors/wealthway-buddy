@@ -54,6 +54,7 @@ function AcceptPage() {
         <CardHeader>
           <CardDescription>{KIND[d.kind] ?? "Document"} · version {d.version}{d.clientName ? ` · ${d.clientName}` : ""}</CardDescription>
           <CardTitle className="font-heading text-2xl">{d.title}</CardTitle>
+          {d.salesContact && <p className="text-sm text-muted-foreground">Your Harmonious contact: <span className="font-medium text-foreground">{d.salesContact.name}</span> · <a className="underline" href={`mailto:${d.salesContact.email}`}>{d.salesContact.email}</a></p>}
         </CardHeader>
         <CardContent className="space-y-4">
           {d.sections.map((s, i) => (
