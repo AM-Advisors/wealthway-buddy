@@ -15,13 +15,13 @@ describe("controlled proposal sections", () => {
   it("About Harmonious is always the approved wording", () => expect(body("about")).toBe(ABOUT_HARMONIOUS));
   it("pricing comes only from the quote", () => { expect(body("pricing")).toContain("$12,000.00"); expect(body("pricing")).not.toContain("$5"); });
   it("summary is generated from quote and prospect", () => expect(body("summary")).toBe("Harmonious proposes White Glove Fund Administration for Roas Capital Management, prepared for Ross Vincent Mahoney."));
-  it("terms stay editable", () => expect(body("terms")).toBe("Rep terms"));
+  it("typed terms are replaced by the MSA notice when no MSA is given", () => expect(body("terms")).not.toBe("Rep terms"));
   it("proposal services section drops typed prices", () => {
     const p = applyLockedSections("proposal", "response", [{ key: "services", title: "Services", body: "We do admin\n- Admin: $1" }], facts);
     expect(p.find((s) => s.key === "services")!.body).not.toContain("$1\n");
     expect(p.find((s) => s.key === "services")!.body).toContain("$12,000.00");
   });
-  it("uses Marketing's saved wording when present", () => {
+  it("uses the saved controlled wording when present", () => {
     const o = applyLockedSections("rfq", "response", typed, { ...facts, about: "Marketing approved wording for Harmonious." });
     expect(o.find((s) => s.key === "about")!.body).toBe("Marketing approved wording for Harmonious.");
   });
