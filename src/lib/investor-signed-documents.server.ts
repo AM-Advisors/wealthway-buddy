@@ -6,9 +6,14 @@ export async function investorSignedDocuments(db: any, userId: string, onboardin
   if (error) throw new Error("Your submitted documents could not be loaded. Please try again.");
   if (!row || row.investor_user_id !== userId || row.removed_at) throw new Error("This investment is not available to this account.");
   if (!row.executed_snapshot || !row.application_id) return [];
+  return submittedSignedDocuments(db, row.application_id);
+}
+
+/** Shared evidence read; callers must authorize the exact investment first. */
+export async function submittedSignedDocuments(db: any, applicationId: string): Promise<SignedDocument[]> {
   const { data: signatures, error: signaturesError } = await db.from("document_signatures")
     .select("id, offering_document_id, signature_template_version, snapshot_version, signed_at, provider_completed_at, provider_status, provider, pdf_path, cancelled_at, superseded_by")
-    .eq("application_id", row.application_id).order("signed_at", { ascending: false });
+    .eq("application_id", applicationId).order("signed_at", { ascending: false });
   if (signaturesError) throw new Error("Your signed documents could not be loaded. Please try again.");
   const completed = (signatures ?? []).filter((s: any) => !s.cancelled_at &&
     (s.provider_status === "completed" || ((!s.provider || s.provider === "internal" || s.provider === "native") && s.signed_at)));
