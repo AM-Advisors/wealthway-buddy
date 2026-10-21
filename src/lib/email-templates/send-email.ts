@@ -81,11 +81,12 @@ export async function sendTemplateEmail(
       sender_domain: 'notify.harmonious.co',
       subject, html, text, label: templateName,
       ...(options.replyTo ? { reply_to: options.replyTo } : {}),
-    }, { apiKey, idempotencyKey: options.idempotencyKey })
+    }, { apiKey, ...(options.idempotencyKey ? { idempotencyKey: options.idempotencyKey } : {}) })
     if (result.status === 'recipient_suppressed' || result.status === 'suppressed') return { sent: false, reason: 'recipient_suppressed' }
     if (!result.success) throw new Error('The approval email could not be sent.')
     messageId = result.message_id ?? null
   } else {
+  if (!brevoKey) throw new Error('BREVO_API_KEY is not configured')
   const response = await fetch(`${BREVO_GATEWAY_URL}/smtp/email`, {
     method: 'POST',
     headers: {

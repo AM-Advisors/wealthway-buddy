@@ -22,7 +22,7 @@ function fixture(over: Record<string, any> = {}) {
       }
       return chain
     },
-    auth: { admin: { getUserById: async (id: string) => ({ data: { user: { email: `${id}@example.com`, email_confirmed_at: over.unverified ? null : '2026-10-20' } }, error: null }) } },
+    auth: { admin: { getUserById: async (id: string) => ({ data: { user: { email: `${id}@example.com`, email_confirmed_at: over['unverified'] ? null : '2026-10-20' } }, error: null }) } },
   }
 }
 beforeEach(() => { send.mockClear(); funding.mockReset(); funding.mockResolvedValue({ unlocked: true, instructions: { account: 'private-account' } }) })
@@ -67,8 +67,8 @@ describe('investor approval event emails', () => {
     const input = { onboardingId: 'investment', action: 'review' as const, ref: 'sig-123' }
     await sendInvestorApprovalNotice(fixture(), input)
     await sendInvestorApprovalNotice(fixture(), input)
-    expect(send.mock.calls[0]?.[2]?.idempotencyKey).toBe('investment-approval:review:sig-123:manager')
-    expect(send.mock.calls[1]?.[2]?.idempotencyKey).toBe(send.mock.calls[0]?.[2]?.idempotencyKey)
+    expect(send.mock.calls[0]?.[2]?.['idempotencyKey']).toBe('investment-approval:review:sig-123:manager')
+    expect(send.mock.calls[1]?.[2]?.['idempotencyKey']).toBe(send.mock.calls[0]?.[2]?.['idempotencyKey'])
   })
   it('does not notify unverified email addresses or removed investments', async () => {
     await sendInvestorApprovalNotice(fixture({ unverified: true }), { onboardingId: 'investment', action: 'review', ref: 'sig' })
