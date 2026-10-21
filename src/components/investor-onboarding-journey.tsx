@@ -220,6 +220,10 @@ function AboutYou({ d, onboardingId, done }: { d: any; onboardingId: string; don
   const choose = useAction(chooseFn, "Saved.", done);
   const setAmt = useAction(amountFn, "Amount saved.", done);
   const list: any[] = (profiles.data as any)?.profiles ?? [];
+  const [showNew, setShowNew] = useState(false);
+  useEffect(() => {
+    if (!profileId && list.length > 0) setProfileId(list[0].id);
+  }, [profileId, list]);
   const owners = (d.requirements ?? []).find((r: any) => r.key === "beneficial_owners");
 
   return (
@@ -246,6 +250,16 @@ function AboutYou({ d, onboardingId, done }: { d: any; onboardingId: string; don
           </div>
         ) : null}
 
+        {list.length > 0 && !showNew ? (
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">
+              Your saved profile already has your verified details, so you don't need to enter them again.
+            </p>
+            <Button variant="link" className="h-auto p-0" onClick={() => setShowNew(true)}>
+              Investing through someone or something else? Add a new profile
+            </Button>
+          </div>
+        ) : (
         <div className="space-y-3 rounded-md border p-4">
           <p className="text-sm font-medium">Add new investment profile</p>
           <div className="grid gap-3 sm:grid-cols-2">
@@ -286,6 +300,7 @@ function AboutYou({ d, onboardingId, done }: { d: any; onboardingId: string; don
             Add and use
           </Button>
         </div>
+        )}
 
         {owners && owners.state !== "valid" && owners.state !== "not_applicable" ? (
           <p className="rounded-md bg-muted p-3 text-sm">
