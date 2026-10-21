@@ -238,7 +238,7 @@ function BankingCard({ d, offeringId, onChanged, reviewOnly = false }: { d: D; o
         )}
 
         {!d.canEdit && <p className="text-sm text-muted-foreground">A Harmonious banking reviewer must verify and release these instructions.</p>}
-        {d.canEdit && <BankInstructionRelease offeringId={offeringId} verified={b.releasable} onChanged={onChanged} />}
+        {d.canEdit && <BankInstructionRelease offeringId={offeringId} verified={b.releasable} available={b.release?.available === true} onChanged={onChanged} />}
         {d.canEdit && !reviewOnly && (
           <div className="space-y-2 border-t pt-4">
             <p className="text-sm font-medium">Bank account review</p>

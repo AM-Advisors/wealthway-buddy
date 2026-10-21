@@ -18,7 +18,7 @@ const ACTIONS: Partial<Record<BankingStatus, string>> = {
 };
 
 /** Explicit existing setup actions, never inferred from uploaded bank evidence. */
-export function BankInstructionRelease({ offeringId, verified, onChanged }: { offeringId: string; verified: boolean; onChanged: () => void }) {
+export function BankInstructionRelease({ offeringId, verified, available, onChanged }: { offeringId: string; verified: boolean; available: boolean; onChanged: () => void }) {
   const qc = useQueryClient();
   const loadSetup = useServerFn(launchStatusFn);
   const loadDetail = useServerFn(fundSetupDetailFn);
@@ -37,7 +37,9 @@ export function BankInstructionRelease({ offeringId, verified, onChanged }: { of
   const b = detail.data.banking;
   const status = b.status as BankingStatus;
   const next = BANKING_STATUSES[BANKING_STATUSES.indexOf(status) + 1];
-  const released = status === "account_active" && b.investor_instructions_released === true && verified;
+  // Shared rule: released for exactly the current verified version.
+  const released = available;
+  const staleRelease = !available && b.investor_instructions_released === true && verified && status === "account_active";
   const run = async (action: () => Promise<unknown>, message: string) => {
     setBusy(true);
     try { await action(); toast.success(message); await invalidateFund(qc, offeringId); onChanged(); }
@@ -47,6 +49,7 @@ export function BankInstructionRelease({ offeringId, verified, onChanged }: { of
   return <div className="space-y-3 border-t pt-4">
     <div className="flex flex-wrap items-center justify-between gap-2"><h3 className="text-sm font-medium">Investor funding instructions</h3><Badge variant={released ? "default" : "outline"}>{released ? "Released to investors" : "Not available to investors"}</Badge></div>
     <p className="text-sm text-muted-foreground">Account status: {LABELS[status] ?? status}</p>
+    {staleRelease && <p className="text-sm text-muted-foreground">The bank details changed after the last release. Release the current verified version to make it available again.</p>}
     {!verified && <p className="text-sm text-muted-foreground">Verify the current wire instructions and resolve account ownership before release.</p>}
     {next && <Button size="sm" variant="outline" disabled={busy} onClick={() => {
       if (!window.confirm(`Confirm: ${LABELS[next]}. Only record a status confirmed by the bank.`)) return;

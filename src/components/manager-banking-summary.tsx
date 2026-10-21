@@ -60,7 +60,7 @@ export function ManagerBankingSummary({ fundId }: { fundId: string }) {
               )}
             </dd>
             <dt className="text-muted-foreground">Funding instructions</dt>
-            <dd>{banking?.releasable ? "Released to investors after signing" : "Not released to investors"}</dd>
+            <dd>{banking?.release?.available ? "Released to approved investors" : banking?.releasable ? "Verified, not yet released to investors" : "Not released to investors"}</dd>
           </dl>
         )}
       </CardContent>
