@@ -124,7 +124,7 @@ export async function investorGrid(fundId: string) {
       docs,
       wiring: CANONICAL_FUNDING_LABELS[funding],
       steps: investorSteps({ stage: o.stage, claimed: !!o.investor_user_id, profileChosen: !!o.investment_profiles?.profile_type, questionnaireDone: !!o.questionnaire_submitted_at,
-        kyc, aml, signed: docs === "Signed", outForSignature: docs === "Out for signature", funding }),
+        kyc, aml, signed: docs === "Signed" || docs === "Signed (outside platform)", outForSignature: docs === "Out for signature", funding }),
       lastActivity: o.last_activity_at ?? o.updated_at ?? null,
       stage: o.stage as string,
       applicationId: o.application_id ?? null,

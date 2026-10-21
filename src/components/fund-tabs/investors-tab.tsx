@@ -279,7 +279,7 @@ export function InvestorSheet({ fundId, id, onClose }: { fundId: string; id: str
           {d && (
             <div className="mt-4 flex flex-wrap items-center gap-2">
               <Badge variant={d.kycOk ? "secondary" : "outline"}>KYC/AML: {d.kycLabel}</Badge>
-              <Badge variant={d.docs === "Signed" ? "secondary" : "outline"}>Docs: {d.docs}</Badge>
+              <Badge variant={String(d.docs).startsWith("Signed") && !String(d.docs).includes("pending") ? "secondary" : "outline"}>Docs: {d.docs}</Badge>
               <Badge variant={d.wiring === "Funded" ? "secondary" : "outline"}>Wiring: {d.wiring}</Badge>
               {d.investorUserId && (
                 <Button asChild size="sm" className="ml-auto"><Link to="/manager/messages" search={{ open: d.applicationId ?? undefined }}>Message</Link></Button>
