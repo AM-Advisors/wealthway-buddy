@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { listPriorDocsFn, markOutsideSubscriptionFn, openPriorDocFn, outsideSubscriptionFn, recordPriorDocFn, startPriorUploadFn } from "@/lib/prior-signed-documents.functions";
 
+const refreshFund = (qc: ReturnType<typeof useQueryClient>) => qc.invalidateQueries({ predicate: (q) => ["fund-investor", "fund-investor-grid", "fund-readiness"].includes(String(q.queryKey[0])) });
+
 const KINDS: Record<string, string> = {
   subscription_agreement: "Subscription Agreement",
   operating_agreement: "Operating / Partnership Agreement",
@@ -49,7 +51,8 @@ export function PriorSignedDocuments({ fundId, onboardingId }: { fundId: string;
       await record({ data: { fundId, onboardingId, path: up.path, fileName: file.name, kind, title: title.trim() || KINDS[kind], signedOn, note: note.trim() || null, replacesId } });
       toast.success("Document saved to this investor.");
       reset();
-      await qc.invalidateQueries({ queryKey: key });
+      await qc.invalidateQueries({ queryKey: ["prior-signed-docs", onboardingId] });
+      if (kind === "subscription_agreement") await refreshFund(qc);
     } catch (e) { toast.error(e instanceof Error ? e.message : "The document could not be saved."); }
     finally { setBusy(false); }
   };
@@ -120,7 +123,7 @@ function OutsideSubscription({ fundId, onboardingId, onLoad }: { fundId: string;
       toast.success(marked ? "Marked as signed outside the platform." : "Outside signing undone.");
       setOpen(false); setNote("");
       await qc.invalidateQueries({ queryKey: ["prior-signed-docs", onboardingId] });
-      await qc.invalidateQueries({ queryKey: ["fund-investor"] });
+      await refreshFund(qc);
     } catch (e) { toast.error(e instanceof Error ? e.message : "This could not be saved."); }
     finally { setBusy(false); }
   };
