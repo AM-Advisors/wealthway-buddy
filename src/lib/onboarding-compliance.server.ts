@@ -235,7 +235,10 @@ export async function resolveStage2(input: Stage2Input, pre?: Stage2Inputs) {
     ? routeTaxIntake(input.profileType, facts.answers ?? {})
     : resolveTaxForm({
         profileType: input.profileType,
-        usPerson: usPersonFrom(input.tax, input.person),
+        // Question 9 rule: individuals by verified citizenship (or verified ID country); otherwise tax records.
+        usPerson: (isIndividualProfile(String(input.profileType ?? ""))
+          ? usPersonFromVerification({ isIndividual: true, citizenshipCountry: input.person?.citizenship_country, documentCountry: input.person?.verified_document_country })
+          : null) ?? usPersonFrom(input.tax, input.person),
         claimsEffectivelyConnectedIncome: rules['taxFacts']?.eci ?? null,
       });
   const forms = profileId ? (p.forms.get(profileId) ?? []) : [];
@@ -342,11 +345,17 @@ async function raiseOpsException(onboardingId: string, type: string, detail: str
   });
 }
 
+import { usPersonFromVerification } from "@/lib/subscription-prefill";
+
 async function loadFacts(d: any, ob: any, userId: string) {
   const [{ data: tax }, { data: person }] = await Promise.all([
     d.from("investor_tax_profiles").select("classification, tax_residency_country").eq("investment_profile_id", ob.investment_profile_id).maybeSingle(),
     d.from("persons").select("id, legal_first_name, legal_last_name, tax_residency_country, residence_country, citizenship_country, address_line1, city, region, postal_code, date_of_birth").eq("user_id", userId).maybeSingle(),
   ]);
+  if (person?.id && !person.citizenship_country) {
+    const { data: k } = await d.from("kyc_verifications").select("document_issuing_country").eq("person_id", person.id).eq("status", "approved").not("completed_at", "is", null).order("completed_at", { ascending: false }).limit(1);
+    (person as any).verified_document_country = k?.[0]?.document_issuing_country ?? null;
+  }
   return { tax, person };
 }
 
@@ -523,7 +532,14 @@ export async function submitTaxFacts(userId: string, input: { onboardingId: stri
 
 async function buildFill(ob: any, profile: any, person: any, routing: { formType: TaxFormType }, input: { legalName: string; tin?: string | null | undefined; foreignTin?: string | null | undefined; certifiedName: string }, signedDate: string) {
   const individual = isIndividualProfile(profile.profile_type) || profile.profile_type === "ira";
-  const address = [person?.address_line1].filter(Boolean).join(" ");
+  // Fall back to the Subscription Agreement answers (Q1 name, Q5 address) when records are blank.
+  let q: Record<string, unknown> = {};
+  if (ob?.id && (!person?.address_line1 || !input.legalName.trim())) {
+    const { data } = await (await db()).from("investor_onboardings").select("questionnaire_responses").eq("id", ob.id).maybeSingle();
+    q = (data?.questionnaire_responses ?? {}) as Record<string, unknown>;
+  }
+  const address = [person?.address_line1 ?? (q["subscriber_s_address_of_residence"] as string | undefined)].filter(Boolean).join(" ");
+  if (!input.legalName.trim() && q["name_of_subscriber"]) input = { ...input, legalName: String(q["name_of_subscriber"]) };
   const csz = [person?.city, person?.region, person?.postal_code].filter(Boolean).join(", ");
   return {
     legalName: input.legalName.trim(),
