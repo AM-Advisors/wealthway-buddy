@@ -60,13 +60,15 @@ export async function renderProposalPdf(doc: any, rawSections: Section[], lines:
   for (const l of wrap(doc.title, serif, 34, maxW).slice(0, 3)) { page.drawText(l, { x: IN, y: ty, size: 34, font: serif, color: rgb(1, 1, 1) }); ty -= 38; }
   const summary = sections.find((s) => /summary|overview|intro/i.test(`${s.key} ${s.title}`));
   if (summary?.body) for (const l of wrap(summary.body, sans, 10.5).slice(0, 4)) { ty -= 2; page.drawText(l, { x: IN, y: ty, size: 10.5, font: sans, color: rgb(0.85, 0.88, 0.92) }); ty -= 15; }
+  const note = sections.find((s) => s.key === "summary_note");
+  if (note?.body) for (const l of wrap(note.body, sans, 10).slice(0, 3)) { ty -= 2; page.drawText(l, { x: IN, y: ty, size: 10, font: sans, color: c(TEAL) }); ty -= 14; }
   y = H - M - coverH - 50;
   if (doc.recipient_name) text(`Prepared for ${doc.recipient_name}`, sans, 10, MUTED, 4);
   text(new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }), sans, 10, MUTED, 4);
   y -= 30;
 
   // Scope of services
-  const body = sections.filter((s) => s !== summary && !/^(pricing|fees?|investment)\b/i.test(s.title) && !/^(pricing|fees|investment)$/i.test(s.key));
+  const body = sections.filter((s) => s !== summary && s.key !== "summary_note" && !/^(pricing|fees?|investment)\b/i.test(s.title) && !/^(pricing|fees|investment)$/i.test(s.key));
   if (body.length) {
     eyebrow("Scope of services"); heading("What we handle");
     body.forEach((s, i) => {
