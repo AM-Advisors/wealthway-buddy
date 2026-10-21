@@ -34,8 +34,10 @@ export async function assertFund(uid: string, fundId: string) {
 
 const personName = (p: any) => (p ? p.preferred_name || [p.legal_first_name, p.legal_last_name].filter(Boolean).join(" ") : "") || "Unnamed investor";
 
-export function docStatus(o: any) {
+export function docStatus(o: any, outside?: { marked: boolean; complete: boolean } | null) {
   if (o.executed_snapshot || SIGNED_STAGES.has(o.stage)) return "Signed";
+  if (outside?.complete) return "Signed (outside platform)";
+  if (outside?.marked) return "Signed outside - copy pending";
   if (o.stage === "signature") return "Out for signature";
   return "Not started";
 }
@@ -61,6 +63,7 @@ export async function investorGrid(fundId: string) {
     ? await (await db()).from("persons").select("id, legal_first_name, legal_last_name, preferred_name, email, phone, kyc_status, aml_status, date_of_birth, citizenship_country, address_line1, city, postal_code, tax_id_last4").in("id", ids)
     : { data: [] as any[] };
   const byId = new Map(((people ?? []) as any[]).map((p) => [p.id, p]));
+  const outsideStates = await (await import("@/lib/prior-signed-documents.server")).outsideSubscriptionStates(await db(), ((data ?? []) as any[]).map((o) => o.id));
   const profileIds = [...new Set(((data ?? []) as any[]).map((o) => o.investment_profile_id).filter(Boolean))] as string[];
   const taxDetails = await currentProfileTaxDetails(await db(), profileIds);
   const { data: checks, error: checksError } = ids.length
@@ -87,7 +90,7 @@ export async function investorGrid(fundId: string) {
     const funding = canonicalFundingState({ fundingStatus: o.funding_status, approvedToFund: !!o.approved_to_fund_at, instructionsReleased: !!o.approved_to_fund_at && fundRelease.available });
     const kycOk = ["verified", "approved", "passed", "clear"].includes(kyc) && ["clear", "passed", "approved", "verified"].includes(aml);
     const committedCents = o.commitment_amount_cents ?? o.accepted_amount_cents ?? o.requested_amount_cents ?? null;
-    const docs = docStatus(o);
+    const docs = docStatus(o, outsideStates.get(o.id));
     // Display-only checklist of what the fund manager still needs to collect.
     const missing: string[] = [];
     if (classApplicable && !o.offering_class_key) missing.push("Class");
