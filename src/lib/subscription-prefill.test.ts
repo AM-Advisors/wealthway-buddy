@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { applyLocked, businessTypeFor, irsFormOptionFor, lockedAnswers, IDENTITY_DOCS_KEY } from "@/lib/subscription-prefill";
-import { questionVisible, validateQuestionnaire, type Question } from "@/lib/investor-onboarding-model";
+import { highRiskYes, stripHiddenAnswers, questionVisible, validateQuestionnaire, type Question } from "@/lib/investor-onboarding-model";
 import standard from "@/lib/standard-investor-questionnaire.json";
 
 const q16 = (standard as Question[]).find((q) => q.key === IDENTITY_DOCS_KEY)!;
@@ -24,12 +24,27 @@ describe("subscription prefill", () => {
     expect(out["name_of_subscriber"]).toBe("Calvin Jung");
     expect(out["subscription_amount"]).toBe("$500,000.00");
   });
-  it("question 16 shows and is required only after a No on the funding bank questions", () => {
-    expect(questionVisible(q16, { [FATF]: "Yes", [CUSTOMER]: "Yes" })).toBe(false);
-    expect(questionVisible(q16, { [FATF]: "No" })).toBe(true);
-    expect(questionVisible(q16, { [FATF]: "Yes", [CUSTOMER]: "No" })).toBe(true);
-    expect(validateQuestionnaire([q16], { [FATF]: "No" }).valid).toBe(false);
-    expect(validateQuestionnaire([q16], { [FATF]: "Yes" }).valid).toBe(true);
-    expect(validateQuestionnaire([{ ...q16, satisfiedBy: "Verification" }], { [FATF]: "No" }).valid).toBe(true);
+  const Q = standard as Question[];
+  const WIRE = "is_the_jurisdiction_where_the_wiring_institution_is_located_";
+  it("question 14 shows only after Yes on question 13", () => {
+    const q14 = Q.find((q) => q.key === CUSTOMER)!;
+    expect(questionVisible(q14, { [FATF]: "Yes" })).toBe(true);
+    expect(questionVisible(q14, { [FATF]: "No" })).toBe(false);
+  });
+  it("question 16 shows and is required only after Yes on question 15", () => {
+    expect(questionVisible(q16, { [WIRE]: "No", [FATF]: "No" })).toBe(false);
+    expect(questionVisible(q16, { [WIRE]: "Yes" })).toBe(true);
+    expect(validateQuestionnaire([q16], { [WIRE]: "Yes" }).valid).toBe(false);
+    expect(validateQuestionnaire([q16], { [WIRE]: "No" }).valid).toBe(true);
+  });
+  it("hidden answers are dropped", () => {
+    const out = stripHiddenAnswers(Q, { [FATF]: "No", [CUSTOMER]: "Yes" });
+    expect(out[CUSTOMER]).toBeUndefined();
+  });
+  it("any Yes on questions 17-24 flags review; all No does not", () => {
+    const bad = Q.filter((q) => q.highRisk);
+    expect(bad.map((q) => Q.indexOf(q) + 1)).toEqual([17, 18, 19, 20, 21, 22, 23, 24]);
+    expect(highRiskYes(Q, Object.fromEntries(bad.map((q) => [q.key, "No"])))).toEqual([]);
+    expect(highRiskYes(Q, { [bad[3]!.key]: "Yes" }).map((f) => f.number)).toEqual([20]);
   });
 });

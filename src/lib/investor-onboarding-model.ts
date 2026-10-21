@@ -790,6 +790,8 @@ export interface Question {
   locked?: boolean;
   /** Required unless the investor's Verification already supplied it. */
   satisfiedBy?: string | null;
+  /** A "Yes" puts the investment under Harmonious review (bad-actor disclosures). */
+  highRisk?: boolean;
 }
 
 export function questionVisible(question: Question, answers: Record<string, unknown>): boolean {
@@ -798,6 +800,23 @@ export function questionVisible(question: Question, answers: Record<string, unkn
   const one = (c: { key: string; equals: (string | boolean | number)[] }) => c.equals.some((v) => v === answers[c.key]);
   return "anyOf" in cond ? cond.anyOf.some(one) : one(cond);
 }
+
+/** Drop answers to questions that are hidden by the investor's other answers. */
+export function stripHiddenAnswers(questions: Question[], answers: Record<string, unknown>): Record<string, unknown> {
+  const next = { ...answers };
+  for (const q of questions) if (!questionVisible(q, next)) delete next[q.key];
+  return next;
+}
+
+/** High-risk questions the investor answered "Yes" to, with their 1-based number. */
+export function highRiskYes(questions: Question[], answers: Record<string, unknown>): { key: string; number: number; label: string }[] {
+  return questions
+    .map((q, i) => ({ q, number: i + 1 }))
+    .filter(({ q }) => q.highRisk && String(answers[q.key] ?? "") === "Yes")
+    .map(({ q, number }) => ({ key: q.key, number, label: q.label }));
+}
+
+export const HIGH_RISK_REVIEW_MESSAGE = "Your investment is under review. We'll notify you about next steps.";
 
 export function validateQuestionnaire(
   questions: Question[],

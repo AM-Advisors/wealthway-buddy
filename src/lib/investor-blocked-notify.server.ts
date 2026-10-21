@@ -51,3 +51,47 @@ export async function notifyInvestorBlocked(n: { onboardingId: string; offeringI
     console.error("investor blocked notify", e);
   }
 }
+
+/** High-risk (bad-actor) "Yes" answers: #operations + fund managers. Question numbers only, never answers text. */
+export async function notifyHighRiskDisclosure(n: { onboardingId: string; offeringId: string; investorUserId: string | null; questions: string; ref: string }) {
+  try {
+    const { supabaseAdmin: db } = (await import("@/integrations/supabase/client.server")) as any;
+    const [{ data: fund }, { data: prof }] = await Promise.all([
+      db.from("offerings").select("name").eq("id", n.offeringId).maybeSingle(),
+      n.investorUserId ? db.from("profiles").select("legal_name").eq("user_id", n.investorUserId).maybeSingle() : Promise.resolve({ data: null }),
+    ]);
+    const investor = prof?.legal_name || "An investor";
+    const { notifySubmission } = await import("@/lib/ops-slack-notify.server");
+    await notifySubmission({
+      kind: "high_risk_disclosure",
+      title: `High-risk answer (question ${n.questions}) - ${investor}. May not be eligible; review before signing.`,
+      offeringId: n.offeringId,
+      ref: n.ref,
+      once: true,
+      path: `/ops/fund/${n.offeringId}`,
+    });
+    const { data: mgrs } = await db.from("fund_managers").select("user_id").eq("offering_id", n.offeringId);
+    const ids = ((mgrs ?? []) as any[]).map((m) => m.user_id).filter(Boolean);
+    if (!ids.length) return;
+    const { data: people } = await db.from("profiles").select("legal_name, email").in("user_id", ids);
+    const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+    for (const p of (people ?? []) as any[]) {
+      if (!p.email) continue;
+      try {
+        await sendTemplateEmail("manager-alert", p.email, {
+          idempotencyKey: `high-risk:${n.ref}:${String(p.email).toLowerCase()}`,
+          templateData: {
+            managerName: p.legal_name || "there",
+            headline: "An investor marked Yes on a high-risk question",
+            intro: `${investor} answered Yes to a high-risk eligibility question on the Subscription Agreement. This may make them ineligible to invest. Harmonious is reviewing, and signing and funding are paused until then.`,
+            offeringName: fund?.name ?? "your fund",
+            details: [{ label: "Investor", value: investor }, { label: "Question", value: n.questions }],
+            portalUrl: `https://app.harmonious.co/client/funds/${n.offeringId}?tab=investors`,
+          },
+        });
+      } catch (e) { console.error("high-risk email", e); }
+    }
+  } catch (e) {
+    console.error("high-risk notify", e);
+  }
+}
