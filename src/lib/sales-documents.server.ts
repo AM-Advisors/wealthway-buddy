@@ -36,7 +36,7 @@ async function access(userId: string, documentId: string) {
   }
   const { data: assists } = await db.from("sales_document_assist_requests").select("*").eq("document_id", documentId).order("created_at", { ascending: false });
   const activeAssist = ((assists ?? []) as any[]).find((a) => a.status === "open" || a.status === "claimed") ?? null;
-  const isMarketing = roles.some((r) => MARKETING_HELPERS.includes(r)) && ((assists ?? []) as any[]).length > 0;
+  const isMarketing = false; // Marketing no longer takes part in proposals.
   if (!salesSee && !isMarketing) throw new Error("Document not found.");
   const locked = ["submitted", "sent", ...OUTCOMES.response, ...OUTCOMES.outbound].includes(doc.status);
   const canEdit = !readOnly && !locked && (
@@ -56,9 +56,9 @@ async function currentAbout(db: any): Promise<string | null> {
   const { data } = await db.from("sales_controlled_texts").select("body").eq("text_key", "about_harmonious").order("version", { ascending: false }).limit(1).maybeSingle();
   return data?.body ?? null;
 }
-const ABOUT_EDITORS = [...MARKETING_HELPERS, "super_admin"];
+const ABOUT_EDITORS = ["super_admin"];
 
-/** Controlled About Harmonious wording: everyone in Sales/Marketing reads it; only Marketing saves new versions. */
+/** Controlled About Harmonious wording: everyone in Sales reads it; only a Super Admin saves new versions. */
 export async function getAboutHarmonious(userId: string) {
   const roles = await rolesOf(userId);
   if (!roles.some((r) => SALES_DOC_ROLES.includes(r) || ABOUT_EDITORS.includes(r))) throw new Error("Not available for your role.");
@@ -72,7 +72,7 @@ export async function getAboutHarmonious(userId: string) {
 }
 export async function saveAboutHarmonious(userId: string, body: string, reason: string | null) {
   const roles = await rolesOf(userId);
-  if (!roles.some((r) => ABOUT_EDITORS.includes(r))) throw new Error("Only Marketing can change the About Harmonious wording.");
+  if (!roles.some((r) => ABOUT_EDITORS.includes(r))) throw new Error("Only a Super Admin can change the About Harmonious wording.");
   const db = await admin();
   const text = body.trim();
   if (text.length < 20) throw new Error("The wording is too short.");
@@ -84,13 +84,19 @@ export async function saveAboutHarmonious(userId: string, body: string, reason: 
   return { version };
 }
 
+async function publishedMsa(db: any) {
+  const { data: v } = await db.from("msa_versions").select("id, version, effective_date").eq("status", "published").lte("effective_date", new Date().toISOString().slice(0, 10)).order("effective_date", { ascending: false }).limit(1).maybeSingle();
+  if (!v) return null;
+  const { data: secs } = await db.from("msa_sections").select("section_no, title, body").eq("msa_version_id", v.id).order("sort_order");
+  return { version: v.version as string, effectiveDate: v.effective_date as string | null, sections: (secs ?? []) as any[] };
+}
 async function lockFacts(db: any, doc: any) {
   const [client, contact, lines] = await Promise.all([
     doc.client_id ? db.from("clients").select("name").eq("id", doc.client_id).maybeSingle() : { data: null },
     doc.contact_id ? db.from("crm_contacts").select("full_name, organization").eq("id", doc.contact_id).maybeSingle() : { data: null },
     doc.quote_id ? db.from("sales_quote_lines").select("label, quantity, unit_cents, line_cents, billing_frequency").eq("quote_id", doc.quote_id).order("sort_order") : { data: [] },
   ]);
-  return { about: await currentAbout(db), organization: client.data?.name ?? contact.data?.organization ?? null, contactName: doc.recipient_name ?? contact.data?.full_name ?? null, lines: (lines.data ?? []) as any[] };
+  return { msa: await publishedMsa(db), about: await currentAbout(db), organization: client.data?.name ?? contact.data?.organization ?? null, contactName: doc.recipient_name ?? contact.data?.full_name ?? null, lines: (lines.data ?? []) as any[] };
 }
 async function writeVersion(db: any, doc: any, rawSections: Section[], userId: string, source: string) {
   // Summary, pricing and About Harmonious are always platform-generated; any typed or AI text for them is replaced.
@@ -108,8 +114,7 @@ export async function listDocuments(userId: string) {
   const db = await admin();
   const roles = await rolesOf(userId);
   const sales = roles.some((r) => SALES_DOC_ROLES.includes(r));
-  const marketing = roles.some((r) => MARKETING_HELPERS.includes(r));
-  if (!sales && !marketing) throw new Error("Proposals are for Sales and Marketing staff.");
+  if (!sales) throw new Error("Proposals are for Sales staff.");
   let q = db.from("sales_documents").select("id, kind, direction, title, status, owner_user_id, client_id, contact_id, due_date, updated_at").order("updated_at", { ascending: false }).limit(300);
   if (!roles.some((r) => LEADER.includes(r))) {
     if (roles.includes("sales_management")) q = q.in("owner_user_id", [...(await teamOf(userId))]);
@@ -263,6 +268,7 @@ export async function draftWithAi(userId: string, id: string, brief: string | nu
 }
 
 export async function requestHelp(userId: string, id: string, d: { note: string; sections: string[]; dueDate: string | null }) {
+  void d; throw new Error("Marketing help is no longer part of proposals.");
   const a = await access(userId, id);
   if (!a.isOwner) throw new Error("Only the document owner can ask Marketing for help.");
   if (a.activeAssist) throw new Error("Marketing already has an open request on this document.");
@@ -315,6 +321,7 @@ export async function returnHelp(userId: string, requestId: string, note: string
 export async function submitForApproval(userId: string, id: string) {
   const a = await access(userId, id);
   if (!a.isOwner || a.doc.status !== "draft") throw new Error("Only a draft can be submitted by its owner.");
+  if (a.doc.direction === "response" && !(await publishedMsa(a.db))) throw new Error("No published Master Services Agreement is available for the Terms section. Ask Legal to publish one first.");
   await a.db.from("sales_documents").update({ status: "submitted", updated_at: new Date().toISOString() }).eq("id", id);
   await event(a.db, id, userId, "submitted", { version: a.doc.current_version });
   return { ok: true };
