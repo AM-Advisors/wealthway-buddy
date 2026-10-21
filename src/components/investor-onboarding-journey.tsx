@@ -5,6 +5,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Check } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { recordMyUpload } from "@/lib/investor-uploads.functions";
+import { questionVisible } from "@/lib/investor-onboarding-model";
 
 import {
   chooseProfileFn,
@@ -369,28 +372,69 @@ function Verify({ d, onboardingId }: { d: any; onboardingId: string }) {
   );
 }
 
+function QuestionUpload({ fundId, value, onUploaded }: { fundId: string | null; value: string; onUploaded: (id: string) => void }) {
+  const record = useServerFn(recordMyUpload);
+  const [busy, setBusy] = useState(false);
+  const [name, setName] = useState<string | null>(null);
+  async function pick(file: File | undefined) {
+    if (!file) return;
+    if (file.size > 25 * 1024 * 1024) { toast.error("Files must be 25 MB or smaller."); return; }
+    setBusy(true);
+    try {
+      const { data: u } = await supabase.auth.getUser();
+      const uid = u.user?.id;
+      if (!uid) throw new Error("Your session expired. Please sign in again.");
+      const path = `${uid}/${crypto.randomUUID()}-${file.name.replace(/[^\w.\-]/g, "_")}`;
+      const { error } = await supabase.storage.from("investor-uploads").upload(path, file);
+      if (error) throw new Error(error.message);
+      const res: any = await record({ data: { storage_path: path, file_name: file.name, doc_kind: "identification", note: "Subscription Agreement identity/formation documents", offering_id: fundId } });
+      setName(file.name);
+      onUploaded(res.id);
+      toast.success("Document uploaded.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Upload failed.");
+    } finally { setBusy(false); }
+  }
+  return (
+    <div className="space-y-1">
+      <Input type="file" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx" disabled={busy} onChange={(e) => { void pick(e.target.files?.[0]); e.target.value = ""; }} />
+      <p className="text-xs text-muted-foreground">{busy ? "Uploading…" : name ? `Uploaded: ${name}` : value ? "A document is on file." : "Individuals: ID and proof of address. Entities: formation documents and director details."}</p>
+    </div>
+  );
+}
+
 function QuestionnaireForm({ d, done, locked, onSave, saving }: { d: any; onboardingId: string; done: boolean; locked: boolean; onSave: (answers: Record<string, string>, submit: boolean) => void; saving: boolean }) {
   const questions: any[] = d.questionnaire.questions ?? [];
   const saved = (d.questionnaireResponses ?? {}) as Record<string, unknown>;
   const [open, setOpen] = useState(!done);
   const [answers, setAnswers] = useState<Record<string, string>>(() => Object.fromEntries(questions.map((q) => [q.key, saved[q.key] == null ? "" : String(saved[q.key])])));
-  const missing = questions.filter((q) => q.required && !String(answers[q.key] ?? "").trim());
+  const lockedVals = (d.questionnaireLocked ?? {}) as Record<string, string | null>;
+  const visible = questions.filter((q) => questionVisible(q, answers));
+  const missing = visible.filter((q) => q.required && !q.satisfiedBy && !String(answers[q.key] ?? "").trim());
   const set = (k: string, v: string) => setAnswers((a) => ({ ...a, [k]: v }));
   return (
     <div className="space-y-4 rounded-md border p-4">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-sm font-medium">Investor questionnaire</p>
-          <p className="text-xs text-muted-foreground">{done ? "Your answers are saved." : `${questions.length - missing.length} of ${questions.length} answered. Questions marked * are required.`}</p>
+          <p className="text-xs text-muted-foreground">{done ? "Your answers are saved." : `${visible.length - missing.length} of ${visible.length} answered. Questions marked * are required. Locked answers come from your Verification and commitment.`}</p>
         </div>
         {done && !locked ? <Button variant="outline" size="sm" onClick={() => setOpen((o) => !o)}>{open ? "Close" : "Review answers"}</Button> : done ? <Badge>Complete</Badge> : null}
       </div>
       {open ? (
         <fieldset disabled={locked} className="space-y-4">
-          {questions.map((q, n) => (
+          {questions.map((q, n) => !questionVisible(q, answers) ? null : (
             <div key={q.key} className="space-y-1.5">
-              <Label htmlFor={q.key} className="leading-snug">{n + 1}. {q.label}{q.required ? " *" : ""}</Label>
-              {q.type === "select" || q.type === "yes_no" ? (
+              <Label htmlFor={q.key} className="leading-snug">{n + 1}. {q.label}{q.required && !q.satisfiedBy ? " *" : ""}</Label>
+              {q.locked ? (
+                <div id={q.key} className="rounded-md border bg-muted px-3 py-2 text-sm">
+                  {lockedVals[q.key] ?? answers[q.key] ?? <span className="text-muted-foreground">Fills in after Verification</span>}
+                </div>
+              ) : q.type === "document" ? (
+                q.satisfiedBy ? <p className="text-sm text-muted-foreground">{q.satisfiedBy}</p> : (
+                  <QuestionUpload fundId={d.offering?.id ?? null} value={answers[q.key] ?? ""} onUploaded={(id) => set(q.key, id)} />
+                )
+              ) : q.type === "select" || q.type === "yes_no" ? (
                 <Select value={answers[q.key] ?? ""} onValueChange={(v) => set(q.key, v)}>
                   <SelectTrigger id={q.key}><SelectValue placeholder="Choose one" /></SelectTrigger>
                   <SelectContent>{(q.type === "yes_no" ? ["Yes", "No"] : (q.options ?? [])).map((o: string) => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
