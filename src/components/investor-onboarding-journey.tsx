@@ -428,7 +428,7 @@ function QuestionnaireForm({ d, done, locked, onSave, saving }: { d: any; onboar
               <Label htmlFor={q.key} className="leading-snug">{n + 1}. {q.label}{q.required && !q.satisfiedBy ? " *" : ""}</Label>
               {q.locked ? (
                 <div id={q.key} className="rounded-md border bg-muted px-3 py-2 text-sm">
-                  {lockedVals[q.key] ?? answers[q.key] ?? <span className="text-muted-foreground">Fills in after Verification</span>}
+                  {lockedVals[q.key] || answers[q.key] || <span className="text-muted-foreground">Fills in after Verification</span>}
                 </div>
               ) : q.type === "document" ? (
                 q.satisfiedBy ? <p className="text-sm text-muted-foreground">{q.satisfiedBy}</p> : (
