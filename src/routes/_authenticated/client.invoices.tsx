@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { downloadInvoice, printInvoice } from "@/components/invoice-document";
 import { InvoiceCardPay } from "@/components/invoice-card-pay";
+import { InvoiceRemittance } from "@/components/invoice-remittance";
 import { declareInvoicePayment, listMyInvoices, respondToInvoice } from "@/lib/invoices.functions";
 
 export const Route = createFileRoute("/_authenticated/client/invoices")({
@@ -283,10 +284,10 @@ function ClientInvoicesPage() {
                         <span className="text-xs text-muted-foreground">Or send a wire or ACH and confirm it below.</span>
                       </div>
                       <p className="text-sm text-muted-foreground">
-                        Send the payment from your fund's operating account using the remittance
-                        details your Harmonious contact provided, then confirm it below so we can
-                        match it on arrival.
+                        Send the payment from your fund's operating account using the instructions
+                        below, then confirm it so we can match it on arrival.
                       </p>
+                      <InvoiceRemittance invoiceId={inv.id} />
                       <div className="grid gap-3 sm:grid-cols-2">
                         <div className="space-y-1">
                           <Label>How you paid</Label>
