@@ -113,7 +113,7 @@ function Editor() {
 
           {sections.map((s, i) => (
             <div key={s.key + i} className="rounded-lg border bg-card p-4">
-              {p.canEdit ? <Input className="mb-2 font-semibold" value={s.title} onChange={(e) => upd(i, { title: e.target.value })} /> : <h3 className="mb-2 font-heading font-semibold">{s.title}</h3>}
+              {p.canEdit && !(d.lockedSectionKeys ?? []).includes(s.key) ? <Input className="mb-2 font-semibold" value={s.title} onChange={(e) => upd(i, { title: e.target.value })} /> : <h3 className="mb-2 font-heading font-semibold">{s.title}</h3>}
               {s.question && <p className="mb-2 text-sm italic text-muted-foreground">Question: {s.question}</p>}
               {(d.lockedSectionKeys ?? []).includes(s.key) ? <><p className="whitespace-pre-wrap text-sm">{s.body || "-"}</p><p className="mt-1 text-xs text-muted-foreground">Set by Harmonious and filled in automatically. It can't be edited.</p></> : p.canEdit ? <Textarea rows={6} value={s.body} onChange={(e) => upd(i, { body: e.target.value })} /> : <p className="whitespace-pre-wrap text-sm">{s.body || "-"}</p>}
               {p.canEdit && !(d.lockedSectionKeys ?? []).includes(s.key) && <Button variant="ghost" size="sm" className="mt-1" onClick={() => { setDirty(true); setSections((x) => x.filter((_, n) => n !== i)); }}>Remove section</Button>}
