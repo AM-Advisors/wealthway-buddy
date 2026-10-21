@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/lib/require-auth";
+import { aggregateOnboardingHoldings, type PortfolioOffering } from "./my-portfolio-merge";
 
 /** One investor's position in a fund, derived from live commitments. */
 export interface CapTableHolder {
@@ -379,31 +380,8 @@ export const getMyPortfolioValue = createServerFn({ method: "GET" })
 
     // Aggregate onboarding-only investments per offering so a fund never
     // appears twice, and value them at received capital.
-    const onboardingTotals = new Map<string, { commitment: number; funded: number }>();
-    for (const o of onboardingOnly) {
-      const cur = onboardingTotals.get(o.offering_id) ?? { commitment: 0, funded: 0 };
-      cur.commitment += Number(o.commitment_amount_cents ?? 0);
-      cur.funded += Number(o.funded_amount_cents ?? 0);
-      onboardingTotals.set(o.offering_id, cur);
-    }
-    for (const [offeringId, totals] of onboardingTotals) {
-      const offering = offeringById.get(offeringId);
-      if (!offering) continue;
-      const price = offering.share_price_cents != null ? Number(offering.share_price_cents) : null;
-      rows.push({
-        offering_id: offering.id,
-        offering_name: offering.name,
-        reg_type: offering.reg_type ?? null,
-        share_price_cents: price,
-        shares: null,
-        share_class: "LP interest",
-        commitment_cents: totals.commitment,
-        funded_cents: totals.funded,
-        pct_of_committed: totals.commitment > 0 ? Math.min(100, (totals.funded / totals.commitment) * 100) : 0,
-        equity_value_cents: totals.funded,
-        valued_by: "capital",
-      });
-    }
+    rows.push(...aggregateOnboardingHoldings(onboardingOnly, offeringById));
+
     return rows;
   });
 
