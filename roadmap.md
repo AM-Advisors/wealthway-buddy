@@ -1,7 +1,8 @@
 # Roadmap
 
 ## Reviewer QA walkthrough (2026-10-21)
-- [ ] Provide an isolated, signed-in Harmonious reviewer path for checking every canonical investor step, without impersonation or production test writes.
+- [x] Start separate Investor reviewer QA draft; verify backend isolation before any synthetic records or invitations.
+- [ ] Provide an isolated, signed-in Harmonious reviewer path for checking every canonical investor step, without impersonation or production test writes — implementation underway in the QA draft.
 - [ ] Add QA-only browser coverage and a step-by-step reviewer verification record; validate against synthetic QA access.
 
 ## Investor checklist consistency (2026-10-21)
