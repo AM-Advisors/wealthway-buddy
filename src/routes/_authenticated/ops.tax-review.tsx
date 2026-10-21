@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { certificationPreview } from "@/lib/certification-preview";
 import { staffTaxEvidenceFn } from "@/lib/onboarding-compliance.functions";
 import {
   createPolicyDraftFn,
@@ -230,6 +231,7 @@ function WordingBoard() {
   return (
     <div className="space-y-6">
       <p className="text-sm text-muted-foreground">Enter wording exactly as approved by counsel. Investors only ever see approved versions; records already certified keep the version they certified.</p>
+      <CertificationPreview rows={q.data!.rows as any[]} />
       <div className="grid gap-2 rounded-md border border-border p-4">
         <select className="h-9 rounded-md border border-input bg-background px-2 text-sm" value={f.requirementKey} onChange={(e) => setF({ ...f, requirementKey: e.target.value })}>
           {WORDING_OPTIONS.map((o) => <option key={o.key} value={o.key}>{o.label}</option>)}
@@ -262,5 +264,50 @@ function WordingBoard() {
         </div>
       ))}
     </div>
+  );
+}
+
+function CertificationPreview({ rows }: { rows: any[] }) {
+  const [includeDrafts, setIncludeDrafts] = useState(true);
+  const [reps, setReps] = useState(false);
+  const today = new Date().toISOString().slice(0, 10);
+  const preview = certificationPreview({ rows, today, includeDrafts, offeringRepresentations: reps });
+  const SOURCE: Record<string, { label: string; variant: "default" | "secondary" | "destructive" }> = {
+    approved: { label: "Approved", variant: "default" },
+    draft: { label: "Draft - awaiting approval", variant: "secondary" },
+    missing: { label: "No approved wording", variant: "destructive" },
+  };
+  return (
+    <section className="space-y-3 rounded-md border border-border p-4" aria-label="Investor preview">
+      <div>
+        <h3 className="font-medium text-foreground">Investor preview</h3>
+        <p className="text-sm text-muted-foreground">The certification statements each kind of investor will see on Review &amp; certify. Nothing here is shown to investors.</p>
+      </div>
+      <div className="flex flex-wrap gap-4 text-sm">
+        <label className="flex items-center gap-2"><input type="checkbox" checked={includeDrafts} onChange={(e) => setIncludeDrafts(e.target.checked)} /> Include drafts as if approved</label>
+        <label className="flex items-center gap-2"><input type="checkbox" checked={reps} onChange={(e) => setReps(e.target.checked)} /> Fund has its own offering representations</label>
+      </div>
+      <div className="grid gap-3 lg:grid-cols-3">
+        {preview.map((t) => (
+          <div key={t.key} className="space-y-2 rounded-md border border-border p-3">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-sm font-medium text-foreground">{t.label}</span>
+              {t.blocked ? <Badge variant="destructive">Investors blocked</Badge> : <Badge variant="outline">{t.statements.length} statements</Badge>}
+            </div>
+            <ol className="space-y-2">
+              {t.statements.map((st, i) => (
+                <li key={st.key} className="rounded-md bg-muted/40 p-2 text-xs">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-medium text-foreground">{i + 1}. {st.heading}</span>
+                    <Badge variant={SOURCE[st.source]!.variant}>{SOURCE[st.source]!.label}</Badge>
+                  </div>
+                  {st.wording ? <p className="mt-1 whitespace-pre-wrap text-muted-foreground">{st.wording}</p> : <p className="mt-1 text-muted-foreground">Investors can't certify this until wording is approved.</p>}
+                </li>
+              ))}
+            </ol>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
