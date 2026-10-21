@@ -360,7 +360,7 @@ function FundPanel({ fund }: { fund: any }) {
                 disabled={syncMutation.isPending}
                 onClick={() => syncMutation.mutate()}
               >
-                {syncMutation.isPending ? "Checking…" : "Sync from Box"}
+                {syncMutation.isPending ? "Checking…" : "Sync from storage"}
               </Button>
               <Button asChild size="sm" variant="outline">
                 <Link to="/diligence/$offeringId" params={{ offeringId: fund.offeringId }}>
@@ -377,7 +377,7 @@ function FundPanel({ fund }: { fund: any }) {
               ? `Box folder checked at ${new Date(lastSync.at).toLocaleTimeString()} - ${lastSync.checked} file${
                   lastSync.checked === 1 ? "" : "s"
                 } there, ${lastSync.added} newly added.`
-              : "Drop files straight into the Box folder, then hit Sync from Box to list them here."}
+              : "Drop files straight into the document folder, then hit Sync from storage to list them here."}
           </p>
         </CardContent>
       </Card>

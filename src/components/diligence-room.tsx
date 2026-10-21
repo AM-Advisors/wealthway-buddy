@@ -786,14 +786,14 @@ function DocumentsTab({
                   disabled={syncMutation.isPending}
                   onClick={() => syncMutation.mutate()}
                 >
-                  {syncMutation.isPending ? "Checking…" : "Sync from Box"}
+                  {syncMutation.isPending ? "Checking…" : "Sync from storage"}
                 </Button>
                 <p className="mt-1 text-xs text-muted-foreground">
                   {lastSync
                     ? `Checked ${lastSync.checked} file${lastSync.checked === 1 ? "" : "s"} at ${new Date(
                         lastSync.at,
                       ).toLocaleTimeString()} · ${lastSync.added} added`
-                    : "Brings in anything you dropped straight into the Box folder."}
+                    : "Brings in anything you dropped straight into the document folder."}
                 </p>
               </div>
             </div>

@@ -38,7 +38,7 @@ import {
 } from "@/components/ui/select";
 
 const BANK_LABELS: Record<string, string> = {
-  mercury: "Mercury",
+  mercury: "Online business bank",
   texas_capital: "Texas Capital Bank",
   customers: "Customers Bank",
 };

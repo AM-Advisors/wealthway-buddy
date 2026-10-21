@@ -95,10 +95,10 @@ export function InvestorReviewBoard({ offeringId }: { offeringId: string }) {
   const archiveMutation = useMutation({
     mutationFn: (signatureId: string) => archiveToBox({ data: { signature_id: signatureId } }),
     onSuccess: () => {
-      toast.success("Signed copy filed in Box");
+      toast.success("Signed copy filed");
       refresh();
     },
-    onError: (e: any) => toast.error(e?.message ?? "Could not file that copy in Box."),
+    onError: (e: any) => toast.error(e?.message ?? "Could not file that copy."),
   });
 
   const syncMutation = useMutation({
@@ -106,7 +106,7 @@ export function InvestorReviewBoard({ offeringId }: { offeringId: string }) {
     onSuccess: (res: any) => {
       const parts: string[] = [];
       if (res.completed > 0) parts.push(`${res.completed} newly signed`);
-      if (res.archived > 0) parts.push(`${res.archived} filed in Box`);
+      if (res.archived > 0) parts.push(`${res.archived} filed`);
       toast.success(parts.length ? parts.join(" · ") : "Everything is up to date");
       refresh();
     },
@@ -203,16 +203,16 @@ export function InvestorReviewBoard({ offeringId }: { offeringId: string }) {
                             {doc.pending ? (
                               <>
                                 <Badge variant="outline">Awaiting signature</Badge>
-                                <span>in Box Sign</span>
+                                <span>awaiting signature</span>
                               </>
                             ) : doc.inBox ? (
                               <>
-                                <Badge variant="secondary">In Box</Badge>
+                                <Badge variant="secondary">Filed</Badge>
                                 <span>filed {when(doc.boxUploadedAt)}</span>
                               </>
                             ) : (
                               <>
-                                <Badge variant="outline">Not in Box yet</Badge>
+                                <Badge variant="outline">Not filed yet</Badge>
                                 <span>{doc.boxError ? doc.boxError : "filing…"}</span>
                               </>
                             )}

@@ -40,7 +40,7 @@ export function BankingTab({ fundId }: { fundId: string }) {
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Connect your bank</CardTitle>
-            <CardDescription>Connect the fund's bank account securely through Plaid. This is read-only: no money can be moved from here.</CardDescription>
+            <CardDescription>Connect the fund's bank account through our secure connection. This is read-only: no money can be moved from here.</CardDescription>
           </CardHeader>
           <CardContent><BankFeedPanel fundId={fundId} /></CardContent>
         </Card>

@@ -68,11 +68,11 @@ export function WebhookLog() {
   const q = useQuery({ queryKey: ["ops-webhook-log", days], queryFn: () => load({ data: { days } }) });
   const events = (q.data?.events ?? []).filter((e) => source === "all" || e.source === source);
   return (
-    <Shell title="Webhook log" intro="Updates received from the identity check, Box Sign and Plaid. Message contents are never shown.">
+    <Shell title="Webhook log" intro="Updates received from identity checks, e-signature and bank linking. Message contents are never shown.">
       <div className="flex flex-wrap gap-3">
         <Days value={days} onChange={setDays} />
         <select className="rounded-md border border-input bg-background px-2 py-1 text-sm" value={source} onChange={(e) => setSource(e.target.value)}>
-          {["all", "Identity check", "Box Sign", "Plaid"].map((s) => <option key={s} value={s}>{s === "all" ? "All sources" : s}</option>)}
+          {["all", "Identity check", "E-signature", "Bank linking"].map((s) => <option key={s} value={s}>{s === "all" ? "All sources" : s}</option>)}
         </select>
       </div>
       {q.isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> : q.error ? <p className="text-sm text-destructive">{(q.error as Error).message}</p> : events.length === 0 ? <p className="text-sm text-muted-foreground">No updates in this period.</p> : (

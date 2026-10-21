@@ -495,7 +495,7 @@ export function ApplicationReview({ applicationId, backTo, backLabel }: Applicat
                           {sig.document?.title ?? "Document"}
                           {sig.provider === "box_sign" && (
                             <Badge variant="secondary" className="ml-2 align-middle">
-                              Box Sign
+                              E-signature
                               {sig.provider_status && sig.provider_status !== "completed"
                                 ? ` · ${String(sig.provider_status).replace(/_/g, " ")}`
                                 : ""}
@@ -520,7 +520,7 @@ export function ApplicationReview({ applicationId, backTo, backLabel }: Applicat
                         )}
                         {sig.provider === "box_sign" && sig.provider_agreement_id && (
                           <p className="break-all font-mono text-[11px] text-muted-foreground">
-                            Box Sign request {sig.provider_agreement_id}
+                            Signature request {sig.provider_agreement_id}
                           </p>
                         )}
                         <p className="break-all font-mono text-[11px] text-muted-foreground">
