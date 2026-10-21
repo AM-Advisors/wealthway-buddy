@@ -21,4 +21,8 @@ describe("controlled proposal sections", () => {
     expect(p.find((s) => s.key === "services")!.body).not.toContain("$1\n");
     expect(p.find((s) => s.key === "services")!.body).toContain("$12,000.00");
   });
+  it("uses Marketing's saved wording when present", () => {
+    const o = applyLockedSections("rfq", "response", typed, { ...facts, about: "Marketing approved wording for Harmonious." });
+    expect(o.find((s) => s.key === "about")!.body).toBe("Marketing approved wording for Harmonious.");
+  });
 });
