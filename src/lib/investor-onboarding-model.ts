@@ -785,14 +785,18 @@ export interface Question {
   required?: boolean;
   options?: string[];
   /** Shown only when another answer equals one of these values. */
-  showWhen?: { key: string; equals: (string | boolean | number)[] };
+  showWhen?: { key: string; equals: (string | boolean | number)[] } | { anyOf: { key: string; equals: (string | boolean | number)[] }[] };
+  /** Filled from verified records; the investor cannot change it. */
+  locked?: boolean;
+  /** Required unless the investor's Verification already supplied it. */
+  satisfiedBy?: string | null;
 }
 
 export function questionVisible(question: Question, answers: Record<string, unknown>): boolean {
   const cond = question.showWhen;
   if (!cond) return true;
-  const value = answers[cond.key];
-  return cond.equals.some((v) => v === value);
+  const one = (c: { key: string; equals: (string | boolean | number)[] }) => c.equals.some((v) => v === answers[c.key]);
+  return "anyOf" in cond ? cond.anyOf.some(one) : one(cond);
 }
 
 export function validateQuestionnaire(
@@ -805,7 +809,7 @@ export function validateQuestionnaire(
     const value = answers[q.key];
     const empty =
       value === undefined || value === null || value === "" || (Array.isArray(value) && value.length === 0);
-    if (q.required && empty) {
+    if (q.required && empty && !q.satisfiedBy) {
       errors.push({ key: q.key, message: `${q.label} is required.` });
       continue;
     }

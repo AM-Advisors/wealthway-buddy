@@ -132,9 +132,25 @@
     },
     {
         "key": "if_the_subscriber_answered_no_to_questions_2_or_3_above_the_",
-        "type": "text",
+        "type": "document",
         "label": "If the Subscriber answered \"No\" to questions 2 or 3 above, the Subscriber may be required, if the Subscriber is an individual, to produce a copy of a passport or identification card, together with any evidence of the Subscriber's address, such as a utility bill or bank statement, and date of birth. If the Subscriber is an entity, the Subscriber may be required to produce a certified copy of the Subscriber's certificate of incorporation, articles of association (or the equivalent) or certificate of formation or limited partnership (or the equivalent), and the names, occupations, dates of birth and residential and business addresses of all directors.",
-        "required": false
+        "required": true,
+        "showWhen": {
+            "anyOf": [
+                {
+                    "key": "is_the_funding_bank_located_in_the_united_states_or_another_",
+                    "equals": [
+                        "No"
+                    ]
+                },
+                {
+                    "key": "if_the_subscriber_answered_yes_is_the_subscriber_a_customer_",
+                    "equals": [
+                        "No"
+                    ]
+                }
+            ]
+        }
     },
     {
         "key": "has_the_subscriber_been_convicted_within_the_past_ten_years_",
