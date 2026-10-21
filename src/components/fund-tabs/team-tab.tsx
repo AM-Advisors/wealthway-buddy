@@ -80,14 +80,65 @@ export function TeamTab({ fundId }: { fundId: string }) {
         <CardHeader className="flex-row items-start justify-between gap-3 space-y-0">
           <div>
             <CardTitle className="text-base">Counsel, auditor, tax preparer and accountant</CardTitle>
-            <CardDescription>The firms that work on this fund.</CardDescription>
+            <CardDescription>Type the firm name, then add the people from that firm who need to be on the platform.</CardDescription>
           </div>
-          <Button size="sm" variant="outline" onClick={() => setEditing({ team_role: "counsel", permissions: [] })}>Add provider</Button>
+          <Button size="sm" variant="outline" onClick={() => setEditing({ firm: true, team_role: "counsel", permissions: [] })}>Add firm</Button>
         </CardHeader>
-        <CardContent className="space-y-3">{list(providers, "No providers added yet.")}
-          {editing && PROVIDERS.includes(editing.team_role) && <MemberEditor key={editing.id ?? `new-${editing.team_role}`} fundId={fundId} member={editing} onClose={() => setEditing(null)} />}</CardContent>
+        <CardContent className="space-y-3">
+          {editing?.firm && <FirmEditor fundId={fundId} onClose={() => setEditing(null)} />}
+          {providerFirms(providers).length === 0 && !editing?.firm && <p className="text-sm text-muted-foreground">No firms added yet.</p>}
+          {providerFirms(providers).map((g) => (
+            <div key={g.key} className="rounded-md border">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b p-3">
+                <p className="text-sm font-medium">{g.firm} <span className="font-normal text-muted-foreground">· {roleLabel(g.role)}</span></p>
+                <Button size="sm" variant="outline" onClick={() => setEditing({ team_role: g.role, company: g.firm, permissions: ["view"] })}>Add person</Button>
+              </div>
+              <div className="p-2">{list(g.people, "No people from this firm yet.")}</div>
+            </div>
+          ))}
+          {editing && !editing.firm && PROVIDERS.includes(editing.team_role) && <MemberEditor key={editing.id ?? `new-${editing.team_role}-${editing.company ?? ""}`} fundId={fundId} member={editing} onClose={() => setEditing(null)} />}
+        </CardContent>
       </Card>
 
+    </div>
+  );
+}
+
+// A firm entry is a provider row whose name is the firm itself; people from the firm share its company and role.
+function providerFirms(rows: any[]) {
+  const groups = new Map<string, { key: string; firm: string; role: string; people: any[] }>();
+  for (const m of rows) {
+    const firm = (m.company || m.full_name || "").trim();
+    const key = `${m.team_role}|${firm.toLowerCase()}`;
+    if (!groups.has(key)) groups.set(key, { key, firm, role: m.team_role, people: [] });
+    if (m.full_name?.trim().toLowerCase() !== firm.toLowerCase() || m.email) groups.get(key)!.people.push(m);
+  }
+  return [...groups.values()];
+}
+
+function FirmEditor({ fundId, onClose }: { fundId: string; onClose: () => void }) {
+  const qc = useQueryClient();
+  const save = useServerFn(saveTeamMemberFn);
+  const [firm, setFirm] = useState("");
+  const [role, setRole] = useState("counsel");
+  const m = useMutation({
+    mutationFn: () => save({ data: { fundId, id: null, fullName: firm.trim(), email: "", phone: "", company: firm.trim(), teamRole: role as any, permissions: [] } }),
+    onSuccess: () => { toast.success("Firm added — now add its people"); invalidateFund(qc, fundId); onClose(); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  return (
+    <div className="grid gap-3 rounded-md border border-primary/40 p-3 sm:grid-cols-[1fr_200px_auto] sm:items-end">
+      <div className="space-y-1"><Label>Firm name</Label><Input autoFocus value={firm} onChange={(e) => setFirm(e.target.value)} placeholder="e.g. Smith & Lee LLP" /></div>
+      <div className="space-y-1"><Label>Role</Label>
+        <Select value={role} onValueChange={setRole}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>{PROVIDERS.map((v) => <SelectItem key={v} value={v}>{roleLabel(v)}</SelectItem>)}</SelectContent>
+        </Select>
+      </div>
+      <div className="flex gap-2">
+        <Button disabled={m.isPending || firm.trim().length < 2} onClick={() => m.mutate()}>Save firm</Button>
+        <Button variant="outline" onClick={onClose}>Cancel</Button>
+      </div>
     </div>
   );
 }
