@@ -33,10 +33,16 @@ export async function commissionReport(userId: string, from: string, to: string)
   const hist = await rateHistory(db);
 
   const { data: quotes } = await db.from("sales_quotes").select("id, quote_number, title, client_id, owner_user_id, bdr_user_id, sow_id, signed_at")
-    .eq("status", "signed").not("sow_id", "is", null);
+    .eq("status", "signed");
   const qs = (quotes ?? []) as any[];
-  const sowIds = qs.map((q) => q.sow_id);
-  const { data: invoices } = sowIds.length ? await db.from("invoices").select("id, number, sow_id, status, paid_on, issue_date, voided_at").in("sow_id", sowIds) : { data: [] };
+  const sowIds = qs.map((q) => q.sow_id).filter(Boolean);
+  const quoteIds = qs.map((q) => q.id);
+  // Invoices billed under the quote's SOW, plus invoices created automatically when the client signed the quote/proposal/RFP/RFQ.
+  const [bySow, byQuote] = await Promise.all([
+    sowIds.length ? db.from("invoices").select("id, number, sow_id, sales_quote_id, status, paid_on, issue_date, voided_at").in("sow_id", sowIds) : { data: [] },
+    quoteIds.length ? db.from("invoices").select("id, number, sow_id, sales_quote_id, status, paid_on, issue_date, voided_at").in("sales_quote_id", quoteIds) : { data: [] },
+  ]);
+  const invoices = [...new Map([...((bySow as any).data ?? []), ...((byQuote as any).data ?? [])].map((i: any) => [i.id, i])).values()];
   const invs = ((invoices ?? []) as any[]).filter((i) => !i.voided_at && i.status !== "void" && i.status !== "draft");
   const { data: lines } = invs.length ? await db.from("invoice_lines").select("id, invoice_id, service_key, label, amount_cents").in("invoice_id", invs.map((i) => i.id)) : { data: [] };
 
@@ -53,7 +59,7 @@ export async function commissionReport(userId: string, from: string, to: string)
   const team = new Set<string>(a.visible ?? [userId]);
   const rows: any[] = [];
   for (const inv of invs) {
-    const q = qs.find((x) => x.sow_id === inv.sow_id); if (!q?.owner_user_id) continue;
+    const q = (inv.sales_quote_id ? qs.find((x) => x.id === inv.sales_quote_id) : null) ?? qs.find((x) => x.sow_id && x.sow_id === inv.sow_id); if (!q?.owner_user_id) continue;
     const paid = inv.status === "paid" || Boolean(inv.paid_on);
     const at = (inv.paid_on ?? inv.issue_date ?? new Date().toISOString().slice(0, 10)) + "T23:59:59Z";
     if (paid && (inv.paid_on < from || inv.paid_on > to)) continue;

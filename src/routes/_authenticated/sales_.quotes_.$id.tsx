@@ -11,6 +11,7 @@ import {
   decideSalesQuote, draftQuoteAgreements, getSalesQuote, markSalesQuoteLost, markSalesQuoteSent, reviseSalesQuote, submitSalesQuote,
 } from "@/lib/sales-hub.functions";
 import { QUOTE_STATUS_LABEL } from "@/lib/sales-model";
+import { getQuoteAcceptLink } from "@/lib/sales-acceptance.functions";
 import { Panel, money } from "@/components/sales/sales-ui";
 import { QuoteBuilder } from "./sales_.quotes";
 
@@ -46,6 +47,8 @@ function QuotePage() {
   const draftFn = useServerFn(draftQuoteAgreements);
   const draft = useMutation({ mutationFn: () => draftFn({ data: { id } }), onSuccess: done("SOW drafted"), onError: err });
   const sentFn = useServerFn(markSalesQuoteSent);
+  const linkFn = useServerFn(getQuoteAcceptLink);
+  const link = useMutation({ mutationFn: () => linkFn({ data: { id } }), onSuccess: async (r) => { await navigator.clipboard.writeText(r.url).catch(() => null); toast.success("Client sign link copied"); }, onError: err });
   const sent = useMutation({ mutationFn: () => sentFn({ data: { id } }), onSuccess: done("Marked sent"), onError: err });
   const reviseFn = useServerFn(reviseSalesQuote);
   const revise = useMutation({ mutationFn: () => reviseFn({ data: { id } }), onSuccess: (r) => { toast.success("New version created"); nav({ to: "/sales/quotes/$id", params: { id: r.id } }); }, onError: err });
@@ -96,6 +99,7 @@ function QuotePage() {
           ) : <span className="text-sm text-muted-foreground">{d.approvalBlocker}</span>)}
           {s === "approved" && !d.quote.sow_id && <Button onClick={() => draft.mutate()} disabled={draft.isPending}>Create SOW{d.quote.msa_id ? "" : " and MSA"} drafts</Button>}
           {s === "approved" && d.quote.sow_id && <><span className="text-sm text-muted-foreground">SOW draft created. Operations reviews and sends it for signature from the agreements queue.</span><Button onClick={() => sent.mutate()} disabled={sent.isPending}>Mark sent to client</Button></>}
+          {(s === "approved" || s === "sent") && <Button variant="outline" onClick={() => link.mutate()} disabled={link.isPending}>Copy client sign &amp; approve link</Button>}
           {s === "sent" && <span className="text-sm text-muted-foreground">Waiting for the client to sign. This updates automatically once the SOW is signed.</span>}
           {s === "signed" && <span className="text-sm text-foreground">Signed {d.quote.signed_at ? new Date(d.quote.signed_at).toLocaleDateString() : ""}. Counted as revenue closed.</span>}
           {!["signed", "superseded"].includes(s) && <Button variant="ghost" onClick={() => revise.mutate()} disabled={revise.isPending}>New version</Button>}
