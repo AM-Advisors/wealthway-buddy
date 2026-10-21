@@ -49,14 +49,14 @@ function Lineage({ row }: { row: any }) {
   );
 }
 
-export function FundAccountingPanel({ offeringId }: { offeringId: string }) {
+export function FundAccountingPanel({ offeringId, defaultTab = "investments" }: { offeringId: string; defaultTab?: string }) {
   const load = useServerFn(accountingOverviewFn);
   const q = useQuery({ queryKey: ["fund-accounting", offeringId], queryFn: () => load({ data: { offeringId } }) });
   if (q.isLoading) return <p className="text-sm text-muted-foreground">Loading fund accounting…</p>;
   if (q.error) return <p className="text-sm text-destructive">{(q.error as Error).message}</p>;
   const d = q.data as any;
   return (
-    <Tabs defaultValue="investments">
+    <Tabs defaultValue={defaultTab}>
       <TabsList className="flex-wrap">
         <TabsTrigger value="investments">Investments</TabsTrigger>
         <TabsTrigger value="expenses">Expenses</TabsTrigger>
