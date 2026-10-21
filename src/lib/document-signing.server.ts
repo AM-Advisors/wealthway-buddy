@@ -301,6 +301,12 @@ export async function openSigningSession(
     partyName = String(investmentProfile?.legal_name ?? "").trim() || null;
   }
   const signerName = resolved.profile.legal_name ?? partyName ?? resolved.profile.email;
+  // Dual documents carry the fund signatory as signer 2 in the same request, so their
+  // fields land in the Acceptance of Subscription block. Their link opens only after approval.
+  const { data: dualDoc } = await admin.from("offering_documents").select("signing_mode, countersigner_user_id").eq("id", resolved.document.id).maybeSingle();
+  const dualSigner = dualDoc?.signing_mode === "dual" && dualDoc.countersigner_user_id && dualDoc.countersigner_user_id !== userId
+    ? (await admin.from("profiles").select("email, legal_name").eq("user_id", dualDoc.countersigner_user_id).maybeSingle()).data
+    : null;
   const detail = await createMultiSignerRequest({
     fileId,
     documentName: `${resolved.offering?.name ?? "Harmonious"} - ${resolved.document.title}`,
@@ -314,6 +320,12 @@ export async function openSigningSession(
         order: 1,
         externalUserId: `${resolved.application.id}:${resolved.document.id}:${userId}`,
       },
+      ...(dualSigner?.email ? [{
+        email: String(dualSigner.email).toLowerCase(),
+        name: dualSigner.legal_name ?? dualSigner.email,
+        order: 2,
+        externalUserId: `${resolved.application.id}:${resolved.document.id}:fund_manager`,
+      }] : []),
     ],
   });
 
@@ -386,9 +398,8 @@ export async function openSigningSession(
   if (signerWrite.error) throw new Error("The signer record could not be saved. Please try again.");
 
   // The fund signatory always countersigns dual documents after the investor; they sign the investor's signed copy.
-  const { data: dualDoc } = await admin.from("offering_documents").select("signing_mode, countersigner_user_id").eq("id", resolved.document.id).maybeSingle();
   if (dualDoc?.signing_mode === "dual" && dualDoc.countersigner_user_id && dualDoc.countersigner_user_id !== userId) {
-    const { data: cs } = await admin.from("profiles").select("email, legal_name").eq("user_id", dualDoc.countersigner_user_id).maybeSingle();
+    const cs = dualSigner;
     if (cs?.email) {
       await admin.from("document_signature_signers").upsert([{
         signature_id: signatureId, application_id: resolved.application.id, offering_document_id: resolved.document.id,

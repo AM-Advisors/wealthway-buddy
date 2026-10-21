@@ -6,6 +6,9 @@ const BOX_TAG_RUN = (tag: string, size: number) =>
   `<w:r><w:rPr><w:color w:val="FFFFFF"/><w:sz w:val="${size}"/></w:rPr><w:t xml:space="preserve"> ${tag}</w:t></w:r>`;
 export const INVESTOR_SIGNATURE_TAG = "[[s|1]]";
 export const INVESTOR_DATE_TAG = "[[d|1]]";
+/** Fund signatory (signing order 2) fields, placed only in the Acceptance of Subscription block. */
+export const FUND_SIGNATURE_TAG = "[[s|2]]";
+export const FUND_DATE_TAG = "[[d|2]]";
 
 /**
  * Fill factual signature-page labels, never signature/date evidence or legal clauses.
@@ -30,6 +33,9 @@ export async function fillSubscriptionDocx(bytes: Uint8Array, values: Record<str
   let subscriberPage = false;
   let signatureTagged = false;
   let dateTagged = false;
+  const fundCountersigns = values["__fund_countersigns"] === "1";
+  let fundSignatureTagged = false;
+  let fundDateTagged = false;
   const xml = (await file.async("string")).replace(/<w:p[ >][\s\S]*?<\/w:p>/g, (p) => {
     const text = [...p.matchAll(/<w:t(?:\s[^>]*)?>([\s\S]*?)<\/w:t>/g)].map((m) => m[1]).join("").replace(/&apos;|&#39;|&#x27;/gi, "'").replace(/&#x2019;|&#8217;/gi, "’");
     const key0 = normKey(text);
@@ -37,7 +43,19 @@ export async function fillSubscriptionDocx(bytes: Uint8Array, values: Record<str
     if (text.includes("ACCEPTANCE OF") && (subscriberPage || signatureTagged)) acceptance = true;
     if (acceptance) {
       // Unfilled template placeholders on the fund's countersignature block stay blank lines.
-      return p.replace(/\{\{[^}<]*\}\}/g, "");
+      const blank = p.replace(/\{\{[^}<]*\}\}/g, "");
+      if (!fundCountersigns) return blank;
+      // The fund signatory signs here, in the acceptance block, never on the investor's lines.
+      const k = normKey(text.replace(/\{\{[^}<]*\}\}/g, ""));
+      if (k === "signature" && !fundSignatureTagged) {
+        fundSignatureTagged = true;
+        return blank.replace("</w:p>", `${BOX_TAG_RUN(FUND_SIGNATURE_TAG, 48)}</w:p>`);
+      }
+      if (k === "date" && fundSignatureTagged && !fundDateTagged) {
+        fundDateTagged = true;
+        return blank.replace("</w:p>", `${BOX_TAG_RUN(FUND_DATE_TAG, 22)}</w:p>`);
+      }
+      return blank;
     }
     if (!text.trim().endsWith(":")) return p;
     // Title applies only to a business subscriber: individuals get no title line.
