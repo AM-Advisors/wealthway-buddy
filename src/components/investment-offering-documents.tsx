@@ -32,8 +32,10 @@ export function InvestmentOfferingDocuments({ onboardingId }: { onboardingId: st
       <CardContent className="space-y-2">
         {q.data.map((d) => (
           <div key={d.id} className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-3">
-            <span className="text-sm">{d.title}{d.versionLabel && <span className="block text-xs text-muted-foreground">{d.versionLabel}</span>}<Badge variant="outline" className="mt-1">{d.approvalLabel}</Badge></span>
-            {d.action === "Acknowledge" ? (
+            <span className="text-sm">{d.title}{d.action !== "Completed" && d.approvalLabel ? <Badge variant="outline" className="mt-1 block w-fit">{d.approvalLabel}</Badge> : null}</span>
+            {d.action === "Completed" ? (
+              <Badge variant="secondary">Completed</Badge>
+            ) : d.action === "Acknowledge" ? (
               <Button size="sm" onClick={() => acknowledge(d.id)}>I acknowledge and agree</Button>
             ) : d.action ? (
               <Button asChild size="sm" variant={d.action.includes("Sign") ? "default" : "outline"}>
