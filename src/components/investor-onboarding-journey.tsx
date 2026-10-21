@@ -320,6 +320,9 @@ export function AboutYou({ d, onboardingId, done }: { d: any; onboardingId: stri
             {minimum > 0 ? (
               <p className="mt-1 text-xs text-muted-foreground">Minimum {money(minimum)}.</p>
             ) : null}
+            {minimum > 0 && amount && Math.round(Number(amount.replace(/[,$]/g, "")) * 100) > 0 && Math.round(Number(amount.replace(/[,$]/g, "")) * 100) < minimum ? (
+              <p className="mt-1 text-xs text-muted-foreground">Below the minimum - your fund manager needs a side letter to accept this amount.</p>
+            ) : null}
           </div>
           <Button
             variant="outline"
