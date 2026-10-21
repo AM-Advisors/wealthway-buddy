@@ -22,6 +22,8 @@ async function event(db: any, documentId: string, actorId: string, ev: string, d
   await db.from("sales_document_events").insert({ document_id: documentId, actor_id: actorId, event: ev, detail });
 }
 
+export const EXEC_DIRECT_SEND_ROLES = ["cro", "executive"];
+
 async function access(userId: string, documentId: string) {
   const db = await admin();
   const roles = await rolesOf(userId);
@@ -44,7 +46,9 @@ async function access(userId: string, documentId: string) {
     (isMarketing && activeAssist?.status === "claimed" && activeAssist.assignee_user_id === userId));
   const canApprove = !readOnly && doc.status === "submitted" && roles.some((r) => SALES_DOC_APPROVERS.includes(r));
   const isOwner = doc.owner_user_id === userId && !readOnly;
-  return { db, roles, doc, assists: (assists ?? []) as any[], activeAssist, isMarketing, salesSee, canEdit, canApprove, isOwner, readOnly };
+  // CRO and CEO (executive) owners may send their own draft/submitted documents directly; the send records the approval.
+  const execDirect = isOwner && roles.some((r) => EXEC_DIRECT_SEND_ROLES.includes(r)) && ["draft", "submitted"].includes(doc.status);
+  return { db, roles, doc, assists: (assists ?? []) as any[], activeAssist, isMarketing, salesSee, canEdit, canApprove, isOwner, readOnly, execDirect };
 }
 
 async function latestSections(db: any, doc: any): Promise<Section[]> {
@@ -213,7 +217,7 @@ export async function getDocument(userId: string, id: string) {
     perms: {
       canEdit: a.canEdit, canApprove: a.canApprove && doc.owner_user_id !== userId && !((versions ?? []) as any[]).some((v) => v.created_by === userId && v.source !== "created"),
       isOwner: a.isOwner, isMarketing: a.isMarketing, canRequestHelp: false,
-      canSubmit: a.isOwner && doc.status === "draft", canSend: a.isOwner && doc.status === "approved", canOutcome: a.isOwner && doc.status === "sent",
+      canSubmit: a.isOwner && doc.status === "draft", canSend: (a.isOwner && doc.status === "approved") || a.execDirect, directSend: a.execDirect, canOutcome: a.isOwner && doc.status === "sent",
       canExport: doc.status !== "draft" || a.salesSee, userId,
     },
   };
@@ -342,7 +346,13 @@ async function approvedSections(a: Awaited<ReturnType<typeof access>>) {
 
 export async function sendDocument(userId: string, id: string, d: { subject: string; message: string }) {
   const a = await access(userId, id);
-  if (!a.isOwner || a.doc.status !== "approved") throw new Error("Only an approved document can be sent, by its owner.");
+  if (!a.isOwner || (a.doc.status !== "approved" && !a.execDirect)) throw new Error("Only an approved document can be sent, by its owner.");
+  if (a.execDirect) {
+    const now = new Date().toISOString();
+    await a.db.from("sales_documents").update({ status: "approved", approved_version: a.doc.current_version, approved_by: userId, approved_at: now, updated_at: now }).eq("id", id);
+    await event(a.db, id, userId, "approved", { version: a.doc.current_version, note: "Sent directly by CRO/CEO without separate approval" });
+    a.doc.approved_version = a.doc.current_version; a.doc.status = "approved";
+  }
   if (!a.doc.contact_id) throw new Error("Link a contact with an email address before sending.");
   const sections = (await approvedSections(a)).filter((s) => s.key !== "summary_note" || s.body.trim());
   const { data: contact } = await a.db.from("crm_contacts").select("email").eq("id", a.doc.contact_id).maybeSingle();

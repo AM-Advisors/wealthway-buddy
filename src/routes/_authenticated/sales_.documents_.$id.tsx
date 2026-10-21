@@ -142,10 +142,11 @@ function Editor() {
             {doc.approved_at && <p className="mt-2 text-xs text-muted-foreground">Approved by {doc.approvedByName} on {new Date(doc.approved_at).toLocaleDateString()} (version {doc.approved_version}).</p>}
             {p.canSend && (
               <div className="mt-3 space-y-2">
+                {p.directSend && <p className="text-sm text-muted-foreground">As CRO or CEO you can send this directly. Sending records your approval of the current version.</p>}
                 {!doc.contact_id && <p className="text-sm text-muted-foreground">Link a contact to email it, or download the PDF/Word file.</p>}
                 <Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Subject" />
                 <Textarea rows={3} value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Short cover note" />
-                <Button className="w-full" disabled={!!busy || !doc.contact_id} onClick={() => run("send", () => send({ data: { id, subject, message } }), "Sent")}>Email to {doc.recipient_name ?? "contact"}</Button>
+                <Button className="w-full" disabled={!!busy || !doc.contact_id || (p.directSend && dirty)} onClick={() => run("send", () => send({ data: { id, subject, message } }), "Sent")}>Email to {doc.recipient_name ?? "contact"}</Button>
               </div>
             )}
             {p.canOutcome && (
