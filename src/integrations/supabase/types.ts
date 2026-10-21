@@ -28896,6 +28896,8 @@ export type Database = {
           note: string | null
           number: string | null
           offering_id: string | null
+          paid_before_issue_on: string | null
+          paid_before_issue_reference: string | null
           paid_on: string | null
           payment_instruction_id: string | null
           payment_reference: string | null
@@ -28946,6 +28948,8 @@ export type Database = {
           note?: string | null
           number?: string | null
           offering_id?: string | null
+          paid_before_issue_on?: string | null
+          paid_before_issue_reference?: string | null
           paid_on?: string | null
           payment_instruction_id?: string | null
           payment_reference?: string | null
@@ -28996,6 +29000,8 @@ export type Database = {
           note?: string | null
           number?: string | null
           offering_id?: string | null
+          paid_before_issue_on?: string | null
+          paid_before_issue_reference?: string | null
           paid_on?: string | null
           payment_instruction_id?: string | null
           payment_reference?: string | null
@@ -42297,6 +42303,7 @@ export type Database = {
           msa_id: string | null
           needs_exec_approval: boolean
           notes: string | null
+          offering_id: string | null
           onboarded_at: string | null
           onboarded_offering_id: string | null
           onboarding_error: string | null
@@ -42329,6 +42336,7 @@ export type Database = {
           msa_id?: string | null
           needs_exec_approval?: boolean
           notes?: string | null
+          offering_id?: string | null
           onboarded_at?: string | null
           onboarded_offering_id?: string | null
           onboarding_error?: string | null
@@ -42361,6 +42369,7 @@ export type Database = {
           msa_id?: string | null
           needs_exec_approval?: boolean
           notes?: string | null
+          offering_id?: string | null
           onboarded_at?: string | null
           onboarded_offering_id?: string | null
           onboarding_error?: string | null

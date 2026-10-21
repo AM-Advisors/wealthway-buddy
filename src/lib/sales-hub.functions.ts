@@ -88,7 +88,7 @@ export const getSalesQuote = createServerFn({ method: "GET" }).middleware([requi
   .handler(async ({ data, context }) => (await Q()).getQuote(context.userId, data.id));
 
 export const saveSalesQuote = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ id: z.string().uuid().nullish(), title: z.string().max(200), clientId: z.string().uuid().nullish(), contactId: z.string().uuid().nullish(), dealId: z.string().uuid().nullish(), validUntil: opt, notes: z.string().max(5000).nullish(), lines: z.array(line).max(50) }).parse(d))
+  .inputValidator((d) => z.object({ id: z.string().uuid().nullish(), title: z.string().max(200), clientId: z.string().uuid().nullish(), contactId: z.string().uuid().nullish(), dealId: z.string().uuid().nullish(), offeringId: z.string().uuid().nullish(), validUntil: opt, notes: z.string().max(5000).nullish(), lines: z.array(line).max(50) }).parse(d))
   .handler(async ({ data, context }) => (await Q()).saveQuote(context.userId, data));
 
 const idOnly = z.object({ id: z.string().uuid() });

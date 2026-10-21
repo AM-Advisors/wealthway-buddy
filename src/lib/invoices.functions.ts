@@ -199,11 +199,18 @@ export const createInvoice = createServerFn({ method: "POST" })
         periodEnd: z.string().min(4).max(20),
         netDays: z.number().int().min(0).max(180).default(30),
         note: z.string().max(1000).optional().or(z.literal("")),
+        alreadyPaidOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
+        alreadyPaidReference: z.string().max(120).optional().or(z.literal("")),
       })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
     const who = await requireContractAuthority(context);
+    if (data.alreadyPaidOn && data.alreadyPaidOn > new Date().toISOString().slice(0, 10)) throw new Error("A past payment date can't be in the future.");
+    if (data.offeringId) {
+      const { data: o } = await context.supabase.from("offerings").select("client_id").eq("id", data.offeringId).maybeSingle();
+      if (!o || (o as any).client_id !== data.clientId) throw new Error("That fund doesn't belong to the chosen client.");
+    }
     const built = await collectLines(context, data);
     if (!built.lines.length) {
       throw new Error(
@@ -216,6 +223,9 @@ export const createInvoice = createServerFn({ method: "POST" })
       .insert({
         client_id: data.clientId,
         sow_id: data.sowId ?? built.activeSow?.id ?? null,
+        offering_id: data.offeringId ?? null,
+        paid_before_issue_on: data.alreadyPaidOn ?? null,
+        paid_before_issue_reference: data.alreadyPaidOn ? data.alreadyPaidReference || null : null,
         period_start: data.periodStart,
         period_end: data.periodEnd,
         net_days: data.netDays,
@@ -490,6 +500,22 @@ export const issueInvoice = createServerFn({ method: "POST" })
       next: { status: "issued", number, total_cents: total, due_date: dueDate, ...(selfIssued ? { self_issue_reason: data.selfIssueReason } : {}) },
     });
 
+    // Marked at creation as already paid outside the platform: record the payment (record only, nothing is collected) and skip the "please pay" email.
+    const priorPaid = (invoice as any).paid_before_issue_on as string | null;
+    if (priorPaid) {
+      const reference = (invoice as any).paid_before_issue_reference ?? null;
+      const { error: payErr } = await context.supabase.from("invoices").update({ status: "paid", paid_on: priorPaid, payment_reference: reference }).eq("id", data.id).eq("status", "issued");
+      if (payErr) throw new Error(payErr.message);
+      await audit(context, who, {
+        action: "payment recorded", target: number, clientId: (invoice as any).client_id,
+        offeringId: await invoiceOfferingId(context, data.id),
+        previous: { status: "issued", paid_on: null, reference: null },
+        next: { status: "paid", paid_on: priorPaid, reference, recorded_as: "paid before issue" },
+      });
+      await (await import("@/lib/billing-schedule.server")).onInvoicePaid(data.id);
+      return { ok: true, number, dueDate, paid: true };
+    }
+
     const { notifyClientAdminsWith, money, CLIENT_PORTAL_BASE } = await import(
       "@/lib/client-notify.server"
     );
@@ -640,6 +666,7 @@ export const recordInvoicePayment = createServerFn({ method: "POST" })
       .maybeSingle();
     if (!invoice) throw new Error("That invoice isn't available.");
     if ((invoice as any).status !== "issued") throw new Error("Only an issued invoice can be paid.");
+    if (data.paidOn > new Date().toISOString().slice(0, 10)) throw new Error("The payment date can't be in the future.");
     const { error } = await context.supabase
       .from("invoices")
       .update({ status: "paid", paid_on: data.paidOn, payment_reference: data.reference || null })
