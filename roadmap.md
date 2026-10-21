@@ -1,5 +1,10 @@
 # Roadmap
 
+## Harmonious investor approval and Calvin executed copy (2026-10-21)
+- [x] Permit existing authorized Harmonious investor-operations staff to approve admission alongside exact-fund managers; preserve readiness and own-investment safeguards, audit actor and investor notices.
+- [ ] Run focused approval checks.
+- [ ] Retrieve and inspect Calvin's fully executed copy with Thomas's signature and date.
+
 ## Wealth paid activation and pricing (2026-10-21)
 - [x] Confirm Portfolio and Report Cards have no published rate-card price; catalog values are zero placeholders, not free services.
 - [x] Record quarterly or annual billing preference.

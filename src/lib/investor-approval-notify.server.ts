@@ -36,7 +36,12 @@ export async function sendInvestorApprovalNotice(db: any, input: { onboardingId:
     : input.action === 'sign' || input.action === 'approve_sign' ? (managerIds.includes(input.signerUserId) ? input.signerUserId : null)
     : managerIds.includes(ob.assigned_to) ? ob.assigned_to : managerIds[0]
   if (countersigner && recipientId === countersigner.userId) return { sent: true }
-  if (!recipientId || (input.action === 'fund' && !managerIds.includes(ob.approved_to_fund_by))) return { sent: false }
+  if (!recipientId) return { sent: false }
+  if (input.action === 'fund' && !managerIds.includes(ob.approved_to_fund_by)) {
+    const { data: approverRoles, error: roleError } = await db.from('user_roles').select('role').eq('user_id', ob.approved_to_fund_by)
+    if (roleError) throw new Error('Approval authority unavailable')
+    if (!(approverRoles ?? []).some((r: any) => r.role === 'admin') || ob.approved_to_fund_by === ob.investor_user_id) return { sent: false }
+  }
   const { data: auth, error: authError } = await db.auth.admin.getUserById(recipientId)
   if (authError) throw new Error('Recipient unavailable')
   const recipient = auth?.user
