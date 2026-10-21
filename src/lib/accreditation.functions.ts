@@ -213,6 +213,7 @@ export const submitVerificationRequest = createServerFn({ method: "POST" })
     if (appError) throw new Error(appError.message);
 
     void (await import("@/lib/manager-alerts.server")).drainManagerAlerts().catch(() => {});
+    void (await import("@/lib/accreditation-review.server")).notifyAccreditationPending(application.id).catch(() => {});
     return { ok: true, status: "review" as const, expiresAt: expires };
   });
 

@@ -1,12 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/lib/require-auth";
-import { ACCREDITATION_QUESTION_KEY, basisFromAnswer, selfCertificationAllowed } from "@/lib/accreditation-step";
+import { ACCREDITATION_QUESTION_KEY, accreditationOutcome, basisFromAnswer, selfCertificationAllowed } from "@/lib/accreditation-step";
 
 /**
  * The investor confirms the accredited-investor category they chose in the
- * questionnaire. Lands in review (never auto-approves); refused on funds that
- * require verified accreditation.
+ * questionnaire. On a 506(b) fund that completes accreditation (no reviewer);
+ * refused on 506(c) funds, which need paperwork reviewed.
  */
 export const confirmAccreditationStepFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -31,16 +31,32 @@ export const confirmAccreditationStepFn = createServerFn({ method: "POST" })
       application_id: row.application_id, reg_type: "506b", method: basis,
       questionnaire: { source: "investor_questionnaire", category: String(answer), submitted_at: now },
       qualifies: true, attested_at: now, attested_signature: data.signature,
-      status: "review", verified_at: null, updated_at: now,
+      status: accreditationOutcome(offering?.reg_type), verified_at: now, updated_at: now,
     };
     const { data: existing } = await db.from("accreditation_records").select("id").eq("application_id", row.application_id).maybeSingle();
     const res = existing ? await db.from("accreditation_records").update(payload).eq("id", existing.id) : await db.from("accreditation_records").insert(payload);
     if (res.error) throw new Error(res.error.message);
-    const up = await db.from("investor_applications").update({ accreditation_status: "review", updated_at: now }).eq("id", row.application_id);
+    const up = await db.from("investor_applications").update({ accreditation_status: "approved", updated_at: now }).eq("id", row.application_id);
     if (up.error) throw new Error(up.error.message);
     try {
       const { reconcileInvestmentReadiness } = await import("@/lib/investor-onboarding.server");
       await reconcileInvestmentReadiness(row.id, { actorUserId: userId, trigger: "accreditation_confirmed" } as any);
     } catch { /* readiness refresh never undoes the record */ }
-    return { ok: true, status: "review" };
+    return { ok: true, status: "approved" };
   });
+
+/** 506(c) paperwork waiting on this fund's managers (Harmonious reviews from Operations). */
+export const listPendingAccreditationsFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ offeringId: z.string().uuid() }).parse)
+  .handler(async ({ data, context }) => (await import("@/lib/accreditation-review.server")).listPending(context.userId, data.offeringId));
+
+export const accreditationFileUrlFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ documentId: z.string().uuid() }).parse)
+  .handler(async ({ data, context }) => (await import("@/lib/accreditation-review.server")).fileUrl(context.userId, data.documentId));
+
+export const decideAccreditationFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ applicationId: z.string().uuid(), decision: z.enum(["approved", "rejected"]), notes: z.string().trim().max(600).default("") }).parse)
+  .handler(async ({ data, context }) => (await import("@/lib/accreditation-review.server")).decide(context.userId, data));
