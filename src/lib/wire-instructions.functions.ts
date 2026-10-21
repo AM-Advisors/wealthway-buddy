@@ -8,6 +8,7 @@ const wireSchema = z.object({
   offering_id: z.string().uuid(),
   bank_name: z.string().trim().max(160).default(""),
   bank_address: z.string().trim().max(240).default(""),
+  beneficiary_address: z.string().trim().max(240).default(""),
   account_name: z.string().trim().max(160).default(""),
   account_number: z.string().trim().max(64).default(""),
   routing_number: z.string().trim().max(64).default(""),

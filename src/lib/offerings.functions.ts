@@ -46,6 +46,7 @@ export const WIRE_FIELDS = ALL_WIRE_FIELDS;
 const wireSchema = z.object({
   bank_name: z.string().trim().max(160).default(""),
   bank_address: z.string().trim().max(240).default(""),
+  beneficiary_address: z.string().trim().max(240).default(""),
   account_name: z.string().trim().max(160).default(""),
   account_number: z.string().trim().max(64).default(""),
   routing_number: z.string().trim().max(64).default(""),

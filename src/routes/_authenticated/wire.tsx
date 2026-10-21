@@ -33,6 +33,7 @@ export const Route = createFileRoute("/_authenticated/wire")({
 const WIRE_LABEL: Record<string, string> = {
   bank_name: "Bank name",
   bank_address: "Bank address",
+  beneficiary_address: "Beneficiary address",
   account_name: "Account name",
   account_number: "Account number",
   routing_number: "Routing number (ABA)",

@@ -216,6 +216,7 @@ const p3 = () => import("@/lib/fund-setup-phase3.server");
 const bankDetails = z.object({
   bank_name: z.string().trim().max(160).default(""),
   bank_address: z.string().trim().max(240).default(""),
+  beneficiary_address: z.string().trim().max(240).default(""),
   account_name: z.string().trim().max(160).default(""),
   account_number: z.string().trim().regex(/^[0-9A-Za-z-]{0,34}$/, "Account number has unexpected characters").default(""),
   routing_number: z.string().trim().regex(/^(\d{9})?$/, "Routing number must be 9 digits").default(""),

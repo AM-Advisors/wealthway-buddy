@@ -561,6 +561,7 @@ function FundingFacts({ funding, offering }: { funding: any; offering: any }) {
   const labels: Record<string, string> = {
     bank_name: "Bank",
     bank_address: "Bank address",
+    beneficiary_address: "Beneficiary address",
     account_name: "Account name",
     account_number: "Account number",
     routing_number: "Routing number (ABA)",

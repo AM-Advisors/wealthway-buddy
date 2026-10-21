@@ -119,7 +119,7 @@ function BankingCard({ d, offeringId, onChanged, reviewOnly = false }: { d: D; o
   const { busy, run } = useRun(onChanged);
   const [reason, setReason] = useState("");
   const [intl, setIntl] = useState(false);
-  const [f, setF] = useState({ bank_name: "", bank_address: "", account_name: "", account_number: "", routing_number: "", swift: "", memo: "" });
+  const [f, setF] = useState({ bank_name: "", bank_address: "", beneficiary_address: "", account_name: "", account_number: "", routing_number: "", swift: "", memo: "" });
   const [method, setMethod] = useState("");
   const [note, setNote] = useState("");
   const b = d.banking;
@@ -229,9 +229,10 @@ function BankingCard({ d, offeringId, onChanged, reviewOnly = false }: { d: D; o
                   {field("account_number", "Account Number")}
                   {intl && field("swift", "SWIFT/BIC")}
                   {field("bank_address", "Bank Address")}
+                  {field("beneficiary_address", "Beneficiary Address")}
                   {field("memo", "For Further Credit")}
                 </div>
-                <Button size="sm" disabled={busy || !f.account_number || !f.bank_name} onClick={() => run(() => save({ data: { offeringId, details: f } }).then(() => setF({ bank_name: "", bank_address: "", account_name: "", account_number: "", routing_number: "", swift: "", memo: "" })), "Saved - pending verification")}>Save instructions</Button>
+                <Button size="sm" disabled={busy || !f.account_number || !f.bank_name} onClick={() => run(() => save({ data: { offeringId, details: f } }).then(() => setF({ bank_name: "", bank_address: "", beneficiary_address: "", account_name: "", account_number: "", routing_number: "", swift: "", memo: "" })), "Saved - pending verification")}>Save instructions</Button>
               </div>
             )}
           </>

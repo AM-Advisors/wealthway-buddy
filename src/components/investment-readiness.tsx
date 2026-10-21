@@ -247,6 +247,7 @@ const WIRE_LABELS: [string, string][] = [
   ["account_number", "Account number"],
   ["swift", "SWIFT"],
   ["bank_address", "Bank address"],
+  ["beneficiary_address", "Beneficiary address"],
   ["memo", "Memo / reference"],
 ];
 
