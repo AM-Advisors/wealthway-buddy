@@ -852,6 +852,35 @@ export async function updateBanking(
   return data;
 }
 
+/**
+ * Shortcut for an account that already exists and is in use: records the banking
+ * record as active in one step, with a required reason, only after the current
+ * bank instructions are verified. Release to investors stays a separate action.
+ */
+export async function markExistingAccountActive(userId: string, sb: unknown, input: { setupId: string; reason: string }) {
+  await assertStaff(userId);
+  const reason = input.reason.trim();
+  if (reason.length < 10) fail("Explain why this account is already active (at least 10 characters).");
+  const { data: record } = await db().from("fund_banking_setups").select("*").eq("setup_id", input.setupId).maybeSingle();
+  if (!record) fail("That fund has no banking record.");
+  if (record.status === "account_active") return record;
+  const { data: setup } = await db().from("fund_setups").select("offering_id").eq("id", input.setupId).maybeSingle();
+  if (!setup?.offering_id) fail("Fund setup is unavailable.");
+  const { bankVersions } = await import("@/lib/fund-setup-phase3.server");
+  const { bankInstructionsReleasable } = await import("@/lib/fund-setup-phase3");
+  if (!bankInstructionsReleasable(await bankVersions(sb, setup.offering_id))) fail("Verify the current bank instructions before marking the account active.");
+  const now = nowIso();
+  const { data } = await db().from("fund_banking_setups").update({
+    status: "account_active", account_active_at: now, approved_at: record.approved_at ?? now,
+    application_submitted_at: record.application_submitted_at ?? now, updated_by: userId, updated_at: now,
+  }).eq("id", record.id).select("*").single();
+  await recordEvent({
+    setupId: input.setupId, subjectTable: "fund_banking_setups", subjectId: record.id, event: "banking_existing_account_active",
+    fromStatus: record.status, toStatus: "account_active", detail: { reason }, actorUserId: userId, actorRole: "harmonious",
+  });
+  return data;
+}
+
 /** Investor-facing funding instructions are released deliberately, by Harmonious. */
 export async function releaseBankingInstructions(userId: string, setupId: string) {
   await assertStaff(userId);
