@@ -39,7 +39,7 @@ import { cn } from "@/lib/utils";
 import { isReconciledFunding } from "@/lib/funding-status";
 import { WIRE_FIELD_LABELS } from "@/lib/wire-scope";
 import { FeeAcceptanceCard, OnboardingUploadsCard, useFeesAccepted } from "@/components/investor-onboarding-extras";
-import { TaxSignPanel } from "@/components/onboard-compliance-panels";
+import { FinancialBackgroundPanel, TaxSignPanel } from "@/components/onboard-compliance-panels";
 
 const money = (cents: number | null | undefined) =>
   cents == null ? "-" : `$${(cents / 100).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
@@ -543,6 +543,7 @@ function Sign({ d, onboardingId, done }: { d: any; onboardingId: string; done: (
         ) : null}
 
         <AccreditationStep d={d} onboardingId={onboardingId} questionnaireDone={questionnaireDone} done={done} />
+        <FinancialBackgroundPanel onboardingId={onboardingId} done={done} />
 
         <TaxSignPanel onboardingId={onboardingId} done={done} locked={!questionnaireDone} subscriberName={(d.questionnaireLocked?.name_of_subscriber ?? (d.questionnaireResponses ?? {}).name_of_subscriber ?? null) as string | null} />
 
