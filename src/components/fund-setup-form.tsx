@@ -14,6 +14,7 @@ import { fundEinFn } from "@/lib/fund-tabs.functions";
 import { SubmitForm, History } from "@/components/fund-manager-setup-loader";
 import { FundSignatoriesCard } from "@/components/fund-signatories-card";
 import { OfferingDocumentsSetup } from "@/components/offering-documents-setup";
+import { ManagerDocumentsChoice } from "@/components/manager-documents-choice";
 import { FORM_SECTIONS, changedBySection, type FieldDef } from "@/lib/fund-setup-form-model";
 
 import { FundOriginControl } from "@/components/fund-origin-control";
@@ -166,7 +167,7 @@ export function FundSetupForm({ offeringId, mode, staffExtras }: { offeringId: s
       {!!(d.items as any[]).some((i) => i.section === "bank") && <History items={(d.items as any[]).filter((i) => i.section === "bank")} isStaff={isStaff} onChange={refresh} />}
 
       <SetupSection open={open} setOpen={setOpen} id="documents" title="Documents" status={<Chip tone={stepOf("document")?.status === "done" ? "done" : "miss"}>{stepOf("document")?.statusLabel ?? ""}</Chip>}>
-        {isStaff ? <OfferingDocumentsSetup offeringId={offeringId} onChanged={refresh} /> : <SubmitForm offeringId={offeringId} section="document" onDone={refresh} />}
+        {isStaff ? <OfferingDocumentsSetup offeringId={offeringId} onChanged={refresh} /> : <ManagerDocumentsChoice offeringId={offeringId} upload={<SubmitForm offeringId={offeringId} section="document" onDone={refresh} />} />}
         <History items={(d.items as any[]).filter((i) => i.section === "document" || i.section === "fund_details" || i.section === "fees_team")} isStaff={isStaff} onChange={refresh} />
       </SetupSection>
 
