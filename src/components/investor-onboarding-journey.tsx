@@ -530,9 +530,8 @@ function Sign({ d, onboardingId, done }: { d: any; onboardingId: string; done: (
   const [userPicked, setUserPicked] = useState(false);
   const saveQ = useAction(questionnaireFn, "Answers saved.", done);
   const prepare = useAction(prepareFn, null, done);
-  const confirmFnWrapped = useServerFn(confirmFn as any) as any;
   const confirm = useMutation({
-    mutationFn: (v: any) => confirmFnWrapped(v),
+    mutationFn: (v: any) => (confirmFn as any)(v),
     onSuccess: () => { toast.success("Thank you. Harmonious will now review your subscription."); done(); },
     onError: (e: any) => {
       const msg = String(e?.message ?? e).replace(/^Forbidden:\s*/, "");
