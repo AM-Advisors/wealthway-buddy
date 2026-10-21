@@ -24782,6 +24782,66 @@ export type Database = {
           },
         ]
       }
+      harmonious_remittance_versions: {
+        Row: {
+          account_name: string
+          account_number: string
+          approved_at: string | null
+          approved_by: string | null
+          bank_address: string | null
+          bank_name: string
+          beneficiary_address: string | null
+          id: string
+          method: string
+          prepared_at: string
+          prepared_by: string
+          reference_note: string | null
+          retired_at: string | null
+          routing_number: string
+          self_approval_reason: string | null
+          status: string
+          swift_code: string | null
+        }
+        Insert: {
+          account_name: string
+          account_number: string
+          approved_at?: string | null
+          approved_by?: string | null
+          bank_address?: string | null
+          bank_name: string
+          beneficiary_address?: string | null
+          id?: string
+          method: string
+          prepared_at?: string
+          prepared_by: string
+          reference_note?: string | null
+          retired_at?: string | null
+          routing_number: string
+          self_approval_reason?: string | null
+          status?: string
+          swift_code?: string | null
+        }
+        Update: {
+          account_name?: string
+          account_number?: string
+          approved_at?: string | null
+          approved_by?: string | null
+          bank_address?: string | null
+          bank_name?: string
+          beneficiary_address?: string | null
+          id?: string
+          method?: string
+          prepared_at?: string
+          prepared_by?: string
+          reference_note?: string | null
+          retired_at?: string | null
+          routing_number?: string
+          self_approval_reason?: string | null
+          status?: string
+          swift_code?: string | null
+        }
+        Relationships: []
+      }
       harmonious_series_masters: {
         Row: {
           active: boolean
@@ -28873,6 +28933,7 @@ export type Database = {
       }
       invoices: {
         Row: {
+          acceptance_key: string | null
           approval_requested_at: string | null
           approval_status: string
           card_session_id: string | null
@@ -28917,6 +28978,8 @@ export type Database = {
           rate_variance_cents: number
           reviewed_at: string | null
           reviewed_by: string | null
+          sales_document_id: string | null
+          sales_quote_id: string | null
           sow_id: string | null
           status: string
           total_cents: number
@@ -28925,6 +28988,7 @@ export type Database = {
           voided_at: string | null
         }
         Insert: {
+          acceptance_key?: string | null
           approval_requested_at?: string | null
           approval_status?: string
           card_session_id?: string | null
@@ -28969,6 +29033,8 @@ export type Database = {
           rate_variance_cents?: number
           reviewed_at?: string | null
           reviewed_by?: string | null
+          sales_document_id?: string | null
+          sales_quote_id?: string | null
           sow_id?: string | null
           status?: string
           total_cents?: number
@@ -28977,6 +29043,7 @@ export type Database = {
           voided_at?: string | null
         }
         Update: {
+          acceptance_key?: string | null
           approval_requested_at?: string | null
           approval_status?: string
           card_session_id?: string | null
@@ -29021,6 +29088,8 @@ export type Database = {
           rate_variance_cents?: number
           reviewed_at?: string | null
           reviewed_by?: string | null
+          sales_document_id?: string | null
+          sales_quote_id?: string | null
           sow_id?: string | null
           status?: string
           total_cents?: number
@@ -40851,6 +40920,42 @@ export type Database = {
           },
         ]
       }
+      remittance_view_events: {
+        Row: {
+          id: string
+          invoice_id: string | null
+          ip: string | null
+          occurred_at: string
+          remittance_version_id: string | null
+          revealed: boolean
+          via: string
+          viewer_email: string | null
+          viewer_user_id: string | null
+        }
+        Insert: {
+          id?: string
+          invoice_id?: string | null
+          ip?: string | null
+          occurred_at?: string
+          remittance_version_id?: string | null
+          revealed?: boolean
+          via: string
+          viewer_email?: string | null
+          viewer_user_id?: string | null
+        }
+        Update: {
+          id?: string
+          invoice_id?: string | null
+          ip?: string | null
+          occurred_at?: string
+          remittance_version_id?: string | null
+          revealed?: boolean
+          via?: string
+          viewer_email?: string | null
+          viewer_user_id?: string | null
+        }
+        Relationships: []
+      }
       report_card_configuration_versions: {
         Row: {
           actor_id: string
@@ -41863,6 +41968,72 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      sales_acceptances: {
+        Row: {
+          acceptance_key: string
+          accepted_at: string
+          client_id: string | null
+          content_hash: string
+          id: string
+          invoice_error: string | null
+          invoice_id: string | null
+          ip: string | null
+          kind: string
+          payment_method: string | null
+          sales_document_id: string | null
+          sales_quote_id: string | null
+          signer_email: string | null
+          signer_name: string
+          signer_title: string | null
+          signer_user_id: string | null
+          user_agent: string | null
+          version: number
+          via: string
+        }
+        Insert: {
+          acceptance_key: string
+          accepted_at?: string
+          client_id?: string | null
+          content_hash: string
+          id?: string
+          invoice_error?: string | null
+          invoice_id?: string | null
+          ip?: string | null
+          kind: string
+          payment_method?: string | null
+          sales_document_id?: string | null
+          sales_quote_id?: string | null
+          signer_email?: string | null
+          signer_name: string
+          signer_title?: string | null
+          signer_user_id?: string | null
+          user_agent?: string | null
+          version: number
+          via: string
+        }
+        Update: {
+          acceptance_key?: string
+          accepted_at?: string
+          client_id?: string | null
+          content_hash?: string
+          id?: string
+          invoice_error?: string | null
+          invoice_id?: string | null
+          ip?: string | null
+          kind?: string
+          payment_method?: string | null
+          sales_document_id?: string | null
+          sales_quote_id?: string | null
+          signer_email?: string | null
+          signer_name?: string
+          signer_title?: string | null
+          signer_user_id?: string | null
+          user_agent?: string | null
+          version?: number
+          via?: string
+        }
+        Relationships: []
       }
       sales_channel_optouts: {
         Row: {
