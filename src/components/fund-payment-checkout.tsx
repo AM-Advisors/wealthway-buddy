@@ -12,7 +12,7 @@ import { getStripe, getStripeEnvironment } from "@/lib/stripe";
 
 const usd = (c: number) => `$${(c / 100).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
 
-type Target = { kind: "new_fund_request"; clientId: string; request: Record<string, any> } | { kind: "service_request"; clientId?: string; answers: Record<string, string>; serviceKeys: string[]; offeringId?: string | null };
+type Target = { kind: "new_fund_request"; clientId: string; request: Record<string, any> } | { kind: "service_request"; clientId?: string; answers: Record<string, string>; serviceKeys: string[]; offeringId?: string | null } | { kind: "side_letter"; onboardingId: string };
 
 /** Shows what is due, takes the card payment, and calls onPaid once the payment is confirmed. */
 export function useFundPayment(target: Target | null) {
@@ -39,8 +39,8 @@ export function PaymentSummary({ items, total }: { items: { key: string; name: s
   );
 }
 
-export function FundPaymentDialog({ open, onOpenChange, target, onPaid }: {
-  open: boolean; onOpenChange: (v: boolean) => void; target: Target; onPaid: (paymentId: string) => void;
+export function FundPaymentDialog({ open, onOpenChange, target, onPaid, cardOnly, description }: {
+  open: boolean; onOpenChange: (v: boolean) => void; target: Target; onPaid: (paymentId: string) => void; cardOnly?: boolean; description?: string;
 }) {
   const start = useServerFn(startFundPayment);
   const startOffline = useServerFn(startOfflineFundPayment);
@@ -86,7 +86,7 @@ export function FundPaymentDialog({ open, onOpenChange, target, onPaid }: {
       <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Payment</DialogTitle>
-          <DialogDescription>Choose how you'd like to pay. Your request is sent to Harmonious once you confirm.</DialogDescription>
+          <DialogDescription>{description ?? "Choose how you'd like to pay. Your request is sent to Harmonious once you confirm."}</DialogDescription>
         </DialogHeader>
         {offline ? (
           <div className="space-y-3 text-sm">
@@ -115,12 +115,14 @@ export function FundPaymentDialog({ open, onOpenChange, target, onPaid }: {
             <Button variant="outline" className="h-auto flex-col gap-1 py-4" onClick={() => setMethod("card")}>
               <CreditCard className="size-5" />Card<span className="text-xs font-normal text-muted-foreground">Confirmed right away</span>
             </Button>
+            {cardOnly ? null : <>
             <Button variant="outline" className="h-auto flex-col gap-1 py-4" disabled={busy} onClick={() => chooseOffline("wire")}>
               <Landmark className="size-5" />Wire<span className="text-xs font-normal text-muted-foreground">Activates once received</span>
             </Button>
             <Button variant="outline" className="h-auto flex-col gap-1 py-4" disabled={busy} onClick={() => chooseOffline("ach")}>
               <Building2 className="size-5" />ACH<span className="text-xs font-normal text-muted-foreground">Activates once received</span>
             </Button>
+            </>}
           </div>
         )}
         <Button variant="ghost" size="sm" onClick={() => close(false)}>Cancel</Button>
