@@ -1,9 +1,10 @@
 # Roadmap
 
 ## Diagnostic repairs — narrow phase 1 (2026-10-21)
-- [ ] Block authenticated/mutating checks without proven backend isolation and synthetic reviewer sessions.
-- [ ] Repair existing health/audit failed reads, recursive display filtering, email diagnostic authorization, and stale job display.
-- [ ] Run offline targeted checks; report blocked end-to-end checks and separate retention proposal.
+- [x] Current backend metadata confirms production/no development instance; preflight blocks before navigation without reviewed isolation and synthetic sessions.
+- [x] Repair existing health/audit failed reads, recursive display filtering, email diagnostic authorization, and stale job display; no business outcomes changed.
+- [x] 39 offline targeted checks passed; preview build OK; separate retention proposal in docs/diagnostic-phase1-results.md.
+- [ ] Authenticated read-back/positive QA preflight blocked: independently isolated backend and synthetic reviewer evidence unavailable.
 - Retention, webhook replay, payment atomicity, drafts and broad telemetry remain unchanged.
 
 ## Invoice pricing consistency (2026-10-21)

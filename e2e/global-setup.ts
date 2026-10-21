@@ -16,8 +16,10 @@ export default async function globalSetup() {
   const sessions = ["E2E_STAFF_SESSION", "E2E_MANAGER_SESSION", "E2E_INVESTOR_SESSION", "E2E_UNVERIFIED_SESSION", "E2E_CAPTABLE_SESSION", "E2E_CAPTABLE_UNPAID_SESSION"].map(key => parseQaSession(process.env[key], evidence));
   const ids = [...new Set(sessions.map(s => s.session.user.id))];
   if (ids.some(id => !/^[0-9a-f-]{36}$/i.test(id))) throw new Error("BLOCKED: invalid synthetic account identity.");
-  const query = `select user_id,is_test_demo from public.profiles where user_id in (${ids.map(id => `'${id}'`).join(",")})`;
+  const query = `select p.user_id,p.is_test_demo,coalesce((select json_agg(r.role) from public.user_roles r where r.user_id=p.user_id),'[]'::json) as roles from public.profiles p where p.user_id in (${ids.map(id => `'${id}'`).join(",")})`;
   const result = JSON.parse(execFileSync("lovable", ["supabase", "query", query, "--json"], { encoding: "utf8" }));
   const rows = Array.isArray(result) ? result : result.rows;
   if (!Array.isArray(rows) || ids.some(id => !rows.some((r: { user_id: string; is_test_demo: boolean }) => r.user_id === id && r.is_test_demo === true))) throw new Error("BLOCKED: backend synthetic-account classification is unverified.");
+  const reviewer = sessions[0];
+  if (!reviewer || !rows.some((r: { user_id: string; roles: string[] }) => r.user_id === reviewer.session.user.id && Array.isArray(r.roles) && r.roles.some(role => ["admin", "super_admin", "operations"].includes(role)))) throw new Error("BLOCKED: synthetic Harmonious reviewer authority is unverified.");
 }

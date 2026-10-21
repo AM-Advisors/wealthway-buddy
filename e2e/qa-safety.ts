@@ -18,7 +18,7 @@ export function parseQaSession(raw: string | undefined, evidence: QaEvidence) {
     const session = parsed.session;
     const parts = String(session?.access_token ?? "").split(".");
     const claims = JSON.parse(atob((parts[1] ?? "").replace(/-/g, "+").replace(/_/g, "/")));
-    if (parts.length !== 3 || !session?.refresh_token || !session?.user?.id || claims.sub !== session.user.id || !evidence.syntheticUserIds.includes(session.user.id) || !String(claims.iss).includes(`://${evidence.backendId}.supabase.co/auth/v1`) || Number(claims.exp) * 1000 <= Date.now() || parsed.storage_key !== `sb-${evidence.backendId}-auth-token`) throw new Error();
+    if (parts.length !== 3 || !session?.refresh_token || !session?.user?.id || claims.sub !== session.user.id || !evidence.syntheticUserIds.includes(session.user.id) || claims.iss !== `https://${evidence.backendId}.supabase.co/auth/v1` || !Number.isFinite(Number(claims.exp)) || Number(claims.exp) * 1000 <= Date.now() || parsed.storage_key !== `sb-${evidence.backendId}-auth-token`) throw new Error();
     return parsed as { storage_key: string; session: { user: { id: string }; access_token: string; refresh_token: string } };
   } catch { throw new Error("BLOCKED: session is malformed, expired, or not bound to the reviewed synthetic QA backend."); }
 }
