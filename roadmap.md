@@ -1,8 +1,9 @@
 # Roadmap
 
 ## Verified investor details (2026-10-21)
-- [ ] Read citizenship and birthday from approved identity checks and tax-ID last four from the investing profile; align details and missing-info warnings.
-- [ ] Run focused synthetic read-back checks; signed-in browser check blocked on isolated QA access.
+- [x] Read citizenship and birthday from approved identity checks and tax-ID last four from the investing profile; align details and missing-info warnings.
+- [x] Ten focused synthetic read-back checks passed; preview build OK.
+- [ ] Signed-in browser read-back — blocked on isolated QA access; no real investor records changed.
 
 ## Investment amount minimum (2026-10-21)
 - [x] Show the fund's minimum under the Investment amount field on the investor About You step, read from the same offering minimum the server checks the saved amount against; no line when the fund sets none.
