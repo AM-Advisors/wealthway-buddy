@@ -47,7 +47,7 @@ export const STAGE_LABELS: Record<OnboardingStage, string> = {
   tax: "Tax documentation",
   subscription: "Subscription information",
   signature: "Signature required",
-  harmonious_review: "Harmonious review",
+  harmonious_review: "Fund manager review",
   approved_to_fund: "Approved to fund",
   awaiting_funds: "Awaiting funds",
   funded: "Funded",
@@ -610,7 +610,7 @@ export function canInvestorFund(input: FundingGateInput): { allowed: boolean; re
   for (const r of outstandingRequirements(input.requirements)) {
     reasons.push(`${r.label}: ${REQUIREMENT_STATE_LABELS[r.state]}`);
   }
-  if (!input.approvedToFundAt) reasons.push("Harmonious has not yet approved this investor to fund.");
+  if (!input.approvedToFundAt) reasons.push("The fund manager has not yet approved this subscription.");
   if (!["approved_to_fund", "awaiting_funds", "funded", "accepted"].includes(input.stage)) {
     reasons.push("This investment is not at the funding stage.");
   }

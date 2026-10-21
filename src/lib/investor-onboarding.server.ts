@@ -1463,13 +1463,16 @@ export async function reviewDetail(userId: string, onboardingId: string) {
 }
 
 export async function approveToFund(userId: string, input: { onboardingId: string; acceptedAmountCents?: number }) {
-  const actor = await assertStaff(userId);
   const row = await onboardingRow(input.onboardingId);
+  const actor = await onboardingActor(userId);
+  if (!actor.managedOfferingIds.includes(row.offering_id)) forbid("Only a fund manager assigned to this fund may approve the subscription.");
+  if (row.investor_user_id === userId) forbid("Another assigned fund manager must approve your own subscription.");
   const facts = await gatherFacts(row);
   const exceptions = await openExceptions(row.id);
   const blocking = exceptions.filter((e) => e.severity === "blocking").length;
   const outstanding = outstandingRequirements(facts.requirements);
-  if (outstanding.length > 0) fail(`${outstanding[0]!.label} is not complete.`);
+  const firstOutstanding = outstanding[0];
+  if (firstOutstanding) fail(`${firstOutstanding.label} is not complete.`);
   if (blocking > 0) fail("Resolve the open issues on this investment first.");
 
   const accepted = Number(input.acceptedAmountCents ?? row.requested_amount_cents ?? 0);
@@ -1493,7 +1496,7 @@ export async function approveToFund(userId: string, input: { onboardingId: strin
     toStatus: "approved_to_fund",
     detail: { acceptedAmountCents: accepted },
     actorUserId: actor.userId,
-    actorRole: "harmonious",
+    actorRole: "fund_manager",
   });
   await touch(row.id, { stage: "awaiting_funds" });
   await syncInvitation(row);

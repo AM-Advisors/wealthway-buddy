@@ -1,11 +1,11 @@
 /** Pure per-step status for the four investor onboarding steps. Display only; grants no authority. */
 export type StepKey = "about_you" | "verification" | "sign" | "fund";
-export type StepState = "not_started" | "in_progress" | "waiting_harmonious" | "blocked" | "complete";
+export type StepState = "not_started" | "in_progress" | "waiting_harmonious" | "waiting_manager" | "blocked" | "complete";
 export type StepStatus = { key: StepKey; label: string; state: StepState; detail: string };
 
 export const STEP_LABELS: Record<StepKey, string> = { about_you: "About You", verification: "Verification", sign: "Sign", fund: "Fund" };
 export const STEP_STATE_LABELS: Record<StepState, string> = {
-  not_started: "Not started", in_progress: "Waiting on investor", waiting_harmonious: "With Harmonious", blocked: "Needs attention", complete: "Complete",
+  not_started: "Not started", in_progress: "Waiting on investor", waiting_harmonious: "With Harmonious", waiting_manager: "With fund manager", blocked: "Needs attention", complete: "Complete",
 };
 
 const OK = ["verified", "approved", "passed", "clear"];
@@ -28,7 +28,7 @@ export function investorSteps(i: {
     : s("verification", "not_started", "Identity check not started");
   const sign = i.signed ? s("sign", "complete", "Subscription signed")
     : i.outForSignature ? s("sign", "in_progress", "Out for signature")
-    : i.stage === "harmonious_review" ? s("sign", "waiting_harmonious", "Harmonious review")
+    : i.stage === "harmonious_review" ? s("sign", "waiting_manager", "Fund manager review")
     : s("sign", "not_started", "Not sent yet");
   const fund = i.funding === "funded" ? s("fund", "complete", "Funds received and matched")
     : i.funding === "needs_review" ? s("fund", "blocked", "Funding needs review")

@@ -61,6 +61,14 @@ describe("investment readiness engine", () => {
     expect(item(r, "approved_to_fund").status).toBe("not_started");
     expect(r.nextAction?.owner).toBe("investor");
   });
+  it("only the fund manager owns subscription approval; approval never reconciles funds", () => {
+    const pending = computeReadiness(input());
+    expect(item(pending, "approved_to_fund").owner).toBe("fund_manager");
+    expect(item(pending, "approved_to_fund").status).toBe("needs_fund_manager");
+    const approved = computeReadiness(input({ approvedToFundAt: NOW }));
+    expect(item(approved, "approved_to_fund").status).toBe("complete");
+    expect(item(approved, "funding").status).toBe("needs_investor");
+  });
   it("a Harmonious/compliance blocker is not the fund manager's to clear", () => {
     const r = computeReadiness(input({ approvedToFundAt: NOW, fundingStatus: "funded", acceptedAt: NOW, acceptedAmountCents: 1, exceptions: [{ severity: "blocking", owner: "harmonious" }] }));
     expect(r.closeReady).toBe(false);

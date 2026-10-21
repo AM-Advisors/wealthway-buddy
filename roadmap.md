@@ -1,5 +1,11 @@
 # Roadmap
 
+## Fund-manager subscription approval (2026-10-21)
+- [x] Replace staff-only subscription admission with exact-fund manager approval; retain identity, banking and receipt reconciliation controls. Own investment requires another assigned manager.
+- [x] Show Fund manager review and a manager-only approval action on investor details; update stale approval task wording and remove obsolete Operations approval button.
+- [x] 126 focused authorization/readiness/progress checks passed; preview build OK.
+- [ ] Signed-in approval/read-back — blocked on isolated synthetic QA access; no approval recorded on Alyssa's behalf.
+
 ## Signed tax-form details (2026-10-21)
 - [x] Confirm Alyssa's W-9 is certified; connect profile and fund investor tax details to current profile-bound signed forms without exposing full identifiers or changing signatures.
 - [x] Eighteen focused regression checks passed; masked tax-form evidence is read without modifying signed records or either encrypted vault.
