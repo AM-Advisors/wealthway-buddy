@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { acknowledgeDocumentFn } from "@/lib/fund-setup-canonical.functions";
 import { InvestorBankVerify } from "@/components/investor-bank-verify";
 import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
