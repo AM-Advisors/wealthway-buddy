@@ -24,7 +24,7 @@ describe("countersign moves the investor to funding", () => {
 
 describe("investor dashboard next step", () => {
   it("tells the investor funding instructions are ready after approval", () => {
-    expect(investmentAttentionStep({ stage: "awaiting_funds", approved_to_fund_at: "2026-10-21", funding_status: "not_funded" } as any))
+    expect(investmentAttentionStep({ stage: "awaiting_funds", approved_to_fund_at: "2026-10-21", funding_status: "not_funded", instructions_available: true } as any))
       .toEqual({ step: "fund", status: "Funding instructions are ready. Open Fund to send your investment.", waiting: false });
   });
   it("shows waiting on the fund manager after submission", () => {
