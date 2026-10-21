@@ -17,7 +17,7 @@ const offering: PortfolioOffering = {
 const onboarding = (over: Partial<OnboardingHolding> = {}): OnboardingHolding => ({
   id: "onb-1",
   offering_id: "fund-1",
-  stage: "funding",
+  stage: "awaiting_funds",
   commitment_amount_cents: 50000000,
   funded_amount_cents: 10000000,
   application_id: null,
@@ -62,6 +62,18 @@ describe("aggregateOnboardingHoldings", () => {
     expect(rows[0].commitment_cents).toBe(0);
     expect(rows[0].equity_value_cents).toBe(0);
     expect(rows[0].pct_of_committed).toBe(0);
+  });
+
+  it("does not show investments that have not reached the signature stage", () => {
+    for (const stage of ["profile_selected", "eligibility", "verification", "tax", "harmonious_review"]) {
+      expect(aggregateOnboardingHoldings([onboarding({ stage })], new Map([["fund-1", offering]]))).toHaveLength(0);
+    }
+  });
+
+  it("shows signed and later-stage investments as holdings", () => {
+    for (const stage of ["signature", "awaiting_funds", "approved_to_fund", "complete", "closed"]) {
+      expect(aggregateOnboardingHoldings([onboarding({ stage })], new Map([["fund-1", offering]]))).toHaveLength(1);
+    }
   });
 });
 

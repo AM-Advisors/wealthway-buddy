@@ -2,7 +2,17 @@
  * Canonical onboarding investments without a legacy application row still
  * count as portfolio holdings. This helper aggregates them per offering and
  * values each holding at the capital the fund has actually received.
+ *
+ * Only committed stages count: the investment appears in the portfolio once
+ * the investor has signed (subscription stage) or moved on to funding.
  */
+export const ONBOARDING_HOLDING_STAGES = new Set([
+  "signature",
+  "awaiting_funds",
+  "approved_to_fund",
+  "complete",
+  "closed",
+]);
 export type OnboardingHolding = {
   id: string;
   offering_id: string;
@@ -39,6 +49,7 @@ export function aggregateOnboardingHoldings(
 ): OnboardingValueRow[] {
   const totals = new Map<string, { commitment: number; funded: number }>();
   for (const o of onboardings) {
+    if (!ONBOARDING_HOLDING_STAGES.has(o.stage)) continue;
     const cur = totals.get(o.offering_id) ?? { commitment: 0, funded: 0 };
     cur.commitment += Number(o.commitment_amount_cents ?? 0);
     cur.funded += Number(o.funded_amount_cents ?? 0);
