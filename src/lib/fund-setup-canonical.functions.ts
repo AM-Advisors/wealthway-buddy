@@ -9,7 +9,7 @@ const fee = z
   .object({
     ratePercent: z.number().min(0).max(100).nullable(),
     basis: z.enum(["committed_capital", "invested_capital", "nav", "flat"]).nullable(),
-    frequency: z.enum(["one_time", "annual", "quarterly", "monthly"]).nullable(),
+    frequency: z.enum(["annual", "per_capital_call", "one_time", "quarterly", "monthly"]).nullable(),
     effectiveFrom: z.string().max(20).nullish(),
     effectiveTo: z.string().max(20).nullish(),
   })

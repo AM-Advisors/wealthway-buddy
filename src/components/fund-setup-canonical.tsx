@@ -495,7 +495,8 @@ function EconomicsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; o
           <Field label="Frequency">
             <select className="h-9 w-full rounded-md border bg-background px-2 text-sm" disabled={!d.canEdit || isNa("managementFee")} value={isNa("managementFee") ? "na" : fee.frequency ?? ""} onChange={(e) => setFee({ frequency: e.target.value || null })}>
               {isNa("managementFee") ? <option value="na">Not applicable</option> : <option value="">-</option>}
-              <option value="one_time">One time</option><option value="annual">Annual</option><option value="quarterly">Quarterly</option><option value="monthly">Monthly</option>
+              {FEE_FREQUENCY_CHOICES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+              {fee.frequency === "quarterly" || fee.frequency === "monthly" ? <option value={fee.frequency}>{FEE_FREQUENCY_LABEL[fee.frequency]} (older setting)</option> : null}
             </select>
           </Field>
           <Field label="Carry (%)">
