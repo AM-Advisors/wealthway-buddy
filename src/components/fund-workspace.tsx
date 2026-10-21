@@ -22,7 +22,6 @@ import { FundRequests } from "@/components/fund-requests";
 import { updateSetupTaskFn } from "@/lib/fund-setup.functions";
 import { Link } from "@tanstack/react-router";
 import { CloseRequestReview } from "@/components/close-request-review";
-import { FundPayments } from "@/components/fund-payments";
 import { FundDistributions } from "@/components/fund-distributions";
 import { listAllCloseRequests } from "@/lib/fund-close-requests.functions";
 import { useServerFn } from "@tanstack/react-start";
