@@ -1,5 +1,10 @@
 # Roadmap
 
+## Investment amount minimum (2026-10-21)
+- [x] Show the fund's minimum under the Investment amount field on the investor About You step, read from the same offering minimum the server checks the saved amount against; no line when the fund sets none.
+- [x] Three focused checks passed (minimum appears directly under the amount box, absent when no minimum is set); preview build OK.
+- [ ] Signed-in read-back on Alyssa's CORPS Erebor investment — blocked: her preview session stops at the second-step sign-in setup, and browser tests are not run against shared production.
+
 ## Saved-profile selection (2026-10-21)
 - [x] Correct staff/investor role collision on “Use this” using record ownership, retaining profile ownership and closed-investment guards across investor self-service.
 - [x] Reproduced four failures before the correction; all 53 focused synthetic checks now pass; preview build OK.
