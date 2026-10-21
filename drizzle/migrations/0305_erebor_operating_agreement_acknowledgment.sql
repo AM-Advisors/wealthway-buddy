@@ -1,0 +1,1 @@
+UPDATE public.offering_documents SET usage = 'acknowledgment' WHERE offering_id = 'fa5ff8b9-e69e-40b9-b9dc-5c6f54d6c88f' AND title = 'Operating Agreement' AND usage = 'reference';
