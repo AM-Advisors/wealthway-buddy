@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
 
 import { getMyPortfolioValue } from "@/lib/cap-table.functions";
+import { portfolioRowsFromResponse } from "@/lib/my-portfolio-merge";
 import { DiligenceRoom } from "@/components/diligence-room";
 import { DocumentsStep } from "@/components/steps/documents-step";
 import { InvestorSharePanel } from "@/components/investor-share-panel";
@@ -60,7 +61,7 @@ function InvestorFund() {
   const navigate = Route.useNavigate();
   const load = useServerFn(getMyPortfolioValue);
   const { data, isLoading } = useQuery({ queryKey: ["my-portfolio-value"], queryFn: () => load() });
-  const fund = (((data as any)?.funds ?? []) as any[]).find((f) => f.offering_id === offeringId);
+  const fund = portfolioRowsFromResponse(data).find((f) => f.offering_id === offeringId);
   const loadStatus = useServerFn(investorFundStatusFn);
   const status = useQuery({
     queryKey: ["investor-fund-status", offeringId],

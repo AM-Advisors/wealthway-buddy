@@ -3,6 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 
 import { getMyPortfolioValue } from "@/lib/cap-table.functions";
+import { portfolioRowsFromResponse } from "@/lib/my-portfolio-merge";
 import { MyPersonalInvestmentLinks } from "@/components/personal-investment-link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -29,7 +30,7 @@ function money(cents: number | null | undefined) {
 function InvestorHome() {
   const load = useServerFn(getMyPortfolioValue);
   const { data, isLoading } = useQuery({ queryKey: ["my-portfolio-value"], queryFn: () => load() });
-  const funds: any[] = ((data as any)?.funds ?? []) as any[];
+  const funds: any[] = portfolioRowsFromResponse(data);
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 px-4 py-10">

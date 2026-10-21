@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/lib/require-auth";
+import { aggregateOnboardingHoldings, type PortfolioOffering } from "./my-portfolio-merge";
 
 /** One investor's position in a fund, derived from live commitments. */
 export interface CapTableHolder {
@@ -297,15 +298,34 @@ export const getMyPortfolioValue = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
-    const { data: apps } = await supabase
-      .from("investor_applications")
-      .select("id, offering_id, status")
-      .eq("user_id", userId);
+    const [appsResult, onboardingResult] = await Promise.all([
+      supabase
+        .from("investor_applications")
+        .select("id, offering_id, status")
+        .eq("user_id", userId),
+      supabase
+        .from("investor_onboardings")
+        .select("id, offering_id, stage, commitment_amount_cents, funded_amount_cents, application_id")
+        .eq("investor_user_id", userId)
+        .is("removed_at", null)
+        .not("stage", "in", "(declined,cancelled)"),
+    ]);
 
-    const active = ((apps ?? []) as { id: string; offering_id: string; status: string }[]).filter(
+    const active = ((appsResult.data ?? []) as { id: string; offering_id: string; status: string }[]).filter(
       (a) => !EXCLUDED_STATUSES.has(a.status),
     );
-    if (active.length === 0) return [] as MyPortfolioValue[];
+    // Canonical onboarding investments without a legacy application row still
+    // count as holdings; skip ones already represented by an application.
+    const activeAppIds = new Set(active.map((a) => a.id));
+    const onboardingOnly = ((onboardingResult.data ?? []) as {
+      id: string;
+      offering_id: string;
+      stage: string;
+      commitment_amount_cents: number | null;
+      funded_amount_cents: number | null;
+      application_id: string | null;
+    }[]).filter((o) => !o.application_id || !activeAppIds.has(o.application_id));
+    if (active.length === 0 && onboardingOnly.length === 0) return [] as MyPortfolioValue[];
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const offeringIds = Array.from(new Set(active.map((a) => a.offering_id)));
@@ -357,6 +377,11 @@ export const getMyPortfolioValue = createServerFn({ method: "GET" })
         valued_by: valuedByPrice ? "share_price" : "capital",
       });
     }
+
+    // Aggregate onboarding-only investments per offering so a fund never
+    // appears twice, and value them at received capital.
+    rows.push(...aggregateOnboardingHoldings(onboardingOnly, offeringById));
+
     return rows;
   });
 
