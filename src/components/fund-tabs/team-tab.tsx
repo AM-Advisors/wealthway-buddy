@@ -72,6 +72,7 @@ export function TeamTab({ fundId }: { fundId: string }) {
         <CardContent className="space-y-3">
           {d.signedInManagers.length > 0 && <p className="text-xs text-muted-foreground">Signed-in fund managers: {d.signedInManagers.map((m: any) => m.name).join(", ")}</p>}
           {list(people, "No Manager / GP details yet. Add the GP first.")}
+          {editing && !PROVIDERS.includes(editing.team_role) && <MemberEditor key={editing.id ?? `new-${editing.team_role}`} fundId={fundId} member={editing} onClose={() => setEditing(null)} />}
         </CardContent>
       </Card>
 
@@ -83,10 +84,10 @@ export function TeamTab({ fundId }: { fundId: string }) {
           </div>
           <Button size="sm" variant="outline" onClick={() => setEditing({ team_role: "counsel", permissions: [] })}>Add provider</Button>
         </CardHeader>
-        <CardContent>{list(providers, "No providers added yet.")}</CardContent>
+        <CardContent className="space-y-3">{list(providers, "No providers added yet.")}
+          {editing && PROVIDERS.includes(editing.team_role) && <MemberEditor key={editing.id ?? `new-${editing.team_role}`} fundId={fundId} member={editing} onClose={() => setEditing(null)} />}</CardContent>
       </Card>
 
-      {editing && <MemberEditor key={editing.id ?? `new-${editing.team_role}`} fundId={fundId} member={editing} onClose={() => setEditing(null)} />}
     </div>
   );
 }
