@@ -53,7 +53,7 @@ export async function startPriorUpload(db: any, userId: string, input: { fundId:
   return { path, token: data.token as string, signedUrl: data.signedUrl as string };
 }
 
-export async function recordPriorDoc(db: any, userId: string, input: { fundId: string; onboardingId: string; path: string; fileName: string; kind: PriorDocKind; title: string; signedOn: string; note?: string | null; replacesId?: string | null }) {
+export async function recordPriorDoc(db: any, userId: string, input: { fundId: string; onboardingId: string; path: string; fileName: string; kind: PriorDocKind; title: string; signedOn: string; note?: string | null | undefined; replacesId?: string | null | undefined }) {
   const role = await access(db, userId, input.fundId, input.onboardingId);
   const prefix = `prior-imports/${input.fundId}/${input.onboardingId}/`;
   if (!input.path.startsWith(prefix) || input.path.includes("..")) throw new Error("That file isn't for this investor.");
