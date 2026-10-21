@@ -2,6 +2,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/lib/require-auth";
+import { diagnosticText } from "@/lib/diagnostic-filter";
+import { assertDiagnosticReads } from "@/lib/diagnostic-read";
 
 /**
  * Harmonious CapTable - Phase 6: compliance and audit history.
@@ -25,8 +27,8 @@ function describeChange(previous: unknown, next: unknown) {
     const to = after ? after[key] : undefined;
     if (JSON.stringify(from ?? null) === JSON.stringify(to ?? null)) continue;
     const label = key.replace(/_/g, " ");
-    const fromText = from === undefined || from === null ? "" : String(JSON.stringify(from)).slice(0, 60);
-    const toText = to === undefined || to === null ? "-" : String(JSON.stringify(to)).slice(0, 60);
+    const fromText = from === undefined || from === null ? "" : diagnosticText(from, key);
+    const toText = to === undefined || to === null ? "-" : diagnosticText(to, key);
     parts.push(fromText ? `${label}: ${fromText} → ${toText}` : `${label}: ${toText}`);
   }
   return parts.length ? parts.slice(0, 6).join(" · ").replace(/"/g, "") : null;
@@ -55,13 +57,7 @@ export const getCapAuditHistory = createServerFn({ method: "GET" })
     const { supabase } = context;
     const companyId = data.companyId;
 
-    const [
-      { data: company },
-      { data: stakeholders },
-      { data: securities },
-      { data: documents },
-      { data: classes },
-    ] = await Promise.all([
+    const initialReads = await Promise.all([
       supabase
         .from("ct_companies")
         .select("id, name, legal_name, is_demo")
@@ -84,6 +80,8 @@ export const getCapAuditHistory = createServerFn({ method: "GET" })
       supabase.from("ct_security_classes").select("id, name").eq("company_id", companyId),
     ]);
 
+    assertDiagnosticReads(initialReads);
+    const [company, stakeholders, securities, documents, classes] = initialReads.map(r => r.data);
     if (!company) {
       return { company: null, stakeholders: [], entries: [], documents: [], summary: null };
     }
@@ -110,7 +108,9 @@ export const getCapAuditHistory = createServerFn({ method: "GET" })
     if (data.from) txQuery = txQuery.gte("effective_date", data.from);
     if (data.to) txQuery = txQuery.lte("effective_date", data.to);
 
-    const [{ data: events }, { data: transactions }] = await Promise.all([eventQuery, txQuery]);
+    const historyReads = await Promise.all([eventQuery, txQuery]);
+    assertDiagnosticReads(historyReads);
+    const [events, transactions] = historyReads.map(r => r.data);
 
     const holderById = new Map(((stakeholders ?? []) as any[]).map((s) => [s.id, s]));
     const securityById = new Map(((securities ?? []) as any[]).map((s) => [s.id, s]));
@@ -166,7 +166,7 @@ export const getCapAuditHistory = createServerFn({ method: "GET" })
         stakeholderId,
         stakeholder: stakeholderId ? (holderById.get(stakeholderId)?.name ?? null) : null,
         detail: null,
-        reason: (e.reason as string | null) ?? null,
+        reason: e.reason ? "[withheld]" : null,
         change: describeChange(e.previous_state, e.new_state),
         status: null,
       });
@@ -194,7 +194,7 @@ export const getCapAuditHistory = createServerFn({ method: "GET" })
         ]
           .filter(Boolean)
           .join(" · "),
-        reason: (t.reason as string | null) ?? null,
+        reason: t.reason ? "[withheld]" : null,
         change: null,
         status: (t.status as string) ?? null,
       });
@@ -265,8 +265,8 @@ export const getCapAuditHistory = createServerFn({ method: "GET" })
       ).length,
       pendingTransactions: ((transactions ?? []) as any[]).filter((t) => t.status === "pending").length,
       securitiesWithoutDocuments: securityRows.filter((s) => !documentedSecurityIds.has(s.id)).length,
-      firstEntry: entries.length ? entries[entries.length - 1]!.occurredAt : null,
-      lastEntry: entries.length ? entries[0]!.occurredAt : null,
+      firstEntry: entries.length ? entries[entries.length - 1]?.occurredAt ?? null : null,
+      lastEntry: entries.length ? entries[0]?.occurredAt ?? null : null,
     };
 
     return {

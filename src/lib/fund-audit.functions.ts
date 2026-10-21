@@ -1,6 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/lib/require-auth";
+import { diagnosticText } from "@/lib/diagnostic-filter";
+import { assertDiagnosticReads } from "@/lib/diagnostic-read";
 
 export type FundAuditEntry = {
   id: string;
@@ -14,13 +16,7 @@ export type FundAuditEntry = {
 };
 
 const nice = (v: string | null | undefined) => (v ? v.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) : "");
-const SECRET = /account|routing|swift|iban|tin|ssn|ein|tax_id/i;
-const show = (k: string, v: unknown): string => {
-  if (v === null || v === undefined || v === "") return "—";
-  const t = typeof v === "object" ? JSON.stringify(v) : String(v);
-  if (SECRET.test(k) && t.length > 4) return `••${t.slice(-4)}`;
-  return t.length > 300 ? `${t.slice(0, 300)}…` : t;
-};
+const show = (k: string, v: unknown): string => diagnosticText(v, k);
 const flat = (o: unknown) =>
   o && typeof o === "object" && !Array.isArray(o)
     ? Object.entries(o as Record<string, unknown>).map(([k, v]) => ({ label: nice(k), value: show(k, v) }))
@@ -35,7 +31,9 @@ export const fundAuditHistoryFn = createServerFn({ method: "POST" })
     await s.assertFund(context.userId, data.fundId);
     const d: any = await s.db();
     const id = data.fundId;
-    const { data: setups } = await d.from("fund_setups").select("id").eq("offering_id", id);
+    const setupRead = await d.from("fund_setups").select("id").eq("offering_id", id);
+    assertDiagnosticReads([setupRead]);
+    const setups = setupRead.data;
     const setupIds = ((setups ?? []) as { id: string }[]).map((x) => x.id);
     const [audit, subs, names, events, reminders, proposals] = await Promise.all([
       d.from("offering_audit_events").select("id,event_type,changes,summary,actor_id,actor_email,actor_name,created_at").eq("offering_id", id).order("created_at", { ascending: false }).limit(500),
@@ -47,10 +45,13 @@ export const fundAuditHistoryFn = createServerFn({ method: "POST" })
       d.from("fund_setup_reminders").select("id,step,direction,sent_by,channel,created_at").eq("offering_id", id).limit(200),
       d.from("fund_setup_proposals").select("id,field,value,source_kind,source_file_name").eq("offering_id", id).limit(500),
     ]);
+    assertDiagnosticReads([audit, subs, names, events, reminders, proposals]);
     const propMap = new Map<string, any>(((proposals.data ?? []) as any[]).map((p) => [p.id, p]));
-    const decisions = propMap.size
-      ? (await d.from("fund_setup_proposal_decisions").select("id,proposal_id,decision,decided_by,decided_at").in("proposal_id", [...propMap.keys()])).data ?? []
-      : [];
+    const decisionRead = propMap.size
+      ? await d.from("fund_setup_proposal_decisions").select("id,proposal_id,decision,decided_by,decided_at").in("proposal_id", [...propMap.keys()])
+      : { data: [], error: null };
+    assertDiagnosticReads([decisionRead]);
+    const decisions = decisionRead.data ?? [];
 
     const userIds = new Set<string>();
     for (const r of audit.data ?? []) if (r.actor_id && !r.actor_email) userIds.add(r.actor_id);
@@ -61,8 +62,9 @@ export const fundAuditHistoryFn = createServerFn({ method: "POST" })
     for (const r of decisions) if (r.decided_by) userIds.add(r.decided_by);
     const emails = new Map<string, string>();
     if (userIds.size) {
-      const { data: profs } = await d.from("profiles").select("id,email").in("id", [...userIds]);
-      for (const p of profs ?? []) emails.set(p.id, p.email);
+      const profileRead = await d.from("profiles").select("id,email").in("id", [...userIds]);
+      assertDiagnosticReads([profileRead]);
+      for (const p of profileRead.data ?? []) emails.set(p.id, p.email);
     }
     const who = (uid: string | null | undefined) => (uid ? emails.get(uid) ?? "Unknown user" : "System");
 
@@ -72,8 +74,8 @@ export const fundAuditHistoryFn = createServerFn({ method: "POST" })
       const isNote = r.event_type === "staff_note";
       out.push({
         id: `a-${r.id}`, at: r.created_at, who: r.actor_name || r.actor_email || who(r.actor_id), role: isNote || String(r.event_type).startsWith("staff_") ? "Harmonious" : null,
-        action: r.summary || nice(r.event_type), status: null, source: isNote ? "Staff note" : "Fund record",
-        details: changes.length ? changes.map((c: any) => ({ label: nice(c.field), value: c.from === undefined ? String(c.to ?? "—") : `${c.from ?? "—"} → ${c.to ?? "—"}` })) : flat(r.changes),
+        action: nice(r.event_type), status: null, source: isNote ? "Staff note" : "Fund record",
+        details: changes.length ? changes.map((c: any) => ({ label: nice(c.field), value: c.from === undefined ? show(c.field, c.to) : `${show(c.field, c.from)} → ${show(c.field, c.to)}` })) : flat(r.changes),
       });
     }
     for (const r of reminders.data ?? []) out.push({
@@ -86,24 +88,24 @@ export const fundAuditHistoryFn = createServerFn({ method: "POST" })
       out.push({
         id: `pd-${r.id}`, at: r.decided_at, who: who(r.decided_by), role: "Harmonious",
         action: `${r.decision === "accepted" ? "Accepted" : "Skipped"} suggested ${nice(p?.field)}`, status: nice(r.decision), source: "Review",
-        details: [{ label: "Value", value: show(p?.field ?? "", p?.value) }, { label: "Suggested from", value: p?.source_file_name || nice(p?.source_kind) || "—" }],
+        details: [{ label: "Value", value: show(p?.field ?? "", p?.value) }, { label: "Suggested from", value: nice(p?.source_kind) || "—" }],
       });
     }
     for (const r of subs.data ?? []) {
       out.push({
         id: `s-${r.id}`, at: r.submitted_at, who: who(r.submitted_by), role: "Fund manager",
         action: `Submitted ${nice(r.section)}${r.doc_kind ? ` (${nice(r.doc_kind)})` : ""} for review`, status: nice(r.status), source: "Manager submission",
-        details: [...flat(r.payload), ...(r.file_name ? [{ label: "File", value: r.file_name }] : [])],
+        details: [...flat(r.payload), ...(r.file_name ? [{ label: "File", value: show("file_name", r.file_name) }] : [])],
       });
       if (r.reviewed_at) out.push({
         id: `sr-${r.id}`, at: r.reviewed_at, who: who(r.reviewed_by), role: "Harmonious",
         action: `${nice(r.status)} ${nice(r.section)} submission`, status: nice(r.status), source: "Review",
-        details: r.review_note ? [{ label: "Note", value: r.review_note }] : [],
+        details: r.review_note ? [{ label: "Note", value: show("note", r.review_note) }] : [],
       });
     }
     for (const r of names.data ?? []) out.push({
       id: `n-${r.id}`, at: r.created_at, who: who(r.actor_id), role: null, action: "Renamed the fund", status: null, source: "Fund record",
-      details: [{ label: "From", value: r.previous_name ?? "—" }, { label: "To", value: r.new_name ?? "—" }, ...(r.effective_date ? [{ label: "Effective", value: r.effective_date }] : []), ...(r.reason ? [{ label: "Reason", value: r.reason }] : [])],
+      details: [{ label: "From", value: r.previous_name ?? "—" }, { label: "To", value: r.new_name ?? "—" }, ...(r.effective_date ? [{ label: "Effective", value: r.effective_date }] : []), ...(r.reason ? [{ label: "Reason", value: show("reason", r.reason) }] : [])],
     });
     for (const r of events.data ?? []) out.push({
       id: `e-${r.id}`, at: r.created_at, who: who(r.actor_user_id), role: r.actor_role ? nice(r.actor_role) : null,

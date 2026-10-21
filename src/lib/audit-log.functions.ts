@@ -2,6 +2,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/lib/require-auth";
+import { assertDiagnosticReads } from "@/lib/diagnostic-read";
+import { diagnosticText } from "@/lib/diagnostic-filter";
 
 const STAFF_ROLES = [
   "admin",
@@ -56,12 +58,14 @@ const sinceOf = (days: number | null | undefined) =>
 
 /** Lookup tables shared by every tab: fund names, people, applications. */
 async function lookups(context: any) {
-  const [{ data: funds }, { data: people }, { data: apps }, { data: clients }] = await Promise.all([
+  const results = await Promise.all([
     context.supabase.from("offerings").select("id, name"),
     context.supabase.from("profiles").select("user_id, legal_name, email"),
     context.supabase.from("investor_applications").select("id, offering_id, user_id"),
     context.supabase.from("clients").select("id, name"),
   ]);
+  assertDiagnosticReads(results);
+  const [funds, people, apps, clients] = results.map(r => r.data);
   const fundName = new Map<string, string>((funds ?? []).map((f: any) => [f.id, f.name]));
   const clientName = new Map<string, string>((clients ?? []).map((c: any) => [c.id, c.name]));
   const personName = new Map<string, string>(
@@ -92,7 +96,7 @@ const joinDetail = (parts: (string | null | undefined)[]) =>
 /** Trim, sort newest first and apply the free-text search. */
 function finish(rows: AuditEntry[], filters: Filters): { entries: AuditEntry[] } {
   const needle = (filters.search ?? "").toLowerCase().trim();
-  let out = rows;
+  let out = rows.map(r => ({ ...r, summary: diagnosticText(r.summary, "action"), status: r.status == null ? null : diagnosticText(r.status, "status") }));
   if (needle) {
     out = out.filter((r) =>
       [r.actor, r.fundName, r.category, r.summary, r.detail, r.status]
@@ -131,6 +135,7 @@ export const listMoneyAudit = createServerFn({ method: "GET" })
         ).limit(500),
       ]);
 
+    assertDiagnosticReads([requests, confirmations, instructions, approvals, payments, wireDecisions]);
     const decisionRows: AuditEntry[] = ((wireDecisions.data ?? []) as any[]).map((d) => {
       const meta = (d.metadata ?? {}) as Record<string, any>;
       const fund = d.offering_id ?? app.get(d.application_id ?? "")?.offering_id ?? null;
@@ -144,7 +149,7 @@ export const listMoneyAudit = createServerFn({ method: "GET" })
         detail: joinDetail([
           `Previous value: ${meta['previous'] ?? "not set"}`,
           `New value: ${meta['next'] ?? d.outcome ?? "-"}`,
-          d.note,
+          null,
         ]),
         amountCents: (meta['amount_cents'] as number) ?? null,
         status: (meta['next'] ?? d.outcome ?? null) as string | null,
@@ -168,8 +173,8 @@ export const listMoneyAudit = createServerFn({ method: "GET" })
         summary: `Wire request ${r.purpose ? `for ${r.purpose}` : ""}`.trim(),
         detail: joinDetail([
           r.expected_date ? `Expected ${dateOnly(r.expected_date)}` : null,
-          r.note,
-          r.review_note ? `Review: ${r.review_note}` : null,
+          null,
+          null ? `Review: ${null}` : null,
           r.reviewed_at ? `Reviewed ${dateOnly(r.reviewed_at)}` : null,
         ]),
         amountCents: r.amount_cents ?? null,
@@ -191,8 +196,8 @@ export const listMoneyAudit = createServerFn({ method: "GET" })
           c.sending_bank_name,
           c.sending_account_last4 ? `Account •••• ${c.sending_account_last4}` : null,
           c.sent_on ? `Sent ${dateOnly(c.sent_on)}` : null,
-          c.investor_note,
-          c.review_notes ? `Review: ${c.review_notes}` : null,
+          null,
+          null ? `Review: ${null}` : null,
         ]),
         amountCents: c.amount_cents ?? null,
         status: c.status ?? null,
@@ -220,7 +225,7 @@ export const listMoneyAudit = createServerFn({ method: "GET" })
           i.compliance_status ? `Compliance: ${i.compliance_status}` : null,
           i.bank_status ? `Bank: ${i.bank_status}` : null,
           i.pause_reason ? `Paused: ${i.pause_reason}` : null,
-          i.note,
+          null,
         ]),
         amountCents: i.amount_cents ?? null,
         status: i.status ?? null,
@@ -236,7 +241,7 @@ export const listMoneyAudit = createServerFn({ method: "GET" })
         fundName: fund ? (fundName.get(fund) ?? null) : null,
         category: "Payment approval",
         summary: `Instruction ${a.decision ?? "reviewed"}`,
-        detail: joinDetail([a.approver_role ? `As ${a.approver_role}` : null, a.note]),
+        detail: joinDetail([a.approver_role ? `As ${a.approver_role}` : null, null]),
         amountCents: null,
         status: a.decision ?? null,
       });
@@ -257,7 +262,7 @@ export const listMoneyAudit = createServerFn({ method: "GET" })
           p.bank_last4 ? `Account •••• ${p.bank_last4}` : null,
           p.expected_date ? `Expected ${dateOnly(p.expected_date)}` : null,
           p.confirmed_at ? `Confirmed ${dateOnly(p.confirmed_at)}` : null,
-          p.failure_reason,
+          null,
         ]),
         amountCents: p.amount_cents ?? null,
         status: p.status ?? null,
@@ -293,7 +298,7 @@ export const listDistributionAudit = createServerFn({ method: "GET" })
       fundName: d.offering_id ? (fundName.get(d.offering_id) ?? null) : null,
       category: "Distribution",
       summary: `${d.kind ?? "Distribution"} paid ${dateOnly(d.paid_on) ?? ""}`.trim(),
-      detail: d.note ?? null,
+      detail: null ?? null,
       amountCents: d.amount_cents ?? null,
       status: null,
     }));
@@ -324,6 +329,7 @@ export const listInvestorCheckAudit = createServerFn({ method: "GET" })
       ).limit(500),
     ]);
 
+    assertDiagnosticReads([kyc, aml, accreditation, decisions]);
     const who = (applicationId: string) => {
       const a = app.get(applicationId);
       return {
@@ -335,6 +341,8 @@ export const listInvestorCheckAudit = createServerFn({ method: "GET" })
     const rows: AuditEntry[] = [];
 
     const plain = (value: unknown): string | null => {
+      return value == null ? null : diagnosticText(value);
+      /*
       if (value === null || value === undefined) return null;
       if (typeof value === "string") return value || null;
       if (typeof value === "number" || typeof value === "boolean") return String(value);
@@ -344,7 +352,7 @@ export const listInvestorCheckAudit = createServerFn({ method: "GET" })
           .map(([k, v]) => `${k.replace(/_/g, " ")}: ${v}`);
         return entries.length ? entries.join(", ") : null;
       }
-      return null;
+      return null; */
     };
 
     for (const k of (kyc.data ?? []) as any[]) {
@@ -389,7 +397,7 @@ export const listInvestorCheckAudit = createServerFn({ method: "GET" })
           w.person ? `Investor ${w.person}` : null,
           `Previous value: ${meta['previous'] ?? "not set"}`,
           `New value: ${meta['next'] ?? d.outcome ?? "-"}`,
-          d.note,
+          null,
         ]),
         amountCents: null,
         status: (meta['next'] ?? d.outcome ?? null) as string | null,
@@ -434,7 +442,7 @@ export const listInvestorCheckAudit = createServerFn({ method: "GET" })
           r.verified_at ? `Verified ${dateOnly(r.verified_at)}` : null,
           r.expires_at ? `Expires ${dateOnly(r.expires_at)}` : null,
           r.reviewer_id ? `Reviewed by ${personName.get(r.reviewer_id) ?? "staff"}` : null,
-          r.review_notes,
+          null,
         ]),
         amountCents: null,
         status: r.status ?? null,
@@ -474,7 +482,7 @@ export const listFilingAudit = createServerFn({ method: "GET" })
         f.due_date ? `Due ${dateOnly(f.due_date)}` : null,
         f.filed_on ? `Filed ${dateOnly(f.filed_on)}` : null,
         f.reference ? `Reference ${f.reference}` : null,
-        f.note,
+        null,
       ]),
       amountCents: null,
       status: f.status ?? null,
@@ -508,13 +516,13 @@ export const listHoldAudit = createServerFn({ method: "GET" })
           ? (clientName.get(h.client_id) ?? null)
           : null,
       category: "Compliance hold",
-      summary: `${String(h.scope ?? "").replace(/_/g, " ")} paused - ${String(h.reason ?? "").replace(/_/g, " ")}`,
+      summary: `${String(h.scope ?? "").replace(/_/g, " ")} paused - ${String(null ?? "").replace(/_/g, " ")}`,
       detail: joinDetail([
         h.placed_at ? `Placed ${dateOnly(h.placed_at)}` : null,
         h.cleared_at ? `Cleared ${dateOnly(h.cleared_at)}` : null,
-        h.remediation ? `Resolves with: ${h.remediation}` : null,
-        h.client_explanation ? `Client sees: ${h.client_explanation}` : null,
-        h.internal_note ? `Internal: ${h.internal_note}` : null,
+        null ? `Resolves with: ${null}` : null,
+        null ? `Client sees: ${null}` : null,
+        null ? `Internal: ${null}` : null,
       ]),
       amountCents: null,
       status: h.status ?? null,
@@ -540,7 +548,7 @@ export const listScopeAudit = createServerFn({ method: "GET" })
 
     const short = (v: unknown) => {
       if (v === null || v === undefined) return null;
-      const text = typeof v === "string" ? v : JSON.stringify(v);
+      const text = diagnosticText(v);
       return text.length > 180 ? `${text.slice(0, 180)}…` : text;
     };
 
@@ -618,7 +626,7 @@ export const listRecordChangeAudit = createServerFn({ method: "GET" })
 
     const short = (v: unknown) => {
       if (v === null || v === undefined || v === "") return "(empty)";
-      const text = typeof v === "string" ? v : JSON.stringify(v);
+      const text = diagnosticText(v);
       return text.length > 140 ? `${text.slice(0, 140)}…` : text;
     };
 
@@ -648,7 +656,7 @@ export const listRecordChangeAudit = createServerFn({ method: "GET" })
         detail: joinDetail([
           `Before: ${short(e.previous_name)}`,
           e.effective_date ? `Effective: ${e.effective_date}` : null,
-          e.reason ? `Reason: ${e.reason}` : null,
+          null ? `Reason: ${null}` : null,
         ]),
         amountCents: null,
         status: null,
