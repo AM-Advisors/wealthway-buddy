@@ -317,7 +317,7 @@ export function EligibilityPanel({ onboardingId, done }: { onboardingId: string;
 }
 
 /** Shared Sign forms: determine the applicable form before presenting certification. */
-export function TaxSignPanel({ onboardingId, done }: { onboardingId: string; done: () => void }) {
+export function TaxSignPanel({ onboardingId, done, locked = false, subscriberName }: { onboardingId: string; done: () => void; locked?: boolean; subscriberName?: string | null }) {
   const q = useCompliance(onboardingId);
   const qc = useQueryClient();
   const refresh = () => {
@@ -327,24 +327,27 @@ export function TaxSignPanel({ onboardingId, done }: { onboardingId: string; don
   if (q.isPending) return <p className="text-sm text-muted-foreground">Loading your tax form…</p>;
   if (q.error || !q.data) return <LoadError error={q.error} what="Your tax form" onRetry={() => void q.refetch()} audience="account" />;
   if (q.data.tax.state === "not_applicable") return null;
+  if (locked && q.data.tax.state !== "valid") {
+    return <Card><CardContent className="pt-6 text-sm text-muted-foreground">Your IRS tax form ({q.data.tax.form?.title ?? "chosen in question 9"}) is next. Submit the investor questions above to open it.</CardContent></Card>;
+  }
   return (
     <section aria-label="Tax form" className="space-y-4">
-      {q.data.tax.state !== "valid" && q.data.taxIntake.state !== "valid" ? (
+      {q.data.tax.state !== "valid" && !q.data.tax.form && q.data.taxIntake.state !== "valid" ? (
         <TaxIntakeCard key={JSON.stringify(q.data.taxIntake.answers)} onboardingId={onboardingId} d={q.data} refresh={refresh} />
       ) : null}
-      <TaxFormSignaturePanel onboardingId={onboardingId} done={done} />
+      <TaxFormSignaturePanel onboardingId={onboardingId} done={done} defaultName={subscriberName ?? null} />
     </section>
   );
 }
 
 /** Review the populated official IRS form, then Certify & Sign. No countersignature. */
-function TaxFormSignaturePanel({ onboardingId, done }: { onboardingId: string; done: () => void }) {
+function TaxFormSignaturePanel({ onboardingId, done, defaultName }: { onboardingId: string; done: () => void; defaultName?: string | null }) {
   const q = useCompliance(onboardingId);
   const qc = useQueryClient();
   const previewFn = useServerFn(previewTaxFormFn);
   const taxFn = useServerFn(certifyTaxFormFn);
   const docFn = useServerFn(myTaxDocumentUrlFn);
-  const [legalName, setLegalName] = useState("");
+  const [legalName, setLegalName] = useState(defaultName ?? "");
   const [tin, setTin] = useState("");
   const [foreignTin, setForeignTin] = useState("");
   const [sig, setSig] = useState("");

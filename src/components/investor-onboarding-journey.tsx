@@ -475,11 +475,12 @@ function Sign({ d, onboardingId, done }: { d: any; onboardingId: string; done: (
   const docs: any[] = d.documents ?? [];
   const questionnaireDone = (d.requirements ?? []).find((r: any) => r.key === "subscription_questionnaire")?.state !== "missing";
   const signed = (d.requirements ?? []).find((r: any) => r.key === "signature")?.state === "valid";
+  const taxState = (d.requirements ?? []).find((r: any) => r.key === "tax_documentation")?.state;
+  const taxReady = !taxState || taxState === "valid" || taxState === "not_applicable" || signed;
   const fees = useFeesAccepted(onboardingId);
 
   return (
     <div className="space-y-5">
-    <TaxSignPanel onboardingId={onboardingId} done={done} />
     <Card>
       <CardHeader>
         <CardTitle>Review &amp; Sign</CardTitle>
@@ -490,12 +491,16 @@ function Sign({ d, onboardingId, done }: { d: any; onboardingId: string; done: (
           <QuestionnaireForm d={d} onboardingId={onboardingId} done={questionnaireDone} locked={signed} onSave={(answers, submit) => saveQ.mutate({ data: { onboardingId, answers, submit } } as any)} saving={saveQ.isPending} />
         ) : null}
 
+        <TaxSignPanel onboardingId={onboardingId} done={done} locked={!questionnaireDone} subscriberName={(d.questionnaireLocked?.name_of_subscriber ?? (d.questionnaireResponses ?? {}).name_of_subscriber ?? null) as string | null} />
+
         <FeeAcceptanceCard onboardingId={onboardingId} />
 
         <div className="space-y-2">
           <h3 className="text-sm font-semibold">Subscription documents</h3>
           {!questionnaireDone ? (
             <p className="text-sm text-muted-foreground">Submit the questionnaire above to unlock your subscription documents.</p>
+          ) : !taxReady ? (
+            <p className="text-sm text-muted-foreground">Sign your IRS tax form above to unlock your subscription documents.</p>
           ) : (
             <ol className="space-y-2">
               {docs.map((doc, i) => {
