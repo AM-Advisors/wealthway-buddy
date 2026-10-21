@@ -83,7 +83,7 @@ export async function generateSideLetterForPayment(paymentId: string) {
   if (error) { console.error("[side letter]", error.message); return null; }
   const bytes = await renderPdf(sideLetterText({ fundName: o.legal_entity_name || o.name, investorName: label, commitmentCents: commitment, minimumCents: Number(o.min_investment_cents), date: today }));
   const path = `side-letters/${ob.offering_id}/${letter.id}.pdf`;
-  const up = await d.storage.from("offering-files").upload(path, new Blob([bytes], { type: "application/pdf" }), { contentType: "application/pdf", upsert: false });
+  const up = await d.storage.from("offering-files").upload(path, new Blob([bytes as BlobPart], { type: "application/pdf" }), { contentType: "application/pdf", upsert: false });
   if (up.error) console.error("[side letter pdf]", up.error.message);
   await d.from("side_letters").update({ document_reference: up.error ? null : path }).eq("id", letter.id);
   const snapshot = {
