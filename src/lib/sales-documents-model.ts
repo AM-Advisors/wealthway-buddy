@@ -57,16 +57,38 @@ const FREQ_ORDER = ["one_time", "monthly", "quarterly", "annual"];
 const PER_YEAR: Record<string, number> = { monthly: 12, quarterly: 4, annual: 1 };
 const TOTAL_WORD: Record<string, string> = { one_time: "One-time total", monthly: "Monthly total", quarterly: "Quarterly total", annual: "Annual total" };
 
+const PER_MONTH: Record<string, number> = { monthly: 1, quarterly: 1 / 3, annual: 1 / 12 };
+const BILLED_EVERY: Record<string, string> = { monthly: "every month", quarterly: "every 3 months", annual: "once a year" };
+const BILLED_WORD: Record<string, string> = { monthly: "monthly", quarterly: "quarterly", annual: "annually" };
+
+/** Client-friendly pricing: recurring services shown as a monthly rate, plus what is actually billed and when. */
 export function pricingText(lines: LockFacts["lines"]): string {
   if (!lines.length) return "Pricing will appear here once services are added to the quote.";
   const freqOf = (l: LockFacts["lines"][number]) => (l.billing_frequency && FREQ_WORD[l.billing_frequency] ? l.billing_frequency : "one_time");
-  const rows = lines.map((l) => `- ${cleanLabel(l.label)}: ${l.quantity} x ${money(l.unit_cents)} = ${money(l.line_cents)} ${FREQ_WORD[freqOf(l)]}`);
-  const by: Record<string, number> = {};
-  for (const l of lines) by[freqOf(l)] = (by[freqOf(l)] ?? 0) + Number(l.line_cents || 0);
-  const totals = FREQ_ORDER.filter((f) => by[f] !== undefined).map((f) => `${TOTAL_WORD[f]}: ${money(by[f]!)}`);
-  const recurring = Object.entries(by).filter(([f]) => PER_YEAR[f]).reduce((s, [f, c]) => s + c * PER_YEAR[f]!, 0);
-  if (recurring > 0) totals.push(`Annual equivalent (recurring fees): ${money(recurring)}`);
-  return `${rows.join("\n")}\n${totals.join("\n")}\n(Pricing from the approved quote.)`;
+  const recurring = lines.filter((l) => freqOf(l) !== "one_time");
+  const oneTime = lines.filter((l) => freqOf(l) === "one_time");
+  const monthlyOf = (l: LockFacts["lines"][number]) => Math.round(Number(l.line_cents || 0) * PER_MONTH[freqOf(l)]!);
+  const out: string[] = [];
+  if (recurring.length) {
+    const monthly = recurring.reduce((s, l) => s + monthlyOf(l), 0);
+    out.push(`Your monthly rate: ${money(monthly)} per month`);
+    const by: Record<string, number> = {};
+    for (const l of recurring) by[freqOf(l)] = (by[freqOf(l)] ?? 0) + Number(l.line_cents || 0);
+    for (const f of ["monthly", "quarterly", "annual"]) if (by[f] !== undefined) out.push(`Billed ${BILLED_WORD[f]}: ${money(by[f]!)} ${BILLED_EVERY[f]}`);
+    out.push("");
+    out.push("What's included:");
+    for (const l of recurring) out.push(`- ${cleanLabel(l.label)}${Number(l.quantity) > 1 ? ` (x${l.quantity})` : ""}: ${money(monthlyOf(l))} per month, billed ${money(Number(l.line_cents))} ${BILLED_WORD[freqOf(l)]}`);
+  }
+  if (oneTime.length) {
+    if (out.length) out.push("");
+    const total = oneTime.reduce((s, l) => s + Number(l.line_cents || 0), 0);
+    out.push(`One-time fees: ${money(total)}, billed once when you sign`);
+    for (const l of oneTime) out.push(`- ${cleanLabel(l.label)}${Number(l.quantity) > 1 ? ` (x${l.quantity})` : ""}: ${money(Number(l.line_cents))}`);
+  }
+  out.push("");
+  out.push("How to get started: accept this proposal, sign the MSA and SOW we send you, and your first invoice follows. Pay by card, ACH or wire.");
+  out.push("(Pricing from the approved quote.)");
+  return out.join("\n");
 }
 
 export function termsText(msa: MsaFacts | undefined): string {
