@@ -51,18 +51,33 @@ export async function investorGrid(fundId: string) {
   if (fundError) throw new Error("Fund class settings could not be loaded. Please try again.");
   const classApplicable = fund?.has_multiple_classes === true;
   const { data } = await (await db()).from("investor_onboardings")
-    .select("id, stage, funding_status, commitment_amount_cents, accepted_amount_cents, requested_amount_cents, funded_amount_cents, approved_to_fund_at, funding_released_at, executed_snapshot, last_activity_at, updated_at, person_id, application_id, investor_user_id, offering_class_key, questionnaire_submitted_at, investment_profiles(legal_name, profile_type)")
+    .select("id, stage, funding_status, commitment_amount_cents, accepted_amount_cents, requested_amount_cents, funded_amount_cents, approved_to_fund_at, funding_released_at, executed_snapshot, last_activity_at, updated_at, person_id, application_id, investor_user_id, offering_class_key, questionnaire_submitted_at, investment_profiles(legal_name, profile_type, tax_id_last4)")
     .eq("offering_id", fundId).is("removed_at", null).order("created_at");
   // No foreign key from investor_onboardings.person_id, so persons are loaded separately.
   const ids = [...new Set(((data ?? []) as any[]).map((o) => o.person_id).filter(Boolean))];
   const { data: people } = ids.length
-    ? await (await db()).from("persons").select("id, legal_first_name, legal_last_name, preferred_name, email, phone, kyc_status, aml_status, date_of_birth, address_line1, city, postal_code, tax_id_last4").in("id", ids)
+    ? await (await db()).from("persons").select("id, legal_first_name, legal_last_name, preferred_name, email, phone, kyc_status, aml_status, date_of_birth, citizenship_country, address_line1, city, postal_code, tax_id_last4").in("id", ids)
     : { data: [] as any[] };
   const byId = new Map(((people ?? []) as any[]).map((p) => [p.id, p]));
+  const { data: checks, error: checksError } = ids.length
+    ? await (await db()).from("kyc_verifications").select("person_id, verified_date_of_birth, decision, completed_at").in("person_id", ids).eq("status", "approved").order("completed_at", { ascending: false })
+    : { data: [] as any[], error: null };
+  if (checksError) throw new Error("Verified investor details could not be loaded. Please try again.");
+  const verifiedByPerson = new Map<string, any>();
+  for (const check of (checks ?? []) as any[]) {
+    if (check.completed_at && !verifiedByPerson.has(check.person_id)) verifiedByPerson.set(check.person_id, check);
+  }
   const human = (s: string | null | undefined) => s ? s.replace(/[_-]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) : null;
   return ((data ?? []) as any[]).map((o) => {
     const p = byId.get(o.person_id) ?? {};
     const entity = !!o.investment_profiles?.profile_type && o.investment_profiles.profile_type !== "individual";
+    const verified = verifiedByPerson.get(o.person_id);
+    const identity = verified?.decision?.id_verification ?? verified?.decision?.id_verifications?.[0];
+    const dateOfBirth = verified?.verified_date_of_birth || p.date_of_birth || null;
+    // Nationality is citizenship; an ID's issuing country is not citizenship.
+    const citizenship = identity?.nationality || p.citizenship_country || null;
+    // An entity's EIN must never fall back to its signer's personal tax ID.
+    const taxIdLast4 = o.investment_profiles?.tax_id_last4 || (!entity ? p.tax_id_last4 : null) || null;
     const kyc = p.kyc_status ?? "not_started";
     const aml = p.aml_status ?? "not_started";
     const funding = canonicalFundingState({ fundingStatus: o.funding_status, approvedToFund: !!o.approved_to_fund_at, instructionsReleased: !!o.funding_released_at });
@@ -76,8 +91,8 @@ export async function investorGrid(fundId: string) {
     if (!p.email) missing.push("Email");
     if (!p.phone) missing.push("Phone");
     if (!p.address_line1 || !p.city || !p.postal_code) missing.push("Address");
-    if (!p.date_of_birth && !entity) missing.push("Date of birth");
-    if (!p.tax_id_last4) missing.push("Tax ID");
+    if (!dateOfBirth && !entity) missing.push("Date of birth");
+    if (!taxIdLast4) missing.push("Tax ID");
     if (!committedCents) missing.push("Commitment amount");
     if (!o.questionnaire_submitted_at) missing.push("Questionnaire");
     if (!kycOk) missing.push(entity ? "KYB/AML check" : "KYC/AML check");
@@ -88,6 +103,9 @@ export async function investorGrid(fundId: string) {
       profileName: o.investment_profiles?.legal_name ?? null,
       email: p.email ?? null,
       phone: p.phone ?? null,
+      dateOfBirth,
+      citizenship,
+      taxIdLast4,
       classApplicable,
       classLabel: human(o.offering_class_key),
       assetLabel: human(o.investment_profiles?.profile_type),
@@ -124,12 +142,11 @@ export async function investorDetail(fundId: string, onboardingId: string) {
     o.application_id ? d.from("investor_documents").select("id, file_name, doc_kind, uploaded_at, review_status").eq("application_id", o.application_id) : Promise.resolve({ data: [] }),
   ]);
   const p = o.persons ?? {};
-  const grid = (await investorGrid(fundId)).find((r) => r.id === onboardingId)!;
+  const grid = (await investorGrid(fundId)).find((r) => r.id === onboardingId);
+  if (!grid) throw new Error("That investor is not available in this fund.");
   return {
     ...grid,
     address: [p.address_line1, p.address_line2, p.city, p.region, p.postal_code, p.country].filter(Boolean).join(", ") || null,
-    citizenship: p.citizenship_country ?? null,
-    taxIdLast4: p.tax_id_last4 ?? null,
     investmentDate: o.investment_date ?? null,
     classKey: o.offering_class_key ?? null,
     sideLetters: (letters ?? []) as any[],

@@ -317,6 +317,7 @@ export function InvestorSheet({ fundId, id, onClose }: { fundId: string; id: str
               <h4 className="mb-1 font-medium">Contact</h4>
               <dl className="divide-y">
                 <Row k="Email" v={d.email} /><Row k="Phone" v={d.phone} /><Row k="Address" v={d.address} /><Row k="Citizenship" v={d.citizenship} />
+                {d.assetLabel === "Individual" && <Row k="Date of birth" v={d.dateOfBirth} />}
               </dl>
             </section>
 
