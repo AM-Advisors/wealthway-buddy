@@ -38,6 +38,7 @@ const INVESTOR_NAV: ClientNavLink[] = [
   { title: "My Funds", url: "/my-funds", icon: "building" },
   { title: "Activity", url: "/activity", icon: "history" },
   { title: "Portfolio", url: "/my-portfolio", icon: "pie" },
+  { title: "Wealth & services", url: "/wealth", icon: "pie" },
   { title: "Reports", url: "/investor-reporting", icon: "report" },
   { title: "Report Cards", url: "/investor-report-cards", icon: "report" },
   { title: "Documents", url: "/documents", icon: "document" },
@@ -57,6 +58,7 @@ const FUND_MANAGER_NAV: ClientNavLink[] = [
   { title: "Investor onboarding", url: "/manager/investor-onboarding", icon: "people" },
   { title: "Capital", url: "/manager/capital", icon: "money" },
   { title: "Portfolio", url: "/manager/portfolio", icon: "pie" },
+  { title: "Wealth & services", url: "/wealth", icon: "pie" },
   { title: "Reports", url: "/manager/reporting", icon: "report" },
   { title: "Report Cards", url: "/manager/report-cards", icon: "report" },
   { title: "Financial reviews", url: "/manager/financial-reviews", icon: "report" },
@@ -70,6 +72,7 @@ const FUND_MANAGER_NAV: ClientNavLink[] = [
 
 const COMPANY_NAV: ClientNavLink[] = [
   { title: "Home", url: "/client/home", icon: "home" },
+  { title: "Wealth & services", url: "/wealth", icon: "pie" },
   { title: "Funds", url: "/client/funds", icon: "briefcase" },
   { title: "Cap Table", url: "/client/cap-table", icon: "pie" },
   { title: "Stakeholders", url: "/client/cap-table/investors", icon: "people" },
@@ -218,6 +221,7 @@ export function workspaceOptionsFromFacts(
 export function accountMenu(options: { isProfessional: boolean }): ClientNavLink[] {
   const links: ClientNavLink[] = [
     { title: "My profile", url: "/profile" },
+    { title: "Wealth & services", url: "/wealth" },
     { title: "Investment profiles", url: "/profile?section=profiles" },
     { title: "Security", url: "/profile?section=security" },
     { title: "Who can see my information", url: "/access" },

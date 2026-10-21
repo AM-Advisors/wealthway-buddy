@@ -11,7 +11,7 @@ export const getWealthServices = createServerFn({ method: 'GET' }).middleware([r
   ]);
   if (selections.error || holdings.error || funds.error) throw new Error('Your wealth records could not be loaded. Please try again.');
   const history = (holdings.data ?? []) as WealthObservation[];
-  return { selections: selections.data ?? [], history, holdings: currentWealthHoldings(history, context.userId, new Date().toISOString().slice(0,10)), funds: (funds.data ?? []).map(f => ({ id: f.offering_id, name: f.offerings?.name ?? 'Fund' })) };
+  return { selections: selections.data ?? [], history, holdings: currentWealthHoldings(history, context.userId, new Date().toISOString().slice(0,10)), funds: (funds.data ?? []).map(f => ({ id: f.offering_id, name: (Array.isArray(f.offerings) ? f.offerings[0]?.name : (f.offerings as {name?:string} | null)?.name) ?? 'Fund' })) };
 });
 export const selectWealthServices = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ offeringId: z.string().uuid().nullable(), services: z.array(z.enum(['portfolio','report_cards'])).max(2) }).parse(d))
