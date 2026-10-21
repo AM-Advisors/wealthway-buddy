@@ -127,12 +127,12 @@ async function investorName(db: any, userId: string | null) {
 export async function notifyInvestorSignedForReview(n: { offeringId: string; investorUserId: string | null; documentTitle: string; signatureId: string }) {
   try {
     const { supabaseAdmin: db } = (await import("@/integrations/supabase/client.server")) as any;
-    const investor = await investorName(db, n.investorUserId);
-    await emailFundManagers(db, n.offeringId, `investor-signed:${n.signatureId}`, {
-      headline: "An investor signed - approve or decline",
-      intro: `${investor} signed ${n.documentTitle}. Review it under Approvals and approve or decline. Your countersignature opens after you approve.`,
-      details: [{ label: "Investor", value: investor }, { label: "Document", value: n.documentTitle }],
-    });
+    const { data: sig } = await db.from('document_signatures').select('application_id').eq('id', n.signatureId).maybeSingle();
+    if (!sig?.application_id) return;
+    const { data: ob } = await db.from('investor_onboardings').select('id').eq('application_id', sig.application_id).eq('offering_id', n.offeringId).is('removed_at', null).maybeSingle();
+    if (!ob) return;
+    const { notifyInvestorApproval } = await import('@/lib/investor-approval-notify.server');
+    await notifyInvestorApproval({ onboardingId: ob.id, action: 'review', ref: `signature:${n.signatureId}` });
   } catch (e) { console.error("investor signed notify", e); }
 }
 
