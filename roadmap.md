@@ -5,9 +5,10 @@
 - [ ] Signing-screen screenshot blocked by account authenticator setup in Alyssa's own authorized session; no Thomas impersonation or security bypass performed.
 
 ## Combined wealth dashboard (2026-10-21)
-- [ ] Combine owned fund investments, personal holdings and connected balances without treating managed funds as personal assets or double-counting securities.
-- [ ] Net worth by currency with recorded debts; dated cash-flow view using canonical investor activity and owner-recorded personal activity.
-- [ ] Focused calculation/privacy checks; signed-in QA requires an isolated synthetic environment.
+- [x] Combine owned fund investments, personal holdings and connected balances; securities are not added to brokerage balances twice and sandbox balances are excluded.
+- [x] Net worth by currency with append-only debt corrections; dated cash flow from posted fund receipts and owner-recorded personal activity, plus summary export.
+- [x] 69 focused wealth/account/distribution checks passed; preview build OK.
+- [ ] Signed-in dashboard QA requires an isolated synthetic environment; live feeds remain sandbox-only and no financial data was changed for testing.
 
 ## Read-only account aggregation (2026-10-21)
 - [x] Owner-only encrypted bank/brokerage connections, consent history and immutable snapshots, isolated from fund books and payments.
