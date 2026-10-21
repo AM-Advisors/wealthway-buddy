@@ -77,3 +77,16 @@ export function applyLocked(answers: Record<string, unknown>, locked: Record<str
   }
   return next;
 }
+
+const isUS = (c: unknown) => ["US", "USA", "UNITED STATES"].includes(String(c ?? "").trim().toUpperCase());
+
+/**
+ * U.S. person for question 9, from Verification: individuals by citizenship
+ * (verified ID's issuing country when citizenship isn't recorded); entities by
+ * the country they were formed in. Null = Verification doesn't say.
+ */
+export function usPersonFromVerification(f: { isIndividual: boolean; citizenshipCountry?: string | null; documentCountry?: string | null; entityCountry?: string | null }): boolean | null {
+  const c = f.isIndividual ? (f.citizenshipCountry || f.documentCountry) : f.entityCountry;
+  if (!c || !String(c).trim()) return null;
+  return isUS(c);
+}
