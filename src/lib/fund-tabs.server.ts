@@ -83,7 +83,7 @@ export async function investorGrid(fundId: string) {
     const taxIdLast4 = taxDetails.get(o.investment_profile_id)?.last4 || o.investment_profiles?.tax_id_last4 || (!entity ? p.tax_id_last4 : null) || null;
     const kyc = p.kyc_status ?? "not_started";
     const aml = p.aml_status ?? "not_started";
-    const funding = canonicalFundingState({ fundingStatus: o.funding_status, approvedToFund: !!o.approved_to_fund_at, instructionsReleased: !!o.funding_released_at });
+    const funding = canonicalFundingState({ fundingStatus: o.funding_status, approvedToFund: !!o.approved_to_fund_at, instructionsReleased: !!o.approved_to_fund_at && fundRelease.available });
     const kycOk = ["verified", "approved", "passed", "clear"].includes(kyc) && ["clear", "passed", "approved", "verified"].includes(aml);
     const committedCents = o.commitment_amount_cents ?? o.accepted_amount_cents ?? o.requested_amount_cents ?? null;
     const docs = docStatus(o);

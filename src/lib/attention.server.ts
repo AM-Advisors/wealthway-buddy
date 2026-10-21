@@ -80,8 +80,13 @@ async function investorItems(ctx: Ctx, n: Names): Promise<AttentionItem[]> {
         .limit(LIMIT),
     ),
   );
+  const approvedFunds = (investments as any[]).filter((i) => i.approved_to_fund_at).map((i) => i.offering_id as string);
+  const release = approvedFunds.length
+    ? await safely(async () => (await import("@/lib/wire-release.server")).wireReleaseStates(approvedFunds)).catch(() => null)
+    : null;
   for (const inv of investments as any[]) {
-    const step = investmentAttentionStep(inv);
+    const rel = release instanceof Map ? release.get(inv.offering_id) : undefined;
+    const step = investmentAttentionStep({ ...inv, instructions_available: rel?.available === true });
     if (!step) continue;
     const fundName = n.funds.get(inv.offering_id) ?? null;
     out.push(
