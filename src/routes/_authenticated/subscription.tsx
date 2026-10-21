@@ -128,7 +128,7 @@ function SubscriptionPage() {
         </p>
       </header>
 
-      <ApplicationChecklist taxClassification={taxClassification} />
+      <ApplicationChecklist />
 
 
       {sub?.status === "confirmed" ? (
