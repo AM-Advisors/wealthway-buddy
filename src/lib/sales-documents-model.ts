@@ -86,7 +86,7 @@ export function pricingText(lines: LockFacts["lines"]): string {
     for (const l of oneTime) out.push(`- ${cleanLabel(l.label)}${Number(l.quantity) > 1 ? ` (x${l.quantity})` : ""}: ${money(Number(l.line_cents))}`);
   }
   out.push("");
-  out.push("How to get started: accept this proposal, sign the MSA and SOW we send you, and your first invoice follows. Pay by card, ACH or wire.");
+  out.push("How to get started: accept this proposal, sign the MSA and SOW we send you, and your first invoice follows. You can pay each invoice online by card.");
   out.push("(Pricing from the approved quote.)");
   return out.join("\n");
 }
