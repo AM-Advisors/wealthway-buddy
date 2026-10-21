@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  decideSalesDocument, draftSalesDocumentWithAi, exportSalesDocument, getSalesDocument, requestMarketingHelp, returnMarketingAssist,
+  decideSalesDocument, draftSalesDocumentWithAi, exportSalesDocument, getSalesDocument,
   saveSalesDocumentSections, sendSalesDocument, setSalesDocumentOutcome, submitSalesDocument, uploadSalesDocumentSource,
 } from "@/lib/sales-documents.functions";
 import { DIRECTION_LABEL, KIND_LABEL, OUTCOMES, STATUS_LABEL, type DocDirection, type DocKind, type Section } from "@/lib/sales-documents-model";
@@ -21,7 +21,7 @@ export const Route = createFileRoute("/_authenticated/sales_/documents_/$id")({
       { title: "Document editor - Harmonious Sales" },
       { name: "description", content: "Edit, approve and send a proposal, RFP or RFQ." },
       { property: "og:title", content: "Document editor - Harmonious Sales" },
-      { property: "og:description", content: "Draft with AI, get Marketing help, approve and send." },
+      { property: "og:description", content: "Standardized proposal built from the quote and MSA; approve and send." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex" },
@@ -39,8 +39,6 @@ function Editor() {
   const save = useServerFn(saveSalesDocumentSections);
   const ai = useServerFn(draftSalesDocumentWithAi);
   const upload = useServerFn(uploadSalesDocumentSource);
-  const help = useServerFn(requestMarketingHelp);
-  const giveBack = useServerFn(returnMarketingAssist);
   const submit = useServerFn(submitSalesDocument);
   const decide = useServerFn(decideSalesDocument);
   const send = useServerFn(sendSalesDocument);
@@ -52,7 +50,6 @@ function Editor() {
   const [dirty, setDirty] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [brief, setBrief] = useState("");
-  const [helpNote, setHelpNote] = useState(""); const [helpDue, setHelpDue] = useState(""); const [helpKeys, setHelpKeys] = useState<string[]>([]);
   const [subject, setSubject] = useState(""); const [message, setMessage] = useState("");
   useEffect(() => { if (d && !dirty) { setSections(d.sections as Section[]); setSubject(d.doc.title); } }, [d, dirty]);
   const refresh = () => { setDirty(false); qc.invalidateQueries({ queryKey: ["sales-document", id] }); qc.invalidateQueries({ queryKey: ["sales-documents"] }); };
@@ -72,7 +69,6 @@ function Editor() {
   if (q.error) return <div className="p-6 text-sm text-muted-foreground">{(q.error as Error).message}</div>;
   if (!d) return <div className="p-6 text-sm text-muted-foreground">Loading...</div>;
   const p = d.perms; const doc: any = d.doc;
-  const activeAssist = d.assists.find((x: any) => x.status === "claimed" && x.assignee_user_id === p.userId);
   const upd = (i: number, patch: Partial<Section>) => { setDirty(true); setSections((s) => s.map((x, n) => (n === i ? { ...x, ...patch } : x))); };
 
   return (
@@ -92,7 +88,7 @@ function Editor() {
 
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
         <div className="space-y-4">
-          {p.canEdit && (
+          {p.canEdit && doc.kind !== "rfq" && (
             <Panel title="AI first draft">
               <Textarea rows={3} placeholder="Optional brief: what the prospect cares about, tone, anything to stress" value={brief} onChange={(e) => setBrief(e.target.value)} />
               <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -134,31 +130,6 @@ function Editor() {
         </div>
 
         <div className="space-y-4">
-          {activeAssist && (
-            <Panel title="You're helping Sales">
-              <p className="text-sm">{activeAssist.note}</p>
-              <Button className="mt-3" disabled={!!busy || dirty} onClick={() => run("return", () => giveBack({ data: { id: activeAssist.id, note: window.prompt("Note for the rep (optional)") ?? null } }), "Handed back to Sales")}>Hand back to Sales</Button>
-              {dirty && <p className="mt-1 text-xs text-muted-foreground">Save your edits first.</p>}
-            </Panel>
-          )}
-          {p.canRequestHelp && (
-            <Panel title="Ask Marketing for help">
-              <Textarea rows={3} placeholder="What do you need? (wording, branding, visuals...)" value={helpNote} onChange={(e) => setHelpNote(e.target.value)} />
-              <div className="mt-2 space-y-1 text-sm">
-                {sections.map((s) => (
-                  <label key={s.key} className="flex items-center gap-2"><input type="checkbox" checked={helpKeys.includes(s.key)} onChange={(e) => setHelpKeys((k) => (e.target.checked ? [...k, s.key] : k.filter((x) => x !== s.key)))} />{s.title}</label>
-                ))}
-              </div>
-              <Input className="mt-2" type="date" value={helpDue} onChange={(e) => setHelpDue(e.target.value)} />
-              <Button className="mt-2" disabled={!!busy || helpNote.trim().length < 3} onClick={() => run("help", () => help({ data: { id, note: helpNote, sections: helpKeys, dueDate: helpDue || null } }), "Sent to Marketing")}>Request Marketing help</Button>
-            </Panel>
-          )}
-          {p.isOwner && d.assists.some((x: any) => x.status === "open") && (
-            <Panel title="Waiting for Marketing">
-              <Button variant="outline" size="sm" onClick={() => run("cancel", () => giveBack({ data: { id: d.assists.find((x: any) => x.status === "open")!.id, note: "Cancelled by rep" } }), "Request cancelled")}>Cancel request</Button>
-            </Panel>
-          )}
-
           <Panel title="Approval & sending">
             {p.canSubmit && <Button className="w-full" disabled={!!busy || dirty} onClick={() => run("submit", () => submit({ data: { id } }), "Submitted for approval")}>Submit for approval</Button>}
             {doc.status === "submitted" && !p.canApprove && <p className="text-sm text-muted-foreground">Waiting for a Sales Manager or the CRO (not the writer).</p>}

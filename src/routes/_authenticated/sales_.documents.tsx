@@ -21,7 +21,7 @@ export const Route = createFileRoute("/_authenticated/sales_/documents")({
       { title: "Proposals & RFPs - Harmonious Sales" },
       { name: "description", content: "Generate proposals, RFP and RFQ responses and vendor requests with AI drafts and approval." },
       { property: "og:title", content: "Proposals & RFPs - Harmonious Sales" },
-      { property: "og:description", content: "AI-drafted proposals, RFPs and RFQs with Marketing help and Sales approval." },
+      { property: "og:description", content: "Standardized proposals, RFPs and RFQs built from the quote and the MSA, with Sales approval." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex" },
@@ -66,7 +66,7 @@ function Documents() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="font-heading text-2xl font-semibold">Proposals & RFPs</h1>
-          <p className="text-sm text-muted-foreground">AI writes the first draft, Marketing can help, a Sales Manager or the CRO approves before it goes out.</p>
+          <p className="text-sm text-muted-foreground">Summary, pricing, terms and About Harmonious are filled in from the quote and the published MSA. A Sales Manager or the CRO approves before it goes out.</p>
         </div>
         {q.data?.canCreate && <Button onClick={() => setOpen((v) => !v)}>{open ? "Close" : "New document"}</Button>}
       </div>
@@ -146,7 +146,7 @@ function Documents() {
   );
 }
 
-/** The one controlled About Harmonious paragraph every proposal uses. Only Marketing saves new versions. */
+/** The one controlled About Harmonious paragraph every proposal uses. Only a Super Admin saves new versions. */
 function AboutHarmoniousEditor() {
   const load = useServerFn(getAboutHarmoniousText);
   const save = useServerFn(saveAboutHarmoniousText);
@@ -154,7 +154,7 @@ function AboutHarmoniousEditor() {
   const [draft, setDraft] = useState<string | null>(null);
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
-  if (q.error || !q.data) return null;
+  if (q.error || !q.data || !q.data.canEdit) return null;
   const d = q.data;
   const body = draft ?? d.body;
   const submit = async () => {
@@ -165,15 +165,15 @@ function AboutHarmoniousEditor() {
   };
   return (
     <Panel title="About Harmonious wording">
-      <p className="mb-2 text-sm text-muted-foreground">Every proposal uses this exact paragraph. {d.canEdit ? "Saving a change updates all proposals that haven't been approved yet." : "Only Marketing can change it."}</p>
+      <p className="mb-2 text-sm text-muted-foreground">Every proposal uses this exact paragraph. {d.canEdit ? "Saving a change updates all proposals that haven't been approved yet." : "Only a Super Admin can change it."}</p>
       {d.canEdit ? (
         <>
           <Textarea rows={7} value={body} onChange={(e) => setDraft(e.target.value)} />
-          <Input className="mt-2" placeholder="Reason for the change (optional)" value={reason} onChange={(e) => setReason(e.target.value)} />
-          <Button className="mt-2" disabled={busy || draft === null || body.trim().length < 20 || body.trim() === d.body} onClick={submit}>{busy ? "Saving…" : "Save wording"}</Button>
+          <Input className="mt-2" placeholder="Reason for the change (required)" value={reason} onChange={(e) => setReason(e.target.value)} />
+          <Button className="mt-2" disabled={busy || draft === null || body.trim().length < 20 || body.trim() === d.body || reason.trim().length < 3} onClick={submit}>{busy ? "Saving…" : "Save wording"}</Button>
         </>
       ) : <p className="whitespace-pre-wrap text-sm">{d.body}</p>}
-      <p className="mt-3 text-xs text-muted-foreground">{d.isDefault ? "Starting wording — Marketing hasn't saved a version yet." : d.history.map((h: any) => `v${h.version} by ${h.byName}, ${new Date(h.at).toLocaleDateString()}${h.reason ? ` (${h.reason})` : ""}`).join(" · ")}</p>
+      <p className="mt-3 text-xs text-muted-foreground">{d.isDefault ? "Starting wording — no Super Admin has saved a version yet." : d.history.map((h: any) => `v${h.version} by ${h.byName}, ${new Date(h.at).toLocaleDateString()}${h.reason ? ` (${h.reason})` : ""}`).join(" · ")}</p>
     </Panel>
   );
 }
