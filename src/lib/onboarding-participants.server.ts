@@ -44,20 +44,32 @@ export async function assignParticipant(userId: string, input: { onboardingId: s
   if (!canAssignParticipant(role)) forbid("you cannot assign people to this investment.");
   const email = input.email.trim().toLowerCase();
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) fail("Enter a valid email.");
-  const { data: existing } = await db().from("onboarding_participants").select("id").eq("onboarding_id", row.id).eq("role", input.role).neq("status", "removed");
+  const { data: existing } = await db().from("onboarding_participants").select("id, email").eq("onboarding_id", row.id).eq("role", input.role).neq("status", "removed");
   if (input.role === "signer" && (existing ?? []).length) fail("Remove the current signer before naming a new one.");
+  if (input.role === "contact") {
+    const { data: pr } = row.investment_profile_id ? await db().from("investment_profiles").select("profile_type").eq("id", row.investment_profile_id).maybeSingle() : { data: null };
+    if (!allowsMultipleContacts(pr?.profile_type)) fail("Extra points of contact are for joint accounts, entities and trusts. Change how they're investing first.");
+    if (((existing ?? []) as any[]).some((e) => String(e.email).toLowerCase() === email)) fail("That person is already a point of contact.");
+    if (((existing ?? []) as any[]).length >= 10) fail("Up to 10 points of contact per investment.");
+  }
   const token = crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, "");
   const { data: p, error } = await db().from("onboarding_participants").insert({ onboarding_id: row.id, offering_id: row.offering_id, role: input.role, full_name: input.fullName.trim(), email, title: input.title?.trim() || null, token, assigned_by: userId, assigned_by_role: role }).select("id").single();
   if (error) fail(error.message);
   await event(row, "participant_assigned", userId, role, { participantId: p.id, role: input.role, email });
 
-  // Email the assignment. Preparers get their own page; signers are told what they will sign.
+  // Email the assignment. Preparers get their own page; signers are told what they will sign; contacts get a view link.
   const fund = String(row.offerings?.name ?? "the fund");
   const investor = `${row.persons?.legal_first_name ?? ""} ${row.persons?.legal_last_name ?? ""}`.trim() || "an investor";
   const { ONBOARD_ORIGIN } = await import("@/lib/onboard-portal-model");
-  const subject = input.role === "preparer" ? `You've been asked to help complete an investment in ${fund}` : `You've been named signer for an investment in ${fund}`;
+  const subject = input.role === "preparer" ? `You've been asked to help complete an investment in ${fund}`
+    : input.role === "contact" ? `You've been added as a point of contact for an investment in ${fund}`
+    : input.signPageUrl ? `Please sign the signature page for an investment in ${fund}` : `You've been named signer for an investment in ${fund}`;
   const body = input.role === "preparer"
     ? `${investor} has asked you to fill in their investor details for ${fund}. Sign in with this email address to start:\n\n${ONBOARD_ORIGIN}/onboard/prepare/${token}\n\nYou can enter details, owners and signers, and upload documents. Identity checks, signing and funding stay with the investor and their signer.`
+    : input.role === "contact"
+    ? `You've been added as a point of contact for ${investor}'s investment in ${fund}. Sign in with this email address to see the investment and its progress:\n\n${ONBOARD_ORIGIN}/onboard/contact/${token}\n\nThis access is view only.`
+    : input.signPageUrl
+    ? `You've been named a signer for ${investor}'s investment in ${fund}. Sign in with this email address to review and sign the signature page:\n\n${input.signPageUrl}`
     : `You've been named the signer for ${investor}'s investment in ${fund}. Once the details are complete, you'll review them and sign the subscription documents.`;
   let messageId: string | null = null; let note: string | null = null;
   try {
