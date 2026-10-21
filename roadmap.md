@@ -1,5 +1,9 @@
 # Roadmap
 
+## Missing banking controls (2026-10-21)
+- [ ] Expose existing bank ownership/verification, account activation and investor release actions beside saved instructions; preserve existing server checks.
+- [ ] Run focused banking checks; signed-in end-to-end verification requires isolated synthetic QA.
+
 ## Harmonious investor approval and Calvin executed copy (2026-10-21)
 - [x] Permit existing authorized Harmonious investor-operations staff to approve admission alongside exact-fund managers; preserve readiness and own-investment safeguards, audit actor and investor notices.
 - [x] 59 focused authorization/document/email checks passed; preview build OK. Signed-in approval walkthrough remains blocked on isolated synthetic QA, not performed on real investors.
