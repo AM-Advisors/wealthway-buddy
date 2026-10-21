@@ -1,5 +1,10 @@
 # Roadmap
 
+## Combined wealth dashboard (2026-10-21)
+- [ ] Combine owned fund investments, personal holdings and connected balances without treating managed funds as personal assets or double-counting securities.
+- [ ] Net worth by currency with recorded debts; dated cash-flow view using canonical investor activity and owner-recorded personal activity.
+- [ ] Focused calculation/privacy checks; signed-in QA requires an isolated synthetic environment.
+
 ## Read-only account aggregation (2026-10-21)
 - [x] Owner-only encrypted bank/brokerage connections, consent history and immutable snapshots, isolated from fund books and payments.
 - [x] Connect source-dated balances and securities to Portfolio and Wealth; manual refresh, verified webhook refresh, reconnect, disconnect and retained history.
