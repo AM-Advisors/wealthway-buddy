@@ -101,7 +101,7 @@ export const REQUIREMENT_SOURCE: Record<string, string> = {
   certifications: "investor certifications",
   subscription_documents: "document snapshots",
   signature: "document_signatures (Box)",
-  approved_to_fund: "Harmonious review",
+  approved_to_fund: "Fund manager subscription approval",
   funding: "bank reconciliation",
   exceptions: "investor_onboarding_exceptions",
   acceptance: "subscription acceptance",
@@ -239,7 +239,7 @@ function fundingItem(input: ReadinessInput, preFundingDone: boolean, blockingExc
         ? { status: "not_started" as const, owner: null, action: null, reason: "Earlier steps must be complete first." }
         : blockingExceptions > 0
           ? { status: "blocked" as const, owner: "harmonious" as const, action: "Resolve open issue" }
-          : { status: "needs_harmonious" as const, owner: "harmonious" as const, action: "Approve investor to fund" }),
+          : { status: "needs_fund_manager" as const, owner: "fund_manager" as const, action: "Fund manager: approve subscription" }),
   };
   let funding: Pick<ReadinessItem, "status" | "owner" | "action"> & { reason?: string };
   // Only reconciled cash completes funding. An investor saying "sent" never does.

@@ -289,8 +289,8 @@ describe("fund manager limits", () => {
 });
 
 describe("Harmonious-only controls", () => {
-  it("refuses approval, bank application, acceptance and closing from non-staff", async () => {
-    await expect(server.approveToFund(MANAGER_A, { onboardingId: OB1 })).rejects.toThrow(/Forbidden/);
+  it("refuses approval by investors, bank application, acceptance and closing from non-staff", async () => {
+    await expect(server.approveToFund(INV1, { onboardingId: OB1 })).rejects.toThrow(/Forbidden/);
     await expect(server.applyBankActivity(INV1, { bankTransactionId: TXN })).rejects.toThrow(/Forbidden/);
     await expect(
       server.acceptSubscription(INV1, { onboardingId: OB1, signerName: "Me", capacity: "self" }),
@@ -300,7 +300,16 @@ describe("Harmonious-only controls", () => {
   });
 
   it("will not approve an investment whose requirements are unfinished", async () => {
-    await expect(server.approveToFund(STAFF, { onboardingId: OB1 })).rejects.toThrow();
+    await expect(server.approveToFund(MANAGER_A, { onboardingId: OB1 })).rejects.toThrow(/not complete/);
+    expect(updates("investor_onboardings")).toHaveLength(0);
+  });
+  it("refuses staff-only or another fund's manager subscription approval", async () => {
+    await expect(server.approveToFund(STAFF, { onboardingId: OB1 })).rejects.toThrow(/Only a fund manager/);
+    await expect(server.approveToFund(MANAGER_B, { onboardingId: OB1 })).rejects.toThrow(/Only a fund manager/);
+    expect(updates("investor_onboardings")).toHaveLength(0);
+  });
+  it("requires another fund manager for the manager's own investment", async () => {
+    await expect(server.approveToFund(MANAGER_A, { onboardingId: "manager-investment" })).rejects.toThrow(/Another assigned fund manager/);
     expect(updates("investor_onboardings")).toHaveLength(0);
   });
 

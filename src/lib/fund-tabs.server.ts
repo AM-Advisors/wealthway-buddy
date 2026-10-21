@@ -153,7 +153,7 @@ export async function investorDetail(fundId: string, onboardingId: string) {
     investmentDate: o.investment_date ?? null,
     classKey: o.offering_class_key ?? null,
     sideLetters: (letters ?? []) as any[],
-    openItems: ((tasks ?? []) as any[]).filter((t) => !t.resolved_at).map((t) => t.title as string),
+    openItems: ((tasks ?? []) as any[]).filter((t) => !t.resolved_at && !(t.title === "Approve investor to fund" && o.approved_to_fund_at)).map((t) => t.title === "Approve investor to fund" ? "Fund manager: approve subscription" : t.title as string),
     documents: (docs ?? []) as any[],
   };
 }

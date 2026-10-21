@@ -43,7 +43,7 @@ export const REASONS: Record<ReasonCode, ReasonDef> = {
   FUND_COUNTERSIGNATURE_REQUIRED: R("FUND_COUNTERSIGNATURE_REQUIRED", "document_signature_signers", {
     investor: "You've signed. The fund's countersignature is pending.", fund_manager: "Your countersignature is needed.", harmonious: "Fund countersignature outstanding." }, { fund_manager: "/manager" }),
   APPROVAL_TO_FUND_REQUIRED: R("APPROVAL_TO_FUND_REQUIRED", "investor_onboardings", {
-    investor: "Harmonious is reviewing your subscription.", fund_manager: "Harmonious is reviewing the subscription.", harmonious: "Approve investor to fund." }, { harmonious: "/ops/readiness" }),
+    investor: "Your fund manager is reviewing your subscription.", fund_manager: "Review and approve the investor's subscription.", harmonious: "Awaiting the fund manager's subscription approval." }, { fund_manager: "/manager" }),
   FUNDING_REQUIRED: R("FUNDING_REQUIRED", "investor_onboardings", {
     investor: "Send your funds using the secure wiring instructions.", fund_manager: "Waiting for the investor's wire.", harmonious: "Awaiting investor funds." }, { investor: "/onboard" }),
   FUNDING_RECONCILIATION_REQUIRED: R("FUNDING_RECONCILIATION_REQUIRED", "bank_transactions", {

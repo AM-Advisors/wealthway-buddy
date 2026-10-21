@@ -13,7 +13,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { FundOnboardingLinkCard } from "@/components/fund-onboarding-link";
-import { fundReadinessFn } from "@/lib/investor-onboarding.functions";
+import { approveToFundFn, fundReadinessFn } from "@/lib/investor-onboarding.functions";
+import { STAGE_LABELS, type OnboardingStage } from "@/lib/investor-onboarding-model";
 import { investorDetailFn, investorGridFn, lastRemindersFn, sendInvestorRemindersFn } from "@/lib/fund-tabs.functions";
 import { bulkSendKycLinksFn, bulkSetClassFn, listInvestorDuplicatesFn, mergeInvestorsFn, requestMissingInfoFn } from "@/lib/investor-bulk.functions";
 import { reminderAllowed, reminderStep } from "@/lib/fund-health";
@@ -248,6 +249,8 @@ function Row({ k, v }: { k: string; v: React.ReactNode }) {
 
 export function InvestorSheet({ fundId, id, onClose }: { fundId: string; id: string | null; onClose: () => void }) {
   const load = useServerFn(investorDetailFn);
+  const approve = useServerFn(approveToFundFn);
+  const [approving, setApproving] = useState(false);
   const q = useQuery({ queryKey: ["fund-investor", fundId, id], queryFn: () => {
     if (!id) throw new Error("Select an investor to review.");
     return load({ data: { fundId, onboardingId: id } });
@@ -303,6 +306,13 @@ export function InvestorSheet({ fundId, id, onClose }: { fundId: string; id: str
               <section className="rounded-lg border border-primary/40 bg-primary/5 p-3">
                 <h4 className="mb-1 font-medium">Open items</h4>
                 <ul className="list-disc space-y-0.5 pl-5">{d.openItems.map((t: string) => <li key={t}>{t}</li>)}</ul>
+                {d.canApproveSubscription && <Button className="mt-3" disabled={approving} onClick={async () => {
+                  if (!id) return;
+                  setApproving(true);
+                  try { await approve({ data: { onboardingId: id } }); toast.success("Subscription approved"); await q.refetch(); }
+                  catch (error) { toast.error(error instanceof Error ? error.message : "Subscription could not be approved."); }
+                  finally { setApproving(false); }
+                }}>{approving ? "Approving…" : "Approve subscription"}</Button>}
               </section>
             )}
 
@@ -326,7 +336,7 @@ export function InvestorSheet({ fundId, id, onClose }: { fundId: string; id: str
               <dl className="divide-y">
                 {d.classApplicable && <Row k="Class" v={d.classLabel} />}<Row k="Investing as" v={d.assetLabel} /><Row k="Tax ID" v={d.taxIdLast4 ? `•••• ${d.taxIdLast4}` : null} />
                 <Row k="Investment date" v={d.investmentDate ? fmtDate(d.investmentDate) : null} />
-                <Row k="Stage" v={<span className="capitalize">{d.stage.replace(/_/g, " ")}</span>} />
+                <Row k="Stage" v={STAGE_LABELS[d.stage as OnboardingStage] ?? d.stage.replace(/_/g, " ")} />
                 <Row k="Latest activity" v={fmtDate(d.lastActivity)} />
               </dl>
             </section>

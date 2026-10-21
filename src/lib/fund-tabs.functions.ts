@@ -11,7 +11,12 @@ export const investorGridFn = createServerFn({ method: "POST" }).middleware([req
   .handler(async ({ data, context }) => { const s = await srv(); await s.assertFund(context.userId, data.fundId); return s.investorGrid(data.fundId); });
 
 export const investorDetailFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator(fund.extend({ onboardingId: uuid }).parse)
-  .handler(async ({ data, context }) => { const s = await srv(); await s.assertFund(context.userId, data.fundId); return s.investorDetail(data.fundId, data.onboardingId); });
+  .handler(async ({ data, context }) => {
+    const s = await srv(); await s.assertFund(context.userId, data.fundId);
+    const detail = await s.investorDetail(data.fundId, data.onboardingId);
+    const actor = await (await import("@/lib/investor-onboarding.server")).onboardingActor(context.userId);
+    return { ...detail, canApproveSubscription: actor.managedOfferingIds.includes(data.fundId) && detail.investorUserId !== context.userId && detail.stage === "harmonious_review" };
+  });
 
 export const fundTeamFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator(fund.parse)
   .handler(async ({ data, context }) => { const s = await srv(); const a = await s.assertFund(context.userId, data.fundId); return { ...(await s.team(data.fundId)), staff: a.staff, me: context.userId }; });
