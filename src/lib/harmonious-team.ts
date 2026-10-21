@@ -74,9 +74,10 @@ export function defaultSalesOwner(actorId: string, actorRoles: readonly string[]
   return staffProfile(actorRoles).teams.includes("sales") ? actorId : null;
 }
 
-/** Client-facing contacts: Account Manager and Operations only; no controls. */
-export function clientFacingContacts(team: readonly EffectiveMember[]) {
-  return team.filter((m) => m.role !== "sales" && m.userId).map((m) => ({ role: m.role === "operations" ? "Operations Contact" : "Account Manager", userId: m.userId! }));
+/** Client-facing contacts: Account Manager and Operations; the Sales Team Member only when Harmonious chose to show them. No controls. */
+export function clientFacingContacts(team: readonly EffectiveMember[], showSalesRep = false) {
+  return team.filter((m) => m.userId && (m.role !== "sales" || showSalesRep))
+    .map((m) => ({ role: m.role === "operations" ? "Operations Contact" : m.role === "sales" ? "Sales Representative" : "Account Manager", userId: m.userId! }));
 }
 
 /**

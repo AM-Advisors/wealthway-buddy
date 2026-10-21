@@ -66,3 +66,10 @@ describe("Harmonious Team", () => {
     expect(clientFacingContacts(t).map((c) => c.role)).toEqual(["Account Manager", "Operations Contact"]);
   });
 });
+
+import { describe as d2, it as i2, expect as e2 } from "vitest";
+d2("client-facing sales rep", () => {
+  const team = [{ role: "sales", userId: "s", source: "client" }, { role: "account_manager", userId: "a", source: "client" }] as any;
+  i2("hidden unless chosen", () => e2(clientFacingContacts(team).map((c) => c.role)).toEqual(["Account Manager"]));
+  i2("shown when chosen", () => e2(clientFacingContacts(team, true).map((c) => c.role)).toEqual(["Sales Representative", "Account Manager"]));
+});

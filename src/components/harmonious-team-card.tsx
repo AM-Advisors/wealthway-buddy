@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { getHarmoniousTeam, getMyHarmoniousContacts, setClientTeamMember, setFundTeamOverride } from "@/lib/harmonious-team.functions";
+import { getHarmoniousTeam, getMyHarmoniousContacts, setClientTeamMember, setFundTeamOverride, setShowSalesRep } from "@/lib/harmonious-team.functions";
 import { TEAM_ROLE_LABEL, TEAM_SOURCE_LABEL, type TeamRole, type TeamSource } from "@/lib/harmonious-team";
 
 /** Internal Harmonious Team for a Client or Fund. Ownership only - never a gate. */
@@ -13,6 +13,7 @@ export function HarmoniousTeamCard({ clientId, offeringId }: { clientId?: string
   const load = useServerFn(getHarmoniousTeam);
   const setClient = useServerFn(setClientTeamMember);
   const setFund = useServerFn(setFundTeamOverride);
+  const setShow = useServerFn(setShowSalesRep);
   const qc = useQueryClient();
   const key = ["harmonious-team", clientId ?? offeringId];
   const q = useQuery({ queryKey: key, queryFn: () => load({ data: clientId ? { clientId } : { offeringId } }), retry: false });
@@ -51,6 +52,17 @@ export function HarmoniousTeamCard({ clientId, offeringId }: { clientId?: string
                 <p className="text-xs text-muted-foreground">{TEAM_ROLE_LABEL[m.role as TeamRole]}</p>
                 <p className="font-medium">{m.name ?? "Not assigned"}</p>
                 {d.scope === "fund" ? <p className="text-xs text-muted-foreground">{TEAM_SOURCE_LABEL[m.source as TeamSource]}</p> : null}
+                {m.role === "sales" ? (
+                  d.canToggleSalesRep ? (
+                    <label className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+                      <input type="checkbox" checked={!!d.showSalesRep} onChange={async (e) => {
+                        try { await setShow({ data: { clientId: clientId!, show: e.target.checked } }); await qc.invalidateQueries({ queryKey: ["harmonious-team"] }); toast.success(e.target.checked ? "Shown to the client" : "Hidden from the client"); }
+                        catch (err) { toast.error((err as Error).message); }
+                      }} />
+                      Show to the client as their Sales Representative
+                    </label>
+                  ) : <p className="text-xs text-muted-foreground">{d.showSalesRep ? "Shown to the client" : "Not shown to the client"}</p>
+                ) : null}
               </div>
               {m.canManage ? (
                 editing === m.role ? (
@@ -98,7 +110,7 @@ export function HarmoniousTeamCard({ clientId, offeringId }: { clientId?: string
   );
 }
 
-/** Client/Fund Manager view: Account Manager and Operations Contact names only. */
+/** Client/Fund Manager view: Account Manager, Operations Contact and (when chosen) Sales Representative names only. */
 export function YourHarmoniousTeam({ fundId }: { fundId: string }) {
   const load = useServerFn(getMyHarmoniousContacts);
   const q = useQuery({ queryKey: ["my-harmonious-contacts", fundId], queryFn: () => load({ data: { offeringId: fundId } }), retry: false });
