@@ -32,3 +32,10 @@ describe("controlled proposal sections", () => {
     expect(o[1]!.body.length).toBe(300);
   });
 });
+
+import { pricingText as _pt } from "./sales-documents-model";
+import { test as _t, expect as _e } from "vitest";
+_t("pricing line never shows a cadence in the name that contradicts its billing frequency", () => {
+  const out = _pt([{ label: "White Glove Fund Administration (annual)", quantity: 1, unit_cents: 1200000, line_cents: 1200000, billing_frequency: "quarterly" } as any]);
+  _e(out).toContain("- White Glove Fund Administration: 1 x $12,000.00 = $12,000.00 per quarter");
+});

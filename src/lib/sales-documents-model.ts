@@ -47,15 +47,17 @@ const FREQ_WORD: Record<string, string> = { one_time: "one-time", monthly: "per 
 export const SUMMARY_NOTE_TITLE = "Note from your Harmonious contact";
 export const SUMMARY_NOTE_MAX = 300;
 
+const cleanLabel = (s: string) => s.replace(/\s*\((annual|quarterly|monthly|one[- ]time)\)\s*$/i, "").trim();
+
 export function pricingText(lines: LockFacts["lines"]): string {
   if (!lines.length) return "Pricing will appear here once services are added to the quote.";
-  const rows = lines.map((l) => `- ${l.label}: ${l.quantity} x ${money(l.unit_cents)} = ${money(l.line_cents)}${l.billing_frequency && FREQ_WORD[l.billing_frequency] ? ` ${FREQ_WORD[l.billing_frequency]}` : ""}`);
+  const rows = lines.map((l) => `- ${cleanLabel(l.label)}: ${l.quantity} x ${money(l.unit_cents)} = ${money(l.line_cents)}${l.billing_frequency && FREQ_WORD[l.billing_frequency] ? ` ${FREQ_WORD[l.billing_frequency]}` : ""}`);
   const total = lines.reduce((s, l) => s + Number(l.line_cents || 0), 0);
   return `${rows.join("\n")}\nTotal: ${money(total)}\n(Pricing from the approved quote.)`;
 }
 
 export function summaryText(f: LockFacts): string {
-  const services = f.lines.map((l) => l.label);
+  const services = f.lines.map((l) => cleanLabel(l.label));
   const list = services.length <= 1 ? services[0] ?? "fund administration services" : `${services.slice(0, -1).join(", ")} and ${services[services.length - 1]}`;
   return `Harmonious proposes ${list} for ${f.organization || "your organization"}${f.contactName ? `, prepared for ${f.contactName}` : ""}.`;
 }

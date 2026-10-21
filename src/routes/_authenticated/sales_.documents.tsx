@@ -188,7 +188,7 @@ function ServicePicker({ clientId, lines, setLines }: { clientId: string | null;
   const all = (c.data?.lines ?? []) as any[];
   const shown = all.filter((l) => !q || String(l.label).toLowerCase().includes(q.toLowerCase())).slice(0, 60);
   const has = (k: string) => lines.some((l) => l.serviceKey === k);
-  const toggle = (l: any) => has(l.serviceKey) ? setLines(lines.filter((x) => x.serviceKey !== l.serviceKey)) : setLines([...lines, { serviceKey: l.serviceKey, label: l.label, quantity: 1, unitCents: l.baselineCents, baselineUnitCents: l.baselineCents, billingFrequency: "one_time" }]);
+  const toggle = (l: any) => has(l.serviceKey) ? setLines(lines.filter((x) => x.serviceKey !== l.serviceKey)) : setLines([...lines, { serviceKey: l.serviceKey, label: l.label, quantity: 1, unitCents: l.baselineCents, baselineUnitCents: l.baselineCents, billingFrequency: l.pricingModel === "annual" ? "annual" : l.pricingModel === "quarterly" ? "quarterly" : l.pricingModel === "monthly" ? "monthly" : "one_time" }]);
   const total = lines.reduce((s, l) => s + l.quantity * l.unitCents, 0);
   const base = lines.reduce((s, l) => s + l.quantity * l.baselineUnitCents, 0);
   return (
