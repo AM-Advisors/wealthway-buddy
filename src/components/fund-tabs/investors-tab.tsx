@@ -338,6 +338,18 @@ export function InvestorSheet({ fundId, id, onClose }: { fundId: string; id: str
                   <dl className="space-y-3">{d.reviewEvidence.questionnaire.map((answer) => <div key={answer.key} className="border-b pb-2"><dt className="break-words text-muted-foreground">{answer.label}</dt><dd className="mt-1 whitespace-pre-line break-words">{answer.answer}</dd></div>)}</dl>
                 </> : <p className="text-muted-foreground">Questionnaire has not been submitted.</p>}
               </section>
+              <section className="space-y-2" aria-label="Accreditation">
+                <h4 className="font-medium">Accreditation</h4>
+                {d.reviewEvidence.accreditation ? (() => { const a = d.reviewEvidence.accreditation; return <dl className="space-y-2">
+                  <div className="flex justify-between gap-3 border-b pb-2"><dt className="text-muted-foreground">Status</dt><dd className="font-medium">{a.status}</dd></div>
+                  {a.basis && <div className="flex justify-between gap-3 border-b pb-2"><dt className="text-muted-foreground">Basis</dt><dd className="text-right capitalize">{a.basis}</dd></div>}
+                  {a.relationship && <div className="flex justify-between gap-3 border-b pb-2"><dt className="text-muted-foreground">Relationship with manager</dt><dd className="text-right">{a.relationship}</dd></div>}
+                  {a.attestedAt && <div className="flex justify-between gap-3 border-b pb-2"><dt className="text-muted-foreground">Confirmed by investor</dt><dd>{fmtDate(a.attestedAt)}</dd></div>}
+                  {a.verifiedAt && <div className="flex justify-between gap-3 border-b pb-2"><dt className="text-muted-foreground">Verified</dt><dd>{fmtDate(a.verifiedAt)}</dd></div>}
+                  {a.expiresAt && <div className="flex justify-between gap-3 border-b pb-2"><dt className="text-muted-foreground">Expires</dt><dd>{fmtDate(a.expiresAt)}</dd></div>}
+                  {a.documents.map((doc: { id: string; name: string; kind: string; uploadedAt: string }) => <div key={doc.id} className="border-b pb-2"><p className="break-words font-medium">{doc.name}</p><p className="text-xs capitalize text-muted-foreground">{doc.kind} · {fmtDate(doc.uploadedAt)}</p></div>)}
+                </dl>; })() : <p className="text-muted-foreground">Accreditation has not been completed.</p>}
+              </section>
             </>}
 
             {(d.openItems.length > 0 || d.canApproveSubscription) && (
