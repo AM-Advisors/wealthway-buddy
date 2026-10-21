@@ -109,7 +109,7 @@ export const getFundOnboardingSettings = createServerFn({ method: "POST" })
       }),
       funding: banking
         ? {
-            released: Boolean(banking.investor_instructions_released) && banking.status === "account_active",
+            released: (await (await import("@/lib/wire-release.server")).wireReleaseState(data.offeringId).catch(() => ({ available: false }))).available,
             bankName: banking.bank_name ?? null,
             accountMasked: mask(banking.account_number),
             version: banking.updated_at ?? null,

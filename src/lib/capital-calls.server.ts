@@ -889,7 +889,8 @@ async function investorFundingInstructions(
   const { data: banking } = setup?.id
     ? await db().from("fund_banking_setups").select("*").eq("setup_id", setup.id).maybeSingle()
     : { data: null };
-  if (!banking || banking.status !== "account_active" || !banking.investor_instructions_released) {
+  const { wireReleaseState } = await import("@/lib/wire-release.server");
+  if (!banking || !(await wireReleaseState(offeringId).catch(() => ({ available: false }))).available) {
     reasons.push("The fund's bank account is not open for investor funding yet.");
   }
   if (reasons.length > 0 || !released) return { unlocked: false, reasons, instructions: null };
