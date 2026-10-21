@@ -6,6 +6,7 @@ const account:AccountSnapshot={connection_id:'a',owner_user_id:'alice',provider_
 describe('combined wealth',()=>{
  it('net worth subtracts debt from account and owned fund value, not commitments',()=>{const s=wealthSummary([],[account],[{offering_id:'f',offering_name:'Fund',equity_value_cents:10000,funded_cents:10000,commitment_cents:500000,valued_by:'capital'}],[debt],new Set());expect(s.totals[0]?.netWorthCents).toBe(40000);});
  it('brokerage securities are not added again',()=>expect(wealthSummary([],[account],[],[],new Set()).totals[0]?.assetsCents).toBe(50000));
+ it('capital-basis fund totals repeated across applications count once',()=>{const f={offering_id:'f',offering_name:'Fund',equity_value_cents:10000,funded_cents:10000,commitment_cents:50000,valued_by:'capital'};expect(wealthSummary([],[],[f,f],[],new Set()).totals[0]?.assetsCents).toBe(10000);});
  it('currencies never combine into a fictitious total',()=>expect(wealthSummary([],[account,{...account,currency:'EUR',current_balance_cents:30000}],[],[],new Set()).totals.map(t=>[t.currency,t.assetsCents])).toEqual([['USD',50000],['EUR',30000]]));
  it('excludes a marked duplicate from the summary',()=>expect(wealthSummary([],[account],[],[],new Set(['account:a:x'])).totals).toEqual([]));
  it('missing values produce a partial summary rather than fabricated zero valuation',()=>expect(wealthSummary([],[{...account,current_balance_cents:null}],[],[],new Set()).totals[0]?.missing).toBe(1));
