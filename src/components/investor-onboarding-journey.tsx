@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { acknowledgeDocumentFn } from "@/lib/fund-setup-canonical.functions";
+import { confirmAccreditationStepFn } from "@/lib/accreditation-step.functions";
+import { ACCREDITATION_QUESTION_KEY, selfCertificationAllowed } from "@/lib/accreditation-step";
 import { InvestorBankVerify } from "@/components/investor-bank-verify";
 import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
