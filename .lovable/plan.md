@@ -43,6 +43,7 @@ Include the supplied cleanup, volume, account, entity, payroll-accounting, AR/AP
 - Activate only after the required accepted/executed contract and authorized operational action; retain any existing payment prerequisites. Draft quotes never activate services.
 - Link enrollment to the exact entity, client and SOW; snapshot tier, frequencies, dates and scope. Route managed work to existing staff assignment controls without granting access through assignment alone.
 - Reuse signed-SOW invoice schedules. Preserve the distinction between commercial draft billing and active service delivery; no bookkeeping invoice can be sent before its required execution/activation controls are satisfied.
+- Resolve first-period ownership between acceptance-created invoices and recurring schedules so the same period cannot be billed twice. Route standalone/company bookkeeping handoffs to the covered entity, not the generic handoff that currently creates a draft fund when no fund is linked.
 - Record upgrade, downgrade and frequency requests, approved amendments and financial impact. New rates and schedules apply prospectively; retain all prior periods, completed work and invoices. Catch-up work is separately quoted.
 
 ### 4. Reconciliation and reviewed reporting
@@ -51,6 +52,7 @@ Include the supplied cleanup, volume, account, entity, payroll-accounting, AR/AP
 - Distinguish imported/unposted transactions from official posted books. Do not release category-based summaries as reviewed financial statements.
 - Address service-critical audit findings before enabling customer accounting writes: exact role/entity scope, source deduplication and transactional application/retry safety. Leave existing posted history unchanged; ambiguous historical items require explicit review rather than silent repair.
 - Enforce preparer/reviewer separation and freeze approved report versions. Unknown statement balances cannot masquerade as completed reconciliation.
+- Require every contracted report in a released package; a reconciliation linked to a draft journal cannot be displayed as posted books or a completed approved close.
 
 ### 5. Client and portfolio views
 - Extend Accounting on existing fund/company dashboards with tier, scope, current period, last/next reconciliation, documentation, outstanding requests, assigned team and released reports.
@@ -60,9 +62,9 @@ Include the supplied cleanup, volume, account, entity, payroll-accounting, AR/AP
 
 ## Technical approach
 - Preserve TanStack Start server-function boundaries, the existing lightweight auth middleware, server-side role/resource checks and semantic UI components.
-- Reuse service_catalog, pricing version systems, sales quote lines/versions, client_sows, service records/selections, invoice_schedules and canonical accounting tables wherever compatible.
+- Reuse service_catalog, pricing version systems, sales quote lines/versions, client_sows, service_engagements and their events, client_entities, invoice_schedules and canonical accounting tables wherever compatible. Extend engagements for SOW/quote-line evidence, cadence and explicit entity coverage instead of creating a second subscription lifecycle.
 - Add only missing effective-dated configuration, quote/enrollment entity relationships, reconciliation schedule and append-only evidence structures; use additive changes with explicit grants, RLS, constraints and transaction-safe transitions.
-- Generalize fund-scoped accounting to nonfund entities through an explicit legal-entity scope adapter and authoritative access checks, never fake funds or duplicate ledgers. Confirm the exact extension in the implementation review before schema changes.
+- Existing books already support client entities and cap-table companies; extend their currently fund-oriented authorization with an explicit legal-entity scope adapter, never fake funds or duplicate ledgers. Confirm deployed schema/controls and the exact extension before schema changes.
 - Keep all automatic scheduling, billing and delivery integration disabled for proposed/unactivated bookkeeping. Existing jobs must not accidentally discover and send staged data.
 
 ## Verification and deliverables

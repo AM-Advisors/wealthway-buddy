@@ -1,7 +1,7 @@
 # Roadmap
 
 ## Bookkeeping service integration brief (2026-10-22)
-- [ ] Review the existing pricing, quote/SOW, billing, accounting and entity-access engines and present a phased implementation plan.
+- [x] Review existing pricing, quote/SOW, billing, accounting and entity-access engines; prepare a phased plan including standalone handoff, first-invoice deduplication and service-critical accounting release gates.
 - [ ] Implement internal proposed catalog/configuration, quote snapshots, overlap checks and scoped SOW terms without publishing prices or modifying current contracts.
 - [ ] Implement contract-gated enrollment, prospective reconciliation schedules, entity-authorized portal views and reviewed report release through existing engines.
 - [ ] Verify fictional acceptance scenarios; authenticated end-to-end checks blocked until independently isolated QA passes preflight. No live invoices, bank connections or production enrollments.
