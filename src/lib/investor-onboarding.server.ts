@@ -799,13 +799,13 @@ export async function latestDiditSessionFor(personId: string | null): Promise<st
 
 /** Answers fixed by verified records, plus Verification-satisfied document questions. */
 export async function subscriptionLocks(row: any, questions: Question[]) {
-  const { lockedAnswers, IDENTITY_DOCS_KEY } = await import("@/lib/subscription-prefill");
+  const { lockedAnswers, suppliedInvestorAnswers, IDENTITY_DOCS_KEY } = await import("@/lib/subscription-prefill");
   const { resolveTaxForm } = await import("@/lib/onboarding-compliance-model");
   const { usPersonFrom } = await import("@/lib/onboarding-compliance.server");
   const [{ data: person }, { data: acct }, { data: profile }, { data: tax }] = await Promise.all([
-    row.person_id ? db().from("persons").select("id, email, phone, tax_residency_country, residence_country, citizenship_country").eq("id", row.person_id).maybeSingle() : Promise.resolve({ data: null }),
+    row.person_id ? db().from("persons").select("id, email, phone, date_of_birth, address_line1, address_line2, city, region, postal_code, country, mailing_address, tax_residency_country, residence_country, citizenship_country").eq("id", row.person_id).maybeSingle() : Promise.resolve({ data: null }),
     db().from("profiles").select("email, phone").eq("user_id", row.investor_user_id).maybeSingle(),
-    row.investment_profile_id ? db().from("investment_profiles").select("profile_type, legal_name, country").eq("id", row.investment_profile_id).maybeSingle() : Promise.resolve({ data: null }),
+    row.investment_profile_id ? db().from("investment_profiles").select("profile_type, legal_name, country, address_line1, address_line2, city, region, postal_code, phone, details").eq("id", row.investment_profile_id).maybeSingle() : Promise.resolve({ data: null }),
     row.investment_profile_id ? db().from("investor_tax_profiles").select("*").eq("investment_profile_id", row.investment_profile_id).order("created_at", { ascending: false }).limit(1).maybeSingle() : Promise.resolve({ data: null }),
   ]) as any[];
   const { data: kyc } = person?.id
@@ -833,7 +833,7 @@ export async function subscriptionLocks(row: any, questions: Question[]) {
         ? { ...q, satisfiedBy: "Your completed Verification already includes your ID and date of birth." }
         : q,
   );
-  return { locked, questions: decorated };
+  return { locked, supplied: suppliedInvestorAnswers(person, profile), questions: decorated };
 }
 
 export async function saveQuestionnaire(
@@ -842,11 +842,12 @@ export async function saveQuestionnaire(
 ) {
   const { actor, row } = await assertInvestorOwns(userId, input.onboardingId);
   const questionnaire = await publishedQuestionnaire(row.offering_id);
-  const { applyLocked } = await import("@/lib/subscription-prefill");
+  const { applyLocked, fillMissingInvestorAnswers } = await import("@/lib/subscription-prefill");
   const locks = await subscriptionLocks(row, (questionnaire?.questions ?? []) as Question[]);
   const questions = locks.questions;
   const { stripHiddenAnswers, highRiskYes } = await import("@/lib/investor-onboarding-model");
-  const answers = stripHiddenAnswers(questions, applyLocked(input.answers, locks.locked, questions.map((q) => q.key)));
+  const keys = questions.map((q) => q.key);
+  const answers = stripHiddenAnswers(questions, applyLocked(fillMissingInvestorAnswers(input.answers, locks.supplied, keys), locks.locked, keys));
 
   if (input.submit) {
     const waiting = questions.find((q) => q.locked && q.required && locks.locked[q.key] == null);
@@ -1187,6 +1188,7 @@ export async function onboardingDetail(userId: string, onboardingId: string): Pr
 
   const questionnaire = await publishedQuestionnaire(row.offering_id);
   const locks = questionnaire ? await subscriptionLocks(row, (questionnaire.questions ?? []) as Question[]) : null;
+  const { fillMissingInvestorAnswers } = await import("@/lib/subscription-prefill");
   const journey = journeySteps(facts.requirements, {
     stage: row.stage,
     approvedToFund: Boolean(row.approved_to_fund_at),
@@ -1217,7 +1219,7 @@ export async function onboardingDetail(userId: string, onboardingId: string): Pr
     fundingUnlocked: fundingGate.allowed,
     fundingBlockedReasons: fundingGate.reasons,
     questionnaire: questionnaire ? { version: questionnaire.version, questions: locks?.questions ?? questionnaire.questions } : null,
-    questionnaireResponses: { ...((row.questionnaire_responses ?? {}) as Record<string, unknown>), ...Object.fromEntries(Object.entries(locks?.locked ?? {}).filter(([, v]) => v != null)) },
+    questionnaireResponses: { ...fillMissingInvestorAnswers((row.questionnaire_responses ?? {}) as Record<string, unknown>, locks?.supplied ?? {}, (questionnaire?.questions ?? []).map((q: Question) => q.key)), ...Object.fromEntries(Object.entries(locks?.locked ?? {}).filter(([, v]) => v != null)) },
     questionnaireLocked: locks?.locked ?? {},
     documentTemplateVersion: row.document_template_version as number | null,
     executedSnapshot: row.executed_snapshot,

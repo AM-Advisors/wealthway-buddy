@@ -80,6 +80,48 @@ export function applyLocked(answers: Record<string, unknown>, locked: Record<str
 
 const isUS = (c: unknown) => ["US", "USA", "UNITED STATES"].includes(String(c ?? "").trim().toUpperCase());
 
+/** Previously supplied facts for the exact investing party; never use the login account. */
+export function suppliedInvestorAnswers(person: Record<string, unknown> | null, profile: Record<string, unknown> | null): Record<string, string> {
+  const out: Record<string, string> = {};
+  const add = (key: string, value: unknown) => {
+    if (typeof value === "string" && value.trim()) out[key] = value.trim();
+  };
+  const individual = profile?.['profile_type'] === "individual";
+  // Entities and joint accounts must use their own address, not their signer's.
+  const source = individual ? { ...person, ...Object.fromEntries(Object.entries(profile ?? {}).filter(([, v]) => typeof v === "string" && v.trim())) } : profile;
+  for (const key of ["address_line1", "address_line2", "city", "region", "postal_code", "country", "phone"]) add(key, source?.[key]);
+  if (individual) {
+    add("date_of_birth", person?.['date_of_birth']);
+    add("citizenship", person?.['citizenship_country']);
+    add("citizenship_country", person?.['citizenship_country']);
+  }
+  if (out['address_line1']) {
+    out['subscriber_s_address_of_residence'] = ["address_line1", "address_line2", "city", "region", "postal_code", "country"].map((key) => out[key]).filter(Boolean).join(", ");
+  }
+  add("address_for_delivery_and_notices_if_different_from_above", source?.['mailing_address']);
+  const details = profile?.['details'];
+  if (details && typeof details === "object" && !Array.isArray(details)) {
+    const record = details as Record<string, unknown>;
+    const kyc = record['kyc'];
+    const values = kyc && typeof kyc === "object" && !Array.isArray(kyc) ? { ...record, ...kyc } : record;
+    // Explicit safe facts only: no tax IDs, bank numbers, signatures or attestations.
+    for (const key of ["formation_state", "formation_date", "control_person", "beneficial_owners", "trustees", "grantor", "custodian_name", "second_holder_name", "second_holder_dob"]) add(key, values[key]);
+  }
+  return out;
+}
+
+/** Fill gaps only; false and zero are real answers. Dirty blanks stay blank. */
+export function fillMissingInvestorAnswers<T extends Record<string, unknown>>(saved: T, supplied: Record<string, unknown>, keys: string[], dirty: string[] = []): Record<string, unknown> {
+  const next: Record<string, unknown> = { ...saved };
+  for (const key of keys) {
+    if (dirty.includes(key)) continue;
+    const current = next[key];
+    const value = supplied[key];
+    if ((current == null || (typeof current === "string" && !current.trim())) && value != null && (typeof value !== "string" || value.trim())) next[key] = value;
+  }
+  return next;
+}
+
 /**
  * U.S. person for question 9, from Verification: individuals by citizenship
  * (verified ID's issuing country when citizenship isn't recorded); entities by
