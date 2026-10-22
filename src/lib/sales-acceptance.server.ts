@@ -308,8 +308,9 @@ async function recordPolicies(db: any, pol: { needs: any[]; userId: string | nul
   await db.from("sales_policy_acceptances").upsert(docs.map((n) => ({ sales_acceptance_id: acc.id, client_id: r.clientId, email, user_id: pol.userId, document_id: n.documentId, kind: n.kind, version: n.version, signer_name: name, ip: d.ip, user_agent: d.ua?.slice(0, 400) ?? null, copied_to_account_at: pol.userId ? new Date().toISOString() : null })), { onConflict: "email,document_id", ignoreDuplicates: true });
   if (pol.userId) await db.from("policy_acceptances").upsert(docs.map((n) => ({ user_id: pol.userId, document_id: n.documentId, kind: n.kind, version: n.version, signer_name: name, email: pol.email, ip_address: d.ip, user_agent: d.ua?.slice(0, 400) ?? null })), { onConflict: "user_id,document_id", ignoreDuplicates: true });
   try {
-    const { recordSalesEvent } = await import("./sales-acceptance-events.server").catch(() => ({ recordSalesEvent: null as any }));
-    if (recordSalesEvent) await recordSalesEvent(db, r, "policy_accepted", { email, documents: docs.map((n) => ({ kind: n.kind, version: n.version })) });
+    const detail = { email, documents: docs.map((n) => ({ kind: n.kind, version: n.version })) };
+    const q = r.kind === "quote";
+    await db.from(q ? "sales_quote_events" : "sales_document_events").insert(q ? { quote_id: r.id, actor_id: null, event: "policy_accepted", note: JSON.stringify(detail) } : { document_id: r.id, actor_id: null, event: "policy_accepted", detail });
   } catch (e) { console.error("policy event", e); }
 }
 
