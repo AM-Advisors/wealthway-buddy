@@ -78,6 +78,8 @@ export function OfferingDocumentsSetup({ offeringId, onChanged }: { offeringId: 
   const byCategory = (c: DocumentCategory) => d.documents.find((x) => x.category === c);
 
   return (
+    <>
+    <CountersignTimingCard offeringId={offeringId} />
     <Card>
       <CardHeader>
         <CardTitle className="text-base">Offering Documents</CardTitle>
