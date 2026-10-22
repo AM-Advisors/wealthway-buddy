@@ -15,6 +15,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { FundOnboardingLinkCard } from "@/components/fund-onboarding-link";
+import { ManagerAddInvestor } from "@/components/manager-add-investor";
 import { approveToFundFn, fundReadinessFn } from "@/lib/investor-onboarding.functions";
 import { STAGE_LABELS, type OnboardingStage } from "@/lib/investor-onboarding-model";
 import { investorDetailFn, investorGridFn, lastRemindersFn, sendInvestorRemindersFn, managerInvestorSignedCopyFn, managerInvestorTaxFormFn, sendSubscriptionSignNoticeFn } from "@/lib/fund-tabs.functions";
@@ -167,11 +168,13 @@ export function InvestorsTab({ fundId, workQueue }: { fundId: string; workQueue?
       </CardContent>
       <InvestorSheet fundId={fundId} id={open} onClose={() => setOpen(null)} />
       <Dialog open={invite} onOpenChange={setInvite}>
-        <DialogContent className="max-w-xl">
+        <DialogContent className="max-h-[90vh] max-w-xl overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Add or invite investors</DialogTitle>
-            <DialogDescription>Share this secure link. Each investor creates their own account and completes About You, Verification, Sign and Fund.</DialogDescription>
+            <DialogDescription>Invite someone by email, or share the fund's secure link. Each investor creates their own account and completes About You, Verification, Sign and Fund.</DialogDescription>
           </DialogHeader>
+          <ManagerAddInvestor fundId={fundId} compact onSent={() => { void q.refetch(); }} />
+          <p className="text-sm font-medium">Or share the fund's link</p>
           <FundOnboardingLinkCard fundId={fundId} />
         </DialogContent>
       </Dialog>

@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 
+import { parseCommitmentCents } from "@/lib/invite-amount";
 import { inviteInvestorFn, managerOnboardingBoardFn, resendOnboardInvitationFn } from "@/lib/investor-onboarding.functions";
 import { managerPortalStatus } from "@/lib/onboard-portal-model";
 import { Badge } from "@/components/ui/badge";
@@ -28,7 +29,7 @@ const INVESTOR_TYPES = [
  * Fund → Investors → Add Investor. The fund's exemption (506(b)/506(c)) comes
  * from its own configuration; managers never choose it here.
  */
-export function ManagerAddInvestor({ fundId, exemptionLabel }: { fundId: string; exemptionLabel?: string | null }) {
+export function ManagerAddInvestor({ fundId, exemptionLabel, onSent, compact }: { fundId: string; exemptionLabel?: string | null; onSent?: () => void; compact?: boolean }) {
   const qc = useQueryClient();
   const invite = useServerFn(inviteInvestorFn);
   const [email, setEmail] = useState("");
@@ -36,6 +37,7 @@ export function ManagerAddInvestor({ fundId, exemptionLabel }: { fundId: string;
   const [amount, setAmount] = useState("");
   const [type, setType] = useState("unknown");
   const [link, setLink] = useState<string | null>(null);
+  const parsedAmount = parseCommitmentCents(amount);
   useEffect(() => {
     const raw = window.sessionStorage.getItem(`harmonious.invite-draft.${fundId}`);
     if (!raw) return;
@@ -49,7 +51,7 @@ export function ManagerAddInvestor({ fundId, exemptionLabel }: { fundId: string;
           offeringId: fundId,
           email: email.trim(),
           name: name.trim() || null,
-          intendedAmountCents: amount ? Math.round(Number(amount.replace(/[,$]/g, "")) * 100) : null,
+          intendedAmountCents: parsedAmount === "invalid" ? null : parsedAmount,
           source: type === "unknown" ? "manager" : `manager:${type}`,
         },
       }),
