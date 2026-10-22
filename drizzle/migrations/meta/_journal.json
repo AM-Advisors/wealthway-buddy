@@ -2311,6 +2311,13 @@
       "when": 1792687010839,
       "tag": "0329_countersign_timing_and_class_count",
       "breakpoints": true
+    },
+    {
+      "idx": 330,
+      "version": "7",
+      "when": 1792689086097,
+      "tag": "0330_quote_policy_acceptances_short_links",
+      "breakpoints": true
     }
   ]
 }
