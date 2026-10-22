@@ -52,7 +52,7 @@ export const listArchivedFundDocumentsFn = createServerFn({ method: "GET" })
 
     const evidence = [
       ...((ackR.data ?? []) as any[]).map((a) => ({ offering_document_id: a.offering_document_id, version: a.version, onboarding_id: a.onboarding_id, at: a.acknowledged_at, kind: "acknowledged" as const })),
-      ...((sigR.data ?? []) as any[]).filter((s) => appToOb[s.application_id]).map((s) => ({ offering_document_id: s.offering_document_id, version: s.signature_template_version, onboarding_id: appToOb[s.application_id], at: s.signed_at, kind: "signed" as const })),
+      ...((sigR.data ?? []) as any[]).filter((s) => appToOb[s.application_id]).map((s) => ({ offering_document_id: s.offering_document_id, version: s.signature_template_version, onboarding_id: appToOb[s.application_id] as string, at: s.signed_at, kind: "signed" as const })),
     ].filter((e) => names[e.onboarding_id]);
 
     const { archivedApplicability } = await import("@/lib/archived-document-applicability");
