@@ -1,4 +1,5 @@
 import { SalesDealDocsTabs } from "@/components/sales-deal-docs-tabs";
+import { LinkedSowTermsEditor } from "@/components/sales/linked-sow-terms-editor";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
