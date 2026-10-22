@@ -314,7 +314,7 @@ export async function quoteFromSow(userId: string, sowId: string) {
     if (!c) return null;
     const qty = Number(l.quantity ?? 1) || 1;
     const unit = Number(l.unit_cents ?? l.unitCents ?? (l.amount_cents != null ? Number(l.amount_cents) / qty : c.baselineCents));
-    return { serviceKey: key, label: c.label, quantity: qty, unitCents: Math.round(unit), baselineUnitCents: c.baselineCents };
+    return { serviceKey: key, label: c.label, quantity: qty, unitCents: Math.round(unit), baselineUnitCents: c.baselineCents, details: l.service_details ?? undefined };
   }).filter(Boolean) as QuoteLineInput[];
   if (!lines.length) throw new Error("This SOW has no services that match the current rate card.");
   const r = await saveQuote(userId, { title: `${sow.title ?? "SOW"} quote`, clientId: sow.client_id, notes: `Drafted from SOW "${sow.title ?? sow.id}"`, lines });
