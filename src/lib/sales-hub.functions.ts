@@ -152,3 +152,13 @@ export const saveCommissionCosts = createServerFn({ method: "POST" }).middleware
 export const saveCommissionCostSettings = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator(z.object({ serviceCostPct: z.record(z.string(), z.number().min(0).max(100)), overheadPct: z.number().min(0).max(100), reason: z.string().trim().min(1) }))
   .handler(async ({ data, context }) => (await C()).saveCommissionCostSettings(context.userId, data));
+
+export const updateSalesQuoteDetails = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ id: z.string().uuid(), title: z.string().trim().min(1).max(200), notes: z.string().max(5000).nullish(), validUntil: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullish() }).parse(d))
+  .handler(async ({ data, context }) => (await Q()).updateQuoteDetails(context.userId, data));
+export const changeSalesQuoteSigner = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ id: z.string().uuid(), fullName: z.string().trim().min(2).max(200), email: z.string().trim().email().max(255), organization: z.string().trim().max(200).nullish(), title: z.string().trim().max(200).nullish(), phone: z.string().trim().max(40).nullish() }).parse(d))
+  .handler(async ({ data, context }) => (await Q()).changeQuoteSigner(context.userId, data.id, data));
+export const sendSalesQuoteEmail = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ id: z.string().uuid(), subject: z.string().trim().min(1).max(200), message: z.string().max(5000).nullish() }).parse(d))
+  .handler(async ({ data, context }) => (await Q()).sendQuoteEmail(context.userId, data));

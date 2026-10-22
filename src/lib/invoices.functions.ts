@@ -392,11 +392,14 @@ export const startInvoiceCardPayment = createServerFn({ method: "POST" })
       const { data: { user } } = await context.supabase.auth.getUser();
       const { customerForClient } = await import("@/lib/billing.server");
       const customer = await customerForClient(stripe, inv.client_id, user?.email, context.userId);
-      const meta = { kind: "invoice_payment", invoiceId: inv.id, clientId: inv.client_id, userId: context.userId };
+      const { cardServiceFeeCents, CARD_SERVICE_FEE_LABEL } = await import("@/lib/card-fee");
+      const feeCents = cardServiceFeeCents(Number(inv.total_cents));
+      const meta = { kind: "invoice_payment", invoiceId: inv.id, clientId: inv.client_id, userId: context.userId, invoiceCents: String(inv.total_cents), cardFeeCents: String(feeCents) };
       const session = await stripe.checkout.sessions.create({
         mode: "payment", ui_mode: "embedded_page", redirect_on_completion: "if_required", return_url: `${origin}/client/invoices?invoice=${inv.id}`,
         customer, metadata: meta, payment_intent_data: { description: `Invoice ${inv.number}`, metadata: meta },
-        line_items: [{ price_data: { currency: "usd", unit_amount: Number(inv.total_cents), product_data: { name: `Invoice ${inv.number}` } }, quantity: 1 }],
+        line_items: [{ price_data: { currency: "usd", unit_amount: Number(inv.total_cents), product_data: { name: `Invoice ${inv.number}` } }, quantity: 1 },
+          ...(feeCents > 0 ? [{ price_data: { currency: "usd", unit_amount: feeCents, product_data: { name: CARD_SERVICE_FEE_LABEL } }, quantity: 1 }] : [])],
       } as any);
       await db.from("invoices").update({ card_session_id: session.id }).eq("id", inv.id).eq("status", "issued");
       return { clientSecret: session.client_secret ?? "" };
