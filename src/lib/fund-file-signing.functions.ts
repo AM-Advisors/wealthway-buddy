@@ -327,6 +327,20 @@ export const sendTemplateDocToSignatoryFn = createServerFn({ method: "POST" }).m
     }
     if (!body) throw new Error("Couldn't read this document's text to send it.");
 
+    const { data: offering, error: offeringError } = await d.from("offerings").select("name, legal_entity_name, fund_signatory_person_id, signatory_title").eq("id", data.fundId).maybeSingle();
+    if (offeringError || !offering) throw new Error("Could not load the fund signatory details.");
+    // A different manager must not inherit the primary signatory's title.
+    const { data: signatory, error: personError } = offering.fund_signatory_person_id
+      ? await d.from("persons").select("user_id, email").eq("id", offering.fund_signatory_person_id).maybeSingle()
+      : { data: null, error: null };
+    if (personError) throw new Error("Could not load the fund signatory details.");
+    const { operatingAgreementSignaturePage, isRecordedOperatingSignatory } = await import("@/lib/operating-agreement-signing");
+    if (!isRecordedOperatingSignatory(signatory, data.managerUserId, mp.email)) {
+      throw new Error("Choose the fund's recorded signatory to sign this Operating Agreement.");
+    }
+    const signaturePage = operatingAgreementSignaturePage({ title: doc.title, fundName: offering.legal_entity_name || offering.name,
+      signerName: mp.legal_name || mp.email, signatoryTitle: offering.signatory_title, body });
+
     // An earlier unsigned send of this document is cancelled (never deleted) so only one request is open.
     const { data: prior } = await d.from("fund_files").select("id").eq("offering_id", data.fundId).eq("title", doc.title).eq("template_key", "operating_agreement").eq("status", "out_for_signature").is("deleted_at", null);
     for (const p of (prior ?? []) as any[]) await d.from("fund_file_signatures").update({ status: "cancelled" }).eq("file_id", p.id).in("status", ["waiting", "sent"]);
@@ -336,7 +350,7 @@ export const sendTemplateDocToSignatoryFn = createServerFn({ method: "POST" }).m
     }).select("id").single();
     if (fe) throw new Error(fe.message);
     const { data: rows, error } = await d.from("fund_file_signatures").insert([
-      { file_id: f.id, offering_id: data.fundId, signer_role: "fund_manager", signing_order: 1, signer_name: mp.legal_name || mp.email, signer_email: String(mp.email).toLowerCase(), signer_user_id: data.managerUserId, created_by: context.userId },
+      { file_id: f.id, offering_id: data.fundId, signature_page: signaturePage, signer_role: "fund_manager", signing_order: 1, signer_name: mp.legal_name || mp.email, signer_email: String(mp.email).toLowerCase(), signer_user_id: data.managerUserId, created_by: context.userId },
     ]).select("*");
     if (error) throw new Error(error.message);
     await d.from("fund_files").update({ status: "out_for_signature" }).eq("id", f.id);
