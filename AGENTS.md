@@ -9,7 +9,7 @@
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
 - Read src/lib/AGENTS.md for workflows/auth, billing, signing, drafts and wealth — why: scoped rules.
-- Fund DOCX autofill reads active fee terms only, formats percentage units in context, and reports fixed fee/arbitration conflicts without rewriting clauses or auto-activating conflicting drafts — why: canonical values cannot override retained legal text or signed history.
+- Fund generation is Harmonious-staff-only across templates, starter drafts and standard forms; DOCX autofill reads active fees, formats percentages and flags fixed legal conflicts without auto-activation — why: staff own generation, canonical facts never overwrite signed history.
 - New template Operating Agreement ceremonies validate the exact recorded signatory, require a recorded title and resolved template fields, and freeze the title in the signature page; corrections use new reviewed versions/signatures — why: missing facts must never be invented or patched into completed agreements.
 - Quote cadence uses quote-billing.ts in the editor and authorized saves; compare prices per selected bill using recorded cadence rates before proportional fallback — why: quarterly prices must not be compared with annual baselines, and signed history remains untouched.
 - Investor questionnaire prefilling uses subscription-prefill.ts on authorized onboarding reads and saves; fill only blank exact-party facts and preserve dirty form answers — why: reuse recorded details without account/party confusion or inferred certifications.
