@@ -531,3 +531,36 @@ export async function listCcOptions(userId: string) {
   return rows.map((x) => ({ userId: String(x.user_id), name: String(x.legal_name || x.email), email: String(x.email).toLowerCase() }))
     .sort((a, b) => a.name.localeCompare(b.name));
 }
+
+/** One personal link per person: signers get review-and-sign, everyone else view-only. Approved versions only. */
+export async function personLinks(userId: string, id: string) {
+  const a = await access(userId, id);
+  const version = a.doc.approved_version as number | null;
+  if (!version) return { version: null, people: [] as { name: string; email: string; title: string | null; role: "signer" | "viewer"; signed: boolean; signUrl: string | null; viewUrl: string }[] };
+  const team = await listClientTeam(userId, id);
+  const { data: sent } = await a.db.from("sales_document_events").select("detail").eq("document_id", id).eq("event", "sent").order("created_at", { ascending: false }).limit(1).maybeSingle();
+  const signerEmails = new Set<string>(((sent?.detail as any)?.signers ?? []).map((e: string) => String(e).toLowerCase()));
+  const toEmails = new Set<string>(((sent?.detail as any)?.to ?? []).map((e: string) => String(e).toLowerCase()));
+  if (!signerEmails.size && team[0]) signerEmails.add(team[0].email);
+  const people = team.filter((t) => !toEmails.size || toEmails.has(t.email) || signerEmails.has(t.email));
+  const { acceptLinkFor } = await import("@/lib/sales-acceptance.server");
+  const { signProposalView } = await import("@/lib/email-tracking.server");
+  const { acceptanceKey } = await import("@/lib/sales-acceptance-model");
+  const viewUrl = await signProposalView(id, version);
+  const { data: acc } = await a.db.from("sales_acceptances").select("signer_email").eq("acceptance_key", acceptanceKey(a.doc.kind, id, version));
+  const signed = new Set(((acc ?? []) as any[]).map((r) => String(r.signer_email ?? "").toLowerCase()));
+  return {
+    version,
+    people: await Promise.all(people.map(async (t) => {
+      const isSigner = signerEmails.has(t.email);
+      return { name: t.name, email: t.email, title: t.title, role: (isSigner ? "signer" : "viewer") as "signer" | "viewer", signed: signed.has(t.email),
+        signUrl: isSigner ? await acceptLinkFor(a.doc.kind, id, version, t.email) : null, viewUrl };
+    })),
+  };
+}
+
+export async function logLinkCopy(userId: string, id: string, email: string, kind: "sign" | "view") {
+  const a = await access(userId, id);
+  await event(a.db, id, userId, "link_copied", { version: a.doc.approved_version, email, kind });
+  return { ok: true };
+}

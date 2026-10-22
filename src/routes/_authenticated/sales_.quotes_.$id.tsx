@@ -4,6 +4,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { SalesProgress } from "@/components/sales/sales-record-parts";
+import { salesProgress } from "@/lib/sales-progress";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -66,6 +68,7 @@ function QuotePage() {
         <div>
           <h1 className="text-3xl">Q-{d.quote.quote_number} v{d.quote.version} · {d.quote.title}</h1>
           <p className="mt-1 text-sm text-muted-foreground">{d.client?.legal_name ?? "No client"} · Owner {d.ownerName}{d.quote.valid_until ? ` · Valid until ${d.quote.valid_until}` : ""}</p>
+          <div className="mt-3"><SalesProgress steps={salesProgress({ status: s, approvedAt: d.quote.approved_at ?? null, signedAt: d.quote.signed_at ?? null, sowStatus: d.quote.sow_id ? "linked" : null })} /></div>
         </div>
         <Badge className="text-sm">{QUOTE_STATUS_LABEL[s] ?? s}</Badge>
       </div>
