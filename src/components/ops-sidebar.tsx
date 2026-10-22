@@ -39,6 +39,7 @@ import {
 } from "@/components/ui/sidebar";
 import { useClientWorkspace } from "@/components/client-workspace";
 import { canSee } from "@/lib/staff-nav";
+import { canEditRemittance } from "@/lib/sales-acceptance-model";
 import { SidebarFavorites, FavoriteStar } from "@/components/sidebar-favorites";
 import { SidebarAccountFooter } from "@/components/sidebar-account-footer";
 import { getNavigation, operationsNavItemIsActive } from "@/lib/navigation";
@@ -246,6 +247,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
     ...(isSalesLeader ? [{ id: "sales-cro", title: "CRO dashboard", url: "/sales/cro", icon: "report" }] : []),
     { id: "sales-dashboard", title: "Sales dashboard", url: "/sales/dashboard", icon: "report" },
     { id: "sales", title: "Pipeline & pricing", url: "/sales", icon: "briefcase" },
+    ...(canEditRemittance(staffRoles) ? [{ id: "client-invoice-instructions", title: "Client invoices · ACH & Wire", url: "/ops/billing/payment-instructions", icon: "ledger" }] : []),
     { id: "sales-outreach", title: "Outreach", url: "/sales/outreach", icon: "people" },
     { id: "sales-follow-ups", title: "Follow-ups & engagement", url: "/sales/follow-ups", icon: "tasks" },
     { id: "sales-documents", title: "Quotes, proposals & agreements", url: "/sales/documents", icon: "document", sub: [

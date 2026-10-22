@@ -13,12 +13,13 @@ import { decideRemittanceVersion, listRemittanceVersions, prepareRemittanceVersi
 export const Route = createFileRoute("/_authenticated/ops/billing/payment-instructions")({
   head: () => ({
     meta: [
-      { title: "Harmonious payment details - Operations" },
+      { title: "Client invoice ACH & Wire - Harmonious" },
       { name: "description", content: "Harmonious wire and ACH instructions shown to clients for invoices, with second-person approval." },
-      { property: "og:title", content: "Harmonious payment details - Operations" },
+      { property: "og:title", content: "Client invoice ACH & Wire - Harmonious" },
       { property: "og:description", content: "Approved wire and ACH instructions for client invoices." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
+      { name: "robots", content: "noindex" },
     ],
   }),
   component: PaymentInstructionsPage,
@@ -43,22 +44,25 @@ function PaymentInstructionsPage() {
   );
   return (
     <main className="mx-auto max-w-5xl space-y-6 px-4 py-10">
-      <header><h1 className="text-3xl">Harmonious payment details (quotes &amp; invoices)</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Harmonious's own wire and ACH details shown to clients after they sign a quote, RFQ or RFP and on their invoices. These are separate from fund banking, which is managed on each fund. Only the CEO and CRO can enter or approve them, and the person who approves must be different from the person who entered. Approved versions can't be edited; add a new version to change them. Clients see masked numbers until they choose to reveal, and every view is logged.</p></header>
-      {q.error && <p className="text-sm text-destructive">{(q.error as Error).message}</p>}
+      <header>
+        <div className="mb-3 flex flex-wrap gap-2"><Badge variant="outline">CEO &amp; CRO</Badge><Badge variant="secondary">Client invoices only</Badge></div>
+        <h1 className="text-3xl">Client invoice ACH &amp; Wire</h1>
+        <p className="mt-2 text-sm text-muted-foreground">Harmonious payment instructions for client invoices, quotes, RFQs and RFPs — separate from fund banking.</p>
+      </header>
+      {q.isPending ? <p className="text-sm text-muted-foreground">Loading payment instructions…</p> : q.error ? <div className="space-y-3"><p className="text-sm text-destructive">{(q.error as Error).message}</p><Button variant="outline" onClick={() => void q.refetch()}>Retry</Button></div> : <>
       <Card>
-        <CardHeader><CardTitle className="font-heading">Add a new version</CardTitle><CardDescription>It replaces the current approved one only after a second person approves it.</CardDescription></CardHeader>
+        <CardHeader><CardTitle className="font-heading">Add ACH or wire instructions</CardTitle><CardDescription>Save a new version for approval. Current approved instructions remain unchanged until approval.</CardDescription></CardHeader>
         <CardContent className="space-y-3">
           <div className="flex gap-2">{(["wire", "ach"] as const).map((m) => <Button key={m} size="sm" variant={f.method === m ? "default" : "outline"} onClick={() => setF({ ...f, method: m })}>{m === "ach" ? "ACH" : "Wire"}</Button>)}</div>
           <div className="grid gap-3 sm:grid-cols-2">
-            {field("bankName", "Bank name")}{field("accountName", "Account name")}{field("accountNumber", "Account number")}{field("routingNumber", "Routing number")}
+            {field("bankName", "Bank name")}{field("accountName", "Beneficiary / account name")}{field("accountNumber", "Account number")}{field("routingNumber", f.method === "ach" ? "ACH routing number" : "Wire routing number")}
             {field("swiftCode", "SWIFT (optional)")}{field("bankAddress", "Bank address (optional)")}{field("beneficiaryAddress", "Beneficiary address (optional)")}{field("referenceNote", "Note to clients (optional)")}
           </div>
           <Button disabled={busy} onClick={() => run(async () => { await prep({ data: f }); setF(EMPTY); }, "Saved for approval")}>Save for approval</Button>
         </CardContent>
       </Card>
       <Card>
-        <CardHeader><CardTitle className="font-heading">Versions</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="font-heading">Approved instructions &amp; review history</CardTitle></CardHeader>
         <CardContent className="space-y-2">
           {(q.data?.versions ?? []).map((v: any) => (
             <div key={v.id} className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-3 text-sm">
@@ -74,6 +78,7 @@ function PaymentInstructionsPage() {
           {q.data && !q.data.versions.length && <p className="text-sm text-muted-foreground">No payment instructions yet. Clients are told to contact their Harmonious representative.</p>}
         </CardContent>
       </Card>
+      </>}
     </main>
   );
 }
