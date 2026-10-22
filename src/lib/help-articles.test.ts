@@ -27,6 +27,16 @@ describe("help center visibility", () => {
   it("maps fund manager platform role", () => {
     expect(clientHelpRolesFor(["fund_manager"])).toContain("fund_manager");
   });
+  it("requires fresh approval for updated illustrated guides and protects new manager guides", () => {
+    const slugs = ["fund-manager-first-login", "sign-operating-agreement"];
+    const old = new Map(slugs.map((slug) => [slug, 1]));
+    expect(articlesFor(HELP_CATALOG, { audience: "client", roles: ["fund_manager"] }, old)).toHaveLength(0);
+    const current = new Map(slugs.map((slug) => [slug, 2]));
+    expect(articlesFor(HELP_CATALOG, { audience: "client", roles: ["fund_manager"] }, current).map((a) => a.slug).sort()).toEqual(slugs.sort());
+    const added = new Map(["manager-countersign-timing", "manager-document-downloads", "harmonized-spv-guide", "fund-of-funds-guide"].map((slug) => [slug, 1]));
+    expect(articlesFor(HELP_CATALOG, { audience: "client", roles: ["investor"] }, added)).toHaveLength(0);
+    expect(articlesFor(HELP_CATALOG, { audience: "client", roles: ["fund_manager"] }, added)).toHaveLength(4);
+  });
   it("requires current-version approval for revised setup and EIN guidance", () => {
     const approved = new Map([["manager-set-up-fund", 1], ["manager-ein", 1]]);
     const reader = { audience: "client" as const, roles: ["fund_manager"] };

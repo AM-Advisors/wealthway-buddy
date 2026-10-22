@@ -52,6 +52,7 @@ export type HelpArticle = {
   sections: HelpSection[];
   /** Rich guide component rendered instead of sections. */
   guide?: "fund-manager-first-login" | "sign-operating-agreement";
+  download?: { href: string; filename: string };
 };
 
 export type HelpArticleView = HelpArticle & { approved: boolean };

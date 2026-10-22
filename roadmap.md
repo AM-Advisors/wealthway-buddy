@@ -1,5 +1,10 @@
 # Roadmap
 
+## Help Center guides and screen recordings (2026-10-22)
+- [x] Updated outdated guides and added fund setup, investor invitation/onboarding, document access, countersign, Harmonized SPV and fund-of-funds guidance; changed client articles need approval of their new versions.
+- [x] 27 Help Center checks passed; preview build OK. Signed-in Help Center viewing not checked.
+- [ ] Create actual screen recordings for investor invitations, fund setup and investor onboarding — blocked until independently isolated synthetic QA supports recording real steps without production records or simulated signatures.
+
 ## Operations Slack links and verification confirmation (2026-10-22)
 - [x] Locate the reported client PortalGate error; Operations Slack links now land directly on ops.harmonious.co without an app-domain hop. Missing owner remains informational; no ownership or permission changes. Exact live access-check failure is not reproduced.
 - [x] Route KYC/KYB/AML confirmation-required alerts through the existing sender from account/provider checks, business submissions and prior-check reruns; include canonical account/business review rows in the existing alert sweep. Processing-only checks do not alert; restricted details stay private.
