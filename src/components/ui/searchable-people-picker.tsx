@@ -17,7 +17,7 @@ export function SearchablePeoplePicker({ children, ...props }: { children: React
       if (!isValidElement<{ value?: string; children?: ReactNode; className?: string; "aria-label"?: string; id?: string; placeholder?: string; disabled?: boolean }>(child)) return;
       const p = child.props;
       if (typeof p.value === "string") {
-        options.push({ value: p.value, label: textOf(p.children), disabled: p.disabled });
+        options.push({ value: p.value, label: textOf(p.children), disabled: p.disabled ?? false });
         return;
       }
       if (p.placeholder) placeholder = p.placeholder;
@@ -29,7 +29,8 @@ export function SearchablePeoplePicker({ children, ...props }: { children: React
     });
   }
   visit(children);
-  return <SearchableSelect value={props.value ?? ""} onValueChange={(value) => props.onValueChange?.(value)} disabled={props.disabled} options={options} className={className} id={id} aria-label={label} placeholder={placeholder} />;
+  return <SearchableSelect value={props.value ?? ""} onValueChange={(value) => props.onValueChange?.(value)} disabled={props.disabled ?? false} options={options}
+    {...(className ? { className } : {})} {...(id ? { id } : {})} {...(label ? { "aria-label": label } : {})} {...(placeholder ? { placeholder } : {})} />;
 }
 
 export function SearchableNativeSelect({ children, onChange, ...props }: {

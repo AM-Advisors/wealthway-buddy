@@ -17,7 +17,7 @@ export function SearchableSelect({ options, children, value, onValueChange, plac
   const items: SearchableOption[] = options ?? Children.toArray(children).flatMap((child) => {
     if (!isValidElement<{ value: string; children: ReactNode; disabled?: boolean }>(child)) return [];
     const text = (node: ReactNode): string => Children.toArray(node).map((part) => isValidElement<{ children?: ReactNode }>(part) ? text(part.props.children) : String(part)).join("");
-    return [{ value: child.props.value, label: text(child.props.children), disabled: child.props.disabled }];
+    return [{ value: child.props.value, label: text(child.props.children), disabled: child.props.disabled ?? false }];
   });
   const selected = items.find((option) => option.value === value);
   return (
@@ -33,7 +33,7 @@ export function SearchableSelect({ options, children, value, onValueChange, plac
         <Command>
           <CommandInput aria-label={label ? `Search ${label}` : "Search contacts"} placeholder="Search name, email or firm…" value={search} onValueChange={setSearch} />
           <CommandList><CommandEmpty>No matches found.</CommandEmpty><CommandGroup>
-            {items.map((option) => <CommandItem key={option.value} value={option.value || "__empty_selection__"} keywords={[option.label, option.detail ?? "", ...(option.keywords ?? [])]} disabled={option.disabled}
+            {items.map((option) => <CommandItem key={option.value} value={option.value || "__empty_selection__"} keywords={[option.label, option.detail ?? "", ...(option.keywords ?? [])]} disabled={option.disabled ?? false}
               onSelect={() => { onValueChange(option.value); setOpen(false); setSearch(""); }}>
               <Check className={cn("h-4 w-4 shrink-0", option.value === value ? "opacity-100" : "opacity-0")} />
               <span className="min-w-0 flex-1">{option.content ?? <><span className="block break-words">{option.label}</span>{option.detail && <span className="block break-words text-xs text-muted-foreground">{option.detail}</span>}</>}</span>
