@@ -1,8 +1,9 @@
 # Roadmap
 
 ## Searchable contact selection (2026-10-22)
-- [ ] Introduce shared type-to-suggest picker and apply to existing contact/person/team selection, including Sales recipients.
-- [ ] Verify filtering and selection offline; signed-in walkthrough requires independently isolated synthetic QA.
+- [x] Shared searchable contact/person picker applied across Sales, CRM, Inbox, fund setup/signers, client teams, professional access, task assignment, accounting and investor/capital records; existing option readers, callbacks and disabled choices preserved. Sales recipients/CC/signers filter while retaining checked choices.
+- [x] Offline fictional browser fixture passed: name/email/firm suggestions, duplicate-name distinction, keyboard selection, no matches, Escape preservation, existing select adapters and checked-recipient retention; preview build OK.
+- [ ] Signed-in contact-selection walkthrough blocked until independently isolated synthetic QA exists; no live records or emails changed.
 
 ## Selected payment reporting and schedules (2026-10-22)
 - [x] Add selected payment calculations and monthly/quarterly/annual totals across commissions, Operations/client invoices and fund payments; existing entitled records only.
