@@ -18362,6 +18362,145 @@ export type Database = {
           },
         ]
       }
+      forecast_scenario_versions: {
+        Row: {
+          actor_id: string
+          assumptions: Json
+          canonical_snapshot: Json | null
+          created_at: string
+          id: string
+          results: Json
+          scenario_id: string
+        }
+        Insert: {
+          actor_id: string
+          assumptions: Json
+          canonical_snapshot?: Json | null
+          created_at?: string
+          id?: string
+          results: Json
+          scenario_id: string
+        }
+        Update: {
+          actor_id?: string
+          assumptions?: Json
+          canonical_snapshot?: Json | null
+          created_at?: string
+          id?: string
+          results?: Json
+          scenario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "forecast_scenario_versions_scenario_id_fkey"
+            columns: ["scenario_id"]
+            isOneToOne: false
+            referencedRelation: "forecast_scenarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      forecast_scenarios: {
+        Row: {
+          created_at: string
+          created_by: string
+          forecast_id: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          forecast_id: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          forecast_id?: string
+          id?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "forecast_scenarios_forecast_id_fkey"
+            columns: ["forecast_id"]
+            isOneToOne: false
+            referencedRelation: "forecasts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      forecast_share_events: {
+        Row: {
+          actor_id: string
+          created_at: string
+          id: string
+          scenario_id: string
+          shared: boolean
+          version_id: string
+        }
+        Insert: {
+          actor_id: string
+          created_at?: string
+          id?: string
+          scenario_id: string
+          shared: boolean
+          version_id: string
+        }
+        Update: {
+          actor_id?: string
+          created_at?: string
+          id?: string
+          scenario_id?: string
+          shared?: boolean
+          version_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "forecast_share_events_scenario_id_fkey"
+            columns: ["scenario_id"]
+            isOneToOne: false
+            referencedRelation: "forecast_scenarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "forecast_share_events_version_id_fkey"
+            columns: ["version_id"]
+            isOneToOne: false
+            referencedRelation: "forecast_scenario_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      forecasts: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          name: string
+          subject_id: string
+          subject_type: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          name: string
+          subject_id: string
+          subject_type: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          name?: string
+          subject_id?: string
+          subject_type?: string
+        }
+        Relationships: []
+      }
       form_1042_returns: {
         Row: {
           approved_by: string | null

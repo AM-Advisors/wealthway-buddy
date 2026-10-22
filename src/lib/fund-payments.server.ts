@@ -39,8 +39,8 @@ export async function priceAddOns(db: any, clientId: string, keys: string[], off
     const c = ((cat ?? []) as any[]).find((x) => x.key === key);
     const sow = live.find((p) => p.service_key === key && offeringId && p.offering_id === offeringId)
       ?? live.find((p) => p.service_key === key && !p.offering_id);
-    if ((key === 'portfolio' || key === 'report_cards') && !sow && rateFor(key) === null) {
-      throw new Error('Portfolio and Report Cards need an approved quote before purchase. Your fund draft can still be saved.');
+    if ((key === 'portfolio' || key === 'report_cards' || key === 'forecasting') && !sow && rateFor(key) === null) {
+      throw new Error('Portfolio, Report Cards, and Forecasting need an approved quote before purchase. Your fund draft can still be saved.');
     }
     return sow
       ? { key, name: c?.name ?? key, cents: Number(sow.contracted_cents), source: "sow" as const }

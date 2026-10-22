@@ -1,3 +1,4 @@
+import { ForecastWorkspace, useForecastAccess } from "@/components/forecast-workspace";
 import { fundOriginLabel, migrationApplies } from "@/lib/fund-origin";
 import { useEffect } from "react";
 import { ReadinessQueue } from "@/components/investment-readiness";
@@ -153,6 +154,8 @@ function Empty({ text }: { text: string }) {
 }
 
 export function FundWorkspace({ fundId, tab, onTab, mode = "client", extraTabs = [], headerExtra }: { fundId: string; tab: string; onTab: (t: string) => void; mode?: FundWorkspaceMode; extraTabs?: ExtraTab[]; headerExtra?: React.ReactNode }) {
+  const forecastAccess = useForecastAccess({subjectType:"fund",subjectId:fundId});
+  if (forecastAccess.data?.enabled) extraTabs = [...extraTabs, {value:"forecasts",label:"Forecasts",content:<ForecastWorkspace subjectType="fund" subjectId={fundId}/>}];
   const staff = mode === "harmonious";
   const [closeOpen, setCloseOpen] = useState(false);
   const loadFund = useServerFn(getClientFund);

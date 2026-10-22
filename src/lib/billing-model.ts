@@ -21,6 +21,7 @@ export function serviceCatalog(): ServiceOption[] {
     { key: "fund_administration", label: "Fund Administration", group: "Administration" },
     { key: "portfolio", label: "Portfolio", group: "Wealth & reporting" },
     { key: "report_cards", label: "Report Cards", group: "Wealth & reporting" },
+    { key: "forecasting", label: "Forecasting", group: "Wealth & reporting" },
     ...SERVICING_KEYS.map((k) => ({ key: `servicing_${k}`, label: `${SERVICING_LABEL[k]} servicing`, group: "Servicing" })),
     { key: "servicing_institutional", label: "Institutional servicing", group: "Servicing" },
     ...INVESTOR_TIERS.map((t) => ({ key: `investor_servicing_${t.key}`, label: `${t.name} investor servicing${t.maxInvestors ? ` (up to ${t.maxInvestors})` : ""}`, group: "Investor servicing" })),
