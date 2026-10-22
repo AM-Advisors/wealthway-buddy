@@ -6,6 +6,7 @@ import { template as documentSigned } from './document-signed'
 import { template as investorInvitation } from './investor-invitation'
 import { template as deliveryAlert } from './delivery-alert'
 import { template as fundInvitation } from './fund-invitation'
+import { template as sowReady } from './sow-ready'
 import { template as managerAlert } from './manager-alert'
 import { template as signingReminder } from './signing-reminder'
 import { template as investorWelcome } from './investor-welcome'
@@ -56,6 +57,7 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'investor-invitation': investorInvitation,
   'delivery-alert': deliveryAlert,
   'fund-invitation': fundInvitation,
+  'sow-ready': sowReady,
   'manager-alert': managerAlert,
   'signing-reminder': signingReminder,
   'investor-welcome': investorWelcome,

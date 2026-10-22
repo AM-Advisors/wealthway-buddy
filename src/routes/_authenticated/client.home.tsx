@@ -92,6 +92,7 @@ function ClientHome() {
         <Card>
           <CardHeader><CardTitle className="text-base">Waiting on you</CardTitle></CardHeader>
           <CardContent className="space-y-2 text-sm">
+            <Link to="/client/agreements" className="flex justify-between rounded-md border p-3 hover:bg-muted"><span>Statements of work to sign</span><Badge variant={h?.sowsToSign ? "default" : "secondary"}>{h?.sowsToSign ?? 0}</Badge></Link>
             <Link to="/client/sign-offs" className="flex justify-between rounded-md border p-3 hover:bg-muted"><span>Sign-offs to review</span><Badge variant={signoffs ? "default" : "secondary"}>{signoffs}</Badge></Link>
             <Link to="/client/invoices" className="flex justify-between rounded-md border p-3 hover:bg-muted"><span>Invoices to pay</span><Badge variant={invoices ? "default" : "secondary"}>{invoices}</Badge></Link>
             <Link to="/client/inbox" className="flex justify-between rounded-md border p-3 hover:bg-muted"><span>Messages from Harmonious</span><span className="text-muted-foreground">Open</span></Link>
