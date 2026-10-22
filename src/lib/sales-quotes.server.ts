@@ -291,9 +291,9 @@ export async function linkedRecords(userId: string, id: string) {
   if (!q || !canSee(a, q.owner_user_id)) throw new Error("Quote not found.");
   const [client, deal, sow, invoices] = await Promise.all([
     q.client_id ? db.from("clients").select("id, legal_name").eq("id", q.client_id).maybeSingle().then((r: any) => r.data) : null,
-    q.deal_id ? db.from("crm_deals").select("id, name, stage, sales_stage, amount_cents").eq("id", q.deal_id).maybeSingle().then((r: any) => r.data) : null,
+    q.deal_id ? db.from("crm_deals").select("id, title, stage, sales_stage, amount_cents").eq("id", q.deal_id).maybeSingle().then((r: any) => r.data) : null,
     q.sow_id ? db.from("client_sows").select("id, status, client_signed_at, executed_at").eq("id", q.sow_id).maybeSingle().then((r: any) => r.data) : null,
-    db.from("invoices").select("id, number, status, total_cents, due_date, paid_at").eq("sales_quote_id", id).order("created_at").then((r: any) => r.data ?? []),
+    db.from("invoices").select("id, number, status, total_cents, due_date, paid_on").eq("sales_quote_id", id).order("created_at").then((r: any) => r.data ?? []),
   ]);
   return { quote: q, client, deal, sow, invoices: invoices as any[] };
 }
