@@ -122,7 +122,7 @@ function AdminLevelPicker({ onAdd, lines }: { onAdd: (key: string) => void; line
   );
 }
 
-export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; initial?: { id: string; title: string; clientId: string | null; offeringId?: string | null; validUntil: string | null; notes: string | null; lines: Line[] } }) {
+export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; initial?: { id: string; title: string; clientId: string | null; contactId?: string | null; offeringId?: string | null; validUntil: string | null; notes: string | null; lines: Line[] } }) {
   const nav = useNavigate();
   const [clientId, setClientId] = useState<string | null>(initial?.clientId ?? null);
   const [offeringId, setOfferingId] = useState<string | null>(initial?.offeringId ?? null);
@@ -134,7 +134,7 @@ export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; init
   const c = useQuery({ queryKey: ["quote-catalog", clientId], queryFn: () => cat({ data: { clientId } }) });
   const save = useServerFn(saveSalesQuote);
   const m = useMutation({
-    mutationFn: () => save({ data: { id: initial?.id ?? null, title, clientId, offeringId, validUntil: validUntil || null, notes: notes || null, lines } }),
+    mutationFn: () => save({ data: { id: initial?.id ?? null, title, clientId, contactId: clientId === initial?.clientId ? initial?.contactId ?? null : null, offeringId, validUntil: validUntil || null, notes: notes || null, lines } }),
     onSuccess: (r) => { toast.success("Quote saved"); onCancel(); nav({ to: "/sales/quotes/$id", params: { id: r.id } }); },
     onError: (e: Error) => toast.error(e.message),
   });

@@ -1,8 +1,9 @@
 # Roadmap
 
 ## Add contact while sending a quote (2026-10-22)
-- [ ] Add inline missing-contact entry to the quote send dialog using the existing authorized client-contact save and recipient selection.
-- [ ] Run focused offline checks; signed-in sending remains blocked until independently isolated synthetic QA exists.
+- [x] Add missing-contact entry on quote recipients and proposal/RFP/RFQ sending using the existing CRM prospect engine, duplicate-email reuse, scoped conditional assignment and recipient refresh; no account membership or automatic email granted.
+- [x] 26 focused offline checks and fictional form save/error recovery passed, desktop/compact views without overflow or runtime errors; preview build OK.
+- [ ] Signed-in contact creation and sending — blocked until independently isolated synthetic QA exists; no real contacts or emails created during testing.
 
 ## Signed-SOW quarterly commissions (2026-10-22)
 - [x] Client SOW signing, quote/proposal/RFP/RFQ acceptance and Harmonious countersigning call the shared commission handoff; existing paid invoices queue automatically and future paid invoices use the same canonical queue. Assigned reps receive a payment-dependent signing notice or their own quarterly scheduled amount; no actual payout is initiated.
