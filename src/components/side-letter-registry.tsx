@@ -23,6 +23,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { invalidateFund } from "@/lib/fund-query-keys";
 
 const catLabel = (k: string) => TERM_CATEGORIES.find((c) => c.key === k)?.label ?? k;
 const scopeLabel = (k: string | null) => MFN_SCOPES.find((s) => s.key === k)?.label ?? "-";
@@ -66,7 +67,7 @@ export function SideLetterRegistry({ fundId, onboardingId }: { fundId: string; o
   const q = useQuery({ queryKey: key, queryFn: () => list({ data: { fundId } }) });
   const [draft, setDraft] = useState<Draft | null>(null);
   const [openId, setOpenId] = useState<string | null>(null);
-  const refresh = () => qc.invalidateQueries({ queryKey: key });
+  const refresh = () => invalidateFund(qc, fundId);
 
   const proposeM = useMutation({
     mutationFn: (d: Draft) =>

@@ -69,6 +69,8 @@ export async function lockedSave<T>(actionKey: keyof typeof LOCKED_ACTIONS, ctx:
     description: `A change to locked ${a.label.toLowerCase()} needs approval from a Harmonious staff member other than the requester. Review it in Operations → Locked edits. Request ${req.id}.`,
     priority: "high", team: "operations", responsibility_status: "HARMONIOUS_HANDLING", related_workflow_type: "locked_edit", related_workflow_id: req.id, source: "workflow", offering_id: a.offering?.(payload) ?? null, client_id: payload?.clientId ?? null,
   });
+  const off = a.offering?.(payload);
+  if (off) await (await import("@/lib/fund-change-notify.server")).notifyFundChange({ fundId: off, ref: req.id, title: "Saved fund information", status: "requested", actorId: ctx.userId });
   throw new PendingApproval(req.id);
 }
 
@@ -96,6 +98,8 @@ export async function decideLockedEdit(ctx: Ctx, input: { requestId: string; dec
   const now = new Date().toISOString();
   if (input.decision === "reject") {
     await db.from("locked_edit_requests").update({ status: "rejected", decided_by: ctx.userId, decided_at: now, note: input.note ?? null }).eq("id", req.id).eq("status", "pending");
+    const off = LOCKED_ACTIONS[req.action]?.offering?.(req.payload);
+    if (off) await (await import("@/lib/fund-change-notify.server")).notifyFundChange({ fundId: off, ref: req.id, title: "Saved fund information", status: "rejected", actorId: ctx.userId });
     return { ok: true };
   }
   const a = LOCKED_ACTIONS[req.action];
@@ -110,5 +114,6 @@ export async function decideLockedEdit(ctx: Ctx, input: { requestId: string; dec
   await db.from("record_locks").upsert({ resource_key: req.resource_key, locked_by: ctx.userId }, { onConflict: "resource_key", ignoreDuplicates: true });
   const off = a.offering?.(req.payload);
   if (off) await (await import("@/lib/fund-setup-extras.server")).autoCompleteAfterSave({ offeringId: off });
+  if (off) await (await import("@/lib/fund-change-notify.server")).notifyFundChange({ fundId: off, ref: req.id, title: "Saved fund information", status: "approved", actorId: ctx.userId });
   return { ok: true };
 }

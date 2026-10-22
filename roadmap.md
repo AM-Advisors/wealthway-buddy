@@ -1,5 +1,11 @@
 # Roadmap
 
+## Fund requests, approvals and alerts (2026-10-22)
+- [x] Expose canonical pending fees, side letters and saved-edit review links beside client approvals; reuse existing decisions, including reason-logged Super Admin side-letter self-review.
+- [x] Add fund-scoped pending request summary and recent status updates; emit manager email/bell and existing Operations alerts for fee/side-letter/saved-edit requests, plus operational request creation/progress. No new approval store or automatic approval.
+- [x] 23 focused fictional model/alert/side-letter/phase-3 checks passed; preview build OK. No real fund terms, approvals or alerts changed during testing.
+- [ ] Authenticated fund request → review → decision/read-back and actual alert delivery — blocked on independently isolated synthetic QA; shared production browser testing not permitted.
+
 ## Default terms and separate investor exceptions (2026-10-22)
 - [x] Keep fund defaults distinct from class overrides; default-term investors need no exception class and no missing-class warning.
 - [x] Reuse approved-class assignment and separately linked side-letter proposals from fund setup and investor details; existing authorization/approval preserved, signed/funded defaults also protected against class reassignment.

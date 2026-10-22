@@ -3,7 +3,7 @@
  * request completed, material update). Uses the existing notification_events outbox → fund managers' email;
  * bodies carry status wording only — never amounts, investor or bank data. Staff are notified through tasks.
  */
-export async function notifyFundManagers(fundId: string, kind: "approval_required" | "information_required" | "request_completed" | "material_update", title: string, portalPath: string) {
+export async function notifyFundManagers(fundId: string, kind: "approval_required" | "information_required" | "request_completed" | "material_update", title: string, portalPath: string, eventRef?: string) {
   const db = (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
   const copy = {
     approval_required: ["Your approval is required", `Harmonious has prepared "${title}" and needs your approval before proceeding.`],
@@ -21,7 +21,7 @@ export async function notifyFundManagers(fundId: string, kind: "approval_require
     const { data: off } = await db.from("offerings").select("client_id").eq("id", fundId).maybeSingle();
     const rows = ((mgrs ?? []) as any[]).filter((m) => m.user_id).map((m) => ({
       user_id: m.user_id, client_id: off?.client_id ?? null, kind, title: copy[0], body: copy[1], path: portalPath,
-      dedupe_key: `${kind}:${fundId}:${title}:${new Date().toISOString().slice(0, 13)}`,
+      dedupe_key: `${kind}:${fundId}:${eventRef ?? `${title}:${new Date().toISOString().slice(0, 13)}`}`,
     }));
     if (rows.length) for (const r of rows) await db.from("client_notifications").insert(r).then(() => undefined, () => undefined);
   } catch { /* best effort */ }

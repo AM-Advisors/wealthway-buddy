@@ -120,6 +120,7 @@ export const listSideLetters = createServerFn({ method: "GET" })
           .is("removed_at", null),
       ]);
 
+    const superAdmin = await (await import("@/lib/self-approval.server")).isSuperAdmin(context.userId);
     const obMap = new Map<string, any>(((onboardings ?? []) as any[]).map((o) => [o.id, o]));
     const commitment = (o: any) =>
       o ? (o.commitment_amount_cents ?? o.accepted_amount_cents ?? o.requested_amount_cents ?? null) : null;
@@ -185,7 +186,7 @@ export const listSideLetters = createServerFn({ method: "GET" })
         decidedAt: r.decided_at as string | null,
         decisionReason: r.decision_reason as string | null,
         createdAt: r.created_at as string,
-        canDecide: r.status === "pending" && canApprove({ actorId: context.userId, actorKind: kind, proposedBy: r.proposed_by }),
+        canDecide: r.status === "pending" && (canApprove({ actorId: context.userId, actorKind: kind, proposedBy: r.proposed_by }) || (superAdmin && kind === "staff")),
       })),
       mfnQueue,
       mfnReviews: ((reviews ?? []) as any[]).map((v) => ({
@@ -294,6 +295,7 @@ export const proposeSideLetterChange = createServerFn({ method: "POST" })
       actor_id: context.userId,
       detail: { change_request_id: req.id, reason: data.reason },
     });
+    await (await import("@/lib/fund-change-notify.server")).notifyFundChange({ fundId: data.fundId, ref: req.id, title: "Side letter change", status: "requested", actorId: context.userId });
     return { ok: true, requestId: req.id as string };
   });
 
@@ -370,6 +372,7 @@ export const decideSideLetterChange = createServerFn({ method: "POST" })
       actor_id: context.userId,
       detail: { change_request_id: req.id, reason: data.reason ?? null },
     });
+    await (await import("@/lib/fund-change-notify.server")).notifyFundChange({ fundId: req.offering_id, ref: req.id, title: "Side letter change", status: data.decision === "approved" ? "approved" : "rejected", actorId: context.userId });
     return { ok: true };
   });
 

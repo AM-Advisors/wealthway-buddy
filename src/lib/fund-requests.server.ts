@@ -134,7 +134,7 @@ export async function createRequest(uid: string, d: {
     sla_due_at: hours == null ? null : new Date(now.getTime() + hours * 3_600_000).toISOString(), irreversible: def.irreversible,
   }).select("*").single();
   if (error) throw new Error(error.message);
-  await (await import("@/lib/ops-slack-notify.server")).notifySubmission({ kind: "fund_request", title: `Client request: ${title}`, offeringId: d.fundId, submittedBy: uid, ref: r.id });
+  await (await import("@/lib/ops-slack-notify.server")).notifySubmission({ kind: "fund_request", title: "Fund service request submitted", offeringId: d.fundId, submittedBy: uid, ref: r.id, path: `/ops/fund/${d.fundId}?tab=requests` });
   const { data: task } = await db.from("staff_tasks").insert({
     title: `Client request: ${title}`, description: `${def.label} submitted by the fund manager. Open it in the fund's Requests tab.`,
     priority: d.priority === "normal" ? "normal" : d.priority, status: "open", team: route.taskTeam, offering_id: d.fundId, due_date: r.due_date,
@@ -153,6 +153,7 @@ export async function createRequest(uid: string, d: {
   for (const f of d.files ?? []) await upload(db, d.fundId, r.id, uid, f, "CLIENT");
   await ev(db, r, uid, staff ? "submitted_by_staff" : "submitted", true, { type: d.type });
   if (entitlement !== "INCLUDED") await ev(db, r, null, "service_review_required", false);
+  await (await import("@/lib/fund-change-notify.server")).notifyFundChange({ fundId: d.fundId, ref: r.id, title: "Fund service request", status: "requested", actorId: uid, tab: "requests" });
   return { id: r.id as string };
 }
 
@@ -212,8 +213,10 @@ export async function updateRequest(uid: string, d: {
     }
     if (d.status === "WAITING_ON_CLIENT") await notifyFundManagers(r.fund_id, "information_required", r.title, `/manager/fund/${r.fund_id}/requests`);
     if (d.status === "COMPLETED") await notifyFundManagers(r.fund_id, "request_completed", r.title, `/manager/fund/${r.fund_id}/requests`);
+    if (r.client_visibility && !["WAITING_ON_CLIENT", "COMPLETED"].includes(d.status ?? "")) await notifyFundManagers(r.fund_id, "material_update", "Fund service request", `/client/funds/${r.fund_id}?tab=requests`);
   } else if (d.stage !== undefined && d.stage !== r.stage) {
     await ev(db, r, uid, "stage", true, { stage: requestType(r.request_type).stages[patch.stage] });
+    if (r.client_visibility) await notifyFundManagers(r.fund_id, "material_update", "Fund service request", `/client/funds/${r.fund_id}?tab=requests`);
   }
   if (d.reason) await ev(db, r, uid, "internal_note", false, { text: d.reason });
   return { ok: true };

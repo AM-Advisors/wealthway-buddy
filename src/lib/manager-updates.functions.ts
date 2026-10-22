@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/lib/require-auth";
 
-const KINDS = ["fund_assigned", "setup_task_progress", "service_progress", "launch_progress"] as const;
+const KINDS = ["fund_assigned", "setup_task_progress", "service_progress", "launch_progress", "client_work_update"] as const;
 
 export type FundUpdate = { id: string; offeringId: string; fundName: string; headline: string; intro: string; at: string; path: string };
 
