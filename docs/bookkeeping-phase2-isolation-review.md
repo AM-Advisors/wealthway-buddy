@@ -28,6 +28,12 @@ October 22, 2026. Status: **blocked before authentication or financial fixture w
 
 The preceding continuation reran 76 offline tests. This Phase 2 review reran six safety tests, not another 76, and does not turn prior offline results into deployed security verification.
 
+### Candidate QA source findings
+
+The Harmonious QA snapshot contains TanStack Start, bookkeeping/operational modules and independent environment-policy code: `src/lib/environment.server.ts`, `src/lib/integration-policy.server.ts` and `src/lib/qa-environment.test.ts`. The policy intends to disable integrations when unconfigured and gate QA email/jobs/sign-in integrations behind explicit flags. Browser and server clients read environment configuration separately; the privileged server client bypasses RLS, so each caller still needs authorization. These are source facts, not observed deployed settings or successful runtime tests.
+
+Its migration histories contain literal data inserts, including offering/application/client-related rows; they must not be applied blindly. The bounded candidate migration scan found no direct HTTP cron creation calls, but this does not establish that deployed jobs, auth triggers or external schedulers are absent. Its release checklist and roadmap are historical documentation, not current isolation evidence. No candidate credentials, database records, providers or sessions were accessed, no files were copied into production, and its tests were not run here.
+
 ## Evidence required before authentication or data writes
 
 | Isolation item | Required observation in the QA project's own context |
