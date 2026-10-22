@@ -1,5 +1,9 @@
 # Roadmap
 
+## Offering document pop-out (2026-10-22)
+- [x] Add View to offering document rows and individual versions; pop-out opens the exact selected original PDF/Word using existing authorized version links, with download and error recovery.
+- [ ] Authenticated exact-fund file viewing — blocked on independently isolated synthetic QA; no production documents changed.
+
 ## Fund requests, approvals and alerts (2026-10-22)
 - [x] Expose canonical pending fees, side letters and saved-edit review links beside client approvals; reuse existing decisions, including reason-logged Super Admin side-letter self-review.
 - [x] Add fund-scoped pending request summary and recent status updates; emit manager email/bell and existing Operations alerts for fee/side-letter/saved-edit requests, plus operational request creation/progress. No new approval store or automatic approval.

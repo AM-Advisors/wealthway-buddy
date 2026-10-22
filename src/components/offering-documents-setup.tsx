@@ -139,6 +139,7 @@ function DocumentRow({ doc, data, offeringId, onChanged }: { doc: Doc; data: Dat
   const [viewVersion, setViewVersion] = useState<number | null>(null);
   const latest = doc.versions[0];
   const active = doc.versions.find((v) => v.isActive);
+  const previewVersion = active ?? latest;
   const run = async (fn: () => Promise<unknown>, ok: string) => {
     setBusy(true);
     try {
@@ -201,7 +202,7 @@ function DocumentRow({ doc, data, offeringId, onChanged }: { doc: Doc; data: Dat
           {doc.resignOpen.length > 0 && <Badge variant="destructive">{doc.resignOpen.length} re-sign needed</Badge>}
           {pendingRequests.length > 0 && <Badge variant="secondary">{pendingRequests.length} change request(s)</Badge>}
           {latest && <Badge variant={latest.state === "ready_for_use" ? "default" : "secondary"}>{VERSION_STATE_LABELS[latest.state]}</Badge>}
-          {(active || latest) && <OfferingDocumentViewButton onClick={() => setViewVersion((active ?? latest).version)} />}
+          {previewVersion && <OfferingDocumentViewButton onClick={() => setViewVersion(previewVersion.version)} />}
           {data.canEdit && latest?.approval === "uploaded_review_required" && !latest.approvedTemplate && (
             <Button size="sm" variant="outline" disabled={busy} onClick={() => run(() => approve({ data: { documentId: doc.id, version: latest.version } }), "Document approved")}>Mark approved</Button>
           )}
