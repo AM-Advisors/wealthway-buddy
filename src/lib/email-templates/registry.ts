@@ -7,6 +7,7 @@ import { template as investorInvitation } from './investor-invitation'
 import { template as deliveryAlert } from './delivery-alert'
 import { template as fundInvitation } from './fund-invitation'
 import { template as sowReady } from './sow-ready'
+import { template as commissionScheduled } from './commission-scheduled'
 import { template as selfServeWelcome } from './self-serve-welcome'
 import { template as upgradeAccountManager } from './upgrade-account-manager'
 import { template as managerAlert } from './manager-alert'
@@ -60,6 +61,7 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'delivery-alert': deliveryAlert,
   'fund-invitation': fundInvitation,
   'sow-ready': sowReady,
+  'commission-scheduled': commissionScheduled,
   'self-serve-welcome': selfServeWelcome,
   'upgrade-account-manager': upgradeAccountManager,
   'manager-alert': managerAlert,

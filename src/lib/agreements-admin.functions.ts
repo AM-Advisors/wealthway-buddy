@@ -442,7 +442,10 @@ export const countersignSow = createServerFn({ method: "POST" })
       .eq("id", data.sowId)
       .maybeSingle();
     if (!sow) throw new Error("Agreement not found.");
-    if ((sow as any).executed_at) return { ok: true, alreadyExecuted: true } as const;
+    if ((sow as any).executed_at) {
+      await (await import("@/lib/commission-notify.server")).afterSowSigned(data.sowId);
+      return { ok: true, alreadyExecuted: true } as const;
+    }
 
     const { data: signatures } = await context.supabase
       .from("agreement_signatures")
@@ -563,6 +566,7 @@ export const countersignSow = createServerFn({ method: "POST" })
       next: { countersignedBy: data.signerName, executedAt: now },
     });
 
+    await (await import("@/lib/commission-notify.server")).afterSowSigned(data.sowId);
     return { ok: true, alreadyExecuted: false } as const;
   });
 

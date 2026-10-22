@@ -1,5 +1,10 @@
 # Roadmap
 
+## Signed-SOW quarterly commissions (2026-10-22)
+- [x] Client SOW signing, quote/proposal/RFP/RFQ acceptance and Harmonious countersigning call the shared commission handoff; existing paid invoices queue automatically and future paid invoices use the same canonical queue. Assigned reps receive a payment-dependent signing notice or their own quarterly scheduled amount; no actual payout is initiated.
+- [x] 26 focused offline checks passed, including quarterly dates, unpaid/void/unsigned exclusions, quote-linked invoices, confirmed recipients and retry deduplication; preview build OK.
+- [ ] Authenticated signing/payment/email walkthrough blocked until independently isolated synthetic QA exists; no production SOWs, payments or emails changed.
+
 ## Searchable contact selection (2026-10-22)
 - [x] Shared searchable contact/person picker applied across Sales, CRM, Inbox, fund setup/signers, client teams, professional access, task assignment, accounting and investor/capital records; existing option readers, callbacks and disabled choices preserved. Sales recipients/CC/signers filter while retaining checked choices.
 - [x] Offline fictional browser fixture passed: name/email/firm suggestions, duplicate-name distinction, keyboard selection, no matches, Escape preservation, existing select adapters and checked-recipient retention; preview build OK.
