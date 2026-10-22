@@ -433,6 +433,29 @@ function ContactSheet({ id, canAssign, onClose, onEdit, onChange }: { id: string
 
 const KIND_LABEL: Record<string, string> = { email: "Email", note: "Note", meeting: "Meeting", call: "Call", task: "Task" };
 
+function CompanySheet({ company, onClose, ...actions }: { company: any; onClose: () => void; onContact: (id: string) => void; onAdd: () => void; onConnect: () => void; onDeal: (deal: any) => void }) {
+  const load = useServerFn(getCrmCompanyDetail);
+  const q = useQuery({ queryKey: ["crm-company", company.id], queryFn: () => load({ data: { companyId: company.id } }) });
+  return <Sheet open onOpenChange={(open) => { if (!open) onClose(); }}><SheetContent className="w-full overflow-y-auto sm:max-w-xl"><SheetHeader><SheetTitle className="break-words">{company.name}</SheetTitle></SheetHeader><div className="mt-4">{q.error ? <p className="text-sm text-destructive">{(q.error as Error).message}</p> : q.data ? <CrmCompanyPanel data={q.data} {...actions} /> : <p className="text-sm text-muted-foreground">Loading company…</p>}</div></SheetContent></Sheet>;
+}
+
+function ConnectCompanyDialog({ company, contacts, onClose, onSaved }: { company: any; contacts: any[]; onClose: () => void; onSaved: () => void }) {
+  const save = useServerFn(saveCrmContact);
+  const [id, setId] = useState("");
+  const [busy, setBusy] = useState(false);
+  const options = contacts.filter((c) => !c.archived_at && c.scope === company.scope && c.offering_id === company.offering_id && c.company_id !== company.id);
+  const submit = async () => {
+    const contact = options.find((c) => c.id === id);
+    if (!contact) return;
+    setBusy(true);
+    try {
+      await save({ data: { id: contact.id, scope: contact.scope, offering_id: contact.offering_id, full_name: contact.full_name, email: contact.email, phone: contact.phone, title: contact.title, organization: company.name, source: contact.source, tags: contact.tags ?? [], company_id: company.id } });
+      toast.success("Contact connected"); onSaved(); onClose();
+    } catch (e) { err(e); } finally { setBusy(false); }
+  };
+  return <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}><DialogContent><DialogHeader><DialogTitle>Connect contact to {company.name}</DialogTitle></DialogHeader><SearchableSelect aria-label="Contact to connect" value={id} onValueChange={setId} options={options.map((c) => ({ value: c.id, label: c.full_name, detail: [c.email, c.title, c.organization].filter(Boolean).join(" · ") }))} />{options.find((c) => c.id === id)?.company_id && <p className="text-sm text-muted-foreground">This changes the contact's company. Previous activity stays on the contact.</p>}<DialogFooter><Button variant="outline" onClick={onClose}>Cancel</Button><Button disabled={busy || !id} onClick={submit}>{busy ? "Saving…" : "Connect contact"}</Button></DialogFooter></DialogContent></Dialog>;
+}
+
 function DealHistory({ id }: { id: string }) {
   const load = useServerFn(getCrmDealDetail);
   const q = useQuery({ queryKey: ["crm-deal", id], queryFn: () => load({ data: { id } }) });
