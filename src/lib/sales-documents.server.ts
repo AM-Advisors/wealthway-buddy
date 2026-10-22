@@ -1,6 +1,6 @@
 /** Server-only Proposals / RFPs / RFQs. Maker-checker approval; prices only from the linked quote; versions append-only. */
 import {
-  MARKETING_HELPERS, OUTCOMES, SALES_DOC_APPROVERS, SALES_DOC_ROLES, defaultSections, applyLockedSections, lockedKeys, ABOUT_HARMONIOUS,
+  MARKETING_HELPERS, OUTCOMES, SALES_DOC_APPROVERS, SALES_DOC_ROLES, defaultSections, applyLockedSections, isSectionShown, lockedKeys, ABOUT_HARMONIOUS,
   type DocDirection, type DocKind, type Section,
 } from "@/lib/sales-documents-model";
 
@@ -470,7 +470,7 @@ export async function setOutcome(userId: string, id: string, outcome: string) {
 export async function exportDocument(userId: string, id: string, format: "pdf" | "docx") {
   const a = await access(userId, id);
   const sections = a.doc.status === "draft" || a.doc.status === "with_marketing" || a.doc.status === "submitted" ? await latestSections(a.db, a.doc) : await approvedSections(a);
-  const shown = sections.filter((s) => s.key !== "summary_note" || s.body.trim());
+  const shown = sections.filter((s) => isSectionShown(s) && (s.key !== "summary_note" || s.body.trim()));
   const draft = !a.doc.approved_version;
   const { renderDocx } = await import("@/lib/sales-documents-render.server");
   const quoteLines = a.doc.quote_id ? ((await a.db.from("sales_quote_lines").select("label, quantity, unit_cents, line_cents, billing_frequency").eq("quote_id", a.doc.quote_id).order("sort_order")).data ?? []) : [];
