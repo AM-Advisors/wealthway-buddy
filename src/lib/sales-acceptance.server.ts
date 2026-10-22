@@ -1,5 +1,7 @@
 import { isSectionShown } from "@/lib/sales-documents-model";
 import { canEditRemittance } from "./sales-acceptance-model";
+import { canReadLinkedSow, clientSowSections } from "./client-sow-view";
+import { pricingText, servicesFromSow } from "./sales-documents-model";
 /** Server-only: client sign-and-approve for quotes/proposals/RFPs/RFQs, automatic invoice, and audited Harmonious payment instructions.
  *  Records only — nothing is charged, pulled or wired. */
 import {
@@ -142,6 +144,23 @@ async function salesContactFor(db: any, clientId: string | null, ownerId: string
 }
 
 /** What the client sees on the sign page. Token-gated; no bank details here. */
+async function linkedSowView(db: any, r: Loaded, t: { version: number; email: string }, accepted: boolean) {
+  if (!r.quoteId) return null;
+  const { data: quote, error: quoteError } = await db.from("sales_quotes").select("sow_id, client_id, status").eq("id", r.quoteId).maybeSingle();
+  if (quoteError) throw new Error("The Statement of Work could not be loaded. Please try again.");
+  if (!quote?.sow_id || quote.client_id !== r.clientId || !["approved", "sent", "signed"].includes(quote.status)) return null;
+  const { data: sow, error } = await db.from("client_sows").select("id, client_id, title, status, effective_date, client_signed_at, executed_at, generated_lines").eq("id", quote.sow_id).maybeSingle();
+  if (error) throw new Error("The Statement of Work could not be loaded. Please try again.");
+  if (!sow || !canReadLinkedSow({ version: r.version, tokenVersion: t.version, approvedVersion: r.approvedVersion, status: r.status, accepted, clientId: r.clientId, sowClientId: sow.client_id, replaced: !!replacedSigner(r, t.email) })) return null;
+  const { data: recorded, error: sectionError } = await db.from("sow_sections").select("key, title, body").eq("sow_id", sow.id).order("sort_order");
+  if (sectionError) throw new Error("The Statement of Work could not be loaded. Please try again.");
+  const sections = clientSowSections(recorded ?? []);
+  const lines = Array.isArray(sow.generated_lines) ? sow.generated_lines.map((l: any) => ({ ...l, line_cents: l.amount_cents ?? l.line_cents ?? 0 })) : [];
+  if (!sections.some(s => s.key === "services") && lines.length) sections.push({ key: "services", title: "Services", body: servicesFromSow(lines) });
+  if (!sections.some(s => s.key === "pricing") && lines.length) sections.push({ key: "pricing", title: "Pricing", body: pricingText(lines) });
+  return { title: String(sow.title ?? r.title), status: String(sow.status), effectiveDate: sow.effective_date as string | null, clientSignedAt: sow.client_signed_at as string | null, executedAt: sow.executed_at as string | null, sections };
+}
+
 export async function viewForToken(token: string) {
   const t = await fromToken(token);
   const db = await admin();
@@ -156,6 +175,7 @@ export async function viewForToken(token: string) {
   return {
     kind: r.kind, title: r.title, version: t.version, clientName: client?.legal_name || client?.name || null,
     response,
+    sow: await linkedSowView(db, r, t, !!acc),
     stale: r.kind !== "quote" && r.approvedVersion !== t.version,
     blocker: acc ? null : (replacedSigner(r, t.email) ?? signBlocker(r.kind, r.status, r.approvedVersion, t.version)),
     salesContact: await salesContactFor(db, r.clientId, r.ownerId).then((c) => c && { name: c.name, email: c.email }),

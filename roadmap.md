@@ -1,5 +1,10 @@
 # Roadmap
 
+## Client proposal SOW tab (2026-10-22)
+- [x] Add a read-only Statement of Work tab to the public proposal review/sign page using its existing recipient/version token, recorded SOW sections and generated lines only; no portal login or signing changes.
+- [x] 33 offline projection, version, signing and linked-term regression tests passed; preview build OK.
+- [ ] Real client-link tab/read-back verification — blocked until independently isolated QA is available; no live client records or emails used for testing.
+
 ## Linked quote and SOW edits (2026-10-22)
 - [x] Synchronize linked draft services, prices, billing terms, title and fund through one transactional save; SOW-side uses the canonical quote form, legacy price/section controls cannot bypass it. Reviewed quotes get a new linked SOW draft; prior agreements remain intact.
 - [x] 84 fictional synchronization and quote/bookkeeping/approval regression tests passed; preview build OK. No real quotes, SOWs, invoices, payments or emails changed in testing.

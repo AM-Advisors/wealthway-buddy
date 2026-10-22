@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ClientSowReader } from "@/components/sales/client-sow-reader";
 import { CARD_SERVICE_FEE_LABEL } from "@/lib/card-fee";
 import { SOW_ROLE_DISCLAIMER } from "@/lib/agreement-templates";
 import { RESPONSE_STATUS } from "@/lib/sales-response-model";
@@ -19,9 +21,9 @@ export const Route = createFileRoute("/accept/$token")({
   head: () => ({
     meta: [
       { title: "Review and sign - Harmonious" },
-      { name: "description", content: "Review, sign and approve your Harmonious quote or proposal, then choose how to pay." },
+      { name: "description", content: "Read your Harmonious proposal and linked Statement of Work, then review, sign and approve." },
       { property: "og:title", content: "Review and sign - Harmonious" },
-      { property: "og:description", content: "Review, sign and approve your Harmonious quote or proposal." },
+      { property: "og:description", content: "Read your Harmonious proposal and linked Statement of Work, then review, sign and approve." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex, nofollow" },
@@ -74,6 +76,12 @@ function AcceptPage() {
           {(d as any).stale && <p className="text-sm text-destructive">A newer version is available. Please use the latest link from your Harmonious contact.</p>}
         </CardHeader>
       </Card>
+      <Tabs defaultValue="proposal">
+        <TabsList aria-label="Proposal documents" className="w-full">
+          <TabsTrigger value="proposal">{KIND[d.kind] ?? "Proposal"}</TabsTrigger>
+          <TabsTrigger value="sow">Statement of Work</TabsTrigger>
+        </TabsList>
+        <TabsContent value="proposal" className="space-y-4">
       <section className="space-y-3 border-y py-5" aria-label="Client response">
         <div className="flex flex-wrap items-center justify-between gap-2"><h2 className="font-heading text-lg font-semibold">Your response</h2><Badge variant="outline">{RESPONSE_STATUS[d.response.status]}</Badge></div>
         {d.response.instructions && <div><h3 className="text-sm font-semibold">Response instructions</h3><p className="whitespace-pre-wrap break-words text-sm">{d.response.instructions}</p></div>}
@@ -180,6 +188,9 @@ function AcceptPage() {
         <Card key={`about-${i}`}><CardHeader><CardTitle className="font-heading text-lg">About Harmonious</CardTitle></CardHeader>
           <CardContent><p className="whitespace-pre-wrap text-sm">{s.body}</p></CardContent></Card>
       ))}
+        </TabsContent>
+        <TabsContent value="sow"><ClientSowReader sow={d.sow} /></TabsContent>
+      </Tabs>
     </Shell>
   );
 }
