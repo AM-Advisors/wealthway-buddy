@@ -1,3 +1,4 @@
+import { SearchablePeoplePicker } from "@/components/ui/searchable-people-picker";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -341,7 +342,7 @@ export function AgreementPreparation({ offeringId }: { offeringId?: string }) {
           </div>
           <div className="grid gap-2">
             <Label>Investor</Label>
-            <Select value={applicationId} onValueChange={setApplicationId}>
+            <SearchablePeoplePicker value={applicationId} onValueChange={setApplicationId}>
               <SelectTrigger>
                 <SelectValue placeholder="Choose an investor" />
               </SelectTrigger>
@@ -352,7 +353,7 @@ export function AgreementPreparation({ offeringId }: { offeringId?: string }) {
                   </SelectItem>
                 ))}
               </SelectContent>
-            </Select>
+            </SearchablePeoplePicker>
           </div>
         </div>
 

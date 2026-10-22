@@ -1,3 +1,4 @@
+import { SearchablePeoplePicker } from "@/components/ui/searchable-people-picker";
 import { DRIVE_LABELS } from "@/lib/drive-labels";
 import { DRIVE_REQUIREMENTS, requirementLabel } from "@/lib/drive-requirements";
 import { useMemo, useState } from "react";
@@ -427,13 +428,13 @@ function DocumentDetailsButton({ row, onSaved }: { row: any; onSaved: () => void
             {investorPick ? (
               <div className="space-y-1">
                 <p className="font-medium">Add to this investor's files</p>
-                <Select value={d.sharedProfileId ?? "none"} onValueChange={(v) => setD({ ...d, sharedProfileId: v === "none" ? null : v })}>
+                <SearchablePeoplePicker value={d.sharedProfileId ?? "none"} onValueChange={(v) => setD({ ...d, sharedProfileId: v === "none" ? null : v })}>
                   <SelectTrigger aria-label="Investor"><SelectValue placeholder="Choose investor" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">Don't share</SelectItem>
                     {(inv.data?.investors ?? []).map((x: { id: string; label: string }) => <SelectItem key={x.id} value={x.id}>{x.label}</SelectItem>)}
                   </SelectContent>
-                </Select>
+                </SearchablePeoplePicker>
                 <p className="text-xs text-muted-foreground">The investor will see and download this file in their documents. Only that investor sees it.</p>
               </div>
             ) : null}
