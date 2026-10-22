@@ -5911,6 +5911,36 @@ export type Database = {
           },
         ]
       }
+      client_dashboard_prefs: {
+        Row: {
+          client_id: string
+          default_fund_id: string | null
+          default_period: string
+          hidden: Json
+          layout: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          client_id: string
+          default_fund_id?: string | null
+          default_period?: string
+          hidden?: Json
+          layout?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          client_id?: string
+          default_fund_id?: string | null
+          default_period?: string
+          hidden?: Json
+          layout?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       client_engagements: {
         Row: {
           billing_frequency: string
@@ -6589,6 +6619,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      client_notifications: {
+        Row: {
+          body: string | null
+          client_id: string | null
+          created_at: string
+          dedupe_key: string | null
+          id: string
+          kind: string
+          path: string | null
+          read_at: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          client_id?: string | null
+          created_at?: string
+          dedupe_key?: string | null
+          id?: string
+          kind: string
+          path?: string | null
+          read_at?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          client_id?: string | null
+          created_at?: string
+          dedupe_key?: string | null
+          id?: string
+          kind?: string
+          path?: string | null
+          read_at?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       client_pricing: {
         Row: {

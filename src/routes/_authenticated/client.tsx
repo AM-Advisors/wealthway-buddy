@@ -1,4 +1,6 @@
 import { useEffect } from "react";
+import { ClientNotificationBell } from "@/components/client-notification-bell";
+import { AttentionPopup } from "@/components/attention-popup";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
@@ -223,6 +225,10 @@ function ClientShell() {
             </p>
           )}
         </div>
+        <div className="flex items-center gap-2">
+          <ClientNotificationBell />
+        </div>
+        <AttentionPopup />
         {clients.length > 1 && (
           <div className="flex flex-wrap gap-2">
             {clients.map((c) => (
