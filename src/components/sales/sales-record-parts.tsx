@@ -4,7 +4,10 @@ import { toast } from "sonner";
 import { Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Panel } from "@/components/sales/sales-ui";
+import type React from "react";
+import { Link } from "@tanstack/react-router";
+import { Panel, money } from "@/components/sales/sales-ui";
+import { getSalesLinkedRecords } from "@/lib/sales-hub.functions";
 import type { ProgressStep } from "@/lib/sales-progress";
 import { logSalesLinkCopy, salesDocumentPersonLinks } from "@/lib/sales-documents.functions";
 
@@ -58,5 +61,41 @@ export function RecipientLinks({ documentId, addOn }: { documentId: string; addO
           </ul>
         )}
     </Panel>
+  );
+}
+
+const lab = (s?: string | null) => (s ? s.replace(/_/g, " ") : "");
+
+/** Everything this quote connects to, each with a link to where it lives. Display only. */
+export function LinkedRecords({ quoteId }: { quoteId: string | null }) {
+  const load = useServerFn(getSalesLinkedRecords);
+  const q = useQuery({ queryKey: ["sales-linked", quoteId], queryFn: () => load({ data: { id: quoteId! } }), enabled: !!quoteId });
+  if (!quoteId) return <Panel title="Linked records"><p className="text-sm text-muted-foreground">Link a quote to connect the SOW, invoice and deal.</p></Panel>;
+  const d = q.data;
+  const row = (label: string, value: React.ReactNode, status?: React.ReactNode) => (
+    <li className="flex items-center justify-between gap-2 py-1.5"><span className="text-muted-foreground">{label}</span><span className="flex min-w-0 items-center gap-2 text-right">{value}{status}</span></li>
+  );
+  return (
+    <Panel title="Linked records">
+      {!d ? <p className="text-sm text-muted-foreground">{q.error ? (q.error as Error).message : "Loading…"}</p> : (
+        <ul className="divide-y text-sm">
+          {row("Quote", <Link to="/sales/quotes/$id" params={{ id: d.quote.id }} className="font-medium hover:underline">Q-{d.quote.quote_number} v{d.quote.version}</Link>, <Badge variant="outline">{lab(d.quote.status)}</Badge>)}
+          {row("Client", d.client ? <Link to="/admin/contracts/$clientId" params={{ clientId: d.client.id }} className="truncate font-medium hover:underline">{d.client.legal_name}</Link> : <span>Not linked</span>)}
+          {row("Deal", d.deal ? <Link to="/sales/crm" className="truncate font-medium hover:underline">{d.deal.title}</Link> : <span>Not linked</span>, d.deal && <Badge variant="outline">{lab(d.deal.sales_stage ?? d.deal.stage)}</Badge>)}
+          {row("SOW", d.sow ? <Link to="/admin/agreements" className="font-medium hover:underline">Statement of work</Link> : <span>Not created</span>, d.sow && <Badge variant="outline">{d.sow.executed_at ? "Executed" : d.sow.client_signed_at ? "Client signed" : lab(d.sow.status)}</Badge>)}
+          {d.invoices.length ? d.invoices.map((i: any) => row("Invoice", <Link to="/admin/invoices" className="font-medium hover:underline">{i.number ?? "Draft"} · {money(i.total_cents)}</Link>, <Badge variant={i.paid_on ? "default" : "outline"}>{i.paid_on ? "Paid" : lab(i.status)}</Badge>)) : row("Invoice", <span>Created when the client signs</span>)}
+        </ul>
+      )}
+    </Panel>
+  );
+}
+
+/** One place for a record's actions: primary on the left, exports on the right. */
+export function ActionBar({ children, secondary }: { children: React.ReactNode; secondary?: React.ReactNode }) {
+  return (
+    <div className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-card/95 p-2 backdrop-blur">
+      <div className="flex flex-wrap items-center gap-2">{children}</div>
+      {secondary && <div className="flex flex-wrap items-center gap-2">{secondary}</div>}
+    </div>
   );
 }

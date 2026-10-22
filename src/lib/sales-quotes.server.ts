@@ -282,3 +282,18 @@ export async function quoteFromSow(userId: string, sowId: string) {
   await event(r.id, "drafted_from_sow", userId, sow.title ?? null);
   return r;
 }
+
+/** Read-only summary of what a quote connects to: client, deal, SOW and invoices. */
+export async function linkedRecords(userId: string, id: string) {
+  const a = await salesActor(userId);
+  const db = await admin();
+  const { data: q } = await db.from("sales_quotes").select("id, owner_user_id, client_id, deal_id, sow_id, quote_number, version, status, total_cents").eq("id", id).maybeSingle();
+  if (!q || !canSee(a, q.owner_user_id)) throw new Error("Quote not found.");
+  const [client, deal, sow, invoices] = await Promise.all([
+    q.client_id ? db.from("clients").select("id, legal_name").eq("id", q.client_id).maybeSingle().then((r: any) => r.data) : null,
+    q.deal_id ? db.from("crm_deals").select("id, title, stage, sales_stage, amount_cents").eq("id", q.deal_id).maybeSingle().then((r: any) => r.data) : null,
+    q.sow_id ? db.from("client_sows").select("id, status, client_signed_at, executed_at").eq("id", q.sow_id).maybeSingle().then((r: any) => r.data) : null,
+    db.from("invoices").select("id, number, status, total_cents, due_date, paid_on").eq("sales_quote_id", id).order("created_at").then((r: any) => r.data ?? []),
+  ]);
+  return { quote: q, client, deal, sow, invoices: invoices as any[] };
+}
