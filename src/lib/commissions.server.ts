@@ -333,6 +333,7 @@ export async function scheduledPayments(userId: string) {
     db.from("invoice_schedules").select("id, sow_id, client_id, label, frequency, amount_cents, next_due_on, active").in("sow_id", sowIds).in("frequency", ["quarterly", "annual"]).eq("active", true).order("next_due_on"),
     db.from("client_sows").select("id, approval_status, client_signed_at, executed_at").in("id", sowIds),
   ]);
+  const dealFacts = await dealAmountFacts(db, sowIds, []);
   const clientIds = [...new Set(((sched ?? []) as any[]).map((s) => s.client_id))];
   const repIds = [...new Set(qs.map((q) => q.owner_user_id).filter(Boolean))];
   const [{ data: clients }, { data: profiles }] = await Promise.all([
