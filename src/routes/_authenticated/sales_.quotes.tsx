@@ -1,5 +1,7 @@
 import { SearchablePeoplePicker } from "@/components/ui/searchable-people-picker";
 import { SalesDealDocsTabs } from "@/components/sales-deal-docs-tabs";
+import { DealPicker } from "@/components/sales/deal-picker";
+import { getSalesDocumentOptions } from "@/lib/sales-documents.functions";
 import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { BILLING_FREQUENCIES } from "@/lib/invoice-schedule-model";
@@ -127,7 +129,10 @@ function AdminLevelPicker({ onAdd, lines }: { onAdd: (key: string) => void; line
   );
 }
 
-export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; initial?: { id: string; title: string; clientId: string | null; contactId?: string | null; offeringId?: string | null; validUntil: string | null; notes: string | null; lines: Line[] } }) {
+export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; initial?: { id: string; title: string; clientId: string | null; contactId?: string | null; offeringId?: string | null; dealId?: string | null; validUntil: string | null; notes: string | null; lines: Line[] } }) {
+  const [dealId, setDealId] = useState<string>(initial?.dealId ?? "");
+  const optFn = useServerFn(getSalesDocumentOptions);
+  const opts = useQuery({ queryKey: ["sales-document-options"], queryFn: () => optFn() });
   const nav = useNavigate();
   const [clientId, setClientId] = useState<string | null>(initial?.clientId ?? null);
   const [offeringId, setOfferingId] = useState<string | null>(initial?.offeringId ?? null);
@@ -143,7 +148,7 @@ export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; init
   const c = useQuery({ queryKey: ["quote-catalog", clientId], queryFn: () => cat({ data: { clientId } }) });
   const save = useServerFn(saveSalesQuote);
   const m = useMutation({
-    mutationFn: () => save({ data: { id: initial?.id ?? null, title, clientId, contactId: clientId === initial?.clientId ? initial?.contactId ?? null : null, offeringId, validUntil: validUntil || null, notes: notes || null, lines } }),
+    mutationFn: () => save({ data: { id: initial?.id ?? null, title, clientId, contactId: clientId === initial?.clientId ? initial?.contactId ?? null : null, offeringId, dealId: dealId || null, validUntil: validUntil || null, notes: notes || null, lines } }),
     onSuccess: (r) => { toast.success("Quote saved"); onCancel(); nav({ to: "/sales/quotes/$id", params: { id: r.id } }); },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -167,6 +172,9 @@ export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; init
         </Select>
         <Input type="date" aria-label="Valid until" value={validUntil} onChange={(e) => setValidUntil(e.target.value)} />
       </div>
+      <div className="mt-3 max-w-xl space-y-1 text-sm"><span>Deal</span>
+        <DealPicker deals={opts.data?.deals ?? []} value={dealId} clientId={clientId} contactId={clientId === initial?.clientId ? initial?.contactId ?? null : null} defaultTitle={title}
+          onChange={(d) => { setDealId(d?.id ?? ""); if (d?.client_id && !clientId) setClientId(d.client_id); }} /></div>
       <AdminLevelPicker onAdd={add} lines={c.data?.lines ?? []} />
       <div className="mt-4">
         <Button variant="outline" onClick={() => setShowBookkeeping(v => !v)}>{showBookkeeping ? "Close bookkeeping" : "Configure Bookkeeping & Accounting"}</Button>
