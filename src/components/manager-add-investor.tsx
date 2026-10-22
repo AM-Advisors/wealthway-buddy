@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 
+import { parseCommitmentCents } from "@/lib/invite-amount";
 import { inviteInvestorFn, managerOnboardingBoardFn, resendOnboardInvitationFn } from "@/lib/investor-onboarding.functions";
 import { managerPortalStatus } from "@/lib/onboard-portal-model";
 import { Badge } from "@/components/ui/badge";
