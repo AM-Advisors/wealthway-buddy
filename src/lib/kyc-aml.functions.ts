@@ -273,6 +273,7 @@ export const decideComplianceCheck = createServerFn({ method: "POST" })
     if (!application || String(application.offering_id) !== data.offeringId) {
       throw new Error("That investor is not in this fund.");
     }
+    if (String(application.user_id) === userId) throw new Error("You can't review your own verification.");
 
     const status =
       data.decision === "approved"

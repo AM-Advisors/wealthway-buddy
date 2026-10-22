@@ -1,3 +1,4 @@
+import { InvestorVerificationCard } from "@/components/investor-verification-card";
 import { createFileRoute, useParams } from "@tanstack/react-router";
 
 import { OpsRecordPage } from "@/components/ops-record";
@@ -25,6 +26,7 @@ function RecordRoute() {
   const { investorId } = useParams({ from: "/_authenticated/ops/investors/$investorId" });
   return (
     <>
+      {/^[0-9a-f-]{36}$/i.test(investorId) ? <div className="mx-auto max-w-5xl p-4"><InvestorVerificationCard investorUserId={investorId} /></div> : null}
       <OpsRecordPage type="investor" id={investorId} />
       {/^[0-9a-f-]{36}$/i.test(investorId) ? <GovernmentIdReview investorUserId={investorId} /> : null}
     </>
