@@ -177,7 +177,6 @@ function Editor() {
           <LinkedRecords quoteId={d.packet?.quote?.id ?? null} />
           <div id="send-box" />
           <Panel title="Approval & sending">
-            {p.canSubmit && <Button className="w-full" disabled={!!busy || dirty} onClick={() => run("submit", () => submit({ data: { id } }), "Submitted for approval")}>Submit for approval</Button>}
             {doc.status === "submitted" && !p.canApprove && <p className="text-sm text-muted-foreground">Waiting for a Sales Manager or the CRO (not the writer).</p>}
             {p.canApprove && (
               <div className="flex gap-2">
