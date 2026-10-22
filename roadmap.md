@@ -1,5 +1,9 @@
 # Roadmap
 
+## Correct documents and staff-only generation (2026-10-22)
+- [ ] Restrict every fund template/starter/standard-form generation path to authorized Harmonious staff; hide manager controls, retain review/sign rights, run fictional permission tests.
+- [ ] Prepare corrected Erebor replacement documents with Managing Partner and consistent approved terms; review/activate before archiving superseded versions, preserving executed originals.
+
 ## Operating Agreement signatory title and signed corrections (2026-10-22)
 - [x] New template Operating Agreement signing requests require the exact recorded signatory, a recorded title and resolved template fields; freeze the title in the signature packet. 31 fictional title/autofill/version regression checks passed; preview build OK. Erebor's offering and active primary signatory both have no recorded title. No signed documents or live records changed.
 - [ ] Authenticated corrected-generation/send/read-back — blocked until independently isolated synthetic QA; offline checks do not verify a real signing ceremony.
