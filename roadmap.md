@@ -1,5 +1,10 @@
 # Roadmap
 
+## Signing while AML is pending (2026-10-22)
+- [ ] Allow approved identity + pending AML to proceed to signing; failed AML and pending identity remain blocked.
+- [ ] Keep wire instructions, funding and final admission behind fully approved verification; run fictional gate regression tests.
+- [ ] Authenticated investor signing/read-back — blocked until independently isolated synthetic QA exists.
+
 ## Quote section switches (2026-10-22)
 - [x] Give every part of a quote its own on/off switch in the quote editor (Summary, Your needs, Our approach, Services and pricing, Pricing, Timeline, Next steps, Notes, About Harmonious): switching one off hides it from the client page and keeps its wording recorded, nothing is deleted. Only Pricing and Notes start on, so existing quote pages look the same.
 - [x] 10 focused model checks passed (a switched-off part keeps its wording, defaults, unknown parts dropped, client projection, notes and pricing switches, ordering); preview build OK. No real quote, SOW, invoice or email changed.
