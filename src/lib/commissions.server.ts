@@ -313,7 +313,7 @@ export async function scheduledPayments(userId: string) {
   }) };
 }
 
-export async function saveCommissionCosts(userId: string, input: { invoiceId?: string; sowId?: string; serviceKey: string; kind: "provider" | "deal"; amountCents: number; supersedesId?: string; reason: string }) {
+export async function saveCommissionCosts(userId: string, input: { invoiceId?: string | undefined; sowId?: string | undefined; serviceKey: string; kind: "provider" | "deal"; amountCents: number; supersedesId?: string | undefined; reason: string }) {
   const a = await salesActor(userId);
   if (!a.roles.some(r => COMMISSION_EDITORS.includes(r))) throw new Error("Only the CRO or CEO can enter costs.");
   if (!input.reason.trim() || !input.serviceKey.trim() || !Number.isSafeInteger(input.amountCents) || input.amountCents < 0 || Boolean(input.invoiceId) === Boolean(input.sowId)) throw new Error("A target, service, nonnegative amount and reason are required.");

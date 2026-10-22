@@ -13,7 +13,7 @@ describe("gross-profit commissions", () => {
   });
   it("selects effective settings and superseding entries", () => {
     const versions = [{ effective_at: "2025-01-01", service_cost_pct: { tax: 20 }, overhead_pct: 5 }, { effective_at: "2026-01-01", service_cost_pct: { tax: 40 }, overhead_pct: 10 }];
-    expect(settingsAt(versions, "2025-06-01").service_cost_pct.tax).toBe(20);
+    expect(settingsAt(versions, "2025-06-01").service_cost_pct['tax']).toBe(20);
     const entries = [{ id: "a", invoice_id: "i", service_key: "tax", kind: "provider" as const, amount_cents: 100 }, { id: "b", invoice_id: "i", service_key: "tax", kind: "provider" as const, amount_cents: 200, supersedes_id: "a" }];
     expect(activeCosts(entries).map(e => e.id)).toEqual(["b"]);
     expect(lineActualCosts(entries, "i", null, "tax", 500, 1000, 1000)).toEqual([100]);
