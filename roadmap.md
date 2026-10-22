@@ -1,9 +1,10 @@
 # Roadmap
 
 ## Selected payment reporting and schedules (2026-10-22)
-- [ ] Add selected payment calculations and monthly/quarterly/annual totals across commissions, client invoices and fund payments.
-- [ ] Add separate quarterly/annual record-only payment schedule controls, preserving approvals and history.
-- [ ] Run focused calculation/schedule tests; signed-in walkthrough blocked until isolated synthetic QA exists.
+- [x] Add selected payment calculations and monthly/quarterly/annual totals across commissions, Operations/client invoices and fund payments; existing entitled records only.
+- [x] Add separate quarterly/annual planning controls with first date and append-only actor-owned saved plans; canonical records re-read on save, no browser-supplied amounts accepted. Invoice terms and actual commission queue deadlines remain unchanged.
+- [x] 24 focused calculation/commission/schedule checks passed; preview build OK. No real payments, invoices, payout records or emails created during verification.
+- [ ] Signed-in save/read-back walkthrough blocked until independently isolated synthetic QA exists.
 
 ## Isolated diagnostic QA provisioning review (2026-10-21)
 - [x] Inspect existing development-backend/draft provisioning options and costs without production changes; independent Cloud remix documented, draft isolation unavailable here, scheduler safety during remix unverified. Findings in docs/diagnostic-qa-provisioning-review.md.
