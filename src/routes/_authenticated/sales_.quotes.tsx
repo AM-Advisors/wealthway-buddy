@@ -19,6 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { draftQuoteFromSow, getQuoteCatalog, listSalesQuotes, listSowsForQuote, saveSalesQuote } from "@/lib/sales-hub.functions";
 import { QUOTE_STATUS_LABEL } from "@/lib/sales-model";
+import type { QuoteLineInput } from "@/lib/sales-model";
 import { Panel, money } from "@/components/sales/sales-ui";
 import { BookkeepingConfigurator } from "@/components/sales/bookkeeping-configurator";
 import { getBookkeepingConfiguration } from "@/lib/bookkeeping.functions";
@@ -103,7 +104,7 @@ function FromSow() {
   );
 }
 
-type Line = { serviceKey: string; label: string; quantity: number; unitCents: number; baselineUnitCents: number; billingFrequency?: "one_time" | "monthly" | "quarterly" | "annual"; firstBillOn?: string | null; bookkeeping?: BookkeepingInput; details?: { scope?: string; included?: string[]; excluded?: string[] } | null };
+type Line = QuoteLineInput;
 
 /** Product first, then only the levels valid for that product. */
 function AdminLevelPicker({ onAdd, lines }: { onAdd: (key: string) => void; lines: any[] }) {

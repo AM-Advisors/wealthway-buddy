@@ -4,7 +4,6 @@ import { names, salesActor } from "@/lib/sales-hub.server";
 import { canAddSalesContact, type SalesContactInput } from "@/lib/sales-contact-model";
 import { BOOKKEEPING_KEY, bookkeepingConfigSchema, bookkeepingDraftBlocker, bookkeepingTerms, calculateBookkeeping } from "@/lib/bookkeeping-model";
 import { linkedTermsEditProblem, quoteInputsFromRows, sowLinesFromQuote } from "@/lib/quote-sow-sync";
-import { pricingText, servicesFromSow } from "@/lib/sales-documents-model";
 
 const admin = async () => (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
 type Actor = Awaited<ReturnType<typeof salesActor>>;
@@ -273,8 +272,8 @@ export async function saveLinkedSowDetails(userId: string, sowId: string, patch:
   const linked = await linkedQuoteForSow(userId, sowId);
   if (!linked) return null;
   const q = linked.quote;
-  return saveQuote(userId, { id: q.id, title: String(patch.title ?? q.title), clientId: q.client_id,
-    contactId: q.contact_id, dealId: q.deal_id, offeringId: patch.offering_id as string | null,
+  return saveQuote(userId, { id: q.id, title: String(patch['title'] ?? q.title), clientId: q.client_id,
+    contactId: q.contact_id, dealId: q.deal_id, offeringId: patch['offering_id'] as string | null,
     validUntil: q.valid_until, notes: q.notes, expectedUpdatedAt: q.updated_at, lines: quoteInputsFromRows(linked.lines) }, patch);
 }
 

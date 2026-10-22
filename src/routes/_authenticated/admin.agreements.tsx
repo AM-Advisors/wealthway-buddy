@@ -314,6 +314,7 @@ function AgreementDetail({
 
   return (
     <div className="space-y-6">
+      {canManage && !executed && !clientSigned && <LinkedSowTermsEditor sowId={sowId} onChanged={refresh} />}
       <div className="flex flex-wrap gap-2">
         <Button size="sm" variant="outline" onClick={download}>
           <Download className="mr-2 h-4 w-4" /> Document
