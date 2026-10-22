@@ -12,6 +12,7 @@ import { getCommissions, getScheduledPayments, saveCommissionRates, saveQuoteBdr
 import { nextPayout, payoutDueDate, type CommissionRates } from "@/lib/commission-model";
 import { Panel, PeriodFilter, Stat, money, usePeriod } from "@/components/sales/sales-ui";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { PayoutCalendar } from "@/components/sales/payout-calendar";
 import { CommissionTracker, type CommissionTrackerRow } from "@/components/sales/commission-tracker";
 
 export const Route = createFileRoute("/_authenticated/sales_/commissions")({
@@ -91,6 +92,8 @@ function Commissions() {
           </TableBody>
         </Table>
       </Panel>
+
+      <PayoutCalendar rows={rows as any} sows={(d?.quotes ?? []).map(qt => ({ id: qt.id, label: qt.label, client: qt.client, signedAt: qt.signedAt }))} onOpenDeal={setDeal} />
 
       {d && <CommissionCostControls data={d} onChange={refresh} />}
       <ScheduledPayments />
