@@ -1,5 +1,12 @@
 # Roadmap
 
+## Bookkeeping continuation safety review (2026-10-22)
+- [x] Review uploaded continuation brief and verify current five-tier/three-reconciliation pricing, server recalculation, frozen proposed snapshots and existing release gates from source.
+- [x] Re-run 76 fictional offline bookkeeping, Sales, invoice, acceptance and QA-safety checks: all pass. Browser preflight blocks before backend queries or navigation without reviewed isolation evidence and an explicit QA origin.
+- [x] Provide continuation results, unchanged-production boundary, remaining risks and activation prerequisites in docs/bookkeeping-continuation-results.md and the user-facing report.
+- [ ] Enrollment infrastructure, entity-scoped reconciliation/review, billing/amendments and client/portfolio views — stopped at the requested safe boundary: independent fictional QA, served frontend/server binding and legal-entity access safeguards are not established. No schema, live services, prices, signed agreements, invoices, payments or client financial records changed.
+- [ ] Full quote-to-enrollment, upgrade/downgrade, direct database/RLS, documentation approval and report-release verification — requires independently isolated synthetic QA with reviewed access design and existing accounting audit fixes; offline tests are not production-readiness evidence.
+
 ## Bookkeeping service integration brief (2026-10-22)
 - [x] Review existing pricing, quote/SOW, billing, accounting and entity-access engines; prepare a phased plan including standalone handoff, first-invoice deduplication and service-critical accounting release gates.
 - [x] Internal proposed configuration editor and guided bookkeeping quote inputs; server-calculated pricing, frozen versioned draft lines and proposed SOW scope; database gates prevent approval, sending and live billing. Existing prices/contracts unchanged.
