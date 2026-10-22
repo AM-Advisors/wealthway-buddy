@@ -113,8 +113,8 @@ function ChangeTermsDialog({ fundId, rows, classes, onClose }: { fundId: string;
           await propose({ data: { fundId, sideLetterId: null, onboardingId: r.id, kind: "create", reason, snapshot: { investorLabel: r.investor, mfnEnabled: false, mfnScope: null, effectiveDate: null, expiryDate: null, renewalNote: null, documentReference: null, terms } } });
           if (draft) {
             const values: Record<string, string> = { investor: r.investor, date: new Date().toLocaleDateString("en-US") };
-            if (fee !== "") { values.include_sl_management_fee = "true"; values.management_rate = `${fee}%`; }
-            if (carry !== "") { values.include_sl_carry = "true"; values.carry_rate = `${carry}%`; }
+            if (fee !== "") { values["include_sl_management_fee"] = "true"; values["management_rate"] = `${fee}%`; }
+            if (carry !== "") { values["include_sl_carry"] = "true"; values["carry_rate"] = `${carry}%`; }
             try { await generate({ data: { fundId, templateKey: "sl_combined", values, onboardingId: r.id } }); }
             catch (e: any) { toast.message(`Side letter proposed for ${r.investor}; draft not generated: ${e.message}`); }
           }
