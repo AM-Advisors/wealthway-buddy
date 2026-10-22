@@ -1,8 +1,9 @@
 # Roadmap
 
 ## CRM company and contact details (2026-10-22)
-- [ ] Save and update contact title/phone; show company-connected contacts, activity, emails and deals using existing authorized CRM records.
-- [ ] Run focused offline tests and fictional UI checks; authenticated save/read-back blocked until independently isolated synthetic QA exists.
+- [x] Save and update contact title/phone with audit values; durable scoped company links connect authorized CRM contacts, activity, emails and deals. Existing prospect organizations backfilled without merging people or changing access.
+- [x] 15 focused offline checks passed; fictional CRM walkthrough verified company contacts/activity/emails and title/phone edit/read-back; preview build OK, no real records or emails used in testing.
+- [ ] Authenticated save/read-back — blocked until independently isolated synthetic QA exists.
 
 ## Sales client responses (2026-10-22)
 - [x] Add response instructions, recorded single-recipient Sales responses, and client review/sign/change-request status to quotes, RFPs and RFQs using existing staff history and recipient/version-bound links; client feedback has its own append-only evidence without attributing it to staff. Approved terms, signatures and invoices unchanged.
