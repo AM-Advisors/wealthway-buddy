@@ -269,6 +269,10 @@ export async function linkedQuoteForSow(userId: string, sowId: string) {
 }
 
 export async function saveLinkedSowDetails(userId: string, sowId: string, patch: Record<string, unknown>) {
+  const db = await admin();
+  const { data: links, error } = await db.from("sales_quotes").select("id").eq("sow_id", sowId).neq("status", "superseded").limit(1);
+  if (error) throw new Error("Couldn't check the SOW's quote link.");
+  if (!links?.length) return null;
   const linked = await linkedQuoteForSow(userId, sowId);
   if (!linked) return null;
   const q = linked.quote;
@@ -304,6 +308,17 @@ export async function newVersion(userId: string, id: string) {
   const { data: lines } = await db.from("sales_quote_lines").select("*").eq("quote_id", id).order("sort_order");
   const { id: newId } = await saveQuote(userId, { title: q.title, clientId: q.client_id, contactId: q.contact_id, dealId: q.deal_id, offeringId: q.offering_id, validUntil: q.valid_until, notes: q.notes,
     lines: ((lines ?? []) as any[]).map((l) => ({ serviceKey: l.service_key, label: l.label, quantity: Number(l.quantity), unitCents: Number(l.unit_cents), baselineUnitCents: Number(l.baseline_unit_cents), billingFrequency: l.billing_frequency ?? "one_time", firstBillOn: l.first_bill_on ?? null, bookkeeping: l.bookkeeping_snapshot ?? undefined, details: l.service_details ?? undefined })) });
+  if (q.sow_id) {
+    // The old SOW stays with its old quote/version; the revision gets its own unsigned draft.
+    const { data: draftLines, error: readError } = await db.from("sales_quote_lines").select("*").eq("quote_id", newId).order("sort_order");
+    if (readError) throw new Error("Couldn't read the revised services.");
+    const { data: sow, error } = await db.from("client_sows").insert({ client_id: q.client_id, offering_id: q.offering_id,
+      title: q.title, sow_type: "services", status: "draft", stage: "draft", created_by: userId,
+      generated_lines: sowLinesFromQuote(draftLines ?? []), notes: `Revised from quote Q-${q.quote_number} v${q.version}; prior SOW retained.` }).select("id").single();
+    if (error || !sow) throw new Error("The revised SOW could not be created. The previous agreement is unchanged.");
+    const { error: linkError } = await db.from("sales_quotes").update({ sow_id: sow.id }).eq("id", newId).eq("status", "draft");
+    if (linkError) throw new Error("The revised SOW could not be linked. Refresh before proceeding.");
+  }
   await db.from("sales_quotes").update({ version: q.version + 1, supersedes_id: q.id, owner_user_id: q.owner_user_id }).eq("id", newId);
   await db.from("sales_quotes").update({ status: "superseded", updated_at: new Date().toISOString() }).eq("id", q.id);
   await event(q.id, "superseded", userId, `Replaced by version ${q.version + 1}`);
