@@ -21,11 +21,10 @@ export const listArchivedFundDocumentsFn = createServerFn({ method: "GET" })
     const staff = ((roles.data ?? []) as any[]).some((r) => STAFF.includes(r.role));
     if (!staff && !(mgr.data ?? []).length) throw new Error("Only Harmonious or this fund's managers can see archived documents.");
 
-    const [docsR, obsR, slR, priorR] = await Promise.all([
+    const [docsR, obsR, slR] = await Promise.all([
       db.from("offering_documents").select("id, title, active_version, removed_at, removed_reason, removed_by").eq("offering_id", data.fundId),
       db.from("investor_onboardings").select("id, application_id, persons(legal_first_name, legal_last_name, preferred_name), investment_profiles(legal_name)").eq("offering_id", data.fundId),
       db.from("side_letters").select("id, onboarding_id, investor_label, status, effective_date, current_version, created_at").eq("offering_id", data.fundId),
-      db.from("prior_signed_documents").select("id, onboarding_id, title, document_kind, signed_on, file_name, created_at").in("onboarding_id", []),
     ]);
     if (docsR.error || obsR.error) throw new Error("Archived documents couldn't be loaded.");
     const docs = (docsR.data ?? []) as any[];
@@ -40,13 +39,13 @@ export const listArchivedFundDocumentsFn = createServerFn({ method: "GET" })
     }
     const docIds = docs.map((d) => d.id);
     const obIds = obs.map((o) => o.id);
-    const [versR, ackR, sigR, prior2] = docIds.length ? await Promise.all([
-      db.from("offering_document_versions").select("offering_document_id, version, file_name, created_at, superseded_at").in("offering_document_id", docIds),
-      db.from("investment_document_acknowledgments").select("offering_document_id, version, onboarding_id, acknowledged_at").in("offering_document_id", docIds),
-      db.from("document_signatures").select("offering_document_id, application_id, signature_template_version, signed_at, cancelled_at").in("offering_document_id", docIds).is("cancelled_at", null).not("signed_at", "is", null),
-      obIds.length ? db.from("prior_signed_documents").select("onboarding_id, title, document_kind, signed_on").in("onboarding_id", obIds) : Promise.resolve({ data: [] }),
-    ]) : [{ data: [] }, { data: [] }, { data: [] }, obIds.length ? await db.from("prior_signed_documents").select("onboarding_id, title, document_kind, signed_on").in("onboarding_id", obIds) : { data: [] }];
-    void priorR;
+    const none = Promise.resolve({ data: [] as any[] });
+    const [versR, ackR, sigR, prior2]: any[] = await Promise.all([
+      docIds.length ? db.from("offering_document_versions").select("offering_document_id, version, file_name, created_at, superseded_at").in("offering_document_id", docIds) : none,
+      docIds.length ? db.from("investment_document_acknowledgments").select("offering_document_id, version, onboarding_id, acknowledged_at").in("offering_document_id", docIds) : none,
+      docIds.length ? db.from("document_signatures").select("offering_document_id, application_id, signature_template_version, signed_at").in("offering_document_id", docIds).is("cancelled_at", null).not("signed_at", "is", null) : none,
+      obIds.length ? db.from("prior_signed_documents").select("onboarding_id, title, document_kind, signed_on").in("onboarding_id", obIds) : none,
+    ]);
     const removerIds = [...new Set(docs.map((d) => d.removed_by).filter(Boolean))];
     const { data: profs } = removerIds.length ? await db.from("profiles").select("id, full_name, email").in("id", removerIds) : { data: [] };
     const who = new Map(((profs ?? []) as any[]).map((p) => [p.id, p.full_name || p.email || null]));
