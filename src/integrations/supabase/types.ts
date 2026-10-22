@@ -43026,6 +43026,7 @@ export type Database = {
           owner_user_id: string
           pricing_version_id: string | null
           quote_number: number
+          sections: Json | null
           sent_at: string | null
           signed_at: string | null
           sow_id: string | null
@@ -43059,6 +43060,7 @@ export type Database = {
           owner_user_id: string
           pricing_version_id?: string | null
           quote_number?: number
+          sections?: Json | null
           sent_at?: string | null
           signed_at?: string | null
           sow_id?: string | null
@@ -43092,6 +43094,7 @@ export type Database = {
           owner_user_id?: string
           pricing_version_id?: string | null
           quote_number?: number
+          sections?: Json | null
           sent_at?: string | null
           signed_at?: string | null
           sow_id?: string | null
