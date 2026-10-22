@@ -41,6 +41,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { SideLetterRegistry } from "@/components/side-letter-registry";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 const tone = (s: string) =>
   (s === "complete" ? "default" : s === "needs_attention" ? "destructive" : s === "not_applicable" ? "outline" : "secondary") as any;
@@ -470,6 +472,7 @@ function EconomicsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; o
   const [multiAnswer, setMultiAnswer] = useState(multi || planned === 1);
   const [countDraft, setCountDraft] = useState(String(planned ?? (multi ? 2 : "")));
   const [confirmed, setConfirmed] = useState(false);
+  const [sideLettersOpen, setSideLettersOpen] = useState(false);
   useEffect(() => { setMultiAnswer(multi || planned === 1); setCountDraft(String(planned ?? (multi ? 2 : ""))); }, [multi, planned]);
   const saveClassAnswer = (yes: boolean, count: number | null) => {
     const a = multipleClassesFromAnswer({ yes, count });
@@ -512,8 +515,9 @@ function EconomicsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; o
               </Field>
             )}
           </div>
-          <p className="text-xs text-muted-foreground">{multi ? `Enter each of the ${planned ?? "planned"} classes below and confirm how they differ.` : "One set of terms applies to every investor."}</p>
+          <p className="text-xs text-muted-foreground">{multi ? `Enter each of the ${planned ?? "planned"} classes below and confirm how they differ.` : "Fund default terms apply unless an investor has separately approved side-letter exceptions."}</p>
         </section>
+        <h3 className="text-sm font-medium">Fund default terms</h3>
         <section className="grid gap-3 sm:grid-cols-4">
           <Field label="Management fee (%)">
             <PresetSelect disabled={!d.canEdit} options={FEE_PRESETS} na={isNa("managementFee")} value={fee.ratePercent}
@@ -553,6 +557,7 @@ function EconomicsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; o
 
         {multi && (
           <section className="space-y-3">
+            <h3 className="text-sm font-medium">Class terms — separate from fund defaults</h3>
             {classes.map((c, i) => {
               const upd = (p: Partial<FundClass>) => setClasses(classes.map((x, j) => (j === i ? { ...x, ...p } : x)));
               const cNa = (k: EconomicTermKey) => !!c.notApplicable?.includes(k);
@@ -605,6 +610,17 @@ function EconomicsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; o
             )}
           </section>
         )}
+
+        <section className="border-t pt-4">
+          <h3 className="mb-2 text-sm font-medium">Investor-specific waivers / changes</h3>
+          <Button variant="outline" onClick={() => setSideLettersOpen(true)}>Associate side-letter exceptions</Button>
+        </section>
+        {sideLettersOpen && <Dialog open onOpenChange={setSideLettersOpen}>
+          <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
+            <DialogHeader><DialogTitle>Investor side-letter exceptions</DialogTitle><DialogDescription>Associate waivers and changed terms with the investor separately from fund defaults and class definitions.</DialogDescription></DialogHeader>
+            <SideLetterRegistry fundId={offeringId} />
+          </DialogContent>
+        </Dialog>}
 
         {d.canEdit && (
           <div className="flex flex-wrap gap-2">

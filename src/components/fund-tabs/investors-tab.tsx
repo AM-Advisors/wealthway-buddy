@@ -31,6 +31,8 @@ import { InvestorEmailHistory, InvestorHelpers, InvestorQuickEdit } from "@/comp
 import { InvestorPeopleAndContacts } from "@/components/investor-people-contacts";
 import { InvestorPriorVerification } from "@/components/investor-prior-verification";
 import { PriorSignedDocuments } from "@/components/prior-signed-documents";
+import { ClassAssignmentCard } from "@/components/fund-setup-phase3";
+import { SideLetterRegistry } from "@/components/side-letter-registry";
 
 export function InvestorsTab({ fundId, workQueue }: { fundId: string; workQueue?: ReactNode }) {
   const load = useServerFn(investorGridFn);
@@ -263,6 +265,7 @@ export function InvestorSheet({ fundId, id, onClose }: { fundId: string; id: str
   const openTaxForm = useServerFn(managerInvestorTaxFormFn);
   const sendSign = useServerFn(sendSubscriptionSignNoticeFn);
   const [sendingSign, setSendingSign] = useState(false);
+  const [termAssociation, setTermAssociation] = useState<"class" | "side_letter" | null>(null);
   const [downloading, setDownloading] = useState<string | null>(null);
   const [approving, setApproving] = useState(false);
   const [questionnaireFor, setQuestionnaireFor] = useState<string | null>(null);
@@ -419,11 +422,12 @@ export function InvestorSheet({ fundId, id, onClose }: { fundId: string; id: str
             <section>
               <h4 className="mb-1 font-medium">Investment</h4>
               <dl className="divide-y">
-                {d.classApplicable && <Row k="Class" v={d.classLabel} />}<Row k="Investing as" v={d.assetLabel} /><Row k="Tax ID" v={d.taxIdLast4 ? `•••• ${d.taxIdLast4}` : null} />
+                <Row k="Terms" v={d.classLabel} /><Row k="Investing as" v={d.assetLabel} /><Row k="Tax ID" v={d.taxIdLast4 ? `•••• ${d.taxIdLast4}` : null} />
                 <Row k="Investment date" v={d.investmentDate ? fmtDate(d.investmentDate) : null} />
                 <Row k="Stage" v={STAGE_LABELS[d.stage as OnboardingStage] ?? d.stage.replace(/_/g, " ")} />
                 <Row k="Latest activity" v={fmtDate(d.lastActivity)} />
               </dl>
+              {d.classApplicable && d.canManageTermAssociations && <Button size="sm" variant="outline" className="mt-2" onClick={() => setTermAssociation("class")}>Associate class</Button>}
             </section>
 
             <section>
@@ -436,10 +440,17 @@ export function InvestorSheet({ fundId, id, onClose }: { fundId: string; id: str
             <section>
               <h4 className="mb-1 font-medium">Side letters</h4>
               {d.sideLetters.length ? d.sideLetters.map((s: any) => <p key={s.id}><Badge variant="secondary" className="mr-2 capitalize">{s.status}</Badge>{s.effective_date ? fmtDate(s.effective_date) : ""}</p>) : <p className="text-muted-foreground">None.</p>}
+              <Button size="sm" variant="outline" className="mt-2" onClick={() => setTermAssociation("side_letter")}>Associate side-letter exceptions</Button>
             </section>
           </div>
         )}
       </SheetContent>
+      {id && termAssociation && <Dialog open onOpenChange={(o) => !o && setTermAssociation(null)}>
+        <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>{termAssociation === "class" ? "Class association" : "Investor side-letter exceptions"}</DialogTitle><DialogDescription>Fund defaults remain unchanged. Reviewed exceptions are recorded separately.</DialogDescription></DialogHeader>
+          {termAssociation === "class" ? <ClassAssignmentCard offeringId={fundId} onboardingId={id} /> : <SideLetterRegistry fundId={fundId} onboardingId={id} />}
+        </DialogContent>
+      </Dialog>}
     </Sheet>
   );
 }

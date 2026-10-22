@@ -447,7 +447,7 @@ export async function changeInvestmentClass(userId: string, input: { onboardingI
   await assertStaff(userId, row.offering_id);
   if ((row.offering_class_key ?? null) === (input.classKey ?? null)) return { ok: true };
   const impact = classChangeImpact(facts);
-  if (row.offering_class_key && impact.blocked) {
+  if (impact.blocked) {
     throw new Error("This investment has signed documents, funding or is closed, so its class can't be changed here. Harmonious must review it.");
   }
   if (impact.warnings.length && !input.acknowledged) throw new Error("Review the impact before changing the class.");
