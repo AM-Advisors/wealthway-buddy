@@ -1,3 +1,4 @@
+import { SharedForecasts } from "@/components/forecast-workspace";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -137,7 +138,7 @@ export function InvestorReportingCenter({ section }: { section?: string | undefi
         </p>
       </div>
 
-      <Tabs value={activeSection} onValueChange={setActiveSection}>
+      <SharedForecasts /><Tabs value={activeSection} onValueChange={setActiveSection}>
         <TabsList className="flex h-auto flex-wrap">
           <TabsTrigger value="investments">Your investments</TabsTrigger>
           <TabsTrigger value="performance">Performance</TabsTrigger>

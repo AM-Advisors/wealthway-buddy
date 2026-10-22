@@ -1,3 +1,4 @@
+import { ForecastTab } from "@/components/forecast-workspace";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -289,7 +290,7 @@ export function FounderCapTable({ clientId }: { clientId?: string | null }) {
       </div>
 
       <Tabs defaultValue="ownership">
-        <TabsList className="flex-wrap">
+        <TabsList className="flex-wrap"><ForecastTab subjectType="cap_table" subjectId={data.clientId ?? ""} />
           <TabsTrigger value="ownership">Ownership</TabsTrigger>
           <TabsTrigger value="shares">Shares</TabsTrigger>
           <TabsTrigger value="upload">Upload</TabsTrigger>
@@ -300,7 +301,7 @@ export function FounderCapTable({ clientId }: { clientId?: string | null }) {
         </TabsList>
 
 
-        <TabsContent value="ownership" className="mt-4">
+        <ForecastTab content subjectType="cap_table" subjectId={data.clientId ?? ""} /><TabsContent value="ownership" className="mt-4">
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Who owns what</CardTitle>

@@ -1,0 +1,10 @@
+import {createServerFn} from '@tanstack/react-start';
+import {z} from 'zod';
+import {requireSupabaseAuth} from './require-auth';
+import {forecastInput} from './forecast-model';
+const subject=z.object({subjectType:z.enum(['cap_table','portfolio','fund']),subjectId:z.string().uuid()});
+export const getForecastAccess=createServerFn({method:'GET'}).middleware([requireSupabaseAuth]).inputValidator((v:unknown)=>subject.parse(v)).handler(async({context,data})=>(await import('./forecast.server')).accessForecast(context.userId,data));
+export const getForecastWorkspace=createServerFn({method:'GET'}).middleware([requireSupabaseAuth]).inputValidator((v:unknown)=>subject.parse(v)).handler(async({context,data})=>(await import('./forecast.server')).loadForecast(context.userId,data));
+export const saveForecastScenario=createServerFn({method:'POST'}).middleware([requireSupabaseAuth]).inputValidator((v:unknown)=>subject.extend({forecastId:z.string().uuid().optional(),scenarioId:z.string().uuid().optional(),forecastName:z.string().trim().min(1).max(160),scenarioName:z.string().trim().min(1).max(160),assumptions:forecastInput}).parse(v)).handler(async({context,data})=>(await import('./forecast.server')).saveForecast(context.userId,data,data));
+export const setForecastSharing=createServerFn({method:'POST'}).middleware([requireSupabaseAuth]).inputValidator((v:unknown)=>subject.extend({scenarioId:z.string().uuid(),versionId:z.string().uuid(),shared:z.boolean()}).parse(v)).handler(async({context,data})=>(await import('./forecast.server')).shareForecast(context.userId,data,data));
+export const getSharedForecasts=createServerFn({method:'GET'}).middleware([requireSupabaseAuth]).handler(async({context})=>(await import('./forecast.server')).investorForecasts(context.userId));
