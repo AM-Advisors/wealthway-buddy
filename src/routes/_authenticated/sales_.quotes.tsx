@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { SPV_TXN_KEY_PREFIX, feeGroup, FEE_GROUP_LABEL, type FeeGroup } from "@/lib/spv-transaction-pricing";
 import { SERVICE_LADDERS, adminQuoteKey, ADMIN_QUOTE_KEY_PREFIX, type LadderProduct } from "@/lib/service-ladders";
+import { standardInclusions } from "@/lib/service-inclusions";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { draftQuoteFromSow, getQuoteCatalog, listSalesQuotes, listSowsForQuote, saveSalesQuote } from "@/lib/sales-hub.functions";

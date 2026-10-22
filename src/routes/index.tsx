@@ -27,7 +27,7 @@ const PILLARS = [
     title: "Form The Entity",
     body: "Streamlined SPV and fund entity formation, with the operating agreement, subscription documents and offering memorandum prepared alongside it.",
     to: "/spvs",
-    cta: "SPV Administration",
+    cta: "Harmonized SPV",
   },
   {
     title: "Onboard The Investors",

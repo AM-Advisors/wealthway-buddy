@@ -27,7 +27,7 @@ export const Route = createFileRoute("/resources/")({
 const GUIDES = [
   {
     audience: "Service guide",
-    title: "SPV Administration: lifecycle architecture & services",
+    title: "Harmonized SPV: lifecycle architecture & services",
     blurb: "Three-tier capital flow, the six-box core services matrix, and a downloadable two-page collateral.",
     to: "/solutions/spv" as const,
   },

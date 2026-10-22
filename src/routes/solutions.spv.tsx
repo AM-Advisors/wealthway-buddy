@@ -5,7 +5,7 @@ import p2 from "@/assets/collateral/spv-collateral-p2.jpg.asset.json";
 import { SolutionGuidePage, type SolutionGuide } from "@/components/marketing/solution-guide";
 import { seoLinks, seoMeta } from "@/lib/seo";
 
-const TITLE = "SPV Administration Guide - Harmonious";
+const TITLE = "Harmonized SPV Guide - Harmonious";
 const DESCRIPTION = "How Harmonious runs SPVs end to end: the three-tier capital flow, six core services and full-lifecycle accounting through final distribution.";
 
 export const Route = createFileRoute("/solutions/spv")({
@@ -55,7 +55,7 @@ const GUIDE: SolutionGuide = {
   ],
   download: { href: "/guides/harmonious-spv-guide.md", label: "Download the SPV guide" },
   collateral: [
-    { src: p1.url, alt: "SPV Administration overview, page 1" },
+    { src: p1.url, alt: "Harmonized SPV overview, page 1" },
     { src: p2.url, alt: "Core services matrix and platform technology, page 2" },
   ],
 };
