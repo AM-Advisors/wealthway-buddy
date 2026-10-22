@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Bell } from "lucide-react";
 
-import { listMyNotifications, markNotificationsRead } from "@/lib/client-dashboard.functions";
+import { listMyNotifications, markNotificationsRead } from "@/lib/client-insights.functions";
 import { getAttention } from "@/lib/attention.functions";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";

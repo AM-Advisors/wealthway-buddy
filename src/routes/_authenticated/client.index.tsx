@@ -12,7 +12,7 @@ import { ClientSowPanel } from "@/components/client-sow-panel";
 import { FundComparison, InsightCharts, InsightFilterBar, ServiceCosts, SummaryTiles, useInsights, type InsightFilters } from "@/components/client-insights";
 import { useClientPortal } from "@/components/client-portal-context";
 import { getClientRecords } from "@/lib/client-records.functions";
-import { getClientInsights, getDashboardPrefs, saveDashboardPrefs } from "@/lib/client-dashboard.functions";
+import { getClientInsights, getDashboardPrefs, saveDashboardPrefs } from "@/lib/client-insights.functions";
 import { DASHBOARD_CARDS, DEFAULT_ORDER, PERIODS, PERIOD_LABEL, resolveLayout, type CardId, type Period } from "@/lib/client-dashboard-model";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";

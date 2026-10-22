@@ -15,7 +15,7 @@ export type Fact = {
 export type Bucket = { key: string; label: string; costInvoiced: number; costPaid: number; committed: number; funded: number; fees: number; carry: number; earned: number; net: number };
 
 export function bucketKey(date: string, period: Period, fundName = ""): { key: string; label: string } {
-  const [y, m] = date.slice(0, 7).split("-");
+  const [y = "", m = "01"] = date.slice(0, 7).split("-");
   if (period === "deal") return { key: fundName || "Unassigned", label: fundName || "Unassigned" };
   if (period === "all") return { key: "all", label: "All time" };
   if (period === "year") return { key: y, label: y };
