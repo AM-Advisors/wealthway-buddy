@@ -480,3 +480,16 @@ export async function croDashboard(userId: string, from: string, to: string) {
     expiring: [...q("sent"), ...q("approved")].filter((x) => x.validUntil && x.validUntil <= soon),
   };
 }
+
+/** Create a new Sales deal from the quote/document forms. Owned by the creator; contact must be visible to them. */
+export async function createQuoteDeal(userId: string, d: { title: string; contactId?: string | null | undefined; clientId?: string | null | undefined }) {
+  const a = await salesActor(userId);
+  if (d.contactId) await loadContact(a, d.contactId);
+  const db = await admin();
+  const { data, error } = await db.from("crm_deals").insert({
+    scope: "harmonious", owner_user_id: userId, contact_id: d.contactId || null, client_id: d.clientId || null, title: d.title.trim(),
+    stage: "lead", sales_stage: "outreach", stage_changed_at: new Date().toISOString(), created_by: userId,
+  }).select("id, title, contact_id, client_id, owner_user_id").single();
+  if (error || !data) throw new Error("Couldn't create that deal.");
+  return data;
+}
