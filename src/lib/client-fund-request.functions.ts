@@ -327,7 +327,10 @@ export const getClientHome = createServerFn({ method: "GET" })
       commit += Number(o.commitment_amount_cents ?? o.accepted_amount_cents ?? o.requested_amount_cents ?? 0);
       if (isReconciledFunding(o.funding_status)) funded += Number(o.funded_amount_cents ?? 0);
     }
+    const { count: sowsToSign } = await db.from("client_sows").select("id", { count: "exact", head: true })
+      .eq("client_id", data.clientId).in("stage", ["in_review", "changes_requested"]).is("client_signed_at", null).is("executed_at", null);
     return {
+      sowsToSign: sowsToSign ?? 0,
       totals: { funds: funds.length, open: funds.filter((f) => f.is_open).length, investors, commitCents: commit, fundedCents: funded },
       funds: funds.map((f) => {
         const s = setupFor.get(f.id);
