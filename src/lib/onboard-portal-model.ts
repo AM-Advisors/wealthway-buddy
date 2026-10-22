@@ -6,6 +6,7 @@
  * every state is derived from records evaluated on the server.
  */
 import type { RequirementKey, RequirementResult } from "@/lib/investor-onboarding-model";
+import { verificationAllowsSigning, signingRequirementSatisfied } from "@/lib/investor-onboarding-model";
 
 export const ONBOARD_ORIGIN = "https://onboard.harmonious.co";
 
@@ -59,8 +60,8 @@ export function portalSteps(requirements: RequirementResult[]): PortalStepView[]
   let accreditation = stateOf(pick("accreditation"));
   if (accreditation !== "not_applicable" && !done(verification) && verification !== "in_review") accreditation = "locked";
   let documents = stateOf(pick("documents"));
-  if (!done(documents) && !(done(verification) || verification === "in_review")) documents = "locked";
-  if (!done(documents) && !(done(accreditation) || accreditation === "in_review")) documents = "locked";
+  if (!done(documents) && (!hasProfile || !verificationAllowsSigning(requirements)
+    || !pick("verification").every(signingRequirementSatisfied))) documents = "locked";
   const out: [PortalStep, PortalStepState][] = [
     ["verification", verification],
     ["accreditation", accreditation],

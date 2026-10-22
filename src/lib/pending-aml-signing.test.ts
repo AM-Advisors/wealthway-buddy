@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { canCloseInvestment, canInvestorFund, determineOnboardingRequirements, verificationAllowsSigning } from "./investor-onboarding-model";
 import { journeySteps, nextJourneyStep } from "./investor-journey-model";
+import { portalSteps, portalResumeStep } from "./onboard-portal-model";
 
 const now = "2026-10-22T20:37:00Z";
 const requirements = (kycStatus = "approved", amlStatus = "pending") => determineOnboardingRequirements({
@@ -23,6 +24,14 @@ describe("approved identity with pending AML: sign only", () => {
   });
   it("allows normal approved screening to sign", () => {
     expect(verificationAllowsSigning(requirements("approved", "approved"))).toBe(true);
+  });
+  it("opens the dedicated onboarding Documents page with pending AML", () => {
+    const steps = portalSteps(requirements());
+    expect(steps.find((s) => s.key === "documents")?.state).toBe("action_required");
+    expect(portalResumeStep(steps)).toBe("documents");
+  });
+  it("keeps that Documents page locked when AML has failed", () => {
+    expect(portalSteps(requirements("approved", "failed")).find((s) => s.key === "documents")?.state).toBe("locked");
   });
   it("opens Sign and resumes there without completing Verification or opening Fund", () => {
     const steps = journeySteps(requirements(), { stage: "verification", approvedToFund: true, fundingStatus: null, investorReportsSent: false });

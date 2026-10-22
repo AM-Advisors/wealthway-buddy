@@ -53,6 +53,9 @@ export const startBoxSigning = createServerFn({ method: "POST" })
       .maybeSingle();
     if (!application) throw new Error("No application found.");
 
+    const { assertApplicationSigningVerification } = await import("@/lib/investor-onboarding.server");
+    await assertApplicationSigningVerification(userId, application.id);
+
     const { data: doc } = await supabase
       .from("offering_documents")
       .select("id, title, body, doc_type, requires_signature, offering_id, signing_mode, countersigner_user_id, signature_template_version")
