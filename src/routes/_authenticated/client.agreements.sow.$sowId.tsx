@@ -21,6 +21,7 @@ import {
   signSow,
 } from "@/lib/agreements.functions";
 import { getAgreementDocument } from "@/lib/agreements-admin.functions";
+import { SOW_ROLE_DISCLAIMER } from "@/lib/agreement-templates";
 
 export const Route = createFileRoute("/_authenticated/client/agreements/sow/$sowId")({
   component: SowWorkspacePage,
@@ -451,6 +452,10 @@ function SowWorkspacePage() {
                   </Button>
                 </>
               )}
+              <div className="rounded-md border bg-muted/30 p-3">
+                <p className="text-xs font-medium text-foreground">Harmonious's role</p>
+                <p className="mt-1 whitespace-pre-wrap text-xs text-muted-foreground">{SOW_ROLE_DISCLAIMER}</p>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
