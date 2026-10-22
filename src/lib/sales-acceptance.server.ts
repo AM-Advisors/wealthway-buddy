@@ -1,3 +1,4 @@
+import { isSectionShown } from "@/lib/sales-documents-model";
 import { canEditRemittance } from "./sales-acceptance-model";
 /** Server-only: client sign-and-approve for quotes/proposals/RFPs/RFQs, automatic invoice, and audited Harmonious payment instructions.
  *  Records only — nothing is charged, pulled or wired. */
@@ -42,7 +43,7 @@ async function loadRecord(db: any, kind: AcceptKind, id: string): Promise<Loaded
   const { data: lines } = d.quote_id ? await db.from("sales_quote_lines").select("*").eq("quote_id", d.quote_id).order("sort_order") : { data: [] };
   return { kind, id, version: v, title: d.title, clientId: d.client_id ?? q?.client_id ?? null, offeringId: q?.offering_id ?? null, quoteId: d.quote_id,
     ownerId: d.owner_user_id, dealId: d.deal_id, status: d.status, approvedVersion: d.approved_version, recipientEmail: d.sent_to ?? d.recipient_email ?? null,
-    sections: ((ver?.sections ?? []) as any[]).filter((s) => s.key !== "terms" && (s.key !== "summary_note" || String(s.body ?? "").trim())).map((s) => ({ title: String(s.title ?? ""), body: String(s.body ?? "") })),
+    sections: ((ver?.sections ?? []) as any[]).filter((s) => s.key !== "terms" && isSectionShown(s) && (s.key !== "summary_note" || String(s.body ?? "").trim())).map((s) => ({ title: String(s.title ?? ""), body: String(s.body ?? "") })),
     lines: lines ?? [] };
 }
 

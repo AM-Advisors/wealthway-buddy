@@ -1,3 +1,5 @@
+import { Switch } from "@/components/ui/switch";
+import { OPTIONAL_SECTION_KEYS, isSectionShown } from "@/lib/sales-documents-model";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ClientResponsePanel } from "@/components/sales/client-response-panel";
 import { useEffect, useState } from "react";
@@ -171,7 +173,13 @@ function Editor() {
                   <AccordionContent><p className="whitespace-pre-wrap text-sm">{s.body || "-"}</p></AccordionContent>
                 </AccordionItem>
               </Accordion>
-            ) : <div key={s.key + i} className="rounded-lg border bg-card p-4">
+            ) : <div key={s.key + i} className={`rounded-lg border bg-card p-4 ${isSectionShown(s) ? "" : "opacity-60"}`}>
+              {OPTIONAL_SECTION_KEYS.includes(s.key) && (
+                <label className="mb-2 flex items-center justify-between gap-2 text-sm">
+                  <span className="text-muted-foreground">{isSectionShown(s) ? "Shown to the client" : "Hidden — turn on when needed"}</span>
+                  <Switch aria-label={`Include ${s.title}`} checked={isSectionShown(s)} disabled={!p.canEdit} onCheckedChange={(v) => upd(i, { included: v })} />
+                </label>
+              )}
               {p.canEdit && !(d.lockedSectionKeys ?? []).includes(s.key) && s.key !== "summary_note" ? <Input className="mb-2 font-semibold" value={s.title} onChange={(e) => upd(i, { title: e.target.value })} /> : <h3 className="mb-2 font-heading font-semibold">{s.title}</h3>}
               {s.question && <p className="mb-2 text-sm italic text-muted-foreground">Question: {s.question}</p>}
               {(d.lockedSectionKeys ?? []).includes(s.key) ? <><p className="whitespace-pre-wrap text-sm">{s.body || "-"}</p><p className="mt-1 text-xs text-muted-foreground">Set by Harmonious and filled in automatically. It can't be edited.</p></> : s.key === "summary_note" ? (p.canEdit ? <><Textarea rows={2} maxLength={300} placeholder="Optional: add one line under the summary" value={s.body} onChange={(e) => upd(i, { body: e.target.value })} /><p className="mt-1 text-xs text-muted-foreground">{s.body.length}/300. Shown under the summary; still needs approval.</p></> : <p className="text-sm">{s.body || "-"}</p>) : p.canEdit ? <Textarea rows={6} value={s.body} onChange={(e) => upd(i, { body: e.target.value })} /> : <p className="whitespace-pre-wrap text-sm">{s.body || "-"}</p>}
