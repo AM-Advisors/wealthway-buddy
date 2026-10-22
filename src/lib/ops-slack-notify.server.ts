@@ -137,7 +137,7 @@ export async function notifySubmission(n: SubmissionNotice): Promise<void> {
 }
 
 /** Called only after an authoritative verification result is saved. No provider details leave. */
-export async function notifyVerificationConfirmation(input: { check: VerificationCheck; status?: string | null; ref: string; offeringId?: string | null; path?: string | null }): Promise<void> {
+export async function notifyVerificationConfirmation(input: { check: VerificationCheck; status?: string | null | undefined; ref: string; offeringId?: string | null; path?: string | null }): Promise<void> {
   const notice = verificationNotice(input);
   if (notice) await notifySubmission(notice);
 }

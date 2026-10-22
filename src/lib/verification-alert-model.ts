@@ -14,7 +14,7 @@ export function operationsNoticeUrl(path?: string | null, offeringId?: string | 
   return appUrl("ops", safe === "/ops" || safe.startsWith("/ops/") ? safe : fallback);
 }
 
-export function verificationNotice(input: { check: VerificationCheck; status?: string | null; ref: string; offeringId?: string | null; path?: string | null }) {
+export function verificationNotice(input: { check: VerificationCheck; status?: string | null | undefined; ref: string; offeringId?: string | null; path?: string | null }) {
   if (!verificationNeedsConfirmation(input.status)) return null;
   return {
     kind: "verification_confirmation",
