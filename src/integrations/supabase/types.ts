@@ -34342,6 +34342,41 @@ export type Database = {
           },
         ]
       }
+      offering_countersign_timing_events: {
+        Row: {
+          changed_at: string
+          changed_by: string
+          id: string
+          new_value: string
+          offering_id: string
+          previous_value: string | null
+        }
+        Insert: {
+          changed_at?: string
+          changed_by: string
+          id?: string
+          new_value: string
+          offering_id: string
+          previous_value?: string | null
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string
+          id?: string
+          new_value?: string
+          offering_id?: string
+          previous_value?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offering_countersign_timing_events_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       offering_document_change_requests: {
         Row: {
           created_version: number | null
@@ -35325,6 +35360,7 @@ export type Database = {
           consolidated_by: string | null
           consolidated_into: string | null
           consolidation_reason: string | null
+          countersign_timing: string
           created_at: string
           date_formed: string | null
           demo_marked_at: string | null
@@ -35361,6 +35397,7 @@ export type Database = {
           offering_close_date: string | null
           offering_open_date: string | null
           payment_methods: string[]
+          planned_class_count: number | null
           principal_address: string | null
           public_headline: string | null
           public_page_enabled: boolean
@@ -35410,6 +35447,7 @@ export type Database = {
           consolidated_by?: string | null
           consolidated_into?: string | null
           consolidation_reason?: string | null
+          countersign_timing?: string
           created_at?: string
           date_formed?: string | null
           demo_marked_at?: string | null
@@ -35446,6 +35484,7 @@ export type Database = {
           offering_close_date?: string | null
           offering_open_date?: string | null
           payment_methods?: string[]
+          planned_class_count?: number | null
           principal_address?: string | null
           public_headline?: string | null
           public_page_enabled?: boolean
@@ -35495,6 +35534,7 @@ export type Database = {
           consolidated_by?: string | null
           consolidated_into?: string | null
           consolidation_reason?: string | null
+          countersign_timing?: string
           created_at?: string
           date_formed?: string | null
           demo_marked_at?: string | null
@@ -35531,6 +35571,7 @@ export type Database = {
           offering_close_date?: string | null
           offering_open_date?: string | null
           payment_methods?: string[]
+          planned_class_count?: number | null
           principal_address?: string | null
           public_headline?: string | null
           public_page_enabled?: boolean

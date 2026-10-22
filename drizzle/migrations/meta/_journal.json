@@ -2304,6 +2304,13 @@
       "when": 1792644798724,
       "tag": "0328_bookkeeping_proposed_quote_configuration",
       "breakpoints": true
+    },
+    {
+      "idx": 329,
+      "version": "7",
+      "when": 1792687010839,
+      "tag": "0329_countersign_timing_and_class_count",
+      "breakpoints": true
     }
   ]
 }
