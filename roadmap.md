@@ -1,5 +1,10 @@
 # Roadmap
 
+## Dedicated client-invoice ACH and wire spot (2026-10-22)
+- [x] Add executive-only Sales shortcut to the existing invoice payment-instructions page; label CEO/CRO and client-invoice-only scope, separate ACH/wire routing labels, history and failed-read retry. Existing authorization and approval engine unchanged.
+- [x] 55 payment authority, approval and navigation tests passed; preview build OK. No banking values, approvals or money records changed.
+- [ ] Signed-in settings walkthrough — blocked on independently isolated synthetic QA; no live banking edits performed for testing.
+
 ## Erebor one-time fee and carry replacements (2026-10-22)
 - [x] Confirm active approved terms: 6% of committed capital and 20% carry. Prepare new unsigned OA review revision v4 and PPM review revision v5 with explicit one-time/nonrecurring fee and 20% carry; inspect all 99 rendered pages and assert PDF economics.
 - [x] User-requested live draft registration through Alyssa's own authorized upload action: OA platform version 3 and PPM platform version 4, both uploaded_review_required and inactive; existing active OA v2/PPM v3 and all signatures unchanged. Read back saved versions.
