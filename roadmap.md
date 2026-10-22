@@ -1,9 +1,10 @@
 # Roadmap
 
 ## Operations Slack links and verification confirmation (2026-10-22)
-- [ ] Diagnose Fund A Open in Harmonious failure without changing ownership or access.
-- [ ] Route KYC/KYB/AML confirmation-required alerts to Operations through the existing sender, with safe fields and deduplication.
-- [ ] Run fictional regression checks; authenticated navigation and live Slack delivery require isolated QA.
+- [x] Locate the reported client PortalGate error; Operations Slack links now land directly on ops.harmonious.co without an app-domain hop. Missing owner remains informational; no ownership or permission changes. Exact live access-check failure is not reproduced.
+- [x] Route KYC/KYB/AML confirmation-required alerts through the existing sender from account/provider checks, business submissions and prior-check reruns; include canonical account/business review rows in the existing alert sweep. Processing-only checks do not alert; restricted details stay private.
+- [x] 167 fictional regression checks passed; preview build OK. No real verification decisions, ownership, messages or funds changed during testing.
+- [ ] Fund A authenticated click-through and live Slack delivery — blocked until independently isolated synthetic QA; old Slack messages retain their original links.
 
 ## Signing while AML is pending (2026-10-22)
 - [x] Allow approved investing-party identity + explicit pending AML to proceed to signing in both investor experiences; ceremony entry points re-read canonical investment verification and blocking exceptions. Failed/review AML and pending identity remain blocked.

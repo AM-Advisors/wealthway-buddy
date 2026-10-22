@@ -13,6 +13,7 @@
  */
 
 import { requireOperations } from "@/lib/ops-access.functions";
+import { verificationNeedsConfirmation } from "@/lib/verification-alert-model";
 import { can, type OpsArea, type OpsCapability } from "@/lib/ops-capabilities";
 import { redactActivity } from "@/lib/ops-records";
 import {
@@ -273,9 +274,7 @@ async function identityItems(s: any, lookup: Lookup, now: Date) {
   for (const k of kyc as any[]) {
     const app = byApp.get(k.application_id);
     if (!app) continue;
-    const waiting = ["pending", "review", "in_review", "requires_review", "failed"].includes(
-      String(k.status),
-    );
+    const waiting = verificationNeedsConfirmation(String(k.status));
     if (!waiting) continue;
     out.push(
       build(lookup, now, {
@@ -319,6 +318,25 @@ async function identityItems(s: any, lookup: Lookup, now: Date) {
         at: a.updated_at ?? null,
       }),
     );
+  }
+  // Canonical account and business checks can exist before any legacy application.
+  const [accounts, entities, profiles] = await Promise.all([
+    safely(async () => rows(await s.from("account_identity_checks").select("id,user_id,status,updated_at").in("status", ["review", "declined"]).limit(SOURCE_LIMIT))),
+    safely(async () => rows(await s.from("entity_verifications").select("id,profile_id,kyb_status,entity_aml_status,updated_at").limit(SOURCE_LIMIT))),
+    safely(async () => rows(await s.from("investment_profiles").select("id,owner_user_id").limit(SOURCE_LIMIT))),
+  ]);
+  const byProfile = new Map(profiles.map((p: any) => [p.id, p]));
+  for (const c of accounts as any[]) {
+    if (!verificationNeedsConfirmation(c.status)) continue;
+    out.push(build(lookup, now, { id: `account-kyc:${c.id}`, source: "onboarding.account_kyc", area: "onboarding", recordType: "investor", recordId: c.user_id, recordTab: "identity", title: "Account KYC requires confirmation", reason: "Identity verification needs a decision", workflowState: c.status, requiredAction: "review", at: c.updated_at }));
+  }
+  for (const e of entities as any[]) {
+    const profile = byProfile.get(e.profile_id) as any;
+    if (!profile?.owner_user_id) continue;
+    for (const [check, status] of [["KYB", e.kyb_status], ["AML", e.entity_aml_status]]) {
+      if (!verificationNeedsConfirmation(status)) continue;
+      out.push(build(lookup, now, { id: `entity-${check}:${e.id}`, source: `onboarding.entity_${check.toLowerCase()}`, area: "onboarding", recordType: "investor", recordId: profile.owner_user_id, recordTab: "profiles", investmentProfileId: e.profile_id, title: `${check} requires confirmation`, reason: "Business verification needs a decision", workflowState: status, requiredAction: "review", at: e.updated_at }));
+    }
   }
   return out;
 }

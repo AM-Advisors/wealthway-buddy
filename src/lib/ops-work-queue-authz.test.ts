@@ -261,3 +261,31 @@ describe("each item opens the record where the action belongs", () => {
     expect(mine.items.length).toBeLessThan(all.items.length);
   });
 });
+
+describe("canonical verification confirmation work", () => {
+  it("includes account KYC review but not ordinary pending", async () => {
+    tables["account_identity_checks"] = [
+      { id: "account-review", user_id: INVESTOR_1, status: "review" },
+      { id: "account-pending", user_id: INVESTOR_1, status: "pending" },
+    ];
+    try {
+      const items = await queue.pendingApprovalItemsForAlerts({ from: builder });
+      expect(items.some((i) => i.id === "account-kyc:account-review")).toBe(true);
+      expect(items.some((i) => i.id === "account-kyc:account-pending")).toBe(false);
+    } finally { delete tables["account_identity_checks"]; }
+  });
+  it("includes separate KYB and entity AML reviews without exposing source details", async () => {
+    tables["investment_profiles"] = [{ id: "entity-profile", owner_user_id: INVESTOR_1 }];
+    tables["entity_verifications"] = [{ id: "entity-review", profile_id: "entity-profile", kyb_status: "review", entity_aml_status: "review", review_notes: "PRIVATE SCREENING MATCH", tax_id_reference: "999999999" }];
+    try {
+      const items = await queue.pendingApprovalItemsForAlerts({ from: builder });
+      expect(items.some((i) => i.id === "entity-KYB:entity-review")).toBe(true);
+      expect(items.some((i) => i.id === "entity-AML:entity-review")).toBe(true);
+      expect(JSON.stringify(items)).not.toContain("PRIVATE SCREENING MATCH");
+      expect(JSON.stringify(items)).not.toContain("999999999");
+      tables["entity_verifications"] = [{ id: "entity-review", profile_id: "entity-profile", kyb_status: "approved", entity_aml_status: "pending" }];
+      const cleared = await queue.pendingApprovalItemsForAlerts({ from: builder });
+      expect(cleared.some((i) => i.id.startsWith("entity-"))).toBe(false);
+    } finally { delete tables["investment_profiles"]; delete tables["entity_verifications"]; }
+  });
+});

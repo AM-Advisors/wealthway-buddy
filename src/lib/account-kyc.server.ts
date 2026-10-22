@@ -96,6 +96,9 @@ export async function applyAccountDecision(c: any, decision: Record<string, any>
   const summary = { document: { type: n.document.documentType, country: n.document.issuingCountry, last4: n.document.numberLast4, expires: n.document.expirationDate }, liveness: n.liveness.status, faceMatch: n.faceMatch.status, address: n.proofOfAddress.status, aml: { status: n.aml.status, hits: n.aml.hitCount } };
   await db().from("account_identity_checks").update({ status: to, decision_summary: summary, warnings: n.warnings.slice(0, 20), updated_at: now() }).eq("id", c.id);
   await logEvent(c, "provider_decision", c.status, to, null);
+  const { notifyVerificationConfirmation } = await import("@/lib/ops-slack-notify.server");
+  await notifyVerificationConfirmation({ check: "KYC", status: to, ref: c.id, path: "/ops/security-compliance?section=overview" });
+  await notifyVerificationConfirmation({ check: "AML", status: n.aml.hitCount > 0 ? "review" : n.aml.status, ref: c.id, path: "/ops/security-compliance?section=overview" });
   return { ...c, status: to };
 }
 

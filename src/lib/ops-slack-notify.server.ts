@@ -4,10 +4,10 @@
  * never throws, never blocks the submission. Messages carry only the item name,
  * fund/client, submitter and a link - never amounts, tax IDs, bank or ID details.
  */
+import { operationsNoticeUrl, verificationNotice, type VerificationCheck } from "@/lib/verification-alert-model";
 const GATEWAY = "https://connector-gateway.lovable.dev/slack/api";
 export const OPS_SLACK_CHANNEL = "C057SPLASCR"; // #operations
 export const COMPLIANCE_SLACK_CHANNEL = "C0C9TBQTXNY"; // #compliance-regulatory
-const SITE = "https://app.harmonious.co";
 
 const admin = async () => (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
 
@@ -33,7 +33,7 @@ export function pickOwners(team: { role: string; userId: string | null }[]): { u
   const out: { userId: string; role: string }[] = [];
   for (const role of ["operations", "account_manager"]) {
     const m = team.find((t) => t.role === role && t.userId && !out.some((o) => o.userId === t.userId));
-    if (m) out.push({ userId: m.userId!, role });
+    if (m?.userId) out.push({ userId: m.userId, role });
   }
   return out;
 }
@@ -42,7 +42,7 @@ export function pickOwners(team: { role: string; userId: string | null }[]): { u
 export function pickOwner(team: { role: string; userId: string | null }[]): { userId: string; role: string } | null {
   for (const role of ["operations", "account_manager"]) {
     const m = team.find((t) => t.role === role && t.userId);
-    if (m) return { userId: m.userId!, role };
+    if (m?.userId) return { userId: m.userId, role };
   }
   return null;
 }
@@ -127,13 +127,19 @@ export async function notifySubmission(n: SubmissionNotice): Promise<void> {
     const mention: string | null = tags.length ? tags.join(" ") : null;
     const { data: sub } = n.submittedBy ? await db.from("profiles").select("legal_name, email").eq("user_id", n.submittedBy).maybeSingle() : { data: null };
     const when = new Date().toLocaleString("en-US", { timeZone: "America/Chicago", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
-    const url = `${SITE}${n.path ?? (n.offeringId ? `/ops/fund/${n.offeringId}` : "/ops/queue")}`;
+    const url = operationsNoticeUrl(n.path, n.offeringId);
     const msg = buildMessage({ title: n.title, place, submitter: sub?.legal_name || sub?.email || null, mention, url, when, completed: n.completed ?? false });
     const r = await slack("chat.postMessage", { channel: OPS_SLACK_CHANNEL, unfurl_links: false, ...msg });
     await db.from("ops_slack_notifications").update({ status: r?.ok ? "sent" : "failed", error: r?.ok ? null : String(r?.error ?? "unknown"), slack_ts: r?.ts ?? null, tagged_user_id: owner?.userId ?? null, client_id: clientId }).eq("dedupe_key", key);
   } catch (e) {
     console.error("ops slack notify", e);
   }
+}
+
+/** Called only after an authoritative verification result is saved. No provider details leave. */
+export async function notifyVerificationConfirmation(input: { check: VerificationCheck; status?: string | null | undefined; ref: string; offeringId?: string | null; path?: string | null }): Promise<void> {
+  const notice = verificationNotice(input);
+  if (notice) await notifySubmission(notice);
 }
 
 /**
@@ -153,7 +159,7 @@ export async function notifyComplianceClear(n: { personId: string; personName: s
       place = f?.name ?? place;
     }
     const when = new Date().toLocaleString("en-US", { timeZone: "America/Chicago", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
-    const url = `${SITE}/ops/compliance`;
+    const url = operationsNoticeUrl("/ops/compliance");
     const text = `KYC/AML fully clear - ${n.personName}`;
     const r = await slack("chat.postMessage", {
       channel: COMPLIANCE_SLACK_CHANNEL,

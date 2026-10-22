@@ -172,5 +172,10 @@ export async function loadPriorVerification(userId: string, input: PriorInput) {
   }
 
   await d.from("investor_onboarding_events").insert({ onboarding_id: row.id, offering_id: row.offering_id, event: "prior_verification_loaded", actor_user_id: userId, detail: { provider: input.provider, checkedOn: input.checkedOn, rerun: input.rerun, aml: out.aml ?? null, kyb: out.kyb ?? null } });
+  const { notifyVerificationConfirmation } = await import("@/lib/ops-slack-notify.server");
+  const notice = { ref: `${row.id}:${now}`, offeringId: row.offering_id, path: `/ops/fund/${encodeURIComponent(row.offering_id)}?tab=investors` };
+  await notifyVerificationConfirmation({ ...notice, check: "AML", status: out.aml });
+  await notifyVerificationConfirmation({ ...notice, check: "KYB", status: out.kyb });
+  await notifyVerificationConfirmation({ ...notice, ref: `${notice.ref}:entity`, check: "AML", status: out.entityAml });
   return out;
 }
