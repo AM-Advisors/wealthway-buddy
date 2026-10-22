@@ -372,9 +372,12 @@ const pv = (v: string | null) => (v ? PROGRESS_VALUES[v] ?? v.charAt(0).toUpperC
 
 /** Wording for Fund Setup progress events; shared by email and the in-portal feed. */
 export function fundProgressMessage(
-  row: Pick<Row, "event_kind" | "field" | "old_value" | "new_value">,
+  row: Pick<Row, "event_kind" | "field" | "old_value" | "new_value"> & { metadata?: Record<string, any> | null },
   offeringName: string,
 ): { headline: string; intro: string; details: { label: string; value: string }[] } | null {
+  if (row.event_kind === "client_work_update") {
+    return { headline: String(row.metadata?.headline ?? "Fund request updated"), intro: String(row.metadata?.intro ?? "There is an update on a fund request."), details: [] };
+  }
   if (row.event_kind === "fund_assigned") {
     return {
       headline: `You've been added to ${offeringName}`,

@@ -294,6 +294,7 @@ export const proposeSideLetterChange = createServerFn({ method: "POST" })
       actor_id: context.userId,
       detail: { change_request_id: req.id, reason: data.reason },
     });
+    await (await import("@/lib/fund-change-notify.server")).notifyFundChange({ fundId: data.fundId, ref: req.id, title: "Side letter change", status: "requested", actorId: context.userId });
     return { ok: true, requestId: req.id as string };
   });
 

@@ -472,7 +472,7 @@ export async function managerUpdates(userId: string, d: { offeringId?: string | 
   const funds = await fundNames(ids);
   const [{ data: progress }, { data: pm }, { data: convs }, { data: act }, { data: read }] = await Promise.all([
     db.from("notification_events").select("id, event_kind, offering_id, field, old_value, new_value, metadata, created_at").in("offering_id", ids)
-      .in("event_kind", ["fund_assigned", "setup_task_progress", "service_progress", "launch_progress"]).order("created_at", { ascending: false }).limit(limit),
+      .in("event_kind", ["fund_assigned", "setup_task_progress", "service_progress", "launch_progress", "client_work_update"]).order("created_at", { ascending: false }).limit(limit),
     db.from("portal_messages").select("id, offering_id, application_id, sender_name, body, created_at").in("offering_id", ids).eq("sender_role", "investor").order("created_at", { ascending: false }).limit(limit),
     db.from("support_conversations").select("id, offering_id, subject").eq("kind", "manager").in("offering_id", ids),
     db.from("crm_activity").select("id, offering_id, kind, summary, contact_id, created_at").eq("scope", "fund").in("offering_id", ids).in("kind", ["stage_changed", "created", "campaign_submitted", "campaign_approved", "campaign_declined", "campaign_sent", "consent_changed", "owner_changed"]).order("created_at", { ascending: false }).limit(limit),
@@ -486,8 +486,8 @@ export async function managerUpdates(userId: string, d: { offeringId?: string | 
   const fn = (id: string | null) => (id ? funds.get(id) ?? "Your fund" : null);
   const items = mergeUpdates([
     ((progress ?? []) as any[]).filter((r) => r.event_kind !== "fund_assigned" || r.metadata?.recipient_user_id === userId).map((r) => {
-      const m = fundProgressMessage(r, fn(r.offering_id)!);
-      return { id: `p:${r.id}`, kind: "fund_progress" as const, offeringId: r.offering_id, fundName: fn(r.offering_id), headline: m?.headline ?? "Fund update", detail: m?.intro ?? "", at: r.created_at, path: `/manager/fund/${r.offering_id}` };
+      const m = fundProgressMessage(r, fn(r.offering_id) ?? "Your fund");
+      return { id: `p:${r.id}`, kind: "fund_progress" as const, offeringId: r.offering_id, fundName: fn(r.offering_id), headline: m?.headline ?? "Fund update", detail: m?.intro ?? "", at: r.created_at, path: `/client/funds/${r.offering_id}` };
     }),
     ((pm ?? []) as any[]).map((m) => ({ id: `m:${m.id}`, kind: "investor_message" as const, offeringId: m.offering_id, fundName: fn(m.offering_id), headline: `Message from ${m.sender_name ?? "an investor"}`, detail: String(m.body).slice(0, 160), at: m.created_at, path: "/manager/messages" })),
     ((hm ?? []) as any[]).map((m) => {

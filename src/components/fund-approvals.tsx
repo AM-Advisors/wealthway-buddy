@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { FundChangeReviews } from "@/components/fund-change-reviews";
 
 const money = (n: number | string | null | undefined, cur = "USD") => (n == null ? null : Number(n).toLocaleString("en-US", { style: "currency", currency: cur, maximumFractionDigits: 0 }));
 const sel = "h-8 rounded-md border bg-background px-2 text-sm";
@@ -33,6 +34,7 @@ export function FundApprovals({ fundId, initialId }: { fundId: string; initialId
   if (openId) return <ApprovalDetail id={openId} fundId={fundId} onBack={() => setOpenId(null)} onOpen={setOpenId} />;
   return (
     <div className="space-y-3">
+      <FundChangeReviews fundId={fundId} />
       <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="Filter approvals">
         {([["needs", "Needs My Approval"], ["review", "In Review"], ["approved", "Approved"], ["changes", "Changes Requested"], ["completed", "Completed"], ["all", "All"]] as const).map(([k, l]) => (
           <button key={k} type="button" aria-pressed={filter === k} onClick={() => setFilter(k)} className={cn("rounded-full border px-2.5 py-1 text-xs", filter === k ? "border-primary bg-primary text-primary-foreground" : "bg-card hover:bg-muted")}>{l}{k !== "all" ? ` (${count(k)})` : ""}</button>
@@ -50,7 +52,7 @@ export function FundApprovals({ fundId, initialId }: { fundId: string; initialId
           <StatusPill s={r.status} />
           <Button size="sm" variant={r.status === "AWAITING_APPROVAL" ? "default" : "outline"} onClick={() => setOpenId(r.id)}>Review</Button>
         </li>
-      ))}</ul> : <div className="rounded-xl border bg-card p-4 text-sm"><p className="font-medium">{filter === "needs" ? "No action required" : "Nothing here"}</p><p className="text-muted-foreground">{filter === "needs" ? "Nothing is waiting for your approval right now." : "No approvals match this filter."}</p></div>}
+      ))}</ul> : <p className="py-3 text-sm text-muted-foreground">{filter === "needs" ? "No additional client approvals awaiting a decision." : "No client approvals match this filter."}</p>}
     </div>
   );
 }

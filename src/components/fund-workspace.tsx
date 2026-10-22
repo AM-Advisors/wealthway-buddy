@@ -54,6 +54,7 @@ import { AssetManager } from "@/components/fund-tabs/asset-manager";
 import { CentsBarChart, CentsDonut } from "@/components/fund-tabs/charts";
 import { RequestHarmoniousButton } from "@/components/fund-tabs/request-harmonious";
 import { fundEinFn } from "@/lib/fund-tabs.functions";
+import { FundChangeSummary } from "@/components/fund-change-summary";
 
 const nice = (v: string | null | undefined) => (v ? v.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) : "");
 
@@ -272,6 +273,7 @@ export function FundWorkspace({ fundId, tab, onTab, mode = "client", extraTabs =
         ))}
       </div>
 
+      <FundChangeSummary fundId={fundId} onNavigate={onTab} />
       <Tabs value={tab} onValueChange={onTab}>
         <FundTabBar fundId={fundId} mode={mode} tab={tab} onTab={onTab} extraTabs={extraTabs} todoCount={steps.filter((s) => s.owner === "You" && !s.done && s.status !== "review" && !s.answer?.trim()).length} />
 

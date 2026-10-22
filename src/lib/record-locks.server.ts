@@ -69,6 +69,8 @@ export async function lockedSave<T>(actionKey: keyof typeof LOCKED_ACTIONS, ctx:
     description: `A change to locked ${a.label.toLowerCase()} needs approval from a Harmonious staff member other than the requester. Review it in Operations → Locked edits. Request ${req.id}.`,
     priority: "high", team: "operations", responsibility_status: "HARMONIOUS_HANDLING", related_workflow_type: "locked_edit", related_workflow_id: req.id, source: "workflow", offering_id: a.offering?.(payload) ?? null, client_id: payload?.clientId ?? null,
   });
+  const off = a.offering?.(payload);
+  if (off) await (await import("@/lib/fund-change-notify.server")).notifyFundChange({ fundId: off, ref: req.id, title: "Saved fund information", status: "requested", actorId: ctx.userId });
   throw new PendingApproval(req.id);
 }
 

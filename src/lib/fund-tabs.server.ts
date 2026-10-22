@@ -198,7 +198,9 @@ export async function setFees(uid: string, fundId: string, f: { managementFeePct
     await d.from("fund_fee_terms").insert({ ...row, status: "active", decided_by: uid, decided_at: new Date().toISOString() });
     return { applied: true };
   }
-  await d.from("fund_fee_terms").insert({ ...row, status: "pending_approval" });
+  const { data: request, error } = await d.from("fund_fee_terms").insert({ ...row, status: "pending_approval" }).select("id").single();
+  if (error || !request) throw new Error("The fee change could not be recorded.");
+  await (await import("@/lib/fund-change-notify.server")).notifyFundChange({ fundId, ref: request.id, title: "Fund fee terms", status: "requested", actorId: uid });
   return { applied: false };
 }
 
@@ -210,7 +212,9 @@ export async function decideFees(uid: string, feeId: string, approve: boolean) {
   if (f.requested_by === uid && !(await (await import("@/lib/self-approval.server")).selfApprove(uid, "fee_terms", [feeId]))) throw new Error("Someone other than the requester must decide this change.");
   const now = new Date().toISOString();
   if (approve) await d.from("fund_fee_terms").update({ status: "superseded" }).eq("offering_id", f.offering_id).eq("status", "active");
-  await d.from("fund_fee_terms").update({ status: approve ? "active" : "rejected", decided_by: uid, decided_at: now }).eq("id", feeId);
+  const { error } = await d.from("fund_fee_terms").update({ status: approve ? "active" : "rejected", decided_by: uid, decided_at: now }).eq("id", feeId);
+  if (error) throw new Error("The fee decision could not be recorded.");
+  await (await import("@/lib/fund-change-notify.server")).notifyFundChange({ fundId: f.offering_id, ref: feeId, title: "Fund fee terms", status: approve ? "approved" : "rejected", actorId: uid });
   return { ok: true };
 }
 
