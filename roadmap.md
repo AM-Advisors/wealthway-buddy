@@ -1,5 +1,10 @@
 # Roadmap
 
+## Agreement panel scrolling (2026-10-22)
+- [x] Let the Master Service Agreement, Privacy Policy and Terms & Conditions panels scroll through their full text on review links, the signed-in signing page, the sign-off screen and both policy gates; the agreement wording editor is now tall and resizable.
+- [x] Preview build OK. On a read-only review link for a fictional test recipient, the Privacy Policy and Terms & Conditions panels scrolled a 1,720px agreement to its last line (606px visible); nothing was signed, sent or recorded.
+- [ ] Master Service Agreement panel and signed-in surfaces (signing page, sign-off screen, policy gates, wording editor) — the agreement panel could not be opened on a live link because every ready client has already accepted the current version, and the signed-in screens need a session that isolated QA must supply.
+
 ## Client proposal SOW tab (2026-10-22)
 - [x] Add a read-only Statement of Work tab to the public proposal review/sign page using its existing recipient/version token, recorded SOW sections and generated lines only; no portal login or signing changes.
 - [x] 33 offline projection, version, signing and linked-term regression tests passed; preview build OK.

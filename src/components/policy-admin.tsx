@@ -152,10 +152,14 @@ export function PolicyDocumentsBoard() {
                   <div className="space-y-1.5">
                     <Label>Wording</Label>
                     <Textarea
-                      rows={12}
+                      rows={20}
+                      className="min-h-[55vh] max-h-[80vh] resize-y leading-relaxed"
                       value={draft.body}
                       onChange={(e) => setDraft({ ...draft, body: e.target.value })}
                     />
+                    <p className="text-xs text-muted-foreground">
+                      {draft.body.length.toLocaleString()} characters · scroll inside the box to reach the end.
+                    </p>
                   </div>
                   <div className="flex gap-2">
                     <Button disabled={mutate.isPending} onClick={() => mutate.mutate(draft)}>

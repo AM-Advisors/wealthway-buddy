@@ -95,7 +95,7 @@ export function CapPolicyGate({ children }: { children: ReactNode }) {
               </span>
             </button>
             {opened[doc.id] && (
-              <ScrollArea className="max-h-64 border-t px-4 py-3">
+              <ScrollArea className="max-h-[55vh] min-h-[12rem] border-t px-4 py-3">
                 <p className="whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">
                   {FULL_TEXT[doc.kind as string] ?? doc.body}
                 </p>

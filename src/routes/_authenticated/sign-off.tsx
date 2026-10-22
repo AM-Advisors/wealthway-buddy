@@ -125,7 +125,7 @@ function SignOffPage() {
                   {isOpen ? "Hide" : "Read"}
                 </Button>
                 {isOpen ? (
-                  <ScrollArea className="mt-3 h-56 rounded-md border p-3">
+                  <ScrollArea className="mt-3 h-[60vh] min-h-[16rem] rounded-md border p-3">
                     <p className="whitespace-pre-wrap text-sm leading-relaxed">{doc.body}</p>
                   </ScrollArea>
                 ) : null}
