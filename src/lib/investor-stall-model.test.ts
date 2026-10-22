@@ -12,7 +12,7 @@ describe("investor stall report", () => {
   });
   it("counts stale after 14 days and ignores later stages", () => {
     const s = summarizeStalls([base, { ...base, stage: "signature" }], new Date("2026-10-22T00:00:00Z"));
-    expect(s[0].total).toBe(1);
-    expect(s[0].stale).toBe(1);
+    expect(s[0]!.total).toBe(1);
+    expect(s[0]!.stale).toBe(1);
   });
 });
