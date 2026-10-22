@@ -149,6 +149,7 @@ function RootComponent() {
       <SelfApprovalPrompt />
       <ActivityTracker />
       <SessionEvidenceTracker />
+      <SessionTimeoutNotice />
     </QueryClientProvider>
   );
 }
