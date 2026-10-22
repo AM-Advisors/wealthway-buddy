@@ -134,7 +134,7 @@ export async function createRequest(uid: string, d: {
     sla_due_at: hours == null ? null : new Date(now.getTime() + hours * 3_600_000).toISOString(), irreversible: def.irreversible,
   }).select("*").single();
   if (error) throw new Error(error.message);
-  await (await import("@/lib/ops-slack-notify.server")).notifySubmission({ kind: "fund_request", title: `Client request: ${title}`, offeringId: d.fundId, submittedBy: uid, ref: r.id });
+  await (await import("@/lib/ops-slack-notify.server")).notifySubmission({ kind: "fund_request", title: "Fund service request submitted", offeringId: d.fundId, submittedBy: uid, ref: r.id, path: `/ops/fund/${d.fundId}?tab=requests` });
   const { data: task } = await db.from("staff_tasks").insert({
     title: `Client request: ${title}`, description: `${def.label} submitted by the fund manager. Open it in the fund's Requests tab.`,
     priority: d.priority === "normal" ? "normal" : d.priority, status: "open", team: route.taskTeam, offering_id: d.fundId, due_date: r.due_date,

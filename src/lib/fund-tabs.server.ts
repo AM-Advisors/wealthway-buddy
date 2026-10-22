@@ -196,6 +196,7 @@ export async function setFees(uid: string, fundId: string, f: { managementFeePct
   if (!signed) {
     await d.from("fund_fee_terms").update({ status: "superseded" }).eq("offering_id", fundId).eq("status", "active");
     await d.from("fund_fee_terms").insert({ ...row, status: "active", decided_by: uid, decided_at: new Date().toISOString() });
+    await (await import("@/lib/client-work-notify.server")).notifyFundManagers(fundId, "material_update", "Fund fee terms", `/client/funds/${fundId}?tab=details`);
     return { applied: true };
   }
   const { data: request, error } = await d.from("fund_fee_terms").insert({ ...row, status: "pending_approval" }).select("id").single();

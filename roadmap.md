@@ -1,9 +1,10 @@
 # Roadmap
 
 ## Fund requests, approvals and alerts (2026-10-22)
-- [ ] Expose existing pending fund edits/economics requests beside client approvals without changing their decision authority.
-- [ ] Show fund-linked updates and request status on the shared fund workspace and use existing alert delivery.
-- [ ] Run focused fictional regression checks; authenticated save/read-back and live delivery remain blocked on independently isolated synthetic QA.
+- [x] Expose canonical pending fees, side letters and saved-edit review links beside client approvals; reuse existing decisions, including reason-logged Super Admin side-letter self-review.
+- [x] Add fund-scoped pending request summary and recent status updates; emit manager email/bell and existing Operations alerts for fee/side-letter/saved-edit requests, plus operational request creation/progress. No new approval store or automatic approval.
+- [x] 23 focused fictional model/alert/side-letter/phase-3 checks passed; preview build OK. No real fund terms, approvals or alerts changed during testing.
+- [ ] Authenticated fund request → review → decision/read-back and actual alert delivery — blocked on independently isolated synthetic QA; shared production browser testing not permitted.
 
 ## Default terms and separate investor exceptions (2026-10-22)
 - [x] Keep fund defaults distinct from class overrides; default-term investors need no exception class and no missing-class warning.
