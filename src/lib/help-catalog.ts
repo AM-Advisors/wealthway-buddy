@@ -4,12 +4,12 @@ import { SERVICE_LEVELS } from "@/lib/service-level";
 
 const U = "2026-10-16";
 const c = (a: Omit<HelpArticle, "audience" | "version" | "updated"> & { version?: number; updated?: string }): HelpArticle => ({ audience: "client", version: 1, updated: U, ...a });
-const s = (a: Omit<HelpArticle, "audience" | "version" | "updated"> & { version?: number }): HelpArticle => ({ audience: "staff", version: 1, updated: U, ...a });
+const s = (a: Omit<HelpArticle, "audience" | "version" | "updated"> & { version?: number; updated?: string }): HelpArticle => ({ audience: "staff", version: 1, updated: U, ...a });
 
 export const HELP_CATALOG: HelpArticle[] = [
   // ---------------- Client ----------------
-  c({ slug: "fund-manager-first-login", title: "First login, SS-4 and Operating Agreement", summary: "Sign in for the first time, verify your identity, sign Form SS-4 and your fund's Operating Agreement.", roles: ["fund_manager"], services: ["funds", "signing", "identity"], guide: "fund-manager-first-login", sections: [] }),
-  c({ slug: "sign-operating-agreement", title: "How to sign your Operating Agreement", summary: "Open the signing email, review the agreement and sign it electronically.", roles: ["fund_manager"], services: ["signing", "funds"], guide: "sign-operating-agreement", sections: [] }),
+  c({ slug: "fund-manager-first-login", version: 2, updated: "2026-10-22", title: "First login, SS-4 and Operating Agreement", summary: "Sign in for the first time, verify your identity, sign Form SS-4 and your fund's Operating Agreement.", roles: ["fund_manager"], services: ["funds", "signing", "identity"], guide: "fund-manager-first-login", sections: [] }),
+  c({ slug: "sign-operating-agreement", version: 2, updated: "2026-10-22", title: "How to sign your Operating Agreement", summary: "Open the signing email, review the agreement and sign it electronically.", roles: ["fund_manager"], services: ["signing", "funds"], guide: "sign-operating-agreement", sections: [] }),
   c({ slug: "getting-started", version: 2, updated: "2026-10-22", title: "Getting started with Harmonious", summary: "Your first sign-in, your menu and where to find things.", roles: [], services: [], sections: [
     { steps: ["Open the invitation email from Harmonious and select the link. Use the latest invitation and check the expiry shown in that email.", "Sign in with the email address the invitation was sent to.", "Accept the Master Service Agreement if you're asked to.", "Use the menu on the left. It only shows the services on your account."] },
     { heading: "Need a hand?", paragraphs: ["Use Messages to contact Harmonious. Self Serve includes only the general Operations inbox with a guaranteed response within five business days. Other support levels cost extra. SaaS includes no services or Operations inbox."] },

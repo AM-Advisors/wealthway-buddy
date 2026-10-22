@@ -54,8 +54,7 @@ export function FundManagerFirstLoginGuide() {
           <p className="text-xs font-semibold uppercase tracking-wider text-accent-foreground">Fund manager guide</p>
           <h1 className="text-3xl font-bold text-foreground">Your first login, Form SS-4 and Operating Agreement</h1>
           <p className="text-muted-foreground">
-            Follow these steps in order. It takes about 15 minutes. Have your government ID, a phone or computer
-            camera, and your SSN or ITIN ready. Your progress saves as you go.
+            Follow these steps in order. Have your government ID and a phone or computer camera ready. If an SS-4 is required, enter the responsible party’s SSN or ITIN only on the protected form. Wait for each saved confirmation before leaving.
           </p>
           <ol className="list-decimal space-y-1 pl-5 text-sm text-muted-foreground">
             <li>Accept your invite and sign in</li>
@@ -71,7 +70,7 @@ export function FundManagerFirstLoginGuide() {
             Open the email from Harmonious and click the invitation link. Create your password using the{" "}
             <strong className="text-foreground">same email address the invite was sent to</strong> — that is how
             your fund is linked to you. Next time, sign in at{" "}
-            <a className="text-primary underline" href="https://portal.harmonious.co">portal.harmonious.co</a> with
+            <a className="text-primary underline" href="https://app.harmonious.co">app.harmonious.co</a> with
             that email, or use <em>Continue with Google</em> if it is a Google address.
           </p>
           <Shot src={loginShot.url} alt="Harmonious sign-in page" caption="The sign-in page. Lost your link? Use “Forgot your password?”" />
@@ -81,8 +80,7 @@ export function FundManagerFirstLoginGuide() {
           <p>
             The first time you sign in you will see <strong className="text-foreground">Before you continue</strong>.
             Read the Privacy Policy, Terms of Service, Fee schedule, Electronic signatures consent and any fund
-            agreement listed. Tick the box at the bottom, type your full name and continue. You only do this once
-            (and again if a document is updated).
+            agreement listed. Tick the box at the bottom, type your full name and continue. Acceptance is recorded for each required version. Previously accepted current versions do not need accepting again.
           </p>
           <Shot src={legalShot.url} alt="Before you continue documents screen" caption="One-time acceptance. Scroll to the bottom to tick the box and type your name." />
         </Step>
@@ -93,14 +91,14 @@ export function FundManagerFirstLoginGuide() {
             photo of your government ID, a quick selfie, and your address. It takes about 5 minutes. On a computer
             you can scan a code to finish on your phone. Your ID number is never shown in the portal.
           </p>
-          <p>Once approved, your full portal and fund open automatically — you won't need to do this again.</p>
-          <Shot src={verifyShot.url} alt="Verify your identity screen" caption="Every user verifies once before seeing fund details or signing." />
+          <p>Approved identity allows account access where you are authorized. Separate investing-party, business and screening requirements can still apply; verification may need updating.</p>
+          <Shot src={verifyShot.url} alt="Verify your identity screen" caption="Account identity verification is separate from each investing party’s requirements." />
         </Step>
 
         <Step n={4} title="Sign Form SS-4 (EIN application)">
           <p>
             Open the <strong className="text-foreground">“Sign Form SS-4”</strong> email and click the link, or find it
-            under <strong className="text-foreground">Notifications &amp; tasks</strong> in the left menu.
+            on your home attention list or <strong className="text-foreground">Sign-off</strong> page.
           </p>
           <ul className="list-disc space-y-1 pl-5">
             <li>Check every line. Harmonious prefilled it from your fund's details.</li>
@@ -125,13 +123,13 @@ export function FundManagerFirstLoginGuide() {
             <p className="text-xs text-muted-foreground">☐ Under penalties of perjury, I declare… typing my name is my electronic signature.</p>
             <span className={btn}>Sign Form SS-4</span>
           </Mock>
-          <p>Harmonious then files the SS-4 with the IRS and adds your EIN to the fund. You'll see it in the fund's Banking and setup pages.</p>
+          <p>Signing the SS-4 records your authorization; it does not file an IRS application automatically. Harmonious handles the requested application separately and records the IRS-issued EIN with its evidence.</p>
         </Step>
 
         <Step n={5} title="Sign the Operating Agreement">
           <p>
             You will get a <strong className="text-foreground">“Review &amp; Countersign”</strong> email for the
-            Operating Agreement. Click the link (or open it from Notifications &amp; tasks), check the fund and document
+            Operating Agreement. Click the personal link (or open the fund’s Documents and Sign-off pages), check the fund and document
             name, then click <strong className="text-foreground">Review &amp; Countersign</strong>. The document opens
             with only your signature fields highlighted. Sign each field and finish.
           </p>
@@ -152,8 +150,7 @@ export function FundManagerFirstLoginGuide() {
         <section className="space-y-2 rounded-lg border border-border bg-muted/40 p-5 text-sm text-muted-foreground">
           <p className="font-semibold text-foreground">Need help?</p>
           <p>
-            Email <a className="text-primary underline" href="mailto:support@harmonious.co">support@harmonious.co</a> or
-            reply to any Harmonious email. We never ask for your password or full SSN by email.
+            Use Messages to contact Harmonious Operations. Self Serve includes a guaranteed response within five business days; paid support levels cost extra. We never ask for your password or full SSN by email.
           </p>
           <Link to="/help" className="text-primary underline">Back to Help center</Link>
         </section>

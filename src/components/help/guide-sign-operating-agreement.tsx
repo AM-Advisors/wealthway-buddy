@@ -41,8 +41,7 @@ export function SignOperatingAgreementGuide() {
           <p className="text-xs font-semibold uppercase tracking-wider text-accent-foreground">Fund manager guide</p>
           <h1 className="text-3xl font-bold text-foreground">Sign your Operating Agreement</h1>
           <p className="text-muted-foreground">
-            When your fund's Operating Agreement is ready, Harmonious emails you a personal signing link. The whole
-            thing takes about 5 minutes — here's exactly what to expect.
+            When your fund's Operating Agreement is ready, Harmonious emails you a personal signing link. Review the entire agreement before signing; the time needed depends on the document.
           </p>
           <ol className="list-decimal space-y-1 pl-5 text-sm text-muted-foreground">
             <li>Open the signing email</li>
@@ -74,7 +73,7 @@ export function SignOperatingAgreementGuide() {
           </Mock>
           <p>
             Can't find it? Check spam, or sign in at{" "}
-            <a className="text-primary underline" href="https://portal.harmonious.co">portal.harmonious.co</a> — the
+            <a className="text-primary underline" href="https://app.harmonious.co">app.harmonious.co</a> — the
             agreement also appears in your notifications.
           </p>
         </Step>
@@ -102,7 +101,7 @@ export function SignOperatingAgreementGuide() {
 
         <Step n={4} title="Sign electronically">
           <p>
-            At the bottom of the document, type your{" "}
+            Follow the signature fields shown. If a typed-signature form appears, enter your{" "}
             <strong className="text-foreground">full legal name</strong> exactly as you want it to appear on the
             signature line, tick the box to agree to sign electronically, and click{" "}
             <strong className="text-foreground">Sign</strong>.
@@ -119,8 +118,7 @@ export function SignOperatingAgreementGuide() {
             <span className={btn}>Sign</span>
           </Mock>
           <p>
-            Your typed name, the date and time, and your consent are recorded with the document — together they form
-            your legal electronic signature.
+            The signing method shown records your signature and completion evidence with the document. Do not close the signing screen until it confirms completion.
           </p>
         </Step>
 
@@ -128,15 +126,14 @@ export function SignOperatingAgreementGuide() {
           <p>
             You'll see a confirmation on screen, and the document is marked <strong className="text-foreground">Signed</strong>{" "}
             on the fund's record. Harmonious is notified automatically — there's nothing else to send or upload. The
-            signed copy stays in the fund's Documents tab permanently.
+            document and signature history are retained. Open My Funds → your fund → Documents; distinguish a generated template from the executed signed copy. If no signed-copy download is shown, ask Harmonious.
           </p>
         </Step>
 
         <section className="space-y-2 rounded-lg border border-border bg-muted/40 p-5 text-sm text-muted-foreground">
           <p className="font-semibold text-foreground">Need help?</p>
           <p>
-            Email <a className="text-primary underline" href="mailto:support@harmonious.co">support@harmonious.co</a> or
-            reply to the signing email. We never ask for your password by email.
+            Use Messages to contact Harmonious Operations, or reply to the signing email. Self Serve includes a guaranteed five-business-day response; paid support is separate. We never ask for your password by email.
           </p>
           <Link to="/help" className="text-primary underline">Back to Help center</Link>
         </section>
