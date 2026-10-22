@@ -55,7 +55,7 @@ function AcceptPage() {
 
   const steps = [
     { id: "overview", label: "Overview" },
-    ...(d.sections.length ? [{ id: "details", label: "What we handle & terms" }] : []),
+    ...(d.sections.length ? [{ id: "details", label: "Services & terms" }] : []),
     ...(d.lines.length ? [{ id: "pricing", label: "Pricing" }] : []),
     { id: "sign", label: d.accepted ? "Signed" : "Sign & approve" },
   ];
@@ -82,9 +82,9 @@ function AcceptPage() {
       </section>
       {d.sections.length > 0 && (
         <Card id="details" className="scroll-mt-6">
-          <CardHeader><CardTitle className="font-heading text-lg">What we handle & terms</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="font-heading text-lg">Services & terms</CardTitle></CardHeader>
           <CardContent className="space-y-4">
-            {d.sections.map((s, i) => (
+            {d.sections.filter((s) => s.title !== "About Harmonious").map((s, i) => (
               <section key={i}><h3 className="font-heading font-semibold text-primary">{s.title}</h3><p className="whitespace-pre-wrap text-sm">{s.body}</p></section>
             ))}
           </CardContent>
@@ -104,6 +104,10 @@ function AcceptPage() {
         </Card>
       )}
 
+      {d.sections.filter((s) => s.title === "About Harmonious").map((s, i) => (
+        <Card key={`about-${i}`}><CardHeader><CardTitle className="font-heading text-lg">About Harmonious</CardTitle></CardHeader>
+          <CardContent><p className="whitespace-pre-wrap text-sm">{s.body}</p></CardContent></Card>
+      ))}
       <div id="sign" className="scroll-mt-6">
       {d.accepted ? (
         <Card>

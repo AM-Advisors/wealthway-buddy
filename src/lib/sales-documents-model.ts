@@ -1,4 +1,5 @@
 /** Pure model for Sales proposals, RFPs and RFQs (client + server). */
+import { sowServicesBody } from "./agreement-templates";
 export type DocKind = "proposal" | "rfp" | "rfq";
 export type DocDirection = "response" | "outbound";
 export type Section = { key: string; title: string; body: string; question?: string | null };
@@ -111,8 +112,8 @@ export function applyLockedSections(kind: DocKind, direction: DocDirection, sect
   const out = sections.map((s) => {
     if (keys.includes(s.key)) return { ...s, ...(s.key === "terms" ? { title: termsTitle(f.msa ?? null) } : {}), body: gen[s.key] ?? s.body };
     if (kind !== "rfq" && s.key === "services") {
-      const typed = s.body.split("\n").filter((l) => !/\$\s?[\d,]/.test(l) && !/^\s*Total:/i.test(l) && !/Pricing from the approved quote/i.test(l)).join("\n").trim();
-      return { ...s, body: `${typed}\n\n${pricingText(f.lines)}`.trim() };
+      const typed = s.body.split(SOW_MARK)[0]!.split("\n").filter((l) => !/\$\s?[\d,]/.test(l) && !/^\s*Total:/i.test(l) && !/Pricing from the approved quote/i.test(l)).join("\n").trim();
+      return { ...s, body: `${typed}\n\n${servicesFromSow(f.lines)}\n\n${pricingText(f.lines)}`.trim() };
     }
     return s;
   });
@@ -125,7 +126,42 @@ export function applyLockedSections(kind: DocKind, direction: DocDirection, sect
     out.splice(at >= 0 ? at + 1 : 0, 0, note);
   }
   for (const k of keys) if (!out.some((s) => s.key === k)) out.push({ key: k, title: k === "about" ? "About Harmonious" : k === "pricing" ? "Pricing" : k === "terms" ? termsTitle(f.msa ?? null) : "Summary", body: gen[k] ?? "" });
-  return out;
+  // RFQs list the SOW services right before pricing.
+  if (kind === "rfq") {
+    const svc = { key: "services", title: "Services (Statement of Work)", body: servicesFromSow(f.lines) };
+    const i = out.findIndex((s) => s.key === "services");
+    if (i >= 0) out[i] = svc; else { const p = out.findIndex((s) => s.key === "pricing"); out.splice(p >= 0 ? p : out.length, 0, svc); }
+  }
+  return aboutLast(out);
+}
+
+const SOW_MARK = "Services from your Statement of Work:";
+/** Services described with the same wording as the SOW the client signs; falls back to the service name. */
+export function servicesFromSow(lines: { label: string; description?: string | null }[]): string {
+  const labels = selectedServiceLabels(lines);
+  if (!labels.length) return `${SOW_MARK}\nServices will appear here once they are added to the quote.`;
+  const services = labels.map((label) => ({ label: cleanLabel(label), description: lines.find((l) => l.label === label)?.description ?? null }));
+  return `${SOW_MARK}\n${sowServicesBody(services).replace(" for the vehicle named above", "")}`;
+}
+
+/** About Harmonious always closes the document, after services, pricing and totals. */
+export const aboutLast = <T extends { key: string }>(sections: T[]): T[] => [...sections.filter((s) => s.key !== "about"), ...sections.filter((s) => s.key === "about")];
+
+/** The standard proposal/quote email. Empty rep messages are left out. */
+export function proposalReadyEmail(d: { clientName?: string | null; repMessage?: string | null; repName?: string | null; link: string; canSign: boolean; signerNames?: string[] }) {
+  const name = d.clientName?.trim() || "there";
+  const msg = d.repMessage?.trim() ?? "";
+  const rep = d.repName?.trim() || "Harmonious Sales";
+  const viewOnly = d.canSign ? "" : `This copy is for your review. ${(d.signerNames ?? []).join(", ") || "Your designated signer"} can sign and approve.`;
+  const text = [`Hello ${name},`, `Your proposal is ready for review and authorization. Please click here to open your quote: ${d.link}`, ...(viewOnly ? [viewOnly] : []), ...(msg ? [msg] : []), `Thanks,\n\n${rep}`].join("\n\n");
+  const esc = (t: string) => t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  const p = (t: string) => `<p style="margin:0 0 14px">${esc(t).replace(/\n/g, "<br/>")}</p>`;
+  const html = `<!doctype html><html><body style="background:#ffffff;font-family:Poppins,Arial,sans-serif;color:#221F20;line-height:1.5">`
+    + p(`Hello ${name},`)
+    + `<p style="margin:0 0 14px">Your proposal is ready for review and authorization. Please <a href="${esc(d.link)}" style="color:#142647;font-weight:600">click here</a> to open your quote.</p>`
+    + (viewOnly ? `<p style="margin:0 0 14px;color:#666">${esc(viewOnly)}</p>` : "")
+    + (msg ? p(msg) : "") + p("Thanks,") + p(rep);
+  return { text, html };
 }
 
 /** Sections shown in a proposal/RFP/RFQ before signing. The MSA ("terms") is shown only at the sign-and-invoice step. */
