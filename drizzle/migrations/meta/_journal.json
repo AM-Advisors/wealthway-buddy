@@ -2332,6 +2332,13 @@
       "when": 1792692682005,
       "tag": "0332_client_dashboard_prefs_and_notifications",
       "breakpoints": true
+    },
+    {
+      "idx": 333,
+      "version": "7",
+      "when": 1792697733011,
+      "tag": "0333_atomic_linked_quote_sow_edits",
+      "breakpoints": true
     }
   ]
 }

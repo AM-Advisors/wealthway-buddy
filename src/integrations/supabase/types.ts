@@ -49893,6 +49893,20 @@ export type Database = {
         }
         Returns: undefined
       }
+      save_linked_quote_draft: {
+        Args: {
+          p_actor_id: string
+          p_expected_at: string
+          p_lines: Json
+          p_pricing: string
+          p_quote_id: string
+          p_row: Json
+          p_services: string
+          p_sow_lines: Json
+          p_sow_patch?: Json
+        }
+        Returns: string
+      }
       save_offering_entity_details: {
         Args: {
           p_ein: string
