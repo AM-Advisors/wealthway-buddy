@@ -55,7 +55,7 @@ function ResponseEditor({ kind, id, data }: { kind: Kind; id: string; data: Awai
         <Button variant="outline" size="sm" disabled={busy || instructions === null} onClick={() => act(false)}>Save instructions</Button></> : <p className="whitespace-pre-wrap break-words text-sm text-muted-foreground">{text || "No response instructions recorded."}</p>}
     </div>
     {data.canSend && <div className="space-y-2 border-t pt-4">
-      <Label>Respond to</Label><SearchableSelect value={selected} onValueChange={(v) => { setRecipient(v); setRequestId(null); }} options={data.recipients.map((r) => ({ value: r.email, label: r.name, description: r.email }))} placeholder="Choose client recipient" />
+      <Label>Respond to</Label><SearchableSelect value={selected} onValueChange={(v) => { setRecipient(v); setRequestId(null); }} options={data.recipients.map((r) => ({ value: r.email, label: r.name, detail: r.email }))} placeholder="Choose client recipient" />
       <Label htmlFor={`response-message-${id}`}>Response to client</Label><Textarea id={`response-message-${id}`} rows={4} maxLength={5000} value={message} onChange={(e) => { setMessage(e.target.value); setRequestId(null); }} />
       <Button size="sm" disabled={busy || !selected || !message.trim()} onClick={() => act(true)}><Send className="mr-2 h-4 w-4" />{busy ? "Sending…" : "Send response"}</Button>
     </div>}
