@@ -8,7 +8,8 @@
 ## Erebor one-time fee and carry replacements (2026-10-22)
 - [x] Confirm active approved terms: 6% of committed capital and 20% carry. Prepare new unsigned OA review revision v4 and PPM review revision v5 with explicit one-time/nonrecurring fee and 20% carry; inspect all 99 rendered pages and assert PDF economics.
 - [x] User-requested live draft registration through Alyssa's own authorized upload action: OA platform version 3 and PPM platform version 4, both uploaded_review_required and inactive; existing active OA v2/PPM v3 and all signatures unchanged. Read back saved versions.
-- [ ] Ready-for-signature review/send to Thomas — blocked on counsel confirmation of fee payment mechanics/advisory agreement and organizer entity wording, missing PPM contact phone/email, recorded Managing Partner title, and explicit approval/signing setup/rollout. No email or signature request sent. Subscription Agreement must be reconciled before investor release.
+- [x] User confirmed organizer Corps Capital BDC LLC and PPM contact Thomas email / 214-452-2300; restored original template presentation without added draft labels/review appendix. All 97 rendered pages inspected; economics/contact/no unresolved placeholders checked. Through authorized saves recorded Managing Partner title, confirmed OA signatory blocks and activated clean OA/PPM platform v5 with new_only, resign=0; saved approval/scope/title read back. Old sent/signed versions retained. This is user-authorized publication, not independent legal certification.
+- [ ] Send to Thomas for actual signature — not sent; awaits explicit send after user views main copies. Subscription Agreement reconciliation remains needed before sending the complete new-investor packet.
 
 ## Offering document pop-out (2026-10-22)
 - [x] Add View to offering document rows and individual versions; pop-out opens the exact selected original PDF/Word using existing authorized version links, with download and error recovery.
