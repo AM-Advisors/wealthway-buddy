@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { paymentPlanDates, selectedPaymentTotals, type PlanningPayment } from "./payment-planning";
-const rows: PlanningPayment[] = [
+const rows: [PlanningPayment, PlanningPayment, PlanningPayment] = [
   { id: "a", label: "A", cents: 10000, date: "2026-01-31", status: "paid" },
   { id: "b", label: "B", cents: 20000, date: "2026-03-01", status: "paid" },
   { id: "c", label: "C", cents: 40000, date: "2026-04-01", status: "issued" },

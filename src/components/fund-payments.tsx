@@ -155,7 +155,7 @@ export function FundPayments({ fundId, backTo }: { fundId: string; backTo: "admi
         ))}
       </div>
 
-      <PaymentPlanner scope="fund_invoices" title="Fund payment calculations" rows={openInvoices.map(inv => ({ id: inv.id, label: inv.number ?? "Invoice", cents: Number(inv.feeCents), date: inv.status === "paid" ? inv.paidOn : inv.dueDate, status: inv.status }))} />
+      <PaymentPlanner scope="fund_invoices" fundId={fundId} title="Fund payment calculations" rows={openInvoices.map(inv => ({ id: inv.id, label: inv.number ?? "Invoice", cents: Number(inv.feeCents), date: inv.status === "paid" ? inv.paidOn : inv.dueDate, status: inv.status }))} />
 
       <Card>
         <CardHeader className="pb-2">

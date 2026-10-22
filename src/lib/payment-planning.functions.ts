@@ -7,6 +7,7 @@ const schema = z.object({
   scope: z.enum(["invoices", "fund_invoices", "client_payments", "commissions"]),
   cadence: z.enum(["quarterly", "annual"]),
   firstDueOn: z.string(),
+  fundId: z.string().uuid().optional(),
   items: z.array(z.object({ id: z.string().min(1).max(200), lineId: z.string().uuid().optional(), userId: z.string().uuid().nullable().optional(), layer: z.string().optional() })).min(1).max(500),
 });
 
@@ -26,12 +27,25 @@ export const savePaymentPlan = createServerFn({ method: "POST" }).middleware([re
       });
     } else {
       const table = data.scope === "client_payments" ? "payment_instructions" : "invoices";
-      const { data: records, error } = await context.supabase.from(table as "invoices").select("*").in("id", items.map(item => item.id));
+      const result = table === "invoices"
+        ? await context.supabase.from("invoices").select("id, total_cents, status, paid_on, due_date, issue_date").in("id", items.map(item => item.id))
+        : await context.supabase.from("payment_instructions").select("id, amount_cents, status, requested_at").in("id", items.map(item => item.id));
+      const { data: records, error } = result;
       if (error) throw new Error("Couldn't verify selected payments.");
+      let fundLines: any[] = [];
+      if (data.scope === "fund_invoices") {
+        if (!data.fundId) throw new Error("Choose the fund for this payment plan.");
+        const { data: lines, error: lineError } = await context.supabase.from("invoice_lines").select("invoice_id, amount_cents").eq("offering_id", data.fundId).in("invoice_id", items.map(item => item.id));
+        if (lineError) throw new Error("Couldn't verify this fund's fees.");
+        fundLines = lines ?? [];
+      }
       snapshots = items.map(item => {
         const row = (records as any[] ?? []).find(r => r.id === item.id);
         if (!row || ["draft", "void", "cancelled", "canceled", "rejected"].includes(row.status)) throw new Error("A selected payment is unavailable.");
-        return { id: row.id, cents: Number(table === "invoices" ? row.total_cents : row.amount_cents), status: row.status, date: row.paid_on ?? row.due_date ?? null };
+        const scoped = fundLines.filter(line => line.invoice_id === row.id);
+        if (data.scope === "fund_invoices" && !scoped.length) throw new Error("A selected invoice does not belong to this fund.");
+        const cents = data.scope === "fund_invoices" ? scoped.reduce((sum, line) => sum + Number(line.amount_cents), 0) : Number(table === "invoices" ? row.total_cents : row.amount_cents);
+        return { id: row.id, cents, status: row.status, date: row.status === "paid" ? row.paid_on : row.due_date ?? row.issue_date ?? row.requested_at ?? null };
       });
     }
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");

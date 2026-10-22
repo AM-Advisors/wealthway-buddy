@@ -10,7 +10,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { getPaymentPlans, savePaymentPlan } from "@/lib/payment-planning.functions";
 import { paymentPlanDates, selectedPaymentTotals, type PaymentCadence, type PlanningPayment, type ReportingCadence } from "@/lib/payment-planning";
 
-export function PaymentPlanner({ rows, scope, title = "Payment calculations" }: { rows: PlanningPayment[]; scope: "invoices" | "fund_invoices" | "client_payments" | "commissions"; title?: string }) {
+export function PaymentPlanner({ rows, scope, fundId, title = "Payment calculations" }: { rows: PlanningPayment[]; scope: "invoices" | "fund_invoices" | "client_payments" | "commissions"; fundId?: string; title?: string }) {
   const [selected, setSelected] = useState<string[]>([]);
   const [reporting, setReporting] = useState<ReportingCadence>("monthly");
   const [cadence, setCadence] = useState<PaymentCadence>("quarterly");
@@ -23,7 +23,7 @@ export function PaymentPlanner({ rows, scope, title = "Payment calculations" }: 
   const totals = selectedPaymentTotals(eligible, selected, reporting);
   const format = (cents: number, currency = "USD") => (cents / 100).toLocaleString("en-US", { style: "currency", currency });
   let dates: string[] = []; try { dates = paymentPlanDates(first, cadence); } catch { /* Invalid date disables saving. */ }
-  const mutation = useMutation({ mutationFn: () => save({ data: { scope, cadence, firstDueOn: first, items: chosen.map(r => ({ id: r.id, ...(r.lineId ? { lineId: r.lineId, userId: r.userId, layer: r.layer } : {}) })) } }), onSuccess: () => { toast.success("Payment schedule saved. No money is sent."); qc.invalidateQueries({ queryKey: ["payment-plans", scope] }); }, onError: (e: Error) => toast.error(e.message) });
+  const mutation = useMutation({ mutationFn: () => save({ data: { scope, cadence, firstDueOn: first, ...(fundId ? { fundId } : {}), items: chosen.map(r => ({ id: r.id, ...(r.lineId ? { lineId: r.lineId, userId: r.userId, layer: r.layer } : {}) })) } }), onSuccess: () => { toast.success("Payment plan saved. No money is sent."); qc.invalidateQueries({ queryKey: ["payment-plans", scope] }); }, onError: (e: Error) => toast.error(e.message) });
   return <section className="space-y-4 border-y py-5" aria-label={title}>
     <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-base font-semibold">{title}</h2><Button size="sm" variant="outline" disabled={!eligible.length} onClick={() => setSelected(chosen.length === eligible.length ? [] : eligible.map(r => r.id))}>{chosen.length === eligible.length && eligible.length ? "Clear selection" : "Select all"}</Button></div>
     <div className="space-y-2"><Label>Show totals</Label><ToggleGroup type="single" variant="outline" value={reporting} onValueChange={v => { if (v) setReporting(v as ReportingCadence); }}>{(["monthly", "quarterly", "annual"] as const).map(v => <ToggleGroupItem key={v} value={v} className="capitalize">{v}</ToggleGroupItem>)}</ToggleGroup></div>
