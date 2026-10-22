@@ -23,6 +23,9 @@ import {
   type FundClass,
   type EconomicTerms,
   type EconomicTermKey,
+  classCountError,
+  classDifferences,
+  multipleClassesFromAnswer,
 } from "@/lib/fund-setup-canonical";
 import { OfferingDocumentsSetup } from "@/components/offering-documents-setup";
 import { FundSetupPhase3 } from "@/components/fund-setup-phase3";
@@ -37,6 +40,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const tone = (s: string) =>
   (s === "complete" ? "default" : s === "needs_attention" ? "destructive" : s === "not_applicable" ? "outline" : "secondary") as any;
