@@ -473,3 +473,4 @@
 - [x] Next payout by person and deal, scheduled-first stable selection, quarter-end scheduled/expected summary, and quote-filtered tracker dialog.
 - [x] Signing notices list the assigned rep's expected dates/amounts using the report's shared gross-profit projection; payment-dependent labels and unchanged delivery idempotency.
 - [x] Pure next-payout regression coverage; payouts remain manual with no money movement or migrations.
+- [ ] Browser push alerts for client attention items — blocked: needs push service keys and a decision to add a push worker
