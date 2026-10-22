@@ -1,6 +1,7 @@
 /** Server-only quoting engine: rate-card quotes → approval → SOW/MSA drafts → signed. Never moves money. */
 import { canDraftQuote, priceQuote, quoteApprovalProblem, type QuoteLineInput } from "@/lib/sales-model";
 import { names, salesActor } from "@/lib/sales-hub.server";
+import { canAddSalesContact, type SalesContactInput } from "@/lib/sales-contact-model";
 
 const admin = async () => (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
 type Actor = Awaited<ReturnType<typeof salesActor>>;
@@ -143,6 +144,19 @@ export async function saveQuote(userId: string, d: { id?: string | null | undefi
   await db.from("sales_quote_lines").insert(priced.lines.map((l, i) => ({ quote_id: id, service_key: l.serviceKey, label: l.label, quantity: l.quantity, unit_cents: l.unitCents, baseline_unit_cents: l.baselineUnitCents, line_cents: l.lineCents, sort_order: i,
     billing_frequency: (d.lines[i] as any)?.billingFrequency ?? "one_time", first_bill_on: (d.lines[i] as any)?.firstBillOn ?? null })));
   return { id };
+}
+
+export async function addQuoteContact(userId: string, id: string, input: SalesContactInput) {
+  const a = await salesActor(userId);
+  const db = await admin();
+  const { data: q, error: readError } = await db.from("sales_quotes").select("id, owner_user_id, contact_id, status").eq("id", id).maybeSingle();
+  if (readError || !q || !canSee(a, q.owner_user_id) || !canDraftQuote(a.roles) || !canAddSalesContact(q.contact_id, q.status)) throw new Error("A contact can't be added to this quote.");
+  const { createProspect } = await import("@/lib/sales-documents.server");
+  const contact = await createProspect(userId, input);
+  const { data: saved, error } = await db.from("sales_quotes").update({ contact_id: contact.contactId, updated_at: new Date().toISOString() }).eq("id", id).is("contact_id", null).eq("status", q.status).select("id");
+  if (error || !saved?.length) throw new Error("The quote changed. Refresh before adding a contact.");
+  await event(id, "contact_added", userId, contact.contactId);
+  return contact;
 }
 
 export async function submitQuote(userId: string, id: string) {

@@ -16,6 +16,9 @@ import { QUOTE_STATUS_LABEL } from "@/lib/sales-model";
 import { getQuoteAcceptLink } from "@/lib/sales-acceptance.functions";
 import { Panel, money } from "@/components/sales/sales-ui";
 import { QuoteBuilder } from "./sales_.quotes";
+import { AddSalesContact } from "@/components/sales/add-sales-contact";
+import { canAddSalesContact } from "@/lib/sales-contact-model";
+import { addSalesQuoteContact } from "@/lib/sales-hub.functions";
 
 export const Route = createFileRoute("/_authenticated/sales_/quotes_/$id")({
   head: () => ({
@@ -37,6 +40,7 @@ function QuotePage() {
   const nav = useNavigate();
   const qc = useQueryClient();
   const load = useServerFn(getSalesQuote);
+  const addContact = useServerFn(addSalesQuoteContact);
   const q = useQuery({ queryKey: ["sales-quote", id], queryFn: () => load({ data: { id } }) });
   const [editing, setEditing] = useState(false);
   const [note, setNote] = useState("");
@@ -96,7 +100,7 @@ function QuotePage() {
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
         <div className="space-y-6">
       {editing ? (
-        <QuoteBuilder onCancel={() => { setEditing(false); qc.invalidateQueries({ queryKey: ["sales-quote", id] }); }} initial={{ id, title: d.quote.title, clientId: d.quote.client_id, offeringId: (d.quote as any).offering_id ?? null, validUntil: d.quote.valid_until, notes: d.quote.notes,
+        <QuoteBuilder onCancel={() => { setEditing(false); qc.invalidateQueries({ queryKey: ["sales-quote", id] }); }} initial={{ id, title: d.quote.title, clientId: d.quote.client_id, contactId: d.quote.contact_id, offeringId: (d.quote as any).offering_id ?? null, validUntil: d.quote.valid_until, notes: d.quote.notes,
           lines: d.lines.map((l: any) => ({ serviceKey: l.service_key, label: l.label, quantity: Number(l.quantity), unitCents: Number(l.unit_cents), baselineUnitCents: Number(l.baseline_unit_cents), billingFrequency: l.billing_frequency ?? "one_time", firstBillOn: l.first_bill_on ?? null })) }} />
       ) : (
         <Panel title="Services">
@@ -130,7 +134,11 @@ function QuotePage() {
                 {(s === "approved" || s === "sent") ? <Button size="sm" variant="outline" className="mt-2" onClick={() => link.mutate()} disabled={link.isPending}>Copy sign link</Button>
                   : s !== "signed" && <p className="mt-2 text-xs text-muted-foreground">The sign link appears once this quote is approved.</p>}
               </div>
-            ) : <p className="text-sm text-muted-foreground">No client contact linked. Edit the quote to add one, or create a proposal to send to several people.</p>}
+            ) : canAddSalesContact(d.quote.contact_id, s) ? <AddSalesContact organization={d.client?.legal_name ?? ""} onSave={async (contact) => {
+              const r = await addContact({ data: { id, ...contact } });
+              toast.success(r.reused ? "Existing contact linked" : "Contact added");
+              await qc.invalidateQueries({ queryKey: ["sales-quote", id] });
+            }} /> : <p className="text-sm text-muted-foreground">No client contact linked.</p>}
             {d.client && <Badge variant="secondary" className="mt-3">Adding services for a current client</Badge>}
           </Panel>
           <LinkedRecords quoteId={id} />
