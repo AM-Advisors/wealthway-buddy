@@ -27,7 +27,7 @@ const FundOnboardingWelcome = ({ contactName, fundName = 'your fund', levelName 
 
 export const template = {
   component: FundOnboardingWelcome,
-  subject: (d: Record<string, any>) => `Next steps for ${d.fundName ?? 'your fund'}`,
+  subject: (d: Record<string, any>) => `Next steps for ${d['fundName'] ?? 'your fund'}`,
   displayName: 'Fund onboarding welcome',
   previewData: { contactName: 'Jane', fundName: 'Roas Hedge LP', levelName: 'Plus', setupUrl: 'https://app.harmonious.co/client/funds' },
 } satisfies TemplateEntry
