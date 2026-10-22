@@ -1,5 +1,11 @@
 # Roadmap
 
+## Quote section switches (2026-10-22)
+- [x] Give every part of a quote its own on/off switch in the quote editor (Summary, Your needs, Our approach, Services and pricing, Pricing, Timeline, Next steps, Notes, About Harmonious): switching one off hides it from the client page and keeps its wording recorded, nothing is deleted. Only Pricing and Notes start on, so existing quote pages look the same.
+- [x] 10 focused model checks passed (a switched-off part keeps its wording, defaults, unknown parts dropped, client projection, notes and pricing switches, ordering); preview build OK. No real quote, SOW, invoice or email changed.
+- [ ] Signed-in quote edit → save → client read-back — blocked until independently isolated synthetic QA exists; the preview runs on live records.
+
+
 ## Agreement panel scrolling (2026-10-22)
 - [x] Let the Master Service Agreement, Privacy Policy and Terms & Conditions panels scroll through their full text on review links, the signed-in signing page, the sign-off screen and both policy gates; the agreement wording editor is now tall and resizable.
 - [x] Preview build OK. On a read-only review link for a fictional test recipient, the Privacy Policy and Terms & Conditions panels scrolled a 1,720px agreement to its last line (606px visible); nothing was signed, sent or recorded.
