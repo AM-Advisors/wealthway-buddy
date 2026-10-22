@@ -171,7 +171,7 @@ export const OPS_WORK_AREAS: OpsWorkArea[] = [
       { title: "Rate proposals", url: "/admin/rate-proposals", description: "Proposed changes to the rate card", step: "Review" },
       { title: "Client statements of work", url: "/ops/billing/sows", description: "Signed quotes, their statements of work and billing schedules", step: "Track" },
       { title: "Client invoices", url: "/ops/billing/invoices", description: "Invoices by signed quote, with review and issue", step: "Track" },
-      { title: "Payment instructions", url: "/ops/billing/payment-instructions", description: "Harmonious wire and ACH details clients see, with second-person approval", step: "Track" },
+      { title: "Harmonious payment details", url: "/ops/billing/payment-instructions", description: "Harmonious wire and ACH details for quotes and invoices (not fund banking). CEO and CRO only", step: "Track" },
       { title: "Unpaid invoices", url: "/admin/invoices", description: "Client invoices awaiting payment", step: "Track" },
       { title: "Incoming requests", url: "/admin/requests", description: "Requests from clients", cap: "tasks", step: "Track" },
       { title: "Clients and scope", url: "/admin/contracts", description: "Contract terms and engagement scope", step: "Reference" },

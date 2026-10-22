@@ -83,3 +83,10 @@ export function shortCode(len = 8): string {
   const b = new Uint8Array(len); crypto.getRandomValues(b);
   return Array.from(b, (x) => SHORT_ALPHABET[x % SHORT_ALPHABET.length]).join("");
 }
+
+/** Harmonious's own wire/ACH details (quotes, RFQs, RFPs, invoices) — separate from fund banking.
+ *  Only the CEO (executive) and CRO may enter or approve; super_admin only for the logged-reason exception. */
+export const REMIT_EDITOR_ROLES = ["executive", "cro", "super_admin"] as const;
+export function canEditRemittance(roles: readonly string[]): boolean {
+  return roles.some((r) => (REMIT_EDITOR_ROLES as readonly string[]).includes(r));
+}
