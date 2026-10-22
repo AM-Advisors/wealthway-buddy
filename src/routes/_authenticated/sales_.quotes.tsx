@@ -184,7 +184,7 @@ export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; init
             if (!rows.length) return [];
             const sub = rows.reduce((s, { l }) => s + l.quantity * l.unitCents, 0);
             return [<TableRow key={`h-${g}`}><TableCell colSpan={6} className="bg-muted/40 text-xs font-semibold uppercase tracking-wide">{FEE_GROUP_LABEL[g]}</TableCell><TableCell className="bg-muted/40 text-right text-xs font-semibold">{money(sub)}{g === "annual" ? "/yr" : ""}</TableCell><TableCell className="bg-muted/40" /></TableRow>,
-              ...rows.map(({ l, i }) => (
+              ...rows.flatMap(({ l, i }) => [
             <TableRow key={i}>
               <TableCell>{l.label}</TableCell>
               <TableCell><Input disabled={!!l.bookkeeping} inputMode="decimal" value={l.quantity} onChange={(e) => setLines(lines.map((x, j) => (j === i ? { ...x, quantity: Number(e.target.value) || 0 } : x)))} /></TableCell>
