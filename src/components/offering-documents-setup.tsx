@@ -45,6 +45,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { listSendableDocumentsFn, sendDocumentsFn } from "@/lib/offering-document-send.functions";
+import { OfferingDocumentPreview, OfferingDocumentViewButton } from "@/components/offering-document-preview";
 
 const CORE: DocumentCategory[] = ["operating_agreement", "subscription_agreement", "ppm"];
 const PROFILE_TYPES = ["individual", "joint", "trust", "llc", "corporation", "partnership", "ira"];
@@ -135,6 +136,7 @@ function DocumentRow({ doc, data, offeringId, onChanged }: { doc: Doc; data: Dat
   const [rollout, setRollout] = useState<{ version: number; r: Awaited<ReturnType<typeof rolloutPreviewFn>> } | null>(null);
   const [showRequest, setShowRequest] = useState(false);
   const [sendOpen, setSendOpen] = useState(false);
+  const [viewVersion, setViewVersion] = useState<number | null>(null);
   const latest = doc.versions[0];
   const active = doc.versions.find((v) => v.isActive);
   const run = async (fn: () => Promise<unknown>, ok: string) => {
@@ -199,6 +201,7 @@ function DocumentRow({ doc, data, offeringId, onChanged }: { doc: Doc; data: Dat
           {doc.resignOpen.length > 0 && <Badge variant="destructive">{doc.resignOpen.length} re-sign needed</Badge>}
           {pendingRequests.length > 0 && <Badge variant="secondary">{pendingRequests.length} change request(s)</Badge>}
           {latest && <Badge variant={latest.state === "ready_for_use" ? "default" : "secondary"}>{VERSION_STATE_LABELS[latest.state]}</Badge>}
+          {(active || latest) && <OfferingDocumentViewButton onClick={() => setViewVersion((active ?? latest).version)} />}
           {data.canEdit && latest?.approval === "uploaded_review_required" && !latest.approvedTemplate && (
             <Button size="sm" variant="outline" disabled={busy} onClick={() => run(() => approve({ data: { documentId: doc.id, version: latest.version } }), "Document approved")}>Mark approved</Button>
           )}
@@ -213,6 +216,7 @@ function DocumentRow({ doc, data, offeringId, onChanged }: { doc: Doc; data: Dat
       </div>
 
       {sendOpen && active && <SendDocDialog doc={doc} offeringId={offeringId} onClose={() => setSendOpen(false)} onSent={onChanged} />}
+      {viewVersion !== null && <OfferingDocumentPreview offeringId={offeringId} documentId={doc.id} version={viewVersion} title={doc.title} onClose={() => setViewVersion(null)} />}
 
       {showRequest && !data.canEdit && <ChangeRequestForm doc={doc} offeringId={offeringId} onDone={() => { setShowRequest(false); onChanged(); }} />}
 
@@ -289,6 +293,7 @@ function DocumentRow({ doc, data, offeringId, onChanged }: { doc: Doc; data: Dat
                     {v.effectiveDate ? ` · effective ${v.effectiveDate}` : ""}
                   </span>
                   <Badge variant="outline">{v.isActive ? "In use (template)" : v.rolloutScope === "single" && v.approval === "approved" ? "Individual version" : VERSION_STATE_LABELS[v.state]}</Badge>
+                  <OfferingDocumentViewButton onClick={() => setViewVersion(v.version)} />
                 </div>
                 {(data.canEdit || doc.canConfigureTemplate) && v.approval !== "superseded" && (
                   <div className="mt-2 flex flex-wrap items-center gap-2">
