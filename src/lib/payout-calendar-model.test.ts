@@ -27,4 +27,8 @@ describe("payout calendar", () => {
     const { signed } = buildPayoutCalendar([], [{ id: "q1", label: "Q-1", signedAt: "2026-10-05T12:00:00Z" }, { id: "q2", label: "Q-2", signedAt: "2026-01-05T00:00:00Z" }, { id: "q3", label: "Q-3", signedAt: null }], range);
     expect(signed.map(s => s.date)).toEqual(["2026-10-05"]);
   });
+  it("carries deal amounts onto signed marks", () => {
+    const { signed } = buildPayoutCalendar([], [{ id: "q1", label: "Q-1", signedAt: "2026-10-05T12:00:00Z", signedAmountCents: 120000, receivedAmountCents: 60000, committedAmountCents: 18000 }], range);
+    expect(signed[0]).toMatchObject({ signedAmountCents: 120000, receivedAmountCents: 60000, committedAmountCents: 18000 });
+  });
 });

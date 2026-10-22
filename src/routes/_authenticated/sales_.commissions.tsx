@@ -93,7 +93,7 @@ function Commissions() {
         </Table>
       </Panel>
 
-      <PayoutCalendar rows={rows as any} sows={(d?.quotes ?? []).map(qt => ({ id: qt.id, label: qt.label, client: qt.client, signedAt: qt.signedAt }))} onOpenDeal={setDeal} />
+      <PayoutCalendar rows={rows as any} sows={(d?.quotes ?? []).map(qt => ({ id: qt.id, label: qt.label, client: qt.client, signedAt: qt.signedAt, signedAmountCents: qt.signedAmountCents, receivedAmountCents: qt.receivedAmountCents, committedAmountCents: qt.committedAmountCents }))} onOpenDeal={setDeal} />
 
       {d && <CommissionCostControls data={d} onChange={refresh} />}
       <ScheduledPayments />
@@ -101,8 +101,8 @@ function Commissions() {
       <CommissionTracker rows={rows} canRecord={Boolean(d?.canRecordPayout)} onChange={refresh} />
 
       <Panel title="Deals">
-        <Table><TableHeader><TableRow><TableHead>Deal</TableHead><TableHead>Next payout</TableHead></TableRow></TableHeader><TableBody>
-          {(d?.quotes ?? []).filter(qt => rows.some(r => r.quoteId === qt.id)).map(qt => <TableRow key={qt.id}><TableCell><Button variant="link" onClick={() => setDeal(qt.id)}>{qt.label}</Button></TableCell><TableCell>{payout(rows.filter(r => r.quoteId === qt.id))}</TableCell></TableRow>)}
+        <Table><TableHeader><TableRow><TableHead>Deal</TableHead><TableHead className="text-right">Signed amount</TableHead><TableHead className="text-right">Received</TableHead><TableHead className="text-right">Committed</TableHead><TableHead>Next payout</TableHead></TableRow></TableHeader><TableBody>
+          {(d?.quotes ?? []).filter(qt => rows.some(r => r.quoteId === qt.id)).map(qt => <TableRow key={qt.id}><TableCell><Button variant="link" onClick={() => setDeal(qt.id)}>{qt.label}</Button></TableCell><TableCell className="text-right">{money(qt.signedAmountCents ?? 0)}</TableCell><TableCell className="text-right">{money(qt.receivedAmountCents ?? 0)}</TableCell><TableCell className="text-right">{money(qt.committedAmountCents ?? 0)}</TableCell><TableCell>{payout(rows.filter(r => r.quoteId === qt.id))}</TableCell></TableRow>)}
         </TableBody></Table>
       </Panel>
       <Dialog open={Boolean(deal)} onOpenChange={open => { if (!open) setDeal(null); }}>
@@ -166,7 +166,7 @@ function ScheduledPayments() {
     <Panel title="Scheduled payments">
       <p className="mb-3 text-sm text-muted-foreground">Quarterly and annual payments from signed statements of work. On each due date the client is invoiced and the rep is notified automatically. Commission is earned once the client pays; payouts stay manual.</p>
       <Table>
-        <TableHeader><TableRow><TableHead>Client</TableHead><TableHead>Service</TableHead><TableHead>Schedule</TableHead><TableHead>Next due</TableHead><TableHead>Rep</TableHead><TableHead className="text-right">Amount</TableHead></TableRow></TableHeader>
+        <TableHeader><TableRow><TableHead>Client</TableHead><TableHead>Service</TableHead><TableHead>Schedule</TableHead><TableHead>Next due</TableHead><TableHead>Rep</TableHead><TableHead className="text-right">Signed amount</TableHead><TableHead className="text-right">Received</TableHead><TableHead className="text-right">Committed</TableHead><TableHead className="text-right">Amount</TableHead></TableRow></TableHeader>
         <TableBody>
           {items.map((i: any) => (
             <TableRow key={i.id}>
@@ -175,11 +175,14 @@ function ScheduledPayments() {
               <TableCell className="capitalize">{i.frequency}</TableCell>
               <TableCell>{i.waitingForSignature ? <Badge variant="outline">Waiting for signed SOW</Badge> : i.dueOn}</TableCell>
               <TableCell>{i.rep}</TableCell>
+              <TableCell className="text-right">{money(i.signedAmountCents ?? 0)}</TableCell>
+              <TableCell className="text-right">{money(i.receivedAmountCents ?? 0)}</TableCell>
+              <TableCell className="text-right">{money(i.committedAmountCents ?? 0)}</TableCell>
               <TableCell className="text-right">{money(i.amountCents)}</TableCell>
             </TableRow>
           ))}
-          {q.isError && <TableRow><TableCell colSpan={6} className="text-destructive">Scheduled payments could not be loaded.</TableCell></TableRow>}
-          {!q.isLoading && !q.isError && !items.length && <TableRow><TableCell colSpan={6} className="text-muted-foreground">No quarterly or annual payments scheduled yet.</TableCell></TableRow>}
+          {q.isError && <TableRow><TableCell colSpan={9} className="text-destructive">Scheduled payments could not be loaded.</TableCell></TableRow>}
+          {!q.isLoading && !q.isError && !items.length && <TableRow><TableCell colSpan={9} className="text-muted-foreground">No quarterly or annual payments scheduled yet.</TableCell></TableRow>}
         </TableBody>
       </Table>
     </Panel>
