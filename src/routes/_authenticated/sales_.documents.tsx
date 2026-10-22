@@ -44,6 +44,8 @@ function Documents() {
   const o = useQuery({ queryKey: ["sales-document-options"], queryFn: () => opts(), enabled: open });
   const [f, setF] = useState({ kind: "proposal" as DocKind, direction: "response" as DocDirection, title: "", quoteId: "", dealId: "", contactId: "", clientId: "", recipientName: "", recipientEmail: "", dueDate: "" });
   const [busy, setBusy] = useState(false);
+  // "client" is a response sent to an existing client (add-on services); stored as a response document.
+  const [audience, setAudience] = useState<"prospect" | "client" | "vendor">("prospect");
   const [lines, setLines] = useState<SvcLine[]>([]);
   const saveQuote = useServerFn(saveSalesQuote);
   const [filter, setFilter] = useState("all");
@@ -78,13 +80,23 @@ function Documents() {
         <Panel title="New document">
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="space-y-1 text-sm"><span>Type</span>
-              <select className={sel} value={f.kind} onChange={(e) => setF({ ...f, kind: e.target.value as DocKind, direction: e.target.value === "proposal" ? "response" : f.direction })}>
+              <select className={sel} value={f.kind} onChange={(e) => { const k = e.target.value as DocKind; if (k === "proposal" && audience === "vendor") setAudience("prospect"); setF({ ...f, kind: k, direction: k === "proposal" ? "response" : f.direction }); }}>
                 {Object.entries(KIND_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
               </select></label>
             <label className="space-y-1 text-sm"><span>Direction</span>
-              <select className={sel} value={f.direction} disabled={f.kind === "proposal"} onChange={(e) => setF({ ...f, direction: e.target.value as DocDirection })}>
-                {Object.entries(DIRECTION_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+              <select className={sel} value={audience} onChange={(e) => { const a = e.target.value as typeof audience; setAudience(a); setF({ ...f, direction: a === "vendor" ? "outbound" : "response" }); }}>
+                <option value="prospect">Response to prospect</option>
+                <option value="client">Response to client</option>
+                {f.kind !== "proposal" && <option value="vendor">{DIRECTION_LABEL.outbound}</option>}
               </select></label>
+            {audience === "client" && (
+              <label className="space-y-1 text-sm sm:col-span-2"><span>Client</span>
+                <select className={sel} value={f.clientId} onChange={(e) => { const c = (o.data?.clients ?? []).find((x: any) => x.id === e.target.value); setF({ ...f, clientId: e.target.value, title: f.title || (c ? `${c.name} additional services` : f.title) }); }}>
+                  <option value="">Choose a current client</option>
+                  {(o.data?.clients ?? []).map((x: any) => <option key={x.id} value={x.id}>{x.name}</option>)}
+                </select>
+                <span className="block text-xs text-muted-foreground">Then pick who receives it under Contact, or look up their email below.</span></label>
+            )}
             <div className="sm:col-span-2"><ProspectLookup onResolved={(p) => setF((cur) => ({ ...cur, contactId: p.contactId ?? cur.contactId, clientId: p.clientId ?? cur.clientId, recipientEmail: p.email, recipientName: p.name ?? cur.recipientName, title: cur.title || (p.organization ? `${p.organization} proposal` : cur.title) }))} /></div>
             <label className="space-y-1 text-sm sm:col-span-2"><span>Title</span><Input value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} placeholder="e.g. Fund administration proposal for Acme Ventures" /></label>
             {f.direction === "response" && (
