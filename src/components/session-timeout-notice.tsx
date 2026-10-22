@@ -118,9 +118,7 @@ export function SessionTimeoutNotice() {
   return (
     <AlertDialog open>
       <AlertDialogContent
-        onEscapeKeyDown={(e) => e.preventDefault()}
-        onInteractOutside={(e) => e.preventDefault()}
-        onPointerDownOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e: KeyboardEvent) => e.preventDefault()}
       >
         <AlertDialogHeader>
           <AlertDialogTitle>You're about to be signed out</AlertDialogTitle>
