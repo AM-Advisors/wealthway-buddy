@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ClientResponsePanel } from "@/components/sales/client-response-panel";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -142,6 +143,7 @@ function QuotePage() {
             {d.client && <Badge variant="secondary" className="mt-3">Adding services for a current client</Badge>}
           </Panel>
           <LinkedRecords quoteId={id} />
+          <ClientResponsePanel kind="quote" id={id} />
           {!["signed", "superseded", "lost"].includes(s) && s !== "pending_approval" && (
             <Panel title="Mark lost">
               <div className="flex gap-2"><Input placeholder="Reason lost" value={note} onChange={(e) => setNote(e.target.value)} /><Button variant="outline" onClick={() => lost.mutate()} disabled={!note.trim() || lost.isPending}>Mark lost</Button></div>

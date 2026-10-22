@@ -7,7 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { acceptanceRemittance, signAcceptance, viewAcceptance } from "@/lib/sales-acceptance.functions";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { RESPONSE_STATUS } from "@/lib/sales-response-model";
+import { acceptanceRemittance, respondToSalesDocument, signAcceptance, viewAcceptance } from "@/lib/sales-acceptance.functions";
 
 export const Route = createFileRoute("/accept/$token")({
   ssr: false,
@@ -33,6 +36,8 @@ function AcceptPage() {
   const { token } = Route.useParams();
   const view = useServerFn(viewAcceptance);
   const sign = useServerFn(signAcceptance);
+  const respond = useServerFn(respondToSalesDocument);
+  const [feedback, setFeedback] = useState("");
   const qc = useQueryClient();
   const q = useQuery({ queryKey: ["accept", token], queryFn: () => view({ data: { token } }), retry: false });
   const [name, setName] = useState(""); const [title, setTitle] = useState(""); const [agree, setAgree] = useState(false); const [msaAgree, setMsaAgree] = useState(false); const [showMsa, setShowMsa] = useState(false);
@@ -64,6 +69,17 @@ function AcceptPage() {
           {(d as any).stale && <p className="text-sm text-destructive">A newer version is available. Please use the latest link from your Harmonious contact.</p>}
         </CardHeader>
       </Card>
+      <section className="space-y-3 border-y py-5" aria-label="Client response">
+        <div className="flex flex-wrap items-center justify-between gap-2"><h2 className="font-heading text-lg font-semibold">Your response</h2><Badge variant="outline">{RESPONSE_STATUS[d.response.status]}</Badge></div>
+        {d.response.instructions && <div><h3 className="text-sm font-semibold">Response instructions</h3><p className="whitespace-pre-wrap break-words text-sm">{d.response.instructions}</p></div>}
+        {d.response.messages.map((m, i) => <div key={`${m.at}:${i}`} className="border-l-2 pl-3 text-sm"><p className="text-xs text-muted-foreground">{m.event === "response_sent" ? "Harmonious response" : m.event === "client_changes_requested" ? "Changes requested" : "Reviewed"} · {new Date(m.at).toLocaleString()}</p><p className="whitespace-pre-wrap break-words">{m.message}</p></div>)}
+        {!d.accepted && !d.blocker && !(d as any).stale && <>
+          <Label htmlFor="client-feedback">Comments or requested changes</Label><Textarea id="client-feedback" rows={3} maxLength={5000} value={feedback} onChange={(e) => setFeedback(e.target.value)} />
+          <div className="flex flex-wrap gap-2">{(["reviewed", "changes_requested"] as const).map((action) => <Button key={action} size="sm" variant="outline" disabled={busy || (action === "changes_requested" && !feedback.trim())} onClick={async () => {
+            setBusy(true); try { const result = await respond({ data: { token, action, message: feedback } }); qc.setQueryData(["accept", token], result); setFeedback(""); toast.success(action === "reviewed" ? "Review recorded" : "Changes requested"); } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
+          }}>{action === "reviewed" ? "Mark reviewed" : "Request changes"}</Button>)}</div>
+        </>}
+      </section>
       {d.sections.length > 0 && (
         <Card id="details" className="scroll-mt-6">
           <CardHeader><CardTitle className="font-heading text-lg">What we handle & terms</CardTitle></CardHeader>

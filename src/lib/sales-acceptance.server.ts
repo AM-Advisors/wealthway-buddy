@@ -105,8 +105,12 @@ export async function viewForToken(token: string) {
   const { data: client } = r.clientId ? await db.from("clients").select("name, legal_name").eq("id", r.clientId).maybeSingle() : { data: null };
   const { data: inv } = acc?.invoice_id ? await db.from("invoices").select("id, number, total_cents, due_date, status").eq("id", acc.invoice_id).maybeSingle() : { data: null };
   const lines = invoiceLinesFromQuote(r.lines);
+  const { responseProjection } = await import("./sales-response-model");
+  const { readResponseEvents } = await import("./sales-response.server");
+  const response = responseProjection(await readResponseEvents(db, t.kind, t.id), t.version, !!acc, ["approved", "sent"].includes(r.status), t.email);
   return {
     kind: r.kind, title: r.title, version: t.version, clientName: client?.legal_name || client?.name || null,
+    response,
     stale: r.kind !== "quote" && r.approvedVersion !== t.version,
     blocker: acc ? null : signBlocker(r.kind, r.status, r.approvedVersion, t.version),
     salesContact: await salesContactFor(db, r.clientId, r.ownerId).then((c) => c && { name: c.name, email: c.email }),
@@ -115,6 +119,26 @@ export async function viewForToken(token: string) {
     accepted: acc ? { signerName: acc.signer_name, acceptedAt: acc.accepted_at, paymentMethod: acc.payment_method, invoiceError: acc.invoice_error } : null,
     invoice: inv ? { number: inv.number, totalCents: Number(inv.total_cents), dueDate: inv.due_date, status: inv.status } : null,
   };
+}
+
+/** Recipient-bound review feedback; never signs, reprices, invoices or grants access. */
+export async function respondByToken(d: { token: string; action: "reviewed" | "changes_requested"; message: string; userId: string | null }) {
+  const t = await fromToken(d.token);
+  const db = await admin();
+  const r = await loadRecord(db, t.kind, t.id);
+  const acc = await acceptanceFor(db, acceptanceKey(t.kind, t.id, t.version));
+  const { responseAllowed } = await import("./sales-response-model");
+  if (!responseAllowed(r.status, r.version, t.version, !!acc)) throw new Error("Use the latest unsigned document link to respond.");
+  if (d.userId) {
+    const roles = await rolesOf(db, d.userId);
+    if (roles.some((role) => STAFF.includes(role))) throw new Error("Harmonious staff cannot respond on behalf of the client.");
+  }
+  if (d.action === "changes_requested" && !d.message.trim()) throw new Error("Describe the changes you're requesting.");
+  const { recordResponse } = await import("./sales-response.server");
+  await recordResponse(db, t.kind, t.id, null, d.action === "reviewed" ? "client_reviewed" : "client_changes_requested", {
+    version: t.version, recipient: t.email.toLowerCase(), message: d.message.trim(),
+  });
+  return viewForToken(d.token);
 }
 
 /**
