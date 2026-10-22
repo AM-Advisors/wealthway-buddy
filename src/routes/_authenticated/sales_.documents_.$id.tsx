@@ -6,6 +6,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { LockKeyhole } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { SearchableContactChoices } from "@/components/ui/searchable-contact-choices";
 import { Textarea } from "@/components/ui/textarea";
@@ -160,7 +162,16 @@ function Editor() {
           )}
 
           {sections.map((s, i) => (
-            <div key={s.key + i} className="rounded-lg border bg-card p-4">
+            s.key === "terms" && (d.lockedSectionKeys ?? []).includes(s.key) ? (
+              <Accordion key={s.key + i} type="single" collapsible className="rounded-lg border bg-card px-4">
+                <AccordionItem value="msa" className="border-b-0">
+                  <AccordionTrigger className="gap-3">
+                    <span className="flex min-w-0 items-center gap-2"><LockKeyhole className="h-4 w-4 shrink-0 text-muted-foreground" /><span>{s.title}</span></span>
+                  </AccordionTrigger>
+                  <AccordionContent><p className="whitespace-pre-wrap text-sm">{s.body || "-"}</p></AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            ) : <div key={s.key + i} className="rounded-lg border bg-card p-4">
               {p.canEdit && !(d.lockedSectionKeys ?? []).includes(s.key) && s.key !== "summary_note" ? <Input className="mb-2 font-semibold" value={s.title} onChange={(e) => upd(i, { title: e.target.value })} /> : <h3 className="mb-2 font-heading font-semibold">{s.title}</h3>}
               {s.question && <p className="mb-2 text-sm italic text-muted-foreground">Question: {s.question}</p>}
               {(d.lockedSectionKeys ?? []).includes(s.key) ? <><p className="whitespace-pre-wrap text-sm">{s.body || "-"}</p><p className="mt-1 text-xs text-muted-foreground">Set by Harmonious and filled in automatically. It can't be edited.</p></> : s.key === "summary_note" ? (p.canEdit ? <><Textarea rows={2} maxLength={300} placeholder="Optional: add one line under the summary" value={s.body} onChange={(e) => upd(i, { body: e.target.value })} /><p className="mt-1 text-xs text-muted-foreground">{s.body.length}/300. Shown under the summary; still needs approval.</p></> : <p className="text-sm">{s.body || "-"}</p>) : p.canEdit ? <Textarea rows={6} value={s.body} onChange={(e) => upd(i, { body: e.target.value })} /> : <p className="whitespace-pre-wrap text-sm">{s.body || "-"}</p>}
@@ -305,9 +316,14 @@ function AgreementPacket({ packet, onChange }: { packet: any; onChange: () => vo
     <Panel title="Agreement packet: quote, MSA and SOW">
       <ul className="space-y-2 text-sm">
         <li className="flex justify-between"><Link to="/sales/quotes/$id" params={{ id: quote.id }} className="font-medium hover:underline">Quote Q-{quote.quote_number} v{quote.version}</Link><span><Badge variant="outline">{String(quote.status).replace(/_/g, " ")}</Badge> {money(quote.total_cents)}</span></li>
-        <li className="flex justify-between"><span>Master Services Agreement</span><Badge variant="outline">{msa ? PSTAT(msa, !!msa.executed_at) : quote.sow_id ? "Already on file" : "Not created"}</Badge></li>
         <li className="flex justify-between"><span>Statement of Work</span><Badge variant="outline">{PSTAT(sow, !!(sow?.executed_at || sow?.client_signed_at))}</Badge></li>
       </ul>
+      <Accordion type="single" collapsible>
+        <AccordionItem value="msa-status" className="border-b-0">
+          <AccordionTrigger className="gap-3"><span className="flex items-center gap-2"><LockKeyhole className="h-4 w-4 shrink-0 text-muted-foreground" />Master Services Agreement</span></AccordionTrigger>
+          <AccordionContent><Badge variant="outline">{msa ? PSTAT(msa, !!msa.executed_at) : quote.sow_id ? "Already on file" : "Not created"}</Badge></AccordionContent>
+        </AccordionItem>
+      </Accordion>
       <div className="mt-3 flex flex-wrap gap-2">
         {["draft", "rejected"].includes(quote.status) && <Button size="sm" disabled={busy} onClick={() => go(() => sub({ data: { id: quote.id } }), "Quote sent for approval")}>Submit quote for approval</Button>}
         {quote.status === "approved" && !quote.sow_id && <Button size="sm" disabled={busy} onClick={() => go(() => mk({ data: { id: quote.id } }), "MSA and SOW packet created")}>Create MSA + SOW packet</Button>}

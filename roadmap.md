@@ -1,5 +1,9 @@
 # Roadmap
 
+## Internal Sales MSA display (2026-10-22)
+- [x] Collapse locked MSA terms and packet details by default in the shared proposal/RFP/RFQ editor; quote detail already omits MSA text. Existing editing authority and client signing views unchanged.
+- [x] Fictional accordion display verified closed by default, expandable and collapsible with no runtime errors; 16 existing MSA/locked-section tests passed and preview build OK. Authenticated walkthrough remains blocked on independently isolated QA.
+
 ## CRM company and contact details (2026-10-22)
 - [x] Save and update contact title/phone with audit values; durable scoped company links connect authorized CRM contacts, activity, emails and deals. Existing prospect organizations backfilled without merging people or changing access.
 - [x] 15 focused offline checks passed; fictional CRM walkthrough verified company contacts/activity/emails and title/phone edit/read-back; preview build OK, no real records or emails used in testing.
