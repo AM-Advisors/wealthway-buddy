@@ -13,6 +13,7 @@ import type {
   RequirementResult,
 } from "@/lib/investor-onboarding-model";
 import { isReconciledFunding } from "@/lib/funding-status";
+import { verificationAllowsSigning } from "@/lib/investor-onboarding-model";
 
 export const JOURNEY_STEPS = ["about", "verify", "sign", "fund"] as const;
 export type JourneyStep = (typeof JOURNEY_STEPS)[number];
@@ -69,7 +70,7 @@ export function journeySteps(requirements: RequirementResult[], facts: JourneyFa
   const refresh = pick("verify").some((r) => r.state === "refresh_required");
 
   let sign: StepState = "locked";
-  if (hasProfile && verify === "complete" && about === "complete") {
+  if (hasProfile && verificationAllowsSigning(requirements) && about === "complete") {
     sign = stateFor(pick("sign"));
     // Signed but still with Harmonious: that is review, not investor action.
     if (sign === "complete" && !facts.approvedToFund) sign = "complete";
@@ -83,7 +84,7 @@ export function journeySteps(requirements: RequirementResult[], facts: JourneyFa
   if (isReconciledFunding(facts.fundingStatus)) {
     fund = "complete";
     fundMessage = "Received. Your investment is complete.";
-  } else if (facts.approvedToFund) {
+  } else if (facts.approvedToFund && verify === "complete") {
     if (facts.investorReportsSent || ["bank_transaction_detected", "reconciliation_pending", "partially_funded"].includes(String(facts.fundingStatus))) {
       fund = "in_progress";
       fundMessage = "Thanks - we'll confirm as soon as your bank transfer is received and matched.";
@@ -91,6 +92,8 @@ export function journeySteps(requirements: RequirementResult[], facts: JourneyFa
       fund = "action_required";
       fundMessage = "Your subscription has been accepted. You can now view secure wiring instructions.";
     }
+  } else if (verify !== "complete" && sign !== "locked") {
+    fundMessage = "Funding remains locked until verification and compliance screening are approved.";
   } else if (sign === "complete") {
     fundMessage = "Harmonious is reviewing your subscription.";
   }
@@ -120,7 +123,9 @@ export function journeySteps(requirements: RequirementResult[], facts: JourneyFa
               ? "Some verification has expired and needs to be renewed."
               : verify === "action_required"
                 ? "Start verification to continue."
-                : "Verification in progress.",
+                : verificationAllowsSigning(requirements)
+                  ? "Identity approved. Compliance screening is pending; you can continue to Sign."
+                  : "Verification in progress.",
     },
     {
       key: "sign",
@@ -141,6 +146,11 @@ export function journeySteps(requirements: RequirementResult[], facts: JourneyFa
 
 /** The first step the investor can act on or is waiting on. Resume goes here. */
 export function nextJourneyStep(steps: JourneyStepView[]): JourneyStep {
+  const about = steps.find((s) => s.key === "about");
+  const verify = steps.find((s) => s.key === "verify");
+  const sign = steps.find((s) => s.key === "sign");
+  if (about?.state === "complete" && verify?.state === "in_progress"
+    && sign && (sign.state === "action_required" || sign.state === "in_progress")) return "sign";
   const first = steps.find((s) => s.state === "action_required" || s.state === "in_progress");
   return first?.key ?? (steps.every((s) => s.state === "complete") ? "fund" : "about");
 }

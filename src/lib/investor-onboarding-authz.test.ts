@@ -195,6 +195,14 @@ const updates = (table: string) => writes.filter((w) => w.table === table && w.o
 const inserts = (table: string) => writes.filter((w) => w.table === table && w.op === "insert");
 
 describe("investor isolation", () => {
+  it("refuses opening signatures on another investor's application", async () => {
+    await expect(server.assertApplicationSigningVerification(INV2, "application-one")).rejects.toThrow(/not ready for signing/);
+    expect(writes).toHaveLength(0);
+  });
+  it("refuses a missing application-linked investment without falling back to account identity", async () => {
+    await expect(server.assertApplicationSigningVerification(INV1, "missing-application")).rejects.toThrow(/not ready for signing/);
+    expect(writes).toHaveLength(0);
+  });
   it("lets a staff member select their own profile for their own investment", async () => {
     const result = await server.chooseProfile(STAFF, { onboardingId: "staff-investment", profileId: "profile-staff" });
     expect(result.profileId).toBe("profile-staff");
