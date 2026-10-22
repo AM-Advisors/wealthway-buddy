@@ -11,8 +11,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DOC_TEMPLATES, STARTER_NOTICE } from "@/lib/fund-doc-templates";
+import { DOC_TEMPLATES, STARTER_NOTICE, SIDE_LETTER_ITEMS, sideLetterItemsComplete } from "@/lib/fund-doc-templates";
 import { deleteFundFileFn, generateFundDocFn, listFundFilesFn, setSignatureBoxesFn, uploadFundFileFn } from "@/lib/fund-tabs.functions";
 import { TemplateDocumentsCard } from "./template-documents-card";
 import { listTemplatesFn, templateAutofillCheckFn, useTemplateInFundFn, fundDocumentGenerationAccessFn } from "@/lib/fund-doc-templates.functions";
@@ -285,20 +287,39 @@ export function DocumentsTab({ fundId }: { fundId: string }) {
 }
 
 function GenerateDialog({ fundId, templateKey, onClose, onCreated }: { fundId: string; templateKey: string; onClose: () => void; onCreated: (doc: { title: string; body: string }) => void }) {
-  const t = DOC_TEMPLATES.find((x) => x.key === templateKey)!;
+  const isSideLetter = templateKey === "sl_combined" || SIDE_LETTER_ITEMS.some((item) => item.key === templateKey);
+  const key = isSideLetter ? "sl_combined" : templateKey;
+  const t = DOC_TEMPLATES.find((x) => x.key === key);
   const gen = useServerFn(generateFundDocFn);
-  const [values, setValues] = useState<Record<string, string>>({});
-  const m = useMutation({ mutationFn: () => gen({ data: { fundId, templateKey, values } }), onSuccess: (r: any) => { toast.success("Draft created in Documents"); onCreated({ title: r.title, body: r.body }); }, onError: (e: Error) => toast.error(e.message) });
+  const [values, setValues] = useState<Record<string, string>>(() => isSideLetter && templateKey !== "sl_combined" ? { [`include_${templateKey}`]: "true" } : {});
+  const m = useMutation({ mutationFn: () => gen({ data: { fundId, templateKey: key, values } }), onSuccess: (r: any) => { toast.success("Draft created in Documents"); onCreated({ title: r.title, body: r.body }); }, onError: (e: Error) => toast.error(e.message) });
+  if (!t) return null;
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader><DialogTitle>{t.title}</DialogTitle><DialogDescription>{STARTER_NOTICE}</DialogDescription></DialogHeader>
         <div className="space-y-3">
           {t.fields.map((f) => (
             <div key={f.key} className="space-y-1"><Label>{f.label}</Label><Input value={values[f.key] ?? ""} placeholder={f.placeholder} onChange={(e) => setValues({ ...values, [f.key]: e.target.value })} /></div>
           ))}
+          {isSideLetter && <fieldset className="space-y-3">
+            <legend className="mb-2 text-sm font-medium">Items in this side letter</legend>
+            {SIDE_LETTER_ITEMS.map((item) => {
+              const selected = values[`include_${item.key}`] === "true";
+              return <div key={item.key} className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Checkbox id={`include-${item.key}`} checked={selected} onCheckedChange={(checked) => setValues({ ...values, [`include_${item.key}`]: checked === true ? "true" : "false" })} />
+                  <Label htmlFor={`include-${item.key}`}>{item.label}</Label>
+                </div>
+                {selected && <div className="space-y-1 pl-6">
+                  <Label htmlFor={`term-${item.key}`}>{item.field.label}</Label>
+                  {item.key === "sl_information_rights" ? <Textarea id={`term-${item.key}`} value={values[item.field.key] ?? ""} placeholder={item.field.placeholder} onChange={(e) => setValues({ ...values, [item.field.key]: e.target.value })} /> : <Input id={`term-${item.key}`} value={values[item.field.key] ?? ""} placeholder={item.field.placeholder} onChange={(e) => setValues({ ...values, [item.field.key]: e.target.value })} />}
+                </div>}
+              </div>;
+            })}
+          </fieldset>}
         </div>
-        <DialogFooter><Button variant="outline" onClick={onClose}>Cancel</Button><Button disabled={m.isPending} onClick={() => m.mutate()}>Create draft</Button></DialogFooter>
+        <DialogFooter><Button variant="outline" onClick={onClose}>Cancel</Button><Button disabled={m.isPending || (isSideLetter && !sideLetterItemsComplete(values))} onClick={() => m.mutate()}>Create draft</Button></DialogFooter>
       </DialogContent>
     </Dialog>
   );

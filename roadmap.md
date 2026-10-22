@@ -1,5 +1,9 @@
 # Roadmap
 
+## Multi-item side letters (2026-10-22)
+- [ ] Combine selected management-fee, carry, minimum-investment and information-rights items into one staff-generated draft, retaining existing signing and historical documents.
+- [ ] Run fictional generation checks; authenticated save/signing remains blocked on independently isolated synthetic QA.
+
 ## Correct documents and staff-only generation (2026-10-22)
 - [x] Restrict template use/bulk generation, starter drafts and standard forms server-side to their existing authorized Harmonious staff allowlists; hide manager generation controls, retain review/sign/upload rights. 49 fictional permission/autofill/version/evidence checks passed; preview build OK. Signed-in generation controls remain unverified pending isolated synthetic QA.
 - [x] Prepare standalone unexecuted Erebor review drafts (OA v3, PPM v4, subscription v4) in Files/collection: recorded identity/title and terms filled, OA fixed fee/arbitration clauses proposed for legal review, no signatures reused. All 116 rendered pages inspected after removing inherited blank breaks and repeated draft labels. Draft files are not recorded platform versions or in use.
