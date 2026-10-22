@@ -413,3 +413,5 @@
 - [x] Forecasts tab built, gated by paid Forecasting add-on
 - [ ] Forecasting price — waiting on Alyssa
 - [ ] Friendlier assumption form (currently raw text) and signed-in check — pending
+
+- Payment schedules: pure signed-SOW quarterly/annual model and tests added; database migration, upgrade/signature hooks, due-invoice delivery, Commissions panel, and daily cron remain pending (required database tools unavailable).
