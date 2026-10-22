@@ -31,6 +31,57 @@ function profitFor(facts: any, inv: any, ln: any, lines: any[], invoices: any[],
   return commissionProfit({ revenueCents: Number(ln.amount_cents), passThroughCents: ln.expense_id ? Number(facts.expenses.find((e: any) => e.id === ln.expense_id)?.amount_cents ?? ln.amount_cents) : 0, actualCosts: ln.expense_id ? [0] : actualCosts, costPct: setting.service_cost_pct[ln.service_key] ?? 0, overheadPct: setting.overhead_pct, rates });
 }
 
+export interface DealAmountTotals { signedCents: number; billedCents: number; receivedCents: number; committedCents: number }
+/** Canonical deal amounts per SOW and per signed quote: the signed SOW total, billed to date, client payments received, and the committed (scheduled) payout total. Read-only; never moves money. */
+export async function dealAmountFacts(db: any, sowIds: string[], quoteIds: string[]) {
+  const bySow = new Map<string, DealAmountTotals>();
+  const byQuote = new Map<string, DealAmountTotals>();
+  const blank = (): DealAmountTotals => ({ signedCents: 0, billedCents: 0, receivedCents: 0, committedCents: 0 });
+  const add = (map: Map<string, DealAmountTotals>, id: string | null | undefined, field: "billedCents" | "receivedCents" | "committedCents", amount: number) => {
+    if (!id) return;
+    const cur = map.get(id) ?? blank();
+    map.set(id, { ...cur, [field]: cur[field] + amount } as DealAmountTotals);
+  };
+  const sowIdsU = [...new Set(sowIds.filter(Boolean))];
+  const quoteIdsU = [...new Set(quoteIds.filter(Boolean))];
+  if (!sowIdsU.length && !quoteIdsU.length) return { bySow, byQuote };
+  const [sowRows, sowInvoices, quoteInvoices] = await Promise.all([
+    sowIdsU.length ? db.from("client_sows").select("id, generated_lines").in("id", sowIdsU) : Promise.resolve({ data: [] }),
+    sowIdsU.length ? db.from("invoices").select("id, sow_id, sales_quote_id, status, paid_on, voided_at").in("sow_id", sowIdsU) : Promise.resolve({ data: [] }),
+    quoteIdsU.length ? db.from("invoices").select("id, sow_id, sales_quote_id, status, paid_on, voided_at").in("sales_quote_id", quoteIdsU) : Promise.resolve({ data: [] }),
+  ]);
+  const invoices = [...new Map([...((sowInvoices.data ?? []) as any[]), ...((quoteInvoices.data ?? []) as any[])].map((i: any) => [i.id, i])).values()] as any[];
+  const { data: lines } = invoices.length ? await db.from("invoice_lines").select("id, invoice_id, amount_cents").in("invoice_id", invoices.map((i: any) => i.id)) : { data: [] };
+  const lineRows = ((lines ?? []) as any[]);
+  const lineIds = lineRows.map((l: any) => l.id);
+  const { data: queued } = lineIds.length ? await db.from("commission_payout_queue").select("invoice_line_id, status, amount_cents").in("invoice_line_id", lineIds) : { data: [] };
+  const invOfLine = new Map(lineRows.map((l: any) => [l.id, l.invoice_id]));
+  const invOf = new Map(invoices.map((i: any) => [i.id, i]));
+  const live = (i: any) => !i.voided_at && i.status !== "void" && i.status !== "draft";
+  for (const s of ((sowRows.data ?? []) as any[])) {
+    const signed = ((s.generated_lines ?? []) as any[]).reduce((t: number, l: any) => t + (Number(l.amount_cents) || 0), 0);
+    bySow.set(s.id, { ...blank(), signedCents: signed });
+  }
+  for (const l of lineRows) {
+    const inv = invOf.get(invOfLine.get(l.invoice_id));
+    if (!inv || !live(inv)) continue;
+    const amt = Number(l.amount_cents) || 0;
+    const paid = inv.status === "paid" || Boolean(inv.paid_on);
+    add(bySow, inv.sow_id, "billedCents", amt);
+    if (paid) add(bySow, inv.sow_id, "receivedCents", amt);
+    add(byQuote, inv.sales_quote_id, "billedCents", amt);
+    if (paid) add(byQuote, inv.sales_quote_id, "receivedCents", amt);
+  }
+  for (const q of ((queued ?? []) as any[])) {
+    if (q.status !== "scheduled" || q.amount_cents == null) continue;
+    const inv = invOf.get(invOfLine.get(q.invoice_line_id));
+    if (!inv) continue;
+    add(bySow, inv.sow_id, "committedCents", Number(q.amount_cents) || 0);
+    add(byQuote, inv.sales_quote_id, "committedCents", Number(q.amount_cents) || 0);
+  }
+  return { bySow, byQuote };
+}
+
 /** Sales staff use their Sales scope; Finance and leadership (no Sales role) still see every commission. */
 async function salesActor(userId: string) {
   try { return await salesHubActor(userId); } catch (e) {
@@ -55,6 +106,7 @@ export async function commissionReport(userId: string, from: string, to: string)
   const qs = (quotes ?? []) as any[];
   const sowIds = qs.map((q) => q.sow_id).filter(Boolean);
   const quoteIds = qs.map((q) => q.id);
+  const dealFacts = await dealAmountFacts(db, sowIds, quoteIds);
   // Invoices billed under the quote's SOW, plus invoices created automatically when the client signed the quote/proposal/RFP/RFQ.
   const [bySow, byQuote] = await Promise.all([
     sowIds.length ? db.from("invoices").select("id, number, sow_id, sales_quote_id, status, paid_on, issue_date, voided_at").in("sow_id", sowIds) : { data: [] },
@@ -131,7 +183,14 @@ export async function commissionReport(userId: string, from: string, to: string)
     history: hist.slice().reverse().map((h) => ({ ...h, setByName: hnm.get(h.set_by) ?? "Unknown" })),
     canRecordPayout: a.roles.some((r: string) => PAYOUT_RECORDERS.includes(r)),
     canEdit: a.roles.some((r: string) => COMMISSION_EDITORS.includes(r)),
-    quotes: qs.map((q) => ({ id: q.id, sowId: q.sow_id, label: `${q.quote_number ?? ""} ${q.title ?? ""}`.trim(), bdrUserId: q.bdr_user_id, ownerUserId: q.owner_user_id, signedAt: q.signed_at ?? null, client: clientName.get(q.client_id) ?? "-" })),
+    quotes: qs.map((q) => {
+      const sowFacts = q.sow_id ? dealFacts.bySow.get(q.sow_id) : undefined;
+      const quoteFacts = dealFacts.byQuote.get(q.id);
+      return { id: q.id, sowId: q.sow_id, label: `${q.quote_number ?? ""} ${q.title ?? ""}`.trim(), bdrUserId: q.bdr_user_id, ownerUserId: q.owner_user_id, signedAt: q.signed_at ?? null, client: clientName.get(q.client_id) ?? "-",
+        signedAmountCents: sowFacts?.signedCents || sowFacts?.billedCents || quoteFacts?.billedCents || 0,
+        receivedAmountCents: sowFacts?.receivedCents ?? quoteFacts?.receivedCents ?? 0,
+        committedAmountCents: sowFacts?.committedCents ?? quoteFacts?.committedCents ?? 0 };
+    }),
     bdrs: await (async () => { const ids = [...rolesOf].filter(([, rs]) => rs.includes("bdr")).map(([id]) => id); const m = await names(ids); return ids.map((id) => ({ id, name: m.get(id) ?? "BDR" })); })(),
   };
 }
@@ -285,7 +344,9 @@ export async function scheduledPayments(userId: string) {
     const rep = qs.find((q) => q.sow_id === s.sow_id)?.owner_user_id;
     const p = ((profiles ?? []) as any[]).find((x) => x.id === rep);
     const c = ((clients ?? []) as any[]).find((x) => x.id === s.client_id);
+    const f = dealFacts.bySow.get(s.sow_id);
     return { id: s.id, client: c?.legal_name || c?.name || "Client", service: s.label, frequency: s.frequency, amountCents: Number(s.amount_cents), dueOn: s.next_due_on,
+      signedAmountCents: f?.signedCents || f?.billedCents || 0, receivedAmountCents: f?.receivedCents ?? 0, committedAmountCents: f?.committedCents ?? 0,
       rep: p?.full_name || "Unassigned", waitingForSignature: !sow || sow.approval_status !== "approved" || (!sow.client_signed_at && !sow.executed_at) };
   }) };
 }
