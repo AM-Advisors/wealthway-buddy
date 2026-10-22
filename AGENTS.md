@@ -51,3 +51,4 @@
 
 - Commission basis is gross profit from append-only cost entries/settings; expected signed-SOW rows are computed projections, never payable; existing queue/payout amounts remain historical.
 - Bookkeeping uses the shared quote engine with recorded proposed configurations and frozen line snapshots; database gates keep these draft-only until a separately approved release — why: staged pricing must never reach live signing, billing or enrollment.
+- Countersign timing lives in src/lib/countersign-timing.ts and feeds canInvestorFund; canCloseInvestment always forces pause so admission still needs approval — why: one funding gate, unchanged admission authority.
