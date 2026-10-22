@@ -165,6 +165,9 @@ export function isTrustedOrigin(
   return trustedOrigins(env).includes(normalized);
 }
 
+/** Published platform address; forwarded to Harmonious domains, never shown. */
+export const PUBLISHED_PLATFORM_HOST = "wealthway-buddy.lovable.app";
+
 export type CanonicalRedirect = { location: string; status: 302 };
 
 /**
@@ -184,7 +187,11 @@ export function canonicalRedirect(
   }
 
   const host = parsed.host.toLowerCase();
-  if (isDevelopmentHost(host)) return null;
+  // The platform-published address is never shown: forward page visits to the
+  // Harmonious domains. Webhooks, callbacks and email routes stay reachable.
+  const onPublishedPlatformHost = host === PUBLISHED_PLATFORM_HOST;
+  if (onPublishedPlatformHost && /^\/(api|lovable)\//.test(parsed.pathname)) return null;
+  if (!onPublishedPlatformHost && isDevelopmentHost(host)) return null;
 
   const { client, ops } = hostConfig(env);
   const clientHost = hostOf(client);
@@ -195,7 +202,7 @@ export function canonicalRedirect(
   const tail = `${pathname}${parsed.search}${parsed.hash}`;
   const surface = surfaceForPath(pathname);
 
-  const onLegacy = legacyHosts.includes(host);
+  const onLegacy = legacyHosts.includes(host) || onPublishedPlatformHost;
   const known = onLegacy || host === clientHost || host === opsHost;
   // An address we don't recognize (a custom domain, a staging host) is left
   // alone rather than bounced somewhere it may not be able to come back from.

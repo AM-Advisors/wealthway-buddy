@@ -330,3 +330,17 @@ describe("the hostname grants nothing", () => {
     tables["user_roles"] = original;
   });
 });
+
+describe("published platform address", () => {
+  it("forwards page visits to a Harmonious domain", () => {
+    const r = canonicalRedirect({ url: "https://wealthway-buddy.lovable.app/client" });
+    expect(r?.location).toMatch(/^https:\/\/[a-z.]*harmonious\.co\/client/);
+  });
+  it("keeps webhooks and callbacks reachable", () => {
+    expect(canonicalRedirect({ url: "https://wealthway-buddy.lovable.app/api/public/payments/webhook" })).toBeNull();
+    expect(canonicalRedirect({ url: "https://wealthway-buddy.lovable.app/lovable/email/auth/webhook" })).toBeNull();
+  });
+  it("leaves the editor preview alone", () => {
+    expect(canonicalRedirect({ url: "https://id-preview--abc.lovable.app/client" })).toBeNull();
+  });
+});

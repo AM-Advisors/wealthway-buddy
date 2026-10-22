@@ -5,7 +5,7 @@ import { serviceError } from "@/lib/service-error";
  */
 import { createHmac, timingSafeEqual } from "crypto";
 
-export const LINKEDIN_REDIRECT_URI = "https://wealthway-buddy.lovable.app/api/public/linkedin/callback";
+export const LINKEDIN_REDIRECT_URI = "https://app.harmonious.co/api/public/linkedin/callback";
 const SCOPES = "w_organization_social r_organization_social rw_organization_admin";
 const admin = async () => (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
 
