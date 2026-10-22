@@ -2,7 +2,7 @@
 import { sowServicesBody } from "./agreement-templates";
 export type DocKind = "proposal" | "rfp" | "rfq";
 export type DocDirection = "response" | "outbound";
-export type Section = { key: string; title: string; body: string; question?: string | null; included?: boolean };
+export type Section = { key: string; title: string; body: string; question?: string | null; included?: boolean | undefined };
 
 /** Sections reps switch on only when needed. Off by default on new documents; older saved sections without the flag stay shown. */
 export const OPTIONAL_SECTION_KEYS = ["needs", "approach", "timeline", "next", "about"];
