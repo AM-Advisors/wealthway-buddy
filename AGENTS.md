@@ -61,4 +61,5 @@
 - Public proposal SOW tabs reuse the acceptance token and exact linked client/version, projecting only client agreement sections and recorded generated lines — why: portal-free reading without directory, notes or signing authority exposure.
 - Countersign timing lives in src/lib/countersign-timing.ts and feeds canInvestorFund; canCloseInvestment always forces pause so admission still needs approval — why: one funding gate, unchanged admission authority.
 - Client dashboard insights use client-insights.functions.ts + pure client-dashboard-model.ts; earnings = posted 'Management fee' ledger entries + approved carry rows only, kept separate from raised capital and Harmonious costs — why: no estimated earnings or mixed figures.
-- Fund changes use fund-changes.functions.ts over canonical requests and existing review/send engines — why: visible fund updates without duplicate approvals or changed authority.
+- Fund changes project canonical requests and reuse review/send engines — why: no duplicate approvals.
+- Offering document pop-outs pin document/version through existing version readers — why: show original files, never regenerate or substitute latest.
