@@ -173,7 +173,7 @@ export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; init
   const belowBaseline = displayLines.some(l => l.unitCents < l.baselineUnitCents);
   const add = (key: string) => {
     const it = c.data?.lines.find((l: any) => l.serviceKey === key);
-    if (it) { const std = standardInclusions(it.serviceKey); const billingFrequency = defaultQuoteBilling(it); setLines([...lines, normalizeQuoteBilling({ serviceKey: it.serviceKey, label: it.label, quantity: 1, unitCents: it.baselineCents, baselineUnitCents: it.baselineCents, billingFrequency, details: std ? { included: std.included, excluded: std.excluded } : undefined }, it)]); }
+    if (it) { const std = standardInclusions(it.serviceKey); const billingFrequency = defaultQuoteBilling(it); const added = normalizeQuoteBilling({ serviceKey: it.serviceKey, label: it.label, quantity: 1, unitCents: it.baselineCents, baselineUnitCents: it.baselineCents, billingFrequency, details: std ? { included: std.included, excluded: std.excluded } : undefined }, it); setLines([...lines, { ...added, unitCents: added.baselineUnitCents }]); }
   };
   return (
     <Panel title={initial ? "Edit quote" : "New quote"}>
@@ -204,8 +204,10 @@ export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; init
         <TableHeader><TableRow><TableHead>Service</TableHead><TableHead className="w-24">Qty</TableHead><TableHead className="w-36">Price ($)</TableHead><TableHead className="w-32">Billed</TableHead><TableHead className="w-36">First bill</TableHead><TableHead className="text-right">Rate card</TableHead><TableHead className="text-right">Line</TableHead><TableHead /></TableRow></TableHeader>
         <TableBody>
           {(["one_time", "annual", "event"] as FeeGroup[]).flatMap((g) => {
-            const model = (k: string) => (c.data?.lines ?? []).find((x: any) => x.serviceKey === k)?.pricingModel;
-            const rows = displayLines.map((l, i) => ({ l, i })).filter(({ l }) => feeGroup(l.serviceKey, model(l.serviceKey)) === g);
+            const rows = displayLines.map((l, i) => ({ l, i })).filter(({ l }) => {
+              const rate = c.data?.lines.find((x: any) => x.serviceKey === l.serviceKey);
+              return (rate && recurringQuoteRate(rate) ? "annual" : feeGroup(l.serviceKey, rate?.pricingModel)) === g;
+            });
             if (!rows.length) return [];
             const sub = rows.reduce((s, { l }) => s + l.quantity * l.unitCents, 0);
             return [<TableRow key={`h-${g}`}><TableCell colSpan={6} className="bg-muted/40 text-xs font-semibold uppercase tracking-wide">{g === "annual" ? "Recurring fees" : FEE_GROUP_LABEL[g]}</TableCell><TableCell className="bg-muted/40 text-right text-xs font-semibold">{money(sub)}</TableCell><TableCell className="bg-muted/40" /></TableRow>,

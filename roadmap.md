@@ -2,7 +2,7 @@
 
 ## Quote quarterly and annual calculation (2026-10-22)
 - [x] Share per-billing-period baseline calculations between quote editor and authorized saves; use recorded quarterly rates where available, preserve true discount approvals and linked SOW billing terms. Recurring service selections convert amounts and show their chosen period rather than a locked annual label.
-- [ ] Run focused regression checks and confirm preview compilation.
+- [x] 82 focused regression checks passed; preview build OK. No live quote/signing/payment actions were exercised.
 - [ ] Authenticated quote save/read-back — blocked until independently isolated synthetic QA; no live quotes, agreements, invoices or payments changed.
 
 ## Dev Test 1 interactive client demo (2026-10-22)
