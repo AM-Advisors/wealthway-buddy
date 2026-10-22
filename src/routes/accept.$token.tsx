@@ -48,29 +48,47 @@ function AcceptPage() {
     catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
   };
 
+  const steps = [
+    { id: "overview", label: "Overview" },
+    ...(d.sections.length ? [{ id: "details", label: "What we handle & terms" }] : []),
+    ...(d.lines.length ? [{ id: "pricing", label: "Pricing" }] : []),
+    { id: "sign", label: d.accepted ? "Signed" : "Sign & approve" },
+  ];
   return (
-    <Shell>
-      <Card>
+    <Shell steps={steps} doneUpTo={d.accepted ? steps.length : 0}>
+      <Card id="overview" className="scroll-mt-6">
         <CardHeader>
           <CardDescription>{KIND[d.kind] ?? "Document"} · version {d.version}{d.clientName ? ` · ${d.clientName}` : ""}</CardDescription>
           <CardTitle className="font-heading text-2xl">{d.title}</CardTitle>
-          {d.salesContact && <p className="text-sm text-muted-foreground">Your Harmonious contact: <span className="font-medium text-foreground">{d.salesContact.name}</span> · <a className="underline" href={`mailto:${d.salesContact.email}`}>{d.salesContact.email}</a></p>}
+          <p className="text-sm text-muted-foreground">From Harmonious{d.salesContact ? <> · Your contact: <span className="font-medium text-foreground">{d.salesContact.name}</span> · <a className="underline" href={`mailto:${d.salesContact.email}`}>{d.salesContact.email}</a></> : null}</p>
+          {(d as any).stale && <p className="text-sm text-destructive">A newer version is available. Please use the latest link from your Harmonious contact.</p>}
         </CardHeader>
-        <CardContent className="space-y-4">
-          {d.sections.map((s, i) => (
-            <section key={i}><h3 className="font-heading font-semibold text-primary">{s.title}</h3><p className="whitespace-pre-wrap text-sm">{s.body}</p></section>
-          ))}
-          {d.lines.length > 0 && (
+      </Card>
+      {d.sections.length > 0 && (
+        <Card id="details" className="scroll-mt-6">
+          <CardHeader><CardTitle className="font-heading text-lg">What we handle & terms</CardTitle></CardHeader>
+          <CardContent className="space-y-4">
+            {d.sections.map((s, i) => (
+              <section key={i}><h3 className="font-heading font-semibold text-primary">{s.title}</h3><p className="whitespace-pre-wrap text-sm">{s.body}</p></section>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+      {d.lines.length > 0 && (
+        <Card id="pricing" className="scroll-mt-6">
+          <CardHeader><CardTitle className="font-heading text-lg">Pricing</CardTitle></CardHeader>
+          <CardContent>
             <table className="w-full text-sm">
               <tbody>
-                {d.lines.map((l, i) => <tr key={i} className="border-b"><td className="py-1">{l.label}{l.quantity > 1 ? ` × ${l.quantity}` : ""}</td><td className="py-1 text-right">{money(l.amountCents)}</td></tr>)}
-                <tr><td className="pt-2 font-semibold">Total</td><td className="pt-2 text-right font-semibold">{money(d.totalCents)}</td></tr>
+                {d.lines.map((l, i) => <tr key={i} className="border-b"><td className="py-2">{l.label}{l.quantity > 1 ? ` × ${l.quantity}` : ""}</td><td className="py-2 text-right">{money(l.amountCents)}</td></tr>)}
+                <tr><td className="pt-3 font-semibold">Total</td><td className="pt-3 text-right font-semibold">{money(d.totalCents)}</td></tr>
               </tbody>
             </table>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
+      <div id="sign" className="scroll-mt-6">
       {d.accepted ? (
         <Card>
           <CardHeader><CardTitle className="font-heading">Signed by {d.accepted.signerName}</CardTitle>
