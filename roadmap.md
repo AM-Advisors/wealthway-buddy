@@ -1,5 +1,9 @@
 # Roadmap
 
+## Corps Erebor template term mismatch (2026-10-22)
+- [ ] Compare canonical fund facts and fee terms with PPM, Operating Agreement and Subscription Agreement sources; correct confirmed autofill defects without changing signed history or activating versions.
+- [ ] Run focused fictional generation/read-back checks; identify existing documents requiring an explicitly reviewed replacement. Authenticated QA requires independent synthetic isolation.
+
 ## Quote quarterly and annual calculation (2026-10-22)
 - [x] Share per-billing-period baseline calculations between quote editor and authorized saves; use recorded quarterly rates where available, preserve true discount approvals and linked SOW billing terms. Recurring service selections convert amounts and show their chosen period rather than a locked annual label.
 - [x] 82 focused regression checks passed; preview build OK. No live quote/signing/payment actions were exercised.
