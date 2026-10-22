@@ -1,5 +1,10 @@
 # Roadmap
 
+## Default terms and separate investor exceptions (2026-10-22)
+- [ ] Keep fund defaults distinct from class overrides; allow default-term investors without an exception class.
+- [ ] Expose investor class assignment and separately linked side-letter proposals from fund setup and investor details, preserving approval/history rules.
+- [ ] Verify fictional default/class/side-letter checks; authenticated save/read-back blocked on independently isolated synthetic QA.
+
 ## Multi-item side letters (2026-10-22)
 - [x] Combine selected management-fee, carry, minimum-investment and information-rights items into one staff-generated draft; each original item button opens the multi-item form with that item selected. Existing signing and historical documents unchanged.
 - [x] 31 fictional generation/model/staff-permission checks passed; preview build OK. No live documents, signatures or emails changed.
