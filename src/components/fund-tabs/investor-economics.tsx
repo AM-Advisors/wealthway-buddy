@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { getInvestorEconomics, linkPendingSideLetter } from "@/lib/investor-economics.functions";
-import { changeInvestmentClassFn, previewClassChangeFn } from "@/lib/fund-setup-phase3.functions";
+import { changeInvestmentClassFn, previewClassChangeFn } from "@/lib/fund-setup-canonical.functions";
 import { proposeSideLetterChange } from "@/lib/side-letters.functions";
 import { generateFundDocFn } from "@/lib/fund-tabs.functions";
 import { fmtRate, type EconRow } from "@/lib/investor-economics-model";
