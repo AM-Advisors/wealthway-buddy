@@ -84,7 +84,8 @@ function Compose({ data, onDone }: { data: any; onDone: (id?: string) => void })
   const qc = useQueryClient();
   const start = useServerFn(startInboxThreadFn);
   const [clientId, setClientId] = useState<string>(data.clients[0]?.id ?? "");
-  const reps = (data.reps as any[]).filter((r) => r.clientId === clientId);
+  const allowed: string[] = data.channels?.[clientId] ?? ["operations", "sales", "rep", "direct"];
+  const reps = allowed.includes("rep") ? (data.reps as any[]).filter((r) => r.clientId === clientId) : [];
   const [to, setTo] = useState("operations");
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
@@ -113,7 +114,7 @@ function Compose({ data, onDone }: { data: any; onDone: (id?: string) => void })
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="operations">Harmonious Operations team</SelectItem>
-              <SelectItem value="sales">Harmonious Sales team</SelectItem>
+              {allowed.includes("sales") && <SelectItem value="sales">Harmonious Sales team</SelectItem>}
               {reps.map((r) => <SelectItem key={r.userId} value={`rep:${r.userId}`}>{r.name} (your {r.role.replace(/_/g, " ")} representative)</SelectItem>)}
             </SelectContent>
           </Select>
