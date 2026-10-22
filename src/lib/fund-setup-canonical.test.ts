@@ -70,7 +70,6 @@ describe("fund setup canonical rules", () => {
     expect(classAssignmentError({ hasMultipleClasses: false, classes, classKey: "class_a" })).toMatch(/multiple/);
   });
   it("normalizes and formats EINs", () => {
-    expect(classAssignmentError({ hasMultipleClasses: true, classes: [{ key: "b", name: "Class B" }], classKey: null })).toBeNull();
     expect(normalizeEin("12-3456789")).toBe("123456789");
     expect(formatEin("123456789")).toBe("12-3456789");
     expect(normalizeEin("123")).toBeNull();
@@ -85,6 +84,7 @@ describe("fund setup canonical rules", () => {
     expect(structureForFundType("Venture capital")).toBe("vc_fund");
   });
   it("keeps default terms intact when a separate class overrides carry", () => {
+    expect(classAssignmentError({ hasMultipleClasses: true, classes: [{ key: "b", name: "Class B" }], classKey: null })).toBeNull();
     const defaults = { managementFee: { ratePercent: 2, basis: "nav" as const, frequency: "annual" as const }, carry: { ratePercent: 20 } };
     expect(effectiveEconomics(defaults, null)).toEqual(defaults);
     expect(effectiveEconomics(defaults, { key: "b", name: "Class B", carry: { ratePercent: 10 } }).carry?.ratePercent).toBe(10);

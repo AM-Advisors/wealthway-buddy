@@ -26,4 +26,7 @@ describe("fund setup phase 3", () => {
     expect(classChangeImpact({ stage: "funding", applicableDocuments: 1, signedDocuments: 1, hasFundingActivity: true }).blocked).toBe(true);
     expect(classChangeImpact({ stage: "about_you", applicableDocuments: 0, signedDocuments: 0, hasFundingActivity: false }).blocked).toBe(false);
   });
+  it("protects signed default terms from later exception-class reassignment", () => {
+    expect(classChangeImpact({ stage: "signature", applicableDocuments: 1, signedDocuments: 1, hasFundingActivity: false }).blocked).toBe(true);
+  });
 });
