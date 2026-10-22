@@ -40,7 +40,7 @@ export const ACCOUNTING_TERMS = ["general ledger", "nav", "waterfall", "quarterl
 
 // Servicing (shared by fund products) — support and hands-on level only.
 const CLIENT_SERVICING: Line[] = [
-  { name: "Self Serve", description: "You run it on the platform. Help center only.", prices: yearly(0, "Included"), items: ["Help center", "Self-serve setup, templates and e-signature"] },
+  { name: "Self Serve", description: "You run it on the platform. Included: General Operations inbox, guaranteed response within 5 business days.", prices: yearly(0, "Included"), items: ["Help center", "Operations inbox (5-business-day response)", "Self-serve setup, templates and e-signature"] },
   { name: "Core", description: "72-hour response.", prices: svc("core"), items: ["Email support, 72-hour response", "Setup and document review on request"] },
   { name: "Plus", description: "48-hour response, named contact.", prices: svc("fund_administration"), items: ["Named relationship contact", "48-hour response", "Quarterly check-in call"] },
   { name: "White Glove", description: "24-hour response, proactive management.", prices: svc("white_glove"), items: ["Named administrator", "24-hour priority response", "Proactive deadline and calendar management", "GP approval workflows run for you"] },
@@ -150,7 +150,7 @@ export const PRODUCTS: Product[] = [
     key: "saas", name: "SaaS Platform", intro: "Platform only, no Harmonious support. Buy services one at a time.",
     fundCost: [{ name: "Platform fee", description: "Full platform access per fund.", prices: cadences(Math.round(2500 * SAAS_BASE_UPLIFT)) }],
     administration: [{ name: "Fund Administration", description: "Not included. Available à la carte.", prices: yearly(null, "SaaS à la carte price") }],
-    servicing: { client: [{ name: "No Harmonious support", description: "Help center only.", prices: yearly(0, "Included") }], investor: investorLines(SAAS_BASE_UPLIFT * SAAS_MARKUP) },
+    servicing: { client: [{ name: "Operations inbox", description: "Included: General Operations inbox, guaranteed response within 5 business days.", prices: yearly(0, "Included") }], investor: investorLines(SAAS_BASE_UPLIFT * SAAS_MARKUP) },
     alaCarte: FUND_A_LA_CARTE.map((l) => l.name.startsWith("Harmonious fund documents")
       ? { ...l, prices: once(SAAS_FUND_DOCUMENT_CENTS / 100, "each, fixed") }
       : { ...l, prices: l.prices.map((p) => (p.amount == null || /Form D|Blue Sky/.test(l.name) ? p : { ...p, amount: Math.round(p.amount * SAAS_BASE_UPLIFT * SAAS_MARKUP) })) }),
