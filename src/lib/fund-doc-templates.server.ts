@@ -245,13 +245,16 @@ const fullName = (p: any) => (p ? [p.legal_first_name, p.legal_middle_name, p.le
 
 /** Fund details keyed by every placeholder spelling used in the Harmonious templates. Investor-level fields (amount, signature, date) are left for signing. */
 export async function fundTemplateValues(offeringId: string): Promise<Record<string, string | null>> {
-  const { data: o } = await db().from("offerings").select("*").eq("id", offeringId).maybeSingle();
+  const { data: o, error: offeringError } = await db().from("offerings").select("*").eq("id", offeringId).maybeSingle();
+  if (offeringError) throw new Error("Could not load the fund details for the document.");
   if (!o) throw new Error("Fund not found.");
-  const [{ data: c }, { data: fee }, { data: sig }] = await Promise.all([
+  const results = await Promise.all([
     o.client_id ? db().from("clients").select("name, legal_name, primary_contact_name, primary_contact_email").eq("id", o.client_id).maybeSingle() : Promise.resolve({ data: null }),
-    db().from("fund_fee_terms").select("management_fee_pct, carry_pct, status, created_at").eq("offering_id", offeringId).in("status", ["active", "approved"]).order("created_at", { ascending: false }).limit(1).maybeSingle(),
+    db().from("fund_fee_terms").select("management_fee_pct, management_fee_basis, carry_pct, hurdle_pct, status, created_at").eq("offering_id", offeringId).eq("status", "active").order("created_at", { ascending: false }).limit(1).maybeSingle(),
     o.fund_signatory_person_id ? db().from("persons").select("legal_first_name, legal_middle_name, legal_last_name, email").eq("id", o.fund_signatory_person_id).maybeSingle() : Promise.resolve({ data: null }),
   ]);
+  if (results.some((result: { error?: unknown }) => result.error)) throw new Error("Could not load the recorded parties or fee terms for the document.");
+  const [{ data: c }, { data: fee }, { data: sig }] = results;
   const legal = o.legal_entity_name || o.name;
   const ap = (await import("@/lib/address")).parseAddressParts(o.principal_address);
   const manager = o.gp_entity_name || o.signatory_entity_name || c?.legal_name || c?.name || null;
@@ -260,14 +263,21 @@ export async function fundTemplateValues(offeringId: string): Promise<Record<str
   const v: Record<string, string | null> = {
     "Fund Name": legal, "Fund Legal Name": legal, "Legal Fund Name": legal, "Legal Name": legal,
     "Subscription Amount": o.min_investment_cents == null ? null : new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(o.min_investment_cents / 100),
+    // Legacy template uses Subscription Amount in its Minimum Subscription Amount definition.
+    // Investor amounts remain separate and are filled by subscription-docx at signing.
+    "Minimum Subscription Amount": o.min_investment_cents == null ? null : new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(o.min_investment_cents / 100),
+    "Minimum Investment": o.min_investment_cents == null ? null : new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(o.min_investment_cents / 100),
+    "Investor Subscription Amount": null,
     "Fund Manager": manager, "Fund Manager Name": manager, "Manager Name": manager, "Fund Adviser Name": manager,
     "General Partner Name": o.gp_entity_name || null,
     "Management Fee": pct(fee?.management_fee_pct), "Carry Percent": pct(fee?.carry_pct), "Carry Amount": pct(fee?.carry_pct),
+    "Management Fee Basis": fee?.management_fee_basis ?? null, "Hurdle Percent": pct(fee?.hurdle_pct), "Preferred Return": pct(fee?.hurdle_pct),
     "address": o.principal_address, "Manager Address": o.principal_address, "email": email, "Manager Email": email,
     "Address Line 1": ap.addressLine1, "Address Line 2": ap.addressLine2, "Address City": ap.addressCity, "Address State": ap.addressState, "Address ZIP": ap.addressZip,
     "Signatory's Legal Name": signer, "Fund Manager Signatory": signer, "Fund Manager Signatory Name": signer,
     "Signatory's Title": o.signatory_title, "Signatory Title": o.signatory_title, "Fund Manager Signatory Title": o.signatory_title,
     "State": o.state_formed, "Arbitration State": o.arbitration_state || o.state_formed, "Arbitration City": o.arbitration_city, "Country": "United States",
+    "Entity Type": o.entity_type ?? null, "State Formed": o.state_formed ?? null,
   };
   return v;
 }

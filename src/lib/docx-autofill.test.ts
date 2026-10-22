@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import JSZip from "jszip";
-import { fillDocx } from "./docx-autofill";
+import { fillDocx, templateTermConflicts } from "./docx-autofill";
 
 async function fill(text: string, values: Record<string, string | null>) {
   const zip = new JSZip();
@@ -30,5 +30,28 @@ describe("publisher identity autofill", () => {
     const r = await fill('<w:r><w:t>[name of general partner] {{Management Fee}}</w:t></w:r>', { "General Partner Name": null });
     expect(r.open.sort()).toEqual(["Management Fee", "name of general partner"]);
     expect(r.xml).toContain("[name of general partner]");
+  });
+});
+
+describe("recorded fund terms", () => {
+  it("formats percentage blanks followed by percent without doubling the unit", async () => {
+    const r = await fill('<w:r><w:t>{{Management Fee}}  percent / {{Carry Amount}} percent / {{Carry Percent}}</w:t></w:r>', { "Management Fee": "6%", "Carry Amount": "15%", "Carry Percent": "15%" });
+    expect(r.xml).toContain("6  percent / 15 percent / 15%");
+  });
+  it("keeps a conflicting no-fee clause unchanged and requires review", async () => {
+    const r = await fill('<w:r><w:t>Management Fee. The Manager will not receive a management fee.</w:t></w:r>', { "Management Fee": "6%" });
+    expect(r.xml).toContain("The Manager will not receive a management fee.");
+    expect(r.open).toContain("Review: fixed no-management-fee clause conflicts with the recorded management fee");
+  });
+  it("flags the embedded advisory agreement's conflicting no-fee clause", () => {
+    expect(templateTermConflicts("The Adviser will not collect a management fee.", { "Management Fee": "6%" })).toHaveLength(1);
+  });
+  it("requires review for Dover arbitration when recorded arbitration is Dallas, Texas", async () => {
+    const r = await fill('<w:r><w:t>"Arbitration Location" means Dover, Delaware.</w:t></w:r>', { "Arbitration City": "Dallas", "Arbitration State": "Texas" });
+    expect(r.xml).toContain("Dover, Delaware");
+    expect(r.open).toContain("Review: fixed arbitration location conflicts with the recorded arbitration city and state");
+  });
+  it("does not flag matching arbitration or a recorded zero management fee", () => {
+    expect(templateTermConflicts('"Arbitration Location" means Dallas, Texas. The Manager will not receive a management fee.', { "Arbitration City": "Dallas", "Arbitration State": "Texas", "Management Fee": "0%" })).toEqual([]);
   });
 });
