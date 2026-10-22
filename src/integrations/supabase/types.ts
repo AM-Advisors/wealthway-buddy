@@ -36370,6 +36370,36 @@ export type Database = {
           },
         ]
       }
+      payment_plan_versions: {
+        Row: {
+          actor_id: string
+          cadence: string
+          created_at: string
+          first_due_on: string
+          id: string
+          items: Json
+          scope: string
+        }
+        Insert: {
+          actor_id: string
+          cadence: string
+          created_at?: string
+          first_due_on: string
+          id?: string
+          items: Json
+          scope: string
+        }
+        Update: {
+          actor_id?: string
+          cadence?: string
+          created_at?: string
+          first_due_on?: string
+          id?: string
+          items?: Json
+          scope?: string
+        }
+        Relationships: []
+      }
       payment_reminder_sends: {
         Row: {
           due_on: string
