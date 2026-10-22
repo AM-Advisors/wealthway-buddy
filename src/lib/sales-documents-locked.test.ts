@@ -37,8 +37,9 @@ import { pricingText as _pt } from "./sales-documents-model";
 import { test as _t, expect as _e } from "vitest";
 _t("pricing line never shows a cadence in the name that contradicts its billing frequency", () => {
   const out = _pt([{ label: "White Glove Fund Administration (annual)", quantity: 1, unit_cents: 1200000, line_cents: 1200000, billing_frequency: "quarterly" } as any]);
-  _e(out).toContain("- White Glove Fund Administration: $4,000.00 per month, billed $12,000.00 quarterly");
+  _e(out).toContain("- White Glove Fund Administration: billed $12,000.00 quarterly");
   _e(out).not.toContain("(annual)");
+  _e(out).not.toMatch(/monthly|per month/i);
 });
 
 import { applyLockedSections as _als, NO_MSA_TERMS as _nomsa } from "./sales-documents-model";
@@ -56,13 +57,19 @@ _t("terms fall back to MSA notice when none is published", () => {
   const out = _als("proposal", "response", [], { msa: null, organization: null, contactName: null, lines: [] });
   _e(out.find((x) => x.key === "terms")!.body).toBe(_nomsa);
 });
-_t("pricing totals are split by billing frequency with annual equivalent", () => {
+_t("pricing shows quarterly and annual bills only, never a monthly rate", () => {
   const out = _pt([
     { label: "Fund Admin", quantity: 1, unit_cents: 300000, line_cents: 300000, billing_frequency: "quarterly" },
     { label: "Setup", quantity: 1, unit_cents: 250000, line_cents: 250000, billing_frequency: "one_time" },
   ] as any);
-  _e(out).toContain("Your monthly rate: $1,000.00 per month");
+  _e(out).not.toMatch(/monthly|per month/i);
   _e(out).toContain("Billed quarterly: $3,000.00 every 3 months");
+  _e(out).toContain("- Fund Admin: billed $3,000.00 quarterly");
   _e(out).toContain("One-time fees: $2,500.00, billed once when you sign");
   _e(out).not.toMatch(/^Total:/m);
+});
+_t("a legacy monthly line stays truthful without quoting a monthly rate", () => {
+  const out = _pt([{ label: "Fund Admin", quantity: 1, unit_cents: 40000, line_cents: 40000, billing_frequency: "monthly" }] as any);
+  _e(out).not.toMatch(/monthly|per month/i);
+  _e(out).toContain("Billed each billing period: $400.00");
 });

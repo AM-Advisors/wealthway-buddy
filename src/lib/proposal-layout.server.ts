@@ -8,7 +8,6 @@ const MUTED = [0.36, 0.42, 0.52] as const;
 const RULE = [0.86, 0.89, 0.93] as const;
 
 const clean = (s: string) => String(s ?? "").replace(/[^\x09\x0A\x0D\x20-\x7E\xA0-\xFF]/g, (c) => ({ "\u2018": "'", "\u2019": "'", "\u201C": '"', "\u201D": '"', "\u2013": "-", "\u2014": "-", "\u2022": "-", "\u2026": "..." } as Record<string, string>)[c] ?? "");
-const FREQ: Record<string, string> = { one_time: "one-time", monthly: "per month", quarterly: "per quarter, invoiced in advance", annual: "per year" };
 const usd = (c: number) => `$${(c / 100).toLocaleString("en-US", { maximumFractionDigits: c % 100 ? 2 : 0, minimumFractionDigits: c % 100 ? 2 : 0 })}`;
 
 /** Internal reviewer notes ("[confirm: ...]") and quote bullets already shown in the fee table never reach the client copy. */
@@ -95,27 +94,28 @@ export async function renderProposalPdf(doc: any, rawSections: Section[], lines:
   if (lines.length) {
     ensure(200); y -= 10;
     eyebrow("Investment"); heading("Engagement fee");
-    const cols = [IN, IN + 220, IN + 320];
+    const cols = [IN, IN + 250];
     page.drawRectangle({ x: IN, y: y - 6, width: maxW, height: 22, color: c(NAVY) });
-    ["SERVICE", "PER MONTH", "YOU'RE BILLED"].forEach((h, i) => page.drawText(h, { x: cols[i]! + 8, y, size: 8, font: bold, color: rgb(1, 1, 1) }));
+    ["SERVICE", "YOU'RE BILLED"].forEach((h, i) => page.drawText(h, { x: cols[i]! + 8, y, size: 8, font: bold, color: rgb(1, 1, 1) }));
     y -= 28;
-    const PM: Record<string, number> = { monthly: 1, quarterly: 1 / 3, annual: 1 / 12 };
-    const BW: Record<string, string> = { monthly: "monthly", quarterly: "quarterly", annual: "annually" };
-    let monthly = 0; let oneTime = 0; const billed: Record<string, number> = {};
+    const BW: Record<string, string> = { monthly: "each billing period", quarterly: "quarterly", annual: "annually" };
+    const EVERY: Record<string, string> = { quarterly: "every 3 months", annual: "once a year" };
+    let oneTime = 0; let other = 0; const billed: Record<string, number> = {};
     for (const l of lines) {
       ensure(26);
       const amt = Number(l.line_cents ?? l.quantity * l.unit_cents) || 0;
-      const f = PM[l.billing_frequency] ? l.billing_frequency : "one_time";
+      const f = BW[l.billing_frequency] ? l.billing_frequency : "one_time";
       const label = String(l.label ?? "").replace(/\s*\((annual|quarterly|monthly|one[- ]time)\)\s*$/i, "");
-      page.drawText(wrap(label, sans, 10, 240)[0] ?? "", { x: cols[0]! + 8, y, size: 10, font: sans, color: c(INK) });
-      if (f === "one_time") { oneTime += amt; page.drawText("-", { x: cols[1]! + 8, y, size: 10, font: sans, color: c(MUTED) }); page.drawText(`${usd(amt)} once, at signing`, { x: cols[2]! + 8, y, size: 9, font: sans, color: c(MUTED) }); }
-      else { const m = Math.round(amt * PM[f]!); monthly += m; billed[f] = (billed[f] ?? 0) + amt; page.drawText(usd(m), { x: cols[1]! + 8, y, size: 10, font: bold, color: c(INK) }); page.drawText(`${usd(amt)} ${BW[f]}`, { x: cols[2]! + 8, y, size: 9, font: sans, color: c(MUTED) }); }
+      page.drawText(wrap(label, sans, 10, 230)[0] ?? "", { x: cols[0]! + 8, y, size: 10, font: sans, color: c(INK) });
+      if (f === "one_time") { oneTime += amt; page.drawText(`${usd(amt)} once, at signing`, { x: cols[1]! + 8, y, size: 9, font: sans, color: c(MUTED) }); }
+      else if (f === "monthly") { other += amt; page.drawText(`${usd(amt)} ${BW["monthly"]}`, { x: cols[1]! + 8, y, size: 9, font: sans, color: c(MUTED) }); }
+      else { billed[f] = (billed[f] ?? 0) + amt; page.drawText(`${usd(amt)} ${BW[f]}`, { x: cols[1]! + 8, y, size: 9, font: sans, color: c(MUTED) }); }
       page.drawLine({ start: { x: IN, y: y - 8 }, end: { x: W - IN, y: y - 8 }, thickness: 0.5, color: c(RULE) });
       y -= 24;
     }
     y -= 6;
-    if (monthly) { page.drawText("YOUR MONTHLY RATE", { x: cols[0]! + 8, y, size: 9, font: bold, color: c(NAVY) }); page.drawText(`${usd(monthly)} / month`, { x: cols[1]! + 8, y, size: 11, font: bold, color: c(NAVY) }); y -= 20; }
-    for (const f of ["monthly", "quarterly", "annual"]) if (billed[f]) { text(`Billed ${BW[f]}: ${usd(billed[f]!)} ${f === "quarterly" ? "every 3 months" : f === "annual" ? "once a year" : "every month"}`, sans, 10, INK, 6, cols[0]! + 8); }
+    for (const f of ["quarterly", "annual"]) if (billed[f]) { text(`Billed ${BW[f]}: ${usd(billed[f]!)} ${EVERY[f]}`, sans, 10, INK, 6, cols[0]! + 8); }
+    if (other) text(`Billed ${BW["monthly"]}: ${usd(other)}`, sans, 10, INK, 6, cols[0]! + 8);
     if (oneTime) text(`One-time fees: ${usd(oneTime)}, billed once when you sign`, sans, 10, INK, 6, cols[0]! + 8);
     y -= 6;
     text("How to get started: sign and approve this proposal. When you sign, you'll also accept our Master Services Agreement (only the first time, or when it's updated), and your invoice follows. You can pay each invoice online by card.", sans, 10, MUTED, 6, cols[0]! + 8);
