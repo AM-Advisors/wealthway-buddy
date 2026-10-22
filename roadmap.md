@@ -1,5 +1,9 @@
 # Roadmap
 
+## Erebor document formatting correction (2026-10-22)
+- [x] Restore missing PPM cover title and add matching navy/white Operating Agreement cover heading; preserve all existing wording, 6% one-time fee, 20% carry, and signed history. Validate Word packages and inspect every one of 97 PDF pages.
+- [x] Save versioned Word/PDF copies in Files and existing Erebor collection (new members pending indexing); authorized new-only activation of both platform version 6 replacements, no resign requests or emails. Read back active versions and approved rollout status.
+
 ## Dedicated client-invoice ACH and wire spot (2026-10-22)
 - [x] Add executive-only Sales shortcut to the existing invoice payment-instructions page; label CEO/CRO and client-invoice-only scope, separate ACH/wire routing labels, history and failed-read retry. Existing authorization and approval engine unchanged.
 - [x] 55 payment authority, approval and navigation tests passed; preview build OK. No banking values, approvals or money records changed.
