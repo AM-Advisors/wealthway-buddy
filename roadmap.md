@@ -1,5 +1,9 @@
 # Roadmap
 
+## Signed-SOW quarterly commissions (2026-10-22)
+- [ ] Connect signed SOWs to the canonical paid-invoice quarterly commission queue and automatic assigned-rep notices, without money movement.
+- [ ] Verify timing, eligibility and duplicate prevention with focused offline tests; authenticated walkthrough waits on isolated synthetic QA.
+
 ## Searchable contact selection (2026-10-22)
 - [x] Shared searchable contact/person picker applied across Sales, CRM, Inbox, fund setup/signers, client teams, professional access, task assignment, accounting and investor/capital records; existing option readers, callbacks and disabled choices preserved. Sales recipients/CC/signers filter while retaining checked choices.
 - [x] Offline fictional browser fixture passed: name/email/firm suggestions, duplicate-name distinction, keyboard selection, no matches, Escape preservation, existing select adapters and checked-recipient retention; preview build OK.
