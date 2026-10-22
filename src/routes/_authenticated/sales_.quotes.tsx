@@ -191,9 +191,20 @@ export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; init
               <TableCell><Input disabled={!!l.bookkeeping} type="date" aria-label="First billing date" value={l.firstBillOn ?? ""} onChange={(e) => setLines(lines.map((x, j) => (j === i ? { ...x, firstBillOn: e.target.value || null } : x)))} /></TableCell>
               <TableCell className="text-right text-muted-foreground">{money(l.baselineUnitCents)}{l.unitCents < l.baselineUnitCents && <Badge variant="destructive" className="ml-1">Discount</Badge>}</TableCell>
               <TableCell className="text-right">{money(l.quantity * l.unitCents)}</TableCell>
-              <TableCell><Button size="sm" variant="ghost" onClick={() => setLines(lines.filter((_, j) => j !== i))}>Remove</Button></TableCell>
-            </TableRow>
-          ))];
+              <TableCell className="whitespace-nowrap">
+                <Button size="sm" variant="ghost" onClick={() => setOpenDetails(openDetails === i ? null : i)}>{l.details ? "Details ✓" : "Details"}</Button>
+                <Button size="sm" variant="ghost" onClick={() => setLines(lines.filter((_, j) => j !== i))}>Remove</Button>
+              </TableCell>
+            </TableRow>,
+            ...(openDetails === i ? [<TableRow key={`d-${i}`}><TableCell colSpan={8} className="bg-muted/20">
+              <div className="grid gap-3 py-1 sm:grid-cols-3">
+                <div><Label>Extra scope detail (optional)</Label><Textarea rows={3} value={l.details?.scope ?? ""} placeholder="Anything specific to this engagement" onChange={(e) => setLines(lines.map((x, j) => j === i ? { ...x, details: { ...x.details, scope: e.target.value } } : x))} /></div>
+                <div><Label>What is included (one per line)</Label><Textarea rows={3} value={(l.details?.included ?? []).join("\n")} placeholder="Monthly NAV report&#10;Investor portal access" onChange={(e) => setLines(lines.map((x, j) => j === i ? { ...x, details: { ...x.details, included: e.target.value.split("\n") } } : x))} /></div>
+                <div><Label>Explicitly not included (one per line)</Label><Textarea rows={3} value={(l.details?.excluded ?? []).join("\n")} placeholder="Audit representation&#10;Tax advice" onChange={(e) => setLines(lines.map((x, j) => j === i ? { ...x, details: { ...x.details, excluded: e.target.value.split("\n") } } : x))} /></div>
+              </div>
+              <p className="text-xs text-muted-foreground">This wording appears under the service on the proposal and the Statement of Work the client signs.</p>
+            </TableCell></TableRow>] : []),
+          ])];
           })}
         </TableBody>
       </Table>
