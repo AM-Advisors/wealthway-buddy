@@ -13,7 +13,7 @@ import {
 } from "@/lib/sales-documents.functions";
 import { DIRECTION_LABEL, KIND_LABEL, OUTCOMES, STATUS_LABEL, type DocDirection, type DocKind, type Section } from "@/lib/sales-documents-model";
 import { Panel, money } from "@/components/sales/sales-ui";
-import { draftQuoteAgreements, submitSalesQuote } from "@/lib/sales-hub.functions";
+import { draftQuoteAgreements, getSalesLinkedRecords, submitSalesQuote } from "@/lib/sales-hub.functions";
 import { ActionBar, LinkedRecords, RecipientLinks, SalesProgress } from "@/components/sales/sales-record-parts";
 import { salesProgress } from "@/lib/sales-progress";
 
@@ -56,6 +56,10 @@ function Editor() {
   const exp = useServerFn(exportSalesDocument);
   const q = useQuery({ queryKey: ["sales-document", id], queryFn: () => load({ data: { id } }) });
   const d = q.data;
+  const linkedFn = useServerFn(getSalesLinkedRecords);
+  const linkedQuoteId = (d as any)?.packet?.quote?.id ?? null;
+  const linked = useQuery({ queryKey: ["sales-linked", linkedQuoteId], queryFn: () => linkedFn({ data: { id: linkedQuoteId } }), enabled: !!linkedQuoteId });
+  const inv0: any = linked.data?.invoices?.[0] ?? null;
   const [sections, setSections] = useState<Section[]>([]);
   const [dirty, setDirty] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
@@ -103,7 +107,7 @@ function Editor() {
           <Link to="/sales/documents" className="text-sm text-muted-foreground hover:underline">Proposals & RFPs</Link>
           <h1 className="font-heading text-2xl font-semibold">{doc.title}</h1>
           <p className="text-sm text-muted-foreground">{KIND_LABEL[doc.kind as DocKind]} · {DIRECTION_LABEL[doc.direction as DocDirection]} · Version {doc.current_version} · Owner {doc.ownerName}{doc.due_date ? ` · Due ${doc.due_date}` : ""}</p>
-          <div className="mt-3"><SalesProgress steps={salesProgress({ status: doc.status, approvedAt: doc.approved_at, events: d.events as any, signedAt: d.packet?.sow?.client_signed_at ?? null, sowStatus: d.packet?.sow?.status ?? null, sowAt: d.packet?.sow?.executed_at ?? null })} /></div>
+          <div className="mt-3"><SalesProgress steps={salesProgress({ status: doc.status, approvedAt: doc.approved_at, events: d.events as any, signedAt: d.packet?.sow?.client_signed_at ?? null, sowStatus: d.packet?.sow?.status ?? null, sowAt: d.packet?.sow?.executed_at ?? null, invoiceStatus: inv0 ? (inv0.paid_on ? "paid" : inv0.status) : null })} /></div>
         </div>
         <Badge>{STATUS_LABEL[doc.status] ?? doc.status}</Badge>
       </div>
