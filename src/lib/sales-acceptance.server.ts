@@ -2,6 +2,7 @@ import { isSectionShown } from "@/lib/sales-documents-model";
 import { canEditRemittance } from "./sales-acceptance-model";
 import { canReadLinkedSow, clientSowSections } from "./client-sow-view";
 import { pricingText, servicesFromSow } from "./sales-documents-model";
+import { quoteClientSections, quoteLockFacts, quoteShowsPricing } from "./quote-sections-model";
 /** Server-only: client sign-and-approve for quotes/proposals/RFPs/RFQs, automatic invoice, and audited Harmonious payment instructions.
  *  Records only — nothing is charged, pulled or wired. */
 import {
@@ -24,7 +25,7 @@ async function sha256(text: string) {
 type Loaded = {
   kind: AcceptKind; id: string; version: number; title: string; clientId: string | null; offeringId: string | null; quoteId: string | null;
   ownerId: string | null; dealId: string | null; status: string; approvedVersion: number | null; recipientEmail: string | null;
-  sections: { title: string; body: string }[]; lines: any[];
+  sections: { title: string; body: string }[]; lines: any[]; showPricing: boolean;
 };
 
 async function loadRecord(db: any, kind: AcceptKind, id: string): Promise<Loaded> {
@@ -32,10 +33,16 @@ async function loadRecord(db: any, kind: AcceptKind, id: string): Promise<Loaded
     const { data: q } = await db.from("sales_quotes").select("*").eq("id", id).maybeSingle();
     if (!q) throw new Error("This link is no longer valid.");
     const { data: lines } = await db.from("sales_quote_lines").select("*").eq("quote_id", id).order("sort_order");
-    const { data: c } = q.contact_id ? await db.from("crm_contacts").select("email").eq("id", q.contact_id).maybeSingle() : { data: null };
+    const { data: c } = q.contact_id ? await db.from("crm_contacts").select("email, full_name, organization").eq("id", q.contact_id).maybeSingle() : { data: null };
+    const { data: cl } = q.client_id ? await db.from("clients").select("name, legal_name").eq("id", q.client_id).maybeSingle() : { data: null };
+    const { currentAbout } = await import("./sales-documents.server");
+    const facts = quoteLockFacts({
+      organization: cl?.legal_name || cl?.name || c?.organization || null, contactName: c?.full_name ?? null,
+      lines: (lines ?? []).map((l: any) => ({ label: String(l.label ?? ""), quantity: Number(l.quantity ?? 0), unitCents: Number(l.unit_cents ?? 0), billingFrequency: l.billing_frequency ?? "one_time", details: l.service_details ?? null })),
+    });
     return { kind, id, version: q.version ?? 1, title: q.title || `Quote Q-${q.quote_number}`, clientId: q.client_id, offeringId: q.offering_id ?? null, quoteId: q.id,
       ownerId: q.owner_user_id, dealId: q.deal_id, status: q.status, approvedVersion: q.version ?? 1, recipientEmail: c?.email ?? null,
-      sections: q.notes ? [{ title: "Notes", body: q.notes }] : [], lines: lines ?? [] };
+      sections: quoteClientSections(q.sections, facts, await currentAbout(db), q.notes ?? null), lines: lines ?? [], showPricing: quoteShowsPricing(q.sections) };
   }
   const { data: d } = await db.from("sales_documents").select("*").eq("id", id).maybeSingle();
   if (!d || d.kind !== kind) throw new Error("This link is no longer valid.");
@@ -46,7 +53,7 @@ async function loadRecord(db: any, kind: AcceptKind, id: string): Promise<Loaded
   return { kind, id, version: v, title: d.title, clientId: d.client_id ?? q?.client_id ?? null, offeringId: q?.offering_id ?? null, quoteId: d.quote_id,
     ownerId: d.owner_user_id, dealId: d.deal_id, status: d.status, approvedVersion: d.approved_version, recipientEmail: d.sent_to ?? d.recipient_email ?? null,
     sections: ((ver?.sections ?? []) as any[]).filter((s) => s.key !== "terms" && isSectionShown(s) && (s.key !== "summary_note" || String(s.body ?? "").trim())).map((s) => ({ title: String(s.title ?? ""), body: String(s.body ?? "") })),
-    lines: lines ?? [] };
+    lines: lines ?? [], showPricing: true };
 }
 
 /** A quote's signer can be changed before signing; the old person's link then stops working. */
@@ -181,6 +188,7 @@ export async function viewForToken(token: string) {
     salesContact: await salesContactFor(db, r.clientId, r.ownerId).then((c) => c && { name: c.name, email: c.email }),
     policies: acc ? [] : (await policyNeedsFor(db, t.email)).needs,
     sections: (r.sections as any[]).filter((x) => x?.key !== "terms"), msa: acc ? null : await msaForClient(db, r.clientId), lines: lines.map((l) => ({ label: l.label, quantity: l.quantity, amountCents: l.amount_cents })),
+    showPricing: r.showPricing,
     totalCents: lines.reduce((s, l) => s + l.amount_cents, 0),
     accepted: acc ? { signerName: acc.signer_name, acceptedAt: acc.accepted_at, paymentMethod: acc.payment_method, invoiceError: acc.invoice_error } : null,
     invoice: inv ? { number: inv.number, totalCents: Number(inv.total_cents), dueDate: inv.due_date, status: inv.status } : null,

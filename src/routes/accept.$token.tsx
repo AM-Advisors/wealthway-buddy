@@ -103,7 +103,7 @@ function AcceptPage() {
           </CardContent>
         </Card>
       )}
-      {d.lines.length > 0 && (
+      {d.showPricing !== false && d.lines.length > 0 && (
         <Card id="pricing" className="scroll-mt-6">
           <CardHeader><CardTitle className="font-heading text-lg">Pricing</CardTitle></CardHeader>
           <CardContent>

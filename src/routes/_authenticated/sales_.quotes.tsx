@@ -1,7 +1,7 @@
 import { SearchablePeoplePicker } from "@/components/ui/searchable-people-picker";
 import { SalesDealDocsTabs } from "@/components/sales-deal-docs-tabs";
 import { DealPicker } from "@/components/sales/deal-picker";
-import { getSalesDocumentOptions } from "@/lib/sales-documents.functions";
+import { getAboutHarmoniousText, getSalesDocumentOptions } from "@/lib/sales-documents.functions";
 import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { BILLING_FREQUENCIES } from "@/lib/invoice-schedule-model";
@@ -24,6 +24,9 @@ import { Panel, money } from "@/components/sales/sales-ui";
 import { BookkeepingConfigurator } from "@/components/sales/bookkeeping-configurator";
 import { getBookkeepingConfiguration } from "@/lib/bookkeeping.functions";
 import { BOOKKEEPING_KEY, type BookkeepingInput } from "@/lib/bookkeeping-model";
+import { Switch } from "@/components/ui/switch";
+import { isQuoteSectionShown, quoteLockFacts, quoteSectionBody, quoteSectionDef, sanitizeQuoteSections } from "@/lib/quote-sections-model";
+import type { Section } from "@/lib/sales-documents-model";
 
 export const Route = createFileRoute("/_authenticated/sales_/quotes")({
   head: () => ({
@@ -130,7 +133,7 @@ function AdminLevelPicker({ onAdd, lines }: { onAdd: (key: string) => void; line
   );
 }
 
-export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; initial?: { id: string; title: string; clientId: string | null; contactId?: string | null; offeringId?: string | null; dealId?: string | null; validUntil: string | null; notes: string | null; expectedUpdatedAt?: string; lines: Line[] } }) {
+export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; initial?: { id: string; title: string; clientId: string | null; contactId?: string | null; offeringId?: string | null; dealId?: string | null; validUntil: string | null; notes: string | null; expectedUpdatedAt?: string; sections?: unknown; lines: Line[] } }) {
   const qc = useQueryClient();
   const [dealId, setDealId] = useState<string>(initial?.dealId ?? "");
   const optFn = useServerFn(getSalesDocumentOptions);
@@ -141,6 +144,7 @@ export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; init
   const [title, setTitle] = useState(initial?.title ?? "");
   const [validUntil, setValidUntil] = useState(initial?.validUntil ?? "");
   const [notes, setNotes] = useState(initial?.notes ?? "");
+  const [sections, setSections] = useState<Section[]>(() => sanitizeQuoteSections(initial?.sections ?? null));
   const [lines, setLines] = useState<Line[]>(initial?.lines ?? []);
   const [openDetails, setOpenDetails] = useState<number | null>(null);
   const [showBookkeeping, setShowBookkeeping] = useState(false);
@@ -150,10 +154,14 @@ export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; init
   const c = useQuery({ queryKey: ["quote-catalog", clientId], queryFn: () => cat({ data: { clientId } }) });
   const save = useServerFn(saveSalesQuote);
   const m = useMutation({
-    mutationFn: () => save({ data: { id: initial?.id ?? null, title, clientId, contactId: clientId === initial?.clientId ? initial?.contactId ?? null : null, offeringId, dealId: dealId || null, validUntil: validUntil || null, notes: notes || null, expectedUpdatedAt: initial?.expectedUpdatedAt, lines } }),
+    mutationFn: () => save({ data: { id: initial?.id ?? null, title, clientId, contactId: clientId === initial?.clientId ? initial?.contactId ?? null : null, offeringId, dealId: dealId || null, validUntil: validUntil || null, notes: notes || null, expectedUpdatedAt: initial?.expectedUpdatedAt, sections, lines } }),
     onSuccess: (r) => { toast.success("Quote saved"); qc.invalidateQueries(); onCancel(); nav({ to: "/sales/quotes/$id", params: { id: r.id } }); },
     onError: (e: Error) => toast.error(e.message),
   });
+  const aboutFn = useServerFn(getAboutHarmoniousText);
+  const about = useQuery({ queryKey: ["about-harmonious-text"], queryFn: () => aboutFn() });
+  const clientName = (c.data?.clients ?? []).find((x: any) => x.id === clientId)?.legal_name ?? null;
+  const facts = quoteLockFacts({ organization: clientName, contactName: null, lines });
   const total = lines.reduce((s, l) => s + l.quantity * l.unitCents, 0);
   const baseline = lines.reduce((s, l) => s + l.quantity * l.baselineUnitCents, 0);
   const add = (key: string) => {
@@ -223,6 +231,30 @@ export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; init
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm">
         <span className="text-muted-foreground">Rate card {money(baseline)} · Quote <span className="font-semibold text-foreground">{money(total)}</span>{total < baseline && " · below rate card: needs CEO or CRO approval"}</span>
         <Input className="max-w-sm" placeholder="Notes for the approver" value={notes} onChange={(e) => setNotes(e.target.value)} />
+      </div>
+      <div className="mt-4 rounded-lg border bg-card p-4">
+        <h3 className="font-heading font-semibold">Sections shown to the client</h3>
+        <p className="mt-1 text-xs text-muted-foreground">Every part of the quote has a switch. Switching one off hides it from the client — the wording is kept, nothing is deleted.</p>
+        <div className="mt-3 space-y-2">
+          {sections.map((s, i) => {
+            const def = quoteSectionDef(s.key);
+            const shown = isQuoteSectionShown(s);
+            const preview = (def?.generated ? quoteSectionBody(s, facts, about.data?.body ?? null) : s.key === "notes" ? notes : s.body).trim();
+            return (
+              <div key={s.key} className={`rounded-lg border p-3 ${shown ? "" : "opacity-60"}`}>
+                <label className="flex items-center justify-between gap-3 text-sm">
+                  <span className="min-w-0"><span className="font-medium">{s.title}</span><span className="ml-2 text-xs text-muted-foreground">{def?.hint}</span></span>
+                  <Switch aria-label={`Show ${s.title} to the client`} checked={shown} onCheckedChange={(v) => setSections(sections.map((x, j) => (j === i ? { ...x, included: v } : x)))} />
+                </label>
+                {shown && (s.key === "timeline" || s.key === "next") ? (
+                  <Textarea rows={3} className="mt-2" placeholder={`What the client should see under ${s.title.toLowerCase()}`} value={s.body} onChange={(e) => setSections(sections.map((x, j) => (j === i ? { ...x, body: e.target.value } : x)))} />
+                ) : shown ? (
+                  <p className="mt-2 whitespace-pre-wrap text-xs text-muted-foreground">{preview || "Nothing written yet."}</p>
+                ) : null}
+              </div>
+            );
+          })}
+        </div>
       </div>
       <div className="mt-4 flex gap-2"><Button onClick={() => m.mutate()} disabled={m.isPending || !lines.length}>Save draft</Button><Button variant="ghost" onClick={onCancel}>Cancel</Button></div>
     </Panel>

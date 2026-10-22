@@ -31,7 +31,7 @@ export function LinkedSowTermsEditor({ sowId, onChanged }: { sowId: string; onCh
     {editing ? <QuoteBuilder onCancel={() => { setEditing(false); qc.invalidateQueries(); onChanged(); }} initial={{
       id: quote.id, title: quote.title, clientId: quote.client_id, contactId: quote.contact_id,
       offeringId: quote.offering_id, dealId: quote.deal_id, validUntil: quote.valid_until,
-      notes: quote.notes, expectedUpdatedAt: quote.updated_at, lines: quoteInputsFromRows(d.lines),
+      notes: quote.notes, expectedUpdatedAt: quote.updated_at, sections: (quote as any).sections ?? null, lines: quoteInputsFromRows(d.lines),
     }} /> : d.canEdit ? <Button variant="outline" onClick={() => setEditing(true)}>Edit linked services &amp; pricing</Button>
       : !["signed", "superseded", "lost"].includes(quote.status) ? <Button variant="outline" disabled={revision.isPending} onClick={() => revision.mutate()}>Create linked quote &amp; SOW revision</Button> : null}
   </div>;

@@ -1,0 +1,2 @@
+ALTER TABLE public.sales_quotes ADD COLUMN IF NOT EXISTS sections jsonb;
+COMMENT ON COLUMN public.sales_quotes.sections IS 'Quote sections shown to the client: [{key,title,body,included}]. A section switched off stays recorded here and is only hidden, never deleted.';

@@ -2339,6 +2339,20 @@
       "when": 1792697733011,
       "tag": "0333_atomic_linked_quote_sow_edits",
       "breakpoints": true
+    },
+    {
+      "idx": 334,
+      "version": "7",
+      "when": 1792699559562,
+      "tag": "0334_add_quote_sections",
+      "breakpoints": true
+    },
+    {
+      "idx": 335,
+      "version": "7",
+      "when": 1792699717558,
+      "tag": "0335_linked_quote_draft_sections",
+      "breakpoints": true
     }
   ]
 }
