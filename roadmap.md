@@ -1,5 +1,9 @@
 # Roadmap
 
+## Dev Test 1 interactive client demo (2026-10-22)
+- [x] Read-only review: fund and owning client are marked demo/test; fund is not launched, has no investors, two real-account managers, incomplete setup details and no recorded banking path. Demo marking is display-only, not isolation.
+- [ ] Finish fictional fund details, synthetic manager/investor setup and interactive invitation/signing walkthrough — blocked until independently isolated backend/frontend binding and synthetic sessions pass existing preflight. Current Dev Test 1 shares production records; no fund facts, access, documents, verification, emails or money records changed.
+
 ## Help Center guides and screen recordings (2026-10-22)
 - [x] Updated outdated guides and added fund setup, investor invitation/onboarding, document access, countersign, Harmonized SPV and fund-of-funds guidance; changed client articles need approval of their new versions.
 - [x] 27 Help Center checks passed; preview build OK. Signed-in Help Center viewing not checked.
