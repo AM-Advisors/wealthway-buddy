@@ -26,7 +26,7 @@ export const respondToSalesDocument = createServerFn({ method: "POST" })
   .handler(async ({ data }) => { noStore(); return (await S()).respondByToken({ ...data, userId: await optionalUser() }); });
 
 export const signAcceptance = createServerFn({ method: "POST" })
-  .inputValidator((d) => z.object({ token, signerName: z.string().trim().min(2).max(160), signerTitle: z.string().max(160).optional(), agree: z.literal(true), msaAgree: z.boolean().optional(), msaVersionId: z.string().uuid().nullable().optional(), paymentMethod: z.enum(["card", "wire", "ach"]) }).parse(d))
+  .inputValidator((d) => z.object({ token, signerName: z.string().trim().min(2).max(160), signerTitle: z.string().max(160).optional(), agree: z.literal(true), msaAgree: z.boolean().optional(), msaVersionId: z.string().uuid().nullable().optional(), policyIds: z.array(z.string().uuid()).max(10).optional(), paymentMethod: z.enum(["card", "wire", "ach"]) }).parse(d))
   .handler(async ({ data }) => {
     noStore();
     return (await S()).acceptByToken({ ...data, ip: ip(), ua: getRequestHeader("user-agent") ?? null, userId: await optionalUser() });
