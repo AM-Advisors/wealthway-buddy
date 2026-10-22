@@ -1,5 +1,9 @@
 # Roadmap
 
+## Linked quote and SOW edits (2026-10-22)
+- [ ] Synchronize shared quote/SOW terms in both edit directions with authorization, approval and signed-history safeguards.
+- [ ] Run fictional synchronization/regression tests; authenticated read-back requires independently isolated QA.
+
 ## Bookkeeping Phase 2 isolation and security (2026-10-22)
 - [x] Inspect current metadata (production-only; three drafts not isolated), available commands and the existing Harmonious QA source snapshot; six offline safety tests pass and browser preflight blocks before queries/navigation. Source contains QA switches but cannot prove deployed isolation.
 - [ ] Verify candidate QA independent database/auth/storage, actual frontend/server binding, credential absence, inert jobs and blocked production integrations — requires that project's own context and complete runtime evidence before accounts or financial fixtures.
