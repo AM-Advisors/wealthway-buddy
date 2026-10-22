@@ -29,9 +29,6 @@ async function staffOrManager(userId: string, offeringId: string) {
   if (!a.isStaff && !a.offeringIds.includes(offeringId)) forbid("you do not manage that fund.");
   return a;
 }
-const asManager = async <T>(a: { isStaff: boolean }, userId: string, offeringId: string, fn: () => Promise<T>) =>
-  a.isStaff ? fn() : (await import("@/lib/self-serve.server")).runSelfServe({ userId, offeringId, scope: "template_documents" }, fn);
-
 export async function listTemplates(userId: string) {
   const actor = await setupActor(userId);
   if (!actor.isStaff) {
@@ -166,8 +163,8 @@ export async function decideTemplateVersion(userId: string, input: { templateId:
 
 /** Copies an approved template without duplicate fund-level Harmonious review. */
 export async function useTemplateInFund(userId: string, input: { templateId: string; version: number; offeringId: string }) {
-  const a = await staffOrManager(userId, input.offeringId);
-  return asManager(a, userId, input.offeringId, () => useTemplateInFundInner(userId, input));
+  await staff(userId);
+  return useTemplateInFundInner(userId, input);
 }
 async function useTemplateInFundInner(userId: string, input: { templateId: string; version: number; offeringId: string }) {
   const { data: t } = await db().from("document_templates").select("*").eq("id", input.templateId).maybeSingle();
@@ -383,6 +380,7 @@ export async function fundTypeTemplates(userId: string, offeringId: string) {
 
 /** Generate every assigned template not yet generated for this fund (same path as using one template). */
 export async function generateFundTypeDocuments(userId: string, offeringId: string) {
+  await staff(userId);
   const { templates } = await fundTypeTemplates(userId, offeringId);
   const made: { title: string; documentId: string; open: string[] }[] = [];
   for (const x of templates.filter((y) => !y.generated && y.approvedVersion != null)) {

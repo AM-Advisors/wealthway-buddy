@@ -16,8 +16,14 @@ vi.mock("@/integrations/supabase/client.server", () => ({ supabaseAdmin: {
   },
   storage: { from: (bucket: string) => ({ createSignedUrl: async (path: string) => { mock.urls(bucket, path); return { data: { signedUrl: `https://synthetic.test/${bucket}/${path}` } }; } }) },
 } }));
-import { investorDetail, investorGrid, listFiles } from "./fund-tabs.server";
+import { investorDetail, investorGrid, listFiles, saveGenerated } from "./fund-tabs.server";
 import { einComplete } from "./fund-setup-complete";
+
+it("denies manager starter-document generation before a fund file can be inserted", async () => {
+  mock.tables = { user_roles: [{ user_id: "manager", role: "fund_manager" }], fund_files: [] };
+  await expect(saveGenerated("manager", "fund", { templateKey: "ppm", title: "PPM", category: "fund_document", body: "Draft" })).rejects.toThrow("Only Harmonious staff");
+  expect(mock.tables["fund_files"]).toEqual([]);
+});
 
 describe("shared IRS evidence read-back", () => {
   beforeEach(() => {

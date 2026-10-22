@@ -6,6 +6,15 @@ import { DOCUMENT_CATEGORIES } from "@/lib/offering-document-model";
 const eng = () => import("./fund-doc-templates.server");
 const uuid = z.string().uuid();
 
+export const fundDocumentGenerationAccessFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ offeringId: uuid }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { assertFund, isStaff } = await import("@/lib/fund-tabs.server");
+    await assertFund(context.userId, data.offeringId);
+    const actor = await (await import("@/lib/fund-setup.server")).setupActor(context.userId);
+    return { templates: actor.isStaff, starter: await isStaff(context.userId) };
+  });
+
 export const listTemplatesFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .handler(async ({ context }) => (await eng()).listTemplates(context.userId));
 

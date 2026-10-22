@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DOC_TEMPLATES, STARTER_NOTICE } from "@/lib/fund-doc-templates";
 import { deleteFundFileFn, generateFundDocFn, listFundFilesFn, setSignatureBoxesFn, uploadFundFileFn } from "@/lib/fund-tabs.functions";
 import { TemplateDocumentsCard } from "./template-documents-card";
-import { listTemplatesFn, templateAutofillCheckFn, useTemplateInFundFn } from "@/lib/fund-doc-templates.functions";
+import { listTemplatesFn, templateAutofillCheckFn, useTemplateInFundFn, fundDocumentGenerationAccessFn } from "@/lib/fund-doc-templates.functions";
 import { FundTypeDocumentsCard } from "./fund-type-documents-card";
 import { fileToBase64, fmtDate } from "./shared";
 import { StandardFormsCard } from "./standard-forms-card";
@@ -26,6 +26,9 @@ const STATUS: Record<string, string> = { draft: "Draft", out_for_signature: "Out
 
 export function DocumentsTab({ fundId }: { fundId: string }) {
   const qc = useQueryClient();
+  const access = useServerFn(fundDocumentGenerationAccessFn);
+  const permission = useQuery({ queryKey: ["fund-document-generation-access", fundId], queryFn: () => access({ data: { offeringId: fundId } }) });
+  const canGenerate = Boolean(permission.data?.templates || permission.data?.starter);
   const list = useServerFn(listFundFilesFn);
   const upload = useServerFn(uploadFundFileFn);
   const del = useServerFn(deleteFundFileFn);
@@ -120,7 +123,7 @@ export function DocumentsTab({ fundId }: { fundId: string }) {
               <input type="file" className="hidden" disabled={busy} onChange={(e) => { onUpload(e.target.files?.[0]); e.target.value = ""; }} />
               <Button asChild size="sm" variant="outline" disabled={busy}><span>{busy ? "Loading…" : "Load file"}</span></Button>
             </label>
-            <Button size="sm" onClick={() => setMode("pick")}>Generate from template</Button>
+            {canGenerate && <Button size="sm" onClick={() => setMode("pick")}>Generate from template</Button>}
           </div>
         </CardHeader>
         <CardContent>
@@ -204,7 +207,7 @@ export function DocumentsTab({ fundId }: { fundId: string }) {
       )}
 
 
-      {mode === "pick" && (
+      {canGenerate && mode === "pick" && (
         <Dialog open onOpenChange={(o) => !o && setMode(null)}>
           <DialogContent className="max-w-2xl">
             <DialogHeader><DialogTitle>Generate from template</DialogTitle><DialogDescription>{STARTER_NOTICE}</DialogDescription></DialogHeader>
@@ -212,11 +215,11 @@ export function DocumentsTab({ fundId }: { fundId: string }) {
               {groups.map((g) => (
                 <div key={g.title} className="space-y-2">
                   <p className="text-sm font-medium">{g.title}</p>
-                  {g.keys.map((t) => <Button key={t.key} variant="outline" size="sm" className="w-full justify-start whitespace-normal text-left h-auto py-2" onClick={() => { setMode(null); setGen(t.key); }}>{t.title}</Button>)}
+                  {permission.data?.starter && g.keys.map((t) => <Button key={t.key} variant="outline" size="sm" className="w-full justify-start whitespace-normal text-left h-auto py-2" onClick={() => { setMode(null); setGen(t.key); }}>{t.title}</Button>)}
                 </div>
               ))}
             </div>
-            {(tpl.data?.templates ?? []).some((t: any) => t.currentApproved) && (
+            {permission.data?.templates && (tpl.data?.templates ?? []).some((t: any) => t.currentApproved) && (
               <div className="space-y-2 border-t pt-4">
                 <p className="text-sm font-medium">Harmonious fund templates</p>
                 <p className="text-xs text-muted-foreground">Filled in from the fund's details, with the signature block set up for you.</p>
@@ -230,7 +233,7 @@ export function DocumentsTab({ fundId }: { fundId: string }) {
           </DialogContent>
         </Dialog>
       )}
-      {checking && (
+      {permission.data?.templates && checking && (
         <Dialog open onOpenChange={(o) => !o && setChecking(null)}>
           <DialogContent className="max-w-lg">
             <DialogHeader><DialogTitle>{checking.title}</DialogTitle><DialogDescription>These blanks are filled from this fund's details. Anything missing can be added under Setup → Fund Details, or left blank for review.</DialogDescription></DialogHeader>
@@ -266,7 +269,7 @@ export function DocumentsTab({ fundId }: { fundId: string }) {
           </DialogContent>
         </Dialog>
       )}
-      {gen && <GenerateDialog fundId={fundId} templateKey={gen} onClose={() => setGen(null)} onCreated={(doc) => { setGen(null); refresh(); setPreview(doc); }} />}
+      {permission.data?.starter && gen && <GenerateDialog fundId={fundId} templateKey={gen} onClose={() => setGen(null)} onCreated={(doc) => { setGen(null); refresh(); setPreview(doc); }} />}
       {preview && (
         <Dialog open onOpenChange={(o) => !o && setPreview(null)}>
           <DialogContent className="max-w-2xl">

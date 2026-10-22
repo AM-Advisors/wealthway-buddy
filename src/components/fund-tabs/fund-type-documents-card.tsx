@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { fundTypeTemplatesFn, generateFundTypeDocumentsFn } from "@/lib/fund-doc-templates.functions";
+import { fundTypeTemplatesFn, generateFundTypeDocumentsFn, fundDocumentGenerationAccessFn } from "@/lib/fund-doc-templates.functions";
 import { invalidateFund } from "@/lib/fund-query-keys";
 import { LoadError } from "@/components/load-error";
 import { modelSourcesForFundType } from "@/lib/fund-type-templates";
@@ -15,6 +15,8 @@ export function FundTypeDocumentsCard({ fundId }: { fundId: string }) {
   const qc = useQueryClient();
   const load = useServerFn(fundTypeTemplatesFn);
   const gen = useServerFn(generateFundTypeDocumentsFn);
+  const access = useServerFn(fundDocumentGenerationAccessFn);
+  const permission = useQuery({ queryKey: ["fund-document-generation-access", fundId], queryFn: () => access({ data: { offeringId: fundId } }) });
   const q = useQuery({ queryKey: ["fund-type-templates", fundId], queryFn: () => load({ data: { offeringId: fundId } }) });
   const m = useMutation({
     mutationFn: () => gen({ data: { offeringId: fundId } }),
@@ -47,7 +49,7 @@ export function FundTypeDocumentsCard({ fundId }: { fundId: string }) {
                   </li>
                 ))}
               </ul>
-              <Button disabled={!pending || m.isPending} onClick={() => m.mutate()}>{m.isPending ? "Generating…" : pending ? `Generate ${pending} fund document${pending === 1 ? "" : "s"}` : "All generated"}</Button>
+              {permission.data?.templates && <Button disabled={!pending || m.isPending} onClick={() => m.mutate()}>{m.isPending ? "Generating…" : pending ? `Generate ${pending} fund document${pending === 1 ? "" : "s"}` : "All generated"}</Button>}
             </>
           )}
       </CardContent>

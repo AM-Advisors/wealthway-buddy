@@ -2,7 +2,7 @@ import { beforeEach, expect, it, vi } from "vitest";
 import JSZip from "jszip";
 
 const state = vi.hoisted(() => ({ type: "Private equity", approved: true, archived: false, legalName: "Synthetic Equity LP", gp: null as string | null, output: null as Uint8Array | null, activated: 0, created: 0, feeStatus: "", feeError: false, fixedTerms: false }));
-vi.mock("@/lib/fund-setup.server", () => ({ setupActor: async () => ({ isStaff: true, offeringIds: [] }), forbid: (m: string) => { throw new Error(m); } }));
+vi.mock("@/lib/fund-setup.server", () => ({ setupActor: async (id: string) => ({ isStaff: id === "staff", offeringIds: ["fund"] }), forbid: (m: string) => { throw new Error(m); } }));
 vi.mock("@/lib/offering-document-setup.server", () => ({
   createSetupDocument: async () => { state.created++; return { id: "document" }; },
   uploadDocumentVersion: async () => ({ version: 1 }),
@@ -32,8 +32,18 @@ vi.mock("@/integrations/supabase/client.server", () => ({ supabaseAdmin: {
   }) },
 } }));
 
-import { fundTemplateValues, useTemplateInFund } from "./fund-doc-templates.server";
+import { fundTemplateValues, useTemplateInFund, generateFundTypeDocuments } from "./fund-doc-templates.server";
 const input = { templateId: "template", version: 1, offeringId: "fund" };
+it("denies a fund manager single-template generation before any document is created", async () => {
+  await expect(useTemplateInFund("manager", input)).rejects.toThrow("only Harmonious");
+  expect(state.created).toBe(0);
+  expect(state.output).toBeNull();
+});
+it("denies a fund manager bulk generation even when no documents are missing", async () => {
+  await expect(generateFundTypeDocuments("manager", "fund")).rejects.toThrow("only Harmonious");
+  expect(state.created).toBe(0);
+  expect(state.output).toBeNull();
+});
 beforeEach(() => Object.assign(state, { type: "Private equity", approved: true, archived: false, legalName: "Synthetic Equity LP", gp: null, output: null, activated: 0, created: 0, feeStatus: "", feeError: false, fixedTerms: false }));
 it("generates from canonical legal name and reads the saved synthetic file back without publishing unresolved terms", async () => {
   const r = await useTemplateInFund("staff", input);

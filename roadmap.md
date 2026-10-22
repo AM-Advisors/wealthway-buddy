@@ -1,5 +1,10 @@
 # Roadmap
 
+## Correct documents and staff-only generation (2026-10-22)
+- [x] Restrict template use/bulk generation, starter drafts and standard forms server-side to their existing authorized Harmonious staff allowlists; hide manager generation controls, retain review/sign/upload rights. 49 fictional permission/autofill/version/evidence checks passed; preview build OK. Signed-in generation controls remain unverified pending isolated synthetic QA.
+- [x] Prepare standalone unexecuted Erebor review drafts (OA v3, PPM v4, subscription v4) in Files/collection: recorded identity/title and terms filled, OA fixed fee/arbitration clauses proposed for legal review, no signatures reused. All 116 rendered pages inspected after removing inherited blank breaks and repeated draft labels. Draft files are not recorded platform versions or in use.
+- [ ] Record confirmed title through authorized save, approve legal correction wording (including fee timing/payee/no duplicate advisory charge), resolve PPM empty contact placeholders, upload/activate replacements and archive superseded versions — blocked on legal approval and authorized version rollout; original signed files and current active versions remain unchanged. No live records, signatures or emails changed.
+
 ## Operating Agreement signatory title and signed corrections (2026-10-22)
 - [x] New template Operating Agreement signing requests require the exact recorded signatory, a recorded title and resolved template fields; freeze the title in the signature packet. 31 fictional title/autofill/version regression checks passed; preview build OK. Erebor's offering and active primary signatory both have no recorded title. No signed documents or live records changed.
 - [ ] Authenticated corrected-generation/send/read-back — blocked until independently isolated synthetic QA; offline checks do not verify a real signing ceremony.

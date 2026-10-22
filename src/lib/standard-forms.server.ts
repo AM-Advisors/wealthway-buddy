@@ -49,6 +49,7 @@ export async function uploadForm(uid: string, key: StandardFormKey, body: string
 }
 
 export async function generate(uid: string, fundId: string, key: StandardFormKey) {
+  if (!(await isStaff(uid))) throw new Error("Only Harmonious staff can generate fund documents.");
   const { offering: o, isSpv } = await fundKind(fundId);
   if (!isSpv) throw new Error("Harmonious standard forms are for SPVs. Regular funds use the ILPA templates.");
   const d = await db();
