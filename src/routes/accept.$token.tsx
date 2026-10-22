@@ -109,10 +109,6 @@ function AcceptPage() {
         </Card>
       )}
 
-      {d.sections.filter((s) => s.title === "About Harmonious").map((s, i) => (
-        <Card key={`about-${i}`}><CardHeader><CardTitle className="font-heading text-lg">About Harmonious</CardTitle></CardHeader>
-          <CardContent><p className="whitespace-pre-wrap text-sm">{s.body}</p></CardContent></Card>
-      ))}
       <div id="sign" className="scroll-mt-6">
       {d.accepted ? (
         <Card>
