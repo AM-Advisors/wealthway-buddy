@@ -1,8 +1,8 @@
 # Roadmap
 
 ## Signing while AML is pending (2026-10-22)
-- [ ] Allow approved identity + pending AML to proceed to signing; failed AML and pending identity remain blocked.
-- [ ] Keep wire instructions, funding and final admission behind fully approved verification; run fictional gate regression tests.
+- [x] Allow approved investing-party identity + explicit pending AML to proceed to signing in both investor experiences; ceremony entry points re-read canonical investment verification and blocking exceptions. Failed/review AML and pending identity remain blocked.
+- [x] Keep wire instructions, funding and final admission behind fully approved verification, including legacy funding reads/actions; 183 fictional regression checks passed and preview build OK. No real identity, signature, funding or email records changed.
 - [ ] Authenticated investor signing/read-back — blocked until independently isolated synthetic QA exists.
 
 ## Quote section switches (2026-10-22)
