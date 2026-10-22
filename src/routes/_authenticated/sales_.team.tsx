@@ -1,3 +1,4 @@
+import { SearchablePeoplePicker } from "@/components/ui/searchable-people-picker";
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -57,13 +58,13 @@ function TeamPage() {
                   <TableCell className="space-x-1">{t.roles.map((r) => <Badge key={r} variant="secondary">{roleLabel(r)}</Badge>)}</TableCell>
                   <TableCell>
                     {d.scope === "all" ? (
-                      <Select value={t.managerId ?? "none"} onValueChange={(v) => mgr.mutate({ repId: t.id, managerId: v === "none" ? null : v })}>
+                      <SearchablePeoplePicker value={t.managerId ?? "none"} onValueChange={(v) => mgr.mutate({ repId: t.id, managerId: v === "none" ? null : v })}>
                         <SelectTrigger className="h-8 w-48"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="none">No manager</SelectItem>
                           {managers.filter((m) => m.id !== t.id).map((m) => <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>)}
                         </SelectContent>
-                      </Select>
+                      </SearchablePeoplePicker>
                     ) : <span className="text-sm text-muted-foreground">{managers.find((m) => m.id === t.managerId)?.name ?? "-"}</span>}
                   </TableCell>
                   <TableCell className="text-right">{d.scope !== "own" && <Button size="sm" variant="outline" onClick={() => setTargetFor({ id: t.id, name: t.name })}>Set target</Button>}</TableCell>

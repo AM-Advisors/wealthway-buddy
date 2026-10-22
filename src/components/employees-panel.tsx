@@ -1,3 +1,4 @@
+import { SearchableNativeSelect } from "@/components/ui/searchable-people-picker";
 import { Link } from "@tanstack/react-router";
 import { AccessBadge, PeopleActions, useAccessStatus } from "@/components/people-actions";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -58,11 +59,11 @@ export function EmployeesPage() {
                   <td className="p-3"><div className="flex flex-wrap gap-1">{p.roles.map((r) => <Badge key={r} variant="outline">{r.replace(/_/g, " ")}</Badge>)}</div></td>
                   <td className="p-3">
                     {d.canAssignManagers ? (
-                      <select aria-label={`Manager for ${p.name || p.email}`} className="rounded border bg-background px-2 py-1 text-sm" value={p.managerId ?? ""} disabled={m.isPending}
+                      <SearchableNativeSelect aria-label={`Manager for ${p.name || p.email}`} className="rounded border bg-background px-2 py-1 text-sm" value={p.managerId ?? ""} disabled={m.isPending}
                         onChange={(e) => m.mutate({ userId: p.userId, managerId: e.target.value || null })}>
                         <option value="">No manager</option>
                         {d.managerOptions.filter((o) => o.userId !== p.userId).map((o) => <option key={o.userId} value={o.userId}>{o.name}</option>)}
-                      </select>
+                      </SearchableNativeSelect>
                     ) : (p.managerName || "—")}
                   </td>
                   <td className="p-3 whitespace-nowrap">{when(p.lastSignIn)}</td>

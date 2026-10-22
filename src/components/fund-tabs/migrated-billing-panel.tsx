@@ -1,3 +1,4 @@
+import { SearchableNativeSelect } from "@/components/ui/searchable-people-picker";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -127,10 +128,10 @@ export function MigratedBillingPanel({ fundId }: { fundId: string }) {
                     <Button size="sm" variant="outline" disabled={!payOn[i.id] || !!busy} onClick={() => run(`pay-${i.id}`, () => recordPay({ data: { invoiceId: i.id, paidOn: payOn[i.id]! } }), "Payment recorded")}>Mark paid</Button>
                   </>)}
                   {i.sales_quote_id ? <Badge variant="secondary">In commissions</Badge> : (<>
-                    <select className="h-8 rounded-md border bg-background px-2 text-sm" value={rep[i.id] ?? ""} onChange={(e) => setRep((x) => ({ ...x, [i.id]: e.target.value }))} aria-label="Sales rep">
+                    <SearchableNativeSelect className="h-8 rounded-md border bg-background px-2 text-sm" value={rep[i.id] ?? ""} onChange={(e) => setRep((x) => ({ ...x, [i.id]: e.target.value }))} aria-label="Sales rep">
                       <option value="">Sales rep…</option>
                       {d.reps.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
-                    </select>
+                    </SearchableNativeSelect>
                     <Button size="sm" disabled={!rep[i.id] || !!busy} onClick={() => run(`push-${i.id}`, () => push({ data: { invoiceId: i.id, repUserId: rep[i.id]! } }), "Sent to commissions")}>Send to commissions</Button>
                   </>)}
                 </span>

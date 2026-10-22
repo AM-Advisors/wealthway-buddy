@@ -1,3 +1,4 @@
+import { SearchablePeoplePicker } from "@/components/ui/searchable-people-picker";
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -372,10 +373,10 @@ function ContactSheet({ id, canAssign, onClose, onEdit, onChange }: { id: string
             {canAssign && (
               <div className="space-y-2">
                 <Label>Owner</Label>
-                <Select value={c.owner_user_id} onValueChange={(v) => act(() => reassign({ data: { table: "crm_contacts", id: c.id, ownerUserId: v, reason: "Reassigned from contact page" } }), "Owner changed")}>
+                <SearchablePeoplePicker value={c.owner_user_id} onValueChange={(v) => act(() => reassign({ data: { table: "crm_contacts", id: c.id, ownerUserId: v, reason: "Reassigned from contact page" } }), "Owner changed")}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>{(ownersQ.data ?? []).map((o) => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}{!(ownersQ.data ?? []).some((o) => o.id === c.owner_user_id) && <SelectItem value={c.owner_user_id}>Current owner</SelectItem>}</SelectContent>
-                </Select>
+                </SearchablePeoplePicker>
               </div>
             )}
 

@@ -1,3 +1,4 @@
+import { SearchablePeoplePicker } from "@/components/ui/searchable-people-picker";
 import { SalesDealDocsTabs } from "@/components/sales-deal-docs-tabs";
 import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
@@ -80,10 +81,10 @@ function FromSow() {
   return (
     <Panel title="Draft a quote from an SOW">
       <div className="flex flex-wrap gap-2">
-        <Select value={clientId ?? ""} onValueChange={(v) => { setClientId(v); setSowId(null); }}>
+        <SearchablePeoplePicker value={clientId ?? ""} onValueChange={(v) => { setClientId(v); setSowId(null); }}>
           <SelectTrigger className="w-64"><SelectValue placeholder="Client" /></SelectTrigger>
           <SelectContent>{(c.data?.clients ?? []).map((cl: any) => <SelectItem key={cl.id} value={cl.id}>{cl.legal_name}</SelectItem>)}</SelectContent>
-        </Select>
+        </SearchablePeoplePicker>
         <Select value={sowId ?? ""} onValueChange={setSowId} disabled={!clientId}>
           <SelectTrigger className="w-72"><SelectValue placeholder={clientId && sows.data && !sows.data.length ? "No SOWs for this client" : "SOW"} /></SelectTrigger>
           <SelectContent>{(sows.data ?? []).map((s: any) => <SelectItem key={s.id} value={s.id}>{s.title} · {s.status}</SelectItem>)}</SelectContent>
@@ -147,10 +148,10 @@ export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; init
     <Panel title={initial ? "Edit quote" : "New quote"}>
       <div className="grid gap-3 sm:grid-cols-4">
         <Input placeholder="Quote title" value={title} onChange={(e) => setTitle(e.target.value)} />
-        <Select value={clientId ?? "none"} onValueChange={(v) => { setClientId(v === "none" ? null : v); setOfferingId(null); }}>
+        <SearchablePeoplePicker value={clientId ?? "none"} onValueChange={(v) => { setClientId(v === "none" ? null : v); setOfferingId(null); }}>
           <SelectTrigger><SelectValue placeholder="Client" /></SelectTrigger>
           <SelectContent><SelectItem value="none">Choose client…</SelectItem>{(c.data?.clients ?? []).map((cl: any) => <SelectItem key={cl.id} value={cl.id}>{cl.legal_name}</SelectItem>)}</SelectContent>
-        </Select>
+        </SearchablePeoplePicker>
         <Select value={offeringId ?? "none"} onValueChange={(v) => setOfferingId(v === "none" ? null : v)} disabled={!clientId}>
           <SelectTrigger aria-label="Fund"><SelectValue placeholder="Fund" /></SelectTrigger>
           <SelectContent><SelectItem value="none">{clientId && !(c.data?.funds ?? []).length ? "No funds for this client" : "No fund (client-wide)"}</SelectItem>{(c.data?.funds ?? []).map((o: any) => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}</SelectContent>
