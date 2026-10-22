@@ -113,7 +113,7 @@ function CustomizeDialog({ initial, period, fundId, funds, onClose, onSave }: {
   const [f, setF] = useState<string | null>(fundId);
   const [drag, setDrag] = useState<number | null>(null);
   const label = (id: CardId) => DASHBOARD_CARDS.find((c) => c.id === id)!.label;
-  const move = (from: number, to: number) => { if (to < 0 || to >= order.length) return; const n = [...order]; const [x] = n.splice(from, 1); n.splice(to, 0, x); setOrder(n); };
+  const move = (from: number, to: number) => { if (to < 0 || to >= order.length) return; const n = [...order]; const [x] = n.splice(from, 1); if (x) n.splice(to, 0, x); setOrder(n); };
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-md">
