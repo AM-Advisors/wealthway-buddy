@@ -4,7 +4,7 @@ import { requireSupabaseAuth } from "@/lib/require-auth";
 
 const S = () => import("@/lib/sales-documents.server");
 const id = z.object({ id: z.string().uuid() });
-const section = z.object({ key: z.string().max(60), title: z.string().max(200), body: z.string().max(20000), question: z.string().max(4000).nullish() });
+const section = z.object({ key: z.string().max(60), title: z.string().max(200), body: z.string().max(20000), question: z.string().max(4000).nullish(), included: z.boolean().optional() });
 
 export const listSalesDocuments = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth])
   .handler(async ({ context }) => (await S()).listDocuments(context.userId));
