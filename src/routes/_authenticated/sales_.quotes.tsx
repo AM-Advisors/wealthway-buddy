@@ -232,6 +232,30 @@ export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; init
         <span className="text-muted-foreground">Rate card {money(baseline)} · Quote <span className="font-semibold text-foreground">{money(total)}</span>{total < baseline && " · below rate card: needs CEO or CRO approval"}</span>
         <Input className="max-w-sm" placeholder="Notes for the approver" value={notes} onChange={(e) => setNotes(e.target.value)} />
       </div>
+      <div className="mt-4 rounded-lg border bg-card p-4">
+        <h3 className="font-heading font-semibold">Sections shown to the client</h3>
+        <p className="mt-1 text-xs text-muted-foreground">Every part of the quote has a switch. Switching one off hides it from the client — the wording is kept, nothing is deleted.</p>
+        <div className="mt-3 space-y-2">
+          {sections.map((s, i) => {
+            const def = quoteSectionDef(s.key);
+            const shown = isQuoteSectionShown(s);
+            const preview = (def?.generated ? quoteSectionBody(s, facts, about.data?.body ?? null) : s.key === "notes" ? notes : s.body).trim();
+            return (
+              <div key={s.key} className={`rounded-lg border p-3 ${shown ? "" : "opacity-60"}`}>
+                <label className="flex items-center justify-between gap-3 text-sm">
+                  <span className="min-w-0"><span className="font-medium">{s.title}</span><span className="ml-2 text-xs text-muted-foreground">{def?.hint}</span></span>
+                  <Switch aria-label={`Show ${s.title} to the client`} checked={shown} onCheckedChange={(v) => setSections(sections.map((x, j) => (j === i ? { ...x, included: v } : x)))} />
+                </label>
+                {shown && (s.key === "timeline" || s.key === "next") ? (
+                  <Textarea rows={3} className="mt-2" placeholder={`What the client should see under ${s.title.toLowerCase()}`} value={s.body} onChange={(e) => setSections(sections.map((x, j) => (j === i ? { ...x, body: e.target.value } : x)))} />
+                ) : shown ? (
+                  <p className="mt-2 whitespace-pre-wrap text-xs text-muted-foreground">{preview || "Nothing written yet."}</p>
+                ) : null}
+              </div>
+            );
+          })}
+        </div>
+      </div>
       <div className="mt-4 flex gap-2"><Button onClick={() => m.mutate()} disabled={m.isPending || !lines.length}>Save draft</Button><Button variant="ghost" onClick={onCancel}>Cancel</Button></div>
     </Panel>
   );
