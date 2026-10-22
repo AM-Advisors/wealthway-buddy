@@ -23,7 +23,7 @@ export async function notifyFundManagers(fundId: string, kind: "approval_require
       user_id: m.user_id, client_id: off?.client_id ?? null, kind, title: copy[0], body: copy[1], path: portalPath,
       dedupe_key: `${kind}:${fundId}:${title}:${new Date().toISOString().slice(0, 13)}`,
     }));
-    if (rows.length) await db.from("client_notifications").upsert(rows, { onConflict: "user_id,dedupe_key", ignoreDuplicates: true });
+    if (rows.length) for (const r of rows) await db.from("client_notifications").insert(r).then(() => undefined, () => undefined);
   } catch { /* best effort */ }
   try { (await import("@/lib/manager-alerts.server")).kickManagerAlerts(); } catch { /* best effort */ }
 }
