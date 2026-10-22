@@ -543,7 +543,17 @@ async function gatherFacts(row: any, inputs?: ReadinessInputs) {
       sort: Number(d.sort_order ?? 0),
     }))
     .sort((a, b) => a.rank - b.rank || a.sort - b.sort);
-  const countersignTiming = (await import("@/lib/countersign-timing")).parseCountersignTiming(off?.countersign_timing);
+  let countersignTiming = (await import("@/lib/countersign-timing")).parseCountersignTiming(off?.countersign_timing);
+  if (countersignTiming !== "pause" && !row.approved_to_fund_at) {
+    // A timing change only applies to investors who hadn't signed yet when it changed.
+    const [{ data: change }, { data: signed }] = await Promise.all([
+      db().from("offering_countersign_timing_events").select("changed_at").eq("offering_id", row.offering_id).order("changed_at", { ascending: false }).limit(1),
+      db().from("investor_onboarding_events").select("created_at").eq("onboarding_id", row.id).eq("event", "signature_completed").order("created_at", { ascending: true }).limit(1),
+    ]);
+    const changedAt = (change as any[] | null)?.[0]?.changed_at;
+    const signedAt = (signed as any[] | null)?.[0]?.created_at;
+    if (changedAt && signedAt && signedAt < changedAt) countersignTiming = "pause";
+  }
   return { offering, person, profile, entity, related, accreditation, tax, requirements, isEntity, documents, completedSignatures, countersignTiming };
 }
 
