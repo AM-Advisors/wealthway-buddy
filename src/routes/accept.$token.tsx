@@ -135,6 +135,7 @@ function AcceptPage() {
           </CardContent>
         </Card>
       )}
+      </div>
     </Shell>
   );
 }
