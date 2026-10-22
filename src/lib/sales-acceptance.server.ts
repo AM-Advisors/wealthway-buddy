@@ -1,3 +1,4 @@
+import { canEditRemittance } from "./sales-acceptance-model";
 /** Server-only: client sign-and-approve for quotes/proposals/RFPs/RFQs, automatic invoice, and audited Harmonious payment instructions.
  *  Records only — nothing is charged, pulled or wired. */
 import {
@@ -6,7 +7,7 @@ import {
 
 const admin = async () => (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
 const STAFF = ["admin", "super_admin", "operations", "fund_administration", "legal", "compliance", "finance", "client_success", "executive", "cro", "sales", "sales_management", "account_executive", "bdr", "account_manager", "leadership", "tax"];
-const REMIT_EDITORS = ["admin", "super_admin", "finance", "executive", "legal", "compliance"];
+
 
 async function rolesOf(db: any, userId: string) {
   const { data } = await db.from("user_roles").select("role").eq("user_id", userId);
@@ -418,7 +419,7 @@ export async function remittanceForInvoice(userId: string, d: { invoiceId: strin
 // ---- Staff: payment instruction versions (maker-checker) ----
 async function remitEditor(db: any, userId: string) {
   const roles = await rolesOf(db, userId);
-  if (!roles.some((r) => REMIT_EDITORS.includes(r))) throw new Error("Only Finance, Legal, Compliance, the CEO or admins can manage payment instructions.");
+  if (!canEditRemittance(roles)) throw new Error("Only the CEO or CRO can manage Harmonious payment details.");
   return roles;
 }
 export async function listRemittance(userId: string) {

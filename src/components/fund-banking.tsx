@@ -122,6 +122,7 @@ export function FundBanking({ fundId, backTo }: { fundId: string; backTo: "admin
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-3xl">Fund banking</h1>
+          <p className="text-xs text-muted-foreground">These are the fund's accounts, not Harmonious's. Harmonious's own payment details for quotes and invoices are managed separately by the CEO and CRO.</p>
           <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
             Enter the fund&apos;s receiving account yourself, or ask Harmonious to help open one.
             Harmonious facilitates payments and recordkeeping; it is not a bank, custodian or
