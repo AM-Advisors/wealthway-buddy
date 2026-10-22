@@ -253,7 +253,7 @@ export async function scheduledPayments(userId: string) {
   const repIds = [...new Set(qs.map((q) => q.owner_user_id).filter(Boolean))];
   const [{ data: clients }, { data: profiles }] = await Promise.all([
     clientIds.length ? db.from("clients").select("id, legal_name, name").in("id", clientIds) : { data: [] },
-    repIds.length ? db.from("profiles").select("id, full_name, email").in("id", repIds) : { data: [] },
+    repIds.length ? db.from("profiles").select("id, full_name").in("id", repIds) : { data: [] },
   ]);
   return { items: ((sched ?? []) as any[]).map((s) => {
     const sow = ((sows ?? []) as any[]).find((x) => x.id === s.sow_id);
@@ -261,6 +261,6 @@ export async function scheduledPayments(userId: string) {
     const p = ((profiles ?? []) as any[]).find((x) => x.id === rep);
     const c = ((clients ?? []) as any[]).find((x) => x.id === s.client_id);
     return { id: s.id, client: c?.legal_name || c?.name || "Client", service: s.label, frequency: s.frequency, amountCents: Number(s.amount_cents), dueOn: s.next_due_on,
-      rep: p?.full_name || p?.email || "Unassigned", waitingForSignature: !sow || sow.approval_status !== "approved" || (!sow.client_signed_at && !sow.executed_at) };
+      rep: p?.full_name || "Unassigned", waitingForSignature: !sow || sow.approval_status !== "approved" || (!sow.client_signed_at && !sow.executed_at) };
   }) };
 }
