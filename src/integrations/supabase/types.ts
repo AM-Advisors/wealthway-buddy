@@ -42792,6 +42792,54 @@ export type Database = {
           },
         ]
       }
+      sales_policy_acceptances: {
+        Row: {
+          accepted_at: string
+          client_id: string | null
+          copied_to_account_at: string | null
+          document_id: string
+          email: string
+          id: string
+          ip: string | null
+          kind: string
+          sales_acceptance_id: string | null
+          signer_name: string
+          user_agent: string | null
+          user_id: string | null
+          version: number
+        }
+        Insert: {
+          accepted_at?: string
+          client_id?: string | null
+          copied_to_account_at?: string | null
+          document_id: string
+          email: string
+          id?: string
+          ip?: string | null
+          kind: string
+          sales_acceptance_id?: string | null
+          signer_name: string
+          user_agent?: string | null
+          user_id?: string | null
+          version: number
+        }
+        Update: {
+          accepted_at?: string
+          client_id?: string | null
+          copied_to_account_at?: string | null
+          document_id?: string
+          email?: string
+          id?: string
+          ip?: string | null
+          kind?: string
+          sales_acceptance_id?: string | null
+          signer_name?: string
+          user_agent?: string | null
+          user_id?: string | null
+          version?: number
+        }
+        Relationships: []
+      }
       sales_quote_events: {
         Row: {
           actor_id: string | null
@@ -44275,6 +44323,24 @@ export type Database = {
           service_product?: string | null
           use_contract_sla?: boolean
           warning_threshold_percentage?: number
+        }
+        Relationships: []
+      }
+      short_links: {
+        Row: {
+          code: string
+          created_at: string
+          target_token: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          target_token: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          target_token?: string
         }
         Relationships: []
       }

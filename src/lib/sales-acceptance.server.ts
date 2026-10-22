@@ -60,7 +60,44 @@ async function acceptanceFor(db: any, key: string) {
 /** Build the client link for an approved record (staff side). */
 export async function acceptLinkFor(kind: AcceptKind, id: string, version: number, email: string) {
   const { signAcceptToken, TRACKING_BASE } = await import("@/lib/email-tracking.server");
-  return `${TRACKING_BASE}/accept/${encodeURIComponent(await signAcceptToken({ kind, id, version, email }))}`;
+  const token = await signAcceptToken({ kind, id, version, email });
+  try {
+    const db = await admin();
+    const { data: ex } = await db.from("short_links").select("code").eq("target_token", token).maybeSingle();
+    if (ex?.code) return `${TRACKING_BASE}/q/${ex.code}`;
+    const { shortCode } = await import("./sales-acceptance-model");
+    for (let i = 0; i < 3; i++) {
+      const code = shortCode();
+      const { error } = await db.from("short_links").insert({ code, target_token: token });
+      if (!error) return `${TRACKING_BASE}/q/${code}`;
+      if (error.code === "23505") { const { data: again } = await db.from("short_links").select("code").eq("target_token", token).maybeSingle(); if (again?.code) return `${TRACKING_BASE}/q/${again.code}`; }
+    }
+  } catch (e) { console.error("short link failed", e); }
+  return `${TRACKING_BASE}/accept/${encodeURIComponent(token)}`;
+}
+
+/** Resolve a short code to its full signed acceptance token. */
+export async function resolveShortLink(code: string): Promise<string | null> {
+  if (!/^[A-Za-z0-9]{6,16}$/.test(code)) return null;
+  const db = await admin();
+  const { data } = await db.from("short_links").select("target_token").eq("code", code).maybeSingle();
+  return data?.target_token ?? null;
+}
+
+/** Current Privacy Policy / Terms & Conditions and whether this signer already accepted them (account or earlier signing). */
+async function policyNeedsFor(db: any, rawEmail: string | null | undefined) {
+  const { policyNeeds } = await import("./sales-acceptance-model");
+  const email = String(rawEmail ?? "").trim().toLowerCase();
+  const { data: docs } = await db.from("policy_documents").select("id, kind, version, title, body").eq("published", true).in("kind", ["privacy", "terms"]);
+  const accepted: { document_id: string; accepted_at: string }[] = [];
+  let userId: string | null = null;
+  if (email) {
+    const { data: prof } = await db.from("profiles").select("user_id").ilike("email", email).maybeSingle();
+    userId = prof?.user_id ?? null;
+    if (userId) { const { data } = await db.from("policy_acceptances").select("document_id, accepted_at").eq("user_id", userId); accepted.push(...((data ?? []) as any[])); }
+    const { data: pend } = await db.from("sales_policy_acceptances").select("document_id, accepted_at").ilike("email", email); accepted.push(...((pend ?? []) as any[]));
+  }
+  return { needs: policyNeeds((docs ?? []) as any[], accepted), userId, email };
 }
 
 /** The MSA this client must accept when signing, or null if they've already signed it and nothing newer was assigned. */
@@ -114,6 +151,7 @@ export async function viewForToken(token: string) {
     stale: r.kind !== "quote" && r.approvedVersion !== t.version,
     blocker: acc ? null : signBlocker(r.kind, r.status, r.approvedVersion, t.version),
     salesContact: await salesContactFor(db, r.clientId, r.ownerId).then((c) => c && { name: c.name, email: c.email }),
+    policies: acc ? [] : (await policyNeedsFor(db, t.email)).needs,
     sections: (r.sections as any[]).filter((x) => x?.key !== "terms"), msa: acc ? null : await msaForClient(db, r.clientId), lines: lines.map((l) => ({ label: l.label, quantity: l.quantity, amountCents: l.amount_cents })),
     totalCents: lines.reduce((s, l) => s + l.amount_cents, 0),
     accepted: acc ? { signerName: acc.signer_name, acceptedAt: acc.accepted_at, paymentMethod: acc.payment_method, invoiceError: acc.invoice_error } : null,
@@ -199,7 +237,7 @@ async function createInvoiceFromAcceptance(db: any, r: Loaded, acc: any, sowId: 
 }
 
 /** Client signs & approves. Idempotent: signing twice never creates a second acceptance or invoice. */
-export async function acceptByToken(d: { token: string; signerName: string; signerTitle?: string | null | undefined; agree: boolean; msaAgree?: boolean | undefined; msaVersionId?: string | null | undefined; paymentMethod: "card" | "wire" | "ach"; ip: string | null; ua: string | null; userId?: string | null | undefined }) {
+export async function acceptByToken(d: { token: string; signerName: string; signerTitle?: string | null | undefined; agree: boolean; msaAgree?: boolean | undefined; msaVersionId?: string | null | undefined; policyIds?: string[] | undefined; paymentMethod: "card" | "wire" | "ach"; ip: string | null; ua: string | null; userId?: string | null | undefined }) {
   if (!d.agree) throw new Error("Tick the box to approve and agree.");
   if (d.signerName.trim().length < 2) throw new Error("Type your full name to sign.");
   const t = await fromToken(d.token);
@@ -220,6 +258,8 @@ export async function acceptByToken(d: { token: string; signerName: string; sign
   let acc = prior;
   const msa = prior ? null : await msaForClient(db, r.clientId);
   if (msa && (!d.msaAgree || d.msaVersionId !== msa.versionId)) throw new Error("Please read and accept the Master Services Agreement to continue.");
+  const pol = prior ? null : await policyNeedsFor(db, t.email);
+  const owedPolicies = pol ? (await import("./sales-acceptance-model")).policiesToRecord(pol.needs, d.policyIds ?? []) : [];
   if (!acc) {
     const hash = await sha256(JSON.stringify({ k: r.kind, i: r.id, v: t.version, s: r.sections, l: r.lines.map((l) => [l.label, l.quantity, l.line_cents]) }));
     const { data, error } = await db.from("sales_acceptances").insert({
@@ -239,6 +279,7 @@ export async function acceptByToken(d: { token: string; signerName: string; sign
       if (ex && !ex.executed_at) await db.from("client_msa_agreements").update({ status: "executed", client_approved_at: now, executed_at: now, updated_at: now }).eq("id", ex.id);
       else if (!ex) await db.from("client_msa_agreements").insert({ client_id: r.clientId, msa_version_id: msa.versionId, status: "executed", client_approved_at: now, executed_at: now });
     }
+    if (pol && data && owedPolicies.length) await recordPolicies(db, pol, owedPolicies, data, r, d);
     if (r.quoteId) await db.from("sales_quotes").update({ status: "signed", signed_at: now, updated_at: now }).eq("id", r.quoteId).in("status", ["approved", "sent"]);
     if (r.dealId) {
       await db.from("crm_deals").update({ sales_stage: "contract_won", stage: "won", stage_changed_at: now }).eq("id", r.dealId);
@@ -260,6 +301,34 @@ export async function acceptByToken(d: { token: string; signerName: string; sign
 }
 
 /** The signer can sign in and start fund setup right away: existing accounts join the client, new emails get a pending invitation claimed at sign-up. */
+async function recordPolicies(db: any, pol: { needs: any[]; userId: string | null; email: string }, ids: string[], acc: any, r: Loaded, d: { signerName: string; ip: string | null; ua: string | null }) {
+  const docs = pol.needs.filter((n) => ids.includes(n.documentId));
+  const name = d.signerName.trim().slice(0, 160);
+  const email = pol.email || "unknown";
+  await db.from("sales_policy_acceptances").upsert(docs.map((n) => ({ sales_acceptance_id: acc.id, client_id: r.clientId, email, user_id: pol.userId, document_id: n.documentId, kind: n.kind, version: n.version, signer_name: name, ip: d.ip, user_agent: d.ua?.slice(0, 400) ?? null, copied_to_account_at: pol.userId ? new Date().toISOString() : null })), { onConflict: "email,document_id", ignoreDuplicates: true });
+  if (pol.userId) await db.from("policy_acceptances").upsert(docs.map((n) => ({ user_id: pol.userId, document_id: n.documentId, kind: n.kind, version: n.version, signer_name: name, email: pol.email, ip_address: d.ip, user_agent: d.ua?.slice(0, 400) ?? null })), { onConflict: "user_id,document_id", ignoreDuplicates: true });
+  try {
+    const detail = { email, documents: docs.map((n) => ({ kind: n.kind, version: n.version })) };
+    const q = r.kind === "quote";
+    await db.from(q ? "sales_quote_events" : "sales_document_events").insert(q ? { quote_id: r.id, actor_id: null, event: "policy_accepted", note: JSON.stringify(detail) } : { document_id: r.id, actor_id: null, event: "policy_accepted", detail });
+  } catch (e) { console.error("policy event", e); }
+}
+
+/** Copy policies accepted while signing a quote onto the account once the signer has one. */
+export async function claimSalesPolicyAcceptances(userId: string, rawEmail: string | null | undefined) {
+  const email = String(rawEmail ?? "").trim().toLowerCase();
+  if (!email) return 0;
+  const db = await admin();
+  const { data: u } = await db.auth.admin.getUserById(userId);
+  if (!u?.user?.email_confirmed_at || String(u.user.email ?? "").toLowerCase() !== email) return 0;
+  const { data } = await db.from("sales_policy_acceptances").select("*").ilike("email", email).is("copied_to_account_at", null);
+  const rows = (data ?? []) as any[];
+  if (!rows.length) return 0;
+  await db.from("policy_acceptances").upsert(rows.map((x) => ({ user_id: userId, document_id: x.document_id, kind: x.kind, version: x.version, signer_name: x.signer_name, email, ip_address: x.ip, user_agent: x.user_agent, accepted_at: x.accepted_at })), { onConflict: "user_id,document_id", ignoreDuplicates: true });
+  await db.from("sales_policy_acceptances").update({ user_id: userId, copied_to_account_at: new Date().toISOString() }).in("id", rows.map((x) => x.id));
+  return rows.length;
+}
+
 async function grantPortalAccess(db: any, clientId: string | null, rawEmail: string | null | undefined, name: string | null) {
   const email = String(rawEmail ?? "").trim().toLowerCase();
   if (!clientId || !email) return;
