@@ -4,7 +4,8 @@
  * economics in fund-setup.server (maker-checker). Staff edit; managers of the
  * exact fund read. Nothing here touches banking, documents, signatures or money.
  */
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import {
+  classCountError, supabaseAdmin } from "@/integrations/supabase/client.server";
 import {
   classAssignmentError,
   classErrors,
@@ -107,6 +108,7 @@ export async function fundSetupOverview(userId: string, offeringId: string, hasE
     carrySet: terms?.carry?.ratePercent != null || !!terms?.notApplicable?.includes("carry"),
     hasMultipleClasses: !!o.has_multiple_classes,
     classCount: classes.length,
+    plannedClassCount: o.planned_class_count ?? null,
     documentCount: (docs.data ?? []).length,
     bankingState,
     adminConfigured: await adminServicesRecorded(setup?.id),
@@ -139,6 +141,7 @@ export async function fundSetupOverview(userId: string, offeringId: string, hasE
       offeringCloseDate: o.offering_close_date,
       rollingCloses: o.rolling_closes,
       hasMultipleClasses: !!o.has_multiple_classes,
+      plannedClassCount: (o.planned_class_count ?? null) as number | null,
       driveFolderUrl: o.drive_folder_url,
       driveLinks: (Array.isArray(o.drive_links) ? o.drive_links : []) as { label: string; url: string }[],
     },
@@ -191,6 +194,7 @@ const OFFERING_FIELDS: Record<string, string> = {
   arbitrationState: "arbitration_state",
   rollingCloses: "rolling_closes",
   hasMultipleClasses: "has_multiple_classes",
+  plannedClassCount: "planned_class_count",
   driveFolderUrl: "drive_folder_url",
   driveLinks: "drive_links",
 };
@@ -272,13 +276,18 @@ export async function changeLegalName(
 /** Saves a draft economics version (existing maker-checker applies on approval). */
 export async function saveFundEconomics(
   userId: string,
-  input: { offeringId: string; terms: EconomicTerms; classes: FundClass[]; changeReason?: string | null },
+  input: { offeringId: string; terms: EconomicTerms; classes: FundClass[]; changeReason?: string | null; classDifferencesConfirmed?: boolean | null },
 ) {
   await assertStaffFor(userId, input.offeringId);
   const errors = [...economicsErrors(input.terms), ...classErrors(input.classes)];
   if (errors.length) throw new Error(errors[0]);
-  const { data: o } = await db().from("offerings").select("fund_type, has_multiple_classes").eq("id", input.offeringId).maybeSingle();
+  const { data: o } = await db().from("offerings").select("fund_type, has_multiple_classes, planned_class_count").eq("id", input.offeringId).maybeSingle();
   if (!o?.has_multiple_classes && input.classes.length) throw new Error("Turn on multiple classes before adding classes.");
+  if (o?.has_multiple_classes) {
+    const countErr = classCountError(o.planned_class_count ?? null, input.classes);
+    if (countErr) throw new Error(countErr);
+    if (input.classes.length && !input.classDifferencesConfirmed) throw new Error("Confirm how each class differs from the fund default before saving.");
+  }
   const setup = await ensureSetup(userId, input.offeringId, o?.fund_type ?? null);
   const { data: draft } = await db().from("fund_economics_versions").select("id").eq("setup_id", setup.id).eq("status", "draft").maybeSingle();
   const classes = input.classes.map((c) => ({ ...c, key: c.key || classKey(c.name) }));
