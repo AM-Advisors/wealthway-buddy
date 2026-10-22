@@ -46,7 +46,7 @@ export function UnifiedInbox() {
           {composing && d && (d.isStaff ? <DirectCompose data={d} onDone={(id) => { setComposing(false); if (id) setOpen(id); }} /> : null)}
           {composing && d && !d.isStaff && <Compose data={d} onDone={(id) => { setComposing(false); if (id) setOpen(id); }} />}
           {open ? (
-            <Thread id={open} onBack={() => setOpen(null)} />
+            <Thread id={open} channels={(d as any)?.channels ?? null} onBack={() => setOpen(null)} />
           ) : (
             <Card>
               <CardContent className="p-0">
@@ -179,7 +179,7 @@ function DirectCompose({ data, onDone }: { data: any; onDone: (id?: string) => v
   );
 }
 
-function Thread({ id, onBack }: { id: string; onBack: () => void }) {
+function Thread({ id, channels, onBack }: { id: string; channels: Record<string, string[]> | null; onBack: () => void }) {
   const qc = useQueryClient();
   const load = useServerFn(inboxThreadFn);
   const send = useServerFn(replyInboxFn);
@@ -203,8 +203,15 @@ function Thread({ id, onBack }: { id: string; onBack: () => void }) {
             <p className="whitespace-pre-wrap">{msg.body}</p>
           </div>
         ))}
-        <Textarea value={body} onChange={(e) => setBody(e.target.value)} rows={3} placeholder="Write a reply" maxLength={5000} />
-        <Button disabled={m.isPending || !body.trim()} onClick={() => m.mutate()}>Reply</Button>
+        {(() => {
+          const t: any = q.data?.thread;
+          const allowed = channels && t?.client_id ? channels[t.client_id] : null;
+          if (t && allowed && !allowed.includes(t.channel)) return <p className="rounded-md border bg-muted p-3 text-sm text-muted-foreground">Your account is on Self Serve, so replies here are closed. Start a new message to Harmonious Operations and they'll help with anything about your fund setup.</p>;
+          return (<>
+            <Textarea value={body} onChange={(e) => setBody(e.target.value)} rows={3} placeholder="Write a reply" maxLength={5000} />
+            <Button disabled={m.isPending || !body.trim()} onClick={() => m.mutate()}>Reply</Button>
+          </>);
+        })()}
       </CardContent>
     </Card>
   );
