@@ -1038,7 +1038,12 @@ export type WireSentDetails = {
  *  marks the investment funded - only a matched bank receipt does that. */
 export async function investorReportsFundsSent(userId: string, onboardingId: string, details: WireSentDetails = {}) {
   const { actor, row } = await assertInvestorOwns(userId, onboardingId);
-  if (!row.approved_to_fund_at) forbid("funding has not been unlocked for this investment.");
+  if (!row.approved_to_fund_at) {
+    const facts = await gatherFacts(row);
+    const exceptions = await openExceptions(row.id);
+    const gate = canInvestorFund({ stage: row.stage, requirements: facts.requirements, approvedToFundAt: null, countersignTiming: facts.countersignTiming, openBlockingExceptions: exceptions.filter((e) => e.severity === "blocking").length });
+    if (!gate.allowed) forbid("funding has not been unlocked for this investment.");
+  }
   const amount = details.amountCents == null ? null : Math.round(Number(details.amountCents));
   if (amount != null && (!Number.isFinite(amount) || amount <= 0)) fail("Enter the amount you sent.");
   const sentOn = details.sentOn && /^\d{4}-\d{2}-\d{2}$/.test(details.sentOn) ? details.sentOn : null;
@@ -1193,7 +1198,7 @@ export async function onboardingDetail(userId: string, onboardingId: string): Pr
   const { fillMissingInvestorAnswers } = await import("@/lib/subscription-prefill");
   const journey = journeySteps(facts.requirements, {
     stage: row.stage,
-    approvedToFund: Boolean(row.approved_to_fund_at),
+    approvedToFund: Boolean(row.approved_to_fund_at) || fundingGate.allowed,
     fundingStatus: row.funding_status,
     investorReportsSent: Boolean(row.investor_reports_sent_at),
   });
@@ -1220,6 +1225,8 @@ export async function onboardingDetail(userId: string, onboardingId: string): Pr
     approvedToFund: Boolean(row.approved_to_fund_at),
     fundingUnlocked: fundingGate.allowed,
     fundingBlockedReasons: fundingGate.reasons,
+    countersignTiming: facts.countersignTiming,
+    awaitingCountersign: !row.approved_to_fund_at && fundingGate.allowed,
     questionnaire: questionnaire ? { version: questionnaire.version, questions: locks?.questions ?? questionnaire.questions } : null,
     questionnaireResponses: { ...fillMissingInvestorAnswers((row.questionnaire_responses ?? {}) as Record<string, unknown>, locks?.supplied ?? {}, (questionnaire?.questions ?? []).map((q: Question) => q.key)), ...Object.fromEntries(Object.entries(locks?.locked ?? {}).filter(([, v]) => v != null)) },
     questionnaireLocked: locks?.locked ?? {},
