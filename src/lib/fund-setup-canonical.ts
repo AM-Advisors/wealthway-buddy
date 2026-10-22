@@ -221,7 +221,8 @@ export function classAssignmentError(input: {
   classes: FundClass[];
   classKey: string | null;
 }): string | null {
-  if (!input.classKey) return input.hasMultipleClasses ? "Choose a class for this investment." : null;
+  // No exception class means the fund's default terms apply.
+  if (!input.classKey) return null;
   if (!input.hasMultipleClasses) return "This fund does not have multiple classes.";
   if (!input.classes.some((c) => c.key === input.classKey)) return "That class does not exist on this fund.";
   return null;

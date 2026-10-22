@@ -93,7 +93,6 @@ export async function investorGrid(fundId: string) {
     const docs = docStatus(o, outsideStates.get(o.id));
     // Display-only checklist of what the fund manager still needs to collect.
     const missing: string[] = [];
-    if (classApplicable && !o.offering_class_key) missing.push("Class");
     if (!o.investment_profiles?.profile_type) missing.push("Investing as (asset type)");
     if (!p.email) missing.push("Email");
     if (!p.phone) missing.push("Phone");
@@ -114,7 +113,7 @@ export async function investorGrid(fundId: string) {
       citizenship,
       taxIdLast4,
       classApplicable,
-      classLabel: human(o.offering_class_key),
+      classLabel: human(o.offering_class_key) ?? "Fund default terms",
       assetLabel: human(o.investment_profiles?.profile_type),
       missing,
       committedCents,

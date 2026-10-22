@@ -56,7 +56,7 @@ type Draft = {
   reason: string;
 };
 
-export function SideLetterRegistry({ fundId }: { fundId: string }) {
+export function SideLetterRegistry({ fundId, onboardingId }: { fundId: string; onboardingId?: string }) {
   const qc = useQueryClient();
   const list = useServerFn(listSideLetters);
   const propose = useServerFn(proposeSideLetterChange);
@@ -101,7 +101,9 @@ export function SideLetterRegistry({ fundId }: { fundId: string }) {
 
   if (q.isLoading) return <Card><CardContent className="p-6 text-sm text-muted-foreground">Loading side letters…</CardContent></Card>;
   if (q.error) return <Card><CardContent className="p-6 text-sm text-destructive">{(q.error as Error).message}</CardContent></Card>;
-  const d = q.data as unknown as SideLetterList;
+  const all = q.data as unknown as SideLetterList;
+  const associated = new Set(all.letters.filter((l) => l.onboardingId === onboardingId).map((l) => l.id));
+  const d = onboardingId ? { ...all, letters: all.letters.filter((l) => associated.has(l.id)), requests: all.requests.filter((r) => associated.has(r.sideLetterId)), investors: all.investors.filter((i) => i.onboardingId === onboardingId), mfnQueue: all.mfnQueue.filter((r) => associated.has(r.holderId)) } : all;
   const letterById = new Map(d.letters.map((l) => [l.id, l]));
   const pending = d.requests.filter((r) => r.status === "pending");
   const canMfn = d.actorKind === "staff" || d.actorKind === "manager";
@@ -118,7 +120,7 @@ export function SideLetterRegistry({ fundId }: { fundId: string }) {
             </CardDescription>
           </div>
           {d.canPropose ? (
-            <Button onClick={() => setDraft({ mode: "create", sideLetterId: null, onboardingId: null, snapshot: emptySnapshot(), reason: "" })}>
+            <Button onClick={() => setDraft({ mode: "create", sideLetterId: null, onboardingId: onboardingId ?? null, snapshot: emptySnapshot(d.investors.find((i) => i.onboardingId === onboardingId)?.label ?? ""), reason: "" })}>
               New side letter
             </Button>
           ) : null}
@@ -400,7 +402,7 @@ function DraftForm({
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label>Terms</Label>
+                <Label>Waivers / changed terms</Label>
                 <Button
                   size="sm"
                   variant="outline"

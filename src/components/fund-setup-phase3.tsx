@@ -438,7 +438,7 @@ function AdminCard({ d, offeringId, onChanged }: { d: D; offeringId: string; onC
 
 // ------------------------------------------------------------------ Class assignment
 
-function ClassAssignmentCard({ offeringId }: { offeringId: string }) {
+export function ClassAssignmentCard({ offeringId, onboardingId }: { offeringId: string; onboardingId?: string }) {
   const qc = useQueryClient();
   const load = useServerFn(classAssignmentsFn);
   const preview = useServerFn(previewClassChangeFn);
@@ -446,11 +446,11 @@ function ClassAssignmentCard({ offeringId }: { offeringId: string }) {
   const q = useQuery({ queryKey: ["class-assign", offeringId], queryFn: () => load({ data: { offeringId } }) });
   const [pending, setPending] = useState<{ id: string; key: string | null; warnings: string[]; blocked: boolean } | null>(null);
   if (!q.data || q.data.classes.length === 0) return null;
-  const refresh = () => qc.invalidateQueries({ queryKey: ["class-assign", offeringId] });
+  const refresh = () => { void invalidateFund(qc, offeringId); void qc.invalidateQueries({ queryKey: ["class-assign", offeringId] }); };
   const start = async (id: string, key: string | null) => {
     try {
       const r = await preview({ data: { onboardingId: id } });
-      if (r.warnings.length || r.blocked) return setPending({ id, key, warnings: r.warnings, blocked: r.blocked && !!r.current });
+      if (r.warnings.length || r.blocked) return setPending({ id, key, warnings: r.warnings, blocked: r.blocked });
       await change({ data: { onboardingId: id, classKey: key, acknowledged: false } });
       toast.success("Class assigned");
       refresh();
@@ -461,7 +461,7 @@ function ClassAssignmentCard({ offeringId }: { offeringId: string }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Investment Classes</CardTitle>
+        <CardTitle className="text-base">Default terms / class association</CardTitle>
         <p className="text-sm text-muted-foreground">Only classes on the approved economics can be chosen. Class terms are shown for context and can't be edited here.</p>
       </CardHeader>
       <CardContent className="space-y-2">
@@ -472,11 +472,11 @@ function ClassAssignmentCard({ offeringId }: { offeringId: string }) {
             </span>
           ))}
         </div>
-        {q.data.investments.map((i) => (
+        {q.data.investments.filter((i) => !onboardingId || i.id === onboardingId).map((i) => (
           <div key={i.id} className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-2 text-sm">
             <span>{i.investor}</span>
             <select className="rounded-md border bg-background px-2 py-1 text-sm" value={i.classKey ?? ""} onChange={(e) => start(i.id, e.target.value || null)} aria-label={`Class for ${i.investor}`}>
-              <option value="">No class</option>
+              <option value="">Fund default terms</option>
               {q.data.classes.map((c) => <option key={c.key} value={c.key}>{c.name}</option>)}
             </select>
           </div>
