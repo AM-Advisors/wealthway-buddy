@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { CARD_SERVICE_FEE_LABEL } from "@/lib/card-fee";
 import { startInvoiceCardPayment } from "@/lib/invoices.functions";
 import { getStripe, getStripeEnvironment } from "@/lib/stripe";
 
@@ -34,6 +35,7 @@ export function InvoiceCardPay({ invoiceId, number }: { invoiceId: string; numbe
         <DialogContent className="max-w-xl">
           <DialogHeader>
             <DialogTitle>Pay invoice {number}</DialogTitle>
+            <p className="text-sm text-muted-foreground">A {CARD_SERVICE_FEE_LABEL} is added at checkout. Wire and ACH have no fee.</p>
             <DialogDescription>Secure card checkout. Harmonious never stores your card details.</DialogDescription>
           </DialogHeader>
           {open ? <EmbeddedCheckoutProvider stripe={getStripe()} options={options}><EmbeddedCheckout /></EmbeddedCheckoutProvider> : null}

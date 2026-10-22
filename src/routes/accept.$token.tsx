@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { CARD_SERVICE_FEE_LABEL } from "@/lib/card-fee";
 import { RESPONSE_STATUS } from "@/lib/sales-response-model";
 import { acceptanceRemittance, respondToSalesDocument, signAcceptance, viewAcceptance } from "@/lib/sales-acceptance.functions";
 
@@ -184,6 +185,7 @@ function MethodPicker({ value, onChange }: { value: Method; onChange: (m: Method
       <div className="mt-1 flex gap-2">{(["wire", "ach", "card"] as Method[]).map((m) => (
         <Button key={m} type="button" size="sm" variant={value === m ? "default" : "outline"} onClick={() => onChange(m)}>{m === "ach" ? "ACH" : m === "wire" ? "Wire" : "Card"}</Button>
       ))}</div>
+      {value === "card" && <p className="mt-1 text-xs text-muted-foreground">Card payments include a {CARD_SERVICE_FEE_LABEL}. Wire and ACH have no fee.</p>}
     </div>
   );
 }
