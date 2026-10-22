@@ -419,3 +419,7 @@
 ## Recurring payment schedules
 - [x] Signed-SOW quarterly/annual payments shown on Commissions, auto-invoiced with rep notice (daily run)
 - [ ] Signed-in check of Scheduled payments and a real due-date send — pending
+
+## Commission planning
+- [ ] Expected quarterly payouts at SOW signing (Expected -> Scheduled once paid)
+- [ ] Commissions: separate revenue, gross profit, net profit; employees paid on gross profit — waiting on cost definitions
