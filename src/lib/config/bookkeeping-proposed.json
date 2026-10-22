@@ -1,0 +1,168 @@
+{
+  "serviceKey": "BOOKKEEPING_ACCOUNTING",
+  "name": "Bookkeeping & Accounting",
+  "tiers": [
+    {
+      "key": "self_service",
+      "name": "Self-Service",
+      "monthlyCents": {
+        "annual": 7900,
+        "quarterly": 8900,
+        "monthly": 9900
+      },
+      "transactions": 250,
+      "accounts": 3,
+      "monthlyBusinessDays": null,
+      "deliverables": [
+        "Customer-managed categorization and reconciliation",
+        "Income, expenses and user-prepared financial reports",
+        "Accountant collaboration; integrations subject to availability"
+      ]
+    },
+    {
+      "key": "essential",
+      "name": "Essential",
+      "monthlyCents": {
+        "annual": 15000,
+        "quarterly": 20000,
+        "monthly": 25000
+      },
+      "transactions": 50,
+      "accounts": 2,
+      "monthlyBusinessDays": 20,
+      "deliverables": [
+        "Managed categorization and reconciliation",
+        "Basic financial statements and standard reporting"
+      ]
+    },
+    {
+      "key": "growth",
+      "name": "Growth",
+      "monthlyCents": {
+        "annual": 30000,
+        "quarterly": 40000,
+        "monthly": 50000
+      },
+      "transactions": 150,
+      "accounts": 4,
+      "monthlyBusinessDays": 15,
+      "deliverables": [
+        "Managed reconciliation and revenue/expense classification",
+        "Standard journal entries and enhanced reporting"
+      ]
+    },
+    {
+      "key": "professional",
+      "name": "Professional",
+      "monthlyCents": {
+        "annual": 65000,
+        "quarterly": 82500,
+        "monthly": 100000
+      },
+      "transactions": 350,
+      "accounts": 8,
+      "monthlyBusinessDays": 10,
+      "deliverables": [
+        "Accrual accounting and advanced journal entries",
+        "Budget-versus-actual and advanced reporting"
+      ]
+    },
+    {
+      "key": "enterprise",
+      "name": "Enterprise",
+      "monthlyCents": {
+        "annual": null,
+        "quarterly": 200000,
+        "monthly": 250000
+      },
+      "transactions": 500,
+      "accounts": null,
+      "monthlyBusinessDays": 7,
+      "deliverables": [
+        "Explicitly contracted multi-entity consolidation",
+        "Portfolio dashboards, advanced accounting and custom workflows"
+      ]
+    }
+  ],
+  "addons": [
+    {
+      "key": "historical_cleanup",
+      "name": "Historical cleanup",
+      "unitCents": 10000,
+      "cadence": "hour"
+    },
+    {
+      "key": "initial_cleanup",
+      "name": "Initial books cleanup",
+      "unitCents": 50000,
+      "cadence": "one_time"
+    },
+    {
+      "key": "extra_transactions",
+      "name": "Additional 50 monthly transactions",
+      "unitCents": 5000,
+      "cadence": "monthly"
+    },
+    {
+      "key": "extra_account",
+      "name": "Additional financial account",
+      "unitCents": 2500,
+      "cadence": "monthly"
+    },
+    {
+      "key": "extra_entity",
+      "name": "Additional Enterprise entity",
+      "unitCents": 20000,
+      "cadence": "monthly"
+    },
+    {
+      "key": "payroll_integration",
+      "name": "Payroll accounting integration",
+      "unitCents": 10000,
+      "cadence": "monthly"
+    },
+    {
+      "key": "ar_ap",
+      "name": "AR/AP management",
+      "unitCents": 15000,
+      "cadence": "monthly"
+    },
+    {
+      "key": "runway",
+      "name": "Cash runway forecasting",
+      "unitCents": 25000,
+      "cadence": "monthly"
+    },
+    {
+      "key": "custom_report",
+      "name": "Custom financial reporting package",
+      "unitCents": 25000,
+      "cadence": "report"
+    },
+    {
+      "key": "analysis",
+      "name": "Advanced financial analysis",
+      "unitCents": 12500,
+      "cadence": "hour"
+    }
+  ],
+  "quarterlyBusinessDays": 20,
+  "annualBusinessDays": 30,
+  "exclusions": [
+    "Tax returns",
+    "K-1 preparation",
+    "Audits",
+    "Investment valuation",
+    "NAV calculation",
+    "Capital allocations",
+    "Investor distributions",
+    "Legal or regulatory filings",
+    "Payroll processing",
+    "Tax advisory"
+  ],
+  "responsibilities": [
+    "Provide complete statements, supporting documents and transaction explanations.",
+    "Disclose existing contracted accounting/reporting scope before approval."
+  ],
+  "amendmentTerms": "Changes require an approved prospective amendment; completed periods and issued invoices remain unchanged. Historical catch-up is separately quoted."
+}
