@@ -346,6 +346,11 @@ export const respondToChange = createServerFn({ method: "POST" })
       .eq("id", data.changeId)
       .maybeSingle();
     if (!change) throw new Error("Change request not found.");
+    if ((change as any).sow_id && ["services", "pricing"].includes((change as any).section_key) && data.decision === "approve") {
+      const { linkedQuoteForSow } = await import("@/lib/sales-quotes.server");
+      if (await linkedQuoteForSow(who.userId, (change as any).sow_id))
+        throw new Error("Update the linked quote and SOW services together before resolving this commercial change.");
+    }
 
     const now = new Date().toISOString();
     let status = "under_review";

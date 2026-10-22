@@ -1,8 +1,9 @@
 # Roadmap
 
 ## Linked quote and SOW edits (2026-10-22)
-- [ ] Synchronize shared quote/SOW terms in both edit directions with authorization, approval and signed-history safeguards.
-- [ ] Run fictional synchronization/regression tests; authenticated read-back requires independently isolated QA.
+- [x] Synchronize linked draft services, prices, billing terms, title and fund through one transactional save; SOW-side uses the canonical quote form, legacy price/section controls cannot bypass it. Reviewed quotes get a new linked SOW draft; prior agreements remain intact.
+- [x] 84 fictional synchronization and quote/bookkeeping/approval regression tests passed; preview build OK. No real quotes, SOWs, invoices, payments or emails changed in testing.
+- [ ] Authenticated edit/save/read-back and database transaction/concurrency verification — blocked until independently isolated QA exists.
 
 ## Bookkeeping Phase 2 isolation and security (2026-10-22)
 - [x] Inspect current metadata (production-only; three drafts not isolated), available commands and the existing Harmonious QA source snapshot; six offline safety tests pass and browser preflight blocks before queries/navigation. Source contains QA switches but cannot prove deployed isolation.
