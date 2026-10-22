@@ -5,7 +5,7 @@ import { getSalesDocumentOptions } from "@/lib/sales-documents.functions";
 import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { BILLING_FREQUENCIES } from "@/lib/invoice-schedule-model";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { draftQuoteFromSow, getQuoteCatalog, listSalesQuotes, listSowsForQuote, saveSalesQuote } from "@/lib/sales-hub.functions";
 import { QUOTE_STATUS_LABEL } from "@/lib/sales-model";
+import type { QuoteLineInput } from "@/lib/sales-model";
 import { Panel, money } from "@/components/sales/sales-ui";
 import { BookkeepingConfigurator } from "@/components/sales/bookkeeping-configurator";
 import { getBookkeepingConfiguration } from "@/lib/bookkeeping.functions";
@@ -103,7 +104,7 @@ function FromSow() {
   );
 }
 
-type Line = { serviceKey: string; label: string; quantity: number; unitCents: number; baselineUnitCents: number; billingFrequency?: "one_time" | "monthly" | "quarterly" | "annual"; firstBillOn?: string | null; bookkeeping?: BookkeepingInput; details?: { scope?: string; included?: string[]; excluded?: string[] } | null };
+type Line = QuoteLineInput;
 
 /** Product first, then only the levels valid for that product. */
 function AdminLevelPicker({ onAdd, lines }: { onAdd: (key: string) => void; lines: any[] }) {
@@ -129,7 +130,8 @@ function AdminLevelPicker({ onAdd, lines }: { onAdd: (key: string) => void; line
   );
 }
 
-export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; initial?: { id: string; title: string; clientId: string | null; contactId?: string | null; offeringId?: string | null; dealId?: string | null; validUntil: string | null; notes: string | null; lines: Line[] } }) {
+export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; initial?: { id: string; title: string; clientId: string | null; contactId?: string | null; offeringId?: string | null; dealId?: string | null; validUntil: string | null; notes: string | null; expectedUpdatedAt?: string; lines: Line[] } }) {
+  const qc = useQueryClient();
   const [dealId, setDealId] = useState<string>(initial?.dealId ?? "");
   const optFn = useServerFn(getSalesDocumentOptions);
   const opts = useQuery({ queryKey: ["sales-document-options"], queryFn: () => optFn() });
@@ -148,8 +150,8 @@ export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; init
   const c = useQuery({ queryKey: ["quote-catalog", clientId], queryFn: () => cat({ data: { clientId } }) });
   const save = useServerFn(saveSalesQuote);
   const m = useMutation({
-    mutationFn: () => save({ data: { id: initial?.id ?? null, title, clientId, contactId: clientId === initial?.clientId ? initial?.contactId ?? null : null, offeringId, dealId: dealId || null, validUntil: validUntil || null, notes: notes || null, lines } }),
-    onSuccess: (r) => { toast.success("Quote saved"); onCancel(); nav({ to: "/sales/quotes/$id", params: { id: r.id } }); },
+    mutationFn: () => save({ data: { id: initial?.id ?? null, title, clientId, contactId: clientId === initial?.clientId ? initial?.contactId ?? null : null, offeringId, dealId: dealId || null, validUntil: validUntil || null, notes: notes || null, expectedUpdatedAt: initial?.expectedUpdatedAt, lines } }),
+    onSuccess: (r) => { toast.success("Quote saved"); qc.invalidateQueries(); onCancel(); nav({ to: "/sales/quotes/$id", params: { id: r.id } }); },
     onError: (e: Error) => toast.error(e.message),
   });
   const total = lines.reduce((s, l) => s + l.quantity * l.unitCents, 0);

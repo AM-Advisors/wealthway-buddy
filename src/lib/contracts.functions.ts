@@ -263,6 +263,9 @@ export const saveSow = createServerFn({ method: "POST" })
       notes: data.notes || null,
     };
     if (data.id) {
+      const { saveLinkedSowDetails } = await import("@/lib/sales-quotes.server");
+      const linked = await saveLinkedSowDetails(context.userId, data.id, row);
+      if (linked) return { id: data.id };
       const { error } = await context.supabase.from("client_sows").update(row).eq("id", data.id);
       if (error) throw new Error(error.message);
       await audit(context, who, {

@@ -1,4 +1,5 @@
 import { SalesDealDocsTabs } from "@/components/sales-deal-docs-tabs";
+import { LinkedSowTermsEditor } from "@/components/sales/linked-sow-terms-editor";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
@@ -313,6 +314,7 @@ function AgreementDetail({
 
   return (
     <div className="space-y-6">
+      {canManage && !executed && !clientSigned && <LinkedSowTermsEditor sowId={sowId} onChanged={refresh} />}
       <div className="flex flex-wrap gap-2">
         <Button size="sm" variant="outline" onClick={download}>
           <Download className="mr-2 h-4 w-4" /> Document

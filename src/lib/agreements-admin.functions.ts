@@ -250,6 +250,9 @@ export const updatePricingLine = createServerFn({ method: "POST" })
     if ((line as any).sow_pricing_snapshots?.locked) {
       throw new Error("This pricing is executed and can only change through an amendment.");
     }
+    const { linkedQuoteForSow } = await import("@/lib/sales-quotes.server");
+    if (await linkedQuoteForSow(who.userId, (line as any).sow_pricing_snapshots.sow_id))
+      throw new Error("Use Edit linked services & pricing so the quote and SOW are saved together.");
 
     const standard = Number((line as any).standard_cents ?? 0);
     if (data.finalCents !== standard && !(data.adjustmentReason ?? "").trim()) {
@@ -295,11 +298,14 @@ export const addPricingLine = createServerFn({ method: "POST" })
     const who = await requireAuthority(context);
     const { data: snapshot } = await context.supabase
       .from("sow_pricing_snapshots")
-      .select("id, locked")
+      .select("id, locked, sow_id")
       .eq("id", data.snapshotId)
       .maybeSingle();
     if (!snapshot) throw new Error("Pricing summary not found.");
     if ((snapshot as any).locked) throw new Error("This pricing is executed and cannot change.");
+    const { linkedQuoteForSow } = await import("@/lib/sales-quotes.server");
+    if (await linkedQuoteForSow(who.userId, (snapshot as any).sow_id))
+      throw new Error("Use Edit linked services & pricing so the quote and SOW are saved together.");
 
     const { error } = await context.supabase.from("sow_pricing_lines").insert({
       snapshot_id: data.snapshotId,
@@ -340,6 +346,11 @@ export const respondToChange = createServerFn({ method: "POST" })
       .eq("id", data.changeId)
       .maybeSingle();
     if (!change) throw new Error("Change request not found.");
+    if ((change as any).sow_id && ["services", "pricing"].includes((change as any).section_key) && data.decision === "approve") {
+      const { linkedQuoteForSow } = await import("@/lib/sales-quotes.server");
+      if (await linkedQuoteForSow(who.userId, (change as any).sow_id))
+        throw new Error("Update the linked quote and SOW services together before resolving this commercial change.");
+    }
 
     const now = new Date().toISOString();
     let status = "under_review";
