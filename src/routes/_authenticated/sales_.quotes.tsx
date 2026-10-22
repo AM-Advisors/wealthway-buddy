@@ -115,7 +115,7 @@ function AdminLevelPicker({ onAdd, lines }: { onAdd: (key: string) => void; line
   return (
     <div className="mt-4 flex flex-wrap items-center gap-2">
       <Select value="" onValueChange={onAdd}>
-        <SelectTrigger className="w-72"><SelectValue placeholder="SPV Administration (by raise)" /></SelectTrigger>
+        <SelectTrigger className="w-72"><SelectValue placeholder="Harmonized SPV (by raise)" /></SelectTrigger>
         <SelectContent>{lines.filter((l) => String(l.serviceKey).startsWith(SPV_TXN_KEY_PREFIX)).map((l) => <SelectItem key={l.serviceKey} value={l.serviceKey}>{l.label} · ${(l.baselineCents / 100).toLocaleString("en-US")}</SelectItem>)}</SelectContent>
       </Select>
       <Select value={product} onValueChange={(v) => setProduct(v as LadderProduct)}>
@@ -166,7 +166,7 @@ export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; init
   const baseline = lines.reduce((s, l) => s + l.quantity * l.baselineUnitCents, 0);
   const add = (key: string) => {
     const it = c.data?.lines.find((l: any) => l.serviceKey === key);
-    if (it) setLines([...lines, { serviceKey: it.serviceKey, label: it.label, quantity: 1, unitCents: it.baselineCents, baselineUnitCents: it.baselineCents }]);
+    if (it) { const std = standardInclusions(it.serviceKey); setLines([...lines, { serviceKey: it.serviceKey, label: it.label, quantity: 1, unitCents: it.baselineCents, baselineUnitCents: it.baselineCents, details: std ? { included: std.included, excluded: std.excluded } : undefined }]); }
   };
   return (
     <Panel title={initial ? "Edit quote" : "New quote"}>
