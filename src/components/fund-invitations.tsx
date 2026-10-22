@@ -209,7 +209,7 @@ export function FundInvitations({ title = "Invitations" }: { title?: string }) {
               <Input
                 id="invite-name"
                 value={name}
-                placeholder="Alyssa Pettit"
+                placeholder="Jane Doe"
                 onChange={(e) => setName(e.target.value)}
               />
             </div>
