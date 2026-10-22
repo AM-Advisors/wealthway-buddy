@@ -33,6 +33,7 @@ import { template as statementReady } from './statement-ready'
 import { template as crmCampaign } from './crm-campaign'
 import { template as paymentReceived } from './payment-received'
 import { template as securityAlert } from './security-alert'
+import { template as saleSigned } from './sale-signed'
 
 
 
@@ -88,6 +89,7 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'crm-campaign': crmCampaign,
   'payment-received': paymentReceived,
   'security-alert': securityAlert,
+  'sale-signed': saleSigned,
   'ownership-update': ownershipUpdate,
 
 

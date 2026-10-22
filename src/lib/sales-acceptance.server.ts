@@ -363,13 +363,24 @@ async function notifyAfterSign(db: any, r: Loaded, acc: any, inv: { id: string; 
     }));
     const rep = await salesContactFor(db, r.clientId, r.ownerId);
     const { data: ownerRow } = r.ownerId ? await db.from("profiles").select("email").eq("user_id", r.ownerId).maybeSingle() : { data: null };
-    for (const to of [...new Set([ownerRow?.email, rep?.email].filter(Boolean) as string[])]) {
-      const owner = { email: to };
-      if (owner.email) {
-        const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
-        await sendTemplateEmail("crm-campaign", owner.email, { idempotencyKey: `accept-owner:${acc.id}:${owner.email}`, templateData: {
-          subject: `Signed: ${r.title}`, body: `${acc.signer_name} signed and approved ${r.title} (version ${r.version}). Invoice ${inv.number} was issued automatically. Payment method chosen: ${acc.payment_method ?? "not chosen"}.`, fundName: null } });
-      }
+    const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+    const kindLabel = { quote: "Quote", proposal: "Proposal", rfp: "RFP", rfq: "RFQ" }[r.kind as string] ?? "Document";
+    const salesUrl = `https://ops.harmonious.co/sales/${r.kind === "quote" ? "quotes" : "documents"}/${r.id}`;
+    const base = {
+      clientName: c?.legal_name || c?.name || "the client", documentTitle: r.title, kindLabel, version: r.version,
+      signerName: acc.signer_name, signedAt: acc.accepted_at, invoiceNumber: inv.number,
+      invoiceAmount: money(inv.totalCents ?? 0), paymentMethod: acc.payment_method ? acc.payment_method.toUpperCase() : "",
+    };
+    // Completed version to the sales inbox, the quote owner and the assigned rep.
+    for (const to of [...new Set(["sales@harmonious.co", ownerRow?.email, rep?.email].filter(Boolean) as string[])]) {
+      await sendTemplateEmail("sale-signed", to, { idempotencyKey: `sale-signed:${acc.id}:${to}`, templateData: {
+        ...base, recipientName: "there", actionUrl: salesUrl, actionLabel: `Open the signed ${kindLabel.toLowerCase()}` } });
+    }
+    // Confirmation to the signer with their invoice and pay link.
+    if (acc.signer_email) {
+      await sendTemplateEmail("sale-signed", acc.signer_email, { idempotencyKey: `sale-signed:${acc.id}:signer`, templateData: {
+        ...base, recipientName: acc.signer_name, forSigner: true,
+        actionUrl: `${CLIENT_PORTAL_BASE}/client/invoices?invoice=${inv.id}`, actionLabel: "View and pay your invoice" } });
     }
   } catch (e) { console.error("accept notify failed", e); }
 }
