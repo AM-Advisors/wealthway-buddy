@@ -45,8 +45,10 @@ const MAX_BODY = 20000;
  * Always returns every part of the quote in canonical order: a switched-off part keeps its wording here,
  * parts that aren't part of a quote are dropped, and parts never recorded fall back to their default position.
  */
+type StoredSection = { key?: unknown; body?: unknown; included?: unknown };
+
 export function sanitizeQuoteSections(input: unknown): Section[] {
-  const stored = Array.isArray(input) ? (input as Record<string, unknown>[]) : [];
+  const stored = Array.isArray(input) ? (input as StoredSection[]) : [];
   const byKey = new Map<string, Section>();
   for (const s of stored) {
     const key = String(s?.key ?? "");
@@ -67,7 +69,7 @@ type QuoteLineFacts = {
   quantity: number;
   unitCents: number;
   billingFrequency?: string | null | undefined;
-  details?: { scope?: string; included?: string[]; excluded?: string[] } | null | undefined;
+  details?: { scope?: string | undefined; included?: string[] | undefined; excluded?: string[] | undefined } | null | undefined;
 };
 
 /** The quote's own services and prices, in the shape the shared section wording expects. */
@@ -81,7 +83,7 @@ export function quoteLockFacts(f: { organization: string | null; contactName?: s
       unit_cents: l.unitCents,
       line_cents: Math.round(l.quantity * l.unitCents),
       billing_frequency: l.billingFrequency ?? "one_time",
-      service_details: l.details ?? undefined,
+      service_details: l.details ?? null,
     })),
   };
 }
