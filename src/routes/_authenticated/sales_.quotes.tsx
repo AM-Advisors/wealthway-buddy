@@ -133,6 +133,7 @@ export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; init
   const [validUntil, setValidUntil] = useState(initial?.validUntil ?? "");
   const [notes, setNotes] = useState(initial?.notes ?? "");
   const [lines, setLines] = useState<Line[]>(initial?.lines ?? []);
+  const [openDetails, setOpenDetails] = useState<number | null>(null);
   const [showBookkeeping, setShowBookkeeping] = useState(false);
   const loadBookkeeping = useServerFn(getBookkeepingConfiguration);
   const bookkeeping = useQuery({ queryKey: ["bookkeeping-proposed-configuration"], queryFn: () => loadBookkeeping(), enabled: showBookkeeping });
