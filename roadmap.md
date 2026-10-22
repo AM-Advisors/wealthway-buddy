@@ -410,7 +410,7 @@
 - [x] Diagnose Calvin's document errors: Box creation accepted (201); ceremony reports sign_and_send permission; signer sync has mismatched upsert/index (42P10). No resend or investor changes; provider permission check and repair remain unverified.
 
 ## Forecasting (paid add-on)
-- [ ] Guided fund growth, expenses, capital calls and distributions with live cash-flow summary; preserve existing scenario versions and projection-only boundaries.
+- [x] Guided fund growth, expenses, capital calls and distributions with live cash-flow summary, separate cash/NAV and shortfall alerts; 34 offline forecast tests passed. Fictional form updates verified; signed-in save/read-back remains blocked by isolated-QA preflight.
 - [x] Operating forecast inputs, monthly compounding, direct costs and operating expenses, and monthly/calendar-quarter profit tables and charts; 28 forecast regression checks pass. Signed-in save/read-back remains blocked by isolated-QA preflight.
 - [x] Forecasts tab built, gated by paid Forecasting add-on
 - [ ] Forecasting price — waiting on Alyssa
