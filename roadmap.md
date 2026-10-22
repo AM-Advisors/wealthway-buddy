@@ -1,5 +1,13 @@
 # Roadmap
 
+## Bookkeeping Phase 2 isolation and security (2026-10-22)
+- [x] Inspect current metadata (production-only; three drafts not isolated), available commands and the existing Harmonious QA source snapshot; six offline safety tests pass and browser preflight blocks before queries/navigation. Source contains QA switches but cannot prove deployed isolation.
+- [ ] Verify candidate QA independent database/auth/storage, actual frontend/server binding, credential absence, inert jobs and blocked production integrations — requires that project's own context and complete runtime evidence before accounts or financial fixtures.
+- [ ] Provision requested fictional entity/user fixtures and validate quote guards, durable read-back, recovery, tenant denial and revocation — blocked until every isolation requirement is independently verified in the QA project's own context.
+- [x] Prepare a proposed exact-entity accounting/document/reconciliation/report access matrix using existing authorization and ledger/reporting engines; not implemented or validated. Dedicated QA projects may use a production instance label, requiring separately reviewed QA-local harness compatibility, never a production bypass.
+- [ ] Validate that access model and resume enrollment and simulated billing — blocked on all isolation evidence and successful synthetic security checks.
+- [x] Deliver docs/bookkeeping-phase2-isolation-review.md with Yes/No results, candidate source findings, exact manual setup, QA-chat handoff and remaining blockers; production code/settings/data/access restrictions unchanged.
+
 ## Bookkeeping continuation safety review (2026-10-22)
 - [x] Review uploaded continuation brief and verify current five-tier/three-reconciliation pricing, server recalculation, frozen proposed snapshots and existing release gates from source.
 - [x] Re-run 76 fictional offline bookkeeping, Sales, invoice, acceptance and QA-safety checks: all pass. Browser preflight blocks before backend queries or navigation without reviewed isolation evidence and an explicit QA origin.
