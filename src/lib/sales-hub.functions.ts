@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/lib/require-auth";
 import { OUTREACH_CHANNELS, SALES_STAGES, periodRange } from "@/lib/sales-model";
+import { bookkeepingInputSchema } from "@/lib/bookkeeping-model";
 
 const period = z.object({ period: z.enum(["day", "week", "month", "quarter", "year", "custom"]), from: z.string().optional(), to: z.string().optional() });
 const range = (p: z.infer<typeof period>) => periodRange(p.period, new Date(), { from: p.from, to: p.to });
@@ -74,7 +75,7 @@ export const roundRobinDeals = createServerFn({ method: "POST" }).middleware([re
   .handler(async ({ data, context }) => (await S()).roundRobin(context.userId, data));
 
 // ---------------- quotes
-const line = z.object({ serviceKey: z.string(), label: z.string(), quantity: z.number().min(0), unitCents: z.number().min(0), baselineUnitCents: z.number().min(0), billingFrequency: z.enum(["one_time", "monthly", "quarterly", "annual"]).optional(), firstBillOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullish() });
+const line = z.object({ serviceKey: z.string(), label: z.string(), quantity: z.number().min(0), unitCents: z.number().min(0), baselineUnitCents: z.number().min(0), billingFrequency: z.enum(["one_time", "monthly", "quarterly", "annual"]).optional(), firstBillOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullish(), bookkeeping: bookkeepingInputSchema.optional() });
 
 export const getQuoteCatalog = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ clientId: z.string().uuid().nullish() }).parse(d))

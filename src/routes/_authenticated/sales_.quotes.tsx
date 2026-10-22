@@ -16,6 +16,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { draftQuoteFromSow, getQuoteCatalog, listSalesQuotes, listSowsForQuote, saveSalesQuote } from "@/lib/sales-hub.functions";
 import { QUOTE_STATUS_LABEL } from "@/lib/sales-model";
 import { Panel, money } from "@/components/sales/sales-ui";
+import { BookkeepingConfigurator } from "@/components/sales/bookkeeping-configurator";
+import { getBookkeepingConfiguration } from "@/lib/bookkeeping.functions";
+import { BOOKKEEPING_KEY, type BookkeepingInput } from "@/lib/bookkeeping-model";
 
 export const Route = createFileRoute("/_authenticated/sales_/quotes")({
   head: () => ({
@@ -96,7 +99,7 @@ function FromSow() {
   );
 }
 
-type Line = { serviceKey: string; label: string; quantity: number; unitCents: number; baselineUnitCents: number; billingFrequency?: "one_time" | "monthly" | "quarterly" | "annual"; firstBillOn?: string | null };
+type Line = { serviceKey: string; label: string; quantity: number; unitCents: number; baselineUnitCents: number; billingFrequency?: "one_time" | "monthly" | "quarterly" | "annual"; firstBillOn?: string | null; bookkeeping?: BookkeepingInput };
 
 /** Product first, then only the levels valid for that product. */
 function AdminLevelPicker({ onAdd, lines }: { onAdd: (key: string) => void; lines: any[] }) {
@@ -130,6 +133,9 @@ export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; init
   const [validUntil, setValidUntil] = useState(initial?.validUntil ?? "");
   const [notes, setNotes] = useState(initial?.notes ?? "");
   const [lines, setLines] = useState<Line[]>(initial?.lines ?? []);
+  const [showBookkeeping, setShowBookkeeping] = useState(false);
+  const loadBookkeeping = useServerFn(getBookkeepingConfiguration);
+  const bookkeeping = useQuery({ queryKey: ["bookkeeping-proposed-configuration"], queryFn: () => loadBookkeeping(), enabled: showBookkeeping });
   const cat = useServerFn(getQuoteCatalog);
   const c = useQuery({ queryKey: ["quote-catalog", clientId], queryFn: () => cat({ data: { clientId } }) });
   const save = useServerFn(saveSalesQuote);
@@ -148,7 +154,7 @@ export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; init
     <Panel title={initial ? "Edit quote" : "New quote"}>
       <div className="grid gap-3 sm:grid-cols-4">
         <Input placeholder="Quote title" value={title} onChange={(e) => setTitle(e.target.value)} />
-        <SearchablePeoplePicker value={clientId ?? "none"} onValueChange={(v) => { setClientId(v === "none" ? null : v); setOfferingId(null); }}>
+        <SearchablePeoplePicker value={clientId ?? "none"} onValueChange={(v) => { setClientId(v === "none" ? null : v); setOfferingId(null); setLines(previous => previous.filter(l => !l.bookkeeping)); }}>
           <SelectTrigger><SelectValue placeholder="Client" /></SelectTrigger>
           <SelectContent><SelectItem value="none">Choose client…</SelectItem>{(c.data?.clients ?? []).map((cl: any) => <SelectItem key={cl.id} value={cl.id}>{cl.legal_name}</SelectItem>)}</SelectContent>
         </SearchablePeoplePicker>
@@ -160,6 +166,9 @@ export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; init
       </div>
       <AdminLevelPicker onAdd={add} lines={c.data?.lines ?? []} />
       <div className="mt-4">
+        <Button variant="outline" onClick={() => setShowBookkeeping(v => !v)}>{showBookkeeping ? "Close bookkeeping" : "Configure Bookkeeping & Accounting"}</Button>
+        {showBookkeeping && bookkeeping.error && <p className="mt-2 text-sm text-destructive">{(bookkeeping.error as Error).message}</p>}
+        {showBookkeeping && bookkeeping.data && <BookkeepingConfigurator configuration={bookkeeping.data.configuration} versionId={bookkeeping.data.versionId} onAdd={(input, invoiceCents) => { setLines(previous => [...previous, { serviceKey: BOOKKEEPING_KEY, label: `Bookkeeping & Accounting — ${input.tier.replace("_", " ")}`, quantity: 1, unitCents: invoiceCents, baselineUnitCents: invoiceCents, billingFrequency: input.billing, firstBillOn: input.effectiveOn, bookkeeping: input }]); setShowBookkeeping(false); }} />}
         <Select value="" onValueChange={add}><SelectTrigger className="w-72"><SelectValue placeholder="Add a service from the rate card" /></SelectTrigger>
           <SelectContent>{(c.data?.lines ?? []).filter((l: any) => !String(l.serviceKey).startsWith(ADMIN_QUOTE_KEY_PREFIX) && !String(l.serviceKey).startsWith(SPV_TXN_KEY_PREFIX)).map((l: any) => <SelectItem key={l.serviceKey} value={l.serviceKey}>{l.label} · {money(l.baselineCents)}</SelectItem>)}</SelectContent></Select>
       </div>
@@ -175,10 +184,10 @@ export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; init
               ...rows.map(({ l, i }) => (
             <TableRow key={i}>
               <TableCell>{l.label}</TableCell>
-              <TableCell><Input inputMode="decimal" value={l.quantity} onChange={(e) => setLines(lines.map((x, j) => (j === i ? { ...x, quantity: Number(e.target.value) || 0 } : x)))} /></TableCell>
-              <TableCell><Input inputMode="decimal" value={l.unitCents / 100} onChange={(e) => setLines(lines.map((x, j) => (j === i ? { ...x, unitCents: Math.round((Number(e.target.value) || 0) * 100) } : x)))} /></TableCell>
-              <TableCell><select aria-label="Billing frequency" className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm" value={l.billingFrequency ?? "one_time"} onChange={(e) => setLines(lines.map((x, j) => (j === i ? { ...x, billingFrequency: e.target.value as any } : x)))}>{BILLING_FREQUENCIES.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}</select></TableCell>
-              <TableCell><Input type="date" aria-label="First billing date" value={l.firstBillOn ?? ""} onChange={(e) => setLines(lines.map((x, j) => (j === i ? { ...x, firstBillOn: e.target.value || null } : x)))} /></TableCell>
+              <TableCell><Input disabled={!!l.bookkeeping} inputMode="decimal" value={l.quantity} onChange={(e) => setLines(lines.map((x, j) => (j === i ? { ...x, quantity: Number(e.target.value) || 0 } : x)))} /></TableCell>
+              <TableCell><Input disabled={!!l.bookkeeping} inputMode="decimal" value={l.unitCents / 100} onChange={(e) => setLines(lines.map((x, j) => (j === i ? { ...x, unitCents: Math.round((Number(e.target.value) || 0) * 100) } : x)))} /></TableCell>
+              <TableCell><select disabled={!!l.bookkeeping} aria-label="Billing frequency" className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm" value={l.billingFrequency ?? "one_time"} onChange={(e) => setLines(lines.map((x, j) => (j === i ? { ...x, billingFrequency: e.target.value as any } : x)))}>{BILLING_FREQUENCIES.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}</select></TableCell>
+              <TableCell><Input disabled={!!l.bookkeeping} type="date" aria-label="First billing date" value={l.firstBillOn ?? ""} onChange={(e) => setLines(lines.map((x, j) => (j === i ? { ...x, firstBillOn: e.target.value || null } : x)))} /></TableCell>
               <TableCell className="text-right text-muted-foreground">{money(l.baselineUnitCents)}{l.unitCents < l.baselineUnitCents && <Badge variant="destructive" className="ml-1">Discount</Badge>}</TableCell>
               <TableCell className="text-right">{money(l.quantity * l.unitCents)}</TableCell>
               <TableCell><Button size="sm" variant="ghost" onClick={() => setLines(lines.filter((_, j) => j !== i))}>Remove</Button></TableCell>
