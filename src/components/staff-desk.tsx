@@ -1,3 +1,4 @@
+import { SearchablePeoplePicker } from "@/components/ui/searchable-people-picker";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
@@ -522,7 +523,7 @@ export function ClientCoverageBoard() {
                           </SelectItem>
                         ))}
                       </SelectContent>
-                    </Select>
+                    </SearchablePeoplePicker>
                   </div>
                   <div className="w-40">
                     <Label>Cover as</Label>

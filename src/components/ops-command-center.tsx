@@ -1,3 +1,4 @@
+import { SearchableNativeSelect } from "@/components/ui/searchable-people-picker";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -457,7 +458,7 @@ function RoleView({ d, field, title }: { d: D; field: "relationshipLeadId" | "pr
   const work = d.queue.filter((q) => q.fundId && ids.has(q.fundId));
   return (
     <div className="space-y-4">
-      <select aria-label="Person" value={who} onChange={(e) => setWho(e.target.value)} className={sel}><option value={d.viewer.userId}>Me</option>{people.map(([id, n]) => <option key={id} value={id}>{n ?? "Staff"}</option>)}</select>
+      <SearchableNativeSelect aria-label="Person" value={who} onChange={(e) => setWho(e.target.value)} className={sel}><option value={d.viewer.userId}>Me</option>{people.map(([id, n]) => <option key={id} value={id}>{n ?? "Staff"}</option>)}</SearchableNativeSelect>
       <section><h2 className="text-lg">{title}</h2><Portfolio rows={funds} economics={false} /></section>
       <Queue rows={work.filter((w) => w.responsibility.startsWith("CLIENT_"))} title="Client actions outstanding" />
       <Queue rows={work.filter((w) => w.kind === "request")} title="Requests" />

@@ -1,3 +1,4 @@
+import { SearchablePeoplePicker } from "@/components/ui/searchable-people-picker";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -131,8 +132,8 @@ function NewTask({ staff }: { staff: { id: string; name: string }[] }) {
       <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="What needs doing?" aria-label="Task title" />
       <Textarea value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Details (optional)" aria-label="Task details" rows={2} />
       <div className="flex flex-wrap gap-2">
-        <Select value={assignee} onValueChange={setAssignee}><SelectTrigger className="w-56" aria-label="Assign to"><SelectValue /></SelectTrigger>
-          <SelectContent><SelectItem value={UNASSIGNED}>Unassigned</SelectItem>{staff.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent></Select>
+        <SearchablePeoplePicker value={assignee} onValueChange={setAssignee}><SelectTrigger className="w-56" aria-label="Assign to"><SelectValue /></SelectTrigger>
+          <SelectContent><SelectItem value={UNASSIGNED}>Unassigned</SelectItem>{staff.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent></SearchablePeoplePicker>
         <Select value={team} onValueChange={setTeam}><SelectTrigger className="w-48" aria-label="Team"><SelectValue /></SelectTrigger>
           <SelectContent>{Object.entries(TEAMS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select>
         <Select value={priority} onValueChange={setPriority}><SelectTrigger className="w-32" aria-label="Priority"><SelectValue /></SelectTrigger>
@@ -172,10 +173,10 @@ function TaskRow({ t, staff, canWrite, open, onToggle }: { t: any; staff: { id: 
         {overdueDays > 0 && <Badge variant="destructive">Overdue {overdueDays}d</Badge>}
         {(t.priority === "high" || t.priority === "urgent") && <Badge variant="destructive">{PRIORITY[t.priority]}</Badge>}
         {canWrite ? (<>
-          <Select value={t.assignee_user_id ?? UNASSIGNED} onValueChange={(v) => save({ assignee: v === UNASSIGNED ? null : v })}>
+          <SearchablePeoplePicker value={t.assignee_user_id ?? UNASSIGNED} onValueChange={(v) => save({ assignee: v === UNASSIGNED ? null : v })}>
             <SelectTrigger className="h-8 w-44" aria-label="Assignee"><SelectValue /></SelectTrigger>
             <SelectContent><SelectItem value={UNASSIGNED}>Unassigned</SelectItem>{staff.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
-          </Select>
+          </SearchablePeoplePicker>
           <Select value={t.status} onValueChange={(v) => save({ status: v })}>
             <SelectTrigger className="h-8 w-36" aria-label="Status"><SelectValue /></SelectTrigger>
             <SelectContent>{Object.entries(STATUS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
@@ -251,8 +252,8 @@ function ResponsibilityEditor({ t, staff }: { t: any; staff: { id: string; name:
       <div className="flex flex-wrap gap-2">
         <Select value={v.status} onValueChange={(x) => setV({ ...v, status: x })}><SelectTrigger className="h-8 w-56" aria-label="Responsibility"><SelectValue /></SelectTrigger>
           <SelectContent>{RESPONSIBILITY_STATUSES.filter((x) => x !== "COMPLETED").map((x) => <SelectItem key={x} value={x}>{RESPONSIBILITY_LABEL[x]}</SelectItem>)}</SelectContent></Select>
-        <Select value={v.owner} onValueChange={(x) => setV({ ...v, owner: x })}><SelectTrigger className="h-8 w-48" aria-label="Responsible person"><SelectValue /></SelectTrigger>
-          <SelectContent><SelectItem value={UNASSIGNED}>No responsible person</SelectItem>{staff.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent></Select>
+        <SearchablePeoplePicker value={v.owner} onValueChange={(x) => setV({ ...v, owner: x })}><SelectTrigger className="h-8 w-48" aria-label="Responsible person"><SelectValue /></SelectTrigger>
+          <SelectContent><SelectItem value={UNASSIGNED}>No responsible person</SelectItem>{staff.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent></SearchablePeoplePicker>
         {v.status === "WAITING_ON_THIRD_PARTY" && (
           <Select value={v.type} onValueChange={(x) => setV({ ...v, type: x })}><SelectTrigger className="h-8 w-44" aria-label="Third-party type"><SelectValue /></SelectTrigger>
             <SelectContent><SelectItem value={UNASSIGNED}>Type not set</SelectItem>{Object.entries(THIRD_PARTY_TYPES).map(([k, l]) => <SelectItem key={k} value={k}>{l}</SelectItem>)}</SelectContent></Select>

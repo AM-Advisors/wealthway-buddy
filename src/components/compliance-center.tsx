@@ -1,3 +1,4 @@
+import { SearchableNativeSelect } from "@/components/ui/searchable-people-picker";
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -187,8 +188,8 @@ function ControlForm({ d, initial, onDone }: { d: Data; initial: any; onDone: ()
       <select className={sel} value={f.frequency} onChange={set("frequency")}>{FREQUENCIES.map((t) => <option key={t} value={t}>{t.replace("_", " ")}</option>)}</select>
       <Input placeholder="System / process" value={f.system_process} onChange={set("system_process")} />
       <Input placeholder="Owner" value={f.owner_label} onChange={set("owner_label")} />
-      <select className={sel} value={f.operator_user_id ?? ""} onChange={set("operator_user_id")}><option value="">Operator…</option>{d.staff.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}</select>
-      <select className={sel} value={f.reviewer_user_id ?? ""} onChange={set("reviewer_user_id")}><option value="">Reviewer…</option>{d.staff.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}</select>
+      <SearchableNativeSelect className={sel} value={f.operator_user_id ?? ""} onChange={set("operator_user_id")}><option value="">Operator…</option>{d.staff.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}</SearchableNativeSelect>
+      <SearchableNativeSelect className={sel} value={f.reviewer_user_id ?? ""} onChange={set("reviewer_user_id")}><option value="">Reviewer…</option>{d.staff.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}</SearchableNativeSelect>
       <Textarea placeholder="Evidence requirements" value={f.evidence_requirements} onChange={set("evidence_requirements")} />
       <Textarea placeholder="Existing implementation" value={f.implementation} onChange={set("implementation")} />
       <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={f.sod_required} onChange={(e) => setF({ ...f, sod_required: e.target.checked })} /> Operator and reviewer must differ</label>
@@ -318,7 +319,7 @@ function Reviews({ d }: { d: Data }) {
             <Input className="w-80" value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} />
             <select className={sel} value={f.population} onChange={(e) => setF({ ...f, population: e.target.value })}><option value="privileged">Privileged access</option><option value="staff">Harmonious staff</option><option value="scoped">Scoped client/fund access</option></select>
             <Input type="date" className="w-40" value={f.period_start} onChange={(e) => setF({ ...f, period_start: e.target.value })} /><Input type="date" className="w-40" value={f.period_end} onChange={(e) => setF({ ...f, period_end: e.target.value })} />
-            <select className={sel} value={f.reviewer_user_id} onChange={(e) => setF({ ...f, reviewer_user_id: e.target.value })}><option value="">Reviewer…</option>{d.staff.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}</select>
+            <SearchableNativeSelect className={sel} value={f.reviewer_user_id} onChange={(e) => setF({ ...f, reviewer_user_id: e.target.value })}><option value="">Reviewer…</option>{d.staff.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}</SearchableNativeSelect>
             <Button size="sm" onClick={() => act(() => create({ data: f as any }), "Campaign created with snapshot")}>Create</Button>
           </CardContent>
         </Card>

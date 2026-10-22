@@ -1,3 +1,4 @@
+import { SearchablePeoplePicker } from "@/components/ui/searchable-people-picker";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -103,7 +104,7 @@ export function GrantAccessWizard({ onDone }: { onDone: () => void }) {
         {step === 0 && (
           <div>
             <Label>Professional</Label>
-            <Select value={delegateUserId} onValueChange={setDelegateUserId}>
+            <SearchablePeoplePicker value={delegateUserId} onValueChange={setDelegateUserId}>
               <SelectTrigger>
                 <SelectValue placeholder="Choose a professional" />
               </SelectTrigger>
@@ -114,7 +115,7 @@ export function GrantAccessWizard({ onDone }: { onDone: () => void }) {
                   </SelectItem>
                 ))}
               </SelectContent>
-            </Select>
+            </SearchablePeoplePicker>
           </div>
         )}
 

@@ -1,3 +1,4 @@
+import { SearchablePeoplePicker } from "@/components/ui/searchable-people-picker";
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -642,7 +643,7 @@ function SetupPage() {
                       </SelectItem>
                     ))}
                   </SelectContent>
-                </Select>
+                </SearchablePeoplePicker>
               </div>
 
               {!existingUserId && (

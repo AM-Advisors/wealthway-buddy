@@ -1,3 +1,4 @@
+import { SearchablePeoplePicker } from "@/components/ui/searchable-people-picker";
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -234,7 +235,7 @@ function AssignmentPanel({
         <div className="flex flex-wrap items-end gap-3">
           <div className="min-w-[240px] flex-1">
             <label className="text-xs font-medium text-muted-foreground">Person</label>
-            <Select value={userId} onValueChange={setUserId}>
+            <SearchablePeoplePicker value={userId} onValueChange={setUserId}>
               <SelectTrigger className="mt-1">
                 <SelectValue placeholder="Choose a person" />
               </SelectTrigger>
@@ -245,7 +246,7 @@ function AssignmentPanel({
                   </SelectItem>
                 ))}
               </SelectContent>
-            </Select>
+            </SearchablePeoplePicker>
           </div>
           <div className="min-w-[220px] flex-1">
             <label className="text-xs font-medium text-muted-foreground">Fund</label>
