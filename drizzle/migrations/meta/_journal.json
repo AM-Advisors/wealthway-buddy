@@ -2318,6 +2318,13 @@
       "when": 1792689086097,
       "tag": "0330_quote_policy_acceptances_short_links",
       "breakpoints": true
+    },
+    {
+      "idx": 331,
+      "version": "7",
+      "when": 1792690613373,
+      "tag": "0331_quote_line_service_details",
+      "breakpoints": true
     }
   ]
 }

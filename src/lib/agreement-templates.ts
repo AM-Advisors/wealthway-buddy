@@ -41,24 +41,56 @@ export type FundFacts = {
   effectiveDate: string;
   msaVersion: string;
   pricingVersion: string;
-  services: { label: string; description?: string | null }[];
+  services: SowService[];
   noticeDays: number;
 };
 
 const money = (cents?: number | null) =>
   cents == null ? "-" : `$${(cents / 100).toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
 
+/**
+ * The Harmonious role disclaimer. Shown as a standalone disclaimer directly under the
+ * signature portion of every Statement of Work, quote and proposal signing page - never
+ * buried inside the Services section.
+ */
+export const SOW_ROLE_DISCLAIMER = [
+  "Harmonious acts solely as an administrative and technology service provider. Nothing in this Statement of Work appoints Harmonious as an investment adviser, broker-dealer, placement agent, custodian, transfer agent, escrow agent, trustee, general partner, fund manager, fiduciary, compliance officer, valuation agent, auditor, accountant, tax preparer or legal counsel, unless a service to that effect is expressly listed above.",
+  "Nothing in this Statement of Work, and no communication from Harmonious, is investment, legal, accounting or tax advice, an offer to sell securities, or a solicitation of an offer to buy securities, and none may be relied on as such.",
+  "The Client remains solely responsible for its offering, its investment and business decisions, its compliance with securities and other applicable laws, and the accuracy and completeness of the information it provides. Harmonious may rely on that information and on the Client's instructions without independent verification.",
+  "Third-party providers - including banks, verification vendors, registered agents, auditors and tax preparers - act independently. Harmonious coordinates with them where a service depends on them but does not assume their professional role, guarantee their timing, or accept responsibility for their acts or omissions.",
+  "Harmonious does not hold, custody or escrow Client or investor funds, and moves money only against the Client's written instruction. The Client's remedies and Harmonious's liability are limited as stated in the Master Services Agreement.",
+].join("\n\n");
+
+export type SowService = {
+  label: string;
+  description?: string | null;
+  /** Extra scope detail recorded by Sales for this engagement. */
+  scope?: string | null;
+  /** What is expressly included. */
+  included?: string[] | null;
+  /** What is expressly not included. */
+  excluded?: string[] | null;
+};
+
 /** The SOW "Services" wording, shared by SOWs and the quotes/proposals that create them. */
-export function sowServicesBody(services: { label: string; description?: string | null }[]) {
+export function sowServicesBody(services: SowService[]) {
   const serviceList = services.length
-    ? services.map((s) => `• ${s.label}${s.description ? ` - ${s.description}` : ""}`).join("\n")
+    ? services
+        .map((s) => {
+          const lines = [`• ${s.label}${s.description ? ` - ${s.description}` : ""}`];
+          if (s.scope?.trim()) lines.push(`  Scope: ${s.scope.trim()}`);
+          const inc = (s.included ?? []).map((x) => x.trim()).filter(Boolean);
+          const exc = (s.excluded ?? []).map((x) => x.trim()).filter(Boolean);
+          if (inc.length) lines.push(`  Included: ${inc.map((x) => `- ${x}`).join("; ")}`);
+          if (exc.length) lines.push(`  Not included: ${exc.map((x) => `- ${x}`).join("; ")}`);
+          return lines.join("\n");
+        })
+        .join("\n")
     : "• Fund administration";
   return [
       "Harmonious will provide the following administrative, technology, onboarding, reporting, payment-facilitation, recordkeeping and compliance-support services for the vehicle named above:",
       "",
       serviceList,
-      "",
-      "Harmonious acts solely as an administrative and technology service provider. Nothing in this Statement of Work appoints Harmonious as an investment adviser, broker-dealer, placement agent, custodian, transfer agent, escrow agent, trustee, general partner, fund manager, fiduciary, compliance officer, valuation agent, auditor, accountant, tax preparer or legal counsel, unless a service to that effect is expressly listed above.",
       "",
       "Services not listed above are not included in the Client's active scope and may be requested in writing through the portal.",
     ].join("\n");

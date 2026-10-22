@@ -80,7 +80,18 @@ export function quoteApprovalProblem(args: { actorId: string; actorRoles: readon
   return args.actorRoles.some((r) => [...EXEC_PRICE_ROLES, "sales_management"].includes(r)) ? null : "A Sales Manager, CRO or CEO must approve this quote.";
 }
 
-export type QuoteLineInput = { serviceKey: string; label: string; quantity: number; unitCents: number; baselineUnitCents: number; billingFrequency?: "one_time" | "monthly" | "quarterly" | "annual" | undefined; firstBillOn?: string | null | undefined; bookkeeping?: import("./bookkeeping-model").BookkeepingInput | undefined };
+/** Sales-recorded per-service SOW detail: extra scope plus what is and is not included. */
+export type QuoteLineDetails = { scope?: string | undefined; included?: string[] | undefined; excluded?: string[] | undefined };
+
+/** Normalizes details typed by Sales: trims, drops blanks, caps counts and lengths. */
+export function cleanLineDetails(d: QuoteLineDetails | null | undefined): QuoteLineDetails | null {
+  if (!d) return null;
+  const list = (v: string[] | undefined) => (v ?? []).map((s) => String(s).trim().slice(0, 300)).filter(Boolean).slice(0, 20);
+  const out: QuoteLineDetails = { scope: String(d.scope ?? "").trim().slice(0, 2000) || undefined, included: list(d.included), excluded: list(d.excluded) };
+  return out.scope || out.included!.length || out.excluded!.length ? out : null;
+}
+
+export type QuoteLineInput = { serviceKey: string; label: string; quantity: number; unitCents: number; baselineUnitCents: number; billingFrequency?: "one_time" | "monthly" | "quarterly" | "annual" | undefined; firstBillOn?: string | null | undefined; bookkeeping?: import("./bookkeeping-model").BookkeepingInput | undefined; details?: QuoteLineDetails | null | undefined };
 export function priceQuote(lines: readonly QuoteLineInput[]) {
   const priced = lines.map((l) => ({ ...l, lineCents: Math.round(l.quantity * l.unitCents) }));
   const total = priced.reduce((a, l) => a + l.lineCents, 0);

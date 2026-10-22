@@ -42887,6 +42887,7 @@ export type Database = {
           line_cents: number
           quantity: number
           quote_id: string
+          service_details: Json
           service_key: string
           sort_order: number
           unit_cents: number
@@ -42902,6 +42903,7 @@ export type Database = {
           line_cents: number
           quantity?: number
           quote_id: string
+          service_details?: Json
           service_key: string
           sort_order?: number
           unit_cents: number
@@ -42917,6 +42919,7 @@ export type Database = {
           line_cents?: number
           quantity?: number
           quote_id?: string
+          service_details?: Json
           service_key?: string
           sort_order?: number
           unit_cents?: number
