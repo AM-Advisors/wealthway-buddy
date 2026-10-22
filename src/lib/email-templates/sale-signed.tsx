@@ -101,9 +101,9 @@ function SaleSigned({
 export const template = {
   component: SaleSigned,
   subject: (data: Record<string, any>) =>
-    data.forSigner
-      ? `Signed: ${data.documentTitle ?? 'your agreement'} — invoice ${data.invoiceNumber ?? ''}`
-      : `Signed: ${data.documentTitle ?? 'Sale document'} — ${data.clientName ?? ''}`,
+    data['forSigner']
+      ? `Signed: ${data['documentTitle'] ?? 'your agreement'} — invoice ${data['invoiceNumber'] ?? ''}`
+      : `Signed: ${data['documentTitle'] ?? 'Sale document'} — ${data['clientName'] ?? ''}`,
   displayName: 'Sale signed (quote/proposal/RFP/RFQ)',
   previewData: {
     recipientName: 'Jane',
