@@ -249,7 +249,7 @@ export function DocumentsStep({ offeringId }: { offeringId?: string }) {
                   <Label htmlFor="ownership_title">Title to be held as</Label>
                   <Input
                     id="ownership_title"
-                    placeholder="Alyssa J. Pettit"
+                    placeholder="John Smith"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                   />
