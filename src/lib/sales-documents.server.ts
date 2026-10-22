@@ -383,21 +383,19 @@ export async function sendDocument(userId: string, id: string, d: { subject: str
   const { acceptLinkFor } = await import("@/lib/sales-acceptance.server");
   const { sendOutreach } = await import("@/lib/sales-hub.server");
   const view = await signProposalView(id, version);
-  const esc = (t: string) => t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  const para = (t: string) => esc(t).split(/\n{2,}/).map((p) => `<p style="margin:0 0 12px">${p.replace(/\n/g, "<br/>")}</p>`).join("");
+  const { proposalReadyEmail } = await import("@/lib/sales-documents-model");
+  const { data: me } = await a.db.from("profiles").select("legal_name, email").eq("user_id", userId).maybeSingle();
+  const repName = me?.legal_name ?? null;
   const signerNames = to.filter((t) => signerIds.has(t.contactId)).map((t) => t.name);
   for (const [i, r] of to.entries()) {
     const recipient = r.email;
     const canSign = signerIds.has(r.contactId);
-    const link = await buildTrackedUrl({ url: view, recipient, template: key, label: "View document" });
-    const pixel = await buildOpenPixelUrl({ recipient, template: key });
     const signUrl = canSign ? await acceptLinkFor(a.doc.kind, id, version, recipient) : null;
-    const note = canSign ? "" : `<p style="color:#666">For your review. ${esc(signerNames.join(", "))} can sign and approve.</p>`;
-    const html = `<!doctype html><html><body style="font-family:Poppins,Arial,sans-serif;color:#221F20;line-height:1.5">${para(d.message)}`
-      + `<p style="margin:20px 0"><a href="${link}" style="background:#142647;color:#ffffff;padding:10px 18px;border-radius:6px;text-decoration:none">View ${esc(a.doc.title)}</a>${signUrl ? ` &nbsp; <a href="${signUrl}" style="background:#5DC6D1;color:#142647;padding:10px 18px;border-radius:6px;text-decoration:none">Sign &amp; approve</a>` : ""}</p>${note}`
-      + sections.map((s) => `<h3 style="color:#142647;font-family:Rubik,Arial,sans-serif;margin:20px 0 6px">${esc(s.title)}</h3>${s.question ? `<p style="color:#666"><em>Question: ${esc(s.question)}</em></p>` : ""}${para(s.body || "")}`).join("")
-      + `<img src="${pixel}" width="1" height="1" alt="" style="display:none"/></body></html>`;
-    const body = `${d.message}\n\nView the full document: ${link}\n${signUrl ? `Sign & approve: ${signUrl}` : `For your review. ${signerNames.join(", ")} can sign and approve.`}\n\n---\n${a.doc.title}\n\n${sectionsText(sections)}`;
+    const link = await buildTrackedUrl({ url: signUrl ?? view, recipient, template: key, label: canSign ? "Sign & approve" : "View document" });
+    const pixel = await buildOpenPixelUrl({ recipient, template: key });
+    const mail = proposalReadyEmail({ clientName: r.name, repMessage: d.message, repName, link, canSign, signerNames });
+    const html = mail.html + `<img src="${pixel}" width="1" height="1" alt="" style="display:none"/></body></html>`;
+    const body = mail.text;
     await sendOutreach(userId, { contactId: r.contactId, channel: "email", subject: d.subject, body, html, cc: i === 0 ? cc : [], visibility: "team" });
   }
   await a.db.from("sales_documents").update({ status: "sent", sent_at: new Date().toISOString(), sent_to: to.map((t) => t.email).join(", "), updated_at: new Date().toISOString() }).eq("id", id);
