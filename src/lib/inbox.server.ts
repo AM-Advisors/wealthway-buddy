@@ -118,8 +118,19 @@ export async function loadThread(a: InboxActor, id: string) {
   };
 }
 
+/** Channels each client may write to, from its funds' active service levels. */
+export async function channelsFor(clientIds: string[]): Promise<Record<string, Channel[]>> {
+  const { allowedInboxChannels } = await import("@/lib/inbox-policy");
+  if (!clientIds.length) return {};
+  const { data } = await (await db()).from("offerings").select("client_id, service_level").in("client_id", clientIds);
+  const out: Record<string, Channel[]> = {};
+  for (const id of clientIds) out[id] = allowedInboxChannels(((data ?? []) as any[]).filter((o) => o.client_id === id).map((o) => o.service_level));
+  return out;
+}
+
 export async function startThread(a: InboxActor, input: { clientId: string; channel: Channel; repUserId: string | null; subject: string; body: string }) {
   if (!a.clientIds.includes(input.clientId)) throw new Error("You can only message Harmonious for your own company.");
+  if (!a.isStaff && !(await channelsFor([input.clientId]))[input.clientId]?.includes(input.channel)) throw new Error("On Self Serve, messages go to Harmonious Operations.");
   if (input.channel === "rep") {
     const reps = await repsFor([input.clientId]);
     if (!input.repUserId || !reps.some((r) => r.userId === input.repUserId)) throw new Error("That person is not assigned to your company.");
@@ -140,6 +151,9 @@ export async function reply(a: InboxActor, id: string, body: string) {
   const { data: t } = await d.from("inbox_threads").select("*").eq("id", id).maybeSingle();
   const side = t ? canSeeThread(a, t) : null;
   if (!side) throw new Error("That conversation is not available.");
+  if (side === "client" && t.client_id && (t.channel === "sales" || t.channel === "rep") && !(await channelsFor([t.client_id]))[t.client_id]?.includes(t.channel)) {
+    throw new Error("This conversation is closed. On Self Serve, please message Harmonious Operations.");
+  }
   const now = new Date().toISOString();
   const { error } = await d.from("inbox_messages").insert({ thread_id: id, sender_id: a.userId, sender_side: side, body });
   if (error) throw new Error("Could not send.");
