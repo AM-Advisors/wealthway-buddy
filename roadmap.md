@@ -1,8 +1,9 @@
 # Roadmap
 
 ## Multi-item side letters (2026-10-22)
-- [ ] Combine selected management-fee, carry, minimum-investment and information-rights items into one staff-generated draft, retaining existing signing and historical documents.
-- [ ] Run fictional generation checks; authenticated save/signing remains blocked on independently isolated synthetic QA.
+- [x] Combine selected management-fee, carry, minimum-investment and information-rights items into one staff-generated draft; each original item button opens the multi-item form with that item selected. Existing signing and historical documents unchanged.
+- [x] 31 fictional generation/model/staff-permission checks passed; preview build OK. No live documents, signatures or emails changed.
+- [ ] Authenticated draft save/read-back and signing — blocked on independently isolated synthetic QA.
 
 ## Correct documents and staff-only generation (2026-10-22)
 - [x] Restrict template use/bulk generation, starter drafts and standard forms server-side to their existing authorized Harmonious staff allowlists; hide manager generation controls, retain review/sign/upload rights. 49 fictional permission/autofill/version/evidence checks passed; preview build OK. Signed-in generation controls remain unverified pending isolated synthetic QA.
