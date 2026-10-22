@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { ClientResponsePanel } from "@/components/sales/client-response-panel";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -182,6 +183,7 @@ function Editor() {
 
         <div className="space-y-4">
           <RecipientLinks documentId={id} addOn={!!doc.client_id} />
+          <ClientResponsePanel kind={doc.kind as DocKind} id={id} />
           <LinkedRecords quoteId={d.packet?.quote?.id ?? null} />
           <div id="send-box" />
           <Panel title="Approval & sending">
