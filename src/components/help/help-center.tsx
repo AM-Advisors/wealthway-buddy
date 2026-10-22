@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { BookOpen, Download } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -32,6 +33,7 @@ function ArticleCard({ a, ops }: { a: HelpArticleView; ops: boolean }) {
         {ops && a.audience === "client" && !a.approved ? <Badge variant="outline">Draft – review</Badge> : null}
       </div>
       <p className="mt-1 text-sm text-muted-foreground">{a.summary}</p>
+      <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground"><BookOpen className="h-3.5 w-3.5" aria-hidden="true" />Guide · Updated {a.updated}</div>
     </Link>
   );
 }
@@ -66,11 +68,13 @@ export function HelpCenterHome({ ops }: { ops: boolean }) {
   const [q, setQ] = useState("");
   const [tab, setTab] = useState<"staff" | "client">("staff");
   const [by, setBy] = useState<"role" | "service">("role");
+  const [format, setFormat] = useState<"all" | "illustrated">("all");
   const pool = ops ? data.articles.filter((a) => a.audience === tab) : data.articles;
   const shown = useMemo(() => {
     const t = q.trim().toLowerCase();
-    return t ? pool.filter((a) => `${a.title} ${a.summary} ${a.services.map(serviceTitle).join(" ")}`.toLowerCase().includes(t)) : pool;
-  }, [pool, q]);
+    const filtered = format === "illustrated" ? pool.filter((a) => Boolean(a.guide)) : pool;
+    return t ? filtered.filter((a) => `${a.title} ${a.summary} ${a.services.map(serviceTitle).join(" ")} ${a.sections.flatMap((s) => [s.heading ?? "", ...(s.steps ?? []), ...(s.paragraphs ?? [])]).join(" ")}`.toLowerCase().includes(t)) : filtered;
+  }, [pool, q, format]);
   const roleList = ops && tab === "staff" ? STAFF_HELP_ROLES : CLIENT_HELP_ROLES;
 
   return (
@@ -93,6 +97,7 @@ export function HelpCenterHome({ ops }: { ops: boolean }) {
         </div>
         {!ops ? <Button asChild variant="outline" size="sm" className="md:ml-auto"><Link to="/messages">Contact Harmonious</Link></Button> : null}
       </div>
+      <div className="flex gap-2" aria-label="Guide format"><Button size="sm" variant={format === "all" ? "secondary" : "ghost"} onClick={() => setFormat("all")}>All guides</Button><Button size="sm" variant={format === "illustrated" ? "secondary" : "ghost"} onClick={() => setFormat("illustrated")}>Illustrated guides</Button></div>
       {shown.length ? <Grouped articles={shown} by={by} ops={ops} roleList={roleList} /> : <p className="text-muted-foreground">No articles match.</p>}
     </div>
   );
@@ -134,6 +139,8 @@ export function HelpArticlePage({ ops, slug }: { ops: boolean; slug: string }) {
           {ops && a.audience === "client" ? <Badge variant="outline">{a.approved ? "Approved for clients" : "Draft – review"}</Badge> : null}
           {ops && a.audience === "staff" ? <Badge variant="outline">Staff only</Badge> : null}
         </div>
+        <p className="text-xs text-muted-foreground">Updated {a.updated} · Version {a.version}</p>
+        {a.download ? <Button asChild variant="outline" size="sm"><a href={a.download.href} download={a.download.filename}><Download className="mr-2 h-4 w-4" />Download guide</a></Button> : null}
         {ops && data.canApprove && a.audience === "client" && !a.approved ? (
           <div className="space-y-2 rounded-lg border border-border bg-muted/40 p-4">
             <p className="text-sm text-foreground">Clients can't see this article until it's approved.</p>
