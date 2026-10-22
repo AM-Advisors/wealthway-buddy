@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { OperatingForecastForm } from '@/components/operating-forecast-form';
 
 export function ForecastChoice({ label, value, options, onChange }: { label: string; value: string; options: { value: string; label: string }[]; onChange: (v: string) => void }) {
   return <div className="min-w-0 space-y-1.5"><Label>{label}</Label><Select value={value} onValueChange={onChange}><SelectTrigger aria-label={label}><SelectValue placeholder="Choose" /></SelectTrigger><SelectContent>{options.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent></Select></div>;
@@ -18,6 +19,7 @@ function Remove({ label, onClick }: { label: string; onClick: () => void }) { re
 const grid = 'grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3';
 export function ForecastAssumptionForm({ value: a, onChange, baseline }: { value: ForecastInput; onChange: (v: ForecastInput) => void; baseline: { holdings?: any[] } }) {
   const year = new Date().getFullYear();
+  if (a.model === 'operating') return <OperatingForecastForm value={a} onChange={onChange} />;
   if (a.model === 'cap_table') {
     const holdings = (baseline.holdings ?? []).filter(h => h.status !== 'cancelled').map(h => ({ holder: String(h.stakeholder_id), class: String(h.share_class ?? h.security_type ?? 'Common'), shares: Number(h.quantity ?? 0) }));
     const patchHolder = (i: number, patch: Partial<typeof a.holders[number]>) => onChange({ ...a, holders: a.holders.map((h, j) => i === j ? { ...h, ...patch } : h) });
