@@ -15,7 +15,24 @@ const common: TemplateField[] = [
 ];
 const investor: TemplateField = { key: "investor", label: "Investor / counterparty name" };
 
+export const SIDE_LETTER_ITEMS = [
+  { key: "sl_management_fee", label: "Management fee", field: { key: "management_rate", label: "Agreed management fee rate", placeholder: "1.5%" }, clause: "Notwithstanding the fund's governing documents, the management fee charged to {{investor}} will be {{management_rate}} per year, calculated on the same basis as all other investors." },
+  { key: "sl_carry", label: "Carried interest", field: { key: "carry_rate", label: "Agreed carried interest", placeholder: "15%" }, clause: "The carried interest applied to distributions to {{investor}} will be {{carry_rate}}." },
+  { key: "sl_minimum", label: "Minimum investment", field: { key: "minimum", label: "Agreed minimum", placeholder: "$25,000" }, clause: "The manager agrees to accept a capital commitment from {{investor}} of not less than {{minimum}}, notwithstanding the stated minimum." },
+  { key: "sl_information_rights", label: "Information rights", field: { key: "rights", label: "Information to be provided", placeholder: "Quarterly financial statements within 60 days of quarter end" }, clause: "The manager will provide {{investor}} with: {{rights}}.\n\n{{investor}} will keep all information received confidential." },
+] as const;
+
+export function selectedSideLetterItems(values: Record<string, string>) {
+  return SIDE_LETTER_ITEMS.filter((item) => values[`include_${item.key}`] === "true");
+}
+
+export function sideLetterItemsComplete(values: Record<string, string>) {
+  const items = selectedSideLetterItems(values);
+  return items.length > 0 && items.every((item) => Boolean(values[item.field.key]?.trim()));
+}
+
 export const DOC_TEMPLATES: DocTemplate[] = [
+  { key: "sl_combined", title: "Side letter - multiple items", category: "side_letter", fields: [...common, investor], body: "" },
   {
     key: "fund_summary", title: "Fund terms summary", category: "fund_document",
     fields: [...common, { key: "target", label: "Target raise" }, { key: "minimum", label: "Minimum investment" }, { key: "mgmt", label: "Management fee" }, { key: "carry", label: "Carried interest" }],
@@ -56,7 +73,13 @@ export const DOC_TEMPLATES: DocTemplate[] = [
 export function renderTemplate(key: string, values: Record<string, string>) {
   const t = DOC_TEMPLATES.find((x) => x.key === key);
   if (!t) throw new Error("Unknown template.");
-  const body = t.body.replace(/\{\{(\w+)\}\}/g, (_, k) => (values[k]?.trim() ? values[k]!.trim() : `[${k}]`));
+  let source = t.body;
+  if (key === "sl_combined") {
+    if (!sideLetterItemsComplete(values)) throw new Error("Select at least one side-letter item and complete each selected item's terms.");
+    const clauses = selectedSideLetterItems(values).map((item, i) => `${i + 1}. ${item.label}\n\n${item.clause}`);
+    source = `SIDE LETTER\n\nDate: {{date}}\nBetween {{fund}} (acting through {{manager}}) and {{investor}}.\n\n${clauses.join("\n\n")}\n\nAll other terms of the governing documents remain unchanged.`;
+  }
+  const body = source.replace(/\{\{(\w+)\}\}/g, (_, k) => values[k]?.trim() || `[${k}]`);
   return { title: t.title, category: t.category, body: `${STARTER_NOTICE}\n\n${body}` };
 }
 
