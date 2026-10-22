@@ -1,0 +1,40 @@
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { calculateBookkeeping, type BookkeepingConfig, type BookkeepingInput } from "@/lib/bookkeeping-model";
+
+const money = (n: number | null) => n === null ? "Custom quote" : `$${(n / 100).toLocaleString("en-US", { minimumFractionDigits: 2 })}`;
+export function BookkeepingConfigurator({ configuration, versionId, onAdd }: { configuration: BookkeepingConfig; versionId: string | null; onAdd: (input: BookkeepingInput, invoiceCents: number) => void }) {
+  const [input, setInput] = useState<BookkeepingInput>({ configVersionId: versionId ?? "00000000-0000-0000-0000-000000000000", tier: "essential", reconciliation: "monthly", billing: "quarterly", entityReferences: ["Proposed legal entity"], expectedTransactions: 50, financialAccounts: 2, accountingMethod: "cash", reportingRequirements: "", effectiveOn: "", termMonths: 12, addons: [], customMonthlyCents: null, customReason: "" });
+  const [entities, setEntities] = useState("");
+  const patch = (value: Partial<BookkeepingInput>) => setInput(previous => ({ ...previous, ...value }));
+  const readyInput = { ...input, configVersionId: versionId ?? input.configVersionId, entityReferences: entities.split("\n").map(v => v.trim()).filter(Boolean), effectiveOn: input.effectiveOn || "2026-01-01" };
+  let result: ReturnType<typeof calculateBookkeeping> | null = null;
+  let error = "";
+  try { result = calculateBookkeeping(configuration, readyInput); } catch (e) { error = (e as Error).message; }
+  return <section className="mt-5 space-y-4 border-t pt-5" aria-label="Bookkeeping quote configuration">
+    <div className="flex flex-wrap items-center gap-2"><h2 className="text-lg font-semibold">Bookkeeping &amp; Accounting</h2><Badge variant="secondary">Proposed · internal draft only</Badge></div>
+    {!versionId && <p className="text-sm text-muted-foreground">An authorized executive must record the proposed pricing version in Services administration before it can be added to a draft.</p>}
+    <div className="grid gap-3 sm:grid-cols-3">
+      <div className="space-y-1"><Label>Bookkeeping tier</Label><Select value={input.tier} onValueChange={tier => patch({ tier: tier as BookkeepingInput["tier"] })}><SelectTrigger aria-label="Bookkeeping tier"><SelectValue /></SelectTrigger><SelectContent>{configuration.tiers.map(t => <SelectItem key={t.key} value={t.key}>{t.name}</SelectItem>)}</SelectContent></Select></div>
+      <div className="space-y-1"><Label>Reconciliation frequency</Label><Select value={input.reconciliation} onValueChange={v => patch({ reconciliation: v as BookkeepingInput["reconciliation"] })}><SelectTrigger aria-label="Reconciliation frequency"><SelectValue /></SelectTrigger><SelectContent>{["monthly", "quarterly", "annual"].map(v => <SelectItem key={v} value={v}>{v.charAt(0).toUpperCase() + v.slice(1)}</SelectItem>)}</SelectContent></Select></div>
+      <div className="space-y-1"><Label>Billing frequency</Label><Select value={input.billing} onValueChange={v => patch({ billing: v as BookkeepingInput["billing"] })}><SelectTrigger aria-label="Bookkeeping billing frequency"><SelectValue /></SelectTrigger><SelectContent>{["monthly", "quarterly", "annual"].map(v => <SelectItem key={v} value={v}>{v.charAt(0).toUpperCase() + v.slice(1)}</SelectItem>)}</SelectContent></Select></div>
+      <div className="space-y-1"><Label htmlFor="bk-transactions">Monthly transactions</Label><Input id="bk-transactions" type="number" min="0" value={input.expectedTransactions} onChange={e => patch({ expectedTransactions: Number(e.target.value) })} /></div>
+      <div className="space-y-1"><Label htmlFor="bk-accounts">Financial accounts</Label><Input id="bk-accounts" type="number" min="0" value={input.financialAccounts} onChange={e => patch({ financialAccounts: Number(e.target.value) })} /></div>
+      <div className="space-y-1"><Label>Accounting method</Label><Select value={input.accountingMethod} onValueChange={v => patch({ accountingMethod: v as "cash" | "accrual" })}><SelectTrigger aria-label="Accounting method"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="cash">Cash</SelectItem><SelectItem value="accrual">Accrual</SelectItem></SelectContent></Select></div>
+      <div className="space-y-1"><Label htmlFor="bk-effective">Effective date</Label><Input id="bk-effective" type="date" value={input.effectiveOn} onChange={e => patch({ effectiveOn: e.target.value })} /></div>
+      <div className="space-y-1"><Label htmlFor="bk-term">Contract term (months)</Label><Input id="bk-term" type="number" min="1" max="120" value={input.termMonths} onChange={e => patch({ termMonths: Number(e.target.value) })} /></div>
+      <div className="space-y-1"><Label htmlFor="bk-custom">Custom monthly price ($)</Label><Input id="bk-custom" type="number" min="0" placeholder="Use proposed rate" value={input.customMonthlyCents === null ? "" : input.customMonthlyCents / 100} onChange={e => patch({ customMonthlyCents: e.target.value === "" ? null : Math.round(Number(e.target.value) * 100) })} /></div>
+    </div>
+    <div className="grid gap-3 sm:grid-cols-2"><div className="space-y-1"><Label htmlFor="bk-entities">Proposed legal entities</Label><Textarea id="bk-entities" placeholder="Legal entity name" value={entities} onChange={e => setEntities(e.target.value)} /></div><div className="space-y-1"><Label htmlFor="bk-reporting">Reporting requirements</Label><Textarea id="bk-reporting" value={input.reportingRequirements} onChange={e => patch({ reportingRequirements: e.target.value })} /></div></div>
+    {input.customMonthlyCents !== null && <div className="space-y-1"><Label htmlFor="bk-reason">Custom price reason</Label><Input id="bk-reason" value={input.customReason} onChange={e => patch({ customReason: e.target.value })} /></div>}
+    <div className="grid gap-x-5 gap-y-2 sm:grid-cols-2">{configuration.addons.map(a => <div key={a.key} className="flex items-center justify-between gap-3 border-b py-2"><Label htmlFor={`bk-addon-${a.key}`} className="min-w-0 text-sm">{a.name}<span className="block text-xs text-muted-foreground">{money(a.unitCents)} / {a.cadence === "monthly" ? "month" : a.cadence.replace("_", " ")}</span></Label><Input id={`bk-addon-${a.key}`} aria-label={`${a.name} quantity`} className="w-20 shrink-0" type="number" min="0" value={input.addons.find(x => x.key === a.key)?.quantity ?? 0} onChange={e => patch({ addons: [...input.addons.filter(x => x.key !== a.key), { key: a.key, quantity: Number(e.target.value) }] })} /></div>)}</div>
+    {result && <><div className="grid gap-3 border-y py-4 sm:grid-cols-5">{[["Monthly-equivalent", result.monthlyCents], ["Recurring invoice", result.invoiceCents], ["Annual recurring", result.annualCents], ["One-time", result.oneTimeCents], ["Quoted usage", result.usageCents]].map(([label, value]) => <div key={String(label)}><p className="text-xs text-muted-foreground">{label}</p><p className="font-semibold">{money(value as number | null)}</p></div>)}</div><p className="text-sm text-muted-foreground">{result.tier.transactions} monthly transactions · {result.tier.accounts ?? "Custom"} accounts included · {result.businessDays === null ? "Customer-managed; no managed completion guarantee" : `${result.businessDays} business days after period end and required records`}</p>{result.blockers.map(b => <p key={b} className="text-sm text-destructive">{b}</p>)}</>}
+    {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+    <Button variant="outline" disabled={!versionId || !result || result.invoiceCents === null || !input.effectiveOn || result.blockers.some(b => !b.startsWith("Confirm the custom"))} onClick={() => { if (result?.invoiceCents !== null && result) onAdd(readyInput, result.invoiceCents); }}>Add proposed bookkeeping line</Button>
+  </section>;
+}

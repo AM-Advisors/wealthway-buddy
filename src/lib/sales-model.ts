@@ -80,7 +80,7 @@ export function quoteApprovalProblem(args: { actorId: string; actorRoles: readon
   return args.actorRoles.some((r) => [...EXEC_PRICE_ROLES, "sales_management"].includes(r)) ? null : "A Sales Manager, CRO or CEO must approve this quote.";
 }
 
-export type QuoteLineInput = { serviceKey: string; label: string; quantity: number; unitCents: number; baselineUnitCents: number; billingFrequency?: "one_time" | "monthly" | "quarterly" | "annual" | undefined; firstBillOn?: string | null | undefined };
+export type QuoteLineInput = { serviceKey: string; label: string; quantity: number; unitCents: number; baselineUnitCents: number; billingFrequency?: "one_time" | "monthly" | "quarterly" | "annual" | undefined; firstBillOn?: string | null | undefined; bookkeeping?: import("./bookkeeping-model").BookkeepingInput | undefined };
 export function priceQuote(lines: readonly QuoteLineInput[]) {
   const priced = lines.map((l) => ({ ...l, lineCents: Math.round(l.quantity * l.unitCents) }));
   const total = priced.reduce((a, l) => a + l.lineCents, 0);

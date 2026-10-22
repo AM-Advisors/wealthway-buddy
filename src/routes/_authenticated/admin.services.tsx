@@ -3,6 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
+import { BookkeepingPricingAdmin } from "@/components/bookkeeping-pricing-admin";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -179,12 +180,14 @@ function ServicesAdmin() {
         <TabsList className="flex-wrap">
           <TabsTrigger value="catalog">Catalog ({services.length})</TabsTrigger>
           <TabsTrigger value="packages">Packages ({catalogue.data.packages.length})</TabsTrigger>
+          <TabsTrigger value="bookkeeping">Bookkeeping</TabsTrigger>
           <TabsTrigger value="requests">
             Client requests ({requests.data?.requests.length ?? 0})
           </TabsTrigger>
           <TabsTrigger value="payments">Wire & ACH payments</TabsTrigger>
         </TabsList>
 
+        <TabsContent value="bookkeeping" className="mt-4"><BookkeepingPricingAdmin /></TabsContent>
         <TabsContent value="catalog" className="mt-4 space-y-4">
           {SERVICE_CATEGORIES.filter((c) => services.some((s) => s.category === c.value)).map(
             (c) => (

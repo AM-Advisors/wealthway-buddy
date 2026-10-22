@@ -20,6 +20,7 @@ import { QuoteBuilder } from "./sales_.quotes";
 import { AddSalesContact } from "@/components/sales/add-sales-contact";
 import { canAddSalesContact } from "@/lib/sales-contact-model";
 import { addSalesQuoteContact } from "@/lib/sales-hub.functions";
+import { bookkeepingDraftBlocker } from "@/lib/bookkeeping-model";
 
 export const Route = createFileRoute("/_authenticated/sales_/quotes_/$id")({
   head: () => ({
@@ -69,6 +70,7 @@ function QuotePage() {
   const d = q.data as any;
   if (!d) return <main className="mx-auto max-w-5xl px-4 py-10 text-sm text-muted-foreground">Loading…</main>;
   const s = d.quote.status as string;
+  const bookkeepingBlocker = bookkeepingDraftBlocker(d.lines);
   return (
     <main className="mx-auto max-w-6xl space-y-6 px-4 py-10">
       <Link to="/sales/quotes" className="text-sm text-muted-foreground hover:underline">← Quotes</Link>
@@ -86,7 +88,7 @@ function QuotePage() {
         {!["signed", "superseded"].includes(s) && <Button size="sm" variant="ghost" onClick={() => revise.mutate()} disabled={revise.isPending}>New version</Button>}
       </>}>
         {d.canEdit && !editing && <Button size="sm" variant="outline" onClick={() => setEditing(true)}>Edit</Button>}
-        {d.canEdit && <Button size="sm" onClick={() => submit.mutate()} disabled={submit.isPending}>Submit for approval</Button>}
+        {d.canEdit && <Button size="sm" onClick={() => submit.mutate()} disabled={submit.isPending || !!bookkeepingBlocker}>Submit for approval</Button>}
         {s === "pending_approval" && (d.canApprove ? (
           <><Input className="h-9 max-w-xs" placeholder="Note (required to request changes)" value={note} onChange={(e) => setNote(e.target.value)} />
             <Button size="sm" onClick={() => decide.mutate(true)} disabled={decide.isPending}>Approve</Button>
@@ -97,12 +99,13 @@ function QuotePage() {
         {s === "sent" && <span className="text-sm text-muted-foreground">Waiting for the client to sign.</span>}
         {s === "signed" && <span className="text-sm text-foreground">Signed {d.quote.signed_at ? new Date(d.quote.signed_at).toLocaleDateString() : ""}. Counted as revenue closed.</span>}
       </ActionBar>
+      {bookkeepingBlocker && <p className="text-sm text-muted-foreground">{bookkeepingBlocker}</p>}
 
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
         <div className="space-y-6">
       {editing ? (
         <QuoteBuilder onCancel={() => { setEditing(false); qc.invalidateQueries({ queryKey: ["sales-quote", id] }); }} initial={{ id, title: d.quote.title, clientId: d.quote.client_id, contactId: d.quote.contact_id, offeringId: (d.quote as any).offering_id ?? null, validUntil: d.quote.valid_until, notes: d.quote.notes,
-          lines: d.lines.map((l: any) => ({ serviceKey: l.service_key, label: l.label, quantity: Number(l.quantity), unitCents: Number(l.unit_cents), baselineUnitCents: Number(l.baseline_unit_cents), billingFrequency: l.billing_frequency ?? "one_time", firstBillOn: l.first_bill_on ?? null })) }} />
+          lines: d.lines.map((l: any) => ({ serviceKey: l.service_key, label: l.label, quantity: Number(l.quantity), unitCents: Number(l.unit_cents), baselineUnitCents: Number(l.baseline_unit_cents), billingFrequency: l.billing_frequency ?? "one_time", firstBillOn: l.first_bill_on ?? null, bookkeeping: l.bookkeeping_snapshot ?? undefined })) }} />
       ) : (
         <Panel title="Services">
           <Table>
@@ -115,6 +118,7 @@ function QuotePage() {
           {d.quote.needs_exec_approval && <p className="mt-2 text-sm text-muted-foreground">Below the rate card: needs CEO or CRO approval.</p>}
           {d.quote.notes && <p className="mt-2 text-sm text-muted-foreground">Notes: {d.quote.notes}</p>}
           {d.quote.decision_note && <p className="mt-2 text-sm text-foreground">Decision note: {d.quote.decision_note}</p>}
+          {d.lines.filter((l: any) => l.bookkeeping_snapshot).map((l: any) => <details key={l.id} className="mt-4 border-t pt-3"><summary className="cursor-pointer text-sm font-medium">Proposed bookkeeping SOW scope</summary><p className="mt-3 whitespace-pre-wrap text-sm text-muted-foreground">{l.bookkeeping_snapshot.scope}</p></details>)}
         </Panel>
       )}
 

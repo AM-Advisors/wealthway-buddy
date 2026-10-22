@@ -2,9 +2,11 @@
 
 ## Bookkeeping service integration brief (2026-10-22)
 - [x] Review existing pricing, quote/SOW, billing, accounting and entity-access engines; prepare a phased plan including standalone handoff, first-invoice deduplication and service-critical accounting release gates.
-- [ ] Implement internal proposed catalog/configuration, quote snapshots, overlap checks and scoped SOW terms without publishing prices or modifying current contracts.
-- [ ] Implement contract-gated enrollment, prospective reconciliation schedules, entity-authorized portal views and reviewed report release through existing engines.
-- [ ] Verify fictional acceptance scenarios; authenticated end-to-end checks blocked until independently isolated QA passes preflight. No live invoices, bank connections or production enrollments.
+- [x] Internal proposed configuration editor and guided bookkeeping quote inputs; server-calculated pricing, frozen versioned draft lines and proposed SOW scope; database gates prevent approval, sending and live billing. Existing prices/contracts unchanged.
+- [x] 87 offline checks passed (48 bookkeeping rules plus Sales, invoice, acceptance and QA regressions); fictional real-form frequency/custom-price/callback read-back passed without network access or runtime errors. Database table, snapshot column and three draft/immutability guards confirmed; preview build OK. Styled authenticated screens and durable signed-in save/read-back remain unverified.
+- [ ] Contract overlap resolution and actual SOW execution, entity coverage, first-period invoice ownership and contract-gated enrollment — release blocked pending explicitly approved operational/access design and isolated QA evidence; draft scope is not an executed SOW.
+- [ ] Prospective reconciliation schedules, explicit legal-entity authorization and client/portfolio reviewed-report views — blocked on entity-book access review and service-critical accounting audit fixes before customer access.
+- [ ] Authenticated quote save/read-back and full acceptance checks — blocked until independently isolated synthetic QA passes preflight. No live invoices, bank connections or production enrollments.
 
 ## Internal Sales MSA display (2026-10-22)
 - [x] Collapse locked MSA terms and packet details by default in the shared proposal/RFP/RFQ editor; quote detail already omits MSA text. Existing editing authority and client signing views unchanged.

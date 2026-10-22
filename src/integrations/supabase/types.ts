@@ -3662,6 +3662,36 @@ export type Database = {
           },
         ]
       }
+      bookkeeping_config_versions: {
+        Row: {
+          configuration: Json
+          created_at: string
+          created_by: string
+          effective_on: string
+          id: string
+          publication_status: string
+          reason: string
+        }
+        Insert: {
+          configuration: Json
+          created_at?: string
+          created_by: string
+          effective_on: string
+          id?: string
+          publication_status?: string
+          reason: string
+        }
+        Update: {
+          configuration?: Json
+          created_at?: string
+          created_by?: string
+          effective_on?: string
+          id?: string
+          publication_status?: string
+          reason?: string
+        }
+        Relationships: []
+      }
       box_sign_webhook_events: {
         Row: {
           delivered_at: string | null
@@ -42760,6 +42790,7 @@ export type Database = {
         Row: {
           baseline_unit_cents: number
           billing_frequency: string
+          bookkeeping_snapshot: Json | null
           created_at: string
           first_bill_on: string | null
           id: string
@@ -42774,6 +42805,7 @@ export type Database = {
         Insert: {
           baseline_unit_cents?: number
           billing_frequency?: string
+          bookkeeping_snapshot?: Json | null
           created_at?: string
           first_bill_on?: string | null
           id?: string
@@ -42788,6 +42820,7 @@ export type Database = {
         Update: {
           baseline_unit_cents?: number
           billing_frequency?: string
+          bookkeeping_snapshot?: Json | null
           created_at?: string
           first_bill_on?: string | null
           id?: string
