@@ -3,7 +3,7 @@
 ## Operations Slack links and verification confirmation (2026-10-22)
 - [x] Locate the reported client PortalGate error; Operations Slack links now land directly on ops.harmonious.co without an app-domain hop. Missing owner remains informational; no ownership or permission changes. Exact live access-check failure is not reproduced.
 - [x] Route KYC/KYB/AML confirmation-required alerts through the existing sender from account/provider checks, business submissions and prior-check reruns; include canonical account/business review rows in the existing alert sweep. Processing-only checks do not alert; restricted details stay private.
-- [ ] Run fictional regression checks and confirm preview status.
+- [x] 167 fictional regression checks passed; preview build OK. No real verification decisions, ownership, messages or funds changed during testing.
 - [ ] Fund A authenticated click-through and live Slack delivery — blocked until independently isolated synthetic QA; old Slack messages retain their original links.
 
 ## Signing while AML is pending (2026-10-22)

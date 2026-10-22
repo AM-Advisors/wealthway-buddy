@@ -274,9 +274,7 @@ async function identityItems(s: any, lookup: Lookup, now: Date) {
   for (const k of kyc as any[]) {
     const app = byApp.get(k.application_id);
     if (!app) continue;
-    const waiting = ["pending", "review", "in_review", "requires_review", "failed"].includes(
-      String(k.status),
-    );
+    const waiting = verificationNeedsConfirmation(String(k.status));
     if (!waiting) continue;
     out.push(
       build(lookup, now, {
