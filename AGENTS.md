@@ -40,6 +40,7 @@
 - Signed-SOW commission handoff uses commission-notify.server.ts and the canonical queueInvoicePayouts engine; event-bound assigned-rep notices use managed delivery, while only paid invoices receive quarter-end queue rows — why: one commission engine, retry-safe notices and no automatic money movement.
 
 - Forecasts are projections only, gated server-side by a contracted and paid subject-specific Forecasting add-on; immutable versions and sharing events never alter canonical records or trigger money movement.
+- Forecast assumption forms edit the existing ForecastInput through forecast-assumption-form.tsx; forecast-form-model.ts handles display-unit conversions and holding selection without mutating baseline records — why: guided input preserves saved-version compatibility and the existing calculation engine.
 
 - Recurring payment schedules come only from signed-SOW frequencies and send invoices and notices, never money; missing terms require staff review.
 
