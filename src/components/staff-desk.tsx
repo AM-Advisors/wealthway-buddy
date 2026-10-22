@@ -1,3 +1,4 @@
+import { SearchablePeoplePicker } from "@/components/ui/searchable-people-picker";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
@@ -506,7 +507,7 @@ export function ClientCoverageBoard() {
                 <div className="flex flex-wrap items-end gap-2">
                   <div className="min-w-56">
                     <Label>Add someone</Label>
-                    <Select
+                    <SearchablePeoplePicker
                       value={d.staffUserId}
                       onValueChange={(v) =>
                         setDraft({ ...draft, [c.id]: { ...d, staffUserId: v } })
@@ -522,7 +523,7 @@ export function ClientCoverageBoard() {
                           </SelectItem>
                         ))}
                       </SelectContent>
-                    </Select>
+                    </SearchablePeoplePicker>
                   </div>
                   <div className="w-40">
                     <Label>Cover as</Label>

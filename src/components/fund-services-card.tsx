@@ -1,3 +1,4 @@
+import { SearchableNativeSelect } from "@/components/ui/searchable-people-picker";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -149,10 +150,10 @@ function BoiParties({ d, offeringId, onChanged, locked }: { d: D; offeringId: st
       ))}
       {!locked && (
         <div className="flex flex-wrap items-end gap-2">
-          <select className="h-9 rounded-md border bg-background px-2 text-sm" value={personId} onChange={(e) => setPersonId(e.target.value)}>
+          <SearchableNativeSelect className="h-9 rounded-md border bg-background px-2 text-sm" value={personId} onChange={(e) => setPersonId(e.target.value)}>
             <option value="">Choose a person on this Fund or Client…</option>
             {d.candidates.map((c) => <option key={c.personId} value={c.personId}>{c.name}</option>)}
-          </select>
+          </SearchableNativeSelect>
           <select className="h-9 rounded-md border bg-background px-2 text-sm" value={role} onChange={(e) => setRole(e.target.value as any)}>
             <option value="beneficial_owner">Beneficial owner</option>
             <option value="company_applicant">Company applicant</option>

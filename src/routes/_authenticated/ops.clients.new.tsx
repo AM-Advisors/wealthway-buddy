@@ -1,3 +1,4 @@
+import { SearchableNativeSelect } from "@/components/ui/searchable-people-picker";
 import { useEffect, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
@@ -153,10 +154,10 @@ function NewClient() {
             <Field label="State / jurisdiction"><Input value={f.jurisdiction ?? ""} onChange={set("jurisdiction")} /></Field>
             <Field label="EIN (only the last 4 digits are kept)"><Input value={f.ein ?? ""} onChange={set("ein")} placeholder={f.ein_hint || "12-3456789"} autoComplete="off" /></Field>
             <Field label="Relationship owner at Harmonious">
-              <select className="h-10 w-full rounded-md border bg-background px-3 text-sm" value={f.relationship_owner_id ?? ""} onChange={set("relationship_owner_id")}>
+              <SearchableNativeSelect className="h-10 w-full rounded-md border bg-background px-3 text-sm" value={f.relationship_owner_id ?? ""} onChange={set("relationship_owner_id")}>
                 <option value="">Choose…</option>
                 {opts?.owners.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
-              </select>
+              </SearchableNativeSelect>
             </Field>
             <div className="sm:col-span-2"><Field label="Address"><Input value={f.address ?? ""} onChange={set("address")} /></Field></div>
             <Field label="Referral / source"><Input value={f.referral_source ?? ""} onChange={set("referral_source")} /></Field>

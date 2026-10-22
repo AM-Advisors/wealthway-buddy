@@ -1,3 +1,4 @@
+import { SearchablePeoplePicker } from "@/components/ui/searchable-people-picker";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -115,12 +116,12 @@ export function FundOnboardingSettings({ fundId }: { fundId: string }) {
                           </SelectContent>
                         </Select>
                         {doc.signingMode === "dual" && (
-                          <Select value={doc.countersignerUserId ?? ""} onValueChange={(v) => update(doc, { countersignerUserId: v })}>
+                          <SearchablePeoplePicker value={doc.countersignerUserId ?? ""} onValueChange={(v) => update(doc, { countersignerUserId: v })}>
                             <SelectTrigger className="w-56"><SelectValue placeholder="Authorized signatory" /></SelectTrigger>
                             <SelectContent>
                               {q.data.countersigners.map((c) => <SelectItem key={c.userId} value={c.userId}>{c.name}</SelectItem>)}
                             </SelectContent>
-                          </Select>
+                          </SearchablePeoplePicker>
                         )}
                         <Button size="sm" variant="outline" onClick={() => setPreparing(preparing === doc.id ? null : doc.id)}>Prepare for Signature</Button>
                       </div>

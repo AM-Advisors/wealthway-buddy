@@ -1,3 +1,4 @@
+import { SearchableNativeSelect } from "@/components/ui/searchable-people-picker";
 import { addFundTitle } from "@/lib/drive-labels";
 import { useMemo, useState } from "react";
 import { parseMoneyToCents, PRICE_INPUT_MESSAGE } from "@/lib/contract-coverage";
@@ -131,10 +132,10 @@ function EditClientDialog({ clientId, initial, staff, onClose }: { clientId: str
           {text("phone", "Phone")}
           <div className="space-y-1">
             <Label htmlFor="ec-owner">Harmonious relationship owner</Label>
-            <select id="ec-owner" className="h-9 w-full rounded-md border bg-background px-2 text-sm" value={f["relationship_owner_id"] ?? ""} onChange={(e) => set("relationship_owner_id", e.target.value)}>
+            <SearchableNativeSelect id="ec-owner" className="h-9 w-full rounded-md border bg-background px-2 text-sm" value={f["relationship_owner_id"] ?? ""} onChange={(e) => set("relationship_owner_id", e.target.value)}>
               <option value="">-</option>
               {staff.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
-            </select>
+            </SearchableNativeSelect>
           </div>
           {text("referral_source", "Referral / source")}
           <div className="space-y-1">

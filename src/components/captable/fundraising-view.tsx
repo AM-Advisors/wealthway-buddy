@@ -1,3 +1,4 @@
+import { SearchablePeoplePicker } from "@/components/ui/searchable-people-picker";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -469,14 +470,14 @@ function InvestmentDialog({
         </DialogHeader>
         <div className="grid gap-3">
           <Field label="Investor">
-            <Select value={stakeholderId} onValueChange={setStakeholderId}>
+            <SearchablePeoplePicker value={stakeholderId} onValueChange={setStakeholderId}>
               <SelectTrigger><SelectValue placeholder="Choose an investor" /></SelectTrigger>
               <SelectContent>
                 {data.stakeholders.map((s) => (
                   <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
                 ))}
               </SelectContent>
-            </Select>
+            </SearchablePeoplePicker>
           </Field>
           <div className="grid gap-3 sm:grid-cols-2">
             <Field label="Instrument">

@@ -1,3 +1,4 @@
+import { SearchableNativeSelect } from "@/components/ui/searchable-people-picker";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
@@ -69,11 +70,11 @@ function QueuePage() {
           <option value="all">All clients</option>
           {clients.map(([id, name]) => <option key={id} value={id}>{name}</option>)}
         </select>
-        <select aria-label="Assigned to" className={sel} value={owner} onChange={(e) => setOwner(e.target.value)}>
+        <SearchableNativeSelect aria-label="Assigned to" className={sel} value={owner} onChange={(e) => setOwner(e.target.value)}>
           <option value="all">Anyone</option>
           <option value="none">Unassigned</option>
           {(q.data?.staff ?? []).map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-        </select>
+        </SearchableNativeSelect>
         <select aria-label="Age" className={sel} value={age} onChange={(e) => setAge(e.target.value)}>
           {AGES.map((a) => <option key={a.key} value={a.key}>{a.label}</option>)}
         </select>

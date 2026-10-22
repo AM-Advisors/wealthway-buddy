@@ -1,3 +1,4 @@
+import { SearchablePeoplePicker } from "@/components/ui/searchable-people-picker";
 import { invalidateFund } from "@/lib/fund-query-keys";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -192,8 +193,8 @@ export function DocumentsTab({ fundId }: { fundId: string }) {
               )}
               {needsMgr && (
                 <div className="space-y-1"><Label>Fund manager</Label>
-                  <Select value={mgr} onValueChange={setMgr}><SelectTrigger><SelectValue placeholder="Choose a fund manager" /></SelectTrigger>
-                    <SelectContent>{(sig.data?.managers ?? []).map((m: any) => <SelectItem key={m.userId} value={m.userId} disabled={!m.email}>{m.name}</SelectItem>)}</SelectContent></Select>
+                  <SearchablePeoplePicker value={mgr} onValueChange={setMgr}><SelectTrigger><SelectValue placeholder="Choose a fund manager" /></SelectTrigger>
+                    <SelectContent>{(sig.data?.managers ?? []).map((m: any) => <SelectItem key={m.userId} value={m.userId} disabled={!m.email}>{m.name}</SelectItem>)}</SelectContent></SearchablePeoplePicker>
                   {!sig.data?.managers?.length && <p className="text-xs text-muted-foreground">This fund has no fund manager with a login yet.</p>}</div>
               )}
             </div>

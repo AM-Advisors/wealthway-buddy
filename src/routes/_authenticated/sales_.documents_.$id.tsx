@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { SearchableContactChoices } from "@/components/ui/searchable-contact-choices";
 import { Textarea } from "@/components/ui/textarea";
 import {
   decideSalesDocument, draftSalesDocumentWithAi, exportSalesDocument, getSalesDocument,
@@ -197,7 +198,7 @@ function Editor() {
                 <Textarea rows={3} value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Short cover note" />
                 <div className="rounded-md border p-2">
                   <p className="mb-1 text-xs font-medium text-muted-foreground">CC Sales team members (optional)</p>
-                  <div className="max-h-36 space-y-1 overflow-y-auto">
+                  <SearchableContactChoices aria-label="Search Sales CC contacts">
                     {(ccOpts.data ?? []).map((o) => (
                       <label key={o.userId} className="flex items-center gap-2 text-sm">
                         <input type="checkbox" checked={ccIds.includes(o.userId)} onChange={(e) => setCcIds((c) => e.target.checked ? [...c, o.userId] : c.filter((x) => x !== o.userId))} />
@@ -205,7 +206,7 @@ function Editor() {
                       </label>
                     ))}
                     {ccOpts.data && !ccOpts.data.length && <p className="text-xs text-muted-foreground">No Sales team members found.</p>}
-                  </div>
+                  </SearchableContactChoices>
                 </div>
                 {(() => {
                   const def = doc.contact_id ? [doc.contact_id as string] : [];
@@ -215,7 +216,7 @@ function Editor() {
                   return (<>
                     <div className="rounded-md border p-2">
                       <p className="mb-1 text-xs font-medium text-muted-foreground">Send to (client's team)</p>
-                      <div className="max-h-36 space-y-1 overflow-y-auto">
+                      <SearchableContactChoices aria-label="Search client recipients">
                         {(team.data ?? []).map((t) => (
                           <label key={t.contactId} className="flex items-center gap-2 text-sm">
                             <input type="checkbox" checked={to.includes(t.contactId)} onChange={(e) => setToIds(tog(to, t.contactId, e.target.checked))} />
@@ -223,19 +224,19 @@ function Editor() {
                           </label>
                         ))}
                         {team.data && !team.data.length && <p className="text-xs text-muted-foreground">No client contacts with an email yet.</p>}
-                      </div>
+                      </SearchableContactChoices>
                       <p className="mt-1 text-xs text-muted-foreground">People at the same organization in your contacts show here. Each gets their own email.</p>
                     </div>
                     <div className="rounded-md border p-2">
                       <p className="mb-1 text-xs font-medium text-muted-foreground">Who can sign and approve</p>
-                      <div className="space-y-1">
+                      <SearchableContactChoices aria-label="Search proposal signers">
                         {(team.data ?? []).filter((t) => to.includes(t.contactId)).map((t) => (
                           <label key={t.contactId} className="flex items-center gap-2 text-sm">
                             <input type="checkbox" checked={signers.includes(t.contactId)} onChange={(e) => setSignerIds(tog(signers, t.contactId, e.target.checked))} />
                             <span>{t.name}</span>
                           </label>
                         ))}
-                      </div>
+                      </SearchableContactChoices>
                       <p className="mt-1 text-xs text-muted-foreground">Only these people get a Sign &amp; approve button. Everyone else gets a view-only copy.</p>
                     </div>
                     <div className="rounded-md border p-2">

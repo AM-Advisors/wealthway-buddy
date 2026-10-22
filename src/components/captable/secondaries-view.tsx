@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { SearchablePeoplePicker } from "@/components/ui/searchable-people-picker";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -407,14 +408,14 @@ function TransferDialog({
 
           {buyerMode === "existing" ? (
             <Field label="Choose the buyer">
-              <Select value={buyerStakeholderId} onValueChange={setBuyerStakeholderId}>
+              <SearchablePeoplePicker value={buyerStakeholderId} onValueChange={setBuyerStakeholderId}>
                 <SelectTrigger><SelectValue placeholder="Select shareholder" /></SelectTrigger>
                 <SelectContent>
                   {data.stakeholders.map((s) => (
                     <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
                   ))}
                 </SelectContent>
-              </Select>
+              </SearchablePeoplePicker>
             </Field>
           ) : (
             <div className="grid gap-3 sm:grid-cols-2">

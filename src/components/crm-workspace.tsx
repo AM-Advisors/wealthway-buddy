@@ -1,3 +1,4 @@
+import { SearchablePeoplePicker } from "@/components/ui/searchable-people-picker";
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -8,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -200,10 +202,8 @@ function DealDialog({ init, contacts, onClose, onSaved }: { init: any; contacts:
         <DialogHeader><DialogTitle>{init.id ? "Edit deal" : "Add deal"}</DialogTitle></DialogHeader>
         <div className="grid gap-3">
           <div><Label>Contact</Label>
-            <Select value={f.contactId} onValueChange={(v) => setF({ ...f, contactId: v })} disabled={!!init.id}>
-              <SelectTrigger><SelectValue placeholder="Pick a contact" /></SelectTrigger>
-              <SelectContent>{contacts.filter((c) => !c.archived_at).map((c) => <SelectItem key={c.id} value={c.id}>{c.full_name}</SelectItem>)}</SelectContent>
-            </Select>
+            <SearchableSelect value={f.contactId} onValueChange={(v) => setF({ ...f, contactId: v })} disabled={!!init.id} aria-label="Contact"
+              options={contacts.filter((c) => !c.archived_at).map((c) => ({ value: c.id, label: c.full_name, detail: [c.email, c.organization].filter(Boolean).join(" · ") }))} />
           </div>
           <div><Label>Deal name</Label><Input value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} /></div>
           <div className="grid grid-cols-3 gap-3">
@@ -373,10 +373,10 @@ function ContactSheet({ id, canAssign, onClose, onEdit, onChange }: { id: string
             {canAssign && (
               <div className="space-y-2">
                 <Label>Owner</Label>
-                <Select value={c.owner_user_id} onValueChange={(v) => act(() => reassign({ data: { table: "crm_contacts", id: c.id, ownerUserId: v, reason: "Reassigned from contact page" } }), "Owner changed")}>
+                <SearchablePeoplePicker value={c.owner_user_id} onValueChange={(v) => act(() => reassign({ data: { table: "crm_contacts", id: c.id, ownerUserId: v, reason: "Reassigned from contact page" } }), "Owner changed")}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>{(ownersQ.data ?? []).map((o) => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}{!(ownersQ.data ?? []).some((o) => o.id === c.owner_user_id) && <SelectItem value={c.owner_user_id}>Current owner</SelectItem>}</SelectContent>
-                </Select>
+                </SearchablePeoplePicker>
               </div>
             )}
 

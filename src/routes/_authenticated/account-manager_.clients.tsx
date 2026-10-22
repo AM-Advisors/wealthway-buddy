@@ -1,3 +1,4 @@
+import { SearchablePeoplePicker } from "@/components/ui/searchable-people-picker";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -64,10 +65,10 @@ function AccountManagerPage() {
                 <div className="flex items-center gap-2">
                   <Badge variant={tone(c.health)}>{c.health}</Badge>
                   {d.team ? (
-                    <Select value={c.accountManagerId ?? ""} onValueChange={(v) => m.mutate({ clientId: c.clientId, userId: v })}>
+                    <SearchablePeoplePicker value={c.accountManagerId ?? ""} onValueChange={(v) => m.mutate({ clientId: c.clientId, userId: v })}>
                       <SelectTrigger className="w-48"><SelectValue placeholder="Account Manager" /></SelectTrigger>
                       <SelectContent>{d.accountManagers.map((a) => <SelectItem key={a.userId} value={a.userId}>{a.name}</SelectItem>)}</SelectContent>
-                    </Select>
+                    </SearchablePeoplePicker>
                   ) : null}
                 </div>
               </li>

@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -134,14 +135,11 @@ function DirectCompose({ data, onDone }: { data: any; onDone: (id?: string) => v
   const qc = useQueryClient();
   const start = useServerFn(startDirectThreadFn);
   const [kind, setKind] = useState<keyof typeof KIND_LABEL>("team");
-  const [search, setSearch] = useState("");
   const [userId, setUserId] = useState("");
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
   const people = ((data.directory ?? []) as any[])
-    .filter((p) => p.kind === kind)
-    .filter((p) => !search.trim() || `${p.name} ${p.email}`.toLowerCase().includes(search.trim().toLowerCase()))
-    .slice(0, 200);
+    .filter((p) => p.kind === kind);
   const m = useMutation({
     mutationFn: () => start({ data: { userId, subject, body } }),
     onSuccess: (r) => { qc.invalidateQueries({ queryKey: ["inbox"] }); toast.success("Message sent"); onDone(r.id); },
@@ -162,11 +160,7 @@ function DirectCompose({ data, onDone }: { data: any; onDone: (id?: string) => v
           </Select>
         </div>
         <div className="space-y-1"><Label>Person</Label>
-          <Input placeholder="Search by name or email" value={search} onChange={(e) => setSearch(e.target.value)} />
-          <Select value={userId} onValueChange={setUserId}>
-            <SelectTrigger><SelectValue placeholder={people.length ? "Choose a person" : "No one found"} /></SelectTrigger>
-            <SelectContent>{people.map((p) => <SelectItem key={p.userId} value={p.userId}>{p.name}{p.email ? ` · ${p.email}` : ""}</SelectItem>)}</SelectContent>
-          </Select>
+          <SearchableSelect aria-label="Message recipient" value={userId} onValueChange={setUserId} options={people.map((p) => ({ value: p.userId, label: p.name, detail: p.email }))} />
         </div>
         <div className="space-y-1"><Label>Subject</Label><Input value={subject} onChange={(e) => setSubject(e.target.value)} maxLength={200} /></div>
         <div className="space-y-1"><Label>Message</Label><Textarea value={body} onChange={(e) => setBody(e.target.value)} rows={5} maxLength={5000} /></div>

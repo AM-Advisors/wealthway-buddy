@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { getMsaSignerOptions, setMsaSigner } from "@/lib/commercial-agreements.functions";
 import { remindMsaFn, msaLastReminderFn } from "@/lib/document-reminders.functions";
 import { Button } from "@/components/ui/button";
@@ -44,13 +44,8 @@ export function MsaSignerPicker({ clientId }: { clientId: string }) {
     <div>
       <p className="text-xs text-muted-foreground">Responsible to sign MSA</p>
       {d.canEdit ? (
-        <Select value={d.signerUserId ?? ANY} disabled={m.isPending} onValueChange={(v) => m.mutate(v === ANY ? null : v)}>
-          <SelectTrigger className="mt-1 h-8 w-full max-w-60"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ANY}>Anyone on the client team</SelectItem>
-            {d.options.map((o) => <SelectItem key={o.userId} value={o.userId}>{o.name}</SelectItem>)}
-          </SelectContent>
-        </Select>
+        <SearchableSelect value={d.signerUserId ?? ANY} disabled={m.isPending} onValueChange={(v) => m.mutate(v === ANY ? null : v)} aria-label="MSA signer" className="mt-1 h-8 w-full max-w-60"
+          options={[{ value: ANY, label: "Anyone on the client team" }, ...d.options.map((o) => ({ value: o.userId, label: o.name }))]} />
       ) : (
         <p className="font-medium">{current?.name ?? "Anyone on the client team"}</p>
       )}

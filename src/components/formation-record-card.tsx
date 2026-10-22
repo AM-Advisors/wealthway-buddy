@@ -1,3 +1,4 @@
+import { SearchableNativeSelect } from "@/components/ui/searchable-people-picker";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ThirdPartyBadge } from "@/components/third-party-badge";
@@ -124,7 +125,7 @@ function AuthorizationForm({ offeringId, people, onChanged }: { offeringId: stri
   return (
     <div className="space-y-2 rounded-md border p-3">
       <div className="grid gap-2 sm:grid-cols-3">
-        <div><Label className="text-xs">Authorized by</Label><select className={selectCls} value={f.personId} onChange={(e) => setF({ ...f, personId: e.target.value })}><option value="">Choose a person</option>{people.map((p) => <option key={p.personId} value={p.personId}>{p.name}</option>)}</select></div>
+        <div><Label className="text-xs">Authorized by</Label><SearchableNativeSelect className={selectCls} value={f.personId} onChange={(e) => setF({ ...f, personId: e.target.value })}><option value="">Choose a person</option>{people.map((p) => <option key={p.personId} value={p.personId}>{p.name}</option>)}</SearchableNativeSelect></div>
         <div><Label className="text-xs">Date</Label><Input type="date" value={f.authorizedOn} onChange={(e) => setF({ ...f, authorizedOn: e.target.value })} /></div>
         <div><Label className="text-xs">How</Label><select className={selectCls} value={f.method} onChange={(e) => setF({ ...f, method: e.target.value as any })}><option value="written">Signed letter</option><option value="e_signature">E-signature</option><option value="email">Email</option></select></div>
       </div>

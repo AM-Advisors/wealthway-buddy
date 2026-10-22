@@ -1,3 +1,4 @@
+import { SearchablePeoplePicker } from "@/components/ui/searchable-people-picker";
 import { Ss4RequestPanel } from "@/components/ss4-request";
 import { invalidateFund } from "@/lib/fund-query-keys";
 import { FundSignoffQueue } from "@/components/signoff-board";
@@ -589,7 +590,7 @@ export function OperationsTaxDocuments({ fundId }: { fundId?: string }) {
             </div>
             <div>
               <Label className="text-xs">Investor (optional)</Label>
-              <Select value={investorUserId} onValueChange={setInvestorUserId}>
+              <SearchablePeoplePicker value={investorUserId} onValueChange={setInvestorUserId}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -601,7 +602,7 @@ export function OperationsTaxDocuments({ fundId }: { fundId?: string }) {
                     </SelectItem>
                   ))}
                 </SelectContent>
-              </Select>
+              </SearchablePeoplePicker>
             </div>
             <div>
               <Label className="text-xs">Tax year (optional)</Label>

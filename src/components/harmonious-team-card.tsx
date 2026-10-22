@@ -1,3 +1,4 @@
+import { SearchableNativeSelect } from "@/components/ui/searchable-people-picker";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -66,7 +67,7 @@ export function HarmoniousTeamCard({ clientId, offeringId }: { clientId?: string
               </div>
               {m.canManage ? (
                 editing === m.role ? (
-                  <select
+                  <SearchableNativeSelect
                     aria-label={`Choose ${TEAM_ROLE_LABEL[m.role as TeamRole]}`}
                     className="rounded-md border bg-background px-2 py-1 text-sm"
                     defaultValue=""
@@ -77,7 +78,7 @@ export function HarmoniousTeamCard({ clientId, offeringId }: { clientId?: string
                       <option key={s.id} value={s.id}>{s.name}</option>
                     ))}
                     {d.scope === "client" && m.userId ? <option value="__clear">Clear assignment</option> : null}
-                  </select>
+                  </SearchableNativeSelect>
                 ) : (
                   <div className="flex gap-1">
                     <Button size="sm" variant="outline" onClick={() => setEditing(m.role)}>{d.scope === "fund" ? "Override" : "Change"}</Button>

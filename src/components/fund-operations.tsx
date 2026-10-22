@@ -1,3 +1,4 @@
+import { SearchablePeoplePicker } from "@/components/ui/searchable-people-picker";
 import { useEffect, useState } from "react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -253,7 +254,7 @@ export function FundOperations({ offeringId }: { offeringId: string }) {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-3">
-            <Select value={applicationId} onValueChange={setApplicationId}>
+            <SearchablePeoplePicker value={applicationId} onValueChange={setApplicationId}>
               <SelectTrigger>
                 <SelectValue placeholder="Choose investor" />
               </SelectTrigger>
@@ -264,7 +265,7 @@ export function FundOperations({ offeringId }: { offeringId: string }) {
                   </SelectItem>
                 ))}
               </SelectContent>
-            </Select>
+            </SearchablePeoplePicker>
             <Select value={category} onValueChange={setCategory}>
               <SelectTrigger>
                 <SelectValue />

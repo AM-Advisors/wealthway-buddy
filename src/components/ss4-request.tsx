@@ -1,3 +1,4 @@
+import { SearchablePeoplePicker } from "@/components/ui/searchable-people-picker";
 import { useEffect, useState } from "react";
 import { SignHereTag, useSignHere } from "@/components/signature-adopt-dialog";
 import { ThirdPartyBadge, ThirdPartyNote } from "@/components/third-party-badge";
@@ -174,10 +175,10 @@ export function Ss4RequestPanel({ fundId }: { fundId: string }) {
           <div className="grid gap-3 md:grid-cols-2">
             <div className="space-y-1">
               <Label className="text-xs">Send to</Label>
-              <Select value={signer ?? ""} onValueChange={setSigner}>
+              <SearchablePeoplePicker value={signer ?? ""} onValueChange={setSigner}>
                 <SelectTrigger><SelectValue placeholder="Choose a fund manager" /></SelectTrigger>
                 <SelectContent>{d.managers.map((m) => <SelectItem key={m.userId} value={m.userId}>{m.name}{m.email ? ` (${m.email})` : ""}</SelectItem>)}</SelectContent>
-              </Select>
+              </SearchablePeoplePicker>
             </div>
             <div className="space-y-1">
               <Label className="text-xs">Note to the manager (optional)</Label>

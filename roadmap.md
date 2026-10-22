@@ -1,5 +1,10 @@
 # Roadmap
 
+## Searchable contact selection (2026-10-22)
+- [x] Shared searchable contact/person picker applied across Sales, CRM, Inbox, fund setup/signers, client teams, professional access, task assignment, accounting and investor/capital records; existing option readers, callbacks and disabled choices preserved. Sales recipients/CC/signers filter while retaining checked choices.
+- [x] Offline fictional browser fixture passed: name/email/firm suggestions, duplicate-name distinction, keyboard selection, no matches, Escape preservation, existing select adapters and checked-recipient retention; preview build OK.
+- [ ] Signed-in contact-selection walkthrough blocked until independently isolated synthetic QA exists; no live records or emails changed.
+
 ## Selected payment reporting and schedules (2026-10-22)
 - [x] Add selected payment calculations and monthly/quarterly/annual totals across commissions, Operations/client invoices and fund payments; existing entitled records only.
 - [x] Add separate quarterly/annual planning controls with first date and append-only actor-owned saved plans; canonical records re-read on save, no browser-supplied amounts accepted. Invoice terms and actual commission queue deadlines remain unchanged.

@@ -1,3 +1,4 @@
+import { SearchableNativeSelect } from "@/components/ui/searchable-people-picker";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -271,10 +272,10 @@ function TicketPanel({ ticket, staff, me, onChanged }: { ticket: any; staff: { i
       {ticket.client && <p className="text-muted-foreground">Client: <span className="text-foreground">{ticket.client}</span></p>}
       <label className="block space-y-1">
         <span className="text-xs text-muted-foreground">Assigned to {ticket.how === "auto" ? "(auto — client's team)" : ""}</span>
-        <select className="w-full rounded-md border bg-background px-2 py-1.5 text-foreground" value={ticket.assigneeId ?? ""} onChange={(e) => m.mutate({ assigneeId: e.target.value || null })} disabled={m.isPending}>
+        <SearchableNativeSelect className="w-full rounded-md border bg-background px-2 py-1.5 text-foreground" value={ticket.assigneeId ?? ""} onChange={(e) => m.mutate({ assigneeId: e.target.value || null })} disabled={m.isPending}>
           <option value="">Unassigned</option>
           {staff.map((s) => <option key={s.id} value={s.id}>{s.name}{s.id === me ? " (me)" : ""}</option>)}
-        </select>
+        </SearchableNativeSelect>
       </label>
       {!ticket.assigneeId && <Button size="sm" variant="outline" className="w-full" onClick={() => m.mutate({ assigneeId: me })}>Assign to me</Button>}
       <div className="grid grid-cols-2 gap-1">

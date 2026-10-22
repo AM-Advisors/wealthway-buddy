@@ -1,3 +1,4 @@
+import { SearchableNativeSelect } from "@/components/ui/searchable-people-picker";
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
@@ -88,8 +89,8 @@ function FollowUps() {
       <div className="grid gap-4 md:grid-cols-2">
         <Panel title="Add a contact to a flow">
           <div className="space-y-2">
-            <select className="h-9 w-full rounded-md border bg-background px-2 text-sm" value={pick.contactId} onChange={(ev) => setPick({ ...pick, contactId: ev.target.value })}>
-              <option value="">Choose a contact…</option>{((c.data ?? []) as any[]).filter((x) => x.email).map((x) => <option key={x.id} value={x.id}>{x.full_name}{x.organization ? ` · ${x.organization}` : ""}</option>)}</select>
+            <SearchableNativeSelect className="h-9 w-full rounded-md border bg-background px-2 text-sm" value={pick.contactId} onChange={(ev) => setPick({ ...pick, contactId: ev.target.value })}>
+              <option value="">Choose a contact…</option>{((c.data ?? []) as any[]).filter((x) => x.email).map((x) => <option key={x.id} value={x.id}>{x.full_name}{x.organization ? ` · ${x.organization}` : ""}</option>)}</SearchableNativeSelect>
             <select className="h-9 w-full rounded-md border bg-background px-2 text-sm" value={pick.flowId} onChange={(ev) => setPick({ ...pick, flowId: ev.target.value })}>
               <option value="">Choose a flow…</option>{((f.data?.flows ?? []) as any[]).map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}</select>
             <Button disabled={!pick.flowId || !pick.contactId} onClick={doEnroll}>Add to flow</Button>

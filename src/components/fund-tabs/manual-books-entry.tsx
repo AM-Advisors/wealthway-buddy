@@ -1,3 +1,4 @@
+import { SearchablePeoplePicker } from "@/components/ui/searchable-people-picker";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -115,8 +116,8 @@ export function ManualTransactionForm({ fundId, investors }: { fundId: string; i
             <SelectContent><SelectItem value="none">Decide later</SelectItem>{STATEMENT_CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select>
         </div>
         <div className="space-y-1"><Label>Investor</Label>
-          <Select value={f.investor} onValueChange={(v) => setF({ ...f, investor: v })}><SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent><SelectItem value="none">None</SelectItem>{investors.map((i) => <SelectItem key={i.id} value={i.id}>{i.name}</SelectItem>)}</SelectContent></Select>
+          <SearchablePeoplePicker value={f.investor} onValueChange={(v) => setF({ ...f, investor: v })}><SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent><SelectItem value="none">None</SelectItem>{investors.map((i) => <SelectItem key={i.id} value={i.id}>{i.name}</SelectItem>)}</SelectContent></SearchablePeoplePicker>
         </div>
         <div className="flex items-end"><Button disabled={m.isPending || !f.date || !f.description.trim() || !f.amount} onClick={() => m.mutate()}>Record transaction</Button></div>
       </CardContent>
