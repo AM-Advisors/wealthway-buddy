@@ -100,7 +100,7 @@ async function lockFacts(db: any, doc: any) {
   const [client, contact, lines] = await Promise.all([
     doc.client_id ? db.from("clients").select("name").eq("id", doc.client_id).maybeSingle() : { data: null },
     doc.contact_id ? db.from("crm_contacts").select("full_name, organization").eq("id", doc.contact_id).maybeSingle() : { data: null },
-    doc.quote_id ? db.from("sales_quote_lines").select("label, quantity, unit_cents, line_cents, billing_frequency").eq("quote_id", doc.quote_id).order("sort_order") : { data: [] },
+    doc.quote_id ? db.from("sales_quote_lines").select("label, quantity, unit_cents, line_cents, billing_frequency, service_details").eq("quote_id", doc.quote_id).order("sort_order") : { data: [] },
   ]);
   return { msa: await publishedMsa(db), about: await currentAbout(db), organization: client.data?.name ?? contact.data?.organization ?? null, contactName: doc.recipient_name ?? contact.data?.full_name ?? null, lines: (lines.data ?? []) as any[] };
 }

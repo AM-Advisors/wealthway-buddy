@@ -9,6 +9,8 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { SPV_TXN_KEY_PREFIX, feeGroup, FEE_GROUP_LABEL, type FeeGroup } from "@/lib/spv-transaction-pricing";
 import { SERVICE_LADDERS, adminQuoteKey, ADMIN_QUOTE_KEY_PREFIX, type LadderProduct } from "@/lib/service-ladders";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -99,7 +101,7 @@ function FromSow() {
   );
 }
 
-type Line = { serviceKey: string; label: string; quantity: number; unitCents: number; baselineUnitCents: number; billingFrequency?: "one_time" | "monthly" | "quarterly" | "annual"; firstBillOn?: string | null; bookkeeping?: BookkeepingInput };
+type Line = { serviceKey: string; label: string; quantity: number; unitCents: number; baselineUnitCents: number; billingFrequency?: "one_time" | "monthly" | "quarterly" | "annual"; firstBillOn?: string | null; bookkeeping?: BookkeepingInput; details?: { scope?: string; included?: string[]; excluded?: string[] } | null };
 
 /** Product first, then only the levels valid for that product. */
 function AdminLevelPicker({ onAdd, lines }: { onAdd: (key: string) => void; lines: any[] }) {
@@ -133,6 +135,7 @@ export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; init
   const [validUntil, setValidUntil] = useState(initial?.validUntil ?? "");
   const [notes, setNotes] = useState(initial?.notes ?? "");
   const [lines, setLines] = useState<Line[]>(initial?.lines ?? []);
+  const [openDetails, setOpenDetails] = useState<number | null>(null);
   const [showBookkeeping, setShowBookkeeping] = useState(false);
   const loadBookkeeping = useServerFn(getBookkeepingConfiguration);
   const bookkeeping = useQuery({ queryKey: ["bookkeeping-proposed-configuration"], queryFn: () => loadBookkeeping(), enabled: showBookkeeping });
@@ -181,7 +184,7 @@ export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; init
             if (!rows.length) return [];
             const sub = rows.reduce((s, { l }) => s + l.quantity * l.unitCents, 0);
             return [<TableRow key={`h-${g}`}><TableCell colSpan={6} className="bg-muted/40 text-xs font-semibold uppercase tracking-wide">{FEE_GROUP_LABEL[g]}</TableCell><TableCell className="bg-muted/40 text-right text-xs font-semibold">{money(sub)}{g === "annual" ? "/yr" : ""}</TableCell><TableCell className="bg-muted/40" /></TableRow>,
-              ...rows.map(({ l, i }) => (
+              ...rows.flatMap(({ l, i }) => [
             <TableRow key={i}>
               <TableCell>{l.label}</TableCell>
               <TableCell><Input disabled={!!l.bookkeeping} inputMode="decimal" value={l.quantity} onChange={(e) => setLines(lines.map((x, j) => (j === i ? { ...x, quantity: Number(e.target.value) || 0 } : x)))} /></TableCell>
@@ -190,9 +193,20 @@ export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; init
               <TableCell><Input disabled={!!l.bookkeeping} type="date" aria-label="First billing date" value={l.firstBillOn ?? ""} onChange={(e) => setLines(lines.map((x, j) => (j === i ? { ...x, firstBillOn: e.target.value || null } : x)))} /></TableCell>
               <TableCell className="text-right text-muted-foreground">{money(l.baselineUnitCents)}{l.unitCents < l.baselineUnitCents && <Badge variant="destructive" className="ml-1">Discount</Badge>}</TableCell>
               <TableCell className="text-right">{money(l.quantity * l.unitCents)}</TableCell>
-              <TableCell><Button size="sm" variant="ghost" onClick={() => setLines(lines.filter((_, j) => j !== i))}>Remove</Button></TableCell>
-            </TableRow>
-          ))];
+              <TableCell className="whitespace-nowrap">
+                <Button size="sm" variant="ghost" onClick={() => setOpenDetails(openDetails === i ? null : i)}>{l.details ? "Details ✓" : "Details"}</Button>
+                <Button size="sm" variant="ghost" onClick={() => setLines(lines.filter((_, j) => j !== i))}>Remove</Button>
+              </TableCell>
+            </TableRow>,
+            ...(openDetails === i ? [<TableRow key={`d-${i}`}><TableCell colSpan={8} className="bg-muted/20">
+              <div className="grid gap-3 py-1 sm:grid-cols-3">
+                <div><Label>Extra scope detail (optional)</Label><Textarea rows={3} value={l.details?.scope ?? ""} placeholder="Anything specific to this engagement" onChange={(e) => setLines(lines.map((x, j) => j === i ? { ...x, details: { ...x.details, scope: e.target.value } } : x))} /></div>
+                <div><Label>What is included (one per line)</Label><Textarea rows={3} value={(l.details?.included ?? []).join("\n")} placeholder="Monthly NAV report&#10;Investor portal access" onChange={(e) => setLines(lines.map((x, j) => j === i ? { ...x, details: { ...x.details, included: e.target.value.split("\n") } } : x))} /></div>
+                <div><Label>Explicitly not included (one per line)</Label><Textarea rows={3} value={(l.details?.excluded ?? []).join("\n")} placeholder="Audit representation&#10;Tax advice" onChange={(e) => setLines(lines.map((x, j) => j === i ? { ...x, details: { ...x.details, excluded: e.target.value.split("\n") } } : x))} /></div>
+              </div>
+              <p className="text-xs text-muted-foreground">This wording appears under the service on the proposal and the Statement of Work the client signs.</p>
+            </TableCell></TableRow>] : []),
+          ])];
           })}
         </TableBody>
       </Table>

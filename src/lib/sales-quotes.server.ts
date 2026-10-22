@@ -1,5 +1,5 @@
 /** Server-only quoting engine: rate-card quotes → approval → SOW/MSA drafts → signed. Never moves money. */
-import { canDraftQuote, priceQuote, quoteApprovalProblem, type QuoteLineInput } from "@/lib/sales-model";
+import { canDraftQuote, cleanLineDetails, priceQuote, quoteApprovalProblem, type QuoteLineInput } from "@/lib/sales-model";
 import { names, salesActor } from "@/lib/sales-hub.server";
 import { canAddSalesContact, type SalesContactInput } from "@/lib/sales-contact-model";
 import { BOOKKEEPING_KEY, bookkeepingConfigSchema, bookkeepingDraftBlocker, bookkeepingTerms, calculateBookkeeping } from "@/lib/bookkeeping-model";
@@ -160,7 +160,7 @@ export async function saveQuote(userId: string, d: { id?: string | null | undefi
   }
   // Billing frequency comes from the quote; once the SOW is signed it's fixed.
   const { error: lineError } = await db.from("sales_quote_lines").insert(priced.lines.map((l, i) => ({ quote_id: id, service_key: l.serviceKey, label: l.label, quantity: l.quantity, unit_cents: l.unitCents, baseline_unit_cents: l.baselineUnitCents, line_cents: l.lineCents, sort_order: i,
-    billing_frequency: l.billingFrequency ?? "one_time", first_bill_on: l.firstBillOn ?? null, bookkeeping_snapshot: snapshots.get(i) ?? null })));
+    billing_frequency: l.billingFrequency ?? "one_time", first_bill_on: l.firstBillOn ?? null, bookkeeping_snapshot: snapshots.get(i) ?? null, service_details: cleanLineDetails(l.details) ?? {} })));
   if (lineError) throw new Error("The quote lines could not be saved. Refresh the draft before continuing.");
   return { id };
 }
@@ -237,7 +237,7 @@ export async function draftAgreements(userId: string, q: any) {
   const { data: sow, error } = await db.from("client_sows").insert({
     client_id: q.client_id, title: q.title, sow_type: "services", status: "draft", stage: "draft", created_by: userId,
     msa_version_id: msaVersion?.id ?? null, notes: `Created from Sales quote Q-${q.quote_number} v${q.version}`,
-    generated_lines: ((lines ?? []) as any[]).map((l) => ({ service_key: l.service_key, label: l.label, quantity: Number(l.quantity), unit_cents: Number(l.unit_cents), amount_cents: Number(l.line_cents), billing_frequency: l.billing_frequency ?? "one_time", first_bill_on: l.first_bill_on ?? null, bookkeeping_snapshot: l.bookkeeping_snapshot ?? null })),
+    generated_lines: ((lines ?? []) as any[]).map((l) => ({ service_key: l.service_key, label: l.label, quantity: Number(l.quantity), unit_cents: Number(l.unit_cents), amount_cents: Number(l.line_cents), billing_frequency: l.billing_frequency ?? "one_time", first_bill_on: l.first_bill_on ?? null, bookkeeping_snapshot: l.bookkeeping_snapshot ?? null, service_details: l.service_details ?? {} })),
   }).select("id").single();
   if (error) { console.error("SOW draft failed", error); throw new Error("Couldn't create the SOW draft."); }
   await db.from("sales_quotes").update({ sow_id: sow.id, msa_id: msaId, updated_at: new Date().toISOString() }).eq("id", q.id);
@@ -271,7 +271,7 @@ export async function newVersion(userId: string, id: string) {
   if (!q || !canSee(a, q.owner_user_id) || ["signed", "superseded"].includes(q.status)) throw new Error("This quote can't be revised.");
   const { data: lines } = await db.from("sales_quote_lines").select("*").eq("quote_id", id).order("sort_order");
   const { id: newId } = await saveQuote(userId, { title: q.title, clientId: q.client_id, contactId: q.contact_id, dealId: q.deal_id, offeringId: q.offering_id, validUntil: q.valid_until, notes: q.notes,
-    lines: ((lines ?? []) as any[]).map((l) => ({ serviceKey: l.service_key, label: l.label, quantity: Number(l.quantity), unitCents: Number(l.unit_cents), baselineUnitCents: Number(l.baseline_unit_cents), billingFrequency: l.billing_frequency ?? "one_time", firstBillOn: l.first_bill_on ?? null, bookkeeping: l.bookkeeping_snapshot ?? undefined })) });
+    lines: ((lines ?? []) as any[]).map((l) => ({ serviceKey: l.service_key, label: l.label, quantity: Number(l.quantity), unitCents: Number(l.unit_cents), baselineUnitCents: Number(l.baseline_unit_cents), billingFrequency: l.billing_frequency ?? "one_time", firstBillOn: l.first_bill_on ?? null, bookkeeping: l.bookkeeping_snapshot ?? undefined, details: l.service_details ?? undefined })) });
   await db.from("sales_quotes").update({ version: q.version + 1, supersedes_id: q.id, owner_user_id: q.owner_user_id }).eq("id", newId);
   await db.from("sales_quotes").update({ status: "superseded", updated_at: new Date().toISOString() }).eq("id", q.id);
   await event(q.id, "superseded", userId, `Replaced by version ${q.version + 1}`);
@@ -314,7 +314,7 @@ export async function quoteFromSow(userId: string, sowId: string) {
     if (!c) return null;
     const qty = Number(l.quantity ?? 1) || 1;
     const unit = Number(l.unit_cents ?? l.unitCents ?? (l.amount_cents != null ? Number(l.amount_cents) / qty : c.baselineCents));
-    return { serviceKey: key, label: c.label, quantity: qty, unitCents: Math.round(unit), baselineUnitCents: c.baselineCents };
+    return { serviceKey: key, label: c.label, quantity: qty, unitCents: Math.round(unit), baselineUnitCents: c.baselineCents, details: l.service_details ?? undefined };
   }).filter(Boolean) as QuoteLineInput[];
   if (!lines.length) throw new Error("This SOW has no services that match the current rate card.");
   const r = await saveQuote(userId, { title: `${sow.title ?? "SOW"} quote`, clientId: sow.client_id, notes: `Drafted from SOW "${sow.title ?? sow.id}"`, lines });

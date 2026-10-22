@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { CARD_SERVICE_FEE_LABEL } from "@/lib/card-fee";
+import { SOW_ROLE_DISCLAIMER } from "@/lib/agreement-templates";
 import { RESPONSE_STATUS } from "@/lib/sales-response-model";
 import { acceptanceRemittance, respondToSalesDocument, signAcceptance, viewAcceptance } from "@/lib/sales-acceptance.functions";
 
@@ -108,10 +109,6 @@ function AcceptPage() {
         </Card>
       )}
 
-      {d.sections.filter((s) => s.title === "About Harmonious").map((s, i) => (
-        <Card key={`about-${i}`}><CardHeader><CardTitle className="font-heading text-lg">About Harmonious</CardTitle></CardHeader>
-          <CardContent><p className="whitespace-pre-wrap text-sm">{s.body}</p></CardContent></Card>
-      ))}
       <div id="sign" className="scroll-mt-6">
       {d.accepted ? (
         <Card>
@@ -175,6 +172,14 @@ function AcceptPage() {
         </Card>
       )}
       </div>
+      <Card>
+        <CardHeader><CardTitle className="font-heading text-lg">Harmonious's role</CardTitle></CardHeader>
+        <CardContent><p className="whitespace-pre-wrap text-xs text-muted-foreground">{SOW_ROLE_DISCLAIMER}</p></CardContent>
+      </Card>
+      {d.sections.filter((s) => s.title === "About Harmonious").map((s, i) => (
+        <Card key={`about-${i}`}><CardHeader><CardTitle className="font-heading text-lg">About Harmonious</CardTitle></CardHeader>
+          <CardContent><p className="whitespace-pre-wrap text-sm">{s.body}</p></CardContent></Card>
+      ))}
     </Shell>
   );
 }
