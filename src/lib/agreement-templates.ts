@@ -48,10 +48,23 @@ export type FundFacts = {
 const money = (cents?: number | null) =>
   cents == null ? "-" : `$${(cents / 100).toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
 
-export function buildSowSections(facts: FundFacts) {
-  const serviceList = facts.services.length
-    ? facts.services.map((s) => `• ${s.label}${s.description ? ` - ${s.description}` : ""}`).join("\n")
+/** The SOW "Services" wording, shared by SOWs and the quotes/proposals that create them. */
+export function sowServicesBody(services: { label: string; description?: string | null }[]) {
+  const serviceList = services.length
+    ? services.map((s) => `• ${s.label}${s.description ? ` - ${s.description}` : ""}`).join("\n")
     : "• Fund administration";
+  return [
+      "Harmonious will provide the following administrative, technology, onboarding, reporting, payment-facilitation, recordkeeping and compliance-support services for the vehicle named above:",
+      "",
+      serviceList,
+      "",
+      "Harmonious acts solely as an administrative and technology service provider. Nothing in this Statement of Work appoints Harmonious as an investment adviser, broker-dealer, placement agent, custodian, transfer agent, escrow agent, trustee, general partner, fund manager, fiduciary, compliance officer, valuation agent, auditor, accountant, tax preparer or legal counsel, unless a service to that effect is expressly listed above.",
+      "",
+      "Services not listed above are not included in the Client's active scope and may be requested in writing through the portal.",
+    ].join("\n");
+}
+
+export function buildSowSections(facts: FundFacts) {
 
   const bodies: Record<SowSectionKey, string> = {
     fund_information: [
@@ -69,15 +82,7 @@ export function buildSowSections(facts: FundFacts) {
       `Effective date: ${facts.effectiveDate}`,
     ].join("\n"),
 
-    services: [
-      "Harmonious will provide the following administrative, technology, onboarding, reporting, payment-facilitation, recordkeeping and compliance-support services for the vehicle named above:",
-      "",
-      serviceList,
-      "",
-      "Harmonious acts solely as an administrative and technology service provider. Nothing in this Statement of Work appoints Harmonious as an investment adviser, broker-dealer, placement agent, custodian, transfer agent, escrow agent, trustee, general partner, fund manager, fiduciary, compliance officer, valuation agent, auditor, accountant, tax preparer or legal counsel, unless a service to that effect is expressly listed above.",
-      "",
-      "Services not listed above are not included in the Client's active scope and may be requested in writing through the portal.",
-    ].join("\n"),
+    services: sowServicesBody(facts.services),
 
     pricing: [
       `Fees for this engagement are set from the Harmonious ${facts.pricingVersion} pricing schedule, as itemised in the pricing summary attached to and forming part of this Statement of Work.`,
