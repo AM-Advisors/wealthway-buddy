@@ -14,7 +14,7 @@ export function SearchableSelect({ options, children, value, onValueChange, plac
 }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const items = options ?? Children.toArray(children).flatMap((child) => {
+  const items: SearchableOption[] = options ?? Children.toArray(children).flatMap((child) => {
     if (!isValidElement<{ value: string; children: ReactNode; disabled?: boolean }>(child)) return [];
     const text = (node: ReactNode): string => Children.toArray(node).map((part) => isValidElement<{ children?: ReactNode }>(part) ? text(part.props.children) : String(part)).join("");
     return [{ value: child.props.value, label: text(child.props.children), disabled: child.props.disabled }];

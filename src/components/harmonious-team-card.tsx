@@ -67,7 +67,7 @@ export function HarmoniousTeamCard({ clientId, offeringId }: { clientId?: string
               </div>
               {m.canManage ? (
                 editing === m.role ? (
-                  <select
+                  <SearchableNativeSelect
                     aria-label={`Choose ${TEAM_ROLE_LABEL[m.role as TeamRole]}`}
                     className="rounded-md border bg-background px-2 py-1 text-sm"
                     defaultValue=""

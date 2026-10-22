@@ -627,7 +627,7 @@ function SetupPage() {
 
               <div className="grid gap-2">
                 <Label>Existing person</Label>
-                <Select
+                <SearchablePeoplePicker
                   value={existingUserId || "none"}
                   onValueChange={(v) => setExistingUserId(v === "none" ? "" : v)}
                 >

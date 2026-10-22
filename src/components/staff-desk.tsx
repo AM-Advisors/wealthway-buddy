@@ -507,7 +507,7 @@ export function ClientCoverageBoard() {
                 <div className="flex flex-wrap items-end gap-2">
                   <div className="min-w-56">
                     <Label>Add someone</Label>
-                    <Select
+                    <SearchablePeoplePicker
                       value={d.staffUserId}
                       onValueChange={(v) =>
                         setDraft({ ...draft, [c.id]: { ...d, staffUserId: v } })
