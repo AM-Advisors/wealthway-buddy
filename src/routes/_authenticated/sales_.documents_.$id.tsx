@@ -17,6 +17,8 @@ import { Panel, money } from "@/components/sales/sales-ui";
 import { draftQuoteAgreements, getSalesLinkedRecords, submitSalesQuote } from "@/lib/sales-hub.functions";
 import { ActionBar, LinkedRecords, RecipientLinks, SalesProgress } from "@/components/sales/sales-record-parts";
 import { salesProgress } from "@/lib/sales-progress";
+import { AddSalesContact } from "@/components/sales/add-sales-contact";
+import { addSalesDocumentContact } from "@/lib/sales-documents.functions";
 
 export const Route = createFileRoute("/_authenticated/sales_/documents_/$id")({
   head: () => ({
@@ -45,6 +47,7 @@ function Editor() {
   const submit = useServerFn(submitSalesDocument);
   const decide = useServerFn(decideSalesDocument);
   const send = useServerFn(sendSalesDocument);
+  const addContact = useServerFn(addSalesDocumentContact);
   const ccLoad = useServerFn(listSalesCcOptions);
   const ccOpts = useQuery({ queryKey: ["sales-cc-options"], queryFn: () => ccLoad() });
   const [ccIds, setCcIds] = useState<string[]>([]);
@@ -193,7 +196,16 @@ function Editor() {
             {p.canSend && (
               <div className="mt-3 space-y-2">
                 {p.directSend && <p className="text-sm text-muted-foreground">As CRO or CEO you can send this directly. Sending records your approval of the current version.</p>}
-                {!doc.contact_id && <p className="text-sm text-muted-foreground">Link a contact to email it, or download the PDF/Word file.</p>}
+                {!doc.contact_id && <AddSalesContact onSave={async (contact) => {
+                  const r = await addContact({ data: { id, ...contact } });
+                  setToIds((current) => [...new Set([...(current ?? []), r.contactId])]);
+                  setSignerIds((current) => current ?? [r.contactId]);
+                  await Promise.all([
+                    qc.invalidateQueries({ queryKey: ["sales-document", id] }),
+                    qc.invalidateQueries({ queryKey: ["sales-client-team", id] }),
+                  ]);
+                  toast.success(r.reused ? "Existing contact linked" : "Contact added");
+                }} />}
                 <Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Subject" />
                 <Textarea rows={3} value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Short cover note" />
                 <div className="rounded-md border p-2">

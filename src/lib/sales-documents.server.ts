@@ -7,6 +7,7 @@ import {
 const admin = async () => (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
 const BUCKET = "client-contracts";
 const LEADER = ["cro", "executive", "super_admin", "leadership"];
+import { canAddSalesContact, type SalesContactInput } from "@/lib/sales-contact-model";
 
 async function rolesOf(userId: string) {
   const { data } = await (await admin()).from("user_roles").select("role").eq("user_id", userId);
@@ -429,6 +430,16 @@ export async function listClientTeam(userId: string, id: string) {
     }
   }
   return out;
+}
+
+export async function addDocumentContact(userId: string, id: string, input: SalesContactInput) {
+  const a = await access(userId, id);
+  if (a.readOnly || !a.salesSee || !canAddSalesContact(a.doc.contact_id, a.doc.status)) throw new Error("A contact can't be added to this document.");
+  const contact = await createProspect(userId, input);
+  const { data: saved, error } = await a.db.from("sales_documents").update({ contact_id: contact.contactId, updated_at: new Date().toISOString() }).eq("id", id).is("contact_id", null).eq("status", a.doc.status).select("id");
+  if (error || !saved?.length) throw new Error("The document changed. Refresh before adding a contact.");
+  await event(a.db, id, userId, "contact_added", { contactId: contact.contactId });
+  return contact;
 }
 
 /** Turns a "client:<id>" team entry into a CRM contact (reusing one with the same email) so the email can be logged. */
