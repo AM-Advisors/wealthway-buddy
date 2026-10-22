@@ -138,6 +138,8 @@ export const saveClientContact = createServerFn({ method: "POST" })
         changed,
         ...(changed.includes("full_name") ? { name: { from: before.full_name, to: row.full_name } } : {}),
         ...(changed.includes("email") ? { email: { from: before.email, to: row.email } } : {}),
+        ...(changed.includes("phone") ? { phone: { from: before.phone, to: row.phone } } : {}),
+        ...(changed.includes("title") ? { title: { from: before.title, to: row.title } } : {}),
       });
       return { id: data.id, possibleMatch: false };
     }

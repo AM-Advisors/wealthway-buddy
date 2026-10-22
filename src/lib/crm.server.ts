@@ -2,6 +2,7 @@
 // updates feed. Every call re-checks the caller; tables are not client-readable.
 import { staffProfile } from "@/lib/harmonious-staff";
 import { OPS_STAFF_ROLES } from "@/lib/ops-capabilities";
+import { companyContacts, contactFields } from "@/lib/crm-company-model";
 import {
   campaignDecisionProblem, campaignEditProblem, campaignSendProblem, canCreate, canEdit, canReassign, canSee,
   DEAL_STAGE_LABELS, mergeUpdates, resolveAudience,
@@ -65,7 +66,9 @@ export async function crmWorkspace(userId: string, filter: { scope: Scope | "all
     if (filter.offeringId) x = x.eq("offering_id", filter.offeringId);
     return x;
   };
-  const [{ data: c }, { data: d }, { data: k }] = await Promise.all([q("crm_contacts"), q("crm_deals"), q("crm_campaigns")]);
+  const [cr, dr, kr, companyResult] = await Promise.all([q("crm_contacts"), q("crm_deals"), q("crm_campaigns"), q("crm_companies")]);
+  for (const result of [cr, dr, kr, companyResult]) if (result.error) throw new Error("Couldn't load CRM records. Try again.");
+  const c = cr.data, d = dr.data, k = kr.data;
   const contacts = ((c ?? []) as any[]).filter((r) => canSee(a, r));
   const deals = ((d ?? []) as any[]).filter((r) => canSee(a, r));
   const campaigns = ((k ?? []) as any[]).filter((r) => canSee(a, r) || (r.status === "submitted" && (a.superUser || a.canApproveCampaigns)));
@@ -88,6 +91,7 @@ export async function crmWorkspace(userId: string, filter: { scope: Scope | "all
     me: { userId, superUser: a.superUser, viewAll: a.viewAll, canAssign: a.superUser || a.canAssign, canApprove: a.superUser || a.canApproveCampaigns, harmonious: a.harmoniousStaff },
     fundOptions: fundOptions as { id: string; name: string }[],
     contacts: contacts.map(decorate),
+    companies: ((companyResult.data ?? []) as any[]).filter((r) => canSee(a, r) || contacts.some((c) => c.company_id === r.id)).map((r) => ({ ...r, contact_count: contacts.filter((c) => c.company_id === r.id && !c.archived_at).length })),
     deals: deals.map(decorate),
     campaigns: campaigns.map((x) => ({ ...decorate(x), decided_by_name: x.decided_by ? ppl.get(x.decided_by) ?? null : null, recipients: counts.get(x.id) ?? {} })),
   };
@@ -98,31 +102,76 @@ export async function contactDetail(userId: string, contactId: string) {
   const db = await admin();
   const { data: c } = await db.from("crm_contacts").select("*").eq("id", contactId).maybeSingle();
   if (!c || !canSee(a, c)) throw new Error("Contact not found.");
-  const [{ data: act }, { data: emails }] = await Promise.all([
+  const [activityResult, emailResult] = await Promise.all([
     db.from("crm_activity").select("*").eq("contact_id", contactId).order("created_at", { ascending: false }).limit(200),
     db.from("crm_email_history").select("id, external_source, direction, subject, snippet, sent_at").eq("contact_id", contactId).order("sent_at", { ascending: false }).limit(100),
   ]);
+  if (activityResult.error || emailResult.error) throw new Error("Couldn't load contact history. Try again.");
+  const act = activityResult.data, emails = emailResult.data;
   const ppl = await names(((act ?? []) as any[]).map((x) => x.actor_user_id));
   return { contact: c, emails: emails ?? [], activity: ((act ?? []) as any[]).map((x) => ({ ...x, actor_name: ppl.get(x.actor_user_id) ?? "System" })) };
 }
 
 // ------------------------------------------------------------ contacts
 
-type ContactInput = { full_name: string; email?: string | null | undefined; phone?: string | null | undefined; organization?: string | null | undefined; title?: string | null | undefined; source?: string | null | undefined; tags?: string[] | undefined };
+type ContactInput = { full_name: string; email?: string | null | undefined; phone?: string | null | undefined; organization?: string | null | undefined; title?: string | null | undefined; source?: string | null | undefined; tags?: string[] | undefined; company_id?: string | null | undefined };
+
+async function resolveCompany(a: CrmActor, d: ContactInput, owned: { scope: Scope; offering_id: string | null; owner_user_id: string }) {
+  const db = await admin();
+  if (d.company_id) {
+    const { data: company, error } = await db.from("crm_companies").select("*").eq("id", d.company_id).maybeSingle();
+    if (error || !company || !canSee(a, company) || company.scope !== owned.scope || company.offering_id !== owned.offering_id) throw new Error("Company not available for this contact.");
+    return { company_id: company.id, organization: company.name };
+  }
+  const name = d.organization?.trim();
+  if (!name) return { company_id: null, organization: null };
+  let query = db.from("crm_companies").select("id, name").eq("scope", owned.scope).eq("owner_user_id", owned.owner_user_id).ilike("name", name.replace(/[\\%_]/g, "\\$&"));
+  query = owned.offering_id ? query.eq("offering_id", owned.offering_id) : query.is("offering_id", null);
+  const existing = await query.maybeSingle();
+  if (existing.error) throw new Error("Couldn't load company.");
+  if (existing.data) return { company_id: existing.data.id, organization: existing.data.name };
+  const result = await db.from("crm_companies").insert({ ...owned, name }).select("id").single();
+  if (result.error) throw new Error("Couldn't save company. Try again.");
+  return { company_id: result.data.id, organization: name };
+}
+
+export async function companyDetail(userId: string, companyId: string) {
+  const a = await crmActor(userId), db = await admin();
+  const [companyResult, contactResult] = await Promise.all([
+    db.from("crm_companies").select("*").eq("id", companyId).maybeSingle(),
+    db.from("crm_contacts").select("*").eq("company_id", companyId).order("full_name"),
+  ]);
+  if (companyResult.error || contactResult.error) throw new Error("Couldn't load company.");
+  const contacts = companyContacts(a, companyId, (contactResult.data ?? []) as any[]);
+  const company = companyResult.data;
+  if (!company || (!canSee(a, company) && !contacts.length)) throw new Error("Company not found.");
+  const ids = contacts.map((c: any) => c.id);
+  if (!ids.length) return { company, contacts, activity: [], emails: [], deals: [] };
+  const [activity, emails, deals] = await Promise.all([
+    db.from("crm_activity").select("id, contact_id, kind, summary, created_at, actor_user_id").in("contact_id", ids).order("created_at", { ascending: false }).limit(200),
+    db.from("crm_email_history").select("id, contact_id, direction, subject, snippet, sent_at").in("contact_id", ids).order("sent_at", { ascending: false }).limit(100),
+    db.from("crm_deals").select("*").in("contact_id", ids).order("updated_at", { ascending: false }).limit(200),
+  ]);
+  if (activity.error || emails.error || deals.error) throw new Error("Couldn't load company history. Try again.");
+  const ppl = await names((activity.data ?? []).map((r: any) => r.actor_user_id));
+  return { company, contacts, activity: (activity.data ?? []).map((r: any) => ({ ...r, actor_name: ppl.get(r.actor_user_id) ?? "System" })), emails: emails.data ?? [], deals: (deals.data ?? []).filter((r: any) => canSee(a, r)) };
+}
 
 export async function saveContact(userId: string, d: ContactInput & { id?: string | undefined; scope: Scope; offering_id: string | null }) {
   const a = await crmActor(userId);
   const db = await admin();
-  const fields = { full_name: d.full_name, email: d.email?.toLowerCase() || null, phone: d.phone || null, organization: d.organization || null, title: d.title || null, source: d.source || null, tags: d.tags ?? [] };
+  let fields = { ...contactFields(d), company_id: null as string | null };
   if (d.id) {
     const { data: c } = await db.from("crm_contacts").select("*").eq("id", d.id).maybeSingle();
     if (!c || !canEdit(a, c)) throw new Error("Contact not found.");
+    fields = { ...fields, ...await resolveCompany(a, d, c) };
     const { error } = await db.from("crm_contacts").update({ ...fields, updated_at: new Date().toISOString() }).eq("id", d.id);
     if (error) throw new Error("Could not save the contact.");
     await logActivity({ scope: c.scope, offering_id: c.offering_id, contact_id: c.id, actor_user_id: userId, kind: "edited", summary: "Contact details updated", details: { before: pick(c, Object.keys(fields)), after: fields } });
     return { id: d.id };
   }
   if (!canCreate(a, d.scope, d.offering_id)) throw new Error("You can't add contacts here.");
+  fields = { ...fields, ...await resolveCompany(a, d, { scope: d.scope, offering_id: d.scope === "fund" ? d.offering_id : null, owner_user_id: userId }) };
   const { data: row, error } = await db.from("crm_contacts").insert({ ...fields, scope: d.scope, offering_id: d.scope === "fund" ? d.offering_id : null, owner_user_id: userId, created_by: userId }).select("id").single();
   if (error) throw new Error("Could not add the contact.");
   await logActivity({ scope: d.scope, offering_id: d.offering_id, contact_id: row.id, actor_user_id: userId, kind: "created", summary: `Contact added: ${d.full_name}` });

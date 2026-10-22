@@ -21,10 +21,15 @@ export const getContactDetail = createServerFn({ method: "GET" })
   .inputValidator((d: unknown) => z.object({ contactId: uuid }).parse(d))
   .handler(async ({ data, context }) => (await srv()).contactDetail(ctx(context), data.contactId));
 
+export const getCrmCompanyDetail = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ companyId: uuid }).parse(d))
+  .handler(async ({ data, context }) => (await srv()).companyDetail(ctx(context), data.companyId));
+
 export const saveCrmContact = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({
-    id: uuid.optional(), scope, offering_id: uuid.nullable(),
+    id: uuid.optional(), scope, offering_id: uuid.nullable(), company_id: uuid.nullable().optional(),
     full_name: z.string().trim().min(1).max(200), email: opt(z.string().trim().email().max(254)), phone: opt(z.string().max(40)),
     organization: opt(z.string().max(200)), title: opt(z.string().max(120)), source: opt(z.string().max(120)), tags: z.array(z.string().trim().min(1).max(60)).max(20).optional(),
   }).parse(d))

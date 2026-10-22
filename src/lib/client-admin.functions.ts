@@ -190,7 +190,7 @@ export const saveClientPerson = createServerFn({ method: "POST" })
       if (rolesChanged && !caps.includes("manage_roles")) throw new Error('Forbidden: this needs the "manage_roles" permission.');
       const { error } = await db.from("client_contacts").update(row).eq("id", data.id);
       if (error) throw new Error(error.message);
-      await audit(db, { actor: userId, clientId: data.clientId, action: rolesChanged ? "person_roles_changed" : "person_edited", target: data.id, before: { name: before.full_name, email: before.email, roles: before.designations }, after: { name: row.full_name, email: row.email, roles: row.designations } });
+      await audit(db, { actor: userId, clientId: data.clientId, action: rolesChanged ? "person_roles_changed" : "person_edited", target: data.id, before: { name: before.full_name, email: before.email, phone: before.phone, title: before.title, roles: before.designations }, after: { name: row.full_name, email: row.email, phone: row.phone, title: row.title, roles: row.designations } });
       await syncPrimary(db, data.clientId, data.id, row);
       return { id: data.id };
     }
