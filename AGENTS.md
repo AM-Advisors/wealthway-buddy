@@ -32,3 +32,4 @@
 - LoadError handles failures; reports load active tabs; Sign shares TaxSignPanel and verified email; OfferingDocumentReader reads entitled files — why: reliability.
 - Investor classes use offerings.has_multiple_classes — why: no inferred classes.
 - approveToFund allows admin staff/exact-fund managers, never self — why: staff approve, signatories sign; money/identity unchanged.
+- Inbox channels and the automatic fund onboarding email depend on the fund's active service level via src/lib/inbox-policy.ts — why: one rule for Self Serve vs paid.

@@ -16,6 +16,7 @@ import { template as opsReviewDecision } from './ops-review-decision'
 import { template as clientAdminAlert } from './client-admin-alert'
 import { template as clientInvitation } from './client-invitation'
 import { template as clientWelcome } from './client-welcome'
+import { template as fundOnboardingWelcome } from './fund-onboarding-welcome'
 import { template as invoiceIssued } from './invoice-issued'
 import { template as invoiceReminder } from './invoice-reminder'
 import { template as wireRequestApproved } from './wire-request-approved'
@@ -64,6 +65,7 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'client-admin-alert': clientAdminAlert,
   'client-invitation': clientInvitation,
   'client-welcome': clientWelcome,
+  'fund-onboarding-welcome': fundOnboardingWelcome,
   'invoice-issued': invoiceIssued,
   'invoice-reminder': invoiceReminder,
   'wire-request-approved': wireRequestApproved,

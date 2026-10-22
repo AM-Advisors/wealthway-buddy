@@ -198,6 +198,25 @@ export const submitFundRequest = createServerFn({ method: "POST" })
         payment_id: payment?.id ?? null, effective_on: lv.status === "active" ? new Date().toISOString().slice(0, 10) : null, actor_id: context.userId,
       });
       if (error) console.warn("service level history not recorded:", error.message);
+      // Paid level active: one automatic onboarding email per person per fund (submitter + fund managers).
+      const { sendsOnboardingEmail } = await import("@/lib/inbox-policy");
+      if (sendsOnboardingEmail(lv.active, lv.status)) {
+        try {
+          const { SERVICE_LEVELS } = await import("@/lib/service-level");
+          const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+          const { data: fms } = await db.from("fund_managers").select("user_id").eq("offering_id", offeringId);
+          const ids = [...new Set([context.userId, ...((fms ?? []) as any[]).map((f) => f.user_id)].filter(Boolean))];
+          const { data: profs } = await db.from("profiles").select("user_id, legal_name, email").in("user_id", ids);
+          const origin = process.env["SITE_URL"] || "https://app.harmonious.co";
+          for (const p of (profs ?? []) as any[]) {
+            if (!p.email) continue;
+            await sendTemplateEmail("fund-onboarding-welcome", p.email, {
+              idempotencyKey: `fund-onboarding-${offeringId}-${p.user_id}`,
+              templateData: { contactName: p.legal_name || undefined, fundName: r.fund_name || "your fund", levelName: SERVICE_LEVELS.find((l) => l.key === lv.active)?.name, setupUrl: `${origin}/client/funds/${offeringId}` },
+            }).catch((e: unknown) => console.warn("onboarding email failed", e));
+          }
+        } catch (e) { console.warn("onboarding email skipped", e); }
+      }
     }
 
     const details = { ...r, _kind: KIND, duplicate_review: duplicate, ...(payment?.awaiting ? { payment_pending: true } : {}) };

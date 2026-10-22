@@ -20,6 +20,7 @@ export const inboxOverviewFn = createServerFn({ method: "GET" })
       canStart: a.clientIds.length > 0,
       clients: clients.map((c) => ({ id: c.id as string, name: c.name as string })),
       reps: await s.repsFor(a.clientIds),
+      channels: a.isStaff ? null : await s.channelsFor(a.clientIds),
       isStaff: a.isStaff,
       directory: await s.directory(a),
     };
