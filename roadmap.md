@@ -423,3 +423,8 @@
 ## Commission planning
 - [x] Expected quarterly payouts at SOW signing (computed, nonpayable; replaced by actual invoice periods)
 - [x] Commissions: revenue, gross profit, net profit and gross-profit commissions; append-only actual costs and effective cost/overhead assumptions.
+
+## Signed-SOW next payouts (2026-10-22)
+- [x] Next payout by person and deal, scheduled-first stable selection, quarter-end scheduled/expected summary, and quote-filtered tracker dialog.
+- [x] Signing notices list the assigned rep's expected dates/amounts using the report's shared gross-profit projection; payment-dependent labels and unchanged delivery idempotency.
+- [x] Pure next-payout regression coverage; payouts remain manual with no money movement or migrations.

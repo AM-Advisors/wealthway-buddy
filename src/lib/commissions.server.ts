@@ -112,37 +112,14 @@ export async function commissionReport(userId: string, from: string, to: string)
     r.cancelReason = qd?.status === "cancelled" ? qd.reason : null;
     r.payoutDue = qd?.due_on ?? (r.paid && r.paidOn ? payoutDueDate(r.paidOn) : null);
   }
-  const today = new Date().toISOString().slice(0, 10);
-  const horizon = new Date(); horizon.setUTCFullYear(horizon.getUTCFullYear() + 2);
-  const { data: signedSows, error: sowError } = sowIds.length ? await db.from("client_sows").select("id, generated_lines, client_signed_at, executed_at").in("id", sowIds) : { data: [], error: null };
-  if (sowError) throw new Error("Signed commission schedules unavailable.");
-  for (const sow of signedSows ?? []) {
-    if (!sow.client_signed_at && !sow.executed_at) continue;
-    const q = qs.find(q => q.sow_id === sow.id); if (!q?.owner_user_id) continue;
-    const signing = q.signed_at ?? sow.client_signed_at ?? sow.executed_at;
-    const setting = settingsAt(facts.settings, signing);
-    const rates = ratesAt(hist, signing);
-    const mgr = managerOf.get(q.owner_user_id) ?? null;
-    for (const item of buildPaymentSchedule(sow.id, sow.generated_lines ?? [], horizon.toISOString().slice(0, 10)).items) {
-      const due = payoutDueDate(item.due_on);
-      if (item.due_on < today || due < from || due > to) continue;
-      // Match the actual billing period by signed service and invoice issue quarter.
-      if (invs.some(inv => inv.sow_id === sow.id && payoutDueDate(inv.issue_date ?? inv.paid_on ?? today) === payoutDueDate(item.due_on) && (lines ?? []).some((l: any) => l.invoice_id === inv.id && l.service_key === item.service_key))) continue;
-      const splits = splitLine({ rates, capTable: isCapTableLine(item.service_key), closerId: q.owner_user_id, closerRoles: rolesOf.get(q.owner_user_id) ?? [], bdrId: q.bdr_user_id, managerId: mgr && (rolesOf.get(mgr) ?? []).includes("sales_management") ? mgr : null, croId, ceoId });
-      const profit = commissionProfit({ revenueCents: item.amount_cents, costPct: setting.service_cost_pct[item.service_key] ?? 0, overheadPct: setting.overhead_pct, rates: splits.map(s => s.ratePct) });
-      for (const split of splits) {
-        if (!viewAll && split.userId !== userId && !(isManager && split.userId && team.has(split.userId))) continue;
-        rows.push({ ...profit, quoteId: q.id, quoteNumber: q.quote_number, client: clientName.get(q.client_id) ?? "-", invoice: null, sowId: sow.id, serviceKey: item.service_key, lineId: `expected:${sow.id}:${item.service_key}:${item.due_on}`, service: item.label, capTable: isCapTableLine(item.service_key), paid: false, paidCents: 0, paidOn: null, baseCents: item.amount_cents, layer: split.layer, userId: split.userId, ratePct: split.ratePct, amountCents: Math.round(profit.grossProfitCents * split.ratePct / 100), status: "expected", payoutDue: due, payout: null });
-      }
-    }
-  }
+  rows.push(...(await expectedCommissionRows(db, qs, invs, lines ?? [], hist, facts, rolesOf, managerOf, clientName, from, to)).filter(r => viewAll || r.userId === userId || (isManager && r.userId && team.has(r.userId))));
   const nm = await names(rows.map((r) => r.userId).filter(Boolean));
   for (const r of rows) r.name = r.userId ? nm.get(r.userId) ?? "Unknown" : "Unassigned";
   const byPerson = new Map<string, { userId: string | null; name: string; earnedCents: number; pendingCents: number }>();
   for (const r of rows) {
     const k = r.userId ?? "none";
     const p = byPerson.get(k) ?? { userId: r.userId, name: r.name, earnedCents: 0, pendingCents: 0 };
-    if (r.status === "expected") continue;
+    if (r.status === "expected") { byPerson.set(k, p); continue; }
     if (r.paid) p.earnedCents += r.amountCents; else p.pendingCents += r.amountCents;
     byPerson.set(k, p);
   }
@@ -338,4 +315,57 @@ export async function saveCommissionCostSettings(userId: string, input: { servic
   const { error } = await db.from("commission_cost_settings").insert({ service_cost_pct: input.serviceCostPct, overhead_pct: input.overheadPct, reason: input.reason.trim(), set_by: userId });
   if (error) throw new Error(error.message);
   return { ok: true };
+}
+
+/** Shared signed-SOW projection for reports and event-bound signing notices. */
+async function expectedCommissionRows(db: any, qs: any[], invs: any[], lines: any[], hist: Awaited<ReturnType<typeof rateHistory>>, facts: any, rolesOf: Map<string, string[]>, managerOf: Map<string, string>, clientName: Map<any, any>, from: string, to: string) {
+  const rows: any[] = [];
+  const sowIds = qs.map(q => q.sow_id).filter(Boolean);
+  const firstWith = (role: string) => [...rolesOf].find(([, rs]) => rs.includes(role))?.[0] ?? null;
+  const croId = firstWith("cro"); const ceoId = firstWith("executive");
+  const today = new Date().toISOString().slice(0, 10);
+  const horizon = new Date(); horizon.setUTCFullYear(horizon.getUTCFullYear() + 2);
+  const { data: signedSows, error: sowError } = sowIds.length ? await db.from("client_sows").select("id, generated_lines, client_signed_at, executed_at").in("id", sowIds) : { data: [], error: null };
+  if (sowError) throw new Error("Signed commission schedules unavailable.");
+  for (const sow of signedSows ?? []) {
+    if (!sow.client_signed_at && !sow.executed_at) continue;
+    const q = qs.find(q => q.sow_id === sow.id); if (!q?.owner_user_id) continue;
+    const signing = q.signed_at ?? sow.client_signed_at ?? sow.executed_at;
+    const setting = settingsAt(facts.settings, signing);
+    const rates = ratesAt(hist, signing);
+    const mgr = managerOf.get(q.owner_user_id) ?? null;
+    for (const item of buildPaymentSchedule(sow.id, sow.generated_lines ?? [], horizon.toISOString().slice(0, 10)).items) {
+      const due = payoutDueDate(item.due_on);
+      if (item.due_on < today || due < from || due > to) continue;
+      // Match the actual billing period by signed service and invoice issue quarter.
+      if (invs.some(inv => inv.sow_id === sow.id && payoutDueDate(inv.issue_date ?? inv.paid_on ?? today) === payoutDueDate(item.due_on) && (lines ?? []).some((l: any) => l.invoice_id === inv.id && l.service_key === item.service_key))) continue;
+      const splits = splitLine({ rates, capTable: isCapTableLine(item.service_key), closerId: q.owner_user_id, closerRoles: rolesOf.get(q.owner_user_id) ?? [], bdrId: q.bdr_user_id, managerId: mgr && (rolesOf.get(mgr) ?? []).includes("sales_management") ? mgr : null, croId, ceoId });
+      const profit = commissionProfit({ revenueCents: item.amount_cents, costPct: setting.service_cost_pct[item.service_key] ?? 0, overheadPct: setting.overhead_pct, rates: splits.map(s => s.ratePct) });
+      for (const split of splits) {
+        rows.push({ ...profit, quoteId: q.id, quoteNumber: q.quote_number, client: clientName.get(q.client_id) ?? "-", invoice: null, sowId: sow.id, serviceKey: item.service_key, lineId: `expected:${sow.id}:${item.service_key}:${item.due_on}`, service: item.label, capTable: isCapTableLine(item.service_key), paid: false, paidCents: 0, paidOn: null, baseCents: item.amount_cents, layer: split.layer, userId: split.userId, ratePct: split.ratePct, amountCents: Math.round(profit.grossProfitCents * split.ratePct / 100), status: "expected", payoutDue: due, payout: null });
+      }
+    }
+  }
+  return rows;
+}
+
+export async function expectedSowCommissions(db: any, sowId: string) {
+  const [quotes, invoices, roles, reporting, hist, facts] = await Promise.all([
+    db.from("sales_quotes").select("*").eq("sow_id", sowId).eq("status", "signed"),
+    db.from("invoices").select("*").eq("sow_id", sowId),
+    db.from("user_roles").select("user_id, role"),
+    db.from("sales_reporting_lines").select("user_id, manager_user_id"), rateHistory(db), costFacts(db),
+  ]);
+  if (quotes.error || invoices.error || roles.error || reporting.error) throw new Error("Expected commission facts unavailable");
+  const invs = (invoices.data ?? []).filter((i: any) => !i.voided_at && i.status !== "void" && i.status !== "draft");
+  const lines: any[] = [];
+  for (const inv of invs) {
+    const result = await db.from("invoice_lines").select("*").eq("invoice_id", inv.id);
+    if (result.error) throw new Error("Expected commission lines unavailable");
+    lines.push(...(result.data ?? []));
+  }
+  const rolesOf = new Map<string, string[]>();
+  for (const r of roles.data ?? []) rolesOf.set(r.user_id, [...(rolesOf.get(r.user_id) ?? []), r.role]);
+  const managerOf = new Map<string, string>((reporting.data ?? []).map((r: any) => [r.user_id, r.manager_user_id]));
+  return expectedCommissionRows(db, quotes.data ?? [], invs, lines, hist, facts, rolesOf, managerOf, new Map(), "0000-01-01", "9999-12-31");
 }
