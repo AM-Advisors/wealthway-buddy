@@ -18,3 +18,13 @@ describe("optional proposal sections", () => {
     expect(out.find((s) => s.key === "approach")!.body).toContain("NAV");
   });
 });
+
+describe("services and pricing follow the SOW", () => {
+  it("typed text is replaced by SOW services and quote pricing", () => {
+    const secs = defaultSections("proposal", "response").map((s) => s.key === "services" ? { ...s, body: "Custom typed $9,999 deal" } : s);
+    const body = applyLockedSections("proposal", "response", secs, facts).find((s) => s.key === "services")!.body;
+    expect(body).not.toContain("9,999");
+    expect(body).toContain("Services from your Statement of Work:");
+    expect(body).toContain("$1.00");
+  });
+});
