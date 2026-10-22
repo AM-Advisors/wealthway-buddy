@@ -57,7 +57,6 @@ const codeStyle = {
   fontSize: '22px',
   fontWeight: 'bold' as const,
   color: '#142647',
-  fontFamily: "Rubik, 'Helvetica Neue', Arial, sans-serif",
   margin: '0 0 30px',
 }
 const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
