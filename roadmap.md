@@ -410,4 +410,6 @@
 - [x] Diagnose Calvin's document errors: Box creation accepted (201); ceremony reports sign_and_send permission; signer sync has mismatched upsert/index (42P10). No resend or investor changes; provider permission check and repair remain unverified.
 
 ## Forecasting (paid add-on)
-- [ ] Forecasts tab for cap tables, portfolios, funds — only when the client pays for the Forecasting service (plan pending approval)
+- [x] Forecasts tab built, gated by paid Forecasting add-on
+- [ ] Forecasting price — waiting on Alyssa
+- [ ] Friendlier assumption form (currently raw text) and signed-in check — pending
