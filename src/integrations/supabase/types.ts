@@ -42316,6 +42316,48 @@ export type Database = {
           },
         ]
       }
+      sales_client_response_events: {
+        Row: {
+          created_at: string
+          detail: Json
+          event: string
+          id: string
+          sales_document_id: string | null
+          sales_quote_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          detail?: Json
+          event: string
+          id?: string
+          sales_document_id?: string | null
+          sales_quote_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          detail?: Json
+          event?: string
+          id?: string
+          sales_document_id?: string | null
+          sales_quote_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_client_response_events_sales_document_id_fkey"
+            columns: ["sales_document_id"]
+            isOneToOne: false
+            referencedRelation: "sales_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_client_response_events_sales_quote_id_fkey"
+            columns: ["sales_quote_id"]
+            isOneToOne: false
+            referencedRelation: "sales_quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sales_controlled_texts: {
         Row: {
           body: string
