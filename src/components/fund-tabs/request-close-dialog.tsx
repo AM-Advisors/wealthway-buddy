@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { createFundCloseRequest, getCloseCandidates } from "@/lib/fund-close-requests.functions";
 import { fundBooksFn, fundTeamFn } from "@/lib/fund-tabs.functions";
 import { fileToBase64, toCents, toPct, usd } from "./shared";
+import { SIDE_LETTER_FEE_CENTS } from "@/lib/side-letter-fee";
 
 const FORM_D_CENTS = 16000;
 const NEW = "__new";
@@ -48,6 +49,7 @@ export function RequestCloseDialog({ fundId, open, onOpenChange, onDone }: { fun
   const selectedCents = rows.filter((r) => picked.has(r.id)).reduce((s, r) => s + (r.amountCents ?? 0), 0);
   const feeCents = toPct(pctStr) != null ? Math.round((selectedCents * (toPct(pctStr) as number)) / 100) : null;
   const notReady = rows.filter((r) => picked.has(r.id) && r.openItems.length > 0).length;
+  const sideLetterCount = rows.filter((r) => picked.has(r.id)).reduce((s, r) => s + (r.sideLetters ?? 0), 0);
   const stateList = useMemo(() => [...new Set(states.split(/[,\s]+/).map((s) => s.trim().toUpperCase()).filter(Boolean))], [states]);
   const isNew = assetSel === NEW || (assets.length === 0 && assetSel === "");
   const toggle = (id: string) => setPicked((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
@@ -160,6 +162,7 @@ export function RequestCloseDialog({ fundId, open, onOpenChange, onDone }: { fun
             <div className="space-y-1"><Label>States where investors live (e.g. TX, CA, NY)</Label><Input value={states} onChange={(e) => setStates(e.target.value)} /></div>
             <p>Harmonious Form D Filing Fee: <span className="font-semibold">{usd(FORM_D_CENTS)}</span></p>
             <p>Blue Sky state fees: {stateList.length ? `${stateList.length} state${stateList.length === 1 ? "" : "s"} (${stateList.join(", ")}). Needs Review: Harmonious confirms each state's fee.` : "add states above"}</p>
+            <p>Side letters: {sideLetterCount === 0 ? "none for the selected investors" : <>{sideLetterCount} side letter{sideLetterCount === 1 ? "" : "s"} × {usd(SIDE_LETTER_FEE_CENTS)} = <span className="font-semibold">{usd(sideLetterCount * SIDE_LETTER_FEE_CENTS)}</span>. Harmonious confirms the total and credits any side letter already paid for.</>}</p>
           </div>
 
           <div className={section}>

@@ -52,6 +52,7 @@ export function CloseRequestReview({ r }: { r: any }) {
       </CardHeader>
       <CardContent className="space-y-2 text-sm">
         {r.notes && <p>{r.notes}</p>}
+        {r.details?.sideLetterCount != null && <p>Side letters (estimate): {r.details.sideLetterCount} × ${((r.details.sideLetterUnitCents ?? 150000) / 100).toLocaleString("en-US")}{r.details.sideLetterPaidCount ? `, ${r.details.sideLetterPaidCount} already paid` : ""} = <span className="font-semibold">${(r.details.sideLetterFeeCents / 100).toLocaleString("en-US")}</span></p>}
         {r.staff_note && <p className="text-xs text-muted-foreground">Last note: {r.staff_note}</p>}
         {r.status !== "completed" && (
           <div className="flex flex-wrap gap-2">
