@@ -1,4 +1,5 @@
 import { SearchablePeoplePicker } from "@/components/ui/searchable-people-picker";
+import { CrmCompanyPanel } from "@/components/crm-company-panel";
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -18,7 +19,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { DEAL_STAGES, DEAL_STAGE_LABELS, type DealStage } from "@/lib/crm-model";
 import {
-  archiveCrmContact, decideCrmCampaign, getContactDetail, getCrmDealDetail, getCrmWorkspace, listCrmOwners, logCrmNote, previewCrmAudience,
+  archiveCrmContact, decideCrmCampaign, getContactDetail, getCrmCompanyDetail, getCrmDealDetail, getCrmWorkspace, listCrmOwners, logCrmNote, previewCrmAudience,
   reassignCrmOwner, saveCrmCampaign, saveCrmContact, saveCrmDeal, sendCrmCampaign, setCrmConsent, submitCrmCampaign,
 } from "@/lib/crm.functions";
 
@@ -38,16 +39,18 @@ export function CrmWorkspace({ scope, title, description }: { scope: Scope; titl
   const load = useServerFn(getCrmWorkspace);
   const [fund, setFund] = useState<string>("all");
   const q = useQuery({ queryKey: ["crm", scope, fund], queryFn: () => load({ data: { scope, offeringId: fund === "all" ? undefined : fund } }) });
-  const refresh = () => qc.invalidateQueries({ queryKey: ["crm"] });
+  const refresh = () => { qc.invalidateQueries({ queryKey: ["crm"] }); qc.invalidateQueries({ queryKey: ["crm-contact"] }); qc.invalidateQueries({ queryKey: ["crm-company"] }); };
   const [search, setSearch] = useState("");
   const [contactOpen, setContactOpen] = useState<string | null>(null);
   const [editContact, setEditContact] = useState<any | null>(null);
   const [editDeal, setEditDeal] = useState<any | null>(null);
   const [editCampaign, setEditCampaign] = useState<any | null>(null);
+  const [companyOpen, setCompanyOpen] = useState<any | null>(null);
+  const [connectCompany, setConnectCompany] = useState<any | null>(null);
 
   const d = q.data;
   const s = search.trim().toLowerCase();
-  const contacts = (d?.contacts ?? []).filter((c: any) => !s || [c.full_name, c.email, c.organization, ...(c.tags ?? [])].some((v) => String(v ?? "").toLowerCase().includes(s)));
+  const contacts = (d?.contacts ?? []).filter((c: any) => !s || [c.full_name, c.email, c.phone, c.title, c.organization, ...(c.tags ?? [])].some((v) => String(v ?? "").toLowerCase().includes(s)));
   const contactName = useMemo(() => new Map((d?.contacts ?? []).map((c: any) => [c.id, c.full_name])), [d]);
   const fundOptions = d?.fundOptions ?? [];
   const defaultFund = fund !== "all" ? fund : fundOptions[0]?.id ?? null;
@@ -72,16 +75,25 @@ export function CrmWorkspace({ scope, title, description }: { scope: Scope; titl
       </div>
 
       {q.isLoading ? <p className="mt-8 text-sm text-muted-foreground">Loading…</p> : q.error ? <p className="mt-8 text-sm text-destructive">{(q.error as Error).message}</p> : (
-        <Tabs defaultValue="contacts" className="mt-6">
-          <TabsList>
-            <TabsTrigger value="contacts">Contacts ({d!.contacts.length})</TabsTrigger>
-            <TabsTrigger value="deals">Deals ({d!.deals.length})</TabsTrigger>
-            <TabsTrigger value="campaigns">Campaigns ({d!.campaigns.length})</TabsTrigger>
+        <Tabs defaultValue={scope === "harmonious" ? "companies" : "contacts"} className="mt-6">
+          <TabsList className="flex h-auto flex-wrap justify-start">
+            {scope === "harmonious" && <TabsTrigger value="companies">Companies ({d?.companies.length ?? 0})</TabsTrigger>}
+            <TabsTrigger value="contacts">Contacts ({d?.contacts.length ?? 0})</TabsTrigger>
+            <TabsTrigger value="deals">Deals ({d?.deals.length ?? 0})</TabsTrigger>
+            <TabsTrigger value="campaigns">Campaigns ({d?.campaigns.length ?? 0})</TabsTrigger>
           </TabsList>
+
+          {scope === "harmonious" && <TabsContent value="companies" className="space-y-3">
+            <div className="flex flex-wrap gap-2"><Input className="min-w-0 flex-1" aria-label="Search companies" placeholder="Search companies and contacts" value={search} onChange={(e) => setSearch(e.target.value)} />{canAdd && <Button onClick={() => setEditContact({ scope, offering_id: null })}>Add prospect</Button>}</div>
+            <Table><TableHeader><TableRow><TableHead>Company</TableHead><TableHead>Contacts</TableHead><TableHead /></TableRow></TableHeader><TableBody>
+              {(d?.companies ?? []).filter((c: any) => !s || c.name.toLowerCase().includes(s) || contacts.some((contact: any) => contact.company_id === c.id)).map((company: any) => <TableRow key={company.id}><TableCell className="font-medium">{company.name}</TableCell><TableCell>{company.contact_count}</TableCell><TableCell className="text-right"><Button size="sm" variant="outline" onClick={() => setCompanyOpen(company)}>Open</Button></TableCell></TableRow>)}
+              {!d?.companies.length && <TableRow><TableCell colSpan={3} className="text-muted-foreground">No prospect companies yet.</TableCell></TableRow>}
+            </TableBody></Table>
+          </TabsContent>}
 
           <TabsContent value="contacts" className="space-y-3">
             <div className="flex gap-2">
-              <Input placeholder="Search name, email, organization or tag" value={search} onChange={(e) => setSearch(e.target.value)} />
+              <Input placeholder="Search name, title, email, phone or company" value={search} onChange={(e) => setSearch(e.target.value)} />
               {canAdd && <Button onClick={() => setEditContact({ scope, offering_id: scope === "fund" ? defaultFund : null })}>Add contact</Button>}
             </div>
             <Card><CardContent className="p-0">
@@ -90,7 +102,7 @@ export function CrmWorkspace({ scope, title, description }: { scope: Scope; titl
                 <TableBody>
                   {contacts.length === 0 ? <TableRow><TableCell colSpan={6} className="text-sm text-muted-foreground">No contacts yet.</TableCell></TableRow> : contacts.map((c: any) => (
                     <TableRow key={c.id} className={c.archived_at ? "opacity-60" : ""}>
-                      <TableCell><div className="font-medium">{c.full_name}</div><div className="text-xs text-muted-foreground">{c.email ?? "No email"}</div></TableCell>
+                      <TableCell><div className="font-medium">{c.full_name}</div><div className="text-xs text-muted-foreground">{c.title ?? "No title"}</div><div className="text-xs text-muted-foreground">{c.email ?? "No email"}</div><div className="text-xs text-muted-foreground">{c.phone ?? "No phone"}</div></TableCell>
                       <TableCell className="text-sm">{c.organization ?? "-"}</TableCell>
                       <TableCell><Badge variant={c.consent === "opted_in" ? "default" : "outline"}>{CONSENT[c.consent]}</Badge></TableCell>
                       {scope === "fund" && <TableCell className="text-sm">{c.fund_name}</TableCell>}
@@ -135,29 +147,32 @@ export function CrmWorkspace({ scope, title, description }: { scope: Scope; titl
         </Tabs>
       )}
 
-      {editContact && <ContactDialog init={editContact} fundOptions={fundOptions} onClose={() => setEditContact(null)} onSaved={refresh} />}
+      {editContact && <ContactDialog init={editContact} companies={d?.companies ?? []} fundOptions={fundOptions} onClose={() => setEditContact(null)} onSaved={refresh} />}
       {editDeal && <DealDialog init={editDeal} contacts={d?.contacts ?? []} onClose={() => setEditDeal(null)} onSaved={refresh} />}
       {editCampaign && <CampaignDialog init={editCampaign} fundOptions={fundOptions} onClose={() => setEditCampaign(null)} onSaved={refresh} />}
       <ContactSheet id={contactOpen} canAssign={!!d?.me.canAssign} onClose={() => setContactOpen(null)} onEdit={(c) => setEditContact(c)} onChange={refresh} />
+      {companyOpen && <CompanySheet company={companyOpen} onClose={() => setCompanyOpen(null)} onContact={(id) => { setCompanyOpen(null); setContactOpen(id); }} onAdd={() => { setEditContact({ scope, offering_id: null, company_id: companyOpen.id, organization: companyOpen.name }); setCompanyOpen(null); }} onConnect={() => { setConnectCompany(companyOpen); setCompanyOpen(null); }} onDeal={(deal) => { setCompanyOpen(null); setEditDeal(deal); }} />}
+      {connectCompany && <ConnectCompanyDialog company={connectCompany} contacts={d?.contacts ?? []} onClose={() => setConnectCompany(null)} onSaved={refresh} />}
     </main>
   );
 }
 
-function ContactDialog({ init, fundOptions, onClose, onSaved }: { init: any; fundOptions: { id: string; name: string }[]; onClose: () => void; onSaved: () => void }) {
+function ContactDialog({ init, companies, fundOptions, onClose, onSaved }: { init: any; companies: any[]; fundOptions: { id: string; name: string }[]; onClose: () => void; onSaved: () => void }) {
   const save = useServerFn(saveCrmContact);
   const [f, setF] = useState({ full_name: init.full_name ?? "", email: init.email ?? "", phone: init.phone ?? "", organization: init.organization ?? "", title: init.title ?? "", source: init.source ?? "", tags: (init.tags ?? []).join(", "), offering_id: init.offering_id ?? null });
   const [busy, setBusy] = useState(false);
+  const [companyId, setCompanyId] = useState<string>(init.company_id ?? "");
   const set = (k: string) => (e: any) => setF({ ...f, [k]: e.target.value });
   async function submit() {
     setBusy(true);
     try {
-      await save({ data: { id: init.id, scope: init.scope, offering_id: init.scope === "fund" ? f.offering_id : null, full_name: f.full_name, email: f.email || null, phone: f.phone || null, organization: f.organization || null, title: f.title || null, source: f.source || null, tags: f.tags.split(",").map((t: string) => t.trim()).filter(Boolean) } });
+      await save({ data: { id: init.id, scope: init.scope, offering_id: init.scope === "fund" ? f.offering_id : null, company_id: companyId || null, full_name: f.full_name, email: f.email || null, phone: f.phone || null, organization: f.organization || null, title: f.title || null, source: f.source || null, tags: f.tags.split(",").map((t: string) => t.trim()).filter(Boolean) } });
       toast.success("Contact saved"); onSaved(); onClose();
     } catch (e) { err(e); } finally { setBusy(false); }
   }
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent>
+      <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle>{init.id ? "Edit contact" : "Add contact"}</DialogTitle></DialogHeader>
         <div className="grid gap-3">
           {init.scope === "fund" && !init.id && (
@@ -169,10 +184,11 @@ function ContactDialog({ init, fundOptions, onClose, onSaved }: { init: any; fun
             </div>
           )}
           <div><Label>Full name</Label><Input value={f.full_name} onChange={set("full_name")} /></div>
+          {init.scope === "harmonious" && <div><Label>Existing company</Label><SearchableSelect aria-label="Existing company" value={companyId} onValueChange={(id) => { setCompanyId(id); const company = companies.find((c) => c.id === id); setF({ ...f, organization: company?.name ?? "" }); }} options={[{ value: "", label: "New or unconnected company" }, ...companies.map((c) => ({ value: c.id, label: c.name }))]} /></div>}
           <div className="grid grid-cols-2 gap-3">
             <div><Label>Email</Label><Input type="email" value={f.email} onChange={set("email")} /></div>
-            <div><Label>Phone</Label><Input value={f.phone} onChange={set("phone")} /></div>
-            <div><Label>Organization</Label><Input value={f.organization} onChange={set("organization")} /></div>
+            <div><Label>Phone</Label><Input type="tel" maxLength={40} value={f.phone} onChange={set("phone")} /></div>
+            <div><Label>Organization</Label><Input disabled={!!companyId} value={f.organization} onChange={set("organization")} /></div>
             <div><Label>Title</Label><Input value={f.title} onChange={set("title")} /></div>
             <div><Label>Source</Label><Input value={f.source} onChange={set("source")} placeholder="Referral, event…" /></div>
             <div><Label>Tags</Label><Input value={f.tags} onChange={set("tags")} placeholder="comma separated" /></div>
@@ -337,7 +353,7 @@ function ContactSheet({ id, canAssign, onClose, onEdit, onChange }: { id: string
   const reassign = useServerFn(reassignCrmOwner);
   const owners = useServerFn(listCrmOwners);
   const qc = useQueryClient();
-  const q = useQuery({ queryKey: ["crm-contact", id], queryFn: () => load({ data: { contactId: id! } }), enabled: !!id });
+  const q = useQuery({ queryKey: ["crm-contact", id], queryFn: () => { if (!id) throw new Error("Contact required."); return load({ data: { contactId: id } }); }, enabled: !!id });
   const ownersQ = useQuery({ queryKey: ["crm-owners"], queryFn: () => owners(), enabled: !!id && canAssign });
   const [text, setText] = useState("");
   const [kind, setKind] = useState<"note" | "call" | "meeting" | "email_logged">("note");
@@ -349,7 +365,7 @@ function ContactSheet({ id, canAssign, onClose, onEdit, onChange }: { id: string
     <Sheet open={!!id} onOpenChange={(o) => !o && onClose()}>
       <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
         <SheetHeader><SheetTitle>{c?.full_name ?? "Contact"}</SheetTitle></SheetHeader>
-        {!c ? <p className="mt-4 text-sm text-muted-foreground">Loading…</p> : (
+        {q.error ? <p className="mt-4 text-sm text-destructive">{(q.error as Error).message}</p> : !c ? <p className="mt-4 text-sm text-muted-foreground">Loading…</p> : (
           <div className="mt-4 space-y-5 text-sm">
             <div className="space-y-1">
               <div>{c.email ?? "No email"}{c.phone ? ` · ${c.phone}` : ""}</div>
@@ -390,7 +406,7 @@ function ContactSheet({ id, canAssign, onClose, onEdit, onChange }: { id: string
                 <Button disabled={!text.trim()} onClick={() => act(async () => { await note({ data: { contactId: c.id, kind, summary: text } }); setText(""); }, "Logged")}>Log</Button>
               </div>
               <ul className="divide-y">
-                {q.data!.activity.map((a: any) => (
+                {q.data?.activity.map((a: any) => (
                   <li key={a.id} className="py-2"><div>{a.summary}</div><div className="text-xs text-muted-foreground">{a.actor_name} · {new Date(a.created_at).toLocaleString()}</div></li>
                 ))}
               </ul>
@@ -416,6 +432,29 @@ function ContactSheet({ id, canAssign, onClose, onEdit, onChange }: { id: string
 }
 
 const KIND_LABEL: Record<string, string> = { email: "Email", note: "Note", meeting: "Meeting", call: "Call", task: "Task" };
+
+function CompanySheet({ company, onClose, ...actions }: { company: any; onClose: () => void; onContact: (id: string) => void; onAdd: () => void; onConnect: () => void; onDeal: (deal: any) => void }) {
+  const load = useServerFn(getCrmCompanyDetail);
+  const q = useQuery({ queryKey: ["crm-company", company.id], queryFn: () => load({ data: { companyId: company.id } }) });
+  return <Sheet open onOpenChange={(open) => { if (!open) onClose(); }}><SheetContent className="w-full overflow-y-auto sm:max-w-xl"><SheetHeader><SheetTitle className="break-words">{company.name}</SheetTitle></SheetHeader><div className="mt-4">{q.error ? <p className="text-sm text-destructive">{(q.error as Error).message}</p> : q.data ? <CrmCompanyPanel data={q.data} {...actions} /> : <p className="text-sm text-muted-foreground">Loading company…</p>}</div></SheetContent></Sheet>;
+}
+
+function ConnectCompanyDialog({ company, contacts, onClose, onSaved }: { company: any; contacts: any[]; onClose: () => void; onSaved: () => void }) {
+  const save = useServerFn(saveCrmContact);
+  const [id, setId] = useState("");
+  const [busy, setBusy] = useState(false);
+  const options = contacts.filter((c) => !c.archived_at && c.scope === company.scope && c.offering_id === company.offering_id && c.company_id !== company.id);
+  const submit = async () => {
+    const contact = options.find((c) => c.id === id);
+    if (!contact) return;
+    setBusy(true);
+    try {
+      await save({ data: { id: contact.id, scope: contact.scope, offering_id: contact.offering_id, full_name: contact.full_name, email: contact.email, phone: contact.phone, title: contact.title, organization: company.name, source: contact.source, tags: contact.tags ?? [], company_id: company.id } });
+      toast.success("Contact connected"); onSaved(); onClose();
+    } catch (e) { err(e); } finally { setBusy(false); }
+  };
+  return <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}><DialogContent><DialogHeader><DialogTitle>Connect contact to {company.name}</DialogTitle></DialogHeader><SearchableSelect aria-label="Contact to connect" value={id} onValueChange={setId} options={options.map((c) => ({ value: c.id, label: c.full_name, detail: [c.email, c.title, c.organization].filter(Boolean).join(" · ") }))} />{options.find((c) => c.id === id)?.company_id && <p className="text-sm text-muted-foreground">This changes the contact's company. Previous activity stays on the contact.</p>}<DialogFooter><Button variant="outline" onClick={onClose}>Cancel</Button><Button disabled={busy || !id} onClick={submit}>{busy ? "Saving…" : "Connect contact"}</Button></DialogFooter></DialogContent></Dialog>;
+}
 
 function DealHistory({ id }: { id: string }) {
   const load = useServerFn(getCrmDealDetail);

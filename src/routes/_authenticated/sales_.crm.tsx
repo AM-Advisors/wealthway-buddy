@@ -6,10 +6,10 @@ import { GmailConnectCard } from "@/components/gmail-connect";
 export const Route = createFileRoute("/_authenticated/sales_/crm")({
   head: () => ({
     meta: [
-      { title: "Contacts, deals & campaigns - Harmonious Sales" },
-      { name: "description", content: "Harmonious Sales contacts, client deal pipeline and approved email campaigns." },
-      { property: "og:title", content: "Contacts, deals & campaigns - Harmonious Sales" },
-      { property: "og:description", content: "Track prospective clients, deals and approved campaigns in one place." },
+      { title: "Companies & contacts - Harmonious CRM" },
+      { name: "description", content: "Harmonious CRM connects prospect companies, editable contact details, deal activity and recorded emails." },
+      { property: "og:title", content: "Companies & contacts - Harmonious CRM" },
+      { property: "og:description", content: "Company-connected contacts, deal history, activity and recorded emails in Harmonious Sales." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -17,7 +17,7 @@ export const Route = createFileRoute("/_authenticated/sales_/crm")({
   component: () => (
     <div className="space-y-4">
       <div className="mx-auto max-w-6xl px-4 pt-4"><GmailConnectCard /></div>
-      <CrmWorkspace scope="harmonious" title="Contacts, deals & campaigns" description="Your prospective clients and deals. Super Administrators, and people they authorize, see everyone's." />
+      <CrmWorkspace scope="harmonious" title="Companies & contacts" description="Prospects and client relationships" />
     </div>
   ),
 });

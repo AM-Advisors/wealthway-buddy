@@ -10143,10 +10143,55 @@ export type Database = {
           },
         ]
       }
+      crm_companies: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          offering_id: string | null
+          owner_user_id: string
+          phone: string | null
+          scope: string
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          offering_id?: string | null
+          owner_user_id: string
+          phone?: string | null
+          scope?: string
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          offering_id?: string | null
+          owner_user_id?: string
+          phone?: string | null
+          scope?: string
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_companies_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       crm_contacts: {
         Row: {
           archived_at: string | null
           client_id: string | null
+          company_id: string | null
           consent: string
           consent_note: string | null
           consent_recorded_at: string | null
@@ -10172,6 +10217,7 @@ export type Database = {
         Insert: {
           archived_at?: string | null
           client_id?: string | null
+          company_id?: string | null
           consent?: string
           consent_note?: string | null
           consent_recorded_at?: string | null
@@ -10197,6 +10243,7 @@ export type Database = {
         Update: {
           archived_at?: string | null
           client_id?: string | null
+          company_id?: string | null
           consent?: string
           consent_note?: string | null
           consent_recorded_at?: string | null
@@ -10225,6 +10272,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_contacts_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "crm_companies"
             referencedColumns: ["id"]
           },
           {
