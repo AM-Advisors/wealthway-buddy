@@ -9,9 +9,10 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getCommissions, getScheduledPayments, saveCommissionRates, saveQuoteBdr } from "@/lib/sales-hub.functions";
-import { LAYER_LABEL, type CommissionLayer, type CommissionRates } from "@/lib/commission-model";
+import { nextPayout, payoutDueDate, type CommissionRates } from "@/lib/commission-model";
 import { Panel, PeriodFilter, Stat, money, usePeriod } from "@/components/sales/sales-ui";
-import { CommissionTracker } from "@/components/sales/commission-tracker";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { CommissionTracker, type CommissionTrackerRow } from "@/components/sales/commission-tracker";
 
 export const Route = createFileRoute("/_authenticated/sales_/commissions")({
   head: () => ({
@@ -42,6 +43,7 @@ function Commissions() {
   const q = useQuery({ queryKey: ["commissions", period], queryFn: () => load({ data: period }), enabled: period.period !== "custom" || Boolean(period.from && period.to) });
   const d = q.data;
   const [draft, setDraft] = useState<CommissionRates | null>(null);
+  const [deal, setDeal] = useState<string | null>(null);
   const [reason, setReason] = useState("");
   useEffect(() => { if (d && !draft) setDraft(d.rates); }, [d, draft]);
   const refresh = () => qc.invalidateQueries({ queryKey: ["commissions"] });
@@ -54,6 +56,13 @@ function Commissions() {
   const earned = d?.people.reduce((s, p) => s + p.earnedCents, 0) ?? 0;
   const pending = d?.people.reduce((s, p) => s + p.pendingCents, 0) ?? 0;
 
+  const rows = (d?.rows ?? []) as CommissionTrackerRow[];
+  const quarterEnd = payoutDueDate(new Date().toISOString());
+  const total = (status: string) => rows.filter(r => r.status === status && r.payoutDue === quarterEnd).reduce((sum, r) => sum + r.amountCents, 0);
+  const payout = (items: CommissionTrackerRow[]) => {
+    const row = nextPayout(items);
+    return row ? <span>{row.payoutDue} · {money(row.amountCents)}<span className="block text-xs text-muted-foreground">{row.status === "expected" ? "Expected — awaiting client payment" : "Scheduled"}</span></span> : <span className="text-muted-foreground">—</span>;
+  };
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-4 md:p-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -64,20 +73,21 @@ function Commissions() {
         <PeriodFilter value={period} onChange={setPeriod} />
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-4">
         <Stat label="Earned (paid invoices)" value={money(earned)} />
         <Stat label="Pending (awaiting payment)" value={money(pending)} />
+        <Stat label={`Next payout · ${quarterEnd}`} value={money(total("scheduled"))} hint={`Scheduled · ${money(total("expected"))} Expected — awaiting client payment`} />
         <Stat label="People with commission" value={d?.people.filter((p) => p.userId).length ?? 0} />
       </div>
 
       <Panel title="By person">
         <Table>
-          <TableHeader><TableRow><TableHead>Person</TableHead><TableHead className="text-right">Earned</TableHead><TableHead className="text-right">Pending</TableHead></TableRow></TableHeader>
+          <TableHeader><TableRow><TableHead>Person</TableHead><TableHead className="text-right">Earned</TableHead><TableHead className="text-right">Pending</TableHead><TableHead>Next payout</TableHead></TableRow></TableHeader>
           <TableBody>
             {(d?.people ?? []).map((p) => (
-              <TableRow key={p.userId ?? "none"}><TableCell>{p.name}</TableCell><TableCell className="text-right">{money(p.earnedCents)}</TableCell><TableCell className="text-right">{money(p.pendingCents)}</TableCell></TableRow>
+              <TableRow key={p.userId ?? "none"}><TableCell>{p.name}</TableCell><TableCell className="text-right">{money(p.earnedCents)}</TableCell><TableCell className="text-right">{money(p.pendingCents)}</TableCell><TableCell>{payout(rows.filter(r => r.userId === p.userId))}</TableCell></TableRow>
             ))}
-            {!q.isLoading && !d?.people.length && <TableRow><TableCell colSpan={3} className="text-muted-foreground">No commissions yet. They appear once a signed quote is invoiced.</TableCell></TableRow>}
+            {!q.isLoading && !d?.people.length && <TableRow><TableCell colSpan={4} className="text-muted-foreground">No commissions yet. They appear once a signed quote is invoiced.</TableCell></TableRow>}
           </TableBody>
         </Table>
       </Panel>
@@ -85,7 +95,18 @@ function Commissions() {
       {d && <CommissionCostControls data={d} onChange={refresh} />}
       <ScheduledPayments />
 
-      <CommissionTracker rows={(d?.rows ?? []) as any} canRecord={Boolean(d?.canRecordPayout)} onChange={refresh} />
+      <CommissionTracker rows={rows} canRecord={Boolean(d?.canRecordPayout)} onChange={refresh} />
+
+      <Panel title="Deals">
+        <Table><TableHeader><TableRow><TableHead>Deal</TableHead><TableHead>Next payout</TableHead></TableRow></TableHeader><TableBody>
+          {(d?.quotes ?? []).filter(qt => rows.some(r => r.quoteId === qt.id)).map(qt => <TableRow key={qt.id}><TableCell><Button variant="link" onClick={() => setDeal(qt.id)}>{qt.label}</Button></TableCell><TableCell>{payout(rows.filter(r => r.quoteId === qt.id))}</TableCell></TableRow>)}
+        </TableBody></Table>
+      </Panel>
+      <Dialog open={Boolean(deal)} onOpenChange={open => { if (!open) setDeal(null); }}>
+        <DialogContent className="max-h-[90vh] max-w-6xl overflow-auto"><DialogHeader><DialogTitle>{d?.quotes.find(qt => qt.id === deal)?.label ?? "Deal payout schedule"}</DialogTitle><DialogDescription>Expected payouts become scheduled only once the client pays. Finance records payouts manually.</DialogDescription></DialogHeader>
+          <CommissionTracker key={deal} rows={rows.filter(r => r.quoteId === deal)} canRecord={Boolean(d?.canRecordPayout)} onChange={refresh} />
+        </DialogContent>
+      </Dialog>
 
       {d && d.quotes.length > 0 && (
         <Panel title="BDR on signed deals">

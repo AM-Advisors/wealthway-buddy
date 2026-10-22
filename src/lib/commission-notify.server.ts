@@ -19,6 +19,15 @@ export async function sendCommissionNotice(db: any, input: { sowId?: string; inv
     amount = rows.reduce((sum: number, row: any) => sum + Number(row.amount_cents), 0);
     dueOn = rows[0].due_on;
   }
+  let expected: { dueOn: string; amount: string }[] = [];
+  if (!input.invoiceId && input.sowId) {
+    const { expectedSowCommissions } = await import('@/lib/commissions.server');
+    const totals = new Map<string, number>();
+    for (const row of await expectedSowCommissions(db, input.sowId)) {
+      if (row.userId === quote.owner_user_id) totals.set(row.payoutDue, (totals.get(row.payoutDue) ?? 0) + row.amountCents);
+    }
+    expected = [...totals].sort(([a], [b]) => a.localeCompare(b)).map(([dueOn, cents]) => ({ dueOn, amount: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(cents / 100) }));
+  }
   const { data: auth, error: authError } = await db.auth.admin.getUserById(quote.owner_user_id);
   if (authError) throw new Error('Commission recipient unavailable');
   if (!auth?.user?.email || !auth.user.email_confirmed_at) return { sent: false };
@@ -26,7 +35,7 @@ export async function sendCommissionNotice(db: any, input: { sowId?: string; inv
   return sendTemplateEmail('commission-scheduled', auth.user.email, {
     managed: true, inboxForAnyUser: true,
     idempotencyKey: `commission-notice:${input.invoiceId ? `invoice:${input.invoiceId}` : `sow:${input.sowId}`}:${quote.owner_user_id}`,
-    templateData: { title: quote.title, scheduled: Boolean(input.invoiceId), amount: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount / 100), dueOn },
+    templateData: { expected, title: quote.title, scheduled: Boolean(input.invoiceId), amount: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount / 100), dueOn },
   });
 }
 

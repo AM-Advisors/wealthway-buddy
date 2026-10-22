@@ -1,3 +1,4 @@
+import { nextPayout, type PayoutStatus } from "./commission-model";
 import { describe, expect, it } from "vitest";
 import { payoutDueDate, PAYOUT_RECORDERS } from "./commission-model";
 
@@ -8,4 +9,24 @@ describe("payoutDueDate", () => {
 });
 describe("payout recorders", () => {
   it("only Finance, CRO and CEO", () => expect([...PAYOUT_RECORDERS].sort()).toEqual(["cro", "executive", "finance"]));
+});
+
+ describe('next payout selection', () => {
+  const row = (status: PayoutStatus, payoutDue: string | null) => ({ status, payoutDue });
+  it('prefers scheduled over earlier expected', () => {
+    const scheduled = row('scheduled', '2027-06-30');
+    expect(nextPayout([row('expected', '2027-03-31'), scheduled])).toBe(scheduled);
+  });
+  it('excludes cancelled, paid out, not earned and undated rows', () => {
+    expect(nextPayout([row('cancelled', '2026-12-31'), row('paid_out', '2026-12-31'), row('not_earned', '2026-12-31'), row('scheduled', null)])).toBeNull();
+    expect(nextPayout([])).toBeNull();
+  });
+  it('selects earliest date for either eligible status and preserves ties without mutation', () => {
+    for (const status of ['expected', 'scheduled'] as const) {
+      const first = row(status, '2027-03-31');
+      const rows = [row(status, '2027-06-30'), first, row(status, '2027-03-31')];
+      expect(nextPayout(rows)).toBe(first);
+      expect(rows[0]?.payoutDue).toBe('2027-06-30');
+    }
+  });
 });

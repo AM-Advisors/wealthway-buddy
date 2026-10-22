@@ -10,14 +10,16 @@ import { LAYER_LABEL, type CommissionLayer } from "@/lib/commission-model";
 import { Panel, Stat, money } from "@/components/sales/sales-ui";
 import { PaymentPlanner } from "@/components/payment-planner";
 
-type Row = {
+export type CommissionTrackerRow = {
+  quoteId: string;
   revenueCents: number; grossProfitCents: number; netProfitCents: number;
   lineId: string; userId: string | null; layer: string; client: string; quoteNumber: string | null; invoice: string | null;
   service: string; capTable: boolean; baseCents: number; paidCents: number; paidOn: string | null; name: string; ratePct: number;
   amountCents: number; status: "expected" | "not_earned" | "scheduled" | "paid_out" | "cancelled"; payoutDue: string | null; cancelReason?: string | null;
   payout: { id: string; date: string; reference: string; note: string | null } | null;
 };
-const STATUS: Record<Row["status"], string> = { expected: "Expected (not payable)", not_earned: "Not earned yet", scheduled: "Scheduled", paid_out: "Paid out", cancelled: "Cancelled" };
+type Row = CommissionTrackerRow;
+const STATUS: Record<Row["status"], string> = { expected: "Expected — awaiting client payment", not_earned: "Not earned yet", scheduled: "Scheduled", paid_out: "Paid out", cancelled: "Cancelled" };
 const key = (r: Row) => `${r.lineId}|${r.userId}|${r.layer}`;
 
 export function CommissionTracker({ rows, canRecord, onChange }: { rows: Row[]; canRecord: boolean; onChange: () => void }) {
@@ -61,7 +63,7 @@ export function CommissionTracker({ rows, canRecord, onChange }: { rows: Row[]; 
   return (
     <Panel title="Commission tracker">
       <div className="mb-4 grid gap-3 grid-cols-2 sm:grid-cols-4">
-        <Stat label="Expected (not payable)" value={money(sum("expected"))} />
+        <Stat label="Expected — awaiting client payment" value={money(sum("expected"))} />
         <Stat label="Not earned yet" value={money(sum("not_earned"))} />
         <Stat label="Scheduled" value={money(sum("scheduled"))} />
         <Stat label="Paid out" value={money(sum("paid_out"))} />
@@ -91,6 +93,7 @@ export function CommissionTracker({ rows, canRecord, onChange }: { rows: Row[]; 
             <div className="flex justify-between gap-2"><span className="font-medium">{r.client}</span><Badge variant={r.status === "paid_out" ? "default" : "outline"}>{STATUS[r.status]}</Badge></div>
             <div className="text-muted-foreground">{r.service} · revenue {money(r.revenueCents)} · gross profit {money(r.grossProfitCents)} · net profit {money(r.netProfitCents)} · paid {money(r.paidCents)}{r.paidOn ? ` on ${r.paidOn}` : ""}</div>
             <div>{r.name} ({LAYER_LABEL[r.layer as CommissionLayer]}) · {r.ratePct}% = <b>{money(r.amountCents)}</b></div>
+            {r.cancelReason && <p className="text-xs text-muted-foreground">{r.cancelReason}</p>}
             <div className="flex justify-between">{payoutCell(r)}{canRecord && r.status === "scheduled" && <input type="checkbox" aria-label="Select" checked={sel.has(key(r))} onChange={() => toggle(r)} />}</div>
           </div>
         ))}

@@ -70,3 +70,14 @@ export function payoutDueDate(paidOn: string): string {
 }
 
 export type PayoutStatus = "expected" | "not_earned" | "scheduled" | "paid_out" | "cancelled";
+
+/** Scheduled takes precedence over projections; equal dates retain input order. */
+export function nextPayout<T extends { status: PayoutStatus; payoutDue: string | null }>(rows: readonly T[]): T | null {
+  let next: T | null = null;
+  for (const row of rows) {
+    if (!row.payoutDue || (row.status !== "scheduled" && row.status !== "expected")) continue;
+    if (!next || (row.status === "scheduled" && next.status === "expected") ||
+      (row.status === next.status && row.payoutDue < next.payoutDue!)) next = row;
+  }
+  return next;
+}

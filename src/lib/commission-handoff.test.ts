@@ -29,6 +29,7 @@ function from(table: string) {
   };
   const query: any = {
     select: () => query, order: () => query,
+    in: (key: string, values: any[]) => { filters.push(r => values.includes(r[key])); return query; },
     eq: (key: string, value: any) => { filters.push(r => r[key] === value); return query; },
     is: (key: string, value: any) => { filters.push(r => (r[key] ?? null) === value); return query; },
     insert: (row: any) => { inserted = row; return query; },
@@ -71,6 +72,21 @@ describe('signed SOW commission handoff (fictional records only)', () => {
     await queueInvoicePayouts('invoice');
     expect(state.tables['commission_payout_queue']?.[0]?.due_on).toBe('2027-03-31');
     expect(state.sends).toHaveLength(2);
+  });
+  it('lists only the assigned rep expected gross-profit amounts with the existing signing key', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-10-22T12:00:00Z'));
+    try {
+      state.tables['invoices'] = [];
+      Object.assign(state.tables['client_sows']![0], { generated_lines: [{ service_key: 'services', amount_cents: 100000, billing_frequency: 'quarterly', first_bill_on: '2026-11-01' }] });
+      state.tables['commission_cost_settings'] = [{ effective_at: '2026-01-01', service_cost_pct: { services: 20 }, overhead_pct: 0 }];
+      await onSowSigned('sow');
+      await onSowSigned('sow');
+      expect(state.sends).toHaveLength(1);
+      expect(state.sends[0].options.idempotencyKey).toBe('commission-notice:sow:sow:rep');
+      expect(state.sends[0].options.templateData.expected[0]).toEqual({ dueOn: '2026-12-31', amount: '$80.00' });
+      expect(state.tables['commission_payout_queue']).toEqual([]);
+    } finally { vi.useRealTimers(); }
   });
   it('signature retries do not duplicate commission rows or logical rep sends', async () => {
     await onSowSigned('sow'); await onSowSigned('sow');
