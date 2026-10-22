@@ -138,3 +138,6 @@ export const reverseCommissionPayout = createServerFn({ method: "POST" }).middle
 
 export const getSalesLinkedRecords = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth]).inputValidator((d) => idOnly.parse(d))
   .handler(async ({ data, context }) => (await Q()).linkedRecords(context.userId, data.id));
+
+export const getScheduledPayments = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => (await C()).scheduledPayments(context.userId));
