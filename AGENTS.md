@@ -9,6 +9,7 @@
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
 - Read src/lib/AGENTS.md for workflows/auth, billing, signing, drafts and wealth — why: scoped rules.
+- Investor questionnaire prefilling uses subscription-prefill.ts on authorized onboarding reads and saves; fill only blank exact-party facts and preserve dirty form answers — why: reuse recorded details without account/party confusion or inferred certifications.
 - Partition hosts/menus through host-routing.ts + navigation.ts; share fund engines — why: display grants no authority.
 - Never automate filings (except IRS e-filing of approved 1065s/K-1s per src/lib/AGENTS.md), tax payments, refunds, ACH/wire or provider money movement; server-side authorization only — why: user-mandated safety boundary.
 - Browser tests live in e2e/*.e2e.ts; global-setup.ts blocks before navigation unless reviewed isolation evidence, actual nonproduction backend identity, frontend binding and backend-classified synthetic sessions agree; absent sessions fail, never skip — why: a preview hostname cannot prove safe QA.

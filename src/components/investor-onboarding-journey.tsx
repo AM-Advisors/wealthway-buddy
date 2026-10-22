@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { fillMissingInvestorAnswers } from "@/lib/subscription-prefill";
 import { acknowledgeDocumentFn } from "@/lib/fund-setup-canonical.functions";
 import { confirmAccreditationStepFn } from "@/lib/accreditation-step.functions";
 import { ACCREDITATION_QUESTION_KEY, selfCertificationAllowed } from "@/lib/accreditation-step";
@@ -415,10 +416,16 @@ function QuestionnaireForm({ d, done, locked, onSave, saving }: { d: any; onboar
   const saved = (d.questionnaireResponses ?? {}) as Record<string, unknown>;
   const [open, setOpen] = useState(!done);
   const [answers, setAnswers] = useState<Record<string, string>>(() => Object.fromEntries(questions.map((q) => [q.key, saved[q.key] == null ? "" : String(saved[q.key])])));
+  const dirty = useRef(new Set<string>());
+  const savedKey = JSON.stringify(saved);
+  useEffect(() => {
+    const incoming = JSON.parse(savedKey) as Record<string, unknown>;
+    setAnswers((current) => Object.fromEntries(Object.entries(fillMissingInvestorAnswers(current, incoming, Object.keys(incoming), [...dirty.current])).map(([key, value]) => [key, String(value ?? "")])));
+  }, [savedKey]);
   const lockedVals = (d.questionnaireLocked ?? {}) as Record<string, string | null>;
   const visible = questions.filter((q) => questionVisible(q, answers));
   const missing = visible.filter((q) => q.required && !q.satisfiedBy && !String(answers[q.key] ?? "").trim());
-  const set = (k: string, v: string) => setAnswers((a) => ({ ...a, [k]: v }));
+  const set = (k: string, v: string) => { dirty.current.add(k); setAnswers((a) => ({ ...a, [k]: v })); };
   return (
     <div className="space-y-4 rounded-md border p-4">
       <div className="flex items-start justify-between gap-3">
