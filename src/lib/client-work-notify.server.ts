@@ -15,5 +15,15 @@ export async function notifyFundManagers(fundId: string, kind: "approval_require
     event_kind: "client_work_update", offering_id: fundId, field: kind,
     metadata: { audience: "managers", headline: copy[0], intro: copy[1], portal_path: portalPath },
   }).then(() => undefined, () => undefined);
+  // In-portal bell notice for each manager of this fund (status wording only).
+  try {
+    const { data: mgrs } = await db.from("fund_managers").select("user_id").eq("offering_id", fundId);
+    const { data: off } = await db.from("offerings").select("client_id").eq("id", fundId).maybeSingle();
+    const rows = ((mgrs ?? []) as any[]).filter((m) => m.user_id).map((m) => ({
+      user_id: m.user_id, client_id: off?.client_id ?? null, kind, title: copy[0], body: copy[1], path: portalPath,
+      dedupe_key: `${kind}:${fundId}:${title}:${new Date().toISOString().slice(0, 13)}`,
+    }));
+    if (rows.length) await db.from("client_notifications").upsert(rows, { onConflict: "user_id,dedupe_key", ignoreDuplicates: true });
+  } catch { /* best effort */ }
   try { (await import("@/lib/manager-alerts.server")).kickManagerAlerts(); } catch { /* best effort */ }
 }
