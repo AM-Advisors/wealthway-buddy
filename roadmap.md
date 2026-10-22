@@ -1,5 +1,10 @@
 # Roadmap
 
+## Fund requests, approvals and alerts (2026-10-22)
+- [ ] Expose existing pending fund edits/economics requests beside client approvals without changing their decision authority.
+- [ ] Show fund-linked updates and request status on the shared fund workspace and use existing alert delivery.
+- [ ] Run focused fictional regression checks; authenticated save/read-back and live delivery remain blocked on independently isolated synthetic QA.
+
 ## Default terms and separate investor exceptions (2026-10-22)
 - [x] Keep fund defaults distinct from class overrides; default-term investors need no exception class and no missing-class warning.
 - [x] Reuse approved-class assignment and separately linked side-letter proposals from fund setup and investor details; existing authorization/approval preserved, signed/funded defaults also protected against class reassignment.
