@@ -99,7 +99,7 @@ function FromSow() {
   );
 }
 
-type Line = { serviceKey: string; label: string; quantity: number; unitCents: number; baselineUnitCents: number; billingFrequency?: "one_time" | "monthly" | "quarterly" | "annual"; firstBillOn?: string | null; bookkeeping?: BookkeepingInput };
+type Line = { serviceKey: string; label: string; quantity: number; unitCents: number; baselineUnitCents: number; billingFrequency?: "one_time" | "monthly" | "quarterly" | "annual"; firstBillOn?: string | null; bookkeeping?: BookkeepingInput; details?: { scope?: string; included?: string[]; excluded?: string[] } | null };
 
 /** Product first, then only the levels valid for that product. */
 function AdminLevelPicker({ onAdd, lines }: { onAdd: (key: string) => void; lines: any[] }) {

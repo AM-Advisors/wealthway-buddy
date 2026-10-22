@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { CARD_SERVICE_FEE_LABEL } from "@/lib/card-fee";
+import { SOW_ROLE_DISCLAIMER } from "@/lib/agreement-templates";
 import { RESPONSE_STATUS } from "@/lib/sales-response-model";
 import { acceptanceRemittance, respondToSalesDocument, signAcceptance, viewAcceptance } from "@/lib/sales-acceptance.functions";
 
