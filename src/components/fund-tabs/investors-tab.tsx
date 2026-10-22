@@ -1,3 +1,4 @@
+import { InvestorEconomicsCard } from "@/components/fund-tabs/investor-economics";
 import { currentStep, STEP_STATE_LABELS, type StepState, type StepStatus } from "@/lib/investor-step-status";
 import { useState, type ReactNode } from "react";
 import { remindInvestorItemFn } from "@/lib/document-reminders.functions";
@@ -196,6 +197,7 @@ export function InvestorsTab({ fundId, workQueue }: { fundId: string; workQueue?
     </Card>
     <FundOnboardingLinkCard fundId={fundId} />
     <InvestorLevelsCard fundId={fundId} />
+    <InvestorEconomicsCard fundId={fundId} />
     {workQueue}
     {(dupQ.data?.duplicates?.length ?? 0) > 0 && <DuplicatesCard fundId={fundId} groups={dupQ.data!.duplicates} staff={dupQ.data!.staff} onMerged={() => { void q.refetch(); void dupQ.refetch(); }} />}
     </div>
