@@ -1,0 +1,13 @@
+CREATE TABLE public.forecasts (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), subject_type text NOT NULL CHECK (subject_type IN ('cap_table','portfolio','fund')), subject_id uuid NOT NULL, name text NOT NULL, created_by uuid NOT NULL, created_at timestamptz NOT NULL DEFAULT now());
+CREATE INDEX ON public.forecasts(subject_type, subject_id);
+CREATE TABLE public.forecast_scenarios (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), forecast_id uuid NOT NULL REFERENCES public.forecasts(id), name text NOT NULL, created_by uuid NOT NULL, created_at timestamptz NOT NULL DEFAULT now());
+CREATE TABLE public.forecast_scenario_versions (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), scenario_id uuid NOT NULL REFERENCES public.forecast_scenarios(id), assumptions jsonb NOT NULL, results jsonb NOT NULL, canonical_snapshot jsonb, actor_id uuid NOT NULL, created_at timestamptz NOT NULL DEFAULT now());
+CREATE TABLE public.forecast_share_events (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), scenario_id uuid NOT NULL REFERENCES public.forecast_scenarios(id), version_id uuid NOT NULL REFERENCES public.forecast_scenario_versions(id), shared boolean NOT NULL, actor_id uuid NOT NULL, created_at timestamptz NOT NULL DEFAULT now());
+GRANT ALL ON public.forecasts, public.forecast_scenarios, public.forecast_scenario_versions, public.forecast_share_events TO service_role;
+ALTER TABLE public.forecasts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.forecast_scenarios ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.forecast_scenario_versions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.forecast_share_events ENABLE ROW LEVEL SECURITY;
+CREATE OR REPLACE FUNCTION public.block_forecast_history_mutation() RETURNS trigger LANGUAGE plpgsql SET search_path = public AS $$ BEGIN RAISE EXCEPTION 'Forecast history is append-only'; END $$;
+CREATE TRIGGER forecast_versions_append_only BEFORE UPDATE OR DELETE ON public.forecast_scenario_versions FOR EACH ROW EXECUTE FUNCTION public.block_forecast_history_mutation();
+CREATE TRIGGER forecast_share_append_only BEFORE UPDATE OR DELETE ON public.forecast_share_events FOR EACH ROW EXECUTE FUNCTION public.block_forecast_history_mutation();
