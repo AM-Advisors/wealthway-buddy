@@ -27,6 +27,16 @@ describe("product pricing", () => {
       for (const t of ACCOUNTING_TERMS) expect(text).not.toContain(t);
     }
   });
+  it("SaaS has no services included and bills yearly or quarterly", () => {
+    const s = productByKey("saas");
+    // Nothing included: no client servicing line is free ($0) or marked "Included".
+    for (const l of s.servicing.client) for (const pr of l.prices) expect(pr.amount === 0 || pr.note === "Included").toBe(false);
+    expect(s.servicing.client.some((l) => (l.description ?? "").toLowerCase().includes("no services included"))).toBe(true);
+    // The platform fee carries both a yearly and a quarterly price.
+    const fee = s.fundCost[0]!.prices;
+    expect(fee.map((p) => p.billing)).toEqual(["annual", "quarterly"]);
+    expect(fee[1]!.amount).toBe(Math.round((fee[0]!.amount! / 4) * 1.1));
+  });
   it("SaaS fund documents are $500 and Form D stays $160", () => {
     const a = productByKey("saas").alaCarte;
     expect(a.find((l) => l.name.startsWith("Harmonious fund documents"))!.prices[0]!.amount).toBe(500);
