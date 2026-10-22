@@ -40,7 +40,7 @@ function AcceptPage() {
   const [feedback, setFeedback] = useState("");
   const qc = useQueryClient();
   const q = useQuery({ queryKey: ["accept", token], queryFn: () => view({ data: { token } }), retry: false });
-  const [name, setName] = useState(""); const [title, setTitle] = useState(""); const [agree, setAgree] = useState(false); const [msaAgree, setMsaAgree] = useState(false); const [showMsa, setShowMsa] = useState(false);
+  const [name, setName] = useState(""); const [title, setTitle] = useState(""); const [agree, setAgree] = useState(false); const [msaAgree, setMsaAgree] = useState(false); const [showMsa, setShowMsa] = useState(false); const [ticked, setTicked] = useState<string[]>([]); const [openPolicy, setOpenPolicy] = useState<string | null>(null);
   const [method, setMethod] = useState<Method>("wire"); const [busy, setBusy] = useState(false);
 
   if (q.isLoading) return <Shell><p className="text-muted-foreground">Loading…</p></Shell>;
@@ -49,10 +49,13 @@ function AcceptPage() {
 
   const submit = async () => {
     setBusy(true);
-    try { const r = await sign({ data: { token, signerName: name, signerTitle: title || undefined, agree: true, msaAgree: d.msa ? msaAgree : undefined, msaVersionId: d.msa?.versionId ?? null, paymentMethod: method } }); qc.setQueryData(["accept", token], r); toast.success("Signed"); }
+    try { const r = await sign({ data: { token, signerName: name, signerTitle: title || undefined, agree: true, msaAgree: d.msa ? msaAgree : undefined, msaVersionId: d.msa?.versionId ?? null, policyIds: ticked, paymentMethod: method } }); qc.setQueryData(["accept", token], r); toast.success("Signed"); }
     catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
   };
 
+  const owed = (d.policies ?? []).filter((p) => !p.acceptedAt);
+  const policiesOk = owed.every((p) => ticked.includes(p.documentId));
+  const shownPolicy = (d.policies ?? []).find((p) => p.documentId === openPolicy);
   const steps = [
     { id: "overview", label: "Overview" },
     ...(d.sections.length ? [{ id: "details", label: "Services & terms" }] : []),
@@ -134,7 +137,7 @@ function AcceptPage() {
             </div>
             {d.msa && (
               <label className="flex items-start gap-2 text-sm"><input type="checkbox" className="mt-1" checked={msaAgree} onChange={(e) => setMsaAgree(e.target.checked)} />
-                <span>I have read and accept the <button type="button" className="font-medium text-primary underline" onClick={() => setShowMsa(true)}>Master Services Agreement and terms and conditions</button> (version {d.msa.version}) on behalf of my organization.</span></label>
+                <span>I have read and accept the <button type="button" className="font-medium text-primary underline" onClick={() => setShowMsa(true)}>Master Service Agreement</button> (version {d.msa.version}) on behalf of my organization.</span></label>
             )}
             {d.msa && showMsa && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4" onClick={() => setShowMsa(false)}>
@@ -148,10 +151,25 @@ function AcceptPage() {
                 </div>
               </div>
             )}
+            {(d.policies ?? []).map((p) => p.acceptedAt ? (
+              <p key={p.documentId} className="text-sm text-muted-foreground">{p.label}: already accepted on {new Date(p.acceptedAt).toLocaleDateString()}</p>
+            ) : (
+              <label key={p.documentId} className="flex items-start gap-2 text-sm"><input type="checkbox" className="mt-1" checked={ticked.includes(p.documentId)} onChange={(e) => setTicked((t) => e.target.checked ? [...t, p.documentId] : t.filter((x) => x !== p.documentId))} />
+                <span>I have read and accept the <button type="button" className="font-medium text-primary underline" onClick={() => setOpenPolicy(p.documentId)}>{p.label}</button> (version {p.version}).</span></label>
+            ))}
+            {shownPolicy && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4" onClick={() => setOpenPolicy(null)}>
+                <div className="flex max-h-[85vh] w-full max-w-2xl flex-col rounded-lg border bg-card p-4 shadow-lg" onClick={(e) => e.stopPropagation()}>
+                  <div className="mb-2 flex items-center justify-between"><p className="font-heading font-semibold text-primary">{shownPolicy.label} · version {shownPolicy.version}</p>
+                    <Button size="sm" variant="outline" onClick={() => setOpenPolicy(null)}>Close</Button></div>
+                  <div className="overflow-y-auto whitespace-pre-wrap text-sm">{shownPolicy.body}</div>
+                </div>
+              </div>
+            )}
             <MethodPicker value={method} onChange={setMethod} />
             <label className="flex items-start gap-2 text-sm"><input type="checkbox" className="mt-1" checked={agree} onChange={(e) => setAgree(e.target.checked)} />
               <span>I approve and agree to this {KIND[d.kind]?.toLowerCase() ?? "document"} on behalf of my organization. Typing my name is my electronic signature.</span></label>
-            <Button className="w-full" disabled={busy || !agree || (!!d.msa && !msaAgree) || name.trim().length < 2} onClick={submit}>Sign and approve</Button>
+            <Button className="w-full" disabled={busy || !agree || (!!d.msa && !msaAgree) || !policiesOk || name.trim().length < 2} onClick={submit}>Sign and approve</Button>
           </CardContent>
         </Card>
       )}
