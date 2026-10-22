@@ -1,6 +1,6 @@
 export type ReportingCadence = "monthly" | "quarterly" | "annual";
 export type PaymentCadence = "quarterly" | "annual";
-export type PlanningPayment = { id: string; label: string; cents: number; date: string | null; status: string; currency?: string; lineId?: string; userId?: string | null; layer?: string };
+export type PlanningPayment = { id: string; label: string; cents: number; date: string | null; status: string; revenueCents?: number; grossProfitCents?: number; netProfitCents?: number; currency?: string; lineId?: string; userId?: string | null; layer?: string };
 
 export function periodKey(date: string, cadence: ReportingCadence): string | null {
   const day = date.slice(0, 10);

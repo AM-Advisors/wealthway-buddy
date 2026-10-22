@@ -41,3 +41,5 @@
 - Forecasts are projections only, gated server-side by a contracted and paid subject-specific Forecasting add-on; immutable versions and sharing events never alter canonical records or trigger money movement.
 
 - Recurring payment schedules come only from signed-SOW frequencies and send invoices and notices, never money; missing terms require staff review.
+
+- Commission basis is gross profit from append-only cost entries/settings; expected signed-SOW rows are computed projections, never payable; existing queue/payout amounts remain historical.

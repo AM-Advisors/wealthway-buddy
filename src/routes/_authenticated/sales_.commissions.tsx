@@ -1,3 +1,4 @@
+import { CommissionCostControls } from "@/components/sales/commission-cost-controls";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -81,6 +82,7 @@ function Commissions() {
         </Table>
       </Panel>
 
+      {d && <CommissionCostControls data={d} onChange={refresh} />}
       <ScheduledPayments />
 
       <CommissionTracker rows={(d?.rows ?? []) as any} canRecord={Boolean(d?.canRecordPayout)} onChange={refresh} />

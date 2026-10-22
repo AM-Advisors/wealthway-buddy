@@ -141,3 +141,10 @@ export const getSalesLinkedRecords = createServerFn({ method: "GET" }).middlewar
 
 export const getScheduledPayments = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth])
   .handler(async ({ context }) => (await C()).scheduledPayments(context.userId));
+
+export const saveCommissionCosts = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ invoiceId: z.string().uuid().optional(), sowId: z.string().uuid().optional(), serviceKey: z.string().min(1), kind: z.enum(["provider", "deal"]), amountCents: z.number().int().nonnegative(), supersedesId: z.string().uuid().optional(), reason: z.string().trim().min(1) }))
+  .handler(async ({ data, context }) => (await C()).saveCommissionCosts(context.userId, data));
+export const saveCommissionCostSettings = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ serviceCostPct: z.record(z.string(), z.number().min(0).max(100)), overheadPct: z.number().min(0).max(100), reason: z.string().trim().min(1) }))
+  .handler(async ({ data, context }) => (await C()).saveCommissionCostSettings(context.userId, data));
