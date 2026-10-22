@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { getCommissions, saveCommissionRates, saveQuoteBdr } from "@/lib/sales-hub.functions";
+import { getCommissions, getScheduledPayments, saveCommissionRates, saveQuoteBdr } from "@/lib/sales-hub.functions";
 import { LAYER_LABEL, type CommissionLayer, type CommissionRates } from "@/lib/commission-model";
 import { Panel, PeriodFilter, Stat, money, usePeriod } from "@/components/sales/sales-ui";
 import { CommissionTracker } from "@/components/sales/commission-tracker";
@@ -81,6 +81,8 @@ function Commissions() {
         </Table>
       </Panel>
 
+      <ScheduledPayments />
+
       <CommissionTracker rows={(d?.rows ?? []) as any} canRecord={Boolean(d?.canRecordPayout)} onChange={refresh} />
 
       {d && d.quotes.length > 0 && (
@@ -127,5 +129,33 @@ function Commissions() {
         <p className="mt-2 text-xs text-muted-foreground">New rates apply to invoices paid from the change onward; earlier payments keep the rates in effect then.</p>
       </Panel>
     </div>
+  );
+}
+
+function ScheduledPayments() {
+  const load = useServerFn(getScheduledPayments);
+  const q = useQuery({ queryKey: ["sales", "scheduled-payments"], queryFn: () => load() });
+  const items = q.data?.items ?? [];
+  return (
+    <Panel title="Scheduled payments">
+      <p className="mb-3 text-sm text-muted-foreground">Quarterly and annual payments from signed statements of work. On each due date the client is invoiced and the rep is notified automatically. Commission is earned once the client pays; payouts stay manual.</p>
+      <Table>
+        <TableHeader><TableRow><TableHead>Client</TableHead><TableHead>Service</TableHead><TableHead>Schedule</TableHead><TableHead>Next due</TableHead><TableHead>Rep</TableHead><TableHead className="text-right">Amount</TableHead></TableRow></TableHeader>
+        <TableBody>
+          {items.map((i: any) => (
+            <TableRow key={i.id}>
+              <TableCell>{i.client}</TableCell>
+              <TableCell>{i.service}</TableCell>
+              <TableCell className="capitalize">{i.frequency}</TableCell>
+              <TableCell>{i.waitingForSignature ? <Badge variant="outline">Waiting for signed SOW</Badge> : i.dueOn}</TableCell>
+              <TableCell>{i.rep}</TableCell>
+              <TableCell className="text-right">{money(i.amountCents)}</TableCell>
+            </TableRow>
+          ))}
+          {q.isError && <TableRow><TableCell colSpan={6} className="text-destructive">Scheduled payments could not be loaded.</TableCell></TableRow>}
+          {!q.isLoading && !q.isError && !items.length && <TableRow><TableCell colSpan={6} className="text-muted-foreground">No quarterly or annual payments scheduled yet.</TableCell></TableRow>}
+        </TableBody>
+      </Table>
+    </Panel>
   );
 }

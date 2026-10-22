@@ -1,7 +1,7 @@
 /**
  * Billing schedules: approved SOW lines → draft invoices on each due date.
- * Drafts only. Issuing needs a reviewer and a different issuer; nothing here
- * charges, issues or emails anyone.
+ * Drafts, then issueScheduledDrafts sends only exact signed-SOW amounts; nothing here
+ * charges or moves money.
  */
 import { duePeriods, isFrequency, scheduleRef, type BillingFrequency } from "@/lib/invoice-schedule-model";
 
@@ -106,4 +106,63 @@ export async function markInvoicePaidByCard(invoiceId: string, sessionId: string
 export async function onCardPaymentReversed(invoiceId: string, why: string) {
   const { cancelInvoicePayouts } = await import("@/lib/commissions.server");
   return cancelInvoicePayouts(invoiceId, why, null);
+}
+
+/**
+ * Sends scheduled invoices automatically: only drafts the schedule made from a
+ * Harmonious-approved, client-signed SOW, billed at exactly the signed amounts.
+ * The SOW's own two-person approval stands in for issue review; anything else
+ * stays a draft for staff. Emails the client and the assigned rep. Never charges.
+ */
+export async function issueScheduledDrafts(asOf = today()) {
+  const db = await admin();
+  const { data: drafts, error } = await db.from("invoices").select("id, client_id, sow_id, total_cents, period_start, period_end, note, net_days, sales_quote_id")
+    .eq("status", "draft").eq("generated_by_schedule", true).is("voided_at", null).lte("period_start", asOf)
+    // Drafts made before automatic sending began stay with staff; never surprise-send old backlog.
+    .gte("created_at", "2026-10-22T00:00:00Z").limit(200);
+  if (error) throw new Error(error.message);
+  const { notifyClientAdminsWith, money, CLIENT_PORTAL_BASE } = await import("@/lib/client-notify.server");
+  let issued = 0;
+  for (const inv of (drafts ?? []) as any[]) {
+    const { data: sow } = await db.from("client_sows").select("id, approval_status, client_signed_at, executed_at, generated_lines").eq("id", inv.sow_id).maybeSingle();
+    if (!sow || sow.approval_status !== "approved" || (!sow.client_signed_at && !sow.executed_at)) continue;
+    const { data: lines } = await db.from("invoice_lines").select("label, amount_cents, service_key, source").eq("invoice_id", inv.id).order("sort_order");
+    const signed = Array.isArray(sow.generated_lines) ? sow.generated_lines : [];
+    const matches = (lines ?? []).length > 0 && (lines ?? []).every((l: any) => l.source === "schedule" && signed.some((s: any) => (s.service_key ?? null) === (l.service_key ?? null) && Math.round(Number(s.amount_cents)) === Number(l.amount_cents)));
+    if (!matches || Number(inv.total_cents) <= 0) continue;
+    const year = asOf.slice(0, 4);
+    const { count } = await db.from("invoices").select("id", { count: "exact", head: true }).not("number", "is", null).like("number", `HRM-${year}-%`);
+    const number = `HRM-${year}-${String((count ?? 0) + 1).padStart(4, "0")}`;
+    const net = Number(inv.net_days ?? 30);
+    const d = new Date(`${asOf}T00:00:00Z`); d.setUTCDate(d.getUTCDate() + net);
+    const dueDate = d.toISOString().slice(0, 10);
+    const { data: done, error: ue } = await db.from("invoices").update({ status: "issued", number, issue_date: asOf, due_date: dueDate, issued_at: new Date().toISOString(), approval_status: "pending", approval_requested_at: new Date().toISOString(), rate_variance_cents: 0, issue_self_reason: "Issued automatically from the signed statement of work's payment schedule." })
+      .eq("id", inv.id).eq("status", "draft").select("id");
+    if (ue || !done?.length) continue;
+    issued++;
+    await db.from("billing_record_events").insert({ entity_kind: "invoice", entity_id: inv.id, client_id: inv.client_id, event_kind: "scheduled_invoice_issued", detail: { number, sow_id: inv.sow_id } }).then(() => null, () => null);
+    const { data: client } = await db.from("clients").select("legal_name, name").eq("id", inv.client_id).maybeSingle();
+    await notifyClientAdminsWith(inv.client_id, "invoice-issued", `invoice-issued:${inv.id}`, (p) => ({
+      contactName: p.name, clientName: client?.legal_name || client?.name || "your organization", invoiceNumber: number,
+      amount: money(Number(inv.total_cents)), issueDate: asOf, dueDate, periodLabel: `${inv.period_start} to ${inv.period_end}`,
+      lines: (lines ?? []).map((l: any) => ({ label: String(l.label ?? "Service fee"), amount: money(Number(l.amount_cents ?? 0)) })),
+      payUrl: `${CLIENT_PORTAL_BASE}/client/invoices?invoice=${inv.id}`, note: inv.note || "",
+    }));
+    await notifyRepPaymentDue(db, inv, number, dueDate, client?.legal_name || client?.name || "Client").catch(() => console.error("[payment-schedule] rep notice failed"));
+  }
+  return { issued };
+}
+
+async function notifyRepPaymentDue(db: any, inv: any, number: string, dueDate: string, clientName: string) {
+  let q = db.from("sales_quotes").select("owner_user_id, title").eq("status", "signed");
+  q = inv.sales_quote_id ? q.eq("id", inv.sales_quote_id) : q.eq("sow_id", inv.sow_id);
+  const { data: quote } = await q.limit(1).maybeSingle();
+  if (!quote?.owner_user_id) return;
+  const { data: auth } = await db.auth.admin.getUserById(quote.owner_user_id);
+  if (!auth?.user?.email || !auth.user.email_confirmed_at) return;
+  const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+  await sendTemplateEmail("payment-due-rep", auth.user.email, {
+    managed: true, inboxForAnyUser: true, idempotencyKey: `payment-due-rep:${inv.id}:${quote.owner_user_id}`,
+    templateData: { clientName, invoiceNumber: number, amount: new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(Number(inv.total_cents) / 100), dueDate },
+  } as any);
 }

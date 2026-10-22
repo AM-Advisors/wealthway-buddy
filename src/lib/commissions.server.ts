@@ -235,3 +235,32 @@ export async function cancelInvoicePayouts(invoiceId: string, reason: string, ac
   for (const h of (hit ?? []) as any[]) await db.from("commission_payout_queue_events").insert({ queue_id: h.id, event_kind: "cancelled", actor_id: actorId, detail: { reason } });
   return { cancelled: (hit ?? []).length };
 }
+
+/** Upcoming quarterly/annual payments from signed SOWs, scoped like the commission report. Read only. */
+export async function scheduledPayments(userId: string) {
+  const db = await admin();
+  const a = await salesActor(userId);
+  const viewAll = a.roles.some((r: string) => COMMISSION_VIEW_ALL.includes(r)) || a.visible == null;
+  const { data: quotes } = await db.from("sales_quotes").select("sow_id, owner_user_id, client_id").eq("status", "signed").not("sow_id", "is", null);
+  const qs = ((quotes ?? []) as any[]).filter((q) => viewAll || q.owner_user_id === userId || (a.visible ?? []).includes(q.owner_user_id));
+  const sowIds = [...new Set(qs.map((q) => q.sow_id))];
+  if (!sowIds.length) return { items: [] as any[] };
+  const [{ data: sched }, { data: sows }] = await Promise.all([
+    db.from("invoice_schedules").select("id, sow_id, client_id, label, frequency, amount_cents, next_due_on, active").in("sow_id", sowIds).in("frequency", ["quarterly", "annual"]).eq("active", true).order("next_due_on"),
+    db.from("client_sows").select("id, approval_status, client_signed_at, executed_at").in("id", sowIds),
+  ]);
+  const clientIds = [...new Set(((sched ?? []) as any[]).map((s) => s.client_id))];
+  const repIds = [...new Set(qs.map((q) => q.owner_user_id).filter(Boolean))];
+  const [{ data: clients }, { data: profiles }] = await Promise.all([
+    clientIds.length ? db.from("clients").select("id, legal_name, name").in("id", clientIds) : { data: [] },
+    repIds.length ? db.from("profiles").select("id, full_name").in("id", repIds) : { data: [] },
+  ]);
+  return { items: ((sched ?? []) as any[]).map((s) => {
+    const sow = ((sows ?? []) as any[]).find((x) => x.id === s.sow_id);
+    const rep = qs.find((q) => q.sow_id === s.sow_id)?.owner_user_id;
+    const p = ((profiles ?? []) as any[]).find((x) => x.id === rep);
+    const c = ((clients ?? []) as any[]).find((x) => x.id === s.client_id);
+    return { id: s.id, client: c?.legal_name || c?.name || "Client", service: s.label, frequency: s.frequency, amountCents: Number(s.amount_cents), dueOn: s.next_due_on,
+      rep: p?.full_name || "Unassigned", waitingForSignature: !sow || sow.approval_status !== "approved" || (!sow.client_signed_at && !sow.executed_at) };
+  }) };
+}
