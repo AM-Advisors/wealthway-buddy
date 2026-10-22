@@ -6,7 +6,7 @@ export type Section = { key: string; title: string; body: string; question?: str
 
 /** Sections reps switch on only when needed. Off by default on new documents; older saved sections without the flag stay shown. */
 export const OPTIONAL_SECTION_KEYS = ["needs", "approach", "timeline", "next", "about"];
-export const isSectionShown = (s: { key: string; included?: boolean }) => !OPTIONAL_SECTION_KEYS.includes(s.key) || s.included !== false;
+export const isSectionShown = (s: { key: string; included?: boolean | undefined }) => !OPTIONAL_SECTION_KEYS.includes(s.key) || s.included !== false;
 
 export const KIND_LABEL: Record<DocKind, string> = { proposal: "Proposal", rfp: "RFP", rfq: "RFQ" };
 export const DIRECTION_LABEL: Record<DocDirection, string> = { response: "Response to prospect", outbound: "Request to vendor" };
