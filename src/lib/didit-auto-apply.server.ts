@@ -44,6 +44,10 @@ export async function autoApplyDiditForOnboarding(onboardingId: string, actorUse
   const decision = await fetchDiditSessionDecision(ob.questionnaire_didit_session_id);
   if (!decision) return { applied: false, reason: "identity-check result unavailable" };
   const x = extractDiditDetails(decision);
+  const { notifyVerificationConfirmation } = await import("@/lib/ops-slack-notify.server");
+  const notice = { ref: ob.questionnaire_didit_session_id, offeringId: ob.offering_id, path: `/ops/fund/${encodeURIComponent(ob.offering_id)}?tab=investors` };
+  await notifyVerificationConfirmation({ ...notice, check: "KYC", status: String(decision.status ?? "") });
+  await notifyVerificationConfirmation({ ...notice, check: "AML", status: x.amlStatus });
   if (!x.sessionApproved) return { applied: false, reason: `identity-check status ${(decision as any).status ?? "unknown"}` };
 
   const { data: person } = await db().from("persons").select("*").eq("id", ob.person_id).maybeSingle();

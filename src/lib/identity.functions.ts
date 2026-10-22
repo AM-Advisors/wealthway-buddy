@@ -304,6 +304,7 @@ export const submitEntityVerification = createServerFn({ method: "POST" })
       : await db.from("entity_verifications").insert(payload);
     if (error) throw new Error(error.message);
 
+    await (await import("@/lib/ops-slack-notify.server")).notifyVerificationConfirmation({ check: "KYB", status: "review", ref: `${data.profile_id}:${payload.submitted_at}` });
     return { ok: true };
   });
 

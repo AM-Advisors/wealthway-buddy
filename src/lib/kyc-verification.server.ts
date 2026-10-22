@@ -599,6 +599,11 @@ async function applyDecision(input: ApplyInput): Promise<SyncResult> {
     });
   }
 
+  const { notifyVerificationConfirmation } = await import("@/lib/ops-slack-notify.server");
+  const reviewPath = application?.user_id ? `/ops/investors/${encodeURIComponent(application.user_id)}?tab=identity` : "/ops/queue";
+  await notifyVerificationConfirmation({ check: "KYC", status: decision.reviewRequired ? "review" : decision.kyc, ref: verification.id, offeringId: application?.offering_id, path: reviewPath });
+  await notifyVerificationConfirmation({ check: "AML", status: decision.aml, ref: verification.id, offeringId: application?.offering_id, path: reviewPath });
+
   return {
     applied: true,
     verificationId: verification.id,

@@ -127,6 +127,7 @@ export async function saveFormation(userId: string, d: FormationInput) {
   const synced = await db.from("investment_profiles").update({ legal_name: d.legal_name.trim() }).eq("id", d.profileId);
   if (synced.error) throw new Error(synced.error.message);
   await log(db, d.profileId, userId, "formation_submitted");
+  await (await import("@/lib/ops-slack-notify.server")).notifyVerificationConfirmation({ check: "KYB", status: "review", ref: `${kyb.id}:${kyb.kyb_status}` });
   return { ok: true };
 }
 
