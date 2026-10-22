@@ -117,7 +117,9 @@ export async function onCardPaymentReversed(invoiceId: string, why: string) {
 export async function issueScheduledDrafts(asOf = today()) {
   const db = await admin();
   const { data: drafts, error } = await db.from("invoices").select("id, client_id, sow_id, total_cents, period_start, period_end, note, net_days, sales_quote_id")
-    .eq("status", "draft").eq("generated_by_schedule", true).is("voided_at", null).lte("period_start", asOf).limit(200);
+    .eq("status", "draft").eq("generated_by_schedule", true).is("voided_at", null).lte("period_start", asOf)
+    // Drafts made before automatic sending began stay with staff; never surprise-send old backlog.
+    .gte("created_at", "2026-10-22T00:00:00Z").limit(200);
   if (error) throw new Error(error.message);
   const { notifyClientAdminsWith, money, CLIENT_PORTAL_BASE } = await import("@/lib/client-notify.server");
   let issued = 0;
