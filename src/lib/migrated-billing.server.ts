@@ -53,7 +53,7 @@ export async function overview(userId: string, fundId: string) {
 type Line = { label: string; amountCents: number };
 
 /** A past invoice (issued, or paid on a past date) for this fund's client. */
-export async function recordInvoice(userId: string, d: { fundId: string; lines: Line[]; issueDate: string; paidOn?: string | null; reference?: string | null; note?: string | null; sowId?: string | null }) {
+export async function recordInvoice(userId: string, d: { fundId: string; lines: Line[]; issueDate: string; paidOn?: string | null | undefined; reference?: string | null | undefined; note?: string | null | undefined; sowId?: string | null | undefined }) {
   const { db } = await actor(userId);
   const { fund: f } = await fund(db, d.fundId);
   if (d.issueDate > today()) throw new Error("The invoice date can't be in the future.");
@@ -77,7 +77,7 @@ export async function recordInvoice(userId: string, d: { fundId: string; lines: 
   return { id: inv.id as string, number: inv.number as string };
 }
 
-export async function recordPayment(userId: string, d: { invoiceId: string; paidOn: string; reference?: string | null }) {
+export async function recordPayment(userId: string, d: { invoiceId: string; paidOn: string; reference?: string | null | undefined }) {
   const { db } = await actor(userId);
   const { data: inv } = await db.from("invoices").select("id, client_id, status, issue_date").eq("id", d.invoiceId).maybeSingle();
   if (!inv) throw new Error("Invoice not found.");
@@ -89,7 +89,7 @@ export async function recordPayment(userId: string, d: { invoiceId: string; paid
 }
 
 /** Generates a statement of work from the fees, assigns it to the fund, puts it on the client's list and emails them. */
-export async function generateSow(userId: string, d: { fundId: string; title: string; lines: Line[]; invoiceId?: string | null }) {
+export async function generateSow(userId: string, d: { fundId: string; title: string; lines: Line[]; invoiceId?: string | null | undefined }) {
   const { db } = await actor(userId);
   const { fund: f, clientName } = await fund(db, d.fundId);
   if (!d.lines.length) throw new Error("Add at least one fee.");
@@ -129,7 +129,7 @@ async function emailClient(db: any, clientId: string, sowId: string, title: stri
 }
 
 /** Stores a previously signed statement of work as executed and assigns it to the fund. */
-export async function uploadSow(userId: string, d: { fundId: string; title: string; signedOn: string; signedBy?: string | null; fileName: string; base64: string; invoiceId?: string | null }) {
+export async function uploadSow(userId: string, d: { fundId: string; title: string; signedOn: string; signedBy?: string | null | undefined; fileName: string; base64: string; invoiceId?: string | null | undefined }) {
   const { db } = await actor(userId);
   const { fund: f } = await fund(db, d.fundId);
   if (d.signedOn > today()) throw new Error("The signed date can't be in the future.");

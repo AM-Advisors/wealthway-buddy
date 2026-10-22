@@ -50,8 +50,8 @@ export function MigratedBillingPanel({ fundId }: { fundId: string }) {
   const lines = rows.filter((r) => r.label.trim() && cents(r.amount) > 0).map((r) => ({ label: r.label.trim(), amountCents: cents(r.amount) }));
 
   const save = async () => {
-    if (!lines.length) return toast.error("Add at least one fee with an amount.");
-    if (sowMode === "upload" && (!file || !signedOn)) return toast.error("Choose the signed PDF and its signed date.");
+    if (!lines.length) { toast.error("Add at least one fee with an amount."); return; }
+    if (sowMode === "upload" && (!file || !signedOn)) { toast.error("Choose the signed PDF and its signed date."); return; }
     await run("save", async () => {
       const inv = issueDate ? await recordInv({ data: { fundId, lines, issueDate, paidOn: paidOn || null, reference: reference || null } }) : null;
       if (sowMode === "generate") {
