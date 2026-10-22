@@ -302,6 +302,8 @@ async function syncSignerRows(signatureId: string, signRequestId: string) {
       if (ob) {
         const { notifyInvestorApproval } = await import('@/lib/investor-approval-notify.server');
         await notifyInvestorApproval({ onboardingId: ob.id, action: 'review', ref: `signature:${signatureId}` });
+        const { requestCountersignIfDue } = await import('@/lib/investor-onboarding.server');
+        await requestCountersignIfDue(ob.id, 'on_investor_signature', ob.id).catch(() => null);
       }
     }
   }

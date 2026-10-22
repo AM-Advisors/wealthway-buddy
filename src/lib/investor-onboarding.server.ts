@@ -1053,6 +1053,7 @@ export async function investorReportsFundsSent(userId: string, onboardingId: str
     investor_reports_sent_at: row.investor_reports_sent_at ?? nowIso(),
     funding_status: row.funding_status === "not_funded" ? "investor_reports_sent" : row.funding_status,
   });
+  await requestCountersignIfDue(row.id, "on_funding_step", actor.userId).catch(() => null);
   await recordEvent({
     onboardingId: row.id,
     offeringId: row.offering_id,
@@ -2682,4 +2683,23 @@ export async function myPersonalLinks(userId: string) {
   const { data: rows } = await db().from("investor_onboardings").select("id, offering_id, invitation_id, investor_user_id, offerings(name)").eq("investor_user_id", userId).is("removed_at", null);
   const { ONBOARD_ORIGIN } = await import("@/lib/onboard-portal-model");
   return { links: ((rows ?? []) as any[]).map((r) => ({ onboardingId: r.id as string, fundName: String(r.offerings?.name ?? "Fund"), url: `${ONBOARD_ORIGIN}/onboard/i/${r.id}` })) };
+}
+
+/**
+ * Ask the fund's managers to countersign when the fund's timing says it's due.
+ * parallel → after the investor signs; after_completion → when the investor reaches/finishes funding.
+ * Sent once per investment (recorded event); never approves, admits or moves money.
+ */
+export async function requestCountersignIfDue(onboardingId: string, moment: "on_investor_signature" | "on_funding_step", actorUserId: string) {
+  const row = await onboardingRow(onboardingId);
+  if (row.approved_to_fund_at || row.removed_at) return { sent: false };
+  const facts = await gatherFacts(row);
+  const { countersignNoticeMoment } = await import("@/lib/countersign-timing");
+  if (facts.countersignTiming === "pause" || countersignNoticeMoment(facts.countersignTiming) !== moment) return { sent: false };
+  const { data: prior } = await db().from("investor_onboarding_events").select("id").eq("onboarding_id", row.id).eq("event", "countersign_requested").limit(1);
+  if ((prior ?? []).length) return { sent: false };
+  await recordEvent({ onboardingId: row.id, offeringId: row.offering_id, event: "countersign_requested", detail: { timing: facts.countersignTiming, moment }, actorUserId, actorRole: "system" });
+  const { notifyFundManagers } = await import("@/lib/client-work-notify.server");
+  await notifyFundManagers(row.offering_id, "approval_required", "Investor agreement countersignature", `/manager/fund/${row.offering_id}/investors`);
+  return { sent: true };
 }
