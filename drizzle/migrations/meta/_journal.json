@@ -2297,6 +2297,13 @@
       "when": 1792642409570,
       "tag": "0327_crm_company_connections",
       "breakpoints": true
+    },
+    {
+      "idx": 328,
+      "version": "7",
+      "when": 1792644798724,
+      "tag": "0328_bookkeeping_proposed_quote_configuration",
+      "breakpoints": true
     }
   ]
 }
