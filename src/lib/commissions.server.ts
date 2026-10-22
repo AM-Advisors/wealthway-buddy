@@ -1,3 +1,5 @@
+import { commissionProfit, settingsAt, lineActualCosts } from "./commission-profit-model";
+import { buildPaymentSchedule } from "./payment-schedule-model";
 /** Server-only commission tracking. Read-only projection over signed quotes and their invoices; never moves money. */
 import { COMMISSION_EDITORS, COMMISSION_VIEW_ALL, DEFAULT_RATES, PAYOUT_RECORDERS, payoutDueDate, isCapTableLine, splitLine, validRates, type CommissionRates } from "@/lib/commission-model";
 import { names, salesActor as salesHubActor } from "@/lib/sales-hub.server";
@@ -14,6 +16,21 @@ const ratesAt = (hist: Awaited<ReturnType<typeof rateHistory>>, at: string) => {
   return r;
 };
 
+async function costFacts(db: any) {
+  const [entries, settings, expenses] = await Promise.all([db.from("commission_cost_entries").select("*"), db.from("commission_cost_settings").select("*").order("effective_at"), db.from("pass_through_expenses").select("id, amount_cents")]);
+  if (entries.error || settings.error || expenses.error) throw new Error("Commission cost facts unavailable.");
+  return { entries: entries.data ?? [], settings: settings.data ?? [], expenses: expenses.data ?? [] };
+}
+function profitFor(facts: any, inv: any, ln: any, lines: any[], invoices: any[], rates: number[]) {
+  const setting = settingsAt(facts.settings, (inv.issue_date ?? "") + "T23:59:59Z");
+  const matching = lines.filter(l => l.service_key === ln.service_key && !l.expense_id);
+  const invoiceTotal = matching.filter(l => l.invoice_id === inv.id).reduce((s, l) => s + Number(l.amount_cents), 0);
+
+  const actualCosts = lineActualCosts(facts.entries, inv.id, inv.sow_id, ln.service_key, Number(ln.amount_cents), invoiceTotal, invoiceTotal);
+  // Expense-linked revenue deducts the recorded expense, not an assumed fee.
+  return commissionProfit({ revenueCents: Number(ln.amount_cents), passThroughCents: ln.expense_id ? Number(facts.expenses.find((e: any) => e.id === ln.expense_id)?.amount_cents ?? ln.amount_cents) : 0, actualCosts: ln.expense_id ? [0] : actualCosts, costPct: setting.service_cost_pct[ln.service_key] ?? 0, overheadPct: setting.overhead_pct, rates });
+}
+
 /** Sales staff use their Sales scope; Finance and leadership (no Sales role) still see every commission. */
 async function salesActor(userId: string) {
   try { return await salesHubActor(userId); } catch (e) {
@@ -26,11 +43,12 @@ async function salesActor(userId: string) {
 }
 
 export async function commissionReport(userId: string, from: string, to: string) {
-  const db = await admin();
   const a = await salesActor(userId);
+  const db = await admin();
   const viewAll = a.roles.some((r: string) => COMMISSION_VIEW_ALL.includes(r));
   const isManager = a.roles.includes("sales_management");
   const hist = await rateHistory(db);
+  const facts = await costFacts(db);
 
   const { data: quotes } = await db.from("sales_quotes").select("id, quote_number, title, client_id, owner_user_id, bdr_user_id, sow_id, signed_at")
     .eq("status", "signed");
@@ -44,7 +62,7 @@ export async function commissionReport(userId: string, from: string, to: string)
   ]);
   const invoices = [...new Map([...((bySow as any).data ?? []), ...((byQuote as any).data ?? [])].map((i: any) => [i.id, i])).values()];
   const invs = ((invoices ?? []) as any[]).filter((i) => !i.voided_at && i.status !== "void" && i.status !== "draft");
-  const { data: lines } = invs.length ? await db.from("invoice_lines").select("id, invoice_id, service_key, label, amount_cents").in("invoice_id", invs.map((i) => i.id)) : { data: [] };
+  const { data: lines } = invs.length ? await db.from("invoice_lines").select("id, invoice_id, service_key, label, amount_cents, expense_id").in("invoice_id", invs.map((i) => i.id)) : { data: [] };
 
   const { data: roleRows } = await db.from("user_roles").select("user_id, role");
   const rolesOf = new Map<string, string[]>();
@@ -69,10 +87,11 @@ export async function commissionReport(userId: string, from: string, to: string)
     for (const ln of ((lines ?? []) as any[]).filter((l) => l.invoice_id === inv.id)) {
       const base = Number(ln.amount_cents) || 0; if (base <= 0) continue;
       const splits = splitLine({ rates, capTable: isCapTableLine(ln.service_key), closerId: q.owner_user_id, closerRoles: rolesOf.get(q.owner_user_id) ?? [], bdrId: q.bdr_user_id, managerId, croId, ceoId });
+      const profit = profitFor(facts, inv, ln, lines ?? [], invs, splits.map(s => s.ratePct));
       for (const s of splits) {
         if (!viewAll && s.userId !== userId && !(isManager && s.userId && team.has(s.userId))) continue;
         rows.push({ quoteId: q.id, quoteNumber: q.quote_number, client: clientName.get(q.client_id) ?? "-", invoice: inv.number, paid, paidOn: inv.paid_on,
-          lineId: ln.id, paidCents: paid ? base : 0, service: ln.label, capTable: isCapTableLine(ln.service_key), layer: s.layer, userId: s.userId, ratePct: s.ratePct, baseCents: base, amountCents: Math.round((base * s.ratePct) / 100) });
+          invoiceId: inv.id, sowId: inv.sow_id, serviceKey: ln.service_key, ...profit, lineId: ln.id, paidCents: paid ? base : 0, service: ln.label, capTable: isCapTableLine(ln.service_key), layer: s.layer, userId: s.userId, ratePct: s.ratePct, baseCents: base, amountCents: Math.round((profit.grossProfitCents * s.ratePct) / 100) });
       }
     }
   }
@@ -87,10 +106,35 @@ export async function commissionReport(userId: string, from: string, to: string)
     r.payout = active ? { id: active.id, date: active.payout_date, reference: active.reference, note: active.note } : null;
     const qd = queueOf(r);
     // The amount queued when the invoice was paid is the commission of record.
+    if (active) r.amountCents = Number(active.amount_cents);
     if (qd && qd.amount_cents != null) r.amountCents = Number(qd.amount_cents);
     r.status = active ? "paid_out" : qd?.status === "cancelled" ? "cancelled" : r.paid ? "scheduled" : "not_earned";
     r.cancelReason = qd?.status === "cancelled" ? qd.reason : null;
     r.payoutDue = qd?.due_on ?? (r.paid && r.paidOn ? payoutDueDate(r.paidOn) : null);
+  }
+  const today = new Date().toISOString().slice(0, 10);
+  const horizon = new Date(); horizon.setUTCFullYear(horizon.getUTCFullYear() + 2);
+  const { data: signedSows, error: sowError } = sowIds.length ? await db.from("client_sows").select("id, generated_lines, client_signed_at, executed_at").in("id", sowIds) : { data: [], error: null };
+  if (sowError) throw new Error("Signed commission schedules unavailable.");
+  for (const sow of signedSows ?? []) {
+    if (!sow.client_signed_at && !sow.executed_at) continue;
+    const q = qs.find(q => q.sow_id === sow.id); if (!q?.owner_user_id) continue;
+    const signing = q.signed_at ?? sow.client_signed_at ?? sow.executed_at;
+    const setting = settingsAt(facts.settings, signing);
+    const rates = ratesAt(hist, signing);
+    const mgr = managerOf.get(q.owner_user_id) ?? null;
+    for (const item of buildPaymentSchedule(sow.id, sow.generated_lines ?? [], horizon.toISOString().slice(0, 10)).items) {
+      const due = payoutDueDate(item.due_on);
+      if (item.due_on < today || due < from || due > to) continue;
+      // Match the actual billing period by signed service and invoice issue quarter.
+      if (invs.some(inv => inv.sow_id === sow.id && payoutDueDate(inv.issue_date ?? inv.paid_on ?? today) === payoutDueDate(item.due_on) && (lines ?? []).some((l: any) => l.invoice_id === inv.id && l.service_key === item.service_key))) continue;
+      const splits = splitLine({ rates, capTable: isCapTableLine(item.service_key), closerId: q.owner_user_id, closerRoles: rolesOf.get(q.owner_user_id) ?? [], bdrId: q.bdr_user_id, managerId: mgr && (rolesOf.get(mgr) ?? []).includes("sales_management") ? mgr : null, croId, ceoId });
+      const profit = commissionProfit({ revenueCents: item.amount_cents, costPct: setting.service_cost_pct[item.service_key] ?? 0, overheadPct: setting.overhead_pct, rates: splits.map(s => s.ratePct) });
+      for (const split of splits) {
+        if (!viewAll && split.userId !== userId && !(isManager && split.userId && team.has(split.userId))) continue;
+        rows.push({ ...profit, quoteId: q.id, quoteNumber: q.quote_number, client: clientName.get(q.client_id) ?? "-", invoice: null, sowId: sow.id, serviceKey: item.service_key, lineId: `expected:${sow.id}:${item.service_key}:${item.due_on}`, service: item.label, capTable: isCapTableLine(item.service_key), paid: false, paidCents: 0, paidOn: null, baseCents: item.amount_cents, layer: split.layer, userId: split.userId, ratePct: split.ratePct, amountCents: Math.round(profit.grossProfitCents * split.ratePct / 100), status: "expected", payoutDue: due, payout: null });
+      }
+    }
   }
   const nm = await names(rows.map((r) => r.userId).filter(Boolean));
   for (const r of rows) r.name = r.userId ? nm.get(r.userId) ?? "Unknown" : "Unassigned";
@@ -98,24 +142,26 @@ export async function commissionReport(userId: string, from: string, to: string)
   for (const r of rows) {
     const k = r.userId ?? "none";
     const p = byPerson.get(k) ?? { userId: r.userId, name: r.name, earnedCents: 0, pendingCents: 0 };
+    if (r.status === "expected") continue;
     if (r.paid) p.earnedCents += r.amountCents; else p.pendingCents += r.amountCents;
     byPerson.set(k, p);
   }
   const current = hist.length ? { ...DEFAULT_RATES, ...hist[hist.length - 1]!.rates } : DEFAULT_RATES;
   const hnm = await names(hist.map((h) => h.set_by));
   return {
+    costSettings: facts.settings, costEntries: viewAll ? facts.entries : [],
     rows, people: [...byPerson.values()].sort((x, y) => y.earnedCents - x.earnedCents), rates: current,
     history: hist.slice().reverse().map((h) => ({ ...h, setByName: hnm.get(h.set_by) ?? "Unknown" })),
     canRecordPayout: a.roles.some((r: string) => PAYOUT_RECORDERS.includes(r)),
     canEdit: a.roles.some((r: string) => COMMISSION_EDITORS.includes(r)),
-    quotes: qs.map((q) => ({ id: q.id, label: `${q.quote_number ?? ""} ${q.title ?? ""}`.trim(), bdrUserId: q.bdr_user_id, ownerUserId: q.owner_user_id })),
+    quotes: qs.map((q) => ({ id: q.id, sowId: q.sow_id, label: `${q.quote_number ?? ""} ${q.title ?? ""}`.trim(), bdrUserId: q.bdr_user_id, ownerUserId: q.owner_user_id })),
     bdrs: await (async () => { const ids = [...rolesOf].filter(([, rs]) => rs.includes("bdr")).map(([id]) => id); const m = await names(ids); return ids.map((id) => ({ id, name: m.get(id) ?? "BDR" })); })(),
   };
 }
 
 export async function setCommissionRates(userId: string, rates: CommissionRates, reason: string) {
-  const db = await admin();
   const a = await salesActor(userId);
+  const db = await admin();
   if (!a.roles.some((r: string) => COMMISSION_EDITORS.includes(r))) throw new Error("Only the CRO or CEO can change commission rates.");
   if (!validRates(rates)) throw new Error("Each rate must be between 0% and 50%.");
   const { error } = await db.from("commission_rate_versions").insert({ rates, reason, set_by: userId });
@@ -124,8 +170,8 @@ export async function setCommissionRates(userId: string, rates: CommissionRates,
 }
 
 export async function setQuoteBdr(userId: string, quoteId: string, bdrId: string | null) {
-  const db = await admin();
   const a = await salesActor(userId);
+  const db = await admin();
   const { data: q } = await db.from("sales_quotes").select("owner_user_id").eq("id", quoteId).maybeSingle();
   if (!q) throw new Error("Quote not found.");
   if (q.owner_user_id !== userId && !a.roles.some((r: string) => COMMISSION_EDITORS.includes(r))) throw new Error("Only the deal owner, CRO or CEO can set the BDR.");
@@ -208,13 +254,15 @@ export async function queueInvoicePayouts(invoiceId: string) {
   const { data: rl } = await db.from("sales_reporting_lines").select("manager_user_id").eq("user_id", q.owner_user_id).maybeSingle();
   const mgr = rl?.manager_user_id ?? null;
   const managerId = mgr && (rolesOf.get(mgr) ?? []).includes("sales_management") ? mgr : null;
-  const { data: lines } = await db.from("invoice_lines").select("id, service_key, amount_cents").eq("invoice_id", invoiceId);
+  const { data: lines } = await db.from("invoice_lines").select("id, invoice_id, service_key, amount_cents, expense_id").eq("invoice_id", invoiceId);
+  const facts = await costFacts(db);
   const due = payoutDueDate(paidOn);
   let queued = 0;
   for (const ln of (lines ?? []) as any[]) {
     const base = Number(ln.amount_cents) || 0; if (base <= 0) continue;
     for (const s of splitLine({ rates, capTable: isCapTableLine(ln.service_key), closerId: q.owner_user_id, closerRoles: rolesOf.get(q.owner_user_id) ?? [], bdrId: q.bdr_user_id, managerId, croId: firstWith("cro"), ceoId: firstWith("executive") })) {
-      const amount = Math.round((base * s.ratePct) / 100); if (amount <= 0) continue;
+      const profit = profitFor(facts, inv, ln, lines ?? [], [inv], []);
+      const amount = Math.round((profit.grossProfitCents * s.ratePct) / 100); if (amount <= 0) continue;
       const { data: row, error } = await db.from("commission_payout_queue").insert({ invoice_id: invoiceId, invoice_line_id: ln.id, quote_id: q.id, user_id: s.userId, layer: s.layer, amount_cents: amount, due_on: due }).select("id").maybeSingle();
       if (error) { if (error.code === "23505") continue; throw new Error(error.message); }
       await db.from("commission_payout_queue_events").insert({ queue_id: row.id, event_kind: "scheduled", detail: { invoice_id: invoiceId, due_on: due, amount_cents: amount } });
@@ -238,8 +286,8 @@ export async function cancelInvoicePayouts(invoiceId: string, reason: string, ac
 
 /** Upcoming quarterly/annual payments from signed SOWs, scoped like the commission report. Read only. */
 export async function scheduledPayments(userId: string) {
-  const db = await admin();
   const a = await salesActor(userId);
+  const db = await admin();
   const viewAll = a.roles.some((r: string) => COMMISSION_VIEW_ALL.includes(r)) || a.visible == null;
   const { data: quotes } = await db.from("sales_quotes").select("sow_id, owner_user_id, client_id").eq("status", "signed").not("sow_id", "is", null);
   const qs = ((quotes ?? []) as any[]).filter((q) => viewAll || q.owner_user_id === userId || (a.visible ?? []).includes(q.owner_user_id));
@@ -263,4 +311,31 @@ export async function scheduledPayments(userId: string) {
     return { id: s.id, client: c?.legal_name || c?.name || "Client", service: s.label, frequency: s.frequency, amountCents: Number(s.amount_cents), dueOn: s.next_due_on,
       rep: p?.full_name || "Unassigned", waitingForSignature: !sow || sow.approval_status !== "approved" || (!sow.client_signed_at && !sow.executed_at) };
   }) };
+}
+
+export async function saveCommissionCosts(userId: string, input: { invoiceId?: string; sowId?: string; serviceKey: string; kind: "provider" | "deal"; amountCents: number; supersedesId?: string; reason: string }) {
+  const a = await salesActor(userId);
+  if (!a.roles.some(r => COMMISSION_EDITORS.includes(r))) throw new Error("Only the CRO or CEO can enter costs.");
+  if (!input.reason.trim() || !input.serviceKey.trim() || !Number.isSafeInteger(input.amountCents) || input.amountCents < 0 || Boolean(input.invoiceId) === Boolean(input.sowId)) throw new Error("A target, service, nonnegative amount and reason are required.");
+  const db = await admin();
+  const { data: target, error: targetError } = await db.from(input.invoiceId ? "invoices" : "client_sows").select("id").eq("id", input.invoiceId ?? input.sowId).maybeSingle();
+  if (targetError || !target) throw new Error("Cost target unavailable.");
+  if (input.supersedesId) {
+    const { data: old } = await db.from("commission_cost_entries").select("*").eq("id", input.supersedesId).maybeSingle();
+    if (!old || old.invoice_id !== (input.invoiceId ?? null) || old.sow_id !== (input.sowId ?? null) || old.service_key !== input.serviceKey || old.kind !== input.kind) throw new Error("Correction must match the original cost target and kind.");
+    const { data: next } = await db.from("commission_cost_entries").select("id").eq("supersedes_id", input.supersedesId);
+    if (next?.length) throw new Error("This cost has already been superseded.");
+  }
+  const { error } = await db.from("commission_cost_entries").insert({ invoice_id: input.invoiceId ?? null, sow_id: input.sowId ?? null, service_key: input.serviceKey, kind: input.kind, amount_cents: input.amountCents, supersedes_id: input.supersedesId ?? null, reason: input.reason.trim(), entered_by: userId });
+  if (error) throw new Error(error.message);
+  return { ok: true };
+}
+export async function saveCommissionCostSettings(userId: string, input: { serviceCostPct: Record<string, number>; overheadPct: number; reason: string }) {
+  const a = await salesActor(userId);
+  if (!a.roles.some(r => COMMISSION_EDITORS.includes(r))) throw new Error("Only the CRO or CEO can change cost settings.");
+  if (!input.reason.trim() || ![input.overheadPct, ...Object.values(input.serviceCostPct)].every(n => Number.isFinite(n) && n >= 0 && n <= 100)) throw new Error("A reason and percentages between 0 and 100 are required.");
+  const db = await admin();
+  const { error } = await db.from("commission_cost_settings").insert({ service_cost_pct: input.serviceCostPct, overhead_pct: input.overheadPct, reason: input.reason.trim(), set_by: userId });
+  if (error) throw new Error(error.message);
+  return { ok: true };
 }

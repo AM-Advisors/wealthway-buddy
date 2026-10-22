@@ -69,4 +69,4 @@ export function payoutDueDate(paidOn: string): string {
   return `${y}-${String(qEndMonth).padStart(2, "0")}-${String(last).padStart(2, "0")}`;
 }
 
-export type PayoutStatus = "not_earned" | "scheduled" | "paid_out" | "cancelled";
+export type PayoutStatus = "expected" | "not_earned" | "scheduled" | "paid_out" | "cancelled";

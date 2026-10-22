@@ -421,5 +421,5 @@
 - [ ] Signed-in check of Scheduled payments and a real due-date send — pending
 
 ## Commission planning
-- [ ] Expected quarterly payouts at SOW signing (Expected -> Scheduled once paid)
-- [ ] Commissions: separate revenue, gross profit, net profit; employees paid on gross profit — waiting on cost definitions
+- [x] Expected quarterly payouts at SOW signing (computed, nonpayable; replaced by actual invoice periods)
+- [x] Commissions: revenue, gross profit, net profit and gross-profit commissions; append-only actual costs and effective cost/overhead assumptions.
