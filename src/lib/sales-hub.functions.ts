@@ -135,3 +135,6 @@ export const recordCommissionPayouts = createServerFn({ method: "POST" }).middle
 export const reverseCommissionPayout = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ payoutId: z.string().uuid(), reason: z.string().min(1).max(1000) }).parse(d))
   .handler(async ({ data, context }) => (await C()).reverseCommissionPayout(context.userId, data.payoutId, data.reason));
+
+export const getSalesLinkedRecords = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth]).inputValidator((d) => idOnly.parse(d))
+  .handler(async ({ data, context }) => (await Q()).linkedRecords(context.userId, data.id));
