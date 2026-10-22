@@ -410,7 +410,7 @@
 - [x] Diagnose Calvin's document errors: Box creation accepted (201); ceremony reports sign_and_send permission; signer sync has mismatched upsert/index (42P10). No resend or investor changes; provider permission check and repair remain unverified.
 
 ## Forecasting (paid add-on)
-- [ ] Operating forecast inputs and monthly/quarterly revenue, expense and profit calculations on Forecasting; offline regression checks.
+- [x] Operating forecast inputs, monthly compounding, direct costs and operating expenses, and monthly/calendar-quarter profit tables and charts; 28 forecast regression checks pass. Signed-in save/read-back remains blocked by isolated-QA preflight.
 - [x] Forecasts tab built, gated by paid Forecasting add-on
 - [ ] Forecasting price — waiting on Alyssa
 - [x] Guided scenario forms with round, exit-year and cap-table holding selectors; all four existing models and version saves retained; 17 offline checks pass.
