@@ -1144,9 +1144,11 @@ export async function investorFundStatus(userId: string, offeringId: string) {
   if (!row) return null;
 
   const facts = await gatherFacts(row);
+  const earlyFunding = !row.approved_to_fund_at && facts.countersignTiming !== "pause"
+    && canInvestorFund({ stage: row.stage, requirements: facts.requirements, approvedToFundAt: null, countersignTiming: facts.countersignTiming, openBlockingExceptions: (await openExceptions(row.id)).filter((e) => e.severity === "blocking").length }).allowed;
   const steps = journeySteps(facts.requirements, {
     stage: row.stage,
-    approvedToFund: Boolean(row.approved_to_fund_at),
+    approvedToFund: Boolean(row.approved_to_fund_at) || earlyFunding,
     fundingStatus: row.funding_status,
     investorReportsSent: Boolean(row.investor_reports_sent_at),
   });
