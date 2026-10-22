@@ -1,0 +1,10 @@
+CREATE TABLE public.commission_cost_entries (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), invoice_id uuid, sow_id uuid, service_key text, kind text NOT NULL CHECK (kind IN ('provider','deal')), amount_cents bigint NOT NULL CHECK (amount_cents >= 0), reason text NOT NULL, supersedes_id uuid REFERENCES public.commission_cost_entries(id), entered_by uuid NOT NULL, created_at timestamptz NOT NULL DEFAULT now(), CHECK (invoice_id IS NOT NULL OR sow_id IS NOT NULL));
+CREATE INDEX ON public.commission_cost_entries(invoice_id);
+CREATE INDEX ON public.commission_cost_entries(sow_id);
+CREATE TABLE public.commission_cost_settings (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), service_cost_pct jsonb NOT NULL DEFAULT '{}'::jsonb, overhead_pct numeric NOT NULL DEFAULT 0 CHECK (overhead_pct >= 0 AND overhead_pct <= 100), reason text NOT NULL, set_by uuid NOT NULL, effective_at timestamptz NOT NULL DEFAULT now());
+GRANT ALL ON public.commission_cost_entries, public.commission_cost_settings TO service_role;
+ALTER TABLE public.commission_cost_entries ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.commission_cost_settings ENABLE ROW LEVEL SECURITY;
+CREATE OR REPLACE FUNCTION public.block_commission_cost_mutation() RETURNS trigger LANGUAGE plpgsql SET search_path = public AS $$ BEGIN RAISE EXCEPTION 'Commission cost history is append-only'; END $$;
+CREATE TRIGGER commission_cost_entries_append_only BEFORE UPDATE OR DELETE ON public.commission_cost_entries FOR EACH ROW EXECUTE FUNCTION public.block_commission_cost_mutation();
+CREATE TRIGGER commission_cost_settings_append_only BEFORE UPDATE OR DELETE ON public.commission_cost_settings FOR EACH ROW EXECUTE FUNCTION public.block_commission_cost_mutation();

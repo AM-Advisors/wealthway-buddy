@@ -7689,6 +7689,80 @@ export type Database = {
           },
         ]
       }
+      commission_cost_entries: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          entered_by: string
+          id: string
+          invoice_id: string | null
+          kind: string
+          reason: string
+          service_key: string | null
+          sow_id: string | null
+          supersedes_id: string | null
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          entered_by: string
+          id?: string
+          invoice_id?: string | null
+          kind: string
+          reason: string
+          service_key?: string | null
+          sow_id?: string | null
+          supersedes_id?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          entered_by?: string
+          id?: string
+          invoice_id?: string | null
+          kind?: string
+          reason?: string
+          service_key?: string | null
+          sow_id?: string | null
+          supersedes_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commission_cost_entries_supersedes_id_fkey"
+            columns: ["supersedes_id"]
+            isOneToOne: false
+            referencedRelation: "commission_cost_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commission_cost_settings: {
+        Row: {
+          effective_at: string
+          id: string
+          overhead_pct: number
+          reason: string
+          service_cost_pct: Json
+          set_by: string
+        }
+        Insert: {
+          effective_at?: string
+          id?: string
+          overhead_pct?: number
+          reason: string
+          service_cost_pct?: Json
+          set_by: string
+        }
+        Update: {
+          effective_at?: string
+          id?: string
+          overhead_pct?: number
+          reason?: string
+          service_cost_pct?: Json
+          set_by?: string
+        }
+        Relationships: []
+      }
       commission_payout_queue: {
         Row: {
           amount_cents: number
