@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { FundBankStatement } from "@/components/fund-bank-statement";
+import { PaymentPlanner } from "@/components/payment-planner";
 
 function money(cents?: number | null) {
   return ((Number(cents ?? 0)) / 100).toLocaleString("en-US", {
@@ -153,6 +154,8 @@ export function FundPayments({ fundId, backTo }: { fundId: string; backTo: "admi
           </Card>
         ))}
       </div>
+
+      <PaymentPlanner scope="fund_invoices" title="Fund payment calculations" rows={openInvoices.map(inv => ({ id: inv.id, label: inv.number ?? "Invoice", cents: Number(inv.feeCents), date: inv.status === "paid" ? inv.paidOn : inv.dueDate, status: inv.status }))} />
 
       <Card>
         <CardHeader className="pb-2">

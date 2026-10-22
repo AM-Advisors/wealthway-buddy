@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { recordCommissionPayouts, reverseCommissionPayout } from "@/lib/sales-hub.functions";
 import { LAYER_LABEL, type CommissionLayer } from "@/lib/commission-model";
 import { Panel, Stat, money } from "@/components/sales/sales-ui";
+import { PaymentPlanner } from "@/components/payment-planner";
 
 type Row = {
   lineId: string; userId: string | null; layer: string; client: string; quoteNumber: string | null; invoice: string | null;
@@ -31,7 +32,7 @@ export function CommissionTracker({ rows, canRecord, onChange }: { rows: Row[]; 
 
   const toggle = (r: Row) => setSel((p) => { const n = new Set(p); n.has(key(r)) ? n.delete(key(r)) : n.add(key(r)); return n; });
   const submit = async () => {
-    const items = shown.filter((r) => sel.has(key(r)) && r.userId).map((r) => ({ lineId: r.lineId, userId: r.userId!, layer: r.layer }));
+    const items = shown.flatMap(r => sel.has(key(r)) && r.userId ? [{ lineId: r.lineId, userId: r.userId, layer: r.layer }] : []);
     try { const res = await record({ data: { items, payoutDate: date, reference: ref, note: note || null } }); toast.success(`${res.count} payout(s) recorded`); setSel(new Set()); setRef(""); setNote(""); onChange(); }
     catch (e) { toast.error((e as Error).message); }
   };
@@ -52,7 +53,7 @@ export function CommissionTracker({ rows, canRecord, onChange }: { rows: Row[]; 
     </select>
   );
   const payoutCell = (r: Row) => r.payout
-    ? <span>{r.payout.date}<div className="text-xs text-muted-foreground">{r.payout.reference}</div>{canRecord && <button className="text-xs text-primary underline" onClick={() => undo(r.payout!.id)}>Reverse</button>}</span>
+    ? <span>{r.payout.date}<div className="text-xs text-muted-foreground">{r.payout.reference}</div>{canRecord && <Button variant="link" size="sm" onClick={() => { if (r.payout) void undo(r.payout.id); }}>Reverse</Button>}</span>
     : r.payoutDue ? <span>Due {r.payoutDue}</span> : <span className="text-xs text-muted-foreground">End of quarter after client pays</span>;
 
   return (
@@ -69,6 +70,7 @@ export function CommissionTracker({ rows, canRecord, onChange }: { rows: Row[]; 
         {sel_(status, setStatus, Object.entries(STATUS) as [string, string][], "All statuses")}
         <Button variant="outline" size="sm" onClick={csv}>Download</Button>
       </div>
+      <PaymentPlanner scope="commissions" title="Selected payment commission calculations" rows={shown.filter(r => r.paidOn && r.status !== "cancelled").map(r => ({ id: key(r), lineId: r.lineId, userId: r.userId, layer: r.layer, label: `${r.client} · ${r.invoice ?? "Invoice"} · ${r.service} · ${r.name} (${LAYER_LABEL[r.layer as CommissionLayer]})`, cents: r.amountCents, date: r.paidOn, status: r.status }))} />
       {canRecord && sel.size > 0 && (
         <div className="mb-3 flex flex-wrap items-end gap-2 rounded-md border p-3">
           <span className="text-sm">{sel.size} selected</span>

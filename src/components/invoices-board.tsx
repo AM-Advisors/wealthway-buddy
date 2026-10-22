@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import { ActivityPanel } from "@/components/activity-panel";
 import { InvoiceEmailStatus } from "@/components/invoice-email-status";
+import { PaymentPlanner } from "@/components/payment-planner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -236,6 +237,7 @@ export function InvoicesBoard() {
 
   return (
     <div className="space-y-6">
+      <PaymentPlanner scope="invoices" rows={invoices.map(inv => ({ id: inv.id, label: `${inv.clientName ?? "Client"} · ${inv.number ?? "Invoice"}`, cents: Number(inv.total_cents), date: inv.status === "paid" ? inv.paid_on : inv.due_date ?? inv.issue_date, status: inv.status, currency: inv.currency ?? "USD" }))} />
       <div className="grid gap-4 sm:grid-cols-3">
         <Card>
           <CardHeader className="pb-2">

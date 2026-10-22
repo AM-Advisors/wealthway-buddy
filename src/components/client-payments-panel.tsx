@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge";
+import { PaymentPlanner } from "@/components/payment-planner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 const money = (cents: number | null | undefined) =>
@@ -41,6 +42,7 @@ export function ClientPaymentsPanel({ payments }: { payments: any[] }) {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
+        <PaymentPlanner scope="client_payments" rows={payments.map(p => ({ id: p.id, label: `${String(p.purpose ?? "Payment").replace(/_/g, " ")}${p.fundName ? ` · ${p.fundName}` : ""}`, cents: Number(p.amount_cents), date: p.settled_on ?? p.sent_on ?? p.created_at ?? null, status: p.status, currency: p.currency ?? "USD" }))} />
         {payments.length === 0 && (
           <p className="text-sm text-muted-foreground">No payments have been raised yet.</p>
         )}

@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { downloadInvoice, printInvoice } from "@/components/invoice-document";
 import { InvoiceCardPay } from "@/components/invoice-card-pay";
 import { InvoiceRemittance } from "@/components/invoice-remittance";
+import { PaymentPlanner } from "@/components/payment-planner";
 import { declareInvoicePayment, listMyInvoices, respondToInvoice } from "@/lib/invoices.functions";
 
 export const Route = createFileRoute("/_authenticated/client/invoices")({
@@ -70,7 +71,7 @@ function ClientInvoicesPage() {
   const [reason, setReason] = useState<Record<string, string>>({});
   const [pay, setPay] = useState<Record<string, { method: string; paidOn: string; reference: string; note: string }>>({});
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: ["my-invoices"],
     queryFn: () => load(),
     retry: false,
@@ -149,7 +150,8 @@ function ClientInvoicesPage() {
         </Card>
       </div>
 
-      {isLoading ? (
+      {!isLoading && !error && <PaymentPlanner scope="invoices" rows={invoices.map(inv => ({ id: inv.id, label: inv.number ?? "Invoice", cents: Number(inv.total_cents), date: inv.status === "paid" ? inv.paid_on : inv.due_date ?? inv.issue_date, status: inv.status, currency: inv.currency ?? "USD" }))} />}
+      {error ? <p role="alert" className="mt-6 text-sm text-destructive">{error.message}</p> : isLoading ? (
         <p className="mt-6 text-sm text-muted-foreground">Loading your invoices…</p>
       ) : invoices.length === 0 ? (
         <Card className="mt-6">
