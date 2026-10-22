@@ -152,6 +152,15 @@ function QuotePage() {
           {d.quote.notes && <p className="mt-2 text-sm text-muted-foreground">Notes: {d.quote.notes}</p>}
           {d.quote.decision_note && <p className="mt-2 text-sm text-foreground">Decision note: {d.quote.decision_note}</p>}
           {d.lines.filter((l: any) => l.bookkeeping_snapshot).map((l: any) => <details key={l.id} className="mt-4 border-t pt-3"><summary className="cursor-pointer text-sm font-medium">Proposed bookkeeping SOW scope</summary><p className="mt-3 whitespace-pre-wrap text-sm text-muted-foreground">{l.bookkeeping_snapshot.scope}</p></details>)}
+          {d.lines.filter((l: any) => l.service_details && (l.service_details.scope || (l.service_details.included ?? []).length || (l.service_details.excluded ?? []).length)).map((l: any) => (
+            <details key={`sd-${l.id}`} className="mt-4 border-t pt-3"><summary className="cursor-pointer text-sm font-medium">SOW detail — {l.label}</summary>
+              <div className="mt-3 space-y-2 text-sm text-muted-foreground">
+                {l.service_details.scope && <p className="whitespace-pre-wrap">Scope: {l.service_details.scope}</p>}
+                {(l.service_details.included ?? []).length > 0 && <p>Included: {(l.service_details.included as string[]).join("; ")}</p>}
+                {(l.service_details.excluded ?? []).length > 0 && <p>Not included: {(l.service_details.excluded as string[]).join("; ")}</p>}
+              </div>
+            </details>
+          ))}
         </Panel>
       )}
 
