@@ -33,6 +33,10 @@ export const CAP_POLICY_KINDS = [
 export const getPolicyStatus = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuthUnverified])
   .handler(async ({ context }) => {
+    try {
+      const { claimSalesPolicyAcceptances } = await import("@/lib/sales-acceptance.server");
+      await claimSalesPolicyAcceptances(context.userId, context.claims?.email as string | undefined);
+    } catch (e) { console.error("claim quote policy acceptances", e); }
     const { data: docs } = await context.supabase
       .from("policy_documents")
       .select("id, kind, title, body, version, effective_date")

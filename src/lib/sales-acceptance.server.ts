@@ -319,6 +319,8 @@ export async function claimSalesPolicyAcceptances(userId: string, rawEmail: stri
   const email = String(rawEmail ?? "").trim().toLowerCase();
   if (!email) return 0;
   const db = await admin();
+  const { data: u } = await db.auth.admin.getUserById(userId);
+  if (!u?.user?.email_confirmed_at || String(u.user.email ?? "").toLowerCase() !== email) return 0;
   const { data } = await db.from("sales_policy_acceptances").select("*").ilike("email", email).is("copied_to_account_at", null);
   const rows = (data ?? []) as any[];
   if (!rows.length) return 0;
