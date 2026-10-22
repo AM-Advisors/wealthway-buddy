@@ -5,6 +5,7 @@ import { canAddSalesContact, type SalesContactInput } from "@/lib/sales-contact-
 import { BOOKKEEPING_KEY, bookkeepingConfigSchema, bookkeepingDraftBlocker, bookkeepingTerms, calculateBookkeeping } from "@/lib/bookkeeping-model";
 import { linkedTermsEditProblem, quoteInputsFromRows, sowLinesFromQuote } from "@/lib/quote-sow-sync";
 import { sanitizeQuoteSections } from "@/lib/quote-sections-model";
+import { normalizeQuoteBilling } from "@/lib/quote-billing";
 
 const admin = async () => (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
 type Actor = Awaited<ReturnType<typeof salesActor>>;
@@ -22,14 +23,14 @@ export async function quoteCatalog(userId: string, clientId: string | null) {
   const { data: clients } = await db.from("clients").select("id, legal_name").order("legal_name");
   const adminLevels = await adminCatalog();
   const { data: funds } = clientId ? await db.from("offerings").select("id, name").eq("client_id", clientId).order("name") : { data: [] };
-  return { funds: (funds ?? []) as any[], versionId, adminLevels, lines: [...adminLevels, ...lines].map((l: any) => ({ serviceKey: l.serviceKey, label: l.label, baselineCents: l.baselineCents, source: l.baselineSource, pricingModel: l.pricingModel })), clients: (clients ?? []) as any[] };
+  return { funds: (funds ?? []) as any[], versionId, adminLevels, lines: [...adminLevels, ...lines].map((l: any) => ({ serviceKey: l.serviceKey, label: l.label, baselineCents: l.baselineCents, quarterlyCents: l.quarterlyCents ?? null, source: l.baselineSource, pricingModel: l.pricingModel })), clients: (clients ?? []) as any[] };
 }
 
 /** Administration levels as quote lines, keyed by product + level, from current pricing versions. */
 async function adminCatalog() {
   const { SERVICE_LADDERS, adminQuoteKey, isLadderProduct } = await import("@/lib/service-ladders");
   const db = await admin();
-  const { data } = await db.from("service_pricing_versions").select("service_product, service_level, annual_price, starting_price").eq("is_current", true);
+  const { data } = await db.from("service_pricing_versions").select("service_product, service_level, annual_price, quarterly_price, starting_price").eq("is_current", true);
   const { spvTxnQuoteKey } = await import("@/lib/spv-transaction-pricing");
   const { data: bands } = await db.from("spv_transaction_pricing").select("id, label, fee_usd").eq("is_current", true).order("sort_order");
   const txn = ((bands ?? []) as any[]).filter((b) => b.fee_usd != null).map((b) => ({ serviceKey: spvTxnQuoteKey(b.id), label: `Harmonized SPV — raise ${b.label}`, baselineCents: Math.round(Number(b.fee_usd) * 100), baselineSource: "spv_transaction_pricing", pricingModel: "one_time" }));
@@ -37,7 +38,7 @@ async function adminCatalog() {
     const lv = SERVICE_LADDERS[p.service_product as "SPV_ADMINISTRATION"].levels.find((l) => l.level === p.service_level);
     if (!lv) return [];
     const cents = Math.round(Number(p.annual_price ?? p.starting_price ?? 0) * 100);
-    return [{ serviceKey: adminQuoteKey(p.service_product, p.service_level), label: `${lv.name} (annual)`, baselineCents: cents, baselineSource: "service_pricing", pricingModel: "annual", product: p.service_product, level: p.service_level }];
+    return [{ serviceKey: adminQuoteKey(p.service_product, p.service_level), label: lv.name, baselineCents: cents, quarterlyCents: p.quarterly_price == null ? null : Math.round(Number(p.quarterly_price) * 100), baselineSource: "service_pricing", pricingModel: "annual", product: p.service_product, level: p.service_level }];
   })];
 }
 
@@ -126,7 +127,7 @@ export async function saveQuote(userId: string, d: { id?: string | null | undefi
     if (l.serviceKey !== BOOKKEEPING_KEY) {
       if (l.bookkeeping) throw new Error("Bookkeeping terms can only be attached to bookkeeping lines.");
       const c: any = card.get(l.serviceKey);
-      return { ...l, label: c.label, quantity: Math.max(0, Number(l.quantity) || 0), unitCents: Math.max(0, Math.round(l.unitCents)), baselineUnitCents: c.baselineCents };
+      return normalizeQuoteBilling({ ...l, quantity: Math.max(0, Number(l.quantity) || 0), unitCents: Math.max(0, Math.round(l.unitCents)) }, c);
     }
     if (!l.bookkeeping) throw new Error("Configure the proposed bookkeeping service first.");
     const { data: version, error } = await db.from("bookkeeping_config_versions").select("id,configuration,effective_on").eq("id", l.bookkeeping.configVersionId).maybeSingle();
@@ -356,14 +357,14 @@ export async function quoteFromSow(userId: string, sowId: string) {
   const { data: sow } = await db.from("client_sows").select("id, client_id, title, generated_lines").eq("id", sowId).maybeSingle();
   if (!sow) throw new Error("SOW not found.");
   const { loadBaseline } = await import("@/lib/commercial-pricing.server");
-  const card = new Map((await loadBaseline(sow.client_id)).lines.map((l: any) => [l.serviceKey, l]));
+  const card = new Map([...(await loadBaseline(sow.client_id)).lines, ...(await adminCatalog())].map((l: any) => [l.serviceKey, l]));
   const src = Array.isArray(sow.generated_lines) ? (sow.generated_lines as any[]) : [];
   const lines = src.map((l) => {
     const key = l.service_key ?? l.serviceKey ?? l.key; const c: any = card.get(key);
     if (!c) return null;
     const qty = Number(l.quantity ?? 1) || 1;
     const unit = Number(l.unit_cents ?? l.unitCents ?? (l.amount_cents != null ? Number(l.amount_cents) / qty : c.baselineCents));
-    return { serviceKey: key, label: c.label, quantity: qty, unitCents: Math.round(unit), baselineUnitCents: c.baselineCents, details: l.service_details ?? undefined };
+    return normalizeQuoteBilling({ serviceKey: key, label: c.label, quantity: qty, unitCents: Math.round(unit), baselineUnitCents: c.baselineCents, billingFrequency: l.billing_frequency ?? l.billingFrequency ?? undefined, firstBillOn: l.first_bill_on ?? null, details: l.service_details ?? undefined }, c);
   }).filter(Boolean) as QuoteLineInput[];
   if (!lines.length) throw new Error("This SOW has no services that match the current rate card.");
   const r = await saveQuote(userId, { title: `${sow.title ?? "SOW"} quote`, clientId: sow.client_id, notes: `Drafted from SOW "${sow.title ?? sow.id}"`, lines });

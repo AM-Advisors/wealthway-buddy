@@ -1,5 +1,10 @@
 # Roadmap
 
+## Quote quarterly and annual calculation (2026-10-22)
+- [x] Share per-billing-period baseline calculations between quote editor and authorized saves; use recorded quarterly rates where available, preserve true discount approvals and linked SOW billing terms. Recurring service selections convert amounts and show their chosen period rather than a locked annual label.
+- [x] 82 focused regression checks passed; preview build OK. No live quote/signing/payment actions were exercised.
+- [ ] Authenticated quote save/read-back — blocked until independently isolated synthetic QA; no live quotes, agreements, invoices or payments changed.
+
 ## Dev Test 1 interactive client demo (2026-10-22)
 - [x] Read-only review: fund and owning client are marked demo/test; fund is not launched, has no investors, two real-account managers, incomplete setup details and no recorded banking path. Demo marking is display-only, not isolation.
 - [ ] Finish fictional fund details, synthetic manager/investor setup and interactive invitation/signing walkthrough — blocked until independently isolated backend/frontend binding and synthetic sessions pass existing preflight. Current Dev Test 1 shares production records; no fund facts, access, documents, verification, emails or money records changed.

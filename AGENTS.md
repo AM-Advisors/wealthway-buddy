@@ -9,6 +9,7 @@
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
 - Read src/lib/AGENTS.md for workflows/auth, billing, signing, drafts and wealth — why: scoped rules.
+- Quote cadence uses quote-billing.ts in the editor and authorized saves; compare prices per selected bill using recorded cadence rates before proportional fallback — why: quarterly prices must not be compared with annual baselines, and signed history remains untouched.
 - Investor questionnaire prefilling uses subscription-prefill.ts on authorized onboarding reads and saves; fill only blank exact-party facts and preserve dirty form answers — why: reuse recorded details without account/party confusion or inferred certifications.
 - Partition hosts/menus through host-routing.ts + navigation.ts; share fund engines — why: display grants no authority.
 - Operations Slack URLs and verification confirmation filtering use verification-alert-model.ts through the existing ops-slack-notify sender; authoritative verification save paths emit safe, deduplicated notices without changing decisions — why: unassigned ownership is routing only, and screening details stay private.
