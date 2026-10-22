@@ -39,7 +39,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 
@@ -558,7 +557,7 @@ function EconomicsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; o
               const upd = (p: Partial<FundClass>) => setClasses(classes.map((x, j) => (j === i ? { ...x, ...p } : x)));
               const cNa = (k: EconomicTermKey) => !!c.notApplicable?.includes(k);
               return (
-                <div key={i} className="grid gap-3 rounded-md border p-3 sm:grid-cols-5">
+                <div key={i} className="grid gap-3 rounded-md border p-3 sm:grid-cols-4">
                   <Field label="Class name"><Input disabled={!d.canEdit} value={c.name} onChange={(e) => upd({ name: e.target.value })} /></Field>
                   <Field label="Mgmt fee (%)">
                     <PresetSelect disabled={!d.canEdit} options={FEE_PRESETS} allowDefault na={cNa("managementFee")} value={c.managementFee?.ratePercent ?? null}
