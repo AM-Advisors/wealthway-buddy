@@ -46,7 +46,6 @@ function PaymentInstructionsPage() {
       <header><h1 className="text-3xl">Harmonious payment details (quotes &amp; invoices)</h1>
         <p className="mt-1 text-sm text-muted-foreground">Harmonious's own wire and ACH details shown to clients after they sign a quote, RFQ or RFP and on their invoices. These are separate from fund banking, which is managed on each fund. Only the CEO and CRO can enter or approve them, and the person who approves must be different from the person who entered. Approved versions can't be edited; add a new version to change them. Clients see masked numbers until they choose to reveal, and every view is logged.</p></header>
       {q.error && <p className="text-sm text-destructive">{(q.error as Error).message}</p>}
-      {q.error ? null : <></>}
       <Card>
         <CardHeader><CardTitle className="font-heading">Add a new version</CardTitle><CardDescription>It replaces the current approved one only after a second person approves it.</CardDescription></CardHeader>
         <CardContent className="space-y-3">
