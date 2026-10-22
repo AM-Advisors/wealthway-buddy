@@ -290,7 +290,7 @@ export function FounderCapTable({ clientId }: { clientId?: string | null }) {
       </div>
 
       <Tabs defaultValue="ownership">
-        <TabsList className="flex-wrap"><ForecastTab subjectType="cap_table" subjectId={data.clientId ?? ""} />
+        <TabsList className="flex-wrap"><ForecastTab subjectType="cap_table" subjectId={data?.clientId ?? ""} />
           <TabsTrigger value="ownership">Ownership</TabsTrigger>
           <TabsTrigger value="shares">Shares</TabsTrigger>
           <TabsTrigger value="upload">Upload</TabsTrigger>
@@ -301,7 +301,7 @@ export function FounderCapTable({ clientId }: { clientId?: string | null }) {
         </TabsList>
 
 
-        <ForecastTab content subjectType="cap_table" subjectId={data.clientId ?? ""} /><TabsContent value="ownership" className="mt-4">
+        <ForecastTab content subjectType="cap_table" subjectId={data?.clientId ?? ""} /><TabsContent value="ownership" className="mt-4">
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Who owns what</CardTitle>
