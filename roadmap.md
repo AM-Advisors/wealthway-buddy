@@ -415,3 +415,7 @@
 - [ ] Friendlier assumption form (currently raw text) and signed-in check — pending
 
 - Payment schedules: pure signed-SOW quarterly/annual model and tests added; database migration, upgrade/signature hooks, due-invoice delivery, Commissions panel, and daily cron remain pending (required database tools unavailable).
+
+## Recurring payment schedules
+- [x] Signed-SOW quarterly/annual payments shown on Commissions, auto-invoiced with rep notice (daily run)
+- [ ] Signed-in check of Scheduled payments and a real due-date send — pending
