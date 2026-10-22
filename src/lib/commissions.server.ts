@@ -131,7 +131,7 @@ export async function commissionReport(userId: string, from: string, to: string)
     history: hist.slice().reverse().map((h) => ({ ...h, setByName: hnm.get(h.set_by) ?? "Unknown" })),
     canRecordPayout: a.roles.some((r: string) => PAYOUT_RECORDERS.includes(r)),
     canEdit: a.roles.some((r: string) => COMMISSION_EDITORS.includes(r)),
-    quotes: qs.map((q) => ({ id: q.id, sowId: q.sow_id, label: `${q.quote_number ?? ""} ${q.title ?? ""}`.trim(), bdrUserId: q.bdr_user_id, ownerUserId: q.owner_user_id })),
+    quotes: qs.map((q) => ({ id: q.id, sowId: q.sow_id, label: `${q.quote_number ?? ""} ${q.title ?? ""}`.trim(), bdrUserId: q.bdr_user_id, ownerUserId: q.owner_user_id, signedAt: q.signed_at ?? null, client: clientName.get(q.client_id) ?? "-" })),
     bdrs: await (async () => { const ids = [...rolesOf].filter(([, rs]) => rs.includes("bdr")).map(([id]) => id); const m = await names(ids); return ids.map((id) => ({ id, name: m.get(id) ?? "BDR" })); })(),
   };
 }
@@ -342,7 +342,7 @@ async function expectedCommissionRows(db: any, qs: any[], invs: any[], lines: an
       const splits = splitLine({ rates, capTable: isCapTableLine(item.service_key), closerId: q.owner_user_id, closerRoles: rolesOf.get(q.owner_user_id) ?? [], bdrId: q.bdr_user_id, managerId: mgr && (rolesOf.get(mgr) ?? []).includes("sales_management") ? mgr : null, croId, ceoId });
       const profit = commissionProfit({ revenueCents: item.amount_cents, costPct: setting.service_cost_pct[item.service_key] ?? 0, overheadPct: setting.overhead_pct, rates: splits.map(s => s.ratePct) });
       for (const split of splits) {
-        rows.push({ ...profit, quoteId: q.id, quoteNumber: q.quote_number, client: clientName.get(q.client_id) ?? "-", invoice: null, sowId: sow.id, serviceKey: item.service_key, lineId: `expected:${sow.id}:${item.service_key}:${item.due_on}`, service: item.label, capTable: isCapTableLine(item.service_key), paid: false, paidCents: 0, paidOn: null, baseCents: item.amount_cents, layer: split.layer, userId: split.userId, ratePct: split.ratePct, amountCents: Math.round(profit.grossProfitCents * split.ratePct / 100), status: "expected", payoutDue: due, payout: null });
+        rows.push({ ...profit, quoteId: q.id, quoteNumber: q.quote_number, client: clientName.get(q.client_id) ?? "-", invoice: null, sowId: sow.id, serviceKey: item.service_key, lineId: `expected:${sow.id}:${item.service_key}:${item.due_on}`, service: item.label, capTable: isCapTableLine(item.service_key), paid: false, paidCents: 0, paidOn: null, baseCents: item.amount_cents, layer: split.layer, userId: split.userId, ratePct: split.ratePct, amountCents: Math.round(profit.grossProfitCents * split.ratePct / 100), status: "expected", payoutDue: due, payout: null, frequency: item.frequency, periodStart: item.due_on });
       }
     }
   }
