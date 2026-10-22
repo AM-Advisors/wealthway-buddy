@@ -336,3 +336,64 @@ export async function linkedRecords(userId: string, id: string) {
   ]);
   return { quote: q, client, deal, sow, invoices: invoices as any[] };
 }
+
+/** Statuses where non-price details may change in place without new approval. */
+const DETAIL_EDITABLE = ["approved", "sent"];
+const SIGNER_CHANGEABLE = ["draft", "rejected", "pending_approval", "approved", "sent"];
+
+/** Title, notes and valid-until only; prices and services need a new version. */
+export async function updateQuoteDetails(userId: string, d: { id: string; title: string; notes?: string | null | undefined; validUntil?: string | null | undefined }) {
+  const a = await salesActor(userId);
+  if (!canDraftQuote(a.roles)) throw new Error("Your role can't edit quotes.");
+  const db = await admin();
+  const { data: q } = await db.from("sales_quotes").select("id, owner_user_id, status, title, notes, valid_until").eq("id", d.id).maybeSingle();
+  if (!q || !canSee(a, q.owner_user_id) || !DETAIL_EDITABLE.includes(q.status)) throw new Error("These details can't be edited here. Use New version to change prices or services.");
+  const next = { title: d.title.trim(), notes: d.notes?.trim() || null, valid_until: d.validUntil || null };
+  const { data: saved } = await db.from("sales_quotes").update({ ...next, updated_at: new Date().toISOString() }).eq("id", q.id).eq("status", q.status).select("id");
+  if (!saved?.length) throw new Error("The quote changed. Refresh and try again.");
+  const changed = (["title", "notes", "valid_until"] as const).filter((k) => (q as any)[k] !== (next as any)[k]);
+  await event(q.id, "details_updated", userId, changed.length ? `Updated ${changed.join(", ").replace("valid_until", "valid until")}` : "No changes");
+  return { ok: true };
+}
+
+/** Replace who signs before signing. The previous signer's link stops working. */
+export async function changeQuoteSigner(userId: string, id: string, input: SalesContactInput) {
+  const a = await salesActor(userId);
+  if (!canDraftQuote(a.roles)) throw new Error("Your role can't edit quotes.");
+  const db = await admin();
+  const { data: q } = await db.from("sales_quotes").select("id, owner_user_id, status, contact_id").eq("id", id).maybeSingle();
+  if (!q || !canSee(a, q.owner_user_id) || !SIGNER_CHANGEABLE.includes(q.status)) throw new Error("The signer can't be changed on this quote.");
+  const { data: prior } = q.contact_id ? await db.from("crm_contacts").select("email").eq("id", q.contact_id).maybeSingle() : { data: null };
+  const { createProspect } = await import("@/lib/sales-documents.server");
+  const contact = await createProspect(userId, input);
+  const { data: saved } = await db.from("sales_quotes").update({ contact_id: contact.contactId, updated_at: new Date().toISOString() }).eq("id", id).eq("status", q.status).select("id");
+  if (!saved?.length) throw new Error("The quote changed. Refresh and try again.");
+  await event(id, "signer_changed", userId, `${prior?.email ?? "none"} → ${input.email.trim().toLowerCase()}`);
+  return contact;
+}
+
+/** Email (or re-email) the standard "ready for review" message with the signer's personal link. */
+export async function sendQuoteEmail(userId: string, d: { id: string; subject: string; message?: string | null | undefined }) {
+  const a = await salesActor(userId);
+  const db = await admin();
+  const { data: q } = await db.from("sales_quotes").select("*").eq("id", d.id).maybeSingle();
+  if (!q || !canSee(a, q.owner_user_id) || !["approved", "sent"].includes(q.status)) throw new Error("Only an approved or sent quote can be emailed.");
+  const { data: c } = q.contact_id ? await db.from("crm_contacts").select("id, full_name, email").eq("id", q.contact_id).maybeSingle() : { data: null };
+  if (!c?.email) throw new Error("Add a signer with an email address first.");
+  const resend = q.status === "sent";
+  if (!resend) await markSent(userId, q.id);
+  const { acceptLinkFor } = await import("@/lib/sales-acceptance.server");
+  const { buildTrackedUrl, buildOpenPixelUrl } = await import("@/lib/email-tracking.server");
+  const { proposalReadyEmail } = await import("@/lib/sales-documents-model");
+  const { sendOutreach } = await import("@/lib/sales-hub.server");
+  const email = String(c.email).toLowerCase();
+  const signUrl = await acceptLinkFor("quote", q.id, q.version ?? 1, email);
+  const key = `quote:${q.id}`;
+  const link = await buildTrackedUrl({ url: signUrl, recipient: email, template: key, label: "Sign & approve" });
+  const pixel = await buildOpenPixelUrl({ recipient: email, template: key });
+  const { data: me } = await db.from("profiles").select("legal_name").eq("user_id", userId).maybeSingle();
+  const mail = proposalReadyEmail({ clientName: c.full_name, repMessage: d.message ?? "", repName: me?.legal_name ?? null, link, canSign: true, signerNames: [c.full_name] });
+  await sendOutreach(userId, { contactId: c.id, channel: "email", subject: d.subject, body: mail.text, html: mail.html + `<img src="${pixel}" width="1" height="1" alt="" style="display:none"/></body></html>`, visibility: "team" });
+  await event(q.id, resend ? "resent" : "emailed", userId, email);
+  return { ok: true, resent: resend };
+}

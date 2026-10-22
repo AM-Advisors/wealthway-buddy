@@ -45,6 +45,12 @@ async function loadRecord(db: any, kind: AcceptKind, id: string): Promise<Loaded
     lines: lines ?? [] };
 }
 
+/** A quote's signer can be changed before signing; the old person's link then stops working. */
+function replacedSigner(r: Loaded, email: string | null | undefined) {
+  if (r.kind !== "quote" || !email || !r.recipientEmail) return null;
+  return r.recipientEmail.trim().toLowerCase() === email.trim().toLowerCase() ? null : "This quote now has a different signer. Please ask your Harmonious contact for help.";
+}
+
 async function fromToken(token: string) {
   const { verifyAcceptToken } = await import("@/lib/email-tracking.server");
   const t = await verifyAcceptToken(token);
@@ -149,7 +155,7 @@ export async function viewForToken(token: string) {
     kind: r.kind, title: r.title, version: t.version, clientName: client?.legal_name || client?.name || null,
     response,
     stale: r.kind !== "quote" && r.approvedVersion !== t.version,
-    blocker: acc ? null : signBlocker(r.kind, r.status, r.approvedVersion, t.version),
+    blocker: acc ? null : (replacedSigner(r, t.email) ?? signBlocker(r.kind, r.status, r.approvedVersion, t.version)),
     salesContact: await salesContactFor(db, r.clientId, r.ownerId).then((c) => c && { name: c.name, email: c.email }),
     policies: acc ? [] : (await policyNeedsFor(db, t.email)).needs,
     sections: (r.sections as any[]).filter((x) => x?.key !== "terms"), msa: acc ? null : await msaForClient(db, r.clientId), lines: lines.map((l) => ({ label: l.label, quantity: l.quantity, amountCents: l.amount_cents })),
@@ -246,7 +252,7 @@ export async function acceptByToken(d: { token: string; signerName: string; sign
   const key = acceptanceKey(t.kind, t.id, t.version);
   const prior = await acceptanceFor(db, key);
   if (!prior) {
-    const blocked = signBlocker(r.kind, r.status, r.approvedVersion, t.version);
+    const blocked = replacedSigner(r, t.email) ?? signBlocker(r.kind, r.status, r.approvedVersion, t.version);
     if (blocked) throw new Error(blocked);
     if (d.userId) {
       const roles = await rolesOf(db, d.userId);
