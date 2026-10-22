@@ -23,12 +23,12 @@ const publisherFields: Record<string, string> = {
 export function templateTermConflicts(text: string, raw: Record<string, string | null | undefined>) {
   const values = Object.fromEntries(Object.entries(raw).map(([key, value]) => [normKey(key), value]));
   const conflicts: string[] = [];
-  const fee = values.managementfee;
+  const fee = values["managementfee"];
   if (fee && Number(fee.replace(/%/g, "")) > 0 && /(?:Manager will not receive|Adviser will not collect) a management fee/i.test(text)) {
     conflicts.push("Review: fixed no-management-fee clause conflicts with the recorded management fee");
   }
-  const city = values.arbitrationcity;
-  const state = values.arbitrationstate;
+  const city = values["arbitrationcity"];
+  const state = values["arbitrationstate"];
   const fixedLocation = text.match(/[“"]Arbitration Location[”"]\s+means\s+([^.,\n]+),\s*([^\.\n]+)\./i);
   if (fixedLocation && city && state && (normKey(fixedLocation[1] ?? "") !== normKey(city) || normKey(fixedLocation[2] ?? "") !== normKey(state))) {
     conflicts.push("Review: fixed arbitration location conflicts with the recorded arbitration city and state");

@@ -1,8 +1,10 @@
 # Roadmap
 
 ## Corps Erebor template term mismatch (2026-10-22)
-- [ ] Compare canonical fund facts and fee terms with PPM, Operating Agreement and Subscription Agreement sources; correct confirmed autofill defects without changing signed history or activating versions.
-- [ ] Run focused fictional generation/read-back checks; identify existing documents requiring an explicitly reviewed replacement. Authenticated QA requires independent synthetic isolation.
+- [x] Compare canonical facts and supplied source templates: recorded management fee 6% of committed capital, carry 15%, arbitration Dallas/Texas; source OA and attached advisory agreement hardcode no management fee and Dover/Delaware, while PPM uses percent-suffixed blanks. Active versions are PPM v1, OA v2, subscription v3; PPM latest v3 points to the old v1 file, not regenerated text.
+- [x] Correct percentage duplication, active-fee-only reads, missing fee basis/hurdle/minimum aliases and failed-read handling; flag fixed no-fee/arbitration conflicts to prevent automatic activation of newly generated conflicting drafts. Retain minimum-versus-investor-amount distinction confirmed in actual subscription template. No live documents, signing, approvals or publication changed.
+- [x] 31 focused fictional regression checks passed; uploaded PPM/OA/subscription templates exercised with fictional fund facts, saved Word bytes read back and both OA conflicts detected.
+- [ ] Replace conflicting existing legal clauses and review/activate corrected versions — requires authorized legal wording review and explicit version rollout; signed history cannot be rewritten. Exact stored-file contents and authenticated generation/read-back remain unverified without independently isolated synthetic QA.
 
 ## Quote quarterly and annual calculation (2026-10-22)
 - [x] Share per-billing-period baseline calculations between quote editor and authorized saves; use recorded quarterly rates where available, preserve true discount approvals and linked SOW billing terms. Recurring service selections convert amounts and show their chosen period rather than a locked annual label.
