@@ -14,7 +14,7 @@ import {
 import { DIRECTION_LABEL, KIND_LABEL, OUTCOMES, STATUS_LABEL, type DocDirection, type DocKind, type Section } from "@/lib/sales-documents-model";
 import { Panel, money } from "@/components/sales/sales-ui";
 import { draftQuoteAgreements, submitSalesQuote } from "@/lib/sales-hub.functions";
-import { RecipientLinks, SalesProgress } from "@/components/sales/sales-record-parts";
+import { ActionBar, LinkedRecords, RecipientLinks, SalesProgress } from "@/components/sales/sales-record-parts";
 import { salesProgress } from "@/lib/sales-progress";
 
 export const Route = createFileRoute("/_authenticated/sales_/documents_/$id")({
@@ -105,14 +105,20 @@ function Editor() {
           <p className="text-sm text-muted-foreground">{KIND_LABEL[doc.kind as DocKind]} · {DIRECTION_LABEL[doc.direction as DocDirection]} · Version {doc.current_version} · Owner {doc.ownerName}{doc.due_date ? ` · Due ${doc.due_date}` : ""}</p>
           <div className="mt-3"><SalesProgress steps={salesProgress({ status: doc.status, approvedAt: doc.approved_at, events: d.events as any, signedAt: d.packet?.sow?.client_signed_at ?? null, sowStatus: d.packet?.sow?.status ?? null, sowAt: d.packet?.sow?.executed_at ?? null })} /></div>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge>{STATUS_LABEL[doc.status] ?? doc.status}</Badge>
-          <Button size="sm" disabled={!!busy} onClick={preview}>{busy === "preview" ? "Loading..." : "Preview"}</Button>
-          {doc.approved_version && <Button variant="outline" size="sm" disabled={!!busy} onClick={copyLink}>Copy review link</Button>}
-          <Button variant="outline" size="sm" disabled={!!busy} onClick={() => download("pdf")}>PDF</Button>
-          <Button variant="outline" size="sm" disabled={!!busy} onClick={() => download("docx")}>Word</Button>
-        </div>
+        <Badge>{STATUS_LABEL[doc.status] ?? doc.status}</Badge>
       </div>
+
+      <ActionBar secondary={<>
+        {doc.approved_version && <Button variant="outline" size="sm" disabled={!!busy} onClick={copyLink}>Copy review link</Button>}
+        <Button variant="outline" size="sm" disabled={!!busy} onClick={() => download("pdf")}>PDF</Button>
+        <Button variant="outline" size="sm" disabled={!!busy} onClick={() => download("docx")}>Word</Button>
+      </>}>
+        <Button size="sm" disabled={!!busy} onClick={preview}>{busy === "preview" ? "Loading..." : "Preview"}</Button>
+        {p.canEdit && <Button size="sm" variant="outline" disabled={!dirty || !!busy} onClick={() => run("save", () => save({ data: { id, sections } }), doc.status === "approved" ? "Saved - needs approval again" : "Saved")}>Save</Button>}
+        {p.canSubmit && <Button size="sm" disabled={!!busy || dirty} onClick={() => run("submit", () => submit({ data: { id } }), "Submitted for approval")}>Submit for approval</Button>}
+        {p.canApprove && <Button size="sm" disabled={!!busy} onClick={() => run("approve", () => decide({ data: { id, approve: true } }), "Approved")}>Approve</Button>}
+        {p.canSend && <Button size="sm" variant="outline" onClick={() => document.getElementById("send-box")?.scrollIntoView({ behavior: "smooth" })}>Send…</Button>}
+      </ActionBar>
 
       {previewUrl && (
         <div className="fixed inset-0 z-50 flex flex-col bg-background/95 p-4">
@@ -168,6 +174,8 @@ function Editor() {
 
         <div className="space-y-4">
           <RecipientLinks documentId={id} addOn={!!doc.client_id} />
+          <LinkedRecords quoteId={d.packet?.quote?.id ?? null} />
+          <div id="send-box" />
           <Panel title="Approval & sending">
             {p.canSubmit && <Button className="w-full" disabled={!!busy || dirty} onClick={() => run("submit", () => submit({ data: { id } }), "Submitted for approval")}>Submit for approval</Button>}
             {doc.status === "submitted" && !p.canApprove && <p className="text-sm text-muted-foreground">Waiting for a Sales Manager or the CRO (not the writer).</p>}
