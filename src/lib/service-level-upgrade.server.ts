@@ -15,8 +15,8 @@ export async function upgradeServiceLevel(userId: string, d: { fundId: string; l
   const from = normalizeServiceLevel(o.service_level);
   if (from === level) throw new Error("The fund is already on that level.");
   await db.from("offerings").update({ service_level: level }).eq("id", o.id);
-  await db.from("fund_service_level_events").insert({ offering_id: o.id, requested_level: level, status: "active", effective_on: new Date().toISOString().slice(0, 10), actor_id: userId, note: d.reason } as any)
-    .then((r: any) => r.error && db.from("fund_service_level_events").insert({ offering_id: o.id, requested_level: level, status: "active", effective_on: new Date().toISOString().slice(0, 10), actor_id: userId }));
+  await db.from("fund_service_level_events").insert({ offering_id: o.id, requested_level: level, status: "active", effective_on: new Date().toISOString().slice(0, 10), actor_id: userId });
+  await db.from("billing_record_events").insert({ entity_kind: "service_level", entity_id: o.id, client_id: o.client_id, actor_id: userId, event_kind: "upgraded", detail: { from, to: level, reason: d.reason } });
   let emailed = 0;
   if (from === "self_serve") emailed = await introduceAccountManager(db, o, level);
   return { emailed };

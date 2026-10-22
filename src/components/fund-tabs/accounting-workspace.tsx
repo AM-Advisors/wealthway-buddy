@@ -13,6 +13,7 @@ import { StatementUpload } from "./statement-upload";
 import { ManualTransactionForm } from "./manual-books-entry";
 import { usd } from "./shared";
 import { MigratedBillingPanel } from "./migrated-billing-panel";
+import { ServiceLevelUpgradeCard } from "./service-level-upgrade-card";
 
 const SECTIONS = [
   { id: "statements", label: "Bank statements" },
@@ -48,6 +49,7 @@ export function AccountingWorkspace({ fundId, staff, extra }: { fundId: string; 
       {section === "fees" && staff && (
         <Card><CardHeader><CardTitle className="text-base">Harmonious: fees, invoices and payments received</CardTitle><CardDescription>Bill fees, issue invoices and record payments received for this fund. Nothing is charged or moved automatically.</CardDescription></CardHeader><CardContent><FundPayments fundId={fundId} backTo="admin" /></CardContent></Card>
       )}
+      {section === "fees" && staff && <ServiceLevelUpgradeCard fundId={fundId} />}
       {section === "fees" && staff && <MigratedBillingPanel fundId={fundId} />}
       {section === "summary" && <div className="space-y-5"><Summary fundId={fundId} />{!books && d && <Ledger fundId={fundId} d={d} />}{extra}</div>}
     </div>
