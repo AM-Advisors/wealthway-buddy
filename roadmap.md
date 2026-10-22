@@ -1,5 +1,9 @@
 # Roadmap
 
+## Searchable contact selection (2026-10-22)
+- [ ] Introduce shared type-to-suggest picker and apply to existing contact/person/team selection, including Sales recipients.
+- [ ] Verify filtering and selection offline; signed-in walkthrough requires independently isolated synthetic QA.
+
 ## Selected payment reporting and schedules (2026-10-22)
 - [x] Add selected payment calculations and monthly/quarterly/annual totals across commissions, Operations/client invoices and fund payments; existing entitled records only.
 - [x] Add separate quarterly/annual planning controls with first date and append-only actor-owned saved plans; canonical records re-read on save, no browser-supplied amounts accepted. Invoice terms and actual commission queue deadlines remain unchanged.
