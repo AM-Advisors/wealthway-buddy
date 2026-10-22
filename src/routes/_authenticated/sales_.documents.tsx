@@ -1,5 +1,6 @@
 import { SearchableNativeSelect } from "@/components/ui/searchable-people-picker";
 import { SalesDealDocsTabs } from "@/components/sales-deal-docs-tabs";
+import { DealPicker } from "@/components/sales/deal-picker";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -111,11 +112,9 @@ function Documents() {
                 )}
               </div>
             )}
-            <label className="space-y-1 text-sm"><span>Deal</span>
-              <select className={sel} value={f.dealId} onChange={(e) => { const d = (o.data?.deals ?? []).find((x: any) => x.id === e.target.value); setF({ ...f, dealId: e.target.value, contactId: d?.contact_id ?? f.contactId, clientId: d?.client_id ?? f.clientId }); }}>
-                <option value="">No deal</option>
-                {(o.data?.deals ?? []).map((x: any) => <option key={x.id} value={x.id}>{x.title}</option>)}
-              </select></label>
+            <div className="space-y-1 text-sm"><span>Deal</span>
+              <DealPicker deals={o.data?.deals ?? []} value={f.dealId} contactId={f.contactId || null} clientId={f.clientId || null} defaultTitle={f.title}
+                onChange={(d) => setF({ ...f, dealId: d?.id ?? "", contactId: d?.contact_id ?? f.contactId, clientId: d?.client_id ?? f.clientId })} /></div>
             <label className="space-y-1 text-sm"><span>Contact</span>
               <SearchableNativeSelect className={sel} value={f.contactId} onChange={(e) => setF({ ...f, contactId: e.target.value })}>
                 <option value="">No contact</option>
