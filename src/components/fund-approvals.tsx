@@ -29,7 +29,8 @@ export function FundApprovals({ fundId, initialId }: { fundId: string; initialId
   const rows = useMemo(() => (q.data?.rows ?? []).filter((r: any) => r.status !== "SUPERSEDED" && (filter === "all" || (CLIENT_APPROVAL_FILTERS[filter] as readonly string[]).includes(r.status))), [q.data, filter]);
   if (q.isLoading) return <p className="text-sm text-muted-foreground">Loading approvals…</p>;
   if (q.error) return <p className="text-sm text-destructive">{(q.error as Error).message}</p>;
-  const d = q.data!;
+  const d = q.data;
+  if (!d) return <p className="text-sm text-muted-foreground">Loading approvals…</p>;
   const count = (k: keyof typeof CLIENT_APPROVAL_FILTERS) => d.rows.filter((r: any) => (CLIENT_APPROVAL_FILTERS[k] as readonly string[]).includes(r.status)).length;
   if (openId) return <ApprovalDetail id={openId} fundId={fundId} onBack={() => setOpenId(null)} onOpen={setOpenId} />;
   return (
@@ -62,7 +63,7 @@ function ApprovalForm({ fundId, onDone, base }: { fundId: string; onDone: (id: s
   const qc = useQueryClient();
   const [v, setV] = useState({ type: base?.approval_type ?? "DISTRIBUTION", title: base?.title ?? "", amount: base?.approval_amount != null ? String(base.approval_amount) : "", due: base?.due_date ?? "", effective: base?.effective_date ?? "", summary: base?.client_visible_summary ?? "", description: base?.description ?? "", internal: base?.internal_notes ?? "", calc: ((base?.calculation_summary ?? []) as any[]).map((c) => `${c.label}: ${c.value}`).join("\n"), docs: ((base?.supporting_documents ?? []) as any[]).map((x) => x.name).join("\n"), reason: "" });
   const submit = async () => {
-    const calculation = v.calc.split("\n").map((l: string) => l.trim()).filter(Boolean).map((l: string) => { const [a, ...b] = l.split(":"); return { label: a!.trim().slice(0, 120), value: b.join(":").trim().slice(0, 200) || "—" }; });
+    const calculation = v.calc.split("\n").map((l: string) => l.trim()).filter(Boolean).map((l: string) => { const [a, ...b] = l.split(":"); return { label: (a ?? "").trim().slice(0, 120), value: b.join(":").trim().slice(0, 200) || "—" }; });
     const documents = v.docs.split("\n").map((l: string) => l.trim()).filter(Boolean).map((name: string) => ({ name: name.slice(0, 200) }));
     const payload = { fundId, type: v.type, title: v.title, amount: v.amount ? Number(v.amount) : null, dueDate: v.due || null, effectiveDate: v.effective || null, summary: v.summary || null, description: v.description || null, internalNotes: v.internal || null, calculation, documents };
     try {
@@ -99,7 +100,8 @@ function ApprovalDetail({ id, fundId, onBack, onOpen }: { id: string; fundId: st
   const act = async (fn: () => Promise<any>, ok: string) => { setBusy(true); try { const r = await fn(); toast.success(r?.remaining ? `Recorded. ${r.remaining} more approval needed from another fund manager.` : ok); invalidateFundWork(qc, fundId); q.refetch(); } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); } };
   if (q.isLoading) return <p className="text-sm text-muted-foreground">Loading…</p>;
   if (q.error) return <div><Button size="sm" variant="ghost" onClick={onBack}>← Approvals</Button><p className="text-sm text-destructive">{(q.error as Error).message}</p></div>;
-  const { approval: a, staff, canDecide, certification, highRisk, events, decisions, versions } = q.data!;
+  if (!q.data) return <p className="text-sm text-muted-foreground">Loading approval…</p>;
+  const { approval: a, staff, canDecide, certification, highRisk, events, decisions, versions } = q.data;
   const newer = versions.find((x: any) => x.version > a.version);
   return (
     <div className="space-y-4">

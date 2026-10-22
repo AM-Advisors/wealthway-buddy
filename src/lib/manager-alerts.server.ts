@@ -376,7 +376,7 @@ export function fundProgressMessage(
   offeringName: string,
 ): { headline: string; intro: string; details: { label: string; value: string }[] } | null {
   if (row.event_kind === "client_work_update") {
-    return { headline: String(row.metadata?.headline ?? "Fund request updated"), intro: String(row.metadata?.intro ?? "There is an update on a fund request."), details: [] };
+    return { headline: String(row.metadata?.["headline"] ?? "Fund request updated"), intro: String(row.metadata?.["intro"] ?? "There is an update on a fund request."), details: [] };
   }
   if (row.event_kind === "fund_assigned") {
     return {
