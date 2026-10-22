@@ -42,6 +42,7 @@
 - Forecasts are projections only, gated server-side by a contracted and paid subject-specific Forecasting add-on; immutable versions and sharing events never alter canonical records or trigger money movement.
 - Forecast assumption forms edit the existing ForecastInput through forecast-assumption-form.tsx; forecast-form-model.ts handles display-unit conversions and holding selection without mutating baseline records — why: guided input preserves saved-version compatibility and the existing calculation engine.
 - Operating forecasts use operating-forecast-model.ts through the shared ForecastInput validator/calculator; monthly integer-cent projections roll up into calendar quarters and remain distinct from fund capital flows — why: one preview/save engine, reconciled totals and no invented operating revenue from capital raised.
+- Fund cash-flow forms/results use fund-cash-flow-model.ts through ForecastInput; growth affects opening NAV only, realized proceeds affect cash only, and negative cash shows a shortfall — why: live summaries and saved projections agree without equating NAV to available cash.
 
 - Recurring payment schedules come only from signed-SOW frequencies and send invoices and notices, never money; missing terms require staff review.
 

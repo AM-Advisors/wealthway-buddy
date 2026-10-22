@@ -1,13 +1,14 @@
 /** Pure projections only. All monetary inputs use the same currency and unit. */
 import { z } from 'zod';
 import { operatingForecastInput, calculateOperatingForecast } from './operating-forecast-model';
+import { fundForecastSchema, calculateFundCashFlow } from './fund-cash-flow-model';
 const n = z.number().finite().nonnegative().max(1e15);
 const rate = z.number().finite().min(0).max(1);
 export const forecastInput = z.discriminatedUnion('model', [
  operatingForecastInput,
  z.object({model:z.literal('cap_table'),holders:z.array(z.object({holder:z.string().max(160),class:z.string().max(80),shares:n})).max(500),rounds:z.array(z.object({name:z.string().max(100),preMoney:n.positive(),raised:n,pricePerShare:n.positive().optional(),poolPercent:rate.refine(x=>x<1),conversions:z.array(z.object({holder:z.string().max(160),class:z.string().max(80),principal:n,interest:rate,years:n.max(100),discount:rate.refine(x=>x<1),cap:n.positive().optional()})).max(100)})).max(30)}),
  z.object({model:z.literal('portfolio'),holdings:z.array(z.object({name:z.string().max(160),cost:n,value:n,growth:z.number().finite().min(-1).max(10),exitValue:n.optional(),exitYear:z.number().int().min(2020).max(2200),startYear:z.number().int().min(1900).max(2200),writeDown:rate})).max(500)}),
- z.object({model:z.literal('fund'),openingNav:n,periods:z.array(z.object({period:z.string().max(30),calls:n,distributions:n,fees:n,expenses:n,gain:z.number().finite().min(-1e15).max(1e15)})).max(200)}),
+ fundForecastSchema,
  z.object({model:z.literal('waterfall'),capital:n,proceeds:n,years:n.max(100),preferredReturn:rate,carry:rate.refine(x=>x<1),catchUp:rate,compounding:z.boolean()})
 ]);
 export type ForecastInput=z.infer<typeof forecastInput>;
@@ -26,7 +27,7 @@ export function calculateForecast(raw:unknown): {totals:Record<string,number|nul
   return {totals:{shares:holders.reduce((s,h)=>s+h.shares,0)},detail};
  }
  if(a.model==='portfolio') { const detail=a.holdings.map(h=>{const years=h.exitYear-h.startYear;if(years<0)throw new Error('Exit year must not precede start year.');const value=(h.exitValue??h.value*(1+h.growth)**years)*(1-h.writeDown);return {...h,value,moic:h.cost?value/h.cost:null,irr:h.cost&&years>0?(value/h.cost)**(1/years)-1:null};});const cost=a.holdings.reduce((s,h)=>s+h.cost,0),value=detail.reduce((s,h)=>s+h.value,0);return {totals:{value,moic:cost?value/cost:null},detail}; }
- if(a.model==='fund'){let nav=a.openingNav,called=0,distributed=0;const detail=a.periods.map(p=>{called+=p.calls;distributed+=p.distributions;nav+=p.calls+p.gain-p.distributions-p.fees-p.expenses;if(nav<0)throw new Error('Projected NAV cannot be negative.');return {...p,nav,called,distributed,dpi:called?distributed/called:null,tvpi:called?(nav+distributed)/called:null};});return {totals:{nav,called,distributed,dpi:called?distributed/called:null,tvpi:called?(nav+distributed)/called:null},detail};}
+ if(a.model==='fund')return calculateFundCashFlow(a);
  const returned=Math.min(a.capital,a.proceeds);let remaining=a.proceeds-returned;const prefDue=a.capital*(a.compounding?(1+a.preferredReturn)**a.years-1:a.preferredReturn*a.years);const pref=Math.min(remaining,prefDue);remaining-=pref;
  // Catch-up allocates its stated fraction to GP until GP reaches carry on profits.
  const target=a.carry*pref/(1-a.carry);const catchUp=a.catchUp>a.carry?Math.min(remaining,target/(a.catchUp-a.carry)*(1-a.carry)):0;
