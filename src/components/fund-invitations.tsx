@@ -226,13 +226,13 @@ export function FundInvitations({ title = "Invitations" }: { title?: string }) {
           <h3 className="text-sm font-semibold">Add several people</h3>
           <p className="text-xs text-muted-foreground">
             Paste up to 50 email addresses - one per line, or as{" "}
-            <code>Alyssa Pettit &lt;alyssa@example.com&gt;</code>. Everyone gets the role and funds
+            <code>Jane Smith &lt;jane.smith@example.com&gt;</code>. Everyone gets the role and funds
             selected above.
           </p>
           <Textarea
             rows={6}
             value={bulkText}
-            placeholder={"alyssa@example.com\nJohn Reed <john@example.com>"}
+            placeholder={"jane.doe@example.com\nJohn Doe <john.doe@example.com>"}
             onChange={(e) => setBulkText(e.target.value)}
           />
           <Button
