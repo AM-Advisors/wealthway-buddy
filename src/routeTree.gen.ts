@@ -97,6 +97,7 @@ import { Route as InviteTokenRouteImport } from './routes/invite.$token'
 import { Route as JoinTokenRouteImport } from './routes/join.$token'
 import { Route as OnboardRefRouteImport } from './routes/onboard.$ref'
 import { Route as PostSlugRouteImport } from './routes/post.$slug'
+import { Route as QCodeRouteImport } from './routes/q.$code'
 import { Route as ReportCardShareTokenRouteImport } from './routes/report-card-share.$token'
 import { Route as ResourcesIndexRouteImport } from './routes/resources.index'
 import { Route as ResourcesEinForLlcRouteImport } from './routes/resources.ein-for-llc'
@@ -930,6 +931,11 @@ const OnboardRefRoute = OnboardRefRouteImport.update({
 const PostSlugRoute = PostSlugRouteImport.update({
   id: '/post/$slug',
   path: '/post/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const QCodeRoute = QCodeRouteImport.update({
+  id: '/q/$code',
+  path: '/q/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ReportCardShareTokenRoute = ReportCardShareTokenRouteImport.update({
@@ -3238,6 +3244,7 @@ export interface FileRoutesByFullPath {
   '/join/$token': typeof JoinTokenRoute
   '/onboard/$ref': typeof OnboardRefRoute
   '/post/$slug': typeof PostSlugRoute
+  '/q/$code': typeof QCodeRoute
   '/report-card-share/$token': typeof ReportCardShareTokenRoute
   '/resources/ein-for-llc': typeof ResourcesEinForLlcRoute
   '/resources/pe-software-buyers-guide': typeof ResourcesPeSoftwareBuyersGuideRoute
@@ -3703,6 +3710,7 @@ export interface FileRoutesByTo {
   '/join/$token': typeof JoinTokenRoute
   '/onboard/$ref': typeof OnboardRefRoute
   '/post/$slug': typeof PostSlugRoute
+  '/q/$code': typeof QCodeRoute
   '/report-card-share/$token': typeof ReportCardShareTokenRoute
   '/resources/ein-for-llc': typeof ResourcesEinForLlcRoute
   '/resources/pe-software-buyers-guide': typeof ResourcesPeSoftwareBuyersGuideRoute
@@ -4170,6 +4178,7 @@ export interface FileRoutesById {
   '/join/$token': typeof JoinTokenRoute
   '/onboard/$ref': typeof OnboardRefRoute
   '/post/$slug': typeof PostSlugRoute
+  '/q/$code': typeof QCodeRoute
   '/report-card-share/$token': typeof ReportCardShareTokenRoute
   '/resources/ein-for-llc': typeof ResourcesEinForLlcRoute
   '/resources/pe-software-buyers-guide': typeof ResourcesPeSoftwareBuyersGuideRoute
@@ -4641,6 +4650,7 @@ export interface FileRouteTypes {
     | '/join/$token'
     | '/onboard/$ref'
     | '/post/$slug'
+    | '/q/$code'
     | '/report-card-share/$token'
     | '/resources/ein-for-llc'
     | '/resources/pe-software-buyers-guide'
@@ -5106,6 +5116,7 @@ export interface FileRouteTypes {
     | '/join/$token'
     | '/onboard/$ref'
     | '/post/$slug'
+    | '/q/$code'
     | '/report-card-share/$token'
     | '/resources/ein-for-llc'
     | '/resources/pe-software-buyers-guide'
@@ -5572,6 +5583,7 @@ export interface FileRouteTypes {
     | '/join/$token'
     | '/onboard/$ref'
     | '/post/$slug'
+    | '/q/$code'
     | '/report-card-share/$token'
     | '/resources/ein-for-llc'
     | '/resources/pe-software-buyers-guide'
@@ -5995,6 +6007,7 @@ export interface RootRouteChildren {
   JoinTokenRoute: typeof JoinTokenRoute
   OnboardRefRoute: typeof OnboardRefRoute
   PostSlugRoute: typeof PostSlugRoute
+  QCodeRoute: typeof QCodeRoute
   ReportCardShareTokenRoute: typeof ReportCardShareTokenRoute
   ResourcesEinForLlcRoute: typeof ResourcesEinForLlcRoute
   ResourcesPeSoftwareBuyersGuideRoute: typeof ResourcesPeSoftwareBuyersGuideRoute
@@ -6654,6 +6667,13 @@ declare module '@tanstack/react-router' {
       path: '/post/$slug'
       fullPath: '/post/$slug'
       preLoaderRoute: typeof PostSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/q/$code': {
+      id: '/q/$code'
+      path: '/q/$code'
+      fullPath: '/q/$code'
+      preLoaderRoute: typeof QCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/report-card-share/$token': {
@@ -10371,6 +10391,7 @@ const rootRouteChildren: RootRouteChildren = {
   JoinTokenRoute: JoinTokenRoute,
   OnboardRefRoute: OnboardRefRoute,
   PostSlugRoute: PostSlugRoute,
+  QCodeRoute: QCodeRoute,
   ReportCardShareTokenRoute: ReportCardShareTokenRoute,
   ResourcesEinForLlcRoute: ResourcesEinForLlcRoute,
   ResourcesPeSoftwareBuyersGuideRoute: ResourcesPeSoftwareBuyersGuideRoute,
