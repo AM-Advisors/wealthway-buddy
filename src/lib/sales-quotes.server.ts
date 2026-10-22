@@ -237,7 +237,7 @@ export async function draftAgreements(userId: string, q: any) {
   const { data: sow, error } = await db.from("client_sows").insert({
     client_id: q.client_id, title: q.title, sow_type: "services", status: "draft", stage: "draft", created_by: userId,
     msa_version_id: msaVersion?.id ?? null, notes: `Created from Sales quote Q-${q.quote_number} v${q.version}`,
-    generated_lines: ((lines ?? []) as any[]).map((l) => ({ service_key: l.service_key, label: l.label, quantity: Number(l.quantity), unit_cents: Number(l.unit_cents), amount_cents: Number(l.line_cents), billing_frequency: l.billing_frequency ?? "one_time", first_bill_on: l.first_bill_on ?? null, bookkeeping_snapshot: l.bookkeeping_snapshot ?? null })),
+    generated_lines: ((lines ?? []) as any[]).map((l) => ({ service_key: l.service_key, label: l.label, quantity: Number(l.quantity), unit_cents: Number(l.unit_cents), amount_cents: Number(l.line_cents), billing_frequency: l.billing_frequency ?? "one_time", first_bill_on: l.first_bill_on ?? null, bookkeeping_snapshot: l.bookkeeping_snapshot ?? null, service_details: l.service_details ?? {} })),
   }).select("id").single();
   if (error) { console.error("SOW draft failed", error); throw new Error("Couldn't create the SOW draft."); }
   await db.from("sales_quotes").update({ sow_id: sow.id, msa_id: msaId, updated_at: new Date().toISOString() }).eq("id", q.id);
