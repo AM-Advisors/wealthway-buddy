@@ -1,7 +1,8 @@
 # Roadmap
 
 ## Operating Agreement signatory title and signed corrections (2026-10-22)
-- [ ] Prevent new Operating Agreement signing requests with missing recorded titles or unresolved template blanks; retain the title in the signing packet and verify with fictional tests.
+- [x] New template Operating Agreement signing requests require the exact recorded signatory, a recorded title and resolved template fields; freeze the title in the signature packet. 31 fictional title/autofill/version regression checks passed; preview build OK. Erebor's offering and active primary signatory both have no recorded title. No signed documents or live records changed.
+- [ ] Authenticated corrected-generation/send/read-back — blocked until independently isolated synthetic QA; offline checks do not verify a real signing ceremony.
 - [ ] Correct Erebor signed documents through reviewed replacement versions and new signatures — requires the actual signatory title and authorized corrected legal wording/rollout; originals must remain unchanged.
 
 ## Corps Erebor template term mismatch (2026-10-22)
