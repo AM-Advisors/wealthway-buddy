@@ -543,7 +543,8 @@ async function gatherFacts(row: any, inputs?: ReadinessInputs) {
       sort: Number(d.sort_order ?? 0),
     }))
     .sort((a, b) => a.rank - b.rank || a.sort - b.sort);
-  return { offering, person, profile, entity, related, accreditation, tax, requirements, isEntity, documents, completedSignatures };
+  const countersignTiming = (await import("@/lib/countersign-timing")).parseCountersignTiming(off?.countersign_timing);
+  return { offering, person, profile, entity, related, accreditation, tax, requirements, isEntity, documents, completedSignatures, countersignTiming };
 }
 
 async function openExceptions(onboardingId: string) {
@@ -1175,6 +1176,7 @@ export async function onboardingDetail(userId: string, onboardingId: string): Pr
     stage: row.stage,
     requirements: facts.requirements,
     approvedToFundAt: row.approved_to_fund_at,
+    countersignTiming: facts.countersignTiming,
     openBlockingExceptions: exceptions.filter((e) => e.severity === "blocking").length,
   });
 
@@ -1265,6 +1267,7 @@ export async function fundingInstructions(userId: string, onboardingId: string) 
     stage: row.stage,
     requirements: facts.requirements,
     approvedToFundAt: row.approved_to_fund_at,
+    countersignTiming: facts.countersignTiming,
     openBlockingExceptions: exceptions.filter((e) => e.severity === "blocking").length,
   });
   if (!gate.allowed) return { unlocked: false, reasons: gate.reasons, instructions: null };
@@ -1426,12 +1429,14 @@ export async function reviewDetail(userId: string, onboardingId: string) {
     stage: row.stage,
     requirements: facts.requirements,
     approvedToFundAt: row.approved_to_fund_at,
+    countersignTiming: facts.countersignTiming,
     openBlockingExceptions: blocking,
   });
   const closingGate = canCloseInvestment({
     stage: row.stage,
     requirements: facts.requirements,
     approvedToFundAt: row.approved_to_fund_at,
+    countersignTiming: facts.countersignTiming,
     openBlockingExceptions: blocking,
     fundingStatus: row.funding_status,
     fundingReconciled: isReconciledFunding(row.funding_status),
@@ -1764,6 +1769,7 @@ export async function closeInvestment(userId: string, input: { onboardingId: str
     stage: row.stage,
     requirements: facts.requirements,
     approvedToFundAt: row.approved_to_fund_at,
+    countersignTiming: facts.countersignTiming,
     openBlockingExceptions: exceptions.filter((e) => e.severity === "blocking").length,
     fundingStatus: row.funding_status,
     fundingReconciled: isReconciledFunding(row.funding_status),
