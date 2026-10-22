@@ -4,9 +4,9 @@
  * economics in fund-setup.server (maker-checker). Staff edit; managers of the
  * exact fund read. Nothing here touches banking, documents, signatures or money.
  */
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import {
-  classCountError, supabaseAdmin } from "@/integrations/supabase/client.server";
-import {
+  classCountError,
   classAssignmentError,
   classErrors,
   classKey,
