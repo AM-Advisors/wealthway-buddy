@@ -1,5 +1,11 @@
 # Roadmap
 
+## Bookkeeping service integration brief (2026-10-22)
+- [x] Review existing pricing, quote/SOW, billing, accounting and entity-access engines; prepare a phased plan including standalone handoff, first-invoice deduplication and service-critical accounting release gates.
+- [ ] Implement internal proposed catalog/configuration, quote snapshots, overlap checks and scoped SOW terms without publishing prices or modifying current contracts.
+- [ ] Implement contract-gated enrollment, prospective reconciliation schedules, entity-authorized portal views and reviewed report release through existing engines.
+- [ ] Verify fictional acceptance scenarios; authenticated end-to-end checks blocked until independently isolated QA passes preflight. No live invoices, bank connections or production enrollments.
+
 ## Internal Sales MSA display (2026-10-22)
 - [x] Collapse locked MSA terms and packet details by default in the shared proposal/RFP/RFQ editor; quote detail already omits MSA text. Existing editing authority and client signing views unchanged.
 - [x] Fictional accordion display verified closed by default, expandable and collapsible with no runtime errors; 16 existing MSA/locked-section tests passed and preview build OK. Authenticated walkthrough remains blocked on independently isolated QA.
