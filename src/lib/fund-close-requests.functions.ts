@@ -18,6 +18,15 @@ async function canViewFund(db: any, uid: string, fundId: string) {
   return isClientMemberOfFund(db, uid, fundId);
 }
 
+async function sideLetterPricing(db: any, fundId: string, onboardingIds: string[]) {
+  const { data: letters, error } = await db.from("side_letters").select("id, onboarding_id, status, fee_payment_id").eq("offering_id", fundId);
+  if (error) throw new Error("Side letters couldn't be counted.");
+  const payIds = [...new Set(((letters ?? []) as any[]).map((l) => l.fee_payment_id).filter(Boolean))];
+  const { data: pays } = payIds.length ? await db.from("fund_payments").select("id, status").in("id", payIds).in("status", ["paid", "used"]) : { data: [] };
+  const { closeSideLetterPricing } = await import("@/lib/close-side-letter-pricing");
+  return closeSideLetterPricing(onboardingIds, (letters ?? []) as any[], ((pays ?? []) as any[]).map((p) => p.id));
+}
+
 const fundInput = (d: unknown) => z.object({ fundId: z.string().uuid() }).parse(d);
 
 /** Read-only, informational tabs: Banking, Taxes, Assets. Nothing here needs approval. */
@@ -58,6 +67,7 @@ export const getCloseCandidates = createServerFn({ method: "GET" })
     ]);
     const open: Record<string, string[]> = {};
     for (const t of (tasks ?? []) as any[]) (open[t.onboarding_id] ??= []).push(t.title);
+    const sl = await sideLetterPricing(db, data.fundId, ((obs ?? []) as any[]).map((o) => o.id));
     return ((obs ?? []) as any[]).map((o) => {
       const p = o.persons;
       const name = p ? p.preferred_name || [p.legal_first_name, p.legal_last_name].filter(Boolean).join(" ") : "";
@@ -67,6 +77,7 @@ export const getCloseCandidates = createServerFn({ method: "GET" })
         profileName: o.investment_profiles?.legal_name ?? null,
         amountCents: o.commitment_amount_cents ?? o.accepted_amount_cents ?? o.requested_amount_cents ?? null,
         openItems: open[o.id] ?? [],
+        sideLetters: sl.perInvestor[o.id] ?? 0,
       };
     });
   });
@@ -120,6 +131,10 @@ export const createFundCloseRequest = createServerFn({ method: "POST" })
       target_date: data.targetDate, notes: data.notes.trim() || null, onboarding_ids: [...new Set(data.onboardingIds)],
     }).select("id").single();
     if (error) throw new Error("Couldn't submit the close request.");
+    // Server-recomputed side-letter estimate; client totals are never trusted.
+    const sl = await sideLetterPricing(db, data.fundId, [...new Set(data.onboardingIds)]);
+    const sideLetterDetails = { sideLetterCount: sl.count, sideLetterPaidCount: sl.paidCount, sideLetterFeeCents: sl.feeCents, sideLetterUnitCents: sl.unitCents };
+    if (!data.details) await db.from("fund_close_requests").update({ details: { ...sideLetterDetails, feesAreEstimate: true } }).eq("id", row.id);
     await (await import("@/lib/ops-slack-notify.server")).notifySubmission({ kind: "close_request", title: "Fund close request submitted", offeringId: data.fundId, submittedBy: uid, ref: row.id, path: "/ops/close-requests" });
     if (data.details) {
       const det = data.details;
@@ -141,7 +156,7 @@ export const createFundCloseRequest = createServerFn({ method: "POST" })
       // Only the last four digits of bank numbers are kept here; full instructions are verified by Harmonious.
       const { purchaseAgreement: _pa, ...rest } = det;
       await db.from("fund_close_requests").update({
-        details: { ...rest, purchaseAgreementPath: paPath, purchaseAgreementName: det.purchaseAgreement?.fileName ?? null, formDFeeCents: 16000, feesAreEstimate: true },
+        details: { ...rest, purchaseAgreementPath: paPath, purchaseAgreementName: det.purchaseAgreement?.fileName ?? null, formDFeeCents: 16000, ...sideLetterDetails, feesAreEstimate: true },
       }).eq("id", row.id);
     }
     await db.from("fund_close_request_events").insert({ close_request_id: row.id, actor_id: uid, from_status: null, to_status: "submitted" });

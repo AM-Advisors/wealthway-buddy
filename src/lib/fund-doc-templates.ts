@@ -70,14 +70,42 @@ export const DOC_TEMPLATES: DocTemplate[] = [
   },
 ];
 
-export function renderTemplate(key: string, values: Record<string, string>) {
+/** Recorded facts a side letter must cite. Built server-side from canonical records only. */
+export type GoverningDocRef = { title: string; version: number; date: string | null };
+export type SideLetterGoverningDocs = {
+  operatingAgreement: GoverningDocRef;
+  subscriptionAgreement: GoverningDocRef;
+  /** Current recorded fund terms each item may change; null = not recorded. */
+  baseline: { managementFee: string | null; carry: string | null; minimum: string | null };
+  investorSubscription?: { amount: string; date: string | null } | null;
+};
+
+const refText = (d: GoverningDocRef) => `the ${d.title} (version ${d.version}${d.date ? `, dated ${d.date}` : ""})`;
+const BASELINE_KEY: Record<string, keyof SideLetterGoverningDocs["baseline"] | null> = {
+  sl_management_fee: "managementFee", sl_carry: "carry", sl_minimum: "minimum", sl_information_rights: null,
+};
+
+export function governingRecital(g: SideLetterGoverningDocs) {
+  const sub = g.investorSubscription
+    ? ` and {{investor}}'s subscription of ${g.investorSubscription.amount}${g.investorSubscription.date ? ` dated ${g.investorSubscription.date}` : ""} made under it`
+    : "";
+  return `Governing documents. This side letter supplements ${refText(g.operatingAgreement)} and ${refText(g.subscriptionAgreement)}${sub}. Where this side letter conflicts with those documents for {{investor}}, this side letter controls for {{investor}} only.`;
+}
+
+export function renderTemplate(key: string, values: Record<string, string>, governingDocs?: SideLetterGoverningDocs) {
   const t = DOC_TEMPLATES.find((x) => x.key === key);
   if (!t) throw new Error("Unknown template.");
   let source = t.body;
   if (key === "sl_combined") {
     if (!sideLetterItemsComplete(values)) throw new Error("Select at least one side-letter item and complete each selected item's terms.");
-    const clauses = selectedSideLetterItems(values).map((item, i) => `${i + 1}. ${item.label}\n\n${item.clause}`);
-    source = `SIDE LETTER\n\nDate: {{date}}\nBetween {{fund}} (acting through {{manager}}) and {{investor}}.\n\n${clauses.join("\n\n")}\n\nAll other terms of the governing documents remain unchanged.`;
+    const clauses = selectedSideLetterItems(values).map((item, i) => {
+      const bk = BASELINE_KEY[item.key];
+      const base = governingDocs && bk ? governingDocs.baseline[bk] : null;
+      const cite = governingDocs ? `\n\nCurrent term: ${base ?? "not stated as a recorded fund term"} under ${refText(governingDocs.operatingAgreement)}.` : "";
+      return `${i + 1}. ${item.label}${cite}\n\n${item.clause}`;
+    });
+    const recital = governingDocs ? `${governingRecital(governingDocs)}\n\n` : "";
+    source = `SIDE LETTER\n\nDate: {{date}}\nBetween {{fund}} (acting through {{manager}}) and {{investor}}.\n\n${recital}${clauses.join("\n\n")}\n\nAll other terms of the governing documents remain unchanged.`;
   }
   const body = source.replace(/\{\{(\w+)\}\}/g, (_, k) => values[k]?.trim() || `[${k}]`);
   return { title: t.title, category: t.category, body: `${STARTER_NOTICE}\n\n${body}` };

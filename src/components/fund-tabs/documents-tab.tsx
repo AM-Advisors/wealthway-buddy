@@ -21,6 +21,7 @@ import { listTemplatesFn, templateAutofillCheckFn, useTemplateInFundFn, fundDocu
 import { FundTypeDocumentsCard } from "./fund-type-documents-card";
 import { fileToBase64, fmtDate } from "./shared";
 import { StandardFormsCard } from "./standard-forms-card";
+import { ArchivedDocuments } from "./archived-documents";
 import { OfferingDocumentsSetup } from "@/components/offering-documents-setup";
 import { fundSigningContextFn, sendFileForSignatureFn, remindFileSignerFn } from "@/lib/fund-file-signing.functions";
 
@@ -281,6 +282,7 @@ export function DocumentsTab({ fundId }: { fundId: string }) {
           </DialogContent>
         </Dialog>
       )}
+      <ArchivedDocuments fundId={fundId} />
       {boxes && <BoxesDialog fundId={fundId} file={boxes} onClose={() => { setBoxes(null); refresh(); }} />}
     </div>
   );

@@ -97,11 +97,14 @@ export const setSignatureBoxesFn = createServerFn({ method: "POST" }).middleware
   .handler(async ({ data, context }) => { const s = await srv(); await s.assertFund(context.userId, data.fundId); return s.setSignatureBoxes(data.fundId, data.id, data.boxes); });
 
 export const generateFundDocFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(fund.extend({ templateKey: z.string().max(60), values: z.record(z.string(), z.string().max(2000)) }).parse)
+  .inputValidator(fund.extend({ templateKey: z.string().max(60), values: z.record(z.string(), z.string().max(2000)), onboardingId: uuid.nullable().optional() }).parse)
   .handler(async ({ data, context }) => {
     const s = await srv(); await s.assertFund(context.userId, data.fundId);
     const { renderTemplate } = await import("@/lib/fund-doc-templates");
-    const r = renderTemplate(data.templateKey, data.values);
+    const governing = data.templateKey === "sl_combined"
+      ? await (await import("@/lib/side-letter-governing.server")).loadSideLetterGoverningDocs(await s.db(), data.fundId, data.onboardingId ?? null)
+      : undefined;
+    const r = renderTemplate(data.templateKey, data.values, governing);
     return s.saveGenerated(context.userId, data.fundId, { templateKey: data.templateKey, ...r });
   });
 
