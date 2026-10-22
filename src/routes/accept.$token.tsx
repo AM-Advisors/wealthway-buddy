@@ -150,7 +150,7 @@ function AcceptPage() {
                 <div className="flex max-h-[85vh] w-full max-w-2xl flex-col rounded-lg border bg-card p-4 shadow-lg" onClick={(e) => e.stopPropagation()}>
                   <div className="mb-2 flex items-center justify-between"><p className="font-heading font-semibold text-primary">Master Services Agreement · version {d.msa.version}</p>
                     <Button size="sm" variant="outline" onClick={() => setShowMsa(false)}>Close</Button></div>
-                  <div className="space-y-3 overflow-y-auto text-sm">
+                  <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pr-1 text-sm">
                     {d.msa.sections.map((x, i) => <div key={i}><p className="font-semibold">{x.no ? `${x.no}. ` : ""}{x.title}</p><p className="whitespace-pre-wrap">{x.body}</p></div>)}
                   </div>
                   <p className="mt-2 text-xs text-muted-foreground">You accept this once. You'll only be asked again if Harmonious updates it and assigns the new version to you.</p>
@@ -168,7 +168,7 @@ function AcceptPage() {
                 <div className="flex max-h-[85vh] w-full max-w-2xl flex-col rounded-lg border bg-card p-4 shadow-lg" onClick={(e) => e.stopPropagation()}>
                   <div className="mb-2 flex items-center justify-between"><p className="font-heading font-semibold text-primary">{shownPolicy.label} · version {shownPolicy.version}</p>
                     <Button size="sm" variant="outline" onClick={() => setOpenPolicy(null)}>Close</Button></div>
-                  <div className="overflow-y-auto whitespace-pre-wrap text-sm">{shownPolicy.body}</div>
+                  <div className="min-h-0 flex-1 overflow-y-auto whitespace-pre-wrap pr-1 text-sm">{shownPolicy.body}</div>
                 </div>
               </div>
             )}

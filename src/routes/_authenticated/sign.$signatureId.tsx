@@ -64,7 +64,7 @@ function SignPage() {
       <Dialog open={viewDoc} onOpenChange={setViewDoc}>
         <DialogContent className="flex max-h-[85vh] max-w-3xl flex-col">
           <DialogHeader><DialogTitle>{s.title}</DialogTitle></DialogHeader>
-          <div className="flex-1 overflow-y-auto whitespace-pre-wrap rounded-lg border p-5 text-sm leading-relaxed">{s.body || "This document has no text to show."}</div>
+          <div className="min-h-0 flex-1 overflow-y-auto whitespace-pre-wrap rounded-lg border p-5 text-sm leading-relaxed">{s.body || "This document has no text to show."}</div>
         </DialogContent>
       </Dialog>
       {s.signaturePage && (
