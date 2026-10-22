@@ -453,6 +453,8 @@ import { Route as ApiPublicSecurityRevokeRouteImport } from './routes/api/public
 import { Route as ApiPublicSlackEventsRouteImport } from './routes/api/public/slack/events'
 import { Route as ApiPublicWebhooksBoxSignRouteImport } from './routes/api/public/webhooks/box-sign'
 import { Route as ApiPublicWebhooksDiditRouteImport } from './routes/api/public/webhooks/didit'
+import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
+import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as AuthenticatedAdminClientsClientIdEntitiesRouteImport } from './routes/_authenticated/admin.clients.$clientId.entities'
 import { Route as AuthenticatedClientAgreementsSowSowIdRouteImport } from './routes/_authenticated/client.agreements.sow.$sowId'
@@ -3007,6 +3009,16 @@ const ApiPublicWebhooksDiditRoute = ApiPublicWebhooksDiditRouteImport.update({
   path: '/api/public/webhooks/didit',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
+  id: '/lovable/email/auth/preview',
+  path: '/lovable/email/auth/preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
+  id: '/lovable/email/auth/webhook',
+  path: '/lovable/email/auth/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LovableEmailTransactionalPreviewRoute =
   LovableEmailTransactionalPreviewRouteImport.update({
     id: '/lovable/email/transactional/preview',
@@ -3590,6 +3602,8 @@ export interface FileRoutesByFullPath {
   '/api/public/slack/events': typeof ApiPublicSlackEventsRoute
   '/api/public/webhooks/box-sign': typeof ApiPublicWebhooksBoxSignRoute
   '/api/public/webhooks/didit': typeof ApiPublicWebhooksDiditRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/admin/contracts/': typeof AuthenticatedAdminContractsIndexRoute
   '/admin/entities/': typeof AuthenticatedAdminEntitiesIndexRoute
@@ -4052,6 +4066,8 @@ export interface FileRoutesByTo {
   '/api/public/slack/events': typeof ApiPublicSlackEventsRoute
   '/api/public/webhooks/box-sign': typeof ApiPublicWebhooksBoxSignRoute
   '/api/public/webhooks/didit': typeof ApiPublicWebhooksDiditRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/admin/contracts': typeof AuthenticatedAdminContractsIndexRoute
   '/admin/entities': typeof AuthenticatedAdminEntitiesIndexRoute
@@ -4524,6 +4540,8 @@ export interface FileRoutesById {
   '/api/public/slack/events': typeof ApiPublicSlackEventsRoute
   '/api/public/webhooks/box-sign': typeof ApiPublicWebhooksBoxSignRoute
   '/api/public/webhooks/didit': typeof ApiPublicWebhooksDiditRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/_authenticated/admin/contracts/': typeof AuthenticatedAdminContractsIndexRoute
   '/_authenticated/admin/entities/': typeof AuthenticatedAdminEntitiesIndexRoute
@@ -4996,6 +5014,8 @@ export interface FileRouteTypes {
     | '/api/public/slack/events'
     | '/api/public/webhooks/box-sign'
     | '/api/public/webhooks/didit'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
     | '/admin/contracts/'
     | '/admin/entities/'
@@ -5458,6 +5478,8 @@ export interface FileRouteTypes {
     | '/api/public/slack/events'
     | '/api/public/webhooks/box-sign'
     | '/api/public/webhooks/didit'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
     | '/admin/contracts'
     | '/admin/entities'
@@ -5929,6 +5951,8 @@ export interface FileRouteTypes {
     | '/api/public/slack/events'
     | '/api/public/webhooks/box-sign'
     | '/api/public/webhooks/didit'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
     | '/_authenticated/admin/contracts/'
     | '/_authenticated/admin/entities/'
@@ -6048,6 +6072,8 @@ export interface RootRouteChildren {
   ApiPublicSlackEventsRoute: typeof ApiPublicSlackEventsRoute
   ApiPublicWebhooksBoxSignRoute: typeof ApiPublicWebhooksBoxSignRoute
   ApiPublicWebhooksDiditRoute: typeof ApiPublicWebhooksDiditRoute
+  LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
+  LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
 }
 
@@ -9161,6 +9187,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicWebhooksDiditRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lovable/email/auth/preview': {
+      id: '/lovable/email/auth/preview'
+      path: '/lovable/email/auth/preview'
+      fullPath: '/lovable/email/auth/preview'
+      preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/auth/webhook': {
+      id: '/lovable/email/auth/webhook'
+      path: '/lovable/email/auth/webhook'
+      fullPath: '/lovable/email/auth/webhook'
+      preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/lovable/email/transactional/preview': {
       id: '/lovable/email/transactional/preview'
       path: '/lovable/email/transactional/preview'
@@ -10432,6 +10472,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicSlackEventsRoute: ApiPublicSlackEventsRoute,
   ApiPublicWebhooksBoxSignRoute: ApiPublicWebhooksBoxSignRoute,
   ApiPublicWebhooksDiditRoute: ApiPublicWebhooksDiditRoute,
+  LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
+  LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
 }
 export const routeTree = rootRouteImport
