@@ -34,6 +34,16 @@ describe("publisher identity autofill", () => {
 });
 
 describe("recorded fund terms", () => {
+  it("fills straight and curly apostrophe signatory titles across split Word runs", async () => {
+    const r = await fill('<w:r><w:t>{{Signatory’s </w:t></w:r><w:r><w:t>Title}} / {{Signatory Title}} / {{Fund Manager Signatory Title}}</w:t></w:r>', { "Signatory's Title": "Managing Member", "Fund Manager Signatory Title": "Managing Member" });
+    expect(r.xml?.match(/Managing Member/g)).toHaveLength(3);
+    expect(r.open).toEqual([]);
+  });
+  it("reports the missing signatory title instead of inventing a title", async () => {
+    const r = await fill('<w:r><w:t>{{Signatory’s Title}}</w:t></w:r>', { "Signatory's Title": null });
+    expect(r.open).toEqual(["Signatory’s Title"]);
+    expect(r.filled).toEqual([]);
+  });
   it("formats percentage blanks followed by percent without doubling the unit", async () => {
     const r = await fill('<w:r><w:t>{{Management Fee}}  percent / {{Carry Amount}} percent / {{Carry Percent}}</w:t></w:r>', { "Management Fee": "6%", "Carry Amount": "15%", "Carry Percent": "15%" });
     expect(r.xml).toContain("6  percent / 15 percent / 15%");

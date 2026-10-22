@@ -1,4 +1,8 @@
 /** Validate a new ceremony only; completed documents are never rebuilt here. */
+export function isRecordedOperatingSignatory(person: { user_id?: string | null; email?: string | null } | null, userId: string, email: string) {
+  return Boolean(person && (person.user_id === userId || (person.email && person.email.toLowerCase() === email.toLowerCase())));
+}
+
 export function operatingAgreementSignaturePage(input: {
   title: string;
   fundName: string;

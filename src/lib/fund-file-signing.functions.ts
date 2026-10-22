@@ -334,10 +334,10 @@ export const sendTemplateDocToSignatoryFn = createServerFn({ method: "POST" }).m
       ? await d.from("persons").select("user_id, email").eq("id", offering.fund_signatory_person_id).maybeSingle()
       : { data: null, error: null };
     if (personError) throw new Error("Could not load the fund signatory details.");
-    if (!signatory || (signatory.user_id !== data.managerUserId && String(signatory.email ?? "").toLowerCase() !== String(mp.email).toLowerCase())) {
+    const { operatingAgreementSignaturePage, isRecordedOperatingSignatory } = await import("@/lib/operating-agreement-signing");
+    if (!isRecordedOperatingSignatory(signatory, data.managerUserId, mp.email)) {
       throw new Error("Choose the fund's recorded signatory to sign this Operating Agreement.");
     }
-    const { operatingAgreementSignaturePage } = await import("@/lib/operating-agreement-signing");
     const signaturePage = operatingAgreementSignaturePage({ title: doc.title, fundName: offering.legal_entity_name || offering.name,
       signerName: mp.legal_name || mp.email, signatoryTitle: offering.signatory_title, body });
 
