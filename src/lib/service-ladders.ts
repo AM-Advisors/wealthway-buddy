@@ -7,7 +7,7 @@ export interface LadderLevel { level: string; name: string; positioning: string;
 
 export const SERVICE_LADDERS: Record<LadderProduct, { label: string; levels: LadderLevel[] }> = {
   SPV_ADMINISTRATION: {
-    label: "SPV Administration",
+    label: "Harmonized SPV",
     levels: [
       { level: "SELF_SERVE", name: "Self Serve", positioning: "Platform only, included in the base fund price" },
       { level: "CORE", name: "SPV Core", positioning: "Essential SPV Infrastructure" },

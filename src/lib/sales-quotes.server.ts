@@ -32,7 +32,7 @@ async function adminCatalog() {
   const { data } = await db.from("service_pricing_versions").select("service_product, service_level, annual_price, starting_price").eq("is_current", true);
   const { spvTxnQuoteKey } = await import("@/lib/spv-transaction-pricing");
   const { data: bands } = await db.from("spv_transaction_pricing").select("id, label, fee_usd").eq("is_current", true).order("sort_order");
-  const txn = ((bands ?? []) as any[]).filter((b) => b.fee_usd != null).map((b) => ({ serviceKey: spvTxnQuoteKey(b.id), label: `SPV Administration — raise ${b.label}`, baselineCents: Math.round(Number(b.fee_usd) * 100), baselineSource: "spv_transaction_pricing", pricingModel: "one_time" }));
+  const txn = ((bands ?? []) as any[]).filter((b) => b.fee_usd != null).map((b) => ({ serviceKey: spvTxnQuoteKey(b.id), label: `Harmonized SPV — raise ${b.label}`, baselineCents: Math.round(Number(b.fee_usd) * 100), baselineSource: "spv_transaction_pricing", pricingModel: "one_time" }));
   return [...txn, ...((data ?? []) as any[]).filter((p) => isLadderProduct(p.service_product)).flatMap((p) => {
     const lv = SERVICE_LADDERS[p.service_product as "SPV_ADMINISTRATION"].levels.find((l) => l.level === p.service_level);
     if (!lv) return [];
