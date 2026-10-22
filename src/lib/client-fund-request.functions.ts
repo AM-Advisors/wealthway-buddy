@@ -216,6 +216,22 @@ export const submitFundRequest = createServerFn({ method: "POST" })
             }).catch((e: unknown) => console.warn("onboarding email failed", e));
           }
         } catch (e) { console.warn("onboarding email skipped", e); }
+      } else if (lv.active === "self_serve") {
+        // Self Serve: one welcome email per person per fund with the fund link; help comes from Operations.
+        try {
+          const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+          const { data: fms } = await db.from("fund_managers").select("user_id").eq("offering_id", offeringId);
+          const ids = [...new Set([context.userId, ...((fms ?? []) as any[]).map((f) => f.user_id)].filter(Boolean))];
+          const { data: profs } = await db.from("profiles").select("user_id, legal_name, email").in("user_id", ids);
+          const origin = process.env["SITE_URL"] || "https://app.harmonious.co";
+          for (const p of (profs ?? []) as any[]) {
+            if (!p.email) continue;
+            await sendTemplateEmail("self-serve-welcome", p.email, {
+              idempotencyKey: `self-serve-welcome-${offeringId}-${p.user_id}`,
+              templateData: { contactName: p.legal_name || undefined, fundName: r.fund_name || "your fund", setupUrl: `${origin}/client/funds/${offeringId}` },
+            }).catch((e: unknown) => console.warn("self serve email failed", e));
+          }
+        } catch (e) { console.warn("self serve email skipped", e); }
       }
     }
 
