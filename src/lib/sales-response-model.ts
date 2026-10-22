@@ -15,7 +15,7 @@ export function responseProjection(events: ResponseEvent[], version: number, sig
   const instructions = [...rows].reverse().find((e) => e.event === "response_instructions")?.detail['instructions'];
   return {
     instructions: typeof instructions === "string" ? instructions : "",
-    status: signed ? "signed" : last?.event === "client_changes_requested" ? "changes_requested" : last?.event === "client_reviewed" ? "reviewed" : ready ? "awaiting_response" : "not_sent",
+    status: signed ? "signed" : last?.event === "client_changes_requested" ? "changes_requested" : last?.event === "client_reviewed" ? "reviewed" : ready || last?.event === "response_sent" ? "awaiting_response" : "not_sent",
     messages: rows.filter((e) => ["response_sent", "client_reviewed", "client_changes_requested"].includes(e.event)).map((e) => ({
       event: e.event, message: String(e.detail['message'] ?? ""), at: e.created_at,
     })),

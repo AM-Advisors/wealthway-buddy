@@ -8,14 +8,21 @@ export async function readResponseEvents(db: any, kind: AcceptKind, id: string):
   const { data, error } = await db.from(quote ? "sales_quote_events" : "sales_document_events").select(quote ? "event,note,created_at" : "event,detail,created_at")
     .eq(quote ? "quote_id" : "document_id", id).in("event", ["response_instructions", "response_pending", "response_sent", "response_failed", "client_reviewed", "client_changes_requested"]).order("created_at");
   if (error) throw new Error("Couldn't load client responses.");
-  return (data ?? []).map((e: any) => {
+  const { data: clientEvents, error: clientError } = await db.from("sales_client_response_events").select("event,detail,created_at").eq(quote ? "sales_quote_id" : "sales_document_id", id).order("created_at");
+  if (clientError) throw new Error("Couldn't load client feedback.");
+  return [...(data ?? []).map((e: any) => {
     let detail = e.detail ?? {};
     if (quote) { try { detail = JSON.parse(e.note ?? "{}"); } catch { detail = {}; } }
     return { event: e.event, detail, created_at: e.created_at };
-  });
+  }), ...(clientEvents ?? [])];
 }
 export async function recordResponse(db: any, kind: AcceptKind, id: string, actorId: string | null, event: string, detail: Record<string, unknown>) {
   const quote = kind === "quote";
+  if (actorId === null) {
+    const { error } = await db.from("sales_client_response_events").insert({ sales_quote_id: quote ? id : null, sales_document_id: quote ? null : id, event, detail });
+    if (error) throw new Error("Couldn't record client feedback.");
+    return;
+  }
   const { error } = await db.from(quote ? "sales_quote_events" : "sales_document_events").insert(quote
     ? { quote_id: id, actor_id: actorId, event, note: JSON.stringify(detail) }
     : { document_id: id, actor_id: actorId, event, detail });
@@ -36,7 +43,9 @@ async function staffRecord(userId: string, kind: AcceptKind, id: string) {
   const to: string[] = sent?.detail?.to ?? [];
   const signers: string[] = sent?.detail?.signers ?? [];
   const team = await (await import("./sales-documents.server")).listClientTeam(userId, id);
-  return { version, title: String(d.doc.title), status: String(d.doc.status), signed: !!d.packet?.sow?.client_signed_at,
+  const { data: acceptance, error: acceptanceError } = await (await admin()).from("sales_acceptances").select("id").eq("sales_document_id", id).eq("version", version).maybeSingle();
+  if (acceptanceError) throw new Error("Couldn't load the signature status.");
+  return { version, title: String(d.doc.title), status: String(d.doc.status), signed: !!acceptance || !!d.packet?.sow?.client_signed_at,
     canWrite: d.perms.canEdit || d.perms.canSend || d.perms.canOutcome,
     recipients: team.filter((r) => to.includes(r.email)).map((r) => ({ email: r.email, name: r.name, canSign: signers.includes(r.email) })) };
 }
