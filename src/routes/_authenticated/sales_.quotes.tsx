@@ -5,6 +5,7 @@ import { getAboutHarmoniousText, getSalesDocumentOptions } from "@/lib/sales-doc
 import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { BILLING_FREQUENCIES } from "@/lib/invoice-schedule-model";
+import { changeQuoteBilling, defaultQuoteBilling, normalizeQuoteBilling, recurringQuoteRate } from "@/lib/quote-billing";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -163,11 +164,16 @@ export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; init
   const about = useQuery({ queryKey: ["about-harmonious-text"], queryFn: () => aboutFn() });
   const clientName = (c.data?.clients ?? []).find((x: any) => x.id === clientId)?.legal_name ?? null;
   const facts = quoteLockFacts({ organization: clientName, contactName: null, lines });
-  const total = lines.reduce((s, l) => s + l.quantity * l.unitCents, 0);
-  const baseline = lines.reduce((s, l) => s + l.quantity * l.baselineUnitCents, 0);
+  const displayLines = lines.map(l => {
+    const rate = c.data?.lines.find((r: any) => r.serviceKey === l.serviceKey);
+    return rate && !l.bookkeeping ? normalizeQuoteBilling(l, rate) : l;
+  });
+  const total = displayLines.reduce((s, l) => s + Math.round(l.quantity * l.unitCents), 0);
+  const baseline = displayLines.reduce((s, l) => s + Math.round(l.quantity * l.baselineUnitCents), 0);
+  const belowBaseline = displayLines.some(l => l.unitCents < l.baselineUnitCents);
   const add = (key: string) => {
     const it = c.data?.lines.find((l: any) => l.serviceKey === key);
-    if (it) { const std = standardInclusions(it.serviceKey); setLines([...lines, { serviceKey: it.serviceKey, label: it.label, quantity: 1, unitCents: it.baselineCents, baselineUnitCents: it.baselineCents, details: std ? { included: std.included, excluded: std.excluded } : undefined }]); }
+    if (it) { const std = standardInclusions(it.serviceKey); const billingFrequency = defaultQuoteBilling(it); setLines([...lines, normalizeQuoteBilling({ serviceKey: it.serviceKey, label: it.label, quantity: 1, unitCents: it.baselineCents, baselineUnitCents: it.baselineCents, billingFrequency, details: std ? { included: std.included, excluded: std.excluded } : undefined }, it)]); }
   };
   return (
     <Panel title={initial ? "Edit quote" : "New quote"}>
@@ -199,19 +205,27 @@ export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; init
         <TableBody>
           {(["one_time", "annual", "event"] as FeeGroup[]).flatMap((g) => {
             const model = (k: string) => (c.data?.lines ?? []).find((x: any) => x.serviceKey === k)?.pricingModel;
-            const rows = lines.map((l, i) => ({ l, i })).filter(({ l }) => feeGroup(l.serviceKey, model(l.serviceKey)) === g);
+            const rows = displayLines.map((l, i) => ({ l, i })).filter(({ l }) => feeGroup(l.serviceKey, model(l.serviceKey)) === g);
             if (!rows.length) return [];
             const sub = rows.reduce((s, { l }) => s + l.quantity * l.unitCents, 0);
-            return [<TableRow key={`h-${g}`}><TableCell colSpan={6} className="bg-muted/40 text-xs font-semibold uppercase tracking-wide">{FEE_GROUP_LABEL[g]}</TableCell><TableCell className="bg-muted/40 text-right text-xs font-semibold">{money(sub)}{g === "annual" ? "/yr" : ""}</TableCell><TableCell className="bg-muted/40" /></TableRow>,
+            return [<TableRow key={`h-${g}`}><TableCell colSpan={6} className="bg-muted/40 text-xs font-semibold uppercase tracking-wide">{g === "annual" ? "Recurring fees" : FEE_GROUP_LABEL[g]}</TableCell><TableCell className="bg-muted/40 text-right text-xs font-semibold">{money(sub)}</TableCell><TableCell className="bg-muted/40" /></TableRow>,
               ...rows.flatMap(({ l, i }) => [
             <TableRow key={i}>
               <TableCell>{l.label}</TableCell>
               <TableCell><Input disabled={!!l.bookkeeping} inputMode="decimal" value={l.quantity} onChange={(e) => setLines(lines.map((x, j) => (j === i ? { ...x, quantity: Number(e.target.value) || 0 } : x)))} /></TableCell>
               <TableCell><Input disabled={!!l.bookkeeping} inputMode="decimal" value={l.unitCents / 100} onChange={(e) => setLines(lines.map((x, j) => (j === i ? { ...x, unitCents: Math.round((Number(e.target.value) || 0) * 100) } : x)))} /></TableCell>
-              <TableCell><select disabled={!!l.bookkeeping} aria-label="Billing frequency" className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm" value={l.billingFrequency ?? "one_time"} onChange={(e) => setLines(lines.map((x, j) => (j === i ? { ...x, billingFrequency: e.target.value as any } : x)))}>{BILLING_FREQUENCIES.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}</select></TableCell>
+              <TableCell><Select disabled={!!l.bookkeeping} value={l.billingFrequency ?? "one_time"} onValueChange={(value) => {
+                const frequency = BILLING_FREQUENCIES.find(f => f.id === value)?.id;
+                if (!frequency) return;
+                const rate = c.data?.lines.find((r: any) => r.serviceKey === l.serviceKey);
+                setLines(lines.map((x, j) => j === i ? rate ? changeQuoteBilling(l, rate, frequency) : { ...x, billingFrequency: frequency } : x));
+              }}><SelectTrigger aria-label={`Billing frequency for ${l.label}`}><SelectValue /></SelectTrigger><SelectContent>{BILLING_FREQUENCIES.filter(f => {
+                const rate = c.data?.lines.find((r: any) => r.serviceKey === l.serviceKey);
+                return !rate || !recurringQuoteRate(rate) || f.id === "quarterly" || f.id === "annual" || f.id === l.billingFrequency;
+              }).map(f => <SelectItem key={f.id} value={f.id}>{f.label}</SelectItem>)}</SelectContent></Select></TableCell>
               <TableCell><Input disabled={!!l.bookkeeping} type="date" aria-label="First billing date" value={l.firstBillOn ?? ""} onChange={(e) => setLines(lines.map((x, j) => (j === i ? { ...x, firstBillOn: e.target.value || null } : x)))} /></TableCell>
               <TableCell className="text-right text-muted-foreground">{money(l.baselineUnitCents)}{l.unitCents < l.baselineUnitCents && <Badge variant="destructive" className="ml-1">Discount</Badge>}</TableCell>
-              <TableCell className="text-right">{money(l.quantity * l.unitCents)}</TableCell>
+              <TableCell className="text-right">{money(l.quantity * l.unitCents)}{l.billingFrequency && l.billingFrequency !== "one_time" && <span className="block text-xs text-muted-foreground">per {l.billingFrequency === "annual" ? "year" : l.billingFrequency === "quarterly" ? "quarter" : "month"}</span>}</TableCell>
               <TableCell className="whitespace-nowrap">
                 <Button size="sm" variant="ghost" onClick={() => setOpenDetails(openDetails === i ? null : i)}>{l.details ? "Details ✓" : "Details"}</Button>
                 <Button size="sm" variant="ghost" onClick={() => setLines(lines.filter((_, j) => j !== i))}>Remove</Button>
@@ -230,7 +244,7 @@ export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; init
         </TableBody>
       </Table>
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm">
-        <span className="text-muted-foreground">Rate card {money(baseline)} · Quote <span className="font-semibold text-foreground">{money(total)}</span>{total < baseline && " · below rate card: needs CEO or CRO approval"}</span>
+        <span className="text-muted-foreground">Rate card {money(baseline)} · Quote <span className="font-semibold text-foreground">{money(total)}</span>{belowBaseline && " · below rate card: needs CEO or CRO approval"}</span>
         <Input className="max-w-sm" placeholder="Notes for the approver" value={notes} onChange={(e) => setNotes(e.target.value)} />
       </div>
       <div className="mt-4 rounded-lg border bg-card p-4">
