@@ -38,6 +38,8 @@ import {
   amountError,
   canCloseInvestment,
   canInvestorFund,
+  signingRequirementSatisfied,
+  verificationAllowsSigning,
   deriveFundingStatus,
   determineOnboardingRequirements,
   invitationStatusForStage,
@@ -918,13 +920,27 @@ async function holdForHighRiskDisclosure(row: any, actorUserId: string, flagged:
  * Freeze the exact subscription package the investor will sign. A later
  * template change can never alter an already prepared or executed package.
  */
+/** Signing callers must re-read the exact investing party, not the login account's identity. */
+export async function assertApplicationSigningVerification(userId: string, applicationId: string) {
+  const { data: row, error } = await db().from("investor_onboardings").select("*")
+    .eq("application_id", applicationId).eq("investor_user_id", userId).is("removed_at", null).maybeSingle();
+  if (error) fail("We couldn't check verification. Please try again.");
+  if (!row) fail("Your investment record is not ready for signing.");
+  const { row: owned } = await assertInvestorOwns(userId, row.id);
+  const facts = await gatherFacts(owned);
+  if (!verificationAllowsSigning(facts.requirements)) fail("Identity and required verification must be approved before signing. Only pending compliance screening may continue.");
+  if ((await openExceptions(owned.id)).some((e: any) => e.severity === "blocking")) {
+    fail("Your investment is under review. We'll notify you about next steps.");
+  }
+}
+
 export async function prepareSubscriptionDocuments(userId: string, onboardingId: string) {
   const { actor, row } = await assertInvestorOwns(userId, onboardingId);
   if (row.executed_snapshot) return { alreadyPrepared: true };
 
   const facts = await gatherFacts(row);
   const missing = outstandingRequirements(facts.requirements).filter(
-    (r) => !["subscription_documents", "signature", "funding"].includes(r.key),
+    (r) => !["subscription_documents", "signature", "funding"].includes(r.key) && !signingRequirementSatisfied(r),
   );
   if (missing.length > 0) fail(`${missing[0]!.label} must be completed first.`);
   if ((await openExceptions(row.id)).some((e: any) => e.severity === "blocking")) {
@@ -1159,7 +1175,7 @@ export async function investorFundStatus(userId: string, offeringId: string) {
     && canInvestorFund({ stage: row.stage, requirements: facts.requirements, approvedToFundAt: null, countersignTiming: facts.countersignTiming, openBlockingExceptions: (await openExceptions(row.id)).filter((e) => e.severity === "blocking").length }).allowed;
   const steps = journeySteps(facts.requirements, {
     stage: row.stage,
-    approvedToFund: Boolean(row.approved_to_fund_at) || earlyFunding,
+    approvedToFund: canInvestorFund({ stage: row.stage, requirements: facts.requirements, approvedToFundAt: row.approved_to_fund_at, countersignTiming: facts.countersignTiming, openBlockingExceptions: (await openExceptions(row.id)).filter((e) => e.severity === "blocking").length }).allowed || earlyFunding,
     fundingStatus: row.funding_status,
     investorReportsSent: Boolean(row.investor_reports_sent_at),
   });
@@ -1211,7 +1227,7 @@ export async function onboardingDetail(userId: string, onboardingId: string): Pr
   const { fillMissingInvestorAnswers } = await import("@/lib/subscription-prefill");
   const journey = journeySteps(facts.requirements, {
     stage: row.stage,
-    approvedToFund: Boolean(row.approved_to_fund_at) || fundingGate.allowed,
+    approvedToFund: fundingGate.allowed,
     fundingStatus: row.funding_status,
     investorReportsSent: Boolean(row.investor_reports_sent_at),
   });

@@ -225,6 +225,8 @@ export interface RequirementResult {
   key: RequirementKey;
   label: string;
   state: RequirementState;
+  /** Pending screening may permit signing only; it never satisfies funding readiness. */
+  signingAllowed?: boolean;
   reason?: string;
 }
 
@@ -404,6 +406,10 @@ export function determineOnboardingRequirements(input: DeterminationInput): Requ
 
   const amlStatus = isEntity ? (profile.entityAmlStatus ?? person.amlStatus) : person.amlStatus;
   add("aml", offering.amlRequired ? reuseState(amlStatus, null, nowIso) : "not_applicable");
+  const aml = out.find((r) => r.key === "aml");
+  if (aml && offering.amlRequired && String(amlStatus ?? "").toLowerCase() === "pending") {
+    aml.signingAllowed = true;
+  }
 
   // Eligibility is the offering's own configured rule set.
   const eligibilityProblems: string[] = [];
@@ -508,6 +514,19 @@ export function outstandingRequirements(
   keys: readonly RequirementKey[] = PRE_REVIEW,
 ): RequirementResult[] {
   return requirements.filter((r) => keys.includes(r.key) && r.state !== "valid" && r.state !== "not_applicable");
+}
+
+/** Explicit pending AML is the only signing exception; review/failure/missing screening stays blocked. */
+export function signingRequirementSatisfied(r: RequirementResult): boolean {
+  return r.state === "valid" || r.state === "not_applicable"
+    || (r.key === "aml" && r.state === "review_required" && r.signingAllowed === true);
+}
+
+export function verificationAllowsSigning(requirements: RequirementResult[]): boolean {
+  const keys: RequirementKey[] = ["identity_verification", "entity_verification", "beneficial_owners", "aml", "eligibility", "accreditation"];
+  return requirements.some((r) => r.key === "identity_verification")
+    && requirements.some((r) => r.key === "aml")
+    && requirements.filter((r) => keys.includes(r.key)).every(signingRequirementSatisfied);
 }
 
 // ------------------------------------------------------------- amounts

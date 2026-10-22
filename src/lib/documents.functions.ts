@@ -185,6 +185,9 @@ export const signDocument = createServerFn({ method: "POST" })
       throw new Error("Document not found for this offering.");
     }
 
+    const { assertApplicationSigningVerification } = await import("@/lib/investor-onboarding.server");
+    await assertApplicationSigningVerification(userId, application.id);
+
     const { data: subscription } = await supabase
       .from("subscriptions")
       .select("commitment_cents, ownership_title, tax_classification")

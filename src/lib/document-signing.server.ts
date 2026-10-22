@@ -270,6 +270,9 @@ export async function openSigningSession(
   });
   if (refusal) throw new SigningRefusal(refusal);
 
+  const { assertApplicationSigningVerification } = await import("@/lib/investor-onboarding.server");
+  await assertApplicationSigningVerification(userId, resolved.application.id);
+
   // Investors always sign first; the fund manager approves or declines after they finish.
 
   if (!resolved.profile.email) throw new SigningRefusal("not_a_required_signer");

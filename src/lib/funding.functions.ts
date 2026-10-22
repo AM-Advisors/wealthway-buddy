@@ -140,16 +140,20 @@ async function assertFundable(
   app: {
   offering_id?: string;
   kyc_status?: string;
+  aml_status?: string;
   accreditation_status: string;
   documents_status: string;
   manager_review_status?: string | null;
 }) {
   // The fund team has to approve the identity application first - nobody
   // reaches wire instructions on an unapproved file.
-  if (app.kyc_status && app.kyc_status !== "approved") {
+  if (app.kyc_status !== "approved") {
     throw new Error(
       "The fund team is still reviewing your identity application. Funding opens once it is approved.",
     );
+  }
+  if (app.aml_status !== "approved") {
+    throw new Error("Compliance screening must be approved before funding instructions are available.");
   }
   if (app.documents_status !== "approved") {
     throw new Error("Sign all fund documents before funding your subscription.");
@@ -204,6 +208,7 @@ export const getFunding = createServerFn({ method: "GET" })
       .eq("id", application.offering_id)
       .maybeSingle();
 
+    await assertFundable(supabase, application as any);
     const { data: wireRow } = await supabase
       .rpc("get_wire_instructions", { p_offering_id: application.offering_id })
       .maybeSingle();
