@@ -36,4 +36,11 @@ describe("linked quote and SOW commercial edits", () => {
     await expect(saveLinkedQuoteDraft({ rpc }, { id: "quote-1", actorId: "rep-1", expectedAt: "old", row: {}, lines })).rejects.toThrow("could not be saved together");
     expect(rpc).toHaveBeenCalledTimes(1);
   });
+  it("saves SOW-origin title and dates through the same transaction without touching quote-only notes", async () => {
+    const rpc = vi.fn().mockResolvedValue({ data: "quote-1", error: null });
+    await saveLinkedQuoteDraft({ rpc }, { id: "quote-1", actorId: "rep-1", expectedAt: "revision-1", row: { title: "Updated engagement", notes: "Internal approval note" },
+      lines, sowPatch: { title: "Updated engagement", effective_date: "2026-11-01", notes: "SOW scope note" } });
+    expect(rpc).toHaveBeenCalledWith("save_linked_quote_draft", expect.objectContaining({ p_row: { title: "Updated engagement", notes: "Internal approval note" },
+      p_sow_patch: { title: "Updated engagement", effective_date: "2026-11-01", notes: "SOW scope note" } }));
+  });
 });

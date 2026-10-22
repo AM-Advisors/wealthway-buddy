@@ -259,11 +259,11 @@ export async function draftAgreements(userId: string, q: any) {
 
 /** SOW-side editing reads the same entitled quote and uses the canonical quote save. */
 export async function linkedQuoteForSow(userId: string, sowId: string) {
-  const a = await salesActor(userId);
   const db = await admin();
   const { data: rows, error } = await db.from("sales_quotes").select("id,owner_user_id,status").eq("sow_id", sowId).neq("status", "superseded");
   if (error) throw new Error("Couldn't read this SOW's linked quote.");
   if (!rows?.length) return null;
+  const a = await salesActor(userId);
   if (rows.length !== 1 || !canSee(a, rows[0].owner_user_id)) throw new Error("This linked quote isn't available for editing.");
   return getQuote(userId, rows[0].id);
 }
@@ -319,7 +319,7 @@ export async function newVersion(userId: string, id: string) {
     const { error: linkError } = await db.from("sales_quotes").update({ sow_id: sow.id }).eq("id", newId).eq("status", "draft");
     if (linkError) throw new Error("The revised SOW could not be linked. Refresh before proceeding.");
   }
-  await db.from("sales_quotes").update({ version: q.version + 1, supersedes_id: q.id, owner_user_id: q.owner_user_id }).eq("id", newId);
+  await db.from("sales_quotes").update({ version: q.version + 1, supersedes_id: q.id, owner_user_id: q.owner_user_id, msa_id: q.msa_id }).eq("id", newId);
   await db.from("sales_quotes").update({ status: "superseded", updated_at: new Date().toISOString() }).eq("id", q.id);
   await event(q.id, "superseded", userId, `Replaced by version ${q.version + 1}`);
   return { id: newId };
