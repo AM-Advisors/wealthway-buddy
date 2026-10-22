@@ -1,6 +1,6 @@
 /** Server-only Proposals / RFPs / RFQs. Maker-checker approval; prices only from the linked quote; versions append-only. */
 import {
-  MARKETING_HELPERS, OUTCOMES, SALES_DOC_APPROVERS, SALES_DOC_ROLES, defaultSections, sectionsText, applyLockedSections, lockedKeys, ABOUT_HARMONIOUS,
+  MARKETING_HELPERS, OUTCOMES, SALES_DOC_APPROVERS, SALES_DOC_ROLES, defaultSections, applyLockedSections, lockedKeys, ABOUT_HARMONIOUS,
   type DocDirection, type DocKind, type Section,
 } from "@/lib/sales-documents-model";
 
