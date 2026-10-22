@@ -231,6 +231,7 @@ export async function acceptByToken(d: { token: string; signerName: string; sign
       if (!prior) await notifyAfterSign(db, r, acc, inv as any);
     } else await db.from("sales_acceptances").update({ invoice_error: (inv as any).error }).eq("id", acc.id);
   }
+  if (sowId) await (await import("@/lib/commission-notify.server")).afterSowSigned(sowId);
   return viewForToken(d.token);
 }
 

@@ -1039,7 +1039,10 @@ export const signSow = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     const who = await whoIs(context);
     const sow = await loadSowForWrite(context, who, data.sowId);
-    if (sow.executed_at) return { ok: true, alreadySigned: true } as const;
+    if (sow.executed_at) {
+      await (await import("@/lib/commission-notify.server")).afterSowSigned(data.sowId);
+      return { ok: true, alreadySigned: true } as const;
+    }
 
     const [{ data: sections }, { data: changes }, { data: existing }] = await Promise.all([
       context.supabase.from("sow_sections").select("id").eq("sow_id", data.sowId),
@@ -1053,7 +1056,10 @@ export const signSow = createServerFn({ method: "POST" })
         .eq("sow_id", data.sowId)
         .eq("side", "client"),
     ]);
-    if (((existing ?? []) as any[]).length) return { ok: true, alreadySigned: true } as const;
+    if (((existing ?? []) as any[]).length) {
+      await (await import("@/lib/commission-notify.server")).afterSowSigned(data.sowId);
+      return { ok: true, alreadySigned: true } as const;
+    }
 
     const { data: approvals } = await context.supabase
       .from("sow_section_approvals")
@@ -1106,5 +1112,6 @@ export const signSow = createServerFn({ method: "POST" })
     });
 
     await notifyCountersign((sow as any).client_id, String((sow as any).title ?? "SOW"), who.userId);
+    await (await import("@/lib/commission-notify.server")).afterSowSigned(data.sowId);
     return { ok: true, alreadySigned: false } as const;
   });

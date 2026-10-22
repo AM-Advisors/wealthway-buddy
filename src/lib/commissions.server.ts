@@ -193,9 +193,11 @@ export async function reverseCommissionPayout(userId: string, payoutId: string, 
  */
 export async function queueInvoicePayouts(invoiceId: string) {
   const db = await admin();
-  const { data: inv } = await db.from("invoices").select("id, sow_id, status, paid_on, issue_date, voided_at").eq("id", invoiceId).maybeSingle();
-  if (!inv?.sow_id || inv.status !== "paid" || inv.voided_at) return { queued: 0 };
-  const { data: q } = await db.from("sales_quotes").select("id, owner_user_id, bdr_user_id").eq("sow_id", inv.sow_id).eq("status", "signed").maybeSingle();
+  const { data: inv } = await db.from("invoices").select("id, sow_id, sales_quote_id, status, paid_on, issue_date, voided_at").eq("id", invoiceId).maybeSingle();
+  if ((!inv?.sow_id && !inv?.sales_quote_id) || inv.status !== "paid" || !inv.paid_on || inv.voided_at) return { queued: 0 };
+  let quoteQuery = db.from("sales_quotes").select("id, owner_user_id, bdr_user_id").eq("status", "signed");
+  quoteQuery = inv.sales_quote_id ? quoteQuery.eq("id", inv.sales_quote_id) : quoteQuery.eq("sow_id", inv.sow_id);
+  const { data: q } = await quoteQuery.maybeSingle();
   if (!q?.owner_user_id) return { queued: 0 };
   const paidOn = String(inv.paid_on ?? new Date().toISOString().slice(0, 10));
   const rates = ratesAt(await rateHistory(db), paidOn + "T23:59:59Z");
@@ -219,6 +221,10 @@ export async function queueInvoicePayouts(invoiceId: string) {
       queued++;
     }
   }
+  try {
+    const { sendCommissionNotice } = await import("@/lib/commission-notify.server");
+    await sendCommissionNotice(db, { invoiceId });
+  } catch { console.error("[commission-notice] notification unavailable"); }
   return { queued };
 }
 
