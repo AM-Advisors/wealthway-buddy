@@ -1,5 +1,10 @@
 # Roadmap
 
+## Operations Slack links and verification confirmation (2026-10-22)
+- [ ] Diagnose Fund A Open in Harmonious failure without changing ownership or access.
+- [ ] Route KYC/KYB/AML confirmation-required alerts to Operations through the existing sender, with safe fields and deduplication.
+- [ ] Run fictional regression checks; authenticated navigation and live Slack delivery require isolated QA.
+
 ## Signing while AML is pending (2026-10-22)
 - [x] Allow approved investing-party identity + explicit pending AML to proceed to signing in both investor experiences; ceremony entry points re-read canonical investment verification and blocking exceptions. Failed/review AML and pending identity remain blocked.
 - [x] Keep wire instructions, funding and final admission behind fully approved verification, including legacy funding reads/actions; 183 fictional regression checks passed and preview build OK. No real identity, signature, funding or email records changed.
