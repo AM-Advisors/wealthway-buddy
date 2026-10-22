@@ -182,6 +182,20 @@ function Remittance({ token, method }: { token: string; method: "wire" | "ach" }
   );
 }
 
-function Shell({ children }: { children: React.ReactNode }) {
-  return <main className="mx-auto max-w-3xl space-y-4 px-4 py-10">{children}</main>;
+function Shell({ children, steps, doneUpTo = 0 }: { children: React.ReactNode; steps?: { id: string; label: string }[]; doneUpTo?: number }) {
+  if (!steps) return <main className="mx-auto max-w-3xl space-y-4 px-4 py-10">{children}</main>;
+  return (
+    <main className="mx-auto grid max-w-5xl gap-6 px-4 py-10 md:grid-cols-[200px_1fr]">
+      <nav aria-label="Steps" className="md:sticky md:top-6 md:self-start">
+        <ol className="flex gap-2 overflow-x-auto text-sm md:flex-col">
+          {steps.map((s, i) => (
+            <li key={s.id}><a href={`#${s.id}`} className="flex items-center gap-2 whitespace-nowrap rounded-md px-2 py-1 hover:bg-muted">
+              <span className={`flex h-6 w-6 items-center justify-center rounded-full border text-xs ${i < doneUpTo ? "border-primary bg-primary text-primary-foreground" : ""}`}>{i + 1}</span>{s.label}
+            </a></li>
+          ))}
+        </ol>
+      </nav>
+      <div className="min-w-0 space-y-4">{children}</div>
+    </main>
+  );
 }
