@@ -57,7 +57,7 @@ async function latestSections(db: any, doc: any): Promise<Section[]> {
   const { data } = await db.from("sales_document_versions").select("sections").eq("document_id", doc.id).eq("version", doc.current_version).maybeSingle();
   return applyLockedSections(doc.kind, doc.direction, (data?.sections ?? []) as Section[], await lockFacts(db, doc));
 }
-async function currentAbout(db: any): Promise<string | null> {
+export async function currentAbout(db: any): Promise<string | null> {
   const { data } = await db.from("sales_controlled_texts").select("body").eq("text_key", "about_harmonious").order("version", { ascending: false }).limit(1).maybeSingle();
   return data?.body ?? null;
 }

@@ -4,6 +4,7 @@ import { names, salesActor } from "@/lib/sales-hub.server";
 import { canAddSalesContact, type SalesContactInput } from "@/lib/sales-contact-model";
 import { BOOKKEEPING_KEY, bookkeepingConfigSchema, bookkeepingDraftBlocker, bookkeepingTerms, calculateBookkeeping } from "@/lib/bookkeeping-model";
 import { linkedTermsEditProblem, quoteInputsFromRows, sowLinesFromQuote } from "@/lib/quote-sow-sync";
+import { sanitizeQuoteSections } from "@/lib/quote-sections-model";
 
 const admin = async () => (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
 type Actor = Awaited<ReturnType<typeof salesActor>>;
@@ -109,7 +110,7 @@ export async function getQuote(userId: string, id: string) {
   };
 }
 
-export async function saveQuote(userId: string, d: { id?: string | null | undefined; title: string; clientId?: string | null | undefined; contactId?: string | null | undefined; dealId?: string | null | undefined; offeringId?: string | null | undefined; validUntil?: string | null | undefined; notes?: string | null | undefined; expectedUpdatedAt?: string | undefined; lines: QuoteLineInput[] }, sowPatch?: Record<string, unknown>) {
+export async function saveQuote(userId: string, d: { id?: string | null | undefined; title: string; clientId?: string | null | undefined; contactId?: string | null | undefined; dealId?: string | null | undefined; offeringId?: string | null | undefined; validUntil?: string | null | undefined; notes?: string | null | undefined; expectedUpdatedAt?: string | undefined; sections?: unknown; lines: QuoteLineInput[] }, sowPatch?: Record<string, unknown>) {
   const a = await salesActor(userId);
   if (!canDraftQuote(a.roles)) throw new Error("Your role can't draft quotes.");
   if (!d.lines.length) throw new Error("Add at least one service.");
@@ -146,7 +147,8 @@ export async function saveQuote(userId: string, d: { id?: string | null | undefi
   let id = d.id ?? null;
   const row = { title: d.title.trim() || "Quote", client_id: d.clientId || null, contact_id: d.contactId || null, deal_id: d.dealId || null, offering_id: d.offeringId || null,
     valid_until: d.validUntil || null, notes: d.notes || null, total_cents: priced.totalCents, baseline_cents: priced.baselineCents,
-    needs_exec_approval: priced.needsExecApproval, pricing_version_id: base.versionId, updated_at: now };
+    needs_exec_approval: priced.needsExecApproval, pricing_version_id: base.versionId, updated_at: now,
+    ...(d.sections !== undefined ? { sections: sanitizeQuoteSections(d.sections) } : {}) };
   const savedLines = priced.lines.map((l, i) => ({ service_key: l.serviceKey, label: l.label, quantity: l.quantity, unit_cents: l.unitCents,
     baseline_unit_cents: l.baselineUnitCents, line_cents: l.lineCents, sort_order: i,
     billing_frequency: l.billingFrequency ?? "one_time", first_bill_on: l.firstBillOn ?? null,
