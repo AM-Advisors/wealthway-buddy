@@ -35,7 +35,7 @@ describe("product pricing", () => {
     // The platform fee carries both a yearly and a quarterly price.
     const fee = s.fundCost[0]!.prices;
     expect(fee.map((p) => p.billing)).toEqual(["annual", "quarterly"]);
-    expect(fee[0]!.amount).toBe(fee[1]!.amount);
+    expect(fee[1]!.amount).toBe(Math.round((fee[0]!.amount! / 4) * 1.1));
   });
   it("SaaS fund documents are $500 and Form D stays $160", () => {
     const a = productByKey("saas").alaCarte;
