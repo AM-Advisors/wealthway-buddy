@@ -1,8 +1,9 @@
 # Roadmap
 
 ## Sales client responses (2026-10-22)
-- [ ] Add response instructions, recorded Sales responses, and client review/sign/change-request status to quotes, RFPs and RFQs using existing record history and recipient-bound links.
-- [ ] Verify offline rules and UI; signed-in sending/read-back requires independently isolated synthetic QA.
+- [x] Add response instructions, recorded single-recipient Sales responses, and client review/sign/change-request status to quotes, RFPs and RFQs using existing staff history and recipient/version-bound links; client feedback has its own append-only evidence without attributing it to staff. Approved terms, signatures and invoices unchanged.
+- [x] 29 focused offline checks passed; fictional response instructions save/send display verified with no overflow or runtime errors, preview build OK; no real records or emails used in testing.
+- [ ] Signed-in sending, client feedback and read-back — blocked until independently isolated synthetic QA exists; real email delivery unverified.
 
 ## Add contact while sending a quote (2026-10-22)
 - [x] Add missing-contact entry on quote recipients and proposal/RFP/RFQ sending using the existing CRM prospect engine, duplicate-email reuse, scoped conditional assignment and recipient refresh; no account membership or automatic email granted.
