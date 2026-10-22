@@ -83,7 +83,11 @@ export function quoteLockFacts(f: { organization: string | null; contactName?: s
       unit_cents: l.unitCents,
       line_cents: Math.round(l.quantity * l.unitCents),
       billing_frequency: l.billingFrequency ?? "one_time",
-      service_details: l.details ?? null,
+      service_details: l.details ? {
+        ...(l.details.scope === undefined ? {} : { scope: l.details.scope }),
+        ...(l.details.included === undefined ? {} : { included: l.details.included }),
+        ...(l.details.excluded === undefined ? {} : { excluded: l.details.excluded }),
+      } : null,
     })),
   };
 }
