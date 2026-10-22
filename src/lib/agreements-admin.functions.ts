@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/lib/require-auth";
-import { HARMONIOUS_LEGAL_NAME } from "@/lib/agreement-templates";
+import { HARMONIOUS_LEGAL_NAME, SOW_ROLE_DISCLAIMER } from "@/lib/agreement-templates";
 
 /**
  * Harmonious side of Agreements & SOW: pricing the engagement, answering change
@@ -814,6 +814,8 @@ export const getAgreementDocument = createServerFn({ method: "GET" })
       }</tbody></table>
       <h2>Signatures</h2>
       ${signatureBlocks || "<p>Not yet signed.</p>"}
+      <h2>Harmonious's role</h2>
+      <p class="muted">${escapeHtml(SOW_ROLE_DISCLAIMER).replace(/\n/g, "<br/>")}</p>
     </body></html>`;
 
     return { html, filename: `${(sow as any).title.replace(/[^\w-]+/g, "-")}.html` };
