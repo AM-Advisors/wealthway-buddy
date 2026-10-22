@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -200,10 +201,8 @@ function DealDialog({ init, contacts, onClose, onSaved }: { init: any; contacts:
         <DialogHeader><DialogTitle>{init.id ? "Edit deal" : "Add deal"}</DialogTitle></DialogHeader>
         <div className="grid gap-3">
           <div><Label>Contact</Label>
-            <Select value={f.contactId} onValueChange={(v) => setF({ ...f, contactId: v })} disabled={!!init.id}>
-              <SelectTrigger><SelectValue placeholder="Pick a contact" /></SelectTrigger>
-              <SelectContent>{contacts.filter((c) => !c.archived_at).map((c) => <SelectItem key={c.id} value={c.id}>{c.full_name}</SelectItem>)}</SelectContent>
-            </Select>
+            <SearchableSelect value={f.contactId} onValueChange={(v) => setF({ ...f, contactId: v })} disabled={!!init.id} aria-label="Contact"
+              options={contacts.filter((c) => !c.archived_at).map((c) => ({ value: c.id, label: c.full_name, detail: [c.email, c.organization].filter(Boolean).join(" · ") }))} />
           </div>
           <div><Label>Deal name</Label><Input value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} /></div>
           <div className="grid grid-cols-3 gap-3">
