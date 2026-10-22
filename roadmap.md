@@ -1,5 +1,9 @@
 # Roadmap
 
+## Add contact while sending a quote (2026-10-22)
+- [ ] Add inline missing-contact entry to the quote send dialog using the existing authorized client-contact save and recipient selection.
+- [ ] Run focused offline checks; signed-in sending remains blocked until independently isolated synthetic QA exists.
+
 ## Signed-SOW quarterly commissions (2026-10-22)
 - [x] Client SOW signing, quote/proposal/RFP/RFQ acceptance and Harmonious countersigning call the shared commission handoff; existing paid invoices queue automatically and future paid invoices use the same canonical queue. Assigned reps receive a payment-dependent signing notice or their own quarterly scheduled amount; no actual payout is initiated.
 - [x] 26 focused offline checks passed, including quarterly dates, unpaid/void/unsigned exclusions, quote-linked invoices, confirmed recipients and retry deduplication; preview build OK.
