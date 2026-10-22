@@ -14,6 +14,8 @@ import {
 import { DIRECTION_LABEL, KIND_LABEL, OUTCOMES, STATUS_LABEL, type DocDirection, type DocKind, type Section } from "@/lib/sales-documents-model";
 import { Panel, money } from "@/components/sales/sales-ui";
 import { draftQuoteAgreements, submitSalesQuote } from "@/lib/sales-hub.functions";
+import { RecipientLinks, SalesProgress } from "@/components/sales/sales-record-parts";
+import { salesProgress } from "@/lib/sales-progress";
 
 export const Route = createFileRoute("/_authenticated/sales_/documents_/$id")({
   head: () => ({
@@ -100,7 +102,8 @@ function Editor() {
         <div>
           <Link to="/sales/documents" className="text-sm text-muted-foreground hover:underline">Proposals & RFPs</Link>
           <h1 className="font-heading text-2xl font-semibold">{doc.title}</h1>
-          <p className="text-sm text-muted-foreground">{KIND_LABEL[doc.kind as DocKind]} · {DIRECTION_LABEL[doc.direction as DocDirection]} · Owner {doc.ownerName}{doc.due_date ? ` · Due ${doc.due_date}` : ""}</p>
+          <p className="text-sm text-muted-foreground">{KIND_LABEL[doc.kind as DocKind]} · {DIRECTION_LABEL[doc.direction as DocDirection]} · Version {doc.current_version} · Owner {doc.ownerName}{doc.due_date ? ` · Due ${doc.due_date}` : ""}</p>
+          <div className="mt-3"><SalesProgress steps={salesProgress({ status: doc.status, approvedAt: doc.approved_at, events: d.events as any, signedAt: d.packet?.sow?.client_signed_at ?? null, sowStatus: d.packet?.sow?.status ?? null, sowAt: d.packet?.sow?.executed_at ?? null })} /></div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Badge>{STATUS_LABEL[doc.status] ?? doc.status}</Badge>
@@ -164,6 +167,7 @@ function Editor() {
         </div>
 
         <div className="space-y-4">
+          <RecipientLinks documentId={id} addOn={!!doc.client_id} />
           <Panel title="Approval & sending">
             {p.canSubmit && <Button className="w-full" disabled={!!busy || dirty} onClick={() => run("submit", () => submit({ data: { id } }), "Submitted for approval")}>Submit for approval</Button>}
             {doc.status === "submitted" && !p.canApprove && <p className="text-sm text-muted-foreground">Waiting for a Sales Manager or the CRO (not the writer).</p>}
