@@ -137,10 +137,14 @@ export function applyLockedSections(kind: DocKind, direction: DocDirection, sect
 
 const SOW_MARK = "Services from your Statement of Work:";
 /** Services described with the same wording as the SOW the client signs; falls back to the service name. */
-export function servicesFromSow(lines: { label: string; description?: string | null }[]): string {
+export function servicesFromSow(lines: { label: string; description?: string | null; service_details?: { scope?: string; included?: string[]; excluded?: string[] } | null }[]): string {
   const labels = selectedServiceLabels(lines);
   if (!labels.length) return `${SOW_MARK}\nServices will appear here once they are added to the quote.`;
-  const services = labels.map((label) => ({ label: cleanLabel(label), description: lines.find((l) => l.label === label)?.description ?? null }));
+  const services = labels.map((label) => {
+    const line = lines.find((l) => l.label === label);
+    const d = line?.service_details ?? null;
+    return { label: cleanLabel(label), description: line?.description ?? null, scope: d?.scope ?? null, included: d?.included ?? null, excluded: d?.excluded ?? null };
+  });
   return `${SOW_MARK}\n${sowServicesBody(services).replace(" for the vehicle named above", "")}`;
 }
 
