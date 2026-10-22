@@ -462,6 +462,17 @@ function EconomicsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; o
   const fee = terms.managementFee ?? (emptyFee as any);
   const setFee = (p: any) => setTerms({ ...terms, managementFee: { ...fee, ...p } });
   const multi = d.offering.hasMultipleClasses;
+  const planned = (d.offering as any).plannedClassCount as number | null;
+  const [multiAnswer, setMultiAnswer] = useState(multi || planned === 1);
+  const [countDraft, setCountDraft] = useState(String(planned ?? (multi ? 2 : "")));
+  const [confirmed, setConfirmed] = useState(false);
+  useEffect(() => { setMultiAnswer(multi || planned === 1); setCountDraft(String(planned ?? (multi ? 2 : ""))); }, [multi, planned]);
+  const saveClassAnswer = (yes: boolean, count: number | null) => {
+    const a = multipleClassesFromAnswer({ yes, count });
+    return run(() => saveFields({ data: { offeringId, fields: { hasMultipleClasses: a.hasMultipleClasses, plannedClassCount: a.plannedClassCount } } }), "Saved");
+  };
+  const countErr = multi ? classCountError(planned, classes) : null;
+  const diffs = classDifferences({ ...terms, minInvestmentCents: d.offering.minInvestmentCents ?? null }, classes);
   const isNa = (k: EconomicTermKey) => !!terms.notApplicable?.includes(k);
   const setNa = (k: EconomicTermKey, on: boolean, patch: Partial<EconomicTerms> = {}) =>
     setTerms((t) => {
@@ -483,6 +494,22 @@ function EconomicsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; o
         </p>
       </CardHeader>
       <CardContent className="space-y-5">
+        <section className="space-y-2 rounded-md border p-3">
+          <Label>Will this fund have multiple classes?</Label>
+          <div className="flex flex-wrap items-end gap-3">
+            <select aria-label="Multiple classes" className="h-9 rounded-md border bg-background px-2 text-sm" disabled={!d.canEdit} value={multiAnswer ? "yes" : "no"}
+              onChange={(e) => { const yes = e.target.value === "yes"; setMultiAnswer(yes); if (!yes) saveClassAnswer(false, null); }}>
+              <option value="no">No</option><option value="yes">Yes</option>
+            </select>
+            {multiAnswer && (
+              <Field label="How many classes?">
+                <Input type="number" min={1} max={20} className="w-28" disabled={!d.canEdit} value={countDraft}
+                  onChange={(e) => setCountDraft(e.target.value)} onBlur={() => { const n = Number(countDraft); if (Number.isInteger(n) && n >= 1 && n <= 20) saveClassAnswer(true, n); }} />
+              </Field>
+            )}
+          </div>
+          <p className="text-xs text-muted-foreground">{multi ? `Enter each of the ${planned ?? "planned"} classes below and confirm how they differ.` : "One set of terms applies to every investor."}</p>
+        </section>
         <section className="grid gap-3 sm:grid-cols-4">
           <Field label="Management fee (%)">
             <PresetSelect disabled={!d.canEdit} options={FEE_PRESETS} na={isNa("managementFee")} value={fee.ratePercent}
@@ -520,10 +547,6 @@ function EconomicsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; o
         </section>
         <p className="text-xs text-muted-foreground">Pick a common value, "Other…" to type your own, or "Not applicable". Not applicable counts as answered.</p>
 
-        <div className="flex items-center gap-3">
-          <Switch checked={multi} disabled={!d.canEdit} onCheckedChange={(v) => run(() => saveFields({ data: { offeringId, fields: { hasMultipleClasses: v } } }), "Saved")} id="multi" />
-          <Label htmlFor="multi">Does this fund have multiple classes?</Label>
-        </div>
         {multi && (
           <section className="space-y-3">
             {classes.map((c, i) => {
@@ -544,17 +567,44 @@ function EconomicsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; o
                     <PresetSelect disabled={!d.canEdit} options={MIN_PRESETS} allowDefault na={cNa("minInvestment")} value={c.minInvestmentCents != null ? c.minInvestmentCents / 100 : null}
                       onChange={(v, na) => upd({ notApplicable: toggle(c, "minInvestment", na), minInvestmentCents: na || v == null ? null : Math.round(v * 100) })} prefix="$" />
                   </Field>
+                  <Field label="Applies to (which investors)"><Input disabled={!d.canEdit} value={c.appliesTo ?? ""} placeholder="e.g. Founding investors" onChange={(e) => upd({ appliesTo: e.target.value })} /></Field>
+                  <Field label="Organizational expenses"><Input disabled={!d.canEdit} value={c.orgExpenseTreatment ?? ""} placeholder="Same as fund default" onChange={(e) => upd({ orgExpenseTreatment: e.target.value || null })} /></Field>
+                  <Field label="Distribution frequency"><Input disabled={!d.canEdit} value={c.distributionFrequency ?? ""} placeholder="Same as fund default" onChange={(e) => upd({ distributionFrequency: e.target.value || null })} /></Field>
+                  <Field label="Assets / allocation"><Input disabled={!d.canEdit} value={c.assetScope ?? ""} placeholder="All fund assets" onChange={(e) => upd({ assetScope: e.target.value || null })} /></Field>
+                  <div className="sm:col-span-4"><Field label="Other differences"><Textarea rows={2} disabled={!d.canEdit} value={c.otherDifferences ?? ""} placeholder="Anything else that's different for this class" onChange={(e) => upd({ otherDifferences: e.target.value || null })} /></Field></div>
                   {d.canEdit && <Button variant="ghost" className="self-end" onClick={() => setClasses(classes.filter((_, j) => j !== i))}>Remove</Button>}
                 </div>
               );
             })}
-            {d.canEdit && <Button variant="outline" onClick={() => setClasses([...classes, { key: "", name: `Class ${String.fromCharCode(65 + classes.length)}` }])}>Add class</Button>}
+            {d.canEdit && (planned == null || classes.length < planned) && <Button variant="outline" onClick={() => setClasses([...classes, { key: "", name: `Class ${String.fromCharCode(65 + classes.length)}` }])}>Add class</Button>}
+            {countErr && <p className="text-sm text-destructive">{countErr}</p>}
+            {classes.length > 0 && (
+              <div className="overflow-x-auto rounded-md border">
+                <table className="w-full text-xs">
+                  <thead><tr className="border-b bg-muted/40"><th className="p-2 text-left">Term</th><th className="p-2 text-left">Fund default</th>{classes.map((c, i) => <th key={i} className="p-2 text-left">{c.name}</th>)}</tr></thead>
+                  <tbody>
+                    {diffs.map((r) => (
+                      <tr key={r.term} className="border-b last:border-0">
+                        <td className="p-2 font-medium">{r.term}</td><td className="p-2">{r.fundDefault}</td>
+                        {r.perClass.map((p, i) => <td key={i} className={`p-2 ${p.differs ? "font-medium text-primary" : "text-muted-foreground"}`}>{p.value}</td>)}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+            {classes.length > 0 && d.canEdit && (
+              <label className="flex items-start gap-2 text-sm">
+                <Checkbox checked={confirmed} onCheckedChange={(v) => setConfirmed(v === true)} />
+                <span>I've reviewed how each class differs from the fund default for its group of investors.</span>
+              </label>
+            )}
           </section>
         )}
 
         {d.canEdit && (
           <div className="flex flex-wrap gap-2">
-            <Button onClick={() => run(() => save({ data: { offeringId, terms: terms as any, classes: multi ? (classes as any) : [] } }), "Economics saved as a draft")}>Save economics draft</Button>
+            <Button onClick={() => run(() => save({ data: { offeringId, terms: terms as any, classes: multi ? (classes as any) : [], classDifferencesConfirmed: confirmed } }), "Economics saved as a draft")}>Save economics draft</Button>
             {d.economics.status === "draft" && d.economics.versionId && (
               <Button variant="outline" disabled={d.economics.preparedByMe} title={d.economics.preparedByMe ? "A different Harmonious reviewer must approve" : undefined}
                 onClick={() => run(() => approve({ data: { versionId: d.economics.versionId! } }), "Economics approved")}>
