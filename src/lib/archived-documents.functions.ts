@@ -47,8 +47,8 @@ export const listArchivedFundDocumentsFn = createServerFn({ method: "GET" })
       obIds.length ? db.from("prior_signed_documents").select("onboarding_id, title, document_kind, signed_on").in("onboarding_id", obIds) : none,
     ]);
     const removerIds = [...new Set(docs.map((d) => d.removed_by).filter(Boolean))];
-    const { data: profs } = removerIds.length ? await db.from("profiles").select("id, full_name, email").in("id", removerIds) : { data: [] };
-    const who = new Map(((profs ?? []) as any[]).map((p) => [p.id, p.full_name || p.email || null]));
+    const { data: profs } = removerIds.length ? await db.from("profiles").select("id, email").in("id", removerIds) : { data: [] };
+    const who = new Map(((profs ?? []) as any[]).map((p) => [p.id, p.email || null]));
 
     const evidence = [
       ...((ackR.data ?? []) as any[]).map((a) => ({ offering_document_id: a.offering_document_id, version: a.version, onboarding_id: a.onboarding_id, at: a.acknowledged_at, kind: "acknowledged" as const })),
