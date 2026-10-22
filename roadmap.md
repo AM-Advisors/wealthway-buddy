@@ -412,7 +412,7 @@
 ## Forecasting (paid add-on)
 - [x] Forecasts tab built, gated by paid Forecasting add-on
 - [ ] Forecasting price — waiting on Alyssa
-- [ ] Guided scenario forms with round, exit-year and cap-table holding selectors; preserve existing models and version saves.
+- [x] Guided scenario forms with round, exit-year and cap-table holding selectors; all four existing models and version saves retained; 17 offline checks pass.
 - [ ] Signed-in forecasting check — blocked pending independently isolated synthetic QA.
 
 - Payment schedules: pure signed-SOW quarterly/annual model and tests added; database migration, upgrade/signature hooks, due-invoice delivery, Commissions panel, and daily cron remain pending (required database tools unavailable).
