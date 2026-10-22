@@ -1,5 +1,9 @@
 # Roadmap
 
+## Sales client responses (2026-10-22)
+- [ ] Add response instructions, recorded Sales responses, and client review/sign/change-request status to quotes, RFPs and RFQs using existing record history and recipient-bound links.
+- [ ] Verify offline rules and UI; signed-in sending/read-back requires independently isolated synthetic QA.
+
 ## Add contact while sending a quote (2026-10-22)
 - [x] Add missing-contact entry on quote recipients and proposal/RFP/RFQ sending using the existing CRM prospect engine, duplicate-email reuse, scoped conditional assignment and recipient refresh; no account membership or automatic email granted.
 - [x] 26 focused offline checks and fictional form save/error recovery passed, desktop/compact views without overflow or runtime errors; preview build OK.
