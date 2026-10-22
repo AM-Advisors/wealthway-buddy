@@ -222,6 +222,7 @@ export async function acceptByToken(d: { token: string; signerName: string; sign
     }
   }
   const sowId = await linkSowToAcceptance(db, r, acc);
+  if (!prior) await grantPortalAccess(db, r.clientId, t.email, acc.signer_name);
   if (!acc.invoice_id) {
     const inv = await createInvoiceFromAcceptance(db, r, acc, sowId);
     if ("id" in inv && inv.id) {
@@ -231,6 +232,22 @@ export async function acceptByToken(d: { token: string; signerName: string; sign
     } else await db.from("sales_acceptances").update({ invoice_error: (inv as any).error }).eq("id", acc.id);
   }
   return viewForToken(d.token);
+}
+
+/** The signer can sign in and start fund setup right away: existing accounts join the client, new emails get a pending invitation claimed at sign-up. */
+async function grantPortalAccess(db: any, clientId: string | null, rawEmail: string | null | undefined, name: string | null) {
+  const email = String(rawEmail ?? "").trim().toLowerCase();
+  if (!clientId || !email) return;
+  try {
+    const { data: prof } = await db.from("profiles").select("user_id").ilike("email", email).maybeSingle();
+    if (prof?.user_id) {
+      const { data: m } = await db.from("client_users").select("id").eq("client_id", clientId).eq("user_id", prof.user_id).is("revoked_at", null).maybeSingle();
+      if (!m) await db.from("client_users").insert({ client_id: clientId, user_id: prof.user_id });
+      return;
+    }
+    const { data: inv } = await db.from("client_invitations").select("id").eq("client_id", clientId).ilike("email", email).eq("status", "pending").maybeSingle();
+    if (!inv) await db.from("client_invitations").insert({ client_id: clientId, email, invited_name: name, status: "pending", note: "Added when they signed", expires_at: new Date(Date.now() + 30 * 864e5).toISOString() });
+  } catch (e) { console.error("portal access after sign failed", e); }
 }
 
 async function notifyAfterSign(db: any, r: Loaded, acc: any, inv: { id: string; number: string; totalCents?: number; dueDate?: string }) {

@@ -78,6 +78,10 @@ function AcceptPage() {
           <CardContent className="space-y-3">
             {!d.invoice && <p className="text-sm text-muted-foreground">{d.accepted.invoiceError ?? "Your invoice is being prepared."}</p>}
             {d.invoice && <PaySection token={token} initial={(d.accepted.paymentMethod as Method) ?? "wire"} />}
+            <div className="rounded-md border p-4">
+              <p className="text-sm">Your account is ready. Sign in with the email this was sent to and start setting up your fund.</p>
+              <a href="/auth?next=%2Fclient%2Ffunds%2Fnew" className="mt-3 inline-block rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">Sign in and start setting up your fund</a>
+            </div>
           </CardContent>
         </Card>
       ) : d.blocker ? (
