@@ -160,7 +160,7 @@ export async function saveQuote(userId: string, d: { id?: string | null | undefi
   }
   // Billing frequency comes from the quote; once the SOW is signed it's fixed.
   const { error: lineError } = await db.from("sales_quote_lines").insert(priced.lines.map((l, i) => ({ quote_id: id, service_key: l.serviceKey, label: l.label, quantity: l.quantity, unit_cents: l.unitCents, baseline_unit_cents: l.baselineUnitCents, line_cents: l.lineCents, sort_order: i,
-    billing_frequency: l.billingFrequency ?? "one_time", first_bill_on: l.firstBillOn ?? null, bookkeeping_snapshot: snapshots.get(i) ?? null })));
+    billing_frequency: l.billingFrequency ?? "one_time", first_bill_on: l.firstBillOn ?? null, bookkeeping_snapshot: snapshots.get(i) ?? null, service_details: cleanLineDetails(l.details) ?? {} })));
   if (lineError) throw new Error("The quote lines could not be saved. Refresh the draft before continuing.");
   return { id };
 }
