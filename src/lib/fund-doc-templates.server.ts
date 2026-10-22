@@ -29,9 +29,6 @@ async function staffOrManager(userId: string, offeringId: string) {
   if (!a.isStaff && !a.offeringIds.includes(offeringId)) forbid("you do not manage that fund.");
   return a;
 }
-const asManager = async <T>(a: { isStaff: boolean }, userId: string, offeringId: string, fn: () => Promise<T>) =>
-  a.isStaff ? fn() : (await import("@/lib/self-serve.server")).runSelfServe({ userId, offeringId, scope: "template_documents" }, fn);
-
 export async function listTemplates(userId: string) {
   const actor = await setupActor(userId);
   if (!actor.isStaff) {
