@@ -31,6 +31,7 @@ export function PayoutCalendar({ rows, sows, onOpenDeal }: { rows: CalendarRow[]
   const people = [...new Set(rows.map(r => r.name).filter(Boolean))] as string[];
   const clients = [...new Set(rows.map(r => r.client))];
   const select = "h-9 rounded-md border border-input bg-background px-2 text-sm";
+  const sowById = useMemo(() => new Map(sows.map(s => [s.id, s])), [sows]);
 
   return (
     <Panel title="Payout calendar">
@@ -54,13 +55,18 @@ export function PayoutCalendar({ rows, sows, onOpenDeal }: { rows: CalendarRow[]
       </div>
       <div className="mt-4 space-y-1">
         <p className="text-sm font-medium">Payment periods</p>
-        {cal.spans.length ? cal.spans.map(s => (
-          <button key={s.key} className="flex w-full flex-wrap justify-between gap-2 rounded border-l-4 border-accent bg-accent/10 px-2 py-1 text-left text-sm" onClick={() => setSelected({ title: `${s.client} · ${s.service}`, rows: filtered.filter(r => r.quoteId === s.quoteId && r.service === s.service), quoteId: s.quoteId, note: `${s.frequency === "quarterly" ? "Quarterly" : "Annual"} period ${s.start} – ${s.end} · ${money(s.amountCents)} billed` })}>
-            <span>{s.client} · {s.service} <span className="text-muted-foreground">({s.frequency})</span></span><span>{s.start} – {s.end} · {money(s.amountCents)}</span>
-          </button>
-        )) : <p className="text-sm text-muted-foreground">No scheduled payment periods from signed SOWs in this range.</p>}
+        {cal.spans.length ? cal.spans.map(s => {
+          const sow = sowById.get(s.quoteId);
+          const hasAmounts = sow && sow.signedAmountCents != null;
+          return (
+            <button key={s.key} className="flex w-full flex-wrap justify-between gap-2 rounded border-l-4 border-accent bg-accent/10 px-2 py-1 text-left text-sm" onClick={() => setSelected({ title: `${s.client} · ${s.service}`, rows: filtered.filter(r => r.quoteId === s.quoteId && r.service === s.service), quoteId: s.quoteId, note: `${s.frequency === "quarterly" ? "Quarterly" : "Annual"} period ${s.start} – ${s.end} · ${money(s.amountCents)} billed${sow ? ` · Signed amount ${money(sow.signedAmountCents ?? 0)} · Received ${money(sow.receivedAmountCents ?? 0)} · Committed ${money(sow.committedAmountCents ?? 0)}` : ""}` })}>
+              <span>{s.client} · {s.service} <span className="text-muted-foreground">({s.frequency})</span></span><span>{s.start} – {s.end} · {money(s.amountCents)}</span>
+              {hasAmounts && <span className="w-full text-xs text-muted-foreground">Signed amount {money(sow!.signedAmountCents ?? 0)} · Received {money(sow!.receivedAmountCents ?? 0)} · Committed {money(sow!.committedAmountCents ?? 0)}</span>}
+            </button>
+          );
+        }) : <p className="text-sm text-muted-foreground">No scheduled payment periods from signed SOWs in this range.</p>}
       </div>
-      <p className="mt-3 text-xs text-muted-foreground">View only. Expected payouts are projections until the client pays; Finance records payouts in the tracker below.</p>
+      <p className="mt-3 text-xs text-muted-foreground">View only. Signed amount is the contract value on the signed statement of work, Amount received is what the client has paid, and Committed is the total scheduled payouts. Expected payouts are projections until the client pays; Finance records payouts in the tracker below.</p>
       <Dialog open={Boolean(selected)} onOpenChange={o => { if (!o) setSelected(null); }}>
         <DialogContent className="max-h-[85vh] max-w-2xl overflow-auto">
           <DialogHeader><DialogTitle>{selected?.title}</DialogTitle>{selected?.note && <DialogDescription>{selected.note}</DialogDescription>}</DialogHeader>
@@ -98,7 +104,7 @@ function MonthGrid({ y, m, cal, onSelect }: { y: number; m: number; cal: ReturnT
           return (
             <div key={i} className={`min-h-14 space-y-0.5 p-1 ${inPeriod ? "bg-accent/10" : "bg-background"}`}>
               <div className="text-muted-foreground">{Number(d.slice(8))}</div>
-              {signed.map(s => <button key={s.quoteId} className="block w-full truncate rounded bg-secondary px-1 text-left text-secondary-foreground" title={`SOW signed · ${s.client} · ${s.label}`} onClick={() => onSelect({ title: `SOW signed · ${s.client}`, rows: [], quoteId: s.quoteId, note: `${s.label} signed ${s.date}` })}>✎ {s.client}</button>)}
+              {signed.map(s => <button key={s.quoteId} className="block w-full truncate rounded bg-secondary px-1 text-left text-secondary-foreground" title={`SOW signed · ${s.client} · ${s.label}`} onClick={() => onSelect({ title: `SOW signed · ${s.client}`, rows: [], quoteId: s.quoteId, note: `${s.label} signed ${s.date}${s.signedAmountCents != null ? ` · Signed amount ${money(s.signedAmountCents)}` : ""}${s.receivedAmountCents != null ? ` · Received ${money(s.receivedAmountCents)}` : ""}${s.committedAmountCents != null ? ` · Committed ${money(s.committedAmountCents)}` : ""}` })}>✎ {s.client}</button>)}
               {day && (Object.entries(day.totals) as [CalendarStatus, number][]).map(([s, v]) => (
                 <button key={s} className={`block w-full truncate rounded px-1 text-left ${STATUS_CLASS[s]}`} onClick={() => onSelect({ title: `${STATUS_LABEL[s]} payouts · ${d}`, rows: day.rows.filter(r => r.status === s) })}>{money(v)}</button>
               ))}
