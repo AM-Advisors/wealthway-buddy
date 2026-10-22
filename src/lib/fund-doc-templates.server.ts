@@ -166,8 +166,8 @@ export async function decideTemplateVersion(userId: string, input: { templateId:
 
 /** Copies an approved template without duplicate fund-level Harmonious review. */
 export async function useTemplateInFund(userId: string, input: { templateId: string; version: number; offeringId: string }) {
-  const a = await staffOrManager(userId, input.offeringId);
-  return asManager(a, userId, input.offeringId, () => useTemplateInFundInner(userId, input));
+  await staff(userId);
+  return useTemplateInFundInner(userId, input);
 }
 async function useTemplateInFundInner(userId: string, input: { templateId: string; version: number; offeringId: string }) {
   const { data: t } = await db().from("document_templates").select("*").eq("id", input.templateId).maybeSingle();
@@ -383,6 +383,7 @@ export async function fundTypeTemplates(userId: string, offeringId: string) {
 
 /** Generate every assigned template not yet generated for this fund (same path as using one template). */
 export async function generateFundTypeDocuments(userId: string, offeringId: string) {
+  await staff(userId);
   const { templates } = await fundTypeTemplates(userId, offeringId);
   const made: { title: string; documentId: string; open: string[] }[] = [];
   for (const x of templates.filter((y) => !y.generated && y.approvedVersion != null)) {

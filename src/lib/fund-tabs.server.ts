@@ -291,6 +291,7 @@ export async function setSignatureBoxes(fundId: string, id: string, boxes: { sig
 }
 
 export async function saveGenerated(uid: string, fundId: string, g: { templateKey: string; title: string; category: string; body: string }) {
+  if (!(await isStaff(uid))) throw new Error("Only Harmonious staff can generate fund documents.");
   const { data, error } = await (await db()).from("fund_files").insert({
     offering_id: fundId, title: g.title, category: g.category, template_key: g.templateKey, body: g.body, uploaded_by: uid,
   }).select("id").single();

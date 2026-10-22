@@ -57,7 +57,7 @@ export function StandardFormsCard({ fundId, onGenerated }: { fundId: string; onG
             </div>
             <div className="flex gap-2">
               {d.staff && <Button size="sm" variant="ghost" onClick={() => setEditing(f)}>{f.version ? "Upload new version" : "Upload form"}</Button>}
-              {f.version ? <Button size="sm" variant="outline" disabled={m.isPending} onClick={() => m.mutate(f.key)}>Generate</Button> : <Badge variant="outline">Waiting on Harmonious</Badge>}
+              {f.version ? d.staff && <Button size="sm" variant="outline" disabled={m.isPending} onClick={() => m.mutate(f.key)}>Generate</Button> : <Badge variant="outline">Waiting on Harmonious</Badge>}
             </div>
           </div>
         )) : ILPA.map((l) => (
