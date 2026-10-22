@@ -19,7 +19,8 @@ import { Panel, money } from "@/components/sales/sales-ui";
 import { QuoteBuilder } from "./sales_.quotes";
 import { AddSalesContact } from "@/components/sales/add-sales-contact";
 import { canAddSalesContact } from "@/lib/sales-contact-model";
-import { addSalesQuoteContact } from "@/lib/sales-hub.functions";
+import { addSalesQuoteContact, changeSalesQuoteSigner, sendSalesQuoteEmail, updateSalesQuoteDetails } from "@/lib/sales-hub.functions";
+import { Textarea } from "@/components/ui/textarea";
 import { bookkeepingDraftBlocker } from "@/lib/bookkeeping-model";
 
 export const Route = createFileRoute("/_authenticated/sales_/quotes_/$id")({
@@ -63,6 +64,15 @@ function QuotePage() {
   const lostFn = useServerFn(markSalesQuoteLost);
   const lost = useMutation({ mutationFn: () => lostFn({ data: { id, reason: note } }), onSuccess: done("Marked lost"), onError: err });
 
+  const detailsFn = useServerFn(updateSalesQuoteDetails);
+  const signerFn = useServerFn(changeSalesQuoteSigner);
+  const emailFn = useServerFn(sendSalesQuoteEmail);
+  const [details, setDetails] = useState<{ title: string; notes: string; validUntil: string } | null>(null);
+  const [mail, setMail] = useState<{ subject: string; message: string } | null>(null);
+  const [changingSigner, setChangingSigner] = useState(false);
+  const saveDetails = useMutation({ mutationFn: () => detailsFn({ data: { id, title: details!.title, notes: details!.notes || null, validUntil: details!.validUntil || null } }), onSuccess: () => { setDetails(null); done("Quote updated")(); }, onError: err });
+  const sendMail = useMutation({ mutationFn: () => emailFn({ data: { id, subject: mail!.subject, message: mail!.message || null } }), onSuccess: (r) => { setMail(null); done(r.resent ? "Quote resent" : "Quote emailed")(); }, onError: err });
+
   const linkedFn = useServerFn(getSalesLinkedRecords);
   const linked = useQuery({ queryKey: ["sales-linked", id], queryFn: () => linkedFn({ data: { id } }) });
 
@@ -88,6 +98,8 @@ function QuotePage() {
         {!["signed", "superseded"].includes(s) && <Button size="sm" variant="ghost" onClick={() => revise.mutate()} disabled={revise.isPending}>New version</Button>}
       </>}>
         {d.canEdit && !editing && <Button size="sm" variant="outline" onClick={() => setEditing(true)}>Edit</Button>}
+        {(s === "approved" || s === "sent") && !details && <Button size="sm" variant="outline" onClick={() => setDetails({ title: d.quote.title ?? "", notes: d.quote.notes ?? "", validUntil: d.quote.valid_until ?? "" })}>Update quote</Button>}
+        {(s === "approved" || s === "sent") && d.contact?.email && !mail && <Button size="sm" onClick={() => setMail({ subject: `Your Harmonious quote: ${d.quote.title}`, message: "" })}>{s === "sent" ? "Resend quote" : "Email quote"}</Button>}
         {d.canEdit && <Button size="sm" onClick={() => submit.mutate()} disabled={submit.isPending || !!bookkeepingBlocker}>Submit for approval</Button>}
         {s === "pending_approval" && (d.canApprove ? (
           <><Input className="h-9 max-w-xs" placeholder="Note (required to request changes)" value={note} onChange={(e) => setNote(e.target.value)} />
@@ -99,6 +111,27 @@ function QuotePage() {
         {s === "sent" && <span className="text-sm text-muted-foreground">Waiting for the client to sign.</span>}
         {s === "signed" && <span className="text-sm text-foreground">Signed {d.quote.signed_at ? new Date(d.quote.signed_at).toLocaleDateString() : ""}. Counted as revenue closed.</span>}
       </ActionBar>
+      {details && (
+        <Panel title="Update quote">
+          <div className="space-y-3">
+            <div><label className="text-sm font-medium" htmlFor="qd-title">Title</label><Input id="qd-title" value={details.title} onChange={(e) => setDetails({ ...details, title: e.target.value })} /></div>
+            <div><label className="text-sm font-medium" htmlFor="qd-valid">Valid until</label><Input id="qd-valid" type="date" value={details.validUntil} onChange={(e) => setDetails({ ...details, validUntil: e.target.value })} /></div>
+            <div><label className="text-sm font-medium" htmlFor="qd-notes">Notes</label><Textarea id="qd-notes" rows={3} value={details.notes} onChange={(e) => setDetails({ ...details, notes: e.target.value })} /></div>
+            <p className="text-xs text-muted-foreground">These changes save right away without new approval. To change prices or services, use New version.</p>
+            <div className="flex gap-2"><Button size="sm" onClick={() => saveDetails.mutate()} disabled={saveDetails.isPending || !details.title.trim()}>Save</Button><Button size="sm" variant="ghost" onClick={() => setDetails(null)}>Cancel</Button></div>
+          </div>
+        </Panel>
+      )}
+      {mail && (
+        <Panel title={s === "sent" ? "Resend quote" : "Email quote"}>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">To {d.contact?.full_name} ({d.contact?.email}) with their personal sign link.</p>
+            <div><label className="text-sm font-medium" htmlFor="qm-subject">Subject</label><Input id="qm-subject" value={mail.subject} onChange={(e) => setMail({ ...mail, subject: e.target.value })} /></div>
+            <div><label className="text-sm font-medium" htmlFor="qm-msg">Your message (optional)</label><Textarea id="qm-msg" rows={3} value={mail.message} onChange={(e) => setMail({ ...mail, message: e.target.value })} /></div>
+            <div className="flex gap-2"><Button size="sm" onClick={() => sendMail.mutate()} disabled={sendMail.isPending || !mail.subject.trim()}>Send</Button><Button size="sm" variant="ghost" onClick={() => setMail(null)}>Cancel</Button></div>
+          </div>
+        </Panel>
+      )}
       {bookkeepingBlocker && <p className="text-sm text-muted-foreground">{bookkeepingBlocker}</p>}
 
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
@@ -138,6 +171,18 @@ function QuotePage() {
                 </div>
                 {(s === "approved" || s === "sent") ? <Button size="sm" variant="outline" className="mt-2" onClick={() => link.mutate()} disabled={link.isPending}>Copy sign link</Button>
                   : s !== "signed" && <p className="mt-2 text-xs text-muted-foreground">The sign link appears once this quote is approved.</p>}
+                {!["signed", "superseded", "lost"].includes(s) && (changingSigner ? (
+                  <div className="mt-3 border-t pt-3">
+                    <p className="mb-2 text-xs text-muted-foreground">The current signer's link will stop working.</p>
+                    <AddSalesContact organization={d.client?.legal_name ?? ""} onSave={async (contact) => {
+                      await signerFn({ data: { id, ...contact } });
+                      toast.success("Signer updated");
+                      setChangingSigner(false);
+                      await qc.invalidateQueries({ queryKey: ["sales-quote", id] });
+                    }} />
+                    <Button size="sm" variant="ghost" className="mt-2" onClick={() => setChangingSigner(false)}>Cancel</Button>
+                  </div>
+                ) : <Button size="sm" variant="ghost" className="mt-2" onClick={() => setChangingSigner(true)}>Change signer</Button>)}
               </div>
             ) : canAddSalesContact(d.quote.contact_id, s) ? <AddSalesContact organization={d.client?.legal_name ?? ""} onSave={async (contact) => {
               const r = await addContact({ data: { id, ...contact } });
