@@ -1,8 +1,10 @@
 /** Pure projections only. All monetary inputs use the same currency and unit. */
 import { z } from 'zod';
+import { operatingForecastInput, calculateOperatingForecast } from './operating-forecast-model';
 const n = z.number().finite().nonnegative().max(1e15);
 const rate = z.number().finite().min(0).max(1);
 export const forecastInput = z.discriminatedUnion('model', [
+ operatingForecastInput,
  z.object({model:z.literal('cap_table'),holders:z.array(z.object({holder:z.string().max(160),class:z.string().max(80),shares:n})).max(500),rounds:z.array(z.object({name:z.string().max(100),preMoney:n.positive(),raised:n,pricePerShare:n.positive().optional(),poolPercent:rate.refine(x=>x<1),conversions:z.array(z.object({holder:z.string().max(160),class:z.string().max(80),principal:n,interest:rate,years:n.max(100),discount:rate.refine(x=>x<1),cap:n.positive().optional()})).max(100)})).max(30)}),
  z.object({model:z.literal('portfolio'),holdings:z.array(z.object({name:z.string().max(160),cost:n,value:n,growth:z.number().finite().min(-1).max(10),exitValue:n.optional(),exitYear:z.number().int().min(2020).max(2200),startYear:z.number().int().min(1900).max(2200),writeDown:rate})).max(500)}),
  z.object({model:z.literal('fund'),openingNav:n,periods:z.array(z.object({period:z.string().max(30),calls:n,distributions:n,fees:n,expenses:n,gain:z.number().finite().min(-1e15).max(1e15)})).max(200)}),
@@ -12,6 +14,7 @@ export type ForecastInput=z.infer<typeof forecastInput>;
 export const PROJECTION_LABEL='Projection — not actual results';
 export function calculateForecast(raw:unknown): {totals:Record<string,number|null>;detail:unknown[]} {
  const a=forecastInput.parse(raw);
+ if(a.model==='operating'){const r=calculateOperatingForecast(a);return {totals:r.totals,detail:r.monthly};}
  if(a.model==='cap_table') {
   let holders=a.holders.map(h=>({...h})); const detail:unknown[]=[];
   for(const r of a.rounds){const before=holders.reduce((s,h)=>s+h.shares,0);if(!before)throw new Error('Starting shares are required.');const price=r.pricePerShare??r.preMoney/before;
