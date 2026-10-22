@@ -298,10 +298,12 @@ async function syncSignerRows(signatureId: string, signRequestId: string) {
     if (status === 'signed' && r.role_key !== 'fund_manager') {
       const { data: sig } = await supabaseAdmin.from('document_signatures').select('application_id').eq('id', signatureId).maybeSingle();
       const { data: ob } = sig?.application_id ? await supabaseAdmin.from('investor_onboardings')
-        .select('id').eq('application_id', sig.application_id).is('removed_at', null).maybeSingle() : { data: null };
+        .select('id, investor_user_id').eq('application_id', sig.application_id).is('removed_at', null).maybeSingle() : { data: null };
       if (ob) {
         const { notifyInvestorApproval } = await import('@/lib/investor-approval-notify.server');
         await notifyInvestorApproval({ onboardingId: ob.id, action: 'review', ref: `signature:${signatureId}` });
+        const { requestCountersignIfDue } = await import('@/lib/investor-onboarding.server');
+        await requestCountersignIfDue(ob.id, 'on_investor_signature', (ob as any).investor_user_id).catch(() => null);
       }
     }
   }

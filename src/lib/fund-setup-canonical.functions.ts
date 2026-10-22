@@ -31,6 +31,11 @@ const fundClass = z.object({
   carry: carry.optional(),
   preferredReturnPercent: z.number().min(0).max(100).nullish(),
   minInvestmentCents: z.number().int().min(0).nullish(),
+  orgExpenseTreatment: z.string().max(200).nullish(),
+  distributionFrequency: z.string().max(100).nullish(),
+  appliesTo: z.string().max(200).nullish(),
+  assetScope: z.string().max(500).nullish(),
+  otherDifferences: z.string().max(1000).nullish(),
   notApplicable: z.array(z.enum(["managementFee", "carry", "preferredReturn", "orgExpense", "distributionFrequency", "minInvestment"])).max(6).optional(),
 });
 
@@ -79,6 +84,7 @@ export const saveFundSetupFieldsFn = createServerFn({ method: "POST" })
           arbitrationState: z.string().max(120).nullish(),
           rollingCloses: z.boolean().nullish(),
           hasMultipleClasses: z.boolean(),
+          plannedClassCount: z.number().int().min(1).max(20).nullable(),
           driveFolderUrl: z.string().url().max(500).nullish().or(z.literal("")),
           driveLinks: z.array(z.object({ label: z.string().max(120), url: z.string().url().max(500).refine((u) => /^https:\/\/(drive|docs)\.google\.com\//.test(u), "Use a Google Drive link") })).max(30),
         })
@@ -117,7 +123,7 @@ export const changeLegalNameFn = createServerFn({ method: "POST" })
 export const saveFundEconomicsFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
-    z.object({ offeringId: uuid, terms, classes: z.array(fundClass).max(20), changeReason: z.string().max(500).nullish() }).parse,
+    z.object({ offeringId: uuid, terms, classes: z.array(fundClass).max(20), changeReason: z.string().max(500).nullish(), classDifferencesConfirmed: z.boolean().nullish() }).parse,
   )
   .handler(async ({ data, context }) => __auto(await (await import("@/lib/record-locks.server")).lockedSave("economics", context as any, data, async () => (await engine()).saveFundEconomics(context.userId, data as any)), { offeringId: (data as any).offeringId, documentId: (data as any).documentId }));
 

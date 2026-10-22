@@ -543,7 +543,18 @@ async function gatherFacts(row: any, inputs?: ReadinessInputs) {
       sort: Number(d.sort_order ?? 0),
     }))
     .sort((a, b) => a.rank - b.rank || a.sort - b.sort);
-  return { offering, person, profile, entity, related, accreditation, tax, requirements, isEntity, documents, completedSignatures };
+  let countersignTiming = (await import("@/lib/countersign-timing")).parseCountersignTiming(off?.countersign_timing);
+  if (countersignTiming !== "pause" && !row.approved_to_fund_at) {
+    // A timing change only applies to investors who hadn't signed yet when it changed.
+    const [{ data: change }, { data: signed }] = await Promise.all([
+      db().from("offering_countersign_timing_events").select("changed_at").eq("offering_id", row.offering_id).order("changed_at", { ascending: false }).limit(1),
+      db().from("investor_onboarding_events").select("created_at").eq("onboarding_id", row.id).eq("event", "signature_completed").order("created_at", { ascending: true }).limit(1),
+    ]);
+    const changedAt = (change as any[] | null)?.[0]?.changed_at;
+    const signedAt = (signed as any[] | null)?.[0]?.created_at;
+    if (changedAt && signedAt && signedAt < changedAt) countersignTiming = "pause";
+  }
+  return { offering, person, profile, entity, related, accreditation, tax, requirements, isEntity, documents, completedSignatures, countersignTiming };
 }
 
 async function openExceptions(onboardingId: string) {
@@ -1037,7 +1048,12 @@ export type WireSentDetails = {
  *  marks the investment funded - only a matched bank receipt does that. */
 export async function investorReportsFundsSent(userId: string, onboardingId: string, details: WireSentDetails = {}) {
   const { actor, row } = await assertInvestorOwns(userId, onboardingId);
-  if (!row.approved_to_fund_at) forbid("funding has not been unlocked for this investment.");
+  if (!row.approved_to_fund_at) {
+    const facts = await gatherFacts(row);
+    const exceptions = await openExceptions(row.id);
+    const gate = canInvestorFund({ stage: row.stage, requirements: facts.requirements, approvedToFundAt: null, countersignTiming: facts.countersignTiming, openBlockingExceptions: exceptions.filter((e) => e.severity === "blocking").length });
+    if (!gate.allowed) forbid("funding has not been unlocked for this investment.");
+  }
   const amount = details.amountCents == null ? null : Math.round(Number(details.amountCents));
   if (amount != null && (!Number.isFinite(amount) || amount <= 0)) fail("Enter the amount you sent.");
   const sentOn = details.sentOn && /^\d{4}-\d{2}-\d{2}$/.test(details.sentOn) ? details.sentOn : null;
@@ -1047,6 +1063,7 @@ export async function investorReportsFundsSent(userId: string, onboardingId: str
     investor_reports_sent_at: row.investor_reports_sent_at ?? nowIso(),
     funding_status: row.funding_status === "not_funded" ? "investor_reports_sent" : row.funding_status,
   });
+  await requestCountersignIfDue(row.id, "on_funding_step", actor.userId).catch(() => null);
   await recordEvent({
     onboardingId: row.id,
     offeringId: row.offering_id,
@@ -1138,9 +1155,11 @@ export async function investorFundStatus(userId: string, offeringId: string) {
   if (!row) return null;
 
   const facts = await gatherFacts(row);
+  const earlyFunding = !row.approved_to_fund_at && facts.countersignTiming !== "pause"
+    && canInvestorFund({ stage: row.stage, requirements: facts.requirements, approvedToFundAt: null, countersignTiming: facts.countersignTiming, openBlockingExceptions: (await openExceptions(row.id)).filter((e) => e.severity === "blocking").length }).allowed;
   const steps = journeySteps(facts.requirements, {
     stage: row.stage,
-    approvedToFund: Boolean(row.approved_to_fund_at),
+    approvedToFund: Boolean(row.approved_to_fund_at) || earlyFunding,
     fundingStatus: row.funding_status,
     investorReportsSent: Boolean(row.investor_reports_sent_at),
   });
@@ -1175,6 +1194,7 @@ export async function onboardingDetail(userId: string, onboardingId: string): Pr
     stage: row.stage,
     requirements: facts.requirements,
     approvedToFundAt: row.approved_to_fund_at,
+    countersignTiming: facts.countersignTiming,
     openBlockingExceptions: exceptions.filter((e) => e.severity === "blocking").length,
   });
 
@@ -1191,7 +1211,7 @@ export async function onboardingDetail(userId: string, onboardingId: string): Pr
   const { fillMissingInvestorAnswers } = await import("@/lib/subscription-prefill");
   const journey = journeySteps(facts.requirements, {
     stage: row.stage,
-    approvedToFund: Boolean(row.approved_to_fund_at),
+    approvedToFund: Boolean(row.approved_to_fund_at) || fundingGate.allowed,
     fundingStatus: row.funding_status,
     investorReportsSent: Boolean(row.investor_reports_sent_at),
   });
@@ -1218,6 +1238,8 @@ export async function onboardingDetail(userId: string, onboardingId: string): Pr
     approvedToFund: Boolean(row.approved_to_fund_at),
     fundingUnlocked: fundingGate.allowed,
     fundingBlockedReasons: fundingGate.reasons,
+    countersignTiming: facts.countersignTiming,
+    awaitingCountersign: !row.approved_to_fund_at && fundingGate.allowed,
     questionnaire: questionnaire ? { version: questionnaire.version, questions: locks?.questions ?? questionnaire.questions } : null,
     questionnaireResponses: { ...fillMissingInvestorAnswers((row.questionnaire_responses ?? {}) as Record<string, unknown>, locks?.supplied ?? {}, (questionnaire?.questions ?? []).map((q: Question) => q.key)), ...Object.fromEntries(Object.entries(locks?.locked ?? {}).filter(([, v]) => v != null)) },
     questionnaireLocked: locks?.locked ?? {},
@@ -1265,6 +1287,7 @@ export async function fundingInstructions(userId: string, onboardingId: string) 
     stage: row.stage,
     requirements: facts.requirements,
     approvedToFundAt: row.approved_to_fund_at,
+    countersignTiming: facts.countersignTiming,
     openBlockingExceptions: exceptions.filter((e) => e.severity === "blocking").length,
   });
   if (!gate.allowed) return { unlocked: false, reasons: gate.reasons, instructions: null };
@@ -1426,12 +1449,14 @@ export async function reviewDetail(userId: string, onboardingId: string) {
     stage: row.stage,
     requirements: facts.requirements,
     approvedToFundAt: row.approved_to_fund_at,
+    countersignTiming: facts.countersignTiming,
     openBlockingExceptions: blocking,
   });
   const closingGate = canCloseInvestment({
     stage: row.stage,
     requirements: facts.requirements,
     approvedToFundAt: row.approved_to_fund_at,
+    countersignTiming: facts.countersignTiming,
     openBlockingExceptions: blocking,
     fundingStatus: row.funding_status,
     fundingReconciled: isReconciledFunding(row.funding_status),
@@ -1764,6 +1789,7 @@ export async function closeInvestment(userId: string, input: { onboardingId: str
     stage: row.stage,
     requirements: facts.requirements,
     approvedToFundAt: row.approved_to_fund_at,
+    countersignTiming: facts.countersignTiming,
     openBlockingExceptions: exceptions.filter((e) => e.severity === "blocking").length,
     fundingStatus: row.funding_status,
     fundingReconciled: isReconciledFunding(row.funding_status),
@@ -2667,4 +2693,23 @@ export async function myPersonalLinks(userId: string) {
   const { data: rows } = await db().from("investor_onboardings").select("id, offering_id, invitation_id, investor_user_id, offerings(name)").eq("investor_user_id", userId).is("removed_at", null);
   const { ONBOARD_ORIGIN } = await import("@/lib/onboard-portal-model");
   return { links: ((rows ?? []) as any[]).map((r) => ({ onboardingId: r.id as string, fundName: String(r.offerings?.name ?? "Fund"), url: `${ONBOARD_ORIGIN}/onboard/i/${r.id}` })) };
+}
+
+/**
+ * Ask the fund's managers to countersign when the fund's timing says it's due.
+ * parallel → after the investor signs; after_completion → when the investor reaches/finishes funding.
+ * Sent once per investment (recorded event); never approves, admits or moves money.
+ */
+export async function requestCountersignIfDue(onboardingId: string, moment: "on_investor_signature" | "on_funding_step", actorUserId: string) {
+  const row = await onboardingRow(onboardingId);
+  if (row.approved_to_fund_at || row.removed_at) return { sent: false };
+  const facts = await gatherFacts(row);
+  const { countersignNoticeMoment } = await import("@/lib/countersign-timing");
+  if (facts.countersignTiming === "pause" || countersignNoticeMoment(facts.countersignTiming) !== moment) return { sent: false };
+  const { data: prior } = await db().from("investor_onboarding_events").select("id").eq("onboarding_id", row.id).eq("event", "countersign_requested").limit(1);
+  if ((prior ?? []).length) return { sent: false };
+  await recordEvent({ onboardingId: row.id, offeringId: row.offering_id, event: "countersign_requested", detail: { timing: facts.countersignTiming, moment }, actorUserId, actorRole: "system" });
+  const { notifyFundManagers } = await import("@/lib/client-work-notify.server");
+  await notifyFundManagers(row.offering_id, "approval_required", "Investor agreement countersignature", `/manager/fund/${row.offering_id}/investors`);
+  return { sent: true };
 }

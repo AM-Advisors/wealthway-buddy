@@ -601,6 +601,8 @@ export interface FundingGateInput {
   requirements: RequirementResult[];
   approvedToFundAt?: string | null;
   openBlockingExceptions: number;
+  /** Fund's countersign timing; non-pause modes may open funding before approval (never admission). */
+  countersignTiming?: "pause" | "parallel" | "after_completion" | null;
 }
 
 /** canInvestorFund - funding instructions stay locked until every one of these holds. */
@@ -610,8 +612,10 @@ export function canInvestorFund(input: FundingGateInput): { allowed: boolean; re
   for (const r of outstandingRequirements(input.requirements)) {
     reasons.push(`${r.label}: ${REQUIREMENT_STATE_LABELS[r.state]}`);
   }
-  if (!input.approvedToFundAt) reasons.push("The fund manager has not yet approved this subscription.");
-  if (!["approved_to_fund", "awaiting_funds", "funded", "accepted"].includes(input.stage)) {
+  const early = !input.approvedToFundAt && (input.countersignTiming === "parallel" || input.countersignTiming === "after_completion")
+    && !["declined", "cancelled", "closed"].includes(input.stage);
+  if (!input.approvedToFundAt && !early) reasons.push("The fund manager has not yet approved this subscription.");
+  if (!early && !["approved_to_fund", "awaiting_funds", "funded", "accepted"].includes(input.stage)) {
     reasons.push("This investment is not at the funding stage.");
   }
   return { allowed: reasons.length === 0, reasons };
@@ -627,7 +631,8 @@ export interface ClosingGateInput extends FundingGateInput {
 /** canCloseInvestment - the final server-side admission gate. */
 export function canCloseInvestment(input: ClosingGateInput): { allowed: boolean; reasons: string[] } {
   const reasons: string[] = [];
-  const funding = canInvestorFund(input);
+  // Admission always needs the manager's countersign/approval, whatever the funding timing.
+  const funding = canInvestorFund({ ...input, countersignTiming: "pause" });
   reasons.push(...funding.reasons);
   if (!input.fundingReconciled) reasons.push("The money has not been reconciled to the fund's bank account.");
   if (input.fundingStatus !== "funded") reasons.push(`Funding is ${FUNDING_STATUS_LABELS[input.fundingStatus]}.`);

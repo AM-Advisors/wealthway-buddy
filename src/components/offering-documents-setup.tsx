@@ -1,3 +1,4 @@
+import { CountersignTimingCard } from "@/components/countersign-timing-card";
 import { invalidateFund } from "@/lib/fund-query-keys";
 import { useIsSuperAdmin } from "@/lib/use-is-super-admin";
 import { useState, type ReactNode } from "react";
@@ -78,6 +79,8 @@ export function OfferingDocumentsSetup({ offeringId, onChanged }: { offeringId: 
   const byCategory = (c: DocumentCategory) => d.documents.find((x) => x.category === c);
 
   return (
+    <>
+    <CountersignTimingCard offeringId={offeringId} />
     <Card>
       <CardHeader>
         <CardTitle className="text-base">Offering Documents</CardTitle>
@@ -112,6 +115,7 @@ export function OfferingDocumentsSetup({ offeringId, onChanged }: { offeringId: 
         )}
       </CardContent>
     </Card>
+    </>
   );
 }
 

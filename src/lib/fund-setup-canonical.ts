@@ -111,8 +111,59 @@ export type FundClass = {
   carry?: Carry | null;
   preferredReturnPercent?: number | null;
   minInvestmentCents?: number | null;
+  orgExpenseTreatment?: string | null;
+  distributionFrequency?: string | null;
+  /** Which investors the class is for (e.g. "Founders", "Investors over $1M"). */
+  appliesTo?: string | null;
+  /** "all" assets, or a description of the specific holdings the class participates in. */
+  assetScope?: string | null;
+  otherDifferences?: string | null;
   notApplicable?: EconomicTermKey[] | undefined;
 };
+
+/** Multiple classes only when Yes and more than one class is planned; 1 class is a single-class fund. */
+export function multipleClassesFromAnswer(answer: { yes: boolean; count: number | null }): { hasMultipleClasses: boolean; plannedClassCount: number | null } {
+  if (!answer.yes || answer.count == null || answer.count <= 1) return { hasMultipleClasses: false, plannedClassCount: answer.yes && answer.count === 1 ? 1 : null };
+  return { hasMultipleClasses: true, plannedClassCount: Math.min(20, Math.floor(answer.count)) };
+}
+
+/** The classes entered must match the planned count before class terms can be saved for approval. */
+export function classCountError(planned: number | null, classes: FundClass[]): string | null {
+  if (planned == null || planned < 2) return null;
+  if (classes.length !== planned) return `You said this fund has ${planned} classes; ${classes.length} ${classes.length === 1 ? "is" : "are"} entered.`;
+  return null;
+}
+
+export type ClassDifferenceRow = { term: string; fundDefault: string; perClass: { name: string; value: string; differs: boolean }[] };
+
+const money = (c: number | null | undefined) => (c == null ? "-" : `$${(c / 100).toLocaleString("en-US")}`);
+const pctTxt = (v: number | null | undefined) => (v == null ? "-" : `${v}%`);
+
+/** Side-by-side view of how each class differs from the fund default. "Same as fund default" when not set. */
+export function classDifferences(defaults: EconomicTerms & { minInvestmentCents?: number | null }, classes: FundClass[]): ClassDifferenceRow[] {
+  const na = (c: FundClass, k: EconomicTermKey) => !!c.notApplicable?.includes(k);
+  const row = (term: string, def: string, val: (c: FundClass) => string | null): ClassDifferenceRow => ({
+    term,
+    fundDefault: def,
+    perClass: classes.map((c) => {
+      const v = val(c);
+      return { name: c.name, value: v ?? "Same as fund default", differs: v != null && v !== def };
+    }),
+  });
+  const fee = defaults.managementFee;
+  const feeTxt = (f: ManagementFee | null | undefined) => (f?.ratePercent == null ? "-" : `${f.ratePercent}%${f.basis ? ` of ${f.basis.replace(/_/g, " ")}` : ""}${f.frequency ? `, ${f.frequency.replace(/_/g, " ")}` : ""}`);
+  return [
+    row("Management fee", feeTxt(fee), (c) => (na(c, "managementFee") ? "Not applicable" : c.managementFee?.ratePercent != null ? feeTxt({ ...(fee ?? {}), ...c.managementFee } as ManagementFee) : null)),
+    row("Minimum investment", money(defaults.minInvestmentCents), (c) => (na(c, "minInvestment") ? "Not applicable" : c.minInvestmentCents != null ? money(c.minInvestmentCents) : null)),
+    row("Carried interest", pctTxt(defaults.carry?.ratePercent), (c) => (na(c, "carry") ? "Not applicable" : c.carry?.ratePercent != null ? pctTxt(c.carry.ratePercent) : null)),
+    row("Preferred return / hurdle", pctTxt(defaults.preferredReturnPercent), (c) => (na(c, "preferredReturn") ? "Not applicable" : c.preferredReturnPercent != null ? pctTxt(c.preferredReturnPercent) : null)),
+    row("Organizational expenses", defaults.orgExpenseTreatment ?? "-", (c) => (na(c, "orgExpense") ? "Not applicable" : c.orgExpenseTreatment || null)),
+    row("Distribution frequency", defaults.distributionFrequency ?? "-", (c) => (na(c, "distributionFrequency") ? "Not applicable" : c.distributionFrequency || null)),
+    row("Assets / allocation", "All fund assets", (c) => (c.assetScope?.trim() ? c.assetScope.trim() : null)),
+    row("Applies to", "All investors", (c) => (c.appliesTo?.trim() ? c.appliesTo.trim() : null)),
+    row("Other differences", "None", (c) => (c.otherDifferences?.trim() ? c.otherDifferences.trim() : null)),
+  ];
+}
 
 const pct = (v: unknown) => typeof v === "number" && Number.isFinite(v) && v >= 0 && v <= 100;
 
@@ -159,6 +210,8 @@ export function effectiveEconomics(defaults: EconomicTerms, cls?: FundClass | nu
     managementFee: cls.managementFee ?? defaults.managementFee,
     carry: cls.carry ?? defaults.carry,
     preferredReturnPercent: cls.preferredReturnPercent ?? defaults.preferredReturnPercent ?? null,
+    orgExpenseTreatment: cls.orgExpenseTreatment || defaults.orgExpenseTreatment || null,
+    distributionFrequency: cls.distributionFrequency || defaults.distributionFrequency || null,
   };
 }
 
@@ -206,6 +259,7 @@ export type SetupFacts = {
   carrySet: boolean;
   hasMultipleClasses: boolean;
   classCount: number;
+  plannedClassCount?: number | null;
   documentCount: number;
   /** Offering Documents configuration status (Phase 2); falls back to documentCount when absent. */
   documentsStatus?: { status: "not_started" | "in_progress" | "complete"; next: string | null };
@@ -250,8 +304,11 @@ export function sectionStatuses(f: SetupFacts): Record<CanonicalSection, Result>
   if (offering.status === "in_progress" && f.economicsStatus === "draft" && f.managementFeeSet && f.carrySet) {
     offering = { status: "in_progress", next: "Have a second Harmonious reviewer approve the economics" };
   }
+  const planned = f.plannedClassCount ?? null;
   const classes: Result = !f.hasMultipleClasses
     ? { status: "not_applicable", next: null }
+    : planned != null && planned >= 2 && f.classCount !== planned
+      ? { status: f.classCount ? "in_progress" : "not_started", next: `Enter all ${planned} classes and confirm how they differ` }
     : f.classCount >= 1 && f.economicsStatus === "approved"
       ? { status: "complete", next: null }
       : f.classCount >= 1
