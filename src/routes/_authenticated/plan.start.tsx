@@ -26,7 +26,7 @@ export const Route = createFileRoute("/_authenticated/plan/start")({
 });
 
 const usd = (n: number) => `$${n.toLocaleString("en-US")}`;
-const SERV_LABEL: Record<ServicingKey, string> = { self_serve: "Self Serve (help center)", core: "Core (72-hour response)", plus: "Plus (48-hour, named contact)", white_glove: "White Glove (24-hour, proactive)" };
+const SERV_LABEL: Record<ServicingKey, string> = { self_serve: "Self Serve (included: Operations inbox, 5-business-day response)", core: "Core (additional cost, 72-hour response)", plus: "Plus (additional cost, 48-hour, named contact)", white_glove: "White Glove (additional cost, 24-hour, proactive)" };
 const CAP_LABEL: Record<CapTier, string> = { none: "No cap table", starter: "Starter (25 stakeholders)", growth: "Growth (50)", scale: "Scale (unlimited)" };
 
 function Choice<T extends string>({ value, options, labels, onChange }: { value: T; options: readonly T[]; labels: Record<T, string>; onChange: (v: T) => void }) {

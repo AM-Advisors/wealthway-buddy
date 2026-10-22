@@ -8,11 +8,11 @@ const ADMIN_ANNUAL = 12000;
 const rate = (k: keyof typeof RATE_CARD_FUND_LEVELS) => (RATE_CARD_FUND_LEVELS[k].annual - ADMIN_ANNUAL) * 100;
 
 export const SERVICE_LEVELS: { key: ServiceLevel; name: string; summary: string; annualCents: number | null }[] = [
-  { key: "self_serve", name: "Self Serve", summary: "You run every step yourself. Help center only.", annualCents: 0 },
-  { key: "core", name: "Core", summary: "Email support, 72-hour response.", annualCents: rate("core") },
-  { key: "plus", name: "Plus", summary: "Named contact, 48-hour response.", annualCents: rate("fund_administration") },
-  { key: "white_glove", name: "White Glove", summary: "Named administrator, 24-hour response, proactive management.", annualCents: rate("white_glove") },
-  { key: "institutional", name: "Institutional", summary: "Dedicated team and custom service levels. Custom quote.", annualCents: null },
+  { key: "self_serve", name: "Self Serve", summary: "You run every step yourself. Included: General Operations inbox, guaranteed response within 5 business days.", annualCents: 0 },
+  { key: "core", name: "Core", summary: "Additional cost. Email support, 72-hour response.", annualCents: rate("core") },
+  { key: "plus", name: "Plus", summary: "Additional cost. Named contact, 48-hour response.", annualCents: rate("fund_administration") },
+  { key: "white_glove", name: "White Glove", summary: "Additional cost. Named administrator, 24-hour response, proactive management.", annualCents: rate("white_glove") },
+  { key: "institutional", name: "Institutional", summary: "Additional cost. Dedicated team and custom service levels. Custom quote.", annualCents: null },
 ];
 
 export function normalizeServiceLevel(v: unknown): ServiceLevel {
