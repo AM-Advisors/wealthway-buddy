@@ -11,11 +11,11 @@ export const Route = createFileRoute("/spvs")({
   head: () =>
     marketingHead({
       path: "/spvs",
-      title: "SPV Administration - Formation to Wind Down | Harmonious",
+      title: "Harmonized SPV - Formation to Wind Down | Harmonious",
       description: "Streamlined SPV formation and administration: entity setup, subscription documents, investor onboarding, funding coordination and reconciliation, reporting and records.",
       
       breadcrumbs: [{ name: "Home", path: "/" }, { name: "SPVs", path: "/spvs" }],
-      service: { name: "SPV Administration", description: "Formation coordination and administration of special purpose vehicles." },
+      service: { name: "Harmonized SPV", description: "Formation coordination and administration of special purpose vehicles." },
     }),
   component: SpvPage,
 });

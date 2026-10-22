@@ -83,7 +83,7 @@ export const MARKETING_NAV: NavGroup[] = [
     label: "SPVs",
     href: "/spvs",
     items: [
-      { label: "SPV Administration", href: "/spvs", status: "live" },
+      { label: "Harmonized SPV", href: "/spvs", status: "live" },
       { label: "Founder SPVs", href: "/founder-spvs", status: "planned" },
       { label: "Secondary SPVs", href: "/secondary-spvs", status: "planned" },
       { label: "Syndicates", href: "/syndicates", status: "planned" },

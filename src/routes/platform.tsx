@@ -122,7 +122,7 @@ function PlatformPage() {
               <Link to="/contactus" search={{ cta: "schedule_demo", intent: "other" }}>Schedule a Demo</Link>
             </Button>
             <Button asChild size="lg" variant="outline">
-              <Link to="/spvs">SPV Administration</Link>
+              <Link to="/spvs">Harmonized SPV</Link>
             </Button>
           </div>
         </section>
