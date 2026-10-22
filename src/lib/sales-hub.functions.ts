@@ -75,7 +75,7 @@ export const roundRobinDeals = createServerFn({ method: "POST" }).middleware([re
   .handler(async ({ data, context }) => (await S()).roundRobin(context.userId, data));
 
 // ---------------- quotes
-const line = z.object({ serviceKey: z.string(), label: z.string(), quantity: z.number().min(0), unitCents: z.number().min(0), baselineUnitCents: z.number().min(0), billingFrequency: z.enum(["one_time", "monthly", "quarterly", "annual"]).optional(), firstBillOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullish(), bookkeeping: bookkeepingInputSchema.optional() });
+const line = z.object({ serviceKey: z.string(), label: z.string(), quantity: z.number().min(0), unitCents: z.number().min(0), baselineUnitCents: z.number().min(0), billingFrequency: z.enum(["one_time", "monthly", "quarterly", "annual"]).optional(), firstBillOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullish(), bookkeeping: bookkeepingInputSchema.optional(), details: z.object({ scope: z.string().max(2000).optional(), included: z.array(z.string().max(300)).max(20).optional(), excluded: z.array(z.string().max(300)).max(20).optional() }).nullish() });
 
 export const getQuoteCatalog = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ clientId: z.string().uuid().nullish() }).parse(d))
@@ -89,7 +89,7 @@ export const getSalesQuote = createServerFn({ method: "GET" }).middleware([requi
   .handler(async ({ data, context }) => (await Q()).getQuote(context.userId, data.id));
 
 export const saveSalesQuote = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ id: z.string().uuid().nullish(), title: z.string().max(200), clientId: z.string().uuid().nullish(), contactId: z.string().uuid().nullish(), dealId: z.string().uuid().nullish(), offeringId: z.string().uuid().nullish(), validUntil: opt, notes: z.string().max(5000).nullish(), lines: z.array(line).max(50) }).parse(d))
+  .inputValidator((d) => z.object({ id: z.string().uuid().nullish(), title: z.string().max(200), clientId: z.string().uuid().nullish(), contactId: z.string().uuid().nullish(), dealId: z.string().uuid().nullish(), offeringId: z.string().uuid().nullish(), validUntil: opt, notes: z.string().max(5000).nullish(), expectedUpdatedAt: z.string().optional(), lines: z.array(line).max(50) }).parse(d))
   .handler(async ({ data, context }) => (await Q()).saveQuote(context.userId, data));
 
 const idOnly = z.object({ id: z.string().uuid() });
@@ -142,6 +142,10 @@ export const reverseCommissionPayout = createServerFn({ method: "POST" }).middle
 
 export const getSalesLinkedRecords = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth]).inputValidator((d) => idOnly.parse(d))
   .handler(async ({ data, context }) => (await Q()).linkedRecords(context.userId, data.id));
+
+export const getLinkedQuoteForSow = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth])
+  .inputValidator(d => z.object({ sowId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => (await Q()).linkedQuoteForSow(context.userId, data.sowId));
 
 export const getScheduledPayments = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth])
   .handler(async ({ context }) => (await C()).scheduledPayments(context.userId));

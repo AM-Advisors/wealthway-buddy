@@ -3,6 +3,8 @@ import { canDraftQuote, cleanLineDetails, priceQuote, quoteApprovalProblem, type
 import { names, salesActor } from "@/lib/sales-hub.server";
 import { canAddSalesContact, type SalesContactInput } from "@/lib/sales-contact-model";
 import { BOOKKEEPING_KEY, bookkeepingConfigSchema, bookkeepingDraftBlocker, bookkeepingTerms, calculateBookkeeping } from "@/lib/bookkeeping-model";
+import { linkedTermsEditProblem, quoteInputsFromRows, sowLinesFromQuote } from "@/lib/quote-sow-sync";
+import { pricingText, servicesFromSow } from "@/lib/sales-documents-model";
 
 const admin = async () => (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
 type Actor = Awaited<ReturnType<typeof salesActor>>;
@@ -108,7 +110,7 @@ export async function getQuote(userId: string, id: string) {
   };
 }
 
-export async function saveQuote(userId: string, d: { id?: string | null | undefined; title: string; clientId?: string | null | undefined; contactId?: string | null | undefined; dealId?: string | null | undefined; offeringId?: string | null | undefined; validUntil?: string | null | undefined; notes?: string | null | undefined; lines: QuoteLineInput[] }) {
+export async function saveQuote(userId: string, d: { id?: string | null | undefined; title: string; clientId?: string | null | undefined; contactId?: string | null | undefined; dealId?: string | null | undefined; offeringId?: string | null | undefined; validUntil?: string | null | undefined; notes?: string | null | undefined; expectedUpdatedAt?: string | undefined; lines: QuoteLineInput[] }, sowPatch?: Record<string, unknown>) {
   const a = await salesActor(userId);
   if (!canDraftQuote(a.roles)) throw new Error("Your role can't draft quotes.");
   if (!d.lines.length) throw new Error("Add at least one service.");
@@ -146,12 +148,23 @@ export async function saveQuote(userId: string, d: { id?: string | null | undefi
   const row = { title: d.title.trim() || "Quote", client_id: d.clientId || null, contact_id: d.contactId || null, deal_id: d.dealId || null, offering_id: d.offeringId || null,
     valid_until: d.validUntil || null, notes: d.notes || null, total_cents: priced.totalCents, baseline_cents: priced.baselineCents,
     needs_exec_approval: priced.needsExecApproval, pricing_version_id: base.versionId, updated_at: now };
+  const savedLines = priced.lines.map((l, i) => ({ service_key: l.serviceKey, label: l.label, quantity: l.quantity, unit_cents: l.unitCents,
+    baseline_unit_cents: l.baselineUnitCents, line_cents: l.lineCents, sort_order: i,
+    billing_frequency: l.billingFrequency ?? "one_time", first_bill_on: l.firstBillOn ?? null,
+    bookkeeping_snapshot: snapshots.get(i) ?? null, service_details: cleanLineDetails(l.details) ?? {} }));
   if (id) {
     const { data: q } = await db.from("sales_quotes").select("*").eq("id", id).maybeSingle();
     if (!q || !canSee(a, q.owner_user_id) || !["draft", "rejected"].includes(q.status)) throw new Error("Only draft quotes can be edited. Create a new version instead.");
-    await db.from("sales_quotes").update({ ...row, status: "draft" }).eq("id", id);
-    await db.from("sales_quote_lines").delete().eq("quote_id", id);
-    await event(id, "edited", userId);
+    if (q.sow_id) {
+      const { data: sow, error } = await db.from("client_sows").select("*").eq("id", q.sow_id).maybeSingle();
+      if (error || !sow) throw new Error("Couldn't check the linked SOW. Nothing was saved.");
+      const problem = linkedTermsEditProblem(q, sow);
+      if (problem) throw new Error(problem);
+    }
+    const { saveLinkedQuoteDraft } = await import("@/lib/quote-sow-sync.server");
+    await saveLinkedQuoteDraft(db, { id, actorId: userId, expectedAt: d.expectedUpdatedAt ?? q.updated_at,
+      row, lines: savedLines, sowPatch });
+    return { id };
   } else {
     const { data: q, error } = await db.from("sales_quotes").insert({ ...row, owner_user_id: userId, created_by: userId }).select("id").single();
     if (error) throw new Error("Couldn't create the quote.");
@@ -159,8 +172,7 @@ export async function saveQuote(userId: string, d: { id?: string | null | undefi
     await event(id, "created", userId);
   }
   // Billing frequency comes from the quote; once the SOW is signed it's fixed.
-  const { error: lineError } = await db.from("sales_quote_lines").insert(priced.lines.map((l, i) => ({ quote_id: id, service_key: l.serviceKey, label: l.label, quantity: l.quantity, unit_cents: l.unitCents, baseline_unit_cents: l.baselineUnitCents, line_cents: l.lineCents, sort_order: i,
-    billing_frequency: l.billingFrequency ?? "one_time", first_bill_on: l.firstBillOn ?? null, bookkeeping_snapshot: snapshots.get(i) ?? null, service_details: cleanLineDetails(l.details) ?? {} })));
+  const { error: lineError } = await db.from("sales_quote_lines").insert(savedLines.map(l => ({ ...l, quote_id: id })));
   if (lineError) throw new Error("The quote lines could not be saved. Refresh the draft before continuing.");
   return { id };
 }
@@ -237,12 +249,33 @@ export async function draftAgreements(userId: string, q: any) {
   const { data: sow, error } = await db.from("client_sows").insert({
     client_id: q.client_id, title: q.title, sow_type: "services", status: "draft", stage: "draft", created_by: userId,
     msa_version_id: msaVersion?.id ?? null, notes: `Created from Sales quote Q-${q.quote_number} v${q.version}`,
-    generated_lines: ((lines ?? []) as any[]).map((l) => ({ service_key: l.service_key, label: l.label, quantity: Number(l.quantity), unit_cents: Number(l.unit_cents), amount_cents: Number(l.line_cents), billing_frequency: l.billing_frequency ?? "one_time", first_bill_on: l.first_bill_on ?? null, bookkeeping_snapshot: l.bookkeeping_snapshot ?? null, service_details: l.service_details ?? {} })),
+    offering_id: q.offering_id ?? null,
+    generated_lines: sowLinesFromQuote(lines ?? []),
   }).select("id").single();
   if (error) { console.error("SOW draft failed", error); throw new Error("Couldn't create the SOW draft."); }
   await db.from("sales_quotes").update({ sow_id: sow.id, msa_id: msaId, updated_at: new Date().toISOString() }).eq("id", q.id);
   await event(q.id, "agreements_drafted", userId, msaId && !existing ? "SOW and MSA drafted" : "SOW drafted");
   return { sowId: sow.id as string };
+}
+
+/** SOW-side editing reads the same entitled quote and uses the canonical quote save. */
+export async function linkedQuoteForSow(userId: string, sowId: string) {
+  const a = await salesActor(userId);
+  const db = await admin();
+  const { data: rows, error } = await db.from("sales_quotes").select("id,owner_user_id,status").eq("sow_id", sowId).neq("status", "superseded");
+  if (error) throw new Error("Couldn't read this SOW's linked quote.");
+  if (!rows?.length) return null;
+  if (rows.length !== 1 || !canSee(a, rows[0].owner_user_id)) throw new Error("This linked quote isn't available for editing.");
+  return getQuote(userId, rows[0].id);
+}
+
+export async function saveLinkedSowDetails(userId: string, sowId: string, patch: Record<string, unknown>) {
+  const linked = await linkedQuoteForSow(userId, sowId);
+  if (!linked) return null;
+  const q = linked.quote;
+  return saveQuote(userId, { id: q.id, title: String(patch.title ?? q.title), clientId: q.client_id,
+    contactId: q.contact_id, dealId: q.deal_id, offeringId: patch.offering_id as string | null,
+    validUntil: q.valid_until, notes: q.notes, expectedUpdatedAt: q.updated_at, lines: quoteInputsFromRows(linked.lines) }, patch);
 }
 
 /** Marks the quote sent once Operations has sent the SOW for signature through the agreements flow. */
