@@ -169,7 +169,7 @@ function Row({ investorUserId, row, ready }: { investorUserId: string; row: any;
           >
             Import Documents
           </Button>
-          <p className="text-xs text-muted-foreground">Imported copies go to private Harmonious storage and need review. Classification is not approval - accreditation evidence does not mark anyone accredited.</p>
+          <p className="text-xs text-muted-foreground">Imported copies go to private Harmonious storage and need review. Classification is not approval, accreditation evidence does not mark anyone accredited.</p>
         </div>
       ) : null}
     </div>

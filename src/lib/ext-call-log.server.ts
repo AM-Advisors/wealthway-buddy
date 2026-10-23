@@ -2,7 +2,7 @@
  * Server-only logging of outbound calls to outside services and of server function calls.
  * Logs only failures (status >= 400, network errors/timeouts) and slow calls (> 3 s):
  * service, method, at most two scrubbed path segments, status and duration.
- * Reads only the status line - never the body - so streams and downloads are untouched.
+ * Reads only the status line (never the body) so streams and downloads are untouched.
  * Never logs bodies, headers, keys, query strings, file names or storage paths.
  * Never throws; always returns/rethrows the original result.
  */

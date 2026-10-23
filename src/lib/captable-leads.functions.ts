@@ -6,7 +6,7 @@ import { requireSupabaseAuth } from "@/lib/require-auth";
 /** Requests from founders who want to move their cap table to Harmonious.
  *
  *  These arrive from the public website form. Harmonious records the request
- *  and its own team decides who to invite into the portal - creating the
+ *  and its own team decides who to invite into the portal, creating the
  *  account is still a Harmonious action, never a self-serve one. */
 
 export const LEAD_PROVIDERS = [

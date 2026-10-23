@@ -1,5 +1,5 @@
 /**
- * Fund Administration Phase D - pure distribution, withholding and outbound
+ * Fund Administration Phase D: pure distribution, withholding and outbound
  * payment rules.
  *
  * No database access, no authorization lookups, no side effects. This module
@@ -333,7 +333,7 @@ export type WithholdingLine = {
 };
 
 export type TaxFacts = {
-  /** From the investor's tax profile - never inferred from citizenship alone. */
+  /** From the investor's tax profile: never inferred from citizenship alone. */
   documentationForm: string | null;
   isForeignPerson: boolean | null;
   backupWithholdingFlag: boolean;
@@ -453,7 +453,7 @@ export function checkBatchBalance(input: {
     );
   }
 
-  const declaredVarianceCents = declaredAmountCents - reserveCents - totalGrossCents;
+  const declaredVarianceCents = declaredAmountCents (reserveCents) totalGrossCents;
   if (declaredVarianceCents !== 0) {
     problems.push(
       `The investor allocations differ from the approved distribution amount by ${declaredVarianceCents} cents.`,
@@ -687,7 +687,7 @@ export function maskTail(value: string | null | undefined): string | null {
   return raw.length <= 4 ? `••••${raw}` : `••••${raw.slice(-4)}`;
 }
 
-/** Stable fingerprint of the paying destination - used to detect any change. */
+/** Stable fingerprint of the paying destination, used to detect any change. */
 export function destinationFingerprint(d: DestinationFields): string {
   const parts = [
     d.method,

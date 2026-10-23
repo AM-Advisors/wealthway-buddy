@@ -129,7 +129,7 @@ function WireConfirmationPage() {
         <h1 className="font-heading text-3xl font-semibold text-foreground">Confirm your wire</h1>
         <p className="text-muted-foreground">
           Once you've sent your transfer, tell us the details here. Your Harmonious contact reviews
-          it and marks your subscription funded - you'll see the status update on this page.
+          it and marks your subscription funded, you'll see the status update on this page.
         </p>
       </header>
 
@@ -191,7 +191,7 @@ function WireConfirmationPage() {
           {settled ? (
             <Card>
               <CardContent className="p-6 text-muted-foreground">
-                Your subscription is fully funded - no further confirmation is needed.
+                Your subscription is fully funded: no further confirmation is needed.
               </CardContent>
             </Card>
           ) : !isWire || !acknowledged ? (

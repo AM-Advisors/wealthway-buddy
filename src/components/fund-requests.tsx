@@ -53,7 +53,7 @@ export function FundRequests({ fundId, preselect }: { fundId: string; preselect?
           <span className="text-xs text-muted-foreground">{REQUEST_STATUS_LABEL[r.status as keyof typeof REQUEST_STATUS_LABEL]}</span>
           <ResponsibilityBadge status={r.responsibility_status} />
         </button></li>
-      ))}</ul> : <div className="rounded-xl border bg-card p-4 text-sm"><p className="font-medium">No requests here</p><p className="text-muted-foreground">Use Request Service to ask Harmonious for anything — capital calls, distributions, reports, filings and more.</p></div>}
+      ))}</ul> : <div className="rounded-xl border bg-card p-4 text-sm"><p className="font-medium">No requests here</p><p className="text-muted-foreground">Use Request Service to ask Harmonious for anything, capital calls, distributions, reports, filings and more.</p></div>}
     </div>
   );
 }
@@ -97,7 +97,7 @@ function NewRequest({ fundId, initial, onDone }: { fundId: string; initial: stri
               </label>
             ))}
           </div>
-          {type === "CAPITAL_CALL" && <p className="text-xs text-muted-foreground">You don't need to calculate each investor's share — Harmonious prepares the allocation and sends it to you for approval.</p>}
+          {type === "CAPITAL_CALL" && <p className="text-xs text-muted-foreground">You don't need to calculate each investor's share. Harmonious prepares the allocation and sends it to you for approval.</p>}
           <div className="flex flex-wrap items-center gap-2 text-sm">
             <span>Priority</span>
             <select aria-label="Priority" value={priority} onChange={(e) => setPriority(e.target.value as any)} className={sel}><option value="normal">Normal</option><option value="high">High</option><option value="urgent">Urgent (time-sensitive)</option></select>

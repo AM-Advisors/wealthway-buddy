@@ -33,13 +33,13 @@ export function validateOutsideRecipients(list: OutsideRecipient[]) {
   }
   return list.map((r) => ({ email: r.email.trim().toLowerCase(), reason: r.reason.trim() }));
 }
-/** Outside recipients get counts only — every name is removed. */
+/** Outside recipients get counts only: every name is removed. */
 export function redactForOutside(sections: SectionResult[]): SectionResult[] { return sections.map((s) => ({ ...s, lines: [] })); }
 
 const inDays = (d: string, asOf: string) => (Date.parse(d) - Date.parse(asOf)) / 86400000;
 export function filingDeadlines(items: { label: string | null; category: string | null; status: string | null; due_date: string | null; filed_on: string | null; fund: string }[], asOf: string): SectionResult {
   const open = items.filter((i) => i.due_date && !i.filed_on && !['filed', 'complete', 'completed', 'not_applicable'].includes(String(i.status)) && inDays(i.due_date, asOf) <= 30);
-  const lines = open.sort((a, b) => a.due_date!.localeCompare(b.due_date!)).map((i) => `${i.fund}: ${i.label ?? i.category ?? 'Filing'} — ${inDays(i.due_date!, asOf) < 0 ? 'overdue' : 'due'} ${i.due_date}`);
+  const lines = open.sort((a, b) => a.due_date!.localeCompare(b.due_date!)).map((i) => `${i.fund}: ${i.label ?? i.category ?? 'Filing'} · ${inDays(i.due_date!, asOf) < 0 ? 'overdue' : 'due'} ${i.due_date}`);
   return { key: 'filing_deadlines', title: REPORT_SECTIONS.filing_deadlines, count: open.length, lines: lines.slice(0, 25) };
 }
 export function fundDeadlines(rows: { fund: string; label: string; date: string | null }[], asOf: string): SectionResult {

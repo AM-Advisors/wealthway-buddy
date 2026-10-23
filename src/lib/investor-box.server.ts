@@ -88,7 +88,7 @@ export async function archiveInvestorUploadToBox(
     );
     const uploadedAtSource = (row.uploaded_at as string | null) ?? new Date().toISOString();
     const { base, ext } = splitExtension(row.file_name as string);
-    const fileName = `${safeName(String(row.doc_kind))} - ${safeName(base)} - ${stamp(
+    const fileName = `${safeName(String(row.doc_kind))} · ${safeName(base)} · ${stamp(
       uploadedAtSource,
     )}${ext}`;
 

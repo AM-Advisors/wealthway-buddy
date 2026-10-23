@@ -1,7 +1,7 @@
 /**
  * The staff sidebar standard: every section and gated entry declares the roles it is for.
  * An entry shows only when the employee holds one of them; empty sections disappear.
- * Display only — every page and action keeps its own server-side check.
+ * Display only, every page and action keeps its own server-side check.
  */
 export const LEADERS = ["super_admin", "executive"] as const;
 

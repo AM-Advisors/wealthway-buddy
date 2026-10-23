@@ -666,7 +666,7 @@ function SowPreview({ clientId, offeringId, canGenerate, onDone }: { clientId: s
             <Button
               disabled={!p.template || !p.lines.length || (!!templateId && reason.trim().length < 5)}
               onClick={() => gen({ data: { clientId, offeringId, templateId, overrideReason: reason || undefined } }).then((r) => {
-                toast.success(r.outcome === "reused_executed" ? "An executed SOW already covers this - reused." : r.outcome === "no_template" ? "No approved template - task raised." : "Draft SOW saved. It is not signed or executed.");
+                toast.success(r.outcome === "reused_executed" ? "An executed SOW already covers this (reused." : r.outcome === "no_template" ? "No approved template) task raised." : "Draft SOW saved. It is not signed or executed.");
                 q.refetch(); onDone();
               }, err)}
             >
@@ -820,7 +820,7 @@ function LinkFundDialog({ clientId, onClose }: { clientId: string; onClose: () =
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Link Existing Fund/SPV</DialogTitle>
-          <DialogDescription>A fund that belongs to another client is never moved silently - it needs a reason and a second person's review.</DialogDescription>
+          <DialogDescription>A fund that belongs to another client is never moved silently, it needs a reason and a second person's review.</DialogDescription>
         </DialogHeader>
         <Input placeholder="Search funds" value={term} onChange={(e) => setTerm(e.target.value)} />
         <Input placeholder="Reason (required for a fund owned by another client)" value={reason} onChange={(e) => setReason(e.target.value)} />

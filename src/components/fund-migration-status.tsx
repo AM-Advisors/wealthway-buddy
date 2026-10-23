@@ -32,7 +32,7 @@ export function FundMigrationStatus({ fundId }: { fundId: string }) {
     <Card>
       <CardHeader>
         <CardTitle className="text-base">Migration status</CardTitle>
-        <CardDescription>Progress bringing this fund's existing investors onto Harmonious. Display only — confirming and sending stay in their own steps.</CardDescription>
+        <CardDescription>Progress bringing this fund's existing investors onto Harmonious. Display only, confirming and sending stay in their own steps.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex items-center gap-3"><Progress value={overall} className="h-2" /><span className="text-sm font-medium tabular-nums">{overall}%</span></div>

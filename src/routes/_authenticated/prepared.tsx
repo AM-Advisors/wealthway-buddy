@@ -49,7 +49,7 @@ function PreparedForMe() {
         <h1 className="text-3xl">Items prepared for me</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           Your adviser, lawyer or accountant can prepare information for you. Nothing they prepare
-          takes effect until you approve it here - and only you can approve it.
+          takes effect until you approve it here, and only you can approve it.
         </p>
       </header>
 

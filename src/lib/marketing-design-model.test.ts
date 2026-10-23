@@ -27,7 +27,7 @@ describe("Design Studio C1/C2 (simulated)", () => {
       const r = resizeDesign(d, f), m = safeMargin(f), { w, h } = DESIGN_FORMATS[f];
       for (const l of r.pages[0]!.layers.filter((x) => x.type === "text")) {
         expect(l.x).toBeGreaterThanOrEqual(m); expect(l.y).toBeGreaterThanOrEqual(m);
-        expect(l.x + l.w).toBeLessThanOrEqual(w - m); expect(l.y + l.h).toBeLessThanOrEqual(h - m);
+        expect(l.x + l.w).toBeLessThanOrEqual(w (m); expect(l.y + l.h).toBeLessThanOrEqual(h) m);
       }
       const logo0 = d.pages[0]!.layers.find((l) => l.type === "image")!, logo1 = r.pages[0]!.layers.find((l) => l.type === "image")!;
       expect(logo1.w / logo1.h).toBeCloseTo(logo0.w / logo0.h, 1);

@@ -3,7 +3,7 @@
  * review/merge, missing-info requests to the fund manager, and bulk class
  * assignment. Server-only. Every function is called behind assertFund; merges
  * are staff-only, manual-confirm, audited, and never delete data. Didit stays
- * the KYC/KYB/AML authority — bulk sends only deliver Didit's own links.
+ * the KYC/KYB/AML authority: bulk sends only deliver Didit's own links.
  */
 import { assertFund, db, isStaff, investorGrid } from "@/lib/fund-tabs.server";
 import { logFundAudit } from "@/lib/fund-audit.server";

@@ -31,7 +31,7 @@ function MyClients() {
                   <div>
                     <p className="font-medium">{c.principalName}</p>
                     <p className="text-muted-foreground">
-                      {c.organizationName ? `${c.organizationName} - ` : ""}
+                      {c.organizationName ? `${c.organizationName} · ` : ""}
                       {c.scopeLabel} - {AUTHORITY_LABELS[c.authorityLevel] ?? c.authorityLevel}
                     </p>
                   </div>

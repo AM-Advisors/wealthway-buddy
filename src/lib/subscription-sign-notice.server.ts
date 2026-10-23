@@ -2,7 +2,7 @@
 const CLOSED = ['declined', 'cancelled', 'closed', 'funded']
 
 export async function sendSubscriptionSignNotice(db: any, actorId: string, input: { fundId: string; onboardingId: string }) {
-  // Only that fund's managers or Harmonious staff — general fund membership is not enough.
+  // Only that fund's managers or Harmonious staff, general fund membership is not enough.
   const { isStaff } = await import('@/lib/fund-tabs.server')
   const staff = await isStaff(actorId)
   if (!staff) {

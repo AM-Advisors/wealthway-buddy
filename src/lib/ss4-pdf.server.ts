@@ -207,7 +207,7 @@ export async function fillSs4Pdf(data: Ss4Data, opts: { signature?: string; sign
 
   for (const [line, key] of TEXT_LINES) setText(line, data[key]);
 
-  // Line 8a / 8c - limited liability company
+  // Line 8a / 8c: limited liability company
   if (data.is_llc) {
     check("c1_1", 0);
     check("c1_2", data.llc_us_organized === false ? 1 : 0);

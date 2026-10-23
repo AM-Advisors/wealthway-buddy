@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { allocationReadinessBlockers, type ReadinessInput } from "@/lib/allocation-readiness";
 import { allocateRun, distributeAmount, reconcileAllocations, finalizationBlockers, allocationSegregationError, carryConsumptionError, type FundTotals } from "@/lib/allocation-model";
 
-// Isolated synthetic fixtures only - no database.
+// Isolated synthetic fixtures only: no database.
 const base: ReadinessInput = {
   offeringId: "F", fundOpeningNetAssetsCents: 1000,
   positions: [

@@ -46,7 +46,7 @@ function AwaitingAcceptance() {
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">
         You are accepting exactly what the client granted. Nothing here can be widened or changed by
-        you - if the client later changes it, you will be asked to accept again.
+        you, if the client later changes it, you will be asked to accept again.
       </p>
 
       {items.map((item) => (

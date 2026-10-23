@@ -71,7 +71,7 @@ function useAction<T>(fn: (v: T) => Promise<any>, ok: string | null, done: () =>
 }
 
 /**
- * Complete Your Investment - four steps: About You, Verification, Sign, Fund.
+ * Complete Your Investment: four steps: About You, Verification, Sign, Fund.
  * Every state shown here is derived on the server from authoritative records.
  */
 export function InvestorOnboardingJourney({

@@ -123,7 +123,7 @@ export function CapTableRequestDialog({ open, provider, onOpenChange }: Props) {
               <DialogTitle>Bring your cap table across</DialogTitle>
               <DialogDescription>
                 Tell us where your records live today. We will confirm the details with you and open your
-                workspace - your existing history comes with you.
+                workspace, your existing history comes with you.
               </DialogDescription>
             </DialogHeader>
 

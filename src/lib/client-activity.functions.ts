@@ -57,7 +57,7 @@ const money = (cents: number | null | undefined) =>
 /**
  * Everything the client side of the portal has done: fund setup details,
  * documents signed, invoices approved or queried, payments declared and
- * service requests raised. Read-only - this is a record, not a control.
+ * service requests raised. Read-only, this is a record, not a control.
  */
 export const getClientPortalActivity = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])

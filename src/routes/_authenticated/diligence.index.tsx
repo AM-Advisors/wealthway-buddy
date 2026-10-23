@@ -15,7 +15,7 @@ export const Route = createFileRoute("/_authenticated/diligence/")({
       {
         name: "description",
         content:
-          "Review fund due diligence materials - formation documents, financials, track record and team - in one secure Harmonious room per fund.",
+          "Review fund due diligence materials (formation documents, financials, track record and team) in one secure Harmonious room per fund.",
       },
       { property: "og:title", content: "Due Diligence Rooms - Harmonious" },
       {

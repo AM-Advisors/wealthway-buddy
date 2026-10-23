@@ -178,7 +178,7 @@ function NewClient() {
 
       {step === 2 && clientId && (
         <Card><CardHeader><CardTitle className="text-base">Contacts</CardTitle>
-          <CardDescription>Everyone at the client lives here. Mark one person as Primary Contact. Designations are reference only - they don't grant access or signing authority.</CardDescription></CardHeader>
+          <CardDescription>Everyone at the client lives here. Mark one person as Primary Contact. Designations are reference only, they don't grant access or signing authority.</CardDescription></CardHeader>
           <CardContent className="space-y-4">
             {legacyPrimary && (
               <div className="rounded-md border border-dashed p-3 text-sm">
@@ -224,7 +224,7 @@ function NewClient() {
 
       {step === 4 && clientId && (
         <Card><CardHeader><CardTitle className="text-base">Expected services</CardTitle>
-          <CardDescription>What Harmonious expects to provide. Optional, and never a blocker - each fund records its own Services & Pricing when it's created.</CardDescription></CardHeader>
+          <CardDescription>What Harmonious expects to provide. Optional, and never a blocker, each fund records its own Services & Pricing when it's created.</CardDescription></CardHeader>
           <CardContent className="space-y-3">
             <ExpectedServicesEditor clientId={clientId} onSaved={() => go(5)} />
             <Button variant="ghost" onClick={() => go(5)}>Skip for now</Button>

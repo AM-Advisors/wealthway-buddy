@@ -10,7 +10,7 @@ export const Route = createFileRoute("/_authenticated/admin/timeline")({
       {
         name: "description",
         content:
-          "Set each fund's key dates - closing, wire deadline and launch - and share them in the due diligence room.",
+          "Set each fund's key dates (closing, wire deadline and launch) and share them in the due diligence room.",
       },
       { property: "og:title", content: "Fund Timeline - Harmonious Admin" },
       { property: "og:description", content: "Set and publish key dates for each fund." },

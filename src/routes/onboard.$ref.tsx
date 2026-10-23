@@ -8,7 +8,7 @@ import { claimOnboardInvitationFn } from "@/lib/investor-onboarding.functions";
 
 /**
  * The single emailed entry point: onboard.harmonious.co/onboard/<reference>.
- * The reference is opaque and never a credential - the server binds it to the
+ * The reference is opaque and never a credential, the server binds it to the
  * signed-in person's verified email before anything is shown.
  */
 export const Route = createFileRoute("/onboard/$ref")({

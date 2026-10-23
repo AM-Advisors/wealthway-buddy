@@ -1,4 +1,4 @@
-/** Builds the invoice a client downloads or views - a real PDF, rendered in the
+/** Builds the invoice a client downloads or views, a real PDF, rendered in the
  *  browser so it needs no server round-trip. */
 
 import { COMPANY } from "@/lib/company-details";

@@ -1,5 +1,5 @@
 /**
- * Investor Google Drive connection - controlled read-only intake from the
+ * Investor Google Drive connection: controlled read-only intake from the
  * Restricted Investor Records repository. Super Administrators only; fails
  * closed when configuration or the repository safety check fails. Never creates,
  * renames or shares Drive folders and never writes to Drive.

@@ -122,7 +122,7 @@ function AuthorityDocuments() {
   return (
     <div className="space-y-6">
       <p className="text-sm text-muted-foreground">
-        Signing on a client's behalf always needs written legal authority on file - a power of
+        Signing on a client's behalf always needs written legal authority on file, a power of
         attorney, resolution, trustee authorization or similar. Uploading one is not enough: Harmonious
         reviews it, and signing only becomes possible once it is accepted.
       </p>

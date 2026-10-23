@@ -1,6 +1,6 @@
 import { resolvePerson } from "@/lib/person-resolution";
 /**
- * Canonical investor record entry & sync - pure rules only.
+ * Canonical investor record entry & sync: pure rules only.
  * Person → Investment Profile → Investment → Fund. Nothing here writes data,
  * approves compliance, or moves money; the server applies these decisions.
  */
@@ -73,7 +73,7 @@ export function normEmail(e: string | null | undefined) { return String(e ?? "")
 export function normName(n: string | null | undefined) { return String(n ?? "").trim().toLowerCase().replace(/\s+/g, " "); }
 export function isEmail(e: string) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.trim()); }
 
-/** a•••••@example.com - never reveals the full address. */
+/** a•••••@example.com: never reveals the full address. */
 export function maskEmail(email: string | null | undefined): string {
   const e = normEmail(email);
   const at = e.indexOf("@");
@@ -137,7 +137,7 @@ export function validateQuickAdd(q: { [K in keyof QuickAdd]?: QuickAdd[K] | unde
 
 export function profileLabelFor(type: ProfileType, legalName: string | null, personName: string) {
   if (type === "individual") return personName;
-  return legalName?.trim() || `${personName} - ${PROFILE_TYPE_LABELS[type]}`;
+  return legalName?.trim() || `${personName} · ${PROFILE_TYPE_LABELS[type]}`;
 }
 
 /* ---------------- record status (separate from readiness) ---------------- */

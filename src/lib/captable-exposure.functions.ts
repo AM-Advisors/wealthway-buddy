@@ -5,11 +5,11 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/lib/require-auth";
 
 /**
- * Harmonious CapTable - Phase 7: SPV exposure claims and verification.
+ * Harmonious CapTable: Phase 7: SPV exposure claims and verification.
  *
  * Outside funds, SPVs and advisers declare the position they believe they hold.
  * The company compares that claim against its own register and confirms,
- * adjusts or disputes it. Verifying a claim never issues or moves shares - the
+ * adjusts or disputes it. Verifying a claim never issues or moves shares, the
  * register is only changed by a deliberate cap table action.
  */
 
@@ -698,7 +698,7 @@ export const addActivityCaseNote = createServerFn({ method: "POST" })
   });
 
 /* ------------------------------------------------------------------ */
-/* Claimant side - signed-in funds, SPVs and advisers                  */
+/* Claimant side: signed-in funds, SPVs and advisers                  */
 /* ------------------------------------------------------------------ */
 
 export const getMyExposureClaims = createServerFn({ method: "GET" })

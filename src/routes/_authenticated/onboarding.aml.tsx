@@ -215,7 +215,7 @@ function AmlPage() {
             <CardHeader>
               <CardTitle>Screening declarations</CardTitle>
               <CardDescription>
-                A "yes" does not disqualify you - it routes your file to enhanced due diligence.
+                A "yes" does not disqualify you, it routes your file to enhanced due diligence.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">

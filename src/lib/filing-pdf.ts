@@ -44,7 +44,7 @@ export async function renderFilingPdf(form: FilingForm): Promise<Uint8Array> {
     }
   }
   const pages = doc.getPages();
-  pages.forEach((p, i) => p.drawText(`Harmonious - prepared for manual filing - page ${i + 1} of ${pages.length}`, { x: M, y: 24, size: 7, font, color: rgb(0.5, 0.5, 0.5) }));
+  pages.forEach((p, i) => p.drawText(`Harmonious (prepared for manual filing) page ${i + 1} of ${pages.length}`, { x: M, y: 24, size: 7, font, color: rgb(0.5, 0.5, 0.5) }));
   const bytes = await doc.save();
   return bytes;
 }

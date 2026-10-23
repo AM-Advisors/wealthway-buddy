@@ -4,12 +4,12 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/lib/require-auth";
 
 /**
- * Harmonious CapTable - Phase 4: secondary transfers.
+ * Harmonious CapTable: Phase 4: secondary transfers.
  *
  * A shareholder sale moves through named stages: request, transfer restriction
  * review, right of first refusal, company consent, then closing. Each stage is
  * owned, dated and written to the company's history. A request never changes
- * the official ledger on its own - only a deliberate close posts the transfer
+ * the official ledger on its own, only a deliberate close posts the transfer
  * transactions the cap table is derived from.
  */
 
@@ -279,7 +279,7 @@ export const saveSecondaryTransfer = createServerFn({ method: "POST" })
     }
     if (data.quantity > balance) {
       throw new Error(
-        `The seller holds ${balance.toLocaleString("en-US")} of this security - you cannot transfer more.`,
+        `The seller holds ${balance.toLocaleString("en-US")} of this security, you cannot transfer more.`,
       );
     }
 
@@ -593,7 +593,7 @@ export const closeSecondaryTransfer = createServerFn({ method: "POST" })
     );
     if (quantity <= 0 || quantity > balance) {
       throw new Error(
-        `The seller now holds ${balance.toLocaleString("en-US")} of this security - the transfer cannot close.`,
+        `The seller now holds ${balance.toLocaleString("en-US")} of this security: the transfer cannot close.`,
       );
     }
 

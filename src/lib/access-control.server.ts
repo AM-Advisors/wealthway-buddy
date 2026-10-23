@@ -4,7 +4,7 @@ import type { AuthzFacts } from "@/lib/authorize";
 /**
  * Read-only Access Control Center (Stage 1). Nothing here changes access, and
  * no enforcement path reads from it. Gate: platform super_admin/admin, or a
- * staff capability to manage staff/roles/permissions - checked on the server
+ * staff capability to manage staff/roles/permissions, checked on the server
  * for every call, never from the menu.
  */
 export async function requireAccessViewer(context: any): Promise<string> {

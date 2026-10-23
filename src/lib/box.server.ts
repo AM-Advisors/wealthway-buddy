@@ -88,7 +88,7 @@ export function sniffDocumentKind(bytes: Uint8Array): "pdf" | "docx" {
 export function signingFileName(baseName: string, bytes: Uint8Array, now = Date.now()): string {
   const kind = sniffDocumentKind(bytes);
   const stem = baseName.replace(/\.(pdf|docx?)$/i, "").trim() || "Fund document";
-  return `${stem} - ${now.toString(36)}.${kind}`;
+  return `${stem} · ${now.toString(36)}.${kind}`;
 }
 
 /**
@@ -471,7 +471,7 @@ export async function createMultiSignerRequest(input: MultiSignerInput): Promise
   return parseSignDetail(await res.json());
 }
 
-/** Full detail for a signing request, straight from Box - the only authority. */
+/** Full detail for a signing request, straight from Box, the only authority. */
 export async function getSignRequestDetail(signRequestId: string): Promise<BoxSignDetail> {
   const res = await boxFetch(`${API}/sign_requests/${encodeURIComponent(signRequestId)}`);
   return parseSignDetail(await res.json());

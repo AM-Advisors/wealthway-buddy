@@ -116,7 +116,7 @@ export function ManagerAddInvestor({ fundId, exemptionLabel, onSent, compact }: 
   );
 }
 
-/** Progress only - no identity evidence, tax numbers, provider results or bank details. */
+/** Progress only, no identity evidence, tax numbers, provider results or bank details. */
 export function FundInvestorProgress({ fundId }: { fundId: string }) {
   const load = useServerFn(managerOnboardingBoardFn);
   const { data, isLoading } = useQuery({

@@ -67,7 +67,7 @@ function Monitoring() {
               <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                 {a.notified_at && <span>Emailed {f(a.notified_at)}</span>}{a.escalated_at && <span>Escalated {f(a.escalated_at)}</span>}
                 {a.acknowledged_at && <span>Acknowledged {f(a.acknowledged_at)}</span>}
-                {a.resolved_at && <span>Resolved {f(a.resolved_at)}{a.auto_resolved ? " (cleared automatically)" : ""}{a.resolution_note ? ` — ${a.resolution_note}` : ""}</span>}
+                {a.resolved_at && <span>Resolved {f(a.resolved_at)}{a.auto_resolved ? " (cleared automatically)" : ""}{a.resolution_note ? ` · ${a.resolution_note}` : ""}</span>}
                 {!a.resolved_at && <>
                   {!a.acknowledged_at && <Button size="sm" variant="outline" onClick={() => doAct(a.id, "acknowledge")}>Acknowledge</Button>}
                   {d.canManage && <Button size="sm" variant="outline" onClick={() => doAct(a.id, "escalate")}>Escalate</Button>}

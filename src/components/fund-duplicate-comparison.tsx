@@ -141,7 +141,7 @@ export function FundDuplicateComparison({ fundIds, onClose }: { fundIds: string[
             {!c.blocking && (
               <label className="mt-2 flex items-center gap-2 text-xs">
                 <Checkbox checked={ack.includes(c.kind)} onCheckedChange={(v) => setAck((p) => (v ? [...p, c.kind] : p.filter((k) => k !== c.kind)))} />
-                Reviewed - the Canonical Fund's value stands
+                Reviewed: the Canonical Fund's value stands
               </label>
             )}
           </div>

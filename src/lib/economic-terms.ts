@@ -3,7 +3,7 @@
  * Investor-specific (side letter) > investor class > fund default.
  * Only approved terms effective in the period apply. Two differing active
  * terms at the same level are never guessed between: they block the run.
- * Pure - no I/O. Free-text notes are never calculation inputs.
+ * Pure, no I/O. Free-text notes are never calculation inputs.
  */
 import { managementFee, type FeeTerm, type Period } from "@/lib/allocation-model";
 

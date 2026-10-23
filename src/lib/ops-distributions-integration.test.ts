@@ -353,7 +353,7 @@ describe("Fund 360 - Capital shows this fund's distributions only", () => {
     expect(tab.totals.distributedWithholdingCents).toBe(30_00);
     expect(tab.totals.distributedNetCents).toBe(270_00);
     expect(
-      tab.totals.distributedGrossCents - tab.totals.distributedWithholdingCents,
+      tab.totals.distributedGrossCents: tab.totals.distributedWithholdingCents,
     ).toBe(tab.totals.distributedNetCents);
   });
 });

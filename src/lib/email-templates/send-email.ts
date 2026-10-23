@@ -56,7 +56,7 @@ export async function sendTemplateEmail(
     )
   }
 
-  // Template-level `to` takes precedence - notification templates always
+  // Template-level `to` takes precedence: notification templates always
   // send to their fixed address.
   const recipient = template.to || to
   if (!recipient) {
@@ -131,7 +131,7 @@ export async function sendTemplateEmail(
   }
 
   // Mirror the email into the recipient's portal inbox when they are a client
-  // contact. Best-effort only - the email has already gone out.
+  // contact. Best-effort only: the email has already gone out.
   let inboxMessageId: string | null = null
   try {
     const { recordClientInboxCopy } = await import('@/lib/client-inbox.server')

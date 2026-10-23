@@ -8,7 +8,7 @@ import {
 
 const rate: RateItem[] = [
   { serviceKey: null, label: "SPV under $250,000", amountCents: 500000, pricingModel: "one_time" },
-  { serviceKey: null, label: "SPV $250,000–$1,000,000", amountCents: 750000, pricingModel: "one_time" },
+  { serviceKey: null, label: "SPV $250,000 to $1,000,000", amountCents: 750000, pricingModel: "one_time" },
   { serviceKey: null, label: "SPV over $1,000,000", amountCents: 1000000, pricingModel: "one_time" },
   { serviceKey: "fund_management", label: "Fund Management", amountCents: 250000, pricingModel: "annual" },
   { serviceKey: "investor_onboarding", label: "IO annual", amountCents: 250000, pricingModel: "annual" },

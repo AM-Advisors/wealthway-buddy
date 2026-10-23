@@ -1,5 +1,5 @@
 /**
- * Client "Launch a new fund or SPV" request - pure rules.
+ * Client "Launch a new fund or SPV" request, pure rules.
  * Sections mirror Harmonious Fund Setup so staff receive a pre-filled setup
  * they still confirm; nothing here marks any setup section complete.
  */
@@ -303,7 +303,7 @@ export function flatAnswers(r: FundRequest): Record<string, string> {
     else if (k === "series_existing" || k === "series_new") {
       if (r.series_home === (k === "series_existing" ? "own" : "new")) out[k] = Object.entries(v as SeriesInfo).filter(([, x]) => x).map(([a, x]) => `${a}: ${x}`).join("; ");
     }
-    else if (k === "series_fee_ack") { if (v && r.series_home === "new") out["invoice_item"] = `New Series LLC management - ${SERIES_NEW_ANNUAL_FEE} (client acknowledged; Operations to invoice)`; }
+    else if (k === "series_fee_ack") { if (v && r.series_home === "new") out["invoice_item"] = `New Series LLC management · ${SERIES_NEW_ANNUAL_FEE} (client acknowledged; Operations to invoice)`; }
     else if (k === "ss4") { const s4 = ss4For(r); if (s4) out[k] = Object.entries(s4).map(([a, x]) => `${a}: ${x}`).join("; "); }
     else if (k === "documents") out[k] = (v as RequestDocument[]).map((d) => `${d.kind}: ${d.fileName}`).join("; ");
   }

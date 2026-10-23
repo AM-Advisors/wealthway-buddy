@@ -1,6 +1,6 @@
 /**
  * Operations Command Center data layer (server-only, service role, staff-gated).
- * One bounded batch of set-based queries per load — no per-fund loops.
+ * One bounded batch of set-based queries per load, no per-fund loops.
  * All judgments (priority, SLA, capacity, limits) are pure in ops-command.ts.
  */
 import {

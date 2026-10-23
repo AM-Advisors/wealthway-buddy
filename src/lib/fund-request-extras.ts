@@ -18,7 +18,7 @@ export const FORMATION_GUIDES: Record<string, FormationGuide> = {
     ],
   },
   Wyoming: {
-    office: "Wyoming Secretary of State - Business Division",
+    office: "Wyoming Secretary of State. Business Division",
     url: "https://sos.wyo.gov/Business/Default.aspx",
     filings: [
       { entity: "LLC", form: "Articles of Organization (LLC)", fee: "$100" },
@@ -28,7 +28,7 @@ export const FORMATION_GUIDES: Record<string, FormationGuide> = {
     ],
   },
   Nevada: {
-    office: "Nevada Secretary of State - SilverFlume",
+    office: "Nevada Secretary of State. SilverFlume",
     url: "https://www.nvsilverflume.gov/",
     filings: [
       { entity: "LLC", form: "Articles of Organization (LLC) + Initial List + Business License", fee: "$75 + list/license fees" },
@@ -38,7 +38,7 @@ export const FORMATION_GUIDES: Record<string, FormationGuide> = {
     ],
   },
   Texas: {
-    office: "Texas Secretary of State - SOSDirect",
+    office: "Texas Secretary of State. SOSDirect",
     url: "https://www.sos.state.tx.us/corp/forms_boc.shtml",
     filings: [
       { entity: "LLC", form: "Form 205 - Certificate of Formation (LLC)", fee: "$300" },
@@ -48,7 +48,7 @@ export const FORMATION_GUIDES: Record<string, FormationGuide> = {
     ],
   },
   "New York": {
-    office: "New York Department of State - Division of Corporations",
+    office: "New York Department of State. Division of Corporations",
     url: "https://dos.ny.gov/forms-and-fees-division-corporations",
     filings: [
       { entity: "LLC", form: "Articles of Organization (LLC) - publication required", fee: "$200 + publication" },

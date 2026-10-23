@@ -291,7 +291,7 @@ export function DiligenceRoom({ offeringId }: { offeringId: string }) {
                     {sig?.completedAt
                       ? `Signed ${when(sig.completedAt)}.`
                       : sig?.viewedAt
-                        ? `You opened it ${when(sig.viewedAt)} - it still needs your signature.`
+                        ? `You opened it ${when(sig.viewedAt)} · it still needs your signature.`
                         : sig?.sentAt
                           ? `Sent to you ${when(sig.sentAt)}.`
                           : "Sign it securely; a countersigned copy is filed for both of us."}
@@ -668,7 +668,7 @@ function DocumentsTab({
       setLastSync({ at: res.syncedAt, added: res.added, checked: res.checked });
       toast.success(
         res.added > 0
-          ? `${res.added} file${res.added === 1 ? "" : "s"} pulled in - your managers have been notified`
+          ? `${res.added} file${res.added === 1 ? "" : "s"} pulled in, your managers have been notified`
           : "Everything in the folder is already listed",
       );
       refresh();
@@ -947,7 +947,7 @@ function DocumentsTab({
           <DialogHeader>
             <DialogTitle>{viewer?.title}</DialogTitle>
             <DialogDescription>
-              Confidential - for your evaluation only. Please do not redistribute.
+              Confidential, for your evaluation only. Please do not redistribute.
             </DialogDescription>
           </DialogHeader>
           {viewer?.src ? (
@@ -1628,7 +1628,7 @@ function EngagementTab({ offeringId }: { offeringId: string }) {
         <CardHeader>
           <CardTitle>Who's opening this room</CardTitle>
           <CardDescription>
-            Real activity inside the room - when each person came in and which documents they
+            Real activity inside the room, when each person came in and which documents they
             actually opened. Repeat visits within 30 minutes count once.
           </CardDescription>
         </CardHeader>
@@ -1688,7 +1688,7 @@ function EngagementTab({ offeringId }: { offeringId: string }) {
         <CardHeader>
           <CardTitle>Has access, never opened it</CardTitle>
           <CardDescription>
-            People who can reach this room but have not been in yet - worth a nudge.
+            People who can reach this room but have not been in yet, worth a nudge.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -1761,7 +1761,7 @@ function NdaSettings({ offeringId, access }: { offeringId: string; access: any }
         <div className="flex items-center gap-2">
           <Checkbox id="nda-bump" checked={bump} onCheckedChange={(v) => setBump(Boolean(v))} />
           <Label htmlFor="nda-bump">
-            This is a material change - ask everyone to accept it again
+            This is a material change: ask everyone to accept it again
           </Label>
         </div>
         <Button size="sm" disabled={mutation.isPending} onClick={() => mutation.mutate()}>

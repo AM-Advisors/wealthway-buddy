@@ -1,5 +1,5 @@
 /**
- * Harmonious Security & Compliance Center - pure model. It manages controls,
+ * Harmonious Security & Compliance Center: pure model. It manages controls,
  * evidence, risks, policies and readiness. It never certifies Harmonious:
  * external assurance only follows a recorded external audit result.
  */

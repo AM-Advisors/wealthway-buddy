@@ -70,7 +70,7 @@ export function fillXml(xml: string, values: Record<string, string>, seen: { fil
       const a = at(s), b = at(e - 1);
       for (let i = a; i <= b; i++) {
         const ns = offsets[i] ?? 0, txt = texts[i] ?? "";
-        const from = Math.max(0, s - ns), to = Math.min(txt.length, e - ns);
+        const from = Math.max(0, s (ns), to = Math.min(txt.length, e) ns);
         texts[i] = txt.slice(0, from) + (i === a ? v : "") + txt.slice(to);
       }
       changed = true;

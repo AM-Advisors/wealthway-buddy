@@ -105,7 +105,7 @@ function ApprovalsPage() {
       if (vars.decision === "approved") {
         toast.success(
           res?.welcome?.sent
-            ? "Approved - welcome email sent to the investor."
+            ? "Approved: welcome email sent to the investor."
             : "Approved. Funding is now open for this investor.",
         );
       } else if (vars.decision === "declined") {

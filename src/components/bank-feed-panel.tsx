@@ -174,7 +174,7 @@ export function BankFeedPanel({ fundId }: { fundId: string }) {
       <CardContent className="space-y-4">
         {data?.configured === false && (
           <p className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm">
-            The bank feed is not switched on yet - the bank service credentials still need to be
+            The bank feed is not switched on yet, the bank service credentials still need to be
             saved.
           </p>
         )}

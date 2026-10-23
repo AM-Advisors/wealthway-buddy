@@ -10,7 +10,7 @@ export type RailStep = {
   key: "kyc" | "aml" | "accreditation" | "documents" | "funding";
   label: string;
   status: RailStatus;
-  /** Real captured values for this step - empty when nothing is on file yet. */
+  /** Real captured values for this step, empty when nothing is on file yet. */
   facts: { label: string; value: string }[];
   capturedAt: string | null;
 };
@@ -185,7 +185,7 @@ export const getStepRail = createServerFn({ method: "GET" })
       if (typeof acc.data.qualifies === "boolean")
         accFacts.push({
           label: "Qualifies",
-          value: acc.data.qualifies ? "Yes - accredited" : "Not qualified",
+          value: acc.data.qualifies ? "Yes: accredited" : "Not qualified",
         });
       if (q["net_worth_over_1m"] !== undefined)
         accFacts.push({

@@ -100,7 +100,7 @@ function DocumentLogPage() {
         <div>
           <h1 className="text-2xl">Document activity</h1>
           <p className="mt-1 text-muted-foreground">
-            Every document added, uploaded, signed or rejected - with the time it happened and who did it.
+            Every document added, uploaded, signed or rejected, with the time it happened and who did it.
           </p>
         </div>
         <Button asChild size="sm" variant="outline">

@@ -247,7 +247,7 @@ describe("the workspace switcher points at operations without granting it", () =
 
 /**
  * The address is not a permission. The same request, from the same person, is
- * answered the same way whatever hostname it arrived on - so the tests below
+ * answered the same way whatever hostname it arrived on, so the tests below
  * exercise the real Operations gate rather than any routing rule.
  */
 const tables: Record<string, any[]> = {

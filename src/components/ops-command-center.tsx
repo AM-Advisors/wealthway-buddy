@@ -265,7 +265,7 @@ function InvestorEx({ rows }: { rows: any[] }) {
             <td className="p-2"><Badge variant={r.severity === "high" ? "destructive" : "outline"}>{r.severity}</Badge></td><td className="p-2">{titleCase(r.team)}</td><td className="p-2">{r.nextAction}</td><td className="p-2">{r.clientVisible ? "Yes" : "No"}</td></tr>
         ))}
       </Table>
-      <p className="text-xs text-muted-foreground">No identity numbers, documents or bank details are shown here — open the investor record for authorized detail.</p>
+      <p className="text-xs text-muted-foreground">No identity numbers, documents or bank details are shown here, open the investor record for authorized detail.</p>
     </section>
   );
 }

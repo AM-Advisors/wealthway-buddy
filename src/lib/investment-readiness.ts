@@ -82,7 +82,7 @@ export const REQUIREMENT_STAGE: Record<RequirementKey, ReadinessStage> = {
   funding: "funding",
 };
 
-/** Source system per requirement - for audit and staff display. */
+/** Source system per requirement, for audit and staff display. */
 export const REQUIREMENT_SOURCE: Record<string, string> = {
   account: "accounts",
   investment_profile: "investment_profiles",
@@ -408,7 +408,7 @@ export function readinessView(r: ReadinessResult, viewer: ReadinessViewer) {
   };
 }
 
-/** Transitions between two computed results - the basis for audit events. */
+/** Transitions between two computed results: the basis for audit events. */
 export function readinessTransitions(prev: Record<string, string>, next: ReadinessResult) {
   return next.items
     .filter((i) => prev[i.key] !== i.status)

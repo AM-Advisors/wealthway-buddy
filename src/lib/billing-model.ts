@@ -1,6 +1,6 @@
 /**
  * Pure rules for current-client services, migration payment records and
- * payment reminders. Reminders only ask the client to pay - nothing here
+ * payment reminders. Reminders only ask the client to pay, nothing here
  * charges, refunds or moves money.
  */
 import { INVESTOR_TIERS } from "@/lib/product-pricing";
@@ -25,7 +25,7 @@ export function serviceCatalog(): ServiceOption[] {
     ...SERVICING_KEYS.map((k) => ({ key: `servicing_${k}`, label: `${SERVICING_LABEL[k]} servicing`, group: "Servicing" })),
     { key: "servicing_institutional", label: "Institutional servicing", group: "Servicing" },
     ...INVESTOR_TIERS.map((t) => ({ key: `investor_servicing_${t.key}`, label: `${t.name} investor servicing${t.maxInvestors ? ` (up to ${t.maxInvestors})` : ""}`, group: "Investor servicing" })),
-    ...CAP_TIERS.filter((t) => t !== "none").map((t) => ({ key: `cap_table_${t}`, label: `Cap table - ${t[0]!.toUpperCase()}${t.slice(1)}`, group: "Cap table" })),
+    ...CAP_TIERS.filter((t) => t !== "none").map((t) => ({ key: `cap_table_${t}`, label: `Cap table · ${t[0]!.toUpperCase()}${t.slice(1)}`, group: "Cap table" })),
     ...alaCarteCatalog().map((a) => ({ key: `alacarte_${a.key}`, label: a.name, group: "A la carte" })),
   ];
 }

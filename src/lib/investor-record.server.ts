@@ -27,7 +27,7 @@ const nowIso = () => new Date().toISOString();
 /**
  * Access for record edits. An assigned preparer acts only on that one investment,
  * only inside the edit window (before signing or funding), and only for profile
- * details and owners/signers - never amounts, notes, verification, signing or money.
+ * details and owners/signers: never amounts, notes, verification, signing or money.
  */
 async function recordAccess(userId: string, onboardingId: string, preparerId?: string | null) {
   if (!preparerId) return { ...(await assertOnboardingAccess(userId, onboardingId)), preparer: false };
@@ -200,7 +200,7 @@ export async function createInvestor(userId: string, input: {
     changes.push({ offeringId: input.offeringId, onboardingId: null, table: "investment_profiles", id: profileId!, field: "tax_id", from: null, to: `•••${input.taxId.slice(-4)}`, source, actor: actor.userId });
   }
 
-  // 3. Investment - converge onto any open record instead of duplicating.
+  // 3. Investment, converge onto any open record instead of duplicating.
   const { data: dupe } = await db().from("investor_onboardings").select("id").eq("offering_id", input.offeringId).eq("investment_profile_id", profileId)
     .is("removed_at", null).not("stage", "in", TERMINAL).limit(1);
   if ((dupe ?? []).length) fail("This investing profile is already in this Fund.");

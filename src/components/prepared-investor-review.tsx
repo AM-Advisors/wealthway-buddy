@@ -83,7 +83,7 @@ export function ConfirmYourInformation({ onboardingId, onChanged }: { onboarding
   );
 }
 
-/** Review Document - must happen before Continue to Sign. Reviewing is never a signature. */
+/** Review Document, must happen before Continue to Sign. Reviewing is never a signature. */
 export function ReviewPreparedDocuments({ onboardingId }: { onboardingId: string }) {
   const qc = useQueryClient();
   const load = useServerFn(getMyDocumentsForReview);

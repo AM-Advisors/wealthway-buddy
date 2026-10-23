@@ -87,7 +87,7 @@ export async function archiveSignatureToBox(signatureId: string): Promise<Archiv
 
     const root = await ensureSubfolder(ROOT_FOLDER_NAME);
     const fundFolder = await ensureSubfolder(fundName, root);
-    const fileName = `${investor} - ${title} - ${stamp(signedAt)}.pdf`;
+    const fileName = `${investor} · ${title} · ${stamp(signedAt)}.pdf`;
 
     const uploaded = await uploadFileTo(fundFolder, fileName, bytes, "application/pdf");
     const uploadedAt = new Date().toISOString();

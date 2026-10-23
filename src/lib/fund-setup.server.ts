@@ -399,7 +399,7 @@ export async function updateTask(
 
   if (!actor.isStaff) {
     // A fund manager may answer their own items. Harmonious-controlled
-    // requirements - and completion itself - are never client-side acts.
+    // requirements (and completion itself) are never client-side acts.
     const verdict = clientMayUpdateTask(
       { responsibleParty: task.responsible_party, clientEditable: task.client_editable },
       (input.status ?? task.status) as TaskStatus,
@@ -1227,7 +1227,7 @@ async function autoDefaultSetup(setupId: string, setup: any) {
   const { data: book } = await db().from("ledger_books").select("id").eq("offering_id", setup.offering_id).eq("domain", "fund_accounting").maybeSingle();
   let bookId = book?.id as string | undefined;
   if (!bookId) {
-    const { data: nb } = await db().from("ledger_books").insert({ name: `${off?.name ?? "Fund"} - fund accounting`, offering_id: setup.offering_id, client_id: off?.client_id ?? null, domain: "fund_accounting", created_by: actor }).select("id").single();
+    const { data: nb } = await db().from("ledger_books").insert({ name: `${off?.name ?? "Fund"} · fund accounting`, offering_id: setup.offering_id, client_id: off?.client_id ?? null, domain: "fund_accounting", created_by: actor }).select("id").single();
     bookId = nb?.id;
   }
   if (bookId) {
@@ -1330,7 +1330,7 @@ export async function launchPreparers(setupId: string, setup?: any) {
 }
 
 /**
- * Harmonious approves - or declines - the fund for investor onboarding.
+ * Harmonious approves (or declines) the fund for investor onboarding.
  * The decision is recorded immutably, with the unmet conditions at the time.
  */
 export async function decideLaunch(
@@ -1404,7 +1404,7 @@ export async function decideLaunch(
 
 /**
  * Generate the investor entry point. Only possible after an approval, and the
- * link is derived from the offering record - never from client input.
+ * link is derived from the offering record, never from client input.
  */
 export async function launchFund(userId: string, setupId: string) {
   const { setup } = await assertSetupAccess(userId, setupId);

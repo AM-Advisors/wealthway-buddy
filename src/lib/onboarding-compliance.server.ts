@@ -497,7 +497,7 @@ export async function investorComplianceView(userId: string, onboardingId: strin
   };
 }
 
-/** Record factual tax answers. The server - never the browser - derives the form. */
+/** Record factual tax answers. The server (never the browser) derives the form. */
 export async function submitTaxFacts(userId: string, input: { onboardingId: string; answers: TaxIntakeAnswers }) {
   const { d, ob, profile } = await loadOwnOnboarding(userId, input.onboardingId);
   const asked = taxIntakeQuestions(profile.profile_type, input.answers);

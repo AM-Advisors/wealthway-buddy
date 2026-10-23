@@ -1,4 +1,4 @@
-// Server-only — never import in the browser.
+// Server-only: never import in the browser.
 // Encrypts per-user connector connection keys (lovack_*) before they are
 // stored in public.app_user_connections. The encryption key is provisioned
 // automatically as APP_USER_CONNECTION_KEY_SECRET when an App User Connector

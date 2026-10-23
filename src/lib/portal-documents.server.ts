@@ -1,5 +1,5 @@
 /**
- * Portal document catalog — server services. Every read and download re-checks
+ * Portal document catalog, server services. Every read and download re-checks
  * authority from canonical records and logs the decision (allow and deny).
  */
 import { supabaseAdmin } from "@/integrations/supabase/client.server";

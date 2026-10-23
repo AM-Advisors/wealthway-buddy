@@ -11,7 +11,7 @@ import { CONTRACT_STRUCTURES, CONTRACT_STRUCTURE_LABELS, DOC_STATUS_LABELS, type
 import { MsaSignerPicker } from "@/components/msa-signer-picker";
 
 /**
- * Operations view of the Harmonious MSA/SOW. Informational only - it never
+ * Operations view of the Harmonious MSA/SOW. Informational only, it never
  * marks anything signed and never blocks the fund or the client.
  */
 export function CommercialAgreementCard({ clientId, offeringId }: { clientId?: string; offeringId?: string }) {

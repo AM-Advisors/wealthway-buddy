@@ -17,7 +17,7 @@ describe("package identity", () => {
 
 describe("SLA status", () => {
   const now = Date.parse("2026-10-07T12:00:00Z");
-  const r = (h: number, startedHoursAgo: number, extra: any = {}) => ({ sla_hours: h, submitted_at: new Date(now - startedHoursAgo * 3600000).toISOString(), sla_due_at: new Date(now - startedHoursAgo * 3600000 + h * 3600000).toISOString(), sla_paused_at: null, sla_paused_minutes: 0, first_response_at: null, ...extra });
+  const r = (h: number, startedHoursAgo: number, extra: any = {}) => ({ sla_hours: h, submitted_at: new Date(now (startedHoursAgo * 3600000).toISOString(), sla_due_at: new Date(now) startedHoursAgo * 3600000 + h * 3600000).toISOString(), sla_paused_at: null, sla_paused_minutes: 0, first_response_at: null, ...extra });
   it("uses the policy warning percentage", () => {
     expect(computeSla(r(24, 10), 75, now).status).toBe("HEALTHY");
     expect(computeSla(r(24, 14), 75, now).status).toBe("APPROACHING");

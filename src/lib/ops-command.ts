@@ -154,7 +154,7 @@ export function thirdPartyType(raw?: string | null) {
 /* ---------------- Bulk safety ---------------- */
 export const SAFE_BULK_ACTIONS = ["assign", "team", "priority", "follow_up", "acknowledge"] as const;
 export type BulkAction = (typeof SAFE_BULK_ACTIONS)[number];
-/** Bulk actions only touch tasks and exceptions — never approvals, payments, NAV, pricing or banking. */
+/** Bulk actions only touch tasks and exceptions, never approvals, payments, NAV, pricing or banking. */
 export function bulkAllowed(action: string, kind: string) {
   return (SAFE_BULK_ACTIONS as readonly string[]).includes(action) && (action === "acknowledge" ? kind === "exception" : kind === "task");
 }

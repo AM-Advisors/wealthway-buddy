@@ -48,7 +48,7 @@ export function AtomicDrawer({ rows, area, summary }: { rows: AtomicRow[]; area:
             {r.destructive ? <Badge variant="outline" className="ml-1">lifecycle - never implied</Badge> : null}
             <span className="ml-2 text-xs text-muted-foreground">{r.key}</span>
             <div className="text-xs text-muted-foreground">
-              {r.global ? `Source: ${r.sources.join(", ")} - scope: All resources` : r.scoped.length ? r.scoped.map((x) => `${x.source} - scope: ${x.scope}`).join("; ") : "Not granted"}
+              {r.global ? `Source: ${r.sources.join(", ")} · scope: All resources` : r.scoped.length ? r.scoped.map((x) => `${x.source} · scope: ${x.scope}`).join("; ") : "Not granted"}
             </div>
           </li>
         ))}
@@ -216,7 +216,7 @@ export function ManageAccessPanel({ userId, canonical, platformRoles }: { userId
   );
 }
 
-/** Person Matrix - one person's effective permissions from the canonical resolver. */
+/** Person Matrix, one person's effective permissions from the canonical resolver. */
 export function PersonMatrix({ canonical }: { canonical: Canonical }) {
   const [open, setOpen] = useState<string | null>(null);
   const areas = [...new Set(canonical.matrix.map((m) => m.permission.split(".")[0]!))];
@@ -253,7 +253,7 @@ export function PersonMatrix({ canonical }: { canonical: Canonical }) {
           <p className="font-medium">{hit.permission}</p>
           <p>{hit.text}</p>
           {hit.scoped.map((s, i) => <p key={i} className="text-muted-foreground">{s.source === "Direct deny" ? "✕" : "✓"} {s.source} - scope: {s.scope} (not valid outside it)</p>)}
-          <p className="text-xs">Decision: <span className="font-medium">{hit.global ? "Allow - all resources" : hit.scoped.length ? "Allow - listed scopes only" : "Deny (no source grants it)"}</span>{hit.sources.length ? ` · source: ${hit.sources.join(", ")}` : ""}</p>
+          <p className="text-xs">Decision: <span className="font-medium">{hit.global ? "Allow (all resources" : hit.scoped.length ? "Allow) listed scopes only" : "Deny (no source grants it)"}</span>{hit.sources.length ? ` · source: ${hit.sources.join(", ")}` : ""}</p>
           <p className="text-xs text-muted-foreground">Protected conditions still apply regardless of this cell: {PROTECTED_PERMISSIONS.join(", ")} are never granted by roles or grants; maker-checker, dual control and immutability rules are enforced separately.</p>
         </CardContent></Card>
       ) : null}

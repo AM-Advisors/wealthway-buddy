@@ -220,8 +220,8 @@ export async function canAct(
   const cap = capability as DelegationCapability;
 
   // Banking, wire, signing and money movement need the signed-authority
-  // workflow, which is not built. A delegation carrying one of these - however
-  // it was created - still gets nothing here.
+  // workflow, which is not built. A delegation carrying one of these, however
+  // it was created: still gets nothing here.
   if (requiresSignedAuthority(cap)) return DENY(SIGNED_AUTHORITY_REQUIRED);
 
   if (options.mutation && !isMutatingCapability(cap)) {

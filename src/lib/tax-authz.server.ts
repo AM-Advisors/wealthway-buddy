@@ -6,8 +6,8 @@
  *
  *   Harmonious tax staff  - admin role in user_roles
  *   fund manager          - fund_managers assignment, fund-level tax only
- *   investor / taxpayer   - own positions, own profiles, own household
- *   tax professional      - live delegation + explicit tax capability + scope
+ *   investor / taxpayer: own positions, own profiles, own household
+ *   tax professional: live delegation + explicit tax capability + scope
  *   provider process      - records an exchange; never an actor
  *
  * A fund manager has no path to an investor's personal 1040, personal tax
@@ -102,7 +102,7 @@ export type TaxViewer = {
 /**
  * Resolve the subject of a taxpayer-facing read. Acting for someone else
  * requires a live delegation carrying the exact tax capability for that
- * surface - a general financial or document permission never suffices.
+ * surface, a general financial or document permission never suffices.
  */
 export async function resolveTaxViewer(
   actorUserId: string,

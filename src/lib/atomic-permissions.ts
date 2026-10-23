@@ -66,15 +66,15 @@ export const ATOMIC_PERMISSIONS: AtomicDef[] = [
   ...([
     ["controls.view", "Controls - view", "view"], ["controls.edit", "Controls - edit", "edit"], ["controls.review", "Controls - review", "review"],
     ["controls.approve", "Controls - approve", "approve"], ["evidence.view", "Evidence - view", "view"], ["evidence.collect", "Evidence - collect", "edit"],
-    ["evidence.review", "Evidence - review", "review"], ["access_reviews.manage", "Access reviews - manage", "edit"],
+    ["evidence.review", "Evidence (review", "review"], ["access_reviews.manage", "Access reviews) manage", "edit"],
     ["privacy.view", "Privacy - view", "view"], ["privacy.manage", "Privacy - manage", "edit"], ["vendors.view", "Vendors - view", "view"],
     ["vendors.manage", "Vendors - manage", "edit"], ["risks.view", "Risks - view", "view"], ["risks.manage", "Risks - manage", "edit"],
-    ["incidents.view", "Incidents - view", "view"], ["incidents.manage", "Incidents - manage", "edit"],
+    ["incidents.view", "Incidents (view", "view"], ["incidents.manage", "Incidents) manage", "edit"],
     // Phase 7 - contacts, deals and campaigns (Super Administrator assigns; never implied).
-    ["crm.view_all", "Contacts & deals - see everyone's", "view"], ["crm.assign", "Contacts & deals - reassign owner", "edit"],
+    ["crm.view_all", "Contacts & deals (see everyone's", "view"], ["crm.assign", "Contacts & deals) reassign owner", "edit"],
     ["campaigns.approve", "Campaigns - approve", "approve"],
     // Phase 7 - contacts, deals and campaigns (Super Administrator assigns; never implied).
-    ["crm.view_all", "Contacts & deals - see everyone's", "view"], ["crm.assign", "Contacts & deals - reassign owner", "edit"],
+    ["crm.view_all", "Contacts & deals (see everyone's", "view"], ["crm.assign", "Contacts & deals) reassign owner", "edit"],
     ["campaigns.approve", "Campaigns - approve", "approve"],
   ] as const).map(([k, label, summary]): AtomicDef => ({ key: `administration.${k}`, label, area: "administration", summary })),
 ];
@@ -173,12 +173,12 @@ function blockers(d: Record<string, unknown>): string[] {
 export function clientDeleteDraftProblem(d: ClientDependencies): string | null {
   if (d.status !== "draft") return "Only an unused draft client can be permanently deleted - archive it instead.";
   const b = blockers(d);
-  return b.length ? `Has ${b.join(", ")} - archive it instead.` : null;
+  return b.length ? `Has ${b.join(", ")} · archive it instead.` : null;
 }
 export function fundDeleteDraftProblem(d: FundDependencies): string | null {
   if (d.stage !== "draft") return "Only an unused draft fund can be permanently deleted - use lifecycle controls instead.";
   const b = blockers(d);
-  return b.length ? `Has ${b.join(", ")} - use lifecycle controls instead.` : null;
+  return b.length ? `Has ${b.join(", ")} · use lifecycle controls instead.` : null;
 }
 
 // ---------------------------------------------------------------- audit vocabulary

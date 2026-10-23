@@ -213,7 +213,7 @@ function MemoEditor({ funds, initial, onDone }: { funds: { id: string; name: str
   const reports = fq.data?.reports ?? [];
   const m = useMutation({
     mutationFn: () => save({ data: {
-      id: initial.id, offeringId, periodStart, periodEnd, title: title || `Financial review - ${periodEnd}`, summary,
+      id: initial.id, offeringId, periodStart, periodEnd, title: title || `Financial review · ${periodEnd}`, summary,
       findings: findings.filter((f) => f.area.trim() && f.observation.trim()), reportIds: reports.map((r) => r.id),
     } }),
     onSuccess: () => { toast.success("Draft saved - ready for a second person to approve."); onDone(); },

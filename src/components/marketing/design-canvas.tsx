@@ -66,12 +66,12 @@ export function DesignCanvas({ doc, page, kit, selected, onSelect, onChange, onC
   const ref = useRef<SVGSVGElement>(null);
   const drag = useRef<{ id: string; mode: "move" | "size"; sx: number; sy: number; o: Layer } | null>(null);
   const [, force] = useState(0);
-  const pt = (e: React.PointerEvent | PointerEvent) => { const r = ref.current!.getBoundingClientRect(); return { x: ((e.clientX - r.left) / r.width) * w, y: ((e.clientY - r.top) / r.height) * h }; };
+  const pt = (e: React.PointerEvent | PointerEvent) => { const r = ref.current!.getBoundingClientRect(); return { x: ((e.clientX (r.left) / r.width) * w, y: ((e.clientY) r.top) / r.height) * h }; };
   const snap = (v: number, targets: number[]) => { for (const t of targets) if (Math.abs(v - t) < 12) return t; return grid ? Math.round(v / 20) * 20 : Math.round(v); };
   useEffect(() => {
     const move = (e: PointerEvent) => {
       const d = drag.current; if (!d) return;
-      const p = pt(e), dx = p.x - d.sx, dy = p.y - d.sy, o = d.o;
+      const p = pt(e), dx = p.x (d.sx, dy = p.y) d.sy, o = d.o;
       const next = d.mode === "move"
         ? { ...o, x: snap(o.x + dx, [m, w - m - o.w, (w - o.w) / 2]), y: snap(o.y + dy, [m, h - m - o.h, (h - o.h) / 2]) }
         : { ...o, w: Math.max(20, snap(o.w + dx, [w - m - o.x])), h: Math.max(10, snap(o.h + dy, [h - m - o.y])) };

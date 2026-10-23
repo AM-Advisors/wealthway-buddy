@@ -22,7 +22,7 @@ export function InvestorStepHistory({ offeringId, onboardingId }: { offeringId: 
           </div>
           {rows.length === 0 ? <p className="text-muted-foreground">Nothing recorded yet.</p> : <ul className="divide-y">{rows.map((e) => (
             <li key={e.id} className="py-2">
-              <div className="flex flex-wrap justify-between gap-2"><b>{e.label}{!onboardingId ? ` — ${nameOf(e.onboardingId)}` : ''}</b><span className="text-xs text-muted-foreground">{new Date(e.at).toLocaleString()}</span></div>
+              <div className="flex flex-wrap justify-between gap-2"><b>{e.label}{!onboardingId ? ` · ${nameOf(e.onboardingId)}` : ''}</b><span className="text-xs text-muted-foreground">{new Date(e.at).toLocaleString()}</span></div>
               <p className="text-xs text-muted-foreground">By {e.who}{e.before || e.after ? ` · ${e.before ?? '(empty)'} → ${e.after ?? '(empty)'}` : ''}</p>
             </li>))}</ul>}
         </>}

@@ -15,7 +15,7 @@ import { CLIENT_STEPS, FUNDING_STATE_LABELS, type FundingState } from "@/lib/das
 import { money } from "@/lib/status";
 import { LoadError } from "@/components/load-error";
 
-const WAITING: Record<string, string> = { harmonious: "Harmonious is reviewing - nothing needed from you right now.", fund_manager: "Waiting on the fund manager - nothing needed from you right now." };
+const WAITING: Record<string, string> = { harmonious: "Harmonious is reviewing (nothing needed from you right now.", fund_manager: "Waiting on the fund manager) nothing needed from you right now." };
 
 function Steps({ step }: { step: number }) {
   return (

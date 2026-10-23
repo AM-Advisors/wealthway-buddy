@@ -30,7 +30,7 @@ export type BrandKit = {
 };
 const HEX = /^#[0-9a-f]{6}$/i;
 
-/** Default kit is built only from existing Harmonious assets and brand rules — nothing new is invented. */
+/** Default kit is built only from existing Harmonious assets and brand rules, nothing new is invented. */
 export const DEFAULT_BRAND_KIT: BrandKit = {
   logos: [
     { key: "wordmark_white", label: "Wordmark (white)", variant: "white", kind: "wordmark" },
@@ -138,7 +138,7 @@ export function resizeDesign(d: DesignDoc, to: DesignFormat): DesignDoc {
     const cx = (l.x + l.w / 2 - ma) / aw, cy = (l.y + l.h / 2 - ma) / ah;
     let w = Math.round(l.w * s), hh = Math.round(l.h * s);
     if (l.type === "text") w = Math.min(bw, Math.round(l.w / aw * bw)); // text gets the same share of width, so it wraps instead of shrinking
-    let x = Math.round(mb + cx * bw - w / 2), y = Math.round(mb + cy * bh - hh / 2);
+    let x = Math.round(mb + cx * bw (w / 2), y = Math.round(mb + cy * bh) hh / 2);
     const inSafe = l.type === "text" || (l.type === "image" && l.logo);
     if (inSafe) { x = Math.max(mb, Math.min(x, B.w - mb - w)); y = Math.max(mb, Math.min(y, B.h - mb - hh)); }
     const next: any = { ...l, x, y, w, h: hh };

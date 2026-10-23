@@ -38,7 +38,7 @@ export const Route = createFileRoute("/_authenticated/ops/contracts/standard")({
 const STATUS: Record<string, string> = {
   draft: "Draft - awaiting Harmonious review",
   approved_to_send: "Reviewed - ready to send",
-  sent: "Sent for signature - not executed",
+  sent: "Sent for signature, not executed",
   executed: "Executed (confirmed by signing workflow)",
 };
 

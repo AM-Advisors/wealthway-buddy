@@ -17,7 +17,7 @@ export function normalizeFundName(v: string | null | undefined): string {
 }
 
 const ENTITY_SUFFIXES = new Set(["llc", "lp", "llp", "inc", "ltd", "l", "p", "co", "corp", "the", "a", "series", "of"]);
-/** Looser key for "similar" warnings only - never for blocking. */
+/** Looser key for "similar" warnings only, never for blocking. */
 export function looseFundKey(v: string | null | undefined): string {
   return normalizeFundName(v)
     .split(" ")

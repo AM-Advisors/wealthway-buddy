@@ -136,7 +136,7 @@ export function StaffDesk() {
             <CardTitle className="text-base">No clients assigned to you yet</CardTitle>
             <CardDescription>
               Ask an administrator to add you to the clients you look after. Until then this desk
-              stays empty - you only ever see the clients you cover.
+              stays empty, you only ever see the clients you cover.
             </CardDescription>
           </CardHeader>
         </Card>
@@ -476,7 +476,7 @@ export function ClientCoverageBoard() {
               <CardTitle className="text-base">{c.name}</CardTitle>
               <CardDescription>
                 {c.assignees.length === 0
-                  ? "Nobody assigned - this client shows on no one's desk."
+                  ? "Nobody assigned, this client shows on no one's desk."
                   : `${c.assignees.length} teammate${c.assignees.length === 1 ? "" : "s"} covering`}
               </CardDescription>
             </CardHeader>

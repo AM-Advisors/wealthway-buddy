@@ -131,7 +131,7 @@ export function WireRequestForm() {
               {((investorData?.investors ?? []) as any[]).map((i) => (
                 <option key={i.application_id} value={i.application_id}>
                   {i.name}
-                  {i.commitment_cents ? ` - ${money(i.commitment_cents)}` : ""}
+                  {i.commitment_cents ? ` · ${money(i.commitment_cents)}` : ""}
                 </option>
               ))}
             </select>

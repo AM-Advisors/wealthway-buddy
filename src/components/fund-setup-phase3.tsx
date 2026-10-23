@@ -410,7 +410,7 @@ function AdminCard({ d, offeringId, onChanged }: { d: D; offeringId: string; onC
           <OwnerTag owner={d.admin.section.owner} />
         </div>
         <p className="text-sm text-muted-foreground">
-          Offering exemption: {d.admin.regType ?? "not chosen yet (set in Offering)"}. Services are only included when confirmed here - nothing is assumed purchased.
+          Offering exemption: {d.admin.regType ?? "not chosen yet (set in Offering)"}. Services are only included when confirmed here, nothing is assumed purchased.
         </p>
       </CardHeader>
       <CardContent className="space-y-3">

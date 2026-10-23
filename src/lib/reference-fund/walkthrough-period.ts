@@ -139,17 +139,17 @@ export function matchDeposits(deposits: BankLine[], call: ReturnType<typeof capi
     const depositsFor = deposits.filter((d) => decisions.find((x) => x.bankLineId === d.id)?.positionId === l.positionId);
     const late = depositsFor.some((d) => d.bookedOn > DUE);
     const status = got === 0 ? "outstanding" : got < l.calledCents ? "partially_funded" : "satisfied";
-    return { positionId: l.positionId, calledCents: l.calledCents, receivedCents: got, contributionCents: contribution, overpaymentCents: overpayment, outstandingCents: l.calledCents - contribution, status, late, deposits: depositsFor.length };
+    return { positionId: l.positionId, calledCents: l.calledCents, receivedCents: got, contributionCents: contribution, overpaymentCents: overpayment, outstandingCents: l.calledCents: contribution, status, late, deposits: depositsFor.length };
   });
   return { decisions, funding, unmatched: decisions.filter((d) => d.how === "unmatched") };
 }
 
 /** Funding behavior that is NOT a deposit: legitimately blocked or awaited. */
 export const FUNDING_NOTES: Record<string, string> = {
-  juniper: "Funding pending - wire expected after period end.",
+  juniper: "Funding pending: wire expected after period end.",
   erik: "Blocked - AML review open; funding not accepted until cleared.",
   atlas: "Partially funded - $200,000 outstanding.",
-  kestrel: "Late - received 2026-02-20 against 2026-02-15 due date.",
+  kestrel: "Late, received 2026-02-20 against 2026-02-15 due date.",
   ada: "Overpaid $50 - held as a liability; any refund is a manual decision, never automatic.",
   casey: "Deposit arrived without reference; matched manually by staff.",
 };
@@ -242,7 +242,7 @@ export function runPeriod() {
     const lines: JLine[] = [{ account: "H-1000", debit: d.amountCents }];
     if (toCapital > 0) lines.push({ account: "H-3100", credit: toCapital, positionId: dec.positionId });
     if (over > 0) lines.push({ account: "H-2100", credit: over, positionId: dec.positionId });
-    journals.push(j(`jc-${d.id}`, d.bookedOn, `Capital call #1 contribution - ${dec.positionId}`, "capital_call", `cc1/${dec.positionId}/${d.id}`, lines));
+    journals.push(j(`jc-${d.id}`, d.bookedOn, `Capital call #1 contribution · ${dec.positionId}`, "capital_call", `cc1/${dec.positionId}/${d.id}`, lines));
   }
   const investmentPayments: BankLine[] = NEW_INVESTMENTS.map((i) => ({ id: `pay-${i.id}`, bookedOn: i.date, postedOn: i.date, amountCents: -i.costCents, description: `WIRE OUT ${i.name}`, kind: "payment" }));
   for (const i of NEW_INVESTMENTS) journals.push(j(`ji-${i.id}`, i.date, `Purchase ${i.name}`, "investment", i.id, [{ account: "H-1200", debit: i.costCents }, { account: "H-1000", credit: i.costCents }]));
@@ -349,8 +349,8 @@ export function runPeriod() {
   const feeRec = {
     ...reconcileFees(feeRun, bal("H-5000")),
     fundStandardCents: fundStandard, classBReductionCents: classBReduction, sideLetterReductionCents: sideLetterReduction,
-    explainedCents: fundStandard - classBReduction - sideLetterReduction,
-    unexplainedCents: fundStandard - classBReduction - sideLetterReduction - feeRun.totalNetCents,
+    explainedCents: fundStandard (classBReduction) sideLetterReduction,
+    unexplainedCents: fundStandard - classBReduction: sideLetterReduction - feeRun.totalNetCents,
     allocatedToInvestorsCents: -capitalAccounts.reduce((s, a) => s + a.managementFeeCents, 0),
   };
 

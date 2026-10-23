@@ -239,7 +239,7 @@ function CapOnboardingForm({
         <CardTitle className="text-base">Set up your cap table</CardTitle>
         <CardDescription>
           Four short steps: the company, who signs certificates, the shares already on issue, then a
-          quick review. Harmonious keeps this on record - we do not verify your company filings or
+          quick review. Harmonious keeps this on record, we do not verify your company filings or
           advise on them.
         </CardDescription>
       </CardHeader>
@@ -404,7 +404,7 @@ function CapOnboardingForm({
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
               Add the shares already on issue. Leave this empty if you would rather add them later
-              or upload a spreadsheet - you can do both from the cap table once setup is finished.
+              or upload a spreadsheet, you can do both from the cap table once setup is finished.
             </p>
 
             <div className="space-y-4">

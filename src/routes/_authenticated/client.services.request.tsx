@@ -35,7 +35,7 @@ export const Route = createFileRoute("/_authenticated/client/services/request")(
       {
         name: "description",
         content:
-          "Tell Harmonious what you need - launch a fund or SPV, add a service, add an entity, move across, file something or get transaction support.",
+          "Tell Harmonious what you need, launch a fund or SPV, add a service, add an entity, move across, file something or get transaction support.",
       },
       { property: "og:title", content: "What would you like to do? - Harmonious" },
       {
@@ -234,7 +234,7 @@ function RequestRouter() {
         <CardHeader>
           <CardTitle className="text-base">Services you might need</CardTitle>
           <CardDescription>
-            Tick anything that looks right - we'll confirm the final list and price before anything
+            Tick anything that looks right, we'll confirm the final list and price before anything
             is agreed.
           </CardDescription>
         </CardHeader>

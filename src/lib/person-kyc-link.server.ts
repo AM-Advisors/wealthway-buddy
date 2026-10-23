@@ -1,6 +1,6 @@
 /**
  * Shared helper: create a Didit verification session for a person and email
- * them the link. Server-only. Didit stays the KYC/KYB/AML authority — this
+ * them the link. Server-only. Didit stays the KYC/KYB/AML authority, this
  * only sends the invitation; results arrive via Didit and auto-apply rules.
  */
 const DIDIT = "https://verification.didit.me/v2";

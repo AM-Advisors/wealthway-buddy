@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
- * Adversarial tests for Fund Administration Phase B - investor onboarding.
+ * Adversarial tests for Fund Administration Phase B, investor onboarding.
  *
  * Every id below arrives "from the browser". The server must re-read the
  * record, resolve authority from authoritative records, keep one investor out

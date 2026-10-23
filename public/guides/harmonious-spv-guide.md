@@ -1,4 +1,4 @@
-# Harmonious Guide - Special Purpose Vehicle (SPV) Administration
+# Harmonious Guide: Special Purpose Vehicle (SPV) Administration
 
 **Subtitle:** Rapid, Institutional-Grade Syndication & Co-Investment Infrastructure  
 **Audience:** Venture Capital GPs, Syndicate Leads, Emerging Managers, Family Offices, and Co-Investors  

@@ -522,7 +522,7 @@ export function FundEntityCard({ fundId }: { fundId: string }) {
                   )}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Save your answers first - the form is built from the saved details.
+                  Save your answers first, the form is built from the saved details.
                 </p>
                 {data?.details?.withOperations && (
                   <p className="rounded-md bg-muted p-3 text-xs text-muted-foreground">

@@ -3,7 +3,7 @@
  * Harmonious team.
  *
  * This file holds no state and stores nothing. A work item is a *reading* of a
- * workflow record that already exists - an onboarding stuck in review, a
+ * workflow record that already exists: an onboarding stuck in review, a
  * capital call waiting for approval, a bank line nobody has matched. When the
  * underlying record moves, the item disappears on the next read, because there
  * is no second status anywhere to keep in step.

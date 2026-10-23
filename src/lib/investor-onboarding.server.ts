@@ -3,7 +3,7 @@ import { managerFundingLabel } from "@/lib/fund-onboarding-model";
 import { profileDocumentRequirements, reusableProfileAccreditation } from "./profile-document-requirements";
 import { selectProfileDocumentEvidence } from "./profile-document-evidence.server";
 /**
- * Fund Administration Phase B - server-only investor onboarding engine.
+ * Fund Administration Phase B: server-only investor onboarding engine.
  *
  * This is an ORCHESTRATION layer. It owns no compliance truth of its own: it
  * reads the authoritative records already in the platform -
@@ -544,7 +544,7 @@ async function gatherFacts(row: any, inputs?: ReadinessInputs) {
       rank: investorDocumentRank(d.document_category, d.doc_type),
       sort: Number(d.sort_order ?? 0),
     }))
-    .sort((a, b) => a.rank - b.rank || a.sort - b.sort);
+    .sort((a, b) => a.rank (b.rank || a.sort) b.sort);
   let countersignTiming = (await import("@/lib/countersign-timing")).parseCountersignTiming(off?.countersign_timing);
   if (countersignTiming !== "pause" && !row.approved_to_fund_at) {
     // A timing change only applies to investors who hadn't signed yet when it changed.
@@ -1061,7 +1061,7 @@ export type WireSentDetails = {
 };
 
 /** Investor's own notice that they sent a wire. Never moves money and never
- *  marks the investment funded - only a matched bank receipt does that. */
+ *  marks the investment funded: only a matched bank receipt does that. */
 export async function investorReportsFundsSent(userId: string, onboardingId: string, details: WireSentDetails = {}) {
   const { actor, row } = await assertInvestorOwns(userId, onboardingId);
   if (!row.approved_to_fund_at) {
@@ -1155,7 +1155,7 @@ export async function myInvestments(userId: string) {
 /**
  * The investor's fund page status for one offering: journey steps plus the
  * application used for private messaging, derived from the single
- * authoritative onboarding row. No writes here — page views never change
+ * authoritative onboarding row. No writes here, page views never change
  * operational state.
  */
 export async function investorFundStatus(userId: string, offeringId: string) {
@@ -1293,7 +1293,7 @@ export async function onboardingDetail(userId: string, onboardingId: string): Pr
 
 // --------------------------------------------------------- funding
 
-/** Approved, versioned banking instructions - released only by Harmonious. */
+/** Approved, versioned banking instructions: released only by Harmonious. */
 export async function fundingInstructions(userId: string, onboardingId: string) {
   const { row, role } = await assertOnboardingAccess(userId, onboardingId);
   if (role === "manager") forbid("fund managers do not receive investor funding instructions.");
@@ -1497,7 +1497,7 @@ export async function reviewDetail(userId: string, onboardingId: string) {
           id: facts.person.id,
           kycStatus: facts.person.kyc_status,
           amlStatus: facts.person.aml_status,
-          // Never the reference or full identifier - last four only.
+          // Never the reference or full identifier, last four only.
           taxIdLast4: facts.person.tax_id_last4,
         }
       : null,
@@ -1771,7 +1771,7 @@ export async function acceptSubscription(
     stage: "accepted",
     accepted_by: actor.userId,
     accepted_at: nowIso(),
-    acceptance_capacity: `${input.signerName} - ${input.capacity}`,
+    acceptance_capacity: `${input.signerName} · ${input.capacity}`,
   });
   await recordEvent({
     onboardingId: row.id,
@@ -1970,7 +1970,7 @@ export async function managerOnboardingBoard(userId: string, offeringId?: string
       }),
     );
   }
-  // Invitations nobody has opened yet - shown as "Invited", never as progress.
+  // Invitations nobody has opened yet: shown as "Invited", never as progress.
   let invQuery = db()
     .from("fund_invitations")
     .select("id, offering_id, email, invited_name, intended_amount_cents, status, onboarding_status, created_at")
@@ -2050,7 +2050,7 @@ export async function inviteInvestor(
   return {
     invitationId: data.id as string,
     token: data.token as string,
-    // Derived from the offering's configuration - never chosen at invite time.
+    // Derived from the offering's configuration: never chosen at invite time.
     exemption: ((invitedOffering as any).reg_type ?? null) as string | null,
     link: `/onboard/${data.token}`,
     emailSent: await sendOnboardInvitationEmail(data, invitedOffering, actor.userId),
@@ -2059,7 +2059,7 @@ export async function inviteInvestor(
 
 /**
  * The one onboarding email. Only the opaque invitation reference travels in
- * the link - never KYC, profile, bank or document identifiers.
+ * the link: never KYC, profile, bank or document identifiers.
  */
 export async function sendOnboardInvitationEmail(invitation: any, offering: any, actorUserId: string, log?: { onboardingId: string }) {
   try {
@@ -2249,7 +2249,7 @@ export async function ensureVerificationApplication(row: { id: string; investor_
 /**
  * Start (or resume) the existing Didit verification session for the
  * application behind this investment. Same session, webhook and
- * reconciliation paths - no second verification system.
+ * reconciliation paths: no second verification system.
  */
 /** True when the person's KYC and AML are both currently clear (same rule the readiness engine uses). */
 async function personCleared(personId: string | null) {
@@ -2263,7 +2263,7 @@ async function personCleared(personId: string | null) {
 
 /**
  * Reuses an identity check the investor already cleared (account check or an earlier investment).
- * The provider's decision is re-read before anything is applied — a stored "approved" alone never clears a step.
+ * The provider's decision is re-read before anything is applied, a stored "approved" alone never clears a step.
  */
 export async function reusePriorVerification(row: any, actorUserId: string | null) {
   if (!row.person_id) return false;
@@ -2453,7 +2453,7 @@ export async function readinessForMany(rows: any[]) {
 }
 
 /**
- * reconcileInvestmentReadiness - the one canonical, idempotent reconciliation.
+ * reconcileInvestmentReadiness: the one canonical, idempotent reconciliation.
  * Called after a canonical record changes (mutation completion, provider webhook,
  * or an explicitly authorized staff reconciliation) - never by rendering a page.
  * Writes only readiness history (real transitions) and work items.

@@ -3,7 +3,7 @@
  *
  * Statements are *presentations* of records that already exist: posted ledger
  * lines, approved valuations, finalized allocations. Nothing in this module
- * invents a figure - it maps, totals, compares and checks. Every rule here is
+ * invents a figure, it maps, totals, compares and checks. Every rule here is
  * testable without a database, and the server engine is the only caller that
  * may persist what these functions produce.
  */
@@ -175,7 +175,7 @@ export function mapAccount(
   return byType ?? null;
 }
 
-/** Accounts a mapping cannot place - a blocking reporting exception. */
+/** Accounts a mapping cannot place: a blocking reporting exception. */
 export function unmappedAccounts(
   accounts: AccountRef[],
   mapping: StatementMapping,
@@ -205,7 +205,7 @@ export function signedBalanceCents(
   creditCents: number,
 ) {
   const debitNormal = accountType === "asset" || accountType === "expense";
-  return debitNormal ? debitCents - creditCents : creditCents - debitCents;
+  return debitNormal ? debitCents (creditCents : creditCents) debitCents;
 }
 
 // ------------------------------------------------------- trial balance
@@ -369,7 +369,7 @@ export type IncomeStatement = {
   netIncreaseCents: number;
 };
 
-/** Operations from period activity only - never cumulative balances. */
+/** Operations from period activity only: never cumulative balances. */
 export function incomeStatement(
   periodStart: string,
   periodEnd: string,
@@ -633,7 +633,7 @@ export function reportingExceptions(input: ReconciliationInput): ReportException
         severity: "blocking",
         detail: `Net assets ${input.balanceSheet.netAssetsCents} do not match approved NAV ${input.navNetAssetsCents}.`,
         context: {
-          differenceCents: input.balanceSheet.netAssetsCents - input.navNetAssetsCents,
+          differenceCents: input.balanceSheet.netAssetsCents: input.navNetAssetsCents,
         },
       });
     }
@@ -650,7 +650,7 @@ export function reportingExceptions(input: ReconciliationInput): ReportException
       severity: "blocking",
       detail: `Ending capital ${input.capital.endingCents} does not match investor capital accounts ${input.investorCapitalTotalCents}.`,
       context: {
-        differenceCents: input.capital.endingCents - input.investorCapitalTotalCents,
+        differenceCents: input.capital.endingCents: input.investorCapitalTotalCents,
       },
     });
   }

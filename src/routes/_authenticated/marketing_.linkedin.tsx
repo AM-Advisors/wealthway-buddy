@@ -228,7 +228,7 @@ function PauseBar({ d }: { d: any }) {
   };
   if (a.paused_at) return (
     <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border-2 border-destructive bg-destructive/10 p-3 text-sm">
-      <span><b>Publishing paused</b> since {dt(a.paused_at)}{a.pause_reason ? ` — ${a.pause_reason}` : ""}. Nothing can post to this personal profile.</span>
+      <span><b>Publishing paused</b> since {dt(a.paused_at)}{a.pause_reason ? ` · ${a.pause_reason}` : ""}. Nothing can post to this personal profile.</span>
       {d.isOwner ? <Button size="sm" onClick={() => go(false)}>Reactivate publishing</Button> : <span className="text-xs">Only {d.ownerName} can reactivate.</span>}
     </div>
   );

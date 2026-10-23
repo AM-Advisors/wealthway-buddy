@@ -131,7 +131,7 @@ export type NormalizedTerm = ExtractedTerm & {
 /**
  * Turns whatever the model returned into the full catalog. Unknown keys are dropped,
  * missing keys become "not_found" with no value, empty values are never kept as found,
- * and every term - however confident - starts as "needs_review".
+ * and every term (however confident) starts as "needs_review".
  */
 export function normalizeExtraction(raw: unknown): NormalizedTerm[] {
   const list = Array.isArray((raw as any)?.terms) ? ((raw as any).terms as any[]) : [];

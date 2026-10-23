@@ -1,5 +1,5 @@
 /**
- * Fund Health — derived, conservative, never manually set. Categories appear only when backed by data;
+ * Fund Health, derived, conservative, never manually set. Categories appear only when backed by data;
  * absence of data is "No data", never "Healthy".
  */
 import { daysOverdue, isOpenTask } from "@/lib/responsibility";

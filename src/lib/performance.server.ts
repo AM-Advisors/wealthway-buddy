@@ -473,7 +473,7 @@ export interface PerformanceCalculation {
 }
 
 /**
- * Calculate - but do not persist - fund and investor performance for a period.
+ * Calculate (but do not persist) fund and investor performance for a period.
  * Every figure comes from an approved NAV, a finalized allocation run or the
  * immutable commitment ledger.
  */

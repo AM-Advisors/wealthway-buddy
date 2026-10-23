@@ -25,7 +25,7 @@ function Included({ pkg }: { pkg: string }) {
   );
 }
 
-/** Client-level Expected Services. Intent only - not a Fund SOW and never a blocker. */
+/** Client-level Expected Services. Intent only, not a Fund SOW and never a blocker. */
 export function ExpectedServicesEditor({ clientId, onSaved }: { clientId: string; onSaved?: () => void }) {
   const load = useServerFn(getClientServiceSetup);
   const save = useServerFn(saveClientServiceConfig);

@@ -160,7 +160,7 @@ async function channelStatusInner(db: any) {
   const rows = await channelRows(db);
   const li = await linkedinConfigured(), meta = metaConfigured();
   return [
-    { channel: "linkedin", label: "LinkedIn", credential: li, accountRef: rows.get("linkedin")?.account_ref ?? null, displayName: rows.get("linkedin")?.display_name ?? null, ready: false, blocked: "Company LinkedIn publishing unavailable — LinkedIn approval required.", refHint: "LinkedIn company page (organization) ID" },
+    { channel: "linkedin", label: "LinkedIn", credential: li, accountRef: rows.get("linkedin")?.account_ref ?? null, displayName: rows.get("linkedin")?.display_name ?? null, ready: false, blocked: "Company LinkedIn publishing unavailable. LinkedIn approval required.", refHint: "LinkedIn company page (organization) ID" },
     { channel: "facebook", label: "Facebook", credential: meta, accountRef: rows.get("facebook")?.account_ref ?? null, displayName: rows.get("facebook")?.display_name ?? null, ready: meta && !!rows.get("facebook")?.account_ref, refHint: "Facebook Page ID" },
     { channel: "instagram", label: "Instagram", credential: meta, accountRef: rows.get("instagram")?.account_ref ?? null, displayName: rows.get("instagram")?.display_name ?? null, ready: meta && !!rows.get("instagram")?.account_ref, refHint: "Instagram Business account ID" },
   ];
@@ -403,7 +403,7 @@ export async function calendar(userId: string, from: string, to: string) {
     db.from("marketing_posts").select("id, title, status, channels, scheduled_at, published_at, campaign_id, author_id, external_source").or(`and(scheduled_at.gte.${from},scheduled_at.lt.${to}),and(published_at.gte.${from},published_at.lt.${to})`),
     db.from("marketing_emails").select("id, name, status, scheduled_at, sent_at, campaign_id, author_id, external_source").or(`and(scheduled_at.gte.${from},scheduled_at.lt.${to}),and(sent_at.gte.${from},sent_at.lt.${to})`),
   ]);
-  // Display hint only — decidePost/decideEmail re-check role and maker-checker server-side.
+  // Display hint only, decidePost/decideEmail re-check role and maker-checker server-side.
   const mayApprove = (a: string | null) => !!canApprove && a !== userId;
   return [
     ...((posts ?? []) as any[]).map((p) => ({ kind: "post" as const, id: p.id, title: p.title, status: p.status, channels: p.channels as string[], at: p.published_at ?? p.scheduled_at, campaignId: p.campaign_id as string | null, source: p.external_source as string | null, canApprove: mayApprove(p.author_id) })),

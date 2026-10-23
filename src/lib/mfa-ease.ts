@@ -4,7 +4,7 @@
  * Two app-owned ways to satisfy the *freshness* half of a step-up:
  *  - a remembered device (30 days) - after a successful authenticator check the
  *    device holds an opaque token whose hash the server keeps;
- *  - a single-use emailed code - for someone locked out of their authenticator
+ *  - a single-use emailed code, for someone locked out of their authenticator
  *    app while a two-person reset is pending.
  *
  * Neither ever replaces the assurance level itself: the session must still be
@@ -85,7 +85,7 @@ export function maskEmail(email: string): string {
  * A texted code is the same single-use 6-digit proof as an emailed one, delivered
  * to the mobile number on the person's record. It is stored in mfa_fallback_codes
  * with a ":sms" purpose marker, so a texted code can never satisfy a request that
- * expects an emailed one - and the hourly cap stays shared across both channels.
+ * expects an emailed one, and the hourly cap stays shared across both channels.
  */
 export function smsPurpose(purpose: string): string {
   return `${purpose}:sms`;

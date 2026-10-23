@@ -111,7 +111,7 @@ export async function decideDelivery(userId: string, id: string, decision: 'appr
       await sendTemplateEmail('client-admin-alert', to, {
         idempotencyKey: `compliance-report:${d.id}:${to}`,
         templateData: {
-          contactName: 'team', headline: `${snap.title ?? 'Compliance report'} — ${d.period_on}`,
+          contactName: 'team', headline: `${snap.title ?? 'Compliance report'} · ${d.period_on}`,
           intro: internal ? 'Your scheduled compliance report was approved for delivery. Open Operations for the item-level detail.' : 'Harmonious is sharing this approved compliance summary with you.',
           details: [
             ...(snap.reportType !== 'open_holds' ? [{ label: 'Open compliance items', value: String(snap.openItems ?? 0) }, { label: 'Overdue', value: String(snap.overdue ?? 0) }, { label: 'Due in the next 30 days', value: String(snap.dueNext30Days ?? 0) }] : []),

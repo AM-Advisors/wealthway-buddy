@@ -402,7 +402,7 @@ export async function sendDocument(userId: string, id: string, d: { subject: str
 }
 
 /** The client's people who can receive this document: the linked contact, CRM contacts at the same organization,
- *  and — for current clients — the client's active saved contacts (ids prefixed "client:" until first send). */
+ *  and (for current clients) the client's active saved contacts (ids prefixed "client:" until first send). */
 export async function listClientTeam(userId: string, id: string) {
   const a = await access(userId, id);
   let rows: any[] = [];

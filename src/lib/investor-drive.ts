@@ -50,7 +50,7 @@ export function fileStatus(file: DriveFile, prior: PriorImport[], ctx: { offerin
   return same ? "current" : "updated";
 }
 
-/** Harmonious copies whose Drive original is gone stay in Harmonious - reported, never deleted. */
+/** Harmonious copies whose Drive original is gone stay in Harmonious, reported, never deleted. */
 export function missingFromDrive(files: DriveFile[], prior: PriorImport[], ctx: { offeringId: string; profileId: string }): string[] {
   const present = new Set(files.map((f) => f.id));
   return prior.filter((p) => p.offering_id === ctx.offeringId && p.investment_profile_id === ctx.profileId && !present.has(p.drive_file_id)).map((p) => p.id);

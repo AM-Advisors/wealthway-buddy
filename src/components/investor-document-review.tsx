@@ -45,7 +45,7 @@ function DocRow({ offeringId, onboardingId, title, version, d, readOnly }: { off
         navigate({ to: "/manager/countersign/$signerId", params: { signerId: d.countersignSignerId } });
         return;
       }
-      toast.success(decision === "approved" ? "Approved - your countersignature is now open." : "Declined - the investment is paused and Harmonious has been told.");
+      toast.success(decision === "approved" ? "Approved (your countersignature is now open." : "Declined) the investment is paused and Harmonious has been told.");
       setReturning(false); setNote("");
       qc.invalidateQueries({ queryKey: ["doc-reviews", offeringId] });
     } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }

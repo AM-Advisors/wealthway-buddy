@@ -49,7 +49,7 @@ export function StatementUpload({ fundId, investors, canEnter = false }: { fundI
           return (
             <div key={u.id} className="space-y-2 rounded-md border p-3 text-sm">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <div><p className="font-medium">{u.file_name}{u.entered_manually ? <span className="ml-2 text-xs font-normal text-muted-foreground">Typed by hand</span> : null}</p><p className="text-xs text-muted-foreground">{[u.bank_name, u.account_mask ? `••••${u.account_mask}` : null, u.period_start ? `${fmtDate(u.period_start)} – ${fmtDate(u.period_end)}` : null].filter(Boolean).join(" · ")}</p></div>
+                <div><p className="font-medium">{u.file_name}{u.entered_manually ? <span className="ml-2 text-xs font-normal text-muted-foreground">Typed by hand</span> : null}</p><p className="text-xs text-muted-foreground">{[u.bank_name, u.account_mask ? `••••${u.account_mask}` : null, u.period_start ? `${fmtDate(u.period_start)} to ${fmtDate(u.period_end)}` : null].filter(Boolean).join(" · ")}</p></div>
                 <div className="flex items-center gap-2">
                   {u.tie.known && <Badge variant={u.tie.ties ? "default" : "destructive"}>{u.tie.ties ? "Balances tie" : `Off by ${usd(Math.abs(u.tie.gapCents))}`}</Badge>}
                   <Badge variant="outline">{u.status === "applied" ? "Applied" : "Needs review"}</Badge>

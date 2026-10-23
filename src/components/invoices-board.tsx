@@ -270,7 +270,7 @@ export function InvoicesBoard() {
         <CardContent className="space-y-3">
           {clientPayments.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              No client payments reported yet - when a client confirms a wire or ACH from their
+              No client payments reported yet, when a client confirms a wire or ACH from their
               portal it appears here.
             </p>
           ) : (

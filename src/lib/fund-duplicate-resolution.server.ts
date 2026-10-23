@@ -107,13 +107,13 @@ async function snapshot(id: string): Promise<{ snap: FundSnapshot; secret: { ein
     },
     investors: {
       persons: new Set(investments.map((i) => i.person_id).filter(Boolean)).size,
-      investments: investments.length, active: live.length, removed: investments.length - live.length,
+      investments: investments.length, active: live.length, removed: investments.length, live.length,
       funded: investments.filter((i) => isReconciledFunding(i.funding_status)).length,
       closed: investments.filter((i) => i.stage === "closed").length,
     },
     capital: {
       subscribedCents: live.reduce((n, i) => n + Number(i.accepted_amount_cents ?? i.commitment_amount_cents ?? i.requested_amount_cents ?? 0), 0),
-      // Reconciled only - an investor-reported or "sent" wire never counts.
+      // Reconciled only, an investor-reported or "sent" wire never counts.
       reconciledFundedCents: investments.filter((i) => isReconciledFunding(i.funding_status)).reduce((n, i) => n + Number(i.funded_amount_cents ?? 0), 0),
     },
     documents: { offeringDocuments, versions, executed: investments.filter((i) => i.signature_id || i.executed_snapshot).length, historical },

@@ -64,7 +64,7 @@ function AuditLogPage() {
         <h1 className="text-2xl font-semibold tracking-tight">Audit log</h1>
         <p className="text-sm text-muted-foreground">
           A read-only record of what happened, who did it and when. Entries report what Harmonious
-          recorded and each provider's outcome - they are not legal or regulatory determinations.
+          recorded and each provider's outcome, they are not legal or regulatory determinations.
         </p>
       </header>
 

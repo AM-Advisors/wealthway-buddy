@@ -96,7 +96,7 @@ export interface TemplateRole {
 
 /**
  * Values that may be written into a document before it is sent. Every one
- * comes from an authoritative Harmonious record - never free text typed by the
+ * comes from an authoritative Harmonious record, never free text typed by the
  * preparer, and never anything that replaces a signature or acknowledgement.
  */
 export const PREFILL_TOKENS = [
@@ -273,7 +273,7 @@ export type PrepareTarget = {
 
 /**
  * Authorization for preparing. Checked against the actual fund/company
- * relationship - never against an email address or its domain.
+ * relationship, never against an email address or its domain.
  */
 export function canPrepare(actor: PreparerActor, target: PrepareTarget): boolean {
   const staffPrepare = actor.capabilities.includes("documents:prepare");

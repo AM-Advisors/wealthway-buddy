@@ -88,7 +88,7 @@ function BrandKitPanel() {
   const submit = async () => { try { const r = await save({ data: { kit, note: note || null } }); toast.success(`Brand Kit version ${r.version} saved.`); setNote(""); qc.invalidateQueries({ queryKey: ["brand-kit"] }); } catch (e: any) { toast.error(e.message); } };
   return (
     <div className="space-y-6">
-      <p className="text-sm text-muted-foreground">Version {q.data.version || "default (from existing brand assets)"}. {can ? "You can edit the Brand Kit; every save is kept as a new version." : "View only — marketing managers and administrators can edit."}</p>
+      <p className="text-sm text-muted-foreground">Version {q.data.version || "default (from existing brand assets)"}. {can ? "You can edit the Brand Kit; every save is kept as a new version." : "View only, marketing managers and administrators can edit."}</p>
       <section><h3 className="mb-2 font-semibold">Approved logos</h3><div className="flex flex-wrap gap-3">{kit.logos.map((l) => (
         <div key={l.key} className="w-40 rounded-md border border-border p-2 text-center text-xs"><div className={`flex h-16 items-center justify-center rounded ${l.variant === "white" ? "bg-primary" : "bg-muted"}`}><img src={LOGO_SRC[`logo:${l.key}`]} alt={l.label} className="max-h-12 max-w-full object-contain" /></div>{l.label}</div>))}</div>
         <p className="mt-1 text-xs text-muted-foreground">Logos are the official files only and can't be replaced here.</p></section>
