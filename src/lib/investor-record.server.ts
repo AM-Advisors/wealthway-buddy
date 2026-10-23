@@ -264,7 +264,7 @@ export async function createInvestorAndInvite(userId: string, input: Parameters<
   try {
     const engine = await import("@/lib/investor-onboarding.server");
     const { data: row, error } = await db().from("investor_onboardings")
-      .select("invitation_id").eq("id", saved.onboardingId).single();
+      .select("invitation_id").eq("id", saved.onboardingId).maybeSingle();
     if (error || !row) return { ...saved, emailSent: false };
     if (!row.invitation_id) await engine.createPersonalLink(userId, saved.onboardingId);
     else {
