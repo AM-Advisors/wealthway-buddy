@@ -2,7 +2,7 @@ import { SearchableNativeSelect } from "@/components/ui/searchable-people-picker
 import { SalesDealDocsTabs } from "@/components/sales-deal-docs-tabs";
 import { DealPicker } from "@/components/sales/deal-picker";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { createSalesDocument, createSalesProspect, getSalesDocumentOptions, listSalesDocuments, lookupSalesProspect, getAboutHarmoniousText, saveAboutHarmoniousText } from "@/lib/sales-documents.functions";
+import { createSalesDocument, createSalesProspect, getSalesDocumentOptions, listSalesDocuments, lookupSalesProspect, searchSalesProspects, getAboutHarmoniousText, saveAboutHarmoniousText } from "@/lib/sales-documents.functions";
 import { getQuoteCatalog, saveSalesQuote } from "@/lib/sales-hub.functions";
 import { BILLING_FREQUENCIES } from "@/lib/invoice-schedule-model";
 import { money } from "@/components/sales/sales-ui";
