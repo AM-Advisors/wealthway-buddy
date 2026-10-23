@@ -1,5 +1,11 @@
 # Roadmap
 
+## Signed replacement publication (2026-10-23)
+- [x] Register exact Thomas OA PDF as offering version 7 through Alyssa's authorized designation; main now Erebor_Operating_Agreement_Thomas_v9.pdf, approved/confirmed/new_only, Thomas signature unchanged, all 7 versions retained, resign=0.
+- [x] Automatically promote explicitly staff-designated approved fund-signatory-only OA replacements after all required file signatures complete, with stale-version protection and atomic retained history. Added staff Use as replacement control; publication required for that new control.
+- [x] 39 fictional promotion/model/title checks and 31 promotion/activation/reader/title checks passed; main and signature read back from live records. No signatures or emails sent for testing.
+- [ ] Future signing and new-control authenticated walkthrough — blocked on independently isolated synthetic QA; live activation verified through authorized save/read-back, not a synthetic signing ceremony.
+
 ## Client MSA signature save (2026-10-23)
 - [x] Reproduce first-signature RLS failure offline and repair using authenticated atomic ceremony with exact membership, designated signer, current-version, retry and rollback checks. No real signatures submitted; staff-owned sibling creation paths use existing privileged authorized saves and are unchanged.
 - [ ] Authenticated real-flow read-back — blocked on independently isolated synthetic QA; never sign a real agreement for testing.

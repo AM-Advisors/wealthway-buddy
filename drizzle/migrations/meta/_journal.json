@@ -2360,6 +2360,13 @@
       "when": 1792714253493,
       "tag": "0336_client_msa_signing_transaction",
       "breakpoints": true
+    },
+    {
+      "idx": 337,
+      "version": "7",
+      "when": 1792715677155,
+      "tag": "0337_signed_fund_replacement_publication",
+      "breakpoints": true
     }
   ]
 }

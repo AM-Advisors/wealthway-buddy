@@ -23,7 +23,8 @@ import { fileToBase64, fmtDate } from "./shared";
 import { StandardFormsCard } from "./standard-forms-card";
 import { ArchivedDocuments } from "./archived-documents";
 import { OfferingDocumentsSetup } from "@/components/offering-documents-setup";
-import { fundSigningContextFn, sendFileForSignatureFn, remindFileSignerFn } from "@/lib/fund-file-signing.functions";
+import { fundSigningContextFn, sendFileForSignatureFn, remindFileSignerFn, designateFundReplacementFn } from "@/lib/fund-file-signing.functions";
+import { listSetupDocumentsFn } from '@/lib/fund-setup-canonical.functions';
 import { SigningTracker } from "./signing-tracker";
 
 const STATUS: Record<string, string> = { draft: "Draft", out_for_signature: "Out for signature", signed: "Signed" };
@@ -33,6 +34,16 @@ export function DocumentsTab({ fundId }: { fundId: string }) {
   const access = useServerFn(fundDocumentGenerationAccessFn);
   const permission = useQuery({ queryKey: ["fund-document-generation-access", fundId], queryFn: () => access({ data: { offeringId: fundId } }) });
   const canGenerate = Boolean(permission.data?.templates || permission.data?.starter);
+  const listOfferingDocs = useServerFn(listSetupDocumentsFn);
+  const offeringDocs = useQuery({ queryKey: ['replacement-documents', fundId], enabled: canGenerate, queryFn: () => listOfferingDocs({ data: { offeringId: fundId } }) });
+  const designate = useServerFn(designateFundReplacementFn);
+  const [replacement, setReplacement] = useState<any | null>(null);
+  const [replacementDocument, setReplacementDocument] = useState('');
+  const replacementSave = useMutation({
+    mutationFn: () => designate({ data: { fundId, fileId: replacement.id, documentId: replacementDocument } }),
+    onSuccess: (r) => { toast.success(r.promoted ? 'Signed agreement is now the main copy for new investors.' : 'Replacement will become the main copy after signing.'); setReplacement(null); void invalidateFund(qc, fundId); },
+    onError: (e: Error) => toast.error(e.message),
+  });
   const list = useServerFn(listFundFilesFn);
   const upload = useServerFn(uploadFundFileFn);
   const del = useServerFn(deleteFundFileFn);
@@ -147,6 +158,7 @@ export function DocumentsTab({ fundId }: { fundId: string }) {
                     ))}
                   </div>
                   <div className="flex items-center gap-2">
+                    {canGenerate && f.template_key === 'operating_agreement' && f.signing_order === 'manager_only' && f.url && <Button size="sm" variant="outline" onClick={() => { setReplacement(f); setReplacementDocument(''); }}>Use as replacement</Button>}
                     {f.status !== "signed" && f.body && <Button size="sm" variant="outline" onClick={() => openSend(f)}>{f.status === "out_for_signature" ? "Resend" : "Send for signature"}</Button>}
                     <Badge variant={f.status === "signed" ? "default" : "outline"}>{STATUS[f.status] ?? f.status}</Badge>
                     {f.status !== "signed" && <Button size="sm" variant="outline" onClick={() => setBoxes(f)}>Signature boxes</Button>}
@@ -164,6 +176,19 @@ export function DocumentsTab({ fundId }: { fundId: string }) {
       <TemplateDocumentsCard fundId={fundId} />
 
       <StandardFormsCard fundId={fundId} onGenerated={refresh} />
+
+      {replacement && <Dialog open onOpenChange={(open) => !open && setReplacement(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>Designate replacement</DialogTitle><DialogDescription>{replacement.title} · New investors only. Existing sent and signed copies stay unchanged.</DialogDescription></DialogHeader>
+          <Label htmlFor="replacement-document">Main agreement to replace</Label>
+          <Select value={replacementDocument} onValueChange={setReplacementDocument}>
+            <SelectTrigger id="replacement-document"><SelectValue placeholder="Choose agreement" /></SelectTrigger>
+            <SelectContent>{(offeringDocs.data?.documents ?? []).filter((d) => d.category === 'operating_agreement').map((d) => <SelectItem key={d.id} value={d.id}>{d.title}</SelectItem>)}</SelectContent>
+          </Select>
+          {offeringDocs.isError && <p className="text-sm text-destructive">Agreements could not be loaded.</p>}
+          <DialogFooter><Button variant="outline" onClick={() => setReplacement(null)}>Cancel</Button><Button disabled={!replacementDocument || replacementSave.isPending} onClick={() => replacementSave.mutate()}>{replacement.status === 'signed' ? 'Make main copy' : 'Make main after signing'}</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>}
 
       {sendFor && (
         <Dialog open onOpenChange={(o) => !o && setSendFor(null)}>

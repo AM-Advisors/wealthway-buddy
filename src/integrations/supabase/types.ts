@@ -20312,6 +20312,61 @@ export type Database = {
           },
         ]
       }
+      fund_document_replacements: {
+        Row: {
+          designated_at: string
+          designated_by: string
+          expected_active_version: number | null
+          file_id: string
+          id: string
+          offering_document_id: string
+          promoted_at: string | null
+          version: number
+        }
+        Insert: {
+          designated_at?: string
+          designated_by: string
+          expected_active_version?: number | null
+          file_id: string
+          id?: string
+          offering_document_id: string
+          promoted_at?: string | null
+          version: number
+        }
+        Update: {
+          designated_at?: string
+          designated_by?: string
+          expected_active_version?: number | null
+          file_id?: string
+          id?: string
+          offering_document_id?: string
+          promoted_at?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_document_replacements_file_id_fkey"
+            columns: ["file_id"]
+            isOneToOne: true
+            referencedRelation: "fund_files"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fund_document_replacements_offering_document_id_fkey"
+            columns: ["offering_document_id"]
+            isOneToOne: false
+            referencedRelation: "offering_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fund_document_replacements_offering_document_id_version_fkey"
+            columns: ["offering_document_id", "version"]
+            isOneToOne: false
+            referencedRelation: "offering_document_versions"
+            referencedColumns: ["offering_document_id", "version"]
+          },
+        ]
+      }
       fund_duplicate_review_events: {
         Row: {
           actor_id: string | null
@@ -49804,6 +49859,10 @@ export type Database = {
           iv: string
           profile_id: string
         }[]
+      }
+      promote_signed_fund_replacement: {
+        Args: { _file: string }
+        Returns: boolean
       }
       purge_security_events: { Args: never; Returns: number }
       read_offering_rp_identifier: {
