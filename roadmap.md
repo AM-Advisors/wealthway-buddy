@@ -614,7 +614,7 @@
 ## Shared manager + Harmonious views (2026-10-23)
 - [x] Investors list: one Add investor chooser, one status per row, tabs; staff fund screens use the same list.
 - [x] Investor page: staff see the same page as managers plus the KYC/AML review card (staff only).
-- [ ] Approvals & requests: one fund list showing who is waiting on whom.
+- [x] Approvals & requests: one shared area (Open items / Approvals / Requests) on manager and staff fund pages.
 - [ ] Documents: one Documents tab layout for both sides.
 - [ ] Fund setup: one checklist with You / Harmonious owner per step.
 - [ ] Verification wording shared everywhere.
