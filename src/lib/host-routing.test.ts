@@ -129,6 +129,15 @@ describe("old addresses keep working", () => {
   it("leaves an address it does not recognize exactly where it is", () => {
     expect(canonicalRedirect({ url: "https://portal.harmonious.co/dashboard" })).toBeNull();
   });
+
+  it("no longer forwards the retired capital-admin address", () => {
+    const retired = "https://app.harmoniouscapitaladmin.com";
+    expect(canonicalRedirect({ url: `${retired}/dashboard` })).toBeNull();
+    expect(canonicalRedirect({ url: `${retired}/ops/funds/abc` })).toBeNull();
+    expect(canonicalRedirect({ url: `${retired}/invest/fund-one?token=abc` })).toBeNull();
+    expect(isTrustedOrigin(retired)).toBe(false);
+    expect(trustedOrigins()).not.toContain(retired);
+  });
 });
 
 describe("no redirect loops", () => {
