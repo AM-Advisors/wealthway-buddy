@@ -24,6 +24,7 @@ import { StandardFormsCard } from "./standard-forms-card";
 import { ArchivedDocuments } from "./archived-documents";
 import { OfferingDocumentsSetup } from "@/components/offering-documents-setup";
 import { fundSigningContextFn, sendFileForSignatureFn, remindFileSignerFn } from "@/lib/fund-file-signing.functions";
+import { SigningTracker } from "./signing-tracker";
 
 const STATUS: Record<string, string> = { draft: "Draft", out_for_signature: "Out for signature", signed: "Signed" };
 
@@ -115,6 +116,7 @@ export function DocumentsTab({ fundId }: { fundId: string }) {
   return (
     <div className="space-y-5">
       <OfferingDocumentsSetup offeringId={fundId} onChanged={refresh} />
+      <SigningTracker fundId={fundId} files={files} signing={sig.data} loading={q.isPending || sig.isPending} error={q.isError || sig.isError} />
       <Card>
         <CardHeader className="flex-row items-start justify-between gap-3 space-y-0">
           <div>
