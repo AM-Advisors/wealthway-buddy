@@ -6,7 +6,8 @@
 
 ## Thomas prepared Erebor copies (2026-10-23)
 - [x] Prepare named OA/PPM copies with Manager title confirmed by Alyssa October 23, 2026 and confirmed email/phone; preserve 6% one-time management fee and 20% carry, actual signature lines and signed history. Saved OA Thomas v8 and PPM Thomas v10 Word/PDF copies; verified title/contact text and cover/signature page layout. No send, platform activation or record-title update performed.
-- [ ] Complete organizer/adviser signature identity — Thomas is recorded as fund signatory only; separate organizer/adviser signing capacity is not recorded. No send, platform upload or activation requested or performed.
+- [x] Confirm organizer/adviser signature capacity — Alyssa confirmed Thomas Morgan Jr., Manager, may sign for Corps Capital BDC LLC in all three roles October 23.
+- [ ] Add a fund Documents signing tracker showing pending and signed evidence; manual logs must not claim an electronic signature or overwrite signed history.
 - [ ] Email Thomas the prepared Operating Agreement through the existing signing request and track it under fund Documents — requested October 23; blocked until organizer/adviser signer and capacity are confirmed, and the adviser company description is corrected. No request sent.
 
 ## Erebor document formatting correction (2026-10-22)
