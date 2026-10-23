@@ -601,4 +601,5 @@
 - [x] Side letters reference OA + Subscription Agreement
 - [x] Side-letter count in close pricing
 - [x] Archived documents view with investor applicability
-- [ ] Diagnose 'Your check is with our compliance team' screen getting stuck (Oct 23)
+- [x] Fix approved account checks reverting to compliance review (profile notices ignored; 3 checks re-read)
+- [ ] morgato27 account check: 32 possible watchlist matches await a compliance reviewer (human decision)
