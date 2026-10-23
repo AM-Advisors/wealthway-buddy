@@ -11,6 +11,13 @@ import { requireSupabaseAuth } from "@/lib/require-auth";
 const SITE = "https://app.harmonious.co";
 const TEAM_EMAIL = "operations@harmonious.co";
 
+export const designateFundReplacementFn = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ fundId: z.string().uuid(), fileId: z.string().uuid(), documentId: z.string().uuid() }).parse)
+  .handler(async ({ data, context }) => {
+    const { designateFundReplacement } = await import('@/lib/fund-document-replacement.server');
+    return designateFundReplacement(context.userId, data.fundId, data.fileId, data.documentId);
+  });
+
 /** Staff registers reviewed replacement bytes; never overwrites an existing file or signature. */
 export const prepareOperatingAgreementCopyFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator(z.object({ fundId: z.string().uuid(), fileName: z.string().min(1).max(200), pdfBase64: z.string().max(28_000_000), docxBase64: z.string().max(28_000_000) }).parse)
@@ -292,7 +299,8 @@ export const signDocumentFn = createServerFn({ method: "POST" }).middleware([req
     // The document is Signed once every packet on it is complete.
     const { data: open } = await d.from("fund_file_signatures").select("id").eq("file_id", s.file_id).in("status", ["waiting", "sent"]).limit(1);
     if (open?.length) return { done: true };
-    await d.from("fund_files").update({ status: "signed" }).eq("id", s.file_id);
+    const { error: completionError } = await d.from("fund_files").update({ status: "signed" }).eq("id", s.file_id);
+    if (completionError) throw new Error('Your signature was recorded, but document completion could not be saved. Contact Harmonious.');
     await logFundAudit(context.userId, { offeringId: s.offering_id, eventType: "document_fully_signed", summary: `"${f?.title}" fully signed`, values: { signedAt: now } });
     await notify(`"${f?.title ?? "Document"}" is fully signed`, "document_fully_signed").catch(() => null);
     try {
