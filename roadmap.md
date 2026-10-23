@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Erebor document formatting correction (2026-10-22)
+- [x] Follow-up white-text clipping: reproduced in PPM General Notices; corrected textbox direction and excessive internal spacing across Table of Contents, General Notices and Exhibit A. Inspected all 60 PPM pages and close-up headings; exact wording unchanged. Saved PPM file v8 and activated platform v7 new_only; read back approved active version, resign=0. Operating Agreement unchanged; no email sent.
 - [x] Restore missing PPM cover title and add matching navy/white Operating Agreement cover heading; preserve all existing wording, 6% one-time fee, 20% carry, and signed history. Validate Word packages and inspect every one of 97 PDF pages.
 - [x] Save versioned Word/PDF copies in Files and existing Erebor collection (new members pending indexing); authorized new-only activation of both platform version 6 replacements, no resign requests or emails. Read back active versions and approved rollout status.
 
