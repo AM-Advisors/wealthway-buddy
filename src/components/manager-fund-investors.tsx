@@ -1,11 +1,13 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { InvestorRecordsSync } from "@/components/investor-records-sync";
 import { funnelStageOf, managerBucketOf, FUNNEL_LABELS, MANAGER_BUCKET_LABELS } from "@/lib/dashboard-metrics";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { ChevronDown, MoreHorizontal } from "lucide-react";
+import { Link as LinkIcon, MoreHorizontal, Plus, X } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AddExistingInvestor } from "@/components/add-existing-investor";
 import { BulkAddInvestors } from "@/components/bulk-add-investors";
 import { BulkInvestorRecords } from "@/components/bulk-investor-records";
@@ -45,7 +47,9 @@ const readinessTone: Record<RosterReadiness, "default" | "secondary" | "outline"
 const claimTone: Record<ClaimState, "outline" | "secondary"> = { prepared: "outline", claimed: "secondary", investor_started: "secondary" };
 
 /** One Fund Investors roster: canonical Person → Profile → Investment rows, plus clearly separate pending invitations. */
-export function ManagerFundInvestors({ fundId }: { fundId: string }) {
+export function ManagerFundInvestors({ fundId, extraTabs }: { fundId: string; extraTabs?: { value: string; label: string; content: ReactNode }[] }) {
+  const [chooser, setChooser] = useState(false);
+  const [tab, setTab] = useState("list");
   const qc = useQueryClient();
   const loadRecords = useServerFn(fundInvestorRecordsFn);
   const loadReadiness = useServerFn(fundReadinessFn);
@@ -131,110 +135,106 @@ export function ManagerFundInvestors({ fundId }: { fundId: string }) {
     return { st, label: ROSTER_READINESS_LABELS[st], next: rr?.nextAction?.label ?? (st === "unknown" ? "-" : "No action needed"), owner: rosterOwner(rr) };
   };
 
+  /** One plain status per row: problems with the record win, otherwise investment readiness. */
+  const oneStatus = (r: (typeof items)[number]) => {
+    const rc = readinessCell(r.onboardingId);
+    if (r.recordStatus === "conflict_detected" || r.recordStatus === "needs_harmonious_review") return { label: r.recordStatusLabel, tone: recordTone[r.recordStatus], rc };
+    if (r.recordStatus === "missing_information" && rc.st !== "closed") return { label: "Details missing", tone: "outline" as const, rc };
+    return { label: rc.label, tone: readinessTone[rc.st], rc };
+  };
+  const nextLine = (rc: ReturnType<typeof readinessCell>) => rc.owner && rc.owner !== "-" && rc.next !== "No action needed" ? `${rc.owner}: ${rc.next}` : rc.next;
+  const pendingCount = pendingOnboard.length + pendingAccess.length;
+  const addOptions: { p: Panel; title: string; body: string; staff?: boolean }[] = [
+    { p: "create", title: "Add one investor", body: "Enter their name and email. We check for an existing record and email them a personal invitation." },
+    { p: "records", title: "Upload a list", body: "Add many investors from a spreadsheet. You see a preview before anything is saved." },
+    { p: "bulkInvite", title: "Invite several by email", body: "Paste email addresses to send fund invitations." },
+    { p: "prep", title: "Prepare a draft", body: "Fill in an investor's details for review before they are invited." },
+    { p: "existing", title: "Add an existing investor", body: "Link someone already on Harmonious to this fund.", staff: true },
+  ];
+  const panelTitle = addOptions.find((o) => o.p === panel)?.title ?? (panel === "invite" ? "Invite investor" : "");
+
   return (
     <section className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <div><h2 className="text-xl">Investors</h2><p className="mt-1 text-sm text-muted-foreground">Everyone investing in this fund, and anyone invited who hasn't started yet.</p></div>
-        <div className="flex w-full flex-wrap gap-2 sm:w-auto">
-          <Button size="sm" onClick={() => toggle("create")}>Create New Investor</Button>
-          {isStaff ? <Button size="sm" variant="secondary" onClick={() => toggle("existing")}>Add Existing Investor</Button> : null}
-          <Button size="sm" variant="secondary" onClick={() => toggle("invite")}>Invite Investor</Button>
-          <Button size="sm" variant="outline" onClick={() => toggle("records")}>Bulk Add Investors</Button>
-          <Button size="sm" variant="outline" onClick={copyLink}>Copy Onboarding Link</Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild><Button size="sm" variant="ghost">More <ChevronDown className="ml-1 h-3 w-3" /></Button></DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => toggle("prep")}>Prepare Investor (draft for review)</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => toggle("bulkInvite")}>Bulk Invite by email</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+        <div><h2 className="text-xl">Investors</h2><p className="mt-1 text-sm text-muted-foreground">Everyone investing in this fund. Click a name to see everything about that investor.</p></div>
+        <div className="flex w-full gap-2 sm:w-auto">
+          <Button className="flex-1 sm:flex-none" onClick={() => setChooser(true)}><Plus className="mr-1 h-4 w-4" />Add investor</Button>
+          <Button variant="outline" onClick={copyLink}><LinkIcon className="mr-1 h-4 w-4" />Copy link</Button>
         </div>
       </div>
 
-      <FundOnboardingLinkCard fundId={fundId} />
+      <Dialog open={chooser} onOpenChange={setChooser}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader><DialogTitle>Add investors</DialogTitle><DialogDescription>Choose how you'd like to add them.</DialogDescription></DialogHeader>
+          <div className="grid gap-2">
+            {addOptions.filter((o) => !o.staff || isStaff).map((o) => (
+              <button key={o.title} type="button" onClick={() => { setPanel(o.p); setChooser(false); }} className="rounded-lg border p-3 text-left transition-colors hover:bg-muted">
+                <p className="font-medium">{o.title}</p><p className="text-sm text-muted-foreground">{o.body}</p>
+              </button>))}
+            <button type="button" onClick={() => { setChooser(false); void copyLink(); }} className="rounded-lg border p-3 text-left transition-colors hover:bg-muted">
+              <p className="font-medium">Share the fund link</p><p className="text-sm text-muted-foreground">Copy the onboarding link so investors can sign up themselves.</p>
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
-      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border bg-border sm:grid-cols-4 lg:grid-cols-7">
-        {([["Total", summary.total + legacy.length], ["Invited", summary.invited], ["Onboarding", summary.onboarding], ["Needs Investor", summary.needsInvestor], ["Needs Harmonious", summary.needsHarmonious], ["Ready", summary.ready], ["Funded", summary.funded]] as const).map(([l, v]) => (
-          <div key={l} className="bg-card p-3"><p className="text-[11px] uppercase tracking-wide text-muted-foreground">{l}</p><p className="font-heading text-xl font-semibold">{v}</p></div>
+      {panel && <Card>
+        <CardHeader className="flex-row items-center justify-between space-y-0"><CardTitle className="text-base">{panelTitle}</CardTitle><Button size="icon" variant="ghost" aria-label="Close" onClick={() => setPanel(null)}><X className="h-4 w-4" /></Button></CardHeader>
+        <CardContent>
+          {panel === "create" && <CreateInvestor fundId={fundId} isStaff={isStaff} onDone={() => { setPanel(null); refresh(); }} />}
+          {panel === "records" && <BulkInvestorRecords fundId={fundId} isStaff={isStaff} />}
+          {panel === "existing" && <AddExistingInvestor fundId={fundId} />}
+          {panel === "invite" && <ManagerAddInvestor fundId={fundId} />}
+          {panel === "prep" && <PrepareInvestor fundId={fundId} />}
+          {panel === "bulkInvite" && <BulkAddInvestors fundId={fundId} existingEmails={legacy.map((a) => String(a.email ?? "")).filter(Boolean)} />}
+        </CardContent>
+      </Card>}
+
+      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border bg-border sm:grid-cols-4">
+        {([["Investors", summary.total + legacy.length], ["Waiting on investor", summary.needsInvestor + summary.invited], ["Waiting on Harmonious", summary.needsHarmonious], ["Ready or funded", summary.ready + summary.funded]] as const).map(([l, v]) => (
+          <div key={l} className="bg-card p-3"><p className="text-xs text-muted-foreground">{l}</p><p className="font-heading text-xl font-semibold">{v}</p></div>
         ))}
       </div>
 
-      {panel === "create" && <CreateInvestor fundId={fundId} isStaff={isStaff} onDone={() => { setPanel(null); refresh(); }} />}
-      {panel === "records" && <BulkInvestorRecords fundId={fundId} isStaff={isStaff} />}
-      {panel === "existing" && <AddExistingInvestor fundId={fundId} />}
-      {panel === "invite" && <ManagerAddInvestor fundId={fundId} />}
-      {panel === "prep" && <PrepareInvestor fundId={fundId} />}
-      {isStaff ? <InvestorRecordsSync fundId={fundId} /> : null}
-      {panel === "bulkInvite" && <BulkAddInvestors fundId={fundId} existingEmails={legacy.map((a) => String(a.email ?? "")).filter(Boolean)} />}
+      <Tabs value={tab} onValueChange={setTab}>
+        <TabsList>
+          <TabsTrigger value="list">Investors</TabsTrigger>
+          <TabsTrigger value="invites">Invitations{pendingCount ? ` (${pendingCount})` : ""}</TabsTrigger>
+          {extraTabs?.map((t) => <TabsTrigger key={t.value} value={t.value}>{t.label}</TabsTrigger>)}
+          <TabsTrigger value="settings">Settings</TabsTrigger>
+        </TabsList>
 
-      <Card>
-        <CardHeader className="gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div><CardTitle className="text-base">Investor roster</CardTitle>
-            <p className="mt-1 text-sm text-muted-foreground"><b>Record</b> = is the investor's information complete and confirmed. <b>Readiness</b> = is the investment ready to close. <b>Prepared</b> = entered by the Fund team or Harmonious; the investor hasn't signed in or confirmed it.</p></div>
-          {drill.stage || drill.bucket ? <p className="text-sm">Showing: <b>{drill.stage ? (FUNNEL_LABELS as any)[drill.stage] ?? drill.stage : (MANAGER_BUCKET_LABELS as any)[drill.bucket!] ?? drill.bucket}</b> · <Link to="/manager/fund/$fundId/investors" params={{ fundId }} className="underline">Show all</Link></p> : null}
-          <Input className="sm:w-56" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search investors" aria-label="Search investors" />
-        </CardHeader>
-        <CardContent>
-          {shown.length === 0 && shownLegacy.length === 0 ? <p className="py-8 text-center text-sm text-muted-foreground">{term ? "No investors match your search." : "No investors yet. Use Create New Investor, Invite Investor or the onboarding link to begin."}</p> : <>
-            <ul className="divide-y rounded-md border md:hidden">
-              {shown.map((r) => { const rc = readinessCell(r.onboardingId); return (
-                <li key={r.onboardingId} className="flex items-start justify-between gap-2 p-3">
-                  <Link to="/manager/fund/$fundId/investor/$onboardingId" params={{ fundId, onboardingId: r.onboardingId }} className="min-w-0 flex-1">
-                    <p className="truncate font-medium">{r.name}</p>
-                    <p className="truncate text-xs text-muted-foreground">{r.profileLabel ?? r.profileType ?? "Profile needed"} · {money(r.amountCents)}</p>
-                    <div className="mt-1.5 flex flex-wrap gap-1">
-                      <Badge variant={claimTone[r.claimState]}>{r.claimState === "prepared" ? "Prepared" : "Claimed"}</Badge>
-                      <Badge variant={recordTone[r.recordStatus]}>Record: {r.recordStatusLabel}</Badge>
-                      <Badge variant={readinessTone[rc.st]}>{rc.label}</Badge>
-                    </div>
-                    <p className="mt-1 text-xs text-muted-foreground">Next: {rc.next}</p>
+        <TabsContent value="list" className="space-y-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <Input className="sm:w-64" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search investors" aria-label="Search investors" />
+            {drill.stage || drill.bucket ? <p className="text-sm">Showing: <b>{drill.stage ? (FUNNEL_LABELS as any)[drill.stage] ?? drill.stage : (MANAGER_BUCKET_LABELS as any)[drill.bucket!] ?? drill.bucket}</b> · <Link to="/manager/fund/$fundId/investors" params={{ fundId }} className="underline">Show all</Link></p> : null}
+          </div>
+          {shown.length === 0 && shownLegacy.length === 0 ? <p className="rounded-md border py-8 text-center text-sm text-muted-foreground">{term ? "No investors match your search." : "No investors yet. Use Add investor to begin."}</p> :
+            <ul className="divide-y rounded-md border">
+              {shown.map((r) => { const s = oneStatus(r); return (
+                <li key={r.onboardingId} className="flex items-center gap-3 p-3 hover:bg-muted/30">
+                  <Link to="/manager/fund/$fundId/investor/$onboardingId" params={{ fundId, onboardingId: r.onboardingId }} className="grid min-w-0 flex-1 gap-1 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,2fr)] sm:items-center sm:gap-4">
+                    <div className="min-w-0"><p className="truncate font-medium">{r.name}</p>
+                      <p className="truncate text-xs text-muted-foreground">{r.profileLabel ?? r.profileType ?? "Profile needed"}{r.claimState === "prepared" ? " · Not signed in yet" : ""}</p></div>
+                    <p className="text-sm">{money(r.amountCents)}</p>
+                    <div className="min-w-0"><Badge variant={s.tone}>{s.label}</Badge><p className="mt-1 truncate text-xs text-muted-foreground">{nextLine(s.rc)}</p></div>
                   </Link>{rowMenu(r)}
                 </li>); })}
               {shownLegacy.map((row: any) => { const s = managerRowFromApplication(row); return (
-                <li key={row.applicationId} className="flex items-start justify-between gap-2 bg-muted/20 p-3">
-                  <Link to="/manager/$applicationId" params={{ applicationId: row.applicationId }} className="min-w-0 flex-1">
-                    <p className="truncate font-medium">{s.investor}</p><p className="text-xs text-muted-foreground">{prettyStatus(s.investingAs)} · {money(s.commitmentCents)}</p>
-                    <Badge variant="outline" className="mt-1.5">Earlier application</Badge><p className="mt-1 text-xs text-muted-foreground">Next: {s.nextAction}</p>
+                <li key={row.applicationId} className="flex items-center gap-3 p-3 hover:bg-muted/30">
+                  <Link to="/manager/$applicationId" params={{ applicationId: row.applicationId }} className="grid min-w-0 flex-1 gap-1 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,2fr)] sm:items-center sm:gap-4">
+                    <div className="min-w-0"><p className="truncate font-medium">{s.investor}</p><p className="truncate text-xs text-muted-foreground">{prettyStatus(s.investingAs)} · Earlier application</p></div>
+                    <p className="text-sm">{money(s.commitmentCents)}</p>
+                    <div className="min-w-0"><Badge variant="outline">{prettyStatus(row.stage)}</Badge><p className="mt-1 truncate text-xs text-muted-foreground">{s.nextAction}</p></div>
                   </Link>{legacyMenu(row.applicationId, s.investor)}
                 </li>); })}
-            </ul>
-            <table className="hidden w-full text-left text-sm md:table">
-              <thead className="border-y bg-muted/50 text-xs text-muted-foreground"><tr>{["Investor", "Profile", "Amount", "Record Status", "Status", "Next Action", "Owner", ""].map((h) => <th key={h} className="px-2 py-2.5 font-medium">{h}</th>)}</tr></thead>
-              <tbody className="divide-y">
-                {shown.map((r) => { const rc = readinessCell(r.onboardingId); return (
-                  <tr key={r.onboardingId} className="align-top hover:bg-muted/30">
-                    <td className="px-2 py-3"><Link to="/manager/fund/$fundId/investor/$onboardingId" params={{ fundId, onboardingId: r.onboardingId }} className="font-medium hover:underline">{r.name}</Link>
-                      <div className="mt-1"><Badge variant={claimTone[r.claimState]} title={r.claimState === "prepared" ? "Entered by the Fund team or Harmonious. No one has access until the investor signs in with this email." : undefined}>{CLAIM_STATE_LABELS[r.claimState]}</Badge></div></td>
-                    <td className="px-2 py-3">{r.profileLabel ?? "-"}<p className="text-xs text-muted-foreground">{r.profileType ?? "Profile needed"}</p></td>
-                    <td className="px-2 py-3">{money(r.amountCents)}<p className="text-xs text-muted-foreground">{prettyStatus(r.stage)}</p></td>
-                    <td className="px-2 py-3"><Badge variant={recordTone[r.recordStatus]}>{r.recordStatusLabel}</Badge></td>
-                    <td className="px-2 py-3"><Badge variant={readinessTone[rc.st]}>{rc.label}</Badge></td>
-                    <td className="px-2 py-3 text-muted-foreground">{rc.next}</td>
-                    <td className="px-2 py-3 text-muted-foreground">{rc.owner}</td>
-                    <td className="px-2 py-3">{rowMenu(r)}</td>
-                  </tr>); })}
-                {shownLegacy.map((row: any) => { const s = managerRowFromApplication(row); return (
-                  <tr key={row.applicationId} className="align-top bg-muted/20">
-                    <td className="px-2 py-3"><Link to="/manager/$applicationId" params={{ applicationId: row.applicationId }} className="font-medium hover:underline">{s.investor}</Link><div className="mt-1"><Badge variant="outline">Earlier application</Badge></div></td>
-                    <td className="px-2 py-3">{prettyStatus(s.investingAs)}</td>
-                    <td className="px-2 py-3">{money(s.commitmentCents)}<p className="text-xs text-muted-foreground">{prettyStatus(row.stage)}</p></td>
-                    <td className="px-2 py-3 text-muted-foreground" colSpan={2}>Verification {s.verification} · Documents {s.documents} · Funding {s.funding}</td>
-                    <td className="px-2 py-3 text-muted-foreground">{s.nextAction}</td>
-                    <td className="px-2 py-3 text-muted-foreground">-</td>
-                    <td className="px-2 py-3">{legacyMenu(row.applicationId, s.investor)}</td>
-                  </tr>); })}
-              </tbody>
-            </table>
-            {shownLegacy.length ? <p className="mt-2 text-xs text-muted-foreground">"Earlier application" rows come from the previous onboarding process and open in their original view.</p> : null}
-          </>}
-        </CardContent>
-      </Card>
+            </ul>}
+          {isStaff ? <InvestorRecordsSync fundId={fundId} /> : null}
+        </TabsContent>
 
-      <Card>
-        <CardHeader><CardTitle className="text-base">Pending invitations</CardTitle>
-          <p className="text-sm text-muted-foreground">Invited but not started. These aren't investments yet; one is created when the investor begins onboarding. Emails only go out when you click Resend.</p></CardHeader>
-        <CardContent>
-          {pendingOnboard.length + pendingAccess.length === 0 ? <p className="text-sm text-muted-foreground">No pending invitations.</p> : (
+        <TabsContent value="invites">
+          <p className="mb-3 text-sm text-muted-foreground">Invited but not started yet. Emails only go out again when you click Resend.</p>
+          {pendingCount === 0 ? <p className="rounded-md border py-8 text-center text-sm text-muted-foreground">No pending invitations.</p> : (
             <ul className="divide-y rounded-md border">
               {pendingOnboard.map((i) => (
                 <li key={i.id} className="flex flex-wrap items-center justify-between gap-2 p-3 text-sm">
@@ -250,11 +250,14 @@ export function ManagerFundInvestors({ fundId }: { fundId: string }) {
                   </div>
                 </li>))}
             </ul>)}
-        </CardContent>
-      </Card>
+        </TabsContent>
 
-      <FundOnboardingSettings fundId={fundId} />
-      <FundEligibilitySetup fundId={fundId} />
+        {extraTabs?.map((t) => <TabsContent key={t.value} value={t.value}>{tab === t.value ? t.content : null}</TabsContent>)}
+
+        <TabsContent value="settings" className="space-y-5">
+          {tab === "settings" && <><FundOnboardingLinkCard fundId={fundId} /><FundOnboardingSettings fundId={fundId} /><FundEligibilitySetup fundId={fundId} /></>}
+        </TabsContent>
+      </Tabs>
     </section>
   );
 }
