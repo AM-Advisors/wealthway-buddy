@@ -1,5 +1,9 @@
 # Roadmap
 
+## Thomas prepared Erebor copies (2026-10-23)
+- [x] Prepare named OA/PPM copies with recorded Managing Partner title and confirmed email/phone; preserve 6% one-time management fee and 20% carry, actual signature lines and signed history.
+- [ ] Complete organizer/adviser signature identity — Thomas is recorded as fund signatory only; separate organizer/adviser signing capacity is not recorded. No send, platform upload or activation requested or performed.
+
 ## Erebor document formatting correction (2026-10-22)
 - [x] Follow-up white-text clipping: reproduced in PPM General Notices; corrected textbox direction and excessive internal spacing across Table of Contents, General Notices and Exhibit A. Inspected all 60 PPM pages and close-up headings; exact wording unchanged. Saved PPM file v8 and activated platform v7 new_only; read back approved active version, resign=0. Operating Agreement unchanged; no email sent.
 - [x] Restore missing PPM cover title and add matching navy/white Operating Agreement cover heading; preserve all existing wording, 6% one-time fee, 20% carry, and signed history. Validate Word packages and inspect every one of 97 PDF pages.
