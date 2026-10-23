@@ -237,18 +237,42 @@ function ServicePicker({ clientId, lines, setLines }: { clientId: string | null;
 
 type Prospect = { email: string; contactId: string | null; clientId: string | null; name: string | null; organization: string | null };
 
-/** Type an email: use the existing platform record, or add a new prospect inline. */
+/** Type part of an email, name or company: pick a suggestion, or add a new prospect inline. */
 function ProspectLookup({ onResolved, label = "Prospect email" }: { onResolved: (p: Prospect) => void; label?: string }) {
   const look = useServerFn(lookupSalesProspect);
+  const search = useServerFn(searchSalesProspects);
   const add = useServerFn(createSalesProspect);
   const [email, setEmail] = useState("");
   const [res, setRes] = useState<any>(null);
+  const [sugs, setSugs] = useState<any[]>([]);
+  const [picked, setPicked] = useState(false);
   const [busy, setBusy] = useState(false);
   const [np, setNp] = useState({ fullName: "", organization: "", title: "", phone: "" });
+
+  useEffect(() => {
+    if (picked) return;
+    const q = email.trim();
+    if (q.length < 2) { setSugs([]); return; }
+    const t = setTimeout(() => {
+      search({ data: { query: q } }).then((r: any) => setSugs(r ?? [])).catch(() => setSugs([]));
+    }, 250);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [email, picked]);
+
+  const choose = (s: any) => {
+    setPicked(true);
+    setSugs([]);
+    setEmail(s.email);
+    setRes({ found: true, contactId: s.contactId, clientId: s.clientId, name: s.name, organization: s.organization, sources: [s.source] });
+    if (s.contactId) onResolved({ email: s.email, contactId: s.contactId, clientId: s.clientId, name: s.name, organization: s.organization });
+    else onResolved({ email: s.email, contactId: null, clientId: s.clientId, name: s.name, organization: s.organization });
+  };
+
   const check = async () => {
     if (!/^\S+@\S+\.\S+$/.test(email.trim())) { toast.error("Enter a valid email."); return; }
     setBusy(true);
-    try { const r = await look({ data: { email } }); setRes(r); if (r.found && r.contactId) onResolved(r); }
+    try { const r = await look({ data: { email } }); setRes(r); setSugs([]); if (r.found && r.contactId) onResolved(r); }
     catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
   };
   const save = async () => {
@@ -264,9 +288,21 @@ function ProspectLookup({ onResolved, label = "Prospect email" }: { onResolved: 
   return (
     <div className="space-y-2 text-sm">
       <span>{label}</span>
-      <div className="flex gap-2">
-        <Input type="email" placeholder="name@company.com" value={email} onChange={(e) => { setEmail(e.target.value); setRes(null); }} onBlur={() => email && !res && check()} onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), check())} />
-        <Button type="button" variant="outline" disabled={busy || !email} onClick={check}>Look up</Button>
+      <div className="relative">
+        <div className="flex gap-2">
+          <Input type="text" placeholder="Start typing a name, company or email" value={email} onChange={(e) => { setEmail(e.target.value); setRes(null); setPicked(false); }} onBlur={() => { setTimeout(() => setSugs([]), 150); if (/^\S+@\S+\.\S+$/.test(email.trim()) && !res) check(); }} onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), setSugs([]), check())} />
+          <Button type="button" variant="outline" disabled={busy || !email} onClick={() => { setSugs([]); check(); }}>Look up</Button>
+        </div>
+        {sugs.length > 0 && (
+          <div className="absolute z-20 mt-1 w-full rounded-md border bg-popover shadow-md">
+            {sugs.map((s) => (
+              <button key={s.email} type="button" className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left hover:bg-accent" onMouseDown={(e) => { e.preventDefault(); choose(s); }}>
+                <span className="min-w-0 truncate"><span className="font-medium">{s.name ?? s.email}</span>{s.organization ? <span className="text-muted-foreground"> — {s.organization}</span> : null}<span className="block truncate text-xs text-muted-foreground">{s.email}</span></span>
+                <Badge variant="outline" className="shrink-0">{s.source}</Badge>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
       {res?.found && res.contactId && <p className="text-muted-foreground"><Badge>Found on platform</Badge> <span className="ml-1">{res.name ?? res.email}{res.organization ? ` - ${res.organization}` : ""} ({res.sources.join(", ")})</span></p>}
       {needsContact && (
