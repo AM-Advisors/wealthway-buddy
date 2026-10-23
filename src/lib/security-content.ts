@@ -1,8 +1,8 @@
 /**
  * Harmonious-owned security statement. Public copy, so every line here must
  * describe something the product actually does - see the notes on each block.
- * It is NOT a certification, an audit opinion, a legal notice or a promise of
- * a specific outcome, and it must never claim SOC 2, ISO 27001 or GDPR status.
+ * It is NOT a legal notice or a promise of a specific outcome, and public copy
+ * states no independent certification status, in either direction.
  */
 
 export interface SecuritySection {
@@ -21,7 +21,7 @@ export interface SecurityStatement {
   /** Short verified facts shown at the top of the page. */
   highlights: { title: string; body: string }[];
   sections: SecuritySection[];
-  /** What the page deliberately does not claim. */
+  /** Plain notes shown beside the trust documents section. */
   disclaimers: string[];
   contact: string;
   /** Address published for security disclosure, matching /.well-known/security.txt. */
@@ -35,7 +35,7 @@ export const SECURITY_STATEMENT: SecurityStatement = {
   title: "Harmonious Data Security",
   updated: "October 23, 2026",
   summary:
-    "A plain-language account of the controls built into Harmonious, written and maintained by Harmonious. It is our own description of how the product behaves, not a certification, an audit opinion or a legal notice.",
+    "A plain-language account of the controls built into Harmonious, written and maintained by Harmonious. It describes how the product behaves.",
   highlights: [
     { title: "Encrypted connections", body: "Every Harmonious web address uses HTTPS with TLS 1.2 or 1.3, and older versions are refused." },
     { title: "Protected access", body: "Two-step authentication and record-scoped permissions protect workspace access." },
@@ -147,8 +147,7 @@ export const SECURITY_STATEMENT: SecurityStatement = {
     },
   ],
   disclaimers: [
-    "This page is Harmonious's own statement about how our product works. It is not a certification, an audit opinion, a regulatory filing or legal advice.",
-    "Harmonious is not certified SOC 2 or ISO 27001 and does not claim to be. Any such statement would follow only after an outside auditor's report exists.",
+    "This page is Harmonious's own statement about how our product works; it is not legal advice.",
     "Our hosting provider publishes its own platform evidence about how the environment is run and monitored at /.well-known/trust.html. That page belongs to the provider, not to Harmonious, and is separate from this one.",
   ],
   contact: "support@harmonious.co",
