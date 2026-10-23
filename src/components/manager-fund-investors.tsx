@@ -47,7 +47,7 @@ const readinessTone: Record<RosterReadiness, "default" | "secondary" | "outline"
 const claimTone: Record<ClaimState, "outline" | "secondary"> = { prepared: "outline", claimed: "secondary", investor_started: "secondary" };
 
 /** One Fund Investors roster: canonical Person → Profile → Investment rows, plus clearly separate pending invitations. */
-export function ManagerFundInvestors({ fundId, extraTabs }: { fundId: string; extraTabs?: { value: string; label: string; content: ReactNode }[] }) {
+export function ManagerFundInvestors({ fundId, extraTabs }: { fundId: string; extraTabs?: { value: string; label: string; content: ReactNode }[] | undefined }) {
   const [chooser, setChooser] = useState(false);
   const [tab, setTab] = useState("list");
   const qc = useQueryClient();
