@@ -37,7 +37,7 @@ import { TodosTab } from "@/components/fund-tabs/todos-tab";
 import { TeamTab } from "@/components/fund-tabs/team-tab";
 import { ManagerFundInvestors } from "@/components/manager-fund-investors";
 import { CapitalTieReport } from "@/components/investor-share-panel";
-import { DocumentsTab } from "@/components/fund-tabs/documents-tab";
+import { FundDocumentsHub } from "@/components/fund-documents-hub";
 import { AuditHistoryTab } from "@/components/fund-tabs/audit-history-tab";
 import { BankingTab } from "@/components/fund-tabs/banking-tab";
 import { AccountingWorkspace } from "@/components/fund-tabs/accounting-workspace";
@@ -299,7 +299,7 @@ export function FundWorkspace({ fundId, tab, onTab, mode = "client", extraTabs =
         <TabsContent value="approvals">{tab === "approvals" && <FundApprovalsHub fundId={fundId} staff={staff} initial="approvals" />}</TabsContent>
         <TabsContent value="requests">{tab === "requests" && <FundApprovalsHub fundId={fundId} staff={staff} initial="requests" />}</TabsContent>
         <TabsContent value="services"><FundServicesTab fundId={fundId} /></TabsContent>
-        <TabsContent value="documents"><DocumentsTab fundId={fundId} /></TabsContent>
+        <TabsContent value="documents"><FundDocumentsHub fundId={fundId} staff /></TabsContent>
         <TabsContent value="audit"><AuditHistoryTab fundId={fundId} /></TabsContent>
         <TabsContent value="regulatory"><RegulatoryTab fundId={fundId} /></TabsContent>
 

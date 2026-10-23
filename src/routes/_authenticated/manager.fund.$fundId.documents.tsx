@@ -1,7 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { FundWorkspaceSection } from "@/components/fund-workspace-section";
-import { SendFundDocuments } from "@/components/send-fund-documents";
-import { InvestorDocumentReview } from "@/components/investor-document-review";
+import { FundDocumentsHub } from "@/components/fund-documents-hub";
 
 export const Route = createFileRoute("/_authenticated/manager/fund/$fundId/documents")({
   head: () => ({ meta: [
@@ -12,19 +10,5 @@ export const Route = createFileRoute("/_authenticated/manager/fund/$fundId/docum
 });
 function Page() {
   const { fundId } = Route.useParams();
-  return (
-    <div className="space-y-8">
-      <SendFundDocuments offeringId={fundId} />
-      <InvestorDocumentReview offeringId={fundId} />
-      <FundWorkspaceSection title="Documents" description="The complete document record for this fund." items={[
-        { title: "Fund documents", description: "Upload and manage the documents investors review and sign.", to: "/manager/documents" },
-        { title: "Document inbox", description: "Review investor uploads and signed copies filed back.", to: "/manager/inbox" },
-        { title: "Diligence room", description: "Organize investor materials, NDA access, and file versions.", to: "/manager/diligence" },
-        { title: "Document permissions", description: "Control which investors can access each diligence file.", to: "/manager/permissions" },
-        { title: "Offering memo", description: "Maintain the fund story presented to prospective investors.", to: "/manager/memo" },
-        { title: "Offering terms", description: "Manage the published terms and offering statement.", to: "/manager/offering-statement" },
-        { title: "Tax documents", description: "Review the fund tax profile and approved tax records.", to: "/manager/tax" },
-      ]}/>
-    </div>
-  );
+  return <FundDocumentsHub fundId={fundId} staff={false} />;
 }
