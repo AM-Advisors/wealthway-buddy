@@ -13,8 +13,9 @@ import { requestTrustDocument, type PublicTrustItem } from "@/lib/trust-center-p
 
 /**
  * Harmonious Trust Center. Built-in copy describes product behavior only;
- * everything else (assurance status, extra sections, trust documents) appears
- * only after Harmonious approves and publishes it internally. No seals or logos.
+ * everything else (published assurance evidence, extra sections, trust
+ * documents) appears only after Harmonious approves and publishes it
+ * internally. No seals or logos, and the page states no certification status.
  */
 export function SecurityCenterPage({ items }: { items: PublicTrustItem[] }) {
   const s = SECURITY_STATEMENT;
@@ -24,7 +25,7 @@ export function SecurityCenterPage({ items }: { items: PublicTrustItem[] }) {
   const built = new Map(s.sections.map((x) => [x.key, x]));
   const visible = TRUST_SECTIONS.filter((t) => built.has(t.key) || sections.some((p) => p.item_key === t.key));
   const extra = sections.filter((p) => !TRUST_SECTIONS.some((t) => t.key === p.item_key));
-  const navigation = [...visible.map((v) => [v.key, v.heading]), ["assurance", "Compliance & assurance"], ["documents", "Trust documents"], ["questions", "Common questions"], ["contact", "Security contact"]];
+  const navigation: [string, string][] = [...visible.map((v): [string, string] => [v.key, v.heading]), ...(assurance.length ? [["assurance", "Published assurance evidence"]] as [string, string][] : []), ["documents", "Trust documents"], ["questions", "Common questions"], ["contact", "Security contact"]];
   const icons = [LockKeyhole, KeyRound, ShieldCheck, Wallet];
   return (
     <MarketingShell>
@@ -78,24 +79,24 @@ export function SecurityCenterPage({ items }: { items: PublicTrustItem[] }) {
           })}
           {extra.map((p) => <section key={p.id} className="mb-10 border-b pb-10"><h2 className="font-heading text-2xl font-semibold tracking-normal">{p.title}</h2><p className="mt-3 whitespace-pre-line text-sm leading-7">{p.body}</p></section>)}
 
-          <section id="assurance" className="mb-10 scroll-mt-24 border-b pb-10">
-            <h2 className="font-heading text-2xl font-semibold tracking-normal">Compliance & assurance</h2>
-            <p className="mt-3 text-sm leading-7 text-muted-foreground">A valid SSL/TLS certificate protects a website connection. It is different from an independent assessment of an organization's security controls.</p>
-            {!assurance.length ? <div className="mt-5 border-l-4 border-primary bg-muted p-5"><h3 className="text-base font-semibold tracking-normal">Independent certification status</h3><p className="mt-2 text-sm leading-7 text-muted-foreground">No independently assessed certification or audit report is published here. Harmonious does not claim SOC 2 or ISO 27001 certification. Approved evidence appears here only when it is published through our internal review process.</p></div> : <ul className="mt-5 divide-y rounded-lg border">{assurance.map((a) => <li key={a.id} className="flex flex-wrap items-start justify-between gap-3 p-4 text-sm"><div className="min-w-0 flex-1"><p className="font-medium">{a.title}</p>{a.body ? <p className="mt-1 whitespace-pre-line leading-6 text-muted-foreground">{a.body}</p> : null}</div><span className="text-xs font-medium text-primary">{ASSURANCE_LABEL[a.assurance_status as keyof typeof ASSURANCE_LABEL] ?? "Planned"}</span></li>)}</ul>}
-            <div className="mt-5 space-y-3">{s.disclaimers.map((d) => <p key={d} className="text-xs leading-6 text-muted-foreground">{d}</p>)}</div>
-          </section>
+          {assurance.length ? (
+            <section id="assurance" className="mb-10 scroll-mt-24 border-b pb-10">
+              <h2 className="font-heading text-2xl font-semibold tracking-normal">Published assurance evidence</h2>
+              <ul className="mt-5 divide-y rounded-lg border">{assurance.map((a) => <li key={a.id} className="flex flex-wrap items-start justify-between gap-3 p-4 text-sm"><div className="min-w-0 flex-1"><p className="font-medium">{a.title}</p>{a.body ? <p className="mt-1 whitespace-pre-line leading-6 text-muted-foreground">{a.body}</p> : null}</div><span className="text-xs font-medium text-primary">{ASSURANCE_LABEL[a.assurance_status as keyof typeof ASSURANCE_LABEL] ?? "Planned"}</span></li>)}</ul>
+            </section>
+          ) : null}
 
           <section id="documents" className="mb-10 scroll-mt-24 border-b pb-10">
             <h2 className="flex items-center gap-3 font-heading text-2xl font-semibold tracking-normal"><FileText className="size-6 text-primary" aria-hidden />Trust documents</h2>
             {!documents.length ? <p className="mt-3 text-sm leading-7 text-muted-foreground">No trust documents are currently published. For a due-diligence questionnaire or supporting security information, contact <a className="break-all underline" href={`mailto:${s.security_contact}`}>{s.security_contact}</a>. Availability and access are reviewed individually.</p> : <ul className="mt-5 space-y-3">{documents.map((d) => <DocumentRow key={d.id} d={d} />)}</ul>}
             <a className="mt-4 inline-flex items-center gap-2 text-sm text-primary underline" href="/.well-known/trust.html">Hosting platform evidence<ArrowUpRight className="size-4" /></a>
-            <p className="mt-2 text-xs leading-6 text-muted-foreground">Separate hosting-platform information, not a Harmonious audit or certification.</p>
+            <div className="mt-3 space-y-2">{s.disclaimers.map((d) => <p key={d} className="text-xs leading-6 text-muted-foreground">{d}</p>)}</div>
           </section>
 
           <section id="questions" className="mb-10 scroll-mt-24 border-b pb-10">
             <h2 className="font-heading text-2xl font-semibold tracking-normal">Common security questions</h2>
             <Accordion type="single" collapsible className="mt-4">
-              <AccordionItem value="certificate"><AccordionTrigger>Does Harmonious have an SSL/TLS certificate?</AccordionTrigger><AccordionContent className="leading-7 text-muted-foreground">Yes. Harmonious uses HTTPS with valid TLS certificates. TLS encrypts traffic between your browser and the website; it is not a SOC 2 report or ISO 27001 certification. Your browser's site information panel shows the connection and certificate details.</AccordionContent></AccordionItem>
+              <AccordionItem value="certificate"><AccordionTrigger>Does Harmonious have an SSL/TLS certificate?</AccordionTrigger><AccordionContent className="leading-7 text-muted-foreground">Yes. Harmonious uses HTTPS with valid TLS certificates on every web address. TLS encrypts traffic between your browser and the website. Your browser's site information panel shows the connection and certificate details.</AccordionContent></AccordionItem>
               <AccordionItem value="warning"><AccordionTrigger>What should I do if my browser shows a security warning?</AccordionTrigger><AccordionContent className="leading-7 text-muted-foreground">Do not bypass the warning or enter personal information. Check that the address is a Harmonious web address and that your device's date and time are correct. Send the exact web address, warning wording, browser name and approximate time to legal@harmonious.co. Do not send passwords, one-time codes, full tax IDs or bank details.</AccordionContent></AccordionItem>
               <AccordionItem value="review"><AccordionTrigger>Can I request information for an investor security review?</AccordionTrigger><AccordionContent className="leading-7 text-muted-foreground">Yes. Email legal@harmonious.co with your organization, the information requested and the purpose of your review. Supporting documents are subject to availability and access review; a request does not itself grant access.</AccordionContent></AccordionItem>
               <AccordionItem value="money"><AccordionTrigger>Does connecting a bank account allow automatic transfers?</AccordionTrigger><AccordionContent className="leading-7 text-muted-foreground">No. Bank connections described here are read-only. Preparing payment instructions, reviewing a distribution or recording a payment does not automatically initiate a wire, ACH transfer, tax payment or refund.</AccordionContent></AccordionItem>
