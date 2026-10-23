@@ -49935,6 +49935,19 @@ export type Database = {
         }
         Returns: undefined
       }
+      sign_client_msa: {
+        Args: {
+          p_client_id: string
+          p_company?: string
+          p_signature_image?: string
+          p_signature_method?: string
+          p_signer_name: string
+          p_signer_title: string
+          p_typed_signature: string
+          p_version_id: string
+        }
+        Returns: Json
+      }
       sod_override_active: { Args: { _ids: string[] }; Returns: boolean }
       store_offering_rp_identifier: {
         Args: {

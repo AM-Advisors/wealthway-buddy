@@ -427,51 +427,25 @@ export const signMsa = createServerFn({ method: "POST" })
     const version = await currentMsaVersion(context);
     if (!version) throw new Error("No master services agreement has been published yet.");
 
-    let { data: agreement } = await context.supabase
-      .from("client_msa_agreements")
-      .select("*")
-      .eq("client_id", data.clientId)
-      .eq("msa_version_id", version.id)
-      .maybeSingle();
-
-    if (!agreement) {
-      const { data: created, error } = await context.supabase
-        .from("client_msa_agreements")
-        .insert({ client_id: data.clientId, msa_version_id: version.id, status: "in_review" })
-        .select("*")
-        .single();
-      if (error) throw new Error(error.message);
-      agreement = created;
-    }
-    if ((agreement as any).executed_at) {
-      return { ok: true, alreadyExecuted: true } as const;
-    }
-
-    const { error: sigError } = await context.supabase.from("agreement_signatures").insert({
-      scope: "msa",
-      client_id: data.clientId,
-      msa_agreement_id: (agreement as any).id,
-      side: "client",
-      company: data.company ?? null,
-      signer_name: data.signerName,
-      signer_title: data.signerTitle,
-      signer_email: who.email,
-      signer_user_id: who.userId,
-      typed_signature: data.typedSignature,
-      version_label: version.version,
-      signature_image: data.signature?.image ?? null,
-      signature_method: data.signature?.method ?? null,
+    const { data: result, error } = await context.supabase.rpc("sign_client_msa", {
+      p_client_id: data.clientId,
+      p_version_id: version.id,
+      p_signer_name: data.signerName,
+      p_signer_title: data.signerTitle,
+      p_typed_signature: data.typedSignature,
+      p_company: data.company ?? undefined,
+      p_signature_image: data.signature?.image ?? undefined,
+      p_signature_method: data.signature?.method ?? undefined,
     });
-    if (sigError) throw new Error(sigError.message);
-    await (async () => (await import("@/lib/ops-slack-notify.server")).notifySubmission({ kind: "msa_signed", title: `Master Service Agreement signed by ${data.signerName}`, clientId: data.clientId, submittedBy: who.userId, ref: (agreement as any).id, path: "/ops/queue", completed: true }))().catch(() => null);
-
-    const now = new Date().toISOString();
-    await context.supabase
-      .from("client_msa_agreements")
-      .update({ status: "client_signed", client_approved_at: now })
-      .eq("id", (agreement as any).id);
-    await notifyCountersign(data.clientId, `MSA ${version.version}`, who.userId);
-    return { ok: true, alreadyExecuted: false } as const;
+    if (error) throw new Error(error.message);
+    const saved = result as { agreementId?: string; newSignature?: boolean; alreadyExecuted?: boolean } | null;
+    if (!saved?.agreementId) throw new Error("Could not confirm the agreement signature was saved.");
+    const agreementId = saved.agreementId;
+    if (saved.newSignature) {
+      await (async () => (await import("@/lib/ops-slack-notify.server")).notifySubmission({ kind: "msa_signed", title: `Master Service Agreement signed by ${data.signerName}`, clientId: data.clientId, submittedBy: who.userId, ref: agreementId, path: "/ops/queue", completed: true }))().catch(() => null);
+      await notifyCountersign(data.clientId, `MSA ${version.version}`, who.userId);
+    }
+    return { ok: true, alreadyExecuted: Boolean(saved.alreadyExecuted) } as const;
   });
 
 /** Opens one countersign task per agreement for the client's Sales owner (or unassigned for CEO/Legal to pick up). */
