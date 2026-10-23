@@ -1,0 +1,5 @@
+Contact: mailto:security@harmonious.co
+Expires: 2027-10-23T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://harmonious.co/.well-known/security.txt
+Policy: https://harmonious.co/data-security
