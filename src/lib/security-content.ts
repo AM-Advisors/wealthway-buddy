@@ -18,6 +18,8 @@ export interface SecurityStatement {
   title: string;
   updated: string;
   summary: string;
+  /** Short verified facts shown at the top of the page. */
+  highlights: { title: string; body: string }[];
   sections: SecuritySection[];
   /** What the page deliberately does not claim. */
   disclaimers: string[];
@@ -29,9 +31,15 @@ export interface SecurityStatement {
 export const SECURITY_STATEMENT: SecurityStatement = {
   eyebrow: "Harmonious / Security & Privacy",
   title: "How Harmonious protects funds, records and money",
-  updated: "October 7, 2026",
+  updated: "October 23, 2026",
   summary:
     "A plain-language account of the controls built into Harmonious, written and maintained by Harmonious. It is our own description of how the product behaves - not a certification, an audit opinion or a legal notice.",
+  highlights: [
+    { title: "Encrypted connections", body: "Every Harmonious web address uses HTTPS with TLS 1.2 or 1.3, and older versions are refused." },
+    { title: "Two-step sign-in", body: "Staff and client workspaces require a passkey or authenticator app at every sign-in." },
+    { title: "Second-person approval", body: "Changes to saved records and sensitive work need sign-off from a different person." },
+    { title: "People release money", body: "Harmonious never automatically starts a wire, ACH transfer, tax payment or refund." },
+  ],
   sections: [
     {
       heading: "Identity & Access", key: "identity_access",
@@ -57,6 +65,26 @@ export const SECURITY_STATEMENT: SecurityStatement = {
       ],
     },
     {
+      heading: "Encryption", key: "encryption",
+      intro: "Information is protected while it travels to Harmonious and when the most sensitive details are stored.",
+      bullets: [
+        "All Harmonious web addresses use HTTPS with a valid certificate. Connections support TLS 1.3 and TLS 1.2; TLS 1.1 and older are refused.",
+        "Browsers are instructed to always use a secure connection with Harmonious (HTTP Strict Transport Security), including on subdomains.",
+        "Tax identification numbers are stored encrypted, and screens show only the last four digits.",
+        "The most sensitive identifiers used for entity formation are kept in separate encrypted storage that can be opened only by the server step that needs them.",
+      ],
+    },
+    {
+      heading: "Application Security", key: "application_security",
+      intro: "Protections are enforced by Harmonious servers, not only by what a screen shows or hides.",
+      bullets: [
+        "Every request that reads or changes fund, investor or client information is checked on the server against the person's role and the exact records they are responsible for.",
+        "Signed-in pages carry a personal watermark and limit copying, and protection events are recorded. No browser can fully prevent screen recording, so these are deterrence and traceability measures.",
+        "Downloads of historical tax documents require a fresh second-step check, and every allowed or refused download is logged.",
+        "Sign-in and session activity is recorded so unusual access can be investigated.",
+      ],
+    },
+    {
       heading: "Money Movement Controls", key: "money_movement",
       intro: "Harmonious prepares payment work; people release it.",
       bullets: [
@@ -66,17 +94,17 @@ export const SECURITY_STATEMENT: SecurityStatement = {
       ],
     },
     {
-      heading: "Bank Connections (Plaid)", key: "bank_connections",
+      heading: "Bank Connections", key: "bank_connections",
       intro:
-        "Connecting a bank account is optional. Clients can upload wire instructions and bank statements instead. If you do connect, we use Plaid and access is read-only.",
+        "Connecting a bank account is optional. Clients can upload wire instructions and bank statements instead. If you do connect, access is read-only.",
       bullets: [
         "Before the bank sign-in window opens, you must be signed in with two-step verification (an authenticator app).",
-        "You also check a consent box that links to our Privacy Policy and Plaid's End User Privacy Policy. We record who agreed, when, and which version, and we check that record before the connection starts.",
-        "Your bank login details go straight to Plaid and your bank. Harmonious never sees or stores them.",
-        "The access key Plaid gives us is kept only on our servers, in restricted storage. It never reaches your browser.",
+        "You also check a consent box that links to our Privacy Policy and our connection partner's privacy policy. We record who agreed, when, and which version, and we check that record before the connection starts.",
+        "Your bank login details go straight to our connection partner and your bank. Harmonious never sees or stores them.",
+        "The connection access key is kept only on our servers, in restricted storage. It never reaches your browser.",
         "We use the connection to read account details, balances and deposits so payments can be matched. We never use it to move money, and we never sell this data.",
         "You can disconnect at any time from Banking. Bank-connection data is kept while you're connected. When you disconnect or ask us to remove it, we delete it, unless a legal or regulatory hold applies. A person reviews and logs every deletion.",
-        "Our written Information Security Policy covers Plaid and is reviewed every year. Ask support@harmonious.co for a copy.",
+        "Our written Information Security Policy covers bank connections and is reviewed every year. Ask support@harmonious.co for a copy.",
       ],
     },
     {
