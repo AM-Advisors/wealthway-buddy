@@ -17,13 +17,13 @@ export const Route = createFileRoute("/client-login")({
   head: () => ({
     meta: [
         { name: "robots", content: "noindex, nofollow" },
-      { title: "Client Sign In - Harmonious Portal" },
+      { title: "Client Sign In | Harmonious Portal" },
       {
         name: "description",
         content:
           "Sign in with your own credentials to your Harmonious client portal: your funds, statement of work, invoices and payments.",
       },
-      { property: "og:title", content: "Client Sign In - Harmonious Portal" },
+      { property: "og:title", content: "Client Sign In | Harmonious Portal" },
       {
         property: "og:description",
         content: "Access your funds, statement of work, invoices and payments.",
@@ -123,7 +123,7 @@ function ClientLoginPage() {
       <div>
         <h1 className="text-3xl">Client sign in</h1>
         <p className="mt-2 text-muted-foreground">
-          Use your own email and password - each person on your team signs in separately, and every
+          Use your own email and password, each person on your team signs in separately, and every
           action is recorded under their own name.
         </p>
 

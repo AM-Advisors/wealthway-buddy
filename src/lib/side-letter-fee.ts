@@ -7,7 +7,7 @@ export const usdWhole = (cents: number) => `$${(cents / 100).toLocaleString("en-
 /** The text of the generated side letter. Waives only the minimum; every other fund term is unchanged. */
 export function sideLetterText(f: { fundName: string; investorName: string; commitmentCents: number; minimumCents: number; date: string }): string[] {
   return [
-    `Side Letter - ${f.fundName}`,
+    `Side Letter · ${f.fundName}`,
     `Date: ${f.date}`,
     `Investor: ${f.investorName}`,
     "",

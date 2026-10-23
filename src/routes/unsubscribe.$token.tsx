@@ -7,9 +7,9 @@ import { unsubscribeEmail } from "@/lib/marketing.functions";
 export const Route = createFileRoute("/unsubscribe/$token")({
   head: () => ({
     meta: [
-      { title: "Unsubscribe - Harmonious" },
+      { title: "Unsubscribe | Harmonious" },
       { name: "description", content: "Stop receiving marketing emails from Harmonious." },
-      { property: "og:title", content: "Unsubscribe - Harmonious" },
+      { property: "og:title", content: "Unsubscribe | Harmonious" },
       { property: "og:description", content: "Manage Harmonious marketing emails." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

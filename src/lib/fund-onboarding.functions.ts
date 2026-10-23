@@ -270,7 +270,7 @@ export const countersignDetailFn = createServerFn({ method: "POST" })
         if (!original.signedFileId) throw new Error("The investor's signed copy isn't ready yet. Try again in a moment.");
         const created = await box.createMultiSignerRequest({
           fileId: original.signedFileId,
-          documentName: `${offering?.name ?? "Harmonious"} - ${doc?.title ?? "Fund document"} (fund countersignature)`,
+          documentName: `${offering?.name ?? "Harmonious"} · ${doc?.title ?? "Fund document"} (fund countersignature)`,
           externalId: `${me.signature_id}:countersign`,
           redirectUrl: `https://app.harmonious.co/manager/countersign/${me.id}`,
           signers: [{ email, name: me.signer_name ?? null, order: 1, externalUserId: `${me.signature_id}:fund_manager` }],

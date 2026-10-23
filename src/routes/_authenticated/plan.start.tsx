@@ -13,7 +13,7 @@ import { INVESTOR_TIERS, investorTierFor } from "@/lib/product-pricing";
 import { signSaasOrderFn } from "@/lib/saas-orders.functions";
 import { alaCarteCatalog, CAP_TIERS, INVESTOR_SERVICING_KEYS, priceOrder, SERVICING_KEYS, type CapTier, type InvestorServicingKey, type OrderInterval, type ServicingKey } from "@/lib/saas-order-model";
 
-const TITLE = "Build your plan - Harmonious";
+const TITLE = "Build your plan | Harmonious";
 const DESC = "Pick the Harmonious services you need, agree to the Statement of Work and start right away.";
 const INV_LABEL = Object.fromEntries(INVESTOR_TIERS.map((t) => [t.key, t.maxInvestors ? `${t.name} (up to ${t.maxInvestors})` : t.name])) as Record<InvestorServicingKey, string>;
 
@@ -106,7 +106,7 @@ function PlanStart() {
           <Card><CardHeader><CardTitle className="text-lg">À la carte services</CardTitle></CardHeader><CardContent className="space-y-2">
             {catalog.map((c) => (
               <div key={c.key} className="flex items-center justify-between gap-3 text-sm">
-                <span>{c.name} <span className="text-muted-foreground">— {usd(c.amount)} {c.recurring ? "/ year" : c.note ?? "one-time"}</span></span>
+                <span>{c.name} <span className="text-muted-foreground"> · {usd(c.amount)} {c.recurring ? "/ year" : c.note ?? "one-time"}</span></span>
                 <Input type="number" min={0} max={100} aria-label={`Quantity of ${c.name}`} className="w-20" value={alaCarte[c.key] ?? 0}
                   onChange={(e) => setAlaCarte((a) => ({ ...a, [c.key]: Math.max(0, Math.min(100, Number(e.target.value) || 0)) }))} />
               </div>

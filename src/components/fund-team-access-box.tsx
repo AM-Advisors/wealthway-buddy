@@ -12,7 +12,7 @@ const STATUS: Record<string, string> = {
   active: "Active",
   revoked: "Removed",
   expired: "Expired",
-  needs_review: "Paused - granting manager left",
+  needs_review: "Paused: granting manager left",
 };
 
 type Target = { kind: "this" } | { kind: "all" } | { kind: "pick"; ids: string[] };

@@ -13,13 +13,13 @@ import { PersonalAccountFeeds } from '@/components/personal-account-feeds';
 export const Route = createFileRoute("/_authenticated/my-portfolio")({
   head: () => ({
     meta: [
-      { title: "My Portfolio Value - Harmonious" },
+      { title: "My Portfolio Value | Harmonious" },
       {
         name: "description",
         content:
           "Your private bank balances, brokerage positions and Harmonious fund holdings, with source-dated account snapshots.",
       },
-      { property: "og:title", content: "My Portfolio Value - Harmonious" },
+      { property: "og:title", content: "My Portfolio Value | Harmonious" },
       {
         property: "og:description",
         content: "Private bank and brokerage account feeds alongside your Harmonious fund positions.",

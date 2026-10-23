@@ -12,9 +12,9 @@ import { OutreachFeed, type OutreachFilter } from "@/components/sales/outreach-f
 export const Route = createFileRoute("/_authenticated/sales_/dashboard")({
   head: () => ({
     meta: [
-      { title: "Sales dashboard - Harmonious" },
+      { title: "Sales dashboard | Harmonious" },
       { name: "description", content: "Team outreach, connections, pipeline stages and revenue for Harmonious Sales." },
-      { property: "og:title", content: "Sales dashboard - Harmonious" },
+      { property: "og:title", content: "Sales dashboard | Harmonious" },
       { property: "og:description", content: "Outreach by team, rep, channel and service with drill-down to every message." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

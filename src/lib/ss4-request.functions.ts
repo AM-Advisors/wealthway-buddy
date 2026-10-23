@@ -293,7 +293,7 @@ export const signSs4RequestFn = createServerFn({ method: "POST" })
       await logFundAudit(context.userId, { offeringId: r.offering_id, eventType: "ss4_signed", summary: `Form SS-4 signed by ${data.signerName}`, values: { signer: `${data.signerName}, ${data.signerTitle}`, signedAt: signedAt.toISOString() } });
     } catch { /* best-effort */ }
 
-    await (async () => (await import("@/lib/ops-slack-notify.server")).notifySubmission({ kind: "ss4_signed", title: `Form SS-4 signed by ${data.signerName} - ready for staff to file by hand`, offeringId: r.offering_id, submittedBy: context.userId, ref: r.id, path: `/ops/fund/${r.offering_id}?tab=setup`, completed: true }))().catch(() => null);
+    await (async () => (await import("@/lib/ops-slack-notify.server")).notifySubmission({ kind: "ss4_signed", title: `Form SS-4 signed by ${data.signerName} | ready for staff to file by hand`, offeringId: r.offering_id, submittedBy: context.userId, ref: r.id, path: `/ops/fund/${r.offering_id}?tab=setup`, completed: true }))().catch(() => null);
 
     // Keep the fund's SS-4 answers and current form in step (manager-authorized RPCs, EIN untouched).
     try {

@@ -82,9 +82,9 @@ export const SS4_LINES: Line[] = [
 ];
 
 const show = (l: Line, v: unknown) => {
-  if (l.kind === "bool") return v === true ? "Yes" : v === false ? "No" : "—";
-  if (Array.isArray(l.kind)) return l.kind.find((o) => o.value === v)?.label ?? (v ? String(v) : "—");
-  return String(v ?? "").trim() || "—";
+  if (l.kind === "bool") return v === true ? "Yes" : v === false ? "No" : " · ";
+  if (Array.isArray(l.kind)) return l.kind.find((o) => o.value === v)?.label ?? (v ? String(v) : " · ");
+  return String(v ?? "").trim() || " · ";
 };
 
 function LineEditor({ form, onChange }: { form: Form; onChange: (f: Form) => void }) {
@@ -288,7 +288,7 @@ export function Ss4SignView({ requestId }: { requestId: string }) {
             <div className="space-y-1"><Label className="text-xs">Title</Label><Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Managing Member" /></div>
             <div className="space-y-1"><Label className="text-xs">Phone</Label><Input value={phone} onChange={(e) => setPhone(e.target.value)} /></div>
             <div className="space-y-1">
-              <Label className="text-xs">Responsible party SSN or ITIN (line 7b){d.tinOnFile ? " — optional, replaces the one on file" : ""}</Label>
+              <Label className="text-xs">Responsible party SSN or ITIN (line 7b){d.tinOnFile ? " · optional, replaces the one on file" : ""}</Label>
               <Input value={tin} onChange={(e) => setTin(e.target.value)} inputMode="numeric" autoComplete="off" placeholder="123-45-6789" />
             </div>
           </div>

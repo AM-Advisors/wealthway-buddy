@@ -125,7 +125,7 @@ export async function saveDesign(userId: string, id: string, doc: DesignDoc, tit
   const { error } = await db.from("marketing_design_versions").insert({ design_id: id, version, doc, change_kind: kind, actor_id: userId });
   if (error) throw new Error(error.message);
   await db.from("marketing_designs").update({ doc, title: title.slice(0, 200), format: doc.format, series_key: doc.series_key, version, status, updated_at: new Date().toISOString() }).eq("id", id).eq("version", d.version);
-  if (status !== d.status) await ev(db, id, "review_reset", userId, "Text, figures or sources changed — needs review again.");
+  if (status !== d.status) await ev(db, id, "review_reset", userId, "Text, figures or sources changed: needs review again.");
   return { version, kind };
 }
 

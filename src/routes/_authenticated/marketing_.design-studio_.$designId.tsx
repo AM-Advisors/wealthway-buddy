@@ -94,7 +94,7 @@ function Editor() {
         {(["text", "image", "shape", "icon", "chart"] as const).map((t) => <Button key={t} size="sm" variant="outline" onClick={() => add(t)}>+ {t}</Button>)}
         <label className="flex items-center gap-1"><input type="checkbox" checked={grid} onChange={(e) => setGrid(e.target.checked)} />Grid & snap</label>
         <Button size="sm" variant={preview ? "default" : "outline"} onClick={() => { setPreview(!preview); setSel(null); }}>{preview ? "Exit preview" : "Preview"}</Button>
-        <select className={`${inp} w-auto`} value="" onChange={(e) => { if (e.target.value) { commit(resizeDesign(doc, e.target.value as DesignFormat)); toast.success("Re-flowed to the new size — check text wrapping."); } }}>
+        <select className={`${inp} w-auto`} value="" onChange={(e) => { if (e.target.value) { commit(resizeDesign(doc, e.target.value as DesignFormat)); toast.success("Re-flowed to the new size, check text wrapping."); } }}>
           <option value="">Resize to…</option>{Object.entries(DESIGN_FORMATS).filter(([k]) => k !== doc.format).map(([k, f]) => <option key={k} value={k}>{f.label}</option>)}</select>
         <select className={`${inp} w-auto`} value="" onChange={(e) => { if (e.target.value) commit(switchTemplate(doc, e.target.value as TemplateKey, kit)); }}>
           <option value="">Switch template…</option>{TEMPLATES.map((t) => <option key={t.key} value={t.key}>{t.label}</option>)}</select>

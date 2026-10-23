@@ -186,7 +186,7 @@ export function FundComplianceCard({ offeringId }: { offeringId: string }) {
           <Input
             value={draft.label}
             onChange={(e) => setDraft({ ...draft, label: e.target.value })}
-            placeholder="Form D - initial notice filing"
+            placeholder="Form D: initial notice filing"
           />
         </div>
         <div className="grid gap-2">

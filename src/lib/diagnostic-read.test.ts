@@ -6,7 +6,7 @@ describe("diagnostic failures and processing facts", () => {
     expect(() => assertDiagnosticReads([{ error: null }])).not.toThrow();
   });
   it("does not label a received event as processed", () => {
-    expect(webhookProcessingState({ processedAt: null })).toBe("Received — processing unconfirmed");
+    expect(webhookProcessingState({ processedAt: null })).toBe("Received: processing unconfirmed");
   });
   it("a timestamp does not override a recorded error", () => {
     expect(webhookProcessingState({ processedAt: "2026-10-21T12:00:00Z", error: "failed to apply" })).toBe("Processing failed");
@@ -14,6 +14,6 @@ describe("diagnostic failures and processing facts", () => {
   });
   it("distinguishes successful processing from ignored or unmatched events", () => {
     expect(webhookProcessingState({ processedAt: "2026-10-21T12:00:00Z", status: "processed" })).toBe("Successfully processed");
-    expect(webhookProcessingState({ processedAt: "2026-10-21T12:00:00Z", status: "unknown_item" })).toBe("Processed — no change applied");
+    expect(webhookProcessingState({ processedAt: "2026-10-21T12:00:00Z", status: "unknown_item" })).toBe("Processed: no change applied");
   });
 });

@@ -43,7 +43,7 @@ export function PersonKycUpdate({ personId }: { personId: string }) {
   return (
     <section className="space-y-4 rounded-lg border p-4">
       <div className="flex flex-wrap items-center gap-2">
-        <h2 className="mr-auto text-lg">Information & KYC update — {p.name}</h2>
+        <h2 className="mr-auto text-lg">Information & KYC update · {p.name}</h2>
         <Badge variant="outline" className="capitalize">KYC {String(p.kyc_status ?? "not started").replace(/_/g, " ")}</Badge>
         <Badge variant="outline" className="capitalize">AML {String(p.aml_status ?? "not started").replace(/_/g, " ")}</Badge>
       </div>
@@ -58,7 +58,7 @@ export function PersonKycUpdate({ personId }: { personId: string }) {
 
       <div>
         <h3 className="mb-1 font-medium">2. Previous KYC (optional)</h3>
-        <p className="mb-2 text-xs text-muted-foreground">Kept for reference only. It doesn't change their KYC/AML status — the updated check below does.</p>
+        <p className="mb-2 text-xs text-muted-foreground">Kept for reference only. It doesn't change their KYC/AML status, the updated check below does.</p>
         <div className="grid gap-2 sm:grid-cols-3">
           <label className="text-xs text-muted-foreground">Who ran it<Input placeholder="e.g. prior administrator" value={pk.provider} onChange={(e) => setPk({ ...pk, provider: e.target.value })} /></label>
           <label className="text-xs text-muted-foreground">Date checked<Input type="date" value={pk.checkedOn} onChange={(e) => setPk({ ...pk, checkedOn: e.target.value })} /></label>

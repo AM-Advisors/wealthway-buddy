@@ -78,7 +78,7 @@ export async function notifyAccreditationPending(applicationId: string) {
   const investor = prof?.legal_name || "An investor";
   try {
     const { notifySubmission } = await import("@/lib/ops-slack-notify.server");
-    await notifySubmission({ kind: "accreditation_pending", title: `Accreditation paperwork pending review - ${investor}`, offeringId: app.offering_id, ref: `accreditation:${applicationId}:${Math.floor(Date.now() / 3_600_000)}`, once: true, path: `/ops/fund/${app.offering_id}` } as any);
+    await notifySubmission({ kind: "accreditation_pending", title: `Accreditation paperwork pending review | ${investor}`, offeringId: app.offering_id, ref: `accreditation:${applicationId}:${Math.floor(Date.now() / 3_600_000)}`, once: true, path: `/ops/fund/${app.offering_id}` } as any);
   } catch (e) { console.error("accreditation slack", e); }
   const { data: mgrs } = await d.from("fund_managers").select("user_id").eq("offering_id", app.offering_id);
   const ids = ((mgrs ?? []) as any[]).map((m) => m.user_id).filter(Boolean);

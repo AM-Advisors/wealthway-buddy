@@ -8,7 +8,7 @@
 
 export const INVESTOR_ORIGINS = [
   { value: "harmonious_onboarded", label: "Harmonious onboarded" },
-  { value: "takeover_prior_administrator", label: "Takeover - prior administrator" },
+  { value: "takeover_prior_administrator", label: "Takeover: prior administrator" },
   { value: "historical_import", label: "Historical import" },
   { value: "other_approved_migration", label: "Other approved migration" },
 ] as const;
@@ -42,7 +42,7 @@ export type EvidenceKey = (typeof EVIDENCE_REQUIREMENTS)[number]["key"];
 
 export const EVIDENCE_STATUSES = [
   { value: "verified_from_source", label: "Verified from source" },
-  { value: "review_required", label: "Evidence available - review required" },
+  { value: "review_required", label: "Evidence available: review required" },
   { value: "missing", label: "Missing" },
   { value: "not_applicable", label: "Not applicable" },
   { value: "pending_refresh", label: "Pending refresh" },

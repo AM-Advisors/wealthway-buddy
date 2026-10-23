@@ -29,7 +29,7 @@ function Monitoring() {
   const [busy, setBusy] = useState<string | null>(null);
   const [showResolved, setShowResolved] = useState(false);
   const d: any = q.data;
-  const f = (x: string | null | undefined) => x ? fmtInTz(x, tz) : "—";
+  const f = (x: string | null | undefined) => x ? fmtInTz(x, tz) : " · ";
   const doRetry = async (source: string | null) => {
     setBusy(source ?? "all");
     try { const r = await retry({ data: { source } }); r.skipped ? toast.info(`Skipped: ${r.skipped}`) : r.errors.length ? toast.error(r.errors.join("; ")) : toast.success(`Retried. ${r.added} new stories.`); }
@@ -49,7 +49,7 @@ function Monitoring() {
       {!d ? <p className="text-sm text-muted-foreground">{q.error ? (q.error as Error).message : "Loading…"}</p> : <div className="space-y-4">
         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
           <Stat label="Last successful run" value={f(d.lastSuccess)} />
-          <Stat label="Last run" value={d.lastRun ? `${d.lastRun.status} · ${f(d.lastRun.started_at)}` : "—"} />
+          <Stat label="Last run" value={d.lastRun ? `${d.lastRun.status} · ${f(d.lastRun.started_at)}` : " · "} />
           <Stat label="AI processing" value={d.aiPaused ? `Paused: ${d.aiPaused}` : "Available"} bad={!!d.aiPaused} />
           <Stat label="Form D this week" value={`${d.formD.filings} filings · ${d.formD.parseErrors} unreadable`} bad={d.formD.filings > 0 && d.formD.parseErrors / d.formD.filings > 0.5} />
         </div>
@@ -67,7 +67,7 @@ function Monitoring() {
               <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                 {a.notified_at && <span>Emailed {f(a.notified_at)}</span>}{a.escalated_at && <span>Escalated {f(a.escalated_at)}</span>}
                 {a.acknowledged_at && <span>Acknowledged {f(a.acknowledged_at)}</span>}
-                {a.resolved_at && <span>Resolved {f(a.resolved_at)}{a.auto_resolved ? " (cleared automatically)" : ""}{a.resolution_note ? ` — ${a.resolution_note}` : ""}</span>}
+                {a.resolved_at && <span>Resolved {f(a.resolved_at)}{a.auto_resolved ? " (cleared automatically)" : ""}{a.resolution_note ? ` · ${a.resolution_note}` : ""}</span>}
                 {!a.resolved_at && <>
                   {!a.acknowledged_at && <Button size="sm" variant="outline" onClick={() => doAct(a.id, "acknowledge")}>Acknowledge</Button>}
                   {d.canManage && <Button size="sm" variant="outline" onClick={() => doAct(a.id, "escalate")}>Escalate</Button>}
@@ -84,8 +84,8 @@ function Monitoring() {
               <tr key={s.key} className="border-t border-border align-top">
                 <td className="p-1 font-medium">{s.name}{!s.active && <span className="ml-1 text-muted-foreground">(inactive)</span>}</td>
                 <td><span className={`rounded-sm px-1.5 py-0.5 ${TONE[s.health as Health]}`}>{HEALTH_LABEL[s.health as Health]}</span>{s.consecutive_failures > 0 && <span className="ml-1">{s.consecutive_failures}× failed</span>}</td>
-                <td>{f(s.last_success_at)}</td><td>{f(s.nextExpected)}</td><td>{s.last_item_count ?? "—"}</td><td>{s.last_invalid_dates}</td>
-                <td>{s.last_duration_ms != null ? `${(s.last_duration_ms / 1000).toFixed(1)}s` : "—"}</td>
+                <td>{f(s.last_success_at)}</td><td>{f(s.nextExpected)}</td><td>{s.last_item_count ?? " · "}</td><td>{s.last_invalid_dates}</td>
+                <td>{s.last_duration_ms != null ? `${(s.last_duration_ms / 1000).toFixed(1)}s` : " · "}</td>
                 <td className="max-w-64 text-destructive">{s.last_error ?? ""}</td>
                 <td>{d.canManage && s.active && s.health !== "manual" && <Button size="sm" variant="ghost" disabled={!!busy} onClick={() => doRetry(s.key)}>{busy === s.key ? "…" : "Retry"}</Button>}</td>
               </tr>))}</tbody></table></div>

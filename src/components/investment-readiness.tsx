@@ -172,7 +172,7 @@ function AuditDetails({ r }: { r: any }) {
             <thead><tr className="text-left"><th className="py-1 font-medium">Item</th><th className="font-medium">Source</th><th className="font-medium">Status</th></tr></thead>
             <tbody>
               {r.items.map((i: any) => (
-                <tr key={i.key} className="border-t align-top"><td className="py-1 pr-2">{i.label}{i.reason ? ` - ${i.reason}` : ""}</td><td className="pr-2">{i.source ?? "-"}</td><td>{i.status}</td></tr>
+                <tr key={i.key} className="border-t align-top"><td className="py-1 pr-2">{i.label}{i.reason ? ` · ${i.reason}` : ""}</td><td className="pr-2">{i.source ?? "-"}</td><td>{i.status}</td></tr>
               ))}
             </tbody>
           </table>

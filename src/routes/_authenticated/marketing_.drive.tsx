@@ -12,9 +12,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 export const Route = createFileRoute("/_authenticated/marketing_/drive")({
   head: () => ({ meta: [
-    { title: "Marketing Drive & sheets - Harmonious" },
+    { title: "Marketing Drive & sheets | Harmonious" },
     { name: "description", content: "Marketing's Google Drive library and tracked marketing sheets." },
-    { property: "og:title", content: "Marketing Drive & sheets - Harmonious" },
+    { property: "og:title", content: "Marketing Drive & sheets | Harmonious" },
     { property: "og:description", content: "Pick images and themes from Drive and share marketing sheets with tracking." },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary" },

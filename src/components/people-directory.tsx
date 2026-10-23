@@ -100,7 +100,7 @@ export function PeopleDirectory({ initial = "all" }: { initial?: Tab }) {
                   <tr key={i.table + i.id}>
                     <td className="space-y-2 p-3"><Link to="/ops/people/invitations/$invitationId" params={{ invitationId: i.id }} search={{ source: i.table }} className="font-medium text-primary hover:underline">{i.name || i.email}</Link><div className="text-xs text-muted-foreground">{i.email}</div><DeliveryBadge outcome={i.outcome} /><div className="text-xs text-muted-foreground">Expires: {insightTime(i.expiresAt)}</div></td>
                     <td className="p-3"><Badge variant="outline">{i.type}</Badge></td>
-                    <td className="p-3">{i.invitedBy || "—"}</td>
+                    <td className="p-3">{i.invitedBy || " · "}</td>
                     <td className="whitespace-nowrap p-3">{insightTime(i.sentAt)}</td>
                     <td className="whitespace-nowrap p-3">{insightTime(i.lastSent)}<div className="text-xs text-muted-foreground">{i.lastSender ?? ""}</div></td>
                     <td className="space-x-1 whitespace-nowrap p-3 text-right">{q.data?.canManage && <>

@@ -349,7 +349,7 @@ function Verify({ d, onboardingId }: { d: any; onboardingId: string }) {
     mutationFn: () => startFn({ data: { onboardingId } }),
     onSuccess: (r: any) => {
       if (r?.url) window.location.assign(r.url);
-      else if (r?.completed) { toast.success("Your earlier verification was reused — this step is complete."); void qc.invalidateQueries(); }
+      else if (r?.completed) { toast.success("Your earlier verification was reused, this step is complete."); void qc.invalidateQueries(); }
     },
     onError: (e: any) => toast.error(String(e?.message ?? e).replace(/^Forbidden:\s*/, "")),
   });
@@ -613,7 +613,7 @@ function Sign({ d, onboardingId, done }: { d: any; onboardingId: string; done: (
                 <Link to="/fund/$offeringId/documents" params={{ offeringId: d.offering.id }}>Review &amp; Sign Documents</Link>
               </Button>
             ) : null}
-            <p className="text-xs text-muted-foreground">A document shows as signed only once the signing service confirms it - this can take a minute.</p>
+            <p className="text-xs text-muted-foreground">A document shows as signed only once the signing service confirms it, this can take a minute.</p>
           </div>
         );
       case "submit": {
@@ -697,7 +697,7 @@ function Fund({ d, onboardingId, done }: { d: any; onboardingId: string; done: (
     queryFn: () => fundingFn({ data: { onboardingId } }),
     enabled: reveal,
   });
-  const sent = useAction(sentFn, "Thanks - we'll confirm once your transfer is received and matched.", done);
+  const sent = useAction(sentFn, "Thanks, we'll confirm once your transfer is received and matched.", done);
   const f: any = funding.data;
   const step = (d.journey ?? []).find((s: any) => s.key === "fund");
   const amount = d.acceptedAmountCents ?? d.requestedAmountCents;

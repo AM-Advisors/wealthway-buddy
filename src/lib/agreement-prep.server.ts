@@ -421,7 +421,7 @@ export async function sendPreparedAgreement(
 
   const detail = await createMultiSignerRequest({
     fileId,
-    documentName: `${offering?.name ?? "Harmonious"} - ${doc.title}`,
+    documentName: `${offering?.name ?? "Harmonious"} · ${doc.title}`,
     message:
       input.message ??
       `Please review and sign ${doc.title} for ${offering?.name ?? "the fund"}.`,

@@ -14,7 +14,7 @@ import { chooseWireFn, mySaasSetupFn, startSaasCheckoutFn, submitKybFn, uploadKy
 import { KYB_DOCUMENTS } from "@/lib/saas-order-model";
 import { getStripe, getStripeEnvironment } from "@/lib/stripe";
 
-const TITLE = "Finish setup - Harmonious";
+const TITLE = "Finish setup | Harmonious";
 const DESC = "Complete payment and business verification to open your Harmonious plan.";
 export const Route = createFileRoute("/_authenticated/plan/setup")({
   head: () => ({ meta: [
@@ -115,7 +115,7 @@ function PlanSetup() {
               <Button variant="outline" onClick={chooseWire}>Pay by wire</Button>
             </div>
           )}
-          {order.payment_method === "ach" && !paid && !paying && <p className="text-sm text-muted-foreground">ACH payments take 3–5 business days to clear. Your plan opens once the payment settles.</p>}
+          {order.payment_method === "ach" && !paid && !paying && <p className="text-sm text-muted-foreground">ACH payments take 3 to 5 business days to clear. Your plan opens once the payment settles.</p>}
         </Step>
         <Step done={!!q.data?.kycOpen} title="Identity verification (you)">
           <p className="text-sm text-muted-foreground">Complete identity verification from the prompt when you sign in.</p>

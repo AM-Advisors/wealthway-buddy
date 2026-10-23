@@ -9,9 +9,9 @@ import { getMyClientBranding } from "@/lib/client-branding.functions";
 export const Route = createFileRoute("/_authenticated/client/setup-options")({
   head: () => ({
     meta: [
-      { title: "Client setup options - Harmonious" },
+      { title: "Client setup options | Harmonious" },
       { name: "description", content: "Turn on white-labeling and set your logo, fonts, colors and web address." },
-      { property: "og:title", content: "Client setup options - Harmonious" },
+      { property: "og:title", content: "Client setup options | Harmonious" },
       { property: "og:description", content: "White-label your Harmonious portal." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

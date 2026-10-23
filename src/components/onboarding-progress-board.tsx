@@ -212,7 +212,7 @@ export function OnboardingProgressBoard() {
               {(row.contacts ?? []).length > 0 ? (
                 <div className="mt-4 space-y-2">
                   <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                    Contacts - sign-ins and document sign-off
+                    Contacts: sign-ins and document sign-off
                   </p>
                   {(row.contacts as any[]).map((contact) => (
                     <div

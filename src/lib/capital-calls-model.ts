@@ -471,7 +471,7 @@ export const FUNDING_EXCEPTION_LABELS: Record<FundingExceptionKind, string> = {
   reversed_transaction: "Reversed transaction",
   currency_discrepancy: "Currency discrepancy",
   fees_deducted: "Fees deducted from wire",
-  ambiguous_match: "Ambiguous - more than one possible investor",
+  ambiguous_match: "Ambiguous: more than one possible investor",
 };
 
 export type IncomingCash = {
@@ -576,7 +576,7 @@ export function proposeFundingMatch(
     } else if (sameAmount.length > 1) {
       return base(
         "ambiguous_match",
-        "Two or more investors are expected to send this exact amount - a human must decide.",
+        "Two or more investors are expected to send this exact amount, a human must decide.",
       );
     } else {
       return base("incorrect_reference", "No reference and no expected amount matches this receipt.");

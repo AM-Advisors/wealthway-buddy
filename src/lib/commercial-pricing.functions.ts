@@ -102,7 +102,7 @@ export const priceFund = createServerFn({ method: "POST" })
     const { data: fund } = await db.from("offerings").select("id, client_id").eq("id", data.offeringId).maybeSingle();
     if (!fund) throw new Error("Fund not found.");
     const { count } = await db.from("investor_applications").select("id", { count: "exact", head: true }).eq("offering_id", data.offeringId);
-    if ((count ?? 0) > 0) throw new Error("This Fund's pricing is already final - it has investors. Existing Funds are never repriced.");
+    if ((count ?? 0) > 0) throw new Error("This Fund's pricing is already final, it has investors. Existing Funds are never repriced.");
     const { data: open } = await db.from("pricing_approval_requests").select("id").eq("offering_id", data.offeringId).eq("status", "pending").maybeSingle();
     if (open) throw new Error("A pricing request for this Fund is already waiting for approval.");
     const { createFundPricingSnapshot } = await import("@/lib/commercial-pricing.server");
@@ -122,7 +122,7 @@ export const decidePricingRequest = createServerFn({ method: "POST" })
     if (!req) throw new Error("Request not found.");
     if (req.status !== "pending") throw new Error("This request has already been decided.");
     assertCanDecide(roles, context.userId, req.requested_by === context.userId && data.approve && (await (await import("@/lib/self-approval.server")).selfApprove(context.userId, "pricing_request", [req.id])) ? "" : req.requested_by);
-    if (data.approve && !data.scope) throw new Error("Choose This Fund Only or Client Pricing - Future Funds.");
+    if (data.approve && !data.scope) throw new Error("Choose This Fund Only or Client Pricing. Future Funds.");
     const now = new Date().toISOString();
     const { error } = await db.from("pricing_approval_requests").update({
       status: data.approve ? "approved" : "rejected", decision_scope: data.approve ? data.scope : null,

@@ -35,7 +35,7 @@ function PreparedForMe() {
         data: { draft_id: vars.id, decision: vars.decision, note: notes[vars.id] || undefined },
       }),
     onSuccess: () => {
-      toast.success("Thank you - your decision has been recorded.");
+      toast.success("Thank you, your decision has been recorded.");
       void qc.invalidateQueries({ queryKey: ["items-prepared-for-me"] });
     },
     onError: (e: any) => toast.error(e?.message ?? "That could not be saved."),
@@ -49,7 +49,7 @@ function PreparedForMe() {
         <h1 className="text-3xl">Items prepared for me</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           Your adviser, lawyer or accountant can prepare information for you. Nothing they prepare
-          takes effect until you approve it here - and only you can approve it.
+          takes effect until you approve it here, and only you can approve it.
         </p>
       </header>
 
@@ -146,13 +146,13 @@ function PreparedForMe() {
 export const Route = createFileRoute("/_authenticated/prepared")({
   head: () => ({
     meta: [
-      { title: "Items prepared for me - Harmonious" },
+      { title: "Items prepared for me | Harmonious" },
       {
         name: "description",
         content:
           "Review, approve or reject information your adviser, lawyer or accountant prepared for you.",
       },
-      { property: "og:title", content: "Items prepared for me - Harmonious" },
+      { property: "og:title", content: "Items prepared for me | Harmonious" },
       {
         property: "og:description",
         content: "Nothing a professional prepares takes effect until you approve it yourself.",

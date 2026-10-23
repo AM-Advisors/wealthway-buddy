@@ -67,7 +67,7 @@ export function FormationRecordCard({ offeringId }: { offeringId: string }) {
         <Section title="Formation documents">
           {d.documents.length === 0 ? <p className="text-sm text-muted-foreground">No formation documents yet.</p> : (
             <ul className="divide-y text-sm">{d.documents.map((doc: any) => (
-              <li key={doc.id} className="flex justify-between gap-2 py-1.5"><span>{doc.typeLabel}{doc.title !== doc.typeLabel ? ` - ${doc.title}` : ""} <span className="text-xs text-muted-foreground">v{doc.version}{!doc.current ? " (earlier version)" : ""}</span></span><span className="text-xs text-muted-foreground">{fmtDate(doc.at)}</span></li>
+              <li key={doc.id} className="flex justify-between gap-2 py-1.5"><span>{doc.typeLabel}{doc.title !== doc.typeLabel ? ` · ${doc.title}` : ""} <span className="text-xs text-muted-foreground">v{doc.version}{!doc.current ? " (earlier version)" : ""}</span></span><span className="text-xs text-muted-foreground">{fmtDate(doc.at)}</span></li>
             ))}</ul>
           )}
           {d.canEdit && <DocumentUpload offeringId={offeringId} onChanged={refresh} />}
@@ -204,7 +204,7 @@ function Discrepancies({ offeringId, d, onChanged }: { offeringId: string; d: an
               <Button size="sm" variant="outline" disabled={resolve.busy} onClick={() => resolve.run({ offeringId, id: x.id, resolution: "kept_ours", note: notes[x.id] ?? "" }, "Settled")}>Keep ours</Button>
               <Button size="sm" variant="outline" disabled={resolve.busy} onClick={() => resolve.run({ offeringId, id: x.id, resolution: "accepted_provider", note: notes[x.id] ?? "" }, "Settled")}>Use provider's</Button>
             </div>
-          ) : <p className="text-xs text-muted-foreground">{x.resolution === "kept_ours" ? "Kept ours" : x.resolution === "accepted_provider" ? "Used provider's" : "Other"} - {x.note}</p>}
+          ) : <p className="text-xs text-muted-foreground">{x.resolution === "kept_ours" ? "Kept ours" : x.resolution === "accepted_provider" ? "Used provider's" : "Other"} · {x.note}</p>}
         </li>
       ))}</ul>
       <div className="grid gap-2 sm:grid-cols-[1fr_1fr_1fr_auto] sm:items-end">

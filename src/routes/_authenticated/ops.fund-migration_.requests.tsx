@@ -13,9 +13,9 @@ import { approveMigrationRequest, declineMigrationRequest, listMigrationRequests
 export const Route = createFileRoute("/_authenticated/ops/fund-migration_/requests")({
   head: () => ({
     meta: [
-      { title: "Migrations approval queue - Harmonious Operations" },
+      { title: "Migrations approval queue | Harmonious Operations" },
       { name: "description", content: "Approve funds coming from Wix, Google Drive or client requests before they join the full fund list." },
-      { property: "og:title", content: "Migrations approval queue - Harmonious Operations" },
+      { property: "og:title", content: "Migrations approval queue | Harmonious Operations" },
       { property: "og:description", content: "Second-person approval for fund migrations." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

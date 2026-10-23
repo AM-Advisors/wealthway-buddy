@@ -209,7 +209,7 @@ export const startNdaSigning = createServerFn({ method: "POST" })
       fileId: room.nda_box_file_id,
       signerEmail: email,
       signerName,
-      documentName: `${fundName} - Confidentiality agreement`,
+      documentName: `${fundName} · Confidentiality agreement`,
       message: `Please review and sign the confidentiality agreement for ${fundName}. The diligence materials open as soon as it is signed.`,
       externalId: `nda:${room.id}:${userId}`,
       redirectUrl: `https://app.harmonious.co/diligence/${data.offering_id}`,

@@ -57,4 +57,4 @@ export function resolveEconomics(
   });
 }
 
-export const fmtRate = (r: Rate) => (r == null ? "—" : `${r}%`);
+export const fmtRate = (r: Rate) => (r == null ? " · " : `${r}%`);

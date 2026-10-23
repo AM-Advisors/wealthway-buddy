@@ -6,9 +6,9 @@ import { AmPage, HandoffList, RenewalList, healthVariant, money, useAmDashboard 
 export const Route = createFileRoute("/_authenticated/account-manager")({
   head: () => ({
     meta: [
-      { title: "Account management dashboard - Harmonious" },
+      { title: "Account management dashboard | Harmonious" },
       { name: "description", content: "Client health, new hand-offs, renewals and what's waiting for Account Managers." },
-      { property: "og:title", content: "Account management dashboard - Harmonious" },
+      { property: "og:title", content: "Account management dashboard | Harmonious" },
       { property: "og:description", content: "Keep signed clients healthy and growing." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

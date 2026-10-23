@@ -63,7 +63,7 @@ function ApprovalForm({ fundId, onDone, base }: { fundId: string; onDone: (id: s
   const qc = useQueryClient();
   const [v, setV] = useState({ type: base?.approval_type ?? "DISTRIBUTION", title: base?.title ?? "", amount: base?.approval_amount != null ? String(base.approval_amount) : "", due: base?.due_date ?? "", effective: base?.effective_date ?? "", summary: base?.client_visible_summary ?? "", description: base?.description ?? "", internal: base?.internal_notes ?? "", calc: ((base?.calculation_summary ?? []) as any[]).map((c) => `${c.label}: ${c.value}`).join("\n"), docs: ((base?.supporting_documents ?? []) as any[]).map((x) => x.name).join("\n"), reason: "" });
   const submit = async () => {
-    const calculation = v.calc.split("\n").map((l: string) => l.trim()).filter(Boolean).map((l: string) => { const [a, ...b] = l.split(":"); return { label: (a ?? "").trim().slice(0, 120), value: b.join(":").trim().slice(0, 200) || "—" }; });
+    const calculation = v.calc.split("\n").map((l: string) => l.trim()).filter(Boolean).map((l: string) => { const [a, ...b] = l.split(":"); return { label: (a ?? "").trim().slice(0, 120), value: b.join(":").trim().slice(0, 200) || " · " }; });
     const documents = v.docs.split("\n").map((l: string) => l.trim()).filter(Boolean).map((name: string) => ({ name: name.slice(0, 200) }));
     const payload = { fundId, type: v.type, title: v.title, amount: v.amount ? Number(v.amount) : null, dueDate: v.due || null, effectiveDate: v.effective || null, summary: v.summary || null, description: v.description || null, internalNotes: v.internal || null, calculation, documents };
     try {
@@ -114,13 +114,13 @@ function ApprovalDetail({ id, fundId, onBack, onOpen }: { id: string; fundId: st
         </div>
         {a.client_visible_summary && <p className="mt-2 text-sm">{a.client_visible_summary}</p>}
         <dl className="mt-3 grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
-          <div><dt className="text-xs text-muted-foreground">Financial impact</dt><dd className="font-semibold">{money(a.approval_amount, a.currency) ?? "—"}</dd></div>
+          <div><dt className="text-xs text-muted-foreground">Financial impact</dt><dd className="font-semibold">{money(a.approval_amount, a.currency) ?? " · "}</dd></div>
           <div><dt className="text-xs text-muted-foreground">Effective date</dt><dd>{fmtDate(a.effective_date)}</dd></div>
           <div><dt className="text-xs text-muted-foreground">Due date</dt><dd>{fmtDate(a.due_date)}</dd></div>
           <div><dt className="text-xs text-muted-foreground">Approvals needed</dt><dd>{decisions.filter((x: any) => x.decision === "APPROVE").length} of {a.required_approver_count}</dd></div>
           <div><dt className="text-xs text-muted-foreground">Prepared by</dt><dd>{a.preparedByName ?? "Harmonious"}</dd></div>
           <div><dt className="text-xs text-muted-foreground">Reviewed by</dt><dd>{a.reviewedByName ?? "Not yet reviewed"}</dd></div>
-          <div><dt className="text-xs text-muted-foreground">Related workflow</dt><dd>{a.related_workflow_type ?? (a.service_request_id ? "Service request" : "—")}</dd></div>
+          <div><dt className="text-xs text-muted-foreground">Related workflow</dt><dd>{a.related_workflow_type ?? (a.service_request_id ? "Service request" : " · ")}</dd></div>
         </dl>
         {a.description && <p className="mt-3 whitespace-pre-wrap text-sm text-muted-foreground">{a.description}</p>}
       </section>
@@ -159,7 +159,7 @@ function ApprovalDetail({ id, fundId, onBack, onOpen }: { id: string; fundId: st
 
       <section className="rounded-xl border bg-card p-4">
         <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Change history</h3>
-        <ul className="space-y-1 text-xs">{events.map((e: any) => <li key={e.id}><span className="text-muted-foreground">{new Date(e.created_at).toLocaleString()}</span> · v{e.version} · {e.action.replace(/_/g, " ")} · {e.who}{e.comment ? ` — ${e.comment}` : ""}</li>)}</ul>
+        <ul className="space-y-1 text-xs">{events.map((e: any) => <li key={e.id}><span className="text-muted-foreground">{new Date(e.created_at).toLocaleString()}</span> · v{e.version} · {e.action.replace(/_/g, " ")} · {e.who}{e.comment ? ` · ${e.comment}` : ""}</li>)}</ul>
       </section>
     </div>
   );

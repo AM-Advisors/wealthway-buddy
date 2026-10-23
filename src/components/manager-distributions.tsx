@@ -81,7 +81,7 @@ export function ManagerDistributions({ offeringId }: { offeringId?: string } = {
             <ul className="text-sm text-muted-foreground">
               {lines.filter((l) => l.batchId === b.id).map((l) => (
                 <li key={l.id}>
-                  {l.displayName ?? "Investor"} - {money(l.grossCents)} gross,{" "}
+                  {l.displayName ?? "Investor"} · {money(l.grossCents)} gross,{" "}
                   {money(l.withholdingCents)} withheld, {money(l.netCents)} net ·{" "}
                   {String(l.paymentState).replace(/_/g, " ")}
                 </li>

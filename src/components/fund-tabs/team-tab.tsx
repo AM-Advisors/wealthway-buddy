@@ -123,7 +123,7 @@ function FirmEditor({ fundId, onClose }: { fundId: string; onClose: () => void }
   const [role, setRole] = useState("counsel");
   const m = useMutation({
     mutationFn: () => save({ data: { fundId, id: null, fullName: firm.trim(), email: "", phone: "", company: firm.trim(), teamRole: role as any, permissions: [] } }),
-    onSuccess: () => { toast.success("Firm added — now add its people"); invalidateFund(qc, fundId); onClose(); },
+    onSuccess: () => { toast.success("Firm added: now add its people"); invalidateFund(qc, fundId); onClose(); },
     onError: (e: Error) => toast.error(e.message),
   });
   return (

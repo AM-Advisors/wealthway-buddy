@@ -16,9 +16,9 @@ import { listBankPackets, retireBankPacket, uploadBankPacket } from "@/lib/fund-
 export const Route = createFileRoute("/_authenticated/admin/bank-packets")({
   head: () => ({
     meta: [
-      { title: "Bank setup packets - Harmonious" },
+      { title: "Bank setup packets | Harmonious" },
       { name: "description", content: "Manage the bank account setup paperwork clients receive when Harmonious coordinates banking." },
-      { property: "og:title", content: "Bank setup packets - Harmonious" },
+      { property: "og:title", content: "Bank setup packets | Harmonious" },
       { property: "og:description", content: "Manage partner bank setup paperwork for new funds and SPVs." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

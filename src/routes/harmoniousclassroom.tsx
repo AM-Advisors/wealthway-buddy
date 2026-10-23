@@ -14,7 +14,7 @@ export const Route = createFileRoute("/harmoniousclassroom")({
   head: ({ loaderData }) =>
     marketingHead({
       path: "/harmoniousclassroom",
-      title: "Harmonious Classroom - Guides on SPVs, Funds & Cap Tables",
+      title: "Harmonious Classroom | Guides on SPVs, Funds & Cap Tables",
       description:
         "Guides on SPVs, fund administration, investor onboarding, cap tables, compliance and private markets from the Harmonious team.",
       // Indexed only once at least one article is published here.

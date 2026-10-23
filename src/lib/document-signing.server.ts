@@ -312,7 +312,7 @@ export async function openSigningSession(
     : null;
   const detail = await createMultiSignerRequest({
     fileId,
-    documentName: `${resolved.offering?.name ?? "Harmonious"} - ${resolved.document.title}`,
+    documentName: `${resolved.offering?.name ?? "Harmonious"} · ${resolved.document.title}`,
     message: `Please review and sign ${resolved.document.title} for ${resolved.offering?.name ?? "the fund"}.`,
     externalId: `${resolved.application.id}:${resolved.document.id}`,
     redirectUrl: "https://app.harmonious.co/portal",

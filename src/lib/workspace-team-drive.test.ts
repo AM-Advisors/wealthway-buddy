@@ -85,7 +85,7 @@ describe("Investor Google Drive connection - rules", () => {
       expect(isBlockedFromInvestorDrive(n)).toBe(true);
     }
     expect(isBlockedFromInvestorDrive("Executed Subscription Agreement.pdf")).toBe(false);
-    expect(BLOCKED_MESSAGE).toBe("Blocked - this document type cannot be imported from Google Drive.");
+    expect(BLOCKED_MESSAGE).toBe("Blocked, this document type cannot be imported from Google Drive.");
     expect(src(DRV)).not.toMatch(/override/i);
   });
   const ctx = { offeringId: "o1", profileId: "p1" };

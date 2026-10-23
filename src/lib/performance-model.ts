@@ -273,7 +273,7 @@ export interface PerformanceMethodology {
 
 export const DEFAULT_METHODOLOGY: PerformanceMethodology = {
   version: "perf-v1",
-  label: "Harmonious standard - dated cash flows, paid-in capital",
+  label: "Harmonious standard: dated cash flows, paid-in capital",
   fundType: "spv",
   calculationMethod: "capital_flows",
   metrics: FUND_TYPE_METRICS.spv,

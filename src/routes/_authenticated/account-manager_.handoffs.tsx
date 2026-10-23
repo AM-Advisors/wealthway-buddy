@@ -4,9 +4,9 @@ import { AmPage, HandoffList, useAmDashboard } from "@/components/account-manage
 export const Route = createFileRoute("/_authenticated/account-manager_/handoffs")({
   head: () => ({
     meta: [
-      { title: "New client hand-offs - Harmonious" },
+      { title: "New client hand-offs | Harmonious" },
       { name: "description", content: "Clients who signed their SOW in the last 30 days and their fund setup status." },
-      { property: "og:title", content: "New client hand-offs - Harmonious" },
+      { property: "og:title", content: "New client hand-offs | Harmonious" },
       { property: "og:description", content: "Signed clients moving from Sales into setup." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

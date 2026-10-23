@@ -53,7 +53,7 @@ export function FundRequests({ fundId, preselect }: { fundId: string; preselect?
           <span className="text-xs text-muted-foreground">{REQUEST_STATUS_LABEL[r.status as keyof typeof REQUEST_STATUS_LABEL]}</span>
           <ResponsibilityBadge status={r.responsibility_status} />
         </button></li>
-      ))}</ul> : <div className="rounded-xl border bg-card p-4 text-sm"><p className="font-medium">No requests here</p><p className="text-muted-foreground">Use Request Service to ask Harmonious for anything — capital calls, distributions, reports, filings and more.</p></div>}
+      ))}</ul> : <div className="rounded-xl border bg-card p-4 text-sm"><p className="font-medium">No requests here</p><p className="text-muted-foreground">Use Request Service to ask Harmonious for anything, capital calls, distributions, reports, filings and more.</p></div>}
     </div>
   );
 }
@@ -97,7 +97,7 @@ function NewRequest({ fundId, initial, onDone }: { fundId: string; initial: stri
               </label>
             ))}
           </div>
-          {type === "CAPITAL_CALL" && <p className="text-xs text-muted-foreground">You don't need to calculate each investor's share — Harmonious prepares the allocation and sends it to you for approval.</p>}
+          {type === "CAPITAL_CALL" && <p className="text-xs text-muted-foreground">You don't need to calculate each investor's share. Harmonious prepares the allocation and sends it to you for approval.</p>}
           <div className="flex flex-wrap items-center gap-2 text-sm">
             <span>Priority</span>
             <select aria-label="Priority" value={priority} onChange={(e) => setPriority(e.target.value as any)} className={sel}><option value="normal">Normal</option><option value="high">High</option><option value="urgent">Urgent (time-sensitive)</option></select>
@@ -143,7 +143,7 @@ function RequestDetail({ id, fundId, onBack }: { id: string; fundId: string; onB
           <div><p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{requestType(r.request_type).label}</p><h2 className="text-xl">{r.title}</h2></div>
           <ResponsibilityBadge status={r.responsibility_status} />
         </div>
-        <p className="mt-1 text-sm text-muted-foreground">{REQUEST_STATUS_LABEL[r.status as keyof typeof REQUEST_STATUS_LABEL]} · {ENT[r.entitlement_status]}{r.entitlement_status !== "INCLUDED" ? " — this request may be outside your current service scope. Harmonious will review it before work begins." : ""}</p>
+        <p className="mt-1 text-sm text-muted-foreground">{REQUEST_STATUS_LABEL[r.status as keyof typeof REQUEST_STATUS_LABEL]} · {ENT[r.entitlement_status]}{r.entitlement_status !== "INCLUDED" ? " · this request may be outside your current service scope. Harmonious will review it before work begins." : ""}</p>
         {r.client_notes && <p className="mt-2 rounded-md bg-muted p-2 text-sm">{r.client_notes}</p>}
         <ol className="mt-4 grid gap-2 sm:grid-cols-4">
           {stages.map((s: string, i: number) => (

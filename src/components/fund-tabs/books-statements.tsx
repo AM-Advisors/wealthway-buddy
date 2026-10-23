@@ -42,7 +42,7 @@ export function BooksStatements({ fundId }: { fundId: string }) {
           {st && !empty && <Button variant="outline" disabled={sm.isPending} onClick={() => sm.mutate()}>Save as draft package (Harmonious)</Button>}
         </div>
         {q.isLoading ? <p className="text-sm text-muted-foreground">Loading the books…</p> : q.error ? <p className="text-sm text-destructive">{(q.error as Error).message}</p> : empty ? (
-          <p className="rounded-md border border-dashed p-4 text-sm text-muted-foreground">The books are empty. Apply a bank statement or connect the bank on the Banking tab, add an asset on the Assets tab, or record a liability below — the statements and charts fill in from those.</p>
+          <p className="rounded-md border border-dashed p-4 text-sm text-muted-foreground">The books are empty. Apply a bank statement or connect the bank on the Banking tab, add an asset on the Assets tab, or record a liability below, the statements and charts fill in from those.</p>
         ) : st && (
           <>
             <div className="grid gap-5 lg:grid-cols-2">
@@ -55,7 +55,7 @@ export function BooksStatements({ fundId }: { fundId: string }) {
               <div className="rounded-md border p-3"><p className="mb-1 font-medium">Changes in capital</p>{row("Opening", st.changesInCapital.openingCents)}{row("Contributions", st.changesInCapital.contributionsCents)}{row("Distributions", -st.changesInCapital.distributionsCents)}{row("Net income", st.changesInCapital.netIncomeCents)}{row("Unrealized", st.changesInCapital.unrealizedCents)}{row("Closing", st.changesInCapital.closingCents, true)}</div>
             </div>
             {st.changesInCapital.closingCents !== st.balanceSheet.partnersCapitalCents && (
-              <p className="text-xs text-muted-foreground">Partners' capital on the balance sheet differs from the capital roll-forward by {usd(Math.abs(st.changesInCapital.closingCents - st.balanceSheet.partnersCapitalCents))} — usually liabilities or asset purchases not yet in the books. Harmonious reviews this before approval.</p>
+              <p className="text-xs text-muted-foreground">Partners' capital on the balance sheet differs from the capital roll-forward by {usd(Math.abs(st.changesInCapital.closingCents - st.balanceSheet.partnersCapitalCents))} · usually liabilities or asset purchases not yet in the books. Harmonious reviews this before approval.</p>
             )}
           </>
         )}

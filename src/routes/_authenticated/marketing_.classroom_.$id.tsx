@@ -15,9 +15,9 @@ import { RESOURCE_CATEGORIES } from "@/lib/marketing/site-config";
 
 export const Route = createFileRoute("/_authenticated/marketing_/classroom_/$id")({
   head: () => ({ meta: [
-    { title: "Edit Classroom article - Harmonious Marketing" },
+    { title: "Edit Classroom article | Harmonious Marketing" },
     { name: "description", content: "Edit, refresh with AI and publish a Harmonious Classroom article." },
-    { property: "og:title", content: "Edit Classroom article - Harmonious Marketing" },
+    { property: "og:title", content: "Edit Classroom article | Harmonious Marketing" },
     { property: "og:description", content: "Classroom article editor with version history." },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary" },

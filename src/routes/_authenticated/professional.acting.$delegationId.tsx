@@ -59,7 +59,7 @@ function DelegatedClient() {
       />
 
       {view.person ? (
-        <WorkspaceSection title="Client" description="Summary details only - never identity documents.">
+        <WorkspaceSection title="Client" description="Summary details only: never identity documents.">
           <dl className="grid gap-2 text-sm sm:grid-cols-2">
             <div>
               <dt className="text-muted-foreground">Name</dt>
@@ -82,7 +82,7 @@ function DelegatedClient() {
       ) : null}
 
       {view.compliance ? (
-        <WorkspaceSection title="Verification" description="Status only - no check provider data.">
+        <WorkspaceSection title="Verification" description="Status only: no check provider data.">
           <dl className="grid gap-2 text-sm sm:grid-cols-2">
             <div>
               <dt className="text-muted-foreground">Identity</dt>
@@ -98,7 +98,7 @@ function DelegatedClient() {
               {view.compliance.accreditations.map((a: any, i: number) => (
                 <li key={i}>
                   Accreditation: {a.status}
-                  {a.expiresAt ? ` - expires ${new Date(a.expiresAt).toLocaleDateString()}` : ""}
+                  {a.expiresAt ? ` · expires ${new Date(a.expiresAt).toLocaleDateString()}` : ""}
                 </li>
               ))}
             </ul>

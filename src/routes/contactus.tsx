@@ -24,7 +24,7 @@ export const Route = createFileRoute("/contactus")({
   head: () =>
     marketingHead({
       path: "/contactus",
-      title: "Contact Harmonious - Schedule a Demo",
+      title: "Contact Harmonious | Schedule a Demo",
       description:
         "Talk to Harmonious about fund administration, SPVs, cap table management, investor onboarding or moving an existing fund.",
       breadcrumbs: [

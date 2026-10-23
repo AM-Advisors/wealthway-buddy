@@ -371,7 +371,7 @@ export function FinancialReportingBoard({ role }: { role: "harmonious" | "manage
               <CardTitle className="text-base">Workpapers</CardTitle>
               <CardDescription>
                 {isStaff
-                  ? "Built from source records - no spreadsheets. A second person signs each one off."
+                  ? "Built from source records, no spreadsheets. A second person signs each one off."
                   : "Workpapers Harmonious has shared with you."}
               </CardDescription>
             </CardHeader>

@@ -20,9 +20,9 @@ export const Route = createFileRoute("/accept/$token")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Review and sign - Harmonious" },
+      { title: "Review and sign | Harmonious" },
       { name: "description", content: "Read your Harmonious proposal and linked Statement of Work, then review, sign and approve." },
-      { property: "og:title", content: "Review and sign - Harmonious" },
+      { property: "og:title", content: "Review and sign | Harmonious" },
       { property: "og:description", content: "Read your Harmonious proposal and linked Statement of Work, then review, sign and approve." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
