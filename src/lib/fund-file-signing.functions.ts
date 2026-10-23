@@ -11,6 +11,28 @@ import { requireSupabaseAuth } from "@/lib/require-auth";
 const SITE = "https://app.harmonious.co";
 const TEAM_EMAIL = "operations@harmonious.co";
 
+/** Staff registers reviewed replacement bytes; never overwrites an existing file or signature. */
+export const prepareOperatingAgreementCopyFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ fundId: z.string().uuid(), fileName: z.string().min(1).max(200), pdfBase64: z.string().max(28_000_000), docxBase64: z.string().max(28_000_000) }).parse)
+  .handler(async ({ data, context }) => {
+    const s = await import("@/lib/fund-tabs.server");
+    await s.assertFund(context.userId, data.fundId);
+    if (!await s.isStaff(context.userId)) throw new Error("Only Harmonious can prepare replacement agreements.");
+    const bytes = Buffer.from(data.pdfBase64, "base64");
+    if (bytes.subarray(0, 5).toString() !== "%PDF-") throw new Error("A PDF agreement is required.");
+    const JSZip = (await import("jszip")).default;
+    const zip = await JSZip.loadAsync(Buffer.from(data.docxBase64, "base64"));
+    const xml = await zip.file("word/document.xml")?.async("string");
+    if (!xml) throw new Error("The matching Word agreement is required.");
+    const body = xml.replace(/<w:tab\s*\/>/g, "\t").replace(/<\/w:p>/g, "\n").replace(/<[^>]+>/g, "").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;/g, "'").trim();
+    if (!body || /\{\{[^{}]+\}\}/.test(body)) throw new Error("Resolve all agreement fields before preparing a signing copy.");
+    const file = await s.uploadFile(context.userId, data.fundId, { title: data.fileName.replace(/\.pdf$/i, "").replace(/_/g, " "), category: "legal", fileName: data.fileName, contentType: "application/pdf", base64: data.pdfBase64 });
+    const d = await s.db();
+    const r = await d.from("fund_files").update({ body, template_key: "operating_agreement", signing_order: "manager_only" }).eq("id", file.id).eq("offering_id", data.fundId).eq("status", "draft");
+    if (r.error) throw new Error("The file was uploaded but its signing text could not be registered.");
+    return file;
+  });
+
 async function db() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   return supabaseAdmin as any;
