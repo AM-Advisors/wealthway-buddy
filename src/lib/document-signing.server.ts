@@ -225,7 +225,7 @@ async function ensureBoxSourceFile(
 
   const safeTitle = resolved.document.title.replace(/[^\w\- ]+/g, "").trim() || "Fund document";
   const who = resolved.profile.legal_name ?? resolved.profile.email ?? "Investor";
-  const fileName = signingFileName(`${safeTitle} · ${who} · ${resolved.application.id.slice(0, 8)}`, bytes);
+  const fileName = signingFileName(`${safeTitle} - ${who} - ${resolved.application.id.slice(0, 8)}`, bytes);
 
   const fileId = await uploadFile(fileName, bytes);
   const versionId = await fileVersionId(fileId).catch(() => null);

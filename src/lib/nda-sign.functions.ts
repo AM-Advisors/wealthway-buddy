@@ -300,7 +300,7 @@ export const getSignedNdaUrl = createServerFn({ method: "POST" })
       .from("signed-documents")
       .createSignedUrl(row.signed_pdf_path, 300);
     if (error || !signed?.signedUrl) throw new Error(error?.message ?? "Could not open the file.");
-    return { url: signed.signedUrl, file_name: `NDA · ${row.signer_name}.pdf` };
+    return { url: signed.signedUrl, file_name: `NDA - ${row.signer_name}.pdf` };
   });
 
 /** Manager view: who has been sent the NDA, who opened it, who signed. */

@@ -200,7 +200,7 @@ export const startBoxSigning = createServerFn({ method: "POST" })
 
     const safeTitle = doc.title.replace(/[^\w\- ]+/g, "").trim() || "Fund document";
     const { signingFileName } = await import("@/lib/box.server");
-    const fileName = signingFileName(`${safeTitle} · ${profile.legal_name ?? profile.email} · ${application.id.slice(0, 8)}`, pdfBytes);
+    const fileName = signingFileName(`${safeTitle} - ${profile.legal_name ?? profile.email} - ${application.id.slice(0, 8)}`, pdfBytes);
     const fileId = await uploadFile(fileName, pdfBytes);
 
     // Dual-signature documents: investor signs first (order 1), then the fund's
