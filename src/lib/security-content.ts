@@ -22,6 +22,8 @@ export interface SecurityStatement {
   /** What the page deliberately does not claim. */
   disclaimers: string[];
   contact: string;
+  /** Address published for security disclosure, matching /.well-known/security.txt. */
+  security_contact: string;
 }
 
 export const SECURITY_STATEMENT: SecurityStatement = {
@@ -119,6 +121,7 @@ export const SECURITY_STATEMENT: SecurityStatement = {
     "Our hosting provider publishes its own platform evidence about how the environment is run and monitored at /.well-known/trust.html. That page belongs to the provider, not to Harmonious, and is separate from this one.",
   ],
   contact: "support@harmonious.co",
+  security_contact: "legal@harmonious.co",
 };
 
 /**

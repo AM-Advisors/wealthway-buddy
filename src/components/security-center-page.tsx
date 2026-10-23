@@ -88,7 +88,10 @@ export function SecurityCenterPage({ items }: { items: PublicTrustItem[] }) {
         <section id="contact" className="mb-12 scroll-mt-24 rounded-lg border bg-muted/40 p-6">
           <h2 className="font-heading text-lg font-semibold">Security Contact</h2>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-            Found something that looks wrong or unsafe? Write to <a className="underline" href={`mailto:${s.contact}`}>{s.contact}</a>. A person reads every message, and two staff members must confirm your identity before we change anything on your account.
+            Found something that looks wrong or unsafe? Write to <a className="underline" href={`mailto:${s.security_contact}`}>{s.security_contact}</a>. A person reads every message, and two staff members must confirm your identity before we change anything on your account.
+          </p>
+          <p className="mt-4 text-sm text-muted-foreground">
+            For account help, write to <a className="underline" href={`mailto:${s.contact}`}>{s.contact}</a>. Machine-readable contact details are also published at <a className="underline" href="/.well-known/security.txt">/.well-known/security.txt</a>.
           </p>
           <p className="mt-4 text-sm text-muted-foreground">
             Related: <Link className="underline" to="/privacy">Privacy Policy</Link>{" · "}<Link className="underline" to="/terms">Terms of Service</Link>{" · "}<a className="underline" href="/.well-known/trust.html">Hosting provider&rsquo;s platform evidence</a>
@@ -97,7 +100,7 @@ export function SecurityCenterPage({ items }: { items: PublicTrustItem[] }) {
 
         <section id="documents" className="scroll-mt-24">
           <h2 className="flex items-center gap-2 font-heading text-xl font-semibold"><FileText className="h-5 w-5 shrink-0 text-accent" aria-hidden />Trust Documents</h2>
-          {!documents.length ? <p className="mt-3 text-sm text-muted-foreground">No documents are available yet. Ask {s.contact} if you need security information for a review.</p> : (
+          {!documents.length ? <p className="mt-3 text-sm text-muted-foreground">No documents are available yet. Ask {s.security_contact} if you need security information for a review.</p> : (
             <ul className="mt-4 space-y-3">{documents.map((d) => <DocumentRow key={d.id} d={d} />)}</ul>
           )}
         </section>
