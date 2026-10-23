@@ -1,5 +1,10 @@
 # Roadmap
 
+## Signed replacement publication (2026-10-23)
+- [ ] Register exact signed Thomas OA as a new offering version and promote new-only through authorized workflow.
+- [ ] Automatically promote explicitly designated approved replacement versions after all required file signatures complete, with stale-version protection and immutable history.
+- [ ] Run fictional transaction tests and read back Erebor's main document; authenticated synthetic signing checks require isolated QA.
+
 ## Client MSA signature save (2026-10-23)
 - [x] Reproduce first-signature RLS failure offline and repair using authenticated atomic ceremony with exact membership, designated signer, current-version, retry and rollback checks. No real signatures submitted; staff-owned sibling creation paths use existing privileged authorized saves and are unchanged.
 - [ ] Authenticated real-flow read-back — blocked on independently isolated synthetic QA; never sign a real agreement for testing.
