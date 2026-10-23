@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { AlertTriangle, FileText, ShieldCheck } from "lucide-react";
+import { ArrowDown, ArrowUpRight, FileText, KeyRound, LockKeyhole, Mail, ShieldCheck, Wallet } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { SECURITY_STATEMENT, TRUST_SECTIONS } from "@/lib/security-content";
@@ -22,89 +24,94 @@ export function SecurityCenterPage({ items }: { items: PublicTrustItem[] }) {
   const built = new Map(s.sections.map((x) => [x.key, x]));
   const visible = TRUST_SECTIONS.filter((t) => built.has(t.key) || sections.some((p) => p.item_key === t.key));
   const extra = sections.filter((p) => !TRUST_SECTIONS.some((t) => t.key === p.item_key));
+  const navigation = [...visible.map((v) => [v.key, v.heading]), ["assurance", "Compliance & assurance"], ["documents", "Trust documents"], ["questions", "Common questions"], ["contact", "Security contact"]];
+  const icons = [LockKeyhole, KeyRound, ShieldCheck, Wallet];
   return (
     <MarketingShell>
-      <section className="bg-primary text-primary-foreground">
-        <div className="mx-auto max-w-4xl px-6 py-16">
-          <p className="font-heading text-sm uppercase tracking-[0.16em] text-accent">Harmonious / Trust Center</p>
-          <h1 className="mt-3 font-heading text-[clamp(1.9rem,4vw,2.75rem)] font-semibold leading-tight">{s.title}</h1>
-          <div className="mt-6 h-px w-24 bg-accent" />
-          <p className="mt-6 max-w-3xl leading-relaxed opacity-90">{s.summary}</p>
-          <p className="mt-6 text-sm opacity-75">Last updated {s.updated}</p>
+      <header className="border-b bg-background">
+        <div className="mx-auto max-w-6xl px-6 py-12 md:py-16">
+          <p className="flex items-center gap-2 text-sm font-medium text-primary"><ShieldCheck className="size-5" aria-hidden />Trust & privacy</p>
+          <h1 className="mt-4 max-w-3xl font-heading text-4xl font-semibold leading-tight tracking-normal md:text-5xl">{s.title}</h1>
+          <p className="mt-5 max-w-3xl text-base leading-7 text-muted-foreground">{s.summary}</p>
+          <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3">
+            <Button asChild><a href="#encryption"><LockKeyhole />Encryption details<ArrowDown /></a></Button>
+            <a href="#contact" className="inline-flex items-center gap-2 text-sm font-medium text-primary underline-offset-4 hover:underline">Contact our security team<ArrowUpRight className="size-4" /></a>
+            <span className="text-xs text-muted-foreground">Updated {s.updated}</span>
+          </div>
+        </div>
+      </header>
+
+      <section aria-label="Security at a glance" className="border-b bg-secondary/40">
+        <div className="mx-auto grid max-w-6xl gap-7 px-6 py-8 sm:grid-cols-2 lg:grid-cols-4">
+          {s.highlights.map((fact, index) => {
+            const Icon = icons[index] ?? ShieldCheck;
+            return <div key={fact.title}><Icon className="mb-3 size-6 text-primary" aria-hidden /><h2 className="font-heading text-base font-semibold tracking-normal">{fact.title}</h2><p className="mt-2 text-sm leading-6 text-muted-foreground">{fact.body}</p></div>;
+          })}
         </div>
       </section>
 
-      <article className="mx-auto max-w-3xl px-6 py-14">
-        <nav aria-label="Trust Center sections" className="mb-12 flex flex-wrap gap-2 text-sm">
-          {[...visible.map((v) => [v.key, v.heading]), ["assurance", "Compliance & Assurance"], ["contact", "Security Contact"], ["documents", "Trust Documents"]].map(([k, h]) => (
-            <a key={k} href={`#${k}`} className="rounded-full border px-3 py-1 hover:bg-muted">{h}</a>
-          ))}
-        </nav>
+      <div className="mx-auto grid max-w-6xl gap-10 px-6 py-12 lg:grid-cols-[230px_minmax(0,1fr)] lg:gap-16">
+        <aside>
+          <nav aria-label="Trust Center sections" className="lg:sticky lg:top-24">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-normal text-muted-foreground">On this page</p>
+            <div className="flex max-h-60 flex-wrap gap-x-5 gap-y-3 overflow-y-auto lg:max-h-[75vh] lg:flex-col lg:gap-0">
+              {navigation.map(([key, heading]) => <a key={key} href={`#${key}`} className="border-l-2 border-transparent py-2 pl-3 text-sm text-muted-foreground transition-colors hover:border-primary hover:text-primary focus-visible:outline-ring">{heading}</a>)}
+            </div>
+          </nav>
+        </aside>
 
-        {visible.map((t) => {
-          const section = built.get(t.key);
-          const published = sections.filter((p) => p.item_key === t.key);
-          return (
-            <section key={t.key} id={t.key} className="mb-12 scroll-mt-24 last:mb-0">
-              <h2 className="flex items-center gap-2 font-heading text-xl font-semibold"><ShieldCheck className="h-5 w-5 shrink-0 text-accent" aria-hidden />{t.heading}</h2>
-              {section?.intro ? <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{section.intro}</p> : null}
-              <ul className="mt-4 space-y-3">
-                {(section?.bullets ?? []).map((b) => (
-                  <li key={b} className="flex gap-3 text-sm leading-relaxed"><span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" aria-hidden /><span>{b}</span></li>
-                ))}
-              </ul>
-              {published.map((p) => <p key={p.id} className="mt-4 whitespace-pre-line text-sm leading-relaxed">{p.body}</p>)}
-              {t.key === "cookies" ? (
-                <button type="button" className="mt-4 rounded-md border border-border px-4 py-2 text-sm font-medium hover:bg-muted" onClick={() => window.dispatchEvent(new Event(OPEN_SETTINGS_EVENT))}>Cookie settings</button>
-              ) : null}
-            </section>
-          );
-        })}
-        {extra.map((p) => (
-          <section key={p.id} className="mb-12"><h2 className="font-heading text-xl font-semibold">{p.title}</h2><p className="mt-3 whitespace-pre-line text-sm leading-relaxed">{p.body}</p></section>
-        ))}
+        <article className="min-w-0">
+          {visible.map((t) => {
+            const section = built.get(t.key);
+            const published = sections.filter((p) => p.item_key === t.key);
+            return (
+              <section key={t.key} id={t.key} className="mb-10 scroll-mt-24 border-b pb-10">
+                <h2 className="font-heading text-2xl font-semibold tracking-normal">{t.heading}</h2>
+                {section?.intro ? <p className="mt-3 text-sm leading-7 text-muted-foreground">{section.intro}</p> : null}
+                <ul className="mt-5 space-y-4">
+                  {(section?.bullets ?? []).map((bullet) => <li key={bullet} className="flex gap-3 text-sm leading-7"><span className="mt-3 size-1.5 shrink-0 rounded-full bg-primary" aria-hidden /><span>{bullet}</span></li>)}
+                </ul>
+                {published.map((p) => <p key={p.id} className="mt-4 whitespace-pre-line text-sm leading-7">{p.body}</p>)}
+                {t.key === "cookies" ? <Button variant="outline" className="mt-5" onClick={() => window.dispatchEvent(new Event(OPEN_SETTINGS_EVENT))}>Cookie settings</Button> : null}
+              </section>
+            );
+          })}
+          {extra.map((p) => <section key={p.id} className="mb-10 border-b pb-10"><h2 className="font-heading text-2xl font-semibold tracking-normal">{p.title}</h2><p className="mt-3 whitespace-pre-line text-sm leading-7">{p.body}</p></section>)}
 
-        <section id="assurance" className="mb-12 scroll-mt-24">
-          <h2 className="flex items-center gap-2 font-heading text-xl font-semibold"><ShieldCheck className="h-5 w-5 shrink-0 text-accent" aria-hidden />Compliance & Assurance</h2>
-          {!assurance.length ? (
-            <p className="mt-3 text-sm leading-relaxed text-muted-foreground">No external assessments have been completed yet, so Harmonious makes no SOC 2, ISO, CSA STAR or GDPR certification claim. Results will appear here only once an outside assessor's report exists.</p>
-          ) : (
-            <ul className="mt-4 divide-y rounded-lg border">
-              {assurance.map((a) => (
-                <li key={a.id} className="flex flex-wrap items-start justify-between gap-2 p-4 text-sm">
-                  <div><p className="font-medium">{a.title}</p>{a.body ? <p className="mt-1 text-muted-foreground">{a.body}</p> : null}</div>
-                  <span className="rounded-full border px-3 py-1 text-xs font-medium">{ASSURANCE_LABEL[a.assurance_status as keyof typeof ASSURANCE_LABEL] ?? "Planned"}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
+          <section id="assurance" className="mb-10 scroll-mt-24 border-b pb-10">
+            <h2 className="font-heading text-2xl font-semibold tracking-normal">Compliance & assurance</h2>
+            <p className="mt-3 text-sm leading-7 text-muted-foreground">A valid SSL/TLS certificate protects a website connection. It is different from an independent assessment of an organization's security controls.</p>
+            {!assurance.length ? <div className="mt-5 border-l-4 border-primary bg-muted p-5"><h3 className="text-base font-semibold tracking-normal">Independent certification status</h3><p className="mt-2 text-sm leading-7 text-muted-foreground">No independently assessed certification or audit report is published here. Harmonious does not claim SOC 2 or ISO 27001 certification. Approved evidence appears here only when it is published through our internal review process.</p></div> : <ul className="mt-5 divide-y rounded-lg border">{assurance.map((a) => <li key={a.id} className="flex flex-wrap items-start justify-between gap-3 p-4 text-sm"><div className="min-w-0 flex-1"><p className="font-medium">{a.title}</p>{a.body ? <p className="mt-1 whitespace-pre-line leading-6 text-muted-foreground">{a.body}</p> : null}</div><span className="text-xs font-medium text-primary">{ASSURANCE_LABEL[a.assurance_status as keyof typeof ASSURANCE_LABEL] ?? "Planned"}</span></li>)}</ul>}
+            <div className="mt-5 space-y-3">{s.disclaimers.map((d) => <p key={d} className="text-xs leading-6 text-muted-foreground">{d}</p>)}</div>
+          </section>
 
-        <section className="mb-12">
-          <h2 className="flex items-center gap-2 font-heading text-xl font-semibold"><AlertTriangle className="h-5 w-5 shrink-0 text-warning" aria-hidden />What this page does not claim</h2>
-          <ul className="mt-4 space-y-3">{s.disclaimers.map((d) => <li key={d} className="text-sm leading-relaxed text-muted-foreground">{d}</li>)}</ul>
-        </section>
+          <section id="documents" className="mb-10 scroll-mt-24 border-b pb-10">
+            <h2 className="flex items-center gap-3 font-heading text-2xl font-semibold tracking-normal"><FileText className="size-6 text-primary" aria-hidden />Trust documents</h2>
+            {!documents.length ? <p className="mt-3 text-sm leading-7 text-muted-foreground">No trust documents are currently published. For a due-diligence questionnaire or supporting security information, contact <a className="break-all underline" href={`mailto:${s.security_contact}`}>{s.security_contact}</a>. Availability and access are reviewed individually.</p> : <ul className="mt-5 space-y-3">{documents.map((d) => <DocumentRow key={d.id} d={d} />)}</ul>}
+            <a className="mt-4 inline-flex items-center gap-2 text-sm text-primary underline" href="/.well-known/trust.html">Hosting platform evidence<ArrowUpRight className="size-4" /></a>
+            <p className="mt-2 text-xs leading-6 text-muted-foreground">Separate hosting-platform information, not a Harmonious audit or certification.</p>
+          </section>
 
-        <section id="contact" className="mb-12 scroll-mt-24 rounded-lg border bg-muted/40 p-6">
-          <h2 className="font-heading text-lg font-semibold">Security Contact</h2>
-          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-            Found something that looks wrong or unsafe? Write to <a className="underline" href={`mailto:${s.security_contact}`}>{s.security_contact}</a>. A person reads every message, and two staff members must confirm your identity before we change anything on your account.
-          </p>
-          <p className="mt-4 text-sm text-muted-foreground">
-            For account help, write to <a className="underline" href={`mailto:${s.contact}`}>{s.contact}</a>. Machine-readable contact details are also published at <a className="underline" href="/.well-known/security.txt">/.well-known/security.txt</a>.
-          </p>
-          <p className="mt-4 text-sm text-muted-foreground">
-            Related: <Link className="underline" to="/privacy">Privacy Policy</Link>{" · "}<Link className="underline" to="/terms">Terms of Service</Link>{" · "}<a className="underline" href="/.well-known/trust.html">Hosting provider&rsquo;s platform evidence</a>
-          </p>
-        </section>
+          <section id="questions" className="mb-10 scroll-mt-24 border-b pb-10">
+            <h2 className="font-heading text-2xl font-semibold tracking-normal">Common security questions</h2>
+            <Accordion type="single" collapsible className="mt-4">
+              <AccordionItem value="certificate"><AccordionTrigger>Does Harmonious have an SSL/TLS certificate?</AccordionTrigger><AccordionContent className="leading-7 text-muted-foreground">Yes. Harmonious uses HTTPS with valid TLS certificates. TLS encrypts traffic between your browser and the website; it is not a SOC 2 report or ISO 27001 certification. Your browser's site information panel shows the connection and certificate details.</AccordionContent></AccordionItem>
+              <AccordionItem value="warning"><AccordionTrigger>What should I do if my browser shows a security warning?</AccordionTrigger><AccordionContent className="leading-7 text-muted-foreground">Do not bypass the warning or enter personal information. Check that the address is a Harmonious web address and that your device's date and time are correct. Send the exact web address, warning wording, browser name and approximate time to legal@harmonious.co. Do not send passwords, one-time codes, full tax IDs or bank details.</AccordionContent></AccordionItem>
+              <AccordionItem value="review"><AccordionTrigger>Can I request information for an investor security review?</AccordionTrigger><AccordionContent className="leading-7 text-muted-foreground">Yes. Email legal@harmonious.co with your organization, the information requested and the purpose of your review. Supporting documents are subject to availability and access review; a request does not itself grant access.</AccordionContent></AccordionItem>
+              <AccordionItem value="money"><AccordionTrigger>Does connecting a bank account allow automatic transfers?</AccordionTrigger><AccordionContent className="leading-7 text-muted-foreground">No. Bank connections described here are read-only. Preparing payment instructions, reviewing a distribution or recording a payment does not automatically initiate a wire, ACH transfer, tax payment or refund.</AccordionContent></AccordionItem>
+            </Accordion>
+          </section>
 
-        <section id="documents" className="scroll-mt-24">
-          <h2 className="flex items-center gap-2 font-heading text-xl font-semibold"><FileText className="h-5 w-5 shrink-0 text-accent" aria-hidden />Trust Documents</h2>
-          {!documents.length ? <p className="mt-3 text-sm text-muted-foreground">No documents are available yet. Ask {s.security_contact} if you need security information for a review.</p> : (
-            <ul className="mt-4 space-y-3">{documents.map((d) => <DocumentRow key={d.id} d={d} />)}</ul>
-          )}
-        </section>
-      </article>
+          <section id="contact" className="scroll-mt-24">
+            <p className="mb-3 flex items-center gap-2 text-sm font-medium text-primary"><Mail className="size-5" aria-hidden />Security contact</p>
+            <h2 className="font-heading text-2xl font-semibold tracking-normal">Report a concern. Ask for evidence.</h2>
+            <p className="mt-3 text-sm leading-7 text-muted-foreground">For a suspected vulnerability, connection warning or security review, contact <a className="break-all font-medium text-primary underline" href={`mailto:${s.security_contact}`}>{s.security_contact}</a>. Share the affected web address and what you observed, without including sensitive account information. Avoid testing that accesses another person's records or interrupts the service.</p>
+            <div className="mt-5 flex flex-wrap gap-3"><Button asChild><a href={`mailto:${s.security_contact}`}><Mail />Email legal</a></Button><Button asChild variant="outline"><a href="/.well-known/security.txt"><FileText />Security contact file</a></Button></div>
+            <p className="mt-5 text-sm leading-7 text-muted-foreground">For account help: <a className="break-all underline" href={`mailto:${s.contact}`}>{s.contact}</a>.</p>
+            <div className="mt-5 flex flex-wrap gap-5 text-sm text-primary"><Link className="underline" to="/privacy">Privacy Policy</Link><Link className="underline" to="/terms">Terms of Service</Link><a className="underline" href="#top" onClick={(event) => { event.preventDefault(); window.scrollTo({ top: 0, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" }); }}>Back to top</a></div>
+          </section>
+        </article>
+      </div>
     </MarketingShell>
   );
 }
@@ -126,10 +133,10 @@ function DocumentRow({ d }: { d: PublicTrustItem }) {
             <input key={k} required={k !== "company"} type={k === "requester_email" ? "email" : "text"} placeholder={{ requester_name: "Your name", requester_email: "Work email", company: "Company" }[k]} className="rounded-md border bg-background px-3 py-2" value={f[k]} onChange={(e) => setF({ ...f, [k]: e.target.value })} />
           ))}
           <input placeholder="Why you need it" className="rounded-md border bg-background px-3 py-2" value={f.reason} onChange={(e) => setF({ ...f, reason: e.target.value })} />
-          <button type="submit" disabled={state === "sending"} className="rounded-md bg-primary px-4 py-2 font-medium text-primary-foreground sm:col-span-2">{state === "sending" ? "Sending..." : "Request document"}</button>
+          <Button type="submit" disabled={state === "sending"} className="sm:col-span-2">{state === "sending" ? "Sending..." : "Request document"}</Button>
           {state === "error" ? <p className="text-destructive sm:col-span-2">Couldn't send your request. Please email us instead.</p> : null}
         </form>
-      ) : <button type="button" className="mt-2 rounded-md border px-3 py-1.5 font-medium hover:bg-muted" onClick={() => setOpen(true)}>Request access</button>}
+      ) : <Button variant="outline" className="mt-2" onClick={() => setOpen(true)}>Request access</Button>}
     </li>
   );
 }
