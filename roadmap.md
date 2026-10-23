@@ -601,3 +601,4 @@
 - [x] Side letters reference OA + Subscription Agreement
 - [x] Side-letter count in close pricing
 - [x] Archived documents view with investor applicability
+- [ ] Diagnose 'Your check is with our compliance team' screen getting stuck (Oct 23)
