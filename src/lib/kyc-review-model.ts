@@ -87,7 +87,7 @@ export function buildReviewDetails(d: Record<string, any> | null | undefined, ca
     aml: aml ? {
       status: reviewStatus(aml.status), raw: str(aml.status), totalHits: num(aml.total_hits) ?? arr(aml.hits).length, entityType: str(aml.entity_type),
       hits: arr(aml.hits).slice(0, 50).map((h) => ({
-        caption: str(h?.caption), datasets: arr(h?.datasets).map(String), matchScore: num(h?.match_score ?? h?.score), riskScore: num(h?.risk_score),
+        id: str(h?.id), caption: str(h?.caption), datasets: arr(h?.datasets).map(String), matchScore: num(h?.match_score ?? h?.score), riskScore: num(h?.risk_score),
         isMatch: bool(h?.match), reviewStatus: str(h?.review_status), countries: arr(h?.properties?.country).map(String), birthDates: arr(h?.properties?.birthDate).map(String),
         pep: arr(h?.pep_matches).length > 0,
         summary: arr(h?.warning_matches?.[0]?.additional_data?.data?.case_details?.[0]?.crime).map(String).join(", ") || null,

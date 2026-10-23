@@ -146,6 +146,11 @@ export async function decideAccountCheck(uid: string, checkId: string, action: "
   if (c.user_id === uid && !(isSuper && note?.trim())) throw new Error(isSuper ? "Add a reason to decide your own identity check." : "You can't decide your own identity check.");
   if (action !== "approve" && !note?.trim()) throw new Error("Add a note explaining why.");
   if (action === "approve" && (c.review_details?.aml?.totalHits ?? 0) > 0 && !note?.trim()) throw new Error("Add a note explaining why the possible watchlist matches were ruled out.");
+  if (action === "approve" && (c.review_details?.aml?.hits?.length ?? 0) > 0) {
+    const { unclearedHits } = await import("@/lib/aml-match-model");
+    const left = unclearedHits(c.review_details.aml.hits, await clearedKeys(checkId));
+    if (left.length) throw new Error(`Clear all possible watchlist matches first (${left.length} left).`);
+  }
   if (action === "approve" && c.status !== "review") throw new Error("Only checks marked Needs review can be approved by hand.");
   if (c.status === "approved" && action !== "send_back") throw new Error("Already approved.");
   const to = action === "approve" ? "approved" : action === "decline" ? "declined" : "sent_back";
@@ -213,4 +218,46 @@ async function emailReviewOutcome(c: any, to: string, note: string | null) {
       idempotencyKey: `identity-review-${c.id}-${to}`,
     });
   } catch (e) { console.error("[account-kyc] review outcome email", e instanceof Error ? e.message : String(e)); }
+}
+
+async function clearedKeys(checkId: string): Promise<string[]> {
+  const { data } = await db().from("account_aml_match_clearances").select("hit_key").eq("check_id", checkId);
+  return ((data ?? []) as any[]).map((r) => String(r.hit_key));
+}
+
+/** Side-by-side view: the verified person's details next to each possible match, with recorded clearances. */
+export async function amlMatchReview(uid: string, checkId: string) {
+  await assertDecider(uid);
+  const { data: c } = await db().from("account_identity_checks").select("id, user_id, status, review_details").eq("id", checkId).maybeSingle();
+  if (!c) throw new Error("Check not found.");
+  const { compareHit, hitKey } = await import("@/lib/aml-match-model");
+  const id = c.review_details?.idDocument ?? {};
+  const person = { fullName: id.fullName ?? null, dateOfBirth: id.dateOfBirth ?? null, country: id.country ?? null };
+  const { data: cl } = await db().from("account_aml_match_clearances").select("hit_key, reason, cleared_by, created_at").eq("check_id", checkId);
+  const byKey = new Map(((cl ?? []) as any[]).map((r) => [r.hit_key, r]));
+  const hits = ((c.review_details?.aml?.hits ?? []) as any[]).map((h) => ({ ...h, id: h.id ?? null, comparison: compareHit(person, h), clearance: byKey.get(hitKey(h)) ?? null }));
+  return { checkId: c.id, status: c.status, isOwn: c.user_id === uid, person, totalHits: c.review_details?.aml?.totalHits ?? hits.length, hits };
+}
+
+/** Record that each chosen match is not this person. Permanent; needs a reason; never your own check. */
+export async function clearAmlMatches(uid: string, checkId: string, keys: string[], reason: string) {
+  await assertDecider(uid);
+  const r = reason.trim();
+  if (r.length < 5) throw new Error("Add a reason explaining why these matches aren't this person.");
+  const { data: c } = await db().from("account_identity_checks").select("*").eq("id", checkId).maybeSingle();
+  if (!c) throw new Error("Check not found.");
+  if (c.status !== "review") throw new Error("Only checks marked Needs review can have matches cleared.");
+  if (c.user_id === uid && !(await roles(uid)).includes("super_admin")) throw new Error("You can't clear matches on your own identity check.");
+  const { hitKey } = await import("@/lib/aml-match-model");
+  const hits = new Map(((c.review_details?.aml?.hits ?? []) as any[]).map((h) => [hitKey(h), h]));
+  const valid = [...new Set(keys)].filter((k) => hits.has(k));
+  if (!valid.length) throw new Error("Choose at least one match to clear.");
+  const done = new Set(await clearedKeys(checkId));
+  const rows = valid.filter((k) => !done.has(k)).map((k) => ({ check_id: checkId, hit_key: k, hit_caption: hits.get(k)?.caption ?? null, reason: r, cleared_by: uid }));
+  if (rows.length) {
+    const ins = await db().from("account_aml_match_clearances").insert(rows);
+    if (ins.error) throw new Error("Couldn't save the clearances. Please try again.");
+    await logEvent(c, "aml_matches_cleared", c.status, c.status, uid, `${rows.length} match(es): ${r}`);
+  }
+  return { cleared: rows.length };
 }
