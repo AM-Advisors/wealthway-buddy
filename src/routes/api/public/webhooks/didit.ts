@@ -77,6 +77,8 @@ export const Route = createFileRoute("/api/public/webhooks/didit")({
         {
           const acct = await import("@/lib/account-kyc.server");
           const check = await acct.accountCheckByProviderRef(body["vendor_data"] ? String(body["vendor_data"]) : null, sessionId);
+          // Profile notices (user./business.data.updated, status "ACTIVE") are not verification results.
+          if (check && !acct.isAccountDecisionEvent(webhookType, sessionId)) return Response.json({ ok: true, account: true, ignored: true });
           if (check) {
             try {
               const { fetchDiditSessionDecision } = await import("@/lib/didit.server");

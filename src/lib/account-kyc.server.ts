@@ -1,7 +1,8 @@
 // Server-only: account-level identity verification that gates every non-staff account.
 // Investment-level KYC (kyc_verifications) stays separate; an approved one counts here.
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { ACCOUNT_KYC_DECIDERS, gateOpen, resolveGate, type AccountCheckStatus } from "@/lib/account-kyc-model";
+import { ACCOUNT_KYC_DECIDERS, accountStatusFromProvider, gateOpen, isSessionDecisionFor, resolveGate, type AccountCheckStatus } from "@/lib/account-kyc-model";
+export { isAccountDecisionEvent } from "@/lib/account-kyc-model";
 
 const db = () => supabaseAdmin as any;
 const now = () => new Date().toISOString();
@@ -80,6 +81,7 @@ export async function startAccountCheck(uid: string, origin: string) {
 
 /** Apply a provider decision (webhook or poll). Approved / review / declined / expired. */
 export async function applyAccountDecision(c: any, decision: Record<string, any>) {
+  if (!isSessionDecisionFor(c, decision)) return c; // never let a non-result payload change the check
   const { normalizeDiditDecision, evaluateDocumentExpiry } = await import("@/lib/kyc-verification");
   const n = normalizeDiditDecision(decision);
   try {
@@ -89,7 +91,7 @@ export async function applyAccountDecision(c: any, decision: Record<string, any>
   } catch (e) { console.error("[account-kyc] review details", e instanceof Error ? e.message : String(e)); }
   if (["approved", "declined"].includes(c.status) && c.decided_by) return c; // human decision stands
   const exp = evaluateDocumentExpiry({ expirationDate: n.document.expirationDate, verificationDate: new Date() });
-  let to: AccountCheckStatus = n.providerStatus === "approved" ? "approved" : n.providerStatus === "declined" ? "declined" : n.providerStatus === "review" ? "review" : "pending";
+  let to: AccountCheckStatus = accountStatusFromProvider(n.providerDecision, n.providerStatus);
   if (exp.expired) to = "expired";
   if (to === "approved" && n.aml.hitCount > 0) to = "review";
   if (to === c.status) return c;
@@ -110,7 +112,8 @@ export async function accountCheckByProviderRef(vendorData: string | null, sessi
 
 export async function reconcileAccountCheck(uid: string) {
   const c = await latest(uid);
-  if (c?.session_id && (c.status === "pending" || !c.review_details)) {
+  // Provider-sourced review is re-read too, so a check wrongly moved to review recovers on "Check again".
+  if (c?.session_id && (c.status === "pending" || !c.review_details || (c.status === "review" && !c.decided_by))) {
     const { fetchDiditSessionDecision } = await import("@/lib/didit.server");
     const d = await fetchDiditSessionDecision(String(c.session_id));
     if (d) await applyAccountDecision(c, d);
