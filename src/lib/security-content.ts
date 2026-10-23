@@ -26,6 +26,8 @@ export interface SecurityStatement {
   contact: string;
   /** Address published for security disclosure, matching /.well-known/security.txt. */
   security_contact: string;
+  /** Ownership notice for the page content itself. */
+  ip_notice: string;
 }
 
 export const SECURITY_STATEMENT: SecurityStatement = {
@@ -47,7 +49,7 @@ export const SECURITY_STATEMENT: SecurityStatement = {
         "Workspace access is protected by two-step authentication and permissions tied to a person's role and assigned records.",
       bullets: [
         "Staff and client workspaces use authenticator-based two-step sign-in. Additional checks protect sensitive actions such as access to tax documents.",
-        "If someone loses their second step, access is restored only after two Harmonious staff independently confirm who that person is.",
+        "If someone loses their second step, access is restored only after a documented identity confirmation process completed by Harmonious staff.",
         "Identity verification is tied to the person's own account. Qualifying identity checks under review may allow limited workspace access; banking, funding and money actions remain blocked until verification is fully approved.",
         "Access follows role and scope: a person sees the funds, clients and records they are responsible for. Extra permissions are granted to one named person and are never handed out because of an email domain.",
         "Access can be revoked, suspended or archived at any time, and each account's most recent sign-in is recorded.",
@@ -60,7 +62,7 @@ export const SECURITY_STATEMENT: SecurityStatement = {
       bullets: [
         "Protected saved records use controlled change requests rather than silent overwrites. Signed agreements retain their original versions and history.",
         "Where separation of duties applies (fee terms, documents, distributions) a different person must sign off before anything takes effect.",
-        "An authorized Super Admin may use an allowed self-approval exception only with a permanently logged written reason. This does not permit self-granted access or changes to their own signing authority.",
+        "Any exception to separation of duties requires specific authorization and a permanently recorded written reason.",
         "Access changes, including changes that were refused, are written to an append-only log that cannot be edited after the fact.",
         "Tax identification numbers are stored encrypted. The app displays only the last four digits.",
       ],
@@ -72,7 +74,7 @@ export const SECURITY_STATEMENT: SecurityStatement = {
         "All Harmonious web addresses use HTTPS with a valid certificate. Connections support TLS 1.3 and TLS 1.2; TLS 1.1 and older are refused.",
         "Browsers are instructed to always use a secure connection with Harmonious (HTTP Strict Transport Security), including on subdomains.",
         "Tax identification numbers are stored encrypted, and screens show only the last four digits.",
-        "The most sensitive identifiers used for entity formation are kept in separate encrypted storage that can be opened only by the server step that needs them.",
+        "The most sensitive identifiers used for entity formation receive additional encrypted protection beyond standard storage.",
       ],
     },
     {
@@ -80,8 +82,8 @@ export const SECURITY_STATEMENT: SecurityStatement = {
       intro: "Protections are enforced by Harmonious servers, not only by what a screen shows or hides.",
       bullets: [
         "Protected fund, investor and client requests are authorized on the server against the person's role and relevant record scope. Sharing a screen or changing web addresses does not grant authority.",
-        "Signed-in pages carry a personal watermark and limit copying, and protection events are recorded. No browser can fully prevent screen recording, so these are deterrence and traceability measures.",
-        "The historical tax-document access workflow uses additional authentication checks and records allowed and refused downloads.",
+        "Signed-in pages use traceability measures so that shared or copied content can be attributed, and protection events are recorded.",
+        "Access to tax documents uses additional authentication checks, and allowed and refused downloads are recorded.",
         "Sign-in and session activity is recorded so unusual access can be investigated.",
       ],
     },
@@ -91,7 +93,7 @@ export const SECURITY_STATEMENT: SecurityStatement = {
       bullets: [
         "Harmonious does not automatically initiate a bank debit, wire, ACH transfer, tax payment or refund.",
         "Payment and distribution files are prepared inside the app and released only after a named person reviews them.",
-        "Distribution workflows separate preparation and approval, subject only to an explicitly authorized, reason-logged Super Admin exception. Approval does not initiate a transfer.",
+        "Distribution workflows separate preparation and approval. Approval does not initiate a transfer.",
       ],
     },
     {
@@ -100,9 +102,9 @@ export const SECURITY_STATEMENT: SecurityStatement = {
         "Connecting a bank account is optional. Clients can upload wire instructions and bank statements instead. If you do connect, access is read-only.",
       bullets: [
         "Before the bank sign-in window opens, you must be signed in with two-step verification (an authenticator app).",
-        "You also check a consent box that links to our Privacy Policy and our connection partner's privacy policy. We record who agreed, when, and which version, and we check that record before the connection starts.",
+        "You also check a consent box that links to our Privacy Policy and our connection partner's privacy policy. We record your consent before the connection starts.",
         "Your bank login details go straight to our connection partner and your bank. Harmonious never sees or stores them.",
-        "The connection access key is kept only on our servers, in restricted storage. It never reaches your browser.",
+        "The connection access key is kept on our servers and never reaches your browser.",
         "We use the connection to read account details, balances and deposits so payments can be matched. We never use it to move money, and we never sell this data.",
         "You can disconnect at any time from Banking. Bank-connection data is kept while you're connected. When you disconnect or ask us to remove it, we delete it, unless a legal or regulatory hold applies. A person reviews and logs every deletion.",
         "Our written Information Security Policy covers bank connections and is reviewed every year. Ask support@harmonious.co for a copy.",
@@ -151,6 +153,8 @@ export const SECURITY_STATEMENT: SecurityStatement = {
   ],
   contact: "support@harmonious.co",
   security_contact: "legal@harmonious.co",
+  ip_notice:
+    "This page and its contents are the property of Harmonious. Harmonious, the Harmonious logo and Harmonized SPV are trademarks of Harmonious. Nothing on this page grants a license to use Harmonious intellectual property, and the security practices described here may not be copied or represented as another party's own.",
 };
 
 /**
