@@ -66,9 +66,13 @@ const FUND_A = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 const FUND_B = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
 const STAFF = "staff", MGR_A = "mgr-a", JANE = "jane-user";
 const reconciled: string[] = [];
+const createPersonalLink = vi.fn(async () => ({ link: {} }));
+const sendPersonalLink = vi.fn(async () => ({ emailSent: true }));
 vi.mock("@/lib/investor-onboarding.server", () => {
   const actor = async (u: string) => ({ userId: u, isStaff: u === STAFF, managedOfferingIds: u === MGR_A ? [FUND_A] : [] });
   return {
+    createPersonalLink: (...args) => createPersonalLink(...args),
+    sendPersonalLink: (...args) => sendPersonalLink(...args),
     forbid: (m: string) => { throw new Error(`Forbidden: ${m}`); },
     onboardingActor: actor,
     launchedOffering: async (id: string) => ({ offering: { id }, setup: {} }),
@@ -92,7 +96,47 @@ const jane = (over: Record<string, unknown> = {}) => ({
   profile: { type: "individual" }, investment: { amountCents: 10_000_000 }, ...over,
 });
 
-beforeEach(() => { for (const k of Object.keys(tables)) delete tables[k]; reconciled.length = 0; for (const k of Object.keys(authUsers)) delete authUsers[k]; });
+beforeEach(() => { for (const k of Object.keys(tables)) delete tables[k]; reconciled.length = 0; for (const k of Object.keys(authUsers)) delete authUsers[k]; createPersonalLink.mockClear(); sendPersonalLink.mockReset(); sendPersonalLink.mockResolvedValue({ emailSent: true }); });
+
+describe("interactive manager addition invitations", () => {
+  it("creates and sends a personal invitation for the exact saved investment", async () => {
+    const r = await (await srv()).createInvestorAndInvite(MGR_A, jane());
+    expect(createPersonalLink).toHaveBeenCalledExactlyOnceWith(MGR_A, r.onboardingId);
+    expect(sendPersonalLink).toHaveBeenCalledExactlyOnceWith(MGR_A, r.onboardingId);
+    expect(r.emailSent).toBe(true);
+    expect(tables.investor_onboardings).toHaveLength(1);
+  });
+  it("reuses the attached pending invitation rather than creating another", async () => {
+    tables.fund_invitations = [{ id: "inv-1", offering_id: FUND_A, email: "jane@example.com", invite_role: "investor", status: "pending" }];
+    const r = await (await srv()).createInvestorAndInvite(MGR_A, jane());
+    expect(createPersonalLink).not.toHaveBeenCalled();
+    expect(sendPersonalLink).toHaveBeenCalledExactlyOnceWith(MGR_A, r.onboardingId);
+  });
+  it("keeps the saved investment when sending fails or is suppressed", async () => {
+    sendPersonalLink.mockResolvedValue({ emailSent: false });
+    const r = await (await srv()).createInvestorAndInvite(MGR_A, jane());
+    expect(r.emailSent).toBe(false);
+    expect(tables.investor_onboardings[0].id).toBe(r.onboardingId);
+  });
+  it("keeps the saved investment when invitation creation throws", async () => {
+    createPersonalLink.mockRejectedValueOnce(new Error("unavailable"));
+    const r = await (await srv()).createInvestorAndInvite(MGR_A, jane());
+    expect(r.emailSent).toBe(false);
+    expect(tables.investor_onboardings).toHaveLength(1);
+    expect(sendPersonalLink).not.toHaveBeenCalled();
+  });
+  it("does not send for record-only imports or staff creation", async () => {
+    await (await srv()).createInvestor(MGR_A, jane({ source: "bulk" }));
+    const r = await (await srv()).createInvestorAndInvite(STAFF, jane({ offeringId: FUND_B, personId: tables.persons[0].id }));
+    expect(r.emailSent).toBeNull();
+    expect(sendPersonalLink).not.toHaveBeenCalled();
+  });
+  it("rejects another fund before creating or emailing", async () => {
+    await expect((await srv()).createInvestorAndInvite(MGR_A, jane({ offeringId: FUND_B }))).rejects.toThrow(/Forbidden/);
+    expect(tables.investor_onboardings ?? []).toHaveLength(0);
+    expect(sendPersonalLink).not.toHaveBeenCalled();
+  });
+});
 
 describe("manual entry", () => {
   it("Operations manually creates an investor without an account, labeled as Harmonious", async () => {
