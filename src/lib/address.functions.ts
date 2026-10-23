@@ -100,7 +100,7 @@ export const reconcileAddresses = createServerFn({ method: "POST" })
  * Records the signed-in person's address.
  *
  * Selecting a suggestion is convenience, never proof of residence, and the
- * browser can only ever assert the address text, the state, the provider
+ * browser can only ever assert the address text - the state, the provider
  * verdict and the provenance are all decided on the server.
  */
 export const saveResidentialAddress = createServerFn({ method: "POST" })

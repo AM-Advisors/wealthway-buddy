@@ -118,7 +118,7 @@ Harmonious provides a complete suite of services across **foundational operation
 
 | Feature / Capability | Traditional Fund Admin | Harmonious Platform |
 | :--- | :--- | :--- |
-| **Onboarding Speed** | 2 to 3 weeks of back-and-forth PDF forms | Same-day digital onboarding with automated KYC/AML |
+| **Onboarding Speed** | 2–3 weeks of back-and-forth PDF forms | Same-day digital onboarding with automated KYC/AML |
 | **Look-Through Reporting** | Static PDF tables with 60-day lag | Dynamic portfolio drill-down into underlying funds & SPVs |
 | **Underlying K-1 Tracking** | Manual spreadsheet logging; frequent surprises | Automated intake tracker with real-time status visibility |
 | **Capital Call Management** | Fragmented email notices & manual wire checks | Automated batch notices, tracking, and instant bank reconciliation |

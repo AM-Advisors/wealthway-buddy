@@ -374,7 +374,7 @@ function FundPanel({ fund }: { fund: any }) {
           <Progress value={fund.readiness.score} />
           <p className="text-xs text-muted-foreground">
             {lastSync
-              ? `Box folder checked at ${new Date(lastSync.at).toLocaleTimeString()} · ${lastSync.checked} file${
+              ? `Box folder checked at ${new Date(lastSync.at).toLocaleTimeString()} - ${lastSync.checked} file${
                   lastSync.checked === 1 ? "" : "s"
                 } there, ${lastSync.added} newly added.`
               : "Drop files straight into the document folder, then hit Sync from storage to list them here."}

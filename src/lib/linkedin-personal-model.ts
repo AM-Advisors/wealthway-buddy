@@ -1,6 +1,6 @@
 /**
  * Personal LinkedIn delegation rules (pure). Ownership is explicit (owner_user_id);
- * platform roles (including Super Admin) are deliberately never consulted here.
+ * platform roles — including Super Admin — are deliberately never consulted here.
  */
 export const LI_PERMS = [
   { key: "view", label: "View content" },
@@ -63,7 +63,7 @@ export function allowed(ctx: LiCtx, perm: LiPerm): Verdict {
   return { ok: true };
 }
 
-/** Delegates may never manage delegates: only the owner. */
+/** Delegates may never manage delegates — only the owner. */
 export function canManageDelegates(actorId: string, ownerId: string): Verdict {
   return actorId === ownerId ? { ok: true } : no("Only the account owner can manage access.");
 }

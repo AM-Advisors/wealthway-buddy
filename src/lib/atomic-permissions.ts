@@ -173,12 +173,12 @@ function blockers(d: Record<string, unknown>): string[] {
 export function clientDeleteDraftProblem(d: ClientDependencies): string | null {
   if (d.status !== "draft") return "Only an unused draft client can be permanently deleted - archive it instead.";
   const b = blockers(d);
-  return b.length ? `Has ${b.join(", ")} · archive it instead.` : null;
+  return b.length ? `Has ${b.join(", ")} - archive it instead.` : null;
 }
 export function fundDeleteDraftProblem(d: FundDependencies): string | null {
   if (d.stage !== "draft") return "Only an unused draft fund can be permanently deleted - use lifecycle controls instead.";
   const b = blockers(d);
-  return b.length ? `Has ${b.join(", ")} · use lifecycle controls instead.` : null;
+  return b.length ? `Has ${b.join(", ")} - use lifecycle controls instead.` : null;
 }
 
 // ---------------------------------------------------------------- audit vocabulary

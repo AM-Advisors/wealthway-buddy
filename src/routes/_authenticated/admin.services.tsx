@@ -161,7 +161,7 @@ function ServicesAdmin() {
           <h1 className="text-3xl">Services administration</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             The catalog, packages and pricing behind every Harmonious engagement. New services are
-            configured here: no rebuild needed.
+            configured here - no rebuild needed.
           </p>
         </div>
         <Button asChild size="sm" variant="outline">
@@ -514,7 +514,7 @@ function ServicesAdmin() {
 
 const usd = (c: number) => `$${(c / 100).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
 
-/** Wire/ACH payments awaiting confirmation. Marking received is a manual reconciliation step, never automatic. */
+/** Wire/ACH payments awaiting confirmation. Marking received is a manual reconciliation step - never automatic. */
 function PaymentsTab() {
   const queryClient = useQueryClient();
   const list = useServerFn(listOfflineFundPayments);

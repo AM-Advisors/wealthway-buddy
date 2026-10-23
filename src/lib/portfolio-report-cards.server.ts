@@ -74,7 +74,7 @@ export async function revokeShareLink(userId:string,linkId:string){ const db=awa
   if(link.revoked_at) return {ok:true};
   checked(await db.from('report_card_share_links').update({revoked_at:new Date().toISOString(),revoked_by:userId}).eq('id',linkId)); return {ok:true};
 }
-/** Public read for a share token. Returns only the published grade, summary and metric scores, never answers or evidence files. */
+/** Public read for a share token. Returns only the published grade, summary and metric scores — never answers or evidence files. */
 export async function readSharedCard(token:string,userAgent:string|null){ const db=await database();
   const link=checked<any>(await db.from('report_card_share_links').select('*').eq('token_hash',await sha256(token)).maybeSingle());
   const state=shareLinkState(link);

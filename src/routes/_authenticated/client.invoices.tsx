@@ -84,7 +84,7 @@ function ClientInvoicesPage() {
     onSuccess: (_r, input: any) => {
       toast.success(
         input.decision === "approved"
-          ? "Thank you, your approval has been recorded."
+          ? "Thank you - your approval has been recorded."
           : "We've recorded your query and the team will be in touch.",
       );
       refresh();

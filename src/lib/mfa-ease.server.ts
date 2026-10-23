@@ -96,7 +96,7 @@ function sixDigitCode(): string {
 /**
  * Which sender the app may text from. Null until Operations attaches a Twilio
  * phone number (TWILIO_FROM_NUMBER) or a messaging service (TWILIO_MESSAGING_SERVICE_SID)
- * to the connected Twilio account: a connected account with no number cannot
+ * to the connected Twilio account - a connected account with no number cannot
  * originate messages.
  */
 export function smsSenderConfig(): SmsSender | null {

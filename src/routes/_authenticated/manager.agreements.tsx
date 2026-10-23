@@ -31,7 +31,7 @@ function ManagerAgreements() {
       <h1 className="text-2xl font-semibold">Agreements</h1>
       <p className="mt-1 text-sm text-muted-foreground">
         Prepare an agreement for signature and follow it through to execution. Investors only ever
-        review and sign, they never place signing fields, and only the signing provider&apos;s own
+        review and sign - they never place signing fields, and only the signing provider&apos;s own
         confirmation marks an agreement executed.
       </p>
 

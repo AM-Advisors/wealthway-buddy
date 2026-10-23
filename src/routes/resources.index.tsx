@@ -11,7 +11,7 @@ const DESCRIPTION =
 export const Route = createFileRoute("/resources/")({
   head: () => ({
     meta: [
-      { title: `${TITLE} | Harmonious` },
+      { title: `${TITLE} - Harmonious` },
       { name: "description", content: DESCRIPTION },
       { property: "og:title", content: TITLE },
       { property: "og:description", content: DESCRIPTION },

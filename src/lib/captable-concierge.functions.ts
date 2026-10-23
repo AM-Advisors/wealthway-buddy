@@ -825,7 +825,7 @@ function pick(row: Record<string, any>, keys: string[]): string {
 /**
  * The migration assistant. A specialist (or a founder's own export handed to
  * us) drops in several files at once - shareholders, grants, rounds and a
- * document list, and each one becomes its own reviewable batch, all grouped
+ * document list - and each one becomes its own reviewable batch, all grouped
  * under a single concierge case.
  *
  * Nothing reaches the live cap table here: the founder still approves the
@@ -944,7 +944,7 @@ export const startMigrationAssistant = createServerFn({ method: "POST" })
 
     if (!created.length) {
       throw new Error(
-        "Add at least one shareholders, grants or rounds file, a document list on its own has nothing to reconcile.",
+        "Add at least one shareholders, grants or rounds file - a document list on its own has nothing to reconcile.",
       );
     }
 

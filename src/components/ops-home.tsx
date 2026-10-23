@@ -1,5 +1,5 @@
 /**
- * Operations Home: the daily work queue.
+ * Operations Home - the daily work queue.
  *
  * Everything on this page is a reading of a workflow record that lives
  * somewhere else: an onboarding, a capital call, a bank line, a journal entry,

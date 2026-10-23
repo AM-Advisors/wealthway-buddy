@@ -57,7 +57,7 @@ type SignerEntry = { roleKey: string; name: string; email: string; order: number
 /**
  * Prepares an agreement for signature: who must sign, in what capacity, and
  * where each Box Sign field belongs. Everything placed here is sent to Box as
- * native Box Sign configuration, Box renders the fields and runs the ceremony.
+ * native Box Sign configuration - Box renders the fields and runs the ceremony.
  * The investor is never shown this screen.
  */
 export function AgreementPreparation({ offeringId }: { offeringId?: string }) {
@@ -303,7 +303,7 @@ export function AgreementPreparation({ offeringId }: { offeringId?: string }) {
         <CardTitle>Prepare an agreement for signature</CardTitle>
         <CardDescription>
           Choose the agreement and the investor, decide who must sign, then place the signing
-          fields. The investor only reviews and signs, they never place fields.
+          fields. The investor only reviews and signs - they never place fields.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -677,7 +677,7 @@ export function AgreementPreparation({ offeringId }: { offeringId?: string }) {
                       <p>
                         Additional signers:{" "}
                         {review.additionalSigners
-                          .map((s: any) => `${roleLabel(s.roleKey)} · ${s.name}`)
+                          .map((s: any) => `${roleLabel(s.roleKey)} - ${s.name}`)
                           .join(", ")}
                       </p>
                     )}

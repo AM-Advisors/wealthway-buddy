@@ -191,7 +191,7 @@ function WireConfirmationPage() {
           {settled ? (
             <Card>
               <CardContent className="p-6 text-muted-foreground">
-                Your subscription is fully funded: no further confirmation is needed.
+                Your subscription is fully funded - no further confirmation is needed.
               </CardContent>
             </Card>
           ) : !isWire || !acknowledged ? (

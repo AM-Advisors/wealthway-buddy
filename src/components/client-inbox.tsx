@@ -58,7 +58,7 @@ export function ClientInbox() {
           <div className="min-w-0">
             <CardTitle className="text-base">Inbox</CardTitle>
             <CardDescription>
-              Every notice Harmonious emails you: invoices, reminders, decisions and welcome
+              Every notice Harmonious emails you - invoices, reminders, decisions and welcome
               notes - kept here so nothing is lost in your mailbox.
             </CardDescription>
           </div>

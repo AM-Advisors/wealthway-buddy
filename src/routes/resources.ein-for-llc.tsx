@@ -14,7 +14,7 @@ const URL = `https://www.harmonious.co${PATH}`;
 export const Route = createFileRoute("/resources/ein-for-llc")({
   head: () => ({
     meta: [
-      { title: `${TITLE} | Harmonious` },
+      { title: `${TITLE} - Harmonious` },
       { name: "description", content: DESCRIPTION },
       { property: "og:title", content: TITLE },
       { property: "og:description", content: DESCRIPTION },
@@ -69,7 +69,7 @@ const STEPS = [
   },
   {
     title: "Decide who the responsible party is",
-    body: "The responsible party is the individual who ultimately controls the entity, not an attorney, not a formation agent. Only a natural person qualifies, and the IRS limits each responsible party to one EIN issued per day.",
+    body: "The responsible party is the individual who ultimately controls the entity - not an attorney, not a formation agent. Only a natural person qualifies, and the IRS limits each responsible party to one EIN issued per day.",
   },
   {
     title: "Choose the tax classification",

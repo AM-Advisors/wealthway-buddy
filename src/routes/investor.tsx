@@ -11,7 +11,7 @@ import { logSecurityEvent } from "@/lib/account-security.functions";
 
 /**
  * The investor portal: its own sign-in and its own shell. It never renders the
- * client or Operations menus, workspace switcher or staff directory, only the
+ * client or Operations menus, workspace switcher or staff directory - only the
  * signed-in person's own investments. Every screen is still authorized on the
  * server against the person's own investor records.
  */

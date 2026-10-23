@@ -23,7 +23,7 @@ export function mapGoogleOAuthError(message: string | undefined): string {
  * Builds the address Google returns to after signing in: always the same-origin
  * sign-in page, carrying nothing but a sanitised application path so the person
  * can be put back where they were heading. Anything that could leave the
- * application: absolute addresses, protocol-relative paths, encoded schemes -
+ * application - absolute addresses, protocol-relative paths, encoded schemes -
  * is discarded here, and the destination is re-checked against the server
  * resolver after sign-in anyway. No token, code or credential is ever placed
  * in this address.

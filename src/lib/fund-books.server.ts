@@ -177,7 +177,7 @@ async function bookFor(uid: string, fundId: string) {
   const { data: b } = await d.from("ledger_books").select("id").eq("offering_id", fundId).eq("domain", "fund_accounting").maybeSingle();
   if (b) return String((b as any).id);
   const { data: off } = await d.from("offerings").select("name, client_id").eq("id", fundId).maybeSingle();
-  const { data: nb, error } = await d.from("ledger_books").insert({ name: `${(off as any)?.name ?? "Fund"} · fund accounting`, offering_id: fundId, client_id: (off as any)?.client_id ?? null, domain: "fund_accounting", created_by: uid }).select("id").single();
+  const { data: nb, error } = await d.from("ledger_books").insert({ name: `${(off as any)?.name ?? "Fund"} - fund accounting`, offering_id: fundId, client_id: (off as any)?.client_id ?? null, domain: "fund_accounting", created_by: uid }).select("id").single();
   if (error) throw new Error("Couldn't open the fund's books.");
   const { seedChartOfAccounts } = await import("@/lib/accounting.server");
   await seedChartOfAccounts(String(nb.id));
@@ -420,7 +420,7 @@ export async function removeManualLine(uid: string, fundId: string, lineId: stri
   return { ok: true };
 }
 
-/** One-off bank line not on a statement yet. Record only, nothing is moved. */
+/** One-off bank line not on a statement yet. Record only - nothing is moved. */
 export async function addManualTransaction(uid: string, fundId: string, t: { postedOn: string; description: string; amountCents: number; direction: "in" | "out"; reference: string | null; category: string | null; onboardingId: string | null }) {
   await assertStaffFund(uid, fundId);
   const { manualLineError } = await import("@/lib/fund-books-model");

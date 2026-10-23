@@ -299,7 +299,7 @@ function ManagerOnboardingPage() {
                       {d.box_uploaded_at
                         ? `Filed to the shared folder on ${new Date(d.box_uploaded_at).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}`
                         : d.box_error
-                          ? `Not filed yet · ${d.box_error}`
+                          ? `Not filed yet - ${d.box_error}`
                           : "Not filed to the shared folder yet"}
                     </p>
                   )}

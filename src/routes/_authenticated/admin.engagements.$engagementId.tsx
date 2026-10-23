@@ -185,7 +185,7 @@ function EngagementPage() {
                     <p className="flex justify-between">
                       <span>
                         Discount
-                        {g.discountReason ? ` · ${g.discountReason}` : ""}
+                        {g.discountReason ? ` - ${g.discountReason}` : ""}
                       </span>
                       <span>-{money(data.pricing.discountCents)}</span>
                     </p>

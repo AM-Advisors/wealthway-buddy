@@ -140,7 +140,7 @@ export async function viewAsFund(staffUserId: string, authSessionId: string | nu
 /**
  * Switch explicitly from View As (read-only) to Edit as Harmonious. Ends the
  * perspective and records which client view was being inspected, so the
- * following edit, made through the existing Operations form and save path,
+ * following edit - made through the existing Operations form and save path,
  * under the staff member's own account - is traceable to View As.
  */
 export async function beginEditAsHarmonious(staffUserId: string, authSessionId: string | null) {
@@ -222,7 +222,7 @@ const human = (s: string | null | undefined) => (s ? s.replace(/_/g, " ").replac
 /**
  * Read-only page data for Client View, limited to the subject's own records
  * (investor: their investments/profiles; manager: the viewed fund). Metadata
- * only, no file links, tax numbers or bank details.
+ * only - no file links, tax numbers or bank details.
  */
 export async function viewAsPage(staffUserId: string, authSessionId: string | null, page: string): Promise<{ items: ViewAsItem[] } | null> {
   const p = await resolvePerspective(staffUserId, authSessionId);

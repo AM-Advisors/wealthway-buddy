@@ -6,7 +6,7 @@
  *
  *   Harmonious tax staff  - admin role in user_roles
  *   fund manager          - fund_managers assignment, fund-level tax only
- *   investor / taxpayer: own positions, own profiles, own household
+ *   investor / taxpayer   - own positions, own profiles, own household
  *   tax professional      - live delegation + explicit tax capability + scope
  *   provider process      - records an exchange; never an actor
  *

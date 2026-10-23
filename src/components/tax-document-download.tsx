@@ -39,7 +39,7 @@ function storeToken(userId: string, token: string) {
     map[userId] = token;
     localStorage.setItem(TOKEN_KEY, JSON.stringify(map));
   } catch {
-    /* storage unavailable, the person just gets asked again next time */
+    /* storage unavailable - the person just gets asked again next time */
   }
 }
 

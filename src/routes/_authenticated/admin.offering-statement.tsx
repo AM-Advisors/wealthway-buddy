@@ -10,7 +10,7 @@ export const Route = createFileRoute("/_authenticated/admin/offering-statement")
       {
         name: "description",
         content:
-          "Enter each fund's offering terms - fees, minimums, closings and distributions, and publish them to the due diligence room.",
+          "Enter each fund's offering terms - fees, minimums, closings and distributions - and publish them to the due diligence room.",
       },
       { property: "og:title", content: "Offering Statement - Harmonious Admin" },
       {

@@ -114,7 +114,7 @@ function ReconciliationBody() {
         <h3 className="text-lg font-semibold tracking-tight">Reconciliation</h3>
         <p className="text-sm text-muted-foreground">
           Every share class in a file you have uploaded, side by side: authorized, issued,
-          outstanding and fully diluted. Flag anything that does not look right, a batch cannot be
+          outstanding and fully diluted. Flag anything that does not look right - a batch cannot be
           recorded while a flag is still open.
         </p>
       </div>

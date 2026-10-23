@@ -1,7 +1,7 @@
 /**
  * Investment Profile detail: contact info, encrypted EIN/SSN, entity formation,
  * formation documents and per-profile accreditation. Owner-only; verification
- * statuses are only ever set to "review" here, staff approve elsewhere.
+ * statuses are only ever set to "review" here - staff approve elsewhere.
  * Full tax IDs are encrypted (encryptTin) and never returned to a browser.
  */
 import { encryptTin } from "@/lib/irs-forms.server";

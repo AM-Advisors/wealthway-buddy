@@ -82,7 +82,7 @@ export function clientFacingContacts(team: readonly EffectiveMember[], showSales
 
 /**
  * Default Operations owner for an existing queue item: fund override, else
- * client assignment. Routing only: the readiness condition never changes.
+ * client assignment. Routing only - the readiness condition never changes.
  */
 export const defaultOperationsOwner = (team: readonly EffectiveMember[]) => team.find((m) => m.role === "operations")?.userId ?? null;
 

@@ -53,8 +53,8 @@ export function newsworthiness(f: Pick<FormD, "is_amendment" | "total_offering" 
 export const usd = (n: number) => n >= 1e9 ? `$${(n / 1e9).toFixed(1)}B` : n >= 1e6 ? `$${(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `$${Math.round(n / 1e3)}K` : `$${n}`;
 
 export function issuerCategory(f: Pick<FormD, "industry" | "fund_type">) {
-  if (f.industry === "Pooled Investment Fund") return f.fund_type ? `Fund · ${f.fund_type}` : "Fund — other";
-  return f.industry ? `Operating company · ${f.industry}` : "Not disclosed";
+  if (f.industry === "Pooled Investment Fund") return f.fund_type ? `Fund — ${f.fund_type}` : "Fund — other";
+  return f.industry ? `Operating company — ${f.industry}` : "Not disclosed";
 }
 
 /** Latest filing per issuer, with prior filings kept as history (nothing dropped). */

@@ -159,7 +159,7 @@ function ApprovalDetail({ id, fundId, onBack, onOpen }: { id: string; fundId: st
 
       <section className="rounded-xl border bg-card p-4">
         <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Change history</h3>
-        <ul className="space-y-1 text-xs">{events.map((e: any) => <li key={e.id}><span className="text-muted-foreground">{new Date(e.created_at).toLocaleString()}</span> · v{e.version} · {e.action.replace(/_/g, " ")} · {e.who}{e.comment ? ` · ${e.comment}` : ""}</li>)}</ul>
+        <ul className="space-y-1 text-xs">{events.map((e: any) => <li key={e.id}><span className="text-muted-foreground">{new Date(e.created_at).toLocaleString()}</span> · v{e.version} · {e.action.replace(/_/g, " ")} · {e.who}{e.comment ? ` — ${e.comment}` : ""}</li>)}</ul>
       </section>
     </div>
   );

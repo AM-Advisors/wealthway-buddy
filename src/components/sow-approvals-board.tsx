@@ -244,7 +244,7 @@ export function SowApprovalsBoard() {
             <CardTitle className="text-base">Not ready for approval</CardTitle>
             <CardDescription>
               These agreements are still waiting on a client signature - on the paperwork, in the
-              client portal, or both, so they cannot be approved yet.
+              client portal, or both - so they cannot be approved yet.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">

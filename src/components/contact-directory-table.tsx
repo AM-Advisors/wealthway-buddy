@@ -200,7 +200,7 @@ function AssignDialog({ isFund, state, targets, onClose, onSubmit }: {
             <Select value={targetId} onValueChange={setTargetId}>
               <SelectTrigger><SelectValue placeholder={isFund ? "Choose a fund" : "Choose a cap table"} /></SelectTrigger>
               <SelectContent>
-                {options.map((t) => <SelectItem key={t.id} value={t.id}>{t.name}{t.clientName ? ` · ${t.clientName}` : ""}</SelectItem>)}
+                {options.map((t) => <SelectItem key={t.id} value={t.id}>{t.name}{t.clientName ? ` — ${t.clientName}` : ""}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>

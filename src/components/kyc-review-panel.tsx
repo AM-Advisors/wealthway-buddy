@@ -103,7 +103,7 @@ export function KycReviewPanel({ rd, checkId }: { rd: ReviewDetails; checkId: st
         </Card>}
         {rd.expected && <Card title="Details we sent to compare"><Grid>{Object.entries(rd.expected).map(([k, v]) => <Row key={k} k={k.replace(/_/g, " ")} v={v} />)}</Grid></Card>}
         {!!rd.questionnaire.length && <Card title="Questionnaire"><Grid>{rd.questionnaire.map((q, i) => <div key={i} className="col-span-2"><Row k={q.question} v={q.answer} /></div>)}</Grid></Card>}
-        {!!rd.reviews.length && <Card title="Provider review history"><ul className="space-y-1 text-sm">{rd.reviews.map((r, i) => <li key={i}>{r.at ? new Date(r.at).toLocaleString() : ""} · {r.newStatus} {r.comment ? ` · ${r.comment}` : ""}</li>)}</ul></Card>}
+        {!!rd.reviews.length && <Card title="Provider review history"><ul className="space-y-1 text-sm">{rd.reviews.map((r, i) => <li key={i}>{r.at ? new Date(r.at).toLocaleString() : ""} · {r.newStatus} {r.comment ? `— ${r.comment}` : ""}</li>)}</ul></Card>}
       </div>
     </div>
   );

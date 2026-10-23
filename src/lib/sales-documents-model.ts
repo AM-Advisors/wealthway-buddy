@@ -88,7 +88,7 @@ const BILLED_WORD: Record<string, string> = { monthly: "each billing period", qu
 
 /**
  * Client-friendly pricing: what the client is billed and when.
- * Recurring services are quoted quarterly or annually only, a monthly rate is never shown to the client.
+ * Recurring services are quoted quarterly or annually only — a monthly rate is never shown to the client.
  */
 export function pricingText(lines: LockFacts["lines"]): string {
   if (!lines.length) return "Pricing will appear here once services are added to the quote.";

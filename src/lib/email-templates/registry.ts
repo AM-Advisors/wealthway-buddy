@@ -49,7 +49,7 @@ export interface TemplateEntry {
 }
 
 /**
- * Template registry, maps template names to their React Email components.
+ * Template registry - maps template names to their React Email components.
  * Import and register new templates here after creating them in this directory.
  *
  * Example:

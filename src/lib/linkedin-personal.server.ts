@@ -284,7 +284,7 @@ export async function postAction(userId: string, id: string, action: "submit" | 
   }
 }
 
-/** Trusted publishing path, manual and scheduler both go through here and recheck everything. */
+/** Trusted publishing path — manual and scheduler both go through here and recheck everything. */
 async function publish(db: any, p: any, actorId: string, trigger: "manual" | "scheduler") {
   const a = await account(db);
   const isOwner = actorId === a.owner_user_id;

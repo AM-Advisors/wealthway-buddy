@@ -44,7 +44,7 @@ function SaleSigned({
   return (
     <Html>
       <Head />
-      <Preview>{`${clientName} signed ${documentTitle} · invoice ${invoiceNumber} issued`}</Preview>
+      <Preview>{`${clientName} signed ${documentTitle} — invoice ${invoiceNumber} issued`}</Preview>
       <Body style={{ backgroundColor: '#f4f7fa', fontFamily: 'Poppins, Helvetica, Arial, sans-serif', margin: 0, padding: '24px 0' }}>
         <Container style={{ backgroundColor: '#ffffff', border: '1px solid #e6ecf3', borderTop: '4px solid #5DC6D1', margin: '0 auto', maxWidth: '560px', padding: '40px' }}>
           <Section style={{ marginBottom: '24px' }}>
@@ -68,9 +68,9 @@ function SaleSigned({
             <Text style={label}>{kindLabel}</Text>
             <Text style={value}>{documentTitle} (version {version})</Text>
             <Text style={label}>Signed by</Text>
-            <Text style={value}>{signerName}{signedAt ? ` · ${formatWhen(signedAt)}` : ''}</Text>
+            <Text style={value}>{signerName}{signedAt ? ` — ${formatWhen(signedAt)}` : ''}</Text>
             <Text style={label}>Invoice</Text>
-            <Text style={value}>{invoiceNumber}{invoiceAmount ? ` · ${invoiceAmount}` : ''}</Text>
+            <Text style={value}>{invoiceNumber}{invoiceAmount ? ` — ${invoiceAmount}` : ''}</Text>
             {paymentMethod ? (
               <>
                 <Text style={label}>Payment method chosen</Text>
@@ -102,8 +102,8 @@ export const template = {
   component: SaleSigned,
   subject: (data: Record<string, any>) =>
     data['forSigner']
-      ? `Signed: ${data['documentTitle'] ?? 'your agreement'} · invoice ${data['invoiceNumber'] ?? ''}`
-      : `Signed: ${data['documentTitle'] ?? 'Sale document'} · ${data['clientName'] ?? ''}`,
+      ? `Signed: ${data['documentTitle'] ?? 'your agreement'} — invoice ${data['invoiceNumber'] ?? ''}`
+      : `Signed: ${data['documentTitle'] ?? 'Sale document'} — ${data['clientName'] ?? ''}`,
   displayName: 'Sale signed (quote/proposal/RFP/RFQ)',
   previewData: {
     recipientName: 'Jane',

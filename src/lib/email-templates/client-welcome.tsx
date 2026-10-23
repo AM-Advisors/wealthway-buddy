@@ -113,7 +113,7 @@ function ClientWelcome({
             </Link>
             .
             <br />
-            2. Tell us about your fund (legal entity, structure and offering details) so we can
+            2. Tell us about your fund - legal entity, structure and offering details - so we can
             set it up under your agreement.
             <br />
             3. From then on, your portal shows your funds, invoices, payments and the services in

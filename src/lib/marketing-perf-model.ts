@@ -74,7 +74,7 @@ export function weeklyRecommendations(posts: PostPerf[], search: SearchRow[], we
         ? pageList.filter((p) => p.c > 0).sort((a, b) => b.c - a.c).slice(0, 5).map((p) => `${p.page}: ${p.c} clicks, ${p.i} impressions`) : none("no Search Console clicks stored") },
     { question: "Which search queries are emerging?", basis: "Impressions this week at least double last week (minimum 10).",
       answers: emerging.length ? emerging.map(([q, i]) => `"${q}": ${i} impressions (was ${lastW.get(q) ?? 0})`) : none("no qualifying query growth") },
-    { question: "Which articles should be refreshed?", basis: "Pages averaging positions 8 to 20 with at least 50 impressions.",
+    { question: "Which articles should be refreshed?", basis: "Pages averaging positions 8–20 with at least 50 impressions.",
       answers: refresh.length ? refresh.map((p) => `${p.page}: average position ${p.avgPos.toFixed(1)}, ${p.i} impressions`) : none("no pages near page one") },
     { question: "Which posts should be repurposed?", basis: "Highest engagement rate among posts at least 14 days old.",
       answers: repurpose.length ? repurpose.map((s) => `"${s.p.title}" (${s.p.channel}): ${s.er}%`) : none("no older posts with engagement data") },

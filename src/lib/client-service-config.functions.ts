@@ -131,7 +131,7 @@ export const getProposedFundServices = createServerFn({ method: "GET" })
     const c = current.config as ClientServiceConfig;
     const { PACKAGES } = await import("@/lib/service-packages");
     const packages = selectedPackages(c).map((k) => ({ key: k, label: PACKAGES[k]!.label, defaultOn: true }));
-    if (c.capTable) packages.push({ key: "cap_table", label: `Cap Table Management · ${c.capTable.tier}`, defaultOn: false });
+    if (c.capTable) packages.push({ key: "cap_table", label: `Cap Table Management - ${c.capTable.tier}`, defaultOn: false });
     if ((c.alaCarte ?? []).length) packages.push({ key: "ala_carte", label: "À la carte services", defaultOn: true });
     return { packages };
   });

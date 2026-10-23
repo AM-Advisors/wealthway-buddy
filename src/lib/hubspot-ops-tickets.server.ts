@@ -53,7 +53,7 @@ async function createDraftFund(db: any, actorId: string, clientId: string, name:
   const slug = `${name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 55) || "fund"}-${crypto.randomUUID().slice(0, 8)}`;
   const { seedFundFeeColumns } = await import("@/lib/fee-rates.server");
   const fees = await seedFundFeeColumns(db, clientId);
-  // 506(b) and fund type are placeholders Operations confirms during setup, not filing decisions.
+  // 506(b) and fund type are placeholders Operations confirms during setup — not filing decisions.
   const { data: off, error } = await db.from("offerings").insert({
     name, slug, client_id: clientId, fund_type: fundType, reg_type: "506b", is_open: false, public_page_enabled: false, ...fees,
   }).select("id").single();

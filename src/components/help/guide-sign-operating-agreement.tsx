@@ -86,7 +86,7 @@ export function SignOperatingAgreementGuide() {
           </p>
           <p>
             First time here? The link walks you through setting a password first, then takes you straight to the
-            agreement. If you've been asked to verify your identity, that one-time step comes first, have a
+            agreement. If you've been asked to verify your identity, that one-time step comes first — have a
             government ID handy.
           </p>
         </Step>

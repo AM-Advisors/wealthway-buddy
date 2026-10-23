@@ -157,7 +157,7 @@ export type Decision = {
   sources: string[];
   reason: string;
   protectedConditions: string[];
-  /** Canonical resolver only: no production endpoint consults it yet. */
+  /** Canonical resolver only - no production endpoint consults it yet. */
   enforcement: "canonical_resolver_only";
 };
 
@@ -264,8 +264,8 @@ export function authorize(
 
 export function formatDecision(d: Decision): string {
   return d.allowed
-    ? `ALLOW · ${d.permission} · ${d.resource} · source: ${d.sources.join(", ")} · scope: ${d.scope}`
-    : `DENY · ${d.permission} · ${d.reason}`;
+    ? `ALLOW - ${d.permission} - ${d.resource} - source: ${d.sources.join(", ")} - scope: ${d.scope}`
+    : `DENY - ${d.permission} - ${d.reason}`;
 }
 
 // ---------------------------------------------------------------- escalation
@@ -326,7 +326,7 @@ export function accessChangeProblem(actor: AuthzFacts, change: AccessChange, res
   if (templateFor(change.kind === "assign_role" || change.kind === "revoke_role" ? change.roleKey : "")?.category === "harmonious") {
     return "Only Harmonious access administrators can assign Harmonious roles.";
   }
-  for (const perm of needed) if (!authorize(actor, perm, res).allowed) return `You can't grant ${perm} · it exceeds your own access.`;
+  for (const perm of needed) if (!authorize(actor, perm, res).allowed) return `You can't grant ${perm} - it exceeds your own access.`;
   return null;
 }
 

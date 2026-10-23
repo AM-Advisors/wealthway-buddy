@@ -100,7 +100,7 @@ function BankSetupRequest({
 export const template = {
   component: BankSetupRequest,
   subject: (data: Record<string, any>) =>
-    `Bank account request · ${data['fundName'] ?? 'a fund'} (${data['bankName'] ?? 'bank'})`,
+    `Bank account request - ${data['fundName'] ?? 'a fund'} (${data['bankName'] ?? 'bank'})`,
   displayName: 'Bank account setup request',
   previewData: {
     fundName: 'Harmonious Growth Fund II',

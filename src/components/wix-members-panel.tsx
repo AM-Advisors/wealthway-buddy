@@ -33,7 +33,7 @@ export function WixMembersPanel() {
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <select className="h-9 rounded-md border bg-background px-2 text-sm" value={siteId} onChange={(e) => setSite(e.target.value)}>
             <option value="">Choose site…</option>
-            {(sites.data ?? []).map((s) => <option key={s.id} value={s.id}>{s.name}{s.url ? ` · ${s.url}` : ""}</option>)}
+            {(sites.data ?? []).map((s) => <option key={s.id} value={s.id}>{s.name}{s.url ? ` — ${s.url}` : ""}</option>)}
           </select>
           <Button variant="outline" disabled={busy || !siteId} onClick={() => act(async () => { const r = await test({ data: { siteId } }); return `Connected. ${r.members} members found.`; })}>Test connection</Button>
           <Button disabled={busy || !siteId} onClick={() => act(async () => { const r = await run({ data: { siteId } }); await qc.invalidateQueries({ queryKey: ["wix-members"] }); return `Imported ${r.total} members: ${r.matched} match existing people, ${r.withPhone} have a phone.`; })}>{busy ? "Working…" : "Import members"}</Button>

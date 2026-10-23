@@ -9,7 +9,7 @@ import { requireSupabaseAuth } from "@/lib/require-auth";
  *
  * Outside funds, SPVs and advisers declare the position they believe they hold.
  * The company compares that claim against its own register and confirms,
- * adjusts or disputes it. Verifying a claim never issues or moves shares, the
+ * adjusts or disputes it. Verifying a claim never issues or moves shares - the
  * register is only changed by a deliberate cap table action.
  */
 

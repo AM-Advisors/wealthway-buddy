@@ -9,7 +9,7 @@ export type NavSub = { title: string; url: string };
 export type NavEntry = { id: string; title: string; url: string; icon: string; sub?: NavSub[] };
 export type NavGroup = { id: string; label: string; items: NavEntry[] };
 
-/** Money, tax-filing and administration screens are never grantable here, they keep their own approvers. */
+/** Money, tax-filing and administration screens are never grantable here - they keep their own approvers. */
 export const NON_GRANTABLE_AREAS: OpsArea[] = ["capital", "tax", "administration"];
 
 export type GrantableItem = { url: string; title: string; areaTitle: string; cap: OpsArea };

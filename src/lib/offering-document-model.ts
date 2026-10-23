@@ -97,7 +97,7 @@ export function versionState(input: {
   return "signing_setup_required";
 }
 
-/** A new version never inherits "confirmed" signing setup, it must be reviewed. */
+/** A new version never inherits "confirmed" signing setup - it must be reviewed. */
 export function signingStatusForNewVersion(previous: SigningConfig | null | undefined): SigningConfigStatus {
   return previous && previous.signers.length ? "needs_review" : "not_configured";
 }
@@ -211,7 +211,7 @@ export type SetupDoc = {
   latestState: VersionState | null;
 };
 
-/** Fund Setup status: never depends on investors having executed anything. */
+/** Fund Setup status - never depends on investors having executed anything. */
 export function offeringDocumentsSetupStatus(docs: SetupDoc[]): { status: "not_started" | "in_progress" | "complete"; next: string | null } {
   const configured = docs.filter((d) => d.category);
   if (!configured.length) return { status: "not_started", next: "Upload the offering documents" };

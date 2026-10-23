@@ -108,7 +108,7 @@ function InvestorRecordPage() {
               {l.snapshot.terms.length ? <ul className="list-disc space-y-1 pl-5">
                 {l.snapshot.terms.map((t) => <li key={t.id}>
                   <span className="font-medium">{TERM_CATEGORIES.find((c) => c.key === t.category)?.label ?? prettyStatus(t.category)}</span>
-                  {t.value ? ` · ${t.value}` : ""}: {t.description}
+                  {t.value ? ` - ${t.value}` : ""}: {t.description}
                   {t.applicability ? <span className="text-muted-foreground"> ({t.applicability})</span> : null}
                 </li>)}
               </ul> : <p className="text-muted-foreground">No terms recorded.</p>}

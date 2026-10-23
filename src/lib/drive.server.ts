@@ -388,7 +388,7 @@ export async function ensureInvestorFundFolder(offeringId: string, who: Actor = 
   const repository = repositoryFor("investor_fund", envName);
   const fundName = safeName(offering.name ?? offering.legal_entity_name ?? "Fund");
   // In the QA root both folders share a parent, so the investor one is suffixed.
-  const name = envName === "test" ? safeName(`${fundName} · Investor Records`) : fundName;
+  const name = envName === "test" ? safeName(`${fundName} - Investor Records`) : fundName;
   const base = { entity_kind: "investor_fund", offering_id: offeringId, harmonious_key: key, environment: envName, repository };
   const problems = await investorRepositoryProblems(envName, inspector);
   if (problems.length) {
@@ -544,7 +544,7 @@ async function enabled(offeringId: string) {
   return Boolean(data?.drive_sync_enabled);
 }
 
-/** Hook: fund launched. Never throws: the launch itself stands. */
+/** Hook: fund launched. Never throws - the launch itself stands. */
 export async function onFundLaunched(offeringId: string, userId: string | null) {
   try {
     if (await enabled(offeringId)) await ensureFundStructure(offeringId, { userId, actor: "fund_launch" });

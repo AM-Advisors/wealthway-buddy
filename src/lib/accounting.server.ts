@@ -144,7 +144,7 @@ export async function ledgerBookForOffering(userId: string, offeringId: string) 
     .maybeSingle();
   if (!offering) fail("Fund not found.");
   return openLedgerBook(userId, {
-    name: `${offering.name} · fund accounting`,
+    name: `${offering.name} - fund accounting`,
     offeringId,
     clientId: offering.client_id,
   });

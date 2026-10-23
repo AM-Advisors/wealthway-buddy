@@ -119,7 +119,7 @@ function Documents() {
               <SearchableNativeSelect className={sel} value={f.contactId} onChange={(e) => setF({ ...f, contactId: e.target.value })}>
                 <option value="">No contact</option>
                 {f.contactId && !(o.data?.contacts ?? []).some((x: any) => x.id === f.contactId) && <option value={f.contactId}>{f.recipientName || f.recipientEmail || "Selected prospect"}</option>}
-                {(o.data?.contacts ?? []).map((x: any) => <option key={x.id} value={x.id}>{x.full_name}{x.organization ? ` · ${x.organization}` : ""}</option>)}
+                {(o.data?.contacts ?? []).map((x: any) => <option key={x.id} value={x.id}>{x.full_name}{x.organization ? ` - ${x.organization}` : ""}</option>)}
               </SearchableNativeSelect></label>
             <label className="space-y-1 text-sm"><span>Client</span>
               <select className={sel} value={f.clientId} onChange={(e) => setF({ ...f, clientId: e.target.value })}>
@@ -304,7 +304,7 @@ function ProspectLookup({ onResolved, label = "Prospect email" }: { onResolved: 
           </div>
         )}
       </div>
-      {res?.found && res.contactId && <p className="text-muted-foreground"><Badge>Found on platform</Badge> <span className="ml-1">{res.name ?? res.email}{res.organization ? ` · ${res.organization}` : ""} ({res.sources.join(", ")})</span></p>}
+      {res?.found && res.contactId && <p className="text-muted-foreground"><Badge>Found on platform</Badge> <span className="ml-1">{res.name ?? res.email}{res.organization ? ` - ${res.organization}` : ""} ({res.sources.join(", ")})</span></p>}
       {needsContact && (
         <div className="space-y-2 rounded-md border p-3">
           <p className="font-medium">{res.found ? `Found as ${res.sources.join(", ")}. Add them as a prospect to continue.` : "Not on the platform yet. Add new prospect"}</p>

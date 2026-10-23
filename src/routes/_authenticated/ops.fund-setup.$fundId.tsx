@@ -1,6 +1,6 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 
-/** Old Fund Setup URL: the fund now has one page. */
+/** Old Fund Setup URL — the fund now has one page. */
 export const Route = createFileRoute("/_authenticated/ops/fund-setup/$fundId")({
   validateSearch: (s: Record<string, unknown>): { tab?: string | undefined } => ({ tab: typeof s["tab"] === "string" ? s["tab"] : undefined }),
   beforeLoad: ({ params, search }) => {

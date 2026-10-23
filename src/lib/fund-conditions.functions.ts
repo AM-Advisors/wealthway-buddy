@@ -161,7 +161,7 @@ export async function evaluateFundConditions(
       ? {
           threshold,
           investors: total,
-          over: total: threshold,
+          over: total - threshold,
           acknowledged: ackCount !== null && ackCount >= total,
           acknowledgedAt: feeAck?.created_at ?? null,
           acknowledgedCount: ackCount,

@@ -4,9 +4,9 @@ import { CHANNEL_LABEL, STATUS_LABEL, type Channel } from "@/lib/marketing-model
 export function mkHead(title: string, description: string) {
   return () => ({
     meta: [
-      { title: `${title} | Harmonious Marketing` },
+      { title: `${title} - Harmonious Marketing` },
       { name: "description", content: description },
-      { property: "og:title", content: `${title} | Harmonious Marketing` },
+      { property: "og:title", content: `${title} - Harmonious Marketing` },
       { property: "og:description", content: description },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

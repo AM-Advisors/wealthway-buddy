@@ -3,7 +3,7 @@
  *
  * Google Places finds an address. Google Address Validation normalizes and
  * assesses it. Didit proof of address evidences that a person is connected to
- * it. Harmonious (and only Harmonious) decides the compliance state. These
+ * it. Harmonious - and only Harmonious - decides the compliance state. These
  * are four different functions and they stay four different pieces of state.
  */
 

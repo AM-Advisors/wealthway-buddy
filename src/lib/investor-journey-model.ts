@@ -1,5 +1,5 @@
 /**
- * The four-step investor experience, derived, never stored.
+ * The four-step investor experience, derived - never stored.
  *
  *   About You → Verification → Sign → Fund
  *
@@ -197,7 +197,7 @@ export function investorHomeSummary(steps: JourneyStepView[], facts: { waitingOn
 
 /**
  * The offering's configured exemption sets a floor on its requirements.
- * It only ever tightens configuration, it never relaxes it.
+ * It only ever tightens configuration - it never relaxes it.
  * 506(c): every investor's accreditation must be verified (REG_TYPES).
  */
 export function applyExemption(

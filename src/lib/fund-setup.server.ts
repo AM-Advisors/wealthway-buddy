@@ -1227,7 +1227,7 @@ async function autoDefaultSetup(setupId: string, setup: any) {
   const { data: book } = await db().from("ledger_books").select("id").eq("offering_id", setup.offering_id).eq("domain", "fund_accounting").maybeSingle();
   let bookId = book?.id as string | undefined;
   if (!bookId) {
-    const { data: nb } = await db().from("ledger_books").insert({ name: `${off?.name ?? "Fund"} · fund accounting`, offering_id: setup.offering_id, client_id: off?.client_id ?? null, domain: "fund_accounting", created_by: actor }).select("id").single();
+    const { data: nb } = await db().from("ledger_books").insert({ name: `${off?.name ?? "Fund"} - fund accounting`, offering_id: setup.offering_id, client_id: off?.client_id ?? null, domain: "fund_accounting", created_by: actor }).select("id").single();
     bookId = nb?.id;
   }
   if (bookId) {

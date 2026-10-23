@@ -312,7 +312,7 @@ export function navigationTelemetry(input: {
 /**
  * Which menu a page should get. Client pages get the client menu; the internal
  * sections keep the internal menu until the operations console moves to its own
- * address. This is presentation only: the backend still authorizes every
+ * address. This is presentation only - the backend still authorizes every
  * request either way.
  */
 export function menuForContext(input: {
@@ -335,7 +335,7 @@ export function contextToClear(): string[] {
 }
 
 /**
- * Remembered things that say nothing about a record or a relationship, only
+ * Remembered things that say nothing about a record or a relationship - only
  * how the screen was arranged last time. These survive a workspace switch.
  */
 export const COSMETIC_STORAGE_KEYS = ["harmonious.sidebar.openGroups"];

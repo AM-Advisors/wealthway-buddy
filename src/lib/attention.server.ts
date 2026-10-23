@@ -192,7 +192,7 @@ async function investorItems(ctx: Ctx, n: Names): Promise<AttentionItem[]> {
           source: "investor.funding",
           group: working ? "harmonious_working" : "needs_you",
           severity: working ? "info" : "action",
-          title: fundName ? `Funding · ${fundName}` : "Funding",
+          title: fundName ? `Funding - ${fundName}` : "Funding",
           workflowState: String(a.funding_status),
           href: "/onboarding/funding",
         }),
@@ -534,7 +534,7 @@ async function fundManagerItems(ctx: Ctx, n: Names): Promise<AttentionItem[]> {
         workspace: "fund_manager",
         group: state === "published" ? "waiting_third_party" : "harmonious_working",
         severity: "info",
-        title: c.title ? `Capital call · ${c.title}` : "Capital call",
+        title: c.title ? `Capital call - ${c.title}` : "Capital call",
         workflowState: state,
         status:
           state === "published"
@@ -666,7 +666,7 @@ async function fundManagerItems(ctx: Ctx, n: Names): Promise<AttentionItem[]> {
         workspace: "fund_manager",
         group: finished ? "recently_completed" : "harmonious_working",
         severity: state === "manager_approval" ? "action" : "info",
-        title: d.title ? `Distribution · ${d.title}` : "Distribution",
+        title: d.title ? `Distribution - ${d.title}` : "Distribution",
         workflowState: state,
         status:
           state === "manager_approval"
@@ -710,7 +710,7 @@ async function fundManagerItems(ctx: Ctx, n: Names): Promise<AttentionItem[]> {
     if (approved !== true) {
       out.push(buildAttentionItem({
         id: `manager-signed-review:${c.id}`, source: "manager.countersign", workspace: "fund_manager", group: "needs_you", severity: "action",
-        title: `Investor signed - approve or decline | ${fundName(c.offering_id) ?? "Fund"}`, workflowState: "awaiting_fund_manager",
+        title: `Investor signed - approve or decline - ${fundName(c.offering_id) ?? "Fund"}`, workflowState: "awaiting_fund_manager",
         status: "The investor has signed. Approve or decline under Approvals.", sourceTable: "document_signature_signers", sourceId: c.id,
         href: `/manager/fund/${c.offering_id}/approvals`, at: c.updated_at ?? null, fundName: fundName(c.offering_id),
       }));
@@ -723,7 +723,7 @@ async function fundManagerItems(ctx: Ctx, n: Names): Promise<AttentionItem[]> {
         workspace: "fund_manager",
         group: "needs_you",
         severity: "action",
-        title: `Signature required | ${fundName(c.offering_id) ?? "Fund"}`,
+        title: `Signature required - ${fundName(c.offering_id) ?? "Fund"}`,
         workflowState: "awaiting_fund_manager",
         status: "The investor has signed. Review & countersign.",
         sourceTable: "document_signature_signers",
@@ -817,7 +817,7 @@ async function companyItems(ctx: Ctx, n: Names): Promise<AttentionItem[]> {
         workspace: "company",
         group: state === "scoped" ? "needs_you" : "harmonious_working",
         severity: state === "scoped" ? "action" : "info",
-        title: r.summary ? `Service request · ${r.summary}` : "Service request",
+        title: r.summary ? `Service request - ${r.summary}` : "Service request",
         workflowState: state,
         status:
           state === "scoped"
@@ -1132,7 +1132,7 @@ async function preparedManagerItems(ctx: Ctx, fundIds: string[], fundName: (id: 
   for (const d of drafts as any[]) {
     out.push(buildAttentionItem({
       id: `manager-prep-draft:${d.id}`, source: "manager.prepared_draft", workspace: "fund_manager", group: "needs_you", severity: "action",
-      title: `Investor draft ready to send | ${d.display_name || d.email}`, workflowState: "draft", status: "Prepared but not sent",
+      title: `Investor draft ready to send - ${d.display_name || d.email}`, workflowState: "draft", status: "Prepared but not sent",
       sourceTable: "investor_prep_drafts", sourceId: d.id, href: `/manager/funds/${d.offering_id}?tab=investors`, at: d.updated_at ?? null, fundName: fundName(d.offering_id),
     }));
   }

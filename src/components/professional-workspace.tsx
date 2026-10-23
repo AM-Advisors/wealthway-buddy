@@ -69,7 +69,7 @@ export function ActingOnBehalfBanner({
         <div>
           <p className="text-sm font-medium">Acting on behalf of {principalName}</p>
           <p className="text-sm text-muted-foreground">
-            {organizationName ? `Through ${organizationName} · ` : ""}
+            {organizationName ? `Through ${organizationName} - ` : ""}
             {scopeLabel} - {AUTHORITY_LABELS[authorityLevel] ?? authorityLevel}
             {expiresAt ? ` - until ${new Date(expiresAt).toLocaleDateString()}` : ""}
           </p>

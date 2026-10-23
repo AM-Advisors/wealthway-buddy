@@ -16,7 +16,7 @@ const CORE: ComplianceTemplateItem[] = [
   },
   {
     key: "blue_sky",
-    label: "Blue Sky: state notice filings",
+    label: "Blue Sky - state notice filings",
     category: "State",
     sort_order: 40,
   },

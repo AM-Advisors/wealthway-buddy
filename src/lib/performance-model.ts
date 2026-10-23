@@ -428,7 +428,7 @@ function npv(flows: { t: number; amount: number }[], rate: number): number {
  * Date-sensitive IRR over actual dated cash flows.
  *
  * Returns an explicit status instead of a number whenever the inputs cannot
- * support one, a missing sign, a period too short to annualise, several
+ * support one - a missing sign, a period too short to annualise, several
  * mathematical roots, or no root at all.
  */
 export function xirr(input: readonly DatedCashFlow[]): IrrResult {

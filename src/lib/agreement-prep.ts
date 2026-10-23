@@ -1,5 +1,5 @@
 /**
- * Agreement preparation: pure rules.
+ * Agreement preparation - pure rules.
  *
  * Harmonious never runs its own signature ceremony. Everything here produces
  * *native Box Sign* configuration: signer roles become Box signers, and placed
@@ -273,7 +273,7 @@ export type PrepareTarget = {
 
 /**
  * Authorization for preparing. Checked against the actual fund/company
- * relationship, never against an email address or its domain.
+ * relationship - never against an email address or its domain.
  */
 export function canPrepare(actor: PreparerActor, target: PrepareTarget): boolean {
   const staffPrepare = actor.capabilities.includes("documents:prepare");

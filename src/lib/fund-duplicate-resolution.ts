@@ -51,7 +51,7 @@ const norm = (v: string | null | undefined) => normalizeFundName(v);
 const differs = (a: string | null | undefined, b: string | null | undefined) => !!norm(a) && !!norm(b) && norm(a) !== norm(b);
 
 /**
- * Every conflict is "Conflict: Harmonious Decision Required". Blocking
+ * Every conflict is "Conflict - Harmonious Decision Required". Blocking
  * conflicts cannot be acknowledged away: they must be fixed at the source
  * (for example, retire one banking version) before consolidation can run.
  */

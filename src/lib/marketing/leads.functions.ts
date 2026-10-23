@@ -49,7 +49,7 @@ export function toSalesforceLead(lead: z.output<typeof leadSchema>) {
 }
 
 /**
- * Public lead submission. Stores the lead only, it never creates an account,
+ * Public lead submission. Stores the lead only - it never creates an account,
  * membership, role, fund, company or any other application record.
  */
 export const submitLead = createServerFn({ method: "POST" })

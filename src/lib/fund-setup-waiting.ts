@@ -42,7 +42,7 @@ export function waitingOnViewer(statuses: readonly StepStatus[], viewerIsStaff: 
   return statuses.filter((s) => (viewerIsStaff ? s === "waiting_harmonious" : s === "waiting_manager" || s === "needs_changes")).length;
 }
 
-/** Standard choices offered as "Default: confirm". Fees are never defaulted. */
+/** Standard choices offered as "Default — confirm". Fees are never defaulted. */
 export function setupDefaults(current: Record<string, string>, opts: { saasOnly: boolean }): Record<string, string> {
   const d: Record<string, string> = { jurisdiction: "Delaware", entityType: "LLC", regType: "506b", solicitationStates: "All states", administrator: opts.saasOnly ? "Client (SaaS-only)" : "Harmonious" };
   const out: Record<string, string> = {};

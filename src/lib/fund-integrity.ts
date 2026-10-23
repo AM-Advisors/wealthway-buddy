@@ -82,7 +82,7 @@ export type SyncCategory = keyof typeof SYNC_CATEGORIES;
 
 export const CONFIDENCE_LABELS = {
   exact: "Exact Match",
-  likely: "Likely Match: Review Required",
+  likely: "Likely Match - Review Required",
   none: "No Match",
   conflict: "Conflict",
   duplicate: "Duplicate Candidate",

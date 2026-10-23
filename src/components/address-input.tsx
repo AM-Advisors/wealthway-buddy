@@ -197,7 +197,7 @@ export function AddressInput({
       {status ? (
         <p className="text-xs text-muted-foreground" data-testid={`${idPrefix}-status`}>
           {status.label}
-          {status.detail ? ` · ${status.detail}` : ""}
+          {status.detail ? ` - ${status.detail}` : ""}
         </p>
       ) : null}
       {manual && value.entryMethod === "manual" && value.line1 ? (
@@ -235,7 +235,7 @@ export function AddressInput({
           ) : null}
           {!lookupAvailable ? (
             <p className="text-xs text-muted-foreground">
-              Address search is unavailable right now, you can enter your address below.
+              Address search is unavailable right now - you can enter your address below.
             </p>
           ) : null}
           <Button

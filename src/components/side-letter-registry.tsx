@@ -484,7 +484,7 @@ function PendingRow({
         <ul className="text-xs space-y-0.5">
           {r.after.terms.map((t) => {
             const k = `${t.category}|${t.description}|${t.value ?? ""}`;
-            return <li key={t.id}>{beforeTerms.has(k) ? "•" : "+"} {catLabel(t.category)}: {t.description}{t.value ? ` · ${t.value}` : ""}</li>;
+            return <li key={t.id}>{beforeTerms.has(k) ? "•" : "+"} {catLabel(t.category)}: {t.description}{t.value ? ` - ${t.value}` : ""}</li>;
           })}
           {(r.before?.terms ?? []).filter((t) => !afterTerms.has(`${t.category}|${t.description}|${t.value ?? ""}`)).map((t) => (
             <li key={t.id} className="text-destructive">− {catLabel(t.category)}: {t.description}</li>

@@ -309,7 +309,7 @@ export type EvidenceStatus =
 export type EvidenceBasis = "supporting_evidence" | "synthetic_assumption";
 export const SYNTHETIC_ASSUMPTION_LABEL = "DEMO / SYNTHETIC ASSUMPTION";
 export function valuationEvidenceStatus(input: { policyRequired: boolean; evidenceCount: number; waived: boolean; evidenceBasis?: EvidenceBasis }): EvidenceStatus {
-  // A synthetic assumption is its own classification, it never counts as evidence.
+  // A synthetic assumption is its own classification - it never counts as evidence.
   if (input.evidenceBasis === "synthetic_assumption") return "synthetic_assumption";
   if (input.evidenceCount > 0) return "evidence_provided";
   if (!input.policyRequired) return "evidence_not_required";
@@ -361,7 +361,7 @@ export type ValuationCandidate = {
 
 /**
  * Everything wrong with a proposed valuation, named. Returning an empty list
- * is not approval, it only means nothing is obviously broken.
+ * is not approval - it only means nothing is obviously broken.
  */
 export function valuationExceptions(
   candidate: ValuationCandidate,
