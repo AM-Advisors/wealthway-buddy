@@ -17,3 +17,21 @@ export function resolveGate(input: { roles: string[]; grandfathered: boolean; la
 }
 
 export const gateOpen = (s: GateState) => s === "exempt" || s === "approved";
+
+/** Only verification-session events carry a result; profile notices ("ACTIVE") never do. */
+export function isAccountDecisionEvent(webhookType: string, sessionId: string | null): boolean {
+  return !!sessionId && (webhookType === "status.updated" || webhookType === "data.updated");
+}
+
+/** A payload may change a check only if it is the result for that check's own session. */
+export function isSessionDecisionFor(check: { session_id?: string | null }, decision: Record<string, any> | null | undefined): boolean {
+  const sid = decision?.["session_id"] ?? decision?.["decision"]?.["session_id"];
+  return !!sid && !!check.session_id && String(sid) === String(check.session_id);
+}
+
+/** Provider "Expired"/"Abandoned" lets the person start a fresh check instead of waiting on review. */
+export function accountStatusFromProvider(raw: string | null | undefined, mapped: "approved" | "declined" | "review" | "pending" | "not_started" | string): AccountCheckStatus {
+  const r = String(raw ?? "").trim().toLowerCase();
+  if (r === "expired" || r === "abandoned") return "expired";
+  return mapped === "approved" ? "approved" : mapped === "declined" ? "declined" : mapped === "review" ? "review" : "pending";
+}

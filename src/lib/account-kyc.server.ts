@@ -1,7 +1,8 @@
 // Server-only: account-level identity verification that gates every non-staff account.
 // Investment-level KYC (kyc_verifications) stays separate; an approved one counts here.
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { ACCOUNT_KYC_DECIDERS, gateOpen, resolveGate, type AccountCheckStatus } from "@/lib/account-kyc-model";
+import { ACCOUNT_KYC_DECIDERS, accountStatusFromProvider, gateOpen, isSessionDecisionFor, resolveGate, type AccountCheckStatus } from "@/lib/account-kyc-model";
+export { isAccountDecisionEvent } from "@/lib/account-kyc-model";
 
 const db = () => supabaseAdmin as any;
 const now = () => new Date().toISOString();
@@ -111,7 +112,8 @@ export async function accountCheckByProviderRef(vendorData: string | null, sessi
 
 export async function reconcileAccountCheck(uid: string) {
   const c = await latest(uid);
-  if (c?.session_id && (c.status === "pending" || !c.review_details)) {
+  // Provider-sourced review is re-read too, so a check wrongly moved to review recovers on "Check again".
+  if (c?.session_id && (c.status === "pending" || !c.review_details || (c.status === "review" && !c.decided_by))) {
     const { fetchDiditSessionDecision } = await import("@/lib/didit.server");
     const d = await fetchDiditSessionDecision(String(c.session_id));
     if (d) await applyAccountDecision(c, d);
