@@ -62,4 +62,5 @@
 - Countersign timing lives in src/lib/countersign-timing.ts and feeds canInvestorFund; canCloseInvestment always forces pause so admission still needs approval — why: one funding gate, unchanged admission authority.
 - Client dashboard insights use client-insights.functions.ts + pure client-dashboard-model.ts; earnings = posted 'Management fee' ledger entries + approved carry rows only, kept separate from raised capital and Harmonious costs — why: no estimated earnings or mixed figures.
 - Fund changes project canonical requests and reuse review/send engines — why: no duplicate approvals.
-- Offering document pop-outs pin document/version through existing version readers — why: show original files, never regenerate or substitute latest.
+- Offering pop-outs pin versions — why: originals only.
+- Manager adds use createInvestorAndInvite + personal-link sender; imports retain createInvestor — why: saved records survive email failure, no bulk sends.
