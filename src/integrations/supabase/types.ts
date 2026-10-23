@@ -242,6 +242,44 @@ export type Database = {
         }
         Relationships: []
       }
+      account_aml_match_clearances: {
+        Row: {
+          check_id: string
+          cleared_by: string
+          created_at: string
+          hit_caption: string | null
+          hit_key: string
+          id: string
+          reason: string
+        }
+        Insert: {
+          check_id: string
+          cleared_by: string
+          created_at?: string
+          hit_caption?: string | null
+          hit_key: string
+          id?: string
+          reason: string
+        }
+        Update: {
+          check_id?: string
+          cleared_by?: string
+          created_at?: string
+          hit_caption?: string | null
+          hit_key?: string
+          id?: string
+          reason?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "account_aml_match_clearances_check_id_fkey"
+            columns: ["check_id"]
+            isOneToOne: false
+            referencedRelation: "account_identity_checks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       account_identity_check_events: {
         Row: {
           actor_user_id: string | null
