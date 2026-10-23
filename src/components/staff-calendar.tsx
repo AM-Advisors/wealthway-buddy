@@ -201,7 +201,7 @@ export function StaffCalendar() {
         detail:
           (fee ? `${fee} proposed` : "No fee set") +
           (q.effective_date ? ` · starts ${q.effective_date}` : " · no start date yet"),
-        status: signed ? "Signed - activate" : "With the client",
+        status: signed ? "Signed: activate" : "With the client",
         overdue: isPast(due || raised),
       });
     }
@@ -477,7 +477,7 @@ export function StaffCalendar() {
                   cell.inMonth ? "" : "bg-muted/30 text-muted-foreground",
                   isSelected ? "ring-2 ring-inset ring-primary" : "hover:bg-muted/40",
                 ].join(" ")}
-                aria-label={`${longDay(cell.key)} - ${dayItems.length} item${dayItems.length === 1 ? "" : "s"} due`}
+                aria-label={`${longDay(cell.key)} · ${dayItems.length} item${dayItems.length === 1 ? "" : "s"} due`}
               >
                 <span
                   className={[

@@ -26,9 +26,9 @@ import { bookkeepingDraftBlocker } from "@/lib/bookkeeping-model";
 export const Route = createFileRoute("/_authenticated/sales_/quotes_/$id")({
   head: () => ({
     meta: [
-      { title: "Quote - Harmonious Sales" },
+      { title: "Quote | Harmonious Sales" },
       { name: "description", content: "Quote detail: services, approval, agreements and signature status." },
-      { property: "og:title", content: "Quote - Harmonious Sales" },
+      { property: "og:title", content: "Quote | Harmonious Sales" },
       { property: "og:description", content: "Approve, send and track a Harmonious quote." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -153,7 +153,7 @@ function QuotePage() {
           {d.quote.decision_note && <p className="mt-2 text-sm text-foreground">Decision note: {d.quote.decision_note}</p>}
           {d.lines.filter((l: any) => l.bookkeeping_snapshot).map((l: any) => <details key={l.id} className="mt-4 border-t pt-3"><summary className="cursor-pointer text-sm font-medium">Proposed bookkeeping SOW scope</summary><p className="mt-3 whitespace-pre-wrap text-sm text-muted-foreground">{l.bookkeeping_snapshot.scope}</p></details>)}
           {d.lines.filter((l: any) => l.service_details && (l.service_details.scope || (l.service_details.included ?? []).length || (l.service_details.excluded ?? []).length)).map((l: any) => (
-            <details key={`sd-${l.id}`} className="mt-4 border-t pt-3"><summary className="cursor-pointer text-sm font-medium">SOW detail — {l.label}</summary>
+            <details key={`sd-${l.id}`} className="mt-4 border-t pt-3"><summary className="cursor-pointer text-sm font-medium">SOW detail · {l.label}</summary>
               <div className="mt-3 space-y-2 text-sm text-muted-foreground">
                 {l.service_details.scope && <p className="whitespace-pre-wrap">Scope: {l.service_details.scope}</p>}
                 {(l.service_details.included ?? []).length > 0 && <p>Included: {(l.service_details.included as string[]).join("; ")}</p>}

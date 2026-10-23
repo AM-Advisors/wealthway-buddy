@@ -21,7 +21,7 @@ export function UploadForInvestor({ onboardingId }: { onboardingId: string }) {
     } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
   };
   return (
-    <Card><CardHeader><CardTitle className="text-base">Add a document for this investor</CardTitle><p className="text-xs text-muted-foreground">Kept as the original and reviewed by Harmonious. Uploading doesn't verify identity — that still runs through the identity check.</p></CardHeader>
+    <Card><CardHeader><CardTitle className="text-base">Add a document for this investor</CardTitle><p className="text-xs text-muted-foreground">Kept as the original and reviewed by Harmonious. Uploading doesn't verify identity, that still runs through the identity check.</p></CardHeader>
       <CardContent className="flex flex-wrap items-center gap-2 text-sm">
         <select aria-label="Document type" className="h-9 rounded-md border bg-background px-2" value={kind} onChange={(e) => setKind(e.target.value as any)}>{KINDS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>
         <input aria-label="File" type="file" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />

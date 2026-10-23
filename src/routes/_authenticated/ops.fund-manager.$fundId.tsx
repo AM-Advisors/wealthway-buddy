@@ -16,9 +16,9 @@ export const Route = createFileRoute("/_authenticated/ops/fund-manager/$fundId")
   validateSearch: (s: Record<string, unknown>) => z.object({ who: z.string().max(80).optional() }).parse({ who: typeof s["who"] === "string" ? s["who"] : undefined }),
   head: () => ({
     meta: [
-      { title: "Fund manager - Harmonious operations" },
+      { title: "Fund manager | Harmonious operations" },
       { name: "description", content: "A fund manager's details, assigned funds and inbox, even before they sign in." },
-      { property: "og:title", content: "Fund manager - Harmonious operations" },
+      { property: "og:title", content: "Fund manager | Harmonious operations" },
       { property: "og:description", content: "Details, funds and messages for one fund manager." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

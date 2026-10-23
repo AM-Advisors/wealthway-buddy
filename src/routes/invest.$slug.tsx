@@ -33,9 +33,9 @@ export const Route = createFileRoute("/invest/$slug")({
     return {
       meta: [
         { name: "robots", content: "noindex, nofollow" },
-        { title: `Invest in ${name} - Harmonious` },
+        { title: `Invest in ${name} | Harmonious` },
         { name: "description", content: description },
-        { property: "og:title", content: `Invest in ${name} - Harmonious` },
+        { property: "og:title", content: `Invest in ${name} | Harmonious` },
         { property: "og:description", content: description },
         { property: "og:type", content: "website" },
         { property: "og:url", content: `${SITE}/invest/${params.slug}` },
@@ -91,7 +91,7 @@ function InvestLanding() {
                 Reviewing creates no commitment. When you continue, you'll go through About You, Verification, Sign and Fund.
               </p>
               <Button onClick={() => begin.mutate()} disabled={begin.isPending}>
-                {begin.isPending ? "Opening…" : "I've reviewed this deal - continue to invest"}
+                {begin.isPending ? "Opening…" : "I've reviewed this deal: continue to invest"}
               </Button>
             </CardContent>
           </Card>

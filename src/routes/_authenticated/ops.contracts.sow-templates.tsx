@@ -17,9 +17,9 @@ import { listSowTemplates, saveSowTemplate, setSowTemplateStatus } from "@/lib/c
 export const Route = createFileRoute("/_authenticated/ops/contracts/sow-templates")({
   head: () => ({
     meta: [
-      { title: "SOW templates - Harmonious operations" },
+      { title: "SOW templates | Harmonious operations" },
       { name: "description", content: "Versioned Harmonious SOW templates: draft, approved/current and retired." },
-      { property: "og:title", content: "SOW templates - Harmonious operations" },
+      { property: "og:title", content: "SOW templates | Harmonious operations" },
       { property: "og:description", content: "Versioned Harmonious SOW templates used to prepare draft SOWs." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -74,7 +74,7 @@ function SowTemplates() {
       <Card>
         <CardHeader><CardTitle className="text-base">All versions</CardTitle></CardHeader>
         <CardContent className="overflow-x-auto">
-          {!templates.length ? <p className="text-sm text-muted-foreground">No templates yet. Until one is approved, new funds show "SOW required - no approved current template available".</p> : (
+          {!templates.length ? <p className="text-sm text-muted-foreground">No templates yet. Until one is approved, new funds show "SOW required: no approved current template available".</p> : (
             <table className="w-full text-sm">
               <thead className="text-left text-xs text-muted-foreground"><tr><th className="py-1">Template</th><th>Type</th><th>Version</th><th>Effective</th><th>Status</th><th>Approved</th><th>Retired</th><th /></tr></thead>
               <tbody>

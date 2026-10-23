@@ -33,9 +33,9 @@ import type { Section } from "@/lib/sales-documents-model";
 export const Route = createFileRoute("/_authenticated/sales_/quotes")({
   head: () => ({
     meta: [
-      { title: "Quotes - Harmonious Sales" },
+      { title: "Quotes | Harmonious Sales" },
       { name: "description", content: "Build quotes from the Harmonious rate card, get approval and turn them into SOW and MSA agreements." },
-      { property: "og:title", content: "Quotes - Harmonious Sales" },
+      { property: "og:title", content: "Quotes | Harmonious Sales" },
       { property: "og:description", content: "Draft, approve, send and sign quotes." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -196,7 +196,7 @@ export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; init
       <div className="mt-4">
         <Button variant="outline" onClick={() => setShowBookkeeping(v => !v)}>{showBookkeeping ? "Close bookkeeping" : "Configure Bookkeeping & Accounting"}</Button>
         {showBookkeeping && bookkeeping.error && <p className="mt-2 text-sm text-destructive">{(bookkeeping.error as Error).message}</p>}
-        {showBookkeeping && bookkeeping.data && <BookkeepingConfigurator configuration={bookkeeping.data.configuration} versionId={bookkeeping.data.versionId} onAdd={(input, invoiceCents) => { setLines(previous => [...previous, { serviceKey: BOOKKEEPING_KEY, label: `Bookkeeping & Accounting — ${input.tier.replace("_", " ")}`, quantity: 1, unitCents: invoiceCents, baselineUnitCents: invoiceCents, billingFrequency: input.billing, firstBillOn: input.effectiveOn, bookkeeping: input }]); setShowBookkeeping(false); }} />}
+        {showBookkeeping && bookkeeping.data && <BookkeepingConfigurator configuration={bookkeeping.data.configuration} versionId={bookkeeping.data.versionId} onAdd={(input, invoiceCents) => { setLines(previous => [...previous, { serviceKey: BOOKKEEPING_KEY, label: `Bookkeeping & Accounting · ${input.tier.replace("_", " ")}`, quantity: 1, unitCents: invoiceCents, baselineUnitCents: invoiceCents, billingFrequency: input.billing, firstBillOn: input.effectiveOn, bookkeeping: input }]); setShowBookkeeping(false); }} />}
         <Select value="" onValueChange={add}><SelectTrigger className="w-72"><SelectValue placeholder="Add a service from the rate card" /></SelectTrigger>
           <SelectContent>{(c.data?.lines ?? []).filter((l: any) => !String(l.serviceKey).startsWith(ADMIN_QUOTE_KEY_PREFIX) && !String(l.serviceKey).startsWith(SPV_TXN_KEY_PREFIX)).map((l: any) => <SelectItem key={l.serviceKey} value={l.serviceKey}>{l.label} · {money(l.baselineCents)}</SelectItem>)}</SelectContent></Select>
       </div>
@@ -251,7 +251,7 @@ export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; init
       </div>
       <div className="mt-4 rounded-lg border bg-card p-4">
         <h3 className="font-heading font-semibold">Sections shown to the client</h3>
-        <p className="mt-1 text-xs text-muted-foreground">Every part of the quote has a switch. Switching one off hides it from the client — the wording is kept, nothing is deleted.</p>
+        <p className="mt-1 text-xs text-muted-foreground">Every part of the quote has a switch. Switching one off hides it from the client, the wording is kept, nothing is deleted.</p>
         <div className="mt-3 space-y-2">
           {sections.map((s, i) => {
             const def = quoteSectionDef(s.key);

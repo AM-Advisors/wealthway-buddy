@@ -136,7 +136,7 @@ export const reviewWixMemberFn = createServerFn({ method: "POST" }).middleware([
       }
       personId = p.id;
     } else {
-      if (m.matched_person_id) throw new Error("This member matches an existing person — link instead.");
+      if (m.matched_person_id) throw new Error("This member matches an existing person, link instead.");
       if (!m.email && !m.first_name) throw new Error("Member has no name or email.");
       if (m.email) {
         const { data: dup } = await db.from("persons").select("id").ilike("email", m.email).limit(1);

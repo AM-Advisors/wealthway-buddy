@@ -80,11 +80,11 @@ const fmtDate = (d: string | null | undefined) =>
   d ? new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "Not recorded";
 
 const CLOSE_STATUS: Record<string, string> = {
-  submitted: "Submitted - Harmonious reviewing",
+  submitted: "Submitted: Harmonious reviewing",
   in_review: "In review",
   completed: "Completed",
   returned: "Returned",
-  approved: "Approved - filings in progress",
+  approved: "Approved: filings in progress",
 };
 
 /** Primary tabs, each owning a group of the original tab values (old addresses keep working). */
@@ -214,7 +214,7 @@ export function FundWorkspace({ fundId, tab, onTab, mode = "client", extraTabs =
                   <div key={i} className="flex items-center gap-3 text-sm">
                     {s.done ? <CheckCircle2 className="size-4 text-primary" /> : <Clock className="size-4 text-muted-foreground" />}
                     <span className={s.done ? "" : "text-muted-foreground"}>{s.label}</span>
-                    {!s.done && <Badge variant="outline" className="ml-auto">{s.status === "review" ? "Sent - Harmonious reviewing" : s.owner === "Harmonious" ? "Harmonious - pending" : "Waiting on you"}</Badge>}
+                    {!s.done && <Badge variant="outline" className="ml-auto">{s.status === "review" ? "Sent: Harmonious reviewing" : s.owner === "Harmonious" ? "Harmonious: pending" : "Waiting on you"}</Badge>}
                   </div>
                 ))}
               </div>}

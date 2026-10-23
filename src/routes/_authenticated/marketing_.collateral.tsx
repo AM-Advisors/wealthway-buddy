@@ -18,9 +18,9 @@ import { decideMarketingCollateral, listMarketingCollateral, saveMarketingCollat
 
 export const Route = createFileRoute("/_authenticated/marketing_/collateral")({
   head: () => ({ meta: [
-    { title: "Collateral Studio - Harmonious Marketing" },
+    { title: "Collateral Studio | Harmonious Marketing" },
     { name: "description", content: "Build on-brand SPV, Fund of Funds, Cap Table and social collateral with built-in brand checks." },
-    { property: "og:title", content: "Collateral Studio - Harmonious Marketing" },
+    { property: "og:title", content: "Collateral Studio | Harmonious Marketing" },
     { property: "og:description", content: "On-brand collateral with built-in brand checks, approval and export." },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary" },

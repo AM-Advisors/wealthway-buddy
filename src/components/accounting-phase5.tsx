@@ -269,7 +269,7 @@ export function QuickBooksPanel() {
               <label className="flex flex-wrap items-center gap-2">Journal export (CSV)<Input type="file" accept=".csv,text/csv" className="max-w-xs" disabled={impM.isPending} onChange={(e) => { const f = e.target.files?.[0]; if (f) impM.mutate(f); e.target.value = ""; }} /></label>
               {d.inbound.length === 0 ? <p className="text-muted-foreground">Nothing brought in yet.</p> : (
                 <table className="w-full text-xs"><thead className="text-left text-muted-foreground"><tr><th>QuickBooks no.</th><th>Date</th><th>Memo</th><th className="text-right">Amount</th><th>Result</th></tr></thead>
-                  <tbody>{d.inbound.map((r: any) => <tr key={r.id} className="border-t border-border"><td className="py-1">{r.qbo_txn_id}</td><td>{r.txn_date ?? "-"}</td><td>{r.memo ?? "-"}</td><td className="text-right">{money(r.total_cents)}</td><td title={r.detail ?? ""}>{INBOUND_LABEL[r.outcome] ?? r.outcome}{r.detail && r.outcome !== "drafted" ? ` - ${r.detail}` : ""}</td></tr>)}</tbody>
+                  <tbody>{d.inbound.map((r: any) => <tr key={r.id} className="border-t border-border"><td className="py-1">{r.qbo_txn_id}</td><td>{r.txn_date ?? "-"}</td><td>{r.memo ?? "-"}</td><td className="text-right">{money(r.total_cents)}</td><td title={r.detail ?? ""}>{INBOUND_LABEL[r.outcome] ?? r.outcome}{r.detail && r.outcome !== "drafted" ? ` · ${r.detail}` : ""}</td></tr>)}</tbody>
                 </table>
               )}
             </CardContent>
@@ -418,7 +418,7 @@ function SheetBody({ kind, snapshot }: { kind: string; snapshot: any }) {
   }
   return (
     <ul className="space-y-1 text-xs">
-      {(snapshot.items ?? []).map((i: any) => <li key={i.key} className="flex items-center gap-2"><Badge variant={i.ok ? "secondary" : "destructive"}>{i.ok ? "Done" : "Open"}</Badge>{i.label} - <span className="text-muted-foreground">{i.detail}</span></li>)}
+      {(snapshot.items ?? []).map((i: any) => <li key={i.key} className="flex items-center gap-2"><Badge variant={i.ok ? "secondary" : "destructive"}>{i.ok ? "Done" : "Open"}</Badge>{i.label} · <span className="text-muted-foreground">{i.detail}</span></li>)}
     </ul>
   );
 }

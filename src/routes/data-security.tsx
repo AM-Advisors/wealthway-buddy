@@ -4,7 +4,7 @@ import { SecurityCenterPage } from "@/components/security-center-page";
 import { seoLinks, seoMeta } from "@/lib/seo";
 import { getPublishedTrustItems } from "@/lib/trust-center-public.functions";
 
-const TITLE = "Data Security & Privacy - Harmonious";
+const TITLE = "Data Security & Privacy | Harmonious";
 const DESCRIPTION =
   "Harmonious security and privacy: HTTPS/TLS encryption, protected access, financial review controls, record retention, security contacts and published assurance evidence.";
 

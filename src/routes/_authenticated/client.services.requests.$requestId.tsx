@@ -16,9 +16,9 @@ import { setupSchemaFor } from "@/lib/client-portal-model";
 export const Route = createFileRoute("/_authenticated/client/services/requests/$requestId")({
   head: () => ({
     meta: [
-      { title: "Your request - Harmonious" },
+      { title: "Your request | Harmonious" },
       { name: "description", content: "Track and manage a request you sent to Harmonious." },
-      { property: "og:title", content: "Your request - Harmonious" },
+      { property: "og:title", content: "Your request | Harmonious" },
       { property: "og:description", content: "Track and manage a request you sent to Harmonious." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -99,7 +99,7 @@ function RequestDetail() {
                 <div key={s.label} className="flex items-center gap-3 text-sm">
                   {done ? <CheckCircle2 className="size-4 text-primary" /> : current ? <Clock className="size-4" /> : <Circle className="size-4 text-muted-foreground" />}
                   <span className={done ? "" : "text-muted-foreground"}>{s.label}</span>
-                  {current && <Badge variant="outline">{s.owner === "Harmonious" ? "Harmonious - pending" : "Waiting on you"}</Badge>}
+                  {current && <Badge variant="outline">{s.owner === "Harmonious" ? "Harmonious: pending" : "Waiting on you"}</Badge>}
                 </div>
               );
             })
@@ -113,7 +113,7 @@ function RequestDetail() {
           <CardDescription>
             {editable
               ? "You can update these until Harmonious starts scoping. Every change is kept on record."
-              : "Harmonious has started - send a message to change anything."}
+              : "Harmonious has started: send a message to change anything."}
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-3 sm:grid-cols-2">

@@ -98,7 +98,7 @@ export const startBoxSigning = createServerFn({ method: "POST" })
         const { signingGate } = await import("@/lib/prepared-investor-workflow");
         const x = await pis.docContext(userId, (ob as any).id);
         const docRow = x.chosen.find((d: any) => d.id === doc.id);
-        if (!docRow) throw new Error("Signing unavailable - this document doesn't apply to your investment.");
+        if (!docRow) throw new Error("Signing unavailable, this document doesn't apply to your investment.");
         const merged = await pis.currentMerge(x, docRow);
         const { data: snaps } = await g.from("investor_document_snapshots").select("*")
           .eq("onboarding_id", (ob as any).id).eq("document_id", doc.id).order("version", { ascending: false }).limit(1);
@@ -200,7 +200,7 @@ export const startBoxSigning = createServerFn({ method: "POST" })
 
     const safeTitle = doc.title.replace(/[^\w\- ]+/g, "").trim() || "Fund document";
     const { signingFileName } = await import("@/lib/box.server");
-    const fileName = signingFileName(`${safeTitle} - ${profile.legal_name ?? profile.email} - ${application.id.slice(0, 8)}`, pdfBytes);
+    const fileName = signingFileName(`${safeTitle} · ${profile.legal_name ?? profile.email} · ${application.id.slice(0, 8)}`, pdfBytes);
     const fileId = await uploadFile(fileName, pdfBytes);
 
     // Dual-signature documents: investor signs first (order 1), then the fund's
@@ -217,7 +217,7 @@ export const startBoxSigning = createServerFn({ method: "POST" })
         ? await supabaseAdmin.from("profiles").select("legal_name, email").eq("user_id", csId).maybeSingle()
         : { data: null };
       if (!rel || !(cs as any)?.email) {
-        throw new Error("This document isn't ready to sign yet - the fund's countersigner hasn't been set up.");
+        throw new Error("This document isn't ready to sign yet, the fund's countersigner hasn't been set up.");
       }
       countersigner = { user_id: csId as string, email: (cs as any).email, name: (cs as any).legal_name ?? (cs as any).email };
     }
@@ -227,7 +227,7 @@ export const startBoxSigning = createServerFn({ method: "POST" })
           const { createMultiSignerRequest } = await import("@/lib/box.server");
           const detail = await createMultiSignerRequest({
             fileId,
-            documentName: `${offering?.name ?? "Harmonious"} - ${doc.title}`,
+            documentName: `${offering?.name ?? "Harmonious"} · ${doc.title}`,
             message: `Please review and sign ${doc.title} for ${offering?.name ?? "the fund"}.`,
             externalId: `${application.id}:${doc.id}`,
             redirectUrl,
@@ -245,7 +245,7 @@ export const startBoxSigning = createServerFn({ method: "POST" })
       signerEmail,
       signerName,
       ...(namedSigner ? { emailSigner: true } : {}),
-      documentName: `${offering?.name ?? "Harmonious"} - ${doc.title}`,
+      documentName: `${offering?.name ?? "Harmonious"} · ${doc.title}`,
       message: `Please review and sign ${doc.title} for ${offering?.name ?? "the fund"}.`,
       externalId: `${application.id}:${doc.id}`,
       redirectUrl,

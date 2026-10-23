@@ -89,7 +89,7 @@ export function buildRow(e: InventoryEntry, latest: Decision | null, facts: Fund
   const v = (ok: boolean, yes: string, no: string): DimensionState => ({ status: ok ? "verified" : "missing", note: ok ? yes : no });
   const dims: Record<Dimension, DimensionState> = {
     identity: f ? v(!!f.legalName, `Matched to Harmonious fund; legal name on record`, "Matched, but no legal name on the Harmonious fund") : { status: "missing", note: status === "matched" ? "Match not yet approved by staff" : "No approved Harmonious fund" },
-    formation: f ? v(f.formationDocs > 0, `${f.formationDocs} formation/governing document(s) on file`, "No formation documents on file") : { status: "missing", note: "Not verified - folder names are not evidence" },
+    formation: f ? v(f.formationDocs > 0, `${f.formationDocs} formation/governing document(s) on file`, "No formation documents on file") : { status: "missing", note: "Not verified: folder names are not evidence" },
     roster: f ? v(f.investorCount > 0, `${f.investorCount} investor record(s)`, "No investor records") : { status: "missing", note: "No verified roster" },
     manager: f ? v(f.managerCount > 0, `${f.managerCount} fund manager(s) linked`, "No fund manager linked") : { status: "missing", note: "No manager relationship" },
     k1: { status: "blocked", note: "Dedicated read-only Box connection not set up" },

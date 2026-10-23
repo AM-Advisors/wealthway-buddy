@@ -212,7 +212,7 @@ export type ServiceChoice = "included" | "not_included";
 export type FilingResponsibility = "not_applicable" | "required" | "harmonious" | "client_counsel";
 export const FILING_RESPONSIBILITY_LABELS: Record<FilingResponsibility, string> = {
   not_applicable: "Not Applicable",
-  required: "Required - responsibility not yet assigned",
+  required: "Required: responsibility not yet assigned",
   harmonious: "To Be Handled by Harmonious",
   client_counsel: "Client / Legal Counsel Handling",
 };

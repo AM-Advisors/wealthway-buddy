@@ -110,7 +110,7 @@ export function FundReadinessPanel({ offeringId }: { offeringId: string }) {
           const blockers = findingFor(row.rules);
           const feeHeld =
             row.key === "onboarding" && !!feeNotice && !feeNotice.acknowledged
-              ? `${feeNotice.investors} investors, above the ${feeNotice.threshold} in the agreement - the additional per-investor fee needs acknowledging.`
+              ? `${feeNotice.investors} investors, above the ${feeNotice.threshold} in the agreement: the additional per-investor fee needs acknowledging.`
               : null;
 
           let tone: "secondary" | "outline" | "destructive" = "secondary";

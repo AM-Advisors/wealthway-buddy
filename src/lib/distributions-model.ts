@@ -1452,7 +1452,7 @@ export function complianceGateBlockers(f: ComplianceGateFacts): GateBlocker[] {
     out.push({ code: "ACCOUNTING_EXCEPTION", reason: "An unresolved material accounting exception is open for this fund." });
   }
   if (f.availableCashCents === null) {
-    out.push({ code: "REVIEW_REQUIRED", reason: "Available fund cash has no authoritative figure - review required." });
+    out.push({ code: "REVIEW_REQUIRED", reason: "Available fund cash has no authoritative figure, review required." });
   } else if (f.availableCashCents < f.netPaymentCents) {
     out.push({ code: "INSUFFICIENT_CASH", reason: "The fund does not have confirmed cash for this payment." });
   }

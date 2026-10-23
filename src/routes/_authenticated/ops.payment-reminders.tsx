@@ -11,9 +11,9 @@ import { paymentRemindersFn, pauseRemindersFn, sendPaymentReminderFn } from "@/l
 export const Route = createFileRoute("/_authenticated/ops/payment-reminders")({
   head: () => ({
     meta: [
-      { title: "Payment reminders - Harmonious operations" },
+      { title: "Payment reminders | Harmonious operations" },
       { name: "description", content: "Upcoming, due and overdue service renewals for current clients, with reminder controls." },
-      { property: "og:title", content: "Payment reminders - Harmonious operations" },
+      { property: "og:title", content: "Payment reminders | Harmonious operations" },
       { property: "og:description", content: "Upcoming, due and overdue service renewals for current clients, with reminder controls." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -55,7 +55,7 @@ function PaymentRemindersPage() {
               <tr key={r.id} className="border-t">
                 <td className="p-2"><Link to="/ops/clients/$clientId" params={{ clientId: r.client_id }} search={{ tab: undefined }} className="text-primary hover:underline">{r.client_name}</Link></td>
                 <td>{r.label}</td><td>{usd(Number(r.amount_cents))}</td><td>{r.due_on}</td>
-                <td>{r.last_sent_at ? new Date(r.last_sent_at).toLocaleDateString() : "—"}</td>
+                <td>{r.last_sent_at ? new Date(r.last_sent_at).toLocaleDateString() : " · "}</td>
                 <td>{r.card_autopay ? <Badge variant="outline">Card autopay</Badge> : r.reminders_paused ? <Badge variant="outline">Paused</Badge> : <Badge>Emailing</Badge>}</td>
                 <td className="space-x-1 whitespace-nowrap p-2 text-right">{q.data?.canManage && !r.card_autopay && <>
                   <Button size="sm" variant="outline" onClick={() => run(() => remind({ data: { recordId: r.id } }), "Reminder sent")}>Send now</Button>

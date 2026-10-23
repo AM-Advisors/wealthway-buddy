@@ -276,7 +276,7 @@ export const listClientFunds = createServerFn({ method: "GET" })
     return {
       caps,
       clientName: ((clientRow as any)?.name as string | null) ?? null,
-      msaStatus: terms.governing ? `Approved - ${terms.governing.title}` : "No approved MSA on file",
+      msaStatus: terms.governing ? `Approved · ${terms.governing.title}` : "No approved MSA on file",
       reassignments: reassign ?? [],
       funds: ((funds ?? []) as any[]).map((f) => {
         const app = findApplicableSow((sows ?? []) as any[], data.clientId, f.id);
@@ -369,7 +369,7 @@ export const createClientFund = createServerFn({ method: "POST" })
     const { data: same } = await db.from("offerings").select("id").eq("client_id", data.clientId).ilike("name", data.name.replace(/[%_\\]/g, (c: string) => `\\${c}`)).limit(1);
     if (same?.length) {
       await audit(db, { actor: userId, clientId: data.clientId, offeringId: same[0].id, action: "fund_create_duplicate_prevented", after: { name: data.name } });
-      return { offeringId: same[0].id as string, duplicate: true, coverage: { status: "existing", label: "Existing fund - nothing new was created" } };
+      return { offeringId: same[0].id as string, duplicate: true, coverage: { status: "existing", label: "Existing fund: nothing new was created" } };
     }
     const base = data.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 60) || "fund";
     let slug = base;

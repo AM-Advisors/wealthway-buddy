@@ -55,7 +55,7 @@ export function buildRbacEvidence(q: EvidenceQuery, s: AccessSnapshot, period: {
         ...s.cus.filter((c) => !clients.has(c.client_id)).map((c) => ({ person: who(c.user_id), issue: "Client membership to a missing client" })),
         ...s.assignments.filter((a) => live(a) && a.scope_type !== "global" && !a.scope_id).map((a) => ({ person: who(a.user_id), issue: `Role ${a.role_key} with no scope (grants nothing)` })),
         ...s.roles.filter((r) => !users.has(r.user_id)).map((r) => ({ person: r.user_id, issue: `Role ${r.role} on a missing account` })),
-        ...(q === "needs_review" ? s.roles.filter((r) => r.role === "client_readonly" && !s.cus.some((c) => c.user_id === r.user_id)).map((r) => ({ person: who(r.user_id), issue: "Read-only client role with no client - manual review" })) : []),
+        ...(q === "needs_review" ? s.roles.filter((r) => r.role === "client_readonly" && !s.cus.some((c) => c.user_id === r.user_id)).map((r) => ({ person: who(r.user_id), issue: "Read-only client role with no client, manual review" })) : []),
       ];
       break;
     }

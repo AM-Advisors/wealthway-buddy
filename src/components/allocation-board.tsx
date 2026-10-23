@@ -186,7 +186,7 @@ export function AllocationBoard({ role }: { role: "harmonious" | "manager" }) {
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
                   <p className="text-sm font-medium">
-                    {run.period_start} – {run.period_end} · version {run.version}
+                    {run.period_start} to {run.period_end} · version {run.version}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     Unexplained difference {money(run.difference_cents ?? 0)}

@@ -144,9 +144,9 @@ function DraftRow({ r, staff, onDecide }: { r: any; staff: boolean; onDecide: (a
   return (
     <div className="space-y-2 p-3 text-sm">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="font-medium">{KIND_LABEL[r.kind as keyof typeof KIND_LABEL]} · {fmtDate(r.period_start)} – {fmtDate(r.period_end)}</p>
+        <p className="font-medium">{KIND_LABEL[r.kind as keyof typeof KIND_LABEL]} · {fmtDate(r.period_start)} to {fmtDate(r.period_end)}</p>
         <Badge variant={r.status === "approved" ? "default" : r.status === "returned" ? "destructive" : "secondary"}>
-          {r.status === "submitted" ? "Draft - Harmonious reviewing" : r.status === "approved" ? "Approved" : "Returned"}
+          {r.status === "submitted" ? "Draft: Harmonious reviewing" : r.status === "approved" ? "Approved" : "Returned"}
         </Badge>
       </div>
       <p className="text-muted-foreground">NAV {usd(c.navCents)}{c.navPerUnitCents != null ? ` · ${usd(c.navPerUnitCents)} per unit` : ""}{c.changePct != null ? ` · ${c.changePct}% vs prior` : ""}{c.expenseRatioPct != null ? ` · expenses ${c.expenseRatioPct}% of NAV` : ""}</p>

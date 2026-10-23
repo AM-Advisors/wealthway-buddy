@@ -64,10 +64,10 @@ export function EmployeesPage() {
                         <option value="">No manager</option>
                         {d.managerOptions.filter((o) => o.userId !== p.userId).map((o) => <option key={o.userId} value={o.userId}>{o.name}</option>)}
                       </SearchableNativeSelect>
-                    ) : (p.managerName || "—")}
+                    ) : (p.managerName || " · ")}
                   </td>
                   <td className="p-3 whitespace-nowrap">{when(p.lastSignIn)}</td>
-                  <td className="p-3 whitespace-nowrap">{p.lastActive ? when(p.lastActive) : "—"}</td>
+                  <td className="p-3 whitespace-nowrap">{p.lastActive ? when(p.lastActive) : " · "}</td>
                   <td className="p-3">{p.actionsThisWeek}</td>
                   <td className="p-3"><Link to="/ops/employees/$userId" params={{ userId: p.userId }} className="text-primary hover:underline">Activity</Link>{access.data && <PeopleActions userId={p.userId} email={p.email} name={p.name} info={acc(p.email)} />}</td>
                 </tr>

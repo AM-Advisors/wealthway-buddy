@@ -134,7 +134,7 @@ export function PricingCalculator() {
         <aside className="h-fit rounded-lg bg-muted/50 p-5 text-sm">
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">One-time / transaction fees</p>
           <div className="mt-2 flex justify-between"><span>Setup fee</span><span>{usd(2500)}</span></div>
-          <div className="mt-2 flex justify-between"><span>Harmonized SPV ({band?.label ?? "—"})</span><span>{tier ? usd(tier.feeUsd) : "Custom"}</span></div>
+          <div className="mt-2 flex justify-between"><span>Harmonized SPV ({band?.label ?? " · "})</span><span>{tier ? usd(tier.feeUsd) : "Custom"}</span></div>
           <div className="mt-2 flex justify-between"><span>Management fee / carry</span><span>{mgmtFee || "0"}% / {carry || "0"}%</span></div>
           <div className="mt-2 flex justify-between"><span>Investors ({investorCount})</span><span>{investorFee ? usd(investorFee) : "Included"}</span></div>
           <div className="mt-4 flex justify-between border-t pt-3 text-base font-medium"><span>One-time estimate</span><span>{usd(totals.oneTime)}{tier == null ? " + custom" : ""}</span></div>

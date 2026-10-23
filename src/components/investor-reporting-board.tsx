@@ -301,7 +301,7 @@ export function InvestorReportingBoard({ role }: { role: "harmonious" | "manager
               <CardHeader>
                 <CardTitle className="text-base">Delivery</CardTitle>
                 <CardDescription>
-                  Portal access is authoritative - an email is never proof the investor read it.
+                  Portal access is authoritative, an email is never proof the investor read it.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-2">

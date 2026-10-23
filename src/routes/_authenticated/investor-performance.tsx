@@ -4,9 +4,9 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 export const Route = createFileRoute("/_authenticated/investor-performance")({
   head: () => ({
     meta: [
-      { title: "Your performance - Harmonious" },
+      { title: "Your performance | Harmonious" },
       { name: "description", content: "Your performance now live under Reports in the Harmonious portal." },
-      { property: "og:title", content: "Your performance - Harmonious" },
+      { property: "og:title", content: "Your performance | Harmonious" },
       { property: "og:description", content: "Your performance now live under Reports." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

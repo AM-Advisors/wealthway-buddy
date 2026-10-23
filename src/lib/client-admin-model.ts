@@ -449,7 +449,7 @@ export function buildSowLines(input: {
       if (eff.customPending) blockers.push({ kind: "custom_pricing_unapproved", serviceKey: svc.key, message: `${svc.name}: custom pricing awaits approval.` });
       if (!(svc.standard_scope || svc.description)) blockers.push({ kind: "missing_scope", serviceKey: svc.key, message: `${svc.name}: no service scope on the catalog item.` });
       const ex = (input.excludedWork ?? "").toLowerCase();
-      if (ex && ex.includes(svc.name.toLowerCase())) blockers.push({ kind: "contract_conflict", serviceKey: svc.key, message: `${svc.name}: the Client's approved agreement lists this as excluded work - SOW requires Harmonious review.` });
+      if (ex && ex.includes(svc.name.toLowerCase())) blockers.push({ kind: "contract_conflict", serviceKey: svc.key, message: `${svc.name}: the Client's approved agreement lists this as excluded work. SOW requires Harmonious review.` });
     }
     lines.push({
       selectionId: sel.id,
@@ -484,4 +484,4 @@ export const SERVICE_STATE_LABEL: Record<string, string> = {
   removed: "Removed",
 };
 
-export const NO_TEMPLATE_MESSAGE = "SOW required - no approved current template available";
+export const NO_TEMPLATE_MESSAGE = "SOW required: no approved current template available";

@@ -43,7 +43,7 @@ export function ServiceEngagementsAdmin() {
           <tbody>
             {d.rows.map((r: any) => (
               <tr key={r.id} className="border-t">
-                <td className="p-2">{r.offerings?.name ?? "—"}<div className="text-xs text-muted-foreground">{r.clients?.name ?? ""}</div></td>
+                <td className="p-2">{r.offerings?.name ?? " · "}<div className="text-xs text-muted-foreground">{r.clients?.name ?? ""}</div></td>
                 <td className="p-2">{serviceLevelLabel(r.service_level, r.service_product).name}<div className="text-xs text-muted-foreground">{titleCase(r.service_product)}</div></td>
                 <td className="p-2"><Badge variant="outline">{titleCase(r.service_status)}</Badge></td>
                 <td className="p-2">{r.included_at_no_charge ? "Included" : usd(r.contracted_annual_value)}{r.pricing_type !== "CURRENT" ? <div className="text-xs text-muted-foreground">{titleCase(r.pricing_type)}</div> : null}</td>
@@ -64,7 +64,7 @@ function Sel({ label, value, options, onChange, labels }: { label: string; value
   return (
     <label className="text-xs text-muted-foreground">{label}
       <select className="mt-1 block w-full rounded-md border bg-background px-2 py-2 text-sm text-foreground" value={value ?? ""} onChange={(e) => onChange(e.target.value || null)}>
-        <option value="">—</option>
+        <option value=""> · </option>
         {options.map((o) => <option key={o} value={o}>{labels?.[o] ?? titleCase(o)}</option>)}
       </select>
     </label>
@@ -209,7 +209,7 @@ function EngagementDetail({ id, features }: { id: string; features: any[] }) {
         <h3 className="text-sm font-medium">Change history</h3>
         <ul className="mt-2 max-h-96 space-y-1 overflow-y-auto text-xs">
           {(events as any[]).map((e) => (
-            <li key={e.id} className="border-b pb-1"><span className="text-muted-foreground">{new Date(e.changed_at).toLocaleString()}</span> · {titleCase(e.field.replace("entitlement:", "entitlement "))}: {e.old_value ?? "—"} → {e.new_value ?? "—"}</li>
+            <li key={e.id} className="border-b pb-1"><span className="text-muted-foreground">{new Date(e.changed_at).toLocaleString()}</span> · {titleCase(e.field.replace("entitlement:", "entitlement "))}: {e.old_value ?? " · "} → {e.new_value ?? " · "}</li>
           ))}
         </ul>
       </div>

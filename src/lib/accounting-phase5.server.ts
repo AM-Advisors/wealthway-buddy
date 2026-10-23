@@ -70,7 +70,7 @@ async function ensureBook(userId: string, offeringId: string) {
   const existing = await bookFor(offeringId);
   if (existing) return existing;
   const name = await fundName(offeringId);
-  const b = await openLedgerBook(userId, { name: `${name} - books`, offeringId });
+  const b = await openLedgerBook(userId, { name: `${name} · books`, offeringId });
   return { id: b.id, name: b.name, basis: b.basis };
 }
 

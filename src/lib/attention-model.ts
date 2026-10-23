@@ -117,9 +117,9 @@ const STATUS_WORDS: Record<string, string> = {
   // capital and cash
   published: "Payment instructions issued",
   awaiting_wire: "Waiting for your transfer",
-  processing: "Transfer detected - Harmonious is confirming it",
+  processing: "Transfer detected: Harmonious is confirming it",
   settled: "Funds received and recorded",
-  auto_matched: "Transfer detected - Harmonious is confirming it",
+  auto_matched: "Transfer detected: Harmonious is confirming it",
   harmonious_reviewed: "Harmonious is confirming your transfer",
   reconciled: "Transfer confirmed and recorded",
   // accounting, valuation, reporting

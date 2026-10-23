@@ -7,9 +7,9 @@ type Tab = FundTab;
 export const Route = createFileRoute("/_authenticated/client/funds/$fundId")({
   head: () => ({
     meta: [
-      { title: "Fund - Harmonious client portal" },
+      { title: "Fund | Harmonious client portal" },
       { name: "description", content: "Fund details, investors, banking, accounting, assets and closes for your fund." },
-      { property: "og:title", content: "Fund - Harmonious client portal" },
+      { property: "og:title", content: "Fund | Harmonious client portal" },
       { property: "og:description", content: "Fund details, investors, banking, taxes, assets and closes." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

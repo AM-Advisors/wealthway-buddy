@@ -18,9 +18,9 @@ import { WixMembersPanel } from "@/components/wix-members-panel";
 export const Route = createFileRoute("/_authenticated/ops/people-access")({
   head: () => ({
     meta: [
-      { title: "People & Access - Harmonious" },
+      { title: "People & Access | Harmonious" },
       { name: "description", content: "Employees and all other users in one place: invites, roles, access, test and demo users." },
-      { property: "og:title", content: "People & Access - Harmonious" },
+      { property: "og:title", content: "People & Access | Harmonious" },
       { property: "og:description", content: "Manage employees, clients, fund managers and investors and their access." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

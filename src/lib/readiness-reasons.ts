@@ -47,7 +47,7 @@ export const REASONS: Record<ReasonCode, ReasonDef> = {
   FUNDING_REQUIRED: R("FUNDING_REQUIRED", "investor_onboardings", {
     investor: "Send your funds using the secure wiring instructions.", fund_manager: "Waiting for the investor's wire.", harmonious: "Awaiting investor funds." }, { investor: "/onboard" }),
   FUNDING_RECONCILIATION_REQUIRED: R("FUNDING_RECONCILIATION_REQUIRED", "bank_transactions", {
-    investor: "Thanks - we'll confirm once your transfer is received and matched.", fund_manager: "Wire reported; Harmonious is reconciling.", harmonious: "Reconcile incoming wire." }, { harmonious: "/ops/readiness" }),
+    investor: "Thanks, we'll confirm once your transfer is received and matched.", fund_manager: "Wire reported; Harmonious is reconciling.", harmonious: "Reconcile incoming wire." }, { harmonious: "/ops/readiness" }),
   FUNDING_EXCEPTION: R("FUNDING_EXCEPTION", "bank_transactions", {
     investor: "Harmonious is reviewing your transfer and will contact you if anything is needed.", fund_manager: "Funding issue with Harmonious.", harmonious: "Resolve funding exception." }, { harmonious: "/ops/readiness" }),
   BANKING_VERIFICATION_REQUIRED: R("BANKING_VERIFICATION_REQUIRED", "funding_instruction_versions", {

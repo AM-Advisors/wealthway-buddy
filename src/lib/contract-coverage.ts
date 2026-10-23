@@ -56,7 +56,7 @@ export function docLabel(d: DocLite) {
   const name = d.title && d.title.trim() ? d.title.trim() : type;
   const head = name.toLowerCase().includes(type.toLowerCase()) ? name : `${name} (${type})`;
   const v = d.version && d.version > 1 ? ` · v${d.version}` : "";
-  return `${head} - ${fmtDate(d.effective_date)} - ${docStatusLabel(d)}${v}`;
+  return `${head} · ${fmtDate(d.effective_date)} · ${docStatusLabel(d)}${v}`;
 }
 
 /* ================================================== relationship types */
@@ -107,9 +107,9 @@ export function relatedDocumentOptions(current: DocLite, docs: readonly DocLite[
     hint: !expected
       ? null
       : activeTyped.length === 0
-        ? "No active document of the expected type - choose carefully."
+        ? "No active document of the expected type, choose carefully."
         : activeTyped.length > 1
-          ? "More than one possible agreement - choose the one this relates to."
+          ? "More than one possible agreement: choose the one this relates to."
           : null,
   };
 }
@@ -274,9 +274,9 @@ export type FundCoverageStatus =
 
 export const COVERAGE_LABEL: Record<FundCoverageStatus, string> = {
   covered: "Covered",
-  covered_client_wide: "Covered - Client-wide SOW",
-  msa_only: "MSA only - Review required",
-  not_contracted: "No SOW - Not yet contracted",
+  covered_client_wide: "Covered: Client-wide SOW",
+  msa_only: "MSA only: Review required",
+  not_contracted: "No SOW, Not yet contracted",
   sow_required: "SOW required",
   needs_review: "Contract review required",
   no_governing_agreement: "No governing agreement",
@@ -304,9 +304,9 @@ export function resolveFundCoverage(input: {
   const explicit = executed.filter((s) => sowCoversFund(s, input.offeringId));
   if (explicit.length === 1) {
     const s = explicit[0]!;
-    return { status: "covered" as const, label: `Covered - ${s.title}${s.template_version ? ` v${s.template_version}` : ""}`, sows: [s], msa: input.governingMsa };
+    return { status: "covered" as const, label: `Covered · ${s.title}${s.template_version ? ` v${s.template_version}` : ""}`, sows: [s], msa: input.governingMsa };
   }
-  if (explicit.length > 1) return { status: "needs_review" as const, label: "Contract review required - more than one SOW lists this Fund", sows: explicit, msa: input.governingMsa };
+  if (explicit.length > 1) return { status: "needs_review" as const, label: "Contract review required: more than one SOW lists this Fund", sows: explicit, msa: input.governingMsa };
   const clientWide = executed.filter((s) => s.fund_scope === "client_wide");
   if (clientWide.length === 1) return { status: "covered_client_wide" as const, label: `Covered - Client-wide SOW (${clientWide[0]!.title})`, sows: clientWide, msa: input.governingMsa };
   if (clientWide.length > 1) return { status: "needs_review" as const, label: COVERAGE_LABEL.needs_review, sows: clientWide, msa: input.governingMsa };
@@ -340,10 +340,10 @@ export function resolveServiceCoverage(selected: readonly string[], coveringSows
     amendmentNeeded: status === "partially_covered",
     message:
       status === "already_contracted"
-        ? "Already contracted - no new SOW."
+        ? "Already contracted: no new SOW."
         : status === "partially_covered"
-          ? "Partially covered - an amendment may be needed for the uncovered services."
-          : "Not covered - draft a new SOW or amendment only if you choose to proceed.",
+          ? "Partially covered, an amendment may be needed for the uncovered services."
+          : "Not covered, draft a new SOW or amendment only if you choose to proceed.",
   };
 }
 
@@ -351,13 +351,13 @@ export function resolveServiceCoverage(selected: readonly string[], coveringSows
 
 export const SEPT_2026_PACKAGE = {
   key: "harmonious_standard_2026_09",
-  title: "Harmonious Master Service Agreement - September 2026",
+  title: "Harmonious Master Service Agreement | September 2026",
   status: "proposed" as const,
   components: [
     { key: "msa", kind: "msa", title: "Master Service Agreement", level: "client" },
     { key: "spv_sow", kind: "sow", title: "SPV Services Statement of Work", level: "engagement" },
-    { key: "appendix_a", kind: "appendix", title: "Appendix A - Fund Administration", level: "engagement", partOf: "spv_sow" },
-    { key: "exhibit_a", kind: "fee_schedule", title: "Exhibit A - Fees and Expenses", level: "engagement", partOf: "spv_sow" },
+    { key: "appendix_a", kind: "appendix", title: "Appendix A | Fund Administration", level: "engagement", partOf: "spv_sow" },
+    { key: "exhibit_a", kind: "fee_schedule", title: "Exhibit A | Fees and Expenses", level: "engagement", partOf: "spv_sow" },
   ],
   /** Base SPV fee, tiered by capital raised (from the addendum; confirm against the signed PDF). */
   spvBaseFeeTiers: [

@@ -12,7 +12,7 @@ export const forecastInput = z.discriminatedUnion('model', [
  z.object({model:z.literal('waterfall'),capital:n,proceeds:n,years:n.max(100),preferredReturn:rate,carry:rate.refine(x=>x<1),catchUp:rate,compounding:z.boolean()})
 ]);
 export type ForecastInput=z.infer<typeof forecastInput>;
-export const PROJECTION_LABEL='Projection — not actual results';
+export const PROJECTION_LABEL='Projection, not actual results';
 export function calculateForecast(raw:unknown): {totals:Record<string,number|null>;detail:unknown[]} {
  const a=forecastInput.parse(raw);
  if(a.model==='operating'){const r=calculateOperatingForecast(a);return {totals:r.totals,detail:r.monthly};}

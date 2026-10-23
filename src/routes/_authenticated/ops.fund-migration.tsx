@@ -20,9 +20,9 @@ import { allowedDecisions, DECISION_LABELS, DIMENSIONS, type DecisionKind, type 
 export const Route = createFileRoute("/_authenticated/ops/fund-migration")({
   head: () => ({
     meta: [
-      { title: "Fund Migration - Harmonious Operations" },
+      { title: "Fund Migration | Harmonious Operations" },
       { name: "description", content: "Registry of discovered historical funds, match review, duplicates, relationships and migration completeness." },
-      { property: "og:title", content: "Fund Migration - Harmonious Operations" },
+      { property: "og:title", content: "Fund Migration | Harmonious Operations" },
       { property: "og:description", content: "Review and prioritize historical funds before any import." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

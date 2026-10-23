@@ -139,7 +139,7 @@ export function FundSetupForm({ offeringId, mode, staffExtras }: { offeringId: s
       <div className="flex items-center gap-3 rounded-2xl border bg-card px-3 py-3">
         <Button variant="outline" size="icon" aria-label="Back" onClick={() => window.history.back()}><ChevronLeft className="h-4 w-4" /></Button>
         <div className="min-w-0 flex-1">
-          <h2 className="truncate font-heading text-lg font-semibold">{allDone ? d.fundName : `Fund setup — ${d.fundName}`}</h2>
+          <h2 className="truncate font-heading text-lg font-semibold">{allDone ? d.fundName : `Fund setup · ${d.fundName}`}</h2>
           {!allDone && <p className="text-xs text-muted-foreground">Launch readiness {d.launchPercent}%</p>}
         </div>
       </div>

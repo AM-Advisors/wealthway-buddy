@@ -469,7 +469,7 @@ export async function buildDelegatedClientView(
   // ---- tasks: outstanding items the professional can see ----------------
   for (const app of view.investments) {
     if (app.fundingStatus && app.fundingStatus !== "settled") {
-      view.tasks.push({ label: `Funding outstanding - ${app.fundName}`, investmentId: app.id });
+      view.tasks.push({ label: `Funding outstanding · ${app.fundName}`, investmentId: app.id });
     }
   }
   if (view.compliance && view.compliance.identity !== "Verified") {
