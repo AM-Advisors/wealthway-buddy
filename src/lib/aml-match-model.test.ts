@@ -11,7 +11,7 @@ describe("watchlist match comparison", () => {
   it("never suggests clearing a politically exposed person automatically", () => expect(compareHit(person, hit({ birthDates: ["1962"], pep: true })).suggestion).toBe("needs_close_look"));
   it("flags country differences", () => expect(compareHit(person, hit({ countries: ["ru"] })).country).toBe("differs"));
   it("lists matches not yet cleared", () => {
-    const hits = [hit({ id: "a" }), hit({ id: "b" })];
-    expect(unclearedHits(hits, ["id:a"])).toEqual(["id:b"]);
+    const hits = [hit({ caption: "A" }), hit({ caption: "B" })];
+    expect(unclearedHits(hits, ["c:a||sanctions"])).toEqual(["c:b||sanctions"]);
   });
 });

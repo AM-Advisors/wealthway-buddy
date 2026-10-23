@@ -5,7 +5,8 @@ export type Verdict = "differs" | "same" | "unknown";
 export type HitComparison = { key: string; caption: string | null; birth: Verdict; country: Verdict; suggestion: "likely_different_person" | "needs_close_look" };
 
 export function hitKey(h: MatchHit): string {
-  return h.id ? `id:${h.id}` : `c:${(h.caption ?? "").toLowerCase()}|${h.birthDates.join(",")}|${h.datasets.join(",")}`;
+  // Built from the match content, not a provider id, so clearances survive refreshed provider results.
+  return `c:${(h.caption ?? "").toLowerCase()}|${h.birthDates.join(",")}|${h.datasets.join(",")}`;
 }
 
 const year = (s: string) => /(\d{4})/.exec(s)?.[1] ?? null;
