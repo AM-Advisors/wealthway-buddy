@@ -1,5 +1,5 @@
 /**
- * Fund accounting prerequisites - server. Reuses the existing journal engine
+ * Fund accounting prerequisites: server. Reuses the existing journal engine
  * (draftJournalEntry / advanceJournalEntry / reverseJournalEntry: balance,
  * period lock, preparer != reviewer/approver, approver != poster) and the
  * fee engine (computeFeeRun). Nothing here moves money.
@@ -177,7 +177,7 @@ export async function prepareInvestment(userId: string, i: PurchaseInput & {
   }).select("id").single();
   if (error) fail(error.code === "23505" ? "This transaction was already recorded." : error.message);
   const jid = await draftFrom(userId, i.offeringId, bookId, purchaseLines(i.principalCents, i.transactionCostCents), {
-    date: i.settlementDate ?? i.tradeDate, memo: `Investment ${i.kind === "purchase" ? "purchase" : "additional purchase"} - ${i.newIssuerName ?? "existing holding"}`,
+    date: i.settlementDate ?? i.tradeDate, memo: `Investment ${i.kind === "purchase" ? "purchase" : "additional purchase"} · ${i.newIssuerName ?? "existing holding"}`,
     source: "investment", table: "fund_investment_transactions", id: data.id,
   });
   await db().from("fund_investment_transactions").update({ journal_entry_id: jid }).eq("id", data.id);
@@ -288,7 +288,7 @@ export async function prepareExpense(userId: string, i: {
     bank_line_id: bank.lineId, bank_transaction_id: bank.txId, prepared_by: userId,
   }).select("id").single();
   if (error) fail(error.code === "23505" ? "DUPLICATE - REVIEW REQUIRED: this expense is already recorded." : error.message);
-  const jid = await draftFrom(userId, i.offeringId, bookId, lines, { date: i.paidOn ?? i.expenseDate, memo: `${i.vendor} - ${i.description}`, source: "expense", table: "fund_expense_records", id: data.id });
+  const jid = await draftFrom(userId, i.offeringId, bookId, lines, { date: i.paidOn ?? i.expenseDate, memo: `${i.vendor} · ${i.description}`, source: "expense", table: "fund_expense_records", id: data.id });
   await db().from("fund_expense_records").update({ journal_entry_id: jid }).eq("id", data.id);
   await event(i.offeringId, "fund_expense_records", data.id, "prepared", userId, null, { journalEntryId: jid, mode: i.paymentMode });
   return { id: String(data.id), journalEntryId: jid };
@@ -340,7 +340,7 @@ export async function prepareSettlement(userId: string, i: {
     amount_cents: i.amountCents, paid_on: i.paidOn, source_reference: i.sourceReference, idempotency_key: i.idempotencyKey, bank_line_id: bank.lineId, bank_transaction_id: bank.txId, prepared_by: userId,
   }).select("id").single();
   if (error) fail(error.message);
-  const jid = await draftFrom(userId, i.offeringId, bookId, lines, { date: i.paidOn, memo: `Payable settlement - ${i.sourceReference}`, source: "payment", table: "fund_payable_settlements", id: data.id });
+  const jid = await draftFrom(userId, i.offeringId, bookId, lines, { date: i.paidOn, memo: `Payable settlement · ${i.sourceReference}`, source: "payment", table: "fund_payable_settlements", id: data.id });
   await db().from("fund_payable_settlements").update({ journal_entry_id: jid }).eq("id", data.id);
   await event(i.offeringId, "fund_payable_settlements", data.id, "prepared", userId, null, { journalEntryId: jid });
   return { id: String(data.id), duplicate: false, journalEntryId: jid };

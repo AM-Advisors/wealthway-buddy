@@ -124,7 +124,7 @@ export const template = {
   displayName: 'Fund manager alert',
   previewData: {
     managerName: 'Jordan',
-    headline: 'Wire confirmation submitted - Harmonious Income Fund I',
+    headline: 'Wire confirmation submitted: Harmonious Income Fund I',
     intro: 'Alyssa Pettit has submitted a wire confirmation for Harmonious Income Fund I.',
     offeringName: 'Harmonious Income Fund I',
     details: [

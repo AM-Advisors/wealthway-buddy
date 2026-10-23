@@ -100,7 +100,7 @@ export async function raiseException(input: {
       context: input.context ?? {},
       opened_by: input.openedBy ?? null,
     });
-  // A unique-violation means the exception is already open - that is the point.
+  // A unique-violation means the exception is already open, that is the point.
   if (error && !String(error.message).includes("duplicate key")) fail(error.message);
 }
 
@@ -711,7 +711,7 @@ export async function prepareReconciliationJournal(
     .maybeSingle();
   if (!txn) fail("Bank transaction not found.");
 
-  // Activity already carried by an investment/expense/settlement record reuses that journal - never a second cash entry.
+  // Activity already carried by an investment/expense/settlement record reuses that journal, never a second cash entry.
   const { linkedAccountingRecord } = await import("@/lib/fund-accounting.server");
   const { reconciliationJournalDecision } = await import("@/lib/fund-accounting-model");
   const linked = await linkedAccountingRecord(String(txn.id));

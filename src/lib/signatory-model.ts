@@ -143,7 +143,7 @@ export const AUTHORITY_REVIEW_STATUSES = [
 export type AuthorityReviewStatus = (typeof AUTHORITY_REVIEW_STATUSES)[number];
 
 export const AUTHORITY_REVIEW_LABELS: Record<AuthorityReviewStatus, string> = {
-  uploaded: "Uploaded - not yet reviewed",
+  uploaded: "Uploaded, not yet reviewed",
   in_review: "In review",
   accepted: "Accepted",
   rejected: "Rejected",

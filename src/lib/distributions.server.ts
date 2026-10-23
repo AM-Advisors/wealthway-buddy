@@ -701,7 +701,7 @@ async function commitmentStateFor(positionIds: string[]) {
   return map;
 }
 
-/** Latest finalized capital account per position - authoritative, not recomputed. */
+/** Latest finalized capital account per position, authoritative, not recomputed. */
 async function capitalAccountsFor(offeringId: string) {
   const { data } = await db()
     .from("capital_accounts")

@@ -45,7 +45,7 @@ export type StaffFacts = {
   /** Harmonious internal roles only. */
   staffRoles: string[];
   operationsEntry: boolean;
-  /** Granular Operations capabilities - never collapsed into a boolean. */
+  /** Granular Operations capabilities: never collapsed into a boolean. */
   capabilities: OpsCapability[];
   /** Individual sidebar items a Super Admin granted (view only; money/tax/admin never). */
   navGrants: { url: string; title: string }[];
@@ -272,7 +272,7 @@ export function operationsAccessProjection(s: StaffFacts) {
 /**
  * Professional STANDING (may this person open the professional workspace?) is
  * deliberately separate from AUTHORITY to act for a client (canAct, per
- * resource). Standing = an active firm seat, or a current delegation - current
+ * resource). Standing = an active firm seat, or a current delegation, current
  * includes one still awaiting acceptance, because the delegate must be able to
  * open the workspace to accept it. Such a delegation authorizes nothing: it is
  * not counted in `usableDelegations` and canAct refuses it.

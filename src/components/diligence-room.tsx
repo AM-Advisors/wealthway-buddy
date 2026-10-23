@@ -291,7 +291,7 @@ export function DiligenceRoom({ offeringId }: { offeringId: string }) {
                     {sig?.completedAt
                       ? `Signed ${when(sig.completedAt)}.`
                       : sig?.viewedAt
-                        ? `You opened it ${when(sig.viewedAt)} - it still needs your signature.`
+                        ? `You opened it ${when(sig.viewedAt)} · it still needs your signature.`
                         : sig?.sentAt
                           ? `Sent to you ${when(sig.sentAt)}.`
                           : "Sign it securely; a countersigned copy is filed for both of us."}
@@ -1761,7 +1761,7 @@ function NdaSettings({ offeringId, access }: { offeringId: string; access: any }
         <div className="flex items-center gap-2">
           <Checkbox id="nda-bump" checked={bump} onCheckedChange={(v) => setBump(Boolean(v))} />
           <Label htmlFor="nda-bump">
-            This is a material change - ask everyone to accept it again
+            This is a material change: ask everyone to accept it again
           </Label>
         </div>
         <Button size="sm" disabled={mutation.isPending} onClick={() => mutation.mutate()}>

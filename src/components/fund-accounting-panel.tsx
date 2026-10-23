@@ -73,7 +73,7 @@ export function FundAccountingPanel({ offeringId, defaultTab = "investments" }: 
       <TabsContent value="history">
         <Card><CardContent className="space-y-1 p-4 text-sm">
           {d.events.length === 0 && <p className="text-muted-foreground">No activity yet.</p>}
-          {d.events.map((e: any) => <p key={e.id}><span className="text-muted-foreground">{new Date(e.created_at).toLocaleString()}</span> · {e.record_table.replace("fund_", "")} {short(e.record_id)} · {e.action} by {short(e.actor_user_id)}{e.reason ? ` - ${e.reason}` : ""}</p>)}
+          {d.events.map((e: any) => <p key={e.id}><span className="text-muted-foreground">{new Date(e.created_at).toLocaleString()}</span> · {e.record_table.replace("fund_", "")} {short(e.record_id)} · {e.action} by {short(e.actor_user_id)}{e.reason ? ` · ${e.reason}` : ""}</p>)}
         </CardContent></Card>
       </TabsContent>
     </Tabs>

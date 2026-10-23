@@ -25,7 +25,7 @@ function money(cents: number | null | undefined) {
 export function feeText(cents: number | null | undefined, model?: string | null) {
   if (cents === null || cents === undefined) {
     return model === "per_request"
-      ? "Quoted per request - the amount depends on the services required"
+      ? "Quoted per request: the amount depends on the services required"
       : "Quoted at the time";
   }
   const amount = money(cents);

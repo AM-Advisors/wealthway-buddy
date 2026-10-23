@@ -4,7 +4,7 @@ import { canReadLinkedSow, clientSowSections } from "./client-sow-view";
 import { pricingText, servicesFromSow } from "./sales-documents-model";
 import { quoteClientSections, quoteLockFacts, quoteShowsPricing } from "./quote-sections-model";
 /** Server-only: client sign-and-approve for quotes/proposals/RFPs/RFQs, automatic invoice, and audited Harmonious payment instructions.
- *  Records only — nothing is charged, pulled or wired. */
+ *  Records only: nothing is charged, pulled or wired. */
 import {
   acceptanceKey, clientRemittance, invoiceLinesFromQuote, remittanceApprovalBlocker, signBlocker, signerBlocker, type AcceptKind,
 } from "@/lib/sales-acceptance-model";

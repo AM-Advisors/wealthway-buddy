@@ -249,7 +249,7 @@ function StepChips({ steps }: { steps: StepStatus[] }) {
   return (
     <div className="flex items-center gap-1">
       {steps.map((st, i) => (
-        <span key={st.key} title={`${st.label}: ${STEP_STATE_LABELS[st.state]} — ${st.detail}`} className={`flex size-6 items-center justify-center rounded-full text-[10px] font-medium ${STATE_DOT[st.state]}`}>{i + 1}</span>
+        <span key={st.key} title={`${st.label}: ${STEP_STATE_LABELS[st.state]} · ${st.detail}`} className={`flex size-6 items-center justify-center rounded-full text-[10px] font-medium ${STATE_DOT[st.state]}`}>{i + 1}</span>
       ))}
     </div>
   );

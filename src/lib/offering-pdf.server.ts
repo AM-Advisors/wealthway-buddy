@@ -63,7 +63,7 @@ export async function buildOfferingPdf(input: OfferingPdfInput): Promise<Uint8Ar
   const regLabel = regTypeLongLabel(input.regType);
   const generatedAt = input.generatedAt ?? new Date().toISOString();
 
-  pdf.setTitle(`${input.offeringName} - ${input.title}`);
+  pdf.setTitle(`${input.offeringName} · ${input.title}`);
   pdf.setAuthor("Harmonious");
   pdf.setSubject(regLabel);
   pdf.setProducer("Harmonious");
@@ -213,7 +213,7 @@ function money(cents?: number | null) {
   return `$${(cents / 100).toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
 }
 
-/** Renders the full fund packet - cover, wire instructions and every document - as one branded PDF. */
+/** Renders the full fund packet (cover, wire instructions and every document) as one branded PDF. */
 export async function buildOfferingPacketPdf(input: OfferingPacketInput): Promise<Uint8Array> {
   const pdf = await PDFDocument.create();
   const regular = await pdf.embedFont(StandardFonts.Helvetica);
@@ -229,7 +229,7 @@ export async function buildOfferingPacketPdf(input: OfferingPacketInput): Promis
     timeZone: "UTC",
   });
 
-  pdf.setTitle(`${input.offeringName} - Investor document packet`);
+  pdf.setTitle(`${input.offeringName} · Investor document packet`);
   pdf.setAuthor("Harmonious");
   pdf.setSubject(regLabel);
   pdf.setProducer("Harmonious");

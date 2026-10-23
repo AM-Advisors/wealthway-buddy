@@ -48,7 +48,7 @@ export function AtomicDrawer({ rows, area, summary }: { rows: AtomicRow[]; area:
             {r.destructive ? <Badge variant="outline" className="ml-1">lifecycle - never implied</Badge> : null}
             <span className="ml-2 text-xs text-muted-foreground">{r.key}</span>
             <div className="text-xs text-muted-foreground">
-              {r.global ? `Source: ${r.sources.join(", ")} - scope: All resources` : r.scoped.length ? r.scoped.map((x) => `${x.source} - scope: ${x.scope}`).join("; ") : "Not granted"}
+              {r.global ? `Source: ${r.sources.join(", ")} · scope: All resources` : r.scoped.length ? r.scoped.map((x) => `${x.source} · scope: ${x.scope}`).join("; ") : "Not granted"}
             </div>
           </li>
         ))}

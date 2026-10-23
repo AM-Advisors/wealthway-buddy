@@ -1,5 +1,5 @@
 /**
- * Client self-service - pure presentation over existing authoritative records.
+ * Client self-service: pure presentation over existing authoritative records.
  *
  * Nothing here stores a status. Fund-request lifecycle labels are read from
  * fund_requests + fund_setups + fund_setup_tasks; milestones group the

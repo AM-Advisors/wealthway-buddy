@@ -9,7 +9,7 @@ import { requireSupabaseAuth } from "@/lib/require-auth";
  * A shareholder sale moves through named stages: request, transfer restriction
  * review, right of first refusal, company consent, then closing. Each stage is
  * owned, dated and written to the company's history. A request never changes
- * the official ledger on its own - only a deliberate close posts the transfer
+ * the official ledger on its own, only a deliberate close posts the transfer
  * transactions the cap table is derived from.
  */
 

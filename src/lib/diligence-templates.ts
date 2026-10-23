@@ -30,7 +30,7 @@ export const ENTITY_TYPES: {
   {
     value: "startup",
     label: "Startup / operating company",
-    description: "A company raising a round - cap table, product, customers and traction.",
+    description: "A company raising a round, cap table, product, customers and traction.",
   },
 ];
 

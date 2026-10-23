@@ -136,7 +136,7 @@ export function StaffDesk() {
             <CardTitle className="text-base">No clients assigned to you yet</CardTitle>
             <CardDescription>
               Ask an administrator to add you to the clients you look after. Until then this desk
-              stays empty - you only ever see the clients you cover.
+              stays empty, you only ever see the clients you cover.
             </CardDescription>
           </CardHeader>
         </Card>

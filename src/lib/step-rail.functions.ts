@@ -153,7 +153,7 @@ export const getStepRail = createServerFn({ method: "GET" })
         label: "PEP / sanctions",
         value:
           amlAnswers["is_pep"] || amlAnswers["sanctions_exposure"]
-            ? "Disclosed - under review"
+            ? "Disclosed: under review"
             : "None declared",
       });
       screeningFacts.push({

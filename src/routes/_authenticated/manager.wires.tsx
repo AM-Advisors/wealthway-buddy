@@ -326,7 +326,7 @@ function ManagerWireBoardPage() {
                             });
                           }}
                         >
-                          Approve - funds received
+                          Approve: funds received
                         </Button>
                         <Button
                           size="sm"

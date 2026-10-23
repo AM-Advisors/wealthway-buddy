@@ -137,7 +137,7 @@ export function validateQuickAdd(q: { [K in keyof QuickAdd]?: QuickAdd[K] | unde
 
 export function profileLabelFor(type: ProfileType, legalName: string | null, personName: string) {
   if (type === "individual") return personName;
-  return legalName?.trim() || `${personName} - ${PROFILE_TYPE_LABELS[type]}`;
+  return legalName?.trim() || `${personName} · ${PROFILE_TYPE_LABELS[type]}`;
 }
 
 /* ---------------- record status (separate from readiness) ---------------- */

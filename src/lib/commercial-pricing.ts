@@ -115,7 +115,7 @@ export const COMMERCIAL_STATUS_LABEL = {
   none: "Legacy Pricing Review",
 } as const;
 
-/** What a client or fund manager sees - never baseline, approvals or notes. */
+/** What a client or fund manager sees, never baseline, approvals or notes. */
 export function clientFacingStatus(status: keyof typeof COMMERCIAL_STATUS_LABEL): string {
   return status === "approved" ? "Approved" : "Being finalised by Harmonious";
 }

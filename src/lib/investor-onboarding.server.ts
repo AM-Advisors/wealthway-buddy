@@ -1061,7 +1061,7 @@ export type WireSentDetails = {
 };
 
 /** Investor's own notice that they sent a wire. Never moves money and never
- *  marks the investment funded - only a matched bank receipt does that. */
+ *  marks the investment funded: only a matched bank receipt does that. */
 export async function investorReportsFundsSent(userId: string, onboardingId: string, details: WireSentDetails = {}) {
   const { actor, row } = await assertInvestorOwns(userId, onboardingId);
   if (!row.approved_to_fund_at) {
@@ -1155,7 +1155,7 @@ export async function myInvestments(userId: string) {
 /**
  * The investor's fund page status for one offering: journey steps plus the
  * application used for private messaging, derived from the single
- * authoritative onboarding row. No writes here — page views never change
+ * authoritative onboarding row. No writes here, page views never change
  * operational state.
  */
 export async function investorFundStatus(userId: string, offeringId: string) {
@@ -1293,7 +1293,7 @@ export async function onboardingDetail(userId: string, onboardingId: string): Pr
 
 // --------------------------------------------------------- funding
 
-/** Approved, versioned banking instructions - released only by Harmonious. */
+/** Approved, versioned banking instructions: released only by Harmonious. */
 export async function fundingInstructions(userId: string, onboardingId: string) {
   const { row, role } = await assertOnboardingAccess(userId, onboardingId);
   if (role === "manager") forbid("fund managers do not receive investor funding instructions.");
@@ -1771,7 +1771,7 @@ export async function acceptSubscription(
     stage: "accepted",
     accepted_by: actor.userId,
     accepted_at: nowIso(),
-    acceptance_capacity: `${input.signerName} - ${input.capacity}`,
+    acceptance_capacity: `${input.signerName} · ${input.capacity}`,
   });
   await recordEvent({
     onboardingId: row.id,
@@ -2059,7 +2059,7 @@ export async function inviteInvestor(
 
 /**
  * The one onboarding email. Only the opaque invitation reference travels in
- * the link - never KYC, profile, bank or document identifiers.
+ * the link: never KYC, profile, bank or document identifiers.
  */
 export async function sendOnboardInvitationEmail(invitation: any, offering: any, actorUserId: string, log?: { onboardingId: string }) {
   try {
@@ -2249,7 +2249,7 @@ export async function ensureVerificationApplication(row: { id: string; investor_
 /**
  * Start (or resume) the existing Didit verification session for the
  * application behind this investment. Same session, webhook and
- * reconciliation paths - no second verification system.
+ * reconciliation paths: no second verification system.
  */
 /** True when the person's KYC and AML are both currently clear (same rule the readiness engine uses). */
 async function personCleared(personId: string | null) {

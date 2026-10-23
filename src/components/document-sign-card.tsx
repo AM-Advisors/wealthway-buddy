@@ -228,7 +228,7 @@ export function DocumentSignCard({
           <div className="min-h-0 flex-1 bg-muted/30">
             {url ? (
               <iframe
-                title={`${title} - review and sign`}
+                title={`${title} · review and sign`}
                 src={url}
                 className="h-full w-full border-0"
                 allow="clipboard-write; fullscreen"

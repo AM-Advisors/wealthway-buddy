@@ -9,7 +9,7 @@ export type HelpEntry = {
   short_description: string;
   long_description?: string | undefined;
   learn_more_url?: string | undefined;
-  /** Selection needs a professional determination - show the review note. */
+  /** Selection needs a professional determination: show the review note. */
   professional?: boolean | undefined;
   version: number;
 };

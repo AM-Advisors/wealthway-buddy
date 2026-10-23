@@ -25,7 +25,7 @@ export const Route = createFileRoute("/_authenticated/manager/capital")({
 /**
  * Capital brings the existing capital surfaces together in one place instead of
  * adding more items to the menu. Every section is the page that already owns
- * that work - nothing about the underlying records changes.
+ * that work: nothing about the underlying records changes.
  */
 const SECTIONS = [
   {

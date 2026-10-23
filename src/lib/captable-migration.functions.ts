@@ -988,7 +988,7 @@ export const importCapMigration = createServerFn({ method: "POST" })
           .from("ct_vesting_schedules")
           .insert({
             company_id: companyId,
-            name: `${mapped.holderName ?? "Grant"} - imported schedule`,
+            name: `${mapped.holderName ?? "Grant"} · imported schedule`,
             start_date: mapped.vestingStart,
             cliff_months: mapped.cliffMonths ?? 0,
             duration_months: mapped.durationMonths ?? 0,

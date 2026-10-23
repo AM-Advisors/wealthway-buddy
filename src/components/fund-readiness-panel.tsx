@@ -8,7 +8,7 @@ import { getFundConditions, type ConditionFinding } from "@/lib/fund-conditions.
 import { sectionState, useFundScope, type FundSection } from "@/lib/fund-scope";
 
 /**
- * One line per fund step - onboarding, identity, screening, accreditation,
+ * One line per fund step: onboarding, identity, screening, accreditation,
  * Form D and Blue Sky - showing whether the step is inside the client's active
  * statement of work and whether the conditions in that agreement are met.
  */

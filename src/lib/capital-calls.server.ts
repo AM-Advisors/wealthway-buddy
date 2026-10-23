@@ -1110,7 +1110,7 @@ export async function detectFundingMatches(userId: string, offeringId: string) {
 
 /**
  * Harmonious decides. Approving hands the cash to the reconciliation and
- * accounting pipeline that already exists - it never writes a balance itself.
+ * accounting pipeline that already exists, it never writes a balance itself.
  */
 export async function decideFundingMatch(
   userId: string,

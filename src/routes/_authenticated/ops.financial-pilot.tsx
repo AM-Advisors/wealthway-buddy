@@ -108,7 +108,7 @@ const NUM_FACTORS = [
   ["investorCount", "Investors"], ["investmentCount", "Investments"], ["monthlyTransactions", "Transactions / month"], ["bankAccountCount", "Bank accounts"],
   ["sideLetters", "Side letters"], ["waterfallTiers", "Waterfall tiers"], ["internationalInvestors", "International investors"], ["outstandingExceptions", "Outstanding exceptions"],
 ] as const;
-const LVL_FACTORS = [["entityComplexity", "Entity complexity (0 simple – 3 feeder/blocker)"], ["taxComplexity", "Tax complexity (0–3)"], ["historicalCompleteness", "History completeness (3 = complete)"], ["dataQuality", "Data quality (3 = clean)"]] as const;
+const LVL_FACTORS = [["entityComplexity", "Entity complexity (0 simple – 3 feeder/blocker)"], ["taxComplexity", "Tax complexity (0 to 3)"], ["historicalCompleteness", "History completeness (3 = complete)"], ["dataQuality", "Data quality (3 = clean)"]] as const;
 const BOOL_FACTORS = [["multiCurrency", "More than one currency"], ["hasFeederBlockerOrParallel", "Feeder / blocker / parallel"], ["unusualTaxAllocation", "Unusual tax allocation"], ["nextCloseIsQuarterOrYearEnd", "Next close is quarter or year-end"]] as const;
 
 function ScoreForm({ offeringId, onDone }: { offeringId: string; onDone: () => void }) {

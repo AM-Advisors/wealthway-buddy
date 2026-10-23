@@ -78,7 +78,7 @@ function ClientAccessManager() {
                 <div>
                   <p className="font-medium">{g.professionalName}</p>
                   <p className="text-muted-foreground">
-                    {g.firm ? `${g.firm} - ` : ""}
+                    {g.firm ? `${g.firm} · ` : ""}
                     {SCOPE_LABELS[g.scopeType] ?? g.scopeType} -{" "}
                     {AUTHORITY_LABELS[g.authorityLevel] ?? g.authorityLevel}
                   </p>

@@ -7,7 +7,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 
 const DESCRIPTION =
-  "Harmonious Capital Administration is the administration, technology and onboarding partner behind private funds and SPVs - formation support, investor onboarding, reporting, payment facilitation and recordkeeping in one workspace.";
+  "Harmonious Capital Administration is the administration, technology and onboarding partner behind private funds and SPVs, formation support, investor onboarding, reporting, payment facilitation and recordkeeping in one workspace.";
 
 export const Route = createFileRoute("/about")({
   head: () =>

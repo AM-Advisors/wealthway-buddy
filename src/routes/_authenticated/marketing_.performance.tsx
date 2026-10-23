@@ -16,7 +16,7 @@ export const Route = createFileRoute("/_authenticated/marketing_/performance")({
 });
 
 const NA = "Not available";
-const STATUS: Record<string, string> = { pending: "Queued", publishing: "Publishing", submitted: "Submitted — awaiting platform confirmation", published: "Published (confirmed)", failed: "Failed", test_passed: "Test passed (not public)" };
+const STATUS: Record<string, string> = { pending: "Queued", publishing: "Publishing", submitted: "Submitted, awaiting platform confirmation", published: "Published (confirmed)", failed: "Failed", test_passed: "Test passed (not public)" };
 
 function Page() {
   const [days, setDays] = useState(30);

@@ -56,7 +56,7 @@ export function walkthroughQ1AllocationInput(opts: { sourceOnlyApproved: boolean
     offeringId: WALKTHROUGH_OFFERING_ID, fundIsTestDemo: true,
     period: { start: "2026-01-01", end: "2026-03-31" },
     policy: WALKTHROUGH_Q1_POLICY,
-    nav: { id: WALKTHROUGH_NAV_ID, offeringId: WALKTHROUGH_OFFERING_ID, navCents: 1_392_991_250, syntheticClassification: "DEMO / SYNTHETIC — UNAUDITED — VALUATIONS NOT INDEPENDENTLY VERIFIED", approvalScope: "internal_synthetic_only", status: "approved" },
+    nav: { id: WALKTHROUGH_NAV_ID, offeringId: WALKTHROUGH_OFFERING_ID, navCents: 1_392_991_250, syntheticClassification: "DEMO / SYNTHETIC — UNAUDITED, VALUATIONS NOT INDEPENDENTLY VERIFIED", approvalScope: "internal_synthetic_only", status: "approved" },
     participants,
     contributions: RECEIPTS.map(([s, d, a]) => ({ positionId: id(s), receivedOn: d, amountCents: a, sourceRef: `WALKTHROUGH-Q1-2026:dep:${s}` })),
     feeLines: Object.values(P).map((p) => ({ positionId: p.id, netFeeCents: p.feeCents, rateBps: p.rate, termStatus: "class" as const, sourceRef: `fee_accrual ${WALKTHROUGH_FEE_RUN_ENTRY}` })),

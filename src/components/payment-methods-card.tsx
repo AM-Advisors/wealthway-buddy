@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { getPaymentMethodsFn, savePaymentMethodsFn } from "@/lib/payment-methods.functions";
 import { PAYMENT_METHODS, PAYMENT_METHOD_LABEL, PAYMENT_METHOD_TIMELINE, type PaymentMethod } from "@/lib/payment-methods";
 
-/** Fund manager / staff choice of how investors send capital. Instructions only - no money moves through Harmonious. */
+/** Fund manager / staff choice of how investors send capital. Instructions only, no money moves through Harmonious. */
 export function PaymentMethodsCard({ fundId }: { fundId: string }) {
   const qc = useQueryClient();
   const load = useServerFn(getPaymentMethodsFn);

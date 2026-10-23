@@ -1,6 +1,6 @@
 /**
  * Harmonious-owned security statement. Public copy, so every line here must
- * describe something the product actually does - see the notes on each block.
+ * describe something the product actually does, see the notes on each block.
  * It is NOT a certification, an audit opinion, a legal notice or a promise of
  * a specific outcome, and it must never claim SOC 2, ISO 27001 or GDPR status.
  */
@@ -56,10 +56,10 @@ export const SECURITY_STATEMENT: SecurityStatement = {
     {
       heading: "Data Protection", key: "data_protection",
       intro:
-        "Fund and investor records are treated as official once saved - not as a draft anyone can quietly overwrite.",
+        "Fund and investor records are treated as official once saved, not as a draft anyone can quietly overwrite.",
       bullets: [
         "Protected saved records use controlled change requests rather than silent overwrites. Signed agreements retain their original versions and history.",
-        "Where separation of duties applies - fee terms, documents, distributions - a different person must sign off before anything takes effect.",
+        "Where separation of duties applies - fee terms, documents, distributions, a different person must sign off before anything takes effect.",
         "An authorized Super Admin may use an allowed self-approval exception only with a permanently logged written reason. This does not permit self-granted access or changes to their own signing authority.",
         "Access changes, including changes that were refused, are written to an append-only log that cannot be edited after the fact.",
         "Tax identification numbers are stored encrypted. The app displays only the last four digits.",
@@ -114,7 +114,7 @@ export const SECURITY_STATEMENT: SecurityStatement = {
       bullets: [
         "From Account -> Privacy you can request a copy of your data, a correction, or deletion.",
         "Privacy requests open a staff review task with a 30-day response target; fulfillment is handled by a person, not an automatic deletion job.",
-        "Deletion never removes financial, tax, regulatory or legal records we are required to keep - we tell you what was kept and why.",
+        "Deletion never removes financial, tax, regulatory or legal records we are required to keep, we tell you what was kept and why.",
         "How we collect and use personal information is described in our Privacy Policy.",
         "A list of the service providers we rely on is available by asking support@harmonious.co.",
       ],

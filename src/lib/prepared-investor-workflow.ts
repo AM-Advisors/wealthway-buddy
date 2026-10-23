@@ -10,7 +10,7 @@ import {
 } from "@/lib/investor-prep-model";
 import { isReconciledFunding } from "@/lib/funding-status";
 
-/* ---------- 1–3. Confirm Your Information ---------- */
+/* ---------- 1 to 3. Confirm Your Information ---------- */
 
 export type ReviewGroup = "profile" | "contact" | "investment" | "entity" | "related";
 export const REVIEW_GROUP_LABELS: Record<ReviewGroup, string> = {
@@ -101,7 +101,7 @@ export function allReviewed(prov: Record<string, FieldProvenance>): boolean {
   return Object.values(prov).every((p) => p.status !== "prepared");
 }
 
-/* ---------- 4–7. Material change → affected requirements ---------- */
+/* ---------- 4 to 7. Material change → affected requirements ---------- */
 
 /** Which requirements depend on each fact. Anything not listed is non-material. */
 export const FIELD_REQUIREMENT_DEPENDENCIES: Record<string, RequirementKey[]> = {
@@ -157,7 +157,7 @@ export function recalcAgreements(
   return reconcileDocuments(offeringId, applicable.map((d) => ({ ...d, investor_required: d.investor_required && (!d.applies_to?.length || d.applies_to.includes(profileType)) })), [...keep, ...autoSpecific]);
 }
 
-/* ---------- 8–10. Merge engine ---------- */
+/* ---------- 8 to 10. Merge engine ---------- */
 
 export type MergeSource = "investment_profile" | "investment" | "fund" | "system";
 export type MergeInput = {
@@ -212,7 +212,7 @@ export function mergeDocument(input: MergeInput, required: string[]): {
   return { values, sources, missing };
 }
 
-/* ---------- 11–13. Snapshot, staleness, review, signing ---------- */
+/* ---------- 11 to 13. Snapshot, staleness, review, signing ---------- */
 
 export function fingerprint(obj: unknown): string {
   const s = JSON.stringify(obj, Object.keys(obj as object).sort());
@@ -256,7 +256,7 @@ export function signatureConfig(d: FundDocument) {
   return { mode, signers: mode === "investor_then_manager" ? ["investor", "fund_manager"] : mode === "investor_only" ? ["investor"] : [] };
 }
 
-/* ---------- 14–16. Manager list and Next Action ---------- */
+/* ---------- 14 to 16. Manager list and Next Action ---------- */
 
 export type ManagerRowInput = {
   invitedOnly?: boolean; draftOnly?: boolean;
@@ -289,7 +289,7 @@ export function nextAction(r: ManagerRowInput): NextAction {
 const coarse = (s?: string | null) =>
   s === "approved" ? "Complete" : s === "rejected" || s === "needs_info" || s === "refresh_required" ? "Needs information" : s === "in_review" || s === "pending_review" ? "Compliance review" : "Not started";
 
-/** Coarse statuses only - never evidence, TINs, raw provider or screening results. */
+/** Coarse statuses only, never evidence, TINs, raw provider or screening results. */
 export function managerSafeRow(r: ManagerRowInput & { name: string; investingAs: string; commitmentCents: number }) {
   return {
     investor: r.name, investingAs: r.investingAs, commitmentCents: r.commitmentCents,
@@ -301,7 +301,7 @@ export function managerSafeRow(r: ManagerRowInput & { name: string; investingAs:
   };
 }
 
-/* ---------- 17–19. Action Center (derived + idempotent) ---------- */
+/* ---------- 17 to 19. Action Center (derived + idempotent) ---------- */
 
 export type Persona = "investor" | "fund_manager" | "harmonious";
 export type DerivedAction = { key: string; persona: Persona; title: string; href: string; fundId: string; subjectId: string };
@@ -318,15 +318,15 @@ export type ActionFacts = {
 export function deriveActions(f: ActionFacts): DerivedAction[] {
   const out: DerivedAction[] = [];
   const push = (a: DerivedAction) => { if (!out.some((x) => x.key === a.key)) out.push(a); };
-  for (const d of f.drafts ?? []) if (d.canSend) push({ key: `draft_ready:${d.id}`, persona: "fund_manager", title: `Investor draft ready to send - ${d.name}`, href: `/manager/funds/${f.fundId}?tab=investors&draft=${d.id}`, fundId: f.fundId, subjectId: d.id });
+  for (const d of f.drafts ?? []) if (d.canSend) push({ key: `draft_ready:${d.id}`, persona: "fund_manager", title: `Investor draft ready to send | ${d.name}`, href: `/manager/funds/${f.fundId}?tab=investors&draft=${d.id}`, fundId: f.fundId, subjectId: d.id });
   for (const i of f.myInvestments ?? []) {
     const base = `/onboard/i/${i.onboardingId}`;
-    if (i.unreviewedPrepared) push({ key: `confirm_info:${i.onboardingId}`, persona: "investor", title: `Confirm your investment information - ${f.fundName}`, href: `${base}#confirm`, fundId: f.fundId, subjectId: i.onboardingId });
+    if (i.unreviewedPrepared) push({ key: `confirm_info:${i.onboardingId}`, persona: "investor", title: `Confirm your investment information | ${f.fundName}`, href: `${base}#confirm`, fundId: f.fundId, subjectId: i.onboardingId });
     if (i.needsInfo) push({ key: `needs_info:${i.onboardingId}`, persona: "investor", title: "Additional information required", href: `${base}#requirements`, fundId: f.fundId, subjectId: i.onboardingId });
     if (i.identityPending) push({ key: `identity:${i.onboardingId}`, persona: "investor", title: "Complete identity verification", href: `${base}#verification`, fundId: f.fundId, subjectId: i.onboardingId });
     if (i.docsToReview) push({ key: `review_docs:${i.onboardingId}`, persona: "investor", title: "Review your documents", href: `${base}#documents`, fundId: f.fundId, subjectId: i.onboardingId });
     if (i.docsToSign) push({ key: `sign_docs:${i.onboardingId}`, persona: "investor", title: "Sign investment documents", href: `${base}#documents`, fundId: f.fundId, subjectId: i.onboardingId });
-    if (i.approvedToFund) push({ key: `approved_fund:${i.onboardingId}`, persona: "investor", title: `Approved to fund - ${f.fundName}`, href: `/investment/${i.onboardingId}?step=fund`, fundId: f.fundId, subjectId: i.onboardingId });
+    if (i.approvedToFund) push({ key: `approved_fund:${i.onboardingId}`, persona: "investor", title: `Approved to fund | ${f.fundName}`, href: `/investment/${i.onboardingId}?step=fund`, fundId: f.fundId, subjectId: i.onboardingId });
   }
   for (const c of f.countersign ?? []) if (c.iAmSignatory) push({ key: `countersign:${c.onboardingId}:${c.documentTitle}`, persona: "fund_manager", title: `Countersign ${c.investorName}'s ${c.documentTitle}`, href: `/manager/funds/${f.fundId}?tab=investors&onboarding=${c.onboardingId}`, fundId: f.fundId, subjectId: c.onboardingId });
   for (const o of f.opsReview ?? []) if (o.allowed) push({ key: `ops:${o.category}:${o.onboardingId}`, persona: "harmonious", title: `${o.category}`, href: `/admin/investor-onboarding?onboarding=${o.onboardingId}`, fundId: f.fundId, subjectId: o.onboardingId });

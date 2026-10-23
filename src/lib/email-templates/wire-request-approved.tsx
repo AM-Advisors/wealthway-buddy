@@ -197,7 +197,7 @@ function WireRequestApproved({
 export const template = {
   component: WireRequestApproved,
   subject: (data: Record<string, any>) =>
-    `Wire request approved - ${data?.['fundName'] ?? 'your fund'} ${data?.['amount'] ?? ''}`.trim(),
+    `Wire request approved · ${data?.['fundName'] ?? 'your fund'} ${data?.['amount'] ?? ''}`.trim(),
   displayName: 'Wire request approved',
   previewData: {
     contactName: 'Alyssa',

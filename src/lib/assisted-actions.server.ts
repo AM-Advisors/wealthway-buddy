@@ -95,7 +95,7 @@ async function currentState(
 
 /**
  * Where an approved draft lands. Kinds that are not listed never write to an
- * authoritative record at all - they stay as prepared material the client
+ * authoritative record at all, they stay as prepared material the client
  * carries into their own workflow.
  */
 const APPLY_TABLE: Partial<Record<AssistedDraftType, { table: string }>> = {
@@ -392,7 +392,7 @@ async function decorate(rows: any[]) {
 export type ReviewDecision = "approve" | "reject" | "request_changes";
 
 /**
- * The client's own decision. Only the principal can make it - a professional
+ * The client's own decision. Only the principal can make it, a professional
  * can never approve what they prepared, and approval records the client as the
  * approver, never the preparer.
  */

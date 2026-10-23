@@ -172,7 +172,7 @@ function AuditDetails({ r }: { r: any }) {
             <thead><tr className="text-left"><th className="py-1 font-medium">Item</th><th className="font-medium">Source</th><th className="font-medium">Status</th></tr></thead>
             <tbody>
               {r.items.map((i: any) => (
-                <tr key={i.key} className="border-t align-top"><td className="py-1 pr-2">{i.label}{i.reason ? ` - ${i.reason}` : ""}</td><td className="pr-2">{i.source ?? "-"}</td><td>{i.status}</td></tr>
+                <tr key={i.key} className="border-t align-top"><td className="py-1 pr-2">{i.label}{i.reason ? ` · ${i.reason}` : ""}</td><td className="pr-2">{i.source ?? "-"}</td><td>{i.status}</td></tr>
               ))}
             </tbody>
           </table>
@@ -251,7 +251,7 @@ const WIRE_LABELS: [string, string][] = [
   ["memo", "Memo / reference"],
 ];
 
-/** Fund launch status, setup % and steps — same tasks/conditions and math as Fund Setup (fundSetupSummary). */
+/** Fund launch status, setup % and steps, same tasks/conditions and math as Fund Setup (fundSetupSummary). */
 function FundLaunchCard({ fundId, readyCount, total }: { fundId: string; readyCount: number; total: number }) {
   const get = useServerFn(getFundLaunchSteps);
   const q = useQuery({ queryKey: ["fund-launch-steps", fundId], queryFn: () => get({ data: { offeringId: fundId } }), retry: false });

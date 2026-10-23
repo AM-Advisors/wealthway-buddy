@@ -1,5 +1,5 @@
 /**
- * Financial Pilot Readiness — server. Staff-only, read-mostly.
+ * Financial Pilot Readiness: server. Staff-only, read-mostly.
  *
  * PARALLEL MODE: nothing here migrates a fund, posts journals, sends money or
  * changes official books. Facts are read from the existing engines; pilot

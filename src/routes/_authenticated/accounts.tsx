@@ -35,7 +35,7 @@ export const Route = createFileRoute("/_authenticated/accounts")({
       {
         name: "description",
         content:
-          "Set up and switch between your investing accounts - individual, LLC, trust, IRA or joint - and see the funds each one is applying to.",
+          "Set up and switch between your investing accounts - individual, LLC, trust, IRA or joint, and see the funds each one is applying to.",
       },
       { property: "og:title", content: "Your Investing Accounts - Harmonious" },
       {

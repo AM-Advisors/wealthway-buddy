@@ -184,7 +184,7 @@ function PolicyTable({ rows, canApprove, me, onAct }: { rows: any[]; canApprove:
         <tbody>
           {rows.map((e) => (
             <tr key={e.id} className="border-t border-border">
-              <td className="p-2">{e.kind === "high_risk_jurisdiction" ? `${e.country_code} - ${e.risk_classification}` : `≥ ${(Number(e.threshold_cents) / 100).toLocaleString()} ${e.currency}`}</td>
+              <td className="p-2">{e.kind === "high_risk_jurisdiction" ? `${e.country_code} · ${e.risk_classification}` : `≥ ${(Number(e.threshold_cents) / 100).toLocaleString()} ${e.currency}`}</td>
               <td className="p-2">{e.effective_date}</td>
               <td className="p-2 text-xs">{e.source_reference}</td>
               <td className="p-2"><Badge variant="secondary">{e.status}</Badge></td>

@@ -80,7 +80,7 @@ const fmtDate = (d: string | null | undefined) =>
   d ? new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "Not recorded";
 
 const CLOSE_STATUS: Record<string, string> = {
-  submitted: "Submitted - Harmonious reviewing",
+  submitted: "Submitted: Harmonious reviewing",
   in_review: "In review",
   completed: "Completed",
   returned: "Returned",

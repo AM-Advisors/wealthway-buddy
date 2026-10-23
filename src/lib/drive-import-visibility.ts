@@ -1,6 +1,6 @@
 /**
  * Who may see a document imported from Google Drive inside the normal
- * Harmonious document experience. Pure rules - the server applies them to
+ * Harmonious document experience. Pure rules: the server applies them to
  * every list, search and open request. An import never widens access: the
  * rules below are the same (or narrower) than the equivalent native document.
  */

@@ -5,7 +5,7 @@
  * KEEP        - the new site must serve this exact path before cutover.
  * REDIRECT    - permanent (301) redirect to `target`.
  * CONSOLIDATE - merged with a sibling page into `target` (301).
- * REVIEW      - needs a Harmonious decision before cutover.
+ * REVIEW: needs a Harmonious decision before cutover.
  */
 export type UrlAction = "KEEP" | "REDIRECT" | "CONSOLIDATE" | "REVIEW";
 export interface WixUrl {

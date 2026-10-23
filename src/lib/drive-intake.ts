@@ -1,5 +1,5 @@
 /**
- * Drive File Intake - pure rules. Super Administrators locate existing files in
+ * Drive File Intake, pure rules. Super Administrators locate existing files in
  * the approved Drive repositories and import a Harmonious-owned copy. Drive is
  * source/provenance only; nothing here ever writes to Drive.
  */

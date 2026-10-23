@@ -115,7 +115,7 @@ function PlanSetup() {
               <Button variant="outline" onClick={chooseWire}>Pay by wire</Button>
             </div>
           )}
-          {order.payment_method === "ach" && !paid && !paying && <p className="text-sm text-muted-foreground">ACH payments take 3–5 business days to clear. Your plan opens once the payment settles.</p>}
+          {order.payment_method === "ach" && !paid && !paying && <p className="text-sm text-muted-foreground">ACH payments take 3 to 5 business days to clear. Your plan opens once the payment settles.</p>}
         </Step>
         <Step done={!!q.data?.kycOpen} title="Identity verification (you)">
           <p className="text-sm text-muted-foreground">Complete identity verification from the prompt when you sign in.</p>

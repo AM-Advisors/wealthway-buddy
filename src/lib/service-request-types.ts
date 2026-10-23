@@ -1,4 +1,4 @@
-/** Service Request Center config — pure. Types, dynamic fields, entitlement keys, team routing, client timelines. */
+/** Service Request Center config, pure. Types, dynamic fields, entitlement keys, team routing, client timelines. */
 import type { ResponsibilityStatus } from "@/lib/responsibility";
 
 export type FieldDef = { key: string; label: string; kind: "text" | "textarea" | "money" | "date" | "select" | "email"; required?: boolean; options?: string[] };

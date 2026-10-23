@@ -90,7 +90,7 @@ function TaxIntakeCard({ onboardingId, d, refresh }: { onboardingId: string; d: 
       <CardHeader>
         <CardTitle className="text-lg">Tax information</CardTitle>
         <CardDescription>
-          {done ? `Done - ${d.tax.form?.title ?? "your tax form"} will be ready to review and sign in the Sign step.` : "A few factual questions so we can prepare the right IRS form. We can't give tax advice; if you're unsure, say so and Harmonious will follow up, or ask your tax adviser."}
+          {done ? `Done · ${d.tax.form?.title ?? "your tax form"} will be ready to review and sign in the Sign step.` : "A few factual questions so we can prepare the right IRS form. We can't give tax advice; if you're unsure, say so and Harmonious will follow up, or ask your tax adviser."}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">

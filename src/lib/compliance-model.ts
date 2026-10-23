@@ -148,7 +148,7 @@ const opt = (...o: string[]) => o;
 
 export const REGISTERS: Record<string, RegisterSpec> = {
   data_map: { kind: "data_map", label: "Data Map", prefix: "DM", statuses: opt("draft", "approved", "retired"),
-    note: "Describes categories only - never store personal data here.",
+    note: "Describes categories only: never store personal data here.",
     fields: [
       { key: "systems", label: "Systems containing it", required: true }, { key: "purpose", label: "Purpose", required: true },
       { key: "classification", label: "Classification", type: "select", options: CLASSIFICATIONS, required: true },
@@ -227,7 +227,7 @@ export const REGISTERS: Record<string, RegisterSpec> = {
       { key: "due", label: "Due date", type: "date" }, { key: "review_date", label: "Review date", type: "date" },
     ] },
   incident: { kind: "incident", label: "Incidents", prefix: "INC", statuses: opt("open", "contained", "investigating", "corrective_action", "closed"),
-    note: "Whether regulators or customers must be notified is a human/legal/privacy decision - the software only records it.",
+    note: "Whether regulators or customers must be notified is a human/legal/privacy decision, the software only records it.",
     fields: [
       { key: "discovered_at", label: "Discovered at", type: "date", required: true }, { key: "reported_by", label: "Reported by", type: "person" },
       { key: "systems", label: "Systems affected" }, { key: "data", label: "Data involved" },

@@ -188,7 +188,7 @@ export const saveSigningTemplate = createServerFn({ method: "POST" })
     });
   });
 
-/** The final review shown before sending. Pure summary - nothing is sent here. */
+/** The final review shown before sending. Pure summary, nothing is sent here. */
 export const reviewPreparedAgreement = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>

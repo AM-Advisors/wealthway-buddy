@@ -96,7 +96,7 @@ async function clickupCampaignFor(db: any, at: string | null, actorId: string, c
   if (!id) {
     const last = new Date(Date.UTC(y, m + 1, 0)).toISOString().slice(0, 10);
     const { data: ins } = await db.from("marketing_campaigns").insert({
-      name: `ClickUp content — ${MONTHS[m]} ${y}`, theme: "Content calendar", goal: "Imported from the ClickUp Content Calendar",
+      name: `ClickUp content · ${MONTHS[m]} ${y}`, theme: "Content calendar", goal: "Imported from the ClickUp Content Calendar",
       starts_on: `${key}-01`, ends_on: last, color: CAMPAIGN_COLORS[m % CAMPAIGN_COLORS.length], notes: marker, created_by: actorId,
     }).select("id").single();
     id = ins?.id ?? null;

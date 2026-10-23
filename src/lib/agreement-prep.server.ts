@@ -301,7 +301,7 @@ async function ensureSourceFile(
 
   const safeTitle = String(doc.title ?? "Fund document").replace(/[^\w\- ]+/g, "").trim();
   const { signingFileName } = await import("@/lib/box.server");
-  const fileName = signingFileName(`${safeTitle || "Fund document"} - ${investorLabel} - ${applicationId.slice(0, 8)}`, bytes);
+  const fileName = signingFileName(`${safeTitle || "Fund document"} · ${investorLabel} · ${applicationId.slice(0, 8)}`, bytes);
   const fileId = await uploadFile(fileName, bytes);
   const versionId = await fileVersionId(fileId).catch(() => null);
   return { fileId, versionId };
@@ -310,7 +310,7 @@ async function ensureSourceFile(
 /**
  * Sends a prepared agreement through Box Sign.
  *
- * Authorization is rechecked here at send time - the preparation screen is not
+ * Authorization is rechecked here at send time, the preparation screen is not
  * trusted for anything. Every signer, capacity and field placement is written
  * down as sent, and the exact Box file version is locked to the request.
  */
@@ -421,7 +421,7 @@ export async function sendPreparedAgreement(
 
   const detail = await createMultiSignerRequest({
     fileId,
-    documentName: `${offering?.name ?? "Harmonious"} - ${doc.title}`,
+    documentName: `${offering?.name ?? "Harmonious"} · ${doc.title}`,
     message:
       input.message ??
       `Please review and sign ${doc.title} for ${offering?.name ?? "the fund"}.`,

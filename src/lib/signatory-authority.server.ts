@@ -350,7 +350,7 @@ export function __setStepUpDelivery(fn: StepUpDelivery | null) {
 
 /**
  * Opens a short-lived challenge bound to one action on one resource. The code
- * itself is never stored - only its hash.
+ * itself is never stored: only its hash.
  */
 export async function beginSigningStepUp(
   actorUserId: string | null | undefined,
@@ -394,7 +394,7 @@ export async function beginSigningStepUp(
     expiresAt,
   });
 
-  // The notification records that a code was sent - never the code itself.
+  // The notification records that a code was sent, never the code itself.
   await db().from("authority_notifications").insert({
     recipient_user_id: actorUserId,
     recipient_kind: "professional",
@@ -721,7 +721,7 @@ export async function listAwaitingAcceptance(actorUserId: string | null | undefi
 
 /**
  * The professional accepts exactly what the client granted. Nothing about the
- * scope, permissions, authority or dates can be altered here - acceptance only
+ * scope, permissions, authority or dates can be altered here, acceptance only
  * records agreement to the stored grant.
  */
 export async function acceptDelegation(

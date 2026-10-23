@@ -92,7 +92,7 @@ export function TaxFormReview({ kind, id, mode = "professional" }: { kind: ProTa
     setBusy(true);
     try {
       await act({ data: { kind, id, action: action as any, note: note.trim() || undefined } });
-      toast.success(`${ACTION_LABEL[action]} - recorded`);
+      toast.success(`${ACTION_LABEL[action]} · recorded`);
       setNote("");
       await Promise.all([qc.invalidateQueries({ queryKey: [mode === "staff" ? "staff-tax" : "professional-tax"] }), history.refetch()]);
     } catch (e: any) {

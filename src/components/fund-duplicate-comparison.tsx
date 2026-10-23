@@ -21,7 +21,7 @@ export const STATUS_LABELS: Record<string, string> = {
   resolved_separate: "Resolved - Separate Funds",
   consolidation_pending: "Awaiting Confirm Consolidation",
   consolidated: "Consolidated",
-  failed: "Consolidation failed - nothing moved",
+  failed: "Consolidation failed: nothing moved",
 };
 
 const money = (c: number) => `$${(c / 100).toLocaleString(undefined, { maximumFractionDigits: 0 })}`;

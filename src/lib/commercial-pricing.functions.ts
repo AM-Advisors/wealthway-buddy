@@ -14,7 +14,7 @@ const admin = async () => (await import("@/integrations/supabase/client.server")
 /**
  * Services & Pricing for one Fund. Staff/Sales see the full snapshot; anyone
  * else must already be able to read the Fund (RLS) and sees only services,
- * price and a simple status - never baseline, approvals or notes.
+ * price and a simple status: never baseline, approvals or notes.
  */
 export const getFundServicesPricing = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])

@@ -196,7 +196,7 @@ function BuyersGuidePage() {
         Private Equity Software Buyer's Guide
       </h1>
       <p className="mt-4 max-w-2xl text-base leading-relaxed text-muted-foreground">
-        A practical comparison of the software categories private capital firms buy - deal
+        A practical comparison of the software categories private capital firms buy, deal
         management, fund accounting, LP portals, cap table, portfolio monitoring, and compliance -
         plus how to judge a unified platform against the fragmented legacy stack most firms inherit.
       </p>

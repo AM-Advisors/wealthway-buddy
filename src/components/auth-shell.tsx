@@ -56,7 +56,7 @@ export function AuthShell({
         <footer className="border-t px-4 py-5 text-xs text-muted-foreground">
           <p className="mx-auto max-w-md">
             © {new Date().getFullYear()} Harmonious. Administration, technology, onboarding,
-            reporting, payment facilitation and recordkeeping support - not an investment adviser,
+            reporting, payment facilitation and recordkeeping support, not an investment adviser,
             broker-dealer, custodian or legal counsel.
           </p>
         </footer>

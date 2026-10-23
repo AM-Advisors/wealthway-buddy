@@ -2,7 +2,7 @@
  * Existing-investor takeover admission (pure). Answers ONE question:
  * "Is this person/entity already an investor in the fund, established from the
  * prior administrator's source records?" It never says Harmonious performed KYC,
- * AML, accreditation, tax collection or payout verification - those are
+ * AML, accreditation, tax collection or payout verification, those are
  * separate statuses that create remediation and block only the actions they affect.
  */
 

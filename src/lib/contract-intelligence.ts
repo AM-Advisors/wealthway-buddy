@@ -556,7 +556,7 @@ export const RENEWAL_REMINDER_DAYS = [90, 60, 30, 14] as const;
 
 /**
  * At most one renewal reminder per document: the tightest interval reached.
- * It is a reminder only - nothing renews, terminates or sends notice.
+ * It is a reminder only: nothing renews, terminates or sends notice.
  */
 export function renewalReminder(lc: Lifecycle, today: string): { daysLeft: number; bucket: number } | null {
   if (!lc.renewalDate || lc.status === "Superseded" || lc.status === "Terminated") return null;
@@ -606,7 +606,7 @@ export type PriceResolution<T extends PriceRow = PriceRow> =
  * Client + Fund (if any) + Service + Date → the approved contract price.
  * History is kept: superseded rows still answer for dates before their
  * replacement took effect. Equally-applicable rows with different amounts are
- * a conflict - never silently chosen.
+ * a conflict: never silently chosen.
  */
 export function resolveContractPrice<T extends PriceRow>(
   rows: T[],
@@ -659,7 +659,7 @@ const STAFF_ROLES = new Set(Object.keys(CONTRACT_ROLE_BASELINE).concat(["fund_ad
 
 /**
  * Contract capabilities for a person. Explicit grants only count for active
- * Harmonious staff - a Fund Manager or investor gets nothing, whatever a grant row says.
+ * Harmonious staff, a Fund Manager or investor gets nothing, whatever a grant row says.
  */
 export function contractCapabilitiesFor(roles: readonly string[], grants: readonly string[] = []): ContractCapability[] {
   if (!roles.some((r) => STAFF_ROLES.has(r))) return [];

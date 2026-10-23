@@ -253,7 +253,7 @@ export async function ensureDraftSow(
     const { error } = await db.from("client_sows").update(payload).eq("id", sowId).is("executed_at", null);
     if (error) throw new Error(error.message);
   } else {
-    const title = `${preview.mode === "amendment" ? "SOW amendment" : "Draft SOW"} - ${preview.offering?.name ?? "Client services"}`;
+    const title = `${preview.mode === "amendment" ? "SOW amendment" : "Draft SOW"} | ${preview.offering?.name ?? "Client services"}`;
     const { data, error } = await db
       .from("client_sows")
       .insert({

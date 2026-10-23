@@ -190,7 +190,7 @@ function ClaimCard({
   const [note, setNote] = useState("");
   const [adjusted, setAdjusted] = useState("");
   const [caseOpen, setCaseOpen] = useState(false);
-  const [caseTitle, setCaseTitle] = useState(`Unverified claim - ${claim.claimantName}`);
+  const [caseTitle, setCaseTitle] = useState(`Unverified claim · ${claim.claimantName}`);
   const [caseSummary, setCaseSummary] = useState("");
   const [severity, setSeverity] = useState("medium");
 

@@ -51,7 +51,7 @@ export type Workspace = {
   surface: "client" | "ops";
 };
 
-/** Harmonious staff authority is never inferred - only explicit active records count. */
+/** Harmonious staff authority is never inferred, only explicit active records count. */
 export function hasOperationsAccess(facts: RelationshipFacts): boolean {
   return facts.staff.active && facts.staff.roles.length > 0;
 }

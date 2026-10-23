@@ -84,7 +84,7 @@ export function CapitalTieReport({ offeringId }: { offeringId: string }) {
               <tr key={r.investorUserId} className="border-t align-top">
                 <td className="py-2">{r.name}</td><td>{money(r.balance)}</td>
                 <td className="space-y-1">{r.ties.map((t) => (
-                  <div key={t.year}>{t.year}: {t.status === "matches" ? "matches" : t.status === "no_k1" ? "no final K-1" : `differs — ${t.lines.filter((l) => Math.abs(l.diff) > 1).map((l) => `${l.label} ${money(l.diff)}`).join(", ")}`}</div>
+                  <div key={t.year}>{t.year}: {t.status === "matches" ? "matches" : t.status === "no_k1" ? "no final K-1" : `differs · ${t.lines.filter((l) => Math.abs(l.diff) > 1).map((l) => `${l.label} ${money(l.diff)}`).join(", ")}`}</div>
                 ))}</td>
               </tr>
             ))}</tbody>

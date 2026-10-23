@@ -175,7 +175,7 @@ export function mapAccount(
   return byType ?? null;
 }
 
-/** Accounts a mapping cannot place - a blocking reporting exception. */
+/** Accounts a mapping cannot place: a blocking reporting exception. */
 export function unmappedAccounts(
   accounts: AccountRef[],
   mapping: StatementMapping,

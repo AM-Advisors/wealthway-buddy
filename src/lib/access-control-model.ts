@@ -5,7 +5,7 @@
  * that already exist - platform roles (user_roles → ops-capabilities), staff
  * capability roles/grants (contract-coverage), fund-scoped fund_managers,
  * investor_fund_access, investment_profiles, client_users, professional
- * memberships and delegations - into one explainable view. Every enforcement
+ * memberships and delegations: into one explainable view. Every enforcement
  * path keeps using its own server-side check.
  */
 import { capabilitiesFor, hasOperationsEntry, OPS_AREAS, type OpsArea } from "@/lib/ops-capabilities";
@@ -119,7 +119,7 @@ export const SUPER_ADMIN_LIMITS = [
   "Immutable audit records",
   "Executed-document immutability",
   "Posted-ledger correction rules (reversals only)",
-  "Maker/checker - no self-approval",
+  "Maker/checker: no self-approval",
   "Dual-control money movement",
   "Dedicated sensitive-tax access (full TIN requires the Tax role)",
   "Provider-verification integrity (KYC/AML/Box results cannot be overridden)",

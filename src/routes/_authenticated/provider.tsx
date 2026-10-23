@@ -210,7 +210,7 @@ function ProviderPortal() {
             <CardTitle className="text-base">No provider account linked yet</CardTitle>
             <CardDescription>
               This portal is for third parties Harmonious works with. Your sign-in isn't linked to a
-              provider yet - ask your Harmonious contact to add your work email.
+              provider yet, ask your Harmonious contact to add your work email.
             </CardDescription>
           </CardHeader>
         </Card>
