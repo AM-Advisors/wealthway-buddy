@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/lib/require-auth";
+// Money, banking and account changes need a fully cleared identity check (not "limited" review access).
+import { requireFullyVerifiedAuth as requireSupabaseAuth } from "@/lib/require-auth";
 import { normalizePaymentMethods, PAYMENT_METHODS } from "@/lib/payment-methods";
 
 /** Staff (admin/super_admin) or a manager of this fund may choose its accepted payment methods. */

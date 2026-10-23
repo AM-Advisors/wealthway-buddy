@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/lib/require-auth";
+// Money, banking and account changes need a fully cleared identity check (not "limited" review access).
+import { requireFullyVerifiedAuth as requireSupabaseAuth } from "@/lib/require-auth";
 import { ALL_WIRE_FIELDS as WIRE_FIELDS } from "@/lib/wire-scope";
 import { diffRecords, summarizeChanges } from "@/lib/offering-audit";
 
