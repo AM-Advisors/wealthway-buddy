@@ -1,5 +1,9 @@
 # Roadmap
 
+## Client MSA signature save (2026-10-23)
+- [x] Reproduce first-signature RLS failure offline and repair using authenticated atomic ceremony with exact membership, designated signer, current-version, retry and rollback checks. No real signatures submitted; staff-owned sibling creation paths use existing privileged authorized saves and are unchanged.
+- [ ] Authenticated real-flow read-back — blocked on independently isolated synthetic QA; never sign a real agreement for testing.
+
 ## Thomas prepared Erebor copies (2026-10-23)
 - [x] Prepare named OA/PPM copies with recorded Managing Partner title and confirmed email/phone; preserve 6% one-time management fee and 20% carry, actual signature lines and signed history.
 - [ ] Complete organizer/adviser signature identity — Thomas is recorded as fund signatory only; separate organizer/adviser signing capacity is not recorded. No send, platform upload or activation requested or performed.

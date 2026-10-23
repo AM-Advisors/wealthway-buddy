@@ -8,7 +8,7 @@ const client = '33333333-3333-4333-8333-333333333333';
 const version = '44444444-4444-4444-8444-444444444444';
 const old = '55555555-5555-4555-8555-555555555555';
 let db: PGlite;
-const sql = () => readFileSync(process.env.MSA_MIGRATION_TEST_PATH ?? '/tmp/client-msa-sign.sql', 'utf8');
+const sql = () => readFileSync('drizzle/migrations/0336_client_msa_signing_transaction.sql', 'utf8');
 const sign = (v = version, title = 'Managing Partner') => db.query<{ result: { newSignature: boolean; alreadyExecuted: boolean } }>(
   `select public.sign_client_msa($1,$2,'Jane Doe',$3,'Jane Doe') as result`, [client, v, title]);
 
