@@ -11,7 +11,6 @@ import { describe, expect, it, vi } from "vitest";
  */
 
 import {
-  LEGACY_ADMIN_ORIGIN,
   canonicalRedirect,
   classifyLegacyPath,
   isDevelopmentHost,
@@ -113,17 +112,11 @@ describe("old addresses keep working", () => {
     expect(
       canonicalRedirect({ url: `${LEGACY_ORIGIN}/invest/fund-one?token=abc` })?.location,
     ).toBe(`${APP}/invest/fund-one?token=abc`);
-    expect(canonicalRedirect({ url: `${LEGACY_ADMIN_ORIGIN}/dashboard` })?.location).toBe(
-      `${APP}/dashboard`,
-    );
   });
 
   it("lands an old internal link on the same page of operations", () => {
     expect(canonicalRedirect({ url: `${LEGACY_ORIGIN}/admin/banking` })?.location).toBe(
       `${OPS}/admin/banking`,
-    );
-    expect(canonicalRedirect({ url: `${LEGACY_ADMIN_ORIGIN}/ops/funds/abc` })?.location).toBe(
-      `${OPS}/ops/funds/abc`,
     );
   });
 
@@ -135,6 +128,15 @@ describe("old addresses keep working", () => {
 
   it("leaves an address it does not recognize exactly where it is", () => {
     expect(canonicalRedirect({ url: "https://portal.harmonious.co/dashboard" })).toBeNull();
+  });
+
+  it("no longer forwards the retired capital-admin address", () => {
+    const retired = "https://app.harmoniouscapitaladmin.com";
+    expect(canonicalRedirect({ url: `${retired}/dashboard` })).toBeNull();
+    expect(canonicalRedirect({ url: `${retired}/ops/funds/abc` })).toBeNull();
+    expect(canonicalRedirect({ url: `${retired}/invest/fund-one?token=abc` })).toBeNull();
+    expect(isTrustedOrigin(retired)).toBe(false);
+    expect(trustedOrigins()).not.toContain(retired);
   });
 });
 
@@ -150,7 +152,7 @@ describe("no redirect loops", () => {
     "/api/public/email/open",
     "/invest/fund-one",
   ];
-  const hosts = [APP, OPS, LEGACY_ORIGIN, LEGACY_ADMIN_ORIGIN];
+  const hosts = [APP, OPS, LEGACY_ORIGIN];
 
   it("settles every page on every address in at most one hop", () => {
     for (const host of hosts) {
@@ -167,7 +169,7 @@ describe("no redirect loops", () => {
 describe("trusted origins stay explicit", () => {
   it("names each Harmonious address rather than allowing every subdomain", () => {
     const list = trustedOrigins();
-    expect(list).toEqual([APP, OPS, LEGACY_ORIGIN, LEGACY_ADMIN_ORIGIN]);
+    expect(list).toEqual([APP, OPS, LEGACY_ORIGIN]);
     expect(list.some((o) => o.includes("*"))).toBe(false);
   });
 

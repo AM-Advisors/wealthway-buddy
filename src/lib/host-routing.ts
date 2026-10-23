@@ -20,11 +20,8 @@ import {
   type AppSurface,
 } from "@/lib/app-origins";
 
-/** The old Harmonious Capital Admin address. Compatibility only. */
-export const LEGACY_ADMIN_ORIGIN = "https://app.harmoniouscapitaladmin.com";
-
 /** Every address that historical links may still point at. */
-export const LEGACY_ORIGINS = [LEGACY_ORIGIN, LEGACY_ADMIN_ORIGIN];
+export const LEGACY_ORIGINS = [LEGACY_ORIGIN];
 
 /** Sections that belong to Harmonious Operations. */
 // "/view-as" is the staff-only read-only Client View; it is bound to the staff
