@@ -24,6 +24,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { invalidateFund } from "@/lib/fund-query-keys";
+import { INVESTOR_TERM_FIELDS, investorFieldValue, setInvestorField, matchesInvestorField } from '@/lib/investor-term-fields';
 
 const catLabel = (k: string) => TERM_CATEGORIES.find((c) => c.key === k)?.label ?? k;
 const scopeLabel = (k: string | null) => MFN_SCOPES.find((s) => s.key === k)?.label ?? "-";
@@ -122,7 +123,7 @@ export function SideLetterRegistry({ fundId, onboardingId }: { fundId: string; o
           </div>
           {d.canPropose ? (
             <Button onClick={() => setDraft({ mode: "create", sideLetterId: null, onboardingId: onboardingId ?? null, snapshot: emptySnapshot(d.investors.find((i) => i.onboardingId === onboardingId)?.label ?? ""), reason: "" })}>
-              New side letter
+              Add investor terms
             </Button>
           ) : null}
         </CardHeader>
@@ -333,7 +334,7 @@ function DraftForm({
   const setTerm = (i: number, patch: Partial<SideLetterTerm>) =>
     set({ terms: s.terms.map((t, j) => (j === i ? { ...t, ...patch } : t)) });
   const terminating = draft.mode === "terminate";
-  const title = draft.mode === "create" ? "New side letter" : terminating ? "Propose termination" : "Propose change";
+  const title = draft.mode === "create" ? "Add investor terms" : terminating ? "Propose termination" : "Propose change";
 
   return (
     <Card>
@@ -362,6 +363,15 @@ function DraftForm({
                 </select>
               </div>
             ) : null}
+            <fieldset className="space-y-3">
+              <legend className="text-sm font-medium">Investor-specific terms</legend>
+              <div className="grid gap-3 sm:grid-cols-3">
+                {INVESTOR_TERM_FIELDS.map(field => <div key={field.key} className="space-y-1">
+                  <Label htmlFor={`investor-term-${field.key}`}>{field.label} ({field.unit})</Label>
+                  <Input id={`investor-term-${field.key}`} type="number" step="any" placeholder="Fund / class default" value={investorFieldValue(s.terms, field)} onChange={e => set({ terms: setInvestorField(s.terms, field, e.target.value, crypto.randomUUID()) })} />
+                </div>)}
+              </div>
+            </fieldset>
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1">
                 <Label>Investor name on letter</Label>
@@ -403,7 +413,7 @@ function DraftForm({
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label>Waivers / changed terms</Label>
+                <Label>Additional terms</Label>
                 <Button
                   size="sm"
                   variant="outline"
@@ -413,6 +423,7 @@ function DraftForm({
                 </Button>
               </div>
               {s.terms.map((t, i) => (
+                INVESTOR_TERM_FIELDS.some(field => matchesInvestorField(t, field)) ? null :
                 <div key={t.id} className="grid gap-2 rounded-md border p-3 sm:grid-cols-[180px_1fr_140px_auto]">
                   <select
                     className="rounded-md border bg-background px-2 py-2 text-sm"

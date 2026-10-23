@@ -442,7 +442,7 @@ export function InvestorSheet({ fundId, id, onClose }: { fundId: string; id: str
             <section>
               <h4 className="mb-1 font-medium">Side letters</h4>
               {d.sideLetters.length ? d.sideLetters.map((s: any) => <p key={s.id}><Badge variant="secondary" className="mr-2 capitalize">{s.status}</Badge>{s.effective_date ? fmtDate(s.effective_date) : ""}</p>) : <p className="text-muted-foreground">None.</p>}
-              <Button size="sm" variant="outline" className="mt-2" onClick={() => setTermAssociation("side_letter")}>Associate side-letter exceptions</Button>
+              <Button size="sm" variant="outline" className="mt-2" onClick={() => setTermAssociation("side_letter")}>Edit investor fees & minimum</Button>
             </section>
           </div>
         )}
