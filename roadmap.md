@@ -1,5 +1,10 @@
 # Roadmap
 
+## Erebor black-text correction (2026-10-23)
+- [x] Replaced 92 red PDF color operators and matching Word red font with black in separate Thomas v10 correction; all extracted wording identical and zero red spans. Registered unsigned draft 281b667a-502d-4774-90a6-c467cd8ecba3 through authorized preparation, no send/signature/activation.
+- [x] Inspected all 37 pages and signature-page close-up; black text visible without new clipping or layout changes. Original blank signature underline wrap retained. Main remains exact Thomas v9 source with actual signature separately recorded.
+- [ ] Replace main with black-text version — requires Thomas's actual new signature; no signature transferred or executed source altered.
+
 ## Signed replacement publication (2026-10-23)
 - [x] Register exact Thomas OA PDF as offering version 7 through Alyssa's authorized designation; main now Erebor_Operating_Agreement_Thomas_v9.pdf, approved/confirmed/new_only, Thomas signature unchanged, all 7 versions retained, resign=0.
 - [x] Automatically promote explicitly staff-designated approved fund-signatory-only OA replacements after all required file signatures complete, with stale-version protection and atomic retained history. Added staff Use as replacement control; publication required for that new control.
