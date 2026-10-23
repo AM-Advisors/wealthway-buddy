@@ -10,9 +10,9 @@ import { AssistantDrafts } from "@/components/fund-team-drafts";
 export const Route = createFileRoute("/_authenticated/shared-funds")({
   head: () => ({
     meta: [
-      { title: "Shared funds - Harmonious" },
+      { title: "Shared funds | Harmonious" },
       { name: "description", content: "Funds a Fund Manager has shared with you as a Viewer or Assistant." },
-      { property: "og:title", content: "Shared funds - Harmonious" },
+      { property: "og:title", content: "Shared funds | Harmonious" },
       { property: "og:description", content: "Funds shared with you by their Fund Manager." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

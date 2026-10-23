@@ -21,9 +21,9 @@ import {
 export const Route = createFileRoute("/_authenticated/ops/document-templates")({
   head: () => ({
     meta: [
-      { title: "Document templates - Harmonious Operations" },
+      { title: "Document templates | Harmonious Operations" },
       { name: "description", content: "Reusable fund document templates with versioning and second-person approval." },
-      { property: "og:title", content: "Document templates - Harmonious Operations" },
+      { property: "og:title", content: "Document templates | Harmonious Operations" },
       { property: "og:description", content: "Turn one fund's document into an approved template for other funds." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -93,7 +93,7 @@ function UploadTemplate() {
       setBusy(true);
       try {
         await create({ data: { title, category, fundTypes, fileName: file.name, base64: await templateFileBase64(file) } });
-        toast.success("Template uploaded and assigned — waiting for approval.");
+        toast.success("Template uploaded and assigned: waiting for approval.");
         setTitle(""); setFile(null); setFundTypes([]);
         await qc.invalidateQueries({ queryKey: ["doc-templates"] });
         await qc.invalidateQueries({ queryKey: ["fund-type-templates"] });
@@ -117,7 +117,7 @@ function CreateFromFund({ funds }: { funds: { id: string; name: string }[] }) {
     setBusy(true);
     try {
       await create({ data: { offeringId: fund, documentId: doc, version: Number(version), title: title || null } });
-      toast.success("Template created - waiting for a second person to approve v1.");
+      toast.success("Template created, waiting for a second person to approve v1.");
       setDoc(""); setVersion(""); setTitle("");
       qc.invalidateQueries({ queryKey: ["doc-templates"] });
     } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
@@ -166,7 +166,7 @@ function TemplateCard({ t, funds }: { t: T; funds: { id: string; name: string }[
   async function upload(): Promise<void> {
     if (!file) return undefined;
     if (file.size > 25 * 1024 * 1024) { toast.error("Files must be 25 MB or smaller."); return; }
-    await run(async () => addVersion({ data: { templateId: t.id, fileName: file.name, base64: await templateFileBase64(file), note: note || null } }), "New version added - waiting for approval.");
+    await run(async () => addVersion({ data: { templateId: t.id, fileName: file.name, base64: await templateFileBase64(file), note: note || null } }), "New version added: waiting for approval.");
     setFile(null);
   }
   return (
@@ -191,7 +191,7 @@ function TemplateCard({ t, funds }: { t: T; funds: { id: string; name: string }[
                 </span>
               </div>
               {v.note ? <p className="text-xs text-muted-foreground">Change: {v.note}</p> : null}
-              {v.decidedBy ? <p className="text-xs text-muted-foreground">{STATUS[v.status]} by {v.decidedBy}{v.decidedAt ? ` on ${new Date(v.decidedAt).toLocaleDateString()}` : ""}{v.decisionNote ? ` - "${v.decisionNote}"` : ""}</p> : null}
+              {v.decidedBy ? <p className="text-xs text-muted-foreground">{STATUS[v.status]} by {v.decidedBy}{v.decidedAt ? ` on ${new Date(v.decidedAt).toLocaleDateString()}` : ""}{v.decisionNote ? ` · "${v.decisionNote}"` : ""}</p> : null}
               {v.status === "pending_approval" && (v.mine && !isSuper ? (
                 <p className="text-xs text-muted-foreground">You added this version, so a different Harmonious team member must approve it.</p>
               ) : (

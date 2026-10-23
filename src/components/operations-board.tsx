@@ -157,19 +157,19 @@ export function OperationsHome() {
             ...banksPending.map((r) => ({
               key: `b-${r.id}`,
               at: r.requestedAt,
-              text: `${r.fundName} - bank account with ${BANK_LABELS[r.bank] ?? r.bank}`,
+              text: `${r.fundName} · bank account with ${BANK_LABELS[r.bank] ?? r.bank}`,
               to: r.offeringId,
             })),
             ...entitiesPending.map((e) => ({
               key: `e-${e.offeringId}`,
               at: e.updatedAt ?? "",
-              text: `${e.fundName} - EIN and Form SS-4`,
+              text: `${e.fundName} · EIN and Form SS-4`,
               to: e.offeringId,
             })),
             ...taxPending.map((t) => ({
               key: `t-${t.id}`,
               at: t.uploadedAt,
-              text: `${t.fundName} - ${DOC_LABELS[t.docType] ?? t.docType}${
+              text: `${t.fundName} · ${DOC_LABELS[t.docType] ?? t.docType}${
                 t.investorName ? ` for ${t.investorName}` : ""
               }`,
               to: t.offeringId,
@@ -248,7 +248,7 @@ export function OperationsBanking({ fundId }: { fundId?: string }) {
             <CardHeader>
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <CardTitle className="text-base">
-                  <FundLink id={r.offeringId} name={r.fundName} show={!fundId} /> - {BANK_LABELS[r.bank] ?? r.bank}
+                  <FundLink id={r.offeringId} name={r.fundName} show={!fundId} /> · {BANK_LABELS[r.bank] ?? r.bank}
                 </CardTitle>
                 <ReviewBadge status={r.reviewStatus} />
               </div>

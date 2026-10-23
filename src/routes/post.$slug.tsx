@@ -16,7 +16,7 @@ export const Route = createFileRoute("/post/$slug")({
   },
   errorComponent: () => <p className="p-10 text-center">This article couldn't load. Please refresh.</p>,
   head: ({ loaderData, params }) => {
-    if (!loaderData) return { meta: [{ title: "Article not found - Harmonious" }, { name: "robots", content: "noindex" }] };
+    if (!loaderData) return { meta: [{ title: "Article not found | Harmonious" }, { name: "robots", content: "noindex" }] };
     const a = loaderData.article;
     
     return marketingHead({

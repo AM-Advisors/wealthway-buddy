@@ -18,9 +18,9 @@ import { CommissionTracker, type CommissionTrackerRow } from "@/components/sales
 export const Route = createFileRoute("/_authenticated/sales_/commissions")({
   head: () => ({
     meta: [
-      { title: "Commissions - Harmonious Sales" },
+      { title: "Commissions | Harmonious Sales" },
       { name: "description", content: "Sales commissions earned on closed and paid deals." },
-      { property: "og:title", content: "Commissions - Harmonious Sales" },
+      { property: "og:title", content: "Commissions | Harmonious Sales" },
       { property: "og:description", content: "Track commission earned and pending for every sales role." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -62,7 +62,7 @@ function Commissions() {
   const total = (status: string) => rows.filter(r => r.status === status && r.payoutDue === quarterEnd).reduce((sum, r) => sum + r.amountCents, 0);
   const payout = (items: CommissionTrackerRow[]) => {
     const row = nextPayout(items);
-    return row ? <span>{row.payoutDue} · {money(row.amountCents)}<span className="block text-xs text-muted-foreground">{row.status === "expected" ? "Expected — awaiting client payment" : "Scheduled"}</span></span> : <span className="text-muted-foreground">—</span>;
+    return row ? <span>{row.payoutDue} · {money(row.amountCents)}<span className="block text-xs text-muted-foreground">{row.status === "expected" ? "Expected: awaiting client payment" : "Scheduled"}</span></span> : <span className="text-muted-foreground"> · </span>;
   };
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-4 md:p-6">
@@ -77,7 +77,7 @@ function Commissions() {
       <div className="grid gap-3 sm:grid-cols-4">
         <Stat label="Earned (paid invoices)" value={money(earned)} />
         <Stat label="Pending (awaiting payment)" value={money(pending)} />
-        <Stat label={`Next payout · ${quarterEnd}`} value={money(total("scheduled"))} hint={`Scheduled · ${money(total("expected"))} Expected — awaiting client payment`} />
+        <Stat label={`Next payout · ${quarterEnd}`} value={money(total("scheduled"))} hint={`Scheduled · ${money(total("expected"))} Expected: awaiting client payment`} />
         <Stat label="People with commission" value={d?.people.filter((p) => p.userId).length ?? 0} />
       </div>
 

@@ -155,7 +155,7 @@ export function ClientPricingBoard({
                       ? `Bills the service: ${
                           catalog.find((s: any) => s.key === row.service_key)?.name ?? row.service_key
                         }`
-                      : "Not linked to a service - it won't appear on a prepared invoice."}
+                      : "Not linked to a service, it won't appear on a prepared invoice."}
                   </p>
                   {row.discount_note ? (
                     <p className="text-xs text-muted-foreground">{row.discount_note}</p>

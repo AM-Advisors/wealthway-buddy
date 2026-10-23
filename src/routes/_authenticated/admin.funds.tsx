@@ -34,13 +34,13 @@ import { Textarea } from "@/components/ui/textarea";
 export const Route = createFileRoute("/_authenticated/admin/funds")({
   head: () => ({
     meta: [
-      { title: "Fund Setup - Harmonious Admin" },
+      { title: "Fund Setup | Harmonious Admin" },
       {
         name: "description",
         content:
           "Configure each Harmonious fund: Reg D 506(b) or 506(c), subscription documents and wire instructions.",
       },
-      { property: "og:title", content: "Fund Setup - Harmonious Admin" },
+      { property: "og:title", content: "Fund Setup | Harmonious Admin" },
       {
         property: "og:description",
         content: "Per-fund paperwork, wire details and exemption type for investor onboarding.",
@@ -576,7 +576,7 @@ function FundsPage() {
 
                 {(o.documents ?? []).length === 0 && (
                   <p className="text-sm text-muted-foreground">
-                    No paperwork yet - investors will have nothing to review or sign for this fund.
+                    No paperwork yet, investors will have nothing to review or sign for this fund.
                   </p>
                 )}
 

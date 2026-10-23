@@ -325,7 +325,7 @@ export type ContractConflict = {
   documentIds: string[];
   provisions: ConflictProvision[];
 };
-export const CONFLICT_TASK_TITLE = "Contract Scope Conflict - Review Required";
+export const CONFLICT_TASK_TITLE = "Contract Scope Conflict: Review Required";
 
 const isActive = (d: DocLite, today: string) =>
   d.review_status !== "superseded" &&
@@ -477,7 +477,7 @@ export const LIFECYCLE_STATUSES = [
   "Renewal Window", "Notice Window", "Expiring", "Expired", "Superseded", "Terminated",
 ] as const;
 export type LifecycleStatus = (typeof LIFECYCLE_STATUSES)[number];
-export const UNABLE = "Unable to calculate - review required";
+export const UNABLE = "Unable to calculate: review required";
 
 export type Lifecycle = {
   status: LifecycleStatus;

@@ -81,8 +81,8 @@ export const SS4_ACTIVITIES = [
   { value: "transportation", label: "Transportation & warehousing", box: 4 },
   { value: "accommodation_food", label: "Accommodation & food service", box: 5 },
   { value: "retail", label: "Retail", box: 7 },
-  { value: "wholesale_agent", label: "Wholesale - agent/broker", box: 1 },
-  { value: "wholesale_other", label: "Wholesale - other", box: 6 },
+  { value: "wholesale_agent", label: "Wholesale: agent/broker", box: 1 },
+  { value: "wholesale_other", label: "Wholesale: other", box: 6 },
   { value: "other", label: "Other", box: 11, detail: true },
 ] as const;
 

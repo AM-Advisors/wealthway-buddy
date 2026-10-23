@@ -65,7 +65,7 @@ function OwnershipUpdate({
     <Html>
       <Head />
       <Preview>
-        Your position in {offeringName} has been updated{ownershipPct ? ` - now ${ownershipPct}` : ''}
+        Your position in {offeringName} has been updated{ownershipPct ? ` · now ${ownershipPct}` : ''}
       </Preview>
       <Body
         style={{

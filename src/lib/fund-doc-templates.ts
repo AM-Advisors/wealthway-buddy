@@ -3,7 +3,7 @@
  * always marked for counsel review. Generating a template saves an unsigned
  * draft; it never sends, signs or files anything.
  */
-export const STARTER_NOTICE = "Starter template - have counsel review before use.";
+export const STARTER_NOTICE = "Starter template: have counsel review before use.";
 
 export type TemplateField = { key: string; label: string; placeholder?: string };
 export type DocTemplate = { key: string; title: string; category: "fund_document" | "side_letter" | "agreement"; fields: TemplateField[]; body: string };
@@ -32,29 +32,29 @@ export function sideLetterItemsComplete(values: Record<string, string>) {
 }
 
 export const DOC_TEMPLATES: DocTemplate[] = [
-  { key: "sl_combined", title: "Side letter - multiple items", category: "side_letter", fields: [...common, investor], body: "" },
+  { key: "sl_combined", title: "Side letter | multiple items", category: "side_letter", fields: [...common, investor], body: "" },
   {
     key: "fund_summary", title: "Fund terms summary", category: "fund_document",
     fields: [...common, { key: "target", label: "Target raise" }, { key: "minimum", label: "Minimum investment" }, { key: "mgmt", label: "Management fee" }, { key: "carry", label: "Carried interest" }],
     body: `FUND TERMS SUMMARY\n\nFund: {{fund}}\nManager: {{manager}}\nDate: {{date}}\n\nTarget raise: {{target}}\nMinimum investment: {{minimum}}\nManagement fee: {{mgmt}}\nCarried interest: {{carry}}\n\nThis summary is for discussion only. The fund's governing documents control.`,
   },
   {
-    key: "sl_management_fee", title: "Side letter - management fee", category: "side_letter",
+    key: "sl_management_fee", title: "Side letter | management fee", category: "side_letter",
     fields: [...common, investor, { key: "rate", label: "Agreed management fee rate", placeholder: "1.5%" }],
     body: `SIDE LETTER - MANAGEMENT FEE\n\nDate: {{date}}\nBetween {{fund}} (acting through {{manager}}) and {{investor}}.\n\nNotwithstanding the fund's governing documents, the management fee charged to {{investor}} will be {{rate}} per year, calculated on the same basis as all other investors.\n\nAll other terms of the governing documents remain unchanged.`,
   },
   {
-    key: "sl_carry", title: "Side letter - carried interest", category: "side_letter",
+    key: "sl_carry", title: "Side letter | carried interest", category: "side_letter",
     fields: [...common, investor, { key: "rate", label: "Agreed carried interest", placeholder: "15%" }],
     body: `SIDE LETTER - CARRIED INTEREST\n\nDate: {{date}}\nBetween {{fund}} (acting through {{manager}}) and {{investor}}.\n\nThe carried interest applied to distributions to {{investor}} will be {{rate}}.\n\nAll other terms of the governing documents remain unchanged.`,
   },
   {
-    key: "sl_minimum", title: "Side letter - minimum investment", category: "side_letter",
+    key: "sl_minimum", title: "Side letter | minimum investment", category: "side_letter",
     fields: [...common, investor, { key: "minimum", label: "Agreed minimum", placeholder: "$25,000" }],
     body: `SIDE LETTER - MINIMUM INVESTMENT\n\nDate: {{date}}\nBetween {{fund}} (acting through {{manager}}) and {{investor}}.\n\nThe manager agrees to accept a capital commitment from {{investor}} of not less than {{minimum}}, notwithstanding the stated minimum.\n\nAll other terms of the governing documents remain unchanged.`,
   },
   {
-    key: "sl_information_rights", title: "Side letter - information rights", category: "side_letter",
+    key: "sl_information_rights", title: "Side letter | information rights", category: "side_letter",
     fields: [...common, investor, { key: "rights", label: "Information to be provided", placeholder: "Quarterly financial statements within 60 days of quarter end" }],
     body: `SIDE LETTER - INFORMATION RIGHTS\n\nDate: {{date}}\nBetween {{fund}} (acting through {{manager}}) and {{investor}}.\n\nThe manager will provide {{investor}} with: {{rights}}.\n\n{{investor}} will keep all information received confidential. All other terms of the governing documents remain unchanged.`,
   },

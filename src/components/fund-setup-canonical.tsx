@@ -497,7 +497,7 @@ function EconomicsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; o
       <CardHeader>
         <CardTitle className="text-base">Economics & Classes</CardTitle>
         <p className="text-sm text-muted-foreground">
-          {d.economics.status === "draft" ? `Draft v${d.economics.version} - needs approval by a second Harmonious reviewer.` : d.economics.approvedVersion ? `Approved v${d.economics.approvedVersion}. Saving creates a new draft; the approved version stays in use until the new one is approved.` : "No economics recorded yet."}
+          {d.economics.status === "draft" ? `Draft v${d.economics.version} · needs approval by a second Harmonious reviewer.` : d.economics.approvedVersion ? `Approved v${d.economics.approvedVersion}. Saving creates a new draft; the approved version stays in use until the new one is approved.` : "No economics recorded yet."}
         </p>
       </CardHeader>
       <CardContent className="space-y-5">

@@ -36,7 +36,7 @@ export function SideLetterNeeds({ offeringId }: { offeringId: string }) {
               <div className="flex flex-wrap items-center gap-2">
                 {i.sideLetter ? (
                   <>
-                    <Badge variant="secondary">{i.sideLetter.status === "active" ? "Side letter active" : "Side letter generated - awaiting approval"}</Badge>
+                    <Badge variant="secondary">{i.sideLetter.status === "active" ? "Side letter active" : "Side letter generated: awaiting approval"}</Badge>
                     {i.sideLetter.hasDocument ? (
                       <Button size="sm" variant="outline" onClick={async () => {
                         try { const r = await openDoc({ data: { sideLetterId: i.sideLetter!.id } }); window.open(r.url, "_blank", "noopener"); }
@@ -61,7 +61,7 @@ export function SideLetterNeeds({ offeringId }: { offeringId: string }) {
           target={{ kind: "side_letter", onboardingId: paying }}
           onPaid={() => {
             setPaying(null);
-            toast.success("Payment confirmed - your side letter has been generated.");
+            toast.success("Payment confirmed, your side letter has been generated.");
             qc.invalidateQueries({ queryKey: ["side-letter-needs", offeringId] });
           }}
         />

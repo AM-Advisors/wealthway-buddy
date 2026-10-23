@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { decidePriorSubscription, getFundLaunchFlow, recordPriorSubscription, sendFundLaunchInvites } from "@/lib/prior-subscription.functions";
 
-const usd = (c: number | null | undefined) => c == null ? "—" : `$${(c / 100).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+const usd = (c: number | null | undefined) => c == null ? " · " : `$${(c / 100).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
 
 export function FundLaunchInvestors({ fundId, items }: { fundId: string; items: any[] }) {
   const load = useServerFn(getFundLaunchFlow);

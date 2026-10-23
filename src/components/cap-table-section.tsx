@@ -123,7 +123,7 @@ export function CapTableSection({ offeringId }: { offeringId: string }) {
       ) : rows.length === 0 ? (
         <p className="text-sm text-muted-foreground">
           {canManage
-            ? "No holders entered yet. Add them below and investors will see the live cap table here - no spreadsheet needed."
+            ? "No holders entered yet. Add them below and investors will see the live cap table here, no spreadsheet needed."
             : "The cap table has not been published yet."}
         </p>
       ) : (

@@ -17,9 +17,9 @@ import { SalesPipelineTab } from "@/components/sales-pipeline-tab";
 export const Route = createFileRoute("/_authenticated/sales")({
   head: () => ({
     meta: [
-      { title: "Sales - Harmonious" },
+      { title: "Sales | Harmonious" },
       { name: "description", content: "Harmonious Sales: clients, fund requests, fund pricing, pricing approvals, Client Pricing and pricing history." },
-      { property: "og:title", content: "Sales - Harmonious" },
+      { property: "og:title", content: "Sales | Harmonious" },
       { property: "og:description", content: "Commercial pricing and agreements for Harmonious staff." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -80,7 +80,7 @@ function FundPricing({ d }: { d: any }) {
   const [reason, setReason] = useState("");
   const m = useMutation({
     mutationFn: () => save({ data: { offeringId: fundId, reason: reason || undefined, prices: Object.fromEntries(Object.entries(prices).filter(([, v]) => v !== "").map(([k, v]) => [k, Math.round(Number(v) * 100)])) } }),
-    onSuccess: (r: any) => { toast.success(r.status === "approved" ? "Pricing approved." : "Below baseline - sent for pricing approval."); setPrices({}); void qc.invalidateQueries({ queryKey: ["sales-overview"] }); },
+    onSuccess: (r: any) => { toast.success(r.status === "approved" ? "Pricing approved." : "Below baseline: sent for pricing approval."); setPrices({}); void qc.invalidateQueries({ queryKey: ["sales-overview"] }); },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Could not save."),
   });
   return (
@@ -130,7 +130,7 @@ function Approvals({ d }: { d: any }) {
                 <Button size="sm" variant="ghost" disabled={m.isPending} onClick={() => m.mutate({ requestId: r.id, approve: false })}>Decline</Button>
               </div>
             </div>
-          ) : r.status === "pending" ? <p className="mt-2 text-xs text-muted-foreground">{r.requested_by === d.me ? "You requested this - another approver must decide." : "Waiting for Sales Management."}</p> : null}
+          ) : r.status === "pending" ? <p className="mt-2 text-xs text-muted-foreground">{r.requested_by === d.me ? "You requested this: another approver must decide." : "Waiting for Sales Management."}</p> : null}
         </li>
       ))}
     </ul>

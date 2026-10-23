@@ -208,7 +208,7 @@ export function AddStakeholderDialog({ onDone }: { onDone: () => void }) {
         },
       }),
     onSuccess: () => {
-      toast.success("Stakeholder added. This does not create any ownership - use Issue Security to record shares.");
+      toast.success("Stakeholder added. This does not create any ownership, use Issue Security to record shares.");
       setForm({ name: "", email: "", type: "investor", entityName: "", title: "" });
       setOpen(false);
       onDone();

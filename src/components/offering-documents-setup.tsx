@@ -165,7 +165,7 @@ function DocumentRow({ doc, data, offeringId, onChanged }: { doc: Doc; data: Dat
         await setUsage({ data: { documentId: doc.id, usage: "signature", applicability: { profileTypes: [], classKeys: [] } } });
       }
       setOpen(true);
-    }, "Document uploaded - now add the signature blocks, then approve");
+    }, "Document uploaded: now add the signature blocks, then approve");
   };
 
   const startActivate = async (version: number) => {
@@ -188,7 +188,7 @@ function DocumentRow({ doc, data, offeringId, onChanged }: { doc: Doc; data: Dat
         <div>
           <p className="text-sm font-medium">{doc.title}</p>
           <p className="text-xs text-muted-foreground">
-            {active ? `Fund template v${active.version} (in use)` : latest ? "Draft - not in use yet" : "Needs setup"}
+            {active ? `Fund template v${active.version} (in use)` : latest ? "Draft, not in use yet" : "Needs setup"}
             {" · "}{doc.usage ? DOCUMENT_USAGE_LABELS[doc.usage] : "Usage not chosen"}
             {" · "}{appliesTo}
           </p>
@@ -229,7 +229,7 @@ function DocumentRow({ doc, data, offeringId, onChanged }: { doc: Doc; data: Dat
               <span>{new Date(r.requestedAt).toLocaleDateString()} · {r.fileName} · {ROLLOUT_LABELS[r.scope]}{r.note ? ` · "${r.note}"` : ""} · <span className="capitalize">{r.status}</span>{r.decisionNote ? ` (${r.decisionNote})` : ""}</span>
               {data.canEdit && r.status === "pending" && (r.mine && !isSuper ? <span className="text-muted-foreground">Another team member must decide</span> : (
                 <span className="flex gap-1">
-                  <Button size="sm" variant="outline" disabled={busy} onClick={() => run(() => decide({ data: { id: r.id, decision: "accept" } }), "Added as a new version - review, set signature blocks and approve").then(() => setOpen(true))}>Accept as new version</Button>
+                  <Button size="sm" variant="outline" disabled={busy} onClick={() => run(() => decide({ data: { id: r.id, decision: "accept" } }), "Added as a new version: review, set signature blocks and approve").then(() => setOpen(true))}>Accept as new version</Button>
                   <Button size="sm" variant="ghost" disabled={busy} onClick={() => { const note = window.prompt("Reason for declining"); if (note) void run(() => decide({ data: { id: r.id, decision: "decline", note } }), "Request declined"); }}>Decline</Button>
                 </span>
               ))}

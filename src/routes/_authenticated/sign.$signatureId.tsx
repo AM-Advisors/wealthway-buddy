@@ -12,9 +12,9 @@ import { getSignatureFn, signDocumentFn } from "@/lib/fund-file-signing.function
 export const Route = createFileRoute("/_authenticated/sign/$signatureId")({
   head: () => ({
     meta: [
-      { title: "Sign document - Harmonious" },
+      { title: "Sign document | Harmonious" },
       { name: "description", content: "Review and sign a fund document in Harmonious." },
-      { property: "og:title", content: "Sign document - Harmonious" },
+      { property: "og:title", content: "Sign document | Harmonious" },
       { property: "og:description", content: "Review and sign your fund document." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -52,7 +52,7 @@ function SignPage() {
       <ol className="space-y-1 rounded-xl border p-4 text-sm">
         {(s.signers as any[]).map((r) => (
           <li key={r.signing_order} className="flex justify-between gap-2">
-            <span>{r.signing_order}. {r.signer_role === "investor" ? "Investor" : "Fund manager"} — {r.signer_name}</span>
+            <span>{r.signing_order}. {r.signer_role === "investor" ? "Investor" : "Fund manager"} · {r.signer_name}</span>
             <span className="text-muted-foreground">{r.status === "signed" ? `Signed ${new Date(r.signed_at).toLocaleDateString()}` : "Not signed yet"}</span>
           </li>
         ))}

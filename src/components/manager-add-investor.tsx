@@ -56,7 +56,7 @@ export function ManagerAddInvestor({ fundId, exemptionLabel, onSent, compact }: 
         },
       }),
     onSuccess: (r: any) => {
-      toast.success(r.emailSent ? "Invitation sent." : "Invitation created. The email could not be sent - use Resend.");
+      toast.success(r.emailSent ? "Invitation sent." : "Invitation created. The email could not be sent, use Resend.");
       setLink(null);
       window.sessionStorage.removeItem(`harmonious.invite-draft.${fundId}`);
       setEmail("");

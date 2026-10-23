@@ -56,7 +56,7 @@ export function dedupeKey(n: Pick<SubmissionNotice, "kind" | "ref" | "offeringId
 export function buildMessage(n: { title: string; place: string; submitter: string | null; mention: string | null; url: string; when: string; completed?: boolean }) {
   const tag = n.mention ?? "_No Operations owner assigned._";
   const head = n.completed ? "Completed" : "New submission";
-  const text = `${tag} ${head} - ${n.place}`;
+  const text = `${tag} ${head} · ${n.place}`;
   return {
     text,
     blocks: [
@@ -160,7 +160,7 @@ export async function notifyComplianceClear(n: { personId: string; personName: s
     }
     const when = new Date().toLocaleString("en-US", { timeZone: "America/Chicago", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
     const url = operationsNoticeUrl("/ops/compliance");
-    const text = `KYC/AML fully clear - ${n.personName}`;
+    const text = `KYC/AML fully clear · ${n.personName}`;
     const r = await slack("chat.postMessage", {
       channel: COMPLIANCE_SLACK_CHANNEL,
       unfurl_links: false,

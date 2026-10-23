@@ -65,7 +65,7 @@ function TodoItem({ fundId, step }: { fundId: string; step: TodoStep }) {
           {step.description && <span className="block text-xs text-muted-foreground">{step.description}</span>}
           {step.dueDate && <span className="block text-xs text-muted-foreground">Due {fmtDate(step.dueDate)}</span>}
         </span>
-        <Badge variant={done ? "secondary" : "outline"}>{done ? "Sent - Harmonious reviewing" : "Waiting on you"}</Badge>
+        <Badge variant={done ? "secondary" : "outline"}>{done ? "Sent: Harmonious reviewing" : "Waiting on you"}</Badge>
       </button>
       {expanded && (
         <div className="mt-3 space-y-2 pl-8">

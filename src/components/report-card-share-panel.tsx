@@ -23,7 +23,7 @@ export function ShareLinksPanel({ cardId }: { cardId: string }) {
   return (
     <div className="w-full space-y-3 rounded-md border p-3">
       <p className="text-sm font-medium">Share links</p>
-      <p className="text-xs text-muted-foreground">Recipients see the grade, summary and measure scores only — never evidence files. Every view is logged. Links expire and can be revoked.</p>
+      <p className="text-xs text-muted-foreground">Recipients see the grade, summary and measure scores only, never evidence files. Every view is logged. Links expire and can be revoked.</p>
       <div className="grid gap-2 sm:grid-cols-[2fr_1fr_auto]">
         <Input aria-label="Who is this for" placeholder="Who is this for (optional)" value={label} onChange={(e) => setLabel(e.target.value)} />
         <select aria-label="Expires after" className="h-10 rounded-md border bg-background px-3 text-sm" value={days} onChange={(e) => setDays(e.target.value)}>

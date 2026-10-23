@@ -68,7 +68,7 @@ export function FundFeePanel({ offeringId }: { offeringId: string }) {
                 <p className="font-medium">{kind.label}</p>
                 <p className="text-sm text-muted-foreground">
                   {money(kind.current.cents)} · {sourceText(kind.current.source)}
-                  {kind.current.reason ? ` - ${kind.current.reason}` : ""}
+                  {kind.current.reason ? ` · ${kind.current.reason}` : ""}
                 </p>
               </div>
               {off ? <Badge variant="destructive">Differs from agreed rate</Badge> : null}

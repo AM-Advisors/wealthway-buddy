@@ -30,7 +30,7 @@ export function SummaryBox({ title, rows, note, onEdit }: { title: string; rows:
         {onEdit && <Button size="sm" variant="outline" onClick={onEdit}><Pencil className="mr-1 h-3.5 w-3.5" />Edit</Button>}
       </div>
       <dl className="grid gap-3 text-sm sm:grid-cols-2">
-        {rows.map(([k, v]) => <div key={k} className="rounded-xl border bg-background px-4 py-3"><dt className="text-xs text-muted-foreground">{k}</dt><dd className="mt-0.5 break-words">{v || "—"}</dd></div>)}
+        {rows.map(([k, v]) => <div key={k} className="rounded-xl border bg-background px-4 py-3"><dt className="text-xs text-muted-foreground">{k}</dt><dd className="mt-0.5 break-words">{v || " · "}</dd></div>)}
       </dl>
       {note && <p className="mt-3 text-xs text-muted-foreground">{note}</p>}
     </section>

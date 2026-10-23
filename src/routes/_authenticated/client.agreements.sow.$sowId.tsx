@@ -168,7 +168,7 @@ function SowWorkspacePage() {
             <CardTitle className="text-base">This agreement is final</CardTitle>
             <CardDescription>
               Executed {new Date(data.sow.executedAt!).toLocaleDateString("en-US")}. Its wording and
-              pricing stay exactly as signed - any change is made through a written amendment.
+              pricing stay exactly as signed, any change is made through a written amendment.
             </CardDescription>
           </CardHeader>
         </Card>
@@ -351,7 +351,7 @@ function SowWorkspacePage() {
                           {m.side === "client" ? "You" : "Harmonious"}
                         </span>{" "}
                         · {new Date(m.createdAt).toLocaleString("en-US")}
-                        {m.body ? ` - ${m.body}` : ""}
+                        {m.body ? ` · ${m.body}` : ""}
                       </p>
                     ))}
                   </div>

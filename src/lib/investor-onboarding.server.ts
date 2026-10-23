@@ -1771,7 +1771,7 @@ export async function acceptSubscription(
     stage: "accepted",
     accepted_by: actor.userId,
     accepted_at: nowIso(),
-    acceptance_capacity: `${input.signerName} - ${input.capacity}`,
+    acceptance_capacity: `${input.signerName} · ${input.capacity}`,
   });
   await recordEvent({
     onboardingId: row.id,

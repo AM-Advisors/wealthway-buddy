@@ -6,9 +6,9 @@
 export type Schedule1065 = "page1" | "scheduleB" | "scheduleK" | "scheduleL" | "scheduleM1" | "scheduleM2" | "analysis";
 export const SCHEDULES_1065: { id: Schedule1065; label: string; note: string }[] = [
   { id: "page1", label: "Page 1 - Income & deductions", note: "Trade or business income and deductions." },
-  { id: "scheduleB", label: "Schedule B - Other information", note: "Partnership questions and the partnership representative." },
-  { id: "scheduleK", label: "Schedule K - Partners' distributive share", note: "Must equal the sum of all current K-1s." },
-  { id: "scheduleL", label: "Schedule L - Balance sheet per books", note: "Assets must equal liabilities plus capital." },
+  { id: "scheduleB", label: "Schedule B: Other information", note: "Partnership questions and the partnership representative." },
+  { id: "scheduleK", label: "Schedule K: Partners' distributive share", note: "Must equal the sum of all current K-1s." },
+  { id: "scheduleL", label: "Schedule L: Balance sheet per books", note: "Assets must equal liabilities plus capital." },
   { id: "scheduleM1", label: "Schedule M-1 - Book-to-tax reconciliation", note: "Ends at Schedule K income." },
   { id: "scheduleM2", label: "Schedule M-2 - Partners' capital accounts", note: "Ending capital ties to partner capital." },
   { id: "analysis", label: "Analysis of net income (loss)", note: "Net income by partner type." },
@@ -45,7 +45,7 @@ export const LINES_1065: LineDef[] = [
   { id: "l_liab", schedule: "scheduleL", line: "20", label: "Total liabilities (end of year)" },
   { id: "l_capital", schedule: "scheduleL", line: "21", label: "Partners' capital accounts (end of year)" },
   { id: "m1_1", schedule: "scheduleM1", line: "1", label: "Net income (loss) per books" },
-  { id: "m1_adj", schedule: "scheduleM1", line: "2–7", label: "Net book-to-tax adjustments" },
+  { id: "m1_adj", schedule: "scheduleM1", line: "2 to 7", label: "Net book-to-tax adjustments" },
   { id: "m1_9", schedule: "scheduleM1", line: "9", label: "Income (loss) per Schedule K analysis" },
   { id: "m2_1", schedule: "scheduleM2", line: "1", label: "Balance at beginning of year" },
   { id: "m2_2", schedule: "scheduleM2", line: "2", label: "Capital contributed" },

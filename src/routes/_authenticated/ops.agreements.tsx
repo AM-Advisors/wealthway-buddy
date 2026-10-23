@@ -11,9 +11,9 @@ import { Textarea } from "@/components/ui/textarea";
 
 export const Route = createFileRoute("/_authenticated/ops/agreements")({
   head: () => ({ meta: [
-    { title: "My client agreements - Harmonious" },
+    { title: "My client agreements | Harmonious" },
     { name: "description", content: "Read-only MSAs and SOWs for the clients and funds you're assigned to." },
-    { property: "og:title", content: "My client agreements - Harmonious" },
+    { property: "og:title", content: "My client agreements | Harmonious" },
     { property: "og:description", content: "See what each agreement covers and what it means for your funds." },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary" },

@@ -20,7 +20,7 @@ export async function resolveMailbox(userId: string, ref: MailboxRef): Promise<{
     if (!key) throw new Error("Connect your Google inbox on the Mailboxes page first.");
     const call: Caller = async (path, init) => {
       const res = await callAsAppUser({ gatewayBaseUrl: GATEWAY_BASE_URL, connectionAPIKey: key, connectorId: GMAIL_CONNECTOR_ID, path, ...(init ? { init } : {}), requiredScopes: GOOGLE_MAIL_SCOPES });
-      if (await appUserReconnectRequired(res)) throw new Error("Your Google access needs to be renewed — reconnect on the Mailboxes page.");
+      if (await appUserReconnectRequired(res)) throw new Error("Your Google access needs to be renewed, reconnect on the Mailboxes page.");
       return res;
     };
     return { call, group: null };

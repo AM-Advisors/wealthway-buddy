@@ -78,7 +78,7 @@ function ClientAccessManager() {
                 <div>
                   <p className="font-medium">{g.professionalName}</p>
                   <p className="text-muted-foreground">
-                    {g.firm ? `${g.firm} - ` : ""}
+                    {g.firm ? `${g.firm} · ` : ""}
                     {SCOPE_LABELS[g.scopeType] ?? g.scopeType} -{" "}
                     {AUTHORITY_LABELS[g.authorityLevel] ?? g.authorityLevel}
                   </p>
@@ -156,13 +156,13 @@ function ClientAccessManager() {
 export const Route = createFileRoute("/_authenticated/access")({
   head: () => ({
     meta: [
-      { title: "Who can see my information - Harmonious" },
+      { title: "Who can see my information | Harmonious" },
       {
         name: "description",
         content:
           "Grant, review, suspend or revoke the access your adviser, lawyer or accountant has to your Harmonious information.",
       },
-      { property: "og:title", content: "Who can see my information - Harmonious" },
+      { property: "og:title", content: "Who can see my information | Harmonious" },
       {
         property: "og:description",
         content: "Full control over professional access to your profiles, investments and documents.",

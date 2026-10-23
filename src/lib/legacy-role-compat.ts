@@ -22,7 +22,7 @@ export const PROPOSED_TEMPLATE: Record<keyof typeof LEGACY_CLIENT_ACTIONS, strin
 };
 
 export const ORPHAN_READONLY = "Legacy client_readonly role has no resolvable client scope.";
-export const MANUAL_REVIEW = "MANUAL REVIEW - DO NOT MIGRATE";
+export const MANUAL_REVIEW = "MANUAL REVIEW: DO NOT MIGRATE";
 export const SAFE_WHEN_APPROVED = "Equivalent - eligible (not migrated in this stage)";
 
 export type DryRunRow = {

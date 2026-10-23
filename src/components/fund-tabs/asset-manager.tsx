@@ -78,7 +78,7 @@ export function AssetManager({ fundId, assets }: { fundId: string; assets: any[]
                 </div>
                 {a.pendingMark && (
                   <div className="flex flex-wrap items-center gap-2">
-                    <Badge variant="secondary">Manager mark {usd(a.pendingMark.valueCents)} · {fmtDate(a.pendingMark.date)} - waiting for Harmonious</Badge>
+                    <Badge variant="secondary">Manager mark {usd(a.pendingMark.valueCents)} · {fmtDate(a.pendingMark.date)} · waiting for Harmonious</Badge>
                     {staff && <><Button size="sm" onClick={() => decM.mutate({ valuationId: a.pendingMark.id, approve: true })}>Approve</Button><Button size="sm" variant="outline" onClick={() => decM.mutate({ valuationId: a.pendingMark.id, approve: false })}>Return</Button></>}
                   </div>
                 )}

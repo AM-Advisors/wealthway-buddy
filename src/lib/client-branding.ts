@@ -7,9 +7,9 @@ export const WHITELABEL_MONTHLY_FEE = 100;
 
 export const WHITELABEL_STATUS_LABEL: Record<string, string> = {
   off: "Not enabled",
-  payment_pending: "Requested - card billing being set up",
+  payment_pending: "Requested: card billing being set up",
   active_paid: "Active - $100/month",
-  unlocked_free: "Active - unlocked free by Harmonious",
+  unlocked_free: "Active: unlocked free by Harmonious",
 };
 
 export function isWhitelabelActive(status?: string | null) {

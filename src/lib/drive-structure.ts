@@ -47,7 +47,7 @@ export function safeName(value: string): string {
 }
 
 export function investorFolderName(displayName: string, profileType: string | null | undefined) {
-  return safeName(`${displayName} - ${profileTypeLabel(profileType)}`);
+  return safeName(`${displayName} · ${profileTypeLabel(profileType)}`);
 }
 
 export const fundKey = (offeringId: string) => `fund:${offeringId}`;
@@ -58,7 +58,7 @@ export const subKey = (parentKey: string, name: string) => `${parentKey}/${name}
 /** Dated, never-overwriting file name for an executed document. */
 export function executedFileName(title: string, completedAt: string, version: string) {
   const date = completedAt.slice(0, 10);
-  return safeName(`${date} - ${title} - executed v${version}.pdf`);
+  return safeName(`${date} · ${title} · executed v${version}.pdf`);
 }
 
 export type DriveFile = { id: string; name: string; appProperties?: Record<string, string> };

@@ -4,9 +4,9 @@ import { CHANNEL_LABEL, STATUS_LABEL, type Channel } from "@/lib/marketing-model
 export function mkHead(title: string, description: string) {
   return () => ({
     meta: [
-      { title: `${title} - Harmonious Marketing` },
+      { title: `${title} | Harmonious Marketing` },
       { name: "description", content: description },
-      { property: "og:title", content: `${title} - Harmonious Marketing` },
+      { property: "og:title", content: `${title} | Harmonious Marketing` },
       { property: "og:description", content: description },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -43,7 +43,7 @@ export function ChannelChip({ c }: { c: string }) {
   return <span className={`rounded px-1.5 py-0.5 text-[11px] font-medium ${CHANNEL_CLS[c] ?? ""}`}>{c === "email" ? "Email" : CHANNEL_LABEL[c as Channel] ?? c}</span>;
 }
 
-export const fmt = (iso: string | null | undefined) => (iso ? new Date(iso).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "—");
+export const fmt = (iso: string | null | undefined) => (iso ? new Date(iso).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : " · ");
 
 /** datetime-local value <-> ISO */
 export const toLocalInput = (iso: string | null) => { if (!iso) return ""; const d = new Date(iso); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16); };

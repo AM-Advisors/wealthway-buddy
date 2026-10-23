@@ -113,12 +113,12 @@ function buildEmail(
 
   if (row.event_kind === "client_work_update") {
     const meta = row.metadata ?? {};
-    return { headline: `${String(meta["headline"] ?? "Update")} - ${offeringName}`, intro: String(meta["intro"] ?? ""), details: [{ label: "Fund", value: offeringName }] };
+    return { headline: `${String(meta["headline"] ?? "Update")} · ${offeringName}`, intro: String(meta["intro"] ?? ""), details: [{ label: "Fund", value: offeringName }] };
   }
 
   if (row.event_kind === "application_created") {
     return {
-      headline: `New application - ${offeringName}`,
+      headline: `New application · ${offeringName}`,
       intro: `${investorName} has started an application for ${offeringName}.`,
       details: [...base, { label: "Commitment", value: money(row.amount_cents) }],
     };
@@ -129,7 +129,7 @@ function buildEmail(
     const names = Array.isArray(meta["file_names"]) ? (meta["file_names"] as string[]) : [];
     const count = Number(meta["count"] ?? names.length);
     return {
-      headline: `${count} new diligence file${count === 1 ? "" : "s"} - ${offeringName}`,
+      headline: `${count} new diligence file${count === 1 ? "" : "s"} · ${offeringName}`,
       intro: `${count} file${count === 1 ? " was" : "s were"} added to the ${offeringName} Box folder and ${
         count === 1 ? "is" : "are"
       } now listed in the diligence room.`,
@@ -144,7 +144,7 @@ function buildEmail(
     const meta = row.metadata ?? {};
     const signer = String(meta["signer_name"] ?? investorName);
     return {
-      headline: `Confidentiality agreement accepted - ${offeringName}`,
+      headline: `Confidentiality agreement accepted · ${offeringName}`,
       intro: `${signer} accepted the confidentiality agreement and now has access to the ${offeringName} diligence room.`,
       details: [
         { label: "Signed by", value: signer },
@@ -157,7 +157,7 @@ function buildEmail(
     const meta = row.metadata ?? {};
     const visitor = String(meta["visitor_name"] ?? investorName);
     return {
-      headline: `Diligence room opened - ${offeringName}`,
+      headline: `Diligence room opened · ${offeringName}`,
       intro: `${visitor} opened the ${offeringName} diligence room for the first time. This is a good moment to reach out if they have questions.`,
       details: [
         { label: "Investor", value: visitor },
@@ -172,7 +172,7 @@ function buildEmail(
     const names = Array.isArray(meta["file_names"]) ? (meta["file_names"] as string[]) : [];
     const title = String(meta["title"] ?? names[0] ?? "A document");
     return {
-      headline: `New diligence document - ${offeringName}`,
+      headline: `New diligence document · ${offeringName}`,
       intro: `“${title}” was added to the ${offeringName} diligence room.`,
       details: [
         { label: "Fund", value: offeringName },
@@ -187,7 +187,7 @@ function buildEmail(
     const meta = row.metadata ?? {};
     const who = String(meta["full_name"] ?? "A visitor");
     return {
-      headline: `New access request - ${offeringName}`,
+      headline: `New access request · ${offeringName}`,
       intro: `${who} asked for access to the ${offeringName} materials from the public fund page.`,
       details: [
         { label: "Name", value: who },
@@ -204,7 +204,7 @@ function buildEmail(
     const meta = row.metadata ?? {};
     const from = String(meta["sender_name"] ?? investorName);
     return {
-      headline: `New investor message - ${offeringName}`,
+      headline: `New investor message · ${offeringName}`,
       intro: `${from} sent a message in the ${offeringName} investor portal. You can reply from the portal.`,
       details: [
         { label: "Investor", value: from },
@@ -218,7 +218,7 @@ function buildEmail(
     const meta = row.metadata ?? {};
     const purpose = String(meta["purpose"] ?? "wire").replace(/_/g, " ");
     return {
-      headline: `Wire request for approval - ${offeringName}`,
+      headline: `Wire request for approval · ${offeringName}`,
       intro: `A wire request of ${money(row.amount_cents)} was submitted for ${offeringName} and is waiting for approval.`,
       details: [
         { label: "Fund", value: offeringName },
@@ -233,9 +233,9 @@ function buildEmail(
     const meta = row.metadata ?? {};
     const bank = [meta["sending_bank_name"], meta["sending_account_last4"] ? `****${meta["sending_account_last4"]}` : null]
       .filter(Boolean)
-      .join(" - ");
+      .join(" · ");
     return {
-      headline: `Wire confirmation submitted - ${offeringName}`,
+      headline: `Wire confirmation submitted · ${offeringName}`,
       intro: `${investorName} has submitted a wire confirmation for ${offeringName}. It is waiting for your review.`,
       details: [
         ...base,
@@ -248,7 +248,7 @@ function buildEmail(
 
   const fieldLabel = FIELD_LABELS[row.field ?? ""] ?? "Status";
   return {
-    headline: `${fieldLabel}: ${label(row.new_value)} - ${investorName}`,
+    headline: `${fieldLabel}: ${label(row.new_value)} · ${investorName}`,
     intro: `${fieldLabel.toLowerCase()} for ${investorName} on ${offeringName} changed from ${label(
       row.old_value,
     )} to ${label(row.new_value)}.`,

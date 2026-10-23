@@ -12,9 +12,9 @@ import { Bars, Donut, Panel, PeriodFilter, Stat, money, pct, stageLabel, usePeri
 export const Route = createFileRoute("/_authenticated/sales_/cro")({
   head: () => ({
     meta: [
-      { title: "CRO dashboard - Harmonious" },
+      { title: "CRO dashboard | Harmonious" },
       { name: "description", content: "Sales team overview, per-member progress and quote approvals for the CRO." },
-      { property: "og:title", content: "CRO dashboard - Harmonious" },
+      { property: "og:title", content: "CRO dashboard | Harmonious" },
       { property: "og:description", content: "Revenue, targets, pipeline and the quoting engine in one place." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

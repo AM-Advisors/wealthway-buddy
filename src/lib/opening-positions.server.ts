@@ -62,7 +62,7 @@ export async function decideOpeningPosition(userId: string, id: string, approve:
     // Recognized by the posted opening journal: Q1 movement is measured from this value, never from cost.
     recognized_by_journal_id: p.opening_journal_id,
     evidence_status: p.evidence_status === "present" ? "present" : "missing",
-    note: p.evidence_status === "missing_in_source" ? "Opening valuation evidence MISSING IN SOURCE - follow-up open; does not satisfy any later valuation" : null,
+    note: p.evidence_status === "missing_in_source" ? "Opening valuation evidence MISSING IN SOURCE, follow-up open; does not satisfy any later valuation" : null,
   }).select("id").single();
   if (ve) fail(ve.message);
   await db().from("portfolio_opening_positions").update({ status: "approved", decided_by: userId, decided_at: now, decision_reason: reason, asset_id: asset.id, opening_valuation_id: val.id }).eq("id", id);

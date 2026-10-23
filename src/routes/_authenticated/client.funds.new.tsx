@@ -7,9 +7,9 @@ export const Route = createFileRoute("/_authenticated/client/funds/new")({
   validateSearch: (s) => z.object({ draft: z.string().uuid().optional() }).parse(s),
   head: () => ({
     meta: [
-      { title: "Launch a new fund or SPV - Harmonious" },
+      { title: "Launch a new fund or SPV | Harmonious" },
       { name: "description", content: "Tell Harmonious everything needed to set up your new fund or SPV." },
-      { property: "og:title", content: "Launch a new fund or SPV - Harmonious" },
+      { property: "og:title", content: "Launch a new fund or SPV | Harmonious" },
       { property: "og:description", content: "A guided form that follows Harmonious Fund Setup." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

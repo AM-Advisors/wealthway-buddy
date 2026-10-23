@@ -51,7 +51,7 @@ const STAGE_LABEL: Record<string, string> = {
   restriction_review: "Restriction review",
   rofr: "Right of first refusal",
   consent: "Awaiting company consent",
-  approved: "Approved - ready to close",
+  approved: "Approved: ready to close",
   closed: "Closed to the ledger",
   rejected: "Rejected",
   withdrawn: "Withdrawn",
@@ -78,7 +78,7 @@ const RESTRICTION_LABEL: Record<string, string> = {
 
 const ROFR_LABEL: Record<string, string> = {
   not_started: "Not started",
-  offered: "Offered - awaiting response",
+  offered: "Offered: awaiting response",
   waived: "Waived",
   expired: "Expired unexercised",
   exercised: "Exercised by the company",

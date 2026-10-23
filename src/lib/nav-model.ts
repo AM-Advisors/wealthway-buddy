@@ -708,7 +708,7 @@ export function capitalHandoff(
 
 // ------------------------------------------------------------ synthetic NAV
 
-export const SYNTHETIC_NAV_LABEL = "DEMO / SYNTHETIC — UNAUDITED — VALUATIONS NOT INDEPENDENTLY VERIFIED";
+export const SYNTHETIC_NAV_LABEL = "DEMO / SYNTHETIC: UNAUDITED: VALUATIONS NOT INDEPENDENTLY VERIFIED";
 export const SYNTHETIC_APPROVAL_SCOPE = "internal_synthetic_only";
 
 /** A NAV that used any synthetic-assumption valuation is synthetic, whatever the fund. */

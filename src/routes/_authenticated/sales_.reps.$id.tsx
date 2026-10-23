@@ -8,9 +8,9 @@ import { usePeriod } from "@/components/sales/sales-ui";
 export const Route = createFileRoute("/_authenticated/sales_/reps/$id")({
   head: () => ({
     meta: [
-      { title: "Sales rep overview - Harmonious" },
+      { title: "Sales rep overview | Harmonious" },
       { name: "description", content: "One sales rep's outreach, pipeline, revenue and assigned client teams." },
-      { property: "og:title", content: "Sales rep overview - Harmonious" },
+      { property: "og:title", content: "Sales rep overview | Harmonious" },
       { property: "og:description", content: "Status, revenue closed and pending, and client team assignments." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

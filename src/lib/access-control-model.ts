@@ -119,7 +119,7 @@ export const SUPER_ADMIN_LIMITS = [
   "Immutable audit records",
   "Executed-document immutability",
   "Posted-ledger correction rules (reversals only)",
-  "Maker/checker - no self-approval",
+  "Maker/checker: no self-approval",
   "Dual-control money movement",
   "Dedicated sensitive-tax access (full TIN requires the Tax role)",
   "Provider-verification integrity (KYC/AML/Box results cannot be overridden)",
