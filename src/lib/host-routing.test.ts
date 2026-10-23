@@ -11,7 +11,6 @@ import { describe, expect, it, vi } from "vitest";
  */
 
 import {
-  LEGACY_ADMIN_ORIGIN,
   canonicalRedirect,
   classifyLegacyPath,
   isDevelopmentHost,
@@ -113,17 +112,11 @@ describe("old addresses keep working", () => {
     expect(
       canonicalRedirect({ url: `${LEGACY_ORIGIN}/invest/fund-one?token=abc` })?.location,
     ).toBe(`${APP}/invest/fund-one?token=abc`);
-    expect(canonicalRedirect({ url: `${LEGACY_ADMIN_ORIGIN}/dashboard` })?.location).toBe(
-      `${APP}/dashboard`,
-    );
   });
 
   it("lands an old internal link on the same page of operations", () => {
     expect(canonicalRedirect({ url: `${LEGACY_ORIGIN}/admin/banking` })?.location).toBe(
       `${OPS}/admin/banking`,
-    );
-    expect(canonicalRedirect({ url: `${LEGACY_ADMIN_ORIGIN}/ops/funds/abc` })?.location).toBe(
-      `${OPS}/ops/funds/abc`,
     );
   });
 
@@ -150,7 +143,7 @@ describe("no redirect loops", () => {
     "/api/public/email/open",
     "/invest/fund-one",
   ];
-  const hosts = [APP, OPS, LEGACY_ORIGIN, LEGACY_ADMIN_ORIGIN];
+  const hosts = [APP, OPS, LEGACY_ORIGIN];
 
   it("settles every page on every address in at most one hop", () => {
     for (const host of hosts) {
@@ -167,7 +160,7 @@ describe("no redirect loops", () => {
 describe("trusted origins stay explicit", () => {
   it("names each Harmonious address rather than allowing every subdomain", () => {
     const list = trustedOrigins();
-    expect(list).toEqual([APP, OPS, LEGACY_ORIGIN, LEGACY_ADMIN_ORIGIN]);
+    expect(list).toEqual([APP, OPS, LEGACY_ORIGIN]);
     expect(list.some((o) => o.includes("*"))).toBe(false);
   });
 
