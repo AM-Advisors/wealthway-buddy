@@ -3,6 +3,9 @@ import { isRecordedOperatingSignatory, operatingAgreementSignaturePage } from ".
 
 const facts = { title: "Operating Agreement", fundName: "Example Fund LLC", signerName: "Jane Doe", signatoryTitle: "Managing Member", body: "Reviewed agreement" };
 describe("new operating agreement signing packets", () => {
+  it("freezes the confirmed Manager signing title for replacement copies", () => {
+    expect(operatingAgreementSignaturePage({ ...facts, signatoryTitle: "Manager" })).toContain("Title: Manager");
+  });
   it("allows the exact recorded signatory but not another manager to inherit their title", () => {
     expect(isRecordedOperatingSignatory({ user_id: "jane", email: "jane@example.com" }, "jane", "jane@example.com")).toBe(true);
     expect(isRecordedOperatingSignatory({ email: "Jane@example.com" }, "jane", "jane@example.com")).toBe(true);
