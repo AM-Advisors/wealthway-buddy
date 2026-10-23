@@ -509,6 +509,33 @@ export async function lookupProspect(userId: string, rawEmail: string) {
   };
 }
 
+/** Partial-match suggestions across CRM contacts, client contacts and clients. Sales staff only. */
+export async function searchProspects(userId: string, rawQuery: string) {
+  const roles = await rolesOf(userId);
+  if (!roles.some((r) => SALES_DOC_ROLES.includes(r))) throw new Error("Only Sales staff can look up prospects.");
+  const q = rawQuery.trim().toLowerCase();
+  if (q.length < 2) return [] as { email: string; contactId: string | null; clientId: string | null; name: string | null; organization: string | null; source: string }[];
+  const like = `%${q.replace(/[%_,]/g, " ")}%`;
+  const db = await admin();
+  const [crm, cc, cl] = await Promise.all([
+    db.from("crm_contacts").select("id, full_name, email, organization").eq("scope", "harmonious").is("archived_at", null).or(`email.ilike.${like},full_name.ilike.${like},organization.ilike.${like}`).limit(8),
+    db.from("client_contacts").select("id, client_id, full_name, email").or(`email.ilike.${like},full_name.ilike.${like}`).limit(8),
+    db.from("clients").select("id, name, primary_contact_email, billing_contact_email").or(`name.ilike.${like},primary_contact_email.ilike.${like},billing_contact_email.ilike.${like}`).limit(8),
+  ]);
+  const out: { email: string; contactId: string | null; clientId: string | null; name: string | null; organization: string | null; source: string }[] = [];
+  const seen = new Set<string>();
+  const push = (email: string | null | undefined, row: { contactId: string | null; clientId: string | null; name: string | null; organization: string | null; source: string }) => {
+    const e = (email ?? "").trim().toLowerCase();
+    if (!e || seen.has(e)) return;
+    seen.add(e);
+    out.push({ email: e, ...row });
+  };
+  for (const x of (crm.data ?? []) as any[]) push(x.email, { contactId: x.id, clientId: null, name: x.full_name ?? null, organization: x.organization ?? null, source: "CRM contact" });
+  for (const x of (cc.data ?? []) as any[]) push(x.email, { contactId: null, clientId: x.client_id ?? null, name: x.full_name ?? null, organization: null, source: "Client contact" });
+  for (const x of (cl.data ?? []) as any[]) push(x.primary_contact_email ?? x.billing_contact_email, { contactId: null, clientId: x.id, name: x.name ?? null, organization: x.name ?? null, source: "Client" });
+  return out.slice(0, 8);
+}
+
 /** Adds a Harmonious CRM prospect, reusing an existing contact with the same email. */
 export async function createProspect(userId: string, d: { email: string; fullName: string; organization?: string | null | undefined; title?: string | null | undefined; phone?: string | null | undefined }) {
   const existing = await lookupProspect(userId, d.email);
