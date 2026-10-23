@@ -26,7 +26,7 @@ export type ReviewDetails = {
   faceMatch: null | { status: ReviewStatus; raw: string | null; score: number | null; warnings: string[] };
   aml: null | {
     status: ReviewStatus; raw: string | null; totalHits: number; entityType: string | null;
-    hits: Array<{ caption: string | null; datasets: string[]; matchScore: number | null; riskScore: number | null; isMatch: boolean | null; reviewStatus: string | null; countries: string[]; birthDates: string[]; pep: boolean; summary: string | null; lists: string[] }>;
+    hits: Array<{ id?: string | null; caption: string | null; datasets: string[]; matchScore: number | null; riskScore: number | null; isMatch: boolean | null; reviewStatus: string | null; countries: string[]; birthDates: string[]; pep: boolean; summary: string | null; lists: string[] }>;
   };
   address: null | { status: ReviewStatus; raw: string | null; address: string | null; warnings: string[] };
   phone: null | { status: ReviewStatus; raw: string | null; numberLast4: string | null; carrier: string | null; type: string | null };
@@ -87,7 +87,7 @@ export function buildReviewDetails(d: Record<string, any> | null | undefined, ca
     aml: aml ? {
       status: reviewStatus(aml.status), raw: str(aml.status), totalHits: num(aml.total_hits) ?? arr(aml.hits).length, entityType: str(aml.entity_type),
       hits: arr(aml.hits).slice(0, 50).map((h) => ({
-        caption: str(h?.caption), datasets: arr(h?.datasets).map(String), matchScore: num(h?.match_score ?? h?.score), riskScore: num(h?.risk_score),
+        id: str(h?.id), caption: str(h?.caption), datasets: arr(h?.datasets).map(String), matchScore: num(h?.match_score ?? h?.score), riskScore: num(h?.risk_score),
         isMatch: bool(h?.match), reviewStatus: str(h?.review_status), countries: arr(h?.properties?.country).map(String), birthDates: arr(h?.properties?.birthDate).map(String),
         pep: arr(h?.pep_matches).length > 0,
         summary: arr(h?.warning_matches?.[0]?.additional_data?.data?.case_details?.[0]?.crime).map(String).join(", ") || null,

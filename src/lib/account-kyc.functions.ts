@@ -28,3 +28,11 @@ export const verificationImagesFn = createServerFn({ method: "POST" }).middlewar
 
 export const backfillReviewDetailsFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuthUnverified])
   .handler(async ({ context }) => (await srv()).backfillReviewDetails(context.userId));
+
+export const amlMatchReviewFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuthUnverified])
+  .inputValidator(z.object({ checkId: z.string().uuid() }).parse)
+  .handler(async ({ data, context }) => (await srv()).amlMatchReview(context.userId, data.checkId) as Promise<any>);
+
+export const clearAmlMatchesFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuthUnverified])
+  .inputValidator(z.object({ checkId: z.string().uuid(), keys: z.array(z.string().min(1).max(500)).min(1).max(100), reason: z.string().min(5).max(2000) }).parse)
+  .handler(async ({ data, context }) => (await srv()).clearAmlMatches(context.userId, data.checkId, data.keys, data.reason));
