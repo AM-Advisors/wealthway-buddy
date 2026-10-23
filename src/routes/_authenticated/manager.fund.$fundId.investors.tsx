@@ -14,4 +14,10 @@ export const Route = createFileRoute("/_authenticated/manager/fund/$fundId/inves
   }),
   component: Page,
 });
-function Page() { const { fundId } = Route.useParams(); return <div className="space-y-8"><ManagerFundInvestors fundId={fundId} /><section aria-label="Record history" className="border-t pt-6"><InvestorStepHistory offeringId={fundId} /></section><section aria-label="Launch and investor readiness" className="border-t pt-6"><FundReadiness fundId={fundId} /></section></div>; }
+function Page() {
+  const { fundId } = Route.useParams();
+  return <ManagerFundInvestors fundId={fundId} extraTabs={[
+    { value: "readiness", label: "Readiness", content: <FundReadiness fundId={fundId} /> },
+    { value: "history", label: "History", content: <InvestorStepHistory offeringId={fundId} /> },
+  ]} />;
+}
