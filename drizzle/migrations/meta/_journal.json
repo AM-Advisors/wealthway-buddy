@@ -2353,6 +2353,13 @@
       "when": 1792699717558,
       "tag": "0335_linked_quote_draft_sections",
       "breakpoints": true
+    },
+    {
+      "idx": 336,
+      "version": "7",
+      "when": 1792714253493,
+      "tag": "0336_client_msa_signing_transaction",
+      "breakpoints": true
     }
   ]
 }
