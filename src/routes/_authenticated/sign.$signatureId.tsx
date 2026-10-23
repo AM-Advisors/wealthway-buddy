@@ -64,7 +64,7 @@ function SignPage() {
       <Dialog open={viewDoc} onOpenChange={setViewDoc}>
         <DialogContent className="flex max-h-[85vh] max-w-3xl flex-col">
           <DialogHeader><DialogTitle>{s.title}</DialogTitle></DialogHeader>
-          <div className="min-h-0 flex-1 overflow-y-auto whitespace-pre-wrap rounded-lg border p-5 text-sm leading-relaxed">{s.body || "This document has no text to show."}</div>
+          {s.sourceUrl && s.sourceType === "application/pdf" ? <><iframe title={s.title} src={s.sourceUrl} className="h-[65vh] w-full border" /><a href={s.sourceUrl} target="_blank" rel="noreferrer" className="text-sm text-primary underline">Open original agreement</a></> : <div className="h-[60vh] overflow-y-auto whitespace-pre-wrap rounded-lg border p-5 text-sm leading-relaxed">{s.body || "This document has no text to show."}</div>}
         </DialogContent>
       </Dialog>
       {s.signaturePage && (
@@ -74,7 +74,7 @@ function SignPage() {
         </div>
       )}
       {s.status === "signed" ? (
-        <p className="rounded-xl border p-4 text-sm">You signed this on {new Date(s.signedAt!).toLocaleString()}.</p>
+        <p className="rounded-xl border p-4 text-sm">You signed this on {s.signedAt ? new Date(s.signedAt).toLocaleString() : "the recorded signing date"}.</p>
       ) : !s.yourTurn ? (
         <p className="rounded-xl border p-4 text-sm">{s.waitingOn === "fund_manager" ? "The fund manager" : "The investor"} needs to sign first. We'll email you when it's your turn.</p>
       ) : (

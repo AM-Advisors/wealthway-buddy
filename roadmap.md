@@ -6,8 +6,11 @@
 
 ## Thomas prepared Erebor copies (2026-10-23)
 - [x] Prepare named OA/PPM copies with Manager title confirmed by Alyssa October 23, 2026 and confirmed email/phone; preserve 6% one-time management fee and 20% carry, actual signature lines and signed history. Saved OA Thomas v8 and PPM Thomas v10 Word/PDF copies; verified title/contact text and cover/signature page layout. No send, platform activation or record-title update performed.
-- [ ] Complete organizer/adviser signature identity — Thomas is recorded as fund signatory only; separate organizer/adviser signing capacity is not recorded. No send, platform upload or activation requested or performed.
-- [ ] Email Thomas the prepared Operating Agreement through the existing signing request and track it under fund Documents — requested October 23; blocked until organizer/adviser signer and capacity are confirmed, and the adviser company description is corrected. No request sent.
+- [x] Confirm organizer/adviser signature capacity — Alyssa confirmed Thomas Morgan Jr., Manager, may sign for Corps Capital BDC LLC in all three roles October 23.
+- [x] Add fund Documents signing tracker over fund_file_signatures and append-only manual audit entries; manual reported signing never changes execution. Twelve model/title tests pass and preview build OK. Tracker UI deployment still requires publishing.
+- [x] Complete OA Thomas v9 all-role blocks, correct adviser entity description, inspect 37 pages, save copies, register exact private PDF plus matching text as fund file 5585a2cc-6678-44bf-b2bf-d443de32a571. Authorized canonical title/capacity save succeeded; previous copies and signed history retained.
+- [x] Email Thomas via existing signatory ceremony; send returned success and signature 6130dd75-eaa9-4a34-bcaf-c37deae67bd3 read back sent at 2026-10-23T00:27:05Z with no signed_at. Managed email logs show no event yet; inbox delivery unverified. No signature submitted.
+- [ ] Verify tracker UI and Thomas exact-PDF view through normal account screens — current requester screen stops at account identity gate; no gate bypass or real signing for testing. Existing published page reads registered agreement text; new original-PDF viewer and tracker require publishing.
 
 ## Erebor document formatting correction (2026-10-22)
 - [x] Follow-up white-text clipping: reproduced in PPM General Notices; corrected textbox direction and excessive internal spacing across Table of Contents, General Notices and Exhibit A. Inspected all 60 PPM pages and close-up headings; exact wording unchanged. Saved PPM file v8 and activated platform v7 new_only; read back approved active version, resign=0. Operating Agreement unchanged; no email sent.

@@ -11,6 +11,28 @@ import { requireSupabaseAuth } from "@/lib/require-auth";
 const SITE = "https://app.harmonious.co";
 const TEAM_EMAIL = "operations@harmonious.co";
 
+/** Staff registers reviewed replacement bytes; never overwrites an existing file or signature. */
+export const prepareOperatingAgreementCopyFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ fundId: z.string().uuid(), fileName: z.string().min(1).max(200), pdfBase64: z.string().max(28_000_000), docxBase64: z.string().max(28_000_000) }).parse)
+  .handler(async ({ data, context }) => {
+    const s = await import("@/lib/fund-tabs.server");
+    await s.assertFund(context.userId, data.fundId);
+    if (!await s.isStaff(context.userId)) throw new Error("Only Harmonious can prepare replacement agreements.");
+    const bytes = Buffer.from(data.pdfBase64, "base64");
+    if (bytes.subarray(0, 5).toString() !== "%PDF-") throw new Error("A PDF agreement is required.");
+    const JSZip = (await import("jszip")).default;
+    const zip = await JSZip.loadAsync(Buffer.from(data.docxBase64, "base64"));
+    const xml = await zip.file("word/document.xml")?.async("string");
+    if (!xml) throw new Error("The matching Word agreement is required.");
+    const body = xml.replace(/<w:tab\s*\/>/g, "\t").replace(/<\/w:p>/g, "\n").replace(/<[^>]+>/g, "").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;/g, "'").trim();
+    if (!body || /\{\{[^{}]+\}\}/.test(body)) throw new Error("Resolve all agreement fields before preparing a signing copy.");
+    const file = await s.uploadFile(context.userId, data.fundId, { title: data.fileName.replace(/\.pdf$/i, "").replace(/_/g, " "), category: "legal", fileName: data.fileName, contentType: "application/pdf", base64: data.pdfBase64 });
+    const d = await s.db();
+    const r = await d.from("fund_files").update({ body, template_key: "operating_agreement", signing_order: "manager_only" }).eq("id", file.id).eq("offering_id", data.fundId).eq("status", "draft");
+    if (r.error) throw new Error("The file was uploaded but its signing text could not be registered.");
+    return file;
+  });
+
 async function db() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   return supabaseAdmin as any;
@@ -18,6 +40,7 @@ async function db() {
 const pname = (p: any) => (p ? p.preferred_name || [p.legal_first_name, p.legal_last_name].filter(Boolean).join(" ") : "") || "";
 
 async function emailSigner(d: any, sig: any) {
+  let delivered = false;
   try {
     const { data: o } = await d.from("offerings").select("name").eq("id", sig.offering_id).maybeSingle();
     const { data: f } = await d.from("fund_files").select("title").eq("id", sig.file_id).maybeSingle();
@@ -37,7 +60,9 @@ async function emailSigner(d: any, sig: any) {
       },
     });
     console.log("signing email", sig.id, r.sent ? "sent" : (r as any).reason);
+    delivered = r.sent;
   } catch (e) { console.error("signing email failed", e); }
+  if (!delivered) throw new Error("The signing request was saved, but its email was not sent. Use Send reminder to retry.");
   await d.from("fund_file_signatures").update({ status: "sent", sent_at: new Date().toISOString() }).eq("id", sig.id).eq("status", "waiting");
 }
 
@@ -51,7 +76,7 @@ export const fundSigningContextFn = createServerFn({ method: "POST" }).middlewar
     const [{ data: obs }, { data: mgrs }, { data: sigs }] = await Promise.all([
       d.from("investor_onboardings").select("id, person_id, investor_user_id").eq("offering_id", data.fundId).is("removed_at", null),
       d.from("fund_managers").select("user_id").eq("offering_id", data.fundId),
-      d.from("fund_file_signatures").select("id, file_id, signer_role, signing_order, signer_name, status, signed_at").eq("offering_id", data.fundId).neq("status", "cancelled").order("signing_order"),
+      d.from("fund_file_signatures").select("id, file_id, signer_user_id, signer_role, signing_order, signer_name, status, sent_at, signed_at").eq("offering_id", data.fundId).neq("status", "cancelled").order("created_at", { ascending: false }),
     ]);
     const { lastReminders } = await import("@/lib/signing-reminder.server");
     const reminded = await lastReminders(data.fundId);
@@ -119,7 +144,7 @@ export const sendFileForSignatureFn = createServerFn({ method: "POST" }).middlew
     const { assertFund } = await import("@/lib/fund-tabs.server");
     await assertFund(context.userId, data.fundId);
     const d = await db();
-    const { data: f } = await d.from("fund_files").select("id, status, title").eq("id", data.fileId).eq("offering_id", data.fundId).is("deleted_at", null).maybeSingle();
+    const { data: f } = await d.from("fund_files").select("id, status, title, storage_path, content_type, body").eq("id", data.fileId).eq("offering_id", data.fundId).is("deleted_at", null).maybeSingle();
     if (!f) throw new Error("Document not found.");
     if (f.status === "signed") throw new Error("This document is already signed.");
     const needsInv = data.order !== "manager_only", needsMgr = data.order !== "investor_only";
@@ -181,17 +206,23 @@ export const sendFileToSignatoryFn = createServerFn({ method: "POST" }).middlewa
     const { assertFund } = await import("@/lib/fund-tabs.server");
     await assertFund(context.userId, data.fundId);
     const d = await db();
-    const { data: f } = await d.from("fund_files").select("id, status, title").eq("id", data.fileId).eq("offering_id", data.fundId).is("deleted_at", null).maybeSingle();
+    const { data: f } = await d.from("fund_files").select("id, status, title, storage_path, content_type, body").eq("id", data.fileId).eq("offering_id", data.fundId).is("deleted_at", null).maybeSingle();
     if (!f) throw new Error("Document not found.");
     if (f.status === "signed") throw new Error("This document is already signed.");
     const { data: mgr } = await d.from("fund_managers").select("user_id").eq("offering_id", data.fundId).eq("user_id", data.managerUserId).maybeSingle();
     if (!mgr) throw new Error("That person isn't a manager of this fund.");
     const { data: mp } = await d.from("profiles").select("legal_name, email").eq("user_id", data.managerUserId).maybeSingle();
     if (!mp?.email) throw new Error("This fund manager has no email address.");
+    if (!f.body && (!f.storage_path || f.content_type !== "application/pdf")) throw new Error("Upload the exact PDF agreement before sending it to sign.");
+    const { data: offering } = await d.from("offerings").select("name,legal_entity_name,fund_signatory_person_id,signatory_title").eq("id", data.fundId).maybeSingle();
+    const { data: person } = offering?.fund_signatory_person_id ? await d.from("persons").select("user_id,email").eq("id", offering.fund_signatory_person_id).maybeSingle() : { data: null };
+    const { isRecordedOperatingSignatory, operatingAgreementSignaturePage } = await import("@/lib/operating-agreement-signing");
+    if (!isRecordedOperatingSignatory(person, data.managerUserId, mp.email)) throw new Error("Choose the fund's recorded signatory.");
+    const page = operatingAgreementSignaturePage({ title: f.title, fundName: offering?.legal_entity_name || offering?.name, signerName: mp.legal_name || mp.email, signatoryTitle: offering?.signatory_title, body: f.body || "" });
     // Any earlier unsigned round is cancelled, never deleted.
     await d.from("fund_file_signatures").update({ status: "cancelled" }).eq("file_id", f.id).in("status", ["waiting", "sent"]);
     const { data: rows, error } = await d.from("fund_file_signatures").insert([
-      { file_id: f.id, offering_id: data.fundId, signer_role: "fund_manager", signing_order: 1, signer_name: mp.legal_name || mp.email, signer_email: String(mp.email).toLowerCase(), signer_user_id: data.managerUserId, created_by: context.userId },
+      { file_id: f.id, offering_id: data.fundId, signature_page: page, signer_role: "fund_manager", signing_order: 1, signer_name: mp.legal_name || mp.email, signer_email: String(mp.email).toLowerCase(), signer_user_id: data.managerUserId, created_by: context.userId },
     ]).select("*");
     if (error) throw new Error(error.message);
     await d.from("fund_files").update({ status: "out_for_signature" }).eq("id", f.id);
@@ -220,12 +251,15 @@ export const getSignatureFn = createServerFn({ method: "POST" }).middleware([req
   .handler(async ({ data, context }) => {
     const { d, s } = await loadForSigner(context.userId, (context.claims as any)?.email, data.id);
     const [{ data: f }, { data: o }, { data: all }] = await Promise.all([
-      d.from("fund_files").select("title, body, status, signing_mode").eq("id", s.file_id).maybeSingle(),
+      d.from("fund_files").select("title, body, status, signing_mode, storage_path, content_type").eq("id", s.file_id).maybeSingle(),
       d.from("offerings").select("name").eq("id", s.offering_id).maybeSingle(),
       peers(d, s, "signing_order, signer_role, signer_name, status, signed_at, signed_name").order("signing_order"),
     ]);
     const earlier = ((all ?? []) as any[]).filter((r) => r.signing_order < s.signing_order);
+    const source = f?.storage_path ? await d.storage.from("manager-uploads").createSignedUrl(f.storage_path, 600) : null;
+    if (source?.error) throw new Error("The original agreement could not be loaded. Please try again.");
     return {
+      sourceUrl: source?.data?.signedUrl ?? null, sourceType: f?.content_type ?? null,
       title: f?.title ?? "Document", body: (f?.body ?? "") as string, fundName: o?.name ?? "", role: s.signer_role as string,
       signerName: s.signer_name as string, status: s.status as string, signedAt: s.signed_at as string | null,
       yourTurn: s.status === "sent" || (s.status === "waiting" && earlier.every((r) => r.status === "signed")),
