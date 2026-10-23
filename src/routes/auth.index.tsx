@@ -88,7 +88,7 @@ function SignInPage() {
   async function signInWithGoogle() {
     setBusy(true);
     // The page they originally asked for travels with them and is re-checked
-    // by the server resolver on return, it never grants anything by itself.
+    // by the server resolver on return - it never grants anything by itself.
     const intended =
       typeof window === "undefined" ? null : intendedPathFromLocation(window.location.search);
     const errorMessage = await startGoogleOAuth("/auth", intended);

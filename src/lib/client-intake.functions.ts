@@ -7,7 +7,7 @@ import { requireSupabaseAuth } from "@/lib/require-auth";
  *
  *  An administrator invites the contact; the first time a main contact signs in
  *  they tell Harmonious about their fund, and that creates the fund record.
- *  Harmonious records and administers: the fund stays closed to investors until
+ *  Harmonious records and administers - the fund stays closed to investors until
  *  a signed and approved statement of work covers it. */
 
 /** Contacts who must complete the intake. View-only contacts go straight in. */

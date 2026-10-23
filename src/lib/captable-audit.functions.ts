@@ -6,7 +6,7 @@ import { diagnosticText } from "@/lib/diagnostic-filter";
 import { assertDiagnosticReads } from "@/lib/diagnostic-read";
 
 /**
- * Harmonious CapTable: Phase 6: compliance and audit history.
+ * Harmonious CapTable - Phase 6: compliance and audit history.
  *
  * The audit trail is read only. Every change already writes a dated event with
  * the actor, the entity it touched and the before/after state; nothing here
@@ -15,7 +15,7 @@ import { assertDiagnosticReads } from "@/lib/diagnostic-read";
  * an auditor one continuous record.
  */
 
-/** A short, readable before/after line for the trail, the raw state stays in the database. */
+/** A short, readable before/after line for the trail - the raw state stays in the database. */
 function describeChange(previous: unknown, next: unknown) {
   const before = (previous ?? null) as Record<string, unknown> | null;
   const after = (next ?? null) as Record<string, unknown> | null;

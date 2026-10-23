@@ -85,7 +85,7 @@ export type OfflineMethod = (typeof OFFLINE_METHODS)[number];
 /**
  * Called inside the submit handlers: the payment must be unused, for this client and kind,
  * and match exactly what is being submitted now. Card payments must be paid; wire/ACH may
- * still be awaiting receipt, the submission is flagged so nothing activates until staff
+ * still be awaiting receipt - the submission is flagged so nothing activates until staff
  * confirm the money arrived.
  */
 export async function verifyPayment(db: any, args: { paymentId: string | null | undefined; clientId: string; kind: string; expected: PayItem[]; usedFor: string | null; actorId: string }) {

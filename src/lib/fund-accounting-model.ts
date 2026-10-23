@@ -152,12 +152,12 @@ export function bankLinkError(i: { cashCents: number; bankSignedCents: number; a
   if (i.bankSignedCents !== i.cashCents) return `BANK AMOUNT MISMATCH - review required: bank ${i.bankSignedCents} vs record ${i.cashCents} cents.`;
   return null;
 }
-/** A bank reconciliation for activity already accounted for reuses that record's journal, never a second cash entry. */
+/** A bank reconciliation for activity already accounted for reuses that record's journal - never a second cash entry. */
 export function reconciliationJournalDecision(linked: { status: string; journalEntryId: string | null } | null):
   { action: "draft" } | { action: "reuse"; entryId: string } | { action: "wait"; reason: string } {
   if (!linked) return { action: "draft" };
   if (linked.status === "posted" && linked.journalEntryId) return { action: "reuse", entryId: linked.journalEntryId };
-  if (linked.status === "reversed") return { action: "wait", reason: "The linked accounting record was reversed, resolve the bank exception before reconciling." };
+  if (linked.status === "reversed") return { action: "wait", reason: "The linked accounting record was reversed - resolve the bank exception before reconciling." };
   return { action: "wait", reason: "This bank activity belongs to an accounting record that is not posted yet - post it first; no second cash entry is created." };
 }
 /** New chart accounts: expense type, unique code/name, numbered inside the parent's range. */

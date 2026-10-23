@@ -556,7 +556,7 @@ export const RENEWAL_REMINDER_DAYS = [90, 60, 30, 14] as const;
 
 /**
  * At most one renewal reminder per document: the tightest interval reached.
- * It is a reminder only: nothing renews, terminates or sends notice.
+ * It is a reminder only - nothing renews, terminates or sends notice.
  */
 export function renewalReminder(lc: Lifecycle, today: string): { daysLeft: number; bucket: number } | null {
   if (!lc.renewalDate || lc.status === "Superseded" || lc.status === "Terminated") return null;
@@ -659,7 +659,7 @@ const STAFF_ROLES = new Set(Object.keys(CONTRACT_ROLE_BASELINE).concat(["fund_ad
 
 /**
  * Contract capabilities for a person. Explicit grants only count for active
- * Harmonious staff, a Fund Manager or investor gets nothing, whatever a grant row says.
+ * Harmonious staff - a Fund Manager or investor gets nothing, whatever a grant row says.
  */
 export function contractCapabilitiesFor(roles: readonly string[], grants: readonly string[] = []): ContractCapability[] {
   if (!roles.some((r) => STAFF_ROLES.has(r))) return [];

@@ -4,7 +4,7 @@ import type { DocDirection, DocKind, Section } from "@/lib/sales-documents-model
 const RESPONSES_URL = "https://ai.gateway.lovable.dev/v1/responses";
 const MODEL = "openai/gpt-6-astra";
 
-const VOICE = "You write for Harmonious (harmonious.co), a fund administration and back-office platform for venture funds, SPVs and their investors (fund setup, investor onboarding and KYC, accounting and NAV, K-1 tax, regulatory filings, banking, cap tables). Voice: clear, confident, warm, professional. Never invent facts, clients, case studies, certifications, numbers or quotes. Never write prices, fees, dollar amounts or percentages, pricing is inserted separately from the approved quote. Where a fact is unknown, write [confirm: ...] for the rep.";
+const VOICE = "You write for Harmonious (harmonious.co), a fund administration and back-office platform for venture funds, SPVs and their investors (fund setup, investor onboarding and KYC, accounting and NAV, K-1 tax, regulatory filings, banking, cap tables). Voice: clear, confident, warm, professional. Never invent facts, clients, case studies, certifications, numbers or quotes. Never write prices, fees, dollar amounts or percentages - pricing is inserted separately from the approved quote. Where a fact is unknown, write [confirm: ...] for the rep.";
 
 const SCHEMA = {
   type: "object", additionalProperties: false, required: ["sections"],

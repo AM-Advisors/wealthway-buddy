@@ -33,7 +33,7 @@ function money(cents: number | null | undefined) {
 
 const NEXT_STEP: Record<string, string> = {
   quoted: "Waiting on the client to approve and sign it.",
-  signed: "Approved by the client, switch it on from the queue below to make it billable.",
+  signed: "Approved by the client - switch it on from the queue below to make it billable.",
   activated: "Active and on the client's rates, so it can be invoiced.",
   declined: "Declined.",
   withdrawn: "Withdrawn.",

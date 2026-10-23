@@ -1,7 +1,7 @@
 /**
  * Pure helpers for the Operations sidebar: one home per screen (no duplicates)
  * and the catalog of individual items a Super Admin may grant someone.
- * Display only, every page and action keeps its own server-side check.
+ * Display only - every page and action keeps its own server-side check.
  */
 import { OPS_WORK_AREAS, type OpsArea, type OpsCapability } from "@/lib/ops-capabilities";
 
@@ -9,7 +9,7 @@ export type NavSub = { title: string; url: string };
 export type NavEntry = { id: string; title: string; url: string; icon: string; sub?: NavSub[] };
 export type NavGroup = { id: string; label: string; items: NavEntry[] };
 
-/** Money, tax-filing and administration screens are never grantable here, they keep their own approvers. */
+/** Money, tax-filing and administration screens are never grantable here - they keep their own approvers. */
 export const NON_GRANTABLE_AREAS: OpsArea[] = ["capital", "tax", "administration"];
 
 export type GrantableItem = { url: string; title: string; areaTitle: string; cap: OpsArea };

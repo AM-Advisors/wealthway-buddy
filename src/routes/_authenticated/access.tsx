@@ -26,7 +26,7 @@ function ClientAccessManager() {
   const refresh = () => {
     void qc.invalidateQueries({ queryKey: ["access-grants"] });
     // Any delegated data the professional's browser cached is irrelevant -
-    // the server re-checks, but clear our own view of it too.
+    // the server re-checks - but clear our own view of it too.
     qc.removeQueries({ queryKey: ["delegated-client"] });
     qc.removeQueries({ queryKey: ["professional-overview"] });
   };
@@ -78,7 +78,7 @@ function ClientAccessManager() {
                 <div>
                   <p className="font-medium">{g.professionalName}</p>
                   <p className="text-muted-foreground">
-                    {g.firm ? `${g.firm} · ` : ""}
+                    {g.firm ? `${g.firm} - ` : ""}
                     {SCOPE_LABELS[g.scopeType] ?? g.scopeType} -{" "}
                     {AUTHORITY_LABELS[g.authorityLevel] ?? g.authorityLevel}
                   </p>

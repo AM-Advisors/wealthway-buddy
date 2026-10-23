@@ -2,7 +2,7 @@
  * Slack alert to #operations whenever something is submitted, tagging the assigned
  * Operations person (falls back to the Account Manager). Server-only, best-effort:
  * never throws, never blocks the submission. Messages carry only the item name,
- * fund/client, submitter and a link, never amounts, tax IDs, bank or ID details.
+ * fund/client, submitter and a link - never amounts, tax IDs, bank or ID details.
  */
 import { operationsNoticeUrl, verificationNotice, type VerificationCheck } from "@/lib/verification-alert-model";
 const GATEWAY = "https://connector-gateway.lovable.dev/slack/api";
@@ -13,7 +13,7 @@ const admin = async () => (await import("@/integrations/supabase/client.server")
 
 export type SubmissionNotice = {
   kind: string;
-  /** Short, non-sensitive label, e.g. "Document. Operating Agreement". */
+  /** Short, non-sensitive label, e.g. "Document - Operating Agreement". */
   title: string;
   offeringId?: string | null;
   clientId?: string | null;
@@ -56,7 +56,7 @@ export function dedupeKey(n: Pick<SubmissionNotice, "kind" | "ref" | "offeringId
 export function buildMessage(n: { title: string; place: string; submitter: string | null; mention: string | null; url: string; when: string; completed?: boolean }) {
   const tag = n.mention ?? "_No Operations owner assigned._";
   const head = n.completed ? "Completed" : "New submission";
-  const text = `${tag} ${head} · ${n.place}`;
+  const text = `${tag} ${head} - ${n.place}`;
   return {
     text,
     blocks: [
@@ -145,7 +145,7 @@ export async function notifyVerificationConfirmation(input: { check: Verificatio
 /**
  * Posts to #compliance-regulatory when a person's KYC and AML are both fully
  * clear (approved with no hits). Best-effort, deduped per person; carries only
- * the person name, fund and a link, never ID numbers or screening details.
+ * the person name, fund and a link - never ID numbers or screening details.
  */
 export async function notifyComplianceClear(n: { personId: string; personName: string; offeringId?: string | null }): Promise<void> {
   try {
@@ -160,7 +160,7 @@ export async function notifyComplianceClear(n: { personId: string; personName: s
     }
     const when = new Date().toLocaleString("en-US", { timeZone: "America/Chicago", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
     const url = operationsNoticeUrl("/ops/compliance");
-    const text = `KYC/AML fully clear · ${n.personName}`;
+    const text = `KYC/AML fully clear - ${n.personName}`;
     const r = await slack("chat.postMessage", {
       channel: COMPLIANCE_SLACK_CHANNEL,
       unfurl_links: false,

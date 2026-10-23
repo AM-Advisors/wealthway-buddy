@@ -1,10 +1,10 @@
 /**
  * Secondary email for a person: an extra address (e.g. a personal email) that
- * receives copies of that person's informational Harmonious emails, signing
+ * receives copies of that person's informational Harmonious emails — signing
  * requests, signing reminders, document sends and identity-check links.
  *
  * Security boundary: account credentials, one-time codes, invitations and
- * password resets NEVER go to the secondary address, the primary login email
+ * password resets NEVER go to the secondary address — the primary login email
  * is the only address that can receive anything that grants access.
  */
 

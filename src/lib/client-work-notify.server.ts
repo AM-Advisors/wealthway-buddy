@@ -1,7 +1,7 @@
 /**
  * Controlled client notifications for high-value transitions only (approval required, information required,
  * request completed, material update). Uses the existing notification_events outbox → fund managers' email;
- * bodies carry status wording only, never amounts, investor or bank data. Staff are notified through tasks.
+ * bodies carry status wording only — never amounts, investor or bank data. Staff are notified through tasks.
  */
 export async function notifyFundManagers(fundId: string, kind: "approval_required" | "information_required" | "request_completed" | "material_update", title: string, portalPath: string, eventRef?: string) {
   const db = (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;

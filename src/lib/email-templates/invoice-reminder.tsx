@@ -163,7 +163,7 @@ function InvoiceReminder({
 export const template = {
   component: InvoiceReminder,
   subject: (data: Record<string, any>) =>
-    `Reminder: invoice ${data?.['invoiceNumber'] ?? ''} · ${data?.['amount'] ?? ''} ${
+    `Reminder: invoice ${data?.['invoiceNumber'] ?? ''} - ${data?.['amount'] ?? ''} ${
       data?.['timing'] ?? 'due soon'
     }`.trim(),
   displayName: 'Invoice reminder',

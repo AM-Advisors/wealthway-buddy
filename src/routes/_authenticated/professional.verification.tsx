@@ -65,7 +65,7 @@ function OrganizationVerification() {
   return (
     <div className="space-y-6">
       <p className="text-sm text-muted-foreground">
-        Verification confirms who your firm is. It does not grant any authority on its own, what you
+        Verification confirms who your firm is. It does not grant any authority on its own - what you
         may do always comes from a client's authorization.
       </p>
 

@@ -209,7 +209,7 @@ function SecurityPage() {
         <CardContent className="space-y-1">
           {(data?.events ?? []).map((e) => (
             <div key={e.id} className="flex flex-wrap justify-between gap-2 border-b py-2 text-sm last:border-0">
-              <span>{EVENT_LABELS[e.event_type] ?? e.event_type}{e.action ? ` · ${e.action}` : ""}</span>
+              <span>{EVENT_LABELS[e.event_type] ?? e.event_type}{e.action ? ` - ${e.action}` : ""}</span>
               <span className="text-xs text-muted-foreground">
                 {[e.city, e.country].filter(Boolean).join(", ") || "-"} · {e.ip ?? "-"} · {fmt(e.created_at)}
               </span>

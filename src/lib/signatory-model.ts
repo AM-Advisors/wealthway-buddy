@@ -1,5 +1,5 @@
 /**
- * Phase 3C vocabulary: verified firms, professional credentials, delegation
+ * Phase 3C vocabulary - verified firms, professional credentials, delegation
  * acceptance, documented legal authority and delegated signing.
  *
  * Client-safe. Nothing here grants anything; it only names the closed sets the

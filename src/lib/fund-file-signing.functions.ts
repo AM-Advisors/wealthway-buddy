@@ -203,7 +203,7 @@ export const sendFileForSignatureFn = createServerFn({ method: "POST" }).middlew
   });
 
 /**
- * Send a document to the fund's signatory only, for documents like the
+ * Send a document to the fund's signatory only - for documents like the
  * operating agreement that the fund manager signs alone. One signer row,
  * signing order 1; the same signing page, reminders and audit apply.
  */

@@ -151,7 +151,7 @@ function ManagerProfilePage() {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Your profile</h1>
           <p className="text-sm text-muted-foreground">
-            Keep your details current, investors and the Harmonious team see this contact
+            Keep your details current - investors and the Harmonious team see this contact
             information.
           </p>
         </div>

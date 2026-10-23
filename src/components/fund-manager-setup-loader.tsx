@@ -213,7 +213,7 @@ export function History({ items, isStaff, onChange }: { items: any[]; isStaff: b
       {shown.map((i) => (
         <div key={i.id} className="rounded-md border p-3 text-sm">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <span className="font-medium">{SECTION_LABEL[i.section as Section]}{i.doc_kind ? ` · ${DOC_KINDS.find((d) => d[0] === i.doc_kind)?.[1]}` : ""}</span>
+            <span className="font-medium">{SECTION_LABEL[i.section as Section]}{i.doc_kind ? ` — ${DOC_KINDS.find((d) => d[0] === i.doc_kind)?.[1]}` : ""}</span>
             <div className="flex items-center gap-2"><span className="text-xs text-muted-foreground">{new Date(i.submitted_at).toLocaleDateString()}</span><StatusBadge status={i.status} /></div>
           </div>
           <dl className="mt-2 grid gap-x-4 gap-y-1 sm:grid-cols-2">

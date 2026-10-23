@@ -57,7 +57,7 @@ export const Route = createFileRoute("/_authenticated/client")({
 function ClientPortalLayout() {
   const logSignIn = useServerFn(recordPortalSignIn);
   useEffect(() => {
-    // Once per browser session: covers Google sign-ins, which the password
+    // Once per browser session - covers Google sign-ins, which the password
     // form's own attempt logging never sees.
     if (sessionStorage.getItem("harmonious-sign-in-logged")) return;
     sessionStorage.setItem("harmonious-sign-in-logged", "1");

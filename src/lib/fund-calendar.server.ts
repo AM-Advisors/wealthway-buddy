@@ -1,7 +1,7 @@
 /**
  * Fund Operating Calendar. Server-only. Reads re-check fund access; clients only see client-visible items
  * without internal notes. Writes (items, rules, schedule generation, task generation) are Harmonious staff only.
- * Generation is an explicit staff action, page views never change state. Dedupe: recurring items by
+ * Generation is an explicit staff action — page views never change state. Dedupe: recurring items by
  * (fund, source, source_ref = rule:period); tasks by (source='calendar', source_ref = item id) + item.task_id.
  */
 import { CALENDAR_TEMPLATES, occurrences, taskDue, type Cadence } from "@/lib/fund-calendar-templates";
@@ -118,7 +118,7 @@ export async function generateSchedule(uid: string, fundId: string, today = new 
   const rows: any[] = [];
   for (const r of (rules ?? []) as any[]) {
     for (const o of occurrences(r, today, horizon)) rows.push({
-      fund_id: fundId, title: `${r.title} | ${o.period}`, category: r.category, due_date: o.due, rule_id: r.id, period_label: o.period,
+      fund_id: fundId, title: `${r.title} — ${o.period}`, category: r.category, due_date: o.due, rule_id: r.id, period_label: o.period,
       responsible_party: r.responsible_party, responsible_team: r.responsible_team, client_visibility: r.client_visibility,
       generate_task: r.generate_task, task_lead_days: r.task_lead_days, source: "RECURRING", source_ref: `${r.id}:${o.period}`,
       report_status: r.category === "REPORTING" ? "SCHEDULED" : null, created_by: uid,

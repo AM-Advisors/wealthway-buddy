@@ -17,7 +17,7 @@ While a single-asset vehicle manages one or two legal tiers, a **Fund of Funds f
 3. **Severe K-1 Cascading Delays:** Aggregating 20 to 50 underlying Schedule K-1s with disparate timelines before distributing consolidated K-1s to FoF investors.
 4. **Multi-Tiered Waterfall & Carry Structures:** Calculating complex hurdle rates, European vs. American waterfalls, and catch-up distributions.
 
-**Harmonious solves this complexity.** Backed by **$24B+ in Assets Under Administration (AUA)** and **750+ fund managers**, Harmonious provides end-to-end legal formation, institutional LP onboarding, look-through fund accounting, capital call automation, tax aggregation, and a real-time investor portal, delivered on a modern technology stack with dedicated specialist support.
+**Harmonious solves this complexity.** Backed by **$24B+ in Assets Under Administration (AUA)** and **750+ fund managers**, Harmonious provides end-to-end legal formation, institutional LP onboarding, look-through fund accounting, capital call automation, tax aggregation, and a real-time investor portal—delivered on a modern technology stack with dedicated specialist support.
 
 ---
 
@@ -118,7 +118,7 @@ Harmonious provides a complete suite of services across **foundational operation
 
 | Feature / Capability | Traditional Fund Admin | Harmonious Platform |
 | :--- | :--- | :--- |
-| **Onboarding Speed** | 2 to 3 weeks of back-and-forth PDF forms | Same-day digital onboarding with automated KYC/AML |
+| **Onboarding Speed** | 2–3 weeks of back-and-forth PDF forms | Same-day digital onboarding with automated KYC/AML |
 | **Look-Through Reporting** | Static PDF tables with 60-day lag | Dynamic portfolio drill-down into underlying funds & SPVs |
 | **Underlying K-1 Tracking** | Manual spreadsheet logging; frequent surprises | Automated intake tracker with real-time status visibility |
 | **Capital Call Management** | Fragmented email notices & manual wire checks | Automated batch notices, tracking, and instant bank reconciliation |

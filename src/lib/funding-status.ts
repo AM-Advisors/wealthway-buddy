@@ -78,7 +78,7 @@ export function canonicalFundingState(f: FundingFacts): CanonicalFundingState {
   return "ready_for_funding";
 }
 
-/** Reconciled funded capital only: never intended/subscription/reported amounts. */
+/** Reconciled funded capital only - never intended/subscription/reported amounts. */
 export function reconciledFundedCents<T>(rows: readonly T[], status: (r: T) => string | null | undefined, amount: (r: T) => number | null | undefined): number {
   return rows.reduce((n, r) => (isReconciledFunding(status(r)) ? n + Number(amount(r) ?? 0) : n), 0);
 }

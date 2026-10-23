@@ -111,7 +111,7 @@ function ArticleTab({ p, set, sources }: TP & { sources: string[] }) {
   return <div className="grid gap-3">
     <F label="SEO article title"><input className={inp} value={p.seo_title} onChange={(e) => set({ seo_title: e.target.value })} /></F>
     <F label="Social headline"><input className={inp} value={p.social_headline} onChange={(e) => set({ social_headline: e.target.value })} /></F>
-    <F label="Outline (one heading per line; points after ' - ')"><textarea className={inp} rows={6} value={p.outline.map((o) => [o.heading, ...o.points.map((x) => ` · ${x}`)].join("\n")).join("\n")}
+    <F label="Outline (one heading per line; points after ' - ')"><textarea className={inp} rows={6} value={p.outline.map((o) => [o.heading, ...o.points.map((x) => ` - ${x}`)].join("\n")).join("\n")}
       onChange={(e) => { const out: ContentPackage["outline"] = []; for (const l of e.target.value.split("\n")) { if (l.startsWith(" - ")) out.at(-1)?.points.push(l.slice(3)); else if (l.trim()) out.push({ heading: l, points: [] }); } set({ outline: out }); }} /></F>
     <F label="Article (HTML)"><textarea className={`${inp} font-mono text-xs`} rows={18} value={p.body_html} onChange={(e) => set({ body_html: e.target.value })} /></F>
     <div className="rounded-md border border-border p-3"><p className="mb-2 text-xs font-semibold">Preview</p><div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: p.body_html.replace(/<script[\s\S]*?<\/script>/gi, "") }} /></div>
@@ -130,7 +130,7 @@ function ArticleTab({ p, set, sources }: TP & { sources: string[] }) {
         <select className={`${inp} ${c.kind === "fact" && !c.source_url ? "border-destructive" : ""}`} value={c.source_url} onChange={(e) => upd(i, { source_url: e.target.value })}><option value="">No source</option>{sources.map((x) => <option key={x} value={x}>{x}</option>)}</select>
         <Button type="button" size="sm" variant="ghost" onClick={() => set({ claims: claims.filter((_, j) => j !== i) })}>Remove</Button>
         {c.kind === "corroborated" && <select className={`${inp} md:col-start-3`} value={c.corroborating_url ?? ""} onChange={(e) => upd(i, { corroborating_url: e.target.value })}><option value="">Second independent source…</option>{sources.map((x) => <option key={x} value={x}>{x}</option>)}</select>}
-        {(c.attribution || c.note) && <p className="text-[11px] text-muted-foreground md:col-span-4">{c.attribution}{c.note ? ` · ${c.note}` : ""}</p>}
+        {(c.attribution || c.note) && <p className="text-[11px] text-muted-foreground md:col-span-4">{c.attribution}{c.note ? ` — ${c.note}` : ""}</p>}
       </div>)}
       <Button type="button" size="sm" variant="outline" onClick={() => set({ claims: [...claims, { text: "", kind: "analysis", source_url: "" }] })}>Add claim</Button>
     </div>
@@ -159,7 +159,7 @@ function SeoTab({ p, set, d }: TP & { d: any }) {
       <F label="Search intent"><input className={inp} value={p.search_intent} onChange={(e) => set({ search_intent: e.target.value })} /></F>
       <F label="Target audience"><input className={inp} value={p.audience ?? ""} onChange={(e) => set({ audience: e.target.value })} /></F>
       <F label="Topic cluster"><select className={inp} value={p.topic_cluster ?? ""} onChange={(e) => set({ topic_cluster: e.target.value })}><option value="">—</option>{CLUSTERS.map((c) => <option key={c.key} value={c.label}>{c.label}</option>)}</select></F>
-      <div className="md:col-span-2"><F label="Opening answer (direct 1 to 2 sentence answer)"><textarea className={inp} rows={2} value={p.opening_answer ?? ""} onChange={(e) => set({ opening_answer: e.target.value })} /></F></div>
+      <div className="md:col-span-2"><F label="Opening answer (direct 1–2 sentence answer)"><textarea className={inp} rows={2} value={p.opening_answer ?? ""} onChange={(e) => set({ opening_answer: e.target.value })} /></F></div>
       <F label="Related questions (one per line)"><textarea className={inp} rows={4} value={lines(p.related_questions)} onChange={(e) => set({ related_questions: unl(e.target.value) })} /></F>
       <F label="Suggested pillar page"><select className={inp} value={p.pillar_page ?? ""} onChange={(e) => set({ pillar_page: e.target.value })}><option value="">None</option>{pub.map((x: any) => <option key={x.url} value={x.url}>{x.title}</option>)}</select></F>
       <F label="Supporting articles (published URLs, one per line)"><textarea className={inp} rows={3} value={lines(p.supporting_articles)} onChange={(e) => set({ supporting_articles: unl(e.target.value) })} /></F>

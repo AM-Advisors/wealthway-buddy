@@ -21,7 +21,7 @@ import { OPS_PREFIXES } from "@/lib/host-routing";
 
 export type NavBadgeKey = "signOff" | "applications" | "unpaidInvoices" | "serviceRequests" | "myClients";
 
-/** The session fields navigation may read, all produced by resolveSession. */
+/** The session fields navigation may read - all produced by resolveSession. */
 export type NavigationSession = {
   operations: boolean;
   staffRoles?: readonly string[];
@@ -45,7 +45,7 @@ export type Navigation = {
   /** Operations menu, from granular capabilities only. */
   operations: { id: string; title: string; url: string; icon: string }[];
   account: ClientNavLink[];
-  /** Exactly the workspaces the server resolved, nothing else. */
+  /** Exactly the workspaces the server resolved - nothing else. */
   switcher: NavigationSession["workspaces"];
   operationsLink: string | null;
 };

@@ -7,7 +7,7 @@
  *
  * Three rules hold everywhere:
  *  - descriptive Client relationship roles never become application authority;
- *  - selecting a service only ever makes it Proposed. Contracted comes only
+ *  - selecting a service only ever makes it Proposed - Contracted comes only
  *    from a fully executed SOW (also enforced in the database);
  *  - nothing is guessed: no price, no template and no precedence decision.
  */
@@ -52,7 +52,7 @@ export function applicationAuthorityFromRoles(_roles: readonly string[]): {
 
 /**
  * The funds a person may open in the portal: exactly the fund_managers rows
- * they hold, never every fund of the Client, whatever their descriptive role.
+ * they hold - never every fund of the Client, whatever their descriptive role.
  */
 export function portalFundAccess(
   userId: string | null,
@@ -319,7 +319,7 @@ export function resolveSowTemplate(
   return { status: "resolved", template: ok[0]! };
 }
 
-/** A manual override may choose another approved template, never draft/retired, always with a reason. */
+/** A manual override may choose another approved template - never draft/retired, always with a reason. */
 export function validateTemplateOverride(
   t: SowTemplate | undefined,
   engagementType: string,

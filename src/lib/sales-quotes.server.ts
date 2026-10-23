@@ -137,7 +137,7 @@ export async function saveQuote(userId: string, d: { id?: string | null | undefi
     if (price.invoiceCents === null || price.blockers.some(b => !b.startsWith("Confirm the custom"))) throw new Error(price.blockers[0] ?? "A custom bookkeeping price is required.");
     if (l.bookkeeping.effectiveOn < version.effective_on) throw new Error("The service date cannot precede the pricing version's effective date.");
     snapshots.set(i, { ...price.input, configuration: config, configurationEffectiveOn: version.effective_on, pricing: price, scope: bookkeepingTerms(config, price.input), publicationStatus: "proposed" });
-    return { ...l, quantity: 1, label: `${config.name} · ${price.tier.name} (${price.input.reconciliation} reconciliation)`, unitCents: price.invoiceCents, baselineUnitCents: price.invoiceCents, billingFrequency: price.input.billing, firstBillOn: price.input.effectiveOn };
+    return { ...l, quantity: 1, label: `${config.name} — ${price.tier.name} (${price.input.reconciliation} reconciliation)`, unitCents: price.invoiceCents, baselineUnitCents: price.invoiceCents, billingFrequency: price.input.billing, firstBillOn: price.input.effectiveOn };
   }));
   const priced = priceQuote(verifiedLines);
   if (d.offeringId) {

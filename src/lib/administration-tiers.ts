@@ -80,7 +80,7 @@ export const ADMINISTRATION_TIERS: AdministrationTier[] = [
     name: "White Glove Fund Administration",
     positioning: "Managed Fund Operations",
     statement: "We run the back office with you.",
-    operatingModel: "Harmonious managed, we proactively manage recurring operational requirements so you don't have to remember routine deadlines.",
+    operatingModel: "Harmonious managed — we proactively manage recurring operational requirements so you don't have to remember routine deadlines.",
     prices: { annual: 36000, quarterly: 10000, monthly: 3500 },
     selfServe: true,
     includesPrevious: "fund_admin",
@@ -132,7 +132,7 @@ export function annualSavings(t: AdministrationTier): number | null {
   return t.prices.monthly * 12 - t.prices.annual;
 }
 
-// Ownership lanes, the central "who is this waiting on" concept.
+// Ownership lanes — the central "who is this waiting on" concept.
 export type OwnershipLane = "harmonious" | "your_approval" | "information_required" | "waiting_investor" | "waiting_third_party" | "completed";
 
 export const OWNERSHIP_LANES: { key: OwnershipLane; label: string }[] = [

@@ -320,7 +320,7 @@ export function FundTaxDocumentsPanel({ offeringId }: { offeringId: string }) {
                   .map(([box, v]) => (
                     <div key={box} className="contents">
                       <dt className="text-xs text-muted-foreground">
-                        Box {box}{K1_BOXES[box] ? ` · ${K1_BOXES[box]}` : ""}
+                        Box {box}{K1_BOXES[box] ? ` - ${K1_BOXES[box]}` : ""}
                       </dt>
                       <dd>{usd(Number(v))}</dd>
                     </div>

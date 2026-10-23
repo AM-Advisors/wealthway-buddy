@@ -5,7 +5,7 @@
  * record is re-read server-side and the caller is authorized against the fund
  * the record actually belongs to. Fund managers propose and acknowledge;
  * Harmonious approves and makes effective. Approved valuations only *prepare*
- * a journal, posting still runs through the existing accounting workflow.
+ * a journal - posting still runs through the existing accounting workflow.
  */
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { reviewerScope, assertScopeAllows, type ReviewerScope } from "@/lib/reviewer-authz.server";
@@ -610,7 +610,7 @@ export async function checkValuation(userId: string, valuationId: string) {
       kind: kind as any,
       offeringId: asset.offering_id,
       bookId: asset.book_id,
-      detail: `${asset.issuer_name} · ${asset.asset_name}`,
+      detail: `${asset.issuer_name} - ${asset.asset_name}`,
       context: { valuation_id: valuation.id, asset_id: asset.id },
       openedBy: userId,
     });
@@ -782,7 +782,7 @@ async function accountIds(bookId: string, codes: string[]) {
 }
 
 /**
- * Prepare (never post) the unrealized movement behind an effective
+ * Prepare - never post - the unrealized movement behind an effective
  * valuation. The movement is measured against the last value already
  * recognized in the ledger, so recomputing or superseding a valuation cannot
  * recognize the same gain twice.
@@ -816,7 +816,7 @@ export async function prepareValuationJournal(userId: string, valuationId: strin
     recognized,
     Number(valuation.value_cents),
     policy,
-    `${synthetic ? `[${SYNTHETIC_ASSUMPTION_LABEL}] ` : ""}Unrealized movement · ${asset.issuer_name} ${asset.asset_name}${synthetic ? " (not independently verified)" : ""}`,
+    `${synthetic ? `[${SYNTHETIC_ASSUMPTION_LABEL}] ` : ""}Unrealized movement - ${asset.issuer_name} ${asset.asset_name}${synthetic ? " (not independently verified)" : ""}`,
   );
   if (!journal) return { journalEntryId: null, created: false, reason: "no_movement" as const };
 
@@ -964,7 +964,7 @@ export async function prepareRealizationJournal(userId: string, realizationId: s
     },
     Number(row.proceeds_cents),
     policy,
-    `Disposition · ${asset.issuer_name} ${asset.asset_name}`,
+    `Disposition - ${asset.issuer_name} ${asset.asset_name}`,
   );
   if (!journal) fail("Nothing to post for this disposition.");
 
@@ -1015,7 +1015,7 @@ function toRecords(rows: any[]): ValuationRecord[] {
   }));
 }
 
-/** The value that was effective on a date, never simply today's latest. */
+/** The value that was effective on a date - never simply today's latest. */
 export async function valuationAsOfDate(userId: string, assetId: string, date: string) {
   const { asset } = await authorizeAsset(userId, assetId);
   const { data } = await db()

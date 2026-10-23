@@ -11,7 +11,7 @@ import { decideMigrationPaymentFn, fundMigrationPaymentsFn, recordMigrationPayme
 
 const usd = (c: number) => (c / 100).toLocaleString("en-US", { style: "currency", currency: "USD" });
 
-/** Staff-only record of what a migrated fund already paid Harmonious and what it covers. Record only, nothing is charged. */
+/** Staff-only record of what a migrated fund already paid Harmonious and what it covers. Record only - nothing is charged. */
 export function MigrationPaymentsCard({ fundId }: { fundId: string }) {
   const qc = useQueryClient();
   const load = useServerFn(fundMigrationPaymentsFn);

@@ -57,7 +57,7 @@ export async function designHome(userId: string) {
 
 type Create = { kind: "blank" | "template" | "item" | "story" | "design"; template: TemplateKey; format: DesignFormat; source_id?: string | null; title?: string | null };
 
-/** Creates a design linked to its source. Claims come only from the stored package/story, nothing is made up. */
+/** Creates a design linked to its source. Claims come only from the stored package/story — nothing is made up. */
 export async function createDesign(userId: string, c: Create) {
   const { db } = await ctx(userId);
   if (!isFormat(c.format)) throw new Error("Unknown format.");

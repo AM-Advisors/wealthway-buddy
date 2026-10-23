@@ -97,7 +97,7 @@ export const Route = createFileRoute("/api/public/webhooks/box-sign")({
             const cs = await completeFundCountersign(supabaseAdmin, { signerRowId: csSigner.id, requestId: signRequestId });
             await supabaseAdmin.from("box_sign_webhook_events").update({ outcome: cs.completed ? "countersigned" : "countersign_pending", processed_at: new Date().toISOString() }).eq("provider_event_id", deliveryId);
           } else if (result.status === "unknown_sign_request") {
-            // Not a fund document, it may be a diligence-room NDA.
+            // Not a fund document - it may be a diligence-room NDA.
             const { syncNdaSignRequest } = await import("@/lib/nda-sign-complete.server");
             const nda = await syncNdaSignRequest(signRequestId, opts);
             console.log("[box-sign] webhook nda", trigger, signRequestId, nda.status);

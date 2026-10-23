@@ -2,7 +2,7 @@
  * The Action Center model: one shared shape for "what needs your attention".
  *
  * Nothing here is stored. An attention item is a *reading* of a workflow record
- * that already exists, an identity check waiting on the investor, a capital
+ * that already exists - an identity check waiting on the investor, a capital
  * call Harmonious is preparing, a signature sitting with a counterparty. When
  * the underlying record moves, the item changes on the next read, because there
  * is no second status kept anywhere.
@@ -117,7 +117,7 @@ const STATUS_WORDS: Record<string, string> = {
   // capital and cash
   published: "Payment instructions issued",
   awaiting_wire: "Waiting for your transfer",
-  processing: "Transfer detected: Harmonious is confirming it",
+  processing: "Transfer detected - Harmonious is confirming it",
   settled: "Funds received and recorded",
   auto_matched: "Transfer detected - Harmonious is confirming it",
   harmonious_reviewed: "Harmonious is confirming your transfer",
@@ -142,7 +142,7 @@ export function plainStatus(workflowState: string, fallback?: string): string {
   return key.replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase());
 }
 
-/** True when no authoritative wording exists, used by tests and the gap list. */
+/** True when no authoritative wording exists - used by tests and the gap list. */
 export function hasPlainStatus(workflowState: string): boolean {
   return Boolean(STATUS_WORDS[String(workflowState ?? "").toLowerCase()]);
 }

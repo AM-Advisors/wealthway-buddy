@@ -8,7 +8,7 @@ import { kycSchema } from "@/lib/onboarding.functions";
 /**
  * The investor's own KYC application, taken inside the fund's investor room:
  * who they are, a government ID, a proof of address and how they qualify as an
- * accredited investor. Everything lands in review, a fund administrator or an
+ * accredited investor. Everything lands in review - a fund administrator or an
  * assigned manager has to approve it before the wire step opens.
  */
 

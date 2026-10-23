@@ -1,6 +1,6 @@
 /**
  * Quote sections: every part of a quote carries an on/off switch (SPST).
- * Switching a part off hides it from the client, the wording stays recorded, nothing is deleted.
+ * Switching a part off hides it from the client — the wording stays recorded, nothing is deleted.
  */
 import {
   ABOUT_HARMONIOUS,

@@ -279,8 +279,8 @@ export function SignatureBlockEditor({
                 const drag = dragRef.current;
                 if (!drag) return;
                 const rect = e.currentTarget.getBoundingClientRect();
-                const x = (e.clientX (rect.left) / rect.width) drag.dx;
-                const y = (e.clientY (rect.top) / rect.height) drag.dy;
+                const x = (e.clientX - rect.left) / rect.width - drag.dx;
+                const y = (e.clientY - rect.top) / rect.height - drag.dy;
                 setBlocks((prev) =>
                   prev.map((b) =>
                     b.key === drag.key
@@ -333,8 +333,8 @@ export function SignatureBlockEditor({
                       ).getBoundingClientRect();
                       dragRef.current = {
                         key: b.key,
-                        dx: (e.clientX (rect.left) / rect.width) b.x,
-                        dy: (e.clientY (rect.top) / rect.height) b.y,
+                        dx: (e.clientX - rect.left) / rect.width - b.x,
+                        dy: (e.clientY - rect.top) / rect.height - b.y,
                       };
                     }}
                     onClick={(e) => e.stopPropagation()}

@@ -45,7 +45,7 @@ function ContentStudio() {
     setBusy(true);
     try {
       const r = await start({ data: input });
-      toast.success(r.existing ? "An open item already uses these stories, opening it instead of duplicating." : `Draft package v${r.version} created. It stays a draft until reviewed.`);
+      toast.success(r.existing ? "An open item already uses these stories — opening it instead of duplicating." : `Draft package v${r.version} created. It stays a draft until reviewed.`);
       nav({ to: "/marketing/studio/content/$itemId", params: { itemId: r.itemId } });
     } catch (e: any) { toast.error(e.message); } finally { setBusy(false); }
   };

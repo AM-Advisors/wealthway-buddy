@@ -61,7 +61,7 @@ function Page() {
         <CardContent className="space-y-2 text-sm">
           <div className="flex flex-wrap gap-2"><Badge>{b.status}</Badge><Badge variant="outline">{b.entry_count} journals</Badge><Badge variant="outline">hash {b.proposal_hash}</Badge></div>
           <p>Reason: {b.reason}</p>
-          <p>Prepared {new Date(b.prepared_at).toLocaleString()}{b.reviewed_at && ` · reviewed ${new Date(b.reviewed_at).toLocaleString()} · “${b.review_note}”`}{b.applied_at && ` · applied ${new Date(b.applied_at).toLocaleString()}`}</p>
+          <p>Prepared {new Date(b.prepared_at).toLocaleString()}{b.reviewed_at && ` · reviewed ${new Date(b.reviewed_at).toLocaleString()} — “${b.review_note}”`}{b.applied_at && ` · applied ${new Date(b.applied_at).toLocaleString()}`}</p>
           {b.status === "prepared" && (
             isPreparer ? <p className="text-muted-foreground">You prepared this batch, so you cannot review it.</p> : (
               <div className="space-y-2">

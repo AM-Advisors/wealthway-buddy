@@ -639,7 +639,7 @@ export const createAmendment = createServerFn({ method: "POST" })
     await audit(context, who, {
       action: "sow.amendment_created",
       clientId: (sow as any).client_id,
-      target: `${(sow as any).title} · amendment ${nextNo}`,
+      target: `${(sow as any).title} - amendment ${nextNo}`,
     });
 
     return { id: (created as any).id as string, amendmentNo: nextNo };
@@ -847,7 +847,7 @@ export const askSalesAboutAgreement = createServerFn({ method: "POST" })
     const { data: client } = await db.from("clients").select("name, legal_name").eq("id", (sow as any).client_id).maybeSingle();
     const { createTask } = await import("./staff-tasks.server");
     const t = await createTask(who.userId, {
-      title: `Agreement question: ${(client as any)?.legal_name || (client as any)?.name || "client"} | ${(sow as any).title}`,
+      title: `Agreement question: ${(client as any)?.legal_name || (client as any)?.name || "client"} - ${(sow as any).title}`,
       description: data.note, priority: "normal", team: "sales", assignee: (owner as any)?.user_id ?? null,
     });
     await audit(context, who, { action: "sow.sales_asked", clientId: (sow as any).client_id, target: (sow as any).title });

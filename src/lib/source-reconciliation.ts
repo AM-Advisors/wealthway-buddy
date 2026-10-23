@@ -30,7 +30,7 @@ export type SourceCounts = {
 };
 export type SourceCard = { source: SourceId; status: ConnectionStatus; lastInventoryAt: string | null; counts: SourceCounts | null; note: string };
 
-/** An unavailable source never reports counts, null, not zero. */
+/** An unavailable source never reports counts - null, not zero. */
 export function sourceCard(source: SourceId, status: ConnectionStatus, note: string, counts: SourceCounts | null = null, lastInventoryAt: string | null = null): SourceCard {
   const available = status === "connected" || status === "partial";
   return { source, status, note, counts: available ? counts : null, lastInventoryAt: available ? lastInventoryAt : null };

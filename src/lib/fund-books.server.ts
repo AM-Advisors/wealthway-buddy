@@ -1,5 +1,5 @@
 // Server-only: bank statement ingestion, asset marks, and books-derived figures for one fund.
-// Records history only: never moves money, never files anything.
+// Records history only - never moves money, never files anything.
 import { assertFund, db, isStaff } from "@/lib/fund-tabs.server";
 import { STATEMENT_CATEGORIES, statementLineBooksAction, balanceTie, dedupeKey, ruleCategory, type Entry } from "@/lib/fund-books-model";
 
@@ -177,7 +177,7 @@ async function bookFor(uid: string, fundId: string) {
   const { data: b } = await d.from("ledger_books").select("id").eq("offering_id", fundId).eq("domain", "fund_accounting").maybeSingle();
   if (b) return String((b as any).id);
   const { data: off } = await d.from("offerings").select("name, client_id").eq("id", fundId).maybeSingle();
-  const { data: nb, error } = await d.from("ledger_books").insert({ name: `${(off as any)?.name ?? "Fund"} · fund accounting`, offering_id: fundId, client_id: (off as any)?.client_id ?? null, domain: "fund_accounting", created_by: uid }).select("id").single();
+  const { data: nb, error } = await d.from("ledger_books").insert({ name: `${(off as any)?.name ?? "Fund"} - fund accounting`, offering_id: fundId, client_id: (off as any)?.client_id ?? null, domain: "fund_accounting", created_by: uid }).select("id").single();
   if (error) throw new Error("Couldn't open the fund's books.");
   const { seedChartOfAccounts } = await import("@/lib/accounting.server");
   await seedChartOfAccounts(String(nb.id));
@@ -213,7 +213,7 @@ export async function recordMark(uid: string, fundId: string, m: { assetId: stri
     asset_id: m.assetId, book_id: (asset as any).book_id, offering_id: fundId, version: Number((cur as any)?.version ?? 0) + 1, status,
     valuation_date: m.date, effective_date: m.date, value_cents: m.valueCents, quantity: (asset as any).quantity, cost_basis_cents: (asset as any).cost_basis_cents,
     methodology: m.method, source_type: a.staff ? "internal_model" : "manager_mark", prior_valuation_id: (eff as any)?.id ?? null,
-    change_cents: prior == null ? 0 : m.valueCents (prior, change_pct: prior ? Math.round(((m.valueCents) prior) / prior) * 10000) / 100 : null,
+    change_cents: prior == null ? 0 : m.valueCents - prior, change_pct: prior ? Math.round(((m.valueCents - prior) / prior) * 10000) / 100 : null,
     prepared_by: uid, prepared_by_role: a.staff ? "harmonious" : "fund_manager", note: m.note,
     ...(a.staff ? { approved_by: uid, approved_at: now, effective_at: now } : {}),
   }).select("id").single();
@@ -420,7 +420,7 @@ export async function removeManualLine(uid: string, fundId: string, lineId: stri
   return { ok: true };
 }
 
-/** One-off bank line not on a statement yet. Record only, nothing is moved. */
+/** One-off bank line not on a statement yet. Record only - nothing is moved. */
 export async function addManualTransaction(uid: string, fundId: string, t: { postedOn: string; description: string; amountCents: number; direction: "in" | "out"; reference: string | null; category: string | null; onboardingId: string | null }) {
   await assertStaffFund(uid, fundId);
   const { manualLineError } = await import("@/lib/fund-books-model");

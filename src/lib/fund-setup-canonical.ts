@@ -277,7 +277,7 @@ function tally(required: [boolean, string][]): Result {
   return { status: filled === 0 ? "not_started" : "in_progress", next };
 }
 
-/** Fund Setup status per section: separate from Investment Readiness. */
+/** Fund Setup status per section - separate from Investment Readiness. */
 export function sectionStatuses(f: SetupFacts): Record<CanonicalSection, Result> {
   const term = termApplies(f.fundType);
   const details = tally([

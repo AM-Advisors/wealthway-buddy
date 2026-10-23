@@ -67,7 +67,7 @@ export function FormationRecordCard({ offeringId }: { offeringId: string }) {
         <Section title="Formation documents">
           {d.documents.length === 0 ? <p className="text-sm text-muted-foreground">No formation documents yet.</p> : (
             <ul className="divide-y text-sm">{d.documents.map((doc: any) => (
-              <li key={doc.id} className="flex justify-between gap-2 py-1.5"><span>{doc.typeLabel}{doc.title !== doc.typeLabel ? ` · ${doc.title}` : ""} <span className="text-xs text-muted-foreground">v{doc.version}{!doc.current ? " (earlier version)" : ""}</span></span><span className="text-xs text-muted-foreground">{fmtDate(doc.at)}</span></li>
+              <li key={doc.id} className="flex justify-between gap-2 py-1.5"><span>{doc.typeLabel}{doc.title !== doc.typeLabel ? ` - ${doc.title}` : ""} <span className="text-xs text-muted-foreground">v{doc.version}{!doc.current ? " (earlier version)" : ""}</span></span><span className="text-xs text-muted-foreground">{fmtDate(doc.at)}</span></li>
             ))}</ul>
           )}
           {d.canEdit && <DocumentUpload offeringId={offeringId} onChanged={refresh} />}

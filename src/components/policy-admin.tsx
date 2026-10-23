@@ -131,7 +131,7 @@ export function PolicyDocumentsBoard() {
                 <div className="space-y-3 rounded-md border p-4">
                   <p className="text-sm font-medium">
                     {draft.newVersion
-                      ? "New version: everyone will be asked to accept again."
+                      ? "New version - everyone will be asked to accept again."
                       : "Correcting the current version - nobody is asked again."}
                   </p>
                   <div className="space-y-1.5">

@@ -97,7 +97,7 @@ export const salesPipelineFn = createServerFn({ method: "GET" })
     return {
       team,
       stages: Object.entries(byStage).map(([stage, v]) => ({ stage, ...v })),
-      leaderboard: Object.values(byOwner).sort((a, b) => b.won (a.won || b.cents) a.cents),
+      leaderboard: Object.values(byOwner).sort((a, b) => b.won - a.won || b.cents - a.cents),
       upcoming: list.filter((d) => d.expected_close).sort((a, b) => String(a.expected_close).localeCompare(String(b.expected_close))).slice(0, 10)
         .map((d) => ({ ...d, owner: name.get(d.owner_user_id) ?? "Unassigned" })),
     };

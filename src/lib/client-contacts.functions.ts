@@ -169,7 +169,7 @@ export const setClientContactActive = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-/** Sends one invite email, only when a person clicks Invite / Resend. Same-day repeats are deduplicated. */
+/** Sends one invite email - only when a person clicks Invite / Resend. Same-day repeats are deduplicated. */
 export const inviteClientContact = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))

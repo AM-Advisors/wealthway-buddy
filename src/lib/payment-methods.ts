@@ -1,6 +1,6 @@
 /**
  * How investors may send capital to a fund. Display/instructions only: Harmonious never
- * pulls or pushes money for these methods, investors send it from their own bank.
+ * pulls or pushes money for these methods - investors send it from their own bank.
  */
 export const PAYMENT_METHODS = ["wire", "ach", "check"] as const;
 export type PaymentMethod = (typeof PAYMENT_METHODS)[number];

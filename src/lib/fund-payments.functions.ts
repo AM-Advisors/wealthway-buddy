@@ -17,7 +17,7 @@ async function admin() {
   return supabaseAdmin as any;
 }
 
-/** Works out the client and the a la carte keys on the server, never trusts a client-sent price. */
+/** Works out the client and the a la carte keys on the server - never trusts a client-sent price. */
 export async function resolveTarget(context: any, t: Target): Promise<{ clientId: string; addOnKeys: string[]; offeringId: string | null; serviceLevel: string | null; onboardingId?: string }> {
   if (t.kind === "side_letter") {
     const { resolveSideLetterTarget } = await import("@/lib/side-letter-fee.server");
@@ -157,7 +157,7 @@ export const listOfflineFundPayments = createServerFn({ method: "GET" })
     }));
   });
 
-/** Staff: confirm a wire/ACH payment arrived. Manual reconciliation only, never automatic. */
+/** Staff: confirm a wire/ACH payment arrived. Manual reconciliation only - never automatic. */
 export const markFundPaymentReceived = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid(), note: z.string().min(3).max(500) }).parse(d))

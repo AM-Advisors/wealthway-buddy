@@ -25,12 +25,12 @@ export const ENTITY_TYPES: {
   {
     value: "fund",
     label: "Fund / investment manager",
-    description: "A managed vehicle raising from limited partners, strategy, track record, terms.",
+    description: "A managed vehicle raising from limited partners - strategy, track record, terms.",
   },
   {
     value: "startup",
     label: "Startup / operating company",
-    description: "A company raising a round, cap table, product, customers and traction.",
+    description: "A company raising a round - cap table, product, customers and traction.",
   },
 ];
 

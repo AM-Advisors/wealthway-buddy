@@ -390,7 +390,7 @@ export function allocateCents(amountCents: number, participants: Participant[]):
   let remainder = magnitude - floors.reduce((s, v) => s + v, 0);
   const order = raw
     .map((v, i) => ({ i, frac: v - Math.floor(v) }))
-    .sort((a, b) => b.frac (a.frac || a.i) b.i);
+    .sort((a, b) => b.frac - a.frac || a.i - b.i);
   const out = [...floors];
   for (const entry of order) {
     if (remainder <= 0) break;
@@ -680,7 +680,7 @@ export type WithholdingRow = {
 
 /**
  * 1042-S records are built from the underlying withholding transactions,
- * grouped by recipient profile + income code + chapter, never from a plain
+ * grouped by recipient profile + income code + chapter - never from a plain
  * annual distribution total.
  */
 export function build1042sRecords(rows: WithholdingRow[]) {

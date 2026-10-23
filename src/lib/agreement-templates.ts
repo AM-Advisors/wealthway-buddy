@@ -3,7 +3,7 @@
  *
  * The Statement of Work body is assembled from these templates when a new fund
  * or SPV is requested, and the Master Services Agreement is published from the
- * section list below. Clients never edit this language directly, they approve
+ * section list below. Clients never edit this language directly - they approve
  * a section or raise a change request against it.
  */
 
@@ -50,14 +50,14 @@ const money = (cents?: number | null) =>
 
 /**
  * The Harmonious role disclaimer. Shown as a standalone disclaimer directly under the
- * signature portion of every Statement of Work, quote and proposal signing page, never
+ * signature portion of every Statement of Work, quote and proposal signing page - never
  * buried inside the Services section.
  */
 export const SOW_ROLE_DISCLAIMER = [
   "Harmonious acts solely as an administrative and technology service provider. Nothing in this Statement of Work appoints Harmonious as an investment adviser, broker-dealer, placement agent, custodian, transfer agent, escrow agent, trustee, general partner, fund manager, fiduciary, compliance officer, valuation agent, auditor, accountant, tax preparer or legal counsel, unless a service to that effect is expressly listed above.",
   "Nothing in this Statement of Work, and no communication from Harmonious, is investment, legal, accounting or tax advice, an offer to sell securities, or a solicitation of an offer to buy securities, and none may be relied on as such.",
   "The Client remains solely responsible for its offering, its investment and business decisions, its compliance with securities and other applicable laws, and the accuracy and completeness of the information it provides. Harmonious may rely on that information and on the Client's instructions without independent verification.",
-  "Third-party providers (including banks, verification vendors, registered agents, auditors and tax preparers) act independently. Harmonious coordinates with them where a service depends on them but does not assume their professional role, guarantee their timing, or accept responsibility for their acts or omissions.",
+  "Third-party providers - including banks, verification vendors, registered agents, auditors and tax preparers - act independently. Harmonious coordinates with them where a service depends on them but does not assume their professional role, guarantee their timing, or accept responsibility for their acts or omissions.",
   "Harmonious does not hold, custody or escrow Client or investor funds, and moves money only against the Client's written instruction. The Client's remedies and Harmonious's liability are limited as stated in the Master Services Agreement.",
 ].join("\n\n");
 

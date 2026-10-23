@@ -55,7 +55,7 @@ async function normaliseUpload(file: File): Promise<string> {
     const scale = Math.min(W / img.width, H / img.height);
     const w = img.width * scale;
     const h = img.height * scale;
-    ctx.drawImage(img, (W (w) / 2, (H) h) / 2, w, h);
+    ctx.drawImage(img, (W - w) / 2, (H - h) / 2, w, h);
     return c.toDataURL("image/png");
   } finally {
     URL.revokeObjectURL(url);
@@ -93,7 +93,7 @@ export function SignatureAdoptDialog({
   const point = (e: React.PointerEvent<HTMLCanvasElement>) => {
     const c = canvasRef.current!;
     const r = c.getBoundingClientRect();
-    return { x: ((e.clientX (r.left) / r.width) * W, y: ((e.clientY) r.top) / r.height) * H };
+    return { x: ((e.clientX - r.left) / r.width) * W, y: ((e.clientY - r.top) / r.height) * H };
   };
   const onDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
     const ctx = canvasRef.current?.getContext("2d");

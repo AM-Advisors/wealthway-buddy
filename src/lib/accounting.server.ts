@@ -144,7 +144,7 @@ export async function ledgerBookForOffering(userId: string, offeringId: string) 
     .maybeSingle();
   if (!offering) fail("Fund not found.");
   return openLedgerBook(userId, {
-    name: `${offering.name} · fund accounting`,
+    name: `${offering.name} - fund accounting`,
     offeringId,
     clientId: offering.client_id,
   });
@@ -286,7 +286,7 @@ export async function draftJournalEntry(
     fail("That accounting period is closed. Reopen it with an authorized adjustment first.");
   }
 
-  // Accounts must belong to this book, no borrowing another fund's chart.
+  // Accounts must belong to this book - no borrowing another fund's chart.
   const accountIds = [...new Set(input.lines.map((l) => l.accountId))];
   const { data: accounts } = await db()
     .from("chart_of_accounts")

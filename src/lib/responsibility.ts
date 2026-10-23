@@ -26,7 +26,7 @@ export const RESPONSIBILITY_CLIENT_EXPLANATION: Record<ResponsibilityStatus, str
   COMPLETED: "This item is complete. No further action is required.",
 };
 
-/** Tone tiers, consistent with the design system, not six unrelated colors. */
+/** Tone tiers — consistent with the design system, not six unrelated colors. */
 export type ResponsibilityTone = "active" | "action" | "waiting" | "done";
 export const RESPONSIBILITY_TONE: Record<ResponsibilityStatus, ResponsibilityTone> = {
   HARMONIOUS_HANDLING: "active",

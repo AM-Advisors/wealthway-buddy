@@ -46,7 +46,7 @@ function InvestorLoginPage() {
     if (loading || !session) return;
     let active = true;
     (async () => {
-      // The server decides where this person belongs, the sign-in page never does.
+      // The server decides where this person belongs - the sign-in page never does.
       const intended =
         typeof window === "undefined" ? null : intendedPathFromLocation(window.location.search);
       const to = intended && intended.startsWith("/investor") ? intended : "/investor";

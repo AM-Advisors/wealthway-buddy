@@ -1,5 +1,5 @@
 /**
- * Fund Administration Phase C: server-only capital call, funding instruction
+ * Fund Administration Phase C - server-only capital call, funding instruction
  * and cash-receipt engine.
  *
  * This layer owns NO money truth of its own. It reads and writes through the
@@ -154,7 +154,7 @@ async function commitmentStateFor(positionIds: string[]) {
 
 /**
  * Cash that actually reached the general ledger for one investor position.
- * Read from POSTED journal lines only, this is what "funded" means.
+ * Read from POSTED journal lines only - this is what "funded" means.
  */
 async function postedContributionsFor(offeringId: string) {
   const { data: book } = await db()
@@ -1110,7 +1110,7 @@ export async function detectFundingMatches(userId: string, offeringId: string) {
 
 /**
  * Harmonious decides. Approving hands the cash to the reconciliation and
- * accounting pipeline that already exists, it never writes a balance itself.
+ * accounting pipeline that already exists - it never writes a balance itself.
  */
 export async function decideFundingMatch(
   userId: string,
@@ -1202,7 +1202,7 @@ export async function decideFundingMatch(
     investmentProfileId: expected.investment_profile_id,
   });
 
-  // 2. Journal preparation: accounting review and posting stay separate acts.
+  // 2. Journal preparation - accounting review and posting stay separate acts.
   // An overpayment splits one receipt: contribution for what is owed, investor-credit liability for the rest.
   let creditAccountId: string | null = null;
   if (split.overpaymentDetected) {

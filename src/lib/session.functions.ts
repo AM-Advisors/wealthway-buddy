@@ -36,7 +36,7 @@ export const resolveSession = createServerFn({ method: "POST" })
       // Granular Operations permissions, never collapsed into a single flag.
       operationsCapabilities: facts.operations.capabilities,
       opsNavGrants: facts.operations.navGrants ?? [],
-      // Navigation flags for the legacy internal menu, projections of the same
+      // Navigation flags for the legacy internal menu - projections of the same
       // facts, so no menu ever runs its own relationship query.
       navigation: {
         isAdmin: adminAccessProjection(facts).isAdmin,

@@ -576,7 +576,7 @@ function FundsPage() {
 
                 {(o.documents ?? []).length === 0 && (
                   <p className="text-sm text-muted-foreground">
-                    No paperwork yet, investors will have nothing to review or sign for this fund.
+                    No paperwork yet - investors will have nothing to review or sign for this fund.
                   </p>
                 )}
 

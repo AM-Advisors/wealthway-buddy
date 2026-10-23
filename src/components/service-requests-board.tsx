@@ -232,7 +232,7 @@ export function ServiceRequestsBoard({ clientId }: { clientId?: string }) {
                   <p className="text-sm">
                     Proposed fee:{" "}
                     <span className="font-medium">
-                      Quoted per request: the amount depends on the services required
+                      Quoted per request - the amount depends on the services required
                     </span>
                     {r.effective_date ? ` · starts ${r.effective_date}` : ""}
                   </p>
@@ -359,7 +359,7 @@ export function ServiceRequestsBoard({ clientId }: { clientId?: string }) {
                 </div>
               ) : (
                 <span className="text-muted-foreground">
-                  No rate on file for this service, enter a fee and say why below.
+                  No rate on file for this service - enter a fee and say why below.
                 </span>
               )}
             </div>

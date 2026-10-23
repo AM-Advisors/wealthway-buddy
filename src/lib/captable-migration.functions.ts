@@ -4,7 +4,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/lib/require-auth";
 
 /**
- * Harmonious CapTable, Phase 5: bringing an existing cap table across.
+ * Harmonious CapTable - Phase 5: bringing an existing cap table across.
  *
  * A file upload becomes a reviewable batch: we detect where it came from, map
  * the columns, flag anything that looks wrong and reconcile against what is
@@ -988,7 +988,7 @@ export const importCapMigration = createServerFn({ method: "POST" })
           .from("ct_vesting_schedules")
           .insert({
             company_id: companyId,
-            name: `${mapped.holderName ?? "Grant"} · imported schedule`,
+            name: `${mapped.holderName ?? "Grant"} - imported schedule`,
             start_date: mapped.vestingStart,
             cliff_months: mapped.cliffMonths ?? 0,
             duration_months: mapped.durationMonths ?? 0,

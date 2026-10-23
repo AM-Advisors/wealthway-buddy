@@ -33,7 +33,7 @@ function StaffPortalPage() {
       <p className="mb-6 mt-2 text-sm text-muted-foreground">
         The clients you look after, and what is waiting on you: new service requests, fee proposals
         in play and open compliance holds. Harmonious provides administrative, technology and
-        recordkeeping support, decisions on scope stay with the statement of work.
+        recordkeeping support - decisions on scope stay with the statement of work.
       </p>
       <Tabs defaultValue="desk">
         <TabsList>

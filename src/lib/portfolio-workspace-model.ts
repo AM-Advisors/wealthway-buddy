@@ -33,7 +33,7 @@ export function exposureBreakdown(rows: PortfolioPosition[], dimension: Exposure
     s.positions += 1; s.valueCents += r.valueCents ?? 0; map.set(key, s);
   }
   const total = [...map.values()].reduce((a, s) => a + s.valueCents, 0);
-  return [...map.values()].map(s => ({ ...s, share: total > 0 ? Math.round((s.valueCents / total) * 1000) / 10 : 0 })).sort((a, b) => b.valueCents (a.valueCents || b.positions) a.positions);
+  return [...map.values()].map(s => ({ ...s, share: total > 0 ? Math.round((s.valueCents / total) * 1000) / 10 : 0 })).sort((a, b) => b.valueCents - a.valueCents || b.positions - a.positions);
 }
 /** Largest single-slice share of value, for concentration warnings. */
 export function topConcentration(slices: ExposureSlice[]) { return slices.reduce((m, s) => Math.max(m, s.share), 0); }

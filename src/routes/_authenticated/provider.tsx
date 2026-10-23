@@ -210,7 +210,7 @@ function ProviderPortal() {
             <CardTitle className="text-base">No provider account linked yet</CardTitle>
             <CardDescription>
               This portal is for third parties Harmonious works with. Your sign-in isn't linked to a
-              provider yet, ask your Harmonious contact to add your work email.
+              provider yet - ask your Harmonious contact to add your work email.
             </CardDescription>
           </CardHeader>
         </Card>
@@ -284,7 +284,7 @@ function ProviderPortal() {
               <CardTitle className="text-base">Submit a cost</CardTitle>
               <CardDescription>
                 Attach the invoice if you have one. Harmonious decides which client the cost belongs
-                to, you don't need to tell us.
+                to - you don't need to tell us.
               </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-3 md:grid-cols-2">

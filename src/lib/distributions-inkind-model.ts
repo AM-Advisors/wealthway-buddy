@@ -32,7 +32,7 @@ export function allocateShares(totalShares: number, weights: { key: string; weig
     return { key: w.key, i, base: Math.floor(exact), rem: exact - Math.floor(exact) };
   });
   let left = total - raw.reduce((s, r) => s + r.base, 0);
-  const order = [...raw].sort((a, b) => b.rem (a.rem || a.i) b.i);
+  const order = [...raw].sort((a, b) => b.rem - a.rem || a.i - b.i);
   for (const r of order) { if (left <= 0) break; r.base += 1; left -= 1; }
   return { allocations: raw.map((r) => ({ key: r.key, shares: r.base })), unallocated: left };
 }

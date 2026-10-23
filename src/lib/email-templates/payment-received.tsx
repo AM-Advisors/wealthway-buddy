@@ -66,7 +66,7 @@ function PaymentReceived({
 
 export const template = {
   component: PaymentReceived,
-  subject: (d: Record<string, any>) => `Payment received · ${d['reference'] ?? 'Harmonious'}`,
+  subject: (d: Record<string, any>) => `Payment received - ${d['reference'] ?? 'Harmonious'}`,
   displayName: 'Wire/ACH payment received',
   previewData: { name: 'Jane', clientName: 'Walkthrough Capital LLC', reference: 'HP-1A2B3C4D', method: 'Wire', amount: '$2,500.00', receivedDate: 'October 2, 2026', purpose: 'New fund request setup fee', activated: true },
 } satisfies TemplateEntry

@@ -134,7 +134,7 @@ export const listClientPeople = createServerFn({ method: "GET" })
  * People connected to this client through real underlying records only: fund
  * manager assignments, investments in the client's funds, and active
  * delegations scoped to the client or its funds. Never by email or domain.
- * Returns names, masked emails and relationship labels, no documents, tax,
+ * Returns names, masked emails and relationship labels - no documents, tax,
  * KYC/KYB, accreditation or ID information.
  */
 async function clientRelationshipPeople(db: any, clientId: string, funds: { id: string; name: string }[], fm: { user_id: string; offering_id: string }[]) {
@@ -223,7 +223,7 @@ export const setClientPersonStatus = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-/** Associate a person with one fund or company. Descriptive only, portal access is unchanged. */
+/** Associate a person with one fund or company. Descriptive only - portal access is unchanged. */
 export const setClientPersonScope = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
@@ -276,7 +276,7 @@ export const listClientFunds = createServerFn({ method: "GET" })
     return {
       caps,
       clientName: ((clientRow as any)?.name as string | null) ?? null,
-      msaStatus: terms.governing ? `Approved · ${terms.governing.title}` : "No approved MSA on file",
+      msaStatus: terms.governing ? `Approved - ${terms.governing.title}` : "No approved MSA on file",
       reassignments: reassign ?? [],
       funds: ((funds ?? []) as any[]).map((f) => {
         const app = findApplicableSow((sows ?? []) as any[], data.clientId, f.id);
@@ -422,7 +422,7 @@ export const createClientFund = createServerFn({ method: "POST" })
     return { offeringId, duplicate: false, coverage: { status: coverage.status, label: coverage.label } };
   });
 
-/** Link an unassigned fund, or open a reviewed reassignment, never a silent move. */
+/** Link an unassigned fund, or open a reviewed reassignment - never a silent move. */
 export const linkFundToClient = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ clientId: uuid, offeringId: uuid, reason: z.string().trim().max(1000).optional() }).parse(d))

@@ -53,7 +53,7 @@ function Compare() {
       </Link>
       <h1 className="text-2xl">Compare Versions</h1>
       <p className="text-sm text-muted-foreground">
-        A mechanical comparison of structured terms. It shows what changed, it does not decide what a change means legally or which provision controls.
+        A mechanical comparison of structured terms. It shows what changed - it does not decide what a change means legally or which provision controls.
         {!d.basedOnApprovedTerms ? " One of these documents isn't approved yet, so some values are still proposals." : ""}
       </p>
       <div className="grid gap-3 sm:grid-cols-2">

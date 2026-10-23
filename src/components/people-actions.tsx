@@ -99,7 +99,7 @@ export function PeopleActions({ email, userId, name, info, context, resend }: {
       <Dialog open={mode !== null} onOpenChange={(o) => !o && setMode(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{mode === "restore" ? "Restore access" : mode === "archive" ? "Archive person" : "Revoke access"}{name || email ? ` · ${name || email}` : ""}</DialogTitle>
+            <DialogTitle>{mode === "restore" ? "Restore access" : mode === "archive" ? "Archive person" : "Revoke access"}{name || email ? ` — ${name || email}` : ""}</DialogTitle>
             <DialogDescription>
               {mode === "archive" ? "They're hidden from lists and can't sign in. Records and history are kept; you can restore them later."
                 : mode === "restore" ? "Lifts the sign-in block. They can sign in again right away."

@@ -1,7 +1,7 @@
 /**
  * Fund-specific investor onboarding settings, countersigning and secure wire
  * reveal. Authority is always resolved from the signed-in user's actual
- * relationship to the fund, never from a role label or browser input.
+ * relationship to the fund - never from a role label or browser input.
  */
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
@@ -189,7 +189,7 @@ export const saveDocumentSigningConfig = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-/** Wire instructions for one investment: fresh sign-in required, audited. */
+/** Wire instructions for one investment - fresh sign-in required, audited. */
 export const revealWireInstructionsFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ onboardingId: z.string().uuid() }).parse)
@@ -201,7 +201,7 @@ export const revealWireInstructionsFn = createServerFn({ method: "POST" })
 /**
  * Countersign: the named signatory, still assigned to the fund, after Box
  * confirmed the investor's signature. Shows only the document and the
- * investor's display name: no compliance material.
+ * investor's display name - no compliance material.
  */
 export const countersignDetailFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -270,7 +270,7 @@ export const countersignDetailFn = createServerFn({ method: "POST" })
         if (!original.signedFileId) throw new Error("The investor's signed copy isn't ready yet. Try again in a moment.");
         const created = await box.createMultiSignerRequest({
           fileId: original.signedFileId,
-          documentName: `${offering?.name ?? "Harmonious"} · ${doc?.title ?? "Fund document"} (fund countersignature)`,
+          documentName: `${offering?.name ?? "Harmonious"} - ${doc?.title ?? "Fund document"} (fund countersignature)`,
           externalId: `${me.signature_id}:countersign`,
           redirectUrl: `https://app.harmonious.co/manager/countersign/${me.id}`,
           signers: [{ email, name: me.signer_name ?? null, order: 1, externalUserId: `${me.signature_id}:fund_manager` }],

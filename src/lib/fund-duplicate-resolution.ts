@@ -2,7 +2,7 @@
  * Existing Fund duplicate resolution (pure). No I/O.
  *
  * Harmonious decides whether two same-named Funds are the same Fund. Nothing
- * here picks a canonical Fund, merges values, or resolves a conflict, it only
+ * here picks a canonical Fund, merges values, or resolves a conflict - it only
  * compares facts, lists conflicts, and describes what a confirmed
  * consolidation would keep, move and preserve.
  */
@@ -51,7 +51,7 @@ const norm = (v: string | null | undefined) => normalizeFundName(v);
 const differs = (a: string | null | undefined, b: string | null | undefined) => !!norm(a) && !!norm(b) && norm(a) !== norm(b);
 
 /**
- * Every conflict is "Conflict: Harmonious Decision Required". Blocking
+ * Every conflict is "Conflict - Harmonious Decision Required". Blocking
  * conflicts cannot be acknowledged away: they must be fixed at the source
  * (for example, retire one banking version) before consolidation can run.
  */

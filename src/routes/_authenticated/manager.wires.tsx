@@ -109,7 +109,7 @@ function ManagerWireBoardPage() {
     onSuccess: (_result, input) => {
       toast.success(
         input.outcome === "approved"
-          ? "Approved: the investor's funding is marked received."
+          ? "Approved - the investor's funding is marked received."
           : "Sent back to the investor with your note.",
       );
       setNotes((prev) => ({ ...prev, [input.confirmationId]: "" }));

@@ -328,7 +328,7 @@ export function ProviderSubmissionsBoard() {
           <CardTitle className="text-base">Who can sign in for a provider</CardTitle>
           <CardDescription>
             Add the person's work email. They sign in with that address and see only their own
-            company's submissions: no client or fund records.
+            company's submissions - no client or fund records.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

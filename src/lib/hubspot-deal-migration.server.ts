@@ -1,7 +1,7 @@
 import { serviceError } from "@/lib/service-error";
 /**
  * Server-only HubSpot deal migration. Reads HubSpot (portal Service Key, read
- * requests only, GET plus POST search/batch-read, which change nothing) and writes
+ * requests only — GET plus POST search/batch-read, which change nothing) and writes
  * only Harmonious tables. Runs in small resumable batches; every run, batch
  * and error is recorded in hubspot_deal_migration_runs.
  */

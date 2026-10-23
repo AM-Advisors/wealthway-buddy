@@ -407,7 +407,7 @@ export const listClientAccountsForAccess = createServerFn({ method: "GET" })
 /**
  * Adds or removes a person's membership in a client account. Access
  * administrators only; never on yourself; audited before the change. Never
- * grants staff authority, it only makes the client workspace available.
+ * grants staff authority - it only makes the client workspace available.
  */
 export const setClientMembership = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

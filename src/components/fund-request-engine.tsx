@@ -284,7 +284,7 @@ export function FundRequestEngine({ clientId: id, draft, mode = "client", client
                   <F label="Legal name">
                     <Input value={r.legal_name} onChange={(e) => set("legal_name", e.target.value)} placeholder="e.g. Acme Ventures I, LP" />
                     {defaultLegalName(r) && r.legal_name === defaultLegalName(r) && (
-                      <p className="mt-1 text-xs text-muted-foreground">{seriesLegalName(r) ? "Generated from the fund name and Master LLC (edit if needed." : "Same as the fund name) edit if needed."}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">{seriesLegalName(r) ? "Generated from the fund name and Master LLC - edit if needed." : "Same as the fund name - edit if needed."}</p>
                     )}
                   </F>
                   <F label="Vehicle / entity structure *"><Pick value={r.vehicle_structure} onChange={(v) => setStructureOrExemption("vehicle_structure", v)} options={VEHICLE_STRUCTURES} /></F>
@@ -301,7 +301,7 @@ export function FundRequestEngine({ clientId: id, draft, mode = "client", client
                   {r.already_formed === "no" && <F label="Who will obtain the EIN? *"><Pick value={r.ein_obtained_by} onChange={(v) => set("ein_obtained_by", v as any)} options={[{ value: "harmonious", label: "Harmonious" }, { value: "client", label: "We will" }]} /></F>}
                   {r.already_formed === "yes" && <F label="Has an EIN? *"><Pick value={r.has_ein} onChange={(v) => set("has_ein", v as any)} options={[{ value: "yes", label: "Yes" }, { value: "no", label: "No" }]} /></F>}
                 </Grid>
-                <p className="text-xs text-muted-foreground">Don't type the EIN here - upload the IRS letter instead.{isSeries(r) ? " A series doesn't have its own certificate of formation, it's created under the Master LLC, so no formation document is needed." : ""}</p>
+                <p className="text-xs text-muted-foreground">Don't type the EIN here - upload the IRS letter instead.{isSeries(r) ? " A series doesn't have its own certificate of formation - it's created under the Master LLC, so no formation document is needed." : ""}</p>
                 {isSeries(r) && (r.series_home === "own" || r.series_home === "new") && (
                   <div className="space-y-3 rounded-md border p-3">
                     <p className="text-sm font-medium">{r.series_home === "own" ? "Your existing Series LLC" : "New Series LLC to set up"}</p>

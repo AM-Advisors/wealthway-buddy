@@ -1,5 +1,5 @@
 /**
- * Fund Administration Phase B: pure investor-onboarding rules.
+ * Fund Administration Phase B - pure investor-onboarding rules.
  *
  * No database access, no authorization, no side effects. This module decides
  * WHAT an investor still has to do, WHICH of their existing verified records
@@ -624,7 +624,7 @@ export interface FundingGateInput {
   countersignTiming?: "pause" | "parallel" | "after_completion" | null;
 }
 
-/** canInvestorFund, funding instructions stay locked until every one of these holds. */
+/** canInvestorFund - funding instructions stay locked until every one of these holds. */
 export function canInvestorFund(input: FundingGateInput): { allowed: boolean; reasons: string[] } {
   const reasons: string[] = [];
   if (input.openBlockingExceptions > 0) reasons.push("There is an open issue on this investment.");
@@ -647,7 +647,7 @@ export interface ClosingGateInput extends FundingGateInput {
   acceptedAmountCents?: number | null;
 }
 
-/** canCloseInvestment: the final server-side admission gate. */
+/** canCloseInvestment - the final server-side admission gate. */
 export function canCloseInvestment(input: ClosingGateInput): { allowed: boolean; reasons: string[] } {
   const reasons: string[] = [];
   // Admission always needs the manager's countersign/approval, whatever the funding timing.

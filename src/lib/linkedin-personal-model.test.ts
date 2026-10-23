@@ -29,7 +29,7 @@ describe("personal LinkedIn delegation", () => {
     expect(publishCheck(acct, draft, ctx(EMP, gr, { postsToday: 1 })).ok).toBe(true);
     expect(publishCheck(acct, draft, ctx(EMP, gr, { postsToday: 2 })).ok).toBe(false);
     expect(publishCheck(acct, draft, { ...ctx(EMP, gr), now: new Date("2026-10-09T04:00:00Z") }).ok).toBe(false);
-    // Account time zone applies: 18:00Z is 9pm in London, outside 9 to 17.
+    // Account time zone applies: 18:00Z is 9pm in London, outside 9–17.
     expect(publishCheck(acct, draft, { ...ctx(EMP, gr, { postsToday: 0 }), tz: "Europe/London" }).ok).toBe(false);
   });
   it("revoked, suspended or expired delegate cannot publish", () => {

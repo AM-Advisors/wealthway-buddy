@@ -119,7 +119,7 @@ function WireAdminPage() {
         <h1 className="text-2xl font-semibold tracking-tight">Wire instructions</h1>
         <p className="text-sm text-muted-foreground">
           Update the bank details for each fund you manage. Investors with an application see the new
-          details on their wire page immediately, you never need to edit a fund page.
+          details on their wire page immediately - you never need to edit a fund page.
         </p>
       </div>
 

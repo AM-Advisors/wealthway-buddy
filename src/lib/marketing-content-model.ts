@@ -62,12 +62,12 @@ export const SERIES_TEMPLATES: Record<string, { summary: string; rules: string[]
     "State the thesis as Harmonious analysis, not fact.", "Support it only with sourced facts; mark reasoning as analysis and any forecast as projection.",
     "Acknowledge one counterpoint or limitation."] },
   whatever_wednesday: { summary: "Engagement: polls, team stories, relatable observations.", rules: [
-    "Light, human tone. Include one poll question with 3 to 4 options in the social captions.",
+    "Light, human tone. Include one poll question with 3–4 options in the social captions.",
     "Never invent team members, anecdotes or client stories; use [TEAM STORY TO ADD] placeholders.", "Any factual hook must come from the sources."] },
   fund_academy_thursday: { summary: "Evergreen education grounded in authoritative regulatory and tax sources.", rules: [
     "Explain step by step with plain definitions.", "Cite the regulator or statute for every requirement; never state a requirement the sources don't contain.",
     "Include a short 'This is general education, not legal or tax advice' line."] },
-  founders_friday: { summary: "Proposed first-person draft for Alyssa Pettit, grounded in public news, not her statement until she approves.", rules: [
+  founders_friday: { summary: "Proposed first-person draft for Alyssa Pettit, grounded in public news — not her statement until she approves.", rules: [
     "This is a PROPOSED draft for Alyssa, never an authenticated statement.",
     "Never invent Alyssa's experiences, opinions, quotes or stories; write [ALYSSA TO ADD: …] placeholders and framing questions where her view belongs.",
     "Public facts must come from the sources."] },
@@ -91,7 +91,7 @@ export function checkPackageClaims(claims: PackageClaim[], allowedSources: strin
 const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9.%$]+/g, " ").trim();
 export const slugify = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 100);
 
-/** Phrases that promise rankings or AI citations, never allowed. */
+/** Phrases that promise rankings or AI citations — never allowed. */
 const RANKING = [/guarantee[ds]? (?:to )?rank/i, /#1 on google/i, /rank (?:first|#1|number one)/i, /guaranteed (?:seo|traffic|citations?)/i, /will be cited by (?:ai|chatgpt)/i];
 export function rankingClaims(text: string): string[] {
   return RANKING.map((r) => text.match(r)?.[0]).filter(Boolean) as string[];
@@ -134,7 +134,7 @@ export function buildSchema(p: Pick<ContentPackage, "seo_title" | "meta_descript
   return JSON.stringify({ "@context": "https://schema.org", "@graph": graph }, null, 2);
 }
 
-/** Share of the article's 8-word phrases that also appear in the source text (0 to 100). */
+/** Share of the article's 8-word phrases that also appear in the source text (0–100). */
 export function overlapPercent(article: string, sources: string): number {
   const words = (t: string) => norm(t.replace(/<[^>]+>/g, " ")).split(" ").filter(Boolean);
   const a = words(article), s = words(sources).join(" ");

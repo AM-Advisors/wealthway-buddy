@@ -105,7 +105,7 @@ function Detail({ returnId }: { returnId: string }) {
         )}
         {d.canEdit && d.history.length > 0 && (
           <section className="space-y-1 border-t pt-3"><h4 className="text-sm font-semibold">History</h4>
-            <ol className="text-sm">{d.history.map((h: any) => <li key={h.version}>v{h.version} · {STAGE_LABEL[h.stage as DetailStage]} · {h.by} · {fmt(h.at)}{h.note ? ` · ${h.note}` : ""}</li>)}</ol>
+            <ol className="text-sm">{d.history.map((h: any) => <li key={h.version}>v{h.version} · {STAGE_LABEL[h.stage as DetailStage]} · {h.by} · {fmt(h.at)}{h.note ? ` - ${h.note}` : ""}</li>)}</ol>
           </section>
         )}
       </CardContent>
@@ -217,7 +217,7 @@ function PfCard({ f, funds, onChanged }: { f: any; funds: { id: string; name: st
           </div>
         </>}
         <details><summary className="cursor-pointer text-xs text-muted-foreground">History ({f.history.length})</summary>
-          <ol className="mt-1 text-xs">{f.history.map((h: any) => <li key={h.version}>v{h.version} · {PF_STATUS_LABEL[h.status as PfStatus]} · {h.by} · {fmt(h.at)}{h.note ? ` · ${h.note}` : ""}</li>)}</ol>
+          <ol className="mt-1 text-xs">{f.history.map((h: any) => <li key={h.version}>v{h.version} · {PF_STATUS_LABEL[h.status as PfStatus]} · {h.by} · {fmt(h.at)}{h.note ? ` - ${h.note}` : ""}</li>)}</ol>
         </details>
       </CardContent>
     </Card>
@@ -293,7 +293,7 @@ function IrsItem({ r, canEdit, onChanged }: { r: any; canEdit: boolean; onChange
       </div>
       <p className="text-xs text-muted-foreground">{fmt(r.receivedOn)}{r.taxYear ? ` · Tax year ${r.taxYear}` : ""}{r.formType ? ` · Form ${r.formType}` : ""}{r.responseDue ? ` · Response due ${fmt(r.responseDue)}` : ""}{canEdit && r.shareWithManager ? " · Shown to managers" : ""}{canEdit && r.hasDocument ? " · Copy on file" : ""}</p>
       {canEdit && <>
-        <ol className="mt-1 text-xs text-muted-foreground">{r.history.map((h: any, i: number) => <li key={i}>{IRS_STATUS_LABEL[h.status as IrsStatus]} · {h.by} · {fmt(h.at)}{h.note ? ` · ${h.note}` : ""}</li>)}</ol>
+        <ol className="mt-1 text-xs text-muted-foreground">{r.history.map((h: any, i: number) => <li key={i}>{IRS_STATUS_LABEL[h.status as IrsStatus]} · {h.by} · {fmt(h.at)}{h.note ? ` - ${h.note}` : ""}</li>)}</ol>
         {r.status !== "closed" && <div className="mt-2 flex flex-wrap gap-2">
           <Input className="h-8 max-w-sm" placeholder="What happened" value={note} onChange={(e) => setNote(e.target.value)} />
           {r.status === "open" && <Button size="sm" variant="outline" disabled={busy} onClick={() => run({ id: r.id, status: "responded", note }, "Updated").then((ok) => ok && setNote(""))}>Mark responded</Button>}

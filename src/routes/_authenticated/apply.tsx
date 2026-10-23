@@ -125,7 +125,7 @@ function ApplyPage() {
             <CardTitle>You have applied to {selected?.name ?? "the fund"}</CardTitle>
             <CardDescription>
               Your application is open and the fund team has been notified. Here is what happens
-              next, you can do these in order, and come back any time.
+              next - you can do these in order, and come back any time.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">

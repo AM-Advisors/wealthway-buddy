@@ -147,7 +147,7 @@ async function reconcile(onboardingId: string, userId: string) {
  * Creates/finds their account, grants access to this fund only, and emails a set-password link.
  * No new investment is created; on verified-email sign-in the existing Person (and its
  * investment) is claimed through the normal claim path. Sign/Fund are satisfied only by a
- * confirmed prior subscription, this never marks anything signed or funded.
+ * confirmed prior subscription - this never marks anything signed or funded.
  */
 async function sendExistingOnboarding(userId: string, offeringId: string, investors: Awaited<ReturnType<typeof launchFlow>>["investors"], ids: string[]) {
   const db = await admin();

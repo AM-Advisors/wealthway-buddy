@@ -180,7 +180,7 @@ export const getMyDesk = createServerFn({ method: "GET" })
     const policies = ((policyRes.data ?? []) as any[]).filter((p: any) => p.published);
     const invoicesAll = (invoiceRes.data ?? []) as any[];
 
-    // Latest published version of each policy document, that is what people must sign.
+    // Latest published version of each policy document - that is what people must sign.
     const latestPolicies = Array.from(
       policies
         .reduce((map: Map<string, any>, p: any) => {

@@ -96,7 +96,7 @@ function sixDigitCode(): string {
 /**
  * Which sender the app may text from. Null until Operations attaches a Twilio
  * phone number (TWILIO_FROM_NUMBER) or a messaging service (TWILIO_MESSAGING_SERVICE_SID)
- * to the connected Twilio account: a connected account with no number cannot
+ * to the connected Twilio account - a connected account with no number cannot
  * originate messages.
  */
 export function smsSenderConfig(): SmsSender | null {
@@ -161,7 +161,7 @@ export async function sendFallbackCode(
       templateData: {
         managerName: firstName ?? "there",
         headline: "Your Harmonious confirmation code",
-        intro: `Use ${code} to confirm it's you. It expires in ten minutes and works once. If this was not you, do not use it, and contact operations@harmonious.co.`,
+        intro: `Use ${code} to confirm it's you. It expires in ten minutes and works once. If this was not you, do not use it - and contact operations@harmonious.co.`,
         details: [],
         portalUrl: "https://app.harmonious.co/security",
       },

@@ -16,7 +16,7 @@ const delegationInput = z.object({ delegation_id: z.string().uuid() });
 export const getProfessionalStanding = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    // Membership alone reveals no client data, it only opens the workspace.
+    // Membership alone reveals no client data - it only opens the workspace.
     const { gatherFacts, professionalStandingProjection } = await import("@/lib/session-facts.server");
     return professionalStandingProjection(await gatherFacts(context));
   });

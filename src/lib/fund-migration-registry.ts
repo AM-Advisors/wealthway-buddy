@@ -125,7 +125,7 @@ export function metrics(rows: RegistryRow[], harmoniousDuplicates: number): Metr
 }
 
 export function sortQueue(rows: RegistryRow[]): RegistryRow[] {
-  return [...rows].sort((a, b) => a.priority (b.priority || b.score) a.score || a.name.localeCompare(b.name));
+  return [...rows].sort((a, b) => a.priority - b.priority || b.score - a.score || a.name.localeCompare(b.name));
 }
 
 /** Normalized fund name key for Harmonious-side duplicate detection. */

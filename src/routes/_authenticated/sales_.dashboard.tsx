@@ -109,7 +109,7 @@ function SalesDashboard() {
             <Table>
               <TableHeader><TableRow><TableHead>Rep</TableHead><TableHead className="text-right">Outreach</TableHead><TableHead className="text-right">Meetings</TableHead><TableHead className="text-right">Closed</TableHead><TableHead className="text-right">Pending</TableHead><TableHead className="text-right">Win rate</TableHead></TableRow></TableHeader>
               <TableBody>
-                {[...d.perRep].sort((a: any, b: any) => b.closed (a.closed || b.outreach) a.outreach).map((r: any) => (
+                {[...d.perRep].sort((a: any, b: any) => b.closed - a.closed || b.outreach - a.outreach).map((r: any) => (
                   <TableRow key={r.id}>
                     <TableCell><Link to="/sales/reps/$id" params={{ id: r.id }} className="font-medium text-foreground underline-offset-4 hover:underline">{r.name}</Link></TableCell>
                     <TableCell className="text-right"><button className="underline-offset-4 hover:underline" onClick={() => open(`Outreach by ${r.name}`, { ownerId: r.id })}>{r.outreach}</button></TableCell>

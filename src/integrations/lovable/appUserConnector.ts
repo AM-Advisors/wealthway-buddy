@@ -5,7 +5,7 @@
  * to start per-user OAuth and to make authenticated provider calls on
  * behalf of the end user that completed the OAuth flow.
  *
- * Never import this from a browser bundle, these functions read
+ * Never import this from a browser bundle — these functions read
  * server-side secrets from `process.env` and call the connector gateway
  * directly. Exposing them to the browser leaks credentials for
  * every app user in the workspace.

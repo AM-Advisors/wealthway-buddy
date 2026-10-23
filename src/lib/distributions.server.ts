@@ -1,5 +1,5 @@
 /**
- * Fund Administration Phase D: server-only distribution, withholding and
+ * Fund Administration Phase D - server-only distribution, withholding and
  * outbound payment engine.
  *
  * This layer owns NO money truth of its own. It reads and writes through the
@@ -701,7 +701,7 @@ async function commitmentStateFor(positionIds: string[]) {
   return map;
 }
 
-/** Latest finalized capital account per position, authoritative, not recomputed. */
+/** Latest finalized capital account per position - authoritative, not recomputed. */
 async function capitalAccountsFor(offeringId: string) {
   const { data } = await db()
     .from("capital_accounts")
@@ -834,7 +834,7 @@ export const DEFAULT_WITHHOLDING_RULES: WithholdingRule[] = [
 
 /**
  * Propose a distribution. Investor amounts are derived from the fund's
- * approved economics: nobody types them in.
+ * approved economics - nobody types them in.
  */
 export async function proposeDistribution(
   userId: string,

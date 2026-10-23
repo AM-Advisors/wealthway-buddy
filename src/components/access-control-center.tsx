@@ -182,12 +182,12 @@ function AccessProfile({ userId }: { userId: string }) {
       </Section>
       <Section n={2} title="Relationships">
         <List items={[
-          ...f.managedFunds.map((x) => `Fund Manager · ${x.name}`),
-          ...f.investorFunds.map((x) => `Investor access · ${x.name}`),
-          ...f.investmentProfiles.map((x) => `Investment profile · ${x.label}${x.status ? ` (${x.status})` : ""}`),
-          ...f.clientMemberships.map((x) => `Client user · ${x.name} (${x.role ?? "member"}${x.canApprove ? ", approver" : ""})`),
-          ...f.companies.map((x) => `Company · ${x.name}`),
-          ...f.professionalMemberships.map((x) => `Professional · ${x.orgName} (${x.status})`),
+          ...f.managedFunds.map((x) => `Fund Manager - ${x.name}`),
+          ...f.investorFunds.map((x) => `Investor access - ${x.name}`),
+          ...f.investmentProfiles.map((x) => `Investment profile - ${x.label}${x.status ? ` (${x.status})` : ""}`),
+          ...f.clientMemberships.map((x) => `Client user - ${x.name} (${x.role ?? "member"}${x.canApprove ? ", approver" : ""})`),
+          ...f.companies.map((x) => `Company - ${x.name}`),
+          ...f.professionalMemberships.map((x) => `Professional - ${x.orgName} (${x.status})`),
         ]} />
       </Section>
       <Section n={2} title="Client accounts">
@@ -211,12 +211,12 @@ function AccessProfile({ userId }: { userId: string }) {
           <ul className="mt-1 space-y-0.5">{(data.canonical as any).matrix.map((m: any) => <li key={m.permission}>{m.permission} - <span className="text-muted-foreground">{m.global ? `allowed everywhere · ${m.sources.join(", ")}` : m.scoped.length ? m.scoped.map((x: any) => `${x.source} (${x.scope})`).join("; ") : "not allowed"}</span></li>)}</ul>
         </details>
       </Section>
-      <Section n={6} title="Direct grants"><List items={direct.map((p) => `${p.area} · ${p.action} · ${p.via}`)} /></Section>
+      <Section n={6} title="Direct grants"><List items={direct.map((p) => `${p.area} · ${p.action} - ${p.via}`)} /></Section>
       <Section n={7} title="Direct denies">
         <p className="text-xs text-muted-foreground">None. Explicit denies aren't stored yet; when added they will override every grant.</p>
       </Section>
       <Section n={8} title="Delegations & authority">
-        <List items={f.delegations.map((d) => `${d.direction === "acting_for" ? "Acts for" : "Delegated to"} ${d.counterpart} · ${d.authority_level}, ${d.scope_type.replace(/_/g, " ")}, ${d.status}${d.expires_at ? `, expires ${fmt(d.expires_at)}` : ""}${d.capabilities.length ? ` (${d.capabilities.join(", ")})` : ""}`)} />
+        <List items={f.delegations.map((d) => `${d.direction === "acting_for" ? "Acts for" : "Delegated to"} ${d.counterpart} - ${d.authority_level}, ${d.scope_type.replace(/_/g, " ")}, ${d.status}${d.expires_at ? `, expires ${fmt(d.expires_at)}` : ""}${d.capabilities.length ? ` (${d.capabilities.join(", ")})` : ""}`)} />
       </Section>
       <Section n={9} title="Access history"><HistoryTable rows={data.history} /></Section>
       <Section n={10} title="Manage access"><ManageAccessPanel userId={userId} canonical={data.canonical as any} platformRoles={data.facts.roles} /></Section>

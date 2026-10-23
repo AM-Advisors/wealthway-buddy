@@ -7,7 +7,7 @@
  * Authority comes only from canAct (live delegation + explicit capability +
  * scope). Preparing never implies approving; the approver must be a different
  * person from anyone who prepared or submitted the record. Nothing here files,
- * transmits, delivers, pays or moves money, those stay with Harmonious.
+ * transmits, delivers, pays or moves money - those stay with Harmonious.
  */
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { canAct } from "@/lib/delegated-access.server";

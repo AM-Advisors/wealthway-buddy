@@ -222,7 +222,7 @@ function FunnelPage() {
               <CardDescription>
                 {data.totalOpens} open{data.totalOpens === 1 ? "" : "s"} and {data.totalClicks} link
                 click{data.totalClicks === 1 ? "" : "s"} recorded in this period. Opens are counted when
-                the recipient's email app loads images, so treat them as a floor, clicks are always
+                the recipient's email app loads images, so treat them as a floor - clicks are always
                 exact.
               </CardDescription>
             </CardHeader>

@@ -51,7 +51,7 @@ function SignatoryAuthority() {
         <h1 className="text-3xl">Signing authority</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           Who may sign on your behalf, for which of your entities, and for which documents. Nobody can
-          move money, change bank details or approve a payment through this, ever.
+          move money, change bank details or approve a payment through this - ever.
         </p>
       </header>
 

@@ -185,7 +185,7 @@ const contactInput = z.object({
 });
 
 /**
- * Contacts are records only, a designation never creates platform access or authority.
+ * Contacts are records only - a designation never creates platform access or authority.
  * Primary Contact is a designation on a Contact, never a second Person. New
  * contacts are matched against this Client's existing contacts through the
  * canonical Person Resolution rules; removed contacts are deactivated, never deleted.
@@ -232,7 +232,7 @@ export const saveExpectedServices = createServerFn({ method: "POST" })
     const db = await admin();
     const { data: catalog } = await db.from("service_catalog").select("key").in("key", data.services);
     const valid = ((catalog ?? []) as any[]).map((r) => r.key as string);
-    // Expected services only: nothing becomes an active engagement here.
+    // Expected services only - nothing becomes an active engagement here.
     await db.from("clients").update({ expected_services: valid, intake_step: 4 }).eq("id", data.clientId);
     await audit(context, roles, { clientId: data.clientId, area: "client", action: "expected services set", next: valid });
     return { services: valid };
@@ -597,7 +597,7 @@ export const approveContractTerms = createServerFn({ method: "POST" })
     return applyApprovedPricing(context, roles, doc, (terms ?? []) as any[]);
   });
 
-/** Configure Contract Pricing: applies an approved document's reviewed prices (idempotent). */
+/** Configure Contract Pricing - applies an approved document's reviewed prices (idempotent). */
 export const applyContractPricing = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ documentId: z.string().uuid() }).parse(d))

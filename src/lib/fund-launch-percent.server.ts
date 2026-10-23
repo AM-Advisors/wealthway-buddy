@@ -1,4 +1,4 @@
-/** Setup % per fund from blocking setup tasks + required launch conditions, the same inputs and math as Fund Setup and Readiness. */
+/** Setup % per fund from blocking setup tasks + required launch conditions — the same inputs and math as Fund Setup and Readiness. */
 import { fundSetupSummary } from "@/lib/fund-launch-summary";
 
 export async function fundLaunchPercents(offeringIds: string[]): Promise<Map<string, number | null>> {

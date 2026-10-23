@@ -514,7 +514,7 @@ function ServicesAdmin() {
 
 const usd = (c: number) => `$${(c / 100).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
 
-/** Wire/ACH payments awaiting confirmation. Marking received is a manual reconciliation step, never automatic. */
+/** Wire/ACH payments awaiting confirmation. Marking received is a manual reconciliation step - never automatic. */
 function PaymentsTab() {
   const queryClient = useQueryClient();
   const list = useServerFn(listOfflineFundPayments);
@@ -542,7 +542,7 @@ function PaymentsTab() {
     <div className="space-y-3">
       <p className="text-sm text-muted-foreground">
         Client requests paid by wire or ACH stay inactive until you confirm the money arrived. Check the bank
-        account first, this is never automatic.
+        account first - this is never automatic.
       </p>
       {rows.map((p) => (
         <Card key={p.id}>

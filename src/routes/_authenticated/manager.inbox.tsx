@@ -130,7 +130,7 @@ function ManagerInboxPage() {
         <h1 className="text-3xl font-semibold tracking-tight">Document inbox</h1>
         <p className="text-muted-foreground max-w-2xl">
           Everything your investors upload arrives here automatically. Open a file, accept it, or
-          send it back for follow-up, no links to chase.
+          send it back for follow-up - no links to chase.
         </p>
         <Button asChild variant="link" className="px-0">
           <Link to="/manager">Back to your panel</Link>

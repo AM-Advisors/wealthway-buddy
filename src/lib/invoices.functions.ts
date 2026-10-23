@@ -897,7 +897,7 @@ export const raiseInvoiceWire = createServerFn({ method: "POST" })
   });
 
 /** A client contact records that they have sent payment for an approved invoice.
- *  This is their confirmation of the transfer. Harmonious still checks the money
+ *  This is their confirmation of the transfer - Harmonious still checks the money
  *  has arrived before the invoice is marked paid. Guarded in the database. */
 export const declareInvoicePayment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

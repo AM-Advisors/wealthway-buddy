@@ -7,7 +7,7 @@ import { authorize } from "@/lib/authorize";
 /**
  * CSA STAR Level 1 (CAIQ v4 self-assessment). Staff-only via administration.controls.*.
  * Answers are append-only; approval needs a second person (or a reasoned Super Admin
- * self-approval). Harmonious never submits to the STAR Registry, staff do that manually.
+ * self-approval). Harmonious never submits to the STAR Registry - staff do that manually.
  */
 const VIEW = "administration.controls.view", EDIT = "administration.controls.edit";
 

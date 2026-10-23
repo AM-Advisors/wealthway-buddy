@@ -193,7 +193,7 @@ export function FundPayments({ fundId, backTo }: { fundId: string; backTo: "admi
         <CardContent className="space-y-3">
           {unbilled.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              Nothing outstanding, every fee on this fund is already on an invoice.
+              Nothing outstanding - every fee on this fund is already on an invoice.
             </p>
           ) : (
             <>

@@ -73,7 +73,7 @@ export function BillingPipeline({ view }: { view: "sows" | "invoices" }) {
                 <tbody>{r.invoices.map((i: any) => (
                   <tr key={i.id} className="border-t">
                     <td>{i.number ?? "Draft"}{i.generated_by_schedule ? " · scheduled" : ""}</td>
-                    <td>{i.period_start ? `${i.period_start} to ${i.period_end ?? ""}` : "—"}</td>
+                    <td>{i.period_start ? `${i.period_start} – ${i.period_end ?? ""}` : "—"}</td>
                     <td className="capitalize">{label(i.status)}{i.status === "issued" ? ` · ${label(i.approval_status)}` : ""}</td>
                     <td>{money(i.total_cents)}</td>
                     <td>{i.paid_at ? `Paid ${new Date(i.paid_at).toLocaleDateString()}` : i.due_date ?? "—"}</td>

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
- * Phase 3B adversarial tests: assisted professional actions.
+ * Phase 3B adversarial tests - assisted professional actions.
  *
  * The question in every case is not what the screen offers but what the server
  * will actually do: preparation is capability- and scope-checked, protected

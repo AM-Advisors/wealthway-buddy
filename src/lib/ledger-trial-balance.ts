@@ -19,7 +19,7 @@ export function trialBalance(accounts: readonly TbAccount[], lines: readonly TbL
     .sort((a, b) => a.code.localeCompare(b.code))
     .map((a) => {
       const s = sums.get(a.id) ?? { d: 0, c: 0 };
-      const balanceCents = a.normal_balance === "credit" ? s.c (s.d : s.d) s.c;
+      const balanceCents = a.normal_balance === "credit" ? s.c - s.d : s.d - s.c;
       return { ...a, debitCents: s.d, creditCents: s.c, balanceCents };
     })
     .filter((r) => r.debitCents !== 0 || r.creditCents !== 0);

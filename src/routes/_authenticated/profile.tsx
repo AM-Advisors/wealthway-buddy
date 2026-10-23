@@ -256,7 +256,7 @@ function ProfilePage() {
             {(data.accreditations as any[]).map((a, i) => (
               <li key={i}>
                 {CHECK_LABEL[a.status] ?? a.status}
-                {a.basis ? ` · ${a.basis}` : ""}
+                {a.basis ? ` - ${a.basis}` : ""}
                 {a.expires_at ? ` - expires ${new Date(a.expires_at).toLocaleDateString()}` : ""}
               </li>
             ))}
