@@ -610,3 +610,13 @@
 - [ ] morgato27 account check: 32 possible watchlist matches await a compliance reviewer (human decision)
 - [x] Limited access during identity review + outcome email
 - [x] Watchlist match review panel (side-by-side, batch clear with reason)
+
+## Shared manager + Harmonious views (2026-10-23)
+- [x] Investors list: one Add investor chooser, one status per row, tabs; staff fund screens use the same list.
+- [x] Investor page: staff see the same page as managers plus the KYC/AML review card (staff only).
+- [ ] Approvals & requests: one fund list showing who is waiting on whom.
+- [ ] Documents: one Documents tab layout for both sides.
+- [ ] Fund setup: one checklist with You / Harmonious owner per step.
+- [ ] Verification wording shared everywhere.
+- [ ] Fund/investor messages shown on the fund and investor pages.
+- [ ] Capital: same committed/received/reconciled figures on both sides.
