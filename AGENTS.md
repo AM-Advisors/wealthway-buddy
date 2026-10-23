@@ -19,7 +19,7 @@
 - Operations Slack URLs and verification confirmation filtering use verification-alert-model.ts through the existing ops-slack-notify sender; authoritative verification save paths emit safe, deduplicated notices without changing decisions — why: unassigned ownership is routing only, and screening details stay private.
 - Never automate filings (except IRS e-filing of approved 1065s/K-1s per src/lib/AGENTS.md), tax payments, refunds, ACH/wire or provider money movement; server-side authorization only — why: user-mandated safety boundary.
 - Browser tests live in e2e/*.e2e.ts; global-setup.ts blocks before navigation unless reviewed isolation evidence, actual nonproduction backend identity, frontend binding and backend-classified synthetic sessions agree; absent sessions fail, never skip — why: a preview hostname cannot prove safe QA.
-- Diagnostic views reuse existing health/audit/email/job readers with diagnostic-read.ts and recursive diagnostic-filter.ts; raw provider text and unrestricted notes stay out of projections, recipient-only email diagnostics are administrator-only, job staleness is display-only — why: truthful failures and privacy without a duplicate monitoring system.
+- Diagnostics reuse existing health/audit/email/job readers and diagnostic-read.ts/diagnostic-filter.ts; omit provider text/notes; recipient-only emails are admin-only; staleness is display-only — why: privacy.
 - Sales menus follow resolved staff roles; invoice ACH/wire links reuse /ops/billing/payment-instructions and its remittance engine — why: no duplicate settings or implied authority.
 - Server functions import requireSupabaseAuth only from src/lib/require-auth.ts, never the generated module — why: light context avoids preview typecheck limits.
 - Fund workspace keeps fund/audience and mounts selected tabs only; bank surfaces share FundBankingReview + BankInstructionRelease using existing review/status/release functions — why: connected actions, unchanged authority.
@@ -64,3 +64,5 @@
 - Fund changes project canonical requests and reuse review/send engines — why: no duplicate approvals.
 - Offering pop-outs pin versions — why: originals only.
 - Manager adds use createInvestorAndInvite + personal-link sender; imports retain createInvestor — why: saved records survive email failure, no bulk sends.
+
+- Public security uses security-content.ts and published trust items only — why: no implied controls or independent assurance.

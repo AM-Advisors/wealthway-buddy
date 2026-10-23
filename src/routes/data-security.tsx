@@ -6,7 +6,7 @@ import { getPublishedTrustItems } from "@/lib/trust-center-public.functions";
 
 const TITLE = "Data Security & Privacy - Harmonious";
 const DESCRIPTION =
-  "How Harmonious protects funds, records and money: two-step sign-in, scoped access, locked records, and payment work that only people can release.";
+  "Harmonious security and privacy: HTTPS/TLS encryption, protected access, financial review controls, record retention, security contacts and published assurance evidence.";
 
 export const Route = createFileRoute("/data-security")({
   head: () => ({
