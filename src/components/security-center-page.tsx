@@ -109,6 +109,7 @@ export function SecurityCenterPage({ items }: { items: PublicTrustItem[] }) {
             <div className="mt-5 flex flex-wrap gap-3"><Button asChild><a href={`mailto:${s.security_contact}`}><Mail />Email legal</a></Button><Button asChild variant="outline"><a href="/.well-known/security.txt"><FileText />Security contact file</a></Button></div>
             <p className="mt-5 text-sm leading-7 text-muted-foreground">For account help: <a className="break-all underline" href={`mailto:${s.contact}`}>{s.contact}</a>.</p>
             <div className="mt-5 flex flex-wrap gap-5 text-sm text-primary"><Link className="underline" to="/privacy">Privacy Policy</Link><Link className="underline" to="/terms">Terms of Service</Link><a className="underline" href="#top" onClick={(event) => { event.preventDefault(); window.scrollTo({ top: 0, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" }); }}>Back to top</a></div>
+            <p className="mt-6 border-t pt-5 text-xs leading-6 text-muted-foreground">{s.ip_notice}</p>
           </section>
         </article>
       </div>
