@@ -1,8 +1,8 @@
 # Roadmap
 
 ## Enhanced public security page (2026-10-23)
-- [ ] Clarify encryption versus independent assurance; improve overview, section navigation, retention, security reporting and investor FAQs using existing published evidence only.
-- [ ] Verify the public page on desktop and mobile; no financial, authentication, publication or assurance records changed.
+- [x] Clarify encryption versus independent assurance; improve overview, section navigation, retention, security reporting and investor FAQs using existing published evidence only.
+- [x] Public desktop/mobile page, expandable SSL answer and legal contact file verified; no overflow or runtime errors. Existing 27 security tests pass; preview build OK. No financial, authentication, publication or assurance records changed. Publishing remains a separate user action.
 
 ## Manager-added investor invitations (2026-10-23)
 - [x] Interactive manager addition uses the saved investment's personal invitation and reports sending failure without losing the saved record; imports and historical rows unchanged.
