@@ -26,7 +26,7 @@ export type ReviewDetails = {
   faceMatch: null | { status: ReviewStatus; raw: string | null; score: number | null; warnings: string[] };
   aml: null | {
     status: ReviewStatus; raw: string | null; totalHits: number; entityType: string | null;
-    hits: Array<{ caption: string | null; datasets: string[]; matchScore: number | null; riskScore: number | null; isMatch: boolean | null; reviewStatus: string | null; countries: string[]; birthDates: string[]; pep: boolean; summary: string | null; lists: string[] }>;
+    hits: Array<{ id?: string | null; caption: string | null; datasets: string[]; matchScore: number | null; riskScore: number | null; isMatch: boolean | null; reviewStatus: string | null; countries: string[]; birthDates: string[]; pep: boolean; summary: string | null; lists: string[] }>;
   };
   address: null | { status: ReviewStatus; raw: string | null; address: string | null; warnings: string[] };
   phone: null | { status: ReviewStatus; raw: string | null; numberLast4: string | null; carrier: string | null; type: string | null };

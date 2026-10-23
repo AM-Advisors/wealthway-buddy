@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { accountCheckQueueFn, decideAccountCheckFn } from "@/lib/account-kyc.functions";
+import { AmlMatchReview } from "@/components/aml-match-review";
 
 const LABEL: Record<string, string> = { not_started: "Not started", pending: "In progress", review: "Needs review", approved: "Approved", declined: "Declined", expired: "ID expired", sent_back: "Sent back" };
 
@@ -18,6 +19,7 @@ export function AccountIdentityQueue() {
   const decide = useServerFn(decideAccountCheckFn);
   const q = useQuery({ queryKey: ["account-identity-queue"], queryFn: () => list() });
   const [notes, setNotes] = useState<Record<string, string>>({});
+  const [openMatches, setOpenMatches] = useState<string | null>(null);
   const [filter, setFilter] = useState<"review" | "all">("review");
   const m = useMutation({
     mutationFn: (v: { checkId: string; action: "approve" | "decline" | "send_back" }) => decide({ data: { ...v, note: notes[v.checkId]?.trim() || null } }),
@@ -40,6 +42,8 @@ export function AccountIdentityQueue() {
               <p className="text-xs text-muted-foreground">Started {new Date(r.created_at).toLocaleDateString()} · ID {d.document?.type ?? "-"} {d.document?.country ?? ""}{d.document?.last4 ? ` ••••${d.document.last4}` : ""} · Liveness {d.liveness ?? "-"} · Face {d.faceMatch ?? "-"} · Address {d.address ?? "-"} · AML {d.aml?.status ?? "-"}{d.aml?.hits ? ` (${d.aml.hits} hit${d.aml.hits > 1 ? "s" : ""})` : ""}</p>
               {!!(r.warnings ?? []).length && <ul className="list-disc pl-5 text-xs text-destructive">{r.warnings.slice(0, 6).map((w: string) => <li key={w}>{w}</li>)}</ul>}
               {r.decision_note && <p className="text-xs">Note: {r.decision_note}</p>}
+              {(d.aml?.hits ?? 0) > 0 && <Button size="sm" variant="outline" onClick={() => setOpenMatches(openMatches === r.id ? null : r.id)}>{openMatches === r.id ? "Hide possible matches" : `Review ${d.aml.hits} possible match${d.aml.hits > 1 ? "es" : ""}`}</Button>}
+              {openMatches === r.id && <AmlMatchReview checkId={r.id} />}
               {["review", "approved", "declined", "expired"].includes(r.status) && (
                 <div className="space-y-2">
                   <Textarea rows={2} placeholder="Note (required to decline or send back)" value={notes[r.id] ?? ""} onChange={(e) => setNotes({ ...notes, [r.id]: e.target.value })} />
