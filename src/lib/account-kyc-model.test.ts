@@ -26,3 +26,17 @@ describe("provider notices never reverse a verification result", () => {
     expect(accountStatusFromProvider("Approved", "approved")).toBe("approved");
   });
 });
+
+import { limitedAccessWhileInReview } from "./account-kyc-model";
+describe("limited access during an open review", () => {
+  const pass = { idDocument: { status: "pass" }, liveness: { status: "pass" }, faceMatch: { status: "pass" } };
+  it("allows it when ID, liveness and face match all passed", () => expect(limitedAccessWhileInReview({ status: "review", review_details: pass })).toBe(true));
+  it("refuses when the ID itself failed or is unread", () => {
+    expect(limitedAccessWhileInReview({ status: "review", review_details: { ...pass, idDocument: { status: "fail" } } })).toBe(false);
+    expect(limitedAccessWhileInReview({ status: "review", review_details: null })).toBe(false);
+  });
+  it("refuses once a person has decided, or for declined checks", () => {
+    expect(limitedAccessWhileInReview({ status: "review", decided_by: "u", review_details: pass })).toBe(false);
+    expect(limitedAccessWhileInReview({ status: "declined", review_details: pass })).toBe(false);
+  });
+});

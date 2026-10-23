@@ -1,7 +1,7 @@
 // Server-only: account-level identity verification that gates every non-staff account.
 // Investment-level KYC (kyc_verifications) stays separate; an approved one counts here.
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { ACCOUNT_KYC_DECIDERS, accountStatusFromProvider, gateOpen, isSessionDecisionFor, resolveGate, type AccountCheckStatus } from "@/lib/account-kyc-model";
+import { ACCOUNT_KYC_DECIDERS, accountStatusFromProvider, gateOpen, isSessionDecisionFor, limitedAccessWhileInReview, resolveGate, type AccountCheckStatus } from "@/lib/account-kyc-model";
 export { isAccountDecisionEvent } from "@/lib/account-kyc-model";
 
 const db = () => supabaseAdmin as any;
@@ -37,15 +37,18 @@ export async function accountKycStatus(uid: string) {
   const [r, l] = await Promise.all([roles(uid), latest(uid)]);
   let state = resolveGate({ roles: r, grandfathered: false, latest: (l?.status ?? null) as AccountCheckStatus | null });
   if (!gateOpen(state) && (await grandfathered(uid))) state = "approved";
-  return { state, open: gateOpen(state), declineNote: l?.status === "declined" || l?.status === "sent_back" ? (l?.decision_note ?? null) : null, expired: l?.status === "expired" };
+  const limited = !gateOpen(state) && limitedAccessWhileInReview(l);
+  return { state, open: gateOpen(state), limited, declineNote: l?.status === "declined" || l?.status === "sent_back" ? (l?.decision_note ?? null) : null, expired: l?.status === "expired" };
 }
 
 /** Throws unless the account may use the platform. Used by the server-side gate. */
-export async function assertAccountVerified(uid: string) {
+export async function assertAccountVerified(uid: string, opts: { allowLimited?: boolean } = {}) {
   const { isGloballyBlocked } = await import("@/lib/user-access.server");
   if (await isGloballyBlocked(uid)) throw new Response("Access revoked", { status: 403 });
   const s = await accountKycStatus(uid);
-  if (!s.open) throw new Response("Identity verification required", { status: 403 });
+  if (s.open) return;
+  if (s.limited && opts.allowLimited !== false) return;
+  throw new Response(s.limited ? "This step opens once your identity review is complete." : "Identity verification required", { status: 403 });
 }
 
 export async function startAccountCheck(uid: string, origin: string) {
@@ -98,6 +101,7 @@ export async function applyAccountDecision(c: any, decision: Record<string, any>
   const summary = { document: { type: n.document.documentType, country: n.document.issuingCountry, last4: n.document.numberLast4, expires: n.document.expirationDate }, liveness: n.liveness.status, faceMatch: n.faceMatch.status, address: n.proofOfAddress.status, aml: { status: n.aml.status, hits: n.aml.hitCount } };
   await db().from("account_identity_checks").update({ status: to, decision_summary: summary, warnings: n.warnings.slice(0, 20), updated_at: now() }).eq("id", c.id);
   await logEvent(c, "provider_decision", c.status, to, null);
+  if (c.status === "review") await emailReviewOutcome(c, to, null);
   const { notifyVerificationConfirmation } = await import("@/lib/ops-slack-notify.server");
   await notifyVerificationConfirmation({ check: "KYC", status: to, ref: c.id, path: "/ops/security-compliance?section=overview" });
   await notifyVerificationConfirmation({ check: "AML", status: n.aml.hitCount > 0 ? "review" : n.aml.status, ref: c.id, path: "/ops/security-compliance?section=overview" });
@@ -147,6 +151,7 @@ export async function decideAccountCheck(uid: string, checkId: string, action: "
   const to = action === "approve" ? "approved" : action === "decline" ? "declined" : "sent_back";
   await db().from("account_identity_checks").update({ status: to, decided_by: uid, decided_at: now(), decision_note: note?.trim() || null, updated_at: now() }).eq("id", checkId);
   await logEvent(c, `staff_${action}`, c.status, to, uid, note?.trim() || null);
+  await emailReviewOutcome(c, to, action === "approve" ? null : note?.trim() || null);
   if (c.session_id && action !== "send_back") await pushProviderStatus(String(c.session_id), action === "approve" ? "Approved" : "Declined", note);
   if (action === "approve") {
     try {
@@ -193,4 +198,19 @@ export async function backfillReviewDetails(uid: string) {
     }
   }
   return { refreshed: n };
+}
+
+/** One email to the person when their identity review is decided. Never blocks the decision. */
+async function emailReviewOutcome(c: any, to: string, note: string | null) {
+  if (!["approved", "declined", "sent_back", "expired"].includes(to)) return;
+  try {
+    const { data: u } = await db().auth.admin.getUserById(c.user_id);
+    const email = u?.user?.email;
+    if (!email) return;
+    const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+    await sendTemplateEmail("identity-review-decided", email, {
+      templateData: { outcome: to === "approved" ? "approved" : "action_needed", note: to === "declined" || to === "sent_back" ? note : null, portalUrl: "https://app.harmonious.co/" },
+      idempotencyKey: `identity-review-${c.id}-${to}`,
+    });
+  } catch (e) { console.error("[account-kyc] review outcome email", e instanceof Error ? e.message : String(e)); }
 }

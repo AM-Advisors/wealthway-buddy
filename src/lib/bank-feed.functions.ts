@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/lib/require-auth";
+// Money, banking and account changes need a fully cleared identity check (not "limited" review access).
+import { requireFullyVerifiedAuth as requireSupabaseAuth } from "@/lib/require-auth";
 
 /** Only admins and the fund's assigned managers may touch a fund's bank feed. */
 async function assertFundAccess(supabase: any, userId: string, fundId: string) {

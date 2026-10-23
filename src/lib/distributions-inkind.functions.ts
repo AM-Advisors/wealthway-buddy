@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/lib/require-auth";
+// Money, banking and account changes need a fully cleared identity check (not "limited" review access).
+import { requireFullyVerifiedAuth as requireSupabaseAuth } from "@/lib/require-auth";
 import { DISTRIBUTION_TYPES } from "@/lib/distributions-model";
 
 const authed = () => createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]);

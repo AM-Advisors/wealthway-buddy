@@ -35,3 +35,13 @@ export function accountStatusFromProvider(raw: string | null | undefined, mapped
   if (r === "expired" || r === "abandoned") return "expired";
   return mapped === "approved" ? "approved" : mapped === "declined" ? "declined" : mapped === "review" ? "review" : "pending";
 }
+
+/**
+ * "Limited" access while a provider-flagged check waits for a person: only when ID, liveness and
+ * face match all passed (typically a possible watchlist match). Money, banking and account changes stay closed.
+ */
+export function limitedAccessWhileInReview(check: { status?: string | null; decided_by?: string | null; review_details?: any } | null | undefined): boolean {
+  if (!check || check.status !== "review" || check.decided_by) return false;
+  const rd = check.review_details;
+  return rd?.idDocument?.status === "pass" && rd?.liveness?.status === "pass" && rd?.faceMatch?.status === "pass";
+}

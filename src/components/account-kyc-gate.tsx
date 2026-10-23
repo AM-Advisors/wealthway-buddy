@@ -22,6 +22,15 @@ export function AccountKycGate({ children, onSignOut }: { children: ReactNode; o
   // Self-serve sign-up (pick plan, sign SOW, pay) comes first; identity is a later step and access stays closed until it passes.
   const onPlanPage = /^\/plan(\/|$)/.test(pathname);
   if (s?.open || onPlanPage) return <>{children}</>;
+  // Limited access: ID, selfie and face match passed; a person is finishing one check. Money and banking stay closed on the server.
+  if (s?.limited) return (
+    <>
+      <div role="status" className="border-b bg-accent/15 px-4 py-2 text-center text-sm text-foreground">
+        You can keep setting up while we finish one compliance check. Funding, banking and account changes open once it's done — we'll email you.
+      </div>
+      {children}
+    </>
+  );
 
   const body = (() => {
     if (q.isLoading) return { title: "One moment…", text: "Checking your account.", cta: null as string | null };

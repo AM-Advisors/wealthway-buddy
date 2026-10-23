@@ -4,7 +4,8 @@
 // record, not a valuation, audit, tax return or investment advice.
 import { createServerFn } from "@tanstack/react-start";
 
-import { requireSupabaseAuth } from "@/lib/require-auth";
+// Money, banking and account changes need a fully cleared identity check (not "limited" review access).
+import { requireFullyVerifiedAuth as requireSupabaseAuth } from "@/lib/require-auth";
 
 const EXCLUDED_STATUSES = new Set(["withdrawn", "declined", "rejected", "cancelled"]);
 

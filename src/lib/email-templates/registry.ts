@@ -34,6 +34,7 @@ import { template as crmCampaign } from './crm-campaign'
 import { template as paymentReceived } from './payment-received'
 import { template as securityAlert } from './security-alert'
 import { template as saleSigned } from './sale-signed'
+import { template as identityReviewDecided } from './identity-review-decided'
 
 
 
@@ -75,6 +76,7 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'bank-setup-request': bankSetupRequest,
   'ops-review-request': opsReviewRequest,
   'ops-review-decision': opsReviewDecision,
+  'identity-review-decided': identityReviewDecided,
   'client-admin-alert': clientAdminAlert,
   'client-invitation': clientInvitation,
   'client-welcome': clientWelcome,

@@ -26,3 +26,16 @@ const verified = createMiddleware({ type: "function" })
   });
 
 export const requireSupabaseAuth = verified as unknown as ReturnType<typeof shape>;
+
+// Same as requireSupabaseAuth, but an account whose identity check is still open for review is refused.
+// Used for money movement, banking, wire instructions and account-security changes.
+const fullyVerified = createMiddleware({ type: "function" })
+  .middleware([generated])
+  .server(async ({ next, context }) => {
+    const uid = (context as unknown as AuthContext).userId;
+    const { assertAccountVerified } = await import("@/lib/account-kyc.server");
+    await assertAccountVerified(uid, { allowLimited: false });
+    return next();
+  });
+
+export const requireFullyVerifiedAuth = fullyVerified as unknown as ReturnType<typeof shape>;
