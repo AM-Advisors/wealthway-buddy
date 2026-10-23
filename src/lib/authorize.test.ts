@@ -88,7 +88,7 @@ describe("canonical resolver", () => {
   });
 });
 
-describe("access changes - no privilege escalation", () => {
+describe("access changes: no privilege escalation", () => {
   it("ordinary staff can't grant Super Admin; only super admins can", () => {
     expect(accessChangeProblem(ops, { kind: "assign_role", targetUserId: "x", roleKey: "super_admin", scope: g })).toBeTruthy();
     expect(accessChangeProblem(F({ userId: "ad", roles: ["admin"] }), { kind: "assign_role", targetUserId: "x", roleKey: "super_admin", scope: g })).toBeTruthy();

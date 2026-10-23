@@ -30,13 +30,13 @@ import { Textarea } from "@/components/ui/textarea";
 export const Route = createFileRoute("/_authenticated/manager/diligence")({
   head: () => ({
     meta: [
-      { title: "Diligence Room Manager - Harmonious" },
+      { title: "Diligence Room Manager | Harmonious" },
       {
         name: "description",
         content:
           "Open a diligence room for each fund you manage, upload materials and sort them into the categories investors expect.",
       },
-      { property: "og:title", content: "Diligence Room Manager - Harmonious" },
+      { property: "og:title", content: "Diligence Room Manager | Harmonious" },
       {
         property: "og:description",
         content: "Upload and categorize fund diligence materials for Harmonious investors.",

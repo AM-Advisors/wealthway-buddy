@@ -89,7 +89,7 @@ function AboutPage() {
           <p className="mt-4 max-w-3xl text-muted-foreground">
             Every engagement is governed by a Master Service Agreement together with one or more
             Statements of Work. The Statement of Work decides exactly which services apply, at what
-            fees and on what timing - so what you see in the portal is always what you have agreed
+            fees and on what timing, so what you see in the portal is always what you have agreed
             to, and anything outside it has to be requested, quoted and signed before it starts.
           </p>
 

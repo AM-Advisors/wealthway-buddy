@@ -61,7 +61,7 @@ export function purchaseError(i: PurchaseInput): string | null {
   if (!Number.isInteger(i.transactionCostCents) || i.transactionCostCents < 0) return "Transaction costs cannot be negative.";
   if (!i.sourceReference.trim()) return "A source reference is required.";
   if (i.kind === "additional_purchase" && !i.assetId) return "An additional purchase must select the existing holding.";
-  if (i.kind === "purchase" && i.assetId) return "This security is already held - record an additional purchase instead.";
+  if (i.kind === "purchase" && i.assetId) return "This security is already held: record an additional purchase instead.";
   if (i.kind === "purchase" && (!i.newIssuerName?.trim() || !i.newAssetName?.trim())) return "A new purchase needs the issuer and security.";
   return null;
 }
@@ -157,7 +157,7 @@ export function reconciliationJournalDecision(linked: { status: string; journalE
   { action: "draft" } | { action: "reuse"; entryId: string } | { action: "wait"; reason: string } {
   if (!linked) return { action: "draft" };
   if (linked.status === "posted" && linked.journalEntryId) return { action: "reuse", entryId: linked.journalEntryId };
-  if (linked.status === "reversed") return { action: "wait", reason: "The linked accounting record was reversed - resolve the bank exception before reconciling." };
+  if (linked.status === "reversed") return { action: "wait", reason: "The linked accounting record was reversed, resolve the bank exception before reconciling." };
   return { action: "wait", reason: "This bank activity belongs to an accounting record that is not posted yet - post it first; no second cash entry is created." };
 }
 /** New chart accounts: expense type, unique code/name, numbered inside the parent's range. */
@@ -167,7 +167,7 @@ export function newAccountError(i: { code: string; name: string; accountType: st
   if (!i.code.startsWith("5")) return "Expense accounts use the 5000 range.";
   if (i.parentCode && i.code.slice(0, 2) !== i.parentCode.slice(0, 2)) return "The code must sit inside the parent account's range.";
   const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
-  if (existing.some((a) => a.code === i.code)) return "DUPLICATE - that account code already exists.";
+  if (existing.some((a) => a.code === i.code)) return "DUPLICATE, that account code already exists.";
   if (existing.some((a) => norm(a.name) === norm(i.name))) return "DUPLICATE: an account with that name already exists.";
   return null;
 }

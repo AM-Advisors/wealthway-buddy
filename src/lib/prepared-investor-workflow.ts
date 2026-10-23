@@ -407,7 +407,7 @@ export function signingGate(input: {
   const s = input.latest;
   if (input.missing.length) return { ok: false, error: `${SIGNING_UNAVAILABLE} ${input.missing.map((m) => m.message).join(" ")}`, next: "complete_information" };
   if (!input.templateReady || !input.signerConfigReady) return { ok: false, error: "Signing unavailable - this document isn't prepared for signature yet.", next: "wait" };
-  if (!input.prerequisitesMet) return { ok: false, error: "Signing unavailable - finish the earlier steps first.", next: "wait" };
+  if (!input.prerequisitesMet) return { ok: false, error: "Signing unavailable: finish the earlier steps first.", next: "wait" };
   if (!s || s.onboarding_id !== input.onboardingId || s.offering_id !== input.offeringId || s.document_id !== input.documentId) return { ok: false, error: SIGNING_UNAVAILABLE, next: "review_document" };
   if (["stale", "superseded"].includes(s.status)) return { ok: false, error: SIGNING_UNAVAILABLE, next: "regenerate" };
   if (fingerprint(s.merge_values) !== fingerprint(input.currentMergeValues)) return { ok: false, error: SIGNING_UNAVAILABLE, next: "regenerate" };

@@ -17,7 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 export const STATUS_LABELS: Record<string, string> = {
   open: "Open",
   needs_review: "Needs Further Review",
-  keep_separate_pending_rename: "Keep Separate - rename required",
+  keep_separate_pending_rename: "Keep Separate: rename required",
   resolved_separate: "Resolved: Separate Funds",
   consolidation_pending: "Awaiting Confirm Consolidation",
   consolidated: "Consolidated",

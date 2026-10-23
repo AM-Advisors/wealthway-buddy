@@ -63,7 +63,7 @@ const COVERAGE = [
 ] as const;
 
 const RECORD = [
-  ["Verify ownership", "Claimed positions are compared with your register and either verified, adjusted, queried or disputed - with the ownership chain shown in full."],
+  ["Verify ownership", "Claimed positions are compared with your register and either verified, adjusted, queried or disputed, with the ownership chain shown in full."],
   ["Document exposure", "Every SPV, nominee and feeder in your holder base is recorded, with who sits behind it."],
   ["Maintain the record", "Certificates, documents and an append-only audit history: who changed what, when, and what it was before."],
 ] as const;

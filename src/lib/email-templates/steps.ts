@@ -53,7 +53,7 @@ export const ONBOARDING_STEPS: OnboardingStepDef[] = [
     key: 'funding',
     label: 'Funding',
     title: 'Funding',
-    detail: 'Choose wire or ACH - your instructions and reference code appear in the portal.',
+    detail: 'Choose wire or ACH, your instructions and reference code appear in the portal.',
     path: '/onboarding/funding',
     ctaLabel: 'Fund your investment',
     lead: 'Everything is signed. The last step is funding, choose wire or ACH and your instructions appear in the portal.',

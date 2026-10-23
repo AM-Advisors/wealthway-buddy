@@ -564,7 +564,7 @@ function InvitePanel({
       setLink(`${origin}${result.path}`);
       setName("");
       setEmail("");
-      toast.success("Link created - copy it and send it to the claimant.");
+      toast.success("Link created, copy it and send it to the claimant.");
       onChanged();
     },
     onError: (error: unknown) =>

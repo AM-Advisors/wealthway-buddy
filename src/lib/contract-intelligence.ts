@@ -477,7 +477,7 @@ export const LIFECYCLE_STATUSES = [
   "Renewal Window", "Notice Window", "Expiring", "Expired", "Superseded", "Terminated",
 ] as const;
 export type LifecycleStatus = (typeof LIFECYCLE_STATUSES)[number];
-export const UNABLE = "Unable to calculate - review required";
+export const UNABLE = "Unable to calculate: review required";
 
 export type Lifecycle = {
   status: LifecycleStatus;

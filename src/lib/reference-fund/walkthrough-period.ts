@@ -149,7 +149,7 @@ export const FUNDING_NOTES: Record<string, string> = {
   juniper: "Funding pending: wire expected after period end.",
   erik: "Blocked - AML review open; funding not accepted until cleared.",
   atlas: "Partially funded - $200,000 outstanding.",
-  kestrel: "Late - received 2026-02-20 against 2026-02-15 due date.",
+  kestrel: "Late: received 2026-02-20 against 2026-02-15 due date.",
   ada: "Overpaid $50 - held as a liability; any refund is a manual decision, never automatic.",
   casey: "Deposit arrived without reference; matched manually by staff.",
 };

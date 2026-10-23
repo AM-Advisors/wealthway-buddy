@@ -235,7 +235,7 @@ function SlaView({ rows }: { rows: any[] }) {
 function ClientActions({ rows }: { rows: any[] }) {
   const step = useServerFn(opsClientActionStep); const qc = useQueryClient();
   const go = async (r: any, s: "reminder" | "follow_up" | "escalate") => {
-    if (r.kind !== "task") { toast.message("Open the item to follow up — only tasks track reminders here."); return; }
+    if (r.kind !== "task") { toast.message("Open the item to follow up, only tasks track reminders here."); return; }
     const date = s === "follow_up" ? window.prompt("Follow-up date (YYYY-MM-DD)") : null;
     if (s === "follow_up" && !date) return;
     try { const res = await step({ data: { taskId: r.id, step: s, date } }); toast.success(res.note ?? "Saved."); qc.invalidateQueries({ queryKey: ["ops-command"] }); } catch (e) { toast.error((e as Error).message); }

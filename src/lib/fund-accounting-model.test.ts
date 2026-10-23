@@ -140,7 +140,7 @@ describe("chart of accounts additions", () => {
 
 import { feeAccrualError, feeAccrualLines } from "./fund-accounting-model";
 describe("management fee accrual", () => {
-  it("expense and payable only - never cash", () => {
+  it("expense and payable only: never cash", () => {
     expect(feeAccrualLines(11_543_750).map((l) => l.purpose)).toEqual(["management_fee_expense", "management_fee_payable"]);
   });
   it("stops on mismatch, block or duplicate", () => {

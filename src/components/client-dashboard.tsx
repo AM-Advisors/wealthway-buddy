@@ -453,7 +453,7 @@ export function ClientDashboard({
           <CardHeader>
             <CardTitle className="text-base">Capital account statements</CardTitle>
             <CardDescription>
-              Produced from each fund's records at a closing. Administrative records only - not a
+              Produced from each fund's records at a closing. Administrative records only, not a
               valuation, audit or tax document.
             </CardDescription>
           </CardHeader>

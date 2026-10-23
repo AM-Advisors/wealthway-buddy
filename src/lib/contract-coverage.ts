@@ -275,7 +275,7 @@ export type FundCoverageStatus =
 export const COVERAGE_LABEL: Record<FundCoverageStatus, string> = {
   covered: "Covered",
   covered_client_wide: "Covered: Client-wide SOW",
-  msa_only: "MSA only - Review required",
+  msa_only: "MSA only: Review required",
   not_contracted: "No SOW, Not yet contracted",
   sow_required: "SOW required",
   needs_review: "Contract review required",
@@ -351,7 +351,7 @@ export function resolveServiceCoverage(selected: readonly string[], coveringSows
 
 export const SEPT_2026_PACKAGE = {
   key: "harmonious_standard_2026_09",
-  title: "Harmonious Master Service Agreement - September 2026",
+  title: "Harmonious Master Service Agreement | September 2026",
   status: "proposed" as const,
   components: [
     { key: "msa", kind: "msa", title: "Master Service Agreement", level: "client" },

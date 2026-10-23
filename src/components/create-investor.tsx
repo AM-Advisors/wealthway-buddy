@@ -70,7 +70,7 @@ export function CreateInvestor({ fundId, isStaff, onDone }: { fundId: string; is
         related: related.filter((r) => r.firstName && r.lastName).map((r) => ({ ...r, email: r.email || null, ownershipPercent: r.ownershipPercent ? Number(r.ownershipPercent) : null })),
       } });
       if (r.emailSent === false) toast.warning("Investor added, but the invitation was not sent. Open their record to check and resend the invitation.");
-      else toast.success(r.emailSent ? "Investor added and invitation sent." : "Investor added - Incomplete, additional information required.");
+      else toast.success(r.emailSent ? "Investor added and invitation sent." : "Investor added: Incomplete, additional information required.");
       qc.invalidateQueries({ queryKey: ["fund-investor-records", fundId] });
       qc.invalidateQueries({ queryKey: ["fund-readiness", fundId] });
       onDone?.();

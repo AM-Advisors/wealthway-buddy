@@ -172,7 +172,7 @@ const ASSIST_ALL = [
 
 beforeEach(reset);
 
-describe("Phase 3A hardening - banking and wire stay closed", () => {
+describe("Phase 3A hardening: banking and wire stay closed", () => {
   it("refuses banking and wire capabilities with signed_authority_required", async () => {
     const id = delegation({ authority_level: "limited_proxy" }, [
       "view_investments",

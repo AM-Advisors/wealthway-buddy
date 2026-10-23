@@ -122,7 +122,7 @@ export function categorize(s: { source_key: string; headline: string; summary?: 
 
 /** Warn when an older development could be presented as current. Uses publication date, never retrieval date. */
 export function freshnessWarning(publishedAt: string | null, now = new Date()): string | null {
-  if (!publishedAt) return "Original publication date unknown — confirm before presenting as current.";
+  if (!publishedAt) return "Original publication date unknown: confirm before presenting as current.";
   const d = Math.floor((now.getTime() - new Date(publishedAt).getTime()) / 86400000);
   return d > 14 ? `Published ${d} days ago — don't present as current news.` : null;
 }

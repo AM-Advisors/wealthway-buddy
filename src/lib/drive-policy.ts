@@ -45,7 +45,7 @@ export type DestinationAudit = {
 
 export type DestinationDecision = { allowed: true } | { allowed: false; reason: string };
 
-export const WITHHELD_MESSAGE = "Drive filing withheld - destination permissions too broad";
+export const WITHHELD_MESSAGE = "Drive filing withheld: destination permissions too broad";
 
 /**
  * Decide whether a document of this classification may be filed where the

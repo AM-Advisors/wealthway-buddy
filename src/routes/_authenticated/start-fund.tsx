@@ -13,9 +13,9 @@ import { startOwnFund } from "@/lib/investor-start.functions";
 export const Route = createFileRoute("/_authenticated/start-fund")({
   head: () => ({
     meta: [
-      { title: "Start your own fund or SPV - Harmonious" },
+      { title: "Start your own fund or SPV | Harmonious" },
       { name: "description", content: "Set up your organization, sign the agreement and pay the $2,500 setup fee to launch a fund or SPV." },
-      { property: "og:title", content: "Start your own fund or SPV - Harmonious" },
+      { property: "og:title", content: "Start your own fund or SPV | Harmonious" },
       { property: "og:description", content: "Launch your own fund or SPV with Harmonious." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

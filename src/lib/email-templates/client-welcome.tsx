@@ -82,7 +82,7 @@ function ClientWelcome({
 
           <Text style={body}>
             Hi {contactName}, your portal for {clientName} is ready. Everything Harmonious
-            administers for you - funds, agreements, invoices and payments - is in one place.
+            administers for you - funds, agreements, invoices and payments, is in one place.
           </Text>
 
           <Text style={{ margin: '24px 0 0' }}>

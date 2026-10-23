@@ -243,7 +243,7 @@ export const TERMS_OF_SERVICE: LegalDocument = {
       paragraphs: [
         "Access to the Platform is granted to named individuals. You are responsible for keeping sign-in credentials confidential, for the activity carried out under your account, and for telling us promptly if you believe an account has been compromised or a person should no longer have access.",
         "You agree not to share accounts, attempt to access data belonging to another client, interfere with the operation or security of the Platform, or use it to store or transmit unlawful material. We may suspend access where we reasonably believe these Terms have been breached or where continued access presents a security, legal or regulatory risk.",
-        "Roles and permissions in the Platform reflect the authority recorded for your organization. Certain actions - including approving fees and authorizing payment instructions - are restricted to people holding the relevant authority.",
+        "Roles and permissions in the Platform reflect the authority recorded for your organization. Certain actions - including approving fees and authorizing payment instructions, are restricted to people holding the relevant authority.",
       ],
     },
     {

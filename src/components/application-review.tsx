@@ -187,7 +187,7 @@ export function ApplicationReview({ applicationId, backTo, backLabel }: Applicat
     onSuccess: (_r, vars) => {
       setWireNotes((prev) => ({ ...prev, [vars.confirmationId]: "" }));
       toast.success(
-        vars.outcome === "approved" ? "Wire approved - subscription funded" : "Wire confirmation rejected",
+        vars.outcome === "approved" ? "Wire approved: subscription funded" : "Wire confirmation rejected",
       );
       invalidate();
     },

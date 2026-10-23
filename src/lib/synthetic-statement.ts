@@ -6,7 +6,7 @@
 import type { PdfDocSpec } from "@/lib/pdf-render";
 
 export const SYNTHETIC_STATEMENT_LABEL =
-  "DEMO / SYNTHETIC — UNAUDITED — NOT CONTRACTUAL — NOT FOR INVESTOR DISTRIBUTION";
+  "DEMO / SYNTHETIC: UNAUDITED, NOT CONTRACTUAL. NOT FOR INVESTOR DISTRIBUTION";
 
 export const SYNTHETIC_DISCLOSURES = [
   "Valuations are synthetic assumptions without independent supporting evidence.",

@@ -56,7 +56,7 @@ export function SignOperatingAgreementGuide() {
           <p>
             You'll receive an email from Harmonious titled{" "}
             <strong className="text-foreground">“Please sign: Operating Agreement”</strong>. It names your fund and
-            shows you're signing as the fund manager. Click the button in the email — the link is personal to you and
+            shows you're signing as the fund manager. Click the button in the email, the link is personal to you and
             only works with the email address it was sent to.
           </p>
           <Mock caption="Illustration of the signing email (sample values).">
@@ -86,7 +86,7 @@ export function SignOperatingAgreementGuide() {
           </p>
           <p>
             First time here? The link walks you through setting a password first, then takes you straight to the
-            agreement. If you've been asked to verify your identity, that one-time step comes first — have a
+            agreement. If you've been asked to verify your identity, that one-time step comes first, have a
             government ID handy.
           </p>
         </Step>

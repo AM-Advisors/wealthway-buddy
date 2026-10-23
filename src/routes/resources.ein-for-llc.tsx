@@ -90,7 +90,7 @@ const STEPS = [
 ];
 
 const PITFALLS = [
-  "Legal name on the SS-4 does not exactly match the state filing - a common rejection cause.",
+  "Legal name on the SS-4 does not exactly match the state filing, a common rejection cause.",
   "Naming a formation company or lawyer as the responsible party instead of a controlling individual.",
   "Applying before the state approves the formation, so the entity does not yet legally exist.",
   "Hitting the one-EIN-per-responsible-party-per-day limit when spinning up several entities at once.",

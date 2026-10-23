@@ -147,7 +147,7 @@ export const PRODUCTS: Product[] = [
     openPoints: ["SPV Core $1,500/yr is a placeholder. Confirm.", "All non-SaaS prices are back to before the 25% increase."],
   },
   {
-    key: "saas", name: "SaaS Platform", intro: "Platform only, no Harmonious support. No services are included — buy services one at a time, billed yearly or quarterly.",
+    key: "saas", name: "SaaS Platform", intro: "Platform only, no Harmonious support. No services are included, buy services one at a time, billed yearly or quarterly.",
     fundCost: [{ name: "Platform fee", description: "Full platform access per fund. Billed yearly or quarterly.", prices: cadences(Math.round(2500 * SAAS_BASE_UPLIFT)) }],
     administration: [{ name: "Fund Administration", description: "Not included. Available à la carte.", prices: yearly(null, "SaaS à la carte price") }],
     servicing: { client: [{ name: "Client servicing", description: "No services included. Core, Plus and White Glove support are available at an extra cost.", prices: yearly(null, "Extra cost") }], investor: investorLines(SAAS_BASE_UPLIFT * SAAS_MARKUP) },

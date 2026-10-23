@@ -74,7 +74,7 @@ function SowTemplates() {
       <Card>
         <CardHeader><CardTitle className="text-base">All versions</CardTitle></CardHeader>
         <CardContent className="overflow-x-auto">
-          {!templates.length ? <p className="text-sm text-muted-foreground">No templates yet. Until one is approved, new funds show "SOW required - no approved current template available".</p> : (
+          {!templates.length ? <p className="text-sm text-muted-foreground">No templates yet. Until one is approved, new funds show "SOW required: no approved current template available".</p> : (
             <table className="w-full text-sm">
               <thead className="text-left text-xs text-muted-foreground"><tr><th className="py-1">Template</th><th>Type</th><th>Version</th><th>Effective</th><th>Status</th><th>Approved</th><th>Retired</th><th /></tr></thead>
               <tbody>

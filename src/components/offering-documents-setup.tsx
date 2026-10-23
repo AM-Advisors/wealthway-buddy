@@ -165,7 +165,7 @@ function DocumentRow({ doc, data, offeringId, onChanged }: { doc: Doc; data: Dat
         await setUsage({ data: { documentId: doc.id, usage: "signature", applicability: { profileTypes: [], classKeys: [] } } });
       }
       setOpen(true);
-    }, "Document uploaded - now add the signature blocks, then approve");
+    }, "Document uploaded: now add the signature blocks, then approve");
   };
 
   const startActivate = async (version: number) => {

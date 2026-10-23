@@ -107,7 +107,7 @@ export function InvestorsTab({ fundId, workQueue }: { fundId: string; workQueue?
       <CardHeader className="flex-row items-start justify-between gap-3 space-y-0">
         <div>
           <CardTitle className="text-base">Investors</CardTitle>
-          <CardDescription>Click an investor to open their record — every detail, document, verification and action for this deal is in one place. Received counts only money matched to the bank.</CardDescription>
+          <CardDescription>Click an investor to open their record, every detail, document, verification and action for this deal is in one place. Received counts only money matched to the bank.</CardDescription>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button size="sm" variant="outline" disabled={!picked.length || sending} onClick={sendReminders}>{sending ? "Working…" : `Send reminder${picked.length ? ` (${picked.length})` : ""}`}</Button>

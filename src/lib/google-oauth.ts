@@ -80,7 +80,7 @@ export function consumeOAuthReturnError(): string | null {
   const description = params.get("error_description") ?? "";
   window.history.replaceState(null, "", window.location.pathname + window.location.search);
   if (code === "access_denied" || description.toLowerCase().includes("cancel")) {
-    return "Google sign-in was cancelled - nothing was changed.";
+    return "Google sign-in was cancelled: nothing was changed.";
   }
   return mapGoogleOAuthError(description || code);
 }

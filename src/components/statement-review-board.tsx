@@ -58,7 +58,7 @@ function StatementQueue() {
   const refresh = () => qc.invalidateQueries({ queryKey: ["statement-review"] });
   const decideM = useMutation({
     mutationFn: (v: { statementId: string; decision: "approved" | "returned"; note?: string }) => decide({ data: v }),
-    onSuccess: (_r, v) => { toast.success(v.decision === "approved" ? "Statement approved - the investor can now see it." : "Statement returned."); setReturning(null); setNote(""); refresh(); },
+    onSuccess: (_r, v) => { toast.success(v.decision === "approved" ? "Statement approved: the investor can now see it." : "Statement returned."); setReturning(null); setNote(""); refresh(); },
     onError: (e) => toast.error(errMsg(e)),
   });
   const notifyM = useMutation({

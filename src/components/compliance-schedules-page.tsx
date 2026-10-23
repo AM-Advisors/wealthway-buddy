@@ -22,7 +22,7 @@ export function ComplianceSchedulesPage() {
   const act = async (id: string, decision: 'approved' | 'rejected') => { try { const r = await decide({ data: { id, decision, reason: reasons[id] ?? '' } }); toast.success(r.status === 'sent' ? 'Approved and sent' : r.status === 'failed' ? 'Approved, but sending failed' : 'Report rejected'); refresh(); } catch (e) { toast.error((e as Error).message); } };
   return (
     <main className="mx-auto max-w-6xl space-y-6 px-4 py-8">
-      <div><h1 className="text-3xl">Compliance report schedules</h1><p className="text-sm text-muted-foreground">Recurring internal summaries of compliance items and holds. Each report is prepared on schedule and sent only after a different team member approves it. These are reports — nothing is filed or paid.</p></div>
+      <div><h1 className="text-3xl">Compliance report schedules</h1><p className="text-sm text-muted-foreground">Recurring internal summaries of compliance items and holds. Each report is prepared on schedule and sent only after a different team member approves it. These are reports, nothing is filed or paid.</p></div>
       <Card><CardHeader><CardTitle className="text-base">New schedule</CardTitle></CardHeader><CardContent className="grid gap-3 sm:grid-cols-2">
         <Input aria-label="Schedule name" placeholder="Schedule name" value={name} onChange={(e) => setName(e.target.value)} />
         <select aria-label="Report" className="h-10 rounded-md border bg-background px-3 text-sm" value={type} onChange={(e) => setType(e.target.value as ReportType)}>{Object.entries(REPORT_TYPES).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>

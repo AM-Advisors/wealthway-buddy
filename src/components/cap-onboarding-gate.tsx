@@ -356,7 +356,7 @@ function CapOnboardingForm({
                 rows={3}
                 value={form.records_source}
                 onChange={(e) => set({ records_source: e.target.value })}
-                placeholder="Spreadsheet, prior provider, law firm - and anything we should know."
+                placeholder="Spreadsheet, prior provider, law firm, and anything we should know."
                 disabled={disabled}
               />
             </div>

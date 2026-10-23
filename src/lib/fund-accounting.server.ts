@@ -115,7 +115,7 @@ export async function addExpenseAccount(userId: string, i: { offeringId: string;
   const parent = i.parentCode ? existing.find((a) => a.code === i.parentCode) : null;
   if (i.parentCode && !parent) fail("Parent account not found.");
   const { data, error } = await db().from("chart_of_accounts").insert({ book_id: bookId, code: i.code, name: i.name, account_type: "expense", subtype: i.subtype, normal_balance: "debit", parent_account_id: parent?.id ?? null }).select("id").single();
-  if (error) fail(error.code === "23505" ? "DUPLICATE - that account code already exists." : error.message);
+  if (error) fail(error.code === "23505" ? "DUPLICATE, that account code already exists." : error.message);
   await event(i.offeringId, "chart_of_accounts", data.id, "account_added", userId, i.reason, { code: i.code, name: i.name, parentCode: i.parentCode });
   return { id: String(data.id) };
 }
@@ -158,7 +158,7 @@ export async function prepareInvestment(userId: string, i: PurchaseInput & {
     if (!a || a.offering_id !== i.offeringId) fail("That holding does not belong to this fund.");
   } else {
     const { data: same } = await db().from("portfolio_assets").select("id").eq("offering_id", i.offeringId).ilike("issuer_name", i.newIssuerName!.trim()).ilike("asset_name", i.newAssetName!.trim()).limit(1);
-    if ((same ?? []).length) fail("This security is already held - record an additional purchase instead.");
+    if ((same ?? []).length) fail("This security is already held: record an additional purchase instead.");
     // A purchase only creates the holding when posted, so an open purchase of the same security is also a duplicate.
     const { data: open } = await db().from("fund_investment_transactions").select("id, status").eq("offering_id", i.offeringId).eq("kind", "purchase")
       .ilike("new_issuer_name", i.newIssuerName!.trim()).ilike("new_asset_name", i.newAssetName!.trim()).in("status", ["prepared", "approved", "posted"]).limit(1);

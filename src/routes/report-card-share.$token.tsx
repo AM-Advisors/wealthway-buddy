@@ -6,9 +6,9 @@ import { Card, CardContent } from '@/components/ui/card';
 export const Route = createFileRoute('/report-card-share/$token')({
   ssr: false,
   head: () => ({ meta: [
-    { title: 'Shared Report Card - Harmonious' },
+    { title: 'Shared Report Card | Harmonious' },
     { name: 'description', content: 'A Report Card shared with you by Harmonious.' },
-    { property: 'og:title', content: 'Shared Report Card - Harmonious' },
+    { property: 'og:title', content: 'Shared Report Card | Harmonious' },
     { property: 'og:description', content: 'A time-limited Report Card shared by Harmonious.' },
     { property: 'og:type', content: 'website' }, { name: 'twitter:card', content: 'summary' }, { name: 'robots', content: 'noindex' },
   ] }),

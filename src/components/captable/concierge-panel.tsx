@@ -162,7 +162,7 @@ export function ConciergePanel({
   const answerer = useMutation({
     mutationFn: (input: { exceptionId: string; response: string }) => answer({ data: input }),
     onSuccess: () => {
-      toast.success("Thank you - sent to your specialist.");
+      toast.success("Thank you: sent to your specialist.");
       refresh();
     },
     onError: (err: unknown) =>

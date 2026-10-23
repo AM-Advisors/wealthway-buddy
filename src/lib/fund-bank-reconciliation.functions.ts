@@ -229,7 +229,7 @@ export const matchBankLineToInvoice = createServerFn({ method: "POST" })
       message:
         difference === 0
           ? "Matched. The invoice is recorded as paid from the bank statement."
-          : "Matched, but the deposit and the invoice total differ - check the amounts.",
+          : "Matched, but the deposit and the invoice total differ, check the amounts.",
     };
   });
 

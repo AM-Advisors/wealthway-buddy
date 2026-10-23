@@ -211,7 +211,7 @@ describe("company Action Center scope (server read model)", () => {
 
 /* ------------------------------------------------- E: getOperationsAccess */
 
-describe("Operations semantics - every staff role", () => {
+describe("Operations semantics: every staff role", () => {
   const ROLES = [...OPS_STAFF_ROLES];
 
   it("the canonical rule is active staff assignment + granular capability", () => {

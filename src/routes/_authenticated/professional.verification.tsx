@@ -165,12 +165,12 @@ function OrganizationVerification() {
 export const Route = createFileRoute("/_authenticated/professional/verification")({
   head: () => ({
     meta: [
-      { title: "Firm verification - Harmonious" },
+      { title: "Firm verification | Harmonious" },
       {
         name: "description",
         content: "Submit your firm's details for Harmonious verification before acting for clients.",
       },
-      { property: "og:title", content: "Firm verification - Harmonious" },
+      { property: "og:title", content: "Firm verification | Harmonious" },
       { property: "og:description", content: "Verify your professional firm with Harmonious." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

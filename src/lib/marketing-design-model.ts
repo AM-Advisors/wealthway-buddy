@@ -162,7 +162,7 @@ export const TEMPLATES: { key: TemplateKey; label: string; series: string | null
   { key: "market_headline", label: "Market Monday — headline + KPI", series: "market_monday" },
   { key: "thesis_statement", label: "Thesis Tuesday: bold statement", series: "thesis_tuesday" },
   { key: "wednesday_poll", label: "Whatever Wednesday: community question", series: "whatever_wednesday" },
-  { key: "academy_compare", label: "Fund Academy — side-by-side comparison", series: "fund_academy_thursday" },
+  { key: "academy_compare", label: "Fund Academy: side-by-side comparison", series: "fund_academy_thursday" },
   { key: "founder_quote", label: "Founders Friday: editorial cover", series: "founders_friday" },
   { key: "blank", label: "Blank", series: null },
 ];

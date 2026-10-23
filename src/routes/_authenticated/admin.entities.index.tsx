@@ -11,13 +11,13 @@ import { listEntityRegister } from "@/lib/entities.functions";
 export const Route = createFileRoute("/_authenticated/admin/entities/")({
   head: () => ({
     meta: [
-      { title: "Entities and engagements - Harmonious admin" },
+      { title: "Entities and engagements | Harmonious admin" },
       {
         name: "description",
         content:
           "Every client's companies, funds, SPVs, series and management entities, and the engagements covering them.",
       },
-      { property: "og:title", content: "Entities and engagements - Harmonious admin" },
+      { property: "og:title", content: "Entities and engagements | Harmonious admin" },
       {
         property: "og:description",
         content: "Client entity register and the engagements attached to each one.",

@@ -25,7 +25,7 @@ export const Route = createFileRoute("/fund/$slug")({
     if (!loaderData) {
       return {
         meta: [
-          { title: "Fund unavailable - Harmonious" },
+          { title: "Fund unavailable | Harmonious" },
           { name: "robots", content: "noindex" },
         ],
       };

@@ -214,7 +214,7 @@ function DocumentsPage() {
       {reference.length > 0 ? (
         <Section
           title="For your records"
-          description="Read these carefully - no signature required."
+          description="Read these carefully: no signature required."
           rows={reference}
           busy={busy}
           onSigned={openSigned}

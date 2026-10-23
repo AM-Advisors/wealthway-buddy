@@ -41,7 +41,7 @@ function DocRow({ offeringId, onboardingId, title, version, d, readOnly }: { off
     try {
       await decide({ data: { offeringId, onboardingId, documentId: d.documentId, decision, note: decision === "returned" ? note : null } });
       if (thenSign && d.countersignSignerId) {
-        toast.success("Approved - opening your signature now.");
+        toast.success("Approved: opening your signature now.");
         navigate({ to: "/manager/countersign/$signerId", params: { signerId: d.countersignSignerId } });
         return;
       }

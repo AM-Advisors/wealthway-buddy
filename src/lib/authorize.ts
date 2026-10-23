@@ -213,7 +213,7 @@ export function authorize(
 
   if (!f.authenticated) return deny("Not signed in");
   if (f.suspended) return deny("Account is suspended");
-  if (isProtected(permission)) return deny("Protected permission - granted only through its dedicated control, never by role or grant", ["dedicated_control"]);
+  if (isProtected(permission)) return deny("Protected permission, granted only through its dedicated control, never by role or grant", ["dedicated_control"]);
   if (!isPermission(permission)) return deny("Unknown permission");
 
   // Explicit deny wins over everything ordinary.

@@ -123,7 +123,7 @@ function ClientLoginPage() {
       <div>
         <h1 className="text-3xl">Client sign in</h1>
         <p className="mt-2 text-muted-foreground">
-          Use your own email and password - each person on your team signs in separately, and every
+          Use your own email and password, each person on your team signs in separately, and every
           action is recorded under their own name.
         </p>
 

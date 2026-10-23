@@ -59,7 +59,7 @@ export function ClientInbox() {
             <CardTitle className="text-base">Inbox</CardTitle>
             <CardDescription>
               Every notice Harmonious emails you: invoices, reminders, decisions and welcome
-              notes - kept here so nothing is lost in your mailbox.
+              notes, kept here so nothing is lost in your mailbox.
             </CardDescription>
           </div>
           {unread > 0 && (

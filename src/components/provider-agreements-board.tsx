@@ -520,7 +520,7 @@ export function ProviderAgreementsBoard() {
                   {selected.status === "signed" ? (
                     <p className="text-xs text-muted-foreground">
                       {outstanding > 0
-                        ? `${outstanding} required condition${outstanding === 1 ? "" : "s"} still outstanding - activation is blocked until they are cleared.`
+                        ? `${outstanding} required condition${outstanding === 1 ? "" : "s"} still outstanding: activation is blocked until they are cleared.`
                         : "All required conditions are cleared. At least one agreed price is also needed."}
                     </p>
                   ) : null}

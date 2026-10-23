@@ -124,7 +124,7 @@ function ManagerPortfolio() {
             </Card>
           );
         })}
-        {funds.length === 0 ? <p className="text-sm text-muted-foreground">{all.length ? "No funds match these filters." : "No funds yet - request your first fund or SPV above."}</p> : null}
+        {funds.length === 0 ? <p className="text-sm text-muted-foreground">{all.length ? "No funds match these filters." : "No funds yet: request your first fund or SPV above."}</p> : null}
       </div>
 
       <div className="mt-8"><AttentionCenter workspace="fund_manager" /></div>

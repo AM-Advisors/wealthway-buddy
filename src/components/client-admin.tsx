@@ -499,7 +499,7 @@ function AddServicesDialog({ clientId, groups, funds, existing, onClose }: { cli
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Add Services</DialogTitle>
-          <DialogDescription>Only approved catalog services. Selecting a service proposes it - nothing is contracted or activated.</DialogDescription>
+          <DialogDescription>Only approved catalog services. Selecting a service proposes it, nothing is contracted or activated.</DialogDescription>
         </DialogHeader>
         <div className="flex flex-wrap gap-2">
           <select aria-label="Service scope" className="h-9 rounded-md border bg-background px-2 text-sm" value={scope} onChange={(e) => { setScope(e.target.value); setPicked(new Set()); }}>

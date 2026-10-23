@@ -42,7 +42,7 @@ export function ComplianceCenter({ initialTab }: { initialTab?: string } = {}) {
     <div className="space-y-4 p-6">
       <div>
         <h1 className="text-2xl font-semibold">Compliance & Controls</h1>
-        <p className="text-sm text-muted-foreground">How Harmonious controls are designed, operated and evidenced. This supports SOC 2 readiness and privacy governance - it does not certify compliance.</p>
+        <p className="text-sm text-muted-foreground">How Harmonious controls are designed, operated and evidenced. This supports SOC 2 readiness and privacy governance, it does not certify compliance.</p>
       </div>
       <Tabs defaultValue={initialTab ?? "home"}>
         <TabsList className="flex-wrap h-auto">

@@ -484,4 +484,4 @@ export const SERVICE_STATE_LABEL: Record<string, string> = {
   removed: "Removed",
 };
 
-export const NO_TEMPLATE_MESSAGE = "SOW required - no approved current template available";
+export const NO_TEMPLATE_MESSAGE = "SOW required: no approved current template available";

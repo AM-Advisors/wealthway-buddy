@@ -170,7 +170,7 @@ function StandardAgreement() {
             {status === "sent" ? (
               <Button variant="outline" onClick={() => act(async () => {
                 const r = await sync({ data: { draftId: d.draft.id } });
-                if (!r.executed) throw new Error("Not signed yet - the signing workflow hasn't recorded execution.");
+                if (!r.executed) throw new Error("Not signed yet: the signing workflow hasn't recorded execution.");
               }, "Execution confirmed - terms ready for review")}>Check signing status</Button>
             ) : null}
             {status === "executed" ? (

@@ -148,7 +148,7 @@ function Editor() {
             <Panel title="AI first draft">
               <Textarea rows={3} placeholder="Optional brief: what the prospect cares about, tone, anything to stress" value={brief} onChange={(e) => setBrief(e.target.value)} />
               <div className="mt-3 flex flex-wrap items-center gap-2">
-                <Button disabled={!!busy} onClick={() => run("ai", () => ai({ data: { id, brief: brief || null } }), "Draft written - review every section")}>{busy === "ai" ? "Drafting..." : "Draft with AI"}</Button>
+                <Button disabled={!!busy} onClick={() => run("ai", () => ai({ data: { id, brief: brief || null } }), "Draft written: review every section")}>{busy === "ai" ? "Drafting..." : "Draft with AI"}</Button>
                 {doc.direction === "response" && doc.kind !== "proposal" && (
                   <label className="cursor-pointer text-sm text-primary hover:underline">
                     {doc.source_file_name ? `Replace prospect's document (${doc.source_file_name})` : "Upload prospect's RFP/RFQ (PDF or Word)"}
@@ -176,7 +176,7 @@ function Editor() {
             ) : <div key={s.key + i} className={`rounded-lg border bg-card p-4 ${isSectionShown(s) ? "" : "opacity-60"}`}>
               {OPTIONAL_SECTION_KEYS.includes(s.key) && (
                 <label className="mb-2 flex items-center justify-between gap-2 text-sm">
-                  <span className="text-muted-foreground">{isSectionShown(s) ? "Shown to the client" : "Hidden — turn on when needed"}</span>
+                  <span className="text-muted-foreground">{isSectionShown(s) ? "Shown to the client" : "Hidden: turn on when needed"}</span>
                   <Switch aria-label={`Include ${s.title}`} checked={isSectionShown(s)} disabled={!p.canEdit} onCheckedChange={(v) => upd(i, { included: v })} />
                 </label>
               )}

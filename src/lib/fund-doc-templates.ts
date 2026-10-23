@@ -3,7 +3,7 @@
  * always marked for counsel review. Generating a template saves an unsigned
  * draft; it never sends, signs or files anything.
  */
-export const STARTER_NOTICE = "Starter template - have counsel review before use.";
+export const STARTER_NOTICE = "Starter template: have counsel review before use.";
 
 export type TemplateField = { key: string; label: string; placeholder?: string };
 export type DocTemplate = { key: string; title: string; category: "fund_document" | "side_letter" | "agreement"; fields: TemplateField[]; body: string };
@@ -54,7 +54,7 @@ export const DOC_TEMPLATES: DocTemplate[] = [
     body: `SIDE LETTER - MINIMUM INVESTMENT\n\nDate: {{date}}\nBetween {{fund}} (acting through {{manager}}) and {{investor}}.\n\nThe manager agrees to accept a capital commitment from {{investor}} of not less than {{minimum}}, notwithstanding the stated minimum.\n\nAll other terms of the governing documents remain unchanged.`,
   },
   {
-    key: "sl_information_rights", title: "Side letter - information rights", category: "side_letter",
+    key: "sl_information_rights", title: "Side letter | information rights", category: "side_letter",
     fields: [...common, investor, { key: "rights", label: "Information to be provided", placeholder: "Quarterly financial statements within 60 days of quarter end" }],
     body: `SIDE LETTER - INFORMATION RIGHTS\n\nDate: {{date}}\nBetween {{fund}} (acting through {{manager}}) and {{investor}}.\n\nThe manager will provide {{investor}} with: {{rights}}.\n\n{{investor}} will keep all information received confidential. All other terms of the governing documents remain unchanged.`,
   },
