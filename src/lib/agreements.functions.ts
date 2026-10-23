@@ -440,8 +440,9 @@ export const signMsa = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     const saved = result as { agreementId?: string; newSignature?: boolean; alreadyExecuted?: boolean } | null;
     if (!saved?.agreementId) throw new Error("Could not confirm the agreement signature was saved.");
+    const agreementId = saved.agreementId;
     if (saved.newSignature) {
-      await (async () => (await import("@/lib/ops-slack-notify.server")).notifySubmission({ kind: "msa_signed", title: `Master Service Agreement signed by ${data.signerName}`, clientId: data.clientId, submittedBy: who.userId, ref: saved.agreementId, path: "/ops/queue", completed: true }))().catch(() => null);
+      await (async () => (await import("@/lib/ops-slack-notify.server")).notifySubmission({ kind: "msa_signed", title: `Master Service Agreement signed by ${data.signerName}`, clientId: data.clientId, submittedBy: who.userId, ref: agreementId, path: "/ops/queue", completed: true }))().catch(() => null);
       await notifyCountersign(data.clientId, `MSA ${version.version}`, who.userId);
     }
     return { ok: true, alreadyExecuted: Boolean(saved.alreadyExecuted) } as const;
