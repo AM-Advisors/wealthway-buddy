@@ -16,7 +16,7 @@ export const Route = createFileRoute("/_authenticated/marketing_/performance")({
 });
 
 const NA = "Not available";
-const STATUS: Record<string, string> = { pending: "Queued", publishing: "Publishing", submitted: "Submitted — awaiting platform confirmation", published: "Published (confirmed)", failed: "Failed", test_passed: "Test passed (not public)" };
+const STATUS: Record<string, string> = { pending: "Queued", publishing: "Publishing", submitted: "Submitted: awaiting platform confirmation", published: "Published (confirmed)", failed: "Failed", test_passed: "Test passed (not public)" };
 
 function Page() {
   const [days, setDays] = useState(30);
@@ -57,7 +57,7 @@ function ModePanel({ m }: { m: any }) {
   return (
     <div className={`space-y-2 rounded-md border p-3 ${live ? "border-primary" : "border-border bg-muted"}`}>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <b className="text-sm">{live ? "LIVE publishing is on" : "TEST mode — nothing is posted publicly"}</b>
+        <b className="text-sm">{live ? "LIVE publishing is on" : "TEST mode: nothing is posted publicly"}</b>
         {live && m.canRequest && <Button size="sm" variant="outline" onClick={() => act(() => back(), "Back in test mode")}>Return to test mode</Button>}
       </div>
       <p className="text-xs text-muted-foreground">{live
@@ -129,7 +129,7 @@ function Search({ d }: { d: any }) {
   return <div className="space-y-4">
     <section className="space-y-2 rounded-md border border-border p-3">
       <h3 className="text-sm font-semibold">Google Search Console</h3>
-      {propError ? <div className="flex items-center gap-2"><p className="text-xs text-muted-foreground">Search Console: Not available — {propError}</p><Button size="sm" variant="outline" onClick={() => pq.refetch()}>Try again</Button></div> : <>
+      {propError ? <div className="flex items-center gap-2"><p className="text-xs text-muted-foreground">Search Console: Not available · {propError}</p><Button size="sm" variant="outline" onClick={() => pq.refetch()}>Try again</Button></div> : <>
         <p className="text-xs">Property: <b>{d.settings?.site_url ?? "none chosen"}</b>{d.settings?.last_refresh_at ? ` · refreshed ${fmtInTz(d.settings.last_refresh_at, tz)}` : ""}{d.settings?.last_error ? ` · last error: ${d.settings.last_error}` : ""}</p>
         <div className="flex gap-2"><select className="rounded-md border border-input bg-background px-2 py-1 text-xs" value={pick} onChange={(e) => setPick(e.target.value)}><option value="">Choose a verified property…</option>{properties.map((p: string) => <option key={p}>{p}</option>)}</select>
           <Button size="sm" variant="outline" disabled={!pick} onClick={async () => { try { await choose({ data: { siteUrl: pick } }); toast.success("Property saved and refreshed"); qc.invalidateQueries({ queryKey: ["perf"] }); } catch (e: any) { toast.error(e.message); } }}>Use this property</Button></div>
@@ -142,7 +142,7 @@ function Search({ d }: { d: any }) {
     </section>
     <section className="space-y-1 rounded-md border border-border p-3 text-xs">
       <h3 className="text-sm font-semibold">Website & leads</h3>
-      <div>Website sessions: <b>{d.ga4 ? "Connected — reporting coming next" : NA}</b>{!d.ga4 && " (Google Analytics 4 isn't connected)"}</div>
+      <div>Website sessions: <b>{d.ga4 ? "Connected: reporting coming next" : NA}</b>{!d.ga4 && " (Google Analytics 4 isn't connected)"}</div>
       <div>Leads (website forms): <b>{d.leads.total}</b> · with UTM attribution: <b>{d.leads.attributed}</b></div>
       <div>Qualified leads: <b>{NA}</b> (no qualification status is recorded on website leads yet)</div>
       <div>Conversion rate: <b>{NA}</b> (needs website sessions) · Assisted conversions: <b>{NA}</b> (needs GA4)</div>

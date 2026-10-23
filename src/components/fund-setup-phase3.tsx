@@ -232,7 +232,7 @@ function BankingCard({ d, offeringId, onChanged, reviewOnly = false }: { d: D; o
                   {field("beneficiary_address", "Beneficiary Address")}
                   {field("memo", "For Further Credit")}
                 </div>
-                <Button size="sm" disabled={busy || !f.account_number || !f.bank_name} onClick={() => run(() => save({ data: { offeringId, details: f } }).then(() => setF({ bank_name: "", bank_address: "", beneficiary_address: "", account_name: "", account_number: "", routing_number: "", swift: "", memo: "" })), "Saved - pending verification")}>Save instructions</Button>
+                <Button size="sm" disabled={busy || !f.account_number || !f.bank_name} onClick={() => run(() => save({ data: { offeringId, details: f } }).then(() => setF({ bank_name: "", bank_address: "", beneficiary_address: "", account_name: "", account_number: "", routing_number: "", swift: "", memo: "" })), "Saved: pending verification")}>Save instructions</Button>
               </div>
             )}
           </>
@@ -285,7 +285,7 @@ function EntityEinCard({ d, offeringId, onChanged }: { d: D; offeringId: string;
   const submitEin = (received: boolean) =>
     run(async () => {
       await record({ data: { offeringId, ein, letterPath: file ? await uploadRestricted(offeringId, "ein-letter", file) : null, received } });
-      if (!file) toast.info("No EIN letter — a task was created to load a signed W-9.");
+      if (!file) toast.info("No EIN letter, a task was created to load a signed W-9.");
       setEin("");
       setFile(null);
     }, received ? "EIN received and recorded" : "EIN recorded");
@@ -410,7 +410,7 @@ function AdminCard({ d, offeringId, onChanged }: { d: D; offeringId: string; onC
           <OwnerTag owner={d.admin.section.owner} />
         </div>
         <p className="text-sm text-muted-foreground">
-          Offering exemption: {d.admin.regType ?? "not chosen yet (set in Offering)"}. Services are only included when confirmed here - nothing is assumed purchased.
+          Offering exemption: {d.admin.regType ?? "not chosen yet (set in Offering)"}. Services are only included when confirmed here, nothing is assumed purchased.
         </p>
       </CardHeader>
       <CardContent className="space-y-3">

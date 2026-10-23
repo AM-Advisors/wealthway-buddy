@@ -16,9 +16,9 @@ import { MfaResetPanel } from "@/components/mfa-reset-panel";
 export const Route = createFileRoute("/_authenticated/ops/people/$userId")({
   head: () => ({
     meta: [
-      { title: "View account - Harmonious" },
+      { title: "View account | Harmonious" },
       { name: "description", content: "Every sign-in, page viewed, click and access change for one user." },
-      { property: "og:title", content: "View account - Harmonious" },
+      { property: "og:title", content: "View account | Harmonious" },
       { property: "og:description", content: "The full activity trail for one Harmonious user." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -90,8 +90,8 @@ function PersonActivityPage() {
   );
 }
 
-const money = (c: number | null | undefined) => (c == null ? "—" : `$${(c / 100).toLocaleString(undefined, { maximumFractionDigits: 0 })}`);
-const label = (s: string | null | undefined) => (s ? s.replace(/_/g, " ") : "—");
+const money = (c: number | null | undefined) => (c == null ? " · " : `$${(c / 100).toLocaleString(undefined, { maximumFractionDigits: 0 })}`);
+const label = (s: string | null | undefined) => (s ? s.replace(/_/g, " ") : " · ");
 
 /** Account + person record + missing info + everything linked, in one place. Display only. */
 function AccountOverview({ d }: { d: any }) {
@@ -106,12 +106,12 @@ function AccountOverview({ d }: { d: any }) {
         <h2 className="text-lg">Person record</h2>
         {!d.people.length ? <p className="mt-2 text-sm text-muted-foreground">No person record found for this email.</p> : d.people.map((p: any) => (
           <dl key={p.id} className="mt-2 grid grid-cols-[7rem_1fr] gap-x-2 gap-y-1 text-sm">
-            <dt className="text-muted-foreground">Name</dt><dd>{p.name || "—"} {!p.linked && <Badge variant="outline" className="ml-1">Same email, not linked</Badge>}</dd>
-            <dt className="text-muted-foreground">Email</dt><dd>{p.email || "—"}</dd>
-            <dt className="text-muted-foreground">Secondary email</dt><dd className="break-all">{p.secondaryEmail || "—"}</dd>
-            <dt className="text-muted-foreground">Phone</dt><dd>{p.phone || "—"}</dd>
-            <dt className="text-muted-foreground">Secondary phone</dt><dd>{p.secondaryPhone || "—"}</dd>
-            <dt className="text-muted-foreground">Address</dt><dd>{p.address || "—"}</dd>
+            <dt className="text-muted-foreground">Name</dt><dd>{p.name || " · "} {!p.linked && <Badge variant="outline" className="ml-1">Same email, not linked</Badge>}</dd>
+            <dt className="text-muted-foreground">Email</dt><dd>{p.email || " · "}</dd>
+            <dt className="text-muted-foreground">Secondary email</dt><dd className="break-all">{p.secondaryEmail || " · "}</dd>
+            <dt className="text-muted-foreground">Phone</dt><dd>{p.phone || " · "}</dd>
+            <dt className="text-muted-foreground">Secondary phone</dt><dd>{p.secondaryPhone || " · "}</dd>
+            <dt className="text-muted-foreground">Address</dt><dd>{p.address || " · "}</dd>
             <dt className="text-muted-foreground">KYC / AML</dt><dd className="capitalize">{label(p.kyc)} / {label(p.aml)}</dd>
             <dt className="text-muted-foreground">Onboarding</dt><dd className="capitalize">{label(p.state)}</dd>
           </dl>))}
@@ -143,8 +143,8 @@ function IdentityResults({ checks }: { checks: any[] }) {
           <tbody>{checks.map((c) => (
             <tr key={c.id} className="border-t">
               <td className="py-2">{when(c.when)}</td><td>{c.kind}</td><td>{cell(c.status)}</td>
-              <td className="text-xs">{c.document || "—"}{c.expires ? <div className="text-muted-foreground">Expires {c.expires}</div> : null}</td>
-              <td>{cell(c.liveness)}</td><td>{cell(c.faceMatch)}{c.faceScore != null ? <span className="ml-1 text-xs text-muted-foreground">{Math.round(Number(c.faceScore))}%</span> : null}</td><td>{c.kind === "Account verification" ? cell(c.aml) : "—"}</td>
+              <td className="text-xs">{c.document || " · "}{c.expires ? <div className="text-muted-foreground">Expires {c.expires}</div> : null}</td>
+              <td>{cell(c.liveness)}</td><td>{cell(c.faceMatch)}{c.faceScore != null ? <span className="ml-1 text-xs text-muted-foreground">{Math.round(Number(c.faceScore))}%</span> : null}</td><td>{c.kind === "Account verification" ? cell(c.aml) : " · "}</td>
             </tr>))}</tbody>
         </table></div>
       )}

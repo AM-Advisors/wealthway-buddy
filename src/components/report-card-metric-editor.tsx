@@ -15,7 +15,7 @@ export function MetricEditor({ rows, onChange, weights, thresholds }: { rows: Me
       {rows.map((r, i) => (
         <div key={i} className="grid gap-2 rounded-md border p-3 sm:grid-cols-[2fr_1fr_1fr_auto]">
           <Input aria-label={`Measure ${i + 1}`} placeholder="Measure" value={r.label} onChange={(e) => set(i, { label: e.target.value })} />
-          <Input aria-label={`Score ${i + 1}`} type="number" min={0} max={100} placeholder="Score 0–100" value={r.score} onChange={(e) => set(i, { score: e.target.value })} />
+          <Input aria-label={`Score ${i + 1}`} type="number" min={0} max={100} placeholder="Score 0 to 100" value={r.score} onChange={(e) => set(i, { score: e.target.value })} />
           <Input aria-label={`Weight ${i + 1}`} type="number" min={0.1} max={5} step={0.1} placeholder="Weight" value={r.weight} onChange={(e) => set(i, { weight: e.target.value })} />
           <Button type="button" variant="ghost" size="sm" disabled={rows.length === 1} onClick={() => onChange(rows.filter((_, j) => j !== i))}>Remove</Button>
           <Input aria-label={`Evidence ${i + 1}`} className="sm:col-span-4" placeholder="Evidence reference (required for the score to count)" value={r.evidence} onChange={(e) => set(i, { evidence: e.target.value })} />

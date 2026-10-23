@@ -86,7 +86,7 @@ export function PacketEmailCard({ fundId }: { fundId: string }) {
             </select>
           ) : (
             <p className="text-muted-foreground text-sm">
-              No investors are linked to this fund yet - type an address below.
+              No investors are linked to this fund yet, type an address below.
             </p>
           )}
         </div>

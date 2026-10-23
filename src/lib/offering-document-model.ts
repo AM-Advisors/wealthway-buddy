@@ -74,7 +74,7 @@ export type VersionState =
   | "ready_for_use"
   | "superseded";
 export const VERSION_STATE_LABELS: Record<VersionState, string> = {
-  uploaded_review_required: "Uploaded - Review Required",
+  uploaded_review_required: "Uploaded: Review Required",
   approved_for_use: "Approved for Use",
   signing_setup_required: "Signing Setup Required",
   signing_setup_needs_review: "Signing Setup Needs Review",
@@ -199,7 +199,7 @@ export function investorDocumentAction(input: { usage: DocumentUsage | null; leg
   if (usage === "reference") return "Review";
   if (usage === "acknowledgment") return input.acknowledged ? "Completed" : "Acknowledge";
   if (input.execution === "fully_executed") return "Completed";
-  if (input.execution === "awaiting_countersignature") return "Signed - awaiting fund signature";
+  if (input.execution === "awaiting_countersignature") return "Signed: awaiting fund signature";
   if (input.execution === "partially_signed" || input.execution === "sent") return "Continue Signing";
   return "Review & Sign";
 }

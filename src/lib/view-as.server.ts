@@ -55,7 +55,7 @@ export async function listPerspectives(staffUserId: string, input: { onboardingI
     const assigned = (data ?? []).length > 0;
     if (!out.some((o) => o.perspective === "fund_manager")) {
       out.push({ perspective: "fund_manager", subjectUserId: staffUserId, offeringId, onboardingId: null, preview: true,
-        name: assigned ? "Preview - fund manager has not signed in yet" : "Preview - no fund manager assigned" });
+        name: assigned ? "Preview: fund manager has not signed in yet" : "Preview: no fund manager assigned" });
     }
   }
   return out;

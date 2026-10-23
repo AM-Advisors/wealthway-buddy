@@ -17,11 +17,11 @@ import { Textarea } from "@/components/ui/textarea";
 export const STATUS_LABELS: Record<string, string> = {
   open: "Open",
   needs_review: "Needs Further Review",
-  keep_separate_pending_rename: "Keep Separate - rename required",
-  resolved_separate: "Resolved - Separate Funds",
+  keep_separate_pending_rename: "Keep Separate: rename required",
+  resolved_separate: "Resolved: Separate Funds",
   consolidation_pending: "Awaiting Confirm Consolidation",
   consolidated: "Consolidated",
-  failed: "Consolidation failed - nothing moved",
+  failed: "Consolidation failed: nothing moved",
 };
 
 const money = (c: number) => `$${(c / 100).toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
@@ -141,7 +141,7 @@ export function FundDuplicateComparison({ fundIds, onClose }: { fundIds: string[
             {!c.blocking && (
               <label className="mt-2 flex items-center gap-2 text-xs">
                 <Checkbox checked={ack.includes(c.kind)} onCheckedChange={(v) => setAck((p) => (v ? [...p, c.kind] : p.filter((k) => k !== c.kind)))} />
-                Reviewed - the Canonical Fund's value stands
+                Reviewed: the Canonical Fund's value stands
               </label>
             )}
           </div>
@@ -212,11 +212,11 @@ function ImpactPanel({ reviewId, version, canonicalId, duplicateId, onDone }: { 
       <p className="font-medium">Pre-merge impact report</p>
       <p><span className="text-muted-foreground">Keep:</span> <code className="text-xs">{report.keep.canonicalId}</code></p>
       <div>
-        <p className="text-muted-foreground">Move / Reassociate - {report.totals.move} record(s)</p>
+        <p className="text-muted-foreground">Move / Reassociate · {report.totals.move} record(s)</p>
         <ul className="ml-4 list-disc">{report.move.map((x) => <li key={x.table + x.column}>{x.table}: {x.count}</li>)}</ul>
       </div>
       <div>
-        <p className="text-muted-foreground">Preserve with original Fund ID - {report.totals.preserve} record(s)</p>
+        <p className="text-muted-foreground">Preserve with original Fund ID · {report.totals.preserve} record(s)</p>
         <ul className="ml-4 list-disc">{report.preserve.map((x) => <li key={x.table + x.column}>{x.table}: {x.count}</li>)}</ul>
       </div>
       <p className="text-muted-foreground">Funded/closed Investments reassociated unchanged: {report.protectedInvestments}. The retired ID becomes a permanent alias.</p>

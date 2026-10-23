@@ -56,9 +56,9 @@ describe("Google Drive structure", () => {
 
   it("separate profiles of the same person never share a folder", () => {
     expect(investorKey("o1", "p1")).not.toBe(investorKey("o1", "p2"));
-    expect(investorFolderName("Jane Smith", "individual")).toBe("Jane Smith - Individual");
-    expect(investorFolderName("Jane Smith IRA", "ira")).toBe("Jane Smith IRA - IRA-SDIRA");
-    expect(investorFolderName("Smith/Family Trust", "trust")).toBe("Smith Family Trust - Trust");
+    expect(investorFolderName("Jane Smith", "individual")).toBe("Jane Smith: Individual");
+    expect(investorFolderName("Jane Smith IRA", "ira")).toBe("Jane Smith IRA: IRA-SDIRA");
+    expect(investorFolderName("Smith/Family Trust", "trust")).toBe("Smith Family Trust: Trust");
   });
 
   it("files subscription agreements to 01 and 05, others to 05 only", () => {

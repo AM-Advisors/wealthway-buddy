@@ -22,7 +22,7 @@ describe("existing health handlers with mocked offline sources", () => {
       { event_id: "processed", received_at: "2026-10-21T12:00:03Z", processed_at: "2026-10-21T12:00:04Z", error: null },
     ] } };
     const output = await run(webhookLogFn);
-    expect(output.events.map((e: any) => e.status).sort()).toEqual(["Processing failed", "Received — processing unconfirmed", "Successfully processed"].sort());
+    expect(output.events.map((e: any) => e.status).sort()).toEqual(["Processing failed", "Received: processing unconfirmed", "Successfully processed"].sort());
     expect(JSON.stringify(output)).not.toContain("secret payload");
   });
 });

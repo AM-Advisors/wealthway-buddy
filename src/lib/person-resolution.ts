@@ -12,7 +12,7 @@ export type PersonResolutionOutcome = "exact_match" | "possible_match" | "no_mat
 
 export const PERSON_RESOLUTION_LABELS: Record<PersonResolutionOutcome, string> = {
   exact_match: "Exact Match",
-  possible_match: "Possible Match - Review Required",
+  possible_match: "Possible Match: Review Required",
   no_match: "No Match",
   ambiguous: "Ambiguous",
   conflict: "Conflict",

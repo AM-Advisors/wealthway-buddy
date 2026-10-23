@@ -114,7 +114,7 @@ describe("investment cash controls", () => {
   it("one bank movement cannot fund two records", () => {
     expect(bankLinkError({ cashCents: -1, bankSignedCents: -1, alreadyLinkedTo: "investment transactions" })).toMatch(/already linked/);
   });
-  it("reconciling linked activity reuses the record's journal - no second cash entry", () => {
+  it("reconciling linked activity reuses the record's journal, no second cash entry", () => {
     expect(reconciliationJournalDecision({ status: "posted", journalEntryId: "J1" })).toEqual({ action: "reuse", entryId: "J1" });
     expect(reconciliationJournalDecision({ status: "approved", journalEntryId: "J1" }).action).toBe("wait");
     expect(reconciliationJournalDecision({ status: "reversed", journalEntryId: "J1" }).action).toBe("wait");
@@ -140,7 +140,7 @@ describe("chart of accounts additions", () => {
 
 import { feeAccrualError, feeAccrualLines } from "./fund-accounting-model";
 describe("management fee accrual", () => {
-  it("expense and payable only - never cash", () => {
+  it("expense and payable only: never cash", () => {
     expect(feeAccrualLines(11_543_750).map((l) => l.purpose)).toEqual(["management_fee_expense", "management_fee_payable"]);
   });
   it("stops on mismatch, block or duplicate", () => {

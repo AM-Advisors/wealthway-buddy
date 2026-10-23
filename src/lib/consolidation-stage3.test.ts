@@ -211,7 +211,7 @@ describe("company Action Center scope (server read model)", () => {
 
 /* ------------------------------------------------- E: getOperationsAccess */
 
-describe("Operations semantics - every staff role", () => {
+describe("Operations semantics: every staff role", () => {
   const ROLES = [...OPS_STAFF_ROLES];
 
   it("the canonical rule is active staff assignment + granular capability", () => {
@@ -241,7 +241,7 @@ describe("Operations semantics - every staff role", () => {
     expect(can(c, "accounting", "see")).toBe(false);
   });
 
-  it("'accounting' is an area, not a role - nobody gets it from a role called accounting", () => {
+  it("'accounting' is an area, not a role, nobody gets it from a role called accounting", () => {
     const f = staffFactsFromRoles(["accounting"]);
     expect(f.operationsEntry).toBe(false);
     expect(f.capabilities).toHaveLength(0);
@@ -296,7 +296,7 @@ const facts = (over: Partial<CanonicalFacts>): CanonicalFacts =>
     ...over,
   }) as CanonicalFacts;
 
-describe("fund-manager semantics - role is descriptive, relationships give scope", () => {
+describe("fund-manager semantics: role is descriptive, relationships give scope", () => {
   it("fund_manager role alone yields no fund scope", () => {
     const p = adminAccessProjection(facts({ roles: ["fund_manager"], managedFundIds: [] }));
     expect(p.isFundManager).toBe(true);

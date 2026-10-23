@@ -19,4 +19,4 @@ const container = { maxWidth: '560px', padding: '32px', borderTop: '4px solid #5
 const heading = { color: '#142647', fontFamily: 'Rubik, Arial, sans-serif', fontSize: '22px' }
 const button = { backgroundColor: '#142647', color: '#ffffff', borderRadius: '6px', padding: '14px 24px' }
 const note = { color: '#5b6472', fontSize: '13px', lineHeight: '20px' }
-export const template = { component: InvestorProgress, subject: (data: Record<string, any>) => `Onboarding progress — ${data['fundName'] || 'your fund'}`, displayName: 'Investor step progress', previewData: { name: 'Jane', fundName: 'Example Fund', completedSteps: ['About You', 'Verification'] } } satisfies TemplateEntry
+export const template = { component: InvestorProgress, subject: (data: Record<string, any>) => `Onboarding progress · ${data['fundName'] || 'your fund'}`, displayName: 'Investor step progress', previewData: { name: 'Jane', fundName: 'Example Fund', completedSteps: ['About You', 'Verification'] } } satisfies TemplateEntry

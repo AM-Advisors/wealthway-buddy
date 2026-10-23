@@ -25,7 +25,7 @@ const REQUEST_STATE: Record<string, string> = {
   requested: "Waiting on Harmonious to review it",
   in_review: "Harmonious is reviewing it",
   quoted: "Waiting on your signature",
-  signed: "Signed - waiting to be switched on",
+  signed: "Signed: waiting to be switched on",
 };
 
 const OPEN_REQUESTS = ["requested", "in_review", "quoted", "signed"];
@@ -144,7 +144,7 @@ export function ClientDashboard({
       id: `inv-${inv.id}`,
       date: String(inv.due_date).slice(0, 10),
       kind: "invoice",
-      label: `${inv.number ?? inv.invoice_number ?? "Invoice"} due - ${money(inv.total_cents)}`,
+      label: `${inv.number ?? inv.invoice_number ?? "Invoice"} due · ${money(inv.total_cents)}`,
       detail: inv.client_approved_at ? "Approved by you" : "Awaiting your approval",
     });
   }
@@ -156,7 +156,7 @@ export function ClientDashboard({
       id: `req-${r.id}`,
       date,
       kind: "request",
-      label: `${r.serviceName} - ${REQUEST_STATE[r.status] ?? r.status}`,
+      label: `${r.serviceName} · ${REQUEST_STATE[r.status] ?? r.status}`,
       detail: r.fundName ?? null,
     });
   }
@@ -453,7 +453,7 @@ export function ClientDashboard({
           <CardHeader>
             <CardTitle className="text-base">Capital account statements</CardTitle>
             <CardDescription>
-              Produced from each fund's records at a closing. Administrative records only - not a
+              Produced from each fund's records at a closing. Administrative records only, not a
               valuation, audit or tax document.
             </CardDescription>
           </CardHeader>

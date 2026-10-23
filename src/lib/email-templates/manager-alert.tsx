@@ -109,7 +109,7 @@ function ManagerAlert({
 
           <Hr style={{ borderColor: '#e6ecf3', margin: '32px 0 16px' }} />
           <Text style={{ color: '#6b7a90', fontSize: '12px', lineHeight: '18px', margin: 0 }}>
-            Harmonious - you receive these because you oversee this fund. You can turn fund alerts off in your portal
+            Harmonious, you receive these because you oversee this fund. You can turn fund alerts off in your portal
             settings.
           </Text>
         </Container>
@@ -124,7 +124,7 @@ export const template = {
   displayName: 'Fund manager alert',
   previewData: {
     managerName: 'Jordan',
-    headline: 'Wire confirmation submitted - Harmonious Income Fund I',
+    headline: 'Wire confirmation submitted: Harmonious Income Fund I',
     intro: 'Alyssa Pettit has submitted a wire confirmation for Harmonious Income Fund I.',
     offeringName: 'Harmonious Income Fund I',
     details: [

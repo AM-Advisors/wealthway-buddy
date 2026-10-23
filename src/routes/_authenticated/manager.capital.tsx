@@ -5,12 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 export const Route = createFileRoute("/_authenticated/manager/capital")({
   head: () => ({
     meta: [
-      { title: "Capital - Harmonious" },
+      { title: "Capital | Harmonious" },
       {
         name: "description",
         content: "Investor capital, cash to confirm and distributions for the funds you manage.",
       },
-      { property: "og:title", content: "Capital - Harmonious" },
+      { property: "og:title", content: "Capital | Harmonious" },
       {
         property: "og:description",
         content: "Investor capital, cash to confirm and distributions for the funds you manage.",

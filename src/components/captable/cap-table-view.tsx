@@ -118,8 +118,8 @@ function Body() {
               <CardTitle className="text-base">Employee grants and vesting</CardTitle>
               <CardDescription>
                 The same figures each holder sees in My Equity. Vesting is worked out from the
-                schedule on the grant, and fully diluted ownership counts the whole grant - vested
-                and unvested - so the two views always agree.
+                schedule on the grant, and fully diluted ownership counts the whole grant, vested
+                and unvested, so the two views always agree.
               </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-3 pt-0 sm:grid-cols-4">
@@ -359,7 +359,7 @@ function Body() {
               <CardTitle className="text-base">As converted</CardTitle>
               <CardDescription>
                 Preferred shown on an as-converted basis. SAFEs and notes are listed separately
-                because they convert on the terms of a future financing - nothing is converted into
+                because they convert on the terms of a future financing, nothing is converted into
                 the official record until that financing closes.
               </CardDescription>
             </CardHeader>

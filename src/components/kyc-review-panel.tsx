@@ -11,7 +11,7 @@ import type { ReviewDetails, ReviewStatus } from "@/lib/kyc-review-model";
 const ICON = { pass: CheckCircle2, fail: XCircle, review: Clock, none: MinusCircle };
 const COLOR = { pass: "text-primary", fail: "text-destructive", review: "text-accent-foreground", none: "text-muted-foreground" };
 const LABEL = { pass: "Passed", fail: "Failed", review: "Needs review", none: "Not done" };
-const yn = (v: boolean | null | undefined) => (v == null ? "—" : v ? "Yes" : "No");
+const yn = (v: boolean | null | undefined) => (v == null ? " · " : v ? "Yes" : "No");
 
 function Status({ s }: { s: ReviewStatus | undefined }) {
   const t = s ?? "none"; const I = ICON[t];
@@ -26,7 +26,7 @@ function Card({ title, s, children }: { title: string; s?: ReviewStatus; childre
   );
 }
 function Row({ k, v }: { k: string; v: unknown }) {
-  return <div><dt className="text-xs text-muted-foreground">{k}</dt><dd className="text-sm">{v == null || v === "" ? "—" : String(v)}</dd></div>;
+  return <div><dt className="text-xs text-muted-foreground">{k}</dt><dd className="text-sm">{v == null || v === "" ? " · " : String(v)}</dd></div>;
 }
 const Grid = ({ children }: { children: React.ReactNode }) => <dl className="grid grid-cols-2 gap-3">{children}</dl>;
 
@@ -80,7 +80,7 @@ export function KycReviewPanel({ rd, checkId }: { rd: ReviewDetails; checkId: st
           </Grid>
         </Card>}
         {rd.aml && <Card title="Watchlist / AML" s={rd.aml.totalHits > 0 && rd.aml.status === "pass" ? "review" : rd.aml.status}>
-          <p className="mb-2 text-sm">{rd.aml.totalHits} possible match{rd.aml.totalHits === 1 ? "" : "es"} · provider result {rd.aml.raw ?? "—"}</p>
+          <p className="mb-2 text-sm">{rd.aml.totalHits} possible match{rd.aml.totalHits === 1 ? "" : "es"} · provider result {rd.aml.raw ?? " · "}</p>
           {!!rd.aml.hits.length && <ul className="max-h-72 space-y-2 overflow-auto print:max-h-none">{rd.aml.hits.map((h, i) => (
             <li key={i} className="rounded-md border px-3 py-2 text-xs">
               <div className="flex flex-wrap items-center justify-between gap-2"><span className="font-medium text-sm">{h.caption ?? "Unnamed"}</span><span className="flex gap-1">{h.pep && <Badge variant="destructive">PEP</Badge>}{h.matchScore != null && <Badge variant="outline">Name match {h.matchScore}%</Badge>}{h.riskScore != null && <Badge variant="secondary">Risk {h.riskScore}</Badge>}</span></div>
@@ -103,7 +103,7 @@ export function KycReviewPanel({ rd, checkId }: { rd: ReviewDetails; checkId: st
         </Card>}
         {rd.expected && <Card title="Details we sent to compare"><Grid>{Object.entries(rd.expected).map(([k, v]) => <Row key={k} k={k.replace(/_/g, " ")} v={v} />)}</Grid></Card>}
         {!!rd.questionnaire.length && <Card title="Questionnaire"><Grid>{rd.questionnaire.map((q, i) => <div key={i} className="col-span-2"><Row k={q.question} v={q.answer} /></div>)}</Grid></Card>}
-        {!!rd.reviews.length && <Card title="Provider review history"><ul className="space-y-1 text-sm">{rd.reviews.map((r, i) => <li key={i}>{r.at ? new Date(r.at).toLocaleString() : ""} · {r.newStatus} {r.comment ? `— ${r.comment}` : ""}</li>)}</ul></Card>}
+        {!!rd.reviews.length && <Card title="Provider review history"><ul className="space-y-1 text-sm">{rd.reviews.map((r, i) => <li key={i}>{r.at ? new Date(r.at).toLocaleString() : ""} · {r.newStatus} {r.comment ? ` · ${r.comment}` : ""}</li>)}</ul></Card>}
       </div>
     </div>
   );

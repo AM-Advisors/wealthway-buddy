@@ -36,8 +36,8 @@ export type PairFacts = { einDiffers: boolean; bankingDiffers: boolean };
 
 export type Decision = "same_fund" | "different_funds" | "needs_review";
 export const DECISION_LABELS: Record<Decision, string> = {
-  same_fund: "Same Fund - Consolidate",
-  different_funds: "Different Funds - Keep Separate",
+  same_fund: "Same Fund: Consolidate",
+  different_funds: "Different Funds: Keep Separate",
   needs_review: "Needs Further Review",
 };
 

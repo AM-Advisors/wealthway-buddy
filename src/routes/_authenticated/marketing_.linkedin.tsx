@@ -76,7 +76,7 @@ function Accounts({ d }: { d: any }) {
           <dt className="text-muted-foreground">Time zone</dt><dd>{d.effectiveTimezone}{a.timezone ? " (account setting)" : " (organization default)"}</dd>
           <dt className="text-muted-foreground">Last authorized</dt><dd>{dt(a.last_authorized_at)}</dd>
           <dt className="text-muted-foreground">Authorization expires</dt><dd>{dt(a.expires_at)}</dd>
-          <dt className="text-muted-foreground">Permissions granted</dt><dd>{a.scopes || "—"}</dd>
+          <dt className="text-muted-foreground">Permissions granted</dt><dd>{a.scopes || " · "}</dd>
           {a.last_error && <><dt className="text-muted-foreground">Last problem</dt><dd className="text-destructive">{a.last_error}</dd></>}
         </dl>
         {!d.appConfigured && <p className="text-xs text-destructive">The LinkedIn developer app credentials aren't saved.</p>}
@@ -190,7 +190,7 @@ function PostCard({ d, p }: { d: any; p: any }) {
   const approvedNow = p.approved_version === p.version;
   return (
     <div className="rounded-lg border border-border p-3 space-y-2 text-sm">
-      <div className="flex flex-wrap items-center gap-2 text-xs"><span className="rounded bg-accent/20 px-2 py-0.5">Personal profile</span><span className="font-medium">{STATUS[p.status]}</span><span className="text-muted-foreground">v{p.version}{approvedNow ? " · approved" : ""} · by {d.names[p.author_id] ?? "—"}{p.scheduled_at ? ` · scheduled ${dt(p.scheduled_at)}` : ""}{p.series_key ? ` · ${p.series_key}` : ""}</span></div>
+      <div className="flex flex-wrap items-center gap-2 text-xs"><span className="rounded bg-accent/20 px-2 py-0.5">Personal profile</span><span className="font-medium">{STATUS[p.status]}</span><span className="text-muted-foreground">v{p.version}{approvedNow ? " · approved" : ""} · by {d.names[p.author_id] ?? " · "}{p.scheduled_at ? ` · scheduled ${dt(p.scheduled_at)}` : ""}{p.series_key ? ` · ${p.series_key}` : ""}</span></div>
       {!locked && (own || g.edit) ? <textarea className="w-full rounded-md border border-input bg-background p-2" rows={3} value={body} onChange={(e) => setBody(e.target.value)} /> : <p className="whitespace-pre-wrap">{p.body}</p>}
       {p.error && <p className="text-xs text-muted-foreground">{p.error}</p>}
       {p.linkedin_post_id && <p className="text-xs">LinkedIn post {p.linkedin_post_id} · {dt(p.published_at)}</p>}
@@ -228,7 +228,7 @@ function PauseBar({ d }: { d: any }) {
   };
   if (a.paused_at) return (
     <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border-2 border-destructive bg-destructive/10 p-3 text-sm">
-      <span><b>Publishing paused</b> since {dt(a.paused_at)}{a.pause_reason ? ` — ${a.pause_reason}` : ""}. Nothing can post to this personal profile.</span>
+      <span><b>Publishing paused</b> since {dt(a.paused_at)}{a.pause_reason ? ` · ${a.pause_reason}` : ""}. Nothing can post to this personal profile.</span>
       {d.isOwner ? <Button size="sm" onClick={() => go(false)}>Reactivate publishing</Button> : <span className="text-xs">Only {d.ownerName} can reactivate.</span>}
     </div>
   );

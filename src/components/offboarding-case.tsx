@@ -199,7 +199,7 @@ export function OffboardingCase({ caseId }: { caseId: string }) {
               ? `${c.sow.title} · ${c.sow.sowType} · ${c.sow.noticeDays}-day notice${
                   c.sow.effectiveDate ? ` · effective ${c.sow.effectiveDate}` : ""
                 }`
-              : "Whole engagement - no single statement of work identified."}
+              : "Whole engagement: no single statement of work identified."}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -290,7 +290,7 @@ export function OffboardingCase({ caseId }: { caseId: string }) {
           {c.settlement.length === 0 ? (
             <p className="text-sm text-muted-foreground">
               {data.rates.length
-                ? "No lines yet - build the list from the client's agreed rates."
+                ? "No lines yet, build the list from the client's agreed rates."
                 : "This client has no agreed rates recorded, so there is nothing to settle."}
             </p>
           ) : null}

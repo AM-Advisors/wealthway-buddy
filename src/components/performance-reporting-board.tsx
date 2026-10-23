@@ -207,7 +207,7 @@ export function PerformanceReportingBoard({ role }: { role: "harmonious" | "mana
     <Card>
       <CardHeader>
         <CardTitle className="text-base">
-          {run.fundName} - {run.period_label || `${run.period_start} to ${run.period_end}`}
+          {run.fundName} · {run.period_label || `${run.period_start} to ${run.period_end}`}
         </CardTitle>
         <CardDescription>
           Version {run.version} · {label(run.status)} · methodology {run.methodology_version} ·{" "}

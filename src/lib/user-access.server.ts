@@ -175,7 +175,7 @@ async function guardTarget(db: any, viewer: string, target: string) {
 export async function revoke(viewer: string, d: { userId?: string | null | undefined; email?: string | null | undefined; scope: "global" | "client" | "offering"; scopeId?: string | null | undefined; reason: string; archive?: boolean | undefined }) {
   const db = await requireAccessManager(viewer);
   const uid = await resolveUser(db, d);
-  if (!uid) throw new Error("This person hasn't created an account yet — cancel their invitation instead.");
+  if (!uid) throw new Error("This person hasn't created an account yet, cancel their invitation instead.");
   await guardTarget(db, viewer, uid);
   const state = d.archive ? "archived" : "revoked";
   const scope = d.archive ? "global" : d.scope;

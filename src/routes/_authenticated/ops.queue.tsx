@@ -11,9 +11,9 @@ import { opsWorkQueueFn } from "@/lib/cross-client-queue.functions";
 export const Route = createFileRoute("/_authenticated/ops/queue")({
   head: () => ({
     meta: [
-      { title: "Work queue - Harmonious Operations" },
+      { title: "Work queue | Harmonious Operations" },
       { name: "description", content: "Everything waiting on Harmonious across all clients and funds." },
-      { property: "og:title", content: "Work queue - Harmonious Operations" },
+      { property: "og:title", content: "Work queue | Harmonious Operations" },
       { property: "og:description", content: "Everything waiting on Harmonious across all clients and funds." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

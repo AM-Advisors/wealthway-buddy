@@ -60,7 +60,7 @@ function InvoiceIssued({
     <Html lang="en" dir="ltr">
       <Head />
       <Preview>
-        Invoice {invoiceNumber} for {clientName} - {amount} due {dueDate}
+        Invoice {invoiceNumber} for {clientName} · {amount} due {dueDate}
       </Preview>
       <Body
         style={{
@@ -189,7 +189,7 @@ function InvoiceIssued({
 export const template = {
   component: InvoiceIssued,
   subject: (data: Record<string, any>) =>
-    `Invoice ${data?.['invoiceNumber'] ?? ''} - ${data?.['amount'] ?? ''} due ${data?.['dueDate'] ?? ''}`.trim(),
+    `Invoice ${data?.['invoiceNumber'] ?? ''} · ${data?.['amount'] ?? ''} due ${data?.['dueDate'] ?? ''}`.trim(),
 
   displayName: 'Invoice issued',
   previewData: {

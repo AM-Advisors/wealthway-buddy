@@ -626,7 +626,7 @@ export function FounderCapTable({ clientId }: { clientId?: string | null }) {
                         .filter((h) => h.status === "outstanding")
                         .map((h) => (
                           <option key={h.id} value={h.id}>
-                            {nameById.get(String(h.stakeholder_id))} - {num(Number(h.quantity))}{" "}
+                            {nameById.get(String(h.stakeholder_id))} · {num(Number(h.quantity))}{" "}
                             {h.share_class ?? h.security_type}
                           </option>
                         ))}

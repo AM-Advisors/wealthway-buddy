@@ -63,7 +63,7 @@ export async function buildOfferingPdf(input: OfferingPdfInput): Promise<Uint8Ar
   const regLabel = regTypeLongLabel(input.regType);
   const generatedAt = input.generatedAt ?? new Date().toISOString();
 
-  pdf.setTitle(`${input.offeringName} - ${input.title}`);
+  pdf.setTitle(`${input.offeringName} · ${input.title}`);
   pdf.setAuthor("Harmonious");
   pdf.setSubject(regLabel);
   pdf.setProducer("Harmonious");
@@ -165,7 +165,7 @@ export async function buildOfferingPdf(input: OfferingPdfInput): Promise<Uint8Ar
   const pages = pdf.getPages();
   pages.forEach((p, index) => {
     const size = p.getSize();
-    p.drawText("Confidential - Harmonious. Not an offer to sell securities.", {
+    p.drawText("Confidential: Harmonious. Not an offer to sell securities.", {
       x: MARGIN,
       y: 30,
       size: 8,
@@ -229,7 +229,7 @@ export async function buildOfferingPacketPdf(input: OfferingPacketInput): Promis
     timeZone: "UTC",
   });
 
-  pdf.setTitle(`${input.offeringName} - Investor document packet`);
+  pdf.setTitle(`${input.offeringName} · Investor document packet`);
   pdf.setAuthor("Harmonious");
   pdf.setSubject(regLabel);
   pdf.setProducer("Harmonious");
@@ -411,7 +411,7 @@ export async function buildOfferingPacketPdf(input: OfferingPacketInput): Promis
   const pages = pdf.getPages();
   pages.forEach((p, index) => {
     const size = p.getSize();
-    p.drawText("Confidential - Harmonious. Not an offer to sell securities.", {
+    p.drawText("Confidential: Harmonious. Not an offer to sell securities.", {
       x: MARGIN,
       y: 30,
       size: 8,

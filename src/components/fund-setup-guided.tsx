@@ -231,7 +231,7 @@ function Proposals({ offeringId, list, onDone }: { offeringId: string; list: any
           <li key={p.id} className="flex flex-wrap items-center gap-2 py-2">
             <div className="min-w-0 flex-1">
               <p><span className="text-muted-foreground">{FIELD_LABEL[p.field] ?? p.field}: </span><span className="font-medium">{p.value}</span></p>
-              <p className="truncate text-xs text-muted-foreground">{p.kind === "default" ? "Default — confirm" : `From ${p.source}`}{p.section === "info" ? " · for reference" : ""}</p>
+              <p className="truncate text-xs text-muted-foreground">{p.kind === "default" ? "Default: confirm" : `From ${p.source}`}{p.section === "info" ? " · for reference" : ""}</p>
             </div>
             <Button size="sm" variant="outline" disabled={busy} onClick={() => act([p.id], "accepted")}>Accept</Button>
             <Button size="sm" variant="ghost" disabled={busy} onClick={() => act([p.id], "skipped")}>Skip</Button>

@@ -45,9 +45,9 @@ export function AmlMatchReview({ checkId }: { checkId: string }) {
         {canAct && suggested.length > 0 && <Button size="sm" variant="outline" onClick={() => setPicked(new Set(suggested))}>Select {suggested.length} with a different birth year</Button>}
       </div>
       <div className="grid gap-1 rounded-md border bg-card p-3 text-sm sm:grid-cols-3">
-        <div><p className="text-xs text-muted-foreground">Verified name</p><p className="font-medium">{d.person.fullName ?? "—"}</p></div>
-        <div><p className="text-xs text-muted-foreground">Date of birth</p><p className="font-medium">{d.person.dateOfBirth ?? "—"}</p></div>
-        <div><p className="text-xs text-muted-foreground">ID country</p><p className="font-medium">{d.person.country ?? "—"}</p></div>
+        <div><p className="text-xs text-muted-foreground">Verified name</p><p className="font-medium">{d.person.fullName ?? " · "}</p></div>
+        <div><p className="text-xs text-muted-foreground">Date of birth</p><p className="font-medium">{d.person.dateOfBirth ?? " · "}</p></div>
+        <div><p className="text-xs text-muted-foreground">ID country</p><p className="font-medium">{d.person.country ?? " · "}</p></div>
       </div>
       <ul className="max-h-[28rem] space-y-2 overflow-auto">
         {d.hits.map((h: any) => {
@@ -69,8 +69,8 @@ export function AmlMatchReview({ checkId }: { checkId: string }) {
                 </div>
               </div>
               <dl className="mt-2 grid gap-2 text-xs sm:grid-cols-2">
-                <div><dt className="text-muted-foreground">Birth date on list</dt><dd>{h.birthDates?.length ? h.birthDates.join(", ") : "—"} <span className={VERDICT[h.comparison.birth]!.cls}>· {VERDICT[h.comparison.birth]!.label}</span></dd></div>
-                <div><dt className="text-muted-foreground">Country on list</dt><dd>{h.countries?.length ? h.countries.join(", ") : "—"} <span className={VERDICT[h.comparison.country]!.cls}>· {VERDICT[h.comparison.country]!.label}</span></dd></div>
+                <div><dt className="text-muted-foreground">Birth date on list</dt><dd>{h.birthDates?.length ? h.birthDates.join(", ") : " · "} <span className={VERDICT[h.comparison.birth]!.cls}>· {VERDICT[h.comparison.birth]!.label}</span></dd></div>
+                <div><dt className="text-muted-foreground">Country on list</dt><dd>{h.countries?.length ? h.countries.join(", ") : " · "} <span className={VERDICT[h.comparison.country]!.cls}>· {VERDICT[h.comparison.country]!.label}</span></dd></div>
               </dl>
               {h.summary && <p className="mt-1 text-xs">{h.summary}</p>}
               {h.clearance && <p className="mt-1 text-xs text-muted-foreground">Cleared {new Date(h.clearance.created_at).toLocaleString()}: {h.clearance.reason}</p>}

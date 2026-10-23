@@ -64,7 +64,7 @@ export const CREDENTIAL_TYPES = [
 export type CredentialType = (typeof CREDENTIAL_TYPES)[number];
 
 export const CREDENTIAL_LABELS: Record<CredentialType, string> = {
-  attorney_bar: "Attorney - bar admission",
+  attorney_bar: "Attorney: bar admission",
   cpa_license: "CPA license",
   investment_adviser_registration: "Investment adviser registration",
   broker_dealer_affiliation: "Broker-dealer affiliation",
@@ -143,7 +143,7 @@ export const AUTHORITY_REVIEW_STATUSES = [
 export type AuthorityReviewStatus = (typeof AUTHORITY_REVIEW_STATUSES)[number];
 
 export const AUTHORITY_REVIEW_LABELS: Record<AuthorityReviewStatus, string> = {
-  uploaded: "Uploaded - not yet reviewed",
+  uploaded: "Uploaded, not yet reviewed",
   in_review: "In review",
   accepted: "Accepted",
   rejected: "Rejected",

@@ -32,12 +32,12 @@ const TABS: { value: Tab; label: string }[] = [
 export const Route = createFileRoute("/_authenticated/my-portfolio_/$offeringId")({
   head: () => ({
     meta: [
-      { title: "Your Fund - Harmonious" },
+      { title: "Your Fund | Harmonious" },
       {
         name: "description",
         content: "Your investment in this fund: holdings, payments, documents, deal room and taxes.",
       },
-      { property: "og:title", content: "Your Fund - Harmonious" },
+      { property: "og:title", content: "Your Fund | Harmonious" },
       { property: "og:description", content: "Investment details, payments, documents and deal room for one fund." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

@@ -50,7 +50,7 @@ function MsaPage() {
         </div>
         {data && (
           <Badge variant={executed ? "secondary" : "default"}>
-            {executed ? "Active - signed by both" : clientSigned ? "Waiting on Harmonious countersignature" : "Review needed"}
+            {executed ? "Active: signed by both" : clientSigned ? "Waiting on Harmonious countersignature" : "Review needed"}
           </Badge>
         )}
       </div>

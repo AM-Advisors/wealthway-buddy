@@ -42,7 +42,7 @@ export function MigrationPaymentsCard({ fundId }: { fundId: string }) {
         <form className="grid gap-3 rounded-md border p-3 md:grid-cols-3" onSubmit={(e) => {
           e.preventDefault();
           if (!f.amount || !f.paidOn) { toast.error("Amount and date paid are required."); return; }
-          run(() => record({ data: { offeringId: fundId, amountCents: Math.round(Number(f.amount) * 100), paidOn: f.paidOn, method: f.method as never, periodStart: f.periodStart || null, periodEnd: f.periodEnd || null, serviceKeys: f.keys, note: f.note || null } }), "Recorded - waiting for Finance to confirm");
+          run(() => record({ data: { offeringId: fundId, amountCents: Math.round(Number(f.amount) * 100), paidOn: f.paidOn, method: f.method as never, periodStart: f.periodStart || null, periodEnd: f.periodEnd || null, serviceKeys: f.keys, note: f.note || null } }), "Recorded: waiting for Finance to confirm");
           setOpen(false);
         }}>
           <div><Label>Amount paid (USD)</Label><Input className="mt-1" inputMode="decimal" value={f.amount} onChange={(e) => setF({ ...f, amount: e.target.value.replace(/[^0-9.]/g, "") })} /></div>

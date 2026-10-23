@@ -7,9 +7,9 @@ import { getEmployeeActivity } from "@/lib/staff-directory.functions";
 export const Route = createFileRoute("/_authenticated/ops/employees_/$userId")({
   head: () => ({
     meta: [
-      { title: "Employee activity - Harmonious" },
+      { title: "Employee activity | Harmonious" },
       { name: "description", content: "Sign-ins, screens viewed and actions taken by a Harmonious employee." },
-      { property: "og:title", content: "Employee activity - Harmonious" },
+      { property: "og:title", content: "Employee activity | Harmonious" },
       { property: "og:description", content: "What a team member has been working on." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

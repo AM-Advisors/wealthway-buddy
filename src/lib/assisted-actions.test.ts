@@ -172,7 +172,7 @@ const ASSIST_ALL = [
 
 beforeEach(reset);
 
-describe("Phase 3A hardening - banking and wire stay closed", () => {
+describe("Phase 3A hardening: banking and wire stay closed", () => {
   it("refuses banking and wire capabilities with signed_authority_required", async () => {
     const id = delegation({ authority_level: "limited_proxy" }, [
       "view_investments",
@@ -460,7 +460,7 @@ describe("assisted uploads", () => {
 });
 
 describe("Phase 3B activation limits", () => {
-  it("activates preparing only - never signing, deciding or paying", () => {
+  it("activates preparing only: never signing, deciding or paying", () => {
     expect(PHASE_3B_CAPABILITIES.sort()).toEqual(
       [
         "assist_accreditation",

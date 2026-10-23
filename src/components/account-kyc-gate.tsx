@@ -26,7 +26,7 @@ export function AccountKycGate({ children, onSignOut }: { children: ReactNode; o
   if (s?.limited) return (
     <>
       <div role="status" className="border-b bg-accent/15 px-4 py-2 text-center text-sm text-foreground">
-        You can keep setting up while we finish one compliance check. Funding, banking and account changes open once it's done — we'll email you.
+        You can keep setting up while we finish one compliance check. Funding, banking and account changes open once it's done, we'll email you.
       </div>
       {children}
     </>
@@ -36,9 +36,9 @@ export function AccountKycGate({ children, onSignOut }: { children: ReactNode; o
     if (q.isLoading) return { title: "One moment…", text: "Checking your account.", cta: null as string | null };
     if (q.error || !s) return { title: "We couldn't check your account", text: "Please refresh the page. If this keeps happening, contact Harmonious.", cta: null };
     switch (s.state) {
-      case "start": return { title: "Verify your identity", text: "Before you can use Harmonious, we verify everyone's identity. This is required for fund administration and anti-money-laundering rules. You'll need a government ID and your phone or computer camera — it takes about 5 minutes. Your ID number is never shown in the portal.", cta: "Start verification" };
+      case "start": return { title: "Verify your identity", text: "Before you can use Harmonious, we verify everyone's identity. This is required for fund administration and anti-money-laundering rules. You'll need a government ID and your phone or computer camera, it takes about 5 minutes. Your ID number is never shown in the portal.", cta: "Start verification" };
       case "in_progress": return { title: "We're checking your details", text: "If you didn't finish, you can continue where you left off. Otherwise this page updates by itself once the check is done.", cta: "Continue verification" };
-      case "review": return { title: "Your check is with our compliance team", text: "A Harmonious compliance specialist is reviewing your verification. You'll get access as soon as it's approved — usually within one business day. This page updates by itself.", cta: null };
+      case "review": return { title: "Your check is with our compliance team", text: "A Harmonious compliance specialist is reviewing your verification. You'll get access as soon as it's approved, usually within one business day. This page updates by itself.", cta: null };
       default: return { title: s.expired ? "Your ID has expired" : "We need you to try again", text: s.expired ? "The ID you used has expired. Please verify again with a current government-issued ID." : s.declineNote ? `Our team asked you to verify again: ${s.declineNote}` : "We couldn't verify your identity. Please try again, making sure your ID is clear and fully in frame.", cta: "Verify again" };
     }
   })();

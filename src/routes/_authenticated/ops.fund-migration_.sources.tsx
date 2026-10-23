@@ -18,9 +18,9 @@ import { CLASS_LABEL, DECISION_LABEL, SOURCE_LABEL, STATUS_LABEL, type MatchClas
 export const Route = createFileRoute("/_authenticated/ops/fund-migration_/sources")({
   head: () => ({
     meta: [
-      { title: "Source Reconciliation - Harmonious Operations" },
+      { title: "Source Reconciliation | Harmonious Operations" },
       { name: "description", content: "Read-only reconciliation of historical records across Harmonious, identity verification, Simplici, Wix, Google Drive and Box." },
-      { property: "og:title", content: "Source Reconciliation - Harmonious Operations" },
+      { property: "og:title", content: "Source Reconciliation | Harmonious Operations" },
       { property: "og:description", content: "Match historical source records to Harmonious before any import." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

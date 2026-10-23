@@ -153,7 +153,7 @@ export const getStepRail = createServerFn({ method: "GET" })
         label: "PEP / sanctions",
         value:
           amlAnswers["is_pep"] || amlAnswers["sanctions_exposure"]
-            ? "Disclosed - under review"
+            ? "Disclosed: under review"
             : "None declared",
       });
       screeningFacts.push({
@@ -185,7 +185,7 @@ export const getStepRail = createServerFn({ method: "GET" })
       if (typeof acc.data.qualifies === "boolean")
         accFacts.push({
           label: "Qualifies",
-          value: acc.data.qualifies ? "Yes - accredited" : "Not qualified",
+          value: acc.data.qualifies ? "Yes: accredited" : "Not qualified",
         });
       if (q["net_worth_over_1m"] !== undefined)
         accFacts.push({

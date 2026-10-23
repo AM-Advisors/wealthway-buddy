@@ -5,7 +5,7 @@ import { serviceError } from "@/lib/service-error";
 const FILES = ["box", "gmail", "hubspot-ops-tickets", "linkedin-personal", "linkedin-direct", "hubspot-deal-migration", "marketing-queue", "marketing-publish", "marketing-imports", "marketing-drive", "fund-setup-guided", "drive", "drive-intake"].map((f) => `src/lib/${f}.server.ts`).concat("src/lib/diligence-assistant.functions.ts");
 
 describe("outside-service error messages", () => {
-  it("contain only service, action and status - no response text", () => {
+  it("contain only service, action and status, no response text", () => {
     const body = '{"error":"invalid_grant","access_token":"secret123","email":"a@b.co"}';
     const e = serviceError("Box", "upload", 403);
     expect(e.message).toBe("Box upload failed (status 403).");

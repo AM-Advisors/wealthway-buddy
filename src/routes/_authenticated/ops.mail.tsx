@@ -19,9 +19,9 @@ import {
 export const Route = createFileRoute("/_authenticated/ops/mail")({
   head: () => ({
     meta: [
-      { title: "Mail - Harmonious" },
+      { title: "Mail | Harmonious" },
       { name: "description", content: "Your Google inbox and shared Harmonious mailboxes with ticket assignment." },
-      { property: "og:title", content: "Mail - Harmonious" },
+      { property: "og:title", content: "Mail | Harmonious" },
       { property: "og:description", content: "Read, reply, draft and track shared inbox tickets." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

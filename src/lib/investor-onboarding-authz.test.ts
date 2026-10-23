@@ -277,7 +277,7 @@ describe("fund manager limits", () => {
     await expect(server.managerOnboardingBoard(MANAGER_B, FUND_A)).rejects.toThrow(/Forbidden/);
   });
 
-  it("gives the managing manager progress only - never compliance material", async () => {
+  it("gives the managing manager progress only, never compliance material", async () => {
     const detail = await server.onboardingDetail(MANAGER_A, OB1);
     expect(detail.executedSnapshot ?? null).toBeNull();
     expect(detail.questionnaireResponses).toEqual({});

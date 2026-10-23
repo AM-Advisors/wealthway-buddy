@@ -34,7 +34,7 @@ const MODULES = [
   },
   {
     title: "Due Diligence Rooms",
-    body: "An NDA-gated room per fund with categorised, versioned documents, a pitch deck viewer, offering terms, a timeline and a question board - plus a record of who opened what.",
+    body: "An NDA-gated room per fund with categorised, versioned documents, a pitch deck viewer, offering terms, a timeline and a question board, plus a record of who opened what.",
   },
   {
     title: "Documents & E-Signature",
@@ -57,7 +57,7 @@ const MODULES = [
 const AUDIENCES = [
   {
     who: "Sponsors and fund managers",
-    body: "Assigned funds, an investor review board, wire approvals, diligence rooms and document permissions - scoped so each manager only sees their own funds.",
+    body: "Assigned funds, an investor review board, wire approvals, diligence rooms and document permissions, scoped so each manager only sees their own funds.",
   },
   {
     who: "Investors",

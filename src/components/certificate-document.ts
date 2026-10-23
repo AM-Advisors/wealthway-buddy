@@ -40,7 +40,7 @@ export function certificatePdfSpec(certificate: any): PdfDocSpec {
         ? `This certificate was ${certificate.status} on ${day(certificate?.cancelled_at)}${
             certificate?.cancelled_reason ? ` - ${certificate.cancelled_reason}` : ""
           }.`
-        : "Draft - not yet signed by the company signatory.";
+        : "Draft, not yet signed by the company signatory.";
 
   return {
     kicker: "Share certificate",
