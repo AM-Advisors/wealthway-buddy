@@ -1,8 +1,5 @@
+import { FundApprovalsHub } from "@/components/fund-approvals-hub";
 import { createFileRoute } from "@tanstack/react-router";
-import { FundApprovals } from "@/components/fund-approvals";
-import { ManagerFundReviews } from "@/components/manager-fund-reviews";
-import { SideLetterNeeds } from "@/components/side-letter-needs";
-import { AccreditationReviews } from "@/components/accreditation-reviews";
 
 export const Route = createFileRoute("/_authenticated/manager/fund/$fundId/approvals")({
   head: () => ({ meta: [
@@ -17,5 +14,5 @@ export const Route = createFileRoute("/_authenticated/manager/fund/$fundId/appro
 
 function Page() {
   const { fundId } = Route.useParams();
-  return <div className="space-y-6"><h2 className="text-xl">Approvals</h2><SideLetterNeeds offeringId={fundId} /><AccreditationReviews offeringId={fundId} /><ManagerFundReviews fundId={fundId} /><FundApprovals fundId={fundId} /></div>;
+  return <FundApprovalsHub fundId={fundId} staff={false} initial="approvals" />;
 }
