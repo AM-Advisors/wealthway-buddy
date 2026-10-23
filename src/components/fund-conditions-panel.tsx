@@ -126,7 +126,7 @@ export function FundConditionsPanel({ offeringId }: { offeringId: string }) {
               {finding.clearedAt ? (
                 <p className="mt-1 text-xs text-muted-foreground">
                   Cleared by Harmonious on {new Date(finding.clearedAt).toLocaleDateString()}
-                  {finding.clearedReason ? ` · ${finding.clearedReason}` : ""}
+                  {finding.clearedReason ? ` - ${finding.clearedReason}` : ""}
                 </p>
               ) : null}
             </div>

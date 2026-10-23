@@ -73,7 +73,7 @@ export function FundAccountingPanel({ offeringId, defaultTab = "investments" }: 
       <TabsContent value="history">
         <Card><CardContent className="space-y-1 p-4 text-sm">
           {d.events.length === 0 && <p className="text-muted-foreground">No activity yet.</p>}
-          {d.events.map((e: any) => <p key={e.id}><span className="text-muted-foreground">{new Date(e.created_at).toLocaleString()}</span> · {e.record_table.replace("fund_", "")} {short(e.record_id)} · {e.action} by {short(e.actor_user_id)}{e.reason ? ` · ${e.reason}` : ""}</p>)}
+          {d.events.map((e: any) => <p key={e.id}><span className="text-muted-foreground">{new Date(e.created_at).toLocaleString()}</span> · {e.record_table.replace("fund_", "")} {short(e.record_id)} · {e.action} by {short(e.actor_user_id)}{e.reason ? ` - ${e.reason}` : ""}</p>)}
         </CardContent></Card>
       </TabsContent>
     </Tabs>
@@ -242,7 +242,7 @@ function FeeTerms({ offeringId }: { offeringId: string }) {
             ))}
           </CardContent></Card>
           <Card><CardContent className="space-y-1 p-4 text-sm">
-            <p className="font-medium">Preview total: {money(d.totalNetCents)}{d.blocked ? " · BLOCKED by a term conflict" : ""}</p>
+            <p className="font-medium">Preview total: {money(d.totalNetCents)}{d.blocked ? " - BLOCKED by a term conflict" : ""}</p>
             {d.lines.map((l: any) => <p key={l.positionId}>{l.name} · {l.appliedLevel ?? "no term"} · {(l.effectiveRateBps / 100).toFixed(2)}% × {money(l.basisAmountCents)} = {money(l.netFeeCents)}</p>)}
           </CardContent></Card>
         </>
@@ -263,7 +263,7 @@ function Mappings({ offeringId }: { offeringId: string }) {
       <p className="text-muted-foreground">Each posting purpose points to an account in this fund's chart. An unmapped purpose blocks posting. Changing a mapping keeps the previous one in history.</p>
       {d.purposes.map((p: string) => (
         <div key={p} className="flex flex-wrap items-center justify-between gap-2 border-t pt-2">
-          <span>{p.replace("expense:", "Expense · ").replace(/_/g, " ")}</span>
+          <span>{p.replace("expense:", "Expense - ").replace(/_/g, " ")}</span>
           <select className="h-8 rounded-md border bg-background px-2" value={active(p)?.account_id ?? ""} onChange={(e) => e.target.value && act(() => save({ data: { offeringId, purpose: p, accountId: e.target.value, note: null } }), "Mapping saved")}>
             <option value="">Not mapped - posting blocked</option>
             {d.accounts.map((a: any) => <option key={a.id} value={a.id}>{a.code} {a.name}</option>)}

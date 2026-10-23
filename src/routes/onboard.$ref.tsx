@@ -15,9 +15,9 @@ export const Route = createFileRoute("/onboard/$ref")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Complete Your Investment | Harmonious" },
+      { title: "Complete Your Investment - Harmonious" },
       { name: "description", content: "Complete verification, accreditation and fund documents for your investment." },
-      { property: "og:title", content: "Complete Your Investment | Harmonious" },
+      { property: "og:title", content: "Complete Your Investment - Harmonious" },
       { property: "og:description", content: "Secure investor onboarding by Harmonious." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

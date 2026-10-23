@@ -115,7 +115,7 @@ export const connectInvestorFolder = createServerFn({ method: "POST" })
       throw new Error(problem);
     }
     const path = await pathOf(s, facts, root.rootId);
-    if (path !== data.confirmPath) throw new Error("The Drive path changed: review it again before connecting.");
+    if (path !== data.confirmPath) throw new Error("The Drive path changed - review it again before connecting.");
     const { data: holder } = await client.from("investor_drive_connections").select("offering_id,investment_profile_id").eq("folder_id", data.folderId).eq("status", "connected").maybeSingle();
     if (holder && (holder.offering_id !== data.offeringId || holder.investment_profile_id !== data.profileId)) {
       throw new Error("That folder is already connected to a different fund or profile.");

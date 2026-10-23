@@ -11,9 +11,9 @@ import { KIND_LABEL, type DocKind } from "@/lib/sales-documents-model";
 export const Route = createFileRoute("/_authenticated/marketing_/assists")({
   head: () => ({
     meta: [
-      { title: "Sales requests | Harmonious Marketing" },
+      { title: "Sales requests - Harmonious Marketing" },
       { name: "description", content: "Proposals, RFPs and RFQs where Sales asked Marketing for help." },
-      { property: "og:title", content: "Sales requests | Harmonious Marketing" },
+      { property: "og:title", content: "Sales requests - Harmonious Marketing" },
       { property: "og:description", content: "Claim and polish Sales proposals and RFP responses." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

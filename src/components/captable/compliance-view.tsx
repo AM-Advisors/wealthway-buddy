@@ -171,7 +171,7 @@ function Body() {
           <CardDescription>
             Every ownership change, ledger entry and filed document for{" "}
             {workspace?.company?.name ?? "this company"}, in one record. Entries are written as they
-            happen and are never edited or removed, corrections are recorded as new entries.
+            happen and are never edited or removed - corrections are recorded as new entries.
           </CardDescription>
         </CardHeader>
         {summary ? (

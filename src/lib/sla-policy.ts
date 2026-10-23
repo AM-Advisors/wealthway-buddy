@@ -39,7 +39,7 @@ export function resolveSla(eng: SlaEngagement | null, policies: SlaPolicy[], req
     return { hours: Number(eng.sla_initial_response_hours), resolutionHours: eng.sla_resolution_target_hours ?? policy?.resolution_target_hours ?? null, warningPct, source: "Engagement Override", policyId: policy?.id ?? null };
   }
   if (eng && policy && (eng.service_level === "SELF_SERVE" || eng.service_level === "SAAS")) {
-    return { hours: null, resolutionHours: null, warningPct, source: eng.service_level === "SAAS" ? "SaaS — no Harmonious support" : "Self Serve: help center, no response target", policyId: policy.id };
+    return { hours: null, resolutionHours: null, warningPct, source: eng.service_level === "SAAS" ? "SaaS — no Harmonious support" : "Self Serve — help center, no response target", policyId: policy.id };
   }
   if (eng && policy) {
     const name = PRODUCT_LEVEL_NAME[`${eng.service_product}/${eng.service_level}`] ?? `${eng.service_product} ${eng.service_level}`;

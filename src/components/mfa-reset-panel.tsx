@@ -34,7 +34,7 @@ export function MfaResetPanel({ email, userId }: { email: string; userId: string
       <Button variant="outline" size="sm" onClick={() => void q.refetch()}>Try again</Button>
     </div> : <>
       <p className="text-sm text-muted-foreground">Confirm the account holder's identity. Super Admins can request and approve alone; other administrators need a second person. Every reset is logged.</p>
-      <form className="space-y-3" onSubmit={event => { event.preventDefault(); void run(async () => { await request({ data: { email, reason, identityCheck } }); setReason(""); setIdentityCheck(""); }, "Reset requested: awaiting another administrator"); }}>
+      <form className="space-y-3" onSubmit={event => { event.preventDefault(); void run(async () => { await request({ data: { email, reason, identityCheck } }); setReason(""); setIdentityCheck(""); }, "Reset requested — awaiting another administrator"); }}>
         <div className="grid gap-3 sm:grid-cols-3">
           <label className="space-y-1 text-sm"><span>Account email</span><Input type="email" value={email} readOnly /></label>
           <label className="space-y-1 text-sm"><span>Reason for reset</span><Input required minLength={5} maxLength={500} value={reason} onChange={event => setReason(event.target.value)} /></label>

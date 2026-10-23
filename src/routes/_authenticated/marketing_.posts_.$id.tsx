@@ -93,7 +93,7 @@ function PostEditor() {
 
   const saveM = useMutation({
     mutationFn: () => save({ data: { id: isNew ? null : id, title, body, channels, imagePaths: images.map((i) => i.path), scheduledAt: fromLocalInput(when) } }),
-    onSuccess: (r) => { toast.success(status !== "draft" && !isNew ? "Saved: back to draft for re-approval" : "Saved"); qc.invalidateQueries({ queryKey: ["mk-posts"] }); if (isNew) nav({ to: "/marketing/posts/$id", params: { id: r.id } }); else q.refetch(); },
+    onSuccess: (r) => { toast.success(status !== "draft" && !isNew ? "Saved — back to draft for re-approval" : "Saved"); qc.invalidateQueries({ queryKey: ["mk-posts"] }); if (isNew) nav({ to: "/marketing/posts/$id", params: { id: r.id } }); else q.refetch(); },
     onError: (e) => toast.error((e as Error).message),
   });
   const decideM = useMutation({
@@ -107,7 +107,7 @@ function PostEditor() {
   });
   const retryM = useMutation({
     mutationFn: () => retry({ data: { id } }),
-    onSuccess: () => { toast.success("Retrying: the original approval still stands"); q.refetch(); qc.invalidateQueries({ queryKey: ["mk-posts"] }); },
+    onSuccess: () => { toast.success("Retrying — the original approval still stands"); q.refetch(); qc.invalidateQueries({ queryKey: ["mk-posts"] }); },
     onError: (e) => toast.error((e as Error).message),
   });
   const draftM = useMutation({
@@ -196,7 +196,7 @@ function PostEditor() {
           )}
           {!!q.data?.history.length && (
             <Panel title="History">
-              <ul className="space-y-1 text-xs text-muted-foreground">{q.data.history.map((h: any) => <li key={h.id}>{fmt(h.created_at)} · {h.actor_name} · {h.action.replace(/_/g, " ")}{h.note ? ` · “${h.note}”` : ""}</li>)}</ul>
+              <ul className="space-y-1 text-xs text-muted-foreground">{q.data.history.map((h: any) => <li key={h.id}>{fmt(h.created_at)} · {h.actor_name} · {h.action.replace(/_/g, " ")}{h.note ? ` — “${h.note}”` : ""}</li>)}</ul>
             </Panel>
           )}
         </div>

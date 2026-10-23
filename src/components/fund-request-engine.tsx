@@ -284,7 +284,7 @@ export function FundRequestEngine({ clientId: id, draft, mode = "client", client
                   <F label="Legal name">
                     <Input value={r.legal_name} onChange={(e) => set("legal_name", e.target.value)} placeholder="e.g. Acme Ventures I, LP" />
                     {defaultLegalName(r) && r.legal_name === defaultLegalName(r) && (
-                      <p className="mt-1 text-xs text-muted-foreground">{seriesLegalName(r) ? "Generated from the fund name and Master LLC, edit if needed." : "Same as the fund name: edit if needed."}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">{seriesLegalName(r) ? "Generated from the fund name and Master LLC - edit if needed." : "Same as the fund name - edit if needed."}</p>
                     )}
                   </F>
                   <F label="Vehicle / entity structure *"><Pick value={r.vehicle_structure} onChange={(v) => setStructureOrExemption("vehicle_structure", v)} options={VEHICLE_STRUCTURES} /></F>
@@ -296,12 +296,12 @@ export function FundRequestEngine({ clientId: id, draft, mode = "client", client
                       ? <Input value={r.jurisdiction} disabled aria-label="Jurisdiction (set by Master LLC)" />
                       : <Pick value={r.jurisdiction} onChange={(v) => set("jurisdiction", v)} options={JURISDICTIONS} />}
                   </F>
-                  <F label="Already formed?"><Pick value={r.already_formed} onChange={(v) => set("already_formed", v as any)} options={[{ value: "yes", label: "Yes" }, { value: "no", label: "No: Harmonious to form" }]} /></F>
+                  <F label="Already formed?"><Pick value={r.already_formed} onChange={(v) => set("already_formed", v as any)} options={[{ value: "yes", label: "Yes" }, { value: "no", label: "No - Harmonious to form" }]} /></F>
                   {r.already_formed === "yes" && <F label="Date formed"><DatePick value={r.date_formed} onChange={(v) => set("date_formed", v)} /></F>}
                   {r.already_formed === "no" && <F label="Who will obtain the EIN? *"><Pick value={r.ein_obtained_by} onChange={(v) => set("ein_obtained_by", v as any)} options={[{ value: "harmonious", label: "Harmonious" }, { value: "client", label: "We will" }]} /></F>}
                   {r.already_formed === "yes" && <F label="Has an EIN? *"><Pick value={r.has_ein} onChange={(v) => set("has_ein", v as any)} options={[{ value: "yes", label: "Yes" }, { value: "no", label: "No" }]} /></F>}
                 </Grid>
-                <p className="text-xs text-muted-foreground">Don't type the EIN here - upload the IRS letter instead.{isSeries(r) ? " A series doesn't have its own certificate of formation, it's created under the Master LLC, so no formation document is needed." : ""}</p>
+                <p className="text-xs text-muted-foreground">Don't type the EIN here - upload the IRS letter instead.{isSeries(r) ? " A series doesn't have its own certificate of formation - it's created under the Master LLC, so no formation document is needed." : ""}</p>
                 {isSeries(r) && (r.series_home === "own" || r.series_home === "new") && (
                   <div className="space-y-3 rounded-md border p-3">
                     <p className="text-sm font-medium">{r.series_home === "own" ? "Your existing Series LLC" : "New Series LLC to set up"}</p>
@@ -324,7 +324,7 @@ export function FundRequestEngine({ clientId: id, draft, mode = "client", client
                 {needsSs4(r) && (
                   <div className="space-y-3 rounded-md border p-3">
                     <p className="text-sm font-medium">IRS Form SS-4 - EIN application</p>
-                    <p className="text-xs text-muted-foreground">Harmonious reviews this before anything is submitted to the IRS. Don't enter a Social Security number here, we'll collect it securely.</p>
+                    <p className="text-xs text-muted-foreground">Harmonious reviews this before anything is submitted to the IRS. Don't enter a Social Security number here - we'll collect it securely.</p>
                     <Grid>
                       {SS4_FIELDS.filter((f) => !f.long).map((f) => (
                         <F key={f.key} label={`${f.label}${f.required ? " *" : ""}`}><Input value={r.ss4?.[f.key] ?? ""} onChange={(e) => set("ss4", { ...r.ss4, [f.key]: e.target.value })} /></F>

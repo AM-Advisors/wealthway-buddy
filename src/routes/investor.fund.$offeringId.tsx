@@ -36,9 +36,9 @@ const TABS: { value: Tab; label: string }[] = [
 export const Route = createFileRoute("/investor/fund/$offeringId")({
   head: () => ({
     meta: [
-      { title: "Fund | Harmonious Investor Portal" },
+      { title: "Fund - Harmonious Investor Portal" },
       { name: "description", content: "Your investment in this fund: overview, documents, deal room, payments, taxes, messages and updates." },
-      { property: "og:title", content: "Fund | Harmonious Investor Portal" },
+      { property: "og:title", content: "Fund - Harmonious Investor Portal" },
       { property: "og:description", content: "Overview, documents, deal room, payments and taxes for one fund." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

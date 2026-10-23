@@ -70,7 +70,7 @@ export function priceOrder(sel: OrderSelection, interval: OrderInterval): Priced
   if (sel.capTable !== "none") {
     const l = productByKey("cap_table").fundCost.find((x) => x.name === CAP_NAME[sel.capTable as Exclude<CapTier, "none">]);
     if (!l) throw new Error("Unknown cap table plan.");
-    push(`cap_table_${sel.capTable}`, `Cap table · ${l.name}`, 1, periodAmount(l, interval), true);
+    push(`cap_table_${sel.capTable}`, `Cap table — ${l.name}`, 1, periodAmount(l, interval), true);
   }
   const cat = alaCarteCatalog();
   for (const [k, qRaw] of Object.entries(sel.alaCarte ?? {})) {

@@ -337,7 +337,7 @@ function TransactionsInner() {
   return (
     <div className="space-y-3">
       <p className="text-sm text-muted-foreground">
-        Company equity events only, never fund bank or capital movements. Finalized entries cannot be edited or deleted; corrections are recorded as reversals that link back to the original. <HelpTip helpKey="reversal" />
+        Company equity events only - never fund bank or capital movements. Finalized entries cannot be edited or deleted; corrections are recorded as reversals that link back to the original. <HelpTip helpKey="reversal" />
       </p>
       <div className="flex flex-wrap gap-2">
         {(["all", "draft", "review", "posted"] as const).map((f) => (

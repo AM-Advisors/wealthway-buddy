@@ -126,7 +126,7 @@ function CampaignPage() {
                     <span className="text-xs text-muted-foreground">{fmt(e.sent_at ?? e.scheduled_at)}</span>
                     <StatusBadge status={e.status} />
                     {e.status === "draft" && <Button size="sm" variant="outline" disabled={busy} onClick={() => run(() => decide({ data: { id: e.id, action: "submit" } }), "Submitted for approval.")}>Submit</Button>}
-                    {e.status === "submitted" && d.canApprove && e.author_id !== d.me && <Button size="sm" disabled={busy} onClick={() => run(() => decide({ data: { id: e.id, action: "approve" } }), "Approved: sending on schedule.")}>Approve & send</Button>}
+                    {e.status === "submitted" && d.canApprove && e.author_id !== d.me && <Button size="sm" disabled={busy} onClick={() => run(() => decide({ data: { id: e.id, action: "approve" } }), "Approved — sending on schedule.")}>Approve & send</Button>}
                     <Button size="sm" variant="ghost" onClick={() => run(() => assign({ data: { kind: "email", itemId: e.id, campaignId: null } }), "Removed from campaign.")}>Remove</Button>
                   </span>
                 </div>

@@ -149,7 +149,7 @@ export async function feeStatus(userId: string, onboardingId: string): Promise<F
   return {
     terms: { id: String(t.id), managementFeePct: t.management_fee_pct, basis: t.management_fee_basis, carryPct: t.carry_pct, hurdlePct: t.hurdle_pct, notes: t.notes ?? null },
     accepted: acc ? { at: String((acc as any).accepted_at), name: String((acc as any).accepted_name) } : null,
-    sideLetters: ((sl ?? []) as any[]).map((s) => `Side letter${s.document_reference ? ` (${s.document_reference})` : ""} · ${String(s.status ?? "").replace(/_/g, " ")}`),
+    sideLetters: ((sl ?? []) as any[]).map((s) => `Side letter${s.document_reference ? ` (${s.document_reference})` : ""} - ${String(s.status ?? "").replace(/_/g, " ")}`),
   };
 }
 

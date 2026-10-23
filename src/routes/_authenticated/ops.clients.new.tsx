@@ -26,9 +26,9 @@ export const Route = createFileRoute("/_authenticated/ops/clients/new")({
   validateSearch: z.object({ id: z.string().uuid().optional(), step: z.number().int().min(1).max(5).optional() }),
   head: () => ({
     meta: [
-      { title: "New client | Harmonious operations" },
+      { title: "New client - Harmonious operations" },
       { name: "description", content: "Create a client: details, contacts, expected services and contract." },
-      { property: "og:title", content: "New client | Harmonious operations" },
+      { property: "og:title", content: "New client - Harmonious operations" },
       { property: "og:description", content: "Guided client intake for the Harmonious team." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -130,7 +130,7 @@ function NewClient() {
           <li key={s}>
             <button type="button" disabled={!clientId && i > 0} onClick={() => go(i + 1)}
               className={`rounded-full border px-3 py-1 ${step === i + 1 ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>
-              {i + 1} · {s}
+              {i + 1} - {s}
             </button>
           </li>
         ))}
@@ -178,7 +178,7 @@ function NewClient() {
 
       {step === 2 && clientId && (
         <Card><CardHeader><CardTitle className="text-base">Contacts</CardTitle>
-          <CardDescription>Everyone at the client lives here. Mark one person as Primary Contact. Designations are reference only, they don't grant access or signing authority.</CardDescription></CardHeader>
+          <CardDescription>Everyone at the client lives here. Mark one person as Primary Contact. Designations are reference only - they don't grant access or signing authority.</CardDescription></CardHeader>
           <CardContent className="space-y-4">
             {legacyPrimary && (
               <div className="rounded-md border border-dashed p-3 text-sm">
@@ -224,7 +224,7 @@ function NewClient() {
 
       {step === 4 && clientId && (
         <Card><CardHeader><CardTitle className="text-base">Expected services</CardTitle>
-          <CardDescription>What Harmonious expects to provide. Optional, and never a blocker, each fund records its own Services & Pricing when it's created.</CardDescription></CardHeader>
+          <CardDescription>What Harmonious expects to provide. Optional, and never a blocker - each fund records its own Services & Pricing when it's created.</CardDescription></CardHeader>
           <CardContent className="space-y-3">
             <ExpectedServicesEditor clientId={clientId} onSaved={() => go(5)} />
             <Button variant="ghost" onClick={() => go(5)}>Skip for now</Button>
@@ -241,7 +241,7 @@ function NewClient() {
                 <label key={v} className="flex items-center gap-2"><input type="radio" checked={contractChoice === v} onChange={() => setContractChoice(v)} />{l}</label>
               ))}
             </div>
-            {contractChoice === "upload" && <UploadContractForm clientId={clientId} onDone={() => toast.success("Contract saved, review its terms from the client's Contracts tab.")} />}
+            {contractChoice === "upload" && <UploadContractForm clientId={clientId} onDone={() => toast.success("Contract saved - review its terms from the client's Contracts tab.")} />}
             {contractChoice === "standard" && <p className="text-sm text-muted-foreground">The standard master agreement is prepared from the existing Client Agreements area after setup.</p>}
             <div className="border-t pt-3 text-sm">
               <p><b>{f.name}</b>{f.client_type ? ` · ${f.client_type}` : ""}</p>

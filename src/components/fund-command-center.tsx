@@ -213,7 +213,7 @@ export function FundCommandCenter({ fundId, onNavigate }: { fundId: string; onNa
           {d.nextReport ? (
             <dl className="grid grid-cols-2 gap-2 text-sm">
               <div className="col-span-2"><dt className="text-xs text-muted-foreground">Next report</dt><dd className="font-medium">{d.nextReport.title}</dd></div>
-              <div><dt className="text-xs text-muted-foreground">Period</dt><dd>{d.nextReport.period ?? " · "}</dd></div>
+              <div><dt className="text-xs text-muted-foreground">Period</dt><dd>{d.nextReport.period ?? "—"}</dd></div>
               <div><dt className="text-xs text-muted-foreground">Expected</dt><dd>{fmtDate(d.nextReport.due)}</dd></div>
               <div className="col-span-2"><dt className="text-xs text-muted-foreground">Status</dt><dd>{d.nextReport.status === "PREPARING" ? "Harmonious Preparing" : titleCase(d.nextReport.status)}</dd></div>
             </dl>

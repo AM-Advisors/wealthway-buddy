@@ -31,7 +31,7 @@ export function PortfolioExposure({ rows }: { rows: PortfolioPosition[] }) {
       )}
       {byValue && top >= 40 ? <p className="text-sm text-destructive">Concentration: one group holds {top}% of approved value.</p> : null}
       <table className="w-full text-sm"><thead><tr className="text-left text-muted-foreground"><th>Group</th><th>Positions</th><th>Approved value</th><th>Share</th></tr></thead>
-        <tbody>{slices.map((s) => <tr key={s.key} className="border-t"><td className="py-2 capitalize">{s.label}</td><td>{s.positions}</td><td>{s.valueCents ? money(s.valueCents) : 'Unavailable'}</td><td>{byValue ? `${s.share}%` : ' · '}</td></tr>)}</tbody></table>
+        <tbody>{slices.map((s) => <tr key={s.key} className="border-t"><td className="py-2 capitalize">{s.label}</td><td>{s.positions}</td><td>{s.valueCents ? money(s.valueCents) : 'Unavailable'}</td><td>{byValue ? `${s.share}%` : '—'}</td></tr>)}</tbody></table>
       <p className="text-xs text-muted-foreground">Values use approved, effective marks only. Positions without a mark are counted but add no value.</p>
     </div>
   );

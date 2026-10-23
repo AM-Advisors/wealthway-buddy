@@ -82,7 +82,7 @@ export async function importBatch(userId: string, slugs: string[]) {
     if (!(WIX_ARTICLE_SLUGS as readonly string[]).includes(slug)) { results.push({ slug, ok: false, message: "Not a known Classroom address." }); continue; }
     try {
       const { data: existing } = await db.from("classroom_articles").select("id").eq("slug", slug).maybeSingle();
-      if (existing) { results.push({ slug, ok: true, message: "Already imported: left unchanged." }); continue; }
+      if (existing) { results.push({ slug, ok: true, message: "Already imported - left unchanged." }); continue; }
       const res = await fetch(`https://www.harmonious.co/post/${slug}`, { headers: { "User-Agent": "Mozilla/5.0 HarmoniousClassroomImport" } });
       if (!res.ok) throw new Error(`The live page returned ${res.status}.`);
       const p = parseWixPost(await res.text());

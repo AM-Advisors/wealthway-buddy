@@ -12,7 +12,7 @@ interface Props {
 
 function InvestmentApproval({ name = 'there', fundName = 'your fund', investorName = 'An investor', action = 'review', instructionsAvailable = false, portalUrl = 'https://app.harmonious.co/investor' }: Props) {
   const headline = action === 'fund' ? 'Your investment has been reviewed and confirmed' : action === 'sign' ? 'Your countersignature is needed' : action === 'approve_sign' ? 'An investor document is ready for you to approve and sign' : 'An investor needs your review and approval'
-  return <Html lang="en" dir="ltr"><Head /><Preview>{headline} · {fundName}</Preview>
+  return <Html lang="en" dir="ltr"><Head /><Preview>{headline} — {fundName}</Preview>
     <Body style={{ backgroundColor: '#ffffff', fontFamily: 'Poppins, Helvetica, Arial, sans-serif', margin: 0 }}>
       <Container style={{ maxWidth: '560px', padding: '32px', borderTop: '4px solid #5DC6D1' }}>
         <Text style={{ color: '#142647', fontWeight: 700 }}>Harmonious</Text>
@@ -31,7 +31,7 @@ function InvestmentApproval({ name = 'there', fundName = 'your fund', investorNa
 
 export const template = {
   component: InvestmentApproval,
-  subject: (data: Record<string, any>) => `${data['action'] === 'fund' ? 'Investment confirmed' : data['action'] === 'sign' ? 'Countersignature needed' : data['action'] === 'approve_sign' ? 'Approve and sign investor documents' : 'Investor review and approval needed'} · ${data['fundName'] ?? 'your fund'}`,
+  subject: (data: Record<string, any>) => `${data['action'] === 'fund' ? 'Investment confirmed' : data['action'] === 'sign' ? 'Countersignature needed' : data['action'] === 'approve_sign' ? 'Approve and sign investor documents' : 'Investor review and approval needed'} — ${data['fundName'] ?? 'your fund'}`,
   displayName: 'Investment review and funding confirmation',
   previewData: { name: 'Jordan', investorName: 'Alex Investor', fundName: 'Example Fund', action: 'fund', instructionsAvailable: true, portalUrl: 'https://app.harmonious.co/investor' },
 } satisfies TemplateEntry

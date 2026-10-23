@@ -19,7 +19,7 @@ export type StructuredFeeTerm = FeeTerm & {
   sideLetterId?: string | null;
 };
 
-export const TERM_CONFLICT_MESSAGE = "ECONOMIC TERM CONFLICT: REVIEW REQUIRED";
+export const TERM_CONFLICT_MESSAGE = "ECONOMIC TERM CONFLICT — REVIEW REQUIRED";
 
 export function termLevel(t: { positionId: string | null; classId: string | null }): TermLevel {
   return t.positionId ? "investor" : t.classId ? "class" : "fund";

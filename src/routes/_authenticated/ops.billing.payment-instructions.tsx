@@ -13,9 +13,9 @@ import { decideRemittanceVersion, listRemittanceVersions, prepareRemittanceVersi
 export const Route = createFileRoute("/_authenticated/ops/billing/payment-instructions")({
   head: () => ({
     meta: [
-      { title: "Client invoice ACH & Wire | Harmonious" },
+      { title: "Client invoice ACH & Wire - Harmonious" },
       { name: "description", content: "Harmonious wire and ACH instructions shown to clients for invoices, with second-person approval." },
-      { property: "og:title", content: "Client invoice ACH & Wire | Harmonious" },
+      { property: "og:title", content: "Client invoice ACH & Wire - Harmonious" },
       { property: "og:description", content: "Approved wire and ACH instructions for client invoices." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -47,7 +47,7 @@ function PaymentInstructionsPage() {
       <header>
         <div className="mb-3 flex flex-wrap gap-2"><Badge variant="outline">CEO &amp; CRO</Badge><Badge variant="secondary">Client invoices only</Badge></div>
         <h1 className="text-3xl">Client invoice ACH &amp; Wire</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Harmonious payment instructions for client invoices, quotes, RFQs and RFPs, separate from fund banking.</p>
+        <p className="mt-2 text-sm text-muted-foreground">Harmonious payment instructions for client invoices, quotes, RFQs and RFPs — separate from fund banking.</p>
       </header>
       {q.isPending ? <p className="text-sm text-muted-foreground">Loading payment instructions…</p> : q.error ? <div className="space-y-3"><p className="text-sm text-destructive">{(q.error as Error).message}</p><Button variant="outline" onClick={() => void q.refetch()}>Retry</Button></div> : <>
       <Card>

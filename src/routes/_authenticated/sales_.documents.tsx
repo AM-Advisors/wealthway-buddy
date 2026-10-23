@@ -21,9 +21,9 @@ import { Panel } from "@/components/sales/sales-ui";
 export const Route = createFileRoute("/_authenticated/sales_/documents")({
   head: () => ({
     meta: [
-      { title: "Proposals & RFPs | Harmonious Sales" },
+      { title: "Proposals & RFPs - Harmonious Sales" },
       { name: "description", content: "Generate proposals, RFP and RFQ responses and vendor requests with AI drafts and approval." },
-      { property: "og:title", content: "Proposals & RFPs | Harmonious Sales" },
+      { property: "og:title", content: "Proposals & RFPs - Harmonious Sales" },
       { property: "og:description", content: "Standardized proposals, RFPs and RFQs built from the quote and the MSA, with Sales approval." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -119,7 +119,7 @@ function Documents() {
               <SearchableNativeSelect className={sel} value={f.contactId} onChange={(e) => setF({ ...f, contactId: e.target.value })}>
                 <option value="">No contact</option>
                 {f.contactId && !(o.data?.contacts ?? []).some((x: any) => x.id === f.contactId) && <option value={f.contactId}>{f.recipientName || f.recipientEmail || "Selected prospect"}</option>}
-                {(o.data?.contacts ?? []).map((x: any) => <option key={x.id} value={x.id}>{x.full_name}{x.organization ? ` · ${x.organization}` : ""}</option>)}
+                {(o.data?.contacts ?? []).map((x: any) => <option key={x.id} value={x.id}>{x.full_name}{x.organization ? ` - ${x.organization}` : ""}</option>)}
               </SearchableNativeSelect></label>
             <label className="space-y-1 text-sm"><span>Client</span>
               <select className={sel} value={f.clientId} onChange={(e) => setF({ ...f, clientId: e.target.value })}>
@@ -187,7 +187,7 @@ function AboutHarmoniousEditor() {
           <Button className="mt-2" disabled={busy || draft === null || body.trim().length < 20 || body.trim() === d.body || reason.trim().length < 3} onClick={submit}>{busy ? "Saving…" : "Save wording"}</Button>
         </>
       ) : <p className="whitespace-pre-wrap text-sm">{d.body}</p>}
-      <p className="mt-3 text-xs text-muted-foreground">{d.isDefault ? "Starting wording, no Super Admin has saved a version yet." : d.history.map((h: any) => `v${h.version} by ${h.byName}, ${new Date(h.at).toLocaleDateString()}${h.reason ? ` (${h.reason})` : ""}`).join(" · ")}</p>
+      <p className="mt-3 text-xs text-muted-foreground">{d.isDefault ? "Starting wording — no Super Admin has saved a version yet." : d.history.map((h: any) => `v${h.version} by ${h.byName}, ${new Date(h.at).toLocaleDateString()}${h.reason ? ` (${h.reason})` : ""}`).join(" · ")}</p>
     </Panel>
   );
 }
@@ -297,14 +297,14 @@ function ProspectLookup({ onResolved, label = "Prospect email" }: { onResolved: 
           <div className="absolute z-20 mt-1 w-full rounded-md border bg-popover shadow-md">
             {sugs.map((s) => (
               <button key={s.email} type="button" className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left hover:bg-accent" onMouseDown={(e) => { e.preventDefault(); choose(s); }}>
-                <span className="min-w-0 truncate"><span className="font-medium">{s.name ?? s.email}</span>{s.organization ? <span className="text-muted-foreground"> · {s.organization}</span> : null}<span className="block truncate text-xs text-muted-foreground">{s.email}</span></span>
+                <span className="min-w-0 truncate"><span className="font-medium">{s.name ?? s.email}</span>{s.organization ? <span className="text-muted-foreground"> — {s.organization}</span> : null}<span className="block truncate text-xs text-muted-foreground">{s.email}</span></span>
                 <Badge variant="outline" className="shrink-0">{s.source}</Badge>
               </button>
             ))}
           </div>
         )}
       </div>
-      {res?.found && res.contactId && <p className="text-muted-foreground"><Badge>Found on platform</Badge> <span className="ml-1">{res.name ?? res.email}{res.organization ? ` · ${res.organization}` : ""} ({res.sources.join(", ")})</span></p>}
+      {res?.found && res.contactId && <p className="text-muted-foreground"><Badge>Found on platform</Badge> <span className="ml-1">{res.name ?? res.email}{res.organization ? ` - ${res.organization}` : ""} ({res.sources.join(", ")})</span></p>}
       {needsContact && (
         <div className="space-y-2 rounded-md border p-3">
           <p className="font-medium">{res.found ? `Found as ${res.sources.join(", ")}. Add them as a prospect to continue.` : "Not on the platform yet. Add new prospect"}</p>

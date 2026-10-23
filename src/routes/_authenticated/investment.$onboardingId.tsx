@@ -18,13 +18,13 @@ import { LoadError } from "@/components/load-error";
 export const Route = createFileRoute("/_authenticated/investment/$onboardingId")({
   head: () => ({
     meta: [
-      { title: "Your investment | Harmonious" },
+      { title: "Your investment - Harmonious" },
       {
         name: "description",
         content:
           "One place for each investment: onboarding steps, capital, performance, reports, documents and tax.",
       },
-      { property: "og:title", content: "Your investment | Harmonious" },
+      { property: "og:title", content: "Your investment - Harmonious" },
       { property: "og:description", content: "Your investment workspace in the Harmonious portal." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

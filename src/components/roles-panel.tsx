@@ -101,7 +101,7 @@ export function RolesPage() {
           <ul className="space-y-1 text-sm">
             {d.events.map((e: any) => {
               const who = (id: string) => d.people.find((p) => p.userId === id)?.email ?? "former staff";
-              return <li key={e.id}><span className="text-muted-foreground">{new Date(e.created_at).toLocaleString("en-US")}</span> · {who(e.actor_id)} {e.action === "grant" ? "gave" : "removed"} {label(e.role)} {e.action === "grant" ? "to" : "from"} {who(e.target_user_id)} · {e.reason}</li>;
+              return <li key={e.id}><span className="text-muted-foreground">{new Date(e.created_at).toLocaleString("en-US")}</span> · {who(e.actor_id)} {e.action === "grant" ? "gave" : "removed"} {label(e.role)} {e.action === "grant" ? "to" : "from"} {who(e.target_user_id)} — {e.reason}</li>;
             })}
           </ul>
         </section>

@@ -233,7 +233,7 @@ export async function saveBankDetails(sb: any, userId: string, input: { offering
   const { error } = await sb.rpc("save_wire_instructions", { p_offering_id: input.offeringId, p_details: details });
   if (error) throw new Error("The bank details couldn't be saved.");
   await (await import("@/lib/fund-setup.server")).syncFundFacts(input.offeringId);
-  await activity(input.offeringId, userId, "bank_instructions_entered", "New bank instructions entered: pending verification");
+  await activity(input.offeringId, userId, "bank_instructions_entered", "New bank instructions entered - pending verification");
   return { ok: true };
 }
 

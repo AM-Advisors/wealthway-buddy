@@ -46,7 +46,7 @@ export function computeReview(i: any, priorNavCents: number | null, feePct: numb
   if (priorNavCents != null) {
     const roll = priorNavCents + n(i.contributions) - n(i.distributions) + n(i.income) - expenses;
     const gap = nav.navCents - roll;
-    if (Math.abs(gap) > Math.max(100_00, Math.abs(nav.navCents) * 0.02)) flags.push("NAV doesn't roll forward from the prior NAV after contributions, distributions, income and expenses, check unrealized changes.");
+    if (Math.abs(gap) > Math.max(100_00, Math.abs(nav.navCents) * 0.02)) flags.push("NAV doesn't roll forward from the prior NAV after contributions, distributions, income and expenses - check unrealized changes.");
   }
   return { ...nav, expensesCents: expenses, expenseRatioPct: nav.navCents > 0 ? Math.round((expenses / nav.navCents) * 10000) / 100 : null, flags };
 }

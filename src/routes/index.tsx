@@ -31,7 +31,7 @@ const PILLARS = [
   },
   {
     title: "Onboard The Investors",
-    body: "Identity verification, AML screening, accreditation under Rule 506(b) or 506(c), document e-signature and investor funding workflows, in one guided flow.",
+    body: "Identity verification, AML screening, accreditation under Rule 506(b) or 506(c), document e-signature and investor funding workflows - in one guided flow.",
     to: "/platform",
     cta: "See the platform",
   },

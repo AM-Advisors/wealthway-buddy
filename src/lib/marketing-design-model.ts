@@ -65,7 +65,7 @@ export const DEFAULT_BRAND_KIT: BrandKit = {
 export function brandKitProblems(k: BrandKit): string[] {
   const out: string[] = [];
   const keys = new Set(DEFAULT_BRAND_KIT.logos.map((l) => l.key));
-  if (k.logos.some((l) => !keys.has(l.key))) out.push("Only the approved Harmonious logo files can be used, new logos can't be added here.");
+  if (k.logos.some((l) => !keys.has(l.key))) out.push("Only the approved Harmonious logo files can be used — new logos can't be added here.");
   if (!k.colors.length || k.colors.some((c) => !HEX.test(c.hex))) out.push("Every color needs a 6-digit hex value.");
   const ck = new Set(k.colors.map((c) => c.key));
   for (const [s, st] of Object.entries(k.styles)) for (const f of ["background", "accent", "text"] as const)
@@ -160,10 +160,10 @@ export function changeKind(a: DesignDoc, b: DesignDoc): "none" | "decorative" | 
 export type TemplateKey = "blank" | "market_headline" | "thesis_statement" | "wednesday_poll" | "academy_compare" | "founder_quote";
 export const TEMPLATES: { key: TemplateKey; label: string; series: string | null }[] = [
   { key: "market_headline", label: "Market Monday — headline + KPI", series: "market_monday" },
-  { key: "thesis_statement", label: "Thesis Tuesday: bold statement", series: "thesis_tuesday" },
-  { key: "wednesday_poll", label: "Whatever Wednesday: community question", series: "whatever_wednesday" },
-  { key: "academy_compare", label: "Fund Academy: side-by-side comparison", series: "fund_academy_thursday" },
-  { key: "founder_quote", label: "Founders Friday: editorial cover", series: "founders_friday" },
+  { key: "thesis_statement", label: "Thesis Tuesday — bold statement", series: "thesis_tuesday" },
+  { key: "wednesday_poll", label: "Whatever Wednesday — community question", series: "whatever_wednesday" },
+  { key: "academy_compare", label: "Fund Academy — side-by-side comparison", series: "fund_academy_thursday" },
+  { key: "founder_quote", label: "Founders Friday — editorial cover", series: "founders_friday" },
   { key: "blank", label: "Blank", series: null },
 ];
 

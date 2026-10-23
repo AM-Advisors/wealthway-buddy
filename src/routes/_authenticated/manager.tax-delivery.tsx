@@ -12,9 +12,9 @@ import { getManagerTaxDelivery } from "@/lib/portal-documents.functions";
 export const Route = createFileRoute("/_authenticated/manager/tax-delivery")({
   head: () => ({
     meta: [
-      { title: "K-1 delivery status | Harmonious" },
+      { title: "K-1 delivery status - Harmonious" },
       { name: "description", content: "See which investors in your funds have K-1s available, without opening their tax documents." },
-      { property: "og:title", content: "K-1 delivery status | Harmonious" },
+      { property: "og:title", content: "K-1 delivery status - Harmonious" },
       { property: "og:description", content: "K-1 availability for the funds you manage." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

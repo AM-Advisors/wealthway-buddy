@@ -10,9 +10,9 @@ export const Route = createFileRoute("/_authenticated/ops/security-compliance")(
   validateSearch: (s) => z.object({ section: z.enum(keys).optional() }).parse(s),
   head: () => ({
     meta: [
-      { title: "Security & Compliance Center | Harmonious Operations" },
+      { title: "Security & Compliance Center - Harmonious Operations" },
       { name: "description", content: "Harmonious internal control library, frameworks, evidence, risks, policies, audits and Trust Center publishing." },
-      { property: "og:title", content: "Security & Compliance Center | Harmonious Operations" },
+      { property: "og:title", content: "Security & Compliance Center - Harmonious Operations" },
       { property: "og:description", content: "Internal governance, risk and compliance workspace for Harmonious." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

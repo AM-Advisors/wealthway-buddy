@@ -39,14 +39,14 @@ export const PEOPLE = { preparer: "demo-preparer", reviewer: "demo-reviewer", ap
 
 // ------------------------------------------------------------------ chart
 export const CHART: (TbAccount & { subtype?: string })[] = [
-  { id: "H-1000", code: "H-1000", name: "Cash: DEMO operating account", account_type: "asset", normal_balance: "debit", subtype: "cash" },
+  { id: "H-1000", code: "H-1000", name: "Cash - DEMO operating account", account_type: "asset", normal_balance: "debit", subtype: "cash" },
   { id: "H-1200", code: "H-1200", name: "Investments at cost", account_type: "asset", normal_balance: "debit" },
   { id: "H-1210", code: "H-1210", name: "Unrealized appreciation (depreciation)", account_type: "asset", normal_balance: "debit" },
   { id: "H-2000", code: "H-2000", name: "Accrued liabilities", account_type: "liability", normal_balance: "credit" },
   { id: "H-2100", code: "H-2100", name: "Investor overpayments held", account_type: "liability", normal_balance: "credit" },
   { id: "H-2200", code: "H-2200", name: "Management fee payable", account_type: "liability", normal_balance: "credit" },
   { id: "H-3000", code: "H-3000", name: "Partners' capital", account_type: "equity", normal_balance: "credit" },
-  { id: "H-3100", code: "H-3100", name: "Capital contributions: current period", account_type: "equity", normal_balance: "credit" },
+  { id: "H-3100", code: "H-3100", name: "Capital contributions - current period", account_type: "equity", normal_balance: "credit" },
   { id: "H-4000", code: "H-4000", name: "Interest income", account_type: "income", normal_balance: "credit" },
   { id: "H-4100", code: "H-4100", name: "Unrealized gain (loss)", account_type: "income", normal_balance: "credit" },
   { id: "H-5000", code: "H-5000", name: "Management fee expense", account_type: "expense", normal_balance: "debit" },
@@ -146,10 +146,10 @@ export function matchDeposits(deposits: BankLine[], call: ReturnType<typeof capi
 
 /** Funding behavior that is NOT a deposit: legitimately blocked or awaited. */
 export const FUNDING_NOTES: Record<string, string> = {
-  juniper: "Funding pending: wire expected after period end.",
-  erik: "Blocked, AML review open; funding not accepted until cleared.",
+  juniper: "Funding pending - wire expected after period end.",
+  erik: "Blocked - AML review open; funding not accepted until cleared.",
   atlas: "Partially funded - $200,000 outstanding.",
-  kestrel: "Late: received 2026-02-20 against 2026-02-15 due date.",
+  kestrel: "Late - received 2026-02-20 against 2026-02-15 due date.",
   ada: "Overpaid $50 - held as a liability; any refund is a manual decision, never automatic.",
   casey: "Deposit arrived without reference; matched manually by staff.",
 };
@@ -178,13 +178,13 @@ export function classifyExpense(e: ExpenseInput): { account: string } | { review
   return { account };
 }
 export const EXPENSES: ExpenseInput[] = [
-  { id: "exp-legal", category: "legal", description: "DEMO fund counsel: Q1", amountCents: $(45_000), date: "2026-02-28", paid: true },
-  { id: "exp-admin", category: "administration", description: "DEMO fund administration: Q1", amountCents: $(15_000), date: "2026-03-15", paid: true },
+  { id: "exp-legal", category: "legal", description: "DEMO fund counsel - Q1", amountCents: $(45_000), date: "2026-02-28", paid: true },
+  { id: "exp-admin", category: "administration", description: "DEMO fund administration - Q1", amountCents: $(15_000), date: "2026-03-15", paid: true },
   { id: "exp-bank", category: "bank_fee", description: "DEMO wire fees", amountCents: $(250), date: "2026-03-31", paid: true },
   { id: "exp-audit", category: "audit_tax", description: "DEMO audit fieldwork accrual", amountCents: $(30_000), date: "2026-03-31", paid: false },
   { id: "exp-valuation", category: "other_professional", description: "DEMO independent valuation consultant", amountCents: $(12_500), date: "2026-03-30", paid: true },
 ];
-export const AMBIGUOUS_EXPENSE: ExpenseInput = { id: "exp-misc", category: "consulting_misc", description: "DEMO consulting: unclear", amountCents: $(4_000), date: "2026-03-20", paid: false };
+export const AMBIGUOUS_EXPENSE: ExpenseInput = { id: "exp-misc", category: "consulting_misc", description: "DEMO consulting - unclear", amountCents: $(4_000), date: "2026-03-20", paid: false };
 
 // --------------------------------------------------------------- fee terms
 const term = (o: Partial<StructuredFeeTerm> & { id: string; rateBps: number }): StructuredFeeTerm => ({
@@ -242,7 +242,7 @@ export function runPeriod() {
     const lines: JLine[] = [{ account: "H-1000", debit: d.amountCents }];
     if (toCapital > 0) lines.push({ account: "H-3100", credit: toCapital, positionId: dec.positionId });
     if (over > 0) lines.push({ account: "H-2100", credit: over, positionId: dec.positionId });
-    journals.push(j(`jc-${d.id}`, d.bookedOn, `Capital call #1 contribution · ${dec.positionId}`, "capital_call", `cc1/${dec.positionId}/${d.id}`, lines));
+    journals.push(j(`jc-${d.id}`, d.bookedOn, `Capital call #1 contribution - ${dec.positionId}`, "capital_call", `cc1/${dec.positionId}/${d.id}`, lines));
   }
   const investmentPayments: BankLine[] = NEW_INVESTMENTS.map((i) => ({ id: `pay-${i.id}`, bookedOn: i.date, postedOn: i.date, amountCents: -i.costCents, description: `WIRE OUT ${i.name}`, kind: "payment" }));
   for (const i of NEW_INVESTMENTS) journals.push(j(`ji-${i.id}`, i.date, `Purchase ${i.name}`, "investment", i.id, [{ account: "H-1200", debit: i.costCents }, { account: "H-1000", credit: i.costCents }]));

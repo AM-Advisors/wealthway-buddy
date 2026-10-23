@@ -108,7 +108,7 @@ export function FundAssets({ fundId }: { fundId: string }) {
             {field("ownershipPct", "Ownership %", "number")}{field("cost", "Cost basis (USD)", "number")}
           </div>
           <div className="space-y-1"><Label htmlFor="a-note">Notes</Label><Textarea id="a-note" value={f.note} onChange={(e) => setF({ ...f, note: e.target.value })} /></div>
-          <p className="text-xs text-muted-foreground">This records the position only. It doesn't post accounting or set a value, valuations go through review.</p>
+          <p className="text-xs text-muted-foreground">This records the position only. It doesn't post accounting or set a value - valuations go through review.</p>
           <Button disabled={busy || !f.issuerName.trim() || !f.assetName.trim()} onClick={submit}>{busy ? "Saving…" : "Add asset"}</Button>
         </DialogContent>
       </Dialog>

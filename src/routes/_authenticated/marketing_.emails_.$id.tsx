@@ -157,7 +157,7 @@ function EmailEditor() {
             </Panel>
           )}
           {q.data && Object.keys(q.data.sends).length > 0 && <Panel title="Delivery"><p className="text-sm">{Object.entries(q.data.sends).map(([k, v]) => `${k.replace(/_/g, " ")}: ${v}`).join(" · ")}</p></Panel>}
-          {!!q.data?.history.length && <Panel title="History"><ul className="space-y-1 text-xs text-muted-foreground">{q.data.history.map((h: any) => <li key={h.id}>{fmt(h.created_at)} · {h.actor_name} · {h.action.replace(/_/g, " ")}{h.note ? ` · “${h.note}”` : ""}</li>)}</ul></Panel>}
+          {!!q.data?.history.length && <Panel title="History"><ul className="space-y-1 text-xs text-muted-foreground">{q.data.history.map((h: any) => <li key={h.id}>{fmt(h.created_at)} · {h.actor_name} · {h.action.replace(/_/g, " ")}{h.note ? ` — “${h.note}”` : ""}</li>)}</ul></Panel>}
         </div>
         <div className="lg:sticky lg:top-4 lg:self-start">
           <p className="mb-2 text-sm font-medium">Preview</p>

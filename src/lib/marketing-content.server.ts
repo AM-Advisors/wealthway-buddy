@@ -133,17 +133,17 @@ export async function generate(userId: string, itemId: string, guidance: string 
     founders ? "FOUNDERS FRIDAY: never invent Alyssa's experiences, opinions, quotes or stories. Write questions and [ALYSSA TO ADD] placeholders where her perspective belongs." : "",
     "Use ONLY the facts and numbers in the SOURCE MATERIAL. Never invent statistics, quotes, SEC statements, laws, clients or current events. Label analysis as analysis. No investment, legal or tax advice.",
     "SEO/GEO: question-based H2/H3 headings, a direct factual answer in the first paragraph under each question, accurate definitions, semantic HTML (h2, h3, p, ul, ol, strong) with no scripts or inline styles. Original analysis. Never promise rankings or AI citations.",
-    "citations: only URLs from SOURCES. internal_links: only URLs from INTERNAL PAGES, choose 2 to 5 relevant ones. slug: lowercase-hyphenated.",
-    "meta_title ≤ 60 chars, meta_description ≤ 155 chars. FAQ 3 to 5 items when useful, answers must match the article.",
-    "Social: write different text per platform. linkedin_company (professional, 120 to 200 words, 3 hashtags), linkedin_executive (first person ONLY as framing questions/placeholders for the executive; never invent their opinions), facebook (conversational, 60 to 120 words), instagram (hook line, short lines, 5 to 8 hashtags, 'link in bio'), x (≤ 270 chars incl. 1 to 2 hashtags), email_subject (≤ 60 chars) and email_body (short newsletter blurb with CTA).",
-    "Graphics: 2 to 4 specs using fitting templates and sizes. stat must be copied verbatim from SOURCE MATERIAL with its stat_source_url from SOURCES, or empty string.",
-    "SEO & AI search: h1 = the visible page title (no H1 in body_html). opening_answer = a direct 1 to 2 sentence answer to the main question, also used as the first paragraph. related_questions = 3 to 6 questions readers ask. Name entities explicitly (Harmonious, SEC, IRS). Use a comparison table where it helps, practical examples (label hypothetical ones), and plain definitions. Never stuff keywords, never write hidden text, never claim how any search or AI engine ranks or cites content, never state search volume, difficulty or rankings.",
+    "citations: only URLs from SOURCES. internal_links: only URLs from INTERNAL PAGES, choose 2–5 relevant ones. slug: lowercase-hyphenated.",
+    "meta_title ≤ 60 chars, meta_description ≤ 155 chars. FAQ 3–5 items when useful, answers must match the article.",
+    "Social: write different text per platform. linkedin_company (professional, 120–200 words, 3 hashtags), linkedin_executive (first person ONLY as framing questions/placeholders for the executive; never invent their opinions), facebook (conversational, 60–120 words), instagram (hook line, short lines, 5–8 hashtags, 'link in bio'), x (≤ 270 chars incl. 1–2 hashtags), email_subject (≤ 60 chars) and email_body (short newsletter blurb with CTA).",
+    "Graphics: 2–4 specs using fitting templates and sizes. stat must be copied verbatim from SOURCE MATERIAL with its stat_source_url from SOURCES, or empty string.",
+    "SEO & AI search: h1 = the visible page title (no H1 in body_html). opening_answer = a direct 1–2 sentence answer to the main question, also used as the first paragraph. related_questions = 3–6 questions readers ask. Name entities explicitly (Harmonious, SEC, IRS). Use a comparison table where it helps, practical examples (label hypothetical ones), and plain definitions. Never stuff keywords, never write hidden text, never claim how any search or AI engine ranks or cites content, never state search volume, difficulty or rankings.",
     "topic_cluster: one of fund administration, SPV administration, cap table management, investor onboarding, KYC/KYB/AML, accredited investor verification, Rule 506(b) and 506(c), Form D and Blue Sky filings, fund accounting and NAV, K-1s and partnership taxes, startup fundraising and dilution, private-market liquidity and secondaries. pillar_page, supporting_articles and service_pages: only URLs from INTERNAL PAGES (or empty).",
     "claim kinds: primary_fact (stated in a regulator or primary document), reported (a third party or company said it — e.g. a press release is attributed to the company), corroborated (two independent SOURCES; set corroborating_url), regulatory_text (quotes or paraphrases rule text), regulatory_interpretation (what a rule means for readers), analysis (Harmonious analysis or opinion), projection, hypothetical, unverified. Form D amounts are issuer-reported, never verified proceeds. corroborating_url is empty unless corroborated.",
     "claims: list every factual statement, analysis, opinion, projection and hypothetical example the article relies on, with kind set honestly. A fact needs source_url copied from SOURCES; non-facts use an empty source_url unless they build on one source. Never present analysis, opinion or projection as fact.",
     "Never write quotation marks around words unless they are copied verbatim from SOURCE MATERIAL. Never invent quotes, statistics, regulatory requirements or personal experiences.",
-    "cta: the main call to action. cta_options: 2 to 3 alternative CTAs suited to this series.",
-    "social.email_body: a complete short newsletter version (headline, 2 to 3 short paragraphs, CTA).",
+    "cta: the main call to action. cta_options: 2–3 alternative CTAs suited to this series.",
+    "social.email_body: a complete short newsletter version (headline, 2–3 short paragraphs, CTA).",
     "schema_jsonld: return an empty string (built separately).", COPY_RULES,
   ].filter(Boolean).join("\n");
   const input = [
@@ -232,7 +232,7 @@ export async function toPosts(userId: string, itemId: string) {
   const { savePost } = await import("@/lib/marketing.server");
   const ids: string[] = [];
   for (const ch of ["facebook", "instagram"] as const) {
-    const r = await savePost(userId, { title: `${p.social_headline} | ${ch}`, body: p.social[ch], channels: [ch], imagePaths: [], scheduledAt: null });
+    const r = await savePost(userId, { title: `${p.social_headline} — ${ch}`, body: p.social[ch], channels: [ch], imagePaths: [], scheduledAt: null });
     ids.push(r.id);
   }
   await db.from("marketing_content_items").update({ post_ids: ids }).eq("id", itemId);

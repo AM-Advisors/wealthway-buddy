@@ -383,7 +383,7 @@ export async function clientActionStep(uid: string, d: { taskId: string; step: "
   const { error } = await db.from("staff_tasks").update(patch).eq("id", d.taskId);
   if (error) throw new Error(error.message);
   await db.from("staff_task_events").insert({ task_id: d.taskId, actor_user_id: uid, kind: `client_${d.step}`, detail: { note: d.note ?? null, date: d.date ?? null } }).then(() => null, () => null);
-  return { ok: true, note: d.step === "reminder" ? "Reminder logged. Send it to the client from the task or your mailbox, nothing is sent automatically." : null };
+  return { ok: true, note: d.step === "reminder" ? "Reminder logged. Send it to the client from the task or your mailbox — nothing is sent automatically." : null };
 }
 
 export async function setServiceReviewStatus(uid: string, d: { id: string; status: string; note?: string | undefined | null; ownerUserId?: string | undefined | null }) {

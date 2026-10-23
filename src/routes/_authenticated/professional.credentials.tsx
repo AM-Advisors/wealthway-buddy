@@ -154,12 +154,12 @@ function MyCredentials() {
 export const Route = createFileRoute("/_authenticated/professional/credentials")({
   head: () => ({
     meta: [
-      { title: "My credentials | Harmonious" },
+      { title: "My credentials - Harmonious" },
       {
         name: "description",
         content: "Record and verify your professional license, bar admission or registration.",
       },
-      { property: "og:title", content: "My credentials | Harmonious" },
+      { property: "og:title", content: "My credentials - Harmonious" },
       { property: "og:description", content: "Professional credentials held with Harmonious." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

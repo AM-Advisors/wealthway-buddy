@@ -28,7 +28,7 @@ export function MarketingDrivePicker({ kind, label = "From Google Drive", onPick
       <DialogContent className="max-w-4xl">
         <DialogHeader>
           <DialogTitle>Marketing Google Drive</DialogTitle>
-          <DialogDescription>Files from the shared Marketing folder. Themes are its top-level folders.{q.data?.lastSyncedAt ? ` Last synced ${new Date(q.data.lastSyncedAt).toLocaleString()}.` : " Not synced yet: use Sync on the Drive library page."}</DialogDescription>
+          <DialogDescription>Files from the shared Marketing folder. Themes are its top-level folders.{q.data?.lastSyncedAt ? ` Last synced ${new Date(q.data.lastSyncedAt).toLocaleString()}.` : " Not synced yet - use Sync on the Drive library page."}</DialogDescription>
         </DialogHeader>
         <div className="flex flex-wrap gap-1">
           <Button size="sm" variant={theme === null ? "default" : "outline"} onClick={() => setTheme(null)}>All</Button>

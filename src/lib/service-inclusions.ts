@@ -26,7 +26,7 @@ export const HARMONIZED_SPV_EXCLUDED: string[] = [
 ];
 
 const SAAS: StandardInclusions = {
-  included: ["Platform access only: no Harmonious services are included", "Services available à la carte at additional cost", "Billed quarterly or annually"],
+  included: ["Platform access only — no Harmonious services are included", "Services available à la carte at additional cost", "Billed quarterly or annually"],
   excluded: ["All Harmonious services (available à la carte)"],
 };
 

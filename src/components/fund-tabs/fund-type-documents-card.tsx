@@ -39,7 +39,7 @@ export function FundTypeDocumentsCard({ fundId }: { fundId: string }) {
       <CardContent className="space-y-3 text-sm">
         {!d ? <p className="text-muted-foreground">Loading…</p>
           : !d.fundType ? <p className="text-muted-foreground">Set the fund type in Fund Setup to see its documents.</p>
-          : !d.templates.length ? <div className="space-y-2"><p className="text-muted-foreground">No approved legal templates are assigned to this fund type yet.</p>{modelSourcesForFundType(d.fundType).map((source) => <a key={source.url} href={source.url} target="_blank" rel="noreferrer" className="block text-primary underline">{source.title} · publisher reference, not ready to sign</a>)}</div> : (
+          : !d.templates.length ? <div className="space-y-2"><p className="text-muted-foreground">No approved legal templates are assigned to this fund type yet.</p>{modelSourcesForFundType(d.fundType).map((source) => <a key={source.url} href={source.url} target="_blank" rel="noreferrer" className="block text-primary underline">{source.title} — publisher reference, not ready to sign</a>)}</div> : (
             <>
               <ul className="divide-y rounded-md border">
                 {d.templates.map((t: { id: string; title: string; generated: boolean }) => (

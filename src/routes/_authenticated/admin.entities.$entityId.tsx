@@ -13,13 +13,13 @@ import { ENTITY_TYPES, getEntity } from "@/lib/entities.functions";
 export const Route = createFileRoute("/_authenticated/admin/entities/$entityId")({
   head: () => ({
     meta: [
-      { title: "Entity | Harmonious admin" },
+      { title: "Entity - Harmonious admin" },
       {
         name: "description",
         content:
           "One entity's details, parent and related entities, and the engagements Harmonious delivers for it.",
       },
-      { property: "og:title", content: "Entity | Harmonious admin" },
+      { property: "og:title", content: "Entity - Harmonious admin" },
       {
         property: "og:description",
         content: "Entity details, related entities and engagements.",

@@ -140,7 +140,7 @@ export function ItemDrawer({ id, series, people, open, onClose, draft }: {
               <h3 className="text-sm font-semibold">Sources and claims</h3>
               {item?.unverified_claims > 0 && <p className="text-xs text-destructive">{item.unverified_claims} factual claim(s) have no primary source. Approval is blocked until they're verified or removed.</p>}
               {cq.data.map((c: any) => (
-                <div key={c.id} className="text-xs"><b className="capitalize">{c.claim_kind}</b>{c.verification !== "not_applicable" ? ` · ${c.verification.replace("_", " ")}` : ""} · {c.claim}{c.source_url && <> · <a className="underline" href={c.source_url} target="_blank" rel="noreferrer">source</a></>}</div>
+                <div key={c.id} className="text-xs"><b className="capitalize">{c.claim_kind}</b>{c.verification !== "not_applicable" ? ` · ${c.verification.replace("_", " ")}` : ""} — {c.claim}{c.source_url && <> · <a className="underline" href={c.source_url} target="_blank" rel="noreferrer">source</a></>}</div>
               ))}
             </section>
           )}
@@ -152,7 +152,7 @@ export function ItemDrawer({ id, series, people, open, onClose, draft }: {
               <div className="flex gap-2"><input className={inp} value={msg} onChange={(e) => setMsg(e.target.value)} placeholder="Add a comment" /><Button size="sm" variant="outline" disabled={!msg.trim() || busy} onClick={() => run(() => addComment({ data: { id: item.id, body: msg } }).then(() => setMsg("")), "Comment added")}>Post</Button></div>
               <h3 className="pt-2 text-sm font-semibold">History</h3>
               <ul className="space-y-1 text-xs text-muted-foreground">
-                {q.data!.events.map((e: any) => <li key={e.id}>{fmtInTz(e.created_at, tz)} · {q.data!.people[e.actor_id] ?? "Team member"} · {e.action}{e.to_status ? ` → ${STUDIO_STATUS_LABEL[e.to_status as StudioStatus] ?? e.to_status}` : ""}{e.note ? ` · “${e.note}”` : ""}</li>)}
+                {q.data!.events.map((e: any) => <li key={e.id}>{fmtInTz(e.created_at, tz)} · {q.data!.people[e.actor_id] ?? "Team member"} · {e.action}{e.to_status ? ` → ${STUDIO_STATUS_LABEL[e.to_status as StudioStatus] ?? e.to_status}` : ""}{e.note ? ` — “${e.note}”` : ""}</li>)}
               </ul>
             </section>
           )}

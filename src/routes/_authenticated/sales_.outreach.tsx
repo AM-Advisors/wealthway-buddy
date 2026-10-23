@@ -21,9 +21,9 @@ import { Panel } from "@/components/sales/sales-ui";
 export const Route = createFileRoute("/_authenticated/sales_/outreach")({
   head: () => ({
     meta: [
-      { title: "Outreach | Harmonious Sales" },
+      { title: "Outreach - Harmonious Sales" },
       { name: "description", content: "Email, text, WhatsApp, LinkedIn and call outreach for each Harmonious Sales contact." },
-      { property: "og:title", content: "Outreach | Harmonious Sales" },
+      { property: "og:title", content: "Outreach - Harmonious Sales" },
       { property: "og:description", content: "One outreach timeline per contact across every channel." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

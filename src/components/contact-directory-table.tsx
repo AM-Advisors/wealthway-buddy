@@ -119,7 +119,7 @@ export function ContactDirectoryTable({ kind }: { kind: Kind }) {
             {rows.map((r) => (
               <TableRow key={r.key}>
                 <TableCell><div className="font-medium">{r.name}</div><div className="text-xs text-muted-foreground">{r.email}</div></TableCell>
-                <TableCell className="text-sm">{r.companies.join(", ") || " · "}</TableCell>
+                <TableCell className="text-sm">{r.companies.join(", ") || "—"}</TableCell>
                 <TableCell className="text-sm">{r.assignments.length ? r.assignments.map((a) => a.name).join(", ") : <span className="text-muted-foreground">None</span>}</TableCell>
                 <TableCell>
                   <div className="flex flex-wrap items-center gap-1"><Badge variant={r.invite === "active" ? "default" : r.invite === "invited" ? "secondary" : "outline"}>{INVITE_LABEL[r.invite]}</Badge> <AccessBadge info={acc(r.email)} /></div>
@@ -200,7 +200,7 @@ function AssignDialog({ isFund, state, targets, onClose, onSubmit }: {
             <Select value={targetId} onValueChange={setTargetId}>
               <SelectTrigger><SelectValue placeholder={isFund ? "Choose a fund" : "Choose a cap table"} /></SelectTrigger>
               <SelectContent>
-                {options.map((t) => <SelectItem key={t.id} value={t.id}>{t.name}{t.clientName ? ` · ${t.clientName}` : ""}</SelectItem>)}
+                {options.map((t) => <SelectItem key={t.id} value={t.id}>{t.name}{t.clientName ? ` — ${t.clientName}` : ""}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>

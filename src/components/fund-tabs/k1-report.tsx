@@ -115,7 +115,7 @@ function K1Row({ r, staff, onDecide }: { r: any; staff: boolean; onDecide: (appr
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="font-medium">Tax year {r.inputs?.taxYear} · {lines.length} investor{lines.length === 1 ? "" : "s"}</p>
         <Badge variant={r.status === "approved" ? "default" : r.status === "returned" ? "destructive" : "secondary"}>
-          {r.status === "submitted" ? "Draft: Harmonious reviewing" : r.status === "approved" ? "Approved" : "Returned"}
+          {r.status === "submitted" ? "Draft - Harmonious reviewing" : r.status === "approved" ? "Approved" : "Returned"}
         </Badge>
       </div>
       {flags.length > 0 && <ul className="list-disc pl-5 text-xs">{flags.map((f) => <li key={f}>{f}</li>)}</ul>}

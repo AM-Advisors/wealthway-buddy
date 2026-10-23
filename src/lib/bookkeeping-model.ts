@@ -66,7 +66,7 @@ export function bookkeepingTerms(config: BookkeepingConfig, input: BookkeepingIn
   const p = calculateBookkeeping(config, input);
   const money = (n: number | null) => n === null ? "Custom price required" : `$${(n / 100).toLocaleString("en-US", { minimumFractionDigits: 2 })}`;
   return [
-    `${config.name} · ${p.tier.name}`,
+    `${config.name} — ${p.tier.name}`,
     `Covered proposed legal entities: ${input.entityReferences.join("; ")}. Exact entity authorization and coverage must be confirmed before activation.`,
     `${input.accountingMethod} accounting; ${input.reconciliation} reconciliation; ${input.billing} billing.`,
     `Monthly-equivalent ${money(p.monthlyCents)}; recurring invoice ${money(p.invoiceCents)}; annual recurring value ${money(p.annualCents)}. One-time ${money(p.oneTimeCents)}; quoted usage ${money(p.usageCents)} (separate from recurring billing).`,

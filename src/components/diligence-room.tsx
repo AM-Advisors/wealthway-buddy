@@ -168,7 +168,7 @@ export function DiligenceRoom({ offeringId }: { offeringId: string }) {
     onSuccess: (r: any) => {
       queryClient.invalidateQueries({ queryKey: ["nda-signing", offeringId] });
       if (r?.completed) {
-        toast.success("Signature received: the diligence materials are open.");
+        toast.success("Signature received - the diligence materials are open.");
         queryClient.invalidateQueries({ queryKey: ["diligence-access", offeringId] });
       } else {
         toast.message("We haven't received your signature yet.");
@@ -186,7 +186,7 @@ export function DiligenceRoom({ offeringId }: { offeringId: string }) {
   const acceptMutation = useMutation({
     mutationFn: () => acceptNda({ data: { offering_id: offeringId, signer_name: signer.trim() } }),
     onSuccess: () => {
-      toast.success("Thank you, the diligence materials are now open to you.");
+      toast.success("Thank you - the diligence materials are now open to you.");
       queryClient.invalidateQueries({ queryKey: ["diligence-access", offeringId] });
     },
     onError: (e: any) => toast.error(e?.message ?? "Could not record your acceptance."),
@@ -291,7 +291,7 @@ export function DiligenceRoom({ offeringId }: { offeringId: string }) {
                     {sig?.completedAt
                       ? `Signed ${when(sig.completedAt)}.`
                       : sig?.viewedAt
-                        ? `You opened it ${when(sig.viewedAt)} · it still needs your signature.`
+                        ? `You opened it ${when(sig.viewedAt)} - it still needs your signature.`
                         : sig?.sentAt
                           ? `Sent to you ${when(sig.sentAt)}.`
                           : "Sign it securely; a countersigned copy is filed for both of us."}
@@ -313,7 +313,7 @@ export function DiligenceRoom({ offeringId }: { offeringId: string }) {
                     disabled={checkSignedMutation.isPending || !sig}
                     onClick={() => checkSignedMutation.mutate()}
                   >
-                    {checkSignedMutation.isPending ? "Checking…" : "I've signed: check now"}
+                    {checkSignedMutation.isPending ? "Checking…" : "I've signed - check now"}
                   </Button>
                 </div>
                 <p className="text-xs text-muted-foreground">
@@ -341,7 +341,7 @@ export function DiligenceRoom({ offeringId }: { offeringId: string }) {
                   disabled={signer.trim().length < 2 || acceptMutation.isPending}
                   onClick={() => acceptMutation.mutate()}
                 >
-                  {acceptMutation.isPending ? "Recording…" : "I agree: open the room"}
+                  {acceptMutation.isPending ? "Recording…" : "I agree - open the room"}
                 </Button>
                 <p className="mt-3 text-xs text-muted-foreground">
                   Your name, the date and time and your network address are recorded with this acceptance.
@@ -363,7 +363,7 @@ export function DiligenceRoom({ offeringId }: { offeringId: string }) {
 
   return (
     <div className="mx-auto w-full max-w-5xl px-4 py-10">
-      <h1 className="text-3xl">{offering?.name} · due diligence</h1>
+      <h1 className="text-3xl">{offering?.name} - due diligence</h1>
       {offering?.summary ? <p className="mt-2 text-muted-foreground">{offering.summary}</p> : null}
       {a.accepted ? (
         <p className="mt-2 text-xs text-muted-foreground">
@@ -668,7 +668,7 @@ function DocumentsTab({
       setLastSync({ at: res.syncedAt, added: res.added, checked: res.checked });
       toast.success(
         res.added > 0
-          ? `${res.added} file${res.added === 1 ? "" : "s"} pulled in, your managers have been notified`
+          ? `${res.added} file${res.added === 1 ? "" : "s"} pulled in - your managers have been notified`
           : "Everything in the folder is already listed",
       );
       refresh();
@@ -947,7 +947,7 @@ function DocumentsTab({
           <DialogHeader>
             <DialogTitle>{viewer?.title}</DialogTitle>
             <DialogDescription>
-              Confidential, for your evaluation only. Please do not redistribute.
+              Confidential - for your evaluation only. Please do not redistribute.
             </DialogDescription>
           </DialogHeader>
           {viewer?.src ? (
@@ -1628,7 +1628,7 @@ function EngagementTab({ offeringId }: { offeringId: string }) {
         <CardHeader>
           <CardTitle>Who's opening this room</CardTitle>
           <CardDescription>
-            Real activity inside the room, when each person came in and which documents they
+            Real activity inside the room - when each person came in and which documents they
             actually opened. Repeat visits within 30 minutes count once.
           </CardDescription>
         </CardHeader>
@@ -1688,7 +1688,7 @@ function EngagementTab({ offeringId }: { offeringId: string }) {
         <CardHeader>
           <CardTitle>Has access, never opened it</CardTitle>
           <CardDescription>
-            People who can reach this room but have not been in yet, worth a nudge.
+            People who can reach this room but have not been in yet - worth a nudge.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -1761,7 +1761,7 @@ function NdaSettings({ offeringId, access }: { offeringId: string; access: any }
         <div className="flex items-center gap-2">
           <Checkbox id="nda-bump" checked={bump} onCheckedChange={(v) => setBump(Boolean(v))} />
           <Label htmlFor="nda-bump">
-            This is a material change: ask everyone to accept it again
+            This is a material change - ask everyone to accept it again
           </Label>
         </div>
         <Button size="sm" disabled={mutation.isPending} onClick={() => mutation.mutate()}>
@@ -1803,7 +1803,7 @@ function InvestingPath({ offeringId }: { offeringId: string }) {
   const startMutation = useMutation({
     mutationFn: () => start({ data: { offering_id: offeringId } }),
     onSuccess: () => {
-      toast.success("Your application is open: let's start with your identity check.");
+      toast.success("Your application is open - let's start with your identity check.");
       queryClient.invalidateQueries({ queryKey: ["diligence-onboarding", offeringId] });
       queryClient.invalidateQueries({ queryKey: ["nav-state"] });
       window.location.href = STEP_LINKS.kyc;

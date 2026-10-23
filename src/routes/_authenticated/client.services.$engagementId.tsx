@@ -23,13 +23,13 @@ import { categoryLabel, listServiceCatalog } from "@/lib/service-catalog.functio
 export const Route = createFileRoute("/_authenticated/client/services/$engagementId")({
   head: () => ({
     meta: [
-      { title: "Your services | Harmonious" },
+      { title: "Your services - Harmonious" },
       {
         name: "description",
         content:
           "What Harmonious does on this engagement, what it costs, what has changed and what needs your approval.",
       },
-      { property: "og:title", content: "Your services | Harmonious" },
+      { property: "og:title", content: "Your services - Harmonious" },
       {
         property: "og:description",
         content: "Services, cost, changes and approvals for one engagement.",

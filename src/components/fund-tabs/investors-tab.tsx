@@ -107,7 +107,7 @@ export function InvestorsTab({ fundId, workQueue }: { fundId: string; workQueue?
       <CardHeader className="flex-row items-start justify-between gap-3 space-y-0">
         <div>
           <CardTitle className="text-base">Investors</CardTitle>
-          <CardDescription>Click an investor to open their record, every detail, document, verification and action for this deal is in one place. Received counts only money matched to the bank.</CardDescription>
+          <CardDescription>Click an investor to open their record — every detail, document, verification and action for this deal is in one place. Received counts only money matched to the bank.</CardDescription>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button size="sm" variant="outline" disabled={!picked.length || sending} onClick={sendReminders}>{sending ? "Working…" : `Send reminder${picked.length ? ` (${picked.length})` : ""}`}</Button>
@@ -217,7 +217,7 @@ function DuplicatesCard({ fundId, groups, staff, onMerged }: { fundId: string; g
     <Card>
       <CardHeader>
         <CardTitle className="text-base">Possible duplicate investors</CardTitle>
-        <CardDescription>Same name or email appears more than once. Merging keeps one record, carries over its documents and tasks, and archives the other, nothing is deleted. Staff only.</CardDescription>
+        <CardDescription>Same name or email appears more than once. Merging keeps one record, carries over its documents and tasks, and archives the other — nothing is deleted. Staff only.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {groups.map((g, i) => (
@@ -249,7 +249,7 @@ function StepChips({ steps }: { steps: StepStatus[] }) {
   return (
     <div className="flex items-center gap-1">
       {steps.map((st, i) => (
-        <span key={st.key} title={`${st.label}: ${STEP_STATE_LABELS[st.state]} · ${st.detail}`} className={`flex size-6 items-center justify-center rounded-full text-[10px] font-medium ${STATE_DOT[st.state]}`}>{i + 1}</span>
+        <span key={st.key} title={`${st.label}: ${STEP_STATE_LABELS[st.state]} — ${st.detail}`} className={`flex size-6 items-center justify-center rounded-full text-[10px] font-medium ${STATE_DOT[st.state]}`}>{i + 1}</span>
       ))}
     </div>
   );

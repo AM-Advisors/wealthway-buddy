@@ -159,7 +159,7 @@ export function FundingStep({ offeringId }: { offeringId?: string }) {
     onSuccess: async (_r, m) => {
       await queryClient.invalidateQueries({ queryKey: ["funding", offeringId ?? "active"] });
       if (m === "wire") chooseWireMutation.mutate();
-      else toast.success("Confirmed, you can now enter your bank details.");
+      else toast.success("Confirmed - you can now enter your bank details.");
     },
     onError,
   });
@@ -212,7 +212,7 @@ export function FundingStep({ offeringId }: { offeringId?: string }) {
         {bankDetailsMissing && (
           <p className="rounded-md border border-amber-300 bg-amber-50 p-3 text-amber-900">
             This fund has not published its bank details yet. Please contact the fund team before sending
-            money, you will be able to continue as soon as the details appear here.
+            money - you will be able to continue as soon as the details appear here.
           </p>
         )}
 
@@ -390,13 +390,13 @@ export function FundingStep({ offeringId }: { offeringId?: string }) {
                 <div className="flex items-start gap-3">
                   <RadioGroupItem value="wire" id="method-wire" className="mt-1" />
                   <Label htmlFor="method-wire" className="font-normal">
-                    Bank wire, you send funds from your bank using our instructions and reference code.
+                    Bank wire - you send funds from your bank using our instructions and reference code.
                   </Label>
                 </div>
                 <div className="flex items-start gap-3">
                   <RadioGroupItem value="ach" id="method-ach" className="mt-1" />
                   <Label htmlFor="method-ach" className="font-normal">
-                    ACH debit, authorize us to debit your bank account for the commitment amount.
+                    ACH debit - authorize us to debit your bank account for the commitment amount.
                     <span className="mt-1 block text-xs text-destructive">ACH usually takes 3-5 business days to arrive, and can take longer. Choose it early so funds arrive before the closing date.</span>
                   </Label>
                 </div>

@@ -134,7 +134,7 @@ export function OpsFundsDashboard({ initialFilter }: { initialFilter?: FundFilte
             const lines = attentionLines(f.metrics).filter((l) => !l.includes("ready"));
             const pct = f.setupCompletion;
             const stage = !f.isOpen ? "Closed" : pct != null && pct < 100 ? "In setup" : "Live";
-            const next = lines[0] ?? (pct != null && pct < 100 ? "Finish fund setup" : " · ");
+            const next = lines[0] ?? (pct != null && pct < 100 ? "Finish fund setup" : "—");
             return (
               <div key={f.id} className="grid grid-cols-2 gap-x-3 gap-y-1 border-b px-4 py-3 text-sm last:border-b-0 hover:bg-muted/30 lg:grid-cols-[2fr_1.2fr_1fr_0.9fr_1.6fr_1fr_6rem] lg:items-center">
                 <div className="col-span-2 min-w-0 lg:col-span-1">

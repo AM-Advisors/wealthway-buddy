@@ -30,7 +30,7 @@ function Documents() {
                   <span className="text-xs text-muted-foreground">{d.status}</span>
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {d.client} · {String(d.kind).replace(/_/g, " ")}
+                  {d.client} - {String(d.kind).replace(/_/g, " ")}
                 </p>
               </li>
             ))}

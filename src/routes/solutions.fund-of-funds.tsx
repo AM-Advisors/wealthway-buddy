@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { SolutionGuidePage, type SolutionGuide } from "@/components/marketing/solution-guide";
 import { seoLinks, seoMeta } from "@/lib/seo";
 
-const TITLE = "Fund of Funds Administration Guide | Harmonious";
+const TITLE = "Fund of Funds Administration Guide - Harmonious";
 const DESCRIPTION = "Harmonious for Fund of Funds: the three-tier operating model, look-through accounting, capital calls, K-1 aggregation and a real-time LP portal.";
 
 export const Route = createFileRoute("/solutions/fund-of-funds")({

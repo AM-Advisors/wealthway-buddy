@@ -207,7 +207,7 @@ export function NavBoard({ role }: { role: "harmonious" | "manager" }) {
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
                     <CardTitle className="text-base">
-                      {nav.fund_name} · {nav.period_label ?? nav.as_of_date}
+                      {nav.fund_name} - {nav.period_label ?? nav.as_of_date}
                     </CardTitle>
                     <CardDescription>
                       As at {nav.as_of_date} · version {nav.version} · cut off{" "}

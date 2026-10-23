@@ -182,7 +182,7 @@ function DistributionDetail({ batchId, fundId, mode, isStaff, onClose }: { batch
     doc.setFontSize(10);
     doc.text([`To: ${b.shareCustodian ?? ""}`, `Issuer: ${b.shareIssuer ?? ""} ${b.shareClass ?? ""}`, `Total shares: ${b.shareCount?.toLocaleString() ?? ""}`, `Distribution: ${b.title ?? b.id}`, "", "Please transfer the shares below to each listed account:"], 20, 32);
     let y = 70;
-    for (const r of rows.filter((x) => (x.shares ?? 0) > 0)) { doc.text(`${r.investor} · ${r.shares?.toLocaleString()} shares · ${r.shareDestination ?? "ACCOUNT NEEDED"}`, 20, y); y += 7; if (y > 270) { doc.addPage(); y = 20; } }
+    for (const r of rows.filter((x) => (x.shares ?? 0) > 0)) { doc.text(`${r.investor} — ${r.shares?.toLocaleString()} shares — ${r.shareDestination ?? "ACCOUNT NEEDED"}`, 20, y); y += 7; if (y > 270) { doc.addPage(); y = 20; } }
     doc.text("Authorized signature: ______________________   Date: __________", 20, Math.min(y + 15, 285));
     doc.save(`share-transfer-${b.id.slice(0, 8)}.pdf`);
   }

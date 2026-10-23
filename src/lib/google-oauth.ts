@@ -11,7 +11,7 @@ export function mapGoogleOAuthError(message: string | undefined): string {
   const msg = (message ?? "").toLowerCase();
   if (!msg) return "Google sign-in failed. Please try again.";
   if (msg.includes("provider") && (msg.includes("not enabled") || msg.includes("disabled") || msg.includes("unsupported"))) {
-    return "Google sign-in isn't available right now, please use your email and password.";
+    return "Google sign-in isn't available right now - please use your email and password.";
   }
   if (msg.includes("redirect") || msg.includes("redirect_uri")) {
     return "Google sign-in is misconfigured. Please contact support.";
@@ -80,7 +80,7 @@ export function consumeOAuthReturnError(): string | null {
   const description = params.get("error_description") ?? "";
   window.history.replaceState(null, "", window.location.pathname + window.location.search);
   if (code === "access_denied" || description.toLowerCase().includes("cancel")) {
-    return "Google sign-in was cancelled: nothing was changed.";
+    return "Google sign-in was cancelled - nothing was changed.";
   }
   return mapGoogleOAuthError(description || code);
 }

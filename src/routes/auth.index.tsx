@@ -19,13 +19,13 @@ export const Route = createFileRoute("/auth/")({
   head: () => ({
     meta: [
         { name: "robots", content: "noindex, nofollow" },
-      { title: "Sign In | Harmonious" },
+      { title: "Sign In - Harmonious" },
       {
         name: "description",
         content:
           "Sign in to Harmonious to track your application, review fund documents, manage your funds and complete your subscription.",
       },
-      { property: "og:title", content: "Sign In | Harmonious" },
+      { property: "og:title", content: "Sign In - Harmonious" },
       { property: "og:description", content: "Access the Harmonious portal." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

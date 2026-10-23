@@ -15,7 +15,7 @@ function Tasks() {
   return (
     <WorkspaceSection
       title="Tasks"
-      description="What is outstanding for your clients. Viewing only, the client still acts."
+      description="What is outstanding for your clients. Viewing only - the client still acts."
     >
       {rows.length === 0 ? (
         <Empty>Nothing outstanding.</Empty>

@@ -68,7 +68,7 @@ export function FundManagerFirstLoginGuide() {
         <Step n={1} title="Accept your invite and sign in">
           <p>
             Open the email from Harmonious and click the invitation link. Create your password using the{" "}
-            <strong className="text-foreground">same email address the invite was sent to</strong> · that is how
+            <strong className="text-foreground">same email address the invite was sent to</strong> — that is how
             your fund is linked to you. Next time, sign in at{" "}
             <a className="text-primary underline" href="https://app.harmonious.co">app.harmonious.co</a> with
             that email, or use <em>Continue with Google</em> if it is a Google address.

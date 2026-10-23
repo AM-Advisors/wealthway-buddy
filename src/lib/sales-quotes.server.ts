@@ -33,7 +33,7 @@ async function adminCatalog() {
   const { data } = await db.from("service_pricing_versions").select("service_product, service_level, annual_price, quarterly_price, starting_price").eq("is_current", true);
   const { spvTxnQuoteKey } = await import("@/lib/spv-transaction-pricing");
   const { data: bands } = await db.from("spv_transaction_pricing").select("id, label, fee_usd").eq("is_current", true).order("sort_order");
-  const txn = ((bands ?? []) as any[]).filter((b) => b.fee_usd != null).map((b) => ({ serviceKey: spvTxnQuoteKey(b.id), label: `Harmonized SPV: raise ${b.label}`, baselineCents: Math.round(Number(b.fee_usd) * 100), baselineSource: "spv_transaction_pricing", pricingModel: "one_time" }));
+  const txn = ((bands ?? []) as any[]).filter((b) => b.fee_usd != null).map((b) => ({ serviceKey: spvTxnQuoteKey(b.id), label: `Harmonized SPV — raise ${b.label}`, baselineCents: Math.round(Number(b.fee_usd) * 100), baselineSource: "spv_transaction_pricing", pricingModel: "one_time" }));
   return [...txn, ...((data ?? []) as any[]).filter((p) => isLadderProduct(p.service_product)).flatMap((p) => {
     const lv = SERVICE_LADDERS[p.service_product as "SPV_ADMINISTRATION"].levels.find((l) => l.level === p.service_level);
     if (!lv) return [];
@@ -137,7 +137,7 @@ export async function saveQuote(userId: string, d: { id?: string | null | undefi
     if (price.invoiceCents === null || price.blockers.some(b => !b.startsWith("Confirm the custom"))) throw new Error(price.blockers[0] ?? "A custom bookkeeping price is required.");
     if (l.bookkeeping.effectiveOn < version.effective_on) throw new Error("The service date cannot precede the pricing version's effective date.");
     snapshots.set(i, { ...price.input, configuration: config, configurationEffectiveOn: version.effective_on, pricing: price, scope: bookkeepingTerms(config, price.input), publicationStatus: "proposed" });
-    return { ...l, quantity: 1, label: `${config.name} · ${price.tier.name} (${price.input.reconciliation} reconciliation)`, unitCents: price.invoiceCents, baselineUnitCents: price.invoiceCents, billingFrequency: price.input.billing, firstBillOn: price.input.effectiveOn };
+    return { ...l, quantity: 1, label: `${config.name} — ${price.tier.name} (${price.input.reconciliation} reconciliation)`, unitCents: price.invoiceCents, baselineUnitCents: price.invoiceCents, billingFrequency: price.input.billing, firstBillOn: price.input.effectiveOn };
   }));
   const priced = priceQuote(verifiedLines);
   if (d.offeringId) {
