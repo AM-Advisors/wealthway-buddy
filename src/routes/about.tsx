@@ -7,7 +7,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 
 const DESCRIPTION =
-  "Harmonious Capital Administration is the administration, technology and onboarding partner behind private funds and SPVs, formation support, investor onboarding, reporting, payment facilitation and recordkeeping in one workspace.";
+  "Harmonious Capital Administration is the administration, technology and onboarding partner behind private funds and SPVs - formation support, investor onboarding, reporting, payment facilitation and recordkeeping in one workspace.";
 
 export const Route = createFileRoute("/about")({
   head: () =>
@@ -42,7 +42,7 @@ const WHAT_WE_DO: readonly [string, string][] = [
   ],
   [
     "Investor onboarding",
-    "Identity verification, anti-money-laundering screening, accreditation checks for 506(b) and 506(c), subscription documents and electronic signing, all tracked in one place.",
+    "Identity verification, anti-money-laundering screening, accreditation checks for 506(b) and 506(c), subscription documents and electronic signing - all tracked in one place.",
   ],
   [
     "Reporting and recordkeeping",
@@ -89,7 +89,7 @@ function AboutPage() {
           <p className="mt-4 max-w-3xl text-muted-foreground">
             Every engagement is governed by a Master Service Agreement together with one or more
             Statements of Work. The Statement of Work decides exactly which services apply, at what
-            fees and on what timing, so what you see in the portal is always what you have agreed
+            fees and on what timing - so what you see in the portal is always what you have agreed
             to, and anything outside it has to be requested, quoted and signed before it starts.
           </p>
 

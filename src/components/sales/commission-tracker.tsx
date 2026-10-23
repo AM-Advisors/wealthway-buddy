@@ -19,7 +19,7 @@ export type CommissionTrackerRow = {
   payout: { id: string; date: string; reference: string; note: string | null } | null;
 };
 type Row = CommissionTrackerRow;
-const STATUS: Record<Row["status"], string> = { expected: "Expected: awaiting client payment", not_earned: "Not earned yet", scheduled: "Scheduled", paid_out: "Paid out", cancelled: "Cancelled" };
+const STATUS: Record<Row["status"], string> = { expected: "Expected — awaiting client payment", not_earned: "Not earned yet", scheduled: "Scheduled", paid_out: "Paid out", cancelled: "Cancelled" };
 const key = (r: Row) => `${r.lineId}|${r.userId}|${r.layer}`;
 
 export function CommissionTracker({ rows, canRecord, onChange }: { rows: Row[]; canRecord: boolean; onChange: () => void }) {
@@ -63,7 +63,7 @@ export function CommissionTracker({ rows, canRecord, onChange }: { rows: Row[]; 
   return (
     <Panel title="Commission tracker">
       <div className="mb-4 grid gap-3 grid-cols-2 sm:grid-cols-4">
-        <Stat label="Expected: awaiting client payment" value={money(sum("expected"))} />
+        <Stat label="Expected — awaiting client payment" value={money(sum("expected"))} />
         <Stat label="Not earned yet" value={money(sum("not_earned"))} />
         <Stat label="Scheduled" value={money(sum("scheduled"))} />
         <Stat label="Paid out" value={money(sum("paid_out"))} />

@@ -59,7 +59,7 @@ export function evaluate(h: HealthInput): AlertSpec[] {
     if (health === "down") out.push({ kind: "repeated_failure", subject_key: s.key, severity: "critical", message: `${s.name} failed ${s.consecutive_failures} times in a row: ${s.last_error ?? "unknown error"}` });
     else if (health === "failing") out.push({ kind: "source_unavailable", subject_key: s.key, severity: "warning", message: `${s.name} could not be retrieved: ${s.last_error}` });
     if (health === "stale") out.push({ kind: "source_stale", subject_key: s.key, severity: "warning", message: `${s.name} hasn't refreshed successfully since ${s.last_success_at ?? "never"}.` });
-    if (!s.last_error && s.last_item_count === 0) out.push({ kind: "format_changed", subject_key: s.key, severity: "warning", message: `${s.name} answered but no stories could be read, its format may have changed.` });
+    if (!s.last_error && s.last_item_count === 0) out.push({ kind: "format_changed", subject_key: s.key, severity: "warning", message: `${s.name} answered but no stories could be read — its format may have changed.` });
     if (s.last_invalid_dates > 0) out.push({ kind: "invalid_dates", subject_key: s.key, severity: "info", message: `${s.last_invalid_dates} ${s.name} stories had a missing or invalid publication date.` });
   }
   if (h.aiPaused) out.push({ kind: "ai_credits", subject_key: "ai", severity: "critical", message: h.aiPaused });

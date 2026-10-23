@@ -69,7 +69,7 @@ export function SetupCard() {
               if (path) navigate({ to: path as never });
             }}
           >
-            Continue · {label(next)}
+            Continue - {label(next)}
           </Button>
         )}
       </CardContent>

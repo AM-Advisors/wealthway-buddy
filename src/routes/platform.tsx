@@ -57,7 +57,7 @@ const MODULES = [
 const AUDIENCES = [
   {
     who: "Sponsors and fund managers",
-    body: "Assigned funds, an investor review board, wire approvals, diligence rooms and document permissions, scoped so each manager only sees their own funds.",
+    body: "Assigned funds, an investor review board, wire approvals, diligence rooms and document permissions - scoped so each manager only sees their own funds.",
   },
   {
     who: "Investors",

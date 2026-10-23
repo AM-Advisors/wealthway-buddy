@@ -14,7 +14,7 @@ const URL = `https://www.harmonious.co${PATH}`;
 export const Route = createFileRoute("/resources/reg-d-506b-vs-506c")({
   head: () => ({
     meta: [
-      { title: `${TITLE} | Harmonious` },
+      { title: `${TITLE} - Harmonious` },
       { name: "description", content: DESCRIPTION },
       { property: "og:title", content: TITLE },
       { property: "og:description", content: DESCRIPTION },
@@ -66,7 +66,7 @@ const COMPARISON: { dimension: string; b: string; c: string }[] = [
   {
     dimension: "General solicitation & advertising",
     b: "Not permitted. You may only offer to people with a pre-existing, substantive relationship.",
-    c: "Permitted. You can market the offering publicly, website, email, social, demo days, press.",
+    c: "Permitted. You can market the offering publicly - website, email, social, demo days, press.",
   },
   {
     dimension: "Who can invest",
@@ -75,7 +75,7 @@ const COMPARISON: { dimension: string; b: string; c: string }[] = [
   },
   {
     dimension: "Accreditation standard",
-    b: "Reasonable belief, self-certification by the investor is generally accepted.",
+    b: "Reasonable belief - self-certification by the investor is generally accepted.",
     c: "Issuer must take reasonable steps to verify: income, net worth, or a third-party letter.",
   },
   {

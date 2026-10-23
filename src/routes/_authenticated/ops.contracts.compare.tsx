@@ -13,9 +13,9 @@ export const Route = createFileRoute("/_authenticated/ops/contracts/compare")({
   validateSearch: z.object({ before: z.string().uuid().optional(), after: z.string().uuid().optional() }),
   head: () => ({
     meta: [
-      { title: "Compare contract versions | Harmonious operations" },
+      { title: "Compare contract versions - Harmonious operations" },
       { name: "description", content: "Side-by-side comparison of approved contract terms." },
-      { property: "og:title", content: "Compare contract versions | Harmonious operations" },
+      { property: "og:title", content: "Compare contract versions - Harmonious operations" },
       { property: "og:description", content: "Added, removed and changed contract terms with source language." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

@@ -384,7 +384,7 @@ export function FundPayments({ fundId, backTo }: { fundId: string; backTo: "admi
             (data.trail as any[]).map((t) => (
               <div key={t.id} className="flex flex-wrap justify-between gap-2 border-b pb-1">
                 <span>
-                  {t.area} · {t.action}
+                  {t.area} - {t.action}
                   {t.target ? ` · ${t.target}` : ""}
                 </span>
                 <span className="text-muted-foreground">

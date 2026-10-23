@@ -31,7 +31,7 @@ export const WIX_PAGES: WixUrl[] = [
   { path: "/about-1", action: "CONSOLIDATE", target: "/about" },
   { path: "/privacy-policy", action: "REDIRECT", target: "/privacy" },
   { path: "/terms-conditions", action: "REDIRECT", target: "/terms" },
-  { path: "/founderfunds", action: "REVIEW", note: "Founder SPVs vs Emerging Managers: depends on current page content" },
+  { path: "/founderfunds", action: "REVIEW", note: "Founder SPVs vs Emerging Managers - depends on current page content" },
   { path: "/spvlife", action: "REVIEW", note: "Purpose unclear" },
   { path: "/file-share", action: "REVIEW", note: "Likely a utility page; do not index" },
   { path: "/items", action: "REVIEW", note: "Wix system page; probably retire" },

@@ -45,7 +45,7 @@ export function InvestorPerformancePanel({ offeringId, embedded = false }: { off
         <h1 className="text-xl font-semibold">Performance</h1>
         <p className="text-sm text-muted-foreground">
           How each of your investments has performed. Figures shown under “Your investment” are
-          calculated from your own contributions, distributions and capital, they are not the same
+          calculated from your own contributions, distributions and capital - they are not the same
           as the fund-level figures shown alongside them.
         </p>
       </div>

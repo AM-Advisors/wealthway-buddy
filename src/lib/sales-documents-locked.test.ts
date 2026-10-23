@@ -47,7 +47,7 @@ const _msa = { version: "v3.0", effectiveDate: "2026-01-01", sections: [{ sectio
 _t("terms section is the published MSA and replaces typed terms", () => {
   const out = _als("rfq", "response", [{ key: "terms", title: "Terms", body: "Net 15, our own terms" }], { msa: _msa, organization: "Roas", contactName: null, lines: [] });
   const t = out.find((x) => x.key === "terms")!;
-  _e(t.title).toBe("Terms: Master Services Agreement");
+  _e(t.title).toBe("Terms — Master Services Agreement");
   _e(t.body).not.toContain("v3.0");
   _e(t.body).toContain("1. Services framework\nHarmonious provides services.");
   _e(t.body).toContain("2. Fees and payment");

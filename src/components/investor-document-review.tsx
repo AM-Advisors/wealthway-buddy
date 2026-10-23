@@ -41,11 +41,11 @@ function DocRow({ offeringId, onboardingId, title, version, d, readOnly }: { off
     try {
       await decide({ data: { offeringId, onboardingId, documentId: d.documentId, decision, note: decision === "returned" ? note : null } });
       if (thenSign && d.countersignSignerId) {
-        toast.success("Approved: opening your signature now.");
+        toast.success("Approved - opening your signature now.");
         navigate({ to: "/manager/countersign/$signerId", params: { signerId: d.countersignSignerId } });
         return;
       }
-      toast.success(decision === "approved" ? "Approved, your countersignature is now open." : "Declined, the investment is paused and Harmonious has been told.");
+      toast.success(decision === "approved" ? "Approved - your countersignature is now open." : "Declined - the investment is paused and Harmonious has been told.");
       setReturning(false); setNote("");
       qc.invalidateQueries({ queryKey: ["doc-reviews", offeringId] });
     } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }

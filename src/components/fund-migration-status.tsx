@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 
-const money = (c: number | null | undefined) => c == null ? " · " : `$${Math.round(c / 100).toLocaleString()}`;
+const money = (c: number | null | undefined) => c == null ? "—" : `$${Math.round(c / 100).toLocaleString()}`;
 const day = (s: string | null | undefined) => s ? new Date(s).toLocaleDateString() : null;
 
 export function FundMigrationStatus({ fundId }: { fundId: string }) {
@@ -32,7 +32,7 @@ export function FundMigrationStatus({ fundId }: { fundId: string }) {
     <Card>
       <CardHeader>
         <CardTitle className="text-base">Migration status</CardTitle>
-        <CardDescription>Progress bringing this fund's existing investors onto Harmonious. Display only, confirming and sending stay in their own steps.</CardDescription>
+        <CardDescription>Progress bringing this fund's existing investors onto Harmonious. Display only — confirming and sending stay in their own steps.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex items-center gap-3"><Progress value={overall} className="h-2" /><span className="text-sm font-medium tabular-nums">{overall}%</span></div>

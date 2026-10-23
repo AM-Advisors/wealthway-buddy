@@ -207,7 +207,7 @@ export function GrantAccessWizard({ onDone }: { onDone: () => void }) {
                       {CAPABILITY_LABELS[cap] ?? cap}
                       {sensitive ? (
                         <span className="ml-2 text-xs text-muted-foreground">
-                          needs a signed authorization, not available yet
+                          needs a signed authorization - not available yet
                         </span>
                       ) : null}
                     </span>

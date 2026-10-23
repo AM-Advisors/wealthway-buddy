@@ -13,9 +13,9 @@ export const Route = createFileRoute("/_authenticated/ops/fund-setup/new")({
     ...(typeof s["draft"] === "string" ? { draft: s["draft"] } : {}),
   }),
   head: () => ({ meta: [
-    { title: "Add Fund or SPV | Harmonious" },
+    { title: "Add Fund or SPV - Harmonious" },
     { name: "description", content: "Set up a new fund or SPV for a client with the same guided steps clients use." },
-    { property: "og:title", content: "Add Fund or SPV | Harmonious" },
+    { property: "og:title", content: "Add Fund or SPV - Harmonious" },
     { property: "og:description", content: "Set up a new fund or SPV for a client with the same guided steps clients use." },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary" },

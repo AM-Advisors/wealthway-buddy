@@ -56,7 +56,7 @@ export function docLabel(d: DocLite) {
   const name = d.title && d.title.trim() ? d.title.trim() : type;
   const head = name.toLowerCase().includes(type.toLowerCase()) ? name : `${name} (${type})`;
   const v = d.version && d.version > 1 ? ` · v${d.version}` : "";
-  return `${head} · ${fmtDate(d.effective_date)} · ${docStatusLabel(d)}${v}`;
+  return `${head} - ${fmtDate(d.effective_date)} - ${docStatusLabel(d)}${v}`;
 }
 
 /* ================================================== relationship types */
@@ -274,9 +274,9 @@ export type FundCoverageStatus =
 
 export const COVERAGE_LABEL: Record<FundCoverageStatus, string> = {
   covered: "Covered",
-  covered_client_wide: "Covered: Client-wide SOW",
-  msa_only: "MSA only: Review required",
-  not_contracted: "No SOW, Not yet contracted",
+  covered_client_wide: "Covered - Client-wide SOW",
+  msa_only: "MSA only - Review required",
+  not_contracted: "No SOW - Not yet contracted",
   sow_required: "SOW required",
   needs_review: "Contract review required",
   no_governing_agreement: "No governing agreement",
@@ -304,7 +304,7 @@ export function resolveFundCoverage(input: {
   const explicit = executed.filter((s) => sowCoversFund(s, input.offeringId));
   if (explicit.length === 1) {
     const s = explicit[0]!;
-    return { status: "covered" as const, label: `Covered · ${s.title}${s.template_version ? ` v${s.template_version}` : ""}`, sows: [s], msa: input.governingMsa };
+    return { status: "covered" as const, label: `Covered - ${s.title}${s.template_version ? ` v${s.template_version}` : ""}`, sows: [s], msa: input.governingMsa };
   }
   if (explicit.length > 1) return { status: "needs_review" as const, label: "Contract review required - more than one SOW lists this Fund", sows: explicit, msa: input.governingMsa };
   const clientWide = executed.filter((s) => s.fund_scope === "client_wide");
@@ -351,13 +351,13 @@ export function resolveServiceCoverage(selected: readonly string[], coveringSows
 
 export const SEPT_2026_PACKAGE = {
   key: "harmonious_standard_2026_09",
-  title: "Harmonious Master Service Agreement | September 2026",
+  title: "Harmonious Master Service Agreement - September 2026",
   status: "proposed" as const,
   components: [
     { key: "msa", kind: "msa", title: "Master Service Agreement", level: "client" },
     { key: "spv_sow", kind: "sow", title: "SPV Services Statement of Work", level: "engagement" },
-    { key: "appendix_a", kind: "appendix", title: "Appendix A | Fund Administration", level: "engagement", partOf: "spv_sow" },
-    { key: "exhibit_a", kind: "fee_schedule", title: "Exhibit A | Fees and Expenses", level: "engagement", partOf: "spv_sow" },
+    { key: "appendix_a", kind: "appendix", title: "Appendix A - Fund Administration", level: "engagement", partOf: "spv_sow" },
+    { key: "exhibit_a", kind: "fee_schedule", title: "Exhibit A - Fees and Expenses", level: "engagement", partOf: "spv_sow" },
   ],
   /** Base SPV fee, tiered by capital raised (from the addendum; confirm against the signed PDF). */
   spvBaseFeeTiers: [

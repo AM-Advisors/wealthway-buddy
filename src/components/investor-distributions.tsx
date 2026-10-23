@@ -54,7 +54,7 @@ export function InvestorDistributions() {
   const confirmM = useMutation({
     mutationFn: (v: { lineId: string; shareDestination?: string | null }) => confirm({ data: v }),
     onSuccess: () => {
-      toast.success("Thank you, your confirmation has been recorded.");
+      toast.success("Thank you - your confirmation has been recorded.");
       queryClient.invalidateQueries({ queryKey: ["my-distributions"] });
     },
     onError: (e: any) => toast.error(e?.message ?? "That didn't save."),

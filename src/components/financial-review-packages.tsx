@@ -101,7 +101,7 @@ function History({ id }: { id: string }) {
     <ul className="space-y-1 text-xs">
       {(q.data?.events ?? []).map((e, i) => (
         <li key={i}>
-          <span className="font-medium">{ACTION_LABEL[e.action] ?? e.action}</span> · {e.who},{" "}
+          <span className="font-medium">{ACTION_LABEL[e.action] ?? e.action}</span> - {e.who},{" "}
           {new Date(e.at).toLocaleString()}
           {e.note ? <span className="text-muted-foreground"> · “{e.note}”</span> : null}
         </li>
@@ -190,7 +190,7 @@ function PackageCard({ p, mode, funds }: { p: any; mode: Mode; funds: { id: stri
     <article className="space-y-3 rounded-lg border border-border p-4">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
-          <p className="font-medium">{p.fundName} · {p.periodType === "annual" ? "Annual" : "Quarterly"} {p.periodStart} to {p.periodEnd}</p>
+          <p className="font-medium">{p.fundName} · {p.periodType === "annual" ? "Annual" : "Quarterly"} {p.periodStart} – {p.periodEnd}</p>
           <p className="text-xs text-muted-foreground">{STATUS[p.status] ?? p.status}</p>
         </div>
         <Steps status={p.status} />

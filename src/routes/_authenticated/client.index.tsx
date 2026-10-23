@@ -23,9 +23,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 export const Route = createFileRoute("/_authenticated/client/")({
   head: () => ({
     meta: [
-      { title: "Portal overview | Harmonious" },
+      { title: "Portal overview - Harmonious" },
       { name: "description", content: "What needs your attention, plus Harmonious costs, capital raised and fees earned by fund and service." },
-      { property: "og:title", content: "Portal overview | Harmonious" },
+      { property: "og:title", content: "Portal overview - Harmonious" },
       { property: "og:description", content: "Attention items, costs and earnings by fund, service and period." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

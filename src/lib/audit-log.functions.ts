@@ -210,7 +210,7 @@ export const listMoneyAudit = createServerFn({ method: "GET" })
             ? (clientName.get(i.client_id) ?? null)
             : null,
         category: "Payment instruction",
-        summary: `${i.direction ?? "payment"} · ${i.purpose ?? "instruction"}`,
+        summary: `${i.direction ?? "payment"} - ${i.purpose ?? "instruction"}`,
         detail: joinDetail([
           i.beneficiary_name ? `To ${i.beneficiary_name}` : null,
           i.beneficiary_account ? `Account ${mask(i.beneficiary_account)}` : null,
@@ -458,7 +458,7 @@ export const listFilingAudit = createServerFn({ method: "GET" })
       at: f.updated_at ?? f.created_at,
       actor: f.owner_name ?? personName.get(f.created_by) ?? null,
       fundName: f.offering_id ? (fundName.get(f.offering_id) ?? null) : null,
-      category: f.category ? `Filing · ${f.category}` : "Filing",
+      category: f.category ? `Filing - ${f.category}` : "Filing",
       summary: "Compliance item recorded",
       detail: joinDetail([
         f.due_date ? `Due ${dateOnly(f.due_date)}` : null,
@@ -540,7 +540,7 @@ export const listScopeAudit = createServerFn({ method: "GET" })
         : e.client_id
           ? (clientName.get(e.client_id) ?? null)
           : null,
-      category: e.area ? `Scope · ${e.area}` : "Scope",
+      category: e.area ? `Scope - ${e.area}` : "Scope",
       summary: diagnosticText(e.action ?? "changed", "action"),
       detail: joinDetail([
         e.actor_role ? `As ${e.actor_role}` : null,

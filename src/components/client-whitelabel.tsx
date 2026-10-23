@@ -110,7 +110,7 @@ export function WhitelabelEditor({ clientId, branding, canEdit, queryKey }: { cl
       )}
       {status === "active_paid" && canEdit && branding?.stripe_customer_id && (
         <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-          {branding?.current_period_end && <span>{branding.cancel_at_period_end ? "Access ends" : "Renews"} {new Date(branding.current_period_end).toLocaleDateString()}{branding.billing_status === "past_due" ? " · payment needs attention" : ""}</span>}
+          {branding?.current_period_end && <span>{branding.cancel_at_period_end ? "Access ends" : "Renews"} {new Date(branding.current_period_end).toLocaleDateString()}{branding.billing_status === "past_due" ? " - payment needs attention" : ""}</span>}
           <Button size="sm" variant="ghost" onClick={openBilling}>Manage billing (card, invoices or cancel)</Button>
         </div>
       )}

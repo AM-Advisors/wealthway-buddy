@@ -63,7 +63,7 @@ const COVERAGE = [
 ] as const;
 
 const RECORD = [
-  ["Verify ownership", "Claimed positions are compared with your register and either verified, adjusted, queried or disputed, with the ownership chain shown in full."],
+  ["Verify ownership", "Claimed positions are compared with your register and either verified, adjusted, queried or disputed - with the ownership chain shown in full."],
   ["Document exposure", "Every SPV, nominee and feeder in your holder base is recorded, with who sits behind it."],
   ["Maintain the record", "Certificates, documents and an append-only audit history: who changed what, when, and what it was before."],
 ] as const;
@@ -198,8 +198,8 @@ function CapTableLanding() {
             ))}
           </div>
           <p className="mt-8 max-w-3xl text-sm text-muted-foreground">
-            Harmonious keeps the record and administers the workflow. Every ownership decision, who
-            may hold shares, what a transfer is worth, what is approved, stays with the company and
+            Harmonious keeps the record and administers the workflow. Every ownership decision - who
+            may hold shares, what a transfer is worth, what is approved - stays with the company and
             its own counsel.
           </p>
         </section>
@@ -234,7 +234,7 @@ function CapTableLanding() {
             </h2>
             <p className="mt-4 max-w-2xl text-primary-foreground/75">
               Tell us where your records live today. We confirm the details with you and open your
-              workspace, you review every row before it is recorded.
+              workspace - you review every row before it is recorded.
             </p>
             <div className="mt-10 flex flex-wrap gap-3">
               <Button size="lg" variant="secondary" onClick={() => ask("carta")}>

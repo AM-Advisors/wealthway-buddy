@@ -37,13 +37,13 @@ import {
 export const Route = createFileRoute("/_authenticated/onboarding/accreditation")({
   head: () => ({
     meta: [
-      { title: "Accreditation | Harmonious Investor Onboarding" },
+      { title: "Accreditation - Harmonious Investor Onboarding" },
       {
         name: "description",
         content:
           "Self-certify accredited investor status for a Reg D 506(b) offering, or upload verification evidence for a 506(c) offering.",
       },
-      { property: "og:title", content: "Accreditation | Harmonious" },
+      { property: "og:title", content: "Accreditation - Harmonious" },
       {
         property: "og:description",
         content: "Step 3 of Harmonious investor onboarding: accredited investor status.",
@@ -98,8 +98,8 @@ function AccreditationPage() {
       <p className="mt-2 text-sm text-muted-foreground">
         {data?.offering?.name ?? "This offering"} is offered under {regTypeLabel(regType)}
         {requiresVerifiedAccreditation(regType)
-          ? " · the fund must take reasonable steps to verify your accredited status before accepting capital."
-          : " · you may self-certify your accredited status."}
+          ? " - the fund must take reasonable steps to verify your accredited status before accepting capital."
+          : " - you may self-certify your accredited status."}
       </p>
 
       {isLoading ? (
@@ -448,7 +448,7 @@ function VerificationForm({
           >
             {[
               ["income_documents", "Income evidence - W-2s or tax returns for the last two years"],
-              ["net_worth_documents", "Net worth evidence: asset statements plus a credit report"],
+              ["net_worth_documents", "Net worth evidence - asset statements plus a credit report"],
               ["third_party_letter", "Written confirmation from a CPA, attorney, adviser or broker-dealer"],
             ].map(([value, label]) => (
               <div key={value} className="flex items-start gap-3">

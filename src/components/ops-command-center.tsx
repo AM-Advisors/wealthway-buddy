@@ -24,8 +24,8 @@ export const OPS_VIEWS = [
 export type OpsView = (typeof OPS_VIEWS)[number][0];
 
 const sel = "h-8 rounded-md border bg-background px-2 text-sm";
-const usd = (n?: number | null) => (n == null ? " · " : `$${Math.round(n).toLocaleString("en-US")}`);
-const hrs = (m?: number | null) => (m == null ? " · " : `${Math.floor(Math.abs(m) / 60)}h ${Math.abs(m) % 60}m${m < 0 ? " over" : ""}`);
+const usd = (n?: number | null) => (n == null ? "—" : `$${Math.round(n).toLocaleString("en-US")}`);
+const hrs = (m?: number | null) => (m == null ? "—" : `${Math.floor(Math.abs(m) / 60)}h ${Math.abs(m) % 60}m${m < 0 ? " over" : ""}`);
 const PACKAGES = PACKAGE_KEYS.map((k) => { const [p, l] = k.split("/"); return packageLabel(p, l); });
 
 function slaTone(s: SlaStatus | null | undefined) {
@@ -135,7 +135,7 @@ function Table({ head, children, empty }: { head: string[]; children: React.Reac
     </div>
   );
 }
-const Veh = ({ r }: { r: any }) => (<td className="p-2">{r.fundId ? <Link to="/ops/fund/$fundId" params={{ fundId: r.fundId }} className="underline">{r.fundName ?? "Fund"}</Link> : " · "}<div className="text-xs text-muted-foreground">{r.clientName ?? ""}</div></td>);
+const Veh = ({ r }: { r: any }) => (<td className="p-2">{r.fundId ? <Link to="/ops/fund/$fundId" params={{ fundId: r.fundId }} className="underline">{r.fundName ?? "Fund"}</Link> : "—"}<div className="text-xs text-muted-foreground">{r.clientName ?? ""}</div></td>);
 const Pkg = ({ r }: { r: any }) => <td className="p-2 whitespace-nowrap">{r.packageLabel}</td>;
 
 function Queue({ rows, title }: { rows: D["queue"]; title: string }) {
@@ -167,8 +167,8 @@ function Queue({ rows, title }: { rows: D["queue"]; title: string }) {
             <Veh r={r} /><Pkg r={r} />
             <td className="p-2"><ResponsibilityBadge status={r.responsibility} /></td>
             <td className="p-2">{r.assignedName ?? (r.team ? titleCase(r.team) : <span className="text-destructive">Unassigned</span>)}</td>
-            <td className="p-2 whitespace-nowrap">{r.due ? fmtDate(r.due) : " · "}</td>
-            <td className="p-2">{r.sla ? <Badge variant={slaTone(r.sla)}>{SLA_STATUS_LABEL[r.sla]}</Badge> : " · "}</td>
+            <td className="p-2 whitespace-nowrap">{r.due ? fmtDate(r.due) : "—"}</td>
+            <td className="p-2">{r.sla ? <Badge variant={slaTone(r.sla)}>{SLA_STATUS_LABEL[r.sla]}</Badge> : "—"}</td>
           </tr>
         ))}
       </Table>
@@ -201,11 +201,11 @@ function Portfolio({ rows, economics }: { rows: D["portfolio"]; economics: boole
     <Table head={["Vehicle", "Package", "Administrator", "Relationship lead", "Health", "Open", "Overdue", "SLA risk", "Breach", "Approvals", "Requests", "Inv. exceptions", "Next report", "Next capital", "Next deadline", ...(economics ? ["Active ACV"] : []), "Limits", "Review"]} empty={!rows.length}>
       {rows.map((r) => (
         <tr key={r.fundId} className="border-t">
-          <Veh r={r} /><Pkg r={r} /><td className="p-2">{r.primaryAdministrator ?? " · "}</td><td className="p-2">{r.relationshipLead ?? " · "}</td>
+          <Veh r={r} /><Pkg r={r} /><td className="p-2">{r.primaryAdministrator ?? "—"}</td><td className="p-2">{r.relationshipLead ?? "—"}</td>
           <td className="p-2"><Badge variant={r.health === "At Risk" ? "destructive" : r.health === "Needs Attention" ? "secondary" : "outline"}>{r.health}</Badge></td>
           <td className="p-2">{r.openTasks}</td><td className="p-2">{r.overdueTasks}</td><td className="p-2">{r.slaRisks}</td><td className="p-2">{r.slaBreaches}</td><td className="p-2">{r.approvals}</td><td className="p-2">{r.requests}</td><td className="p-2">{r.investorExceptions}</td>
-          <td className="p-2 whitespace-nowrap">{r.nextReport ? fmtDate(r.nextReport) : " · "}</td><td className="p-2 whitespace-nowrap">{r.nextCapitalEvent ? fmtDate(r.nextCapitalEvent) : " · "}</td><td className="p-2 whitespace-nowrap">{r.nextDeadline ? fmtDate(r.nextDeadline) : " · "}</td>
-          {economics ? <td className="p-2">{usd(r.acv)}</td> : null}<td className="p-2">{r.serviceLimitStatus}</td><td className="p-2">{r.serviceReviewStatus ? titleCase(r.serviceReviewStatus) : " · "}</td>
+          <td className="p-2 whitespace-nowrap">{r.nextReport ? fmtDate(r.nextReport) : "—"}</td><td className="p-2 whitespace-nowrap">{r.nextCapitalEvent ? fmtDate(r.nextCapitalEvent) : "—"}</td><td className="p-2 whitespace-nowrap">{r.nextDeadline ? fmtDate(r.nextDeadline) : "—"}</td>
+          {economics ? <td className="p-2">{usd(r.acv)}</td> : null}<td className="p-2">{r.serviceLimitStatus}</td><td className="p-2">{r.serviceReviewStatus ? titleCase(r.serviceReviewStatus) : "—"}</td>
         </tr>
       ))}
     </Table>
@@ -220,11 +220,11 @@ function SlaView({ rows }: { rows: any[] }) {
       <select aria-label="SLA status" value={st} onChange={(e) => setSt(e.target.value)} className={sel}><option value="">All SLA statuses</option>{Object.entries(SLA_STATUS_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
       <Table head={["Vehicle", "Package", "Request", "Assigned", "Team", "Response SLA", "SLA source", "Started", "Elapsed", "Paused", "Pause reason", "Remaining", "Due", "Status"]} empty={!list.length}>
         {list.map((r) => (
-          <tr key={r.id} className="border-t"><Veh r={r} /><Pkg r={r} /><td className="p-2">{r.title}</td><td className="p-2">{r.assignedName ?? " · "}</td><td className="p-2">{titleCase(r.assigned_team)}</td>
-            <td className="p-2">{r.sla_hours != null ? `${r.sla_hours} hours` : " · "}</td><td className="p-2 text-xs">{r.sla_source ?? " · "}</td><td className="p-2 whitespace-nowrap">{r.submitted_at ? fmtDate(r.submitted_at) : " · "}</td>
-            <td className="p-2">{hrs(r.slaElapsedMin)}</td><td className="p-2">{hrs(r.slaPausedMin)}</td><td className="p-2 text-xs">{r.sla_paused_at ? titleCase(r.status) : " · "}</td>
-            <td className="p-2">{r.slaRemainingMin == null ? " · " : hrs(r.slaRemainingMin)}</td><td className="p-2 whitespace-nowrap">{r.slaDueAt ? fmtDate(r.slaDueAt) : " · "}</td>
-            <td className="p-2"><Badge variant={slaTone(r.slaStatus)}>{SLA_STATUS_LABEL[r.slaStatus as SlaStatus] ?? " · "}</Badge></td></tr>
+          <tr key={r.id} className="border-t"><Veh r={r} /><Pkg r={r} /><td className="p-2">{r.title}</td><td className="p-2">{r.assignedName ?? "—"}</td><td className="p-2">{titleCase(r.assigned_team)}</td>
+            <td className="p-2">{r.sla_hours != null ? `${r.sla_hours} hours` : "—"}</td><td className="p-2 text-xs">{r.sla_source ?? "—"}</td><td className="p-2 whitespace-nowrap">{r.submitted_at ? fmtDate(r.submitted_at) : "—"}</td>
+            <td className="p-2">{hrs(r.slaElapsedMin)}</td><td className="p-2">{hrs(r.slaPausedMin)}</td><td className="p-2 text-xs">{r.sla_paused_at ? titleCase(r.status) : "—"}</td>
+            <td className="p-2">{r.slaRemainingMin == null ? "—" : hrs(r.slaRemainingMin)}</td><td className="p-2 whitespace-nowrap">{r.slaDueAt ? fmtDate(r.slaDueAt) : "—"}</td>
+            <td className="p-2"><Badge variant={slaTone(r.slaStatus)}>{SLA_STATUS_LABEL[r.slaStatus as SlaStatus] ?? "—"}</Badge></td></tr>
         ))}
       </Table>
       <p className="text-xs text-muted-foreground">Warning point comes from each SLA policy (default 75% elapsed). The clock pauses while waiting on the client, an investor or a third party.</p>
@@ -235,7 +235,7 @@ function SlaView({ rows }: { rows: any[] }) {
 function ClientActions({ rows }: { rows: any[] }) {
   const step = useServerFn(opsClientActionStep); const qc = useQueryClient();
   const go = async (r: any, s: "reminder" | "follow_up" | "escalate") => {
-    if (r.kind !== "task") { toast.message("Open the item to follow up, only tasks track reminders here."); return; }
+    if (r.kind !== "task") { toast.message("Open the item to follow up — only tasks track reminders here."); return; }
     const date = s === "follow_up" ? window.prompt("Follow-up date (YYYY-MM-DD)") : null;
     if (s === "follow_up" && !date) return;
     try { const res = await step({ data: { taskId: r.id, step: s, date } }); toast.success(res.note ?? "Saved."); qc.invalidateQueries({ queryKey: ["ops-command"] }); } catch (e) { toast.error((e as Error).message); }
@@ -244,8 +244,8 @@ function ClientActions({ rows }: { rows: any[] }) {
     <Table head={["Client / Vehicle", "Item", "Waiting on", "Requested", "Due", "Days waiting", "Last reminder", "Priority", "Harmonious owner", "Actions"]} empty={!rows.length}>
       {rows.map((r) => (
         <tr key={r.id} className="border-t"><Veh r={r} /><td className="p-2"><a href={r.href} className="underline">{r.title}</a></td><td className="p-2"><ResponsibilityBadge status={r.responsibility} /></td>
-          <td className="p-2">{r.requestedDate ? fmtDate(r.requestedDate) : " · "}</td><td className="p-2">{r.due ? fmtDate(r.due) : " · "}</td><td className="p-2">{r.daysWaiting ?? " · "}</td>
-          <td className="p-2">{r.lastReminder ? fmtDate(r.lastReminder) : " · "}</td><td className="p-2">{r.priority}</td><td className="p-2">{r.assignedName ?? " · "}</td>
+          <td className="p-2">{r.requestedDate ? fmtDate(r.requestedDate) : "—"}</td><td className="p-2">{r.due ? fmtDate(r.due) : "—"}</td><td className="p-2">{r.daysWaiting ?? "—"}</td>
+          <td className="p-2">{r.lastReminder ? fmtDate(r.lastReminder) : "—"}</td><td className="p-2">{r.priority}</td><td className="p-2">{r.assignedName ?? "—"}</td>
           <td className="p-2 whitespace-nowrap"><a href={r.href} className="mr-2 underline">Open</a><button className="mr-2 underline" onClick={() => go(r, "reminder")}>Log reminder</button><button className="mr-2 underline" onClick={() => go(r, "follow_up")}>Follow-up</button><button className="underline" onClick={() => go(r, "escalate")}>Escalate</button></td></tr>
       ))}
     </Table>
@@ -261,7 +261,7 @@ function InvestorEx({ rows }: { rows: any[] }) {
       <select aria-label="Type" value={t} onChange={(e) => setT(e.target.value)} className={sel}><option value="">All exception types</option>{types.map((x) => <option key={x}>{x}</option>)}</select>
       <Table head={["Investor", "Vehicle", "Type", "Created", "Age (days)", "Severity", "Team", "Next action", "Client visible"]} empty={!list.length}>
         {list.slice(0, 300).map((r) => (
-          <tr key={r.id} className="border-t"><td className="p-2">{r.investor}</td><Veh r={r} /><td className="p-2">{r.type}</td><td className="p-2">{r.created ? fmtDate(r.created) : " · "}</td><td className="p-2">{r.age}</td>
+          <tr key={r.id} className="border-t"><td className="p-2">{r.investor}</td><Veh r={r} /><td className="p-2">{r.type}</td><td className="p-2">{r.created ? fmtDate(r.created) : "—"}</td><td className="p-2">{r.age}</td>
             <td className="p-2"><Badge variant={r.severity === "high" ? "destructive" : "outline"}>{r.severity}</Badge></td><td className="p-2">{titleCase(r.team)}</td><td className="p-2">{r.nextAction}</td><td className="p-2">{r.clientVisible ? "Yes" : "No"}</td></tr>
         ))}
       </Table>
@@ -274,8 +274,8 @@ function ThirdParty({ rows }: { rows: any[] }) {
   return (
     <Table head={["Vehicle", "Item", "Third-party type", "Third-party name", "Waiting since", "Days waiting", "Due", "Assigned", "Next follow-up"]} empty={!rows.length}>
       {rows.map((r) => (
-        <tr key={r.id} className="border-t"><Veh r={r} /><td className="p-2"><a href={r.href} className="underline">{r.title}</a></td><td className="p-2">{r.thirdPartyType}</td><td className="p-2">{r.thirdPartyName ?? " · "}</td>
-          <td className="p-2">{r.waitingSince ? fmtDate(r.waitingSince) : " · "}</td><td className="p-2">{r.daysWaiting ?? " · "}</td><td className="p-2">{r.due ? fmtDate(r.due) : " · "}</td><td className="p-2">{r.assignedName ?? " · "}</td><td className="p-2">{r.followUp ? fmtDate(r.followUp) : " · "}</td></tr>
+        <tr key={r.id} className="border-t"><Veh r={r} /><td className="p-2"><a href={r.href} className="underline">{r.title}</a></td><td className="p-2">{r.thirdPartyType}</td><td className="p-2">{r.thirdPartyName ?? "—"}</td>
+          <td className="p-2">{r.waitingSince ? fmtDate(r.waitingSince) : "—"}</td><td className="p-2">{r.daysWaiting ?? "—"}</td><td className="p-2">{r.due ? fmtDate(r.due) : "—"}</td><td className="p-2">{r.assignedName ?? "—"}</td><td className="p-2">{r.followUp ? fmtDate(r.followUp) : "—"}</td></tr>
       ))}
     </Table>
   );
@@ -291,9 +291,9 @@ function ApprovalsOps({ rows }: { rows: any[] }) {
       <Table head={["Approval", "Vehicle", "Package", "Type", "Amount", "Prepared by", "Reviewer", "2nd approver", "Step-up", "Version", "Requested", "Due", "Status", "Age"]} empty={!list.length}>
         {list.map((r) => (
           <tr key={r.id} className={`border-t ${r.overdue ? "bg-destructive/5" : ""}`}><td className="p-2"><a href={`/manager/fund/${r.fund_id}/approvals?approval=${r.id}`} className="underline">{r.title}</a></td><Veh r={r} /><Pkg r={r} />
-            <td className="p-2">{titleCase(r.approval_type)}{r.highRisk ? <Badge variant="secondary" className="ml-1">High risk</Badge> : null}</td><td className="p-2">{usd(r.approval_amount)}</td><td className="p-2">{r.preparedByName ?? " · "}</td><td className="p-2">{r.reviewerName ?? " · "}</td>
+            <td className="p-2">{titleCase(r.approval_type)}{r.highRisk ? <Badge variant="secondary" className="ml-1">High risk</Badge> : null}</td><td className="p-2">{usd(r.approval_amount)}</td><td className="p-2">{r.preparedByName ?? "—"}</td><td className="p-2">{r.reviewerName ?? "—"}</td>
             <td className="p-2">{r.secondApproverRequired ? "Required" : "No"}</td><td className="p-2 text-xs">Typed confirmation (re-sign-in not built)</td><td className="p-2">v{r.version}</td>
-            <td className="p-2">{r.requested_at ? fmtDate(r.requested_at) : " · "}</td><td className="p-2">{r.due_date ? fmtDate(r.due_date) : " · "}</td><td className="p-2">{titleCase(r.status)}</td><td className="p-2">{r.age ?? " · "}d</td></tr>
+            <td className="p-2">{r.requested_at ? fmtDate(r.requested_at) : "—"}</td><td className="p-2">{r.due_date ? fmtDate(r.due_date) : "—"}</td><td className="p-2">{titleCase(r.status)}</td><td className="p-2">{r.age ?? "—"}d</td></tr>
         ))}
       </Table>
     </section>
@@ -319,8 +319,8 @@ function RequestsOps({ rows }: { rows: any[] }) {
       <Table head={["Request", "Vehicle", "Package", "Type", "Responsibility", "Status", "Team", "Assigned", "Priority", "SLA", "Due", "Submitted", "Entitlement"]} empty={!list.length}>
         {list.map((r) => (
           <tr key={r.id} className="border-t"><td className="p-2"><a href={`/manager/fund/${r.fund_id}/requests?request=${r.id}`} className="underline">{r.title}</a></td><Veh r={r} /><Pkg r={r} /><td className="p-2">{titleCase(r.request_type)}</td>
-            <td className="p-2"><ResponsibilityBadge status={r.responsibility} /></td><td className="p-2">{titleCase(r.status)}</td><td className="p-2">{titleCase(r.assigned_team)}</td><td className="p-2">{r.assignedName ?? " · "}</td><td className="p-2">{r.priority}</td>
-            <td className="p-2">{r.slaStatus ? <Badge variant={slaTone(r.slaStatus)}>{SLA_STATUS_LABEL[r.slaStatus as SlaStatus]}</Badge> : " · "}</td><td className="p-2">{r.due_date ? fmtDate(r.due_date) : " · "}</td><td className="p-2">{r.submitted_at ? fmtDate(r.submitted_at) : " · "}</td>
+            <td className="p-2"><ResponsibilityBadge status={r.responsibility} /></td><td className="p-2">{titleCase(r.status)}</td><td className="p-2">{titleCase(r.assigned_team)}</td><td className="p-2">{r.assignedName ?? "—"}</td><td className="p-2">{r.priority}</td>
+            <td className="p-2">{r.slaStatus ? <Badge variant={slaTone(r.slaStatus)}>{SLA_STATUS_LABEL[r.slaStatus as SlaStatus]}</Badge> : "—"}</td><td className="p-2">{r.due_date ? fmtDate(r.due_date) : "—"}</td><td className="p-2">{r.submitted_at ? fmtDate(r.submitted_at) : "—"}</td>
             <td className="p-2">{r.entitlement_status === "REVIEW_REQUIRED" ? <Badge variant="secondary">Review required</Badge> : "Included"}</td></tr>
         ))}
       </Table>
@@ -343,10 +343,10 @@ function CalendarOps({ rows, today }: { rows: any[]; today: string }) {
       <Table head={["Date", "Item", "Vehicle", "Package", "Category", "Responsible", "Administrator", "Status"]} empty={!list.length}>
         {list.map((r) => (
           <tr key={r.id} className={`border-t ${r.due_date < today && r.status !== "COMPLETED" ? "bg-destructive/5" : ""}`}><td className="p-2 whitespace-nowrap">{fmtDate(r.due_date)}</td><td className="p-2">{r.title}</td><Veh r={r} /><Pkg r={r} />
-            <td className="p-2">{titleCase(r.category)}</td><td className="p-2">{titleCase(r.responsible_party)}{r.responsible_team ? ` · ${titleCase(r.responsible_team)}` : ""}</td><td className="p-2">{r.administrator ?? " · "}</td><td className="p-2">{titleCase(r.status)}</td></tr>
+            <td className="p-2">{titleCase(r.category)}</td><td className="p-2">{titleCase(r.responsible_party)}{r.responsible_team ? ` · ${titleCase(r.responsible_team)}` : ""}</td><td className="p-2">{r.administrator ?? "—"}</td><td className="p-2">{titleCase(r.status)}</td></tr>
         ))}
       </Table>
-      <p className="text-xs text-muted-foreground">Reads every fund's existing Operating Calendar, edit items on the fund's Calendar tab.</p>
+      <p className="text-xs text-muted-foreground">Reads every fund's existing Operating Calendar — edit items on the fund's Calendar tab.</p>
     </section>
   );
 }
@@ -360,8 +360,8 @@ function ReportingOps({ rows, today }: { rows: any[]; today: string }) {
       <select aria-label="Window" value={w} onChange={(e) => setW(e.target.value)} className={sel}><option value="week">This week</option><option value="month">This month</option><option value="quarter">This quarter</option><option value="overdue">Overdue</option><option value="all">All</option></select>
       <Table head={["Vehicle", "Package", "Report", "Period", "Expected", "Status", "Administrator", "Prepared by / Reviewer / Client review / Release"]} empty={!list.length}>
         {list.map((r) => (
-          <tr key={r.id} className="border-t"><Veh r={r} /><Pkg r={r} /><td className="p-2">{r.title}</td><td className="p-2">{r.period_label ?? " · "}</td><td className="p-2">{fmtDate(r.due_date)}</td>
-            <td className="p-2"><Badge variant={r.reportState === "OVERDUE" ? "destructive" : "outline"}>{titleCase(r.reportState)}</Badge></td><td className="p-2">{r.administrator ?? " · "}</td><td className="p-2 text-xs text-muted-foreground">No Data (not yet tracked per report)</td></tr>
+          <tr key={r.id} className="border-t"><Veh r={r} /><Pkg r={r} /><td className="p-2">{r.title}</td><td className="p-2">{r.period_label ?? "—"}</td><td className="p-2">{fmtDate(r.due_date)}</td>
+            <td className="p-2"><Badge variant={r.reportState === "OVERDUE" ? "destructive" : "outline"}>{titleCase(r.reportState)}</Badge></td><td className="p-2">{r.administrator ?? "—"}</td><td className="p-2 text-xs text-muted-foreground">No Data (not yet tracked per report)</td></tr>
         ))}
       </Table>
     </section>
@@ -373,11 +373,11 @@ function CapitalOps({ calls, dists }: { calls: any[]; dists: any[] }) {
     <div className="space-y-4">
       <section><h2 className="text-lg">Capital calls</h2>
         <Table head={["Vehicle", "Package", "Call", "Requested", "Funded", "Outstanding", "Due", "Status"]} empty={!calls.length}>
-          {calls.map((r) => <tr key={r.id} className="border-t"><Veh r={r} /><Pkg r={r} /><td className="p-2">{r.title}</td><td className="p-2">{usd(r.requested)}</td><td className="p-2">{usd(r.funded)}</td><td className="p-2">{usd(r.outstanding)}</td><td className="p-2">{r.due_date ? fmtDate(r.due_date) : " · "}</td><td className="p-2">{titleCase(r.status)}</td></tr>)}
+          {calls.map((r) => <tr key={r.id} className="border-t"><Veh r={r} /><Pkg r={r} /><td className="p-2">{r.title}</td><td className="p-2">{usd(r.requested)}</td><td className="p-2">{usd(r.funded)}</td><td className="p-2">{usd(r.outstanding)}</td><td className="p-2">{r.due_date ? fmtDate(r.due_date) : "—"}</td><td className="p-2">{titleCase(r.status)}</td></tr>)}
         </Table></section>
       <section><h2 className="text-lg">Distributions</h2>
         <Table head={["Vehicle", "Package", "Distribution", "Gross", "Approval", "Payment", "Reconciliation", "Pay date"]} empty={!dists.length}>
-          {dists.map((r) => <tr key={r.id} className="border-t"><Veh r={r} /><Pkg r={r} /><td className="p-2">{r.title}</td><td className="p-2">{usd(r.gross)}</td><td className="p-2">{r.final_approved_at ? "Final approved" : titleCase(r.status)}</td><td className="p-2">{titleCase(r.payment_status)}</td><td className="p-2 text-xs text-muted-foreground">{r.reconciliation}</td><td className="p-2">{r.payment_date ? fmtDate(r.payment_date) : " · "}</td></tr>)}
+          {dists.map((r) => <tr key={r.id} className="border-t"><Veh r={r} /><Pkg r={r} /><td className="p-2">{r.title}</td><td className="p-2">{usd(r.gross)}</td><td className="p-2">{r.final_approved_at ? "Final approved" : titleCase(r.status)}</td><td className="p-2">{titleCase(r.payment_status)}</td><td className="p-2 text-xs text-muted-foreground">{r.reconciliation}</td><td className="p-2">{r.payment_date ? fmtDate(r.payment_date) : "—"}</td></tr>)}
         </Table></section>
       <p className="text-xs text-muted-foreground">View only. Money still moves only through the separate controlled payment process.</p>
     </div>
@@ -403,7 +403,7 @@ function Exceptions({ rows }: { rows: any[] }) {
       <Table head={["Type", "Item", "Vehicle", "Severity", "Due", "Status", "Actions"]} empty={!list.length}>
         {list.slice(0, 300).map((r) => (
           <tr key={`${r.exception_type}-${r.source_ref}`} className="border-t"><td className="p-2">{titleCase(r.exception_type)}</td><td className="p-2">{r.title}</td><Veh r={r} />
-            <td className="p-2"><Badge variant={r.severity === "high" || r.severity === "critical" ? "destructive" : "outline"}>{r.severity}</Badge></td><td className="p-2">{r.due_date ? fmtDate(r.due_date) : " · "}</td><td className="p-2">{titleCase(r.status)}</td>
+            <td className="p-2"><Badge variant={r.severity === "high" || r.severity === "critical" ? "destructive" : "outline"}>{r.severity}</Badge></td><td className="p-2">{r.due_date ? fmtDate(r.due_date) : "—"}</td><td className="p-2">{titleCase(r.status)}</td>
             <td className="p-2 whitespace-nowrap">{r.status === "OPEN" ? <button className="mr-2 underline" onClick={() => act(r, "ACKNOWLEDGED")}>Acknowledge</button> : null}<button className="mr-2 underline" onClick={() => act(r, "IN_PROGRESS")}>In progress</button><button className="mr-2 underline" onClick={() => act(r, "RESOLVED")}>Resolve</button><button className="underline" onClick={() => act(r, "DISMISSED")}>Dismiss</button></td></tr>
         ))}
       </Table>
@@ -415,7 +415,7 @@ function Exceptions({ rows }: { rows: any[] }) {
 function Limits({ rows }: { rows: any[] }) {
   return (
     <Table head={["Vehicle", "Package", "Metric", "Used", "Included", "Percent", "Status"]} empty={!rows.length}>
-      {rows.map((r) => <tr key={`${r.engagementId}-${r.metric}`} className="border-t"><Veh r={r} /><Pkg r={r} /><td className="p-2">{r.metric}</td><td className="p-2">{r.used ?? "No Data"}</td><td className="p-2">{r.included}</td><td className="p-2">{r.pct != null ? `${r.pct}%` : " · "}</td>
+      {rows.map((r) => <tr key={`${r.engagementId}-${r.metric}`} className="border-t"><Veh r={r} /><Pkg r={r} /><td className="p-2">{r.metric}</td><td className="p-2">{r.used ?? "No Data"}</td><td className="p-2">{r.included}</td><td className="p-2">{r.pct != null ? `${r.pct}%` : "—"}</td>
         <td className="p-2"><Badge variant={r.status === "REVIEW_REQUIRED" ? "destructive" : r.status === "APPROACHING" ? "secondary" : "outline"}>{titleCase(r.status)}</Badge></td></tr>)}
     </Table>
   );
@@ -474,9 +474,9 @@ function Economics({ rows, acv }: { rows: any[]; acv: D["acv"] }) {
     <div className="space-y-4">
       {acv ? <Acv acv={acv} /> : null}
       <Table head={["Vehicle", "Package", "Active ACV", "SPV transaction fee", "Annual service fee", "Billing", "Investors", "Entities", "Investments", "Requests YTD", "Tasks", "Capital events", "Reports", "Weight", "Review", "Hours YTD", "Labor cost", "Vendor cost", "Gross margin"]} empty={!rows.length}>
-        {rows.map((r) => <tr key={r.engagementId} className="border-t"><Veh r={r} /><Pkg r={r} /><td className="p-2">{usd(r.acv)}</td><td className="p-2 text-xs">{r.spvTransactionFee ?? " · "}</td><td className="p-2">{usd(r.annualServiceFee)}</td><td className="p-2">{titleCase(r.billingFrequency)}</td>
+        {rows.map((r) => <tr key={r.engagementId} className="border-t"><Veh r={r} /><Pkg r={r} /><td className="p-2">{usd(r.acv)}</td><td className="p-2 text-xs">{r.spvTransactionFee ?? "—"}</td><td className="p-2">{usd(r.annualServiceFee)}</td><td className="p-2">{titleCase(r.billingFrequency)}</td>
           <td className="p-2">{r.investorCount}</td><td className="p-2 text-xs">{r.entityCount}</td><td className="p-2 text-xs">{r.investmentCount}</td><td className="p-2">{r.requestsYtd}</td><td className="p-2">{r.tasksYtd}</td><td className="p-2">{r.capitalEventsYtd}</td><td className="p-2">{r.reportingCycles}</td><td className="p-2">{r.weightedWorkload}</td>
-          <td className="p-2">{r.serviceReviewStatus ? titleCase(r.serviceReviewStatus) : " · "}</td><td className="p-2 text-xs">{r.hoursYtd}</td><td className="p-2 text-xs">{r.laborCost}</td><td className="p-2 text-xs">{r.vendorCost}</td><td className="p-2 text-xs">{r.grossMargin}</td></tr>)}
+          <td className="p-2">{r.serviceReviewStatus ? titleCase(r.serviceReviewStatus) : "—"}</td><td className="p-2 text-xs">{r.hoursYtd}</td><td className="p-2 text-xs">{r.laborCost}</td><td className="p-2 text-xs">{r.vendorCost}</td><td className="p-2 text-xs">{r.grossMargin}</td></tr>)}
       </Table>
       <p className="text-xs text-muted-foreground">Internal only. Active Administration ACV is contracted value, not recognized revenue. SPV transaction fees are one-time and not linked per SPV yet (No Data); costs show No Data until time and vendor data exist.</p>
     </div>

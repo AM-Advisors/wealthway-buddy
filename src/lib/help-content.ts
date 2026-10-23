@@ -24,7 +24,7 @@ export const DEFAULT_HELP: Record<string, HelpEntry> = Object.fromEntries(
     e("pe_fund", "PE Fund", "A pooled fund that acquires or invests in established private companies.", "Private equity funds in Harmonious use similar fund economics to VC funds, plus acquisition or investment strategy details."),
     e("hedge_fund", "Hedge Fund", "A pooled fund that typically trades liquid assets and allows periodic subscriptions and redemptions.", "Hedge funds in Harmonious track NAV, subscription and redemption terms, liquidity terms and performance allocation."),
     e("spv", "SPV", "A special purpose vehicle generally created for a specific investment or transaction.", "An SPV pools investors into one vehicle for a single deal. Its setup in Harmonious is shorter and focused on that transaction."),
-    e("gp", "GP", "The general partner, the entity that manages the fund and makes its decisions."),
+    e("gp", "GP", "The general partner - the entity that manages the fund and makes its decisions."),
     e("management_company", "Management Company", "The company that employs the investment team and usually receives the management fee."),
     e("fund_manager", "Fund Manager", "A person with authority to manage a specific fund in Harmonious. Access is granted fund by fund."),
     e("investment_profile", "Investment Profile", "The legal party that invests - for example you individually, jointly, or through an LLC, trust or IRA.", "Your login account is never the investing party. Each Investment Profile keeps its own identity, tax and signing details."),

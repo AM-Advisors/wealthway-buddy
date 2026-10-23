@@ -13,9 +13,9 @@ import { SYNTHETIC_STATEMENT_LABEL, syntheticStatementPdfSpec } from "@/lib/synt
 export const Route = createFileRoute("/_authenticated/ops/synthetic-statements/$fundId")({
   head: () => ({
     meta: [
-      { title: "Synthetic statement previews | Harmonious" },
+      { title: "Synthetic statement previews - Harmonious" },
       { name: "description", content: "Internal-only synthetic investor statement previews for the TEST/DEMO reference fund." },
-      { property: "og:title", content: "Synthetic statement previews | Harmonious" },
+      { property: "og:title", content: "Synthetic statement previews - Harmonious" },
       { property: "og:description", content: "Internal QA previews. Not for investor distribution." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

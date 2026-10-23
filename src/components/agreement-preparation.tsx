@@ -303,7 +303,7 @@ export function AgreementPreparation({ offeringId }: { offeringId?: string }) {
         <CardTitle>Prepare an agreement for signature</CardTitle>
         <CardDescription>
           Choose the agreement and the investor, decide who must sign, then place the signing
-          fields. The investor only reviews and signs, they never place fields.
+          fields. The investor only reviews and signs - they never place fields.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -370,7 +370,7 @@ export function AgreementPreparation({ offeringId }: { offeringId?: string }) {
                     .filter((v: any) => v.status === "published")
                     .map((v: any) => (
                       <SelectItem key={v.id} value={v.id}>
-                        {t.name} · v{v.versionNo}
+                        {t.name} - v{v.versionNo}
                       </SelectItem>
                     )),
                 )}
@@ -397,7 +397,7 @@ export function AgreementPreparation({ offeringId }: { offeringId?: string }) {
             <DialogHeader className="border-b px-5 py-3">
               <DialogTitle>{document_?.title ?? "Agreement"}</DialogTitle>
               <DialogDescription>
-                Prepare for signature · {investor?.name ?? "investor"}
+                Prepare for signature - {investor?.name ?? "investor"}
               </DialogDescription>
             </DialogHeader>
 
@@ -677,7 +677,7 @@ export function AgreementPreparation({ offeringId }: { offeringId?: string }) {
                       <p>
                         Additional signers:{" "}
                         {review.additionalSigners
-                          .map((s: any) => `${roleLabel(s.roleKey)} · ${s.name}`)
+                          .map((s: any) => `${roleLabel(s.roleKey)} - ${s.name}`)
                           .join(", ")}
                       </p>
                     )}

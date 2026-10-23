@@ -13,7 +13,7 @@ export const BRAND_RULES = [
   "Navy #002856 to midnight gradient; cyan #5dc6d1 for highlights and dividers; white cards with soft slate borders.",
   "Rubik Bold headings; Poppins for subtitles and body copy.",
   "80px outer margins; a subtle cyan glow only in the background corner, never under text.",
-  "Whole-word wrapping only: no hyphenated or broken words.",
+  "Whole-word wrapping only - no hyphenated or broken words.",
   "Never mention offshore jurisdictions (no Cayman, BVI or 'offshore').",
   "Never include pricing, fees or cost figures.",
   "Footer proof points: $24B+ AUA · 750+ Fund Managers · Your Funds On Easy Mode.",

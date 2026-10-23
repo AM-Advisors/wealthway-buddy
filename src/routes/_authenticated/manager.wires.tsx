@@ -21,13 +21,13 @@ import { decideWireAsReviewer, getWireConfirmationBoard } from "@/lib/manager.fu
 export const Route = createFileRoute("/_authenticated/manager/wires")({
   head: () => ({
     meta: [
-      { title: "Wire Review Board | Harmonious Manager" },
+      { title: "Wire Review Board - Harmonious Manager" },
       {
         name: "description",
         content:
           "Every wire confirmation your investors submit, with one-click approve or send back and the current funding status.",
       },
-      { property: "og:title", content: "Wire Review Board | Harmonious Manager" },
+      { property: "og:title", content: "Wire Review Board - Harmonious Manager" },
       {
         property: "og:description",
         content: "Approve or send back investor wire confirmations in one place.",
@@ -233,7 +233,7 @@ function ManagerWireBoardPage() {
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <CardTitle className="text-base">
-                        {row.investorName} · {money(row.amountCents)}
+                        {row.investorName} - {money(row.amountCents)}
                       </CardTitle>
                       <CardDescription>
                         {row.fundName}
@@ -326,7 +326,7 @@ function ManagerWireBoardPage() {
                             });
                           }}
                         >
-                          Approve: funds received
+                          Approve - funds received
                         </Button>
                         <Button
                           size="sm"

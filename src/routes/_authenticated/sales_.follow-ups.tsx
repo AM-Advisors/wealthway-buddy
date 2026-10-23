@@ -27,7 +27,7 @@ export const Route = createFileRoute("/_authenticated/sales_/follow-ups")({
   component: FollowUps,
 });
 
-const when = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" }) : " to ");
+const when = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "–");
 
 function FollowUps() {
   const loadF = useServerFn(getMyFollowUps), loadE = useServerFn(getSalesEngagement), loadC = useServerFn(getOutreachContacts);
@@ -59,8 +59,8 @@ function FollowUps() {
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <Stat label="Due now" value={due.length} />
         <Stat label="Coming up" value={later.length} />
-        <Stat label="Engaged contacts (90d)" value={eng?.contacts.length ?? " to "} />
-        <Stat label="Likely forwarded" value={eng ? eng.contacts.filter((x: any) => x.likelyForwarded).length : " to "} hint="Estimate" />
+        <Stat label="Engaged contacts (90d)" value={eng?.contacts.length ?? "–"} />
+        <Stat label="Likely forwarded" value={eng ? eng.contacts.filter((x: any) => x.likelyForwarded).length : "–"} hint="Estimate" />
       </div>
 
       <Panel title="Due follow-ups">
@@ -112,7 +112,7 @@ function FollowUps() {
             <thead className="text-left text-xs uppercase text-muted-foreground"><tr><th className="py-2">Contact</th><th>Type</th><th>Opens</th><th>Clicks</th><th>Replies</th><th>Likely forwarded</th><th>Last activity</th></tr></thead>
             <tbody className="divide-y">{eng.contacts.map((r: any) => (
               <tr key={r.id}><td className="py-2">{r.name} <span className="text-muted-foreground">{r.organization ?? ""}</span>{r.unsubscribed && <Badge variant="secondary" className="ml-2">Unsubscribed</Badge>}</td>
-                <td>{r.kind}</td><td>{r.opens}</td><td>{r.clicks}</td><td>{r.replies}</td><td>{r.likelyForwarded ? "Yes" : " to "}</td><td>{when(r.lastActivity)}</td></tr>))}</tbody>
+                <td>{r.kind}</td><td>{r.opens}</td><td>{r.clicks}</td><td>{r.replies}</td><td>{r.likelyForwarded ? "Yes" : "–"}</td><td>{when(r.lastActivity)}</td></tr>))}</tbody>
           </table></div>
         )}
       </Panel>

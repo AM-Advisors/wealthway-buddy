@@ -79,7 +79,7 @@ export function TakeoverAdmissionsPanel({ offeringId }: { offeringId: string }) 
                       <div><div className="font-medium">Compliance (separate from ownership)</div>
                         <ul className="mt-1 grid gap-1 sm:grid-cols-2">{COMPLIANCE_ITEMS.map((c) => <li key={c.key}>{c.label}: <span className="text-muted-foreground">{label(COMPLIANCE_STATES, a.compliance?.[c.key] ?? "missing")}</span></li>)}</ul>
                       </div>
-                      {a.decided_by && <div className="text-muted-foreground">Decided {String(a.decided_at).slice(0, 10)}{a.decision_reason ? ` · ${a.decision_reason}` : ""}</div>}
+                      {a.decided_by && <div className="text-muted-foreground">Decided {String(a.decided_at).slice(0, 10)}{a.decision_reason ? ` - ${a.decision_reason}` : ""}</div>}
                       {["prepared", "evidence_review", "approval_required"].includes(a.status) && (
                         <div className="space-y-2">
                           <Textarea placeholder="Note (required to reject)" value={reason} onChange={(e) => setReason(e.target.value)} />

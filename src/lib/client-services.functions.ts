@@ -88,7 +88,7 @@ export const REQUEST_INTENTS = [
   {
     value: "add_entity",
     label: "Add Another Entity",
-    blurb: "Any other entity, a holding company, blocker, trust or other vehicle.",
+    blurb: "Any other entity - a holding company, blocker, trust or other vehicle.",
     suggests: ["registered_agent"],
     questions: [
       { key: "entity_name", label: "What is the entity's legal name?" },

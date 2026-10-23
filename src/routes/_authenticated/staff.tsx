@@ -7,13 +7,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 export const Route = createFileRoute("/_authenticated/staff")({
   head: () => ({
     meta: [
-      { title: "My clients | Harmonious staff desk" },
+      { title: "My clients - Harmonious staff desk" },
       {
         name: "description",
         content:
           "Each Harmonious team member sees only the clients they cover, with the service requests, fee proposals and compliance holds waiting on them.",
       },
-      { property: "og:title", content: "My clients | Harmonious staff desk" },
+      { property: "og:title", content: "My clients - Harmonious staff desk" },
       {
         property: "og:description",
         content: "The clients you cover and everything waiting on you, in one place.",

@@ -16,7 +16,7 @@ const CORE: ComplianceTemplateItem[] = [
   },
   {
     key: "blue_sky",
-    label: "Blue Sky: state notice filings",
+    label: "Blue Sky - state notice filings",
     category: "State",
     sort_order: 40,
   },
@@ -40,7 +40,7 @@ const REG_CF: ComplianceTemplateItem[] = [
 ];
 
 const REG_A: ComplianceTemplateItem[] = [
-  { key: "form_1a", label: "Form 1-A: offering circular", category: "Federal", sort_order: 70 },
+  { key: "form_1a", label: "Form 1-A - offering circular", category: "Federal", sort_order: 70 },
   { key: "form_1k", label: "Form 1-K - annual report", category: "Federal", sort_order: 80 },
   { key: "form_1sa", label: "Form 1-SA - semi-annual report", category: "Federal", sort_order: 90 },
   { key: "form_1u", label: "Form 1-U - current report", category: "Federal", sort_order: 100 },

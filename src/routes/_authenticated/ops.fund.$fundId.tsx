@@ -8,9 +8,9 @@ export const Route = createFileRoute("/_authenticated/ops/fund/$fundId")({
   }),
   head: () => ({
     meta: [
-      { title: "Fund | Harmonious operations" },
+      { title: "Fund - Harmonious operations" },
       { name: "description", content: "One page per fund: setup and launch readiness, investors, banking, documents and more." },
-      { property: "og:title", content: "Fund | Harmonious operations" },
+      { property: "og:title", content: "Fund - Harmonious operations" },
       { property: "og:description", content: "One page per fund: setup and launch readiness, investors, banking, documents and more." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

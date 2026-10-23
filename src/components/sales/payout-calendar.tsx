@@ -59,8 +59,8 @@ export function PayoutCalendar({ rows, sows, onOpenDeal }: { rows: CalendarRow[]
           const sow = sowById.get(s.quoteId);
           const hasAmounts = sow && sow.signedAmountCents != null;
           return (
-            <button key={s.key} className="flex w-full flex-wrap justify-between gap-2 rounded border-l-4 border-accent bg-accent/10 px-2 py-1 text-left text-sm" onClick={() => setSelected({ title: `${s.client} · ${s.service}`, rows: filtered.filter(r => r.quoteId === s.quoteId && r.service === s.service), quoteId: s.quoteId, note: `${s.frequency === "quarterly" ? "Quarterly" : "Annual"} period ${s.start} to ${s.end} · ${money(s.amountCents)} billed${sow ? ` · Signed amount ${money(sow.signedAmountCents ?? 0)} · Received ${money(sow.receivedAmountCents ?? 0)} · Committed ${money(sow.committedAmountCents ?? 0)}` : ""}` })}>
-              <span>{s.client} · {s.service} <span className="text-muted-foreground">({s.frequency})</span></span><span>{s.start} to {s.end} · {money(s.amountCents)}</span>
+            <button key={s.key} className="flex w-full flex-wrap justify-between gap-2 rounded border-l-4 border-accent bg-accent/10 px-2 py-1 text-left text-sm" onClick={() => setSelected({ title: `${s.client} · ${s.service}`, rows: filtered.filter(r => r.quoteId === s.quoteId && r.service === s.service), quoteId: s.quoteId, note: `${s.frequency === "quarterly" ? "Quarterly" : "Annual"} period ${s.start} – ${s.end} · ${money(s.amountCents)} billed${sow ? ` · Signed amount ${money(sow.signedAmountCents ?? 0)} · Received ${money(sow.receivedAmountCents ?? 0)} · Committed ${money(sow.committedAmountCents ?? 0)}` : ""}` })}>
+              <span>{s.client} · {s.service} <span className="text-muted-foreground">({s.frequency})</span></span><span>{s.start} – {s.end} · {money(s.amountCents)}</span>
               {hasAmounts && <span className="w-full text-xs text-muted-foreground">Signed amount {money(sow!.signedAmountCents ?? 0)} · Received {money(sow!.receivedAmountCents ?? 0)} · Committed {money(sow!.committedAmountCents ?? 0)}</span>}
             </button>
           );
@@ -73,7 +73,7 @@ export function PayoutCalendar({ rows, sows, onOpenDeal }: { rows: CalendarRow[]
           <div className="space-y-2">
             {selected?.rows.map((r, i) => (
               <div key={i} className="flex flex-wrap items-center justify-between gap-2 rounded border border-border p-2 text-sm">
-                <div><div className="font-medium">{r.client} · {r.service}</div><div className="text-muted-foreground">{r.name ?? "Unassigned"} · {r.layer.toUpperCase()} · payout {r.payoutDue ?? " · "}</div></div>
+                <div><div className="font-medium">{r.client} · {r.service}</div><div className="text-muted-foreground">{r.name ?? "Unassigned"} · {r.layer.toUpperCase()} · payout {r.payoutDue ?? "—"}</div></div>
                 <div className="flex items-center gap-2">{money(r.amountCents)}<Badge variant="outline">{STATUS_LABEL[r.status as CalendarStatus] ?? r.status}</Badge>
                   <Button size="sm" variant="link" onClick={() => { setSelected(null); onOpenDeal(r.quoteId); }}>Deal payouts</Button></div>
               </div>

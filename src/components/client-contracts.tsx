@@ -16,9 +16,9 @@ import { ContractFamilyPanel } from "@/components/contract-family";
 
 export const REVIEW_LABEL: Record<string, string> = {
   uploaded: "Uploaded",
-  awaiting_review: "Contract uploaded: terms awaiting review",
+  awaiting_review: "Contract uploaded - terms awaiting review",
   manual_review_required: "Document requires manual review",
-  extraction_failed: "Reading failed: manual review",
+  extraction_failed: "Reading failed - manual review",
   approved: "Approved",
   superseded: "Superseded",
 };
@@ -80,7 +80,7 @@ export function UploadContractForm({
         },
       });
       toast.success(
-        res.duplicate ? "This exact file was already uploaded, opening it." : "Uploaded. Terms are ready for review.",
+        res.duplicate ? "This exact file was already uploaded - opening it." : "Uploaded. Terms are ready for review.",
       );
       onDone?.(res.documentId);
     } catch (e) {

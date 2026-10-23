@@ -24,5 +24,5 @@ export function filterDiagnostic(value: unknown, key = "", depth = 0, seen = new
 }
 export function diagnosticText(value: unknown, key = ""): string {
   const safe = filterDiagnostic(value, key);
-  return safe == null ? " · " : typeof safe === "string" ? safe : JSON.stringify(safe);
+  return safe == null ? "—" : typeof safe === "string" ? safe : JSON.stringify(safe);
 }

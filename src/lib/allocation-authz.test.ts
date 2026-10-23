@@ -439,7 +439,7 @@ describe("statements", () => {
   });
 });
 
-describe("REGRESSION A: allocation independent review", () => {
+describe("REGRESSION A - allocation independent review", () => {
   it("refuses the preparer acting as independent reviewer", async () => {
     await expect(decideAllocationRun(PREPARER, RUN_SUBMITTED, "review")).rejects.toThrow(/someone other than/i);
     expect(writes.filter((w) => w.table === "allocation_runs")).toHaveLength(0);

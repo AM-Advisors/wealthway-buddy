@@ -27,7 +27,7 @@ type Scope = "harmonious" | "fund";
 const money = (c: number | null) => (c == null ? "-" : (c / 100).toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }));
 const err = (e: unknown) => toast.error(e instanceof Error ? e.message : "Something went wrong.");
 const CONSENT: Record<string, string> = { unknown: "No consent recorded", opted_in: "Opted in", unsubscribed: "Unsubscribed" };
-const STATUS: Record<string, string> = { draft: "Draft", submitted: "Waiting for approval", approved: "Approved: ready to send", declined: "Declined", sending: "Sending…", sent: "Sent" };
+const STATUS: Record<string, string> = { draft: "Draft", submitted: "Waiting for approval", approved: "Approved - ready to send", declined: "Declined", sending: "Sending…", sent: "Sent" };
 
 /**
  * Contacts, deals and campaigns. `scope` decides whose records: "harmonious"
@@ -468,7 +468,7 @@ function DealHistory({ id }: { id: string }) {
     <div className="space-y-3 border-t pt-3 text-sm">
       {d.deal.external_source === "hubspot" && (
         <div className="text-xs text-muted-foreground">
-          From HubSpot: {d.deal.hs_pipeline_label ?? " · "} · {d.deal.hs_stage_label ?? " · "} · original owner {d.deal.hs_owner_name ?? "none"}
+          From HubSpot: {d.deal.hs_pipeline_label ?? "—"} · {d.deal.hs_stage_label ?? "—"} · original owner {d.deal.hs_owner_name ?? "none"}
           {d.deal.source_created_at ? ` · created ${new Date(d.deal.source_created_at).toLocaleDateString()}` : ""}
         </div>
       )}

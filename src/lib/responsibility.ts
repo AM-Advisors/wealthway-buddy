@@ -56,7 +56,7 @@ export function waitingOnDetail(t: WaitingInput, audience: "client" | "internal"
   if (s === "WAITING_ON_THIRD_PARTY") {
     const type = t.waiting_on_type ? THIRD_PARTY_TYPES[t.waiting_on_type as ThirdPartyType] ?? null : null;
     if (audience === "client") return type;
-    return [type, t.waiting_on_name].filter(Boolean).join(" · ") || null;
+    return [type, t.waiting_on_name].filter(Boolean).join(" — ") || null;
   }
   return null;
 }

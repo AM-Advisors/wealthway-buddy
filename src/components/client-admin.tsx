@@ -150,7 +150,7 @@ function EditClientDialog({ clientId, initial, staff, onClose }: { clientId: str
           {text("payment_terms_days", "Payment terms (days)", "number")}
           {(["line1", "city", "state", "postal_code", "country"] as const).map((k) => (
             <div key={k} className="space-y-1">
-              <Label htmlFor={`ec-addr-${k}`}>Address · {k.replace("_", " ")}</Label>
+              <Label htmlFor={`ec-addr-${k}`}>Address - {k.replace("_", " ")}</Label>
               <Input id={`ec-addr-${k}`} value={f["address"]?.[k] ?? ""} onChange={(e) => set("address", { ...(f["address"] ?? {}), [k]: e.target.value })} />
             </div>
           ))}
@@ -239,7 +239,7 @@ export function ClientPeoplePanel({ clientId }: { clientId: string }) {
               <span className="text-muted-foreground">Fund / company scope: </span>
               {p.scopes.length ? p.scopes.map((s: any) => (
                 <span key={s.id} className="mr-2 inline-flex items-center gap-1">
-                  {roleLabel(s.role)} · {s.offeringId ? fundName.get(s.offeringId) ?? "Fund" : (d.companies as any[]).find((c) => c.id === s.companyId)?.name ?? "Company"}
+                  {roleLabel(s.role)} - {s.offeringId ? fundName.get(s.offeringId) ?? "Fund" : (d.companies as any[]).find((c) => c.id === s.companyId)?.name ?? "Company"}
                   {caps.includes("manage_roles") ? (
                     <button type="button" className="text-destructive" aria-label="Remove scope" onClick={() => scope({ data: { clientId, contactId: p.id, offeringId: s.offeringId, companyId: s.companyId, role: s.role, add: false } }).then(refresh, err)}>×</button>
                   ) : null}
@@ -499,7 +499,7 @@ function AddServicesDialog({ clientId, groups, funds, existing, onClose }: { cli
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Add Services</DialogTitle>
-          <DialogDescription>Only approved catalog services. Selecting a service proposes it, nothing is contracted or activated.</DialogDescription>
+          <DialogDescription>Only approved catalog services. Selecting a service proposes it - nothing is contracted or activated.</DialogDescription>
         </DialogHeader>
         <div className="flex flex-wrap gap-2">
           <select aria-label="Service scope" className="h-9 rounded-md border bg-background px-2 text-sm" value={scope} onChange={(e) => { setScope(e.target.value); setPicked(new Set()); }}>
@@ -576,7 +576,7 @@ function StandardPackages({ groups, already, busy, onAdd }: { groups: any[]; alr
         {tiers.length ? (
           <span className="flex items-center gap-1">
             <select aria-label="Cap table tier" className="h-9 rounded-md border bg-background px-2 text-sm" value={tier} onChange={(e) => setTier(e.target.value)}>
-              {tiers.map((k) => <option key={k} value={k}>{all.find((s) => s.key === k)?.name.replace("Cap table management · ", "")}</option>)}
+              {tiers.map((k) => <option key={k} value={k}>{all.find((s) => s.key === k)?.name.replace("Cap table management — ", "")}</option>)}
             </select>
             <Button size="sm" variant="outline" disabled={busy} onClick={() => onAdd(fresh([tier]), "Cap table pricing")}>Add cap table</Button>
           </span>
@@ -594,7 +594,7 @@ function OverrideDialog({ clientId, sel, onClose }: { clientId: string; sel: any
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Custom price · {sel.serviceName}</DialogTitle>
+          <DialogTitle>Custom price - {sel.serviceName}</DialogTitle>
           <DialogDescription>Applies to {sel.scopeLabel} only. The standard price list is not changed. Another person with pricing permission must approve it before the SOW can go to signature.</DialogDescription>
         </DialogHeader>
         <p className="text-sm">Current: {money(sel.cents)} {sel.source ? `(${PRICING_SOURCES[sel.source as keyof typeof PRICING_SOURCES] ?? sel.source})` : ""}</p>
@@ -622,7 +622,7 @@ function SowPreview({ clientId, offeringId, canGenerate, onDone }: { clientId: s
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">SOW Preview · {p.offering?.name ?? "Client-wide"} {p.mode === "amendment" ? "(amendment)" : ""}</CardTitle>
+        <CardTitle className="text-base">SOW Preview - {p.offering?.name ?? "Client-wide"} {p.mode === "amendment" ? "(amendment)" : ""}</CardTitle>
         <CardDescription>
           {p.executedSow && p.mode === "amendment" ? "An executed SOW already covers this engagement. It stays unchanged; changes go into an amendment for review and signature." : "Generating creates a Draft SOW only. It still needs review, approval and client signature."}
         </CardDescription>
@@ -631,7 +631,7 @@ function SowPreview({ clientId, offeringId, canGenerate, onDone }: { clientId: s
         <dl className="grid gap-2 sm:grid-cols-2">
           <div><dt className="text-xs text-muted-foreground">Template</dt><dd>{p.template ? `${p.template.name} v${p.template.version} (effective ${p.template.effectiveDate})` : "None available"}</dd></div>
           <div><dt className="text-xs text-muted-foreground">Governing agreement</dt><dd>{p.governing ? p.governing.title : "No approved MSA on file"}</dd></div>
-          <div><dt className="text-xs text-muted-foreground">Existing draft</dt><dd>{p.draftSow ? "Yes: generating updates it" : "No"}</dd></div>
+          <div><dt className="text-xs text-muted-foreground">Existing draft</dt><dd>{p.draftSow ? "Yes - generating updates it" : "No"}</dd></div>
           <div><dt className="text-xs text-muted-foreground">Special terms</dt><dd>{p.specialTerms.length ? p.specialTerms.join("; ") : "None approved"}</dd></div>
         </dl>
         <table className="w-full">
@@ -666,7 +666,7 @@ function SowPreview({ clientId, offeringId, canGenerate, onDone }: { clientId: s
             <Button
               disabled={!p.template || !p.lines.length || (!!templateId && reason.trim().length < 5)}
               onClick={() => gen({ data: { clientId, offeringId, templateId, overrideReason: reason || undefined } }).then((r) => {
-                toast.success(r.outcome === "reused_executed" ? "An executed SOW already covers this - reused." : r.outcome === "no_template" ? "No approved template: task raised." : "Draft SOW saved. It is not signed or executed.");
+                toast.success(r.outcome === "reused_executed" ? "An executed SOW already covers this - reused." : r.outcome === "no_template" ? "No approved template - task raised." : "Draft SOW saved. It is not signed or executed.");
                 q.refetch(); onDone();
               }, err)}
             >
@@ -700,7 +700,7 @@ export function ClientFundsPanel({ clientId }: { clientId: string }) {
         <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-2">
           <div>
             <CardTitle className="text-base">Funds & SPVs</CardTitle>
-            <CardDescription>MSA: {d.msaStatus}. A fund can exist without Harmonious being contractually engaged, that needs an executed SOW.</CardDescription>
+            <CardDescription>MSA: {d.msaStatus}. A fund can exist without Harmonious being contractually engaged - that needs an executed SOW.</CardDescription>
           </div>
           {caps.includes("link_funds") ? (
             <div className="flex gap-2">
@@ -820,7 +820,7 @@ function LinkFundDialog({ clientId, onClose }: { clientId: string; onClose: () =
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Link Existing Fund/SPV</DialogTitle>
-          <DialogDescription>A fund that belongs to another client is never moved silently, it needs a reason and a second person's review.</DialogDescription>
+          <DialogDescription>A fund that belongs to another client is never moved silently - it needs a reason and a second person's review.</DialogDescription>
         </DialogHeader>
         <Input placeholder="Search funds" value={term} onChange={(e) => setTerm(e.target.value)} />
         <Input placeholder="Reason (required for a fund owned by another client)" value={reason} onChange={(e) => setReason(e.target.value)} />

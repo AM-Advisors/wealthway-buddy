@@ -18,9 +18,9 @@ type Tab = (typeof TABS)[number]["id"];
 export const Route = createFileRoute("/_authenticated/my-funds/$fundId")({
   head: () => ({
     meta: [
-      { title: "Your fund | Harmonious" },
+      { title: "Your fund - Harmonious" },
       { name: "description", content: "Your fund, subscription, documents and tax forms in one place." },
-      { property: "og:title", content: "Your fund | Harmonious" },
+      { property: "og:title", content: "Your fund - Harmonious" },
       { property: "og:description", content: "Your investor view of a fund on Harmonious." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -32,9 +32,9 @@ export const Route = createFileRoute("/_authenticated/my-funds/$fundId")({
   component: InvestorFundPage,
 });
 
-const money = (c: number | null | undefined) => (c == null ? " · " : `$${Math.round(c / 100).toLocaleString("en-US")}`);
-const human = (s: string | null | undefined) => (s ? s.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase()) : " · ");
-const day = (d: string | null | undefined) => (d ? new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : " · ");
+const money = (c: number | null | undefined) => (c == null ? "—" : `$${Math.round(c / 100).toLocaleString("en-US")}`);
+const human = (s: string | null | undefined) => (s ? s.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase()) : "—");
+const day = (d: string | null | undefined) => (d ? new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—");
 
 function Section({ title, children, action }: { title: string; children: React.ReactNode; action?: React.ReactNode }) {
   return (
@@ -85,7 +85,7 @@ function InvestorFundPage() {
         <div>
           <Link to="/my-funds" className="text-xs text-muted-foreground hover:underline">← My Funds</Link>
           <h1 className="mt-1 text-2xl font-semibold tracking-tight">{v.fund.name}</h1>
-          <p className="text-sm text-muted-foreground">{[v.fund.legalName, human(v.fund.fundType)].filter((x) => x && x !== " · ").join(" · ")}</p>
+          <p className="text-sm text-muted-foreground">{[v.fund.legalName, human(v.fund.fundType)].filter((x) => x && x !== "—").join(" · ")}</p>
         </div>
 
         <div role="tablist" className="flex items-center gap-1 overflow-x-auto border-b pb-2">
@@ -113,7 +113,7 @@ function InvestorFundPage() {
                 <Field label="Fund type" value={human(v.fund.fundType)} />
                 <Field label="Entity type" value={human(v.fund.entityType)} />
                 <Field label="Minimum commitment" value={money(v.fund.minInvestmentCents)} />
-                <Field label="Legal name" value={v.fund.legalName ?? " · "} />
+                <Field label="Legal name" value={v.fund.legalName ?? "—"} />
               </div>
               {v.fund.summary && <p className="mt-4 text-sm text-muted-foreground">{v.fund.summary}</p>}
             </Section>
@@ -167,7 +167,7 @@ function InvestorFundPage() {
                   <div key={t.id} className="flex flex-wrap items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
                     <div>
                       <div className="text-sm font-medium">{t.name}</div>
-                      <div className="text-xs text-muted-foreground">{t.year ? `Tax year ${t.year}` : "Tax year · "} · {day(t.date)}</div>
+                      <div className="text-xs text-muted-foreground">{t.year ? `Tax year ${t.year}` : "Tax year —"} · {day(t.date)}</div>
                     </div>
                     <Badge variant="outline">{t.form}</Badge>
                   </div>

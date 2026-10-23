@@ -66,7 +66,7 @@ export function duplicateFundIdFromError(message: string | null | undefined): st
 
 export const SYNC_CATEGORIES = {
   matched: "Matched",
-  existing_person_missing_investment: "Existing Person: Missing Investment",
+  existing_person_missing_investment: "Existing Person - Missing Investment",
   new_investor_candidate: "New Investor Candidate",
   suggested_update: "Suggested Update",
   conflict: "Conflict",
@@ -82,7 +82,7 @@ export type SyncCategory = keyof typeof SYNC_CATEGORIES;
 
 export const CONFIDENCE_LABELS = {
   exact: "Exact Match",
-  likely: "Likely Match: Review Required",
+  likely: "Likely Match - Review Required",
   none: "No Match",
   conflict: "Conflict",
   duplicate: "Duplicate Candidate",

@@ -25,7 +25,7 @@ function money(cents: number | null | undefined) {
 export function feeText(cents: number | null | undefined, model?: string | null) {
   if (cents === null || cents === undefined) {
     return model === "per_request"
-      ? "Quoted per request: the amount depends on the services required"
+      ? "Quoted per request - the amount depends on the services required"
       : "Quoted at the time";
   }
   const amount = money(cents);
@@ -154,7 +154,7 @@ export function MyServiceRequests() {
 
         {signing ? (
           <div className="space-y-3 rounded-md border border-primary p-4">
-            <p className="text-sm font-medium">Sign the amendment · {signing.serviceName}</p>
+            <p className="text-sm font-medium">Sign the amendment - {signing.serviceName}</p>
             <p className="text-sm">
               Fee:{" "}
               <span className="font-medium">

@@ -33,13 +33,13 @@ import { Textarea } from "@/components/ui/textarea";
 export const Route = createFileRoute("/_authenticated/provider")({
   head: () => ({
     meta: [
-      { title: "Provider Portal | Harmonious" },
+      { title: "Provider Portal - Harmonious" },
       {
         name: "description",
         content:
           "Submit your costs and documents to Harmonious and follow where each one stands, from sent to accepted.",
       },
-      { property: "og:title", content: "Provider Portal | Harmonious" },
+      { property: "og:title", content: "Provider Portal - Harmonious" },
       {
         property: "og:description",
         content: "Send costs and documents to Harmonious and track their status.",
@@ -210,7 +210,7 @@ function ProviderPortal() {
             <CardTitle className="text-base">No provider account linked yet</CardTitle>
             <CardDescription>
               This portal is for third parties Harmonious works with. Your sign-in isn't linked to a
-              provider yet, ask your Harmonious contact to add your work email.
+              provider yet - ask your Harmonious contact to add your work email.
             </CardDescription>
           </CardHeader>
         </Card>

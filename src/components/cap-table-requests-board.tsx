@@ -215,7 +215,7 @@ export function CapTableRequestsBoard() {
                       <Textarea
                         rows={2}
                         maxLength={2000}
-                        placeholder="Internal note, not shown to the founder."
+                        placeholder="Internal note - not shown to the founder."
                         value={notes[lead.id] ?? lead.internalNote ?? ""}
                         onChange={(e) => setNotes((prev) => ({ ...prev, [lead.id]: e.target.value }))}
                       />

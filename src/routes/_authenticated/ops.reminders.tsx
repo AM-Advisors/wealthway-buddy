@@ -11,9 +11,9 @@ import { Input } from "@/components/ui/input";
 export const Route = createFileRoute("/_authenticated/ops/reminders")({
   head: () => ({
     meta: [
-      { title: "Reminder tracking | Harmonious Operations" },
+      { title: "Reminder tracking - Harmonious Operations" },
       { name: "description", content: "Delivery, open, click and in-portal read rates for reminder emails." },
-      { property: "og:title", content: "Reminder tracking | Harmonious Operations" },
+      { property: "og:title", content: "Reminder tracking - Harmonious Operations" },
       { property: "og:description", content: "Delivery, open, click and in-portal read rates for reminder emails." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -23,8 +23,8 @@ export const Route = createFileRoute("/_authenticated/ops/reminders")({
   component: RemindersPage,
 });
 
-const fmt = (s: string | null) => (s ? new Date(s).toLocaleString() : " · ");
-const pct = (n: number, d: number) => (d ? `${Math.round((n / d) * 100)}%` : " · ");
+const fmt = (s: string | null) => (s ? new Date(s).toLocaleString() : "—");
+const pct = (n: number, d: number) => (d ? `${Math.round((n / d) * 100)}%` : "—");
 
 function RemindersPage() {
   const load = useServerFn(listReminderTracking);
@@ -46,7 +46,7 @@ function RemindersPage() {
     <div className="mx-auto max-w-7xl space-y-6 p-6">
       <div>
         <h1 className="font-heading text-2xl font-semibold text-foreground">Reminder tracking</h1>
-        <p className="text-sm text-muted-foreground">Every reminder email, and whether it was delivered, opened, clicked and read in the portal. Opens are estimates, some email apps block or pre-load them.</p>
+        <p className="text-sm text-muted-foreground">Every reminder email, and whether it was delivered, opened, clicked and read in the portal. Opens are estimates — some email apps block or pre-load them.</p>
       </div>
       <div className="flex flex-wrap gap-3">
         <Input placeholder="Search document, person or fund" value={q} onChange={(e) => setQ(e.target.value)} className="max-w-sm" />
@@ -72,7 +72,7 @@ function RemindersPage() {
                     <td className="px-3 py-2 whitespace-nowrap">{fmt(r.createdAt)}<div className="text-xs text-muted-foreground">{r.sentBy ?? ""}</div></td>
                     <td className="px-3 py-2">{r.document}</td>
                     <td className="px-3 py-2">{r.recipient}</td>
-                    <td className="px-3 py-2">{r.fund ?? " · "}</td>
+                    <td className="px-3 py-2">{r.fund ?? "—"}</td>
                     <td className="px-3 py-2">
                       {!r.accepted ? <Badge variant="destructive">Not sent</Badge>
                         : r.bouncedAt ? <Badge variant="destructive" title={r.bounceReason ?? ""}>Bounced</Badge>
@@ -80,8 +80,8 @@ function RemindersPage() {
                         : r.tracked ? <Badge variant="secondary">Sent</Badge>
                         : <Badge variant="outline">Sent (no tracking)</Badge>}
                     </td>
-                    <td className="px-3 py-2 whitespace-nowrap">{r.firstOpenedAt ? `${fmt(r.firstOpenedAt)} · ${r.openCount}×` : " · "}</td>
-                    <td className="px-3 py-2 whitespace-nowrap">{r.firstClickedAt ? `${fmt(r.firstClickedAt)} · ${r.clickCount}×` : " · "}</td>
+                    <td className="px-3 py-2 whitespace-nowrap">{r.firstOpenedAt ? `${fmt(r.firstOpenedAt)} · ${r.openCount}×` : "—"}</td>
+                    <td className="px-3 py-2 whitespace-nowrap">{r.firstClickedAt ? `${fmt(r.firstClickedAt)} · ${r.clickCount}×` : "—"}</td>
                     <td className="px-3 py-2 whitespace-nowrap">{r.inInbox ? fmt(r.readInPortalAt) : "Not in portal"}</td>
                   </tr>
                 ))}

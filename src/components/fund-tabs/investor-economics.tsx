@@ -44,7 +44,7 @@ export function InvestorEconomicsCard({ fundId }: { fundId: string }) {
       <CardContent className="space-y-3">
         {q.data.unlinkedLetters.map((l) => (
           <div key={l.id} className="flex flex-wrap items-center gap-2 rounded-md border border-dashed p-2 text-sm">
-            <span>Waiting side letter for <strong>{l.label}</strong> (fee {fmtRate(l.fee)}, carry {fmtRate(l.carry)}) · </span>
+            <span>Waiting side letter for <strong>{l.label}</strong> (fee {fmtRate(l.fee)}, carry {fmtRate(l.carry)}) —</span>
             <select aria-label="Link to investor" className="h-8 rounded-md border bg-background px-2 text-sm" defaultValue="" onChange={async (e) => {
               if (!e.target.value) return;
               try { await link({ data: { fundId, sideLetterId: l.id, onboardingId: e.target.value } }); toast.success("Side letter linked"); refresh(); } catch (err: any) { toast.error(err.message); }
@@ -102,7 +102,7 @@ function ChangeTermsDialog({ fundId, rows, classes, onClose }: { fundId: string;
         if (mode !== "custom") {
           const key = mode === "class" ? classKey : null;
           const p = await preview({ data: { onboardingId: r.id } });
-          if (p.blocked) throw new Error("signed or funded: needs Harmonious review");
+          if (p.blocked) throw new Error("signed or funded — needs Harmonious review");
           await change({ data: { onboardingId: r.id, classKey: key, acknowledged: true } });
         } else {
           const terms = [
@@ -122,7 +122,7 @@ function ChangeTermsDialog({ fundId, rows, classes, onClose }: { fundId: string;
       } catch (e: any) { failed.push(`${r.investor}: ${e.message}`); }
     }
     setBusy(false);
-    if (failed.length) toast.error(failed.join("\n")); else toast.success(mode === "custom" ? "Side letter proposed: awaiting approval" : "Terms updated");
+    if (failed.length) toast.error(failed.join("\n")); else toast.success(mode === "custom" ? "Side letter proposed — awaiting approval" : "Terms updated");
     onClose(failed.length < rows.length);
   };
 
@@ -130,7 +130,7 @@ function ChangeTermsDialog({ fundId, rows, classes, onClose }: { fundId: string;
     <Dialog open onOpenChange={(o) => !o && onClose(false)}>
       <DialogContent className="max-h-[85vh] max-w-xl overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Change terms · {rows.length === 1 ? first.investor : `${rows.length} investors`}</DialogTitle>
+          <DialogTitle>Change terms — {rows.length === 1 ? first.investor : `${rows.length} investors`}</DialogTitle>
           <DialogDescription>Currently fee {fmtRate(first.fee)} · carry {fmtRate(first.carry)} ({first.source}). Fund defaults stay unchanged.</DialogDescription>
         </DialogHeader>
         {locked.length > 0 && <p className="rounded-md border border-destructive/40 p-2 text-sm">{locked.map((r) => r.investor).join(", ")} already signed. Class moves are blocked; a side letter goes to review and may need their consent.</p>}

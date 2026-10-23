@@ -165,7 +165,7 @@ function DocumentRow({ doc, data, offeringId, onChanged }: { doc: Doc; data: Dat
         await setUsage({ data: { documentId: doc.id, usage: "signature", applicability: { profileTypes: [], classKeys: [] } } });
       }
       setOpen(true);
-    }, "Document uploaded: now add the signature blocks, then approve");
+    }, "Document uploaded - now add the signature blocks, then approve");
   };
 
   const startActivate = async (version: number) => {
@@ -188,7 +188,7 @@ function DocumentRow({ doc, data, offeringId, onChanged }: { doc: Doc; data: Dat
         <div>
           <p className="text-sm font-medium">{doc.title}</p>
           <p className="text-xs text-muted-foreground">
-            {active ? `Fund template v${active.version} (in use)` : latest ? "Draft, not in use yet" : "Needs setup"}
+            {active ? `Fund template v${active.version} (in use)` : latest ? "Draft - not in use yet" : "Needs setup"}
             {" · "}{doc.usage ? DOCUMENT_USAGE_LABELS[doc.usage] : "Usage not chosen"}
             {" · "}{appliesTo}
           </p>

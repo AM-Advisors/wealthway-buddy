@@ -34,9 +34,9 @@ import {
 export const Route = createFileRoute("/_authenticated/ops/financial-pilot")({
   head: () => ({
     meta: [
-      { title: "Financial pilot readiness | Harmonious operations" },
+      { title: "Financial pilot readiness - Harmonious operations" },
       { name: "description", content: "Evaluate and prepare one fund for a parallel accounting pilot without changing its official books." },
-      { property: "og:title", content: "Financial pilot readiness | Harmonious operations" },
+      { property: "og:title", content: "Financial pilot readiness - Harmonious operations" },
       { property: "og:description", content: "Parallel-mode pilot readiness, opening balances, variances and sign-off." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -108,7 +108,7 @@ const NUM_FACTORS = [
   ["investorCount", "Investors"], ["investmentCount", "Investments"], ["monthlyTransactions", "Transactions / month"], ["bankAccountCount", "Bank accounts"],
   ["sideLetters", "Side letters"], ["waterfallTiers", "Waterfall tiers"], ["internationalInvestors", "International investors"], ["outstandingExceptions", "Outstanding exceptions"],
 ] as const;
-const LVL_FACTORS = [["entityComplexity", "Entity complexity (0 simple – 3 feeder/blocker)"], ["taxComplexity", "Tax complexity (0 to 3)"], ["historicalCompleteness", "History completeness (3 = complete)"], ["dataQuality", "Data quality (3 = clean)"]] as const;
+const LVL_FACTORS = [["entityComplexity", "Entity complexity (0 simple – 3 feeder/blocker)"], ["taxComplexity", "Tax complexity (0–3)"], ["historicalCompleteness", "History completeness (3 = complete)"], ["dataQuality", "Data quality (3 = clean)"]] as const;
 const BOOL_FACTORS = [["multiCurrency", "More than one currency"], ["hasFeederBlockerOrParallel", "Feeder / blocker / parallel"], ["unusualTaxAllocation", "Unusual tax allocation"], ["nextCloseIsQuarterOrYearEnd", "Next close is quarter or year-end"]] as const;
 
 function ScoreForm({ offeringId, onDone }: { offeringId: string; onDone: () => void }) {
@@ -195,7 +195,7 @@ function PilotFund({ offeringId }: { offeringId: string }) {
               <p className="text-sm font-medium">{s}</p>
               <ul className="mt-1 grid gap-1 text-sm sm:grid-cols-2">
                 {readiness.items.filter((i) => i.section === s).map((i) => (
-                  <li key={i.key} className="flex gap-2"><span className={i.ok ? "text-primary" : i.critical ? "text-destructive" : "text-muted-foreground"}>{i.ok ? "✓" : i.critical ? "✕" : "!"}</span><span>{i.label}<span className="text-muted-foreground"> · {i.detail}</span></span></li>
+                  <li key={i.key} className="flex gap-2"><span className={i.ok ? "text-primary" : i.critical ? "text-destructive" : "text-muted-foreground"}>{i.ok ? "✓" : i.critical ? "✕" : "!"}</span><span>{i.label}<span className="text-muted-foreground"> — {i.detail}</span></span></li>
                 ))}
               </ul>
             </div>
@@ -224,7 +224,7 @@ function Opening({ pilot, data, onChange }: { pilot: any; data: any; onChange: (
   });
   return (
     <Card>
-      <CardHeader><CardTitle className="text-base">Opening balances</CardTitle><CardDescription>Enter the official opening figures with their source document. Differences become migration exceptions, never plugs.</CardDescription></CardHeader>
+      <CardHeader><CardTitle className="text-base">Opening balances</CardTitle><CardDescription>Enter the official opening figures with their source document. Differences become migration exceptions — never plugs.</CardDescription></CardHeader>
       <CardContent className="space-y-3 text-sm">
         <div className="flex flex-wrap gap-2">
           <select className="rounded-md border bg-background px-2 text-sm" value={cat} onChange={(e) => setCat(e.target.value)}>{OPENING_CATS.map((c) => <option key={c} value={c}>{c.replace(/_/g, " ")}</option>)}</select>
@@ -293,7 +293,7 @@ function Signoff({ pilot, signoffs, decisions, onChange }: { pilot: any; signoff
   const d = useMutation({ mutationFn: (decision: any) => decide({ data: { pilotId: pilot.id, decision, reason: window.prompt("Reason for this decision:") ?? "" } }), onSuccess: () => { toast.success("Decision recorded. No automatic cutover."); onChange(); }, onError: err });
   return (
     <Card>
-      <CardHeader><CardTitle className="text-base">Pilot sign-off and decision</CardTitle><CardDescription>Four different people sign after the parallel close. A cutover approval is recorded only. Harmonious does not become the official books automatically.</CardDescription></CardHeader>
+      <CardHeader><CardTitle className="text-base">Pilot sign-off and decision</CardTitle><CardDescription>Four different people sign after the parallel close. A cutover approval is recorded only — Harmonious does not become the official books automatically.</CardDescription></CardHeader>
       <CardContent className="space-y-3 text-sm">
         <div className="grid gap-1 sm:grid-cols-3">{SIGNOFF_CONFIRMATIONS.map((k) => <label key={k} className="flex items-center gap-2"><input type="checkbox" checked={Boolean(conf[k])} onChange={(e) => setConf({ ...conf, [k]: e.target.checked })} />{k.replace(/_/g, " ")}</label>)}</div>
         <div className="flex flex-wrap gap-2">{SIGNOFF_ROLES.map((r) => {
@@ -307,7 +307,7 @@ function Signoff({ pilot, signoffs, decisions, onChange }: { pilot: any; signoff
             <Button size="sm" variant="ghost" onClick={() => d.mutate("requires_remediation")}>Requires remediation</Button>
           </div>
         ) : null}
-        {decisions.map((x) => <p key={x.id} className="text-muted-foreground">{x.decision.replace(/_/g, " ")} · {x.reason}</p>)}
+        {decisions.map((x) => <p key={x.id} className="text-muted-foreground">{x.decision.replace(/_/g, " ")} — {x.reason}</p>)}
       </CardContent>
     </Card>
   );

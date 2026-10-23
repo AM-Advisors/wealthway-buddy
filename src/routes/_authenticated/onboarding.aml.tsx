@@ -27,13 +27,13 @@ import {
 export const Route = createFileRoute("/_authenticated/onboarding/aml")({
   head: () => ({
     meta: [
-      { title: "AML Questionnaire | Harmonious Investor Onboarding" },
+      { title: "AML Questionnaire - Harmonious Investor Onboarding" },
       {
         name: "description",
         content:
           "Declare source of funds, source of wealth, PEP status and sanctions exposure to complete anti-money-laundering screening.",
       },
-      { property: "og:title", content: "AML Questionnaire | Harmonious" },
+      { property: "og:title", content: "AML Questionnaire - Harmonious" },
       {
         property: "og:description",
         content: "Step 2 of Harmonious investor onboarding: anti-money-laundering declarations.",
@@ -215,7 +215,7 @@ function AmlPage() {
             <CardHeader>
               <CardTitle>Screening declarations</CardTitle>
               <CardDescription>
-                A "yes" does not disqualify you, it routes your file to enhanced due diligence.
+                A "yes" does not disqualify you - it routes your file to enhanced due diligence.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">

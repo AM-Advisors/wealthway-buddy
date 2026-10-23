@@ -16,9 +16,9 @@ import { LoadError } from "@/components/load-error";
 export const Route = createFileRoute("/_authenticated/client/home")({
   head: () => ({
     meta: [
-      { title: "Home | Harmonious client portal" },
+      { title: "Home - Harmonious client portal" },
       { name: "description", content: "Your funds, new fund requests, setup progress and what's waiting on you." },
-      { property: "og:title", content: "Home | Harmonious client portal" },
+      { property: "og:title", content: "Home - Harmonious client portal" },
       { property: "og:description", content: "Your funds, requests and setup progress at a glance." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -82,7 +82,7 @@ function ClientHome() {
                 ) : r.offeringId ? (
                   <Link to="/client/funds/$fundId" params={{ fundId: r.offeringId }}><Badge variant="outline">Harmonious - pending review</Badge></Link>
                 ) : (
-                  <Badge variant="outline">{r.duplicate ? "Harmonious reviewing a possible duplicate" : "Harmonious: pending review"}</Badge>
+                  <Badge variant="outline">{r.duplicate ? "Harmonious reviewing a possible duplicate" : "Harmonious - pending review"}</Badge>
                 )}
               </div>
             ))}
@@ -110,7 +110,7 @@ function ClientHome() {
               <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
                 <span className="font-medium">{f.name}</span>
                 <span className="flex items-center gap-2">
-                  {f.harmoniousPending > 0 && <Badge variant="outline">Harmonious · {f.harmoniousPending} pending</Badge>}
+                  {f.harmoniousPending > 0 && <Badge variant="outline">Harmonious - {f.harmoniousPending} pending</Badge>}
                   <Badge variant={f.isOpen ? "default" : "secondary"}>{f.isOpen ? "Open" : "In setup"}</Badge>
                 </span>
               </div>

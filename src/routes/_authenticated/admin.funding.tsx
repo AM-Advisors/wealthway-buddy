@@ -11,13 +11,13 @@ import { Card, CardContent } from "@/components/ui/card";
 export const Route = createFileRoute("/_authenticated/admin/funding")({
   head: () => ({
     meta: [
-      { title: "Funding Dashboard | Harmonious Admin" },
+      { title: "Funding Dashboard - Harmonious Admin" },
       {
         name: "description",
         content:
           "Live funding snapshot for every Harmonious fund: capital raised, commitments in progress and progress toward the target raise.",
       },
-      { property: "og:title", content: "Funding Dashboard | Harmonious Admin" },
+      { property: "og:title", content: "Funding Dashboard - Harmonious Admin" },
       {
         property: "og:description",
         content: "Per-fund raised, in-progress applications and target-raise progress.",

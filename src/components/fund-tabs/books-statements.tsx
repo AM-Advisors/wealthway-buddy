@@ -55,7 +55,7 @@ export function BooksStatements({ fundId }: { fundId: string }) {
               <div className="rounded-md border p-3"><p className="mb-1 font-medium">Changes in capital</p>{row("Opening", st.changesInCapital.openingCents)}{row("Contributions", st.changesInCapital.contributionsCents)}{row("Distributions", -st.changesInCapital.distributionsCents)}{row("Net income", st.changesInCapital.netIncomeCents)}{row("Unrealized", st.changesInCapital.unrealizedCents)}{row("Closing", st.changesInCapital.closingCents, true)}</div>
             </div>
             {st.changesInCapital.closingCents !== st.balanceSheet.partnersCapitalCents && (
-              <p className="text-xs text-muted-foreground">Partners' capital on the balance sheet differs from the capital roll-forward by {usd(Math.abs(st.changesInCapital.closingCents - st.balanceSheet.partnersCapitalCents))} · usually liabilities or asset purchases not yet in the books. Harmonious reviews this before approval.</p>
+              <p className="text-xs text-muted-foreground">Partners' capital on the balance sheet differs from the capital roll-forward by {usd(Math.abs(st.changesInCapital.closingCents - st.balanceSheet.partnersCapitalCents))} — usually liabilities or asset purchases not yet in the books. Harmonious reviews this before approval.</p>
             )}
           </>
         )}

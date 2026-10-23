@@ -136,7 +136,7 @@ export function StaffDesk() {
             <CardTitle className="text-base">No clients assigned to you yet</CardTitle>
             <CardDescription>
               Ask an administrator to add you to the clients you look after. Until then this desk
-              stays empty, you only ever see the clients you cover.
+              stays empty - you only ever see the clients you cover.
             </CardDescription>
           </CardHeader>
         </Card>
@@ -236,7 +236,7 @@ export function StaffDesk() {
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <CardTitle className="text-base">{serviceLabel(r.service_key)}</CardTitle>
                       <Badge variant="secondary">
-                        {r.status === "quoted" ? "Waiting on the client" : "Signed: activate it"}
+                        {r.status === "quoted" ? "Waiting on the client" : "Signed - activate it"}
                       </Badge>
                     </div>
                     <CardDescription>

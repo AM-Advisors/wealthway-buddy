@@ -71,7 +71,7 @@ export function WireFromBankForm({ fundId, allowPrefill = true }: { fundId: stri
           </label>
           {isAdmin && <Button size="sm" variant="outline" onClick={manual}>Enter manually</Button>}
           {allowPrefill && <Button size="sm" variant="outline" onClick={() => fill.mutate()} disabled={fill.isPending}>{fill.isPending ? "Reading bank…" : "Fill wire form from connected bank"}</Button>}
-          {uploaded && <span className="text-xs text-muted-foreground">Uploaded {uploaded} · saved to Documents</span>}
+          {uploaded && <span className="text-xs text-muted-foreground">Uploaded {uploaded} - saved to Documents</span>}
         </div>
       ) : (
         <div className="space-y-2 rounded-md border p-3">

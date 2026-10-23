@@ -187,7 +187,7 @@ export async function scan(migrationId: string, userId: string) {
       const m = g.category === "investor" ? match(g.investorName) : null;
       rows.push({
         migration_id: migrationId, drive_file_id: f.id, file_name: f.name, mime_type: f.mimeType, path: path || "/", size_bytes: f.size ? Number(f.size) : null,
-        suggested_category: g.category, suggested_type: g.type, suggested_reason: restricted ? "Restricted evidence: never imported" : !supported ? "File type can't be imported" : g.reason,
+        suggested_category: g.category, suggested_type: g.type, suggested_reason: restricted ? "Restricted evidence - never imported" : !supported ? "File type can't be imported" : g.reason,
         investor_name: g.investorName, category: g.category, document_type: g.type, profile_id: m?.profileId ?? null, onboarding_id: m?.onboardingId ?? null,
         action: restricted || !supported ? "blocked" : "pending",
       });

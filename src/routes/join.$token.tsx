@@ -12,9 +12,9 @@ export const Route = createFileRoute("/join/$token")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Investor Onboarding | Harmonious" },
+      { title: "Investor Onboarding - Harmonious" },
       { name: "description", content: "Begin secure investor onboarding through Harmonious." },
-      { property: "og:title", content: "Investor Onboarding | Harmonious" },
+      { property: "og:title", content: "Investor Onboarding - Harmonious" },
       { property: "og:description", content: "Begin secure investor onboarding through Harmonious." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

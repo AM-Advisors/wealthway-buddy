@@ -453,7 +453,7 @@ async function notifyCountersign(clientId: string, label: string, actor: string)
   try {
     const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
     const { data: c } = await db.from("clients").select("name, legal_name").eq("id", clientId).maybeSingle();
-    const title = `Countersign: ${(c as any)?.legal_name || (c as any)?.name || "client"} | ${label}`;
+    const title = `Countersign: ${(c as any)?.legal_name || (c as any)?.name || "client"} - ${label}`;
     const { data: dup } = await db.from("staff_tasks").select("id").eq("title", title).neq("status", "done").limit(1);
     if ((dup ?? []).length) return;
     const { data: owner } = await db.from("client_team_assignments").select("user_id").eq("client_id", clientId).eq("team_role", "sales").maybeSingle();
@@ -541,7 +541,7 @@ export const requestNewFund = createServerFn({ method: "POST" })
       .from("client_sows")
       .insert({
         client_id: data.clientId,
-        title: `Statement of Work | ${data.fundName}`,
+        title: `Statement of Work - ${data.fundName}`,
         sow_type: "spv",
         status: "draft",
         stage: "in_review",

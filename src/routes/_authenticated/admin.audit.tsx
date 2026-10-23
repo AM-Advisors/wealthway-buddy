@@ -19,13 +19,13 @@ import {
 export const Route = createFileRoute("/_authenticated/admin/audit")({
   head: () => ({
     meta: [
-      { title: "Audit log | Harmonious" },
+      { title: "Audit log - Harmonious" },
       {
         name: "description",
         content:
           "A read-only trail of wires, distributions, investor checks, filings, compliance holds and scope changes with timestamps.",
       },
-      { property: "og:title", content: "Audit log | Harmonious" },
+      { property: "og:title", content: "Audit log - Harmonious" },
       {
         property: "og:description",
         content: "Every money movement, investor check, filing and hold recorded with who acted and when.",

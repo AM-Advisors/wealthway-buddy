@@ -148,7 +148,7 @@ const opt = (...o: string[]) => o;
 
 export const REGISTERS: Record<string, RegisterSpec> = {
   data_map: { kind: "data_map", label: "Data Map", prefix: "DM", statuses: opt("draft", "approved", "retired"),
-    note: "Describes categories only: never store personal data here.",
+    note: "Describes categories only - never store personal data here.",
     fields: [
       { key: "systems", label: "Systems containing it", required: true }, { key: "purpose", label: "Purpose", required: true },
       { key: "classification", label: "Classification", type: "select", options: CLASSIFICATIONS, required: true },
@@ -156,7 +156,7 @@ export const REGISTERS: Record<string, RegisterSpec> = {
       { key: "recipients", label: "Recipients" }, { key: "retention", label: "Retention category" },
     ] },
   processing: { kind: "processing", label: "Processing Activities", prefix: "PA", statuses: opt("draft", "approved", "retired"),
-    note: "Lawful basis and controller/processor role must be set and approved by the privacy/legal owner, the software never decides them.",
+    note: "Lawful basis and controller/processor role must be set and approved by the privacy/legal owner - the software never decides them.",
     fields: [
       { key: "purpose", label: "Business purpose", required: true },
       { key: "role", label: "Controller/processor role", type: "select", options: ["Controller", "Processor", "Joint controller", "Undetermined"], humanOnly: true },
@@ -169,7 +169,7 @@ export const REGISTERS: Record<string, RegisterSpec> = {
       { key: "review_date", label: "Review date", type: "date" },
     ] },
   retention: { kind: "retention", label: "Retention", prefix: "RS", statuses: opt("draft", "approved", "under_review"),
-    note: "Policy and workflow only, nothing is deleted automatically. Retention disposition is not the same as deleting an unused draft.",
+    note: "Policy and workflow only - nothing is deleted automatically. Retention disposition is not the same as deleting an unused draft.",
     fields: [
       { key: "classification", label: "Classification", type: "select", options: CLASSIFICATIONS, required: true },
       { key: "purpose", label: "Purpose" }, { key: "basis", label: "Retention basis", required: true },
@@ -227,7 +227,7 @@ export const REGISTERS: Record<string, RegisterSpec> = {
       { key: "due", label: "Due date", type: "date" }, { key: "review_date", label: "Review date", type: "date" },
     ] },
   incident: { kind: "incident", label: "Incidents", prefix: "INC", statuses: opt("open", "contained", "investigating", "corrective_action", "closed"),
-    note: "Whether regulators or customers must be notified is a human/legal/privacy decision, the software only records it.",
+    note: "Whether regulators or customers must be notified is a human/legal/privacy decision - the software only records it.",
     fields: [
       { key: "discovered_at", label: "Discovered at", type: "date", required: true }, { key: "reported_by", label: "Reported by", type: "person" },
       { key: "systems", label: "Systems affected" }, { key: "data", label: "Data involved" },
@@ -336,7 +336,7 @@ export const EVIDENCE_QUERIES = {
   super_admins: { control: "AC-03", label: "Current Super Administrators" },
   staff_roles: { control: "AC-02", label: "Harmonious staff roles" },
   privileged_roles: { control: "AC-03", label: "Privileged roles" },
-  privileged_accounts: { control: "AC-07", label: "Privileged accounts: individual assignment" },
+  privileged_accounts: { control: "AC-07", label: "Privileged accounts - individual assignment" },
   direct_grants: { control: "AC-02", label: "Direct grants" },
   explicit_denies: { control: "AC-02", label: "Explicit denies" },
   expired_access: { control: "AC-05", label: "Expired access" },

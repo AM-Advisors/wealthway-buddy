@@ -143,7 +143,7 @@ export async function planWeek(userId: string, week: string) {
     const d = zonedToUtc(day.getUTCFullYear(), day.getUTCMonth() + 1, day.getUTCDate(), 9, 0, tz); // 9am organization time
     const { data, error } = await db.from("marketing_content_items").insert({
       series_key: s.key, week_start: monday, publish_at: d.toISOString(), proposed_slot: true,
-      topic: `Proposed ${s.name} topic: replace me`, platforms: ["linkedin"], created_by: userId, author_id: null,
+      topic: `Proposed ${s.name} topic — replace me`, platforms: ["linkedin"], created_by: userId, author_id: null,
     }).select().single();
     if (error) { if (String(error.code) === "23505") continue; throw new Error(error.message); }
     await snapshot(db, data, userId);

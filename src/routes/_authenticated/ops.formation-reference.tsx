@@ -14,9 +14,9 @@ import {
 
 export const Route = createFileRoute("/_authenticated/ops/formation-reference")({
   head: () => ({ meta: [
-    { title: "Formation reference data | Harmonious Operations" },
+    { title: "Formation reference data - Harmonious Operations" },
     { name: "description", content: "Formation providers, state fees and formation packages used in Fund Setup." },
-    { property: "og:title", content: "Formation reference data | Harmonious Operations" },
+    { property: "og:title", content: "Formation reference data - Harmonious Operations" },
     { property: "og:description", content: "Formation providers, state fees and formation packages used in Fund Setup." },
     { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" },
   ] }),

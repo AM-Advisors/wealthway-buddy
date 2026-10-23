@@ -13,9 +13,9 @@ import { applyPeriodLinkBatch, getPeriodLinkBatch, reviewPeriodLinkBatch } from 
 export const Route = createFileRoute("/_authenticated/ops/period-links/$batchId")({
   head: () => ({
     meta: [
-      { title: "Journal period linking review | Harmonious" },
+      { title: "Journal period linking review - Harmonious" },
       { name: "description", content: "Independent review and application of a journal-to-period linking batch." },
-      { property: "og:title", content: "Journal period linking review | Harmonious" },
+      { property: "og:title", content: "Journal period linking review - Harmonious" },
       { property: "og:description", content: "Internal accounting control: review and apply period links." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -53,7 +53,7 @@ function Page() {
     <div className="mx-auto max-w-5xl space-y-4 p-6">
       <Card>
         <CardHeader>
-          <CardTitle>Journal period linking · {b.accounting_periods?.label}</CardTitle>
+          <CardTitle>Journal period linking — {b.accounting_periods?.label}</CardTitle>
           <CardDescription>
             Adds a period reference only. Dates, amounts, lines and approvals never change. Two-person control: the preparer can never approve or apply; the independent reviewer approves and may then apply.
           </CardDescription>
@@ -61,7 +61,7 @@ function Page() {
         <CardContent className="space-y-2 text-sm">
           <div className="flex flex-wrap gap-2"><Badge>{b.status}</Badge><Badge variant="outline">{b.entry_count} journals</Badge><Badge variant="outline">hash {b.proposal_hash}</Badge></div>
           <p>Reason: {b.reason}</p>
-          <p>Prepared {new Date(b.prepared_at).toLocaleString()}{b.reviewed_at && ` · reviewed ${new Date(b.reviewed_at).toLocaleString()} · “${b.review_note}”`}{b.applied_at && ` · applied ${new Date(b.applied_at).toLocaleString()}`}</p>
+          <p>Prepared {new Date(b.prepared_at).toLocaleString()}{b.reviewed_at && ` · reviewed ${new Date(b.reviewed_at).toLocaleString()} — “${b.review_note}”`}{b.applied_at && ` · applied ${new Date(b.applied_at).toLocaleString()}`}</p>
           {b.status === "prepared" && (
             isPreparer ? <p className="text-muted-foreground">You prepared this batch, so you cannot review it.</p> : (
               <div className="space-y-2">

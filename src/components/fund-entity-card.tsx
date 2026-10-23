@@ -61,8 +61,8 @@ const ACTIVITIES = [
   { value: "transportation", label: "Transportation & warehousing" },
   { value: "accommodation_food", label: "Accommodation & food service" },
   { value: "retail", label: "Retail" },
-  { value: "wholesale_agent", label: "Wholesale: agent/broker" },
-  { value: "wholesale_other", label: "Wholesale: other" },
+  { value: "wholesale_agent", label: "Wholesale - agent/broker" },
+  { value: "wholesale_other", label: "Wholesale - other" },
   { value: "other", label: "Other" },
 ];
 
@@ -393,7 +393,7 @@ export function FundEntityCard({ fundId }: { fundId: string }) {
                   {field("responsible_party_name", "Responsible party (line 7a)")}
                   <div className="space-y-1.5">
                     <Label htmlFor="rp-tin">
-                      Their SSN, ITIN or EIN (line 7b){data?.details?.rp_tin_on_file ? " · on file; enter only to replace" : ""}
+                      Their SSN, ITIN or EIN (line 7b){data?.details?.rp_tin_on_file ? " - on file; enter only to replace" : ""}
                     </Label>
                     <Input
                       id="rp-tin"

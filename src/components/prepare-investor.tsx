@@ -64,7 +64,7 @@ export function PrepareInvestor({ fundId }: { fundId: string }) {
   });
   const sendM = useMutation({
     mutationFn: async () => { const r: any = await save({ data: payload() }); setDraftId(r.id); return send({ data: { offeringId: fundId, draftId: r.id } }); },
-    onSuccess: (r: any) => { toast.success(r.emailSent ? "Onboarding sent." : "Onboarding created, the email could not be sent, use Resend."); setReview(false); setDraftId(null); void qc.invalidateQueries(); },
+    onSuccess: (r: any) => { toast.success(r.emailSent ? "Onboarding sent." : "Onboarding created - the email could not be sent, use Resend."); setReview(false); setDraftId(null); void qc.invalidateQueries(); },
     onError: (e: any) => toast.error(String(e?.message ?? e).replace(/^Forbidden:\s*/, "")),
   });
 
@@ -153,7 +153,7 @@ export function PrepareInvestor({ fundId }: { fundId: string }) {
             {data.drafts.map((d: any) => (
               <div key={d.id} className="flex flex-wrap items-center justify-between gap-2 border-b py-2 text-sm last:border-0">
                 <span>{d.display_name || d.email}</span>
-                <span className="flex gap-2"><Badge variant="outline">{preparedLabel(d.preparer_capacity)}</Badge><Badge variant={d.status === "sent" ? "secondary" : "default"}>{d.status === "draft" ? "Draft, not sent" : d.status === "sent" ? "Invitation sent" : "Cancelled"}</Badge></span>
+                <span className="flex gap-2"><Badge variant="outline">{preparedLabel(d.preparer_capacity)}</Badge><Badge variant={d.status === "sent" ? "secondary" : "default"}>{d.status === "draft" ? "Draft - not sent" : d.status === "sent" ? "Invitation sent" : "Cancelled"}</Badge></span>
               </div>
             ))}
           </section>

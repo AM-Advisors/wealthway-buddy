@@ -481,7 +481,7 @@ function InvestorListTable({ records: all }: { records: InvestorListRow[] }) {
                         </Link>
                       </div>
                     ))
-                  : " · "}
+                  : "—"}
               </TableCell>
               <TableCell>
                 {row.funds.length
@@ -492,10 +492,10 @@ function InvestorListTable({ records: all }: { records: InvestorListRow[] }) {
                         </Link>
                       </div>
                     ))
-                  : " · "}
+                  : "—"}
               </TableCell>
-              <TableCell>{row.status ? <Badge variant="secondary">{row.status}</Badge> : " · "}</TableCell>
-              <TableCell>{row.stage ?? " · "}</TableCell>
+              <TableCell>{row.status ? <Badge variant="secondary">{row.status}</Badge> : "—"}</TableCell>
+              <TableCell>{row.stage ?? "—"}</TableCell>
               <TableCell>
                 <Button asChild size="sm" variant="outline">
                   <Link to={recordPath("investor", row.id) as any}>Open</Link>

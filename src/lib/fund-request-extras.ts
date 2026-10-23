@@ -52,7 +52,7 @@ export const FORMATION_GUIDES: Record<string, FormationGuide> = {
     url: "https://dos.ny.gov/forms-and-fees-division-corporations",
     filings: [
       { entity: "LLC", form: "Articles of Organization (LLC) - publication required", fee: "$200 + publication" },
-      { entity: "Series LLC", form: "New York does not form series LLCs, choose another state", fee: "-" },
+      { entity: "Series LLC", form: "New York does not form series LLCs - choose another state", fee: "-" },
       { entity: "LP", form: "Certificate of Limited Partnership - publication required", fee: "$200 + publication" },
       { entity: "GP", form: "Certificate of Assumed Name if not using partners' names", fee: "Varies" },
     ],

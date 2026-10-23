@@ -177,7 +177,7 @@ async function bookFor(uid: string, fundId: string) {
   const { data: b } = await d.from("ledger_books").select("id").eq("offering_id", fundId).eq("domain", "fund_accounting").maybeSingle();
   if (b) return String((b as any).id);
   const { data: off } = await d.from("offerings").select("name, client_id").eq("id", fundId).maybeSingle();
-  const { data: nb, error } = await d.from("ledger_books").insert({ name: `${(off as any)?.name ?? "Fund"} · fund accounting`, offering_id: fundId, client_id: (off as any)?.client_id ?? null, domain: "fund_accounting", created_by: uid }).select("id").single();
+  const { data: nb, error } = await d.from("ledger_books").insert({ name: `${(off as any)?.name ?? "Fund"} - fund accounting`, offering_id: fundId, client_id: (off as any)?.client_id ?? null, domain: "fund_accounting", created_by: uid }).select("id").single();
   if (error) throw new Error("Couldn't open the fund's books.");
   const { seedChartOfAccounts } = await import("@/lib/accounting.server");
   await seedChartOfAccounts(String(nb.id));

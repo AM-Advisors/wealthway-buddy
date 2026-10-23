@@ -323,7 +323,7 @@ export function OperationsWorkHome() {
           {activity.data?.activity.map((entry, index) => (
             <p key={`${entry.at}-${index}`} className="text-sm">
               <span className="text-muted-foreground">{when(entry.at) ?? ""} · </span>
-              {entry.actor} ({entry.capacity}) {entry.action} · {entry.resource}
+              {entry.actor} ({entry.capacity}) {entry.action} - {entry.resource}
             </p>
           ))}
           {activity.data && activity.data.activity.length === 0 && (

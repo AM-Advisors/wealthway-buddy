@@ -50,7 +50,7 @@ export function OfferingDocumentPreview({ offeringId, documentId, version, title
         <div className="flex shrink-0 flex-wrap gap-2"><Button asChild size="sm" variant="outline"><a href={q.data.url} target="_blank" rel="noopener noreferrer"><Download className="size-4" /> Open or download</a></Button></div>
         {word && wordState === "loading" && <p className="text-sm text-muted-foreground">Opening document…</p>}
         {word && wordState === "failed" && <p className="text-sm text-destructive">This file could not be displayed. You can still open or download it.</p>}
-        {word ? <div ref={content} className="document-surface min-h-0 min-w-0 flex-1 overflow-auto rounded-md border" /> : <iframe title={`${title} · Version ${version}`} src={q.data.url} className="min-h-0 w-full flex-1 rounded-md border bg-card" />}
+        {word ? <div ref={content} className="document-surface min-h-0 min-w-0 flex-1 overflow-auto rounded-md border" /> : <iframe title={`${title} — Version ${version}`} src={q.data.url} className="min-h-0 w-full flex-1 rounded-md border bg-card" />}
       </>}
     </DialogContent>
   </Dialog>;

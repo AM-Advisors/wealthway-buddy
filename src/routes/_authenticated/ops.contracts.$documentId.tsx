@@ -25,9 +25,9 @@ import { decideContractRelationship, recordContractRelationship, retireContractR
 export const Route = createFileRoute("/_authenticated/ops/contracts/$documentId")({
   head: () => ({
     meta: [
-      { title: "Contract review | Harmonious operations" },
+      { title: "Contract review - Harmonious operations" },
       { name: "description", content: "Compare extracted contract terms with the original and approve them." },
-      { property: "og:title", content: "Contract review | Harmonious operations" },
+      { property: "og:title", content: "Contract review - Harmonious operations" },
       { property: "og:description", content: "Human review of contract terms before they take effect." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -105,7 +105,7 @@ function ContractReview() {
               <CardDescription>Execution and precedence are always decided by a person.</CardDescription></CardHeader>
             <CardContent className="grid gap-3 text-sm sm:grid-cols-2">
               <Sel label="Execution" disabled={!editable || !d.mayConfirmExecution} value={doc.execution_status}
-                options={[["needs_review", "Not confirmed"], ["executed_confirmed", "Fully executed: I checked every signature"], ["not_executed", "Not executed"]]}
+                options={[["needs_review", "Not confirmed"], ["executed_confirmed", "Fully executed - I checked every signature"], ["not_executed", "Not executed"]]}
                 onChange={(v) => act(() => updateDoc({ data: { documentId, executionStatus: v as any } }), "Saved")} />
               <PrecedenceField doc={doc} disabled={!editable || !d.mayReviewPrecedence}
                 onSave={(status, note, source) => act(() => updateDoc({ data: { documentId, precedenceStatus: status as any, precedenceNote: note, precedenceSource: source } }), "Precedence recorded")} />
@@ -298,7 +298,7 @@ function RelationshipsCard({ d, documentId, onDone }: { d: any; documentId: stri
   const submit = async () => {
     try {
       await record({ data: { documentId, relatedDocumentId: related || null, relationshipType: type as any, scope, offeringIds: scope === "fund" && fund ? [fund] : [], serviceKeys: scope === "service" && svc ? [svc] : [], reason: reason || null, sourceReference: source || null, provisionReference: scope === "provision" ? provision || null : null } });
-      toast.success("Relationship recorded: awaiting approval by a different reviewer"); setReason(""); setSource(""); onDone();
+      toast.success("Relationship recorded - awaiting approval by a different reviewer"); setReason(""); setSource(""); onDone();
     } catch (e) { toast.error((e as Error).message); }
   };
   return (
@@ -310,7 +310,7 @@ function RelationshipsCard({ d, documentId, onDone }: { d: any; documentId: stri
           <ul className="space-y-1">
             {d.relationships.map((r: any) => (
               <li key={r.id} className={r.status === "retired" ? "text-muted-foreground line-through" : ""}>
-                {titleOf(r.document_id)} · {typeLabel(r.relationship_type)} {r.related_document_id ? titleOf(r.related_document_id) : ""} · {r.scope.replace("_", "-")}
+                {titleOf(r.document_id)} - {typeLabel(r.relationship_type)} {r.related_document_id ? titleOf(r.related_document_id) : ""} · {r.scope.replace("_", "-")}
                 {r.provision_reference ? ` · provision ${r.provision_reference}` : ""}
                 {r.reason ? ` · ${r.reason}` : ""}{r.source_reference ? ` (${r.source_reference})` : ""}
                 {r.approval_status === "pending_approval" ? <Badge variant="secondary" className="ml-2">Awaiting approval</Badge> : r.approval_status === "rejected" ? <Badge variant="outline" className="ml-2">Rejected</Badge> : null}

@@ -266,13 +266,13 @@ function AuthorityDocuments() {
 export const Route = createFileRoute("/_authenticated/professional/authority")({
   head: () => ({
     meta: [
-      { title: "Authority documents | Harmonious" },
+      { title: "Authority documents - Harmonious" },
       {
         name: "description",
         content:
           "Submit powers of attorney, resolutions and trustee authorizations that permit delegated signing.",
       },
-      { property: "og:title", content: "Authority documents | Harmonious" },
+      { property: "og:title", content: "Authority documents - Harmonious" },
       { property: "og:description", content: "Documented legal authority for delegated signing." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

@@ -610,7 +610,7 @@ export async function checkValuation(userId: string, valuationId: string) {
       kind: kind as any,
       offeringId: asset.offering_id,
       bookId: asset.book_id,
-      detail: `${asset.issuer_name} · ${asset.asset_name}`,
+      detail: `${asset.issuer_name} - ${asset.asset_name}`,
       context: { valuation_id: valuation.id, asset_id: asset.id },
       openedBy: userId,
     });
@@ -816,7 +816,7 @@ export async function prepareValuationJournal(userId: string, valuationId: strin
     recognized,
     Number(valuation.value_cents),
     policy,
-    `${synthetic ? `[${SYNTHETIC_ASSUMPTION_LABEL}] ` : ""}Unrealized movement · ${asset.issuer_name} ${asset.asset_name}${synthetic ? " (not independently verified)" : ""}`,
+    `${synthetic ? `[${SYNTHETIC_ASSUMPTION_LABEL}] ` : ""}Unrealized movement - ${asset.issuer_name} ${asset.asset_name}${synthetic ? " (not independently verified)" : ""}`,
   );
   if (!journal) return { journalEntryId: null, created: false, reason: "no_movement" as const };
 
@@ -964,7 +964,7 @@ export async function prepareRealizationJournal(userId: string, realizationId: s
     },
     Number(row.proceeds_cents),
     policy,
-    `Disposition · ${asset.issuer_name} ${asset.asset_name}`,
+    `Disposition - ${asset.issuer_name} ${asset.asset_name}`,
   );
   if (!journal) fail("Nothing to post for this disposition.");
 

@@ -54,7 +54,7 @@ function AgreementsPage() {
         <CardContent><Rows rows={d?.agreements ?? []} empty={q.isLoading ? "Loading…" : "Nothing accepted yet."} /></CardContent>
       </Card>
       <Card>
-        <CardHeader><CardTitle className="text-base">Pricing & Commercial Terms</CardTitle><CardDescription>Platform-level pricing acknowledgments, not fund SOWs.</CardDescription></CardHeader>
+        <CardHeader><CardTitle className="text-base">Pricing & Commercial Terms</CardTitle><CardDescription>Platform-level pricing acknowledgments - not fund SOWs.</CardDescription></CardHeader>
         <CardContent><Rows rows={d?.pricing ?? []} empty={q.isLoading ? "Loading…" : "No pricing acknowledgments."} /></CardContent>
       </Card>
       <Card>

@@ -206,7 +206,7 @@ export function ClientBankLinking() {
           <CardContent>
             <p className="text-sm text-muted-foreground">
               Bank linking isn't switched on for this portal yet. Your Harmonious contact can enable
-              it, until then, keep reporting each payment on the invoice and we will match it.
+              it - until then, keep reporting each payment on the invoice and we will match it.
             </p>
           </CardContent>
         )}

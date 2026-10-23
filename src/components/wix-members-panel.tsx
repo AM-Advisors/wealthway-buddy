@@ -33,7 +33,7 @@ export function WixMembersPanel() {
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <select className="h-9 rounded-md border bg-background px-2 text-sm" value={siteId} onChange={(e) => setSite(e.target.value)}>
             <option value="">Choose site…</option>
-            {(sites.data ?? []).map((s) => <option key={s.id} value={s.id}>{s.name}{s.url ? ` · ${s.url}` : ""}</option>)}
+            {(sites.data ?? []).map((s) => <option key={s.id} value={s.id}>{s.name}{s.url ? ` — ${s.url}` : ""}</option>)}
           </select>
           <Button variant="outline" disabled={busy || !siteId} onClick={() => act(async () => { const r = await test({ data: { siteId } }); return `Connected. ${r.members} members found.`; })}>Test connection</Button>
           <Button disabled={busy || !siteId} onClick={() => act(async () => { const r = await run({ data: { siteId } }); await qc.invalidateQueries({ queryKey: ["wix-members"] }); return `Imported ${r.total} members: ${r.matched} match existing people, ${r.withPhone} have a phone.`; })}>{busy ? "Working…" : "Import members"}</Button>
@@ -51,10 +51,10 @@ export function WixMembersPanel() {
             <thead className="text-left text-muted-foreground"><tr><th className="p-2">Name</th><th className="p-2">Email</th><th className="p-2">Phone</th><th className="p-2">Wix status</th><th className="p-2">Harmonious</th><th className="p-2"></th></tr></thead>
             <tbody>{rows.slice(0, 500).map((m: any) => (
               <tr key={m.wix_member_id} className="border-t">
-                <td className="p-2">{[m.first_name, m.last_name].filter(Boolean).join(" ") || " · "}</td>
-                <td className="p-2">{m.email || " · "}</td>
-                <td className="p-2">{m.phone || " · "}</td>
-                <td className="p-2 capitalize">{String(m.wix_status ?? " · ").toLowerCase()}</td>
+                <td className="p-2">{[m.first_name, m.last_name].filter(Boolean).join(" ") || "—"}</td>
+                <td className="p-2">{m.email || "—"}</td>
+                <td className="p-2">{m.phone || "—"}</td>
+                <td className="p-2 capitalize">{String(m.wix_status ?? "—").toLowerCase()}</td>
                 <td className="p-2">{m.matched_person_id ? <Badge variant="secondary">Matches a person</Badge> : <Badge variant="outline">Not in Harmonious</Badge>}</td>
                 <td className="p-2 text-right">{m.linked_person_id ? <Badge>{m.review_action === "created" ? "Created" : "Linked"}</Badge> : m.matched_person_id ? <Button size="sm" variant="outline" disabled={rowBusy === m.wix_member_id} onClick={() => doReview(m.wix_member_id, "link")}>Link</Button> : <Button size="sm" variant="outline" disabled={rowBusy === m.wix_member_id || (!m.email && !m.first_name)} onClick={() => { if (window.confirm(`Create a Harmonious person for ${[m.first_name, m.last_name].filter(Boolean).join(" ") || m.email}?`)) doReview(m.wix_member_id, "create"); }}>Create person</Button>}</td>
               </tr>))}

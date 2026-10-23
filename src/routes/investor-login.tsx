@@ -17,13 +17,13 @@ export const Route = createFileRoute("/investor-login")({
   head: () => ({
     meta: [
         { name: "robots", content: "noindex, nofollow" },
-      { title: "Investor Sign In | Harmonious" },
+      { title: "Investor Sign In - Harmonious" },
       {
         name: "description",
         content:
           "Sign in to your investor portal: your investments, documents, deal rooms, capital calls, tax documents and messages.",
       },
-      { property: "og:title", content: "Investor Sign In | Harmonious" },
+      { property: "og:title", content: "Investor Sign In - Harmonious" },
       {
         property: "og:description",
         content: "Your investments, documents, deal rooms and tax documents in one place.",

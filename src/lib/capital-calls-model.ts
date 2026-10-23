@@ -471,7 +471,7 @@ export const FUNDING_EXCEPTION_LABELS: Record<FundingExceptionKind, string> = {
   reversed_transaction: "Reversed transaction",
   currency_discrepancy: "Currency discrepancy",
   fees_deducted: "Fees deducted from wire",
-  ambiguous_match: "Ambiguous: more than one possible investor",
+  ambiguous_match: "Ambiguous - more than one possible investor",
 };
 
 export type IncomingCash = {

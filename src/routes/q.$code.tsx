@@ -12,9 +12,9 @@ const resolve = createServerFn({ method: "GET" })
 export const Route = createFileRoute("/q/$code")({
   head: () => ({
     meta: [
-      { title: "Open your quote | Harmonious" },
+      { title: "Open your quote - Harmonious" },
       { name: "description", content: "Opening your Harmonious quote or proposal." },
-      { property: "og:title", content: "Open your quote | Harmonious" },
+      { property: "og:title", content: "Open your quote - Harmonious" },
       { property: "og:description", content: "Opening your Harmonious quote or proposal." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

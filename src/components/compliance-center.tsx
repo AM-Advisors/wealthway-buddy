@@ -42,7 +42,7 @@ export function ComplianceCenter({ initialTab }: { initialTab?: string } = {}) {
     <div className="space-y-4 p-6">
       <div>
         <h1 className="text-2xl font-semibold">Compliance & Controls</h1>
-        <p className="text-sm text-muted-foreground">How Harmonious controls are designed, operated and evidenced. This supports SOC 2 readiness and privacy governance, it does not certify compliance.</p>
+        <p className="text-sm text-muted-foreground">How Harmonious controls are designed, operated and evidenced. This supports SOC 2 readiness and privacy governance - it does not certify compliance.</p>
       </div>
       <Tabs defaultValue={initialTab ?? "home"}>
         <TabsList className="flex-wrap h-auto">
@@ -118,7 +118,7 @@ function Controls({ d }: { d: Data }) {
         <Card key={c.control_key}>
           <CardContent className="space-y-2 p-4">
             <div className="flex flex-wrap items-center gap-2">
-              <button className="font-medium" onClick={() => setOpen(open === c.control_key ? null : c.control_key)}>{c.control_key} · {c.name}</button>
+              <button className="font-medium" onClick={() => setOpen(open === c.control_key ? null : c.control_key)}>{c.control_key} - {c.name}</button>
               <StatusBadge s={c.status} /><Badge variant="outline">v{c.version}</Badge><Badge variant="outline">{c.control_type}</Badge><Badge variant="outline">{c.frequency.replace("_", " ")}</Badge>
               {c.mappings.map((m: string) => <Badge key={m} variant="secondary">{m}</Badge>)}
             </div>
@@ -290,7 +290,7 @@ function Evidence({ d }: { d: Data }) {
                     <Input className="w-72" placeholder="Review note" value={note} onChange={(x) => setNote(x.target.value)} />
                     <Button size="sm" onClick={() => act(() => review({ data: { evidence_id: e.id, decision: "accepted", note } }), "Evidence accepted")}>Accept</Button>
                     <Button size="sm" variant="destructive" onClick={() => act(() => review({ data: { evidence_id: e.id, decision: "exception", note } }), "Exception recorded")}>Record exception</Button>
-                    {e.system_generated && can("administration.evidence.collect") && <Button size="sm" variant="outline" onClick={() => act(() => collect({ data: { query: e.artifact_reference.replace("rbac:", ""), period_start: e.period_start, period_end: e.period_end, supersedes_id: e.id } }), "Regenerated: original retained")}>Regenerate (keeps original)</Button>}
+                    {e.system_generated && can("administration.evidence.collect") && <Button size="sm" variant="outline" onClick={() => act(() => collect({ data: { query: e.artifact_reference.replace("rbac:", ""), period_start: e.period_start, period_end: e.period_end, supersedes_id: e.id } }), "Regenerated - original retained")}>Regenerate (keeps original)</Button>}
                   </div>
                 )}
               </div>
@@ -339,7 +339,7 @@ function Reviews({ d }: { d: Data }) {
                       <ul className="mt-1 space-y-1">{roles.map((x, n) => <li key={n} className="rounded border p-1">{x.role} · {x.source} · scope {x.scope} · by {x.granted_by} · at {String(x.granted_at).slice(0, 16).replace("T", " ")} · expiry {x.expiry}{x.sensitive ? ` · ${x.sensitive}` : ""}</li>)}
                         <li className="text-muted-foreground">Direct grants/denies: {(i.direct_grants ?? []).join("; ") || "None"}</li></ul></details></td>
                     <td className="p-1">{i.scope}</td><td className="p-1">{i.sensitive || "-"}</td><td className="p-1">{i.source}</td><td className="p-1">{i.granted_by}</td><td className="p-1">{i.last_used}</td><td className="p-1">{i.expiry}</td>
-                    <td className="p-1">{dd ? <span>{dd.decision === "approve" ? "keep" : dd.decision}{dd.target ? ` (${dd.target})` : ""}{dd.note ? ` · ${dd.note}` : ""}</span> : mine ? (
+                    <td className="p-1">{dd ? <span>{dd.decision === "approve" ? "keep" : dd.decision}{dd.target ? ` (${dd.target})` : ""}{dd.note ? ` - ${dd.note}` : ""}</span> : mine ? (
                       <div className="flex flex-wrap gap-1"><Input className="h-7 w-40" placeholder="Note" value={notes[i.key] ?? ""} onChange={(e) => setNotes({ ...notes, [i.key]: e.target.value })} />
                         <select className={sel + " h-7"} value={targets[i.key] ?? ""} onChange={(e) => setTargets({ ...targets, [i.key]: e.target.value })}><option value="">Whole subject</option>{roles.map((x) => <option key={x.role} value={x.role}>{x.role}</option>)}{(i.direct_grants ?? []).map((g: string) => <option key={g} value={g}>{g}</option>)}</select>
                         {(["approve", "revoke", "reduce", "investigate"] as const).map((x) => <Button key={x} size="sm" variant="outline" className="h-7 px-2" onClick={() => act(() => decide({ data: { review_id: r.id, item_key: i.key, decision: x, note: notes[i.key] ?? "", target: targets[i.key] || null } }), "Decision recorded")}>{x === "approve" ? "Keep" : x === "reduce" ? "Reduce" : x === "investigate" ? "Investigate" : "Revoke"}</Button>)}</div>

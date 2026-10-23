@@ -159,7 +159,7 @@ export function FundingStep({ offeringId }: { offeringId?: string }) {
     onSuccess: async (_r, m) => {
       await queryClient.invalidateQueries({ queryKey: ["funding", offeringId ?? "active"] });
       if (m === "wire") chooseWireMutation.mutate();
-      else toast.success("Confirmed, you can now enter your bank details.");
+      else toast.success("Confirmed - you can now enter your bank details.");
     },
     onError,
   });

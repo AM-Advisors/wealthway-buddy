@@ -18,7 +18,7 @@ export async function renderPdf(doc: any, sections: Section[], draft: boolean): 
   const footer = (p: any) => {
     p.drawRectangle({ x: 0, y: 0, width: W, height: 28, color: rgb(NAVY.r, NAVY.g, NAVY.b) });
     p.drawText("Harmonious  |  harmonious.co", { x: M, y: 10, size: 8, font: reg, color: rgb(1, 1, 1) });
-    if (draft) p.drawText("DRAFT, not approved", { x: W - M - 100, y: 10, size: 8, font: bold, color: rgb(TEAL.r, TEAL.g, TEAL.b) });
+    if (draft) p.drawText("DRAFT - not approved", { x: W - M - 100, y: 10, size: 8, font: bold, color: rgb(TEAL.r, TEAL.g, TEAL.b) });
   };
   const newPage = () => { footer(page); page = pdf.addPage([W, H]); y = H - M; };
   const wrap = (text: string, font: any, size: number) => {
@@ -69,7 +69,7 @@ export async function renderDocx(doc: any, sections: Section[], draft: boolean):
     new Paragraph({ heading: HeadingLevel.TITLE, children: [new TextRun({ text: doc.title, bold: true, color: "142647", font: "Rubik", size: 44 })] }),
   ];
   if (doc.recipient_name) children.push(new Paragraph({ children: [new TextRun({ text: `Prepared for ${doc.recipient_name}`, font: "Poppins" })] }));
-  if (draft) children.push(new Paragraph({ children: [new TextRun({ text: "DRAFT, not approved", bold: true, color: "5DC6D1", font: "Poppins" })] }));
+  if (draft) children.push(new Paragraph({ children: [new TextRun({ text: "DRAFT - not approved", bold: true, color: "5DC6D1", font: "Poppins" })] }));
   for (const s of sections) {
     children.push(new Paragraph({ heading: HeadingLevel.HEADING_1, spacing: { before: 300 }, children: [new TextRun({ text: s.title, color: "142647", font: "Rubik", bold: true })] }));
     if (s.question) children.push(new Paragraph({ children: [new TextRun({ text: `Question: ${s.question}`, italics: true, color: "666666", font: "Poppins" })] }));

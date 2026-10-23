@@ -14,9 +14,9 @@ import { listAllCloseRequests } from "@/lib/fund-close-requests.functions";
 export const Route = createFileRoute("/_authenticated/ops/close-requests")({
   head: () => ({
     meta: [
-      { title: "Close requests | Harmonious Operations" },
+      { title: "Close requests - Harmonious Operations" },
       { name: "description", content: "Fund close requests submitted by fund managers, for Harmonious review." },
-      { property: "og:title", content: "Close requests | Harmonious Operations" },
+      { property: "og:title", content: "Close requests - Harmonious Operations" },
       { property: "og:description", content: "Review fund close requests from fund managers." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
