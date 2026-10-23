@@ -1,3 +1,4 @@
+import { InvestorVerificationCard } from "@/components/investor-verification-card";
 import { PersonalInvestmentLinkCard } from "@/components/personal-investment-link";
 import { InvestorReviewPanel } from "@/components/fund-tabs/investors-tab";
 import { UploadForInvestor } from "@/components/upload-for-investor";
@@ -85,6 +86,7 @@ function InvestorRecordPage() {
       {tab === "history" ? <InvestorStepHistory offeringId={fundId} onboardingId={onboardingId} /> : null}
       {tab === "overview" ? <div className="grid gap-4 md:grid-cols-2">
         <Card className="md:col-span-2"><CardHeader><CardTitle className="text-base">Status, review & actions</CardTitle></CardHeader><CardContent><InvestorReviewPanel fundId={fundId} id={onboardingId} embedded /></CardContent></Card>
+        {staff && data.overview.investorUserId ? <div className="md:col-span-2"><InvestorVerificationCard investorUserId={data.overview.investorUserId} /></div> : null}
         <Card><CardHeader><CardTitle className="text-base">Investment</CardTitle></CardHeader><CardContent className="space-y-1 text-sm">
           <p>Amount: {money(inv.amountCents)}</p><p>Commitment: {money(inv.commitmentCents)}</p>{staff ? <p>Accepted: {money(inv.acceptedCents)}</p> : null}<p>Funded: {money(inv.fundedCents)}</p></CardContent></Card>
         <PersonalInvestmentLinkCard onboardingId={onboardingId} />
