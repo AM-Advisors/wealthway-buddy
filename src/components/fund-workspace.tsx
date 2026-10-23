@@ -17,9 +17,7 @@ import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { FundServicesTab } from "@/components/fund-services-tab";
 import { FundCommandCenter } from "@/components/fund-command-center";
 import { FundCalendar } from "@/components/fund-calendar";
-import { FundApprovals } from "@/components/fund-approvals";
-import { ManagerFundReviews } from "@/components/manager-fund-reviews";
-import { FundRequests } from "@/components/fund-requests";
+import { FundApprovalsHub } from "@/components/fund-approvals-hub";
 import { updateSetupTaskFn } from "@/lib/fund-setup.functions";
 import { Link } from "@tanstack/react-router";
 import { CloseRequestReview } from "@/components/close-request-review";
@@ -39,7 +37,6 @@ import { TodosTab } from "@/components/fund-tabs/todos-tab";
 import { TeamTab } from "@/components/fund-tabs/team-tab";
 import { ManagerFundInvestors } from "@/components/manager-fund-investors";
 import { CapitalTieReport } from "@/components/investor-share-panel";
-import { FundUpdatesPanel } from "@/components/investor-onboarding-extras";
 import { DocumentsTab } from "@/components/fund-tabs/documents-tab";
 import { AuditHistoryTab } from "@/components/fund-tabs/audit-history-tab";
 import { BankingTab } from "@/components/fund-tabs/banking-tab";
@@ -299,8 +296,8 @@ export function FundWorkspace({ fundId, tab, onTab, mode = "client", extraTabs =
         {!merged && <TabsContent value="team"><TeamTab fundId={fundId} /></TabsContent>}
         <TabsContent value="overview"><FundCommandCenter fundId={fundId} onNavigate={(t) => onTab(t === "capital" ? "distributions" : t)} /></TabsContent>
         <TabsContent value="calendar"><FundCalendar fundId={fundId} /></TabsContent>
-        <TabsContent value="approvals">{tab === "approvals" && <div className="space-y-6">{!staff && <ManagerFundReviews fundId={fundId} />}<FundApprovals fundId={fundId} /></div>}</TabsContent>
-        <TabsContent value="requests"><FundRequests fundId={fundId} /></TabsContent>
+        <TabsContent value="approvals">{tab === "approvals" && <FundApprovalsHub fundId={fundId} staff={staff} initial="approvals" />}</TabsContent>
+        <TabsContent value="requests">{tab === "requests" && <FundApprovalsHub fundId={fundId} staff={staff} initial="requests" />}</TabsContent>
         <TabsContent value="services"><FundServicesTab fundId={fundId} /></TabsContent>
         <TabsContent value="documents"><DocumentsTab fundId={fundId} /></TabsContent>
         <TabsContent value="audit"><AuditHistoryTab fundId={fundId} /></TabsContent>
@@ -309,7 +306,7 @@ export function FundWorkspace({ fundId, tab, onTab, mode = "client", extraTabs =
         {!merged && <TabsContent value="details" className="space-y-5">{detailsBody}</TabsContent>}
         {!merged && <TabsContent value="banking" className="space-y-5">{bankingBody}</TabsContent>}
 
-        <TabsContent value="investors" className="space-y-4">{staff && migrationApplies(f.fund_origin) && <FundMigrationStatus fundId={fundId} />}{staff && migrationApplies(f.fund_origin) && <MigrationPaymentsCard fundId={fundId} />}<ManagerFundInvestors fundId={fundId} extraTabs={staff ? [{ value: "queue", label: "Work queue", content: <ReadinessQueue offeringId={fundId} initialTab="all" /> }] : undefined} /><CapitalTieReport offeringId={fundId} /><FundUpdatesPanel fundId={fundId} /></TabsContent>
+        <TabsContent value="investors" className="space-y-4">{staff && migrationApplies(f.fund_origin) && <FundMigrationStatus fundId={fundId} />}{staff && migrationApplies(f.fund_origin) && <MigrationPaymentsCard fundId={fundId} />}<ManagerFundInvestors fundId={fundId} extraTabs={staff ? [{ value: "queue", label: "Work queue", content: <ReadinessQueue offeringId={fundId} initialTab="all" /> }] : undefined} /><CapitalTieReport offeringId={fundId} /></TabsContent>
 
 
         <TabsContent value="accounting"><AccountingWorkspace fundId={fundId} staff={staff} extra={<AccountTab fundId={fundId} fundName={String(f.name ?? "Fund")} taxDocs={td?.taxDocs ?? []} />} /></TabsContent>
