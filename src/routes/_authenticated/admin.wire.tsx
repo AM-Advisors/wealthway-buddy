@@ -83,7 +83,7 @@ function WireAdminPage() {
   const mutation = useMutation({
     mutationFn: (input: { offering_id: string } & Record<string, string>) => save({ data: input as any }),
     onSuccess: () => {
-      toast.success("Wire instructions updated - investors see them right away.");
+      toast.success("Wire instructions updated: investors see them right away.");
       queryClient.invalidateQueries({ queryKey: ["managed-wire"] });
       queryClient.invalidateQueries({ queryKey: ["offerings"] });
       setSavingId(null);

@@ -11,13 +11,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 export const Route = createFileRoute("/_authenticated/client/funds/")({
   head: () => ({
     meta: [
-      { title: "Your funds - Harmonious" },
+      { title: "Your funds | Harmonious" },
       {
         name: "description",
         content:
           "The funds Harmonious administers for you, with legal entity, exemption and formation details.",
       },
-      { property: "og:title", content: "Your funds - Harmonious" },
+      { property: "og:title", content: "Your funds | Harmonious" },
       {
         property: "og:description",
         content: "The funds Harmonious administers for you under your agreement.",

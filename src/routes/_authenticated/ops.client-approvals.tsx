@@ -66,7 +66,7 @@ function Approvals() {
     <ul className="divide-y rounded-lg border bg-card">{list.map((r: any) => (
       <li key={r.id} className="flex flex-wrap items-center gap-2 p-3 text-sm">
         <div className="min-w-0 flex-1"><p className="font-medium">{r.title} <span className="text-xs text-muted-foreground">· {approvalType(r.approval_type).label} v{r.version}</span></p>
-          <p className="text-xs text-muted-foreground"><FundLink id={r.fund_id} name={r.fundName} tab="approvals" /> · {r.approval_amount != null ? `$${Number(r.approval_amount).toLocaleString("en-US")} · ` : ""}{r.due_date ? `Due ${fmtDate(r.due_date)} · ` : ""}Prepared by {r.preparedByName ?? "—"}</p></div>
+          <p className="text-xs text-muted-foreground"><FundLink id={r.fund_id} name={r.fundName} tab="approvals" /> · {r.approval_amount != null ? `$${Number(r.approval_amount).toLocaleString("en-US")} · ` : ""}{r.due_date ? `Due ${fmtDate(r.due_date)} · ` : ""}Prepared by {r.preparedByName ?? " · "}</p></div>
         <span className="text-xs">{APPROVAL_STATUS_LABEL[r.status]}</span>
       </li>
     ))}{!list.length && <li className="p-3 text-sm text-muted-foreground">No approvals match.</li>}</ul>

@@ -17,13 +17,13 @@ import { AccountSwitcher } from "@/components/account-switcher";
 export const Route = createFileRoute("/_authenticated/apply")({
   head: () => ({
     meta: [
-      { title: "Apply to Join a Fund - Harmonious Investor Portal" },
+      { title: "Apply to Join a Fund | Harmonious Investor Portal" },
       {
         name: "description",
         content:
           "Apply to join a Harmonious fund: choose the fund, tell us how you invest and how much, then step through identity, accreditation and funding.",
       },
-      { property: "og:title", content: "Apply to Join a Fund - Harmonious Investor Portal" },
+      { property: "og:title", content: "Apply to Join a Fund | Harmonious Investor Portal" },
       {
         property: "og:description",
         content: "Start your subscription application and follow each step through to funding.",

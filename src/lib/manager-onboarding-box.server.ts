@@ -95,7 +95,7 @@ export async function archiveManagerDocToBox(
 
     const approvedAt = ((row as any).reviewed_at as string | null) ?? new Date().toISOString();
     const { base, ext } = splitExtension((row as any).file_name as string);
-    const fileName = `${safeName(String((row as any).doc_type))} - ${safeName(base)} - approved ${stamp(
+    const fileName = `${safeName(String((row as any).doc_type))} · ${safeName(base)} · approved ${stamp(
       approvedAt,
     )}${ext}`;
 

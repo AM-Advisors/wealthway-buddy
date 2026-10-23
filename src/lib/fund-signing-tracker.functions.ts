@@ -32,7 +32,7 @@ export const logSigningTrackerFn = createServerFn({ method: "POST" }).middleware
     if (file.error || manager.error || !file.data || !manager.data) throw new Error("Choose a document and manager belonging to this fund.");
     const { fundId, ...values } = data;
     const r = await d.from("offering_audit_events").insert({ offering_id: fundId, event_type: "document_signing_manual_log", actor_id: context.userId,
-      summary: `Manual signing update: ${file.data.title} — ${data.status === "signed" ? "reported signed" : "pending"}`,
+      summary: `Manual signing update: ${file.data.title} · ${data.status === "signed" ? "reported signed" : "pending"}`,
       changes: Object.entries(values).map(([field, to]) => ({ field, to })) });
     if (r.error) throw new Error("Signing update could not be saved.");
     return { ok: true };

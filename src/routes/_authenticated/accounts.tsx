@@ -31,13 +31,13 @@ import {
 export const Route = createFileRoute("/_authenticated/accounts")({
   head: () => ({
     meta: [
-      { title: "Your Investing Accounts - Harmonious" },
+      { title: "Your Investing Accounts | Harmonious" },
       {
         name: "description",
         content:
           "Set up and switch between your investing accounts - individual, LLC, trust, IRA or joint - and see the funds each one is applying to.",
       },
-      { property: "og:title", content: "Your Investing Accounts - Harmonious" },
+      { property: "og:title", content: "Your Investing Accounts | Harmonious" },
       {
         property: "og:description",
         content: "Manage individual, entity, trust and retirement accounts in one place.",

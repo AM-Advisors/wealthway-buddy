@@ -460,7 +460,7 @@ describe("assisted uploads", () => {
 });
 
 describe("Phase 3B activation limits", () => {
-  it("activates preparing only - never signing, deciding or paying", () => {
+  it("activates preparing only: never signing, deciding or paying", () => {
     expect(PHASE_3B_CAPABILITIES.sort()).toEqual(
       [
         "assist_accreditation",

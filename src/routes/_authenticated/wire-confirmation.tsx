@@ -17,13 +17,13 @@ import { getFunding, submitWireConfirmation, wireConfirmationSchema } from "@/li
 export const Route = createFileRoute("/_authenticated/wire-confirmation")({
   head: () => ({
     meta: [
-      { title: "Confirm your wire - Harmonious investor portal" },
+      { title: "Confirm your wire | Harmonious investor portal" },
       {
         name: "description",
         content:
           "Tell Harmonious the details of the wire you sent so your subscription can be matched and reviewed.",
       },
-      { property: "og:title", content: "Confirm your wire - Harmonious investor portal" },
+      { property: "og:title", content: "Confirm your wire | Harmonious investor portal" },
       {
         property: "og:description",
         content: "Submit your wire details for review by the Harmonious team.",

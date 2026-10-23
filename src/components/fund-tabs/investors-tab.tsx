@@ -217,7 +217,7 @@ function DuplicatesCard({ fundId, groups, staff, onMerged }: { fundId: string; g
     <Card>
       <CardHeader>
         <CardTitle className="text-base">Possible duplicate investors</CardTitle>
-        <CardDescription>Same name or email appears more than once. Merging keeps one record, carries over its documents and tasks, and archives the other — nothing is deleted. Staff only.</CardDescription>
+        <CardDescription>Same name or email appears more than once. Merging keeps one record, carries over its documents and tasks, and archives the other, nothing is deleted. Staff only.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {groups.map((g, i) => (
@@ -249,7 +249,7 @@ function StepChips({ steps }: { steps: StepStatus[] }) {
   return (
     <div className="flex items-center gap-1">
       {steps.map((st, i) => (
-        <span key={st.key} title={`${st.label}: ${STEP_STATE_LABELS[st.state]} — ${st.detail}`} className={`flex size-6 items-center justify-center rounded-full text-[10px] font-medium ${STATE_DOT[st.state]}`}>{i + 1}</span>
+        <span key={st.key} title={`${st.label}: ${STEP_STATE_LABELS[st.state]} · ${st.detail}`} className={`flex size-6 items-center justify-center rounded-full text-[10px] font-medium ${STATE_DOT[st.state]}`}>{i + 1}</span>
       ))}
     </div>
   );

@@ -17,9 +17,9 @@ import { SalesPipelineTab } from "@/components/sales-pipeline-tab";
 export const Route = createFileRoute("/_authenticated/sales")({
   head: () => ({
     meta: [
-      { title: "Sales - Harmonious" },
+      { title: "Sales | Harmonious" },
       { name: "description", content: "Harmonious Sales: clients, fund requests, fund pricing, pricing approvals, Client Pricing and pricing history." },
-      { property: "og:title", content: "Sales - Harmonious" },
+      { property: "og:title", content: "Sales | Harmonious" },
       { property: "og:description", content: "Commercial pricing and agreements for Harmonious staff." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

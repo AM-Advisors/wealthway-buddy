@@ -73,7 +73,7 @@ function CalendarPage() {
     try {
       const fn = it.kind === "post" ? decidePost : decideEmail;
       await fn({ data: { id: it.id, action } });
-      toast.success(action === "submit" ? "Sent for approval" : action === "approve" ? "Approved — it goes live at its scheduled time" : "Sent back to the author");
+      toast.success(action === "submit" ? "Sent for approval" : action === "approve" ? "Approved, it goes live at its scheduled time" : "Sent back to the author");
       await q.refetch();
     } catch (e) {
       toast.error((e as Error).message);

@@ -88,7 +88,7 @@ export const fundAuditHistoryFn = createServerFn({ method: "POST" })
       out.push({
         id: `pd-${r.id}`, at: r.decided_at, who: who(r.decided_by), role: "Harmonious",
         action: `${r.decision === "accepted" ? "Accepted" : "Skipped"} suggested ${nice(p?.field)}`, status: nice(r.decision), source: "Review",
-        details: [{ label: "Value", value: show(p?.field ?? "", p?.value) }, { label: "Suggested from", value: nice(p?.source_kind) || "—" }],
+        details: [{ label: "Value", value: show(p?.field ?? "", p?.value) }, { label: "Suggested from", value: nice(p?.source_kind) || " · " }],
       });
     }
     for (const r of subs.data ?? []) {
@@ -105,7 +105,7 @@ export const fundAuditHistoryFn = createServerFn({ method: "POST" })
     }
     for (const r of names.data ?? []) out.push({
       id: `n-${r.id}`, at: r.created_at, who: who(r.actor_id), role: null, action: "Renamed the fund", status: null, source: "Fund record",
-      details: [{ label: "From", value: r.previous_name ?? "—" }, { label: "To", value: r.new_name ?? "—" }, ...(r.effective_date ? [{ label: "Effective", value: r.effective_date }] : []), ...(r.reason ? [{ label: "Reason", value: show("reason", r.reason) }] : [])],
+      details: [{ label: "From", value: r.previous_name ?? " · " }, { label: "To", value: r.new_name ?? " · " }, ...(r.effective_date ? [{ label: "Effective", value: r.effective_date }] : []), ...(r.reason ? [{ label: "Reason", value: show("reason", r.reason) }] : [])],
     });
     for (const r of events.data ?? []) out.push({
       id: `e-${r.id}`, at: r.created_at, who: who(r.actor_user_id), role: r.actor_role ? nice(r.actor_role) : null,

@@ -63,7 +63,7 @@ function WirePage() {
       await navigator.clipboard.writeText(value);
       toast.success(`${label} copied`);
     } catch {
-      toast.error("Could not copy - please select the text manually.");
+      toast.error("Could not copy: please select the text manually.");
     }
   }
 

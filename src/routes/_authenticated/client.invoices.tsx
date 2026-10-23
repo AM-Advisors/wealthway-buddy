@@ -19,13 +19,13 @@ import { declareInvoicePayment, listMyInvoices, respondToInvoice } from "@/lib/i
 export const Route = createFileRoute("/_authenticated/client/invoices")({
   head: () => ({
     meta: [
-      { title: "Your invoices - Harmonious" },
+      { title: "Your invoices | Harmonious" },
       {
         name: "description",
         content:
           "View and pay your Harmonious invoices, including fund wire fees and closing costs, and confirm the transfer you sent.",
       },
-      { property: "og:title", content: "Your invoices - Harmonious" },
+      { property: "og:title", content: "Your invoices | Harmonious" },
       {
         property: "og:description",
         content: "Approve invoices, pay wire fees and closing costs, and confirm your transfer.",
@@ -84,7 +84,7 @@ function ClientInvoicesPage() {
     onSuccess: (_r, input: any) => {
       toast.success(
         input.decision === "approved"
-          ? "Thank you - your approval has been recorded."
+          ? "Thank you, your approval has been recorded."
           : "We've recorded your query and the team will be in touch.",
       );
       refresh();

@@ -59,7 +59,7 @@ export function ClientServicesPanel({ clientId }: { clientId: string }) {
             {(d.records as any[]).map((r) => (
               <tr key={r.id} className="border-t align-top">
                 <td className="py-2">{r.label}{r.card_autopay && <span className="ml-1 text-xs text-muted-foreground">(card autopay)</span>}</td>
-                <td>{CADENCE[r.cadence]}</td><td>{usd(Number(r.amount_cents))}</td><td>{r.start_date}</td><td>{r.next_due ?? "—"}</td>
+                <td>{CADENCE[r.cadence]}</td><td>{usd(Number(r.amount_cents))}</td><td>{r.start_date}</td><td>{r.next_due ?? " · "}</td>
                 <td><Badge variant={r.status === "active" ? "default" : "outline"}>{r.status === "proposed" ? "Waiting for approval" : r.status}</Badge>{r.reminders_paused && <Badge variant="outline" className="ml-1">Reminders paused</Badge>}</td>
                 <td className="space-x-1 whitespace-nowrap text-right">
                   {r.status === "proposed" && d.canPrepare && <>
@@ -113,7 +113,7 @@ export function ClientServicesPanel({ clientId }: { clientId: string }) {
                 <Button size="sm" variant="ghost" onClick={() => { const n = askNote("Reason for declining:", true); if (n !== undefined) run(() => decideSwitch({ data: { requestId: pending.id, approve: false, note: n } }), "Declined"); }}>Decline</Button>
               </>}
             </div>
-          ) : d.canPrepare && <Button size="sm" className="mt-2" variant="outline" onClick={() => run(() => reqSwitch({ data: { clientId } }), "Switch requested - a second person must approve")}>Switch to purchased-services menu</Button>}
+          ) : d.canPrepare && <Button size="sm" className="mt-2" variant="outline" onClick={() => run(() => reqSwitch({ data: { clientId } }), "Switch requested: a second person must approve")}>Switch to purchased-services menu</Button>}
         </>}
       </div>
 

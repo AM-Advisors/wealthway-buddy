@@ -321,7 +321,7 @@ export function ServiceRequestsBoard({ clientId }: { clientId?: string }) {
       {quoteDraft ? (
         <Card className="border-primary">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Propose a fee - {quoteDraft.serviceName}</CardTitle>
+            <CardTitle className="text-base">Propose a fee · {quoteDraft.serviceName}</CardTitle>
             <CardDescription>
               The client sees exactly this, signs it in writing, and only then can it be activated.
             </CardDescription>
@@ -491,7 +491,7 @@ export function ServiceRequestsBoard({ clientId }: { clientId?: string }) {
       {declineDraft ? (
         <Card className="border-destructive">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Decline - {declineDraft.serviceName}</CardTitle>
+            <CardTitle className="text-base">Decline · {declineDraft.serviceName}</CardTitle>
             <CardDescription>The client sees this reason.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -520,7 +520,7 @@ export function ServiceRequestsBoard({ clientId }: { clientId?: string }) {
       {activateDraft ? (
         <Card className="border-primary">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Activate - {activateDraft.serviceName}</CardTitle>
+            <CardTitle className="text-base">Activate · {activateDraft.serviceName}</CardTitle>
             <CardDescription>
               The client has signed. Attach the statement of work this amendment belongs to and pick
               the start date.

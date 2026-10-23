@@ -233,7 +233,7 @@ function ManagerWireBoardPage() {
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <CardTitle className="text-base">
-                        {row.investorName} - {money(row.amountCents)}
+                        {row.investorName} · {money(row.amountCents)}
                       </CardTitle>
                       <CardDescription>
                         {row.fundName}
@@ -326,7 +326,7 @@ function ManagerWireBoardPage() {
                             });
                           }}
                         >
-                          Approve - funds received
+                          Approve: funds received
                         </Button>
                         <Button
                           size="sm"

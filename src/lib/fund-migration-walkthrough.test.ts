@@ -25,7 +25,7 @@ const PREPARER = "demo-preparer";
 const REVIEWER = "demo-reviewer";
 const fixedMapping = { ...INITIAL_MAPPING, "1010": "H-1000" };
 
-describe("Walkthrough reference fund - synthetic investors", () => {
+describe("Walkthrough reference fund: synthetic investors", () => {
   it("has 13 synthetic investors whose commitments total exactly $25,000,000", () => {
     expect(WALKTHROUGH_INVESTORS).toHaveLength(13);
     expect(WALKTHROUGH_INVESTORS.reduce((s, i) => s + i.commitment, 0) * 100).toBe(FUND_COMMITMENTS);

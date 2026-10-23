@@ -231,7 +231,7 @@ function FundPanel({ fund }: { fund: any }) {
       setLastSync({ at: res.syncedAt, added: res.added, checked: res.checked });
       toast.success(
         res.added > 0
-          ? `${res.added} file${res.added === 1 ? "" : "s"} pulled in - your managers have been notified`
+          ? `${res.added} file${res.added === 1 ? "" : "s"} pulled in, your managers have been notified`
           : "Everything in the folder is already listed",
       );
       queryClient.invalidateQueries({ queryKey: ["managed-diligence-rooms"] });
@@ -374,7 +374,7 @@ function FundPanel({ fund }: { fund: any }) {
           <Progress value={fund.readiness.score} />
           <p className="text-xs text-muted-foreground">
             {lastSync
-              ? `Box folder checked at ${new Date(lastSync.at).toLocaleTimeString()} - ${lastSync.checked} file${
+              ? `Box folder checked at ${new Date(lastSync.at).toLocaleTimeString()} · ${lastSync.checked} file${
                   lastSync.checked === 1 ? "" : "s"
                 } there, ${lastSync.added} newly added.`
               : "Drop files straight into the document folder, then hit Sync from storage to list them here."}

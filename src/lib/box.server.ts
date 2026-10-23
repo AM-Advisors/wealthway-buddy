@@ -88,7 +88,7 @@ export function sniffDocumentKind(bytes: Uint8Array): "pdf" | "docx" {
 export function signingFileName(baseName: string, bytes: Uint8Array, now = Date.now()): string {
   const kind = sniffDocumentKind(bytes);
   const stem = baseName.replace(/\.(pdf|docx?)$/i, "").trim() || "Fund document";
-  return `${stem} - ${now.toString(36)}.${kind}`;
+  return `${stem} · ${now.toString(36)}.${kind}`;
 }
 
 /**

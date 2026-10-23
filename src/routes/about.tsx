@@ -7,7 +7,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 
 const DESCRIPTION =
-  "Harmonious Capital Administration is the administration, technology and onboarding partner behind private funds and SPVs - formation support, investor onboarding, reporting, payment facilitation and recordkeeping in one workspace.";
+  "Harmonious Capital Administration is the administration, technology and onboarding partner behind private funds and SPVs, formation support, investor onboarding, reporting, payment facilitation and recordkeeping in one workspace.";
 
 export const Route = createFileRoute("/about")({
   head: () =>
@@ -42,7 +42,7 @@ const WHAT_WE_DO: readonly [string, string][] = [
   ],
   [
     "Investor onboarding",
-    "Identity verification, anti-money-laundering screening, accreditation checks for 506(b) and 506(c), subscription documents and electronic signing - all tracked in one place.",
+    "Identity verification, anti-money-laundering screening, accreditation checks for 506(b) and 506(c), subscription documents and electronic signing, all tracked in one place.",
   ],
   [
     "Reporting and recordkeeping",

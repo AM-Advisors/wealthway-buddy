@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { getBillingPipeline } from "@/lib/ops-billing.functions";
 
 const money = (c: number) => `$${(Number(c ?? 0) / 100).toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
-const label = (s?: string | null) => (s ? s.replace(/_/g, " ") : "—");
+const label = (s?: string | null) => (s ? s.replace(/_/g, " ") : " · ");
 
 export function useBillingPipeline() {
   const load = useServerFn(getBillingPipeline);
@@ -40,7 +40,7 @@ export function BillingPipeline({ view }: { view: "sows" | "invoices" }) {
                 <CardTitle className="text-lg">{r.clientName}</CardTitle>
                 <CardDescription>
                   <Link to="/sales/quotes/$id" params={{ id: r.id }} className="underline">Quote {r.number} v{r.version}</Link>
-                  {" · "}signed {r.signedAt ? new Date(r.signedAt).toLocaleDateString() : "—"} · {money(r.totalCents)}
+                  {" · "}signed {r.signedAt ? new Date(r.signedAt).toLocaleDateString() : " · "} · {money(r.totalCents)}
                 </CardDescription>
               </div>
               <Badge variant="secondary">Signed quote</Badge>
@@ -61,7 +61,7 @@ export function BillingPipeline({ view }: { view: "sows" | "invoices" }) {
                   <table className="w-full text-left">
                     <thead className="text-muted-foreground"><tr><th>Service</th><th>Billed</th><th>Amount</th><th>Next bill</th></tr></thead>
                     <tbody>{r.schedules.map((s: any, i: number) => (
-                      <tr key={i} className="border-t"><td>{s.label}</td><td className="capitalize">{label(s.frequency)}</td><td>{money(s.amount_cents)}</td><td>{s.active ? s.next_due_on ?? "—" : "Finished"}</td></tr>
+                      <tr key={i} className="border-t"><td>{s.label}</td><td className="capitalize">{label(s.frequency)}</td><td>{money(s.amount_cents)}</td><td>{s.active ? s.next_due_on ?? " · " : "Finished"}</td></tr>
                     ))}</tbody>
                   </table>
                 ) : <p className="text-muted-foreground">Billing schedule starts once the statement of work is signed and approved.</p>}
@@ -73,10 +73,10 @@ export function BillingPipeline({ view }: { view: "sows" | "invoices" }) {
                 <tbody>{r.invoices.map((i: any) => (
                   <tr key={i.id} className="border-t">
                     <td>{i.number ?? "Draft"}{i.generated_by_schedule ? " · scheduled" : ""}</td>
-                    <td>{i.period_start ? `${i.period_start} – ${i.period_end ?? ""}` : "—"}</td>
+                    <td>{i.period_start ? `${i.period_start} to ${i.period_end ?? ""}` : " · "}</td>
                     <td className="capitalize">{label(i.status)}{i.status === "issued" ? ` · ${label(i.approval_status)}` : ""}</td>
                     <td>{money(i.total_cents)}</td>
-                    <td>{i.paid_at ? `Paid ${new Date(i.paid_at).toLocaleDateString()}` : i.due_date ?? "—"}</td>
+                    <td>{i.paid_at ? `Paid ${new Date(i.paid_at).toLocaleDateString()}` : i.due_date ?? " · "}</td>
                   </tr>
                 ))}</tbody>
               </table>

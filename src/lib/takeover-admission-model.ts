@@ -8,7 +8,7 @@
 
 export const INVESTOR_ORIGINS = [
   { value: "harmonious_onboarded", label: "Harmonious onboarded" },
-  { value: "takeover_prior_administrator", label: "Takeover - prior administrator" },
+  { value: "takeover_prior_administrator", label: "Takeover: prior administrator" },
   { value: "historical_import", label: "Historical import" },
   { value: "other_approved_migration", label: "Other approved migration" },
 ] as const;

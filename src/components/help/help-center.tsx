@@ -136,7 +136,7 @@ export function HelpArticlePage({ ops, slug }: { ops: boolean; slug: string }) {
         <Link to={ops ? "/ops/help" : "/help"} className="text-sm text-primary underline">← Help center</Link>
         <div className="flex flex-wrap gap-2">
           {a.services.map((s) => <Badge key={s} variant="secondary">{serviceTitle(s)}</Badge>)}
-          {ops && a.audience === "client" ? <Badge variant="outline">{a.approved ? "Approved for clients" : "Draft – review"}</Badge> : null}
+          {ops && a.audience === "client" ? <Badge variant="outline">{a.approved ? "Approved for clients" : "Draft: review"}</Badge> : null}
           {ops && a.audience === "staff" ? <Badge variant="outline">Staff only</Badge> : null}
         </div>
         <p className="text-xs text-muted-foreground">Updated {a.updated} · Version {a.version}</p>

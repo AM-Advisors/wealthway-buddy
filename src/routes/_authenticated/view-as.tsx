@@ -13,9 +13,9 @@ export const Route = createFileRoute("/_authenticated/view-as")({
   validateSearch: (s: Record<string, unknown>): { page?: string } => (typeof s["page"] === "string" ? { page: s["page"] } : {}),
   head: () => ({
     meta: [
-      { title: "Client View - Harmonious" },
+      { title: "Client View | Harmonious" },
       { name: "description", content: "Read-only view of exactly what an investor or fund manager sees." },
-      { property: "og:title", content: "Client View - Harmonious" },
+      { property: "og:title", content: "Client View | Harmonious" },
       { property: "og:description", content: "Read-only view of exactly what an investor or fund manager sees." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

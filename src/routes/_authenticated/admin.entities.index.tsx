@@ -42,7 +42,7 @@ function EntityRegisterPage() {
       <h1 className="text-3xl">Entities and engagements</h1>
       <p className="mb-6 mt-2 text-sm text-muted-foreground">
         Each client holds a master relationship, a register of entities - companies, funds, SPVs,
-        series, GPs and management companies - and one engagement per entity covering its services,
+        series, GPs and management companies, and one engagement per entity covering its services,
         commercial terms and delivery.
       </p>
 

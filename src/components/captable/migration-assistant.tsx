@@ -230,7 +230,7 @@ export function MigrationAssistant({ onStarted }: { onStarted: (caseId: string) 
                     {list.map((item) => (
                       <SelectItem key={item.id} value={item.id}>
                         {item.name}
-                        {item.client ? ` - ${item.client}` : ""}
+                        {item.client ? ` · ${item.client}` : ""}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -380,7 +380,7 @@ export function MigrationAssistant({ onStarted }: { onStarted: (caseId: string) 
             </div>
             {files.length && !importable.length ? (
               <p className="text-xs text-muted-foreground">
-                Add a shareholders, grants or rounds file too - a document list on its own has
+                Add a shareholders, grants or rounds file too, a document list on its own has
                 nothing to reconcile.
               </p>
             ) : null}

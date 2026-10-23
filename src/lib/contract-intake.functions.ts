@@ -346,7 +346,7 @@ async function runExtraction(context: any, roles: string[], documentId: string) 
   } catch (e) {
     await db.from("contract_extractions").insert({ document_id: documentId, model: "none", prompt_version: mod.EXTRACTION_PROMPT_VERSION, status: "failed", error: (e as Error).message, created_by: context.userId });
     await db.from("client_governing_documents").update({ review_status: "manual_review_required" }).eq("id", documentId);
-    await audit(context, roles, { clientId: doc.client_id, action: "extraction failed - manual review required", target: documentId });
+    await audit(context, roles, { clientId: doc.client_id, action: "extraction failed: manual review required", target: documentId });
     return;
   }
   if (mod.readableQuality(chars) === "poor") {

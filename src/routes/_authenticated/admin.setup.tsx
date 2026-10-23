@@ -329,13 +329,13 @@ function SetupPage() {
                     disabled={Boolean(fundId) || !clientId}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Optional - choose an agreement" />
+                      <SelectValue placeholder="Optional: choose an agreement" />
                     </SelectTrigger>
                     <SelectContent>
                       {clientSows.map((s) => (
                         <SelectItem key={s.id} value={s.id} disabled={s.reason === "Already used for another fund"}>
                           {s.title}
-                          {s.signed ? "" : ` - ${s.reason}`}
+                          {s.signed ? "" : ` · ${s.reason}`}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -639,7 +639,7 @@ function SetupPage() {
                     {users.map((u) => (
                       <SelectItem key={u.userId} value={u.userId}>
                         {u.email}
-                        {u.legalName ? ` - ${u.legalName}` : ""}
+                        {u.legalName ? ` · ${u.legalName}` : ""}
                       </SelectItem>
                     ))}
                   </SelectContent>

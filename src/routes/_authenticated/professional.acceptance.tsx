@@ -54,7 +54,7 @@ function AwaitingAcceptance() {
           <CardHeader className="flex-row items-start justify-between gap-3 space-y-0">
             <CardTitle className="text-lg">{item.principalName}</CardTitle>
             <Badge variant="secondary">
-              {item.acceptanceState === "renewal_required" ? "Changed - accept again" : "Awaiting you"}
+              {item.acceptanceState === "renewal_required" ? "Changed: accept again" : "Awaiting you"}
             </Badge>
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
@@ -77,7 +77,7 @@ function AwaitingAcceptance() {
               <div>
                 <dt className="text-xs text-muted-foreground">Dates</dt>
                 <dd>
-                  {item.effectiveAt ? new Date(item.effectiveAt).toLocaleDateString() : "-"} –{" "}
+                  {item.effectiveAt ? new Date(item.effectiveAt).toLocaleDateString() : "-"} to {" "}
                   {item.expiresAt ? new Date(item.expiresAt).toLocaleDateString() : "no end date"}
                 </dd>
               </div>
@@ -148,12 +148,12 @@ function AwaitingAcceptance() {
 export const Route = createFileRoute("/_authenticated/professional/acceptance")({
   head: () => ({
     meta: [
-      { title: "Authorizations awaiting acceptance - Harmonious" },
+      { title: "Authorizations awaiting acceptance | Harmonious" },
       {
         name: "description",
         content: "Review and accept the authorizations clients have granted you.",
       },
-      { property: "og:title", content: "Authorizations awaiting acceptance - Harmonious" },
+      { property: "og:title", content: "Authorizations awaiting acceptance | Harmonious" },
       { property: "og:description", content: "Accept client authorizations before acting." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

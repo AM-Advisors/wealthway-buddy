@@ -325,7 +325,7 @@ export type ContractConflict = {
   documentIds: string[];
   provisions: ConflictProvision[];
 };
-export const CONFLICT_TASK_TITLE = "Contract Scope Conflict - Review Required";
+export const CONFLICT_TASK_TITLE = "Contract Scope Conflict: Review Required";
 
 const isActive = (d: DocLite, today: string) =>
   d.review_status !== "superseded" &&

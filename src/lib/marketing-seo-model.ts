@@ -177,7 +177,7 @@ export function linkIssues(links: { label: string; url: string }[], pages: SiteP
     if (seen.has(l.url)) out.push(`Duplicate link to ${l.url}`); seen.add(l.url);
   }
   const exact = primaryKeyword.trim() ? links.filter((l) => l.label.trim().toLowerCase() === primaryKeyword.trim().toLowerCase()).length : 0;
-  if (exact > 1) out.push(`${exact} links use the exact primary keyword as anchor text — vary them.`);
+  if (exact > 1) out.push(`${exact} links use the exact primary keyword as anchor text, vary them.`);
   return out;
 }
 
@@ -229,12 +229,12 @@ export function seoQuality(p: SeoPkg, ctx: { linkIssues: string[]; schemaIssues:
   const hs = headings(body);
   return [
     dim("intent", "Search intent alignment", [[!!p.search_intent.trim(), "State the search intent (informational, commercial, navigational)."], [!!kw, "Set a primary keyword."], [!kw || p.seo_title.toLowerCase().includes(kw.split(" ")[0]!), "Reflect the main topic in the SEO title."], [!!(p.audience ?? "").trim(), "Name the target audience."]]),
-    dim("useful", "Content usefulness", [[txt.length >= 600, "Article is short — answer the question fully (600+ words)."], [/<(ol|ul|table)/i.test(body), "Add a list, steps or a comparison table where it helps."], [/example/i.test(body), "Add a practical example (label hypothetical ones)."], [density < 0.03, "Primary keyword is repeated too often — write naturally."]]),
+    dim("useful", "Content usefulness", [[txt.length >= 600, "Article is short — answer the question fully (600+ words)."], [/<(ol|ul|table)/i.test(body), "Add a list, steps or a comparison table where it helps."], [/example/i.test(body), "Add a practical example (label hypothetical ones)."], [density < 0.03, "Primary keyword is repeated too often, write naturally."]]),
     dim("sources", "Source quality", [[p.citations.length >= 1, "Cite at least one primary source."], [p.citations.some((c) => isRegulator(c.url)), "Prefer a regulator or primary document where one exists."]]),
     dim("facts", "Factual support", [[facts.every((c) => c.verification !== "unverified" && c.kind !== "unverified"), "Source or remove every unverified claim."], [claims.length > 0, "List the claims the article relies on."]]),
-    dim("structure", "Structural clarity", [[structureIssues(body).length === 0, structureIssues(body)[0] ?? ""], [firstPara.length >= 80 || !!(p.opening_answer ?? "").trim(), "Open with a direct 1–2 sentence answer."], [hs.filter((h) => h.level === 2).length >= 3, "Use at least three descriptive H2 sections."], [/<(dfn|strong)>[^<]{2,60}<\/(dfn|strong)>\s*(is|means|refers)/i.test(body) || /\bis defined as\b|\bmeans\b/i.test(body), "Define key terms plainly."]]),
-    dim("links", "Internal linking", [[p.internal_links.length >= 2, "Add 2–5 relevant internal links."], [ctx.linkIssues.length === 0, ctx.linkIssues[0] ?? ""]]),
-    dim("meta", "Metadata completeness", [[p.meta_title.length > 20 && p.meta_title.length <= 60, "Meta title should be 20–60 characters."], [p.meta_description.length >= 70 && p.meta_description.length <= 155, "Meta description should be 70–155 characters."], [/^[a-z0-9-]{3,80}$/.test(p.slug), "Use a short lowercase-hyphen slug."], [ctx.duplicateTitles.length === 0, `Title is close to existing content: ${ctx.duplicateTitles[0] ?? ""}`]]),
+    dim("structure", "Structural clarity", [[structureIssues(body).length === 0, structureIssues(body)[0] ?? ""], [firstPara.length >= 80 || !!(p.opening_answer ?? "").trim(), "Open with a direct 1 to 2 sentence answer."], [hs.filter((h) => h.level === 2).length >= 3, "Use at least three descriptive H2 sections."], [/<(dfn|strong)>[^<]{2,60}<\/(dfn|strong)>\s*(is|means|refers)/i.test(body) || /\bis defined as\b|\bmeans\b/i.test(body), "Define key terms plainly."]]),
+    dim("links", "Internal linking", [[p.internal_links.length >= 2, "Add 2 to 5 relevant internal links."], [ctx.linkIssues.length === 0, ctx.linkIssues[0] ?? ""]]),
+    dim("meta", "Metadata completeness", [[p.meta_title.length > 20 && p.meta_title.length <= 60, "Meta title should be 20 to 60 characters."], [p.meta_description.length >= 70 && p.meta_description.length <= 155, "Meta description should be 70 to 155 characters."], [/^[a-z0-9-]{3,80}$/.test(p.slug), "Use a short lowercase-hyphen slug."], [ctx.duplicateTitles.length === 0, `Title is close to existing content: ${ctx.duplicateTitles[0] ?? ""}`]]),
     dim("technical", "Technical SEO readiness", [[ctx.schemaIssues.length === 0, ctx.schemaIssues[0] ?? ""], [!/<script|style=/i.test(body), "Remove scripts or inline styles from the article HTML."], [ctx.canonicalLive, "Canonical host www.harmonious.co isn't serving this site yet — confirm before publishing."]]),
     dim("ai", "AI-answer readability", [[hs.filter((h) => /\?$/.test(h.text)).length >= 2, "Phrase some headings as the questions readers ask."], [p.faq.length >= 3 || (p.related_questions ?? []).length >= 3, "Answer 3+ related questions."], [/Harmonious/.test(body), "Name entities clearly (e.g. Harmonious, SEC, IRS) instead of 'we' or 'they'."]]),
   ].map((d) => ({ ...d, recs: d.recs.filter(Boolean) }));

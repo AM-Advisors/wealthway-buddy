@@ -189,13 +189,13 @@ export function sanitizeAssistedPayload(
 /** Where personal action is legally required, no preparation can substitute. */
 export const CLIENT_ACTION_REQUIRED: Partial<Record<AssistedDraftType, string>> = {
   kyc_support:
-    "Client action required - identity verification must be completed by the client in person.",
+    "Client action required, identity verification must be completed by the client in person.",
   kyb_support:
-    "Client action required - the authorized person must confirm the entity check themselves.",
+    "Client action required, the authorized person must confirm the entity check themselves.",
   accreditation:
-    "Client action required - the client must attest to their accreditation; verification stays with Harmonious.",
+    "Client action required, the client must attest to their accreditation; verification stays with Harmonious.",
   investment:
-    "Client action required - the client must review, attest and sign in their own account.",
+    "Client action required, the client must review, attest and sign in their own account.",
 };
 
 export const DRAFT_STATUS_LABELS: Record<string, string> = {

@@ -75,10 +75,10 @@ export const PRIVACY_POLICY: LegalDocument = {
         "Satschel - compliance verification for KYC/AML, accreditation verification and liveness testing. Privacy notice: https://simplici.io/privacy-notice",
         "Legal Inc - registered agent provider. Privacy policy: https://legalinc.com/privacypolicy/",
         "Google - usage analytics for this Site. Privacy policy: https://policies.google.com/technologies/partner-sites",
-        "Stripe - card payments. Stripe uses a cookie to remember who you are and to enable the website to process payments without storing card information on its own servers. Privacy policy: https://stripe.com/privacy",
+        "Stripe, card payments. Stripe uses a cookie to remember who you are and to enable the website to process payments without storing card information on its own servers. Privacy policy: https://stripe.com/privacy",
         "Airtable - data and workflow syncing. Privacy policy: https://www.airtable.com/privacy",
         "HubSpot - CRM and reporting. Privacy policy: https://legal.hubspot.com/privacy-policy",
-        "Plaid - read-only bank account verification and transaction matching where you choose to link an account. Privacy policy: https://plaid.com/legal/",
+        "Plaid, read-only bank account verification and transaction matching where you choose to link an account. Privacy policy: https://plaid.com/legal/",
       ],
     },
     {
@@ -335,7 +335,7 @@ export const TERMS_OF_SERVICE: LegalDocument = {
 
 /** Flattens a document into the plain text stored on the accepted policy version. */
 export function legalPlainText(doc: LegalDocument): string {
-  const parts: string[] = [`${doc.title} - last updated ${doc.updated}`, ""];
+  const parts: string[] = [`${doc.title} · last updated ${doc.updated}`, ""];
   for (const block of doc.blocks) {
     if (block.heading) parts.push(block.heading);
     for (const p of block.paragraphs ?? []) parts.push(p);

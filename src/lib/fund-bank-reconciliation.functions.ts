@@ -189,7 +189,7 @@ export const matchBankLineToInvoice = createServerFn({ method: "POST" })
     }
 
     const now = new Date().toISOString();
-    const reference = `Bank statement ${line.posted_on} - ${line.name || "deposit"}`;
+    const reference = `Bank statement ${line.posted_on} · ${line.name || "deposit"}`;
 
     const { error: invoiceError } = await supabase
       .from("invoices")

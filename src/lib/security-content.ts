@@ -56,7 +56,7 @@ export const SECURITY_STATEMENT: SecurityStatement = {
     {
       heading: "Data Protection", key: "data_protection",
       intro:
-        "Fund and investor records are treated as official once saved - not as a draft anyone can quietly overwrite.",
+        "Fund and investor records are treated as official once saved, not as a draft anyone can quietly overwrite.",
       bullets: [
         "Protected saved records use controlled change requests rather than silent overwrites. Signed agreements retain their original versions and history.",
         "Where separation of duties applies - fee terms, documents, distributions - a different person must sign off before anything takes effect.",
@@ -122,7 +122,7 @@ export const SECURITY_STATEMENT: SecurityStatement = {
     {
       heading: "How long we keep records", key: "retention",
       intro:
-        "Every record family has a written retention rule in our Compliance & Controls register. Nothing is deleted automatically - a person reviews each disposition, and a legal or regulatory hold blocks it.",
+        "Every record family has a written retention rule in our Compliance & Controls register. Nothing is deleted automatically, a person reviews each disposition, and a legal or regulatory hold blocks it.",
       bullets: [
         "Tax records (K-1s, filings, workpapers): 7 years after the return is filed.",
         "Fund formation and offering documents (PPM, operating agreement, subscriptions): the life of the fund plus 7 years after dissolution.",

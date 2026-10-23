@@ -28,9 +28,9 @@ import { addSalesDocumentContact } from "@/lib/sales-documents.functions";
 export const Route = createFileRoute("/_authenticated/sales_/documents_/$id")({
   head: () => ({
     meta: [
-      { title: "Document editor - Harmonious Sales" },
+      { title: "Document editor | Harmonious Sales" },
       { name: "description", content: "Edit, approve and send a proposal, RFP or RFQ." },
-      { property: "og:title", content: "Document editor - Harmonious Sales" },
+      { property: "og:title", content: "Document editor | Harmonious Sales" },
       { property: "og:description", content: "Standardized proposal built from the quote and MSA; approve and send." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -127,7 +127,7 @@ function Editor() {
         <Button variant="outline" size="sm" disabled={!!busy} onClick={() => download("docx")}>Word</Button>
       </>}>
         <Button size="sm" disabled={!!busy} onClick={preview}>{busy === "preview" ? "Loading..." : "Preview"}</Button>
-        {p.canEdit && <Button size="sm" variant="outline" disabled={!dirty || !!busy} onClick={() => run("save", () => save({ data: { id, sections } }), doc.status === "approved" ? "Saved - needs approval again" : "Saved")}>Save</Button>}
+        {p.canEdit && <Button size="sm" variant="outline" disabled={!dirty || !!busy} onClick={() => run("save", () => save({ data: { id, sections } }), doc.status === "approved" ? "Saved: needs approval again" : "Saved")}>Save</Button>}
         {p.canSubmit && <Button size="sm" disabled={!!busy || dirty} onClick={() => run("submit", () => submit({ data: { id } }), "Submitted for approval")}>Submit for approval</Button>}
         {p.canApprove && <Button size="sm" disabled={!!busy} onClick={() => run("approve", () => decide({ data: { id, approve: true } }), "Approved")}>Approve</Button>}
         {p.canSend && <Button size="sm" variant="outline" onClick={() => document.getElementById("send-box")?.scrollIntoView({ behavior: "smooth" })}>Send…</Button>}
@@ -154,7 +154,7 @@ function Editor() {
                     {doc.source_file_name ? `Replace prospect's document (${doc.source_file_name})` : "Upload prospect's RFP/RFQ (PDF or Word)"}
                     <input type="file" accept=".pdf,.docx" className="hidden" onChange={async (e) => {
                       const file = e.target.files?.[0]; if (!file) return;
-                      await run("upload", async () => upload({ data: { id, name: file.name, type: file.type, base64: await toB64(file) } }), "Document read - now draft with AI");
+                      await run("upload", async () => upload({ data: { id, name: file.name, type: file.type, base64: await toB64(file) } }), "Document read: now draft with AI");
                     }} />
                   </label>
                 )}
@@ -189,7 +189,7 @@ function Editor() {
           {p.canEdit && (
             <div className="flex gap-2">
               <Button variant="outline" onClick={() => { setDirty(true); setSections((x) => [...x, { key: `s${Date.now()}`, title: "New section", body: "" }]); }}>Add section</Button>
-              <Button disabled={!dirty || !!busy} onClick={() => run("save", () => save({ data: { id, sections } }), doc.status === "approved" ? "Saved - needs approval again" : "Saved")}>Save</Button>
+              <Button disabled={!dirty || !!busy} onClick={() => run("save", () => save({ data: { id, sections } }), doc.status === "approved" ? "Saved: needs approval again" : "Saved")}>Save</Button>
             </div>
           )}
           {d.packet && <AgreementPacket packet={d.packet} onChange={refresh} />}

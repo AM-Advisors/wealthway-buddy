@@ -22,14 +22,14 @@ const toneOf = (v: unknown): Tone => {
 const words = (v: unknown) => (v == null || v === "" ? "Not done" : v === true ? "Yes" : v === false ? "No" : String(v).replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase()));
 const ICON = { pass: CheckCircle2, fail: XCircle, pending: Clock, none: MinusCircle };
 const COLOR = { pass: "text-primary", fail: "text-destructive", pending: "text-accent-foreground", none: "text-muted-foreground" };
-const date = (s: string | null | undefined) => (s ? new Date(s).toLocaleString([], { dateStyle: "medium", timeStyle: "short" }) : "—");
+const date = (s: string | null | undefined) => (s ? new Date(s).toLocaleString([], { dateStyle: "medium", timeStyle: "short" }) : " · ");
 
 function Check({ label, value }: { label: string; value: unknown }) {
   const t = toneOf(value); const I = ICON[t];
   return <div className="flex items-center justify-between gap-2 rounded-md border bg-card px-3 py-2 text-sm"><span>{label}</span><span className={`flex items-center gap-1 ${COLOR[t]}`}><I className="h-4 w-4" />{words(value)}</span></div>;
 }
 function Field({ label, value }: { label: string; value: unknown }) {
-  return <div><dt className="text-xs text-muted-foreground">{label}</dt><dd className="text-sm">{value == null || value === "" ? "—" : String(value)}</dd></div>;
+  return <div><dt className="text-xs text-muted-foreground">{label}</dt><dd className="text-sm">{value == null || value === "" ? " · " : String(value)}</dd></div>;
 }
 function Block({ title, children }: { title: string; children: React.ReactNode }) {
   return <div className="rounded-lg border p-4"><h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">{title}</h3>{children}</div>;

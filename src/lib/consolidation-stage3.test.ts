@@ -296,7 +296,7 @@ const facts = (over: Partial<CanonicalFacts>): CanonicalFacts =>
     ...over,
   }) as CanonicalFacts;
 
-describe("fund-manager semantics - role is descriptive, relationships give scope", () => {
+describe("fund-manager semantics: role is descriptive, relationships give scope", () => {
   it("fund_manager role alone yields no fund scope", () => {
     const p = adminAccessProjection(facts({ roles: ["fund_manager"], managedFundIds: [] }));
     expect(p.isFundManager).toBe(true);

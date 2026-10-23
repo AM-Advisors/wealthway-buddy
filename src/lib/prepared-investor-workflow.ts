@@ -318,15 +318,15 @@ export type ActionFacts = {
 export function deriveActions(f: ActionFacts): DerivedAction[] {
   const out: DerivedAction[] = [];
   const push = (a: DerivedAction) => { if (!out.some((x) => x.key === a.key)) out.push(a); };
-  for (const d of f.drafts ?? []) if (d.canSend) push({ key: `draft_ready:${d.id}`, persona: "fund_manager", title: `Investor draft ready to send - ${d.name}`, href: `/manager/funds/${f.fundId}?tab=investors&draft=${d.id}`, fundId: f.fundId, subjectId: d.id });
+  for (const d of f.drafts ?? []) if (d.canSend) push({ key: `draft_ready:${d.id}`, persona: "fund_manager", title: `Investor draft ready to send | ${d.name}`, href: `/manager/funds/${f.fundId}?tab=investors&draft=${d.id}`, fundId: f.fundId, subjectId: d.id });
   for (const i of f.myInvestments ?? []) {
     const base = `/onboard/i/${i.onboardingId}`;
-    if (i.unreviewedPrepared) push({ key: `confirm_info:${i.onboardingId}`, persona: "investor", title: `Confirm your investment information - ${f.fundName}`, href: `${base}#confirm`, fundId: f.fundId, subjectId: i.onboardingId });
+    if (i.unreviewedPrepared) push({ key: `confirm_info:${i.onboardingId}`, persona: "investor", title: `Confirm your investment information | ${f.fundName}`, href: `${base}#confirm`, fundId: f.fundId, subjectId: i.onboardingId });
     if (i.needsInfo) push({ key: `needs_info:${i.onboardingId}`, persona: "investor", title: "Additional information required", href: `${base}#requirements`, fundId: f.fundId, subjectId: i.onboardingId });
     if (i.identityPending) push({ key: `identity:${i.onboardingId}`, persona: "investor", title: "Complete identity verification", href: `${base}#verification`, fundId: f.fundId, subjectId: i.onboardingId });
     if (i.docsToReview) push({ key: `review_docs:${i.onboardingId}`, persona: "investor", title: "Review your documents", href: `${base}#documents`, fundId: f.fundId, subjectId: i.onboardingId });
     if (i.docsToSign) push({ key: `sign_docs:${i.onboardingId}`, persona: "investor", title: "Sign investment documents", href: `${base}#documents`, fundId: f.fundId, subjectId: i.onboardingId });
-    if (i.approvedToFund) push({ key: `approved_fund:${i.onboardingId}`, persona: "investor", title: `Approved to fund - ${f.fundName}`, href: `/investment/${i.onboardingId}?step=fund`, fundId: f.fundId, subjectId: i.onboardingId });
+    if (i.approvedToFund) push({ key: `approved_fund:${i.onboardingId}`, persona: "investor", title: `Approved to fund | ${f.fundName}`, href: `/investment/${i.onboardingId}?step=fund`, fundId: f.fundId, subjectId: i.onboardingId });
   }
   for (const c of f.countersign ?? []) if (c.iAmSignatory) push({ key: `countersign:${c.onboardingId}:${c.documentTitle}`, persona: "fund_manager", title: `Countersign ${c.investorName}'s ${c.documentTitle}`, href: `/manager/funds/${f.fundId}?tab=investors&onboarding=${c.onboardingId}`, fundId: f.fundId, subjectId: c.onboardingId });
   for (const o of f.opsReview ?? []) if (o.allowed) push({ key: `ops:${o.category}:${o.onboardingId}`, persona: "harmonious", title: `${o.category}`, href: `/admin/investor-onboarding?onboarding=${o.onboardingId}`, fundId: f.fundId, subjectId: o.onboardingId });

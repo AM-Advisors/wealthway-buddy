@@ -281,7 +281,7 @@ function LetterDetail({
             <li key={t.id}>
               <Badge variant="outline" className="mr-2">{catLabel(t.category)}</Badge>
               {t.description}
-              {t.value ? <span className="text-muted-foreground"> - {t.value}</span> : null}
+              {t.value ? <span className="text-muted-foreground"> · {t.value}</span> : null}
               {t.applicability ? <span className="text-muted-foreground"> ({t.applicability})</span> : null}
             </li>
           ))}
@@ -293,7 +293,7 @@ function LetterDetail({
           <ul className="space-y-1">
             {reviews.map((r) => (
               <li key={r.id}>
-                {labelOf(r.holderId)} ← {labelOf(r.sourceId)}: <span className="capitalize">{r.decision.replace("_", " ")}</span> - {r.reason}
+                {labelOf(r.holderId)} ← {labelOf(r.sourceId)}: <span className="capitalize">{r.decision.replace("_", " ")}</span> · {r.reason}
               </li>
             ))}
           </ul>
@@ -484,7 +484,7 @@ function PendingRow({
         <ul className="text-xs space-y-0.5">
           {r.after.terms.map((t) => {
             const k = `${t.category}|${t.description}|${t.value ?? ""}`;
-            return <li key={t.id}>{beforeTerms.has(k) ? "•" : "+"} {catLabel(t.category)}: {t.description}{t.value ? ` - ${t.value}` : ""}</li>;
+            return <li key={t.id}>{beforeTerms.has(k) ? "•" : "+"} {catLabel(t.category)}: {t.description}{t.value ? ` · ${t.value}` : ""}</li>;
           })}
           {(r.before?.terms ?? []).filter((t) => !afterTerms.has(`${t.category}|${t.description}|${t.value ?? ""}`)).map((t) => (
             <li key={t.id} className="text-destructive">− {catLabel(t.category)}: {t.description}</li>

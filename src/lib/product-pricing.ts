@@ -89,7 +89,7 @@ const FUND_A_LA_CARTE: Line[] = [
 
 const fundCost: Line[] = [{ name: "Fund platform fee", description: "Base price for every fund: portal, investor records, documents, e-signature, KYC/AML workflow.", prices: cadences(2500) }];
 const fundAdmin = (nav: "quarterly" | "monthly", annual: number): Line => ({
-  name: nav === "monthly" ? "Fund Administration — monthly NAV" : "Fund Administration — quarterly NAV",
+  name: nav === "monthly" ? "Fund Administration: monthly NAV" : "Fund Administration: quarterly NAV",
   description: "Accounting work, priced separately from servicing.",
   prices: annual === ADMIN_Q.annual ? cadences(ADMIN_Q.annual, ADMIN_Q.quarterly) : cadences(annual),
   items: ["General ledger, trial balance and bank reconciliation", nav === "monthly" ? "Monthly close and monthly NAV" : "Quarterly close and quarterly NAV",
@@ -126,9 +126,9 @@ export const PRODUCTS: Product[] = [
     key: "spv", name: "SPVs", intro: "Single-asset SPVs. One-time fee by capital raised (pre-increase prices restored).",
     fundCost: [
       { name: "Raise under $250,000", prices: once(5000) },
-      { name: "Raise $250,000 – $1,000,000", prices: once(7500) },
-      { name: "Raise $1,000,000 – $5,000,000", prices: once(12500) },
-      { name: "Raise $5,000,000 – $10,000,000", prices: once(15000) },
+      { name: "Raise $250,000 to $1,000,000", prices: once(7500) },
+      { name: "Raise $1,000,000 to $5,000,000", prices: once(12500) },
+      { name: "Raise $5,000,000 to $10,000,000", prices: once(15000) },
       { name: "Raise over $10,000,000", prices: once(null, "Custom quote") },
     ],
     administration: [

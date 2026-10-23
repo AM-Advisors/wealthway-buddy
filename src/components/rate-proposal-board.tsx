@@ -204,7 +204,7 @@ export function RateProposalBoard() {
               />
               {suggested?.cents != null && (
                 <p className="text-xs text-muted-foreground">
-                  On file: {money(suggested.cents)} - {suggested.label}{" "}
+                  On file: {money(suggested.cents)} · {suggested.label}{" "}
                   <button
                     type="button"
                     className="underline"

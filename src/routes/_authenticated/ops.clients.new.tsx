@@ -26,9 +26,9 @@ export const Route = createFileRoute("/_authenticated/ops/clients/new")({
   validateSearch: z.object({ id: z.string().uuid().optional(), step: z.number().int().min(1).max(5).optional() }),
   head: () => ({
     meta: [
-      { title: "New client - Harmonious operations" },
+      { title: "New client | Harmonious operations" },
       { name: "description", content: "Create a client: details, contacts, expected services and contract." },
-      { property: "og:title", content: "New client - Harmonious operations" },
+      { property: "og:title", content: "New client | Harmonious operations" },
       { property: "og:description", content: "Guided client intake for the Harmonious team." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -130,7 +130,7 @@ function NewClient() {
           <li key={s}>
             <button type="button" disabled={!clientId && i > 0} onClick={() => go(i + 1)}
               className={`rounded-full border px-3 py-1 ${step === i + 1 ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>
-              {i + 1} - {s}
+              {i + 1} · {s}
             </button>
           </li>
         ))}

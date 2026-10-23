@@ -751,7 +751,7 @@ export const sendForFounderReview = createServerFn({ method: "POST" })
     await notifyFounder(context, row.company_id as string, {
       headline: "Your cap table is ready for review",
       intro:
-        "We have finished preparing your cap table. Please review it in the portal - nothing is recorded until you approve it.",
+        "We have finished preparing your cap table. Please review it in the portal, nothing is recorded until you approve it.",
       details: [
         { label: "Lines prepared", value: String(summary.lines) },
         { label: "Shares", value: summary.shares.toLocaleString("en-US") },
@@ -944,7 +944,7 @@ export const startMigrationAssistant = createServerFn({ method: "POST" })
 
     if (!created.length) {
       throw new Error(
-        "Add at least one shareholders, grants or rounds file - a document list on its own has nothing to reconcile.",
+        "Add at least one shareholders, grants or rounds file, a document list on its own has nothing to reconcile.",
       );
     }
 

@@ -114,8 +114,8 @@ export function ClientIntakeForm({
       <Logo className="h-8" />
       <h1 className="mt-6 text-3xl">Tell us about your fund</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        {clientName ? `${clientName} - ` : ""}we need these details before your portal opens. Everything can
-        be changed later, and you can stop and come back - your answers are saved as you go.
+        {clientName ? `${clientName} · ` : ""}we need these details before your portal opens. Everything can
+        be changed later, and you can stop and come back, your answers are saved as you go.
       </p>
 
       <ol className="mt-6 flex flex-wrap gap-2 text-xs">

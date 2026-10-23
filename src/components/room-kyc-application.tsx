@@ -150,7 +150,7 @@ export function RoomKycApplication({ offeringId }: { offeringId: string }) {
   const submitMutation = useMutation({
     mutationFn: () => submitAll({ data: { offering_id: offeringId } }),
     onSuccess: () => {
-      toast.success("Application sent - the fund team will review it.");
+      toast.success("Application sent: the fund team will review it.");
       invalidate();
       queryClient.invalidateQueries({ queryKey: ["step-rail", offeringId] });
       queryClient.invalidateQueries({ queryKey: ["diligence-activity", offeringId] });

@@ -17,9 +17,9 @@ import { listSowTemplates, saveSowTemplate, setSowTemplateStatus } from "@/lib/c
 export const Route = createFileRoute("/_authenticated/ops/contracts/sow-templates")({
   head: () => ({
     meta: [
-      { title: "SOW templates - Harmonious operations" },
+      { title: "SOW templates | Harmonious operations" },
       { name: "description", content: "Versioned Harmonious SOW templates: draft, approved/current and retired." },
-      { property: "og:title", content: "SOW templates - Harmonious operations" },
+      { property: "og:title", content: "SOW templates | Harmonious operations" },
       { property: "og:description", content: "Versioned Harmonious SOW templates used to prepare draft SOWs." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

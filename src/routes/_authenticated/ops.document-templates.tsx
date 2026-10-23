@@ -21,9 +21,9 @@ import {
 export const Route = createFileRoute("/_authenticated/ops/document-templates")({
   head: () => ({
     meta: [
-      { title: "Document templates - Harmonious Operations" },
+      { title: "Document templates | Harmonious Operations" },
       { name: "description", content: "Reusable fund document templates with versioning and second-person approval." },
-      { property: "og:title", content: "Document templates - Harmonious Operations" },
+      { property: "og:title", content: "Document templates | Harmonious Operations" },
       { property: "og:description", content: "Turn one fund's document into an approved template for other funds." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -191,7 +191,7 @@ function TemplateCard({ t, funds }: { t: T; funds: { id: string; name: string }[
                 </span>
               </div>
               {v.note ? <p className="text-xs text-muted-foreground">Change: {v.note}</p> : null}
-              {v.decidedBy ? <p className="text-xs text-muted-foreground">{STATUS[v.status]} by {v.decidedBy}{v.decidedAt ? ` on ${new Date(v.decidedAt).toLocaleDateString()}` : ""}{v.decisionNote ? ` - "${v.decisionNote}"` : ""}</p> : null}
+              {v.decidedBy ? <p className="text-xs text-muted-foreground">{STATUS[v.status]} by {v.decidedBy}{v.decidedAt ? ` on ${new Date(v.decidedAt).toLocaleDateString()}` : ""}{v.decisionNote ? ` · "${v.decisionNote}"` : ""}</p> : null}
               {v.status === "pending_approval" && (v.mine && !isSuper ? (
                 <p className="text-xs text-muted-foreground">You added this version, so a different Harmonious team member must approve it.</p>
               ) : (

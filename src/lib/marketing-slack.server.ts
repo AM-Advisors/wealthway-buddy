@@ -41,7 +41,7 @@ export async function notifyPostSubmitted(postId: string, submitterId: string) {
     const paths: string[] = p.image_paths ?? [];
     const { data: urls } = paths.length ? await db.storage.from("marketing-assets").createSignedUrls(paths.slice(0, 3), 7 * 86400) : { data: [] };
     const text = String(p.body ?? "").slice(0, 2800);
-    const chans = (p.channels ?? []).map((c: string) => c.charAt(0).toUpperCase() + c.slice(1)).join(", ") || "—";
+    const chans = (p.channels ?? []).map((c: string) => c.charAt(0).toUpperCase() + c.slice(1)).join(", ") || " · ";
     const blocks: any[] = [
       { type: "section", text: { type: "mrkdwn", text: `${MENTIONS.map((u) => `<@${u}>`).join(" ")} a post is ready for approval${prof ? ` (submitted by ${prof.legal_name || prof.email})` : ""}.` } },
       { type: "section", fields: [{ type: "mrkdwn", text: `*Title*\n${p.title}` }, { type: "mrkdwn", text: `*Channels*\n${chans}` }] },

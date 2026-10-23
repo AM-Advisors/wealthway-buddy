@@ -17,13 +17,13 @@ export const Route = createFileRoute("/client-login")({
   head: () => ({
     meta: [
         { name: "robots", content: "noindex, nofollow" },
-      { title: "Client Sign In - Harmonious Portal" },
+      { title: "Client Sign In | Harmonious Portal" },
       {
         name: "description",
         content:
           "Sign in with your own credentials to your Harmonious client portal: your funds, statement of work, invoices and payments.",
       },
-      { property: "og:title", content: "Client Sign In - Harmonious Portal" },
+      { property: "og:title", content: "Client Sign In | Harmonious Portal" },
       {
         property: "og:description",
         content: "Access your funds, statement of work, invoices and payments.",

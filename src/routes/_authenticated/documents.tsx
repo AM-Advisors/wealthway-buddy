@@ -21,13 +21,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 export const Route = createFileRoute("/_authenticated/documents")({
   head: () => ({
     meta: [
-      { title: "Fund Documents - Harmonious" },
+      { title: "Fund Documents | Harmonious" },
       {
         name: "description",
         content:
           "Review the documents required for your Harmonious fund subscription and see which are pending signature and which are complete.",
       },
-      { property: "og:title", content: "Fund Documents - Harmonious" },
+      { property: "og:title", content: "Fund Documents | Harmonious" },
       {
         property: "og:description",
         content: "Track which fund documents still need your signature and download completed ones.",

@@ -73,7 +73,7 @@ export function SignOperatingAgreementGuide() {
           </Mock>
           <p>
             Can't find it? Check spam, or sign in at{" "}
-            <a className="text-primary underline" href="https://app.harmonious.co">app.harmonious.co</a> — the
+            <a className="text-primary underline" href="https://app.harmonious.co">app.harmonious.co</a> · the
             agreement also appears in your notifications.
           </p>
         </Step>
@@ -81,7 +81,7 @@ export function SignOperatingAgreementGuide() {
         <Step n={2} title="Sign in to Harmonious">
           <p>
             The link opens the Harmonious sign-in page. Sign in with the{" "}
-            <strong className="text-foreground">same email address the signing email was sent to</strong> — that's how
+            <strong className="text-foreground">same email address the signing email was sent to</strong> · that's how
             we know it's you. If it's a Google address, <em>Continue with Google</em> works too.
           </p>
           <p>

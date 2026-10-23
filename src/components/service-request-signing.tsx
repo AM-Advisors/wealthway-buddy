@@ -154,7 +154,7 @@ export function MyServiceRequests() {
 
         {signing ? (
           <div className="space-y-3 rounded-md border border-primary p-4">
-            <p className="text-sm font-medium">Sign the amendment - {signing.serviceName}</p>
+            <p className="text-sm font-medium">Sign the amendment · {signing.serviceName}</p>
             <p className="text-sm">
               Fee:{" "}
               <span className="font-medium">

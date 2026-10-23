@@ -5,7 +5,7 @@ describe("responsibility", () => {
   it("hides third-party names from clients", () => {
     const t = { responsibility_status: "WAITING_ON_THIRD_PARTY", waiting_on_type: "AUDITOR", waiting_on_name: "Deloitte" };
     expect(waitingOnDetail(t, "client")).toBe("Auditor");
-    expect(waitingOnDetail(t, "internal")).toBe("Auditor — Deloitte");
+    expect(waitingOnDetail(t, "internal")).toBe("Auditor: Deloitte");
   });
   it("counts and falls back safely", () => {
     const c = responsibilityCounts([{ responsibility_status: "COMPLETED" }, { responsibility_status: null }, { responsibility_status: "WAITING_ON_INVESTOR" }]);

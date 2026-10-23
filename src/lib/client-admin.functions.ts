@@ -276,7 +276,7 @@ export const listClientFunds = createServerFn({ method: "GET" })
     return {
       caps,
       clientName: ((clientRow as any)?.name as string | null) ?? null,
-      msaStatus: terms.governing ? `Approved - ${terms.governing.title}` : "No approved MSA on file",
+      msaStatus: terms.governing ? `Approved · ${terms.governing.title}` : "No approved MSA on file",
       reassignments: reassign ?? [],
       funds: ((funds ?? []) as any[]).map((f) => {
         const app = findApplicableSow((sows ?? []) as any[], data.clientId, f.id);

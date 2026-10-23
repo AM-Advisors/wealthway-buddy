@@ -384,7 +384,7 @@ export function ApplicationReview({ applicationId, backTo, backLabel }: Applicat
               <Row label="AML provider" value={(d?.aml as any)?.provider} />
               <Row
                 label="Watchlist hits"
-                value={(d?.aml as any)?.matches?.flagged ? "Flagged - manual review" : "No hits"}
+                value={(d?.aml as any)?.matches?.flagged ? "Flagged: manual review" : "No hits"}
               />
             </div>
             <DecisionBar
@@ -726,7 +726,7 @@ export function ApplicationReview({ applicationId, backTo, backLabel }: Applicat
                       <p className="border-t pt-3 text-muted-foreground">
                         {prettyStatus(w.status)}
                         {w.reviewed_at ? ` ${new Date(w.reviewed_at).toLocaleString()}` : ""}
-                        {w.review_notes ? ` - ${w.review_notes}` : ""}
+                        {w.review_notes ? ` · ${w.review_notes}` : ""}
                       </p>
                     )}
                   </div>

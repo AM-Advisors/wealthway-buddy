@@ -11,6 +11,6 @@ export function serviceLevelLabel(level: string, product?: string) {
   const tier = tierByKey(t);
   return { name: tier.name, positioning: tier.positioning };
 }
-export const titleCase = (s?: string | null) => (s ? s.toLowerCase().replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) : "—");
-export const usd = (n?: number | string | null) => (n == null || n === "" ? "—" : `$${Number(n).toLocaleString("en-US")}`);
-export const fmtDate = (d?: string | null) => (d ? new Date(`${d.slice(0, 10)}T12:00:00`).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : "—");
+export const titleCase = (s?: string | null) => (s ? s.toLowerCase().replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) : " · ");
+export const usd = (n?: number | string | null) => (n == null || n === "" ? " · " : `$${Number(n).toLocaleString("en-US")}`);
+export const fmtDate = (d?: string | null) => (d ? new Date(`${d.slice(0, 10)}T12:00:00`).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : " · ");

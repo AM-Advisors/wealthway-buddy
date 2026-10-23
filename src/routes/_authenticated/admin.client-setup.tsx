@@ -15,9 +15,9 @@ import { listClientSetup, setFreeWhitelabel } from "@/lib/client-branding.functi
 export const Route = createFileRoute("/_authenticated/admin/client-setup")({
   head: () => ({
     meta: [
-      { title: "Client setup options - Harmonious Operations" },
+      { title: "Client setup options | Harmonious Operations" },
       { name: "description", content: "Manage white-labeling and branding for each client." },
-      { property: "og:title", content: "Client setup options - Harmonious" },
+      { property: "og:title", content: "Client setup options | Harmonious" },
       { property: "og:description", content: "White-label status and branding per client." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

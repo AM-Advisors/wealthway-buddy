@@ -43,7 +43,7 @@ export function PersonKycUpdate({ personId }: { personId: string }) {
   return (
     <section className="space-y-4 rounded-lg border p-4">
       <div className="flex flex-wrap items-center gap-2">
-        <h2 className="mr-auto text-lg">Information & KYC update — {p.name}</h2>
+        <h2 className="mr-auto text-lg">Information & KYC update · {p.name}</h2>
         <Badge variant="outline" className="capitalize">KYC {String(p.kyc_status ?? "not started").replace(/_/g, " ")}</Badge>
         <Badge variant="outline" className="capitalize">AML {String(p.aml_status ?? "not started").replace(/_/g, " ")}</Badge>
       </div>

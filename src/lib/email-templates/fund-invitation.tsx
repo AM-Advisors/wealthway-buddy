@@ -132,7 +132,7 @@ function FundInvitation({
           <Hr style={{ borderColor: '#e6ecf3', margin: '32px 0 16px' }} />
           <Text style={{ color: '#606060', fontSize: '12px', lineHeight: '18px' }}>
             Questions? Reply to this message or contact us at {contactEmail}. Harmonious will never
-            ask you to send funds to bank details received by email - always confirm wire
+            ask you to send funds to bank details received by email, always confirm wire
             instructions by phone.
           </Text>
           <OpenPixel url={pixelUrl} />

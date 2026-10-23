@@ -37,7 +37,7 @@ const personName = (p: any) => (p ? p.preferred_name || [p.legal_first_name, p.l
 export function docStatus(o: any, outside?: { marked: boolean; complete: boolean } | null) {
   if (o.executed_snapshot || SIGNED_STAGES.has(o.stage)) return "Signed";
   if (outside?.complete) return "Signed (outside platform)";
-  if (outside?.marked) return "Signed outside - copy pending";
+  if (outside?.marked) return "Signed outside: copy pending";
   if (o.stage === "signature") return "Out for signature";
   return "Not started";
 }

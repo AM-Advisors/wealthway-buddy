@@ -615,7 +615,7 @@ export function ProviderAgreementsBoard() {
             <CardHeader>
               <CardTitle className="text-base">Conditions before go-live</CardTitle>
               <CardDescription>
-                Insurance, security review, data handling, service levels - required items must be
+                Insurance, security review, data handling, service levels, required items must be
                 cleared before the agreement can be activated.
               </CardDescription>
             </CardHeader>

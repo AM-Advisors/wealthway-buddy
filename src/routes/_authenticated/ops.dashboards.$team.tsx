@@ -34,9 +34,9 @@ export const Route = createFileRoute("/_authenticated/ops/dashboards/$team")({
     const t = params.team === "finance" ? "Accounting & Finance" : params.team.charAt(0).toUpperCase() + params.team.slice(1);
     return {
       meta: [
-        { title: `${t} dashboard - Harmonious` },
+        { title: `${t} dashboard | Harmonious` },
         { name: "description", content: `Workload and status for the Harmonious ${t} team.` },
-        { property: "og:title", content: `${t} dashboard - Harmonious` },
+        { property: "og:title", content: `${t} dashboard | Harmonious` },
         { property: "og:description", content: `${t} team overview.` },
         { property: "og:type", content: "website" },
         { name: "twitter:card", content: "summary" },
@@ -85,7 +85,7 @@ function TeamDashboard() {
   );
 }
 
-const fmtDate = (d: string | null) => (d ? new Date(d.length === 10 ? d + "T00:00:00" : d).toLocaleDateString() : "—");
+const fmtDate = (d: string | null) => (d ? new Date(d.length === 10 ? d + "T00:00:00" : d).toLocaleDateString() : " · ");
 
 function FinanceOverview() {
   const load = useServerFn(getFinanceOverview);
@@ -118,7 +118,7 @@ function FinanceOverview() {
         <Table head={["Invoice", "Client", "Due", "Status", "Amount"]} rows={d.invoices.map((i) => [i.number ?? "Draft", i.client, fmtDate(i.due), <Badge key="s" variant={i.status === "overdue" ? "destructive" : i.status === "paid" ? "default" : "secondary"}>{i.status.replace(/_/g, " ")}</Badge>, money(i.cents)])} empty="No invoices yet." />
       </Panel>
       <Panel title="Payments received">
-        <Table head={["Invoice", "Client", "Paid on", "Amount"]} rows={d.payments.map((p) => [p.number ?? "—", p.client, fmtDate(p.paidOn), money(p.cents)])} empty="No payments recorded yet." />
+        <Table head={["Invoice", "Client", "Paid on", "Amount"]} rows={d.payments.map((p) => [p.number ?? " · ", p.client, fmtDate(p.paidOn), money(p.cents)])} empty="No payments recorded yet." />
       </Panel>
     </div>
     <div className="grid gap-4 lg:grid-cols-2">

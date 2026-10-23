@@ -24,9 +24,9 @@ import {
 export const Route = createFileRoute("/_authenticated/ops/tax-review")({
   head: () => ({
     meta: [
-      { title: "Investor tax review - Harmonious Operations" },
+      { title: "Investor tax review | Harmonious Operations" },
       { name: "description", content: "Tax classification, IRS form status, compliance policy and approved legal wording for investor onboarding." },
-      { property: "og:title", content: "Investor tax review - Harmonious Operations" },
+      { property: "og:title", content: "Investor tax review | Harmonious Operations" },
       { property: "og:description", content: "Masked tax status with audited access to signed IRS forms." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -184,7 +184,7 @@ function PolicyTable({ rows, canApprove, me, onAct }: { rows: any[]; canApprove:
         <tbody>
           {rows.map((e) => (
             <tr key={e.id} className="border-t border-border">
-              <td className="p-2">{e.kind === "high_risk_jurisdiction" ? `${e.country_code} - ${e.risk_classification}` : `≥ ${(Number(e.threshold_cents) / 100).toLocaleString()} ${e.currency}`}</td>
+              <td className="p-2">{e.kind === "high_risk_jurisdiction" ? `${e.country_code} · ${e.risk_classification}` : `≥ ${(Number(e.threshold_cents) / 100).toLocaleString()} ${e.currency}`}</td>
               <td className="p-2">{e.effective_date}</td>
               <td className="p-2 text-xs">{e.source_reference}</td>
               <td className="p-2"><Badge variant="secondary">{e.status}</Badge></td>
@@ -202,11 +202,11 @@ function PolicyTable({ rows, canApprove, me, onAct }: { rows: any[]; canApprove:
 
 const WORDING_OPTIONS = [
   { key: "bad_actor_questionnaire", label: "Bad Actor questionnaire" },
-  { key: "certification:accuracy", label: "Certification - accuracy" },
+  { key: "certification:accuracy", label: "Certification: accuracy" },
   { key: "certification:authority_capacity", label: "Certification - authority & capacity" },
-  { key: "certification:electronic_records", label: "Certification - electronic records" },
+  { key: "certification:electronic_records", label: "Certification: electronic records" },
   { key: "certification:privacy_terms", label: "Certification - privacy & terms" },
-  { key: "certification:offering_representations", label: "Certification - offering representations" },
+  { key: "certification:offering_representations", label: "Certification: offering representations" },
 ];
 
 function WordingBoard() {
@@ -274,7 +274,7 @@ function CertificationPreview({ rows }: { rows: any[] }) {
   const preview = certificationPreview({ rows, today, includeDrafts, offeringRepresentations: reps });
   const SOURCE: Record<string, { label: string; variant: "default" | "secondary" | "destructive" }> = {
     approved: { label: "Approved", variant: "default" },
-    draft: { label: "Draft - awaiting approval", variant: "secondary" },
+    draft: { label: "Draft: awaiting approval", variant: "secondary" },
     missing: { label: "No approved wording", variant: "destructive" },
   };
   return (

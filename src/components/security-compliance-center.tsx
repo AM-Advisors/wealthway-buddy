@@ -88,7 +88,7 @@ function Section({ s, d }: { s: ScSection; d: Data }) {
 }
 
 function Planned({ title }: { title: string }) {
-  return <Card><CardHeader><CardTitle className="text-base">{title}</CardTitle><CardDescription>Planned — next phase. No records are kept here yet, and nothing is shown as complete.</CardDescription></CardHeader></Card>;
+  return <Card><CardHeader><CardTitle className="text-base">{title}</CardTitle><CardDescription>Planned, next phase. No records are kept here yet, and nothing is shown as complete.</CardDescription></CardHeader></Card>;
 }
 
 function Stat({ k, v, sub }: { k: string; v: string | number; sub?: string }) {
@@ -116,7 +116,7 @@ function Overview({ d }: { d: Data }) {
         <Stat k="Policies due for review" v={o.policiesDue} />
         <Stat k="Vendor reviews due" v={o.vendorReviewsDue} />
         <Stat k="Access reviews due" v={o.accessReviewsDue} />
-        <Stat k="Vulnerabilities past SLA" v="—" sub="Module planned" />
+        <Stat k="Vulnerabilities past SLA" v=" · " sub="Module planned" />
         <Stat k="Open incidents" v={o.openIncidents} />
         <Stat k="Audit readiness" v={`${o.auditReadiness}%`} sub="Requirements with an effective control" />
       </div>
@@ -180,9 +180,9 @@ function Frameworks({ d }: { d: Data }) {
               <div className="flex flex-wrap gap-2"><Badge variant="outline">{label(f.program_status)}</Badge><Badge variant="secondary">Scope: {f.scope_name ?? "Not set"}</Badge>{f.assessor ? <Badge variant="outline">{f.assessor}</Badge> : null}</div>
               <Bar pct={f.readiness} />
               <p className="text-xs text-muted-foreground">{f.total} requirements · {f.mapped} mapped · {f.gaps} gaps · {f.operating} effective · {f.audits} assessment(s){f.assessment_start ? ` · period ${f.assessment_start} to ${f.assessment_end ?? "?"}` : ""}</p>
-              {f.total === 0 ? <p className="text-xs text-muted-foreground">No requirement identifiers loaded yet{f.key === "csa_ccm" ? " — CSA STAR Prep Kit loaded; follow the Level 1 checklist in Privacy → CSA STAR." : "."}</p> : null}
+              {f.total === 0 ? <p className="text-xs text-muted-foreground">No requirement identifiers loaded yet{f.key === "csa_ccm" ? " · CSA STAR Prep Kit loaded; follow the Level 1 checklist in Privacy → CSA STAR." : "."}</p> : null}
               <details><summary className="cursor-pointer text-xs">Requirements and mapped controls</summary>
-                <ul className="mt-1 space-y-1 text-xs">{f.requirements.map((r: any) => <li key={r.id}><span className="font-medium">{r.code}</span> {r.title} — {r.controls.length ? r.controls.join(", ") : <span className="text-destructive">gap</span>}</li>)}</ul></details>
+                <ul className="mt-1 space-y-1 text-xs">{f.requirements.map((r: any) => <li key={r.id}><span className="font-medium">{r.code}</span> {r.title} · {r.controls.length ? r.controls.join(", ") : <span className="text-destructive">gap</span>}</li>)}</ul></details>
               {canEdit ? <Button size="sm" variant="outline" onClick={() => setEdit({ ...f })}>Edit</Button> : null}
             </CardContent>
           </Card>
@@ -244,7 +244,7 @@ function Controls({ d }: { d: Data }) {
               <td className="p-2 text-xs">{CONTROL_DOMAINS[c.domain] ?? c.domain}</td>
               <td className="p-2"><Badge variant={c.lifecycle === "operating_effectively" || c.lifecycle === "auditor_verified" ? "default" : c.lifecycle === "failed" ? "destructive" : "outline"}>{LIFECYCLE_LABEL[c.lifecycle]}</Badge></td>
               <td className="p-2 text-xs">{c.evidence.filter((e) => e.current).length} current / {c.evidence.length}</td>
-              <td className="p-2 text-xs">{[...new Set(c.mappings.map((m) => m.split(":")[0]))].join(", ") || "—"}</td>
+              <td className="p-2 text-xs">{[...new Set(c.mappings.map((m) => m.split(":")[0]))].join(", ") || " · "}</td>
               <td className="p-2"><Button size="sm" variant="outline" onClick={() => setOpen(c)}>Open</Button></td>
             </tr>
           ))}</tbody>
@@ -271,9 +271,9 @@ function ControlDialog({ c, d, onClose }: { c: Data["controls"][number]; d: Data
         <DialogHeader><DialogTitle>{c.canonical_id} · {c.name}</DialogTitle></DialogHeader>
         <div className="grid gap-3 text-sm md:grid-cols-2">
           <div className="space-y-1 md:col-span-2"><p><span className="font-medium">Objective:</span> {c.objective}</p><p className="text-muted-foreground">{c.description}</p>
-            <p className="text-xs">Owner: {c.owner || "—"} · Type: {label(c.control_type)} · Frequency: {label(c.frequency)} · Evidence required: {c.evidence_requirements || "—"}</p>
-            <p className="text-xs">Mappings: {c.mappings.join("; ") || "—"}</p>
-            <p className="text-xs">Evidence: {c.evidence.map((e) => `${e.title}${e.current ? "" : " (not current)"}`).join("; ") || "none"} · Risks: {c.risks.join(", ") || "—"} · Policies: {c.policies.join(", ") || "—"}</p></div>
+            <p className="text-xs">Owner: {c.owner || " · "} · Type: {label(c.control_type)} · Frequency: {label(c.frequency)} · Evidence required: {c.evidence_requirements || " · "}</p>
+            <p className="text-xs">Mappings: {c.mappings.join("; ") || " · "}</p>
+            <p className="text-xs">Evidence: {c.evidence.map((e) => `${e.title}${e.current ? "" : " (not current)"}`).join("; ") || "none"} · Risks: {c.risks.join(", ") || " · "} · Policies: {c.policies.join(", ") || " · "}</p></div>
           <label className="space-y-1"><span className="text-xs">Status</span>
             <Select value={f.lifecycle_status} onValueChange={(v) => setF({ ...f, lifecycle_status: v as Lifecycle })} disabled={!canEdit}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{LIFECYCLE.map((s) => <SelectItem key={s} value={s}>{LIFECYCLE_LABEL[s]}</SelectItem>)}</SelectContent></Select></label>
           <label className="space-y-1"><span className="text-xs">Domain</span>
@@ -323,7 +323,7 @@ function Evidence({ d }: { d: Data }) {
       <div className="space-y-2">{d.evidence.map((e) => (
         <div key={e.id} className="rounded-md border p-3 text-sm">
           <div className="flex flex-wrap items-center gap-2"><span className="font-medium">{e.title}</span><Badge variant={e.current ? "default" : "outline"}>{e.current ? "Current" : e.superseded ? "Superseded" : e.accepted ? "Expired" : "Awaiting review"}</Badge><Badge variant="secondary">{label(e.details?.sensitivity ?? "restricted")}</Badge></div>
-          <p className="text-xs text-muted-foreground">{label(e.type)} · {e.source} · collected {new Date(e.collected_at).toLocaleDateString()} by {e.collected_by ?? "—"}{e.period_start ? ` · covers ${e.period_start} to ${e.period_end ?? "?"}` : ""}{e.details?.expires_on ? ` · review by ${e.details.expires_on}` : ""}</p>
+          <p className="text-xs text-muted-foreground">{label(e.type)} · {e.source} · collected {new Date(e.collected_at).toLocaleDateString()} by {e.collected_by ?? " · "}{e.period_start ? ` · covers ${e.period_start} to ${e.period_end ?? "?"}` : ""}{e.details?.expires_on ? ` · review by ${e.details.expires_on}` : ""}</p>
           <p className="text-xs">Controls: {e.controlKeys.map((k) => d.controls.find((c) => c.control_key === k)?.canonical_id ?? k).join(", ")}{e.details?.systems?.length ? ` · Systems: ${e.details.systems.join(", ")}` : ""}</p>
           {d.caps.includes("evidence_manage") ? <Button className="mt-1" size="sm" variant="outline" onClick={() => setEdit({ id: e.id, expires_on: e.details?.expires_on ?? null, sensitivity: e.details?.sensitivity ?? "restricted", systems: (e.details?.systems ?? []).join(", "), collection_method: e.details?.collection_method ?? "manual", controls: e.controlKeys.join(", "), requirement_ids: e.details?.requirement_ids ?? [], sha: e.details?.file_sha256 ?? "" })}>Edit details</Button> : null}
         </div>
@@ -365,10 +365,10 @@ function Risks({ d }: { d: Data }) {
         <thead className="bg-muted/50 text-left text-xs text-muted-foreground"><tr><th className="p-2">Risk</th><th className="p-2">Inherent</th><th className="p-2">Residual</th><th className="p-2">Treatment</th><th className="p-2">Status</th><th className="p-2" /></tr></thead>
         <tbody>{d.risks.map((r: any) => (
           <tr key={r.risk_ref} className="border-t align-top">
-            <td className="p-2"><span className="font-medium">{r.risk_ref}</span> {r.title}<br /><span className="text-xs text-muted-foreground">{r.owner || "No owner"} · review {r.review_date ?? "—"}</span></td>
+            <td className="p-2"><span className="font-medium">{r.risk_ref}</span> {r.title}<br /><span className="text-xs text-muted-foreground">{r.owner || "No owner"} · review {r.review_date ?? " · "}</span></td>
             <td className="p-2">{r.inherent} <span className="text-xs text-muted-foreground">({riskBand(r.inherent)})</span></td>
             <td className="p-2">{r.residual ?? <span className="text-xs text-muted-foreground">Not assessed</span>}</td>
-            <td className="p-2">{label(r.treatment) || "—"}</td>
+            <td className="p-2">{label(r.treatment) || " · "}</td>
             <td className="p-2"><Badge variant="outline">{label(r.status)}</Badge>{r.status === "accepted" ? <p className="text-xs text-muted-foreground">by {r.accepted_by_label} until {r.acceptance_expires}</p> : null}</td>
             <td className="space-y-1 p-2">{can ? <>
               <Button size="sm" variant="outline" onClick={() => setEdit({ ...r, controls: (r.control_keys ?? []).join(", "), change_reason: "" })}>Edit</Button>
@@ -444,7 +444,7 @@ function Policies({ d }: { d: Data }) {
       <div className="space-y-2">{d.policies.map((p: any) => (
         <div key={p.policy_ref} className="rounded-md border p-3 text-sm">
           <div className="flex flex-wrap items-center gap-2"><span className="font-medium">{p.policy_ref}</span>{p.title}<Badge variant="outline">v{p.version} · {label(p.status)}</Badge><Badge variant="secondary">{p.category}</Badge>{p.requires_acknowledgment ? <Badge variant="outline">Acknowledgment required · {p.acks}</Badge> : null}</div>
-          <p className="text-xs text-muted-foreground">Owner {p.owner || "—"} · Approved by {p.approved_by_label ?? "—"} · Effective {p.effective_date ?? "—"} · Next review {p.next_review ?? "—"}</p>
+          <p className="text-xs text-muted-foreground">Owner {p.owner || " · "} · Approved by {p.approved_by_label ?? " · "} · Effective {p.effective_date ?? " · "} · Next review {p.next_review ?? " · "}</p>
           {can ? <div className="mt-1 flex flex-wrap gap-2">
             <Button size="sm" variant="outline" onClick={() => setEdit({ ...p, controls: (p.control_keys ?? []).join(", "), change_reason: "" })}>{["approved", "effective"].includes(p.status) ? "Start new version" : "Edit"}</Button>
             {next[p.status]!.filter((x) => x !== "superseded").map((to) => <Button key={to} size="sm" variant="ghost" onClick={() => setTr({ ref: p.policy_ref, to, reason: "", date: "" })}>Move to {label(to)}</Button>)}
@@ -545,7 +545,7 @@ function Trust({ d }: { d: Data }) {
             {can ? <Button size="sm" variant="outline" onClick={() => setEdit({ ...p })}>Edit</Button> : null}
             {next[p.state]!.filter((to) => (to === "approved" || to === "published" ? pub : can)).map((to) => <Button key={to} size="sm" variant="ghost" onClick={() => setTr({ id: p.id, to, reason: "" })}>{to === "approved" ? "Approve for Trust Center" : label(to === "internal_only" ? "return to internal" : to)}</Button>)}
           </div>
-          <details><summary className="cursor-pointer text-xs">Publication history</summary><ul className="text-xs text-muted-foreground">{p.events.map((e: any) => <li key={e.id}>{label(e.from_state) || "—"} → {label(e.to_state)} · {e.reason} · {e.actor_label} · {new Date(e.created_at).toLocaleString()}</li>)}</ul></details>
+          <details><summary className="cursor-pointer text-xs">Publication history</summary><ul className="text-xs text-muted-foreground">{p.events.map((e: any) => <li key={e.id}>{label(e.from_state) || " · "} → {label(e.to_state)} · {e.reason} · {e.actor_label} · {new Date(e.created_at).toLocaleString()}</li>)}</ul></details>
         </div>
       ))}
       {can ? <Card><CardHeader><CardTitle className="text-base">Document requests</CardTitle><CardDescription>A request never grants access by itself.</CardDescription></CardHeader>

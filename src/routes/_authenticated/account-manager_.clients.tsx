@@ -11,9 +11,9 @@ import { setClientTeamMember } from "@/lib/harmonious-team.functions";
 export const Route = createFileRoute("/_authenticated/account-manager_/clients")({
   head: () => ({
     meta: [
-      { title: "My clients - Account management - Harmonious" },
+      { title: "My clients | Account management | Harmonious" },
       { name: "description", content: "Account Manager client books: funds, setup progress and client health." },
-      { property: "og:title", content: "My clients - Account management - Harmonious" },
+      { property: "og:title", content: "My clients | Account management | Harmonious" },
       { property: "og:description", content: "Client books for Harmonious Account Managers." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

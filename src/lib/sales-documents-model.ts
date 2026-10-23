@@ -41,7 +41,7 @@ export const ABOUT_HARMONIOUS =
 
 export type MsaFacts = { version: string; effectiveDate: string | null; sections: { section_no: string; title: string; body: string }[] } | null;
 export const NO_MSA_TERMS = "Terms will be provided in the Master Services Agreement.";
-export const termsTitle = (msa: MsaFacts) => msa ? "Terms — Master Services Agreement" : "Terms";
+export const termsTitle = (msa: MsaFacts) => msa ? "Terms: Master Services Agreement" : "Terms";
 
 export type LockFacts = { msa?: MsaFacts; about?: string | null; organization: string | null; contactName: string | null; lines: { label: string; quantity: number; unit_cents: number; line_cents: number; billing_frequency?: string | null; service_details?: { scope?: string; included?: string[]; excluded?: string[] } | null }[] };
 

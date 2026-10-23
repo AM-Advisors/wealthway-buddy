@@ -107,7 +107,7 @@ function PostEditor() {
   });
   const retryM = useMutation({
     mutationFn: () => retry({ data: { id } }),
-    onSuccess: () => { toast.success("Retrying — the original approval still stands"); q.refetch(); qc.invalidateQueries({ queryKey: ["mk-posts"] }); },
+    onSuccess: () => { toast.success("Retrying: the original approval still stands"); q.refetch(); qc.invalidateQueries({ queryKey: ["mk-posts"] }); },
     onError: (e) => toast.error((e as Error).message),
   });
   const draftM = useMutation({
@@ -196,7 +196,7 @@ function PostEditor() {
           )}
           {!!q.data?.history.length && (
             <Panel title="History">
-              <ul className="space-y-1 text-xs text-muted-foreground">{q.data.history.map((h: any) => <li key={h.id}>{fmt(h.created_at)} · {h.actor_name} · {h.action.replace(/_/g, " ")}{h.note ? ` — “${h.note}”` : ""}</li>)}</ul>
+              <ul className="space-y-1 text-xs text-muted-foreground">{q.data.history.map((h: any) => <li key={h.id}>{fmt(h.created_at)} · {h.actor_name} · {h.action.replace(/_/g, " ")}{h.note ? ` · “${h.note}”` : ""}</li>)}</ul>
             </Panel>
           )}
         </div>

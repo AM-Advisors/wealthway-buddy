@@ -296,7 +296,7 @@ export function FundRequestEngine({ clientId: id, draft, mode = "client", client
                       ? <Input value={r.jurisdiction} disabled aria-label="Jurisdiction (set by Master LLC)" />
                       : <Pick value={r.jurisdiction} onChange={(v) => set("jurisdiction", v)} options={JURISDICTIONS} />}
                   </F>
-                  <F label="Already formed?"><Pick value={r.already_formed} onChange={(v) => set("already_formed", v as any)} options={[{ value: "yes", label: "Yes" }, { value: "no", label: "No - Harmonious to form" }]} /></F>
+                  <F label="Already formed?"><Pick value={r.already_formed} onChange={(v) => set("already_formed", v as any)} options={[{ value: "yes", label: "Yes" }, { value: "no", label: "No: Harmonious to form" }]} /></F>
                   {r.already_formed === "yes" && <F label="Date formed"><DatePick value={r.date_formed} onChange={(v) => set("date_formed", v)} /></F>}
                   {r.already_formed === "no" && <F label="Who will obtain the EIN? *"><Pick value={r.ein_obtained_by} onChange={(v) => set("ein_obtained_by", v as any)} options={[{ value: "harmonious", label: "Harmonious" }, { value: "client", label: "We will" }]} /></F>}
                   {r.already_formed === "yes" && <F label="Has an EIN? *"><Pick value={r.has_ein} onChange={(v) => set("has_ein", v as any)} options={[{ value: "yes", label: "Yes" }, { value: "no", label: "No" }]} /></F>}

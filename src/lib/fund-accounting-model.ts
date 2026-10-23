@@ -90,7 +90,7 @@ export function expenseError(e: ExpenseInputModel): string | null {
   if (!ISO.test(e.expenseDate)) return "Expense date is required.";
   if (!Number.isInteger(e.amountCents) || e.amountCents <= 0) return "Amount must be positive.";
   if (e.paymentMode === "paid" && (!e.paidOn || !ISO.test(e.paidOn))) return "A paid expense needs the payment date.";
-  if (e.paymentMode === "accrued" && e.paidOn) return "An accrued expense has not been paid - leave the payment date empty.";
+  if (e.paymentMode === "accrued" && e.paidOn) return "An accrued expense has not been paid, leave the payment date empty.";
   if (!e.sourceReference.trim()) return "A source reference is required.";
   return null;
 }
@@ -168,7 +168,7 @@ export function newAccountError(i: { code: string; name: string; accountType: st
   if (i.parentCode && i.code.slice(0, 2) !== i.parentCode.slice(0, 2)) return "The code must sit inside the parent account's range.";
   const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
   if (existing.some((a) => a.code === i.code)) return "DUPLICATE - that account code already exists.";
-  if (existing.some((a) => norm(a.name) === norm(i.name))) return "DUPLICATE - an account with that name already exists.";
+  if (existing.some((a) => norm(a.name) === norm(i.name))) return "DUPLICATE: an account with that name already exists.";
   return null;
 }
 
@@ -182,6 +182,6 @@ export function feeAccrualError(i: { blocked: boolean; engineCents: number; benc
   if (i.alreadyAccrued) return "DUPLICATE - this period's management fee is already accrued.";
   if (i.blocked) return "The fee engine is blocked for this period - resolve the fee-term exception first.";
   if (!Number.isInteger(i.benchmarkCents) || i.benchmarkCents <= 0) return "State the independently calculated benchmark.";
-  if (i.engineCents !== i.benchmarkCents) return `FEE MISMATCH - engine ${i.engineCents} vs benchmark ${i.benchmarkCents} cents; stop and review.`;
+  if (i.engineCents !== i.benchmarkCents) return `FEE MISMATCH: engine ${i.engineCents} vs benchmark ${i.benchmarkCents} cents; stop and review.`;
   return null;
 }

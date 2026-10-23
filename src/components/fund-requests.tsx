@@ -143,7 +143,7 @@ function RequestDetail({ id, fundId, onBack }: { id: string; fundId: string; onB
           <div><p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{requestType(r.request_type).label}</p><h2 className="text-xl">{r.title}</h2></div>
           <ResponsibilityBadge status={r.responsibility_status} />
         </div>
-        <p className="mt-1 text-sm text-muted-foreground">{REQUEST_STATUS_LABEL[r.status as keyof typeof REQUEST_STATUS_LABEL]} · {ENT[r.entitlement_status]}{r.entitlement_status !== "INCLUDED" ? " — this request may be outside your current service scope. Harmonious will review it before work begins." : ""}</p>
+        <p className="mt-1 text-sm text-muted-foreground">{REQUEST_STATUS_LABEL[r.status as keyof typeof REQUEST_STATUS_LABEL]} · {ENT[r.entitlement_status]}{r.entitlement_status !== "INCLUDED" ? " · this request may be outside your current service scope. Harmonious will review it before work begins." : ""}</p>
         {r.client_notes && <p className="mt-2 rounded-md bg-muted p-2 text-sm">{r.client_notes}</p>}
         <ol className="mt-4 grid gap-2 sm:grid-cols-4">
           {stages.map((s: string, i: number) => (

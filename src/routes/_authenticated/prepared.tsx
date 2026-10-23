@@ -35,7 +35,7 @@ function PreparedForMe() {
         data: { draft_id: vars.id, decision: vars.decision, note: notes[vars.id] || undefined },
       }),
     onSuccess: () => {
-      toast.success("Thank you - your decision has been recorded.");
+      toast.success("Thank you, your decision has been recorded.");
       void qc.invalidateQueries({ queryKey: ["items-prepared-for-me"] });
     },
     onError: (e: any) => toast.error(e?.message ?? "That could not be saved."),

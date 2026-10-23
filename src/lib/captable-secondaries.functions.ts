@@ -29,12 +29,12 @@ export const RESTRICTION_OUTCOMES = [
   { value: "not_started", label: "Not started" },
   { value: "clear", label: "No restriction blocks the sale" },
   { value: "conditions", label: "Permitted with conditions" },
-  { value: "blocked", label: "Restricted - cannot proceed" },
+  { value: "blocked", label: "Restricted: cannot proceed" },
 ] as const;
 
 export const ROFR_OUTCOMES = [
   { value: "not_started", label: "Not started" },
-  { value: "offered", label: "Offered - awaiting response" },
+  { value: "offered", label: "Offered: awaiting response" },
   { value: "waived", label: "Waived" },
   { value: "expired", label: "Expired unexercised" },
   { value: "exercised", label: "Exercised by the company" },

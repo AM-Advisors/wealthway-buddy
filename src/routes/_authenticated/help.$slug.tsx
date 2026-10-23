@@ -5,9 +5,9 @@ import { HelpArticlePage, helpQuery } from "@/components/help/help-center";
 export const Route = createFileRoute("/_authenticated/help/$slug")({
   head: () => ({
     meta: [
-      { title: "Help article - Harmonious" },
+      { title: "Help article | Harmonious" },
       { name: "description", content: "A Harmonious help center article." },
-      { property: "og:title", content: "Help article - Harmonious" },
+      { property: "og:title", content: "Help article | Harmonious" },
       { property: "og:description", content: "A Harmonious help center article." },
       { property: "og:type", content: "article" },
       { name: "twitter:card", content: "summary" },

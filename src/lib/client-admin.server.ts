@@ -192,7 +192,7 @@ export async function buildPreview(db: any, clientId: string, offeringId: string
   } else {
     const r = resolveSowTemplate(templates, type, today);
     if (r.status === "resolved") template = r.template;
-    else templateProblem = r.status === "ambiguous" ? "Two approved templates share the latest version - Harmonious review required." : NO_TEMPLATE_MESSAGE;
+    else templateProblem = r.status === "ambiguous" ? "Two approved templates share the latest version. Harmonious review required." : NO_TEMPLATE_MESSAGE;
   }
   if (!template) blockers.push({ kind: "no_template", message: templateProblem ?? NO_TEMPLATE_MESSAGE });
   if (!lines.length) blockers.push({ kind: "no_services", message: amendment ? "No service changes are pending for this engagement." : "Select at least one service." });
@@ -253,7 +253,7 @@ export async function ensureDraftSow(
     const { error } = await db.from("client_sows").update(payload).eq("id", sowId).is("executed_at", null);
     if (error) throw new Error(error.message);
   } else {
-    const title = `${preview.mode === "amendment" ? "SOW amendment" : "Draft SOW"} - ${preview.offering?.name ?? "Client services"}`;
+    const title = `${preview.mode === "amendment" ? "SOW amendment" : "Draft SOW"} | ${preview.offering?.name ?? "Client services"}`;
     const { data, error } = await db
       .from("client_sows")
       .insert({

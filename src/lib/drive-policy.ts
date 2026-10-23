@@ -167,7 +167,7 @@ export type RepositoryConfig = {
 export const INVESTOR_UNAVAILABLE = "Investor Drive filing unavailable - repository permissions require review";
 export const TEST_UNAVAILABLE = "Test Drive configuration unavailable";
 export const FUND_UNAVAILABLE = "Fund Drive repository unavailable";
-export const HARMONIOUS_STORAGE = "Kept in private Harmonious storage - never filed to Google Drive";
+export const HARMONIOUS_STORAGE = "Kept in private Harmonious storage: never filed to Google Drive";
 
 /** Roots that overlap in any way are treated as misconfigured, never guessed. */
 export function repositoryConfigProblem(c: RepositoryConfig): string | null {

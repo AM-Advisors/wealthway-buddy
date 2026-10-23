@@ -45,7 +45,7 @@ export const LINES_1065: LineDef[] = [
   { id: "l_liab", schedule: "scheduleL", line: "20", label: "Total liabilities (end of year)" },
   { id: "l_capital", schedule: "scheduleL", line: "21", label: "Partners' capital accounts (end of year)" },
   { id: "m1_1", schedule: "scheduleM1", line: "1", label: "Net income (loss) per books" },
-  { id: "m1_adj", schedule: "scheduleM1", line: "2–7", label: "Net book-to-tax adjustments" },
+  { id: "m1_adj", schedule: "scheduleM1", line: "2 to 7", label: "Net book-to-tax adjustments" },
   { id: "m1_9", schedule: "scheduleM1", line: "9", label: "Income (loss) per Schedule K analysis" },
   { id: "m2_1", schedule: "scheduleM2", line: "1", label: "Balance at beginning of year" },
   { id: "m2_2", schedule: "scheduleM2", line: "2", label: "Capital contributed" },

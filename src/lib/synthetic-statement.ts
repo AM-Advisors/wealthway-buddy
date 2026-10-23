@@ -112,7 +112,7 @@ const usd = (c: number) => `${c < 0 ? "-" : ""}$${(Math.abs(c) / 100).toLocaleSt
 
 export function syntheticStatementPdfSpec(s: SyntheticStatement, fundName: string): PdfDocSpec {
   return {
-    kicker: "Synthetic capital account statement — internal preview",
+    kicker: "Synthetic capital account statement: internal preview",
     title: fundName,
     subtitle: `${s.investorName} · Class ${s.classLabel} · ${s.period.start} to ${s.period.end}`,
     badge: "SYNTHETIC",
