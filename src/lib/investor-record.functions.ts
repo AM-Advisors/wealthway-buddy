@@ -30,7 +30,7 @@ export const createInvestorFn = createServerFn({ method: "POST" }).middleware([r
     person, profile: z.object({ type: z.string().max(40), subType: str, legalName: str, details }), investment, related: related.optional(),
     taxId: z.string().regex(/^\d{9}$/, "The SSN / Tax ID must be 9 digits.").nullable().optional(),
   }).parse)
-  .handler(async ({ data, context }) => (await srv()).createInvestor(context.userId, data as any));
+  .handler(async ({ data, context }) => (await srv()).createInvestorAndInvite(context.userId, data as any));
 
 export const updateInvestorRecordFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator(z.object({ onboardingId: uuid, person: person.optional(), profile: z.object({ legalName: str, details }).optional(), investment: investment.optional(), taxId: z.string().regex(/^\d{9}$/, "The tax ID must be 9 digits.").nullable().optional() }).parse)

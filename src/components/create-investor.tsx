@@ -69,7 +69,8 @@ export function CreateInvestor({ fundId, isStaff, onDone }: { fundId: string; is
         },
         related: related.filter((r) => r.firstName && r.lastName).map((r) => ({ ...r, email: r.email || null, ownershipPercent: r.ownershipPercent ? Number(r.ownershipPercent) : null })),
       } });
-      toast.success("Investor added - Incomplete, additional information required.");
+      if (r.emailSent === false) toast.warning("Investor added, but the invitation was not sent. Open their record to check and resend the invitation.");
+      else toast.success(r.emailSent ? "Investor added and invitation sent." : "Investor added - Incomplete, additional information required.");
       qc.invalidateQueries({ queryKey: ["fund-investor-records", fundId] });
       qc.invalidateQueries({ queryKey: ["fund-readiness", fundId] });
       onDone?.();
@@ -176,8 +177,8 @@ export function CreateInvestor({ fundId, isStaff, onDone }: { fundId: string; is
         ) : null}
 
         <div className="flex flex-wrap gap-2">
-          <Button onClick={() => save(true)} disabled={busy}>{busy ? "Saving…" : "Save & Continue"}</Button>
-          <Button variant="outline" onClick={() => save(false)} disabled={busy}>Save</Button>
+          <Button onClick={() => save(true)} disabled={busy}>{busy ? "Saving…" : isStaff ? "Save & Continue" : "Add & invite · Open record"}</Button>
+          <Button variant="outline" onClick={() => save(false)} disabled={busy}>{isStaff ? "Save" : "Add & invite"}</Button>
         </div>
       </CardContent>
     </Card>

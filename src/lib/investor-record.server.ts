@@ -254,6 +254,32 @@ export async function createInvestor(userId: string, input: {
 
 /* ---------------------------------------------------------------- update */
 
+/** Interactive manual addition only; imports continue to use createInvestor without email. */
+export async function createInvestorAndInvite(userId: string, input: Parameters<typeof createInvestor>[1]) {
+  const actor = await fundActor(userId, input.offeringId);
+  const saved = await createInvestor(userId, input);
+  if (actor.isStaff) return { ...saved, emailSent: null };
+
+  // The investor record is already saved. A failed send must not encourage another creation.
+  try {
+    const engine = await import("@/lib/investor-onboarding.server");
+    const { data: row, error } = await db().from("investor_onboardings")
+      .select("invitation_id").eq("id", saved.onboardingId).single();
+    if (error || !row) return { ...saved, emailSent: false };
+    if (!row.invitation_id) await engine.createPersonalLink(userId, saved.onboardingId);
+    else {
+      const { data: inv } = await db().from("fund_invitations").select("status, expires_at, offering_id")
+        .eq("id", row.invitation_id).maybeSingle();
+      if (!inv || inv.offering_id !== input.offeringId || !["pending", "accepted"].includes(inv.status)
+        || (inv.expires_at && inv.expires_at < nowIso())) return { ...saved, emailSent: false };
+    }
+    const result = await engine.sendPersonalLink(userId, saved.onboardingId);
+    return { ...saved, emailSent: result.emailSent };
+  } catch {
+    return { ...saved, emailSent: false };
+  }
+}
+
 const PERSON_FIELDS = ["legal_first_name", "legal_middle_name", "legal_last_name", "preferred_name", "email", "phone", "date_of_birth", "citizenship_country", "address_line1", "address_line2", "city", "region", "postal_code", "country", "mailing_address"];
 const ADDRESS_FIELDS = new Set(["address_line1", "address_line2", "city", "region", "postal_code", "country"]);
 

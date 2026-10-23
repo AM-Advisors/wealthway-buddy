@@ -1,5 +1,10 @@
 # Roadmap
 
+## Manager-added investor invitations (2026-10-23)
+- [x] Interactive manager addition uses the saved investment's personal invitation and reports sending failure without losing the saved record; imports and historical rows unchanged.
+- [ ] Run fictional invitation regression checks and inspect preview diagnostics.
+- [ ] Authenticated add → email → claim read-back — blocked on independently isolated synthetic QA; no live investor additions or test emails.
+
 ## Erebor black-text correction (2026-10-23)
 - [x] Replaced 92 red PDF color operators and matching Word red font with black in separate Thomas v10 correction; all extracted wording identical and zero red spans. Registered unsigned draft 281b667a-502d-4774-90a6-c467cd8ecba3 through authorized preparation, no send/signature/activation.
 - [x] Inspected all 37 pages and signature-page close-up; black text visible without new clipping or layout changes. Original blank signature underline wrap retained. Main remains exact Thomas v9 source with actual signature separately recorded.
