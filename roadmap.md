@@ -603,3 +603,4 @@
 - [x] Archived documents view with investor applicability
 - [x] Fix approved account checks reverting to compliance review (profile notices ignored; 3 checks re-read)
 - [ ] morgato27 account check: 32 possible watchlist matches await a compliance reviewer (human decision)
+- [x] Limited access during identity review + outcome email
