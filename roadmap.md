@@ -1,5 +1,9 @@
 # Roadmap
 
+## Erebor black-text correction (2026-10-23)
+- [ ] Inspect red text in Thomas's main agreement and create a separate black-text correction; do not alter signed source or transfer signature.
+- [ ] Visually inspect every corrected page and preserve main signed agreement until corrected copy is actually signed.
+
 ## Signed replacement publication (2026-10-23)
 - [x] Register exact Thomas OA PDF as offering version 7 through Alyssa's authorized designation; main now Erebor_Operating_Agreement_Thomas_v9.pdf, approved/confirmed/new_only, Thomas signature unchanged, all 7 versions retained, resign=0.
 - [x] Automatically promote explicitly staff-designated approved fund-signatory-only OA replacements after all required file signatures complete, with stale-version protection and atomic retained history. Added staff Use as replacement control; publication required for that new control.
