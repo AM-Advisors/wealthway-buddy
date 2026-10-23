@@ -165,6 +165,13 @@ export function isTrustedOrigin(
 /** Published platform address; forwarded to Harmonious domains, never shown. */
 export const PUBLISHED_PLATFORM_HOST = "wealthway-buddy.lovable.app";
 
+/** The brand site. The retired former site address forwards here. */
+export const SITE_ORIGIN = "https://harmonious.co";
+
+/** Retired former site addresses. Mail and DNS records stay at the registrar;
+ * only page visits move on. */
+export const RETIRED_SITE_HOSTS = ["harmoniouscapitaladmin.com", "www.harmoniouscapitaladmin.com"];
+
 export type CanonicalRedirect = { location: string; status: 302 };
 
 /**
@@ -199,10 +206,19 @@ export function canonicalRedirect(
   const tail = `${pathname}${parsed.search}${parsed.hash}`;
   const surface = surfaceForPath(pathname);
 
+  // The retired former site address is gone: every page visit goes to the
+  // brand site. Machine endpoints, tracking and sign-in paths keep answering
+  // where they are.
+  if (RETIRED_SITE_HOSTS.includes(host)) {
+    if (surface === "shared") return null;
+    return { location: SITE_ORIGIN, status: 302 };
+  }
+
   const onLegacy = legacyHosts.includes(host) || onPublishedPlatformHost;
   const known = onLegacy || host === clientHost || host === opsHost;
   // An address we don't recognize (a custom domain, a staging host) is left
   // alone rather than bounced somewhere it may not be able to come back from.
+  // The retired site hosts above are the one exception.
   if (!known) return null;
 
   if (pathname === "/" && !onLegacy) {

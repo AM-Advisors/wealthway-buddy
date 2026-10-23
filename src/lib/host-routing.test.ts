@@ -152,7 +152,13 @@ describe("no redirect loops", () => {
     "/api/public/email/open",
     "/invest/fund-one",
   ];
-  const hosts = [APP, OPS, LEGACY_ORIGIN];
+  const hosts = [
+    APP,
+    OPS,
+    LEGACY_ORIGIN,
+    "https://harmoniouscapitaladmin.com",
+    "https://www.harmoniouscapitaladmin.com",
+  ];
 
   it("settles every page on every address in at most one hop", () => {
     for (const host of hosts) {
@@ -344,5 +350,27 @@ describe("published platform address", () => {
   });
   it("leaves the editor preview alone", () => {
     expect(canonicalRedirect({ url: "https://id-preview--abc.lovable.app/client" })).toBeNull();
+  });
+});
+
+describe("retired capital-admin site address", () => {
+  it("sends every page visit to the brand site", () => {
+    expect(canonicalRedirect({ url: "https://harmoniouscapitaladmin.com/" })).toEqual({
+      location: "https://harmonious.co",
+      status: 302,
+    });
+    expect(
+      canonicalRedirect({ url: "https://www.harmoniouscapitaladmin.com/anything?from=old" })?.location,
+    ).toBe("https://harmonious.co");
+  });
+
+  it("keeps machine endpoints and sign-in paths reachable", () => {
+    expect(canonicalRedirect({ url: "https://harmoniouscapitaladmin.com/api/public/email/open" })).toBeNull();
+    expect(canonicalRedirect({ url: "https://www.harmoniouscapitaladmin.com/auth?next=%2Fhome" })).toBeNull();
+  });
+
+  it("never points back at itself, so nothing loops", () => {
+    expect(redirectSettles("https://harmoniouscapitaladmin.com/")).toBe(true);
+    expect(redirectSettles("https://www.harmoniouscapitaladmin.com/old-page")).toBe(true);
   });
 });
