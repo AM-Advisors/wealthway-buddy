@@ -615,7 +615,7 @@
 - [x] Investors list: one Add investor chooser, one status per row, tabs; staff fund screens use the same list.
 - [x] Investor page: staff see the same page as managers plus the KYC/AML review card (staff only).
 - [x] Approvals & requests: one shared area (Open items / Approvals / Requests) on manager and staff fund pages.
-- [ ] Documents: one Documents tab layout for both sides.
+- [x] Documents: one Documents tab layout for both sides (Fund files, Send to investors, Investor uploads); generation remains staff-only server-side.
 - [ ] Fund setup: one checklist with You / Harmonious owner per step.
 - [ ] Verification wording shared everywhere.
 - [ ] Fund/investor messages shown on the fund and investor pages.
