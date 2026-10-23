@@ -42,13 +42,13 @@ import {
 export const Route = createFileRoute("/_authenticated/admin/services")({
   head: () => ({
     meta: [
-      { title: "Services administration | Harmonious" },
+      { title: "Services administration - Harmonious" },
       {
         name: "description",
         content:
           "Manage the Harmonious service catalog, packages, standard pricing and the queue of client requests.",
       },
-      { property: "og:title", content: "Services administration | Harmonious" },
+      { property: "og:title", content: "Services administration - Harmonious" },
       {
         property: "og:description",
         content: "Service catalog, packages, pricing and client requests.",
@@ -161,7 +161,7 @@ function ServicesAdmin() {
           <h1 className="text-3xl">Services administration</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             The catalog, packages and pricing behind every Harmonious engagement. New services are
-            configured here: no rebuild needed.
+            configured here - no rebuild needed.
           </p>
         </div>
         <Button asChild size="sm" variant="outline">
@@ -542,14 +542,14 @@ function PaymentsTab() {
     <div className="space-y-3">
       <p className="text-sm text-muted-foreground">
         Client requests paid by wire or ACH stay inactive until you confirm the money arrived. Check the bank
-        account first, this is never automatic.
+        account first - this is never automatic.
       </p>
       {rows.map((p) => (
         <Card key={p.id}>
           <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-2 space-y-0">
             <div>
               <CardTitle className="text-base">
-                {p.clientName} · {usd(p.totalCents)} by {p.method.toUpperCase()}
+                {p.clientName} - {usd(p.totalCents)} by {p.method.toUpperCase()}
               </CardTitle>
               <CardDescription>
                 Reference {p.reference} · {p.kind === "new_fund_request" ? "New fund request" : "A la carte services"} ·{" "}
@@ -827,7 +827,7 @@ function RequestsTab({ requests, onSaved }: { requests: any[]; onSaved: () => vo
           <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-2 space-y-0">
             <div>
               <CardTitle className="text-base">
-                {intentLabel(r.intent)} · {r.clientName}
+                {intentLabel(r.intent)} - {r.clientName}
               </CardTitle>
               <CardDescription>
                 {r.entityName ?? "No specific entity"} ·{" "}

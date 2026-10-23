@@ -18,9 +18,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 export const Route = createFileRoute("/_authenticated/ops/fund-migrate/$fundId")({
   head: () => ({ meta: [
-    { title: "Fund migration | Harmonious" },
+    { title: "Fund migration - Harmonious" },
     { name: "description", content: "Bring an existing fund in from its Google Drive folder." },
-    { property: "og:title", content: "Fund migration | Harmonious" },
+    { property: "og:title", content: "Fund migration - Harmonious" },
     { property: "og:description", content: "Sort a fund's Drive files and fill in Fund Setup from its documents." },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary" },
@@ -208,7 +208,7 @@ function ItemRow({ i, d, selected, onSelect, onChange }: { i: any; d: any; selec
         <div className="text-xs text-muted-foreground">{i.result_message ?? i.suggested_reason}</div>
       </td>
       <td className="py-2 pr-2">
-        {locked ? <span className="text-xs">{TYPE_OPTIONS.find((t) => t.value === `${i.category}:${i.document_type}`)?.label ?? " · "}</span> : (
+        {locked ? <span className="text-xs">{TYPE_OPTIONS.find((t) => t.value === `${i.category}:${i.document_type}`)?.label ?? "—"}</span> : (
           <Select value={`${i.category}:${i.document_type}`} onValueChange={(v) => { const [category, documentType] = v.split(":"); onChange({ category, documentType }); }}>
             <SelectTrigger className="h-8 w-56" aria-label="Document type"><SelectValue /></SelectTrigger>
             <SelectContent>{TYPE_OPTIONS.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
@@ -217,7 +217,7 @@ function ItemRow({ i, d, selected, onSelect, onChange }: { i: any; d: any; selec
       </td>
       <td className="py-2 pr-2 text-xs text-muted-foreground">{i.destination}</td>
       <td className="py-2 pr-2">
-        {i.category === "investor" ? (locked ? <span className="text-xs">{d.investors.find((x: any) => x.onboardingId === i.onboarding_id)?.name ?? i.investor_name ?? " · "}</span> : (
+        {i.category === "investor" ? (locked ? <span className="text-xs">{d.investors.find((x: any) => x.onboardingId === i.onboarding_id)?.name ?? i.investor_name ?? "—"}</span> : (
           <div className="space-y-1">
             <Select value={i.onboarding_id ?? NONE} onValueChange={(v) => onChange({ onboardingId: v === NONE ? null : v })}>
               <SelectTrigger className="h-8 w-48" aria-label="Investor"><SelectValue /></SelectTrigger>

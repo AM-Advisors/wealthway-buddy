@@ -68,7 +68,7 @@ export async function mergeInvestors(userId: string, fundId: string, keepId: str
   if (!(await isStaff(userId))) throw new Error("Only Harmonious staff can merge investor records.");
   await assertFund(userId, fundId);
   if (keepId === archiveId) throw new Error("Pick two different records.");
-  if (!reason.trim()) throw new Error("Give a reason, it's saved in Audit History.");
+  if (!reason.trim()) throw new Error("Give a reason — it's saved in Audit History.");
   const d = await db();
   const { data: pair } = await d.from("investor_onboardings").select("id, person_id, application_id, stage").eq("offering_id", fundId).is("removed_at", null).in("id", [keepId, archiveId]);
   const keep = (pair ?? []).find((x: any) => x.id === keepId);

@@ -87,7 +87,7 @@ export function journeySteps(requirements: RequirementResult[], facts: JourneyFa
   } else if (facts.approvedToFund && verify === "complete") {
     if (facts.investorReportsSent || ["bank_transaction_detected", "reconciliation_pending", "partially_funded"].includes(String(facts.fundingStatus))) {
       fund = "in_progress";
-      fundMessage = "Thanks, we'll confirm as soon as your bank transfer is received and matched.";
+      fundMessage = "Thanks - we'll confirm as soon as your bank transfer is received and matched.";
     } else {
       fund = "action_required";
       fundMessage = "Your subscription has been accepted. You can now view secure wiring instructions.";

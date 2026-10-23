@@ -225,7 +225,7 @@ export function FundInvitations({ title = "Invitations" }: { title?: string }) {
         <section className="space-y-4 rounded-md border p-4">
           <h3 className="text-sm font-semibold">Add several people</h3>
           <p className="text-xs text-muted-foreground">
-            Paste up to 50 email addresses: one per line, or as{" "}
+            Paste up to 50 email addresses - one per line, or as{" "}
             <code>Jane Smith &lt;jane.smith@example.com&gt;</code>. Everyone gets the role and funds
             selected above.
           </p>

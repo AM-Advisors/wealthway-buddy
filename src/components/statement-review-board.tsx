@@ -58,7 +58,7 @@ function StatementQueue() {
   const refresh = () => qc.invalidateQueries({ queryKey: ["statement-review"] });
   const decideM = useMutation({
     mutationFn: (v: { statementId: string; decision: "approved" | "returned"; note?: string }) => decide({ data: v }),
-    onSuccess: (_r, v) => { toast.success(v.decision === "approved" ? "Statement approved: the investor can now see it." : "Statement returned."); setReturning(null); setNote(""); refresh(); },
+    onSuccess: (_r, v) => { toast.success(v.decision === "approved" ? "Statement approved - the investor can now see it." : "Statement returned."); setReturning(null); setNote(""); refresh(); },
     onError: (e) => toast.error(errMsg(e)),
   });
   const notifyM = useMutation({
@@ -213,10 +213,10 @@ function MemoEditor({ funds, initial, onDone }: { funds: { id: string; name: str
   const reports = fq.data?.reports ?? [];
   const m = useMutation({
     mutationFn: () => save({ data: {
-      id: initial.id, offeringId, periodStart, periodEnd, title: title || `Financial review · ${periodEnd}`, summary,
+      id: initial.id, offeringId, periodStart, periodEnd, title: title || `Financial review - ${periodEnd}`, summary,
       findings: findings.filter((f) => f.area.trim() && f.observation.trim()), reportIds: reports.map((r) => r.id),
     } }),
-    onSuccess: () => { toast.success("Draft saved: ready for a second person to approve."); onDone(); },
+    onSuccess: () => { toast.success("Draft saved - ready for a second person to approve."); onDone(); },
     onError: (e) => toast.error(errMsg(e)),
   });
 

@@ -135,7 +135,7 @@ export function GrantAccessWizard({ onDone }: { onDone: () => void }) {
               </SelectContent>
             </Select>
             <p className="mt-2 text-xs text-muted-foreground">
-              Membership of a firm gives no access on its own, only this authorization does.
+              Membership of a firm gives no access on its own - only this authorization does.
             </p>
           </div>
         )}
@@ -207,7 +207,7 @@ export function GrantAccessWizard({ onDone }: { onDone: () => void }) {
                       {CAPABILITY_LABELS[cap] ?? cap}
                       {sensitive ? (
                         <span className="ml-2 text-xs text-muted-foreground">
-                          needs a signed authorization, not available yet
+                          needs a signed authorization - not available yet
                         </span>
                       ) : null}
                     </span>
@@ -241,7 +241,7 @@ export function GrantAccessWizard({ onDone }: { onDone: () => void }) {
         {step === 4 && (
           <p className="text-muted-foreground">
             {assisting
-              ? "View and prepare. Everything prepared waits for your approval, signing and moving money are not available."
+              ? "View and prepare. Everything prepared waits for your approval - signing and moving money are not available."
               : "View only. This authorization can never do more than look."}
           </p>
         )}

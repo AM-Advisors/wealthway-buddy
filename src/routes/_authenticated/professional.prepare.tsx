@@ -234,13 +234,13 @@ function PreparePage() {
 export const Route = createFileRoute("/_authenticated/professional/prepare")({
   head: () => ({
     meta: [
-      { title: "Prepare for a client | Harmonious" },
+      { title: "Prepare for a client - Harmonious" },
       {
         name: "description",
         content:
           "Prepare contact details, entity and ownership information, accreditation evidence and investments for a client to review and approve.",
       },
-      { property: "og:title", content: "Prepare for a client | Harmonious" },
+      { property: "og:title", content: "Prepare for a client - Harmonious" },
       {
         property: "og:description",
         content: "Professional preparation that always waits for the client's own approval.",

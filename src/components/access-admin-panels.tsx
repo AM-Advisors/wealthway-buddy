@@ -48,7 +48,7 @@ export function AtomicDrawer({ rows, area, summary }: { rows: AtomicRow[]; area:
             {r.destructive ? <Badge variant="outline" className="ml-1">lifecycle - never implied</Badge> : null}
             <span className="ml-2 text-xs text-muted-foreground">{r.key}</span>
             <div className="text-xs text-muted-foreground">
-              {r.global ? `Source: ${r.sources.join(", ")} · scope: All resources` : r.scoped.length ? r.scoped.map((x) => `${x.source} · scope: ${x.scope}`).join("; ") : "Not granted"}
+              {r.global ? `Source: ${r.sources.join(", ")} - scope: All resources` : r.scoped.length ? r.scoped.map((x) => `${x.source} - scope: ${x.scope}`).join("; ") : "Not granted"}
             </div>
           </li>
         ))}
@@ -149,7 +149,7 @@ export function ManageAccessPanel({ userId, canonical, platformRoles }: { userId
           {["harmonious", "client", "fund", "company", "custom"].map((cat) => (
             <optgroup key={cat} label={cat[0]!.toUpperCase() + cat.slice(1)}>
               {roles.filter((r) => r.category === cat).map((r) => (
-                <option key={r.key} value={r.key} disabled={r.superAdminOnly && !ctx?.isSuper}>{r.label}{r.superAdminOnly ? " · Super Administrator only" : ""}</option>
+                <option key={r.key} value={r.key} disabled={r.superAdminOnly && !ctx?.isSuper}>{r.label}{r.superAdminOnly ? " - Super Administrator only" : ""}</option>
               ))}
             </optgroup>
           ))}
@@ -172,7 +172,7 @@ export function ManageAccessPanel({ userId, canonical, platformRoles }: { userId
           })}
           {canonical.assignments.map((a) => (
             <li key={a.id} className="flex items-center justify-between gap-2">
-              <span className={a.live ? "" : "text-muted-foreground line-through"}><Badge variant="secondary">RBAC assignment - effective/expiring</Badge> {a.label} · {a.scope} {a.expiresAt ? `· until ${fmt(a.expiresAt)}` : ""} {a.revokedAt ? "· revoked" : !a.live ? "· not in effect" : ""}</span>
+              <span className={a.live ? "" : "text-muted-foreground line-through"}><Badge variant="secondary">RBAC assignment - effective/expiring</Badge> {a.label} - {a.scope} {a.expiresAt ? `· until ${fmt(a.expiresAt)}` : ""} {a.revokedAt ? "· revoked" : !a.live ? "· not in effect" : ""}</span>
               {!a.revokedAt ? <Button size="sm" variant="outline" disabled={run.isPending} onClick={() => run.mutate(() => revokeRole({ data: { targetUserId: userId, roleKey: a.roleKey, assignmentId: a.id, reason } }))}>Revoke</Button> : null}
             </li>
           ))}
@@ -199,7 +199,7 @@ export function ManageAccessPanel({ userId, canonical, platformRoles }: { userId
         <ul className="space-y-1 text-sm">
           {canonical.grants.map((g) => (
             <li key={g.id} className="flex items-center justify-between gap-2">
-              <span className={g.live ? "" : "text-muted-foreground line-through"}><Badge variant={g.effect === "deny" ? "destructive" : "outline"}>{g.effect === "deny" ? "Deny" : "Grant"}</Badge> {g.permission} · {g.scope}{g.revokedAt ? " · revoked" : !g.live ? " · not in effect" : ""}</span>
+              <span className={g.live ? "" : "text-muted-foreground line-through"}><Badge variant={g.effect === "deny" ? "destructive" : "outline"}>{g.effect === "deny" ? "Deny" : "Grant"}</Badge> {g.permission} - {g.scope}{g.revokedAt ? " · revoked" : !g.live ? " · not in effect" : ""}</span>
               {!g.revokedAt ? <Button size="sm" variant="outline" disabled={run.isPending} onClick={() => run.mutate(() => revokeGrant({ data: { targetUserId: userId, grantId: g.id, reason } }))}>Revoke</Button> : null}
             </li>
           ))}
@@ -252,8 +252,8 @@ export function PersonMatrix({ canonical }: { canonical: Canonical }) {
         <Card><CardContent className="space-y-1 p-3 text-sm">
           <p className="font-medium">{hit.permission}</p>
           <p>{hit.text}</p>
-          {hit.scoped.map((s, i) => <p key={i} className="text-muted-foreground">{s.source === "Direct deny" ? "✕" : "✓"} {s.source} · scope: {s.scope} (not valid outside it)</p>)}
-          <p className="text-xs">Decision: <span className="font-medium">{hit.global ? "Allow: all resources" : hit.scoped.length ? "Allow: listed scopes only" : "Deny (no source grants it)"}</span>{hit.sources.length ? ` · source: ${hit.sources.join(", ")}` : ""}</p>
+          {hit.scoped.map((s, i) => <p key={i} className="text-muted-foreground">{s.source === "Direct deny" ? "✕" : "✓"} {s.source} - scope: {s.scope} (not valid outside it)</p>)}
+          <p className="text-xs">Decision: <span className="font-medium">{hit.global ? "Allow - all resources" : hit.scoped.length ? "Allow - listed scopes only" : "Deny (no source grants it)"}</span>{hit.sources.length ? ` · source: ${hit.sources.join(", ")}` : ""}</p>
           <p className="text-xs text-muted-foreground">Protected conditions still apply regardless of this cell: {PROTECTED_PERMISSIONS.join(", ")} are never granted by roles or grants; maker-checker, dual control and immutability rules are enforced separately.</p>
         </CardContent></Card>
       ) : null}
@@ -320,7 +320,7 @@ export function RoleAdmin() {
             ) : null}
             <Textarea rows={2} placeholder="Reason (required)" value={reason} onChange={(e) => setReason(e.target.value)} />
             <Button size="sm" disabled={!key || run.isPending} onClick={() => run.mutate()}>Save</Button>
-            <p className="text-xs text-muted-foreground">Edits and deactivation save a new version; earlier versions stay unchanged, so past assignments and audit evidence keep their original meaning. Predefined templates can't be edited, clone them.</p>
+            <p className="text-xs text-muted-foreground">Edits and deactivation save a new version; earlier versions stay unchanged, so past assignments and audit evidence keep their original meaning. Predefined templates can't be edited - clone them.</p>
           </CardContent>
         </Card>
       ) : <p className="text-xs text-muted-foreground">Only a Super Administrator can create or change roles.</p>}
@@ -338,7 +338,7 @@ export function NeedsReview() {
     <div className="mt-4 space-y-6">
       <section className="space-y-2">
         <h2 className="font-medium">Needs review</h2>
-        {data.needsReview.length ? data.needsReview.map((n: any, i: number) => <div key={n.userId + i} className="text-sm"><p><span className="font-medium">{n.person}</span> · {n.issue}</p>{n.detail ? <p className="text-xs text-muted-foreground">{n.detail}</p> : null}</div>) : <p className="text-sm text-muted-foreground">Nothing needs review.</p>}
+        {data.needsReview.length ? data.needsReview.map((n: any, i: number) => <div key={n.userId + i} className="text-sm"><p><span className="font-medium">{n.person}</span> - {n.issue}</p>{n.detail ? <p className="text-xs text-muted-foreground">{n.detail}</p> : null}</div>) : <p className="text-sm text-muted-foreground">Nothing needs review.</p>}
       </section>
       <Stage3Panel />
       <section className="space-y-2">

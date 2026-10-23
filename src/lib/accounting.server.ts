@@ -144,7 +144,7 @@ export async function ledgerBookForOffering(userId: string, offeringId: string) 
     .maybeSingle();
   if (!offering) fail("Fund not found.");
   return openLedgerBook(userId, {
-    name: `${offering.name} · fund accounting`,
+    name: `${offering.name} - fund accounting`,
     offeringId,
     clientId: offering.client_id,
   });
@@ -446,7 +446,7 @@ export async function voidJournalEntry(userId: string, entryId: string, reason: 
   await authorizeBook(userId, entry.book_id, { write: true });
   await assertAdmin(userId);
   const from = entry.status as JournalStatus;
-  if (!canTransitionJournal(from, "voided")) fail(from === "posted" ? "A posted entry cannot be voided, reverse it instead." : `A ${from} entry cannot be voided.`);
+  if (!canTransitionJournal(from, "voided")) fail(from === "posted" ? "A posted entry cannot be voided - reverse it instead." : `A ${from} entry cannot be voided.`);
   const { data: upd } = await db().from("journal_entries").update({ status: "voided", updated_at: new Date().toISOString() }).eq("id", entryId).eq("status", from).select("id");
   if (!(upd ?? []).length) fail("This entry changed while you were voiding it.");
   await db().from("journal_entry_events").insert({ entry_id: entryId, actor_user_id: userId, from_status: from, to_status: "voided", reason });

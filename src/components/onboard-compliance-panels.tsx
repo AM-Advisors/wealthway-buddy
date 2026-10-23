@@ -80,7 +80,7 @@ function TaxIntakeCard({ onboardingId, d, refresh }: { onboardingId: string; d: 
   const questions = taxIntakeQuestions(d.profileType, a as any);
   const m = useMutation({
     mutationFn: () => fn({ data: { onboardingId, answers: a as any } }),
-    onSuccess: (r: any) => { r.status === "determined" ? toast.success(`Next: review ${r.form} in the Sign step`) : toast.message("Tax Classification: Needs Review"); refresh(); },
+    onSuccess: (r: any) => { r.status === "determined" ? toast.success(`Next: review ${r.form} in the Sign step`) : toast.message("Tax Classification - Needs Review"); refresh(); },
     onError: (e: Error) => toast.error(e.message),
   });
   if (d.taxIntake.state === "not_applicable") return null;
@@ -90,12 +90,12 @@ function TaxIntakeCard({ onboardingId, d, refresh }: { onboardingId: string; d: 
       <CardHeader>
         <CardTitle className="text-lg">Tax information</CardTitle>
         <CardDescription>
-          {done ? `Done · ${d.tax.form?.title ?? "your tax form"} will be ready to review and sign in the Sign step.` : "A few factual questions so we can prepare the right IRS form. We can't give tax advice; if you're unsure, say so and Harmonious will follow up, or ask your tax adviser."}
+          {done ? `Done - ${d.tax.form?.title ?? "your tax form"} will be ready to review and sign in the Sign step.` : "A few factual questions so we can prepare the right IRS form. We can't give tax advice; if you're unsure, say so and Harmonious will follow up, or ask your tax adviser."}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {d.taxIntake.state === "review_required" ? (
-          <p className="rounded-md border p-3 text-sm"><strong>Tax Classification: Needs Review.</strong> {d.taxIntake.reason} Harmonious will contact you. You may wish to consult your tax adviser.</p>
+          <p className="rounded-md border p-3 text-sm"><strong>Tax Classification - Needs Review.</strong> {d.taxIntake.reason} Harmonious will contact you. You may wish to consult your tax adviser.</p>
         ) : null}
         {questions.map((q) => (
           <div key={q} className="space-y-2">
@@ -139,7 +139,7 @@ function AmlCard({ onboardingId, d, refresh }: { onboardingId: string; d: any; r
   const [sig, setSig] = useState("");
   const m = useMutation({
     mutationFn: () => fn({ data: { onboardingId, answers: a, certifiedName: sig } }),
-    onSuccess: (r: any) => { r.reviewStatus === "review_required" ? toast.message("Thanks: Compliance Review Required. Harmonious will follow up.") : toast.success("Saved"); refresh(); },
+    onSuccess: (r: any) => { r.reviewStatus === "review_required" ? toast.message("Thanks - Compliance Review Required. Harmonious will follow up.") : toast.success("Saved"); refresh(); },
     onError: (e: Error) => toast.error(e.message),
   });
   if (d.aml.state === "valid" || d.aml.state === "not_applicable") return null;

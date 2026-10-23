@@ -12,9 +12,9 @@ import { decideLockedEditFn, listLockedEditsFn } from "@/lib/record-locks.functi
 export const Route = createFileRoute("/_authenticated/ops/locked-edits")({
   head: () => ({
     meta: [
-      { title: "Locked edit approvals | Harmonious operations" },
+      { title: "Locked edit approvals - Harmonious operations" },
       { name: "description", content: "Approve or reject changes to locked fund, investor and client information." },
-      { property: "og:title", content: "Locked edit approvals | Harmonious operations" },
+      { property: "og:title", content: "Locked edit approvals - Harmonious operations" },
       { property: "og:description", content: "Second-person approval for edits to saved information." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

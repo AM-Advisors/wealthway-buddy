@@ -64,7 +64,7 @@ export function companyInvoiceItems(
           title: approved ? `Pay ${label}` : `Approve ${label}`,
           workflowState: approved && state === "issued" ? "client_approved" : state,
           status: approved
-            ? "You approved this invoice: payment is due"
+            ? "You approved this invoice - payment is due"
             : "This invoice is waiting for your approval",
           sourceTable: "invoices",
           sourceId: i.id,
@@ -137,7 +137,7 @@ export function companyFeeProposalItems(
           title: `${name} request`,
           status:
             state === "signed"
-              ? "Signed: Harmonious is switching this on"
+              ? "Signed - Harmonious is switching this on"
               : "Harmonious is reviewing your request",
         }),
       );

@@ -116,7 +116,7 @@ const SAFE_LABEL: Record<ReadinessStage, Partial<Record<ReadinessStatus, string>
   investment_profile: { complete: "Profile complete" },
   identity: { complete: "Identity complete", under_review: "Verification pending", needs_harmonious: "Verification pending", needs_investor: "Verification pending" },
   eligibility: { complete: "Eligibility complete", needs_investor: "Accreditation incomplete", under_review: "Harmonious review" },
-  tax: { complete: "Tax: Complete", needs_investor: "Tax information required", under_review: "Tax information required" },
+  tax: { complete: "Tax - Complete", needs_investor: "Tax information required", under_review: "Tax information required" },
   subscription: { complete: "Documents executed", needs_investor: "Documents awaiting signature", needs_harmonious: "Documents being prepared" },
   funding: { complete: "Funded", needs_investor: "Funding pending", needs_harmonious: "Funding pending", under_review: "Funding pending" },
   close_readiness: { complete: "Ready to close", needs_harmonious: "Harmonious review", blocked: "Harmonious review" },

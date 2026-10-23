@@ -163,7 +163,7 @@ function ResearchPage() {
                   <td className="p-2">{s.name}{s.is_primary && <span className="ml-1 text-[10px] text-primary">primary</span>}</td>
                   <td className="p-2 text-xs">{s.kind}</td><td className="p-2 tabular-nums">{s.credibility}</td>
                   <td className="p-2 text-xs">{s.active ? (s.last_error ? <span className="text-destructive">{s.last_error}</span> : "Automatic") : s.access_note}</td>
-                  <td className="p-2 text-xs">{s.last_fetched_at ? fmtInTz(s.last_fetched_at, tz) : " · "}</td>
+                  <td className="p-2 text-xs">{s.last_fetched_at ? fmtInTz(s.last_fetched_at, tz) : "—"}</td>
                 </tr>
               ))}</tbody>
             </table>
@@ -228,7 +228,7 @@ function FormDTab({ tz }: { tz?: string }) {
       {!d ? <p className="text-sm text-muted-foreground">{r.error ? (r.error as Error).message : "Loading…"}</p> : <>
         <section className="rounded-lg border border-border bg-card p-3 space-y-2">
           <h2 className="font-heading text-lg">Weekly Form D Intelligence Digest</h2>
-          <p className="text-xs text-muted-foreground">{fmtDate(d.from, tz)} to {fmtDate(d.to, tz)} · computed from the official EDGAR filings below. All amounts are self-reported by issuers on Form D and link to the original filing. Total offering amount is not completed fundraising; amount sold is not independently verified.</p>
+          <p className="text-xs text-muted-foreground">{fmtDate(d.from, tz)} – {fmtDate(d.to, tz)} · computed from the official EDGAR filings below. All amounts are self-reported by issuers on Form D and link to the original filing. Total offering amount is not completed fundraising; amount sold is not independently verified.</p>
           {d.digest.patterns.length ? <ul className="list-disc pl-5 text-sm">{d.digest.patterns.map((p: string) => <li key={p}>{p}</li>)}</ul> : <p className="text-sm text-muted-foreground">No filings in this period.</p>}
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
             <Group title="Filing date" rows={d.digest.byDate} /><Group title="Industry" rows={d.digest.byIndustry} /><Group title="Fund / issuer category" rows={d.digest.byCategory} /><Group title="Geography" rows={d.digest.byState} />
@@ -240,14 +240,14 @@ function FormDTab({ tz }: { tz?: string }) {
           <tbody>{d.filings.map((f: any) => {
             const hist = d.history.filter((h: any) => h.cik === f.cik && h.accession !== f.accession);
             return <tr key={f.accession} className="border-t border-border align-top">
-              <td className="py-1">{f.filed_at ? fmtDate(f.filed_at, tz) : " · "}</td>
+              <td className="py-1">{f.filed_at ? fmtDate(f.filed_at, tz) : "—"}</td>
               <td><a className="underline" href={f.index_url} target="_blank" rel="noreferrer">{f.issuer}</a>{f.newsworthy && <span className="ml-1 rounded-sm bg-accent/30 px-1">In daily feed</span>}{f.parse_error && <span className="ml-1 text-destructive">details unavailable</span>}</td>
-              <td>{f.is_amendment ? `Amendment${f.filed_at ? ` · amended ${fmtDate(f.filed_at, tz)}` : ""}` : "New"}</td><td>{issuerCategory(f)}</td><td>{f.state ?? " · "}</td>
-              <td>{f.exemptions.map((e: string) => EXEMPTION_LABEL[e]).filter(Boolean).join(", ") || " · "}</td>
+              <td>{f.is_amendment ? `Amendment${f.filed_at ? ` · amended ${fmtDate(f.filed_at, tz)}` : ""}` : "New"}</td><td>{issuerCategory(f)}</td><td>{f.state ?? "—"}</td>
+              <td>{f.exemptions.map((e: string) => EXEMPTION_LABEL[e]).filter(Boolean).join(", ") || "—"}</td>
               <td>{fmtFormDAmount(f.total_offering, f.offering_indefinite)}</td>
               <td>{fmtFormDAmount(f.total_sold)}</td>
               <td>{fmtFormDAmount(f.total_remaining == null ? null : Number(f.total_remaining), f.remaining_indefinite)}</td>
-              <td>{hist.length ? hist.map((h: any) => `${h.form_type} ${h.filed_at ? fmtDate(h.filed_at, tz) : ""}`).join("; ") : " · "}{f.doc_url && <> · <a className="underline" href={f.doc_url} target="_blank" rel="noreferrer">SEC filing</a></>}</td>
+              <td>{hist.length ? hist.map((h: any) => `${h.form_type} ${h.filed_at ? fmtDate(h.filed_at, tz) : ""}`).join("; ") : "—"}{f.doc_url && <> · <a className="underline" href={f.doc_url} target="_blank" rel="noreferrer">SEC filing</a></>}</td>
             </tr>;
           })}</tbody></table></div>
       </>}

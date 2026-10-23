@@ -176,7 +176,7 @@ export function InvestorOnboardingOps() {
                     .map((e: any) => (
                       <div key={e.id} className="flex items-center justify-between rounded-md border p-2 text-sm">
                         <span>
-                          {String(e.exception_type).replace(/_/g, " ")} · {e.detail ?? "no detail"}
+                          {String(e.exception_type).replace(/_/g, " ")} - {e.detail ?? "no detail"}
                         </span>
                         <Button
                           size="sm"

@@ -17,9 +17,9 @@ import { Panel } from "@/components/sales/sales-ui";
 export const Route = createFileRoute("/_authenticated/sales_/team")({
   head: () => ({
     meta: [
-      { title: "Sales team | Harmonious" },
+      { title: "Sales team - Harmonious" },
       { name: "description", content: "Harmonious Sales team: roles, managers, targets and each rep's overview." },
-      { property: "og:title", content: "Sales team | Harmonious" },
+      { property: "og:title", content: "Sales team - Harmonious" },
       { property: "og:description", content: "Manage reporting lines and quotas for CRO, Sales Managers, AEs and BDRs." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

@@ -11,9 +11,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 export const Route = createFileRoute("/_authenticated/manager/request-fund")({
   head: () => ({
     meta: [
-      { title: "Add Fund or SPV | Harmonious" },
+      { title: "Add Fund or SPV - Harmonious" },
       { name: "description", content: "Set up a new fund or SPV with the same guided steps Harmonious uses." },
-      { property: "og:title", content: "Add Fund or SPV | Harmonious" },
+      { property: "og:title", content: "Add Fund or SPV - Harmonious" },
       { property: "og:description", content: "Set up a new fund or SPV with the same guided steps Harmonious uses." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

@@ -56,7 +56,7 @@ function PackageView({ packageId }: { packageId: string }) {
 
   const acknowledge = useMutation({
     mutationFn: async () => record({ data: { packageId, event: "acknowledged" } }),
-    onSuccess: () => toast.success("Thank you, your acknowledgement is recorded"),
+    onSuccess: () => toast.success("Thank you - your acknowledgement is recorded"),
     onError: (error) => toast.error((error as Error)?.message ?? "Could not record that"),
   });
 

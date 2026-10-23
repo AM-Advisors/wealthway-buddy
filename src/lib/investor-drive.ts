@@ -5,8 +5,8 @@
 import { neverInDrive, classifyDocument, type DriveClassification } from "@/lib/drive-policy";
 import { isRestrictedEvidence } from "@/lib/drive-intake";
 
-export const BLOCKED_MESSAGE = "Blocked, this document type cannot be imported from Google Drive.";
-export const UPDATED_MESSAGE = "Updated in Google Drive: review new version";
+export const BLOCKED_MESSAGE = "Blocked - this document type cannot be imported from Google Drive.";
+export const UPDATED_MESSAGE = "Updated in Google Drive - review new version";
 export const ALREADY_IMPORTED = "Already imported";
 export const OUTSIDE_APPROVED = "That folder is outside the approved Restricted Investor Records repository.";
 
@@ -61,7 +61,7 @@ export const STATUS_LABELS: Record<FileStatus, string> = {
   updated: UPDATED_MESSAGE,
   current: "Current",
   blocked: BLOCKED_MESSAGE,
-  other_context: "Needs Review: imported for a different fund or profile",
+  other_context: "Needs Review - imported for a different fund or profile",
 };
 
 /** Proposed classification is a suggestion; it never approves anything. */

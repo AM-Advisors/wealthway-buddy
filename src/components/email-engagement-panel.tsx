@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Panel, Stat } from "@/components/sales/sales-ui";
 import { getMarketingEngagement } from "@/lib/email-flows.functions";
 
-const pct = (n: number, d: number) => (d ? `${Math.round((n / d) * 100)}%` : " to ");
+const pct = (n: number, d: number) => (d ? `${Math.round((n / d) * 100)}%` : "–");
 
 /** Marketing dashboard: opens, clicks, replies, likely forwards (30 days). */
 export function MarketingEngagementPanel() {

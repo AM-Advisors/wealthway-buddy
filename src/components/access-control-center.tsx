@@ -182,12 +182,12 @@ function AccessProfile({ userId }: { userId: string }) {
       </Section>
       <Section n={2} title="Relationships">
         <List items={[
-          ...f.managedFunds.map((x) => `Fund Manager · ${x.name}`),
-          ...f.investorFunds.map((x) => `Investor access · ${x.name}`),
-          ...f.investmentProfiles.map((x) => `Investment profile · ${x.label}${x.status ? ` (${x.status})` : ""}`),
-          ...f.clientMemberships.map((x) => `Client user · ${x.name} (${x.role ?? "member"}${x.canApprove ? ", approver" : ""})`),
-          ...f.companies.map((x) => `Company · ${x.name}`),
-          ...f.professionalMemberships.map((x) => `Professional · ${x.orgName} (${x.status})`),
+          ...f.managedFunds.map((x) => `Fund Manager - ${x.name}`),
+          ...f.investorFunds.map((x) => `Investor access - ${x.name}`),
+          ...f.investmentProfiles.map((x) => `Investment profile - ${x.label}${x.status ? ` (${x.status})` : ""}`),
+          ...f.clientMemberships.map((x) => `Client user - ${x.name} (${x.role ?? "member"}${x.canApprove ? ", approver" : ""})`),
+          ...f.companies.map((x) => `Company - ${x.name}`),
+          ...f.professionalMemberships.map((x) => `Professional - ${x.orgName} (${x.status})`),
         ]} />
       </Section>
       <Section n={2} title="Client accounts">
@@ -203,7 +203,7 @@ function AccessProfile({ userId }: { userId: string }) {
         ) : null}
       </Section>
       <Section n={4} title="Resource scopes">
-        <List items={[...new Set(perms.map((p) => (p.scope.type === "global" ? "Global: all resources" : `${p.scope.type.replace(/_/g, " ")}: ${p.scope.label}`)))]} />
+        <List items={[...new Set(perms.map((p) => (p.scope.type === "global" ? "Global - all resources" : `${p.scope.type.replace(/_/g, " ")}: ${p.scope.label}`)))]} />
       </Section>
       <Section n={5} title="Effective permissions (canonical resolver)">
         <PersonMatrix canonical={data.canonical as any} />
@@ -211,12 +211,12 @@ function AccessProfile({ userId }: { userId: string }) {
           <ul className="mt-1 space-y-0.5">{(data.canonical as any).matrix.map((m: any) => <li key={m.permission}>{m.permission} - <span className="text-muted-foreground">{m.global ? `allowed everywhere · ${m.sources.join(", ")}` : m.scoped.length ? m.scoped.map((x: any) => `${x.source} (${x.scope})`).join("; ") : "not allowed"}</span></li>)}</ul>
         </details>
       </Section>
-      <Section n={6} title="Direct grants"><List items={direct.map((p) => `${p.area} · ${p.action} · ${p.via}`)} /></Section>
+      <Section n={6} title="Direct grants"><List items={direct.map((p) => `${p.area} · ${p.action} - ${p.via}`)} /></Section>
       <Section n={7} title="Direct denies">
         <p className="text-xs text-muted-foreground">None. Explicit denies aren't stored yet; when added they will override every grant.</p>
       </Section>
       <Section n={8} title="Delegations & authority">
-        <List items={f.delegations.map((d) => `${d.direction === "acting_for" ? "Acts for" : "Delegated to"} ${d.counterpart} · ${d.authority_level}, ${d.scope_type.replace(/_/g, " ")}, ${d.status}${d.expires_at ? `, expires ${fmt(d.expires_at)}` : ""}${d.capabilities.length ? ` (${d.capabilities.join(", ")})` : ""}`)} />
+        <List items={f.delegations.map((d) => `${d.direction === "acting_for" ? "Acts for" : "Delegated to"} ${d.counterpart} - ${d.authority_level}, ${d.scope_type.replace(/_/g, " ")}, ${d.status}${d.expires_at ? `, expires ${fmt(d.expires_at)}` : ""}${d.capabilities.length ? ` (${d.capabilities.join(", ")})` : ""}`)} />
       </Section>
       <Section n={9} title="Access history"><HistoryTable rows={data.history} /></Section>
       <Section n={10} title="Manage access"><ManageAccessPanel userId={userId} canonical={data.canonical as any} platformRoles={data.facts.roles} /></Section>
@@ -232,7 +232,7 @@ function RolesTab() {
       <div className="md:col-span-2"><RoleAdmin /></div>
       <Card><CardHeader><CardTitle className="text-base">Harmonious platform roles</CardTitle></CardHeader>
         <CardContent className="space-y-1 text-sm">
-          {OPS_STAFF_ROLES.map((r) => <p key={r}><span className="font-medium">{r}</span>{r === "super_admin" ? " · highest; assigned to an exact user ID, never by email domain" : ""}</p>)}
+          {OPS_STAFF_ROLES.map((r) => <p key={r}><span className="font-medium">{r}</span>{r === "super_admin" ? " - highest; assigned to an exact user ID, never by email domain" : ""}</p>)}
         </CardContent></Card>
       <Card><CardHeader><CardTitle className="text-base">Staff capability roles</CardTitle></CardHeader>
         <CardContent className="space-y-2 text-sm">
@@ -242,10 +242,10 @@ function RolesTab() {
         </CardContent></Card>
       <Card className="md:col-span-2"><CardHeader><CardTitle className="text-base">Relationship roles (always scoped)</CardTitle></CardHeader>
         <CardContent className="space-y-1 text-sm">
-          <p><span className="font-medium">Fund Manager</span> · exact managed funds only.</p>
-          <p><span className="font-medium">Investor</span> · own investment profiles and investments only.</p>
-          <p><span className="font-medium">Client / company user</span> · their client, company and linked funds only.</p>
-          <p><span className="font-medium">Professional / delegate</span> · only with a live, accepted, unexpired delegation that passes the acting-authority check.</p>
+          <p><span className="font-medium">Fund Manager</span> - exact managed funds only.</p>
+          <p><span className="font-medium">Investor</span> - own investment profiles and investments only.</p>
+          <p><span className="font-medium">Client / company user</span> - their client, company and linked funds only.</p>
+          <p><span className="font-medium">Professional / delegate</span> - only with a live, accepted, unexpired delegation that passes the acting-authority check.</p>
         </CardContent></Card>
     </div>
   );

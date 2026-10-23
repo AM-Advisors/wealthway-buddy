@@ -17,9 +17,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 export const Route = createFileRoute("/_authenticated/ops/tasks")({
   head: () => ({ meta: [
-    { title: "Tasks | Harmonious" },
+    { title: "Tasks - Harmonious" },
     { name: "description", content: "Assign and track tasks for each Harmonious team member." },
-    { property: "og:title", content: "Tasks | Harmonious" },
+    { property: "og:title", content: "Tasks - Harmonious" },
     { property: "og:description", content: "Team task tickets with owners, due dates and history." },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary" },
@@ -186,10 +186,10 @@ function TaskRow({ t, staff, canWrite, open, onToggle }: { t: any; staff: { id: 
       {open && (
         <div className="mt-3 space-y-3 rounded-md bg-muted/40 p-3 text-sm">
           <dl className="grid gap-x-4 gap-y-1 text-xs sm:grid-cols-3">
-            {([["Fund", t.fundName ?? " · "], ["Status", STATUS[t.status]], ["Responsibility", RESPONSIBILITY_LABEL[asResponsibility(t.responsibility_status)] + (t.responsibility_manual ? " (set manually)" : "")],
+            {([["Fund", t.fundName ?? "—"], ["Status", STATUS[t.status]], ["Responsibility", RESPONSIBILITY_LABEL[asResponsibility(t.responsibility_status)] + (t.responsibility_manual ? " (set manually)" : "")],
               ["Owner", t.responsible_user_id ? staff.find((x) => x.id === t.responsible_user_id)?.name ?? "Staff member" : t.assigneeName ?? "Unassigned"],
-              ["Due", t.due_date ?? " · "], ["SLA due", t.sla_due_date ?? " · "], ["Waiting on", waiting ?? " · "], ["Client can see", t.client_visibility ? "Yes" : "No (internal)"],
-              ["Related workflow", t.related_workflow_type ?? " · "]] as const).map(([k, v]) => (
+              ["Due", t.due_date ?? "—"], ["SLA due", t.sla_due_date ?? "—"], ["Waiting on", waiting ?? "—"], ["Client can see", t.client_visibility ? "Yes" : "No (internal)"],
+              ["Related workflow", t.related_workflow_type ?? "—"]] as const).map(([k, v]) => (
               <div key={k}><dt className="text-muted-foreground">{k}</dt><dd className="text-foreground">{v}</dd></div>
             ))}
           </dl>

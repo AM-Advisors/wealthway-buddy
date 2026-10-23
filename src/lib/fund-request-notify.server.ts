@@ -55,7 +55,7 @@ export async function createSalesforceOpportunity(n: Notice) {
     method: "POST",
     headers: headers(key),
     body: JSON.stringify({
-      Name: `${n.clientName} · ${n.fundName} (${n.isSpv ? "SPV" : "Fund"} setup)`.slice(0, 120),
+      Name: `${n.clientName} - ${n.fundName} (${n.isSpv ? "SPV" : "Fund"} setup)`.slice(0, 120),
       StageName: "Prospecting",
       CloseDate: close,
       ...(accountId ? { AccountId: accountId } : {}),

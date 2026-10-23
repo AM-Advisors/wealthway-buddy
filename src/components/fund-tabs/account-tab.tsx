@@ -12,7 +12,7 @@ import { BooksStatements } from "./books-statements";
 import { fmtDate, usd } from "./shared";
 
 const label = (s: string | null | undefined) => (s ? s.replace(/_/g, " ") : "-");
-const period = (a?: string | null, b?: string | null) => (a || b ? `${a ? fmtDate(a) : "?"} to ${b ? fmtDate(b) : "?"}` : "-");
+const period = (a?: string | null, b?: string | null) => (a || b ? `${a ? fmtDate(a) : "?"} – ${b ? fmtDate(b) : "?"}` : "-");
 
 function Section({ title, desc, children, action }: { title: string; desc: string; children: React.ReactNode; action: React.ReactNode }) {
   return (

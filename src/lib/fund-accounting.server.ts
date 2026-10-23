@@ -115,7 +115,7 @@ export async function addExpenseAccount(userId: string, i: { offeringId: string;
   const parent = i.parentCode ? existing.find((a) => a.code === i.parentCode) : null;
   if (i.parentCode && !parent) fail("Parent account not found.");
   const { data, error } = await db().from("chart_of_accounts").insert({ book_id: bookId, code: i.code, name: i.name, account_type: "expense", subtype: i.subtype, normal_balance: "debit", parent_account_id: parent?.id ?? null }).select("id").single();
-  if (error) fail(error.code === "23505" ? "DUPLICATE, that account code already exists." : error.message);
+  if (error) fail(error.code === "23505" ? "DUPLICATE - that account code already exists." : error.message);
   await event(i.offeringId, "chart_of_accounts", data.id, "account_added", userId, i.reason, { code: i.code, name: i.name, parentCode: i.parentCode });
   return { id: String(data.id) };
 }
@@ -158,7 +158,7 @@ export async function prepareInvestment(userId: string, i: PurchaseInput & {
     if (!a || a.offering_id !== i.offeringId) fail("That holding does not belong to this fund.");
   } else {
     const { data: same } = await db().from("portfolio_assets").select("id").eq("offering_id", i.offeringId).ilike("issuer_name", i.newIssuerName!.trim()).ilike("asset_name", i.newAssetName!.trim()).limit(1);
-    if ((same ?? []).length) fail("This security is already held: record an additional purchase instead.");
+    if ((same ?? []).length) fail("This security is already held - record an additional purchase instead.");
     // A purchase only creates the holding when posted, so an open purchase of the same security is also a duplicate.
     const { data: open } = await db().from("fund_investment_transactions").select("id, status").eq("offering_id", i.offeringId).eq("kind", "purchase")
       .ilike("new_issuer_name", i.newIssuerName!.trim()).ilike("new_asset_name", i.newAssetName!.trim()).in("status", ["prepared", "approved", "posted"]).limit(1);
@@ -177,7 +177,7 @@ export async function prepareInvestment(userId: string, i: PurchaseInput & {
   }).select("id").single();
   if (error) fail(error.code === "23505" ? "This transaction was already recorded." : error.message);
   const jid = await draftFrom(userId, i.offeringId, bookId, purchaseLines(i.principalCents, i.transactionCostCents), {
-    date: i.settlementDate ?? i.tradeDate, memo: `Investment ${i.kind === "purchase" ? "purchase" : "additional purchase"} · ${i.newIssuerName ?? "existing holding"}`,
+    date: i.settlementDate ?? i.tradeDate, memo: `Investment ${i.kind === "purchase" ? "purchase" : "additional purchase"} - ${i.newIssuerName ?? "existing holding"}`,
     source: "investment", table: "fund_investment_transactions", id: data.id,
   });
   await db().from("fund_investment_transactions").update({ journal_entry_id: jid }).eq("id", data.id);
@@ -288,7 +288,7 @@ export async function prepareExpense(userId: string, i: {
     bank_line_id: bank.lineId, bank_transaction_id: bank.txId, prepared_by: userId,
   }).select("id").single();
   if (error) fail(error.code === "23505" ? "DUPLICATE - REVIEW REQUIRED: this expense is already recorded." : error.message);
-  const jid = await draftFrom(userId, i.offeringId, bookId, lines, { date: i.paidOn ?? i.expenseDate, memo: `${i.vendor} · ${i.description}`, source: "expense", table: "fund_expense_records", id: data.id });
+  const jid = await draftFrom(userId, i.offeringId, bookId, lines, { date: i.paidOn ?? i.expenseDate, memo: `${i.vendor} - ${i.description}`, source: "expense", table: "fund_expense_records", id: data.id });
   await db().from("fund_expense_records").update({ journal_entry_id: jid }).eq("id", data.id);
   await event(i.offeringId, "fund_expense_records", data.id, "prepared", userId, null, { journalEntryId: jid, mode: i.paymentMode });
   return { id: String(data.id), journalEntryId: jid };
@@ -340,7 +340,7 @@ export async function prepareSettlement(userId: string, i: {
     amount_cents: i.amountCents, paid_on: i.paidOn, source_reference: i.sourceReference, idempotency_key: i.idempotencyKey, bank_line_id: bank.lineId, bank_transaction_id: bank.txId, prepared_by: userId,
   }).select("id").single();
   if (error) fail(error.message);
-  const jid = await draftFrom(userId, i.offeringId, bookId, lines, { date: i.paidOn, memo: `Payable settlement · ${i.sourceReference}`, source: "payment", table: "fund_payable_settlements", id: data.id });
+  const jid = await draftFrom(userId, i.offeringId, bookId, lines, { date: i.paidOn, memo: `Payable settlement - ${i.sourceReference}`, source: "payment", table: "fund_payable_settlements", id: data.id });
   await db().from("fund_payable_settlements").update({ journal_entry_id: jid }).eq("id", data.id);
   await event(i.offeringId, "fund_payable_settlements", data.id, "prepared", userId, null, { journalEntryId: jid });
   return { id: String(data.id), duplicate: false, journalEntryId: jid };

@@ -16,9 +16,9 @@ import { getWixFundStaging } from "@/lib/wix-funds.functions";
 export const Route = createFileRoute("/_authenticated/ops/fund-migration_/wix")({
   head: () => ({
     meta: [
-      { title: "Wix Funds Review | Harmonious Operations" },
+      { title: "Wix Funds Review - Harmonious Operations" },
       { name: "description", content: "Funds and investments copied from Wix for review against Harmonious funds." },
-      { property: "og:title", content: "Wix Funds Review | Harmonious Operations" },
+      { property: "og:title", content: "Wix Funds Review - Harmonious Operations" },
       { property: "og:description", content: "Review Wix funds and investments before migration." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

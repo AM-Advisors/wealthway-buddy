@@ -193,7 +193,7 @@ export function FundPayments({ fundId, backTo }: { fundId: string; backTo: "admi
         <CardContent className="space-y-3">
           {unbilled.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              Nothing outstanding, every fee on this fund is already on an invoice.
+              Nothing outstanding - every fee on this fund is already on an invoice.
             </p>
           ) : (
             <>
@@ -384,7 +384,7 @@ export function FundPayments({ fundId, backTo }: { fundId: string; backTo: "admi
             (data.trail as any[]).map((t) => (
               <div key={t.id} className="flex flex-wrap justify-between gap-2 border-b pb-1">
                 <span>
-                  {t.area} · {t.action}
+                  {t.area} - {t.action}
                   {t.target ? ` · ${t.target}` : ""}
                 </span>
                 <span className="text-muted-foreground">

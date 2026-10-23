@@ -43,7 +43,7 @@ export function InvestorPeopleAndContacts({ onboardingId, onSaved }: { onboardin
     onSuccess: (r) => {
       const bits = [r.underReview ? "Added (Harmonious will confirm it isn't a duplicate person)" : "Added"];
       if (r.kyc) bits.push(r.kyc === "emailed" ? "identity check emailed" : "identity check created");
-      if (r.signer) bits.push("named signer, they'll get the signature page by email when signing starts");
+      if (r.signer) bits.push("named signer - they'll get the signature page by email when signing starts");
       toast.success(bits.join(" · ")); r.warnings.forEach((w) => toast.warning(w)); setAdd(null); refresh();
     },
     onError: (e) => toast.error((e as Error).message),

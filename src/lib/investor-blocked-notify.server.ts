@@ -20,7 +20,7 @@ export async function notifyInvestorBlocked(n: { onboardingId: string; offeringI
     const { notifySubmission } = await import("@/lib/ops-slack-notify.server");
     await notifySubmission({
       kind: "investor_blocked",
-      title: `Investor blocked at ${n.step} | ${investor}`,
+      title: `Investor blocked at ${n.step} - ${investor}`,
       offeringId: n.offeringId,
       ref: `${n.onboardingId}:${n.step}:${Math.floor(Date.now() / 3_600_000)}`,
       once: true,
@@ -64,7 +64,7 @@ export async function notifyHighRiskDisclosure(n: { onboardingId: string; offeri
     const { notifySubmission } = await import("@/lib/ops-slack-notify.server");
     await notifySubmission({
       kind: "high_risk_disclosure",
-      title: `High-risk answer (question ${n.questions}) | ${investor}. May not be eligible; review before signing.`,
+      title: `High-risk answer (question ${n.questions}) - ${investor}. May not be eligible; review before signing.`,
       offeringId: n.offeringId,
       ref: n.ref,
       once: true,
@@ -142,7 +142,7 @@ export async function notifyDocumentsDeclined(n: { onboardingId: string; offerin
     const { supabaseAdmin: db } = (await import("@/integrations/supabase/client.server")) as any;
     const investor = await investorName(db, n.investorUserId);
     const { notifySubmission } = await import("@/lib/ops-slack-notify.server");
-    await notifySubmission({ kind: "manager_declined_documents", title: `Fund manager declined ${n.documentTitle} | ${investor}. Investment paused.`, offeringId: n.offeringId, ref: n.ref, once: true, path: `/ops/fund/${n.offeringId}` });
+    await notifySubmission({ kind: "manager_declined_documents", title: `Fund manager declined ${n.documentTitle} - ${investor}. Investment paused.`, offeringId: n.offeringId, ref: n.ref, once: true, path: `/ops/fund/${n.offeringId}` });
   } catch (e) { console.error("decline notify", e); }
 }
 
@@ -152,7 +152,7 @@ export async function notifySideLetterRequired(n: { onboardingId: string; offeri
     const { supabaseAdmin: db } = (await import("@/integrations/supabase/client.server")) as any;
     const investor = await investorName(db, n.investorUserId);
     const { notifySubmission } = await import("@/lib/ops-slack-notify.server");
-    await notifySubmission({ kind: "side_letter_required", title: `Side letter required | ${investor} committed ${n.commitment}, below the ${n.minimum} minimum.`, offeringId: n.offeringId, ref: n.onboardingId, once: true, path: `/ops/fund/${n.offeringId}` });
+    await notifySubmission({ kind: "side_letter_required", title: `Side letter required - ${investor} committed ${n.commitment}, below the ${n.minimum} minimum.`, offeringId: n.offeringId, ref: n.onboardingId, once: true, path: `/ops/fund/${n.offeringId}` });
     await emailFundManagers(db, n.offeringId, `side-letter:${n.onboardingId}`, {
       headline: "A side letter is required",
       intro: `${investor} committed ${n.commitment}, below this fund's ${n.minimum} minimum. A side letter is required to accept it. The side letter costs $1,500: pay it under Approvals and the side letter is generated as soon as payment is confirmed.`,

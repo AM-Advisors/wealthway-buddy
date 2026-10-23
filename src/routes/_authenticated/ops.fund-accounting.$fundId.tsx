@@ -6,9 +6,9 @@ export const Route = createFileRoute("/_authenticated/ops/fund-accounting/$fundI
   component: Page,
   head: () => ({
     meta: [
-      { title: "Fund accounting | Harmonious" },
+      { title: "Fund accounting - Harmonious" },
       { name: "description", content: "Investment purchases, fund expenses, payables, fee terms and account mappings with second-person review." },
-      { property: "og:title", content: "Fund accounting | Harmonious" },
+      { property: "og:title", content: "Fund accounting - Harmonious" },
       { property: "og:description", content: "Reviewed investment, expense and fee-term records for a fund." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

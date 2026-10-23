@@ -132,7 +132,7 @@ function MyClaimsPage() {
         <h1 className="text-xl font-semibold tracking-tight">My declared positions</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Declare what you hold in a company and follow their decision. Declaring a position does not create or
-          move any shares, the company confirms it against their own register.
+          move any shares - the company confirms it against their own register.
         </p>
       </div>
 

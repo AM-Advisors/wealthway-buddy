@@ -45,7 +45,7 @@ function ContentStudio() {
     setBusy(true);
     try {
       const r = await start({ data: input });
-      toast.success(r.existing ? "An open item already uses these stories, opening it instead of duplicating." : `Draft package v${r.version} created. It stays a draft until reviewed.`);
+      toast.success(r.existing ? "An open item already uses these stories — opening it instead of duplicating." : `Draft package v${r.version} created. It stays a draft until reviewed.`);
       nav({ to: "/marketing/studio/content/$itemId", params: { itemId: r.itemId } });
     } catch (e: any) { toast.error(e.message); } finally { setBusy(false); }
   };
@@ -61,7 +61,7 @@ function ContentStudio() {
             <p className="text-xs text-muted-foreground">Only stories verified against a primary source in the last 30 days. Pick several to build one package from a group of related stories.</p>
             {(d.stories as any[]).map((s) => <label key={s.id} className="flex items-start gap-2 rounded-md border border-border p-2 text-sm">
               <input type="checkbox" checked={picked.includes(s.id)} onChange={() => toggle(s.id, true)} />
-              <span><b>{s.headline}</b><span className="block text-xs text-muted-foreground">{s.publisher} · {s.published_at ? fmtInTz(s.published_at, tz) : "date unknown"} · score {s.score ?? " · "}</span></span>
+              <span><b>{s.headline}</b><span className="block text-xs text-muted-foreground">{s.publisher} · {s.published_at ? fmtInTz(s.published_at, tz) : "date unknown"} · score {s.score ?? "—"}</span></span>
             </label>)}
             {!d.stories.length && <p className="text-sm">No verified stories yet.</p>}
           </div>}

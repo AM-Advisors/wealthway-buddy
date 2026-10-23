@@ -6,9 +6,9 @@ import { BillingPipeline } from "@/components/ops-billing-pipeline";
 export const Route = createFileRoute("/_authenticated/ops/billing/invoices")({
   head: () => ({
     meta: [
-      { title: "Client invoices | Harmonious Operations" },
+      { title: "Client invoices - Harmonious Operations" },
       { name: "description", content: "Invoices for each signed quote, from scheduled drafts to issued and paid, with review and issue actions." },
-      { property: "og:title", content: "Client invoices | Harmonious Operations" },
+      { property: "og:title", content: "Client invoices - Harmonious Operations" },
       { property: "og:description", content: "Invoices by signed quote, with review, issue and payment status." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

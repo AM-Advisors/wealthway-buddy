@@ -56,7 +56,7 @@ export function SignOperatingAgreementGuide() {
           <p>
             You'll receive an email from Harmonious titled{" "}
             <strong className="text-foreground">“Please sign: Operating Agreement”</strong>. It names your fund and
-            shows you're signing as the fund manager. Click the button in the email, the link is personal to you and
+            shows you're signing as the fund manager. Click the button in the email — the link is personal to you and
             only works with the email address it was sent to.
           </p>
           <Mock caption="Illustration of the signing email (sample values).">
@@ -73,7 +73,7 @@ export function SignOperatingAgreementGuide() {
           </Mock>
           <p>
             Can't find it? Check spam, or sign in at{" "}
-            <a className="text-primary underline" href="https://app.harmonious.co">app.harmonious.co</a> · the
+            <a className="text-primary underline" href="https://app.harmonious.co">app.harmonious.co</a> — the
             agreement also appears in your notifications.
           </p>
         </Step>
@@ -81,19 +81,19 @@ export function SignOperatingAgreementGuide() {
         <Step n={2} title="Sign in to Harmonious">
           <p>
             The link opens the Harmonious sign-in page. Sign in with the{" "}
-            <strong className="text-foreground">same email address the signing email was sent to</strong> · that's how
+            <strong className="text-foreground">same email address the signing email was sent to</strong> — that's how
             we know it's you. If it's a Google address, <em>Continue with Google</em> works too.
           </p>
           <p>
             First time here? The link walks you through setting a password first, then takes you straight to the
-            agreement. If you've been asked to verify your identity, that one-time step comes first, have a
+            agreement. If you've been asked to verify your identity, that one-time step comes first — have a
             government ID handy.
           </p>
         </Step>
 
         <Step n={3} title="Read the agreement">
           <p>
-            The full Operating Agreement opens on screen. Scroll through and read it carefully, this is the exact
+            The full Operating Agreement opens on screen. Scroll through and read it carefully — this is the exact
             document your signature will be applied to. If anything looks wrong, don't sign: reply to the email or
             contact Harmonious and we'll send a corrected version.
           </p>
@@ -125,7 +125,7 @@ export function SignOperatingAgreementGuide() {
         <Step n={5} title="You're done">
           <p>
             You'll see a confirmation on screen, and the document is marked <strong className="text-foreground">Signed</strong>{" "}
-            on the fund's record. Harmonious is notified automatically, there's nothing else to send or upload. The
+            on the fund's record. Harmonious is notified automatically — there's nothing else to send or upload. The
             document and signature history are retained. Open My Funds → your fund → Documents; distinguish a generated template from the executed signed copy. If no signed-copy download is shown, ask Harmonious.
           </p>
         </Step>

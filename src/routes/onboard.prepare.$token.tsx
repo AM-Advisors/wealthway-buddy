@@ -14,9 +14,9 @@ export const Route = createFileRoute("/onboard/prepare/$token")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Complete Investor Details | Harmonious" },
+      { title: "Complete Investor Details - Harmonious" },
       { name: "description", content: "Fill in investor details on behalf of the investor you were assigned to help." },
-      { property: "og:title", content: "Complete Investor Details | Harmonious" },
+      { property: "og:title", content: "Complete Investor Details - Harmonious" },
       { property: "og:description", content: "Secure investor detail preparation by Harmonious." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

@@ -23,7 +23,7 @@ export function ConfirmYourInformation({ onboardingId }: { onboardingId: string 
     setBusy(true);
     try {
       await confirm({ data: { onboardingId, corrections: edits } });
-      toast.success("Thanks, your information is confirmed.");
+      toast.success("Thanks - your information is confirmed.");
       qc.invalidateQueries({ queryKey: ["investor-prefill", onboardingId] });
     } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
   };

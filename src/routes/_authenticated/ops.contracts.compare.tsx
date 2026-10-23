@@ -13,9 +13,9 @@ export const Route = createFileRoute("/_authenticated/ops/contracts/compare")({
   validateSearch: z.object({ before: z.string().uuid().optional(), after: z.string().uuid().optional() }),
   head: () => ({
     meta: [
-      { title: "Compare contract versions | Harmonious operations" },
+      { title: "Compare contract versions - Harmonious operations" },
       { name: "description", content: "Side-by-side comparison of approved contract terms." },
-      { property: "og:title", content: "Compare contract versions | Harmonious operations" },
+      { property: "og:title", content: "Compare contract versions - Harmonious operations" },
       { property: "og:description", content: "Added, removed and changed contract terms with source language." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -53,7 +53,7 @@ function Compare() {
       </Link>
       <h1 className="text-2xl">Compare Versions</h1>
       <p className="text-sm text-muted-foreground">
-        A mechanical comparison of structured terms. It shows what changed, it does not decide what a change means legally or which provision controls.
+        A mechanical comparison of structured terms. It shows what changed - it does not decide what a change means legally or which provision controls.
         {!d.basedOnApprovedTerms ? " One of these documents isn't approved yet, so some values are still proposals." : ""}
       </p>
       <div className="grid gap-3 sm:grid-cols-2">

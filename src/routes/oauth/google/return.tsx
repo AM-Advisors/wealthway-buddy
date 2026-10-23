@@ -43,6 +43,6 @@ function OAuthReturn() {
 }
 
 export const Route = createFileRoute("/oauth/google/return")({
-  head: () => ({ meta: [{ title: "Connecting Google | Harmonious" }] }),
+  head: () => ({ meta: [{ title: "Connecting Google - Harmonious" }] }),
   component: OAuthReturn,
 });

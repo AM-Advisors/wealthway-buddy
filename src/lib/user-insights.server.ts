@@ -33,7 +33,7 @@ export async function invitationSummaries(db: any, emails?: string[]) {
     const sent = attempts.filter((a: any) => a.status === "sent");
     const last = attempts[0] ?? null;
     // Legacy timestamps are reported separately, never treated as proven sends.
-    return { id: r.id, table: r.table, email: String(r.email ?? "").toLowerCase(), name: r.invited_name ?? r.full_name ?? "", status: r.status, role: r.invite_role ?? r.client_role ?? r.role ?? "Client contact", createdAt: r.created_at, expiresAt: r.expires_at ?? null, acceptedAt: r.accepted_at ?? null, reportedSentAt: r.last_sent_at ?? r.invite_sent_at ?? r.invited_at ?? null, firstSent: sent.at(-1)?.at ?? null, lastSent: sent[0]?.at ?? null, attempts, invitedBy: names.get(r.invited_by ?? r.last_invited_by) ?? " · ", lastSender: last ? names.get(last.actorId) ?? " · " : null, outcome: emailOutcome(last, [], true), isTestDemo: !!r.is_test_demo };
+    return { id: r.id, table: r.table, email: String(r.email ?? "").toLowerCase(), name: r.invited_name ?? r.full_name ?? "", status: r.status, role: r.invite_role ?? r.client_role ?? r.role ?? "Client contact", createdAt: r.created_at, expiresAt: r.expires_at ?? null, acceptedAt: r.accepted_at ?? null, reportedSentAt: r.last_sent_at ?? r.invite_sent_at ?? r.invited_at ?? null, firstSent: sent.at(-1)?.at ?? null, lastSent: sent[0]?.at ?? null, attempts, invitedBy: names.get(r.invited_by ?? r.last_invited_by) ?? "—", lastSender: last ? names.get(last.actorId) ?? "—" : null, outcome: emailOutcome(last, [], true), isTestDemo: !!r.is_test_demo };
   });
 }
 

@@ -33,9 +33,9 @@ export const Route = createFileRoute("/_authenticated/ops/areas/$area")({
     const title = loaderData ? opsWorkArea(loaderData.areaId)?.title : "Work area";
     return {
       meta: [
-        { title: `${title} | Harmonious Operations` },
+        { title: `${title} - Harmonious Operations` },
         { name: "description", content: `What's waiting in ${title} and every screen for that process.` },
-        { property: "og:title", content: `${title} | Harmonious Operations` },
+        { property: "og:title", content: `${title} - Harmonious Operations` },
         { property: "og:description", content: `What's waiting in ${title} and every screen for that process.` },
         { property: "og:type", content: "website" },
         { name: "twitter:card", content: "summary" },

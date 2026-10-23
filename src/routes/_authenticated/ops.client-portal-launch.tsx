@@ -20,9 +20,9 @@ import {
 export const Route = createFileRoute("/_authenticated/ops/client-portal-launch")({
   head: () => ({
     meta: [
-      { title: "Client Portal Launch | Harmonious Operations" },
+      { title: "Client Portal Launch - Harmonious Operations" },
       { name: "description", content: "Document sources, K-1 matching, access approvals, sync health, emergency freeze and audit history for the investor portal." },
-      { property: "og:title", content: "Client Portal Launch | Harmonious Operations" },
+      { property: "og:title", content: "Client Portal Launch - Harmonious Operations" },
       { property: "og:description", content: "Launch readiness for investor and fund manager K-1 access." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -32,7 +32,7 @@ export const Route = createFileRoute("/_authenticated/ops/client-portal-launch")
   component: Page,
 });
 
-const when = (v?: string | null) => (v ? new Date(v).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }) : " · ");
+const when = (v?: string | null) => (v ? new Date(v).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }) : "—");
 const err = (e: any) => toast.error(String(e?.message ?? "Failed").replace(/^Forbidden:\s*/, ""));
 
 function Page() {
@@ -150,9 +150,9 @@ function Documents({ catalog, refresh }: { catalog: any[]; refresh: () => void }
             {catalog.map((c) => (
               <TableRow key={c.id}>
                 <TableCell className="text-xs">{c.file_name}</TableCell>
-                <TableCell>{c.tax_year ?? " · "}</TableCell>
-                <TableCell className="text-xs">{c.offerings?.name ?? " · "}</TableCell>
-                <TableCell className="text-xs">{c.investment_profiles?.legal_name ?? " · "}</TableCell>
+                <TableCell>{c.tax_year ?? "—"}</TableCell>
+                <TableCell className="text-xs">{c.offerings?.name ?? "—"}</TableCell>
+                <TableCell className="text-xs">{c.investment_profiles?.legal_name ?? "—"}</TableCell>
                 <TableCell><Badge variant={c.status === "published" ? "default" : "secondary"}>{c.status}</Badge><p className="text-xs text-muted-foreground">{REASON_LABELS[c.status_reason] ?? c.status_reason}</p></TableCell>
               </TableRow>
             ))}
@@ -314,7 +314,7 @@ function Audit({ d }: { d: any }) {
           {(d.events as any[]).map((e) => (
             <TableRow key={e.id}>
               <TableCell className="text-xs">{when(e.created_at)}</TableCell>
-              <TableCell className="text-xs">{e.actor_user_id?.slice(0, 8) ?? " · "}</TableCell>
+              <TableCell className="text-xs">{e.actor_user_id?.slice(0, 8) ?? "—"}</TableCell>
               <TableCell className="text-xs">{e.action}</TableCell>
               <TableCell><Badge variant={e.decision === "allow" ? "default" : "destructive"}>{e.decision}</Badge></TableCell>
               <TableCell className="text-xs">{e.reason_code}</TableCell>

@@ -254,7 +254,7 @@ export async function resolveStage2(input: Stage2Input, pre?: Stage2Inputs) {
     : routing.status === "determined"
       ? { state: "valid" }
       : facts
-        ? { state: "review_required", reason: "Tax Classification: Needs Review" }
+        ? { state: "review_required", reason: "Tax Classification - Needs Review" }
         : { state: "missing", reason: "Answer a few tax questions." };
   const tax = !facts && routing.status !== "determined" && input.taxRequired
     ? { state: "missing" as const, reason: "Answer the tax questions first." }

@@ -5,9 +5,9 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 export const Route = createFileRoute("/_authenticated/admin/investors")({
   head: () => ({
     meta: [
-      { title: "Investor directory | Harmonious operations" },
+      { title: "Investor directory - Harmonious operations" },
       { name: "description", content: "The investor directory now lives in Operations Investor 360." },
-      { property: "og:title", content: "Investor directory | Harmonious operations" },
+      { property: "og:title", content: "Investor directory - Harmonious operations" },
       { property: "og:description", content: "The investor directory now lives in Operations Investor 360." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

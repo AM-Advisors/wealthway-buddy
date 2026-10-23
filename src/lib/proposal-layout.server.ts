@@ -136,7 +136,7 @@ export async function renderProposalPdf(doc: any, rawSections: Section[], lines:
   }
   for (const p of pdf.getPages()) {
     p.drawText("HARMONIOUS  |  harmonious.co", { x: IN, y: 24, size: 7, font: sans, color: c(MUTED) });
-    if (draft) p.drawText("DRAFT, not approved", { x: W - IN - 90, y: 24, size: 7, font: bold, color: c(TEAL) });
+    if (draft) p.drawText("DRAFT - not approved", { x: W - IN - 90, y: 24, size: 7, font: bold, color: c(TEAL) });
   }
   return await pdf.save();
 }

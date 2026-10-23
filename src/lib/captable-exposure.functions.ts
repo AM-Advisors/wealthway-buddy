@@ -809,7 +809,7 @@ export const withdrawMyExposureClaim = createServerFn({ method: "POST" })
       .maybeSingle();
     if (!existing) throw new Error("That claim is not yours to withdraw.");
     if (existing.status === "verified" || existing.status === "partially_verified") {
-      throw new Error("A verified claim cannot be withdrawn, contact the company.");
+      throw new Error("A verified claim cannot be withdrawn - contact the company.");
     }
     const { error } = await context.supabase
       .from("ct_exposure_claims")

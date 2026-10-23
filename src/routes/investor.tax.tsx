@@ -10,9 +10,9 @@ import { getMyTaxDocuments } from "@/lib/portal-documents.functions";
 export const Route = createFileRoute("/investor/tax")({
   head: () => ({
     meta: [
-      { title: "Tax documents | Harmonious Investor Portal" },
+      { title: "Tax documents - Harmonious Investor Portal" },
       { name: "description", content: "Your Schedule K-1s for each investment, protected by two-step verification." },
-      { property: "og:title", content: "Tax documents | Harmonious Investor Portal" },
+      { property: "og:title", content: "Tax documents - Harmonious Investor Portal" },
       { property: "og:description", content: "Your Schedule K-1s for each investment." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
