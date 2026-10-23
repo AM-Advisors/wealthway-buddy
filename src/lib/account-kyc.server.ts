@@ -80,6 +80,7 @@ export async function startAccountCheck(uid: string, origin: string) {
 
 /** Apply a provider decision (webhook or poll). Approved / review / declined / expired. */
 export async function applyAccountDecision(c: any, decision: Record<string, any>) {
+  if (!isSessionDecisionFor(c, decision)) return c; // never let a non-result payload change the check
   const { normalizeDiditDecision, evaluateDocumentExpiry } = await import("@/lib/kyc-verification");
   const n = normalizeDiditDecision(decision);
   try {
@@ -89,7 +90,7 @@ export async function applyAccountDecision(c: any, decision: Record<string, any>
   } catch (e) { console.error("[account-kyc] review details", e instanceof Error ? e.message : String(e)); }
   if (["approved", "declined"].includes(c.status) && c.decided_by) return c; // human decision stands
   const exp = evaluateDocumentExpiry({ expirationDate: n.document.expirationDate, verificationDate: new Date() });
-  let to: AccountCheckStatus = n.providerStatus === "approved" ? "approved" : n.providerStatus === "declined" ? "declined" : n.providerStatus === "review" ? "review" : "pending";
+  let to: AccountCheckStatus = accountStatusFromProvider(n.providerDecision, n.providerStatus);
   if (exp.expired) to = "expired";
   if (to === "approved" && n.aml.hitCount > 0) to = "review";
   if (to === c.status) return c;
