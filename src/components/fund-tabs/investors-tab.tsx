@@ -4,7 +4,7 @@ import { useState, type ReactNode } from "react";
 import { remindInvestorItemFn } from "@/lib/document-reminders.functions";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -41,7 +41,7 @@ export function InvestorsTab({ fundId, workQueue }: { fundId: string; workQueue?
   const loadReady = useServerFn(fundReadinessFn);
   const rq = useQuery({ queryKey: ["fund-readiness", fundId], queryFn: () => loadReady({ data: { offeringId: fundId } }), retry: false });
   const ready = new Map(((rq.data?.rows ?? []) as any[]).map((x) => [x.onboardingId, x]));
-  const [open, setOpen] = useState<string | null>(null);
+  const navigate = useNavigate();
   const [invite, setInvite] = useState(false);
   const rows = q.data ?? [];
   const classApplicable = rows.some((r) => r.classApplicable);
@@ -107,7 +107,7 @@ export function InvestorsTab({ fundId, workQueue }: { fundId: string; workQueue?
       <CardHeader className="flex-row items-start justify-between gap-3 space-y-0">
         <div>
           <CardTitle className="text-base">Investors</CardTitle>
-          <CardDescription>Click an investor to see everything for this deal. Received counts only money matched to the bank.</CardDescription>
+          <CardDescription>Click an investor to open their record — every detail, document, verification and action for this deal is in one place. Received counts only money matched to the bank.</CardDescription>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button size="sm" variant="outline" disabled={!picked.length || sending} onClick={sendReminders}>{sending ? "Working…" : `Send reminder${picked.length ? ` (${picked.length})` : ""}`}</Button>
@@ -141,7 +141,7 @@ export function InvestorsTab({ fundId, workQueue }: { fundId: string; workQueue?
               </thead>
               <tbody>
                 {rows.map((r) => (
-                  <tr key={r.id} className="cursor-pointer border-t hover:bg-muted" onClick={() => setOpen(r.id)}>
+                  <tr key={r.id} className="cursor-pointer border-t hover:bg-muted" onClick={() => navigate({ to: "/manager/fund/$fundId/investor/$onboardingId", params: { fundId, onboardingId: r.id } })}>
                     <td className="py-2" onClick={(e) => e.stopPropagation()}>
                       <input type="checkbox" aria-label={`Select ${r.name}`} title={canRemind(r) ? "Select for reminders and bulk actions" : "Select for bulk actions (no reminder due)"} checked={picked.includes(r.id)} onChange={(e) => setPicked((p) => e.target.checked ? [...p, r.id] : p.filter((x) => x !== r.id))} />
                     </td>
@@ -169,7 +169,6 @@ export function InvestorsTab({ fundId, workQueue }: { fundId: string; workQueue?
           </div>
         )}
       </CardContent>
-      <InvestorSheet fundId={fundId} id={open} onClose={() => setOpen(null)} />
       <Dialog open={invite} onOpenChange={setInvite}>
         <DialogContent className="max-h-[90vh] max-w-xl overflow-y-auto">
           <DialogHeader>
@@ -262,6 +261,39 @@ function Row({ k, v }: { k: string; v: React.ReactNode }) {
 
 export function InvestorSheet({ fundId, id, onClose }: { fundId: string; id: string | null; onClose: () => void }) {
   const load = useServerFn(investorDetailFn);
+  const q = useQuery({ queryKey: ["fund-investor", fundId, id], queryFn: () => {
+    if (!id) throw new Error("Select an investor to review.");
+    return load({ data: { fundId, onboardingId: id } });
+  }, enabled: !!id });
+  const d = q.data;
+  return (
+    <Sheet open={!!id} onOpenChange={(o) => !o && onClose()}>
+      <SheetContent className="w-full overflow-y-auto p-0 sm:max-w-xl">
+        <div className="border-b bg-muted/40 p-6">
+          <SheetHeader className="space-y-1 text-left">
+            <SheetTitle className="text-xl">{d?.name ?? "Investor"}</SheetTitle>
+            <SheetDescription>{d?.profileName ?? "Details for this fund only."}</SheetDescription>
+          </SheetHeader>
+          {id && <Button asChild size="sm" variant="outline" className="mt-3"><Link to="/manager/fund/$fundId/investor/$onboardingId" params={{ fundId, onboardingId: id }}>Open full investor record</Link></Button>}
+          {d && (
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              <Badge variant={d.kycOk ? "secondary" : "outline"}>KYC/AML: {d.kycLabel}</Badge>
+              <Badge variant={String(d.docs).startsWith("Signed") && !String(d.docs).includes("pending") ? "secondary" : "outline"}>Docs: {d.docs}</Badge>
+              <Badge variant={d.wiring === "Funded" ? "secondary" : "outline"}>Wiring: {d.wiring}</Badge>
+              {d.investorUserId && (
+                <Button asChild size="sm" className="ml-auto"><Link to="/manager/messages" search={{ open: d.applicationId ?? undefined }}>Message</Link></Button>
+              )}
+            </div>
+          )}
+        </div>
+        <InvestorReviewPanel fundId={fundId} id={id} />
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+export function InvestorReviewPanel({ fundId, id, embedded = false }: { fundId: string; id: string | null; embedded?: boolean }) {
+  const load = useServerFn(investorDetailFn);
   const approve = useServerFn(approveToFundFn);
   const downloadSigned = useServerFn(managerInvestorSignedCopyFn);
   const openTaxForm = useServerFn(managerInvestorTaxFormFn);
@@ -279,181 +311,170 @@ export function InvestorSheet({ fundId, id, onClose }: { fundId: string; id: str
   const d = q.data;
   const pct = d && d.committedCents ? Math.min(100, Math.round(((d.receivedCents ?? 0) / d.committedCents) * 100)) : 0;
   return (
-    <Sheet open={!!id} onOpenChange={(o) => !o && onClose()}>
-      <SheetContent className="w-full overflow-y-auto p-0 sm:max-w-xl">
-        <div className="border-b bg-muted/40 p-6">
-          <SheetHeader className="space-y-1 text-left">
-            <SheetTitle className="text-xl">{d?.name ?? "Investor"}</SheetTitle>
-            <SheetDescription>{d?.profileName ?? "Details for this fund only."}</SheetDescription>
-          </SheetHeader>
-          {d && (
-            <div className="mt-4 flex flex-wrap items-center gap-2">
-              <Badge variant={d.kycOk ? "secondary" : "outline"}>KYC/AML: {d.kycLabel}</Badge>
-              <Badge variant={String(d.docs).startsWith("Signed") && !String(d.docs).includes("pending") ? "secondary" : "outline"}>Docs: {d.docs}</Badge>
-              <Badge variant={d.wiring === "Funded" ? "secondary" : "outline"}>Wiring: {d.wiring}</Badge>
-              {d.investorUserId && (
-                <Button asChild size="sm" className="ml-auto"><Link to="/manager/messages" search={{ open: d.applicationId ?? undefined }}>Message</Link></Button>
-              )}
-            </div>
-          )}
-        </div>
+    <div>
+      {embedded && d && <div className="mb-4 flex flex-wrap items-center gap-2">
+        <Badge variant={d.kycOk ? "secondary" : "outline"}>KYC/AML: {d.kycLabel}</Badge>
+        <Badge variant={String(d.docs).startsWith("Signed") && !String(d.docs).includes("pending") ? "secondary" : "outline"}>Docs: {d.docs}</Badge>
+        <Badge variant={d.wiring === "Funded" ? "secondary" : "outline"}>Wiring: {d.wiring}</Badge>
+        {d.investorUserId && <Button asChild size="sm" variant="outline" className="ml-auto"><Link to="/manager/messages" search={{ open: d.applicationId ?? undefined }}>Message</Link></Button>}
+      </div>}
         {q.isLoading ? <p className="p-6 text-sm text-muted-foreground">Loading…</p> : q.error ? <div role="alert" className="space-y-2 p-6"><p className="text-sm text-destructive">Investor details couldn’t load.</p><Button variant="outline" onClick={() => void q.refetch()}>Retry</Button></div> : d && (
-          <div className="space-y-6 p-6 text-sm">
-            {id && <PersonalInvestmentLinkCard onboardingId={id} />}
-            {id && <InvestorEmailHistory onboardingId={id} />}
-            {id && <InvestorQuickEdit onboardingId={id} onSaved={() => q.refetch()} />}
-            {id && <InvestorPriorVerification onboardingId={id} onSaved={() => q.refetch()} />}
-            {id && <InvestorHelpers onboardingId={id} />}
-            {id && <InvestorPeopleAndContacts onboardingId={id} onSaved={() => q.refetch()} />}
-            <section className="grid grid-cols-2 gap-3">
-              <div className="rounded-lg border p-3"><p className="text-xs text-muted-foreground">Committed</p><p className="text-lg font-semibold">{usd(d.committedCents)}</p></div>
-              <div className="rounded-lg border p-3"><p className="text-xs text-muted-foreground">Received</p><p className="text-lg font-semibold">{usd(d.receivedCents)}</p>
-                <div className="mt-2 h-1.5 rounded-full bg-muted"><div className="h-1.5 rounded-full bg-primary" style={{ width: `${pct}%` }} /></div></div>
-            </section>
+        <div className={embedded ? "space-y-6 text-sm" : "space-y-6 p-6 text-sm"}>
+          {id && !embedded && <PersonalInvestmentLinkCard onboardingId={id} />}
+          {id && <InvestorEmailHistory onboardingId={id} />}
+          {id && <InvestorQuickEdit onboardingId={id} onSaved={() => q.refetch()} />}
+          {id && <InvestorPriorVerification onboardingId={id} onSaved={() => q.refetch()} />}
+          {id && <InvestorHelpers onboardingId={id} />}
+          {id && <InvestorPeopleAndContacts onboardingId={id} onSaved={() => q.refetch()} />}
+          <section className="grid grid-cols-2 gap-3">
+            <div className="rounded-lg border p-3"><p className="text-xs text-muted-foreground">Committed</p><p className="text-lg font-semibold">{usd(d.committedCents)}</p></div>
+            <div className="rounded-lg border p-3"><p className="text-xs text-muted-foreground">Received</p><p className="text-lg font-semibold">{usd(d.receivedCents)}</p>
+              <div className="mt-2 h-1.5 rounded-full bg-muted"><div className="h-1.5 rounded-full bg-primary" style={{ width: `${pct}%` }} /></div></div>
+          </section>
 
-            <section>
-              <h4 className="mb-2 font-medium">Progress</h4>
-              <ol className="space-y-2">
-                {(d.steps as StepStatus[]).map((st, i) => (
-                  <li key={st.key} className="flex items-center gap-3 rounded-md border p-2">
-                    <span className={`flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-medium ${STATE_DOT[st.state]}`}>{i + 1}</span>
-                    <span className="flex-1"><span className="font-medium">{st.label}</span><span className="block text-xs text-muted-foreground">{st.detail}</span></span>
-                    <Badge variant={st.state === "complete" ? "secondary" : st.state === "blocked" ? "destructive" : "outline"}>{STEP_STATE_LABELS[st.state]}</Badge>
-                  </li>
-                ))}
-              </ol>
-              <p className="mt-2 text-xs text-muted-foreground">See the History tab for who completed each step and when.</p>
-            </section>
+          <section>
+            <h4 className="mb-2 font-medium">Progress</h4>
+            <ol className="space-y-2">
+              {(d.steps as StepStatus[]).map((st, i) => (
+                <li key={st.key} className="flex items-center gap-3 rounded-md border p-2">
+                  <span className={`flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-medium ${STATE_DOT[st.state]}`}>{i + 1}</span>
+                  <span className="flex-1"><span className="font-medium">{st.label}</span><span className="block text-xs text-muted-foreground">{st.detail}</span></span>
+                  <Badge variant={st.state === "complete" ? "secondary" : st.state === "blocked" ? "destructive" : "outline"}>{STEP_STATE_LABELS[st.state]}</Badge>
+                </li>
+              ))}
+            </ol>
+            <p className="mt-2 text-xs text-muted-foreground">See the History tab for who completed each step and when.</p>
+          </section>
 
-            {d.reviewEvidence && <>
-              <section className="space-y-3" aria-label="Signed fund documents">
-                <h4 className="font-medium">Signed fund documents</h4>
-                {d.reviewEvidence.signedDocuments.length ? d.reviewEvidence.signedDocuments.map((doc) => <div key={doc.id} className="flex flex-wrap items-center justify-between gap-2 border-b pb-3">
-                  <div className="min-w-0"><p className="break-words font-medium">{doc.title}</p><p className="text-xs text-muted-foreground">{doc.version != null ? `Version ${doc.version}` : "Version not recorded"} · {fmtDate(doc.signedAt)}{doc.replaced ? " · Replaced, retained copy" : " · Signed"}</p></div>
-                  {doc.hasCopy ? <Button size="sm" variant="outline" disabled={downloading !== null} onClick={async () => {
-                    if (!id) return;
-                    setDownloading(doc.id);
-                    try { const result = await downloadSigned({ data: { fundId, onboardingId: id, signatureId: doc.id } }); const link = document.createElement("a"); link.href = result.url; link.download = ""; link.rel = "noreferrer"; link.click(); }
-                    catch (error) { toast.error(error instanceof Error ? error.message : "The signed copy could not be opened."); }
-                    finally { setDownloading(null); }
-                  }}>{downloading === doc.id ? "Opening…" : "Download signed copy"}</Button> : <span className="text-muted-foreground">Signed copy pending</span>}
-                </div>) : <p className="text-muted-foreground">No submitted signed documents yet.</p>}
-                {(d.reviewEvidence.taxForms ?? []).map((tf: { id: string; label: string; certifiedAt: string | null; hasCopy: boolean }) => <div key={tf.id} className="flex flex-wrap items-center justify-between gap-2 border-b pb-3">
-                  <div className="min-w-0"><p className="font-medium">Tax form ({tf.label})</p><p className="text-xs text-muted-foreground">{tf.certifiedAt ? `${fmtDate(tf.certifiedAt)} · ` : ""}Signed</p></div>
-                  {tf.hasCopy ? <Button size="sm" variant="outline" disabled={downloading !== null} onClick={async () => {
-                    if (!id) return;
-                    setDownloading(tf.id);
-                    try { const result = await openTaxForm({ data: { fundId, onboardingId: id, taxFormId: tf.id } }); const link = document.createElement("a"); link.href = result.url; link.download = ""; link.rel = "noreferrer"; link.click(); }
-                    catch (error) { toast.error(error instanceof Error ? error.message : "The signed tax form could not be opened."); }
-                    finally { setDownloading(null); }
-                  }}>{downloading === tf.id ? "Opening…" : `Download ${tf.label}`}</Button> : <span className="text-muted-foreground">Signed copy pending</span>}
-                </div>)}
-                {d.reviewEvidence.acknowledgments.map((doc: { id: string; title: string; version: number; acknowledgedAt: string }) => <div key={doc.id} className="border-b pb-2"><p className="font-medium">{doc.title}</p><p className="text-xs text-muted-foreground">Version {doc.version} · {fmtDate(doc.acknowledgedAt)} · Acknowledged and agreed</p></div>)}
-              </section>
-              {id && <PriorSignedDocuments fundId={fundId} onboardingId={id} />}
-              <section aria-label="Investor questionnaire">
-                <Collapsible open={questionnaireOpen} onOpenChange={(o) => setQuestionnaireFor(o ? id : null)} className="rounded-lg border">
-                  <CollapsibleTrigger className="flex w-full items-center gap-2 p-3 text-left transition-colors hover:bg-muted/50">
-                    {questionnaireOpen ? <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />}
-                    <span className="flex-1 font-medium">Investor questionnaire</span>
-                    <span className="shrink-0 text-xs text-muted-foreground">{d.reviewEvidence.questionnaireSubmittedAt ? `${d.reviewEvidence.questionnaire.length} answers · Submitted ${fmtDate(d.reviewEvidence.questionnaireSubmittedAt)}` : "Not submitted"}</span>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="px-3 pb-3">
-                    {d.reviewEvidence.questionnaireSubmittedAt ? <dl className="space-y-3 border-t pt-3">{d.reviewEvidence.questionnaire.map((answer) => <div key={answer.key} className="border-b pb-2"><dt className="break-words text-muted-foreground">{answer.label}</dt><dd className="mt-1 whitespace-pre-line break-words">{answer.answer}</dd></div>)}</dl> : <p className="border-t pt-3 text-muted-foreground">Questionnaire has not been submitted.</p>}
-                  </CollapsibleContent>
-                </Collapsible>
-              </section>
-              <section className="space-y-2" aria-label="Accreditation">
-                <h4 className="font-medium">Accreditation</h4>
-                {d.reviewEvidence.accreditation ? (() => { const a = d.reviewEvidence.accreditation; return <dl className="space-y-2">
-                  <div className="flex justify-between gap-3 border-b pb-2"><dt className="text-muted-foreground">Status</dt><dd className="font-medium">{a.status}</dd></div>
-                  {a.basis && <div className="flex justify-between gap-3 border-b pb-2"><dt className="text-muted-foreground">Basis</dt><dd className="text-right capitalize">{a.basis}</dd></div>}
-                  {a.relationship && <div className="flex justify-between gap-3 border-b pb-2"><dt className="text-muted-foreground">Relationship with manager</dt><dd className="text-right">{a.relationship}</dd></div>}
-                  {a.attestedAt && <div className="flex justify-between gap-3 border-b pb-2"><dt className="text-muted-foreground">Confirmed by investor</dt><dd>{fmtDate(a.attestedAt)}</dd></div>}
-                  {a.verifiedAt && <div className="flex justify-between gap-3 border-b pb-2"><dt className="text-muted-foreground">Verified</dt><dd>{fmtDate(a.verifiedAt)}</dd></div>}
-                  {a.expiresAt && <div className="flex justify-between gap-3 border-b pb-2"><dt className="text-muted-foreground">Expires</dt><dd>{fmtDate(a.expiresAt)}</dd></div>}
-                  {a.documents.map((doc: { id: string; name: string; kind: string; uploadedAt: string }) => <div key={doc.id} className="border-b pb-2"><p className="break-words font-medium">{doc.name}</p><p className="text-xs capitalize text-muted-foreground">{doc.kind} · {fmtDate(doc.uploadedAt)}</p></div>)}
-                </dl>; })() : <p className="text-muted-foreground">Accreditation has not been completed.</p>}
-              </section>
-            </>}
-
-            {(d.openItems.length > 0 || d.canApproveSubscription) && (
-              <section className="rounded-lg border border-primary/40 bg-primary/5 p-3">
-                <h4 className="mb-1 font-medium">Open items</h4>
-                <ul className="list-disc space-y-0.5 pl-5">{d.openItems.map((t: string) => <li key={t}>{t}</li>)}</ul>
-                {d.canApproveSubscription && <Button className="mt-3" disabled={approving} onClick={async () => {
+          {d.reviewEvidence && <>
+            <section className="space-y-3" aria-label="Signed fund documents">
+              <h4 className="font-medium">Signed fund documents</h4>
+              {d.reviewEvidence.signedDocuments.length ? d.reviewEvidence.signedDocuments.map((doc) => <div key={doc.id} className="flex flex-wrap items-center justify-between gap-2 border-b pb-3">
+                <div className="min-w-0"><p className="break-words font-medium">{doc.title}</p><p className="text-xs text-muted-foreground">{doc.version != null ? `Version ${doc.version}` : "Version not recorded"} · {fmtDate(doc.signedAt)}{doc.replaced ? " · Replaced, retained copy" : " · Signed"}</p></div>
+                {doc.hasCopy ? <Button size="sm" variant="outline" disabled={downloading !== null} onClick={async () => {
                   if (!id) return;
-                  setApproving(true);
-                  try { await approve({ data: { onboardingId: id } }); toast.success("Subscription approved"); await q.refetch(); }
-                  catch (error) { toast.error(error instanceof Error ? error.message : "Subscription could not be approved."); }
-                  finally { setApproving(false); }
-                }}>{approving ? "Approving…" : "Approve subscription"}</Button>}
-              </section>
-            )}
+                  setDownloading(doc.id);
+                  try { const result = await downloadSigned({ data: { fundId, onboardingId: id, signatureId: doc.id } }); const link = document.createElement("a"); link.href = result.url; link.download = ""; link.rel = "noreferrer"; link.click(); }
+                  catch (error) { toast.error(error instanceof Error ? error.message : "The signed copy could not be opened."); }
+                  finally { setDownloading(null); }
+                }}>{downloading === doc.id ? "Opening…" : "Download signed copy"}</Button> : <span className="text-muted-foreground">Signed copy pending</span>}
+              </div>) : <p className="text-muted-foreground">No submitted signed documents yet.</p>}
+              {(d.reviewEvidence.taxForms ?? []).map((tf: { id: string; label: string; certifiedAt: string | null; hasCopy: boolean }) => <div key={tf.id} className="flex flex-wrap items-center justify-between gap-2 border-b pb-3">
+                <div className="min-w-0"><p className="font-medium">Tax form ({tf.label})</p><p className="text-xs text-muted-foreground">{tf.certifiedAt ? `${fmtDate(tf.certifiedAt)} · ` : ""}Signed</p></div>
+                {tf.hasCopy ? <Button size="sm" variant="outline" disabled={downloading !== null} onClick={async () => {
+                  if (!id) return;
+                  setDownloading(tf.id);
+                  try { const result = await openTaxForm({ data: { fundId, onboardingId: id, taxFormId: tf.id } }); const link = document.createElement("a"); link.href = result.url; link.download = ""; link.rel = "noreferrer"; link.click(); }
+                  catch (error) { toast.error(error instanceof Error ? error.message : "The signed tax form could not be opened."); }
+                  finally { setDownloading(null); }
+                }}>{downloading === tf.id ? "Opening…" : `Download ${tf.label}`}</Button> : <span className="text-muted-foreground">Signed copy pending</span>}
+              </div>)}
+              {d.reviewEvidence.acknowledgments.map((doc: { id: string; title: string; version: number; acknowledgedAt: string }) => <div key={doc.id} className="border-b pb-2"><p className="font-medium">{doc.title}</p><p className="text-xs text-muted-foreground">Version {doc.version} · {fmtDate(doc.acknowledgedAt)} · Acknowledged and agreed</p></div>)}
+            </section>
+            {id && <PriorSignedDocuments fundId={fundId} onboardingId={id} />}
+            <section aria-label="Investor questionnaire">
+              <Collapsible open={questionnaireOpen} onOpenChange={(o) => setQuestionnaireFor(o ? id : null)} className="rounded-lg border">
+                <CollapsibleTrigger className="flex w-full items-center gap-2 p-3 text-left transition-colors hover:bg-muted/50">
+                  {questionnaireOpen ? <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />}
+                  <span className="flex-1 font-medium">Investor questionnaire</span>
+                  <span className="shrink-0 text-xs text-muted-foreground">{d.reviewEvidence.questionnaireSubmittedAt ? `${d.reviewEvidence.questionnaire.length} answers · Submitted ${fmtDate(d.reviewEvidence.questionnaireSubmittedAt)}` : "Not submitted"}</span>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="px-3 pb-3">
+                  {d.reviewEvidence.questionnaireSubmittedAt ? <dl className="space-y-3 border-t pt-3">{d.reviewEvidence.questionnaire.map((answer) => <div key={answer.key} className="border-b pb-2"><dt className="break-words text-muted-foreground">{answer.label}</dt><dd className="mt-1 whitespace-pre-line break-words">{answer.answer}</dd></div>)}</dl> : <p className="border-t pt-3 text-muted-foreground">Questionnaire has not been submitted.</p>}
+                </CollapsibleContent>
+              </Collapsible>
+            </section>
+            <section className="space-y-2" aria-label="Accreditation">
+              <h4 className="font-medium">Accreditation</h4>
+              {d.reviewEvidence.accreditation ? (() => { const a = d.reviewEvidence.accreditation; return <dl className="space-y-2">
+                <div className="flex justify-between gap-3 border-b pb-2"><dt className="text-muted-foreground">Status</dt><dd className="font-medium">{a.status}</dd></div>
+                {a.basis && <div className="flex justify-between gap-3 border-b pb-2"><dt className="text-muted-foreground">Basis</dt><dd className="text-right capitalize">{a.basis}</dd></div>}
+                {a.relationship && <div className="flex justify-between gap-3 border-b pb-2"><dt className="text-muted-foreground">Relationship with manager</dt><dd className="text-right">{a.relationship}</dd></div>}
+                {a.attestedAt && <div className="flex justify-between gap-3 border-b pb-2"><dt className="text-muted-foreground">Confirmed by investor</dt><dd>{fmtDate(a.attestedAt)}</dd></div>}
+                {a.verifiedAt && <div className="flex justify-between gap-3 border-b pb-2"><dt className="text-muted-foreground">Verified</dt><dd>{fmtDate(a.verifiedAt)}</dd></div>}
+                {a.expiresAt && <div className="flex justify-between gap-3 border-b pb-2"><dt className="text-muted-foreground">Expires</dt><dd>{fmtDate(a.expiresAt)}</dd></div>}
+                {a.documents.map((doc: { id: string; name: string; kind: string; uploadedAt: string }) => <div key={doc.id} className="border-b pb-2"><p className="break-words font-medium">{doc.name}</p><p className="text-xs capitalize text-muted-foreground">{doc.kind} · {fmtDate(doc.uploadedAt)}</p></div>)}
+              </dl>; })() : <p className="text-muted-foreground">Accreditation has not been completed.</p>}
+            </section>
+          </>}
 
-            <section className="rounded-lg border p-3">
-              <h4 className="mb-1 font-medium">Subscription Agreement</h4>
-              <p className="text-muted-foreground">Email the investor a link that opens the signing step of their investment.</p>
-              <Button size="sm" variant="outline" className="mt-2" disabled={sendingSign} onClick={async () => {
+          {(d.openItems.length > 0 || d.canApproveSubscription) && (
+            <section className="rounded-lg border border-primary/40 bg-primary/5 p-3">
+              <h4 className="mb-1 font-medium">Open items</h4>
+              <ul className="list-disc space-y-0.5 pl-5">{d.openItems.map((t: string) => <li key={t}>{t}</li>)}</ul>
+              {d.canApproveSubscription && <Button className="mt-3" disabled={approving} onClick={async () => {
                 if (!id) return;
-                setSendingSign(true);
-                try {
-                  const r = await sendSign({ data: { fundId, onboardingId: id } });
-                  if (r.sent) toast.success("Signing email sent to the investor");
-                  else toast.message(r.reason === "recipient_suppressed" ? "This investor has turned off emails, so it wasn't sent." : "The email wasn't sent.");
-                } catch (error) { toast.error(error instanceof Error ? error.message : "The email could not be sent."); }
-                finally { setSendingSign(false); }
-              }}>{sendingSign ? "Sending…" : "Email signing link"}</Button>
+                setApproving(true);
+                try { await approve({ data: { onboardingId: id } }); toast.success("Subscription approved"); await q.refetch(); }
+                catch (error) { toast.error(error instanceof Error ? error.message : "Subscription could not be approved."); }
+                finally { setApproving(false); }
+              }}>{approving ? "Approving…" : "Approve subscription"}</Button>}
             </section>
+          )}
 
-            {d.missing.length > 0 && (
-              <section className="rounded-lg border border-destructive/40 bg-destructive/5 p-3">
-                <h4 className="mb-1 font-medium">Missing info for the fund manager to obtain</h4>
-                <ul className="list-disc space-y-0.5 pl-5">{d.missing.map((t: string) => <li key={t}>{t}</li>)}</ul>
-              </section>
-            )}
+          <section className="rounded-lg border p-3">
+            <h4 className="mb-1 font-medium">Subscription Agreement</h4>
+            <p className="text-muted-foreground">Email the investor a link that opens the signing step of their investment.</p>
+            <Button size="sm" variant="outline" className="mt-2" disabled={sendingSign} onClick={async () => {
+              if (!id) return;
+              setSendingSign(true);
+              try {
+                const r = await sendSign({ data: { fundId, onboardingId: id } });
+                if (r.sent) toast.success("Signing email sent to the investor");
+                else toast.message(r.reason === "recipient_suppressed" ? "This investor has turned off emails, so it wasn't sent." : "The email wasn't sent.");
+              } catch (error) { toast.error(error instanceof Error ? error.message : "The email could not be sent."); }
+              finally { setSendingSign(false); }
+            }}>{sendingSign ? "Sending…" : "Email signing link"}</Button>
+          </section>
 
-            <section>
-              <h4 className="mb-1 font-medium">Contact</h4>
-              <dl className="divide-y">
-                <Row k="Email" v={d.email} /><Row k="Phone" v={d.phone} /><Row k="Address" v={d.address} /><Row k="Citizenship" v={d.citizenship} />
-                {d.assetLabel === "Individual" && <Row k="Date of birth" v={d.dateOfBirth} />}
-              </dl>
+          {d.missing.length > 0 && (
+            <section className="rounded-lg border border-destructive/40 bg-destructive/5 p-3">
+              <h4 className="mb-1 font-medium">Missing info for the fund manager to obtain</h4>
+              <ul className="list-disc space-y-0.5 pl-5">{d.missing.map((t: string) => <li key={t}>{t}</li>)}</ul>
             </section>
+          )}
 
-            <section>
-              <h4 className="mb-1 font-medium">Investment</h4>
-              <dl className="divide-y">
-                <Row k="Terms" v={d.classLabel} /><Row k="Investing as" v={d.assetLabel} /><Row k="Tax ID" v={d.taxIdLast4 ? `•••• ${d.taxIdLast4}` : null} />
-                <Row k="Investment date" v={d.investmentDate ? fmtDate(d.investmentDate) : null} />
-                <Row k="Stage" v={STAGE_LABELS[d.stage as OnboardingStage] ?? d.stage.replace(/_/g, " ")} />
-                <Row k="Latest activity" v={fmtDate(d.lastActivity)} />
-              </dl>
-              {d.classApplicable && d.canManageTermAssociations && <Button size="sm" variant="outline" className="mt-2" onClick={() => setTermAssociation("class")}>Associate class</Button>}
-            </section>
+          <section>
+            <h4 className="mb-1 font-medium">Contact</h4>
+            <dl className="divide-y">
+              <Row k="Email" v={d.email} /><Row k="Phone" v={d.phone} /><Row k="Address" v={d.address} /><Row k="Citizenship" v={d.citizenship} />
+              {d.assetLabel === "Individual" && <Row k="Date of birth" v={d.dateOfBirth} />}
+            </dl>
+          </section>
 
-            <section>
-              <h4 className="mb-1 font-medium">Documents</h4>
-              {d.documents.length ? (
-                <ul className="divide-y rounded-md border">{d.documents.map((x: any) => <li key={x.id} className="flex justify-between gap-2 p-2"><span className="break-all">{x.file_name}</span><span className="shrink-0 text-xs capitalize text-muted-foreground">{String(x.doc_kind).replace(/_/g, " ")}</span></li>)}</ul>
-              ) : <p className="text-muted-foreground">No documents uploaded for this deal yet.</p>}
-            </section>
+          <section>
+            <h4 className="mb-1 font-medium">Investment</h4>
+            <dl className="divide-y">
+              <Row k="Terms" v={d.classLabel} /><Row k="Investing as" v={d.assetLabel} /><Row k="Tax ID" v={d.taxIdLast4 ? `•••• ${d.taxIdLast4}` : null} />
+              <Row k="Investment date" v={d.investmentDate ? fmtDate(d.investmentDate) : null} />
+              <Row k="Stage" v={STAGE_LABELS[d.stage as OnboardingStage] ?? d.stage.replace(/_/g, " ")} />
+              <Row k="Latest activity" v={fmtDate(d.lastActivity)} />
+            </dl>
+            {d.classApplicable && d.canManageTermAssociations && <Button size="sm" variant="outline" className="mt-2" onClick={() => setTermAssociation("class")}>Associate class</Button>}
+          </section>
 
-            <section>
-              <h4 className="mb-1 font-medium">Side letters</h4>
-              {d.sideLetters.length ? d.sideLetters.map((s: any) => <p key={s.id}><Badge variant="secondary" className="mr-2 capitalize">{s.status}</Badge>{s.effective_date ? fmtDate(s.effective_date) : ""}</p>) : <p className="text-muted-foreground">None.</p>}
-              <Button size="sm" variant="outline" className="mt-2" onClick={() => setTermAssociation("side_letter")}>Edit investor fees & minimum</Button>
-            </section>
-          </div>
-        )}
-      </SheetContent>
+          <section>
+            <h4 className="mb-1 font-medium">Documents</h4>
+            {d.documents.length ? (
+              <ul className="divide-y rounded-md border">{d.documents.map((x: any) => <li key={x.id} className="flex justify-between gap-2 p-2"><span className="break-all">{x.file_name}</span><span className="shrink-0 text-xs capitalize text-muted-foreground">{String(x.doc_kind).replace(/_/g, " ")}</span></li>)}</ul>
+            ) : <p className="text-muted-foreground">No documents uploaded for this deal yet.</p>}
+          </section>
+
+          <section>
+            <h4 className="mb-1 font-medium">Side letters</h4>
+            {!embedded && (d.sideLetters.length ? d.sideLetters.map((s: any) => <p key={s.id}><Badge variant="secondary" className="mr-2 capitalize">{s.status}</Badge>{s.effective_date ? fmtDate(s.effective_date) : ""}</p>) : <p className="text-muted-foreground">None.</p>)}
+            {embedded && <p className="text-muted-foreground">Full side-letter history is in the Side letter card above.</p>}
+            <Button size="sm" variant="outline" className="mt-2" onClick={() => setTermAssociation("side_letter")}>Edit investor fees & minimum</Button>
+          </section>
+        </div>
+      )}
       {id && termAssociation && <Dialog open onOpenChange={(o) => !o && setTermAssociation(null)}>
         <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
           <DialogHeader><DialogTitle>{termAssociation === "class" ? "Class association" : "Investor side-letter exceptions"}</DialogTitle><DialogDescription>Fund defaults remain unchanged. Reviewed exceptions are recorded separately.</DialogDescription></DialogHeader>
           {termAssociation === "class" ? <ClassAssignmentCard offeringId={fundId} onboardingId={id} /> : <SideLetterRegistry fundId={fundId} onboardingId={id} />}
         </DialogContent>
       </Dialog>}
-    </Sheet>
+    </div>
   );
 }
 
