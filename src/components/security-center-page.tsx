@@ -13,9 +13,9 @@ import { requestTrustDocument, type PublicTrustItem } from "@/lib/trust-center-p
 
 /**
  * Harmonious Trust Center. Built-in copy describes product behavior only;
- * everything else (published assurance evidence, extra sections, trust
- * documents) appears only after Harmonious approves and publishes it
- * internally. No seals or logos, and the page states no certification status.
+ * published evidence, extra sections and trust documents appear only after
+ * Harmonious approves and publishes them internally. No seals or logos, and
+ * the page states no independent certification status in either direction.
  */
 export function SecurityCenterPage({ items }: { items: PublicTrustItem[] }) {
   const s = SECURITY_STATEMENT;
