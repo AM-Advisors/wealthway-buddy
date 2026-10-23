@@ -37,7 +37,7 @@ import { getClientFund, getFundCapTable } from "@/lib/fund-cap-table.functions";
 import { getFundTabsData, listFundCloseRequests } from "@/lib/fund-close-requests.functions";
 import { TodosTab } from "@/components/fund-tabs/todos-tab";
 import { TeamTab } from "@/components/fund-tabs/team-tab";
-import { InvestorsTab } from "@/components/fund-tabs/investors-tab";
+import { ManagerFundInvestors } from "@/components/manager-fund-investors";
 import { CapitalTieReport } from "@/components/investor-share-panel";
 import { FundUpdatesPanel } from "@/components/investor-onboarding-extras";
 import { DocumentsTab } from "@/components/fund-tabs/documents-tab";
@@ -309,7 +309,7 @@ export function FundWorkspace({ fundId, tab, onTab, mode = "client", extraTabs =
         {!merged && <TabsContent value="details" className="space-y-5">{detailsBody}</TabsContent>}
         {!merged && <TabsContent value="banking" className="space-y-5">{bankingBody}</TabsContent>}
 
-        <TabsContent value="investors" className="space-y-4">{staff && migrationApplies(f.fund_origin) && <FundMigrationStatus fundId={fundId} />}{staff && migrationApplies(f.fund_origin) && <MigrationPaymentsCard fundId={fundId} />}<InvestorsTab fundId={fundId} workQueue={staff ? <ReadinessQueue offeringId={fundId} initialTab="all" /> : undefined} /><CapitalTieReport offeringId={fundId} /><FundUpdatesPanel fundId={fundId} /></TabsContent>
+        <TabsContent value="investors" className="space-y-4">{staff && migrationApplies(f.fund_origin) && <FundMigrationStatus fundId={fundId} />}{staff && migrationApplies(f.fund_origin) && <MigrationPaymentsCard fundId={fundId} />}<ManagerFundInvestors fundId={fundId} extraTabs={staff ? [{ value: "queue", label: "Work queue", content: <ReadinessQueue offeringId={fundId} initialTab="all" /> }] : undefined} /><CapitalTieReport offeringId={fundId} /><FundUpdatesPanel fundId={fundId} /></TabsContent>
 
 
         <TabsContent value="accounting"><AccountingWorkspace fundId={fundId} staff={staff} extra={<AccountTab fundId={fundId} fundName={String(f.name ?? "Fund")} taxDocs={td?.taxDocs ?? []} />} /></TabsContent>
