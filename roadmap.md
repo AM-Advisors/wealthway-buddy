@@ -2,7 +2,7 @@
 
 ## Manager-added investor invitations (2026-10-23)
 - [x] Interactive manager addition uses the saved investment's personal invitation and reports sending failure without losing the saved record; imports and historical rows unchanged.
-- [ ] Run fictional invitation regression checks and inspect preview diagnostics.
+- [x] All 56 fictional investor-entry/invitation checks pass; preview build OK. No live additions or test emails sent.
 - [ ] Authenticated add → email → claim read-back — blocked on independently isolated synthetic QA; no live investor additions or test emails.
 
 ## Erebor black-text correction (2026-10-23)
