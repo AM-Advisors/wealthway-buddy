@@ -295,3 +295,4 @@
 - Account identity checks change only from session results for that check's own session (account-kyc-model isAccountDecisionEvent/isSessionDecisionFor); provider profile notices never alter status — why: they reverted approvals to review.
 - Account identity checks in provider review with ID/liveness/face passed grant limited access (requireSupabaseAuth); money, banking and wire functions use requireFullyVerifiedAuth; decisions email the person once via identity-review-decided — why: keep people moving without opening money paths.
 - Watchlist match clearances are append-only account_aml_match_clearances rows (aml-match-model.ts compares, never decides); approving a check with matches requires every match cleared — why: reasoned, permanent human decisions.
+- Account identity queue opens the exact selected check's stored evidence with KycReviewPanel; existing photo and decision engines remain authoritative — why: avoid session mix-ups and expanded access.
