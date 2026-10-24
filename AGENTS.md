@@ -8,7 +8,7 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
-- Read src/lib/AGENTS.md for workflows/auth, billing, signing, drafts and wealth — why: scoped rules.
+- Read src/lib/AGENTS.md for scoped rules, including exact-check review evidence reuse.
 - Fund generation is Harmonious-staff-only across templates, starter drafts and standard forms; DOCX autofill reads active fees, formats percentages and flags fixed legal conflicts without auto-activation — why: staff own generation, canonical facts never overwrite signed history.
 - Starter side-letter selections share sl_combined rendering in fund-doc-templates.ts, with separate values for each selected item; legacy keys remain readable — why: one document contains all requested terms without mixing fee/carry values or changing signed history.
 - Default investors use null class keys; ClassAssignmentCard and investor-scoped SideLetterRegistry link exceptions, with investor-term-fields preserving separate fee/carry/minimum inputs — why: defaults and signed history stay intact.
