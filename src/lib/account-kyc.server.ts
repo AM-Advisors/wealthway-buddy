@@ -131,7 +131,7 @@ async function assertDecider(uid: string) {
 
 export async function accountCheckQueue(uid: string) {
   await assertDecider(uid);
-  const { data } = await db().from("account_identity_checks").select("id, user_id, status, decision_summary, warnings, decision_note, created_at, updated_at, decided_at").order("updated_at", { ascending: false }).limit(200);
+  const { data } = await db().from("account_identity_checks").select("id, user_id, status, decision_summary, review_details, warnings, decision_note, created_at, updated_at, decided_at").order("updated_at", { ascending: false }).limit(200);
   const rows = (data ?? []) as any[];
   const emails = new Map<string, string>();
   await Promise.all([...new Set(rows.map((r) => r.user_id))].map(async (id) => { const { data: u } = await db().auth.admin.getUserById(id); if (u?.user?.email) emails.set(id, u.user.email); }));

@@ -26,7 +26,7 @@ function Card({ title, s, children }: { title: string; s?: ReviewStatus; childre
   );
 }
 function Row({ k, v }: { k: string; v: unknown }) {
-  return <div><dt className="text-xs text-muted-foreground">{k}</dt><dd className="text-sm">{v == null || v === "" ? " · " : String(v)}</dd></div>;
+  return <div className="min-w-0"><dt className="text-xs text-muted-foreground">{k}</dt><dd className="break-words text-sm">{v == null || v === "" ? "Not recorded" : String(v)}</dd></div>;
 }
 const Grid = ({ children }: { children: React.ReactNode }) => <dl className="grid grid-cols-2 gap-3">{children}</dl>;
 
@@ -35,7 +35,10 @@ export function KycReviewPanel({ rd, checkId }: { rd: ReviewDetails; checkId: st
   const imgs = useServerFn(verificationImagesFn);
   const [images, setImages] = useState<Array<{ label: string; url: string }> | null>(null);
   const m = useMutation({
-    mutationFn: () => imgs({ data: { checkId: checkId! } }),
+    mutationFn: () => {
+      if (!checkId) throw new Error("No account check selected.");
+      return imgs({ data: { checkId } });
+    },
     onSuccess: (r) => { setImages(r); if (!r.length) toast.message("No photos are available for this session."); },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -53,7 +56,7 @@ export function KycReviewPanel({ rd, checkId }: { rd: ReviewDetails; checkId: st
         {checkId && <div className="mt-3 print:hidden"><Button size="sm" variant="outline" disabled={m.isPending} onClick={() => m.mutate()}><ImageIcon className="mr-1 h-4 w-4" />{images ? "Refresh photos" : "Show ID and selfie photos"}</Button></div>}
         {images && !!images.length && (
           <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">{images.map((i) => (
-            <figure key={i.label} className="space-y-1"><img src={i.url} alt={i.label} referrerPolicy="no-referrer" className="h-32 w-full rounded-md border object-cover" /><figcaption className="text-xs text-muted-foreground">{i.label}</figcaption></figure>
+            <figure key={i.label} className="space-y-1"><img src={i.url} alt={i.label} referrerPolicy="no-referrer" className="h-52 w-full rounded-md border object-contain" /><figcaption className="text-xs text-muted-foreground">{i.label}</figcaption></figure>
           ))}</div>
         )}
       </Card>
@@ -73,9 +76,9 @@ export function KycReviewPanel({ rd, checkId }: { rd: ReviewDetails; checkId: st
         </Card>}
         {(rd.liveness || rd.faceMatch) && <Card title="Liveness & face match" s={[rd.liveness?.status, rd.faceMatch?.status].includes("fail") ? "fail" : [rd.liveness?.status, rd.faceMatch?.status].every((x) => x === "pass") ? "pass" : "review"}>
           <Grid>
-            <Row k="Liveness" v={rd.liveness ? `${rd.liveness.raw ?? "—"}${rd.liveness.score != null ? ` · ${rd.liveness.score}%` : ""}` : "Not done"} />
+            <Row k="Liveness" v={rd.liveness ? `${rd.liveness.raw ?? "Not recorded"}${rd.liveness.score != null ? ` · ${rd.liveness.score}%` : ""}` : "Not done"} />
             <Row k="Method" v={rd.liveness?.method?.toLowerCase()} />
-            <Row k="Face match" v={rd.faceMatch ? `${rd.faceMatch.raw ?? "—"}${rd.faceMatch.score != null ? ` · ${rd.faceMatch.score}%` : ""}` : "Not done"} />
+            <Row k="Face match" v={rd.faceMatch ? `${rd.faceMatch.raw ?? "Not recorded"}${rd.faceMatch.score != null ? ` · ${rd.faceMatch.score}%` : ""}` : "Not done"} />
             <Row k="Estimated age" v={rd.liveness?.ageEstimate != null ? Math.round(rd.liveness.ageEstimate) : null} />
           </Grid>
         </Card>}
