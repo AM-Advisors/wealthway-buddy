@@ -121,6 +121,7 @@ export function MigratedBillingPanel({ fundId }: { fundId: string }) {
             {d.invoices.map((i: any) => (
               <li key={i.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
                 <span>{i.number ?? "Draft"} · {usd(Number(i.total_cents))} · {i.issue_date ?? "-"}</span>
+                {i.note ? <span className="w-full text-xs text-muted-foreground">{i.note}</span> : null}
                 <span className="flex flex-wrap items-center gap-2">
                   <Badge variant={i.paid_on ? "default" : "outline"}>{i.paid_on ? `Paid ${i.paid_on}` : i.status}</Badge>
                   {i.status === "issued" && (<>

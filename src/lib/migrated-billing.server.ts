@@ -71,8 +71,8 @@ export async function recordInvoice(userId: string, d: { fundId: string; lines: 
     issued_at: new Date(d.issueDate + "T12:00:00Z").toISOString(), issued_by: userId, created_by: userId,
   }).select("id, number").single();
   if (error) { console.error("migrated invoice failed", error); throw new Error("Couldn't save the invoice."); }
-  const { error: le } = await db.from("invoice_lines").insert(d.lines.map((l, i) => ({ invoice_id: inv.id, offering_id: f.id, source: "manual", label: l.label, quantity: 1, unit_cents: l.amountCents, amount_cents: l.amountCents, sort_order: i, source_ref: "migration" })));
-  if (le) console.error("migrated invoice lines failed", le);
+  const { error: le } = await db.from("invoice_lines").insert(d.lines.map((l, i) => ({ invoice_id: inv.id, offering_id: f.id, source: "manual", label: l.label, quantity: 1, unit_cents: l.amountCents, amount_cents: l.amountCents, sort_order: i, source_ref: `migration:${inv.id}:${i}` })));
+  if (le) { console.error("migrated invoice lines failed", le); throw new Error("Couldn't save the invoice items."); }
   await log(db, inv.id, f.client_id, userId, "invoice_recorded", { number, total_cents: total, issue_date: d.issueDate, paid_on: d.paidOn ?? null });
   return { id: inv.id as string, number: inv.number as string };
 }
