@@ -2,7 +2,7 @@
 
 ## Clickable account identity review (2026-10-24)
 - [x] Open exact-check detailed evidence from the account identity queue using the shared review panel, recorded warnings, on-demand photos and existing decisions/match clearances; no authority or verification changes.
-- [ ] Focused checks and fictional UI walkthrough.
+- [x] 47 existing identity/match checks passed; fictional click-through verified exact-check details, expected-name comparison, masked ID, breach details, photo control, absent evidence and clean session switching on desktop/compact screens without runtime errors; preview build OK.
 - [ ] Authenticated evidence/photo/decision read-back, blocked on independently isolated synthetic QA; no real decisions or test emails.
 
 ## Enhanced public security page (2026-10-23)
