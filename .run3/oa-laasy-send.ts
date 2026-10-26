@@ -81,7 +81,8 @@ await d.from("fund_files").update({ status: "out_for_signature" }).eq("id", f.id
 const sig = (rows as any[])[0];
 const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
 const { secondaryCcFor } = await import("@/lib/person-emails.server");
-const { TEAM_EMAIL, SITE } = await import("@/lib/email-templates/send-email").then((m) => ({ TEAM_EMAIL: (m as any).TEAM_EMAIL, SITE: (m as any).SITE })).catch(() => ({ TEAM_EMAIL: undefined, SITE: undefined }));
+const SITE = "https://app.harmonious.co";
+const TEAM_EMAIL = "operations@harmonious.co";
 const secondary = await secondaryCcFor(sig.signer_email);
 const r = await sendTemplateEmail("manager-alert", sig.signer_email, {
   idempotencyKey: `fund-file-sign:${sig.id}`,
