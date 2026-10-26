@@ -1,8 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { billingDate, invoiceDueState, invoiceSourceMatches, invoiceSowMatches } from "./client-billing-links";
+import { billingDate, invoiceDueState, invoiceSourceMatches, invoiceSowMatches, acceptanceInvoiceMatches } from "./client-billing-links";
 const invoice = { client_id: "client", sales_quote_id: "quote", acceptance_key: "quote:quote:2", sow_id: "sow" };
 const quote = { id: "quote", client_id: "client", version: 2, status: "signed" };
 describe("invoice document relationships", () => {
+  it("public acceptance shows only the exact client and acceptance-version invoice", () => {
+    expect(acceptanceInvoiceMatches(invoice, "client", "quote:quote:2")).toBe(true);
+    expect(acceptanceInvoiceMatches(invoice, "other", "quote:quote:2")).toBe(false);
+    expect(acceptanceInvoiceMatches(invoice, "client", "quote:quote:3")).toBe(false);
+    expect(acceptanceInvoiceMatches(null, "client", "quote:quote:2")).toBe(false);
+  });
   it("links only the exact invoice quote and accepted version", () => {
     expect(invoiceSourceMatches(invoice, quote)).toBe(true);
     expect(invoiceSourceMatches(invoice, { ...quote, version: 3 })).toBe(false);

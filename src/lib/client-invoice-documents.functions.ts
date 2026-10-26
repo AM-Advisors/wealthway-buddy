@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/lib/require-auth";
-import { invoiceSourceMatches } from "./client-billing-links";
+import { invoiceSourceMatches, invoiceSowMatches } from "./client-billing-links";
 
 /** RLS-entitled invoice is the boundary; only its same-client original document is projected. */
 export const getInvoiceOriginalQuote = createServerFn({ method: "GET" })
@@ -32,13 +32,16 @@ export const getInvoiceOriginalQuote = createServerFn({ method: "GET" })
     if (linesError) throw new Error("The recorded invoice pricing could not be loaded.");
     if (!inv.sales_document_id) {
       const { data: client } = await db.from("clients").select("name, legal_name").eq("id", inv.client_id).maybeSingle();
+      const { data: quoteLines, error: quoteLinesError } = await db.from("sales_quote_lines").select("label, quantity, unit_cents, billing_frequency, service_details").eq("quote_id", quote.id).order("sort_order");
+      if (quoteLinesError) throw new Error("The original quote terms could not be loaded.");
       const { quoteClientSections, quoteLockFacts, sanitizeQuoteSections } = await import("./quote-sections-model");
       const facts = quoteLockFacts({ organization: client?.legal_name ?? client?.name ?? null, contactName: null,
-        lines: (lines ?? []).map((l: any) => ({ label: l.label, quantity: Number(l.quantity), unitCents: Number(l.unit_cents) })) });
+        lines: (quoteLines ?? []).map((l: any) => ({ label: l.label, quantity: Number(l.quantity), unitCents: Number(l.unit_cents), billingFrequency: l.billing_frequency, details: l.service_details })) });
       // The quote's client-visible sections only; no CRM notes, approvals or staff messages.
       sections = quoteClientSections(sanitizeQuoteSections(quote.sections).filter(s => !["notes", "about"].includes(s.key)), facts, null, null);
     }
     // Recorded invoice lines are the frozen billed terms, never today's rate card.
     const [invoice] = await (await import("./invoice-balance.server")).withInvoiceBalances([inv]);
-    return { invoice, title: String(title), version: Number(version), validUntil: quote.valid_until as string | null, sections, lines: (lines ?? []) as { label: string; quantity: number; unit_cents: number; amount_cents: number }[] };
+    const { data: sow } = inv.sow_id ? await context.supabase.from("client_sows").select("id, client_id, status").eq("id", inv.sow_id).maybeSingle() : { data: null };
+    return { invoice, sowId: sow && invoiceSowMatches(inv, sow) ? sow.id : null, title: String(title), version: Number(version), validUntil: quote.valid_until as string | null, sections, lines: (lines ?? []) as { label: string; quantity: number; unit_cents: number; amount_cents: number }[] };
   });

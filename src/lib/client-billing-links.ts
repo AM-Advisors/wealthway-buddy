@@ -10,6 +10,9 @@ export function invoiceSourceMatches(invoice: { client_id: string; sales_quote_i
 export function invoiceSowMatches(invoice: { client_id: string; sow_id?: string | null }, sow: { id: string; client_id: string | null; status: string }) {
   return invoice.sow_id === sow.id && invoice.client_id === sow.client_id && sow.status !== "draft";
 }
+export function acceptanceInvoiceMatches(invoice: { client_id: string; acceptance_key: string | null } | null, clientId: string | null, key: string) {
+  return !!invoice && !!clientId && invoice.client_id === clientId && invoice.acceptance_key === key;
+}
 export function billingDate(date: string | null | undefined) {
   if (!date || !periodKey(date, "monthly")) return "Not set";
   return new Date(`${date.slice(0, 10)}T00:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });

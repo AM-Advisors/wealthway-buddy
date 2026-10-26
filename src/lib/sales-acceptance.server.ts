@@ -179,8 +179,8 @@ export async function viewForToken(token: string) {
   const { data: client } = r.clientId ? await db.from("clients").select("name, legal_name").eq("id", r.clientId).maybeSingle() : { data: null };
   const { data: recordedInvoice, error: invoiceError } = acc?.invoice_id ? await db.from("invoices").select("id, client_id, acceptance_key, number, total_cents, due_date, status, paid_on").eq("id", acc.invoice_id).maybeSingle() : { data: null, error: null };
   if (invoiceError) throw new Error("The invoice could not be loaded. Please try again.");
-  const invoiceMatches = recordedInvoice && recordedInvoice.client_id === r.clientId && recordedInvoice.acceptance_key === acceptanceKey(t.kind, t.id, t.version);
-  const [inv] = invoiceMatches ? await (await import("./invoice-balance.server")).withInvoiceBalances([recordedInvoice]) : [];
+  const { acceptanceInvoiceMatches } = await import("./client-billing-links");
+  const [inv] = recordedInvoice && acceptanceInvoiceMatches(recordedInvoice, r.clientId, acceptanceKey(t.kind, t.id, t.version)) ? await (await import("./invoice-balance.server")).withInvoiceBalances([recordedInvoice]) : [];
   const lines = invoiceLinesFromQuote(r.lines);
   const { responseProjection } = await import("./sales-response-model");
   const { readResponseEvents } = await import("./sales-response.server");

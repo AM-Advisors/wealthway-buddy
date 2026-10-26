@@ -24,7 +24,10 @@ function InvoiceQuotePage() {
   const { data } = useSuspenseQuery(originalQuote(invoiceId));
   const money = (n: number) => (n / 100).toLocaleString("en-US", { style: "currency", currency: "USD" });
   return <main className="mx-auto max-w-3xl space-y-6 py-6">
-    <Button asChild size="sm" variant="outline"><Link to="/client/invoices" search={{ invoice: invoiceId }}>Back to invoice {data.invoice?.number}</Link></Button>
+    <div className="flex flex-wrap gap-2">
+      <Button asChild size="sm" variant="outline"><Link to="/client/invoices" search={{ invoice: invoiceId }}>Back to invoice {data.invoice?.number}</Link></Button>
+      {data.sowId && <Button asChild size="sm" variant="outline"><Link to="/client/agreements/sow/$sowId" params={{ sowId: data.sowId }}>View SOW</Link></Button>}
+    </div>
     <header><p className="text-xs text-muted-foreground">Original commercial document · version {data.version}</p><h1 className="mt-1 text-2xl">{data.title}</h1><p className="mt-2 text-sm text-muted-foreground">Quote valid until: {billingDate(data.validUntil)}</p></header>
     {data.invoice && <InvoiceDueDate invoice={data.invoice} />}
     {data.sections.map((s, i) => <section key={i} className="border-t pt-4"><h2 className="text-base font-semibold">{s.title}</h2><p className="mt-2 whitespace-pre-wrap break-words text-sm">{s.body}</p></section>)}
