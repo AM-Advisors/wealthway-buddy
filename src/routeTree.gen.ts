@@ -31,6 +31,7 @@ import { Route as PlaidOauthRouteImport } from './routes/plaid-oauth'
 import { Route as PlatformRouteImport } from './routes/platform'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as QaSandboxRouteImport } from './routes/qa-sandbox'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SpvRouteImport } from './routes/spv'
@@ -590,6 +591,11 @@ const PricingRoute = PricingRouteImport.update({
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const QaSandboxRoute = QaSandboxRouteImport.update({
+  id: '/qa-sandbox',
+  path: '/qa-sandbox',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -3206,6 +3212,7 @@ export interface FileRoutesByFullPath {
   '/platform': typeof PlatformRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
+  '/qa-sandbox': typeof QaSandboxRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/spv': typeof SpvRoute
@@ -3678,6 +3685,7 @@ export interface FileRoutesByTo {
   '/platform': typeof PlatformRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
+  '/qa-sandbox': typeof QaSandboxRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/spv': typeof SpvRoute
@@ -4148,6 +4156,7 @@ export interface FileRoutesById {
   '/platform': typeof PlatformRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
+  '/qa-sandbox': typeof QaSandboxRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/spv': typeof SpvRoute
@@ -4624,6 +4633,7 @@ export interface FileRouteTypes {
     | '/platform'
     | '/pricing'
     | '/privacy'
+    | '/qa-sandbox'
     | '/reset-password'
     | '/sitemap.xml'
     | '/spv'
@@ -5096,6 +5106,7 @@ export interface FileRouteTypes {
     | '/platform'
     | '/pricing'
     | '/privacy'
+    | '/qa-sandbox'
     | '/reset-password'
     | '/sitemap.xml'
     | '/spv'
@@ -5565,6 +5576,7 @@ export interface FileRouteTypes {
     | '/platform'
     | '/pricing'
     | '/privacy'
+    | '/qa-sandbox'
     | '/reset-password'
     | '/sitemap.xml'
     | '/spv'
@@ -6041,6 +6053,7 @@ export interface RootRouteChildren {
   PlatformRoute: typeof PlatformRoute
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
+  QaSandboxRoute: typeof QaSandboxRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SpvRoute: typeof SpvRoute
@@ -6257,6 +6270,13 @@ declare module '@tanstack/react-router' {
       path: '/privacy'
       fullPath: '/privacy'
       preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/qa-sandbox': {
+      id: '/qa-sandbox'
+      path: '/qa-sandbox'
+      fullPath: '/qa-sandbox'
+      preLoaderRoute: typeof QaSandboxRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -10461,6 +10481,7 @@ const rootRouteChildren: RootRouteChildren = {
   PlatformRoute: PlatformRoute,
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
+  QaSandboxRoute: QaSandboxRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   SpvRoute: SpvRoute,
