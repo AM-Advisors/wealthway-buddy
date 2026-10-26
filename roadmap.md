@@ -1,7 +1,7 @@
 # Roadmap
 
 ## Corps LaaSy subscription agreement and PPM (2026-10-26)
-- [ ] Add the two approved SPV templates through the authorized staff generation engine and verify stored copies; leave unresolved fund fields open and preserve the Operating Agreement and all signatures.
+- [x] Added both approved SPV templates through authorized staff generation and read back stored Word copies with Corps LaaSy's name and canonical terms. Subscription v2 removes two inherited red font settings without changing wording and retains investor-first signing configuration. PPM v1 and subscription v2 remain inactive review drafts; Operating Agreement v2 and all signature/history records unchanged. No email sent.
 - [ ] Final readiness requires confirmation of the manager address and arbitration city; investor signature/date fields remain for the actual signing ceremony. No automatic sending or activation with open fields.
 
 ## Clickable account identity review (2026-10-24)
