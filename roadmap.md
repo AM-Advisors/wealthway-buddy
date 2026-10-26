@@ -1,5 +1,10 @@
 # Roadmap
 
+## ROAS billing frequency and invoice views (2026-10-26)
+- [ ] Add consistent monthly, quarterly, and annual proposed service billing choices, preserving negotiated annual value and existing approval/signing gates; ROAS White Glove is $4,000/$12,000/$48,000 respectively.
+- [ ] Check monthly, quarterly, and annual invoice balance reporting independently of billing terms; retain issued invoices and receipt history.
+- [ ] Run focused offline rule tests and check preview errors. Authenticated save/read-back requires independently isolated synthetic QA.
+
 ## ROAS partial payments and White Glove (2026-10-26)
 - [x] Client invoices/downloads show paid and remaining; outstanding total and dashboard due amounts use remaining balances. Authorized readers project receipt snapshots only; issued amounts/notes unchanged. Partial-payment card checkout blocked to prevent full-amount double collection.
 - [x] Recorded the previously confirmed $11,500 INV-5 receipt as an append-only structured total; read back $19,000 original, $11,500 paid, $7,500 remaining. No paid status, invoice, commission or money movement triggered.
