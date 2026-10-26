@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BankAlertsPanel, CloseSheetsPanel, GeneralLedgerPanel, QuickBooksPanel } from "@/components/accounting-phase5";
+import { InvoiceFeeAccounting } from "@/components/invoice-fee-accounting";
 import { TRANSACTION_TYPE_LABELS, type CashTransactionType } from "@/lib/reconciliation-model";
 import {
   advanceJournalForItem,
@@ -158,6 +159,7 @@ function AccountingOperations() {
           <TabsTrigger value="exceptions">Exceptions</TabsTrigger>
           <TabsTrigger value="rules">Accounting mappings</TabsTrigger>
           <TabsTrigger value="ledger">General ledger</TabsTrigger>
+          <TabsTrigger value="fees">Invoice fees</TabsTrigger>
           <TabsTrigger value="qbo">QuickBooks</TabsTrigger>
           <TabsTrigger value="alerts">Bank alerts</TabsTrigger>
           <TabsTrigger value="close">Close sheets</TabsTrigger>

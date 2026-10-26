@@ -7,6 +7,7 @@ import { ActivityPanel } from "@/components/activity-panel";
 import { InvoiceEmailStatus } from "@/components/invoice-email-status";
 import { PaymentPlanner } from "@/components/payment-planner";
 import { InvoicePeriodSummary } from "@/components/invoice-period-summary";
+import { InvoiceFeeAccounting } from "@/components/invoice-fee-accounting";
 import { invoiceBalance } from "@/lib/invoice-balance";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -562,6 +563,7 @@ export function InvoicesBoard() {
                       ))}
                     </ul>
                     {inv.note ? <p className="text-sm text-muted-foreground">{inv.note}</p> : null}
+                    {["issued", "paid"].includes(inv.status) ? <InvoiceFeeAccounting invoiceId={inv.id} canManage={canManage} /> : null}
 
                     {canManage && inv.status === "draft" ? (
                       <div className="space-y-2">
