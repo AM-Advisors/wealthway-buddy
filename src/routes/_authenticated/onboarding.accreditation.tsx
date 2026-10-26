@@ -20,6 +20,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { OnboardingStepper } from "@/components/OnboardingStepper";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { EVIDENCE_OPTIONS, optionFor } from "@/lib/accreditation-evidence-options";
+import { ProfessionalRequestPanel } from "@/components/accreditation-professional-request";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
