@@ -15,7 +15,7 @@ import {
   canManageFundRecords, sanitizePatch, sourceFor, rankMatches, validateQuickAdd, isProfileType,
   dbProfileType, formProfileType, profileLabelFor, recordStatus, RECORD_STATUS_LABELS, claimState, CLAIM_STATE_LABELS, sameValue, isMaterial,
   parseCsv, classifyBulk, bulkSummary, committable, parseAmountCents, activityFor, removalBlocker, normEmail,
-  planIncoming, PROFILE_TYPE_LABELS, planClaim,
+  planIncoming, PROFILE_TYPE_LABELS, planClaim, validPaperworkContact, profileNameMismatch, type PaperworkContactInput,
 } from "@/lib/investor-record-model";
 import { personCreationBlocker } from "@/lib/person-resolution";
 import { findPersonCandidates, resolvePersonServer, withPersonCreationLock } from "@/lib/person-resolution.server";
@@ -138,6 +138,10 @@ export async function createInvestor(userId: string, input: {
   allowPreLaunch?: boolean;
   /** Optional 9-digit SSN/ITIN/EIN; encrypted, only last 4 kept in plain. */
   taxId?: string | null;
+  /** Spouse/assistant/advisor who completes the paperwork: the invitation goes to them, the investor stays the party. */
+  contact?: PaperworkContactInput | null;
+  /** Required to save when a chosen individual profile carries a different first name than the investor. */
+  confirmedProfileMismatch?: boolean;
 }) {
   const actor = await fundActor(userId, input.offeringId);
   if (input.taxId && !/^\d{9}$/.test(input.taxId)) fail("The SSN / Tax ID must be 9 digits.");
