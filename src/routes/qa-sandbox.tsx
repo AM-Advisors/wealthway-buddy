@@ -80,7 +80,9 @@ function QaSandboxPage() {
 }
 
 function SandboxShell({ children }: { children: React.ReactNode }) {
-  const { role, setRole } = useQa();
+  const { state, role, setRole } = useQa();
+  // Update the mock state synchronously so remounted queries see the new role.
+  const pick = (r: QaRole) => { state.role = r; setRole(r); };
   return (
     <div className="min-h-screen bg-background">
       <div className="border-b bg-muted/60 px-4 py-3">
@@ -91,8 +93,8 @@ function SandboxShell({ children }: { children: React.ReactNode }) {
           </div>
           <div className="flex items-center gap-1" role="group" aria-label="View as">
             <span className="mr-1 text-xs text-muted-foreground">View as</span>
-            <Button size="sm" variant={role === "staff" ? "default" : "outline"} onClick={() => setRole("staff")}>Harmonious staff</Button>
-            <Button size="sm" variant={role === "manager" ? "default" : "outline"} onClick={() => setRole("manager")}>Fund manager</Button>
+            <Button size="sm" variant={role === "staff" ? "default" : "outline"} onClick={() => pick("staff")}>Harmonious staff</Button>
+            <Button size="sm" variant={role === "manager" ? "default" : "outline"} onClick={() => pick("manager")}>Fund manager</Button>
           </div>
         </div>
       </div>
