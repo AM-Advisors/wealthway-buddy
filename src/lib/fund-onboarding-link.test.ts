@@ -93,7 +93,7 @@ describe("link management authorization", () => {
     expect(url).toMatch(/\/join\/[A-Za-z0-9_-]{43}$/);
     expect(await s.ensureFundLaunchLink(MGR_A, FUND_A)).toBe(url);
     expect(tables["fund_onboarding_links"]).toHaveLength(1);
-    expect(tables["fund_onboarding_links"]?.[0]?.offering_id).toBe(FUND_A);
+    expect(tables["fund_onboarding_links"]?.[0]?.["offering_id"]).toBe(FUND_A);
     expect((await s.getFundLink(MGR_A, FUND_A)).url).toBe(url);
   });
   it("launch preserves an explicitly disabled link rather than re-enabling it", async () => {
@@ -102,7 +102,7 @@ describe("link management authorization", () => {
     await s.setFundLinkEnabled(STAFF, FUND_A, false);
     await expect(s.ensureFundLaunchLink(STAFF, FUND_A)).rejects.toThrow(/disabled/);
     expect(tables["fund_onboarding_links"]).toHaveLength(1);
-    expect(tables["fund_onboarding_links"]?.[0]?.status).toBe("disabled");
+    expect(tables["fund_onboarding_links"]?.[0]?.["status"]).toBe("disabled");
   });
   it("launch-link creation retains exact-fund authorization and readiness", async () => {
     const s = await srv();
