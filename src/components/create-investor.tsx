@@ -50,9 +50,10 @@ export function CreateInvestor({ fundId, isStaff, onDone }: { fundId: string; is
   const save = async (continueToRecord: boolean) => {
     const amountCents = cents(f['amount']) ?? 0;
     if (!chosen) {
-      const errs = validateQuickAdd({ firstName: f['firstName'], lastName: f['lastName'], email: f['email'], profileType: f['profileType'], amountCents });
+      const errs = validateQuickAdd({ firstName: f['firstName'], lastName: f['lastName'], email: f['email'] || (contactOn ? f['contactEmail'] : ""), profileType: f['profileType'], amountCents });
       if (errs.length) return void toast.error(errs[0]);
     } else if (!(amountCents > 0)) return void toast.error("Enter the investment amount.");
+    if (mismatchPrompt && !mismatchConfirmed) return void toast.error("Confirm who is investing before saving.");
     setBusy(true);
     try {
       const details: Record<string, string> = {};
@@ -73,6 +74,8 @@ export function CreateInvestor({ fundId, isStaff, onDone }: { fundId: string; is
           sourceReferral: f['referral'] || null, managerNotes: f['managerNotes'] || null, internalNotes: isStaff ? f['internalNotes'] || null : null,
         },
         related: related.filter((r) => r.firstName && r.lastName).map((r) => ({ ...r, email: r.email || null, ownershipPercent: r.ownershipPercent ? Number(r.ownershipPercent) : null })),
+        contact: contactOn ? { firstName: f['contactFirstName'], lastName: f['contactLastName'], email: f['contactEmail'], relationship: f['contactRelationship'] } : null,
+        confirmedProfileMismatch: mismatchConfirmed,
       } });
       if (r.emailSent === false) toast.warning("Investor added, but the invitation was not sent. Open their record to check and resend the invitation.");
       else toast.success(r.emailSent ? "Investor added and invitation sent." : "Investor added: Incomplete, additional information required.");
@@ -80,7 +83,11 @@ export function CreateInvestor({ fundId, isStaff, onDone }: { fundId: string; is
       qc.invalidateQueries({ queryKey: ["fund-readiness", fundId] });
       onDone?.();
       if (continueToRecord) navigate({ to: recordTo, params: { fundId, onboardingId: r.onboardingId } });
-    } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
+    } catch (e) {
+      const msg = (e as Error).message;
+      if (msg.includes("Confirm who is investing")) { setMismatchPrompt(msg); setMismatchConfirmed(false); }
+      else toast.error(msg);
+    } finally { setBusy(false); }
   };
 
   const field = (k: string, label: string, props: Record<string, unknown> = {}) => (
