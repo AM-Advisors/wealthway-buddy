@@ -392,3 +392,10 @@ export async function generateFundTypeDocuments(userId: string, offeringId: stri
   }
   return { made };
 }
+
+/** US numbers read as +1 214-728-6100; anything else stays as recorded. */
+function formatPhone(p: string) {
+  const d = p.replace(/\D/g, "");
+  const n = d.length === 11 && d.startsWith("1") ? d.slice(1) : d;
+  return n.length === 10 ? `+1 ${n.slice(0, 3)}-${n.slice(3, 6)}-${n.slice(6)}` : p;
+}
