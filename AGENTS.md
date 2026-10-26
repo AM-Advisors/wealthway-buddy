@@ -53,7 +53,7 @@
 - Operating forecasts use operating-forecast-model.ts through the shared ForecastInput validator/calculator; monthly integer-cent projections roll up into calendar quarters and remain distinct from fund capital flows — why: one preview/save engine, reconciled totals and no invented operating revenue from capital raised.
 - Fund cash-flow forms/results use fund-cash-flow-model.ts through ForecastInput; growth affects opening NAV only, realized proceeds affect cash only, and negative cash shows a shortfall — why: live summaries and saved projections agree without equating NAV to available cash.
 
-- Billing uses signed-SOW frequencies, never money. Models: service-billing-cadence.ts, invoice-period-totals.ts, client-billing-links.ts. See src/lib/AGENTS.md. Why: accurate dates, retained history.
+- Billing cadence, invoice links and fee ownership rules: src/lib/AGENTS.md. Why: recorded terms and fee review, never automatic money or posting.
 
 - Commission basis is gross profit from append-only cost entries/settings; expected signed-SOW rows are computed projections, never payable; existing queue/payout amounts remain historical.
 - Bookkeeping uses the shared quote engine with recorded proposed configurations and frozen line snapshots; database gates keep these draft-only until a separately approved release — why: staged pricing must never reach live signing, billing or enrollment.
