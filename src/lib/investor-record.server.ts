@@ -259,7 +259,7 @@ export async function createInvestor(userId: string, input: {
     const { error: linkErr } = await db().from("investor_onboardings").update({ invitation_id: cInv.id }).eq("id", onboardingId);
     if (linkErr) fail(linkErr.message);
     const { addRelatedPerson } = await import("@/lib/related-person.server");
-    await addRelatedPerson({ profileId: profileId!, offeringId: input.offeringId, firstName: input.contact.firstName!.trim(), lastName: input.contact.lastName!.trim(), email: input.contact.email, role: "paperwork_contact", isSigner: false, actorUserId: actor.userId, entrySource: source });
+    await addRelatedPerson({ profileId: profileId!, offeringId: input.offeringId, firstName: input.contact.firstName!.trim(), lastName: input.contact.lastName!.trim(), email: input.contact.email ?? null, role: "paperwork_contact", isSigner: false, actorUserId: actor.userId, entrySource: source });
     changes.push({ offeringId: input.offeringId, onboardingId, table: "fund_invitations", id: cInv.id, field: "paperwork_contact", from: null, to: { email: normEmail(input.contact.email!), relationship: input.contact.relationship }, source, actor: actor.userId });
   }
 
