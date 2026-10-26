@@ -3,7 +3,8 @@
 ## Corps LaaSy subscription agreement and PPM (2026-10-26)
 - [x] Added both approved SPV templates through authorized staff generation and read back stored Word copies with Corps LaaSy's name and canonical terms. Subscription v2 removes two inherited red font settings without changing wording and retains investor-first signing configuration. PPM v1 and subscription v2 remain inactive review drafts; Operating Agreement v2 and all signature/history records unchanged. No email sent.
 - [x] Arbitration recorded on the fund as Dallas, Texas (2026-10-26).
-- [ ] Final readiness requires confirmation of the manager address, then regenerate drafts; investor signature/date fields remain for the actual signing ceremony. No automatic sending or activation with open fields.
+- [x] Address confirmed (Corps only); regenerated inactive drafts PPM v2 and subscription v3 with Southlake address and Dallas arbitration, black text, nothing sent or activated.
+- [ ] PPM contact phone and email are blank, waiting on the user to supply them.
 
 ## Clickable account identity review (2026-10-24)
 - [x] Open exact-check detailed evidence from the account identity queue using the shared review panel, recorded warnings, on-demand photos and existing decisions/match clearances; no authority or verification changes.
