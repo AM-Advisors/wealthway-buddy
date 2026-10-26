@@ -349,7 +349,7 @@ function Verify({ d, onboardingId }: { d: any; onboardingId: string }) {
     mutationFn: () => startFn({ data: { onboardingId } }),
     onSuccess: (r: any) => {
       if (r?.url) window.location.assign(r.url);
-      else if (r?.completed) { toast.success("Your earlier verification was reused, this step is complete."); void qc.invalidateQueries(); }
+      else if (r?.completed) { toast.success("Your earlier identity check was reused."); void qc.invalidateQueries(); }
     },
     onError: (e: any) => toast.error(String(e?.message ?? e).replace(/^Forbidden:\s*/, "")),
   });
