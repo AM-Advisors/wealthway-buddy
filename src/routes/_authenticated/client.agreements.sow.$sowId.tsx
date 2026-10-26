@@ -22,8 +22,16 @@ import {
 } from "@/lib/agreements.functions";
 import { getAgreementDocument } from "@/lib/agreements-admin.functions";
 import { SOW_ROLE_DISCLAIMER } from "@/lib/agreement-templates";
+import { InvoiceDueDate } from "@/components/invoice-due-date";
 
 export const Route = createFileRoute("/_authenticated/client/agreements/sow/$sowId")({
+  head: () => ({ meta: [
+    { title: "Statement of Work and invoices | Harmonious" },
+    { name: "description", content: "Review your Harmonious Statement of Work, linked invoices and recorded payment due dates." },
+    { property: "og:title", content: "Statement of Work and invoices | Harmonious" },
+    { property: "og:description", content: "Your agreement, pricing, signatures and related invoice balances." },
+    { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
+  ] }),
   component: SowWorkspacePage,
 });
 
@@ -48,7 +56,7 @@ function SowWorkspacePage() {
   const document$ = useServerFn(getAgreementDocument);
   const queryClient = useQueryClient();
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: ["sow-workspace", sowId],
     queryFn: () => load({ data: { sowId } }),
   });
@@ -110,6 +118,7 @@ function SowWorkspacePage() {
     setTimeout(() => URL.revokeObjectURL(url), 8000);
   };
 
+  if (error) return <p role="alert" className="text-sm text-destructive">{error.message}</p>;
   if (isLoading || !data) return <Skeleton className="h-64 w-full" />;
 
   const executed = Boolean(data.sow.executedAt);
@@ -161,6 +170,16 @@ function SowWorkspacePage() {
           </Button>
         </div>
       </div>
+
+      <section className="space-y-3 border-y py-4" aria-label="Related invoices">
+        <h2 className="text-base font-semibold">Related invoices</h2>
+        {data.invoices.length ? data.invoices.map(inv => <div key={inv.id} className="space-y-2 border-t pt-3">
+          <div className="flex flex-wrap items-center justify-between gap-3"><strong className="text-sm">{inv.number ?? "Invoice"}</strong><Badge variant="outline">{inv.partially_paid ? "Partially paid" : inv.status === "paid" ? "Paid" : inv.status === "void" ? "Cancelled" : "Awaiting payment"}</Badge></div>
+          <InvoiceDueDate invoice={inv} />
+          <p className="text-sm">Paid: {money(inv.recorded_paid_cents)} · Remaining: {money(inv.remaining_cents)}</p>
+          <Button asChild size="sm" variant="outline"><Link to="/client/invoices" search={{ invoice: inv.id }}>{inv.status === "paid" || inv.status === "void" ? "View invoice" : "View and pay invoice"}</Link></Button>
+        </div>) : <p className="text-sm text-muted-foreground">No issued invoices are linked to this agreement.</p>}
+      </section>
 
       {executed && (
         <Card>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -17,8 +17,10 @@ import { PaymentPlanner } from "@/components/payment-planner";
 import { declareInvoicePayment, listMyInvoices, respondToInvoice } from "@/lib/invoices.functions";
 import { invoiceBalance } from "@/lib/invoice-balance";
 import { InvoicePeriodSummary } from "@/components/invoice-period-summary";
+import { InvoiceDueDate } from "@/components/invoice-due-date";
 
 export const Route = createFileRoute("/_authenticated/client/invoices")({
+  validateSearch: (s: Record<string, unknown>) => ({ invoice: typeof s.invoice === "string" ? s.invoice : undefined }),
   head: () => ({
     meta: [
       { title: "Your invoices | Harmonious" },
@@ -64,6 +66,7 @@ function feeKind(line: any): string | null {
 }
 
 function ClientInvoicesPage() {
+  const { invoice: selectedInvoice } = Route.useSearch();
   const queryClient = useQueryClient();
   const load = useServerFn(listMyInvoices);
   const respond = useServerFn(respondToInvoice);
@@ -103,7 +106,8 @@ function ClientInvoicesPage() {
     onError: (e: any) => toast.error(e?.message ?? "That didn't save."),
   });
 
-  const invoices = (data?.invoices ?? []) as any[];
+  const invoices = [...(data?.invoices ?? [])] as any[];
+  if (selectedInvoice) invoices.sort((a, b) => Number(b.id === selectedInvoice) - Number(a.id === selectedInvoice));
   const open = invoices.filter((i) => i.status === "issued");
   const outstanding = open.reduce((sum, i) => sum + invoiceBalance(i).remainingCents, 0);
   const feeTotal = open.reduce(
@@ -173,7 +177,7 @@ function ClientInvoicesPage() {
             const state = payState(inv.id);
             const fees = (inv.lines ?? []).filter((l: any) => feeKind(l));
             return (
-              <Card key={inv.id}>
+              <Card key={inv.id} id={`invoice-${inv.id}`} className={selectedInvoice === inv.id ? "border-primary" : ""}>
                 <CardHeader>
                   <div className="flex flex-wrap items-center gap-2">
                     <CardTitle className="text-base">{inv.number ?? "Invoice"}</CardTitle>
@@ -199,6 +203,7 @@ function ClientInvoicesPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  <InvoiceDueDate invoice={inv} />
                   <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
                     <span>Invoice total: {money(Number(inv.total_cents))}</span>
                     <span>Paid: {money(invoiceBalance(inv).paidCents)}</span>
@@ -219,6 +224,8 @@ function ClientInvoicesPage() {
                   </ul>
 
                   <div className="flex flex-wrap gap-2">
+                    {inv.sales_quote_id && <Button asChild size="sm" variant="outline"><Link to="/client/invoices/$invoiceId/quote" params={{ invoiceId: inv.id }}>View original quote{inv.sales_document_id ? " / proposal" : ""}</Link></Button>}
+                    {inv.linked_sow_id && <Button asChild size="sm" variant="outline"><Link to="/client/agreements/sow/$sowId" params={{ sowId: inv.linked_sow_id }}>View SOW</Link></Button>}
                     <Button size="sm" variant="outline" onClick={() => void downloadInvoice(inv)}>
                       Download invoice
                     </Button>

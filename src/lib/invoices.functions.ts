@@ -784,11 +784,16 @@ export const listMyInvoices = createServerFn({ method: "GET" })
         .in("id", clientIds);
       clients = data ?? [];
     }
+    const sowIds = [...new Set((invoices ?? []).map(inv => inv.sow_id).filter((id): id is string => !!id))];
+    const { data: entitledSows, error: sowError } = sowIds.length ? await context.supabase.from("client_sows").select("id, client_id, status").in("id", sowIds) : { data: [], error: null };
+    if (sowError) throw new Error("Related agreements could not be loaded. Please try again.");
+    const { invoiceSowMatches } = await import("./client-billing-links");
     return {
       invoices: await (await import("@/lib/invoice-balance.server")).withInvoiceBalances((invoices ?? []).map((inv: any) => ({
         ...inv,
         overdue: inv.status === "issued" && !!inv.due_date && inv.due_date < today,
         client_name: clients.find((c) => c.id === inv.client_id)?.name ?? null,
+        linked_sow_id: entitledSows?.find(s => invoiceSowMatches(inv, s))?.id ?? null,
         lines: lines.filter((l) => l.invoice_id === inv.id),
       }))),
     };

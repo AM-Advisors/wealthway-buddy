@@ -725,8 +725,15 @@ export const getSowWorkspace = createServerFn({ method: "GET" })
       ((approvals ?? []) as any[]).map((a) => [a.section_id, a.status]),
     );
 
+    const { data: relatedInvoices, error: invoiceError } = await context.supabase.from("invoices")
+      .select("id, client_id, sow_id, number, status, total_cents, due_date, paid_on")
+      .eq("client_id", (sow as any).client_id).eq("sow_id", data.sowId).neq("status", "draft").order("due_date").limit(100);
+    if (invoiceError) throw new Error("Related invoices could not be loaded. Please try again.");
+    const invoiceBalances = await (await import("./invoice-balance.server")).withInvoiceBalances(relatedInvoices ?? []);
+
     return {
       access: { isStaff: who.isStaff, canManage: who.canManage },
+      invoices: invoiceBalances,
       sow: {
         id: (sow as any).id as string,
         clientId: (sow as any).client_id as string,
