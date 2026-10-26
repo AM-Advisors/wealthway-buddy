@@ -362,6 +362,7 @@ function AccountingOperations() {
           ))}
         </TabsContent>
         <TabsContent value="ledger" className="pt-4"><GeneralLedgerPanel /></TabsContent>
+        <TabsContent value="fees" className="pt-4"><InvoiceFeeAccounting canManage /></TabsContent>
         <TabsContent value="qbo" className="pt-4"><QuickBooksPanel /></TabsContent>
         <TabsContent value="alerts" className="pt-4"><BankAlertsPanel /></TabsContent>
         <TabsContent value="close" className="pt-4"><CloseSheetsPanel /></TabsContent>
