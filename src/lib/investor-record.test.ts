@@ -2,7 +2,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   activityFor, bulkSummary, classifyBulk, committable, createNewBlocker, dbProfileType, maskEmail, parseCsv, planIncoming,
-  profileNameMismatch, rankMatches, recordStatus, removalBlocker, sanitizePatch, validateQuickAdd, validPaperworkContact, type PersonCandidate,
+  isPaperworkContactRole, profileNameMismatch, rankMatches, recordStatus, removalBlocker, sanitizePatch, relatedRoleLabel, validateQuickAdd, validPaperworkContact, type PersonCandidate,
 } from "@/lib/investor-record-model";
 
 /* ---------------- in-memory fake of the service-role client ---------------- */
@@ -600,5 +600,15 @@ describe("validPaperworkContact", () => {
   it("treats an absent contact as nothing to validate", () => {
     expect(validPaperworkContact(null)).toEqual([]);
     expect(validPaperworkContact(undefined)).toEqual([]);
+  });
+});
+
+describe("paperwork contact role labels", () => {
+  it("renders the contact's relationship and never leaks into owner roles", () => {
+    expect(isPaperworkContactRole("paperwork_contact:spouse")).toBe(true);
+    expect(isPaperworkContactRole("beneficial_owner")).toBe(false);
+    expect(relatedRoleLabel("paperwork_contact:spouse")).toBe("Paperwork contact · Spouse");
+    expect(relatedRoleLabel("paperwork_contact")).toBe("Paperwork contact");
+    expect(relatedRoleLabel("beneficial_owner")).toBe("Beneficial owner");
   });
 });

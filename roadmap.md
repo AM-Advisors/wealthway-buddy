@@ -668,8 +668,10 @@
 - [ ] Capital: same committed/received/reconciled figures on both sides.
 
 ## Paperwork contact and legal-name catch (2026-10-26)
-- [x] Add investor now offers an optional paperwork contact (name, email, relationship: spouse/family/assistant/advisor/attorney/other). The invitation and reminders go to the contact; the investor's legal name stays on the agreements and the investor still signs. Contact is recorded as a related person (paperwork_contact) with safe-match review.
+- [x] Add investor now offers an optional paperwork contact (name, email, relationship: spouse/family/assistant/advisor/attorney/other). The invitation and reminders go to the contact; the investor's legal name stays on the agreements and the investor still signs. Contact is recorded as a related person (paperwork_contact:<relationship>) with safe-match review, shown in a read-only Paperwork contact block; wire reports carry an optional senderName so a wire from a spouse or entity matches the notice, never auto-marks funded.
 - [x] Choosing an existing individual/joint profile whose legal first name differs from the investor's blocks the save until the manager confirms who is investing (prefix-tolerant, so Kim matches Kimberly). Entity/trust/IRA profiles are never flagged.
 - [x] Sixty-two focused investor-record tests pass, including the Kimberly/Joe Girardi spouse case; typecheck clean.
 - [ ] Expected wire sender on the funding step (wire from a different name matches a recorded note, staff still review) and helper role labels on the investor record: not yet built.
 - [ ] Authenticated walkthrough of the new form, blocked on independently isolated synthetic QA sessions.
+- [x] Wire report form offers "Name on the sending account" so a wire from a spouse or company matches the notice; shown on the funding ledger and in the record history. Informational only, never marks funded.
+- [x] Investor record shows a Paperwork contact block with the helper's name and relationship, separate from owners and signers.
