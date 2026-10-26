@@ -6,7 +6,7 @@ import { writeFileSync } from "fs";
 const db = supabaseAdmin as any, A = "fcf83359-0486-402d-83b4-fd5484fb663d", F = "92252b98-c5d2-444a-8620-fb29436a87cf";
 const jobs = [
   { doc: "aee9a7c8-458e-4d22-9182-36a96929b9ef", tpl: "d0659664-98b3-4500-a161-0e2206b30ed8", key: "ppm" },
-  { doc: "7a6b7f9a-fe10-45b0-ae78-3bf1b28ee2c0", tpl: "b042bb64-12c3-4951-8af7-206b47fca361", key: "sub" },
+
 ];
 const values = await fundTemplateValues(F);
 for (const j of jobs) {
