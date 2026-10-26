@@ -444,6 +444,10 @@ export function determineOnboardingRequirements(input: DeterminationInput): Requ
       add("accreditation", "review_required", "This fund requires independent verification of your accreditation.");
     } else {
       add("accreditation", state);
+      // Submitted paperwork under review lets the investor keep going (sign); funding and admission stay gated.
+      const st = String(profile.accreditationStatus ?? "").toLowerCase();
+      const acc = out.find((r) => r.key === "accreditation");
+      if (acc && state === "review_required" && IN_REVIEW.has(st)) acc.signingAllowed = true;
     }
   }
 
@@ -519,7 +523,7 @@ export function outstandingRequirements(
 /** Explicit pending AML is the only signing exception; review/failure/missing screening stays blocked. */
 export function signingRequirementSatisfied(r: RequirementResult): boolean {
   return r.state === "valid" || r.state === "not_applicable"
-    || (r.key === "aml" && r.state === "review_required" && r.signingAllowed === true);
+    || ((r.key === "aml" || r.key === "accreditation") && r.state === "review_required" && r.signingAllowed === true);
 }
 
 export function verificationAllowsSigning(requirements: RequirementResult[]): boolean {
