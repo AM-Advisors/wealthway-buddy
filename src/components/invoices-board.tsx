@@ -563,7 +563,24 @@ export function InvoicesBoard() {
                       ))}
                     </ul>
                     {inv.note ? <p className="text-sm text-muted-foreground">{inv.note}</p> : null}
-                    {["issued", "paid"].includes(inv.status) ? <InvoiceFeeAccounting invoiceId={inv.id} canManage={canManage} /> : null}
+                    {["issued", "paid"].includes(inv.status) ? (
+                      <div className="space-y-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            const url = `${window.location.origin}/client/invoices?invoice=${inv.id}`;
+                            void navigator.clipboard?.writeText(url).then(
+                              () => toast.success("Client link copied. Send it to the fund manager and it opens this invoice directly."),
+                              () => toast.error(`Copy this link: ${url}`),
+                            );
+                          }}
+                        >
+                          Copy link for fund manager
+                        </Button>
+                        <InvoiceFeeAccounting invoiceId={inv.id} canManage={canManage} />
+                      </div>
+                    ) : null}
 
                     {canManage && inv.status === "draft" ? (
                       <div className="space-y-2">
