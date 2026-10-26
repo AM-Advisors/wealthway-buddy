@@ -107,10 +107,10 @@ export function ManagerFundInvestors({ fundId, extraTabs }: { fundId: string; ex
     <DropdownMenu>
       <DropdownMenuTrigger asChild><Button size="icon" variant="ghost" aria-label={`Actions for ${r.name}`}><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem asChild><Link to="/manager/fund/$fundId/investor/$onboardingId" params={{ fundId, onboardingId: r.onboardingId }}>Open investor</Link></DropdownMenuItem>
-        <DropdownMenuItem asChild><Link to="/manager/fund/$fundId/investor/$onboardingId" params={{ fundId, onboardingId: r.onboardingId }} search={{ tab: "profile" }}>{r.hasAccount && !isStaff ? "Suggest detail changes" : "Edit investor details"}</Link></DropdownMenuItem>
-        <DropdownMenuItem asChild><Link to="/manager/fund/$fundId/investor/$onboardingId" params={{ fundId, onboardingId: r.onboardingId }} search={{ tab: "investment" }}>Edit investment</Link></DropdownMenuItem>
-        <DropdownMenuItem asChild><Link to="/manager/fund/$fundId/investor/$onboardingId" params={{ fundId, onboardingId: r.onboardingId }} search={{ tab: "readiness" }}>View readiness</Link></DropdownMenuItem>
+        <DropdownMenuItem asChild><Link to={recordTo} params={{ fundId, onboardingId: r.onboardingId }}>Open investor</Link></DropdownMenuItem>
+        <DropdownMenuItem asChild><Link to={recordTo} params={{ fundId, onboardingId: r.onboardingId }} search={{ tab: "profile" }}>{r.hasAccount && !isStaff ? "Suggest detail changes" : "Edit investor details"}</Link></DropdownMenuItem>
+        <DropdownMenuItem asChild><Link to={recordTo} params={{ fundId, onboardingId: r.onboardingId }} search={{ tab: "investment" }}>Edit investment</Link></DropdownMenuItem>
+        <DropdownMenuItem asChild><Link to={recordTo} params={{ fundId, onboardingId: r.onboardingId }} search={{ tab: "readiness" }}>View readiness</Link></DropdownMenuItem>
         {isStaff && r.hasAccount ? <DropdownMenuItem asChild><Link to="/ops/readiness">View client perspective</Link></DropdownMenuItem> : null}
         <DropdownMenuSeparator />
         <DropdownMenuItem className="text-destructive" onClick={() => { if (window.confirm(`Remove ${r.name} from this Fund? Their person record, other Funds and history are kept.`)) run(() => remove({ data: { onboardingId: r.onboardingId } }), "Removed from Fund"); }}>Remove from Fund</DropdownMenuItem>
@@ -213,7 +213,7 @@ export function ManagerFundInvestors({ fundId, extraTabs }: { fundId: string; ex
             <ul className="divide-y rounded-md border">
               {shown.map((r) => { const s = oneStatus(r); return (
                 <li key={r.onboardingId} className="flex items-center gap-3 p-3 hover:bg-muted/30">
-                  <Link to="/manager/fund/$fundId/investor/$onboardingId" params={{ fundId, onboardingId: r.onboardingId }} className="grid min-w-0 flex-1 gap-1 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,2fr)] sm:items-center sm:gap-4">
+                  <Link to={recordTo} params={{ fundId, onboardingId: r.onboardingId }} className="grid min-w-0 flex-1 gap-1 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,2fr)] sm:items-center sm:gap-4">
                     <div className="min-w-0"><p className="truncate font-medium">{r.name}</p>
                       <p className="truncate text-xs text-muted-foreground">{r.profileLabel ?? r.profileType ?? "Profile needed"}{r.claimState === "prepared" ? " · Not signed in yet" : ""}</p></div>
                     <p className="text-sm">{money(r.amountCents)}</p>

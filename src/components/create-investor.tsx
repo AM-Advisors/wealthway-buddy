@@ -74,7 +74,7 @@ export function CreateInvestor({ fundId, isStaff, onDone }: { fundId: string; is
       qc.invalidateQueries({ queryKey: ["fund-investor-records", fundId] });
       qc.invalidateQueries({ queryKey: ["fund-readiness", fundId] });
       onDone?.();
-      if (continueToRecord) navigate({ to: "/manager/fund/$fundId/investor/$onboardingId", params: { fundId, onboardingId: r.onboardingId } });
+      if (continueToRecord) navigate({ to: recordTo, params: { fundId, onboardingId: r.onboardingId } });
     } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
   };
 

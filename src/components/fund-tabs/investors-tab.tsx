@@ -141,7 +141,7 @@ export function InvestorsTab({ fundId, workQueue }: { fundId: string; workQueue?
               </thead>
               <tbody>
                 {rows.map((r) => (
-                  <tr key={r.id} className="cursor-pointer border-t hover:bg-muted" onClick={() => navigate({ to: "/manager/fund/$fundId/investor/$onboardingId", params: { fundId, onboardingId: r.id } })}>
+                  <tr key={r.id} className="cursor-pointer border-t hover:bg-muted" onClick={() => navigate({ to: recordTo, params: { fundId, onboardingId: r.id } })}>
                     <td className="py-2" onClick={(e) => e.stopPropagation()}>
                       <input type="checkbox" aria-label={`Select ${r.name}`} title={canRemind(r) ? "Select for reminders and bulk actions" : "Select for bulk actions (no reminder due)"} checked={picked.includes(r.id)} onChange={(e) => setPicked((p) => e.target.checked ? [...p, r.id] : p.filter((x) => x !== r.id))} />
                     </td>
@@ -274,7 +274,7 @@ export function InvestorSheet({ fundId, id, onClose }: { fundId: string; id: str
             <SheetTitle className="text-xl">{d?.name ?? "Investor"}</SheetTitle>
             <SheetDescription>{d?.profileName ?? "Details for this fund only."}</SheetDescription>
           </SheetHeader>
-          {id && <Button asChild size="sm" variant="outline" className="mt-3"><Link to="/manager/fund/$fundId/investor/$onboardingId" params={{ fundId, onboardingId: id }}>Open full investor record</Link></Button>}
+          {id && <Button asChild size="sm" variant="outline" className="mt-3"><Link to={recordTo} params={{ fundId, onboardingId: id }}>Open full investor record</Link></Button>}
           {d && (
             <div className="mt-4 flex flex-wrap items-center gap-2">
               <Badge variant={d.kycOk ? "secondary" : "outline"}>KYC/AML: {d.kycLabel}</Badge>
