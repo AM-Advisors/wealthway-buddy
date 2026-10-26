@@ -21,6 +21,7 @@ import {
   type QaPerson,
 } from "./fictional-data";
 import { fromCrossJSON } from "seroval";
+import { getDefaultSerovalPlugins } from "@tanstack/start-client-core";
 import { rankMatches, validateQuickAdd, createNewBlocker } from "@/lib/investor-record-model";
 
 export type QaRole = "staff" | "manager";
@@ -174,7 +175,7 @@ export function installQaFetchMock(state: QaState): () => void {
       if (typeof body === "string") {
         const parsed = JSON.parse(body);
         // Server-function payloads are seroval cross-JSON; plain JSON is accepted too.
-        data = (parsed && typeof parsed === "object" && "t" in parsed ? fromCrossJSON(parsed) : parsed)?.data ?? null;
+        data = (parsed && typeof parsed === "object" && "t" in parsed ? fromCrossJSON(parsed, { plugins: getDefaultSerovalPlugins() }) : parsed)?.data ?? null;
       }
     } catch {
       return fail("Could not read the request.");
