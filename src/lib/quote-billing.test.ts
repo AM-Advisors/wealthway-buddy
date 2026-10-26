@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { changeQuoteBilling, normalizeQuoteBilling, quotePeriodBaseline } from "./quote-billing";
+import { changeQuoteBilling, normalizeQuoteBilling, quotePeriodBaseline, hasRoasWhiteGloveCadences, changeRoasWhiteGloveBilling } from "./quote-billing";
 import { priceQuote } from "./sales-model";
 import { sowLinesFromQuote } from "./quote-sow-sync";
 
@@ -7,6 +7,15 @@ const annual = { serviceKey: "tax_k1", label: "Tax service (annual)", pricingMod
 const line = { serviceKey: annual.serviceKey, label: annual.label, quantity: 1, unitCents: 62500, baselineUnitCents: 250000, billingFrequency: "quarterly" as const };
 
 describe("quote billing period pricing", () => {
+  const whiteGlove = { serviceKey: "ADMIN:FUND_ADMINISTRATION:WHITE_GLOVE", label: "White Glove", baselineCents: 3600000, quarterlyCents: 1000000, pricingModel: "annual" };
+  const roas = { ...line, serviceKey: whiteGlove.serviceKey, unitCents: 1200000 };
+  it("ROAS White Glove quarterly $12,000 converts to monthly $4,000", () => expect(changeRoasWhiteGloveBilling(roas, whiteGlove, "monthly").unitCents).toBe(400000));
+  it("ROAS White Glove quarterly $12,000 converts to annual $48,000", () => expect(changeRoasWhiteGloveBilling(roas, whiteGlove, "annual").unitCents).toBe(4800000));
+  it("the three-cadence exception is limited to ROAS White Glove", () => {
+    expect(hasRoasWhiteGloveCadences("acb8193f-35fc-41cc-9ee5-629bde3e11b2", whiteGlove.serviceKey)).toBe(true);
+    expect(hasRoasWhiteGloveCadences("another-fund", whiteGlove.serviceKey)).toBe(false);
+    expect(hasRoasWhiteGloveCadences("acb8193f-35fc-41cc-9ee5-629bde3e11b2", "ADMIN:FUND_ADMINISTRATION:SAAS")).toBe(false);
+  });
   it("compares quarterly service prices to a quarterly baseline, not a year", () => {
     const priced = priceQuote([normalizeQuoteBilling(line, annual)]);
     expect(priced.baselineCents).toBe(62500);
