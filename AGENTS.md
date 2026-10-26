@@ -48,10 +48,7 @@
 - Sales client-response instructions and staff sends use sales-response-model/server/functions and existing append-only quote/document events; recipient feedback is append-only sales_client_response_events under version-bound acceptance links, while event-bound response emails never alter approved terms or signature/invoice state — why: truthful client attribution without a parallel signing authority or fake staff actors.
 - Signed-SOW commission handoff uses commission-notify.server.ts and the canonical queueInvoicePayouts engine; event-bound assigned-rep notices use managed delivery, while only paid invoices receive quarter-end queue rows — why: one commission engine, retry-safe notices and no automatic money movement.
 
-- Forecasts are projections only, gated server-side by a contracted and paid subject-specific Forecasting add-on; immutable versions and sharing events never alter canonical records or trigger money movement.
-- Forecast assumption forms edit the existing ForecastInput through forecast-assumption-form.tsx; forecast-form-model.ts handles display-unit conversions and holding selection without mutating baseline records — why: guided input preserves saved-version compatibility and the existing calculation engine.
-- Operating forecasts use operating-forecast-model.ts through the shared ForecastInput validator/calculator; monthly integer-cent projections roll up into calendar quarters and remain distinct from fund capital flows — why: one preview/save engine, reconciled totals and no invented operating revenue from capital raised.
-- Fund cash-flow forms/results use fund-cash-flow-model.ts through ForecastInput; growth affects opening NAV only, realized proceeds affect cash only, and negative cash shows a shortfall — why: live summaries and saved projections agree without equating NAV to available cash.
+- Forecast rules (projections only, ForecastInput forms, operating and fund cash-flow models): src/lib/AGENTS.md.
 
 - Billing cadence, invoice links and fee ownership rules: src/lib/AGENTS.md. Why: recorded terms and fee review, never automatic money or posting.
 
@@ -66,3 +63,4 @@
 - Manager adds use createInvestorAndInvite + personal-link sender; imports retain createInvestor — why: saved records survive email failure, no bulk sends.
 
 - Public security uses published content only, never certification status; see src/lib/AGENTS.md.
+- Fictional QA sandbox at /qa-sandbox (src/lib/qa-sandbox/) intercepts every server-function call client-side with in-memory fictional data and blocks anything not modeled; never point it at the real backend — why: isolated click-through testing without touching records, emails or money.
