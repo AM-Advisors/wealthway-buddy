@@ -2,7 +2,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   activityFor, bulkSummary, classifyBulk, committable, createNewBlocker, dbProfileType, maskEmail, parseCsv, planIncoming,
-  rankMatches, recordStatus, removalBlocker, sanitizePatch, validateQuickAdd, type PersonCandidate,
+  profileNameMismatch, rankMatches, recordStatus, removalBlocker, sanitizePatch, validateQuickAdd, validPaperworkContact, type PersonCandidate,
 } from "@/lib/investor-record-model";
 
 /* ---------------- in-memory fake of the service-role client ---------------- */
