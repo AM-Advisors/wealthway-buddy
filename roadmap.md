@@ -1,5 +1,9 @@
 # Roadmap
 
+## Fund and company fee accounting links (2026-10-26)
+- [ ] Connect invoice fees to an exact fund or company and the canonical bookkeeping review flow, preserving issued history, accounting controls and duplicate prevention.
+- [ ] Verify relationship and accounting rules offline; authenticated financial QA requires independently isolated synthetic evidence and sessions.
+
 ## Connected client quotes, agreements and invoice due dates (2026-10-26)
 - [x] Client invoices open same-client original quote/proposal readers and entitled SOWs; SOWs list exact related issued invoices with direct invoice selection/payment links. Original versions/read fields are scoped; no new signing tokens or access grants.
 - [x] Signed proposals show exact acceptance-linked invoice number/status, paid/remaining balances, recorded due dates and direct invoice link. Quote valid-until is separate; absent dates remain Not set. No issued terms, due dates, signatures, emails or money changed.
