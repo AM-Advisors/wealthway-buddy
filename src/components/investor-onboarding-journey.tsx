@@ -769,13 +769,14 @@ function WireSentForm({ defaultAmountCents, pending, already, onSubmit }: {
   defaultAmountCents: number | null;
   pending: boolean;
   already: boolean;
-  onSubmit: (v: { sentOn: string | null; amountCents: number | null; sendingBank: string | null; reference: string | null }) => void;
+  onSubmit: (v: { sentOn: string | null; amountCents: number | null; sendingBank: string | null; reference: string | null; senderName: string | null }) => void;
 }) {
   const [open, setOpen] = useState(false);
   const [sentOn, setSentOn] = useState(new Date().toISOString().slice(0, 10));
   const [amt, setAmt] = useState(defaultAmountCents ? String(defaultAmountCents / 100) : "");
   const [bank, setBank] = useState("");
   const [ref, setRef] = useState("");
+  const [sender, setSender] = useState("");
   if (!open) {
     return (
       <Button variant="outline" onClick={() => setOpen(true)}>
@@ -792,12 +793,13 @@ function WireSentForm({ defaultAmountCents, pending, already, onSubmit }: {
         <div className="space-y-1"><Label htmlFor="w-amt">Amount sent ($)</Label><Input id="w-amt" inputMode="decimal" value={amt} onChange={(e) => setAmt(e.target.value)} /></div>
         <div className="space-y-1"><Label htmlFor="w-bank">Sending bank</Label><Input id="w-bank" value={bank} onChange={(e) => setBank(e.target.value)} placeholder="e.g. Chase" /></div>
         <div className="space-y-1"><Label htmlFor="w-ref">Confirmation number (optional)</Label><Input id="w-ref" value={ref} onChange={(e) => setRef(e.target.value)} /></div>
+        <div className="space-y-1 sm:col-span-2"><Label htmlFor="w-sender">Name on the sending account (optional)</Label><Input id="w-sender" value={sender} onChange={(e) => setSender(e.target.value)} placeholder="If someone else, like a spouse or your company, sends the wire" /></div>
       </div>
-      <p className="text-xs text-muted-foreground">Don't enter account numbers.</p>
+      <p className="text-xs text-muted-foreground">Don't enter account numbers. If the wire comes from an account under a different name, entering that name helps us match it faster.</p>
       <div className="flex gap-2">
         <Button
           disabled={pending || !(cents > 0)}
-          onClick={() => onSubmit({ sentOn, amountCents: cents > 0 ? cents : null, sendingBank: bank || null, reference: ref || null })}
+          onClick={() => onSubmit({ sentOn, amountCents: cents > 0 ? cents : null, sendingBank: bank || null, reference: ref || null, senderName: sender || null })}
         >
           Confirm Wire Sent
         </Button>
@@ -831,6 +833,7 @@ function FundingLedger({ onboardingId }: { onboardingId: string }) {
                 {e.sentOn ? ` · sent ${e.sentOn}` : ""}
                 {e.sendingBank ? ` · ${e.sendingBank}` : ""}
                 {e.reference ? ` · ref ${e.reference}` : ""}
+                {e.senderName ? ` · from ${e.senderName}` : ""}
                 {e.kind === "reported" ? " · awaiting confirmation" : ""}
               </p>
             </div>
