@@ -6,6 +6,14 @@ import { resolveFundLinkFn, startFromFundLinkFn } from "@/lib/fund-onboarding-li
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { PENDING_MATCH_MESSAGE } from "@/lib/investor-record-model";
+import guideVideo from "@/assets/investor-onboarding-guide.mp4.asset.json";
+
+const GUIDE_STEPS: [string, string][] = [
+  ["About You", "Create your account, then choose or add the profile you are investing through"],
+  ["Verification", "Confirm your identity securely in a few minutes"],
+  ["Sign", "Review and sign the fund documents online"],
+  ["Fund", "Get the wire instructions and send your investment"],
+];
 
 /** Public Fund onboarding entry. Shows only the fund's display name and manager before sign-in. */
 export const Route = createFileRoute("/join/$token")({
@@ -46,7 +54,16 @@ function JoinPage() {
   };
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-background px-4">
+    <main className="flex min-h-screen flex-col items-center justify-center gap-6 bg-background px-4 py-10">
+      <section className="w-full max-w-md space-y-4 rounded-xl border bg-card p-6" aria-label="How onboarding works">
+        <video src={guideVideo.url} className="aspect-video w-full rounded-md" autoPlay muted loop playsInline controls />
+        <h2 className="font-heading text-lg font-semibold">How onboarding works</h2>
+        <ol className="space-y-2 text-sm text-muted-foreground">
+          {GUIDE_STEPS.map(([t, d], i) => (
+            <li key={t} className="flex gap-3"><span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">{i + 1}</span><span><span className="font-medium text-foreground">{t}.</span> {d}</span></li>
+          ))}
+        </ol>
+      </section>
       <div className="w-full max-w-md space-y-6 rounded-xl border bg-card p-8 text-center">
         <p className="font-heading text-sm font-semibold uppercase tracking-widest text-muted-foreground">Harmonious</p>
         {q.isPending ? <p className="text-sm text-muted-foreground">Checking your link…</p> : q.isError ? (
