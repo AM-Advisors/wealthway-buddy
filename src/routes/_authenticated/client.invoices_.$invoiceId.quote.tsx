@@ -15,7 +15,7 @@ export const Route = createFileRoute("/_authenticated/client/invoices_/$invoiceI
     { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" },
   ] }),
   loader: ({ context, params }) => context.queryClient.ensureQueryData(originalQuote(params.invoiceId)),
-  errorComponent: ({ error }) => <div className="space-y-3 p-4"><p role="alert" className="text-sm text-destructive">{error.message}</p><Button asChild variant="outline"><Link to="/client/invoices">Back to invoices</Link></Button></div>,
+  errorComponent: ({ error }) => <div className="space-y-3 p-4"><p role="alert" className="text-sm text-destructive">{error instanceof Error ? error.message : "The original quote could not be loaded."}</p><Button asChild variant="outline"><Link to="/client/invoices">Back to invoices</Link></Button></div>,
   notFoundComponent: () => <p>Original quote not found.</p>,
   component: InvoiceQuotePage,
 });

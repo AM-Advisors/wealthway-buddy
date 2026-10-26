@@ -13,7 +13,7 @@ export const getInvoiceOriginalQuote = createServerFn({ method: "GET" })
     if (!inv.sales_quote_id) throw new Error("No original quote is recorded for this invoice.");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const db = supabaseAdmin as any;
-    const { data: quote, error: quoteError } = await db.from("sales_quotes").select("id, client_id, version, status, title, valid_until").eq("id", inv.sales_quote_id).maybeSingle();
+    const { data: quote, error: quoteError } = await db.from("sales_quotes").select("id, client_id, version, status, title, valid_until, sections").eq("id", inv.sales_quote_id).maybeSingle();
     if (quoteError || !quote || !invoiceSourceMatches(inv, quote)) throw new Error("The exact original quote is unavailable. Please contact your Harmonious representative.");
     let sections: { title: string; body: string }[] = [];
     let title = quote.title, version = quote.version;
@@ -30,6 +30,14 @@ export const getInvoiceOriginalQuote = createServerFn({ method: "GET" })
     }
     const { data: lines, error: linesError } = await db.from("invoice_lines").select("label, quantity, unit_cents, amount_cents").eq("invoice_id", inv.id).order("sort_order");
     if (linesError) throw new Error("The recorded invoice pricing could not be loaded.");
+    if (!inv.sales_document_id) {
+      const { data: client } = await db.from("clients").select("name, legal_name").eq("id", inv.client_id).maybeSingle();
+      const { quoteClientSections, quoteLockFacts, sanitizeQuoteSections } = await import("./quote-sections-model");
+      const facts = quoteLockFacts({ organization: client?.legal_name ?? client?.name ?? null, contactName: null,
+        lines: (lines ?? []).map((l: any) => ({ label: l.label, quantity: Number(l.quantity), unitCents: Number(l.unit_cents) })) });
+      // The quote's client-visible sections only; no CRM notes, approvals or staff messages.
+      sections = quoteClientSections(sanitizeQuoteSections(quote.sections).filter(s => !["notes", "about"].includes(s.key)), facts, null, null);
+    }
     // Recorded invoice lines are the frozen billed terms, never today's rate card.
     const [invoice] = await (await import("./invoice-balance.server")).withInvoiceBalances([inv]);
     return { invoice, title: String(title), version: Number(version), validUntil: quote.valid_until as string | null, sections, lines: (lines ?? []) as { label: string; quantity: number; unit_cents: number; amount_cents: number }[] };

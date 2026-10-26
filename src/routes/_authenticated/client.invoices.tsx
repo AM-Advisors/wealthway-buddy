@@ -20,7 +20,7 @@ import { InvoicePeriodSummary } from "@/components/invoice-period-summary";
 import { InvoiceDueDate } from "@/components/invoice-due-date";
 
 export const Route = createFileRoute("/_authenticated/client/invoices")({
-  validateSearch: (s: Record<string, unknown>) => ({ invoice: typeof s.invoice === "string" ? s.invoice : undefined }),
+  validateSearch: (s: Record<string, unknown>): { invoice?: string } => typeof s['invoice'] === "string" ? { invoice: s['invoice'] } : {},
   head: () => ({
     meta: [
       { title: "Your invoices | Harmonious" },
