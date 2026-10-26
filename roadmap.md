@@ -1,5 +1,9 @@
 # Roadmap
 
+## Investor onboarding link during fund launch (2026-10-26)
+- [ ] Reuse the canonical onboarding-link engine before marking a ready fund launched; preserve approvals and exact-fund authorization.
+- [ ] Verify fictional launch/link regression cases; authenticated durable click-through requires independently isolated QA evidence and sessions.
+
 ## Direct invoice and fee links (2026-10-26)
 - [x] Client invoices page: each invoice has a Copy direct link button (/client/invoices?invoice=<id>) that opens, sorts and scrolls to that invoice; fund managers use it to jump straight to the invoice.
 - [x] Staff invoice board: Copy link for fund manager button copies the client-facing direct link for sharing.
