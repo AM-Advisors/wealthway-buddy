@@ -569,3 +569,36 @@ describe("manager-entered tax ID, owners and signers", () => {
     await expect(s.addDistributionDestination(MGR_A, { onboardingId: r.onboardingId, destination: { method: "wire" } })).rejects.toThrow(/sign in once/);
   });
 });
+
+/* ---------------- paperwork contact & legal-name catch ---------------- */
+
+describe("profileNameMismatch", () => {
+  it("flags a spouse's profile: Kimberly added under a Joe Girardi profile", () => {
+    expect(profileNameMismatch({ firstName: "Kimberly", lastName: "Girardi", profileType: "individual", profileLegalName: "Joe Girardi" })).toBe(true);
+  });
+  it("accepts the investor's own name and prefix short forms", () => {
+    expect(profileNameMismatch({ firstName: "Kimberly", lastName: "Girardi", profileType: "individual", profileLegalName: "Kimberly Girardi" })).toBe(false);
+    expect(profileNameMismatch({ firstName: "Kim", lastName: "Girardi", profileType: "individual", profileLegalName: "Kimberly Girardi" })).toBe(false);
+  });
+  it("never flags entity, trust or IRA profiles, which legitimately carry another name", () => {
+    expect(profileNameMismatch({ firstName: "Kimberly", lastName: "Girardi", profileType: "entity", profileLegalName: "Girardi Family LLC" })).toBe(false);
+    expect(profileNameMismatch({ firstName: "Kimberly", lastName: "Girardi", profileType: "trust", profileLegalName: "Girardi Living Trust" })).toBe(false);
+  });
+  it("stays quiet when the profile has no legal name or the person has no name", () => {
+    expect(profileNameMismatch({ firstName: "Kimberly", lastName: "Girardi", profileType: "individual", profileLegalName: null })).toBe(false);
+    expect(profileNameMismatch({ firstName: null, lastName: null, profileType: "individual", profileLegalName: "Joe Girardi" })).toBe(false);
+  });
+});
+
+describe("validPaperworkContact", () => {
+  it("requires a name, a valid email and a known relationship", () => {
+    expect(validPaperworkContact({ firstName: "Dante", lastName: "Girardi", email: "dantegirardi28@gmail.com", relationship: "spouse" })).toEqual([]);
+    expect(validPaperworkContact({ firstName: "", lastName: "Girardi", email: "d@example.com", relationship: "spouse" })[0]).toMatch(/first and last name/);
+    expect(validPaperworkContact({ firstName: "Dante", lastName: "Girardi", email: "not-an-email", relationship: "spouse" })[0]).toMatch(/valid email/);
+    expect(validPaperworkContact({ firstName: "Dante", lastName: "Girardi", email: "d@example.com", relationship: "boss" })[0]).toMatch(/relationship/);
+  });
+  it("treats an absent contact as nothing to validate", () => {
+    expect(validPaperworkContact(null)).toEqual([]);
+    expect(validPaperworkContact(undefined)).toEqual([]);
+  });
+});
