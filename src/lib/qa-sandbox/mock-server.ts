@@ -40,17 +40,29 @@ export function createQaState(role: QaRole = "staff"): QaState {
 
 const SERVER_FN_HEADER = "x-tsr-serverfn";
 
-/** Map a server-function URL to the export name it was built from. */
+const KNOWN_FNS = [
+  "searchInvestorsFn",
+  "createInvestorFn",
+  "listManagedWireInstructions",
+  "saveManagedWireInstructions",
+  "prefillWireFromBank",
+  "uploadFundFileFn",
+] as const;
+
+/** Map a server-function URL to the export name it was built from. Ids are base64 JSON: { file, export }. */
 function resolveFnName(url: string): string | null {
-  const known = [
-    "searchInvestorsFn",
-    "createInvestorFn",
-    "listManagedWireInstructions",
-    "saveManagedWireInstructions",
-    "prefillWireFromBank",
-    "uploadFundFileFn",
-  ] as const;
-  return known.find((name) => url.includes(name)) ?? null;
+  const match = (text: string) => KNOWN_FNS.find((name) => text.includes(name)) ?? null;
+  const direct = match(url);
+  if (direct) return direct;
+  try {
+    const segment = url.split("/").pop() ?? "";
+    const decoded = atob(segment.replace(/-/g, "+").replace(/_/g, "/"));
+    const parsed = JSON.parse(decoded);
+    if (typeof parsed?.export === "string") return match(parsed.export);
+  } catch {
+    /* not a decodable function id */
+  }
+  return null;
 }
 
 export class QaBlockedError extends Error {}
