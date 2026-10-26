@@ -1,5 +1,10 @@
 # Roadmap
 
+## ROAS partial payments and White Glove (2026-10-26)
+- [ ] Show recorded paid and remaining amounts on client invoices, downloads and totals without rewriting issued amounts or treating notes/declarations as receipts.
+- [ ] Add ROAS-specific White Glove at $12,000 quarterly through the existing authorized draft commercial workflow, preserving approvals and signed history.
+- [ ] Run focused checks and verify saved records; authenticated UI QA requires independent synthetic isolation.
+
 ## Corps LaaSy subscription agreement and PPM (2026-10-26)
 - [x] Added both approved SPV templates through authorized staff generation and read back stored Word copies with Corps LaaSy's name and canonical terms. Subscription v2 removes two inherited red font settings without changing wording and retains investor-first signing configuration. PPM v1 and subscription v2 remain inactive review drafts; Operating Agreement v2 and all signature/history records unchanged. No email sent.
 - [x] Arbitration recorded on the fund as Dallas, Texas (2026-10-26).
