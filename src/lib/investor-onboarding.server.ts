@@ -1058,6 +1058,8 @@ export type WireSentDetails = {
   amountCents?: number | null | undefined;
   sendingBank?: string | null | undefined;
   reference?: string | null | undefined;
+  /** Name on the sending account, so a wire from a spouse or entity matches this notice instead of looking unexpected. */
+  senderName?: string | null | undefined;
 };
 
 /** Investor's own notice that they sent a wire. Never moves money and never
@@ -1084,7 +1086,7 @@ export async function investorReportsFundsSent(userId: string, onboardingId: str
     onboardingId: row.id,
     offeringId: row.offering_id,
     event: "investor_reports_funds_sent",
-    detail: { sentOn, amountCents: amount, sendingBank: clean(details.sendingBank), reference: clean(details.reference) },
+    detail: { sentOn, amountCents: amount, sendingBank: clean(details.sendingBank), reference: clean(details.reference), senderName: clean(details.senderName) },
     actorUserId: actor.userId,
     actorRole: "investor",
   });
@@ -1109,7 +1111,7 @@ export async function investorFundingLedger(userId: string, onboardingId: string
       return { id: e.id, at: e.created_at, kind: "received", label: "Wire received and confirmed", amountCents: Number(d.amountCents ?? 0), balanceCents: received };
     }
     if (e.event === "investor_reports_funds_sent") {
-      return { id: e.id, at: e.created_at, kind: "reported", label: "You reported a wire sent", amountCents: d.amountCents ?? null, sentOn: d.sentOn ?? null, sendingBank: d.sendingBank ?? null, reference: d.reference ?? null, balanceCents: received };
+      return { id: e.id, at: e.created_at, kind: "reported", label: "You reported a wire sent", amountCents: d.amountCents ?? null, sentOn: d.sentOn ?? null, sendingBank: d.sendingBank ?? null, reference: d.reference ?? null, senderName: d.senderName ?? null, balanceCents: received };
     }
     return { id: e.id, at: e.created_at, kind: "opened", label: "Funding opened", amountCents: null, balanceCents: received };
   });
