@@ -3,6 +3,7 @@
 
 import { COMPANY } from "@/lib/company-details";
 import { downloadPdfDoc, openPdfDoc, type PdfDocSpec } from "@/lib/pdf-render";
+import { invoiceBalance } from "@/lib/invoice-balance";
 
 const money = (cents: number | null | undefined) =>
   typeof cents === "number"
@@ -28,6 +29,9 @@ export function invoicePdfSpec(invoice: any): PdfDocSpec {
     value: money(Number(line.amount_cents)),
   }));
   rows.push({ label: "Total", value: money(Number(invoice?.total_cents)) });
+  const balance = invoiceBalance(invoice);
+  rows.push({ label: "Paid", value: money(balance.paidCents) });
+  rows.push({ label: "Remaining", value: money(balance.remainingCents) });
 
   const notes: string[] = [];
   if (invoice?.client_payment_declared_at) {
@@ -52,7 +56,7 @@ export function invoicePdfSpec(invoice: any): PdfDocSpec {
     kicker: "Invoice",
     title: String(invoice?.number ?? "Invoice"),
     subtitle: COMPANY.tagline,
-    badge: STATUS[invoice?.status] ?? invoice?.status ?? "",
+    badge: balance.partiallyPaid ? "Partially paid" : STATUS[invoice?.status] ?? invoice?.status ?? "",
     meta: [
       { label: "Billed to", value: String(invoice?.client_name ?? "Your organization") },
       {

@@ -191,10 +191,10 @@ export const getClientPortal = createServerFn({ method: "GET" })
           (catalogByKey.get(r.service_key) as any)?.name ?? String(r.service_key).replace(/_/g, " "),
         fundName: r.offering_id ? fundNameById.get(r.offering_id) ?? null : null,
       })),
-      invoices: (invoices ?? []).map((inv: any) => ({
+      invoices: await (await import("@/lib/invoice-balance.server")).withInvoiceBalances((invoices ?? []).map((inv: any) => ({
         ...inv,
         overdue: inv.status === "issued" && !!inv.due_date && inv.due_date < today,
-      })),
+      }))),
       wireRequests: ((wireRows ?? []) as any[]).map((w) => ({
         ...w,
         fundName: fundNameById.get(w.offering_id) ?? null,

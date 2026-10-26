@@ -136,12 +136,12 @@ export const listInvoices = createServerFn({ method: "GET" })
       clients: clients ?? [],
       sows: sows ?? [],
       funds: funds ?? [],
-      invoices: (invoices ?? []).map((inv: any) => ({
+      invoices: await (await import("@/lib/invoice-balance.server")).withInvoiceBalances((invoices ?? []).map((inv: any) => ({
         ...inv,
         clientName: clientById.get(inv.client_id)?.name ?? "Unknown client",
         overdue: inv.status === "issued" && !!inv.due_date && inv.due_date < today,
         lines: lines.filter((l) => l.invoice_id === inv.id),
-      })),
+      }))),
     };
   });
 
@@ -385,6 +385,8 @@ export const startInvoiceCardPayment = createServerFn({ method: "POST" })
     if (!inv || !mine.has(inv.client_id)) return { error: "That invoice isn't available." };
     if (inv.status !== "issued") return { error: inv.status === "paid" ? "This invoice is already paid." : "Only an issued invoice can be paid." };
     if (!(Number(inv.total_cents) > 0)) return { error: "Nothing to pay." };
+    const [balance] = await (await import("@/lib/invoice-balance.server")).withInvoiceBalances([inv]);
+    if (balance?.partially_paid) return { error: "This invoice has a recorded partial payment. Please contact billing to settle the remaining balance without paying the original amount again." };
     const origin = new URL(data.returnUrl).origin;
     const { createStripeClient, getStripeErrorMessage } = await import("@/lib/stripe.server");
     try {
@@ -783,12 +785,12 @@ export const listMyInvoices = createServerFn({ method: "GET" })
       clients = data ?? [];
     }
     return {
-      invoices: (invoices ?? []).map((inv: any) => ({
+      invoices: await (await import("@/lib/invoice-balance.server")).withInvoiceBalances((invoices ?? []).map((inv: any) => ({
         ...inv,
         overdue: inv.status === "issued" && !!inv.due_date && inv.due_date < today,
         client_name: clients.find((c) => c.id === inv.client_id)?.name ?? null,
         lines: lines.filter((l) => l.invoice_id === inv.id),
-      })),
+      }))),
     };
   });
 

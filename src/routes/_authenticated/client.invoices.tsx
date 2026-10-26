@@ -15,6 +15,7 @@ import { InvoiceCardPay } from "@/components/invoice-card-pay";
 import { InvoiceRemittance } from "@/components/invoice-remittance";
 import { PaymentPlanner } from "@/components/payment-planner";
 import { declareInvoicePayment, listMyInvoices, respondToInvoice } from "@/lib/invoices.functions";
+import { invoiceBalance } from "@/lib/invoice-balance";
 
 export const Route = createFileRoute("/_authenticated/client/invoices")({
   head: () => ({
@@ -103,7 +104,7 @@ function ClientInvoicesPage() {
 
   const invoices = (data?.invoices ?? []) as any[];
   const open = invoices.filter((i) => i.status === "issued");
-  const outstanding = open.reduce((sum, i) => sum + Number(i.total_cents ?? 0), 0);
+  const outstanding = open.reduce((sum, i) => sum + invoiceBalance(i).remainingCents, 0);
   const feeTotal = open.reduce(
     (sum, i) =>
       sum +
@@ -173,7 +174,7 @@ function ClientInvoicesPage() {
                   <div className="flex flex-wrap items-center gap-2">
                     <CardTitle className="text-base">{inv.number ?? "Invoice"}</CardTitle>
                     <Badge variant={inv.status === "paid" ? "secondary" : "default"}>
-                      {STATUS[inv.status] ?? inv.status}
+                      {invoiceBalance(inv).partiallyPaid ? "Partially paid" : STATUS[inv.status] ?? inv.status}
                     </Badge>
                     {inv.overdue ? <Badge variant="destructive">Overdue</Badge> : null}
                     {inv.approval_status === "approved" ? (
@@ -194,6 +195,11 @@ function ClientInvoicesPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
+                    <span>Invoice total: {money(Number(inv.total_cents))}</span>
+                    <span>Paid: {money(invoiceBalance(inv).paidCents)}</span>
+                    <span className="font-semibold">Remaining: {money(invoiceBalance(inv).remainingCents)}</span>
+                  </div>
                   <ul className="text-sm">
                     {(inv.lines ?? []).map((l: any) => (
                       <li key={l.id} className="flex justify-between gap-4 border-b py-1 last:border-0">
@@ -231,7 +237,7 @@ function ClientInvoicesPage() {
 
                   {inv.status === "issued" && inv.approval_status === "pending" ? (
                     <div className="space-y-2 rounded-md border p-3">
-                      <p className="text-sm font-medium">Step 1 - approve this invoice</p>
+                      <p className="text-sm font-medium">Step 1: approve this invoice</p>
                       <Label htmlFor={`signer-${inv.id}`}>Type your full name to approve</Label>
                       <Input
                         id={`signer-${inv.id}`}
@@ -280,9 +286,9 @@ function ClientInvoicesPage() {
                   inv.approval_status === "approved" &&
                   !inv.client_payment_declared_at ? (
                     <div className="space-y-3 rounded-md border p-3">
-                      <p className="text-sm font-medium">Step 2 - pay and confirm</p>
+                      <p className="text-sm font-medium">Step 2: pay and confirm</p>
                       <div className="flex flex-wrap items-center gap-2">
-                        <InvoiceCardPay invoiceId={inv.id} number={inv.number} />
+                        {!invoiceBalance(inv).partiallyPaid && <InvoiceCardPay invoiceId={inv.id} number={inv.number} />}
                         <span className="text-xs text-muted-foreground">Or send a wire or ACH and confirm it below.</span>
                       </div>
                       <p className="text-sm text-muted-foreground">
@@ -290,6 +296,7 @@ function ClientInvoicesPage() {
                         below, then confirm it so we can match it on arrival.
                       </p>
                       <InvoiceRemittance invoiceId={inv.id} />
+                      {invoiceBalance(inv).partiallyPaid && <p className="text-sm text-muted-foreground">Remaining payment: {money(invoiceBalance(inv).remainingCents)}. Contact billing if you would like to pay this balance by card.</p>}
                       <div className="grid gap-3 sm:grid-cols-2">
                         <div className="space-y-1">
                           <Label>How you paid</Label>
