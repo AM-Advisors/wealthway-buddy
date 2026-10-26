@@ -1471,6 +1471,24 @@ export async function launchFund(userId: string, setupId: string) {
   const { onFundLaunched } = await import("@/lib/drive.server");
   await onFundLaunched(offering.id, userId);
 
+  // Tell the fund team the fund is live; email problems never affect the launch.
+  try {
+    const { notifyFundLive } = await import("@/lib/fund-live-notify.server");
+    const counts = await notifyFundLive({ setupId, offeringId: offering.id, fundName: offering.name, onboardingUrl: url });
+    await recordEvent({
+      setupId,
+      subjectTable: "fund_setups",
+      subjectId: setupId,
+      event: "fund_live_notified",
+      toStatus: "launched",
+      detail: counts,
+      actorUserId: userId,
+      actorRole: actor.isStaff ? "harmonious" : "fund_manager",
+    });
+  } catch (e) {
+    console.error("[fund-live] notice step failed", (e as Error)?.message);
+  }
+
   await (await import("@/lib/fund-alerts-kick.server")).kickFundAlerts();
   return {
     setup: updated,
