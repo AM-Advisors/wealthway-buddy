@@ -1,3 +1,4 @@
+import { useInvestorRecordRoute } from "@/lib/use-investor-record-route";
 import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
@@ -19,6 +20,7 @@ type Related = { firstName: string; lastName: string; email: string; role: strin
 
 /** Search first, then Quick Add or Full Details. Every write re-authorizes on the server. */
 export function CreateInvestor({ fundId, isStaff, onDone }: { fundId: string; isStaff: boolean; onDone?: () => void }) {
+  const recordTo = useInvestorRecordRoute();
   const search = useServerFn(searchInvestorsFn);
   const create = useServerFn(createInvestorFn);
   const qc = useQueryClient();
@@ -74,7 +76,7 @@ export function CreateInvestor({ fundId, isStaff, onDone }: { fundId: string; is
       qc.invalidateQueries({ queryKey: ["fund-investor-records", fundId] });
       qc.invalidateQueries({ queryKey: ["fund-readiness", fundId] });
       onDone?.();
-      if (continueToRecord) navigate({ to: "/manager/fund/$fundId/investor/$onboardingId", params: { fundId, onboardingId: r.onboardingId } });
+      if (continueToRecord) navigate({ to: recordTo, params: { fundId, onboardingId: r.onboardingId } });
     } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
   };
 
