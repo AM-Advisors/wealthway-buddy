@@ -1,5 +1,9 @@
 # Roadmap
 
+## Corps LaaSy subscription agreement and PPM (2026-10-26)
+- [ ] Add the two approved SPV templates through the authorized staff generation engine and verify stored copies; leave unresolved fund fields open and preserve the Operating Agreement and all signatures.
+- [ ] Final readiness requires confirmation of the manager address and arbitration city; investor signature/date fields remain for the actual signing ceremony. No automatic sending or activation with open fields.
+
 ## Clickable account identity review (2026-10-24)
 - [x] Open exact-check detailed evidence from the account identity queue using the shared review panel, recorded warnings, on-demand photos and existing decisions/match clearances; no authority or verification changes.
 - [x] 47 existing identity/match checks passed; fictional click-through verified exact-check details, expected-name comparison, masked ID, breach details, photo control, absent evidence and clean session switching on desktop/compact screens without runtime errors; preview build OK.
