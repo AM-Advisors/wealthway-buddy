@@ -741,6 +741,51 @@ export type Database = {
           },
         ]
       }
+      accreditation_ai_checks: {
+        Row: {
+          application_id: string
+          created_at: string
+          criteria: Json
+          document_id: string
+          document_kind: string | null
+          id: string
+          method: string | null
+          model: string | null
+          red_flags: Json
+          requested_by: string | null
+          summary: string | null
+          verdict: string
+        }
+        Insert: {
+          application_id: string
+          created_at?: string
+          criteria?: Json
+          document_id: string
+          document_kind?: string | null
+          id?: string
+          method?: string | null
+          model?: string | null
+          red_flags?: Json
+          requested_by?: string | null
+          summary?: string | null
+          verdict: string
+        }
+        Update: {
+          application_id?: string
+          created_at?: string
+          criteria?: Json
+          document_id?: string
+          document_kind?: string | null
+          id?: string
+          method?: string | null
+          model?: string | null
+          red_flags?: Json
+          requested_by?: string | null
+          summary?: string | null
+          verdict?: string
+        }
+        Relationships: []
+      }
       accreditation_documents: {
         Row: {
           application_id: string
