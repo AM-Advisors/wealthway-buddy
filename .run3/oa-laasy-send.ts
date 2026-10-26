@@ -93,7 +93,7 @@ const r = await sendTemplateEmail("manager-alert", sig.signer_email, {
     intro: `${offering.name} has a document ready for your signature. Sign in to Harmonious with this email address to review and sign it.`,
     offeringName: offering.name,
     details: [{ label: "Document", value: doc.title }, { label: "Signing as", value: "Fund manager" }],
-    portalUrl: `${SITE ?? "https://app.harmonious.co"}/sign/${sig.id}`,
+    portalUrl: `${SITE}/sign/${sig.id}`,
   },
 });
 console.log("email", r.sent ? "sent" : (r as any).reason);
