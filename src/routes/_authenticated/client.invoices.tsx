@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -108,6 +108,19 @@ function ClientInvoicesPage() {
 
   const invoices = [...(data?.invoices ?? [])] as any[];
   if (selectedInvoice) invoices.sort((a, b) => Number(b.id === selectedInvoice) - Number(a.id === selectedInvoice));
+
+  useEffect(() => {
+    if (!selectedInvoice || isLoading) return;
+    document.getElementById(`invoice-${selectedInvoice}`)?.scrollIntoView({ block: "start" });
+  }, [selectedInvoice, isLoading]);
+
+  const copyInvoiceLink = (id: string) => {
+    const url = `${window.location.origin}/client/invoices?invoice=${id}`;
+    void navigator.clipboard?.writeText(url).then(
+      () => toast.success("Direct link copied. Send it to the fund manager and it opens this invoice."),
+      () => toast.error(`Copy this link: ${url}`),
+    );
+  };
   const open = invoices.filter((i) => i.status === "issued");
   const outstanding = open.reduce((sum, i) => sum + invoiceBalance(i).remainingCents, 0);
   const feeTotal = open.reduce(
@@ -226,6 +239,9 @@ function ClientInvoicesPage() {
                   <div className="flex flex-wrap gap-2">
                     {inv.sales_quote_id && <Button asChild size="sm" variant="outline"><Link to="/client/invoices/$invoiceId/quote" params={{ invoiceId: inv.id }}>View original quote{inv.sales_document_id ? " / proposal" : ""}</Link></Button>}
                     {inv.linked_sow_id && <Button asChild size="sm" variant="outline"><Link to="/client/agreements/sow/$sowId" params={{ sowId: inv.linked_sow_id }}>View SOW</Link></Button>}
+                    <Button size="sm" variant="outline" onClick={() => copyInvoiceLink(inv.id)}>
+                      Copy direct link
+                    </Button>
                     <Button size="sm" variant="outline" onClick={() => void downloadInvoice(inv)}>
                       Download invoice
                     </Button>

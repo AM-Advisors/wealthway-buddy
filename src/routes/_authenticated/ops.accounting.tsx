@@ -44,6 +44,9 @@ function Stat({ label, value }: { label: string; value: string | number }) {
 }
 
 function AccountingOperations() {
+  const search = Route.useSearch();
+  const navigate = Route.useNavigate();
+  const activeTab = search.tab ?? "queue";
   const queryClient = useQueryClient();
   const loadOps = useServerFn(getAccountingOperations);
   const loadQueue = useServerFn(getReconciliationQueue);
@@ -153,7 +156,7 @@ function AccountingOperations() {
         </div>
       ) : null}
 
-      <Tabs defaultValue="queue">
+      <Tabs value={activeTab} onValueChange={(tab) => void navigate({ search: tab === "queue" ? {} : { tab, ...(tab === "fees" && search.invoice ? { invoice: search.invoice } : {}) }, replace: true })}>
         <TabsList className="flex h-auto flex-wrap">
           <TabsTrigger value="queue">Reconciliation queue</TabsTrigger>
           <TabsTrigger value="exceptions">Exceptions</TabsTrigger>
@@ -362,7 +365,7 @@ function AccountingOperations() {
           ))}
         </TabsContent>
         <TabsContent value="ledger" className="pt-4"><GeneralLedgerPanel /></TabsContent>
-        <TabsContent value="fees" className="pt-4"><InvoiceFeeAccounting canManage /></TabsContent>
+        <TabsContent value="fees" className="pt-4"><InvoiceFeeAccounting canManage invoiceId={search.invoice} shareLinks /></TabsContent>
         <TabsContent value="qbo" className="pt-4"><QuickBooksPanel /></TabsContent>
         <TabsContent value="alerts" className="pt-4"><BankAlertsPanel /></TabsContent>
         <TabsContent value="close" className="pt-4"><CloseSheetsPanel /></TabsContent>
@@ -372,6 +375,10 @@ function AccountingOperations() {
 }
 
 export const Route = createFileRoute("/_authenticated/ops/accounting")({
+  validateSearch: (s: Record<string, unknown>): { tab?: string; invoice?: string } => ({
+    ...(typeof s['tab'] === "string" && ["queue", "exceptions", "rules", "ledger", "fees", "qbo", "alerts", "close"].includes(s['tab']) ? { tab: s['tab'] } : {}),
+    ...(typeof s['invoice'] === "string" ? { invoice: s['invoice'] } : {}),
+  }),
   head: () => ({
     meta: [
       { title: "Accounting operations | Harmonious" },
