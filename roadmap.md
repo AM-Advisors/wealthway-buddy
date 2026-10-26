@@ -1,5 +1,9 @@
 # Roadmap
 
+## Corps LaaSy subscription agreement and PPM (2026-10-26)
+- [x] Added both approved SPV templates through authorized staff generation and read back stored Word copies with Corps LaaSy's name and canonical terms. Subscription v2 removes two inherited red font settings without changing wording and retains investor-first signing configuration. PPM v1 and subscription v2 remain inactive review drafts; Operating Agreement v2 and all signature/history records unchanged. No email sent.
+- [ ] Final readiness requires confirmation of the manager address and arbitration city; investor signature/date fields remain for the actual signing ceremony. No automatic sending or activation with open fields.
+
 ## Clickable account identity review (2026-10-24)
 - [x] Open exact-check detailed evidence from the account identity queue using the shared review panel, recorded warnings, on-demand photos and existing decisions/match clearances; no authority or verification changes.
 - [x] 47 existing identity/match checks passed; fictional click-through verified exact-check details, expected-name comparison, masked ID, breach details, photo control, absent evidence and clean session switching on desktop/compact screens without runtime errors; preview build OK.
