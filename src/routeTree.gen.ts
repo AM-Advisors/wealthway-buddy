@@ -458,6 +458,7 @@ import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/em
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as AuthenticatedAdminClientsClientIdEntitiesRouteImport } from './routes/_authenticated/admin.clients.$clientId.entities'
 import { Route as AuthenticatedClientAgreementsSowSowIdRouteImport } from './routes/_authenticated/client.agreements.sow.$sowId'
+import { Route as AuthenticatedClientInvoicesInvoiceIdQuoteRouteImport } from './routes/_authenticated/client.invoices_.$invoiceId.quote'
 import { Route as AuthenticatedClientServicesRequestsRequestIdRouteImport } from './routes/_authenticated/client.services.requests.$requestId'
 import { Route as AuthenticatedManagerFundFundIdIndexRouteImport } from './routes/_authenticated/manager.fund.$fundId.index'
 import { Route as AuthenticatedManagerFundFundIdApprovalsRouteImport } from './routes/_authenticated/manager.fund.$fundId.approvals'
@@ -3038,6 +3039,12 @@ const AuthenticatedClientAgreementsSowSowIdRoute =
     path: '/sow/$sowId',
     getParentRoute: () => AuthenticatedClientAgreementsRoute,
   } as any)
+const AuthenticatedClientInvoicesInvoiceIdQuoteRoute =
+  AuthenticatedClientInvoicesInvoiceIdQuoteRouteImport.update({
+    id: '/invoices_/$invoiceId/quote',
+    path: '/invoices/$invoiceId/quote',
+    getParentRoute: () => AuthenticatedClientRoute,
+  } as any)
 const AuthenticatedClientServicesRequestsRequestIdRoute =
   AuthenticatedClientServicesRequestsRequestIdRouteImport.update({
     id: '/services/requests/$requestId',
@@ -3626,6 +3633,7 @@ export interface FileRoutesByFullPath {
   '/ops/investors/': typeof AuthenticatedOpsInvestorsIndexRoute
   '/admin/clients/$clientId/entities': typeof AuthenticatedAdminClientsClientIdEntitiesRoute
   '/client/agreements/sow/$sowId': typeof AuthenticatedClientAgreementsSowSowIdRoute
+  '/client/invoices/$invoiceId/quote': typeof AuthenticatedClientInvoicesInvoiceIdQuoteRoute
   '/client/services/requests/$requestId': typeof AuthenticatedClientServicesRequestsRequestIdRoute
   '/manager/fund/$fundId/approvals': typeof AuthenticatedManagerFundFundIdApprovalsRoute
   '/manager/fund/$fundId/assets': typeof AuthenticatedManagerFundFundIdAssetsRoute
@@ -4091,6 +4099,7 @@ export interface FileRoutesByTo {
   '/ops/investors': typeof AuthenticatedOpsInvestorsIndexRoute
   '/admin/clients/$clientId/entities': typeof AuthenticatedAdminClientsClientIdEntitiesRoute
   '/client/agreements/sow/$sowId': typeof AuthenticatedClientAgreementsSowSowIdRoute
+  '/client/invoices/$invoiceId/quote': typeof AuthenticatedClientInvoicesInvoiceIdQuoteRoute
   '/client/services/requests/$requestId': typeof AuthenticatedClientServicesRequestsRequestIdRoute
   '/manager/fund/$fundId/approvals': typeof AuthenticatedManagerFundFundIdApprovalsRoute
   '/manager/fund/$fundId/assets': typeof AuthenticatedManagerFundFundIdAssetsRoute
@@ -4566,6 +4575,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/investors/': typeof AuthenticatedOpsInvestorsIndexRoute
   '/_authenticated/admin/clients/$clientId/entities': typeof AuthenticatedAdminClientsClientIdEntitiesRoute
   '/_authenticated/client/agreements/sow/$sowId': typeof AuthenticatedClientAgreementsSowSowIdRoute
+  '/_authenticated/client/invoices_/$invoiceId/quote': typeof AuthenticatedClientInvoicesInvoiceIdQuoteRoute
   '/_authenticated/client/services/requests/$requestId': typeof AuthenticatedClientServicesRequestsRequestIdRoute
   '/_authenticated/manager/fund/$fundId/approvals': typeof AuthenticatedManagerFundFundIdApprovalsRoute
   '/_authenticated/manager/fund/$fundId/assets': typeof AuthenticatedManagerFundFundIdAssetsRoute
@@ -5041,6 +5051,7 @@ export interface FileRouteTypes {
     | '/ops/investors/'
     | '/admin/clients/$clientId/entities'
     | '/client/agreements/sow/$sowId'
+    | '/client/invoices/$invoiceId/quote'
     | '/client/services/requests/$requestId'
     | '/manager/fund/$fundId/approvals'
     | '/manager/fund/$fundId/assets'
@@ -5506,6 +5517,7 @@ export interface FileRouteTypes {
     | '/ops/investors'
     | '/admin/clients/$clientId/entities'
     | '/client/agreements/sow/$sowId'
+    | '/client/invoices/$invoiceId/quote'
     | '/client/services/requests/$requestId'
     | '/manager/fund/$fundId/approvals'
     | '/manager/fund/$fundId/assets'
@@ -5980,6 +5992,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/investors/'
     | '/_authenticated/admin/clients/$clientId/entities'
     | '/_authenticated/client/agreements/sow/$sowId'
+    | '/_authenticated/client/invoices_/$invoiceId/quote'
     | '/_authenticated/client/services/requests/$requestId'
     | '/_authenticated/manager/fund/$fundId/approvals'
     | '/_authenticated/manager/fund/$fundId/assets'
@@ -9235,6 +9248,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClientAgreementsSowSowIdRouteImport
       parentRoute: typeof AuthenticatedClientAgreementsRoute
     }
+    '/_authenticated/client/invoices_/$invoiceId/quote': {
+      id: '/_authenticated/client/invoices_/$invoiceId/quote'
+      path: '/invoices/$invoiceId/quote'
+      fullPath: '/client/invoices/$invoiceId/quote'
+      preLoaderRoute: typeof AuthenticatedClientInvoicesInvoiceIdQuoteRouteImport
+      parentRoute: typeof AuthenticatedClientRoute
+    }
     '/_authenticated/client/services/requests/$requestId': {
       id: '/_authenticated/client/services/requests/$requestId'
       path: '/services/requests/$requestId'
@@ -9519,6 +9539,7 @@ interface AuthenticatedClientRouteChildren {
   AuthenticatedClientServicesEngagementIdRoute: typeof AuthenticatedClientServicesEngagementIdRoute
   AuthenticatedClientServicesRequestRoute: typeof AuthenticatedClientServicesRequestRoute
   AuthenticatedClientServicesIndexRoute: typeof AuthenticatedClientServicesIndexRoute
+  AuthenticatedClientInvoicesInvoiceIdQuoteRoute: typeof AuthenticatedClientInvoicesInvoiceIdQuoteRoute
   AuthenticatedClientServicesRequestsRequestIdRoute: typeof AuthenticatedClientServicesRequestsRequestIdRoute
 }
 
@@ -9545,6 +9566,8 @@ const AuthenticatedClientRouteChildren: AuthenticatedClientRouteChildren = {
   AuthenticatedClientServicesRequestRoute:
     AuthenticatedClientServicesRequestRoute,
   AuthenticatedClientServicesIndexRoute: AuthenticatedClientServicesIndexRoute,
+  AuthenticatedClientInvoicesInvoiceIdQuoteRoute:
+    AuthenticatedClientInvoicesInvoiceIdQuoteRoute,
   AuthenticatedClientServicesRequestsRequestIdRoute:
     AuthenticatedClientServicesRequestsRequestIdRoute,
 }
