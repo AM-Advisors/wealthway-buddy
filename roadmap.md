@@ -1,5 +1,11 @@
 # Roadmap
 
+## Direct invoice and fee links (2026-10-26)
+- [x] Client invoices page: each invoice has a Copy direct link button (/client/invoices?invoice=<id>) that opens, sorts and scrolls to that invoice; fund managers use it to jump straight to the invoice.
+- [x] Staff invoice board: Copy link for fund manager button copies the client-facing direct link for sharing.
+- [x] Accounting page: /ops/accounting?tab=fees&invoice=<id> opens the Invoice fees tab scoped to one invoice, with per-fee Copy link and a Show all fees reset. Twelve focused fee/balance tests pass.
+- [ ] Authenticated click-through of the deep links, blocked on independently isolated synthetic QA sessions.
+
 ## Fund and company fee accounting links (2026-10-26)
 - [x] Added same-client fund/legal-company assignment per issued fee using append-only billing events, with fixed recorded fund ownership and no invoice-term changes. Accounting Invoice fees tab reads those same sources and any existing source-linked journal status; no duplicate ledger entries are created.
 - [x] Sixty-six focused offline fee-ownership, invoice relationship and staged-bookkeeping rules pass; preview build OK. No live assignments, financial records, activation, emails or payments changed.
