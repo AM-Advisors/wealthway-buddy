@@ -65,4 +65,4 @@
 - Offering pop-outs pin versions — why: originals only.
 - Manager adds use createInvestorAndInvite + personal-link sender; imports retain createInvestor — why: saved records survive email failure, no bulk sends.
 
-- Public security uses security-content.ts and published trust items only, and never states certification status — why: no implied controls.
+- Public security uses published content only, never certification status; see src/lib/AGENTS.md.
