@@ -19,6 +19,15 @@ const publisherFields: Record<string, string> = {
   nameoffundmanager: "Fund Manager Name",
 };
 
+/** Names an empty {{}} blank from the label immediately before it. */
+export function unlabeledField(before: string) {
+  const tail = before.slice(-40);
+  if (/(?:tel|telephone|phone|ph)\.?\s*:?\s*$/i.test(tail)) return "Manager Phone";
+  if (/e-?mail\s*:?\s*$/i.test(tail)) return "Manager Email";
+  if (/(?:fax)\s*:?\s*$/i.test(tail)) return "Manager Fax";
+  return "Unlabeled blank";
+}
+
 /** Flag fixed clauses that disagree with recorded facts; never rewrite legal clauses. */
 export function templateTermConflicts(text: string, raw: Record<string, string | null | undefined>) {
   const values = Object.fromEntries(Object.entries(raw).map(([key, value]) => [normKey(key), value]));
@@ -51,10 +60,13 @@ export function fillXml(xml: string, values: Record<string, string>, seen: { fil
     const texts = nodes.map((n) => n.text);
     const offsets: number[] = []; let o = 0; for (const t of texts) { offsets.push(o); o += t.length; }
     const at = (pos: number) => { let i = offsets.length - 1; while (i > 0 && (offsets[i] ?? 0) > pos) i--; return i; };
-    const tokens = [...joined.matchAll(/\{\{([^{}]{1,80})\}\}|\[([^\[\]]{1,80})\]/g)].reverse();
+    const tokens = [...joined.matchAll(/\{\{([^{}]{0,80})\}\}|\[([^\[\]]{1,80})\]/g)].reverse();
     let changed = false;
     for (const t of tokens) {
-      const label = t[1] ?? t[2];
+      let label = t[1] ?? t[2];
+      // Empty {{}} blanks take their meaning from the label just before them
+      // ("Tel:", "e-mail:"); anything else is reported so it is never missed.
+      if (t[1] != null && !t[1].trim()) label = unlabeledField(joined.slice(0, t.index));
       if (!label) continue;
       const publisherKey = t[2] ? publisherFields[normKey(label)] : undefined;
       if (t[2] && !publisherKey) { seen.open.add(label.trim()); continue; }

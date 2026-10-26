@@ -65,3 +65,19 @@ describe("recorded fund terms", () => {
     expect(templateTermConflicts('"Arbitration Location" means Dallas, Texas. The Manager will not receive a management fee.', { "Arbitration City": "Dallas", "Arbitration State": "Texas", "Management Fee": "0%" })).toEqual([]);
   });
 });
+import { fillXml as fillXmlBlank, unlabeledField } from "./docx-autofill";
+describe("empty {{}} blanks", () => {
+  const para = (t: string) => `<w:p><w:r><w:t xml:space="preserve">${t}</w:t></w:r></w:p>`;
+  it("fills Tel and e-mail blanks from the manager's phone and email", () => {
+    const seen = { filled: new Set<string>(), open: new Set<string>() };
+    const out = fillXmlBlank(para("Tel: {{}}") + para("e-mail: {{}}"), { managerphone: "+1 214-728-6100", manageremail: "t@x.com" }, seen);
+    expect(out).toContain("Tel: +1 214-728-6100");
+    expect(out).toContain("e-mail: t@x.com");
+  });
+  it("reports an empty blank it cannot name instead of skipping it", () => {
+    const seen = { filled: new Set<string>(), open: new Set<string>() };
+    fillXmlBlank(para("Notes {{}}"), {}, seen);
+    expect([...seen.open]).toContain("Unlabeled blank");
+    expect(unlabeledField("Phone:")).toBe("Manager Phone");
+  });
+});
