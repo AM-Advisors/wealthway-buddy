@@ -144,7 +144,7 @@ export function ClientDashboard({
       id: `inv-${inv.id}`,
       date: String(inv.due_date).slice(0, 10),
       kind: "invoice",
-      label: `${inv.number ?? inv.invoice_number ?? "Invoice"} due · ${money(inv.total_cents)}`,
+      label: `${inv.number ?? inv.invoice_number ?? "Invoice"} due · ${money(inv.remaining_cents ?? inv.total_cents)}`,
       detail: inv.client_approved_at ? "Approved by you" : "Awaiting your approval",
     });
   }

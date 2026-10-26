@@ -1,5 +1,12 @@
 # Roadmap
 
+## ROAS partial payments and White Glove (2026-10-26)
+- [x] Client invoices/downloads show paid and remaining; outstanding total and dashboard due amounts use remaining balances. Authorized readers project receipt snapshots only; issued amounts/notes unchanged. Partial-payment card checkout blocked to prevent full-amount double collection.
+- [x] Recorded the previously confirmed $11,500 INV-5 receipt as an append-only structured total; read back $19,000 original, $11,500 paid, $7,500 remaining. No paid status, invoice, commission or money movement triggered.
+- [x] Added ROAS-specific proposed Fund Administration White Glove at $12,000 quarterly, $48,000 annualized, through the existing save validation/authorization with custom-price reason. No effective date, activation, invoice or email; agreement/approval remain required.
+- [x] Thirteen focused balance/migrated-authority/custom-pricing checks passed; preview build OK and actual saved balances/proposed service read back.
+- [ ] Authenticated client UI read-back, blocked on independently isolated synthetic QA; no production client session used for testing.
+
 ## Corps LaaSy subscription agreement and PPM (2026-10-26)
 - [x] Added both approved SPV templates through authorized staff generation and read back stored Word copies with Corps LaaSy's name and canonical terms. Subscription v2 removes two inherited red font settings without changing wording and retains investor-first signing configuration. PPM v1 and subscription v2 remain inactive review drafts; Operating Agreement v2 and all signature/history records unchanged. No email sent.
 - [x] Arbitration recorded on the fund as Dallas, Texas (2026-10-26).
