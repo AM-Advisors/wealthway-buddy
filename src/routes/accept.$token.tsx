@@ -15,6 +15,8 @@ import { CARD_SERVICE_FEE_LABEL } from "@/lib/card-fee";
 import { SOW_ROLE_DISCLAIMER } from "@/lib/agreement-templates";
 import { RESPONSE_STATUS } from "@/lib/sales-response-model";
 import { acceptanceRemittance, respondToSalesDocument, signAcceptance, viewAcceptance } from "@/lib/sales-acceptance.functions";
+import { InvoiceDueDate } from "@/components/invoice-due-date";
+import { billingDate } from "@/lib/client-billing-links";
 
 export const Route = createFileRoute("/accept/$token")({
   ssr: false,
@@ -72,6 +74,7 @@ function AcceptPage() {
         <CardHeader>
           <CardDescription>{KIND[d.kind] ?? "Document"} · version {d.version}{d.clientName ? ` · ${d.clientName}` : ""}</CardDescription>
           <CardTitle className="font-heading text-2xl">{d.title}</CardTitle>
+          {d.validUntil && <p className="text-sm text-muted-foreground">Quote valid until: <strong>{billingDate(d.validUntil)}</strong></p>}
           <p className="text-sm text-muted-foreground">From Harmonious{d.salesContact ? <> · Your contact: <span className="font-medium text-foreground">{d.salesContact.name}</span> · <a className="underline" href={`mailto:${d.salesContact.email}`}>{d.salesContact.email}</a></> : null}</p>
           {(d as any).stale && <p className="text-sm text-destructive">A newer version is available. Please use the latest link from your Harmonious contact.</p>}
         </CardHeader>
@@ -121,10 +124,16 @@ function AcceptPage() {
       {d.accepted ? (
         <Card>
           <CardHeader><CardTitle className="font-heading">Signed by {d.accepted.signerName}</CardTitle>
-            <CardDescription>{new Date(d.accepted.acceptedAt).toLocaleString()}{d.invoice ? ` · invoice ${d.invoice.number} issued for ${money(d.invoice.totalCents)}, due ${d.invoice.dueDate}` : ""}</CardDescription></CardHeader>
+            <CardDescription>{new Date(d.accepted.acceptedAt).toLocaleString()}</CardDescription></CardHeader>
           <CardContent className="space-y-3">
             {!d.invoice && <p className="text-sm text-muted-foreground">{d.accepted.invoiceError ?? "Your invoice is being prepared."}</p>}
-            {d.invoice && <PaySection token={token} initial={(d.accepted.paymentMethod as Method) ?? "wire"} />}
+            {d.invoice && <section className="space-y-3 border-y py-4" aria-label="Linked invoice">
+              <div className="flex flex-wrap items-center justify-between gap-2"><h2 className="text-base font-semibold">Invoice {d.invoice.number}</h2><Badge variant="outline">{d.invoice.partiallyPaid ? "Partially paid" : d.invoice.status === "paid" ? "Paid" : d.invoice.status === "void" ? "Cancelled" : "Awaiting payment"}</Badge></div>
+              <InvoiceDueDate invoice={{ due_date: d.invoice.dueDate, status: d.invoice.status, total_cents: d.invoice.totalCents, recorded_paid_cents: d.invoice.paidCents }} />
+              <p className="text-sm">Total: {money(d.invoice.totalCents)} · Paid: {money(d.invoice.paidCents)} · Remaining: {money(d.invoice.remainingCents)}</p>
+              <Button asChild><a href={`/client/invoices?invoice=${encodeURIComponent(d.invoice.id)}`}>{d.invoice.status === "issued" && d.invoice.remainingCents > 0 ? "View and pay invoice" : "View invoice"}</a></Button>
+              {d.invoice.status === "issued" && d.invoice.remainingCents > 0 && <PaySection token={token} initial={(d.accepted.paymentMethod as Method) ?? "wire"} />}
+            </section>}
             <div className="rounded-md border p-4">
               <p className="text-sm">Your account is ready. Sign in with the email this was sent to and start setting up your fund.</p>
               <a href="/auth?next=%2Fclient%2Ffunds%2Fnew" className="mt-3 inline-block rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">Sign in and start setting up your fund</a>

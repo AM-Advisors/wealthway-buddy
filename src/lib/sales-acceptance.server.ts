@@ -25,6 +25,7 @@ async function sha256(text: string) {
 type Loaded = {
   kind: AcceptKind; id: string; version: number; title: string; clientId: string | null; offeringId: string | null; quoteId: string | null;
   ownerId: string | null; dealId: string | null; status: string; approvedVersion: number | null; recipientEmail: string | null;
+  validUntil: string | null;
   sections: { title: string; body: string }[]; lines: any[]; showPricing: boolean;
 };
 
@@ -42,16 +43,18 @@ async function loadRecord(db: any, kind: AcceptKind, id: string): Promise<Loaded
     });
     return { kind, id, version: q.version ?? 1, title: q.title || `Quote Q-${q.quote_number}`, clientId: q.client_id, offeringId: q.offering_id ?? null, quoteId: q.id,
       ownerId: q.owner_user_id, dealId: q.deal_id, status: q.status, approvedVersion: q.version ?? 1, recipientEmail: c?.email ?? null,
+      validUntil: q.valid_until ?? null,
       sections: quoteClientSections(q.sections, facts, await currentAbout(db), q.notes ?? null), lines: lines ?? [], showPricing: quoteShowsPricing(q.sections) };
   }
   const { data: d } = await db.from("sales_documents").select("*").eq("id", id).maybeSingle();
   if (!d || d.kind !== kind) throw new Error("This link is no longer valid.");
   const v = d.approved_version ?? d.current_version;
   const { data: ver } = await db.from("sales_document_versions").select("sections").eq("document_id", id).eq("version", v).maybeSingle();
-  const { data: q } = d.quote_id ? await db.from("sales_quotes").select("offering_id, client_id").eq("id", d.quote_id).maybeSingle() : { data: null };
+  const { data: q } = d.quote_id ? await db.from("sales_quotes").select("offering_id, client_id, valid_until").eq("id", d.quote_id).maybeSingle() : { data: null };
   const { data: lines } = d.quote_id ? await db.from("sales_quote_lines").select("*").eq("quote_id", d.quote_id).order("sort_order") : { data: [] };
   return { kind, id, version: v, title: d.title, clientId: d.client_id ?? q?.client_id ?? null, offeringId: q?.offering_id ?? null, quoteId: d.quote_id,
     ownerId: d.owner_user_id, dealId: d.deal_id, status: d.status, approvedVersion: d.approved_version, recipientEmail: d.sent_to ?? d.recipient_email ?? null,
+    validUntil: q?.valid_until ?? null,
     sections: ((ver?.sections ?? []) as any[]).filter((s) => s.key !== "terms" && isSectionShown(s) && (s.key !== "summary_note" || String(s.body ?? "").trim())).map((s) => ({ title: String(s.title ?? ""), body: String(s.body ?? "") })),
     lines: lines ?? [], showPricing: true };
 }
@@ -174,13 +177,17 @@ export async function viewForToken(token: string) {
   const r = await loadRecord(db, t.kind, t.id);
   const acc = await acceptanceFor(db, acceptanceKey(t.kind, t.id, t.version));
   const { data: client } = r.clientId ? await db.from("clients").select("name, legal_name").eq("id", r.clientId).maybeSingle() : { data: null };
-  const { data: inv } = acc?.invoice_id ? await db.from("invoices").select("id, number, total_cents, due_date, status").eq("id", acc.invoice_id).maybeSingle() : { data: null };
+  const { data: recordedInvoice, error: invoiceError } = acc?.invoice_id ? await db.from("invoices").select("id, client_id, acceptance_key, number, total_cents, due_date, status, paid_on").eq("id", acc.invoice_id).maybeSingle() : { data: null, error: null };
+  if (invoiceError) throw new Error("The invoice could not be loaded. Please try again.");
+  const { acceptanceInvoiceMatches } = await import("./client-billing-links");
+  const [inv] = recordedInvoice && acceptanceInvoiceMatches(recordedInvoice, r.clientId, acceptanceKey(t.kind, t.id, t.version)) ? await (await import("./invoice-balance.server")).withInvoiceBalances([recordedInvoice]) : [];
   const lines = invoiceLinesFromQuote(r.lines);
   const { responseProjection } = await import("./sales-response-model");
   const { readResponseEvents } = await import("./sales-response.server");
   const response = responseProjection(await readResponseEvents(db, t.kind, t.id), t.version, !!acc, ["approved", "sent"].includes(r.status), t.email);
   return {
     kind: r.kind, title: r.title, version: t.version, clientName: client?.legal_name || client?.name || null,
+    validUntil: r.validUntil,
     response,
     sow: await linkedSowView(db, r, t, !!acc),
     stale: r.kind !== "quote" && r.approvedVersion !== t.version,
@@ -191,7 +198,7 @@ export async function viewForToken(token: string) {
     showPricing: r.showPricing,
     totalCents: lines.reduce((s, l) => s + l.amount_cents, 0),
     accepted: acc ? { signerName: acc.signer_name, acceptedAt: acc.accepted_at, paymentMethod: acc.payment_method, invoiceError: acc.invoice_error } : null,
-    invoice: inv ? { number: inv.number, totalCents: Number(inv.total_cents), dueDate: inv.due_date, status: inv.status } : null,
+    invoice: inv ? { id: inv.id, number: inv.number, totalCents: Number(inv.total_cents), dueDate: inv.due_date, status: inv.status, paidCents: inv.recorded_paid_cents, remainingCents: inv.remaining_cents, partiallyPaid: inv.partially_paid } : null,
   };
 }
 

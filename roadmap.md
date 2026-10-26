@@ -1,5 +1,11 @@
 # Roadmap
 
+## Connected client quotes, agreements and invoice due dates (2026-10-26)
+- [x] Client invoices open same-client original quote/proposal readers and entitled SOWs; SOWs list exact related issued invoices with direct invoice selection/payment links. Original versions/read fields are scoped; no new signing tokens or access grants.
+- [x] Signed proposals show exact acceptance-linked invoice number/status, paid/remaining balances, recorded due dates and direct invoice link. Quote valid-until is separate; absent dates remain Not set. No issued terms, due dates, signatures, emails or money changed.
+- [x] Thirty-five focused relationship, date, balance, acceptance and client-section tests pass; preview build OK. Offline fictional deadline/control display inspected on desktop and 440px screen without overflow/runtime errors, not a real authenticated page walkthrough.
+- [ ] Authenticated quote → invoice → SOW → payment read-back, blocked on independently isolated synthetic QA evidence/sessions; no real signing/payment or production client testing.
+
 ## ROAS billing frequency and invoice views (2026-10-26)
 - [x] Added monthly, quarterly, and annual proposed engagement selectors with consistent negotiated annual value; ROAS White Glove calculates $4,000/$12,000/$48,000. ROAS-specific quote monthly selection uses annual-equivalent conversion without changing global rates. Contracted cadence changes require a new agreement; no live service, quote or invoice changes.
 - [x] Added shared client/Operations monthly, quarterly, and annual billed/paid/remaining views with invoice selection; issue dates, recorded receipt dates and due dates remain separate. Existing payment plans and issued/receipt history unchanged; staff outstanding total uses remaining balances.
