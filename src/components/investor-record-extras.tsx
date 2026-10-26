@@ -3,6 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 
 import { addDistributionDestinationFn, editRelatedPartyFn, updateInvestorRecordFn } from "@/lib/investor-record.functions";
+import { isPaperworkContactRole, relatedRoleLabel } from "@/lib/investor-record-model";
 import { RELATED_REVIEW_MESSAGE } from "@/lib/related-person-model";
 import { prettyStatus } from "@/lib/status";
 import { Button } from "@/components/ui/button";
@@ -39,13 +40,32 @@ export function RelatedPartiesEditor({ onboardingId, related, editable, onChange
   };
   const pct = (v: string) => (v.trim() === "" ? null : Number(v));
 
+  const contacts = related.filter((r) => isPaperworkContactRole(r.role));
+  const owners = related.filter((r) => !isPaperworkContactRole(r.role));
+
   return (
     <div className="space-y-3 sm:col-span-2">
+      {contacts.length ? (
+        <div className="space-y-2">
+          <p className="text-sm font-medium">Paperwork contact</p>
+          <ul className="space-y-2">
+            {contacts.map((r) => (
+              <li key={r.id} className="rounded-md border p-3 text-sm">
+                <p className="font-medium">{r.name}</p>
+                <p className="text-xs text-muted-foreground">
+                  {relatedRoleLabel(r.role)} · receives the invitation and reminders; the investor still signs
+                  {r.underReview ? ` · ${RELATED_REVIEW_MESSAGE}` : ""}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
       <p className="text-sm font-medium">Owners, control persons & signers</p>
       {!editable ? <p className="text-xs text-muted-foreground">Signing or funding has started, so changes go through Harmonious.</p> : null}
-      {related.length === 0 ? <p className="text-sm text-muted-foreground">None recorded.</p> : (
+      {owners.length === 0 ? <p className="text-sm text-muted-foreground">None recorded.</p> : (
         <ul className="space-y-2">
-          {related.map((r) => {
+          {owners.map((r) => {
             const cur = rows[r.id] ?? { role: r.role, pct: r.ownershipPercent == null ? "" : String(r.ownershipPercent), signer: r.signer };
             const setRow = (patch: Partial<typeof cur>) => setRows((s) => ({ ...s, [r.id]: { ...cur, ...patch } }));
             return (
