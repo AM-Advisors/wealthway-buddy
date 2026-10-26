@@ -1,5 +1,10 @@
 # Roadmap
 
+## Connected client quotes, agreements and invoice due dates (2026-10-26)
+- [ ] Add entitled original quote/SOW links on client invoices and related invoice links on SOWs.
+- [ ] Link signed proposals to the exact client invoice, show current balances/status and recorded due dates; show quote acceptance deadline separately.
+- [ ] Add focused entitlement/date tests, check preview errors; authenticated end-to-end verification requires independently isolated synthetic QA.
+
 ## ROAS billing frequency and invoice views (2026-10-26)
 - [x] Added monthly, quarterly, and annual proposed engagement selectors with consistent negotiated annual value; ROAS White Glove calculates $4,000/$12,000/$48,000. ROAS-specific quote monthly selection uses annual-equivalent conversion without changing global rates. Contracted cadence changes require a new agreement; no live service, quote or invoice changes.
 - [x] Added shared client/Operations monthly, quarterly, and annual billed/paid/remaining views with invoice selection; issue dates, recorded receipt dates and due dates remain separate. Existing payment plans and issued/receipt history unchanged; staff outstanding total uses remaining balances.
