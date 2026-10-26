@@ -248,7 +248,7 @@ export async function fundTemplateValues(offeringId: string): Promise<Record<str
   const results = await Promise.all([
     o.client_id ? db().from("clients").select("name, legal_name, primary_contact_name, primary_contact_email").eq("id", o.client_id).maybeSingle() : Promise.resolve({ data: null }),
     db().from("fund_fee_terms").select("management_fee_pct, management_fee_basis, carry_pct, hurdle_pct, status, created_at").eq("offering_id", offeringId).eq("status", "active").order("created_at", { ascending: false }).limit(1).maybeSingle(),
-    o.fund_signatory_person_id ? db().from("persons").select("legal_first_name, legal_middle_name, legal_last_name, email").eq("id", o.fund_signatory_person_id).maybeSingle() : Promise.resolve({ data: null }),
+    o.fund_signatory_person_id ? db().from("persons").select("legal_first_name, legal_middle_name, legal_last_name, email, phone").eq("id", o.fund_signatory_person_id).maybeSingle() : Promise.resolve({ data: null }),
   ]);
   if (results.some((result: { error?: unknown }) => result.error)) throw new Error("Could not load the recorded parties or fee terms for the document.");
   const [{ data: c }, { data: fee }, { data: sig }] = results;
@@ -257,6 +257,7 @@ export async function fundTemplateValues(offeringId: string): Promise<Record<str
   const manager = o.gp_entity_name || o.signatory_entity_name || c?.legal_name || c?.name || null;
   const signer = fullName(sig);
   const email = sig?.email || c?.primary_contact_email || null;
+  const phone = sig?.phone ? formatPhone(String(sig.phone)) : null;
   const v: Record<string, string | null> = {
     "Fund Name": legal, "Fund Legal Name": legal, "Legal Fund Name": legal, "Legal Name": legal,
     "Subscription Amount": o.min_investment_cents == null ? null : new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(o.min_investment_cents / 100),
@@ -270,6 +271,7 @@ export async function fundTemplateValues(offeringId: string): Promise<Record<str
     "Management Fee": pct(fee?.management_fee_pct), "Carry Percent": pct(fee?.carry_pct), "Carry Amount": pct(fee?.carry_pct),
     "Management Fee Basis": fee?.management_fee_basis ?? null, "Hurdle Percent": pct(fee?.hurdle_pct), "Preferred Return": pct(fee?.hurdle_pct),
     "address": o.principal_address, "Manager Address": o.principal_address, "email": email, "Manager Email": email,
+    "phone": phone, "Manager Phone": phone, "Tel": phone, "Telephone": phone,
     "Address Line 1": ap.addressLine1, "Address Line 2": ap.addressLine2, "Address City": ap.addressCity, "Address State": ap.addressState, "Address ZIP": ap.addressZip,
     "Signatory's Legal Name": signer, "Fund Manager Signatory": signer, "Fund Manager Signatory Name": signer,
     "Signatory's Title": o.signatory_title, "Signatory Title": o.signatory_title, "Fund Manager Signatory Title": o.signatory_title,

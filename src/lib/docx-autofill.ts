@@ -19,6 +19,15 @@ const publisherFields: Record<string, string> = {
   nameoffundmanager: "Fund Manager Name",
 };
 
+/** Names an empty {{}} blank from the label immediately before it. */
+export function unlabeledField(before: string) {
+  const tail = before.slice(-40);
+  if (/(?:tel|telephone|phone|ph)\.?\s*:?\s*$/i.test(tail)) return "Manager Phone";
+  if (/e-?mail\s*:?\s*$/i.test(tail)) return "Manager Email";
+  if (/(?:fax)\s*:?\s*$/i.test(tail)) return "Manager Fax";
+  return "Unlabeled blank";
+}
+
 /** Flag fixed clauses that disagree with recorded facts; never rewrite legal clauses. */
 export function templateTermConflicts(text: string, raw: Record<string, string | null | undefined>) {
   const values = Object.fromEntries(Object.entries(raw).map(([key, value]) => [normKey(key), value]));
