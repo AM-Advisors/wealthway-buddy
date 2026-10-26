@@ -25,11 +25,9 @@ function decodeCrossJson(node: any): any {
   if (node === null || typeof node !== "object") return node;
   if (Array.isArray(node)) return node.map(decodeCrossJson);
   if (typeof node.t !== "number") return node;
-  // Constants: seroval encodes null/undefined/etc. as small tagged nodes without payload.
-  if (node.t === 0) return null;
+  if (node.t === 0) return node.s; // number
   if (node.t === 1) return node.s; // string
-  if (node.t === 2) return node.s; // number
-  if (node.t === 3) return !!node.s; // boolean
+  if (node.t === 2) return [null, undefined, true, false, -0, Infinity, -Infinity, NaN][node.s as number]; // constant
   if (node.p && Array.isArray(node.p.k) && Array.isArray(node.p.v)) {
     const out: Record<string, unknown> = {};
     node.p.k.forEach((key: string, i: number) => {
