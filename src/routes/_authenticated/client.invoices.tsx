@@ -16,6 +16,7 @@ import { InvoiceRemittance } from "@/components/invoice-remittance";
 import { PaymentPlanner } from "@/components/payment-planner";
 import { declareInvoicePayment, listMyInvoices, respondToInvoice } from "@/lib/invoices.functions";
 import { invoiceBalance } from "@/lib/invoice-balance";
+import { InvoicePeriodSummary } from "@/components/invoice-period-summary";
 
 export const Route = createFileRoute("/_authenticated/client/invoices")({
   head: () => ({
@@ -151,7 +152,10 @@ function ClientInvoicesPage() {
         </Card>
       </div>
 
-      {!isLoading && !error && <PaymentPlanner scope="invoices" rows={invoices.map(inv => ({ id: inv.id, label: inv.number ?? "Invoice", cents: Number(inv.total_cents), date: inv.status === "paid" ? inv.paid_on : inv.due_date ?? inv.issue_date, status: inv.status, currency: inv.currency ?? "USD" }))} />}
+      {!isLoading && !error && <>
+        <InvoicePeriodSummary invoices={invoices} />
+        <PaymentPlanner scope="invoices" rows={invoices.map(inv => ({ id: inv.id, label: inv.number ?? "Invoice", cents: Number(inv.total_cents), date: inv.status === "paid" ? inv.paid_on : inv.due_date ?? inv.issue_date, status: inv.status, currency: inv.currency ?? "USD" }))} />
+      </>}
       {error ? <p role="alert" className="mt-6 text-sm text-destructive">{error.message}</p> : isLoading ? (
         <p className="mt-6 text-sm text-muted-foreground">Loading your invoices…</p>
       ) : invoices.length === 0 ? (

@@ -106,6 +106,11 @@ export const saveServiceEngagement = createServerFn({ method: "POST" })
     const { id, ...fields } = data;
     const prior = id ? (await d.from("service_engagements").select("*").eq("id", id).maybeSingle()).data : null;
     if (id && !prior) throw new Error("Engagement not found.");
+    const cadence = await import("@/lib/service-billing-cadence");
+    const frequencyChanged = !!prior && fields.billing_frequency !== undefined && fields.billing_frequency !== prior.billing_frequency;
+    if (frequencyChanged && !["PROPOSED", "PENDING_AGREEMENT"].includes(prior.service_status)) {
+      throw new Error("Contracted billing frequency requires a new agreement. Prepare a proposed engagement instead.");
+    }
     const ladders = await import("@/lib/service-ladders");
     if (!ladders.isValidCombination(fields.service_product, fields.service_level)) throw new Error(`That level isn't offered for ${ladders.isLadderProduct(fields.service_product) ? ladders.SERVICE_LADDERS[fields.service_product].label : "this product"}.`);
     const { data: price } = await d.from("service_pricing_versions").select("*")
@@ -125,6 +130,9 @@ export const saveServiceEngagement = createServerFn({ method: "POST" })
       row.contracted_annual_value = pv.annual_price ?? pv.starting_price ?? null;
     }
     if (row.recurring_invoice_amount == null && (!prior || tierChanged)) row.recurring_invoice_amount = cadencePrice(pv, fields.billing_frequency);
+    if (frequencyChanged && !tierChanged && cadence.isServiceCadence(fields.billing_frequency)) {
+      row.recurring_invoice_amount = cadence.serviceCadenceAmount({ ...prior, ...row }, fields.billing_frequency, pv);
+    }
 
     const listAnnual = pv?.annual_price ?? pv?.starting_price ?? null;
     const { isPricingOverride, assertPricingOverrideAllowed } = await import("@/lib/service-pricing-rules");

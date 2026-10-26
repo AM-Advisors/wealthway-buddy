@@ -26,6 +26,7 @@ export function FundServicesTab({ fundId }: { fundId: string }) {
             <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
               <Item k="Annual contract" v={r.included_at_no_charge ? "Included" : usd(r.contracted_annual_value)} />
               <Item k="Billing" v={r.included_at_no_charge ? " · " : titleCase(r.billing_frequency)} />
+              <Item k="Amount per bill" v={r.included_at_no_charge ? "Included" : usd(r.recurring_invoice_amount)} />
               <Item k="Reporting" v={titleCase(r.reporting_frequency)} />
               <Item k="Effective" v={fmtDate(r.effective_date)} />
               <Item k="Renewal" v={fmtDate(r.renewal_date)} />

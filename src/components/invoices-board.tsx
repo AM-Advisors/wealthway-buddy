@@ -6,6 +6,8 @@ import { toast } from "sonner";
 import { ActivityPanel } from "@/components/activity-panel";
 import { InvoiceEmailStatus } from "@/components/invoice-email-status";
 import { PaymentPlanner } from "@/components/payment-planner";
+import { InvoicePeriodSummary } from "@/components/invoice-period-summary";
+import { invoiceBalance } from "@/lib/invoice-balance";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -216,7 +218,7 @@ export function InvoicesBoard() {
 
   const outstanding = ((data?.invoices ?? []) as any[])
     .filter((i) => i.status === "issued")
-    .reduce((s, i) => s + Number(i.total_cents ?? 0), 0);
+    .reduce((s, i) => s + invoiceBalance(i).remainingCents, 0);
   const overdue = ((data?.invoices ?? []) as any[]).filter((i) => i.overdue);
   const clientPayments = ((data?.invoices ?? []) as any[])
     .filter((i) => i.client_payment_declared_at)
@@ -237,6 +239,7 @@ export function InvoicesBoard() {
 
   return (
     <div className="space-y-6">
+      <InvoicePeriodSummary invoices={invoices} />
       <PaymentPlanner scope="invoices" rows={invoices.map(inv => ({ id: inv.id, label: `${inv.clientName ?? "Client"} · ${inv.number ?? "Invoice"}`, cents: Number(inv.total_cents), date: inv.status === "paid" ? inv.paid_on : inv.due_date ?? inv.issue_date, status: inv.status, currency: inv.currency ?? "USD" }))} />
       <div className="grid gap-4 sm:grid-cols-3">
         <Card>
