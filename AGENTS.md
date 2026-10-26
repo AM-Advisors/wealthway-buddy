@@ -66,3 +66,4 @@
 - Manager adds use createInvestorAndInvite + personal-link sender; imports retain createInvestor — why: saved records survive email failure, no bulk sends.
 
 - Public security uses published content only, never certification status; see src/lib/AGENTS.md.
+- Fictional QA sandbox at /qa-sandbox (src/lib/qa-sandbox/) intercepts every server-function call client-side with in-memory fictional data and blocks anything not modeled; never point it at the real backend — why: isolated click-through testing without touching records, emails or money.

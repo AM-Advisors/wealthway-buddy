@@ -675,3 +675,7 @@
 - [ ] Authenticated walkthrough of the new form, blocked on independently isolated synthetic QA sessions.
 - [x] Wire report form offers "Name on the sending account" so a wire from a spouse or company matches the notice; shown on the funding ledger and in the record history. Informational only, never marks funded.
 - [x] Investor record shows a Paperwork contact block with the helper's name and relationship, separate from owners and signers.
+
+## Fictional QA sandbox (2026-10-26)
+- [x] /qa-sandbox renders the real investor form and wire sender against an in-memory fictional backend (fictional fund Fablewood Ventures I LP, manager, investors, bank); all server calls intercepted, unmodeled calls blocked, nothing persisted or emailed.
+- [x] Verified click-through: search match with masked email, duplicate-email blocker, confirmed create to fictional record page, wire prefill/save, fund-manager view hides staff-only wire controls. 8 mock tests pass; build OK.
