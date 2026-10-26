@@ -5,7 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { createInvestorFn, searchInvestorsFn } from "@/lib/investor-record.functions";
-import { ENTITY_TYPES, PROFILE_TYPES, PROFILE_TYPE_LABELS, validateQuickAdd, type SafeMatch } from "@/lib/investor-record-model";
+import { ENTITY_TYPES, PROFILE_TYPES, PROFILE_TYPE_LABELS, PAPERWORK_CONTACT_RELATIONSHIPS, PAPERWORK_CONTACT_LABELS, validateQuickAdd, type SafeMatch } from "@/lib/investor-record-model";
 import { prettyStatus } from "@/lib/status";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -34,6 +34,9 @@ export function CreateInvestor({ fundId, isStaff, onDone }: { fundId: string; is
   const [section, setSection] = useState<(typeof SECTIONS)[number]>("Contact");
   const [related, setRelated] = useState<Related[]>([]);
   const [busy, setBusy] = useState(false);
+  const [contactOn, setContactOn] = useState(false);
+  const [mismatchPrompt, setMismatchPrompt] = useState<string | null>(null);
+  const [mismatchConfirmed, setMismatchConfirmed] = useState(false);
 
   const cents = (v?: string) => (v ? Math.round(Number(v.replace(/[$,\s]/g, "")) * 100) || null : null);
   const runSearch = async () => {
