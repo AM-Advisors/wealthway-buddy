@@ -57,13 +57,16 @@ export function PriorSignedDocuments({ fundId, onboardingId }: { fundId: string;
     finally { setBusy(false); }
   };
 
+  // An active signed Subscription Agreement is changed only through Replace, never loaded a second time.
+  const hasActiveSub = (q.data ?? []).some((d) => d.kind === "subscription_agreement" && !d.replaced);
+  const kindOptions = Object.entries(KINDS).filter(([k]) => !(hasActiveSub && !replacesId && k === "subscription_agreement"));
   return (
     <div className="space-y-4">
     <OutsideSubscription fundId={fundId} onboardingId={onboardingId} onLoad={() => { setAdding(true); setKind("subscription_agreement"); setTitle("Subscription Agreement"); }} />
     <section className="space-y-2" aria-label="Previously signed documents">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h4 className="font-medium">Signed before joining Harmonious</h4>
-        {!adding && <Button size="sm" variant="outline" onClick={() => setAdding(true)}>Load a completed document</Button>}
+        {!adding && <Button size="sm" variant="outline" onClick={() => { setAdding(true); if (hasActiveSub) setKind("other"); }}>{(q.data ?? []).length ? "Load another document" : "Load a completed document"}</Button>}
       </div>
       <p className="text-xs text-muted-foreground">Upload documents this investor already completed elsewhere. They are kept permanently for the record and don't change the investor's steps.</p>
       {q.isError ? <p className="text-destructive">{(q.error as Error).message} <Button size="sm" variant="link" onClick={() => q.refetch()}>Retry</Button></p>
@@ -89,7 +92,7 @@ export function PriorSignedDocuments({ fundId, onboardingId }: { fundId: string;
           {replacesId && <p className="text-xs text-muted-foreground">Replacing a document. The earlier copy stays on record.</p>}
           <Select value={kind} onValueChange={(v) => setKind(v as Kind)}>
             <SelectTrigger aria-label="Document type"><SelectValue /></SelectTrigger>
-            <SelectContent>{Object.entries(KINDS).map(([k, l]) => <SelectItem key={k} value={k}>{l}</SelectItem>)}</SelectContent>
+            <SelectContent>{kindOptions.map(([k, l]) => <SelectItem key={k} value={k}>{l}</SelectItem>)}</SelectContent>
           </Select>
           <Input aria-label="Document name" placeholder={KINDS[kind]} value={title} maxLength={200} onChange={(e) => setTitle(e.target.value)} />
           <label className="block text-xs text-muted-foreground">Date signed<Input type="date" value={signedOn} max={new Date().toISOString().slice(0, 10)} onChange={(e) => setSignedOn(e.target.value)} /></label>
