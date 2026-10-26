@@ -60,3 +60,8 @@ export const decideAccreditationFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ applicationId: z.string().uuid(), decision: z.enum(["approved", "rejected"]), notes: z.string().trim().max(600).default("") }).parse)
   .handler(async ({ data, context }) => (await import("@/lib/accreditation-review.server")).decide(context.userId, data));
+
+export const rerunAccreditationAiFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ documentId: z.string().uuid() }).parse)
+  .handler(async ({ data, context }) => (await import("@/lib/accreditation-review.server")).rerunAiCheck(context.userId, data.documentId));

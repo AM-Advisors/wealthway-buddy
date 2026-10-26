@@ -26,13 +26,28 @@ export async function listPending(userId: string, offeringId: string) {
     d.from("accreditation_documents").select("id, application_id, file_name, doc_kind").in("application_id", ids),
     d.from("profiles").select("user_id, legal_name").in("user_id", rows.map((a) => a.user_id)),
   ]);
-  return rows.map((a) => ({
+  const { latestChecks } = await import("@/lib/accreditation-ai.server");
+  const { overallVerdict, verdictRank } = await import("@/lib/accreditation-ai-model");
+  const checks = await latestChecks(ids).catch(() => [] as any[]);
+  const out = rows.map((a) => ({
     applicationId: a.id as string,
     investor: ((people ?? []) as any[]).find((p) => p.user_id === a.user_id)?.legal_name ?? "Investor",
     method: ((recs ?? []) as any[]).find((r) => r.application_id === a.id)?.method ?? null,
     submittedAt: ((recs ?? []) as any[]).find((r) => r.application_id === a.id)?.attested_at ?? null,
-    documents: ((docs ?? []) as any[]).filter((x) => x.application_id === a.id).map((x) => ({ id: x.id as string, name: x.file_name as string, kind: x.doc_kind as string })),
-  }));
+    documents: ((docs ?? []) as any[]).filter((x) => x.application_id === a.id).map((x) => ({ id: x.id as string, name: x.file_name as string, kind: x.doc_kind as string, ai: (checks.find((c: any) => c.document_id === x.id) ?? null) as any })),
+  })).map((r) => ({ ...r, aiVerdict: overallVerdict(r.documents.map((x) => (x.ai?.verdict ?? "unavailable") as any)) }));
+  return out.sort((x, y) => verdictRank(x.aiVerdict) - verdictRank(y.aiVerdict));
+}
+
+/** Reviewer re-runs the AI pre-check on one document. Adds a new result; older ones are kept. */
+export async function rerunAiCheck(userId: string, documentId: string) {
+  const d = await db();
+  const { data: doc } = await d.from("accreditation_documents").select("application_id").eq("id", documentId).maybeSingle();
+  if (!doc) throw new Error("Document not found.");
+  const { data: app } = await d.from("investor_applications").select("offering_id").eq("id", doc.application_id).maybeSingle();
+  await assertManager(d, userId, app?.offering_id);
+  const { checkDocument } = await import("@/lib/accreditation-ai.server");
+  return { verdict: await checkDocument(documentId, userId) };
 }
 
 export async function fileUrl(userId: string, documentId: string) {
