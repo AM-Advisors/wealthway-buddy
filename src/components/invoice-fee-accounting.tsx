@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { assignInvoiceFeeTarget, listInvoiceFeeAccounting } from "@/lib/invoice-fee-accounting.functions";
 
-export function InvoiceFeeAccounting({ invoiceId, canManage = false, shareLinks = false }: { invoiceId?: string; canManage?: boolean; shareLinks?: boolean }) {
+export function InvoiceFeeAccounting({ invoiceId, canManage = false, shareLinks = false }: { invoiceId?: string | undefined; canManage?: boolean; shareLinks?: boolean }) {
   const load = useServerFn(listInvoiceFeeAccounting);
   const save = useServerFn(assignInvoiceFeeTarget);
   const cache = useQueryClient();
