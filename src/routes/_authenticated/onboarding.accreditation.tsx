@@ -20,6 +20,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { OnboardingStepper } from "@/components/OnboardingStepper";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { EVIDENCE_OPTIONS, optionFor } from "@/lib/accreditation-evidence-options";
+import { ProfessionalRequestPanel } from "@/components/accreditation-professional-request";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -441,24 +443,23 @@ function VerificationForm({
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          <p className="text-sm font-medium">What can I provide?</p>
           <RadioGroup
-            className="space-y-3"
+            className="grid gap-3 sm:grid-cols-2"
             value={form.method}
-            onValueChange={(v) => setForm((f) => ({ ...f, method: v as typeof form.method }))}
+            onValueChange={(v) => { setForm((f) => ({ ...f, method: v as typeof form.method })); setDocKind(optionFor(v).defaultKind); }}
           >
-            {[
-              ["income_documents", "Income evidence - W-2s or tax returns for the last two years"],
-              ["net_worth_documents", "Net worth evidence: asset statements plus a credit report"],
-              ["third_party_letter", "Written confirmation from a CPA, attorney, adviser or broker-dealer"],
-            ].map(([value, label]) => (
-              <div key={value} className="flex items-start gap-3">
-                <RadioGroupItem value={value as string} id={`method-${value}`} className="mt-1" />
-                <Label htmlFor={`method-${value}`} className="font-normal leading-relaxed">
-                  {label}
-                </Label>
-              </div>
+            {EVIDENCE_OPTIONS.map((o) => (
+              <Label key={o.method} htmlFor={`method-${o.method}`} className={`flex cursor-pointer items-start gap-3 rounded-md border p-3 font-normal ${form.method === o.method ? "border-primary bg-accent/30" : ""}`}>
+                <RadioGroupItem value={o.method} id={`method-${o.method}`} className="mt-1" />
+                <span className="space-y-1">
+                  <span className="block font-medium">{o.title}</span>
+                  <ul className="list-disc space-y-0.5 pl-4 text-xs text-muted-foreground">{o.provide.map((p) => <li key={p}>{p}</li>)}</ul>
+                </span>
+              </Label>
             ))}
           </RadioGroup>
+          <ProfessionalRequestPanel onboardingId={currentOnboardingId()} />
 
           {form.method === "third_party_letter" && (
             <div className="grid gap-4 border-t pt-4 sm:grid-cols-2">

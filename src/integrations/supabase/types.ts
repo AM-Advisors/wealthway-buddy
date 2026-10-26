@@ -776,6 +776,104 @@ export type Database = {
           },
         ]
       }
+      accreditation_professional_request_events: {
+        Row: {
+          actor_user_id: string | null
+          created_at: string
+          detail: Json
+          event: string
+          id: string
+          request_id: string
+        }
+        Insert: {
+          actor_user_id?: string | null
+          created_at?: string
+          detail?: Json
+          event: string
+          id?: string
+          request_id: string
+        }
+        Update: {
+          actor_user_id?: string | null
+          created_at?: string
+          detail?: Json
+          event?: string
+          id?: string
+          request_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accreditation_professional_request_events_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "accreditation_professional_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      accreditation_professional_requests: {
+        Row: {
+          application_id: string
+          created_at: string
+          expires_at: string
+          id: string
+          last_sent_at: string
+          license_number: string | null
+          onboarding_id: string | null
+          professional_email: string
+          professional_firm: string | null
+          professional_name: string
+          professional_role: string
+          requested_by: string
+          send_count: number
+          status: string
+          token_hash: string
+          updated_at: string
+          uploaded_at: string | null
+          uploaded_document_id: string | null
+        }
+        Insert: {
+          application_id: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          last_sent_at?: string
+          license_number?: string | null
+          onboarding_id?: string | null
+          professional_email: string
+          professional_firm?: string | null
+          professional_name: string
+          professional_role: string
+          requested_by: string
+          send_count?: number
+          status?: string
+          token_hash: string
+          updated_at?: string
+          uploaded_at?: string | null
+          uploaded_document_id?: string | null
+        }
+        Update: {
+          application_id?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          last_sent_at?: string
+          license_number?: string | null
+          onboarding_id?: string | null
+          professional_email?: string
+          professional_firm?: string | null
+          professional_name?: string
+          professional_role?: string
+          requested_by?: string
+          send_count?: number
+          status?: string
+          token_hash?: string
+          updated_at?: string
+          uploaded_at?: string | null
+          uploaded_document_id?: string | null
+        }
+        Relationships: []
+      }
       accreditation_records: {
         Row: {
           application_id: string

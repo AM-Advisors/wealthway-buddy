@@ -109,6 +109,7 @@ import { Route as SolutionsIndexRouteImport } from './routes/solutions.index'
 import { Route as SolutionsFundOfFundsRouteImport } from './routes/solutions.fund-of-funds'
 import { Route as SolutionsSpvRouteImport } from './routes/solutions.spv'
 import { Route as UnsubscribeTokenRouteImport } from './routes/unsubscribe.$token'
+import { Route as VerifyAccreditationTokenRouteImport } from './routes/verify-accreditation.$token'
 import { Route as AuthenticatedAccountManagerClientsRouteImport } from './routes/_authenticated/account-manager_.clients'
 import { Route as AuthenticatedAccountManagerHandoffsRouteImport } from './routes/_authenticated/account-manager_.handoffs'
 import { Route as AuthenticatedAccountManagerRenewalsRouteImport } from './routes/_authenticated/account-manager_.renewals'
@@ -330,6 +331,7 @@ import { Route as AuthenticatedSalesOutreachRouteImport } from './routes/_authen
 import { Route as AuthenticatedSalesQuotesRouteImport } from './routes/_authenticated/sales_.quotes'
 import { Route as AuthenticatedSalesTeamRouteImport } from './routes/_authenticated/sales_.team'
 import { Route as AuthenticatedSignSignatureIdRouteImport } from './routes/_authenticated/sign.$signatureId'
+import { Route as ApiPublicAccreditationUploadRouteImport } from './routes/api/public/accreditation-upload'
 import { Route as ApiPublicBrevoWebhookRouteImport } from './routes/api/public/brevo-webhook'
 import { Route as ApiPublicCapClaimRouteImport } from './routes/api/public/cap-claim'
 import { Route as ApiPublicCapTableRequestRouteImport } from './routes/api/public/cap-table-request'
@@ -999,6 +1001,12 @@ const UnsubscribeTokenRoute = UnsubscribeTokenRouteImport.update({
   path: '/unsubscribe/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const VerifyAccreditationTokenRoute =
+  VerifyAccreditationTokenRouteImport.update({
+    id: '/verify-accreditation/$token',
+    path: '/verify-accreditation/$token',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedAccountManagerClientsRoute =
   AuthenticatedAccountManagerClientsRouteImport.update({
     id: '/account-manager_/clients',
@@ -2296,6 +2304,12 @@ const AuthenticatedSignSignatureIdRoute =
     path: '/sign/$signatureId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiPublicAccreditationUploadRoute =
+  ApiPublicAccreditationUploadRouteImport.update({
+    id: '/api/public/accreditation-upload',
+    path: '/api/public/accreditation-upload',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicBrevoWebhookRoute = ApiPublicBrevoWebhookRouteImport.update({
   id: '/api/public/brevo-webhook',
   path: '/api/public/brevo-webhook',
@@ -3286,6 +3300,7 @@ export interface FileRoutesByFullPath {
   '/solutions/fund-of-funds': typeof SolutionsFundOfFundsRoute
   '/solutions/spv': typeof SolutionsSpvRoute
   '/unsubscribe/$token': typeof UnsubscribeTokenRoute
+  '/verify-accreditation/$token': typeof VerifyAccreditationTokenRoute
   '/auth/': typeof AuthIndexRoute
   '/investor/': typeof InvestorIndexRoute
   '/resources/': typeof ResourcesIndexRoute
@@ -3503,6 +3518,7 @@ export interface FileRoutesByFullPath {
   '/sales/quotes': typeof AuthenticatedSalesQuotesRoute
   '/sales/team': typeof AuthenticatedSalesTeamRoute
   '/sign/$signatureId': typeof AuthenticatedSignSignatureIdRoute
+  '/api/public/accreditation-upload': typeof ApiPublicAccreditationUploadRoute
   '/api/public/brevo-webhook': typeof ApiPublicBrevoWebhookRoute
   '/api/public/cap-claim': typeof ApiPublicCapClaimRoute
   '/api/public/cap-table-request': typeof ApiPublicCapTableRequestRoute
@@ -3757,6 +3773,7 @@ export interface FileRoutesByTo {
   '/solutions/fund-of-funds': typeof SolutionsFundOfFundsRoute
   '/solutions/spv': typeof SolutionsSpvRoute
   '/unsubscribe/$token': typeof UnsubscribeTokenRoute
+  '/verify-accreditation/$token': typeof VerifyAccreditationTokenRoute
   '/auth': typeof AuthIndexRoute
   '/investor': typeof InvestorIndexRoute
   '/resources': typeof ResourcesIndexRoute
@@ -3971,6 +3988,7 @@ export interface FileRoutesByTo {
   '/sales/quotes': typeof AuthenticatedSalesQuotesRoute
   '/sales/team': typeof AuthenticatedSalesTeamRoute
   '/sign/$signatureId': typeof AuthenticatedSignSignatureIdRoute
+  '/api/public/accreditation-upload': typeof ApiPublicAccreditationUploadRoute
   '/api/public/brevo-webhook': typeof ApiPublicBrevoWebhookRoute
   '/api/public/cap-claim': typeof ApiPublicCapClaimRoute
   '/api/public/cap-table-request': typeof ApiPublicCapTableRequestRoute
@@ -4230,6 +4248,7 @@ export interface FileRoutesById {
   '/solutions/fund-of-funds': typeof SolutionsFundOfFundsRoute
   '/solutions/spv': typeof SolutionsSpvRoute
   '/unsubscribe/$token': typeof UnsubscribeTokenRoute
+  '/verify-accreditation/$token': typeof VerifyAccreditationTokenRoute
   '/auth/': typeof AuthIndexRoute
   '/investor/': typeof InvestorIndexRoute
   '/resources/': typeof ResourcesIndexRoute
@@ -4447,6 +4466,7 @@ export interface FileRoutesById {
   '/_authenticated/sales_/quotes': typeof AuthenticatedSalesQuotesRoute
   '/_authenticated/sales_/team': typeof AuthenticatedSalesTeamRoute
   '/_authenticated/sign/$signatureId': typeof AuthenticatedSignSignatureIdRoute
+  '/api/public/accreditation-upload': typeof ApiPublicAccreditationUploadRoute
   '/api/public/brevo-webhook': typeof ApiPublicBrevoWebhookRoute
   '/api/public/cap-claim': typeof ApiPublicCapClaimRoute
   '/api/public/cap-table-request': typeof ApiPublicCapTableRequestRoute
@@ -4707,6 +4727,7 @@ export interface FileRouteTypes {
     | '/solutions/fund-of-funds'
     | '/solutions/spv'
     | '/unsubscribe/$token'
+    | '/verify-accreditation/$token'
     | '/auth/'
     | '/investor/'
     | '/resources/'
@@ -4924,6 +4945,7 @@ export interface FileRouteTypes {
     | '/sales/quotes'
     | '/sales/team'
     | '/sign/$signatureId'
+    | '/api/public/accreditation-upload'
     | '/api/public/brevo-webhook'
     | '/api/public/cap-claim'
     | '/api/public/cap-table-request'
@@ -5178,6 +5200,7 @@ export interface FileRouteTypes {
     | '/solutions/fund-of-funds'
     | '/solutions/spv'
     | '/unsubscribe/$token'
+    | '/verify-accreditation/$token'
     | '/auth'
     | '/investor'
     | '/resources'
@@ -5392,6 +5415,7 @@ export interface FileRouteTypes {
     | '/sales/quotes'
     | '/sales/team'
     | '/sign/$signatureId'
+    | '/api/public/accreditation-upload'
     | '/api/public/brevo-webhook'
     | '/api/public/cap-claim'
     | '/api/public/cap-table-request'
@@ -5650,6 +5674,7 @@ export interface FileRouteTypes {
     | '/solutions/fund-of-funds'
     | '/solutions/spv'
     | '/unsubscribe/$token'
+    | '/verify-accreditation/$token'
     | '/auth/'
     | '/investor/'
     | '/resources/'
@@ -5867,6 +5892,7 @@ export interface FileRouteTypes {
     | '/_authenticated/sales_/quotes'
     | '/_authenticated/sales_/team'
     | '/_authenticated/sign/$signatureId'
+    | '/api/public/accreditation-upload'
     | '/api/public/brevo-webhook'
     | '/api/public/cap-claim'
     | '/api/public/cap-table-request'
@@ -6079,8 +6105,10 @@ export interface RootRouteChildren {
   SolutionsFundOfFundsRoute: typeof SolutionsFundOfFundsRoute
   SolutionsSpvRoute: typeof SolutionsSpvRoute
   UnsubscribeTokenRoute: typeof UnsubscribeTokenRoute
+  VerifyAccreditationTokenRoute: typeof VerifyAccreditationTokenRoute
   ResourcesIndexRoute: typeof ResourcesIndexRoute
   SolutionsIndexRoute: typeof SolutionsIndexRoute
+  ApiPublicAccreditationUploadRoute: typeof ApiPublicAccreditationUploadRoute
   ApiPublicBrevoWebhookRoute: typeof ApiPublicBrevoWebhookRoute
   ApiPublicCapClaimRoute: typeof ApiPublicCapClaimRoute
   ApiPublicCapTableRequestRoute: typeof ApiPublicCapTableRequestRoute
@@ -6816,6 +6844,13 @@ declare module '@tanstack/react-router' {
       path: '/unsubscribe/$token'
       fullPath: '/unsubscribe/$token'
       preLoaderRoute: typeof UnsubscribeTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/verify-accreditation/$token': {
+      id: '/verify-accreditation/$token'
+      path: '/verify-accreditation/$token'
+      fullPath: '/verify-accreditation/$token'
+      preLoaderRoute: typeof VerifyAccreditationTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/account-manager_/clients': {
@@ -8364,6 +8399,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/sign/$signatureId'
       preLoaderRoute: typeof AuthenticatedSignSignatureIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/public/accreditation-upload': {
+      id: '/api/public/accreditation-upload'
+      path: '/api/public/accreditation-upload'
+      fullPath: '/api/public/accreditation-upload'
+      preLoaderRoute: typeof ApiPublicAccreditationUploadRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/public/brevo-webhook': {
       id: '/api/public/brevo-webhook'
@@ -10507,8 +10549,10 @@ const rootRouteChildren: RootRouteChildren = {
   SolutionsFundOfFundsRoute: SolutionsFundOfFundsRoute,
   SolutionsSpvRoute: SolutionsSpvRoute,
   UnsubscribeTokenRoute: UnsubscribeTokenRoute,
+  VerifyAccreditationTokenRoute: VerifyAccreditationTokenRoute,
   ResourcesIndexRoute: ResourcesIndexRoute,
   SolutionsIndexRoute: SolutionsIndexRoute,
+  ApiPublicAccreditationUploadRoute: ApiPublicAccreditationUploadRoute,
   ApiPublicBrevoWebhookRoute: ApiPublicBrevoWebhookRoute,
   ApiPublicCapClaimRoute: ApiPublicCapClaimRoute,
   ApiPublicCapTableRequestRoute: ApiPublicCapTableRequestRoute,

@@ -27,7 +27,7 @@ export const accreditation506bSchema = z.object({
 });
 
 export const accreditation506cSchema = z.object({
-  method: z.enum(["income_documents", "net_worth_documents", "third_party_letter"]),
+  method: z.enum(["income_documents", "net_worth_documents", "professional_license", "entity_documents", "third_party_letter"]),
   professional_license: z.string().trim().max(120).optional().or(z.literal("")),
   verifier_name: z.string().trim().max(160).optional().or(z.literal("")),
   verifier_role: z.enum(["cpa", "attorney", "investment_adviser", "broker_dealer", ""]).optional(),
