@@ -1,5 +1,11 @@
 # Roadmap
 
+## Fund and company fee accounting links (2026-10-26)
+- [x] Added same-client fund/legal-company assignment per issued fee using append-only billing events, with fixed recorded fund ownership and no invoice-term changes. Accounting Invoice fees tab reads those same sources and any existing source-linked journal status; no duplicate ledger entries are created.
+- [x] Sixty-six focused offline fee-ownership, invoice relationship and staged-bookkeeping rules pass; preview build OK. No live assignments, financial records, activation, emails or payments changed.
+- [ ] Actual fee-to-journal draft/posting and company quote propagation: deferred behind existing entity-accounting/access design and isolated financial QA release boundary, not represented as posted books.
+- [ ] Authenticated assignment and accounting read-back: blocked on independently isolated synthetic evidence and sessions.
+
 ## Connected client quotes, agreements and invoice due dates (2026-10-26)
 - [x] Client invoices open same-client original quote/proposal readers and entitled SOWs; SOWs list exact related issued invoices with direct invoice selection/payment links. Original versions/read fields are scoped; no new signing tokens or access grants.
 - [x] Signed proposals show exact acceptance-linked invoice number/status, paid/remaining balances, recorded due dates and direct invoice link. Quote valid-until is separate; absent dates remain Not set. No issued terms, due dates, signatures, emails or money changed.
