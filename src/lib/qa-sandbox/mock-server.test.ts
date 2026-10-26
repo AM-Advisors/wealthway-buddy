@@ -28,7 +28,7 @@ describe("QA sandbox mock server", () => {
     expect(r.onboardingId).toMatch(/^qa-onboarding-/);
     expect(r.emailSent).toBe(true);
     expect(state.createdInvestors).toHaveLength(1);
-    expect(state.createdInvestors[0].name).toBe("Taylor Reyes");
+    expect(state.createdInvestors[0]!.name).toBe("Taylor Reyes");
   });
 
   it("rejects an invalid new investor with a validation message", () => {
