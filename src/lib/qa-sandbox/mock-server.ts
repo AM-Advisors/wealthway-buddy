@@ -20,8 +20,26 @@ import {
   QA_WIRE_REQUIRED_FIELDS,
   type QaPerson,
 } from "./fictional-data";
-import { fromCrossJSON } from "seroval";
-import { getDefaultSerovalPlugins } from "@tanstack/start-client-core";
+/** Minimal seroval cross-JSON decoder for plain data (objects, arrays, strings, numbers, booleans, null). */
+function decodeCrossJson(node: any): any {
+  if (node === null || typeof node !== "object") return node;
+  if (Array.isArray(node)) return node.map(decodeCrossJson);
+  if (typeof node.t !== "number") return node;
+  // Constants: seroval encodes null/undefined/etc. as small tagged nodes without payload.
+  if (node.t === 0) return null;
+  if (node.t === 1) return node.s; // string
+  if (node.t === 2) return node.s; // number
+  if (node.t === 3) return !!node.s; // boolean
+  if (node.p && Array.isArray(node.p.k) && Array.isArray(node.p.v)) {
+    const out: Record<string, unknown> = {};
+    node.p.k.forEach((key: string, i: number) => {
+      out[key] = decodeCrossJson(node.p.v[i]);
+    });
+    return out;
+  }
+  if (node.p && Array.isArray(node.p.v)) return node.p.v.map(decodeCrossJson);
+  return null;
+}
 import { rankMatches, validateQuickAdd, createNewBlocker } from "@/lib/investor-record-model";
 
 export type QaRole = "staff" | "manager";
@@ -175,7 +193,7 @@ export function installQaFetchMock(state: QaState): () => void {
       if (typeof body === "string") {
         const parsed = JSON.parse(body);
         // Server-function payloads are seroval cross-JSON; plain JSON is accepted too.
-        data = (parsed && typeof parsed === "object" && "t" in parsed ? fromCrossJSON(parsed, { plugins: getDefaultSerovalPlugins() }) : parsed)?.data ?? null;
+        data = (parsed && typeof parsed === "object" && "t" in parsed ? decodeCrossJson(parsed.t) : parsed)?.data ?? null;
       }
     } catch {
       return fail("Could not read the request.");
