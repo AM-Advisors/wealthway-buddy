@@ -42,3 +42,13 @@ export function changeQuoteBilling(line: QuoteLineInput, rate: QuoteRate, freque
     ? Math.round(line.unitCents * newBaseline / oldBaseline) : line.unitCents;
   return normalizeQuoteBilling({ ...line, billingFrequency: frequency, unitCents }, rate);
 }
+
+/** Fund-specific negotiated cadence choice; never changes the global White Glove rate card. */
+export function hasRoasWhiteGloveCadences(fundId: string | null | undefined, serviceKey: string) {
+  return fundId === "acb8193f-35fc-41cc-9ee5-629bde3e11b2" && serviceKey === "ADMIN:FUND_ADMINISTRATION:WHITE_GLOVE";
+}
+export function changeRoasWhiteGloveBilling(line: QuoteLineInput, rate: QuoteRate, frequency: BillingFrequency): QuoteLineInput {
+  const months = { monthly: 1, quarterly: 3, annual: 12, one_time: 12 };
+  const unitCents = Math.round(line.unitCents * months[frequency] / months[line.billingFrequency ?? "annual"]);
+  return normalizeQuoteBilling({ ...line, billingFrequency: frequency, unitCents }, rate);
+}

@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { getServiceEngagementDetail, listServiceEngagements, saveServiceEngagement, setEngagementEntitlement } from "@/lib/service-engagements.functions";
 import { levelsFor } from "@/lib/service-ladders";
 import { serviceLevelLabel, titleCase, usd, fmtDate } from "@/lib/service-engagement-labels";
+import { RECURRING_SERVICE_CADENCES, serviceCadenceAmount, isServiceCadence } from "@/lib/service-billing-cadence";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 const PRODUCTS = ["SPV_ADMINISTRATION", "FUND_ADMINISTRATION", "CAP_TABLE", "TAX", "REGULATORY", "ENTITY_MANAGEMENT", "PAYMASTER", "REGISTERED_AGENT", "DEAL_ROOM", "BANKING", "OTHER"];
 const STATUSES = ["PROPOSED", "PENDING_AGREEMENT", "ACTIVE", "PAUSED", "CANCELLATION_PENDING", "CANCELLED", "EXPIRED"];
@@ -24,7 +26,8 @@ export function ServiceEngagementsAdmin() {
   const [editing, setEditing] = useState<any | null>(null);
   if (q.isLoading) return <div className="p-6 text-sm text-muted-foreground">Loading…</div>;
   if (q.error) return <div className="p-6 text-sm text-destructive">{(q.error as Error).message}</div>;
-  const d = q.data!;
+  const d = q.data;
+  if (!d) return null;
   return (
     <div className="mx-auto max-w-6xl space-y-5 px-4 py-6">
       <div className="flex items-center justify-between gap-3">
@@ -47,7 +50,7 @@ export function ServiceEngagementsAdmin() {
                 <td className="p-2">{serviceLevelLabel(r.service_level, r.service_product).name}<div className="text-xs text-muted-foreground">{titleCase(r.service_product)}</div></td>
                 <td className="p-2"><Badge variant="outline">{titleCase(r.service_status)}</Badge></td>
                 <td className="p-2">{r.included_at_no_charge ? "Included" : usd(r.contracted_annual_value)}{r.pricing_type !== "CURRENT" ? <div className="text-xs text-muted-foreground">{titleCase(r.pricing_type)}</div> : null}</td>
-                <td className="p-2">{titleCase(r.billing_frequency)}</td>
+                <td className="p-2">{titleCase(r.billing_frequency)}<div className="text-xs text-muted-foreground">{r.included_at_no_charge ? "Included" : usd(r.recurring_invoice_amount)}</div></td>
                 <td className="p-2">{fmtDate(r.renewal_date)}</td>
                 <td className="p-2 text-right"><Button size="sm" variant="outline" onClick={() => setEditing(r)}>Open</Button></td>
               </tr>
@@ -84,6 +87,9 @@ function EngagementForm({ initial, data, onClose }: { initial: any; data: any; o
   const price = data.pricing.find((p: any) => p.service_product === f.service_product && p.service_level === f.service_level);
   const staffLabels = Object.fromEntries((data.staff as any[]).map((s) => [s.user_id, s.legal_name || s.email]));
   const fundLabels = Object.fromEntries((data.funds as any[]).map((x) => [x.id, x.name]));
+  const draftBilling = !f.id || ["PROPOSED", "PENDING_AGREEMENT"].includes(initial.service_status);
+  const changeBilling = (frequency: string | null) => setF((p: any) => ({ ...p, billing_frequency: frequency,
+    ...(isServiceCadence(frequency) ? { recurring_invoice_amount: serviceCadenceAmount(p, frequency, price) } : {}) }));
 
   async function submit() {
     setBusy(true);
@@ -106,7 +112,7 @@ function EngagementForm({ initial, data, onClose }: { initial: any; data: any; o
         <Sel label="Service product" value={f.service_product} options={PRODUCTS} onChange={(v) => setF((p: any) => ({ ...p, service_product: v, service_level: levelsFor(v).includes(p.service_level) ? p.service_level : levelsFor(v)[0] }))} />
         <Sel label="Service level" value={f.service_level} options={levelsFor(f.service_product)} labels={Object.fromEntries(levelsFor(f.service_product).map((l) => [l, serviceLevelLabel(l, f.service_product).name]))} onChange={(v) => set("service_level", v)} />
         <Sel label="Status" value={f.service_status} options={STATUSES} onChange={(v) => set("service_status", v)} />
-        <Sel label="Billing frequency" value={f.billing_frequency} options={BILLING} onChange={(v) => set("billing_frequency", v)} />
+        {draftBilling ? <Sel label="Billing frequency" value={f.billing_frequency} options={BILLING} onChange={changeBilling} /> : <Field label="Billing frequency"><p className="py-2 text-sm text-foreground">{titleCase(f.billing_frequency)}</p></Field>}
         <Sel label="Pricing type" value={f.pricing_type} options={PRICING} onChange={(v) => set("pricing_type", v)} />
         <Field label={`Contracted annual value${price ? ` (list ${usd(price.annual_price ?? price.starting_price)})` : ""}`}><Input type="number" value={f.contracted_annual_value ?? ""} onChange={(e) => set("contracted_annual_value", num(e.target.value))} placeholder="Defaults to list price" /></Field>
         <Field label="Recurring invoice amount"><Input type="number" value={f.recurring_invoice_amount ?? ""} onChange={(e) => set("recurring_invoice_amount", num(e.target.value))} placeholder="Defaults from billing" /></Field>
@@ -126,6 +132,12 @@ function EngagementForm({ initial, data, onClose }: { initial: any; data: any; o
         <Field label="Entity limit"><Input type="number" value={f.entity_limit ?? ""} onChange={(e) => set("entity_limit", num(e.target.value))} /></Field>
         {TEAM.map(([k, l]) => <Sel key={k} label={l} value={f[k]} options={data.staff.map((s: any) => s.user_id)} labels={staffLabels} onChange={(v) => set(k, v)} />)}
       </div>
+      {draftBilling && <div className="space-y-2 border-y py-4">
+        <p className="text-sm font-medium">Recurring billing amount</p>
+        <ToggleGroup type="single" variant="outline" value={isServiceCadence(f.billing_frequency) ? f.billing_frequency : ""} onValueChange={v => { if (v) changeBilling(v); }} className="flex flex-wrap justify-start">
+          {RECURRING_SERVICE_CADENCES.map(c => <ToggleGroupItem key={c} value={c} className="h-auto flex-col items-start gap-1 px-4 py-3"><span>{titleCase(c)}</span><span className="font-semibold">{usd(serviceCadenceAmount(f, c, price))}</span></ToggleGroupItem>)}
+        </ToggleGroup>
+      </div>}
       <Field label="Pricing override reason (Admin only; required for non-list pricing)"><Textarea value={f.pricing_override_reason ?? ""} onChange={(e) => set("pricing_override_reason", e.target.value)} /></Field>
       <Field label="Internal notes (never shown to clients)"><Textarea value={f.notes_internal ?? ""} onChange={(e) => set("notes_internal", e.target.value)} /></Field>
       <div className="flex gap-2">

@@ -12,8 +12,8 @@ export async function withInvoiceBalances<T extends { id: string; client_id: str
   if (error) throw new Error("Couldn't load recorded invoice payments. Please try again.");
   return invoices.map(inv => {
     const event = data?.find(e => e.entity_id === inv.id && e.client_id === inv.client_id);
-    const detail = event?.detail as { paid_cents?: number } | undefined;
+    const detail = event?.detail as { paid_cents?: number; paid_on?: string } | undefined;
     const balance = invoiceBalance({ ...inv, recorded_paid_cents: detail?.paid_cents });
-    return { ...inv, recorded_paid_cents: balance.paidCents, remaining_cents: balance.remainingCents, partially_paid: balance.partiallyPaid };
+    return { ...inv, recorded_paid_cents: balance.paidCents, recorded_paid_on: detail?.paid_on ?? null, remaining_cents: balance.remainingCents, partially_paid: balance.partiallyPaid };
   });
 }

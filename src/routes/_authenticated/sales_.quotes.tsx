@@ -5,7 +5,7 @@ import { getAboutHarmoniousText, getSalesDocumentOptions } from "@/lib/sales-doc
 import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { BILLING_FREQUENCIES } from "@/lib/invoice-schedule-model";
-import { changeQuoteBilling, defaultQuoteBilling, normalizeQuoteBilling, recurringQuoteRate } from "@/lib/quote-billing";
+import { changeQuoteBilling, changeRoasWhiteGloveBilling, hasRoasWhiteGloveCadences, defaultQuoteBilling, normalizeQuoteBilling, recurringQuoteRate } from "@/lib/quote-billing";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -220,10 +220,10 @@ export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; init
                 const frequency = BILLING_FREQUENCIES.find(f => f.id === value)?.id;
                 if (!frequency) return;
                 const rate = c.data?.lines.find((r: any) => r.serviceKey === l.serviceKey);
-                setLines(lines.map((x, j) => j === i ? rate ? changeQuoteBilling(l, rate, frequency) : { ...x, billingFrequency: frequency } : x));
+                setLines(lines.map((x, j) => j === i ? rate ? hasRoasWhiteGloveCadences(offeringId, l.serviceKey) ? changeRoasWhiteGloveBilling(l, rate, frequency) : changeQuoteBilling(l, rate, frequency) : { ...x, billingFrequency: frequency } : x));
               }}><SelectTrigger aria-label={`Billing frequency for ${l.label}`}><SelectValue /></SelectTrigger><SelectContent>{BILLING_FREQUENCIES.filter(f => {
                 const rate = c.data?.lines.find((r: any) => r.serviceKey === l.serviceKey);
-                return !rate || !recurringQuoteRate(rate) || f.id === "quarterly" || f.id === "annual" || f.id === l.billingFrequency;
+                return !rate || !recurringQuoteRate(rate) || f.id === "quarterly" || f.id === "annual" || f.id === l.billingFrequency || f.id === "monthly" && hasRoasWhiteGloveCadences(offeringId, l.serviceKey);
               }).map(f => <SelectItem key={f.id} value={f.id}>{f.label}</SelectItem>)}</SelectContent></Select></TableCell>
               <TableCell><Input disabled={!!l.bookkeeping} type="date" aria-label="First billing date" value={l.firstBillOn ?? ""} onChange={(e) => setLines(lines.map((x, j) => (j === i ? { ...x, firstBillOn: e.target.value || null } : x)))} /></TableCell>
               <TableCell className="text-right text-muted-foreground">{money(l.baselineUnitCents)}{l.unitCents < l.baselineUnitCents && <Badge variant="destructive" className="ml-1">Discount</Badge>}</TableCell>
