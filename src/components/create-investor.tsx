@@ -111,6 +111,24 @@ export function CreateInvestor({ fundId, isStaff, onDone }: { fundId: string; is
           {field("firstName", type === "entity" ? "Contact first name" : "Legal first name")}{field("lastName", type === "entity" ? "Contact last name" : "Last name")}
           {field("email", type === "entity" ? "Contact email" : "Email", { type: "email" })}{type !== "individual" ? field("entityName", type === "trust" ? "Trust name" : "Legal business / entity name") : null}
         </div>
+        {type !== "entity" ? (
+          <div className="space-y-3 rounded-md border p-3">
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={contactOn} onChange={(e) => setContactOn(e.target.checked)} />
+              Someone else completes the paperwork and gets the invitation (spouse, assistant, advisor)
+            </label>
+            {contactOn ? (
+              <div className="grid gap-3 sm:grid-cols-2">
+                {field("contactFirstName", "Contact first name")}{field("contactLastName", "Contact last name")}
+                {field("contactEmail", "Contact email", { type: "email" })}
+                <div className="space-y-1"><Label>Relationship to the investor</Label>
+                  <Select value={f['contactRelationship'] ?? ""} onValueChange={set("contactRelationship")}><SelectTrigger><SelectValue placeholder="Choose" /></SelectTrigger>
+                    <SelectContent>{PAPERWORK_CONTACT_RELATIONSHIPS.map((r) => <SelectItem key={r} value={r}>{PAPERWORK_CONTACT_LABELS[r]}</SelectItem>)}</SelectContent></Select></div>
+                <p className="text-xs text-muted-foreground sm:col-span-2">The invitation and reminder emails go to the contact. The investor's legal name stays on the agreements, and the investor still signs (or an authority document goes on file).</p>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
         <Button variant="outline" size="sm" onClick={runSearch}>Search existing investors</Button>
 
         {matches ? (
@@ -188,6 +206,15 @@ export function CreateInvestor({ fundId, isStaff, onDone }: { fundId: string; is
           </div>
         ) : null}
 
+        {mismatchPrompt ? (
+          <div className="space-y-2 rounded-md border bg-muted p-3">
+            <p className="text-sm font-medium">{mismatchPrompt}</p>
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={mismatchConfirmed} onChange={(e) => setMismatchConfirmed(e.target.checked)} />
+              The investor named above is correct · save with this profile
+            </label>
+          </div>
+        ) : null}
         <div className="flex flex-wrap gap-2">
           <Button onClick={() => save(true)} disabled={busy}>{busy ? "Saving…" : isStaff ? "Save & Continue" : "Add & invite · Open record"}</Button>
           <Button variant="outline" onClick={() => save(false)} disabled={busy}>{isStaff ? "Save" : "Add & invite"}</Button>
