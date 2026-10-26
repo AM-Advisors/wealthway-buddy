@@ -24,6 +24,7 @@
 - Server functions import requireSupabaseAuth only from src/lib/require-auth.ts, never the generated module — why: light context avoids preview typecheck limits.
 - Fund workspace keeps fund/audience and mounts selected tabs only; bank surfaces share FundBankingReview + BankInstructionRelease using existing review/status/release functions — why: connected actions, unchanged authority.
 - Setup %: fund-launch-summary.ts; banking: bankSetupStatus; launch: ManagerLaunchCard; setup refresh: invalidateFund — why: shared facts, scoped refresh.
+- Launch links reuse ensureFundLaunchLink before launch state changes; active tokens persist and disabled links need explicit enablement — why: no launched fund without its canonical entry point.
 - Fund origin separates new/migration workflows; investor-progress-email uses canonical steps, audit frequency and the existing drain — why: no inferred takeover or duplicate engine.
 
 - Marketing/email/CSA STAR/direct signing-email rules: src/lib/AGENTS.md.

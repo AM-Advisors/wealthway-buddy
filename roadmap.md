@@ -1,8 +1,9 @@
 # Roadmap
 
 ## Investor onboarding link during fund launch (2026-10-26)
-- [ ] Reuse the canonical onboarding-link engine before marking a ready fund launched; preserve approvals and exact-fund authorization.
-- [ ] Verify fictional launch/link regression cases; authenticated durable click-through requires independently isolated QA evidence and sessions.
+- [x] Reuse the canonical onboarding-link engine before marking a ready fund launched; preserve approvals and exact-fund authorization, reuse active links, refuse silently enabling disabled links, and retain ready state on link-creation failure. No real fund/link records changed.
+- [x] Forty-four fictional launch/link regression checks pass; launch returns and records the canonical join URL, with existing links readable through the manager's link reader.
+- [ ] Authenticated launch → Copy link → investor start and durable concurrency checks, blocked on independently isolated QA evidence and synthetic sessions; no production launch or emails used for testing.
 
 ## Direct invoice and fee links (2026-10-26)
 - [x] Client invoices page: each invoice has a Copy direct link button (/client/invoices?invoice=<id>) that opens, sorts and scrolls to that invoice; fund managers use it to jump straight to the invoice.
