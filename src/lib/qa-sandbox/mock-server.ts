@@ -192,7 +192,6 @@ export function installQaFetchMock(state: QaState): () => void {
         const parsed = JSON.parse(body);
         // Server-function payloads are seroval cross-JSON; plain JSON is accepted too.
         data = (parsed && typeof parsed === "object" && "t" in parsed ? decodeCrossJson(parsed.t) : parsed)?.data ?? null;
-        console.debug("[qa-sandbox]", fnName, JSON.stringify(data)?.slice(0, 400));
       }
     } catch {
       return fail("Could not read the request.");
