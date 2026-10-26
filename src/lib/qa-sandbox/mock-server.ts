@@ -161,8 +161,9 @@ export function installQaFetchMock(state: QaState): () => void {
     const isServerFn = headers.get(SERVER_FN_HEADER) === "true" || /\/_?serverFn\//.test(url) || url.includes("serverFn");
     if (!isServerFn) return original(input as any, init);
     const fnName = resolveFnName(url);
+    // The client middleware executor unwraps { result, error, context }.
     const json = (payload: unknown, status = 200) =>
-      new Response(JSON.stringify(payload), { status, headers: { "content-type": "application/json" } });
+      new Response(JSON.stringify({ result: payload, error: null, context: {} }), { status, headers: { "content-type": "application/json" } });
     const fail = (message: string, status = 400) =>
       new Response(message, { status, headers: { "content-type": "text/plain" } });
     if (!fnName) return fail(`Blocked in the fictional QA sandbox: this action is not modeled here.`, 403);
