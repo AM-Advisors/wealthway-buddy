@@ -67,6 +67,9 @@ export function journeySteps(requirements: RequirementResult[], facts: JourneyFa
   const about = hasProfile ? stateFor(pick("about")) : "action_required";
 
   let verify: StepState = hasProfile ? stateFor(pick("verify")) : "locked";
+  const verifyOpen = pick("verify").filter((r) => r.state !== "valid" && r.state !== "not_applicable");
+  const onlyAccreditation = verifyOpen.length > 0 && verifyOpen.every((r) => r.key === "accreditation");
+  const aboutReason = pick("about").find((r) => r.state !== "valid" && r.state !== "not_applicable")?.reason;
   const refresh = pick("verify").some((r) => r.state === "refresh_required");
 
   let sign: StepState = "locked";
@@ -107,7 +110,7 @@ export function journeySteps(requirements: RequirementResult[], facts: JourneyFa
         about === "complete"
           ? "Done."
           : hasProfile
-            ? "A few details are still needed about who is investing."
+            ? (aboutReason ?? "A few details are still needed about who is investing.")
             : "Tell us who is making this investment.",
     },
     {
@@ -122,7 +125,7 @@ export function journeySteps(requirements: RequirementResult[], facts: JourneyFa
             : refresh
               ? "Some verification has expired and needs to be renewed."
               : verify === "action_required"
-                ? "Start verification to continue."
+                ? (onlyAccreditation ? "Identity verified. Confirm your accreditation to continue." : "Start verification to continue.")
                 : verificationAllowsSigning(requirements)
                   ? "Identity approved. Compliance screening is pending; you can continue to Sign."
                   : "Verification in progress.",
@@ -135,7 +138,7 @@ export function journeySteps(requirements: RequirementResult[], facts: JourneyFa
         sign === "complete"
           ? "Documents signed."
           : sign === "locked"
-            ? "Available after verification."
+            ? (about !== "complete" && hasProfile ? "Available after About You and verification." : "Available after verification.")
             : sign === "in_progress"
               ? "Waiting for signing to finish."
               : "Review and sign your documents.",
