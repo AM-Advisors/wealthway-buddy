@@ -14,7 +14,8 @@ const unavailable = (): never => { throw new Error(LINK_UNAVAILABLE); };
 const urlFor = (token: string) => appUrl("client", `/join/${token}`);
 
 async function currentLink(offeringId: string) {
-  const { data } = await db().from("fund_onboarding_links").select("*").eq("offering_id", offeringId).in("status", ["active", "disabled"]).maybeSingle();
+  const { data, error } = await db().from("fund_onboarding_links").select("*").eq("offering_id", offeringId).in("status", ["active", "disabled"]).maybeSingle();
+  if (error) throw new Error("Could not load the onboarding link.");
   return data as any;
 }
 
@@ -49,6 +50,28 @@ export async function getFundLink(userId: string, offeringId: string) {
     starts: count ?? 0,
     canManage: actor.isStaff || actor.managedOfferingIds.includes(offeringId),
   };
+}
+
+/** Launch reuses a current link, never silently replaces or re-enables it. */
+export async function ensureFundLaunchLink(userId: string, offeringId: string): Promise<string> {
+  await assertLinkManager(userId, offeringId);
+  await launchedOffering(offeringId);
+  const existing = await currentLink(offeringId);
+  if (existing?.status === "disabled") throw new Error("This fund's onboarding link is disabled. Enable it in Onboarding Link before launching.");
+  if (existing?.status === "active") return urlFor(existing.token);
+
+  const token = generateLinkToken();
+  const { data, error } = await db().from("fund_onboarding_links")
+    .insert({ offering_id: offeringId, token, created_by: userId })
+    .select("id").single();
+  if (error || !data) {
+    // A concurrent creator may have won the one-current-link constraint.
+    const winner = await currentLink(offeringId);
+    if (winner?.status === "active") return urlFor(winner.token);
+    throw new Error("Could not create the onboarding link. The fund has not been launched.");
+  }
+  await recordAccessEvent({ actorUserId: userId, actorIdentity: null, targetUserId: null, action: "fund_link.create", scopeType: "offering", scopeId: offeringId, correlationId: data.id });
+  return urlFor(token);
 }
 
 /** Create or regenerate. Old link stops working; investors it already started are untouched. Staff or this fund's managers. */

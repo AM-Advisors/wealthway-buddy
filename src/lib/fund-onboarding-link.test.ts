@@ -87,6 +87,30 @@ describe("token rules", () => {
 });
 
 describe("link management authorization", () => {
+  it("launch creates a reusable active link for the exact fund before it is open", async () => {
+    const s = await srv();
+    const url = await s.ensureFundLaunchLink(MGR_A, FUND_A);
+    expect(url).toMatch(/\/join\/[A-Za-z0-9_-]{43}$/);
+    expect(await s.ensureFundLaunchLink(MGR_A, FUND_A)).toBe(url);
+    expect(tables["fund_onboarding_links"]).toHaveLength(1);
+    expect(tables["fund_onboarding_links"]?.[0]?.["offering_id"]).toBe(FUND_A);
+    expect((await s.getFundLink(MGR_A, FUND_A)).url).toBe(url);
+  });
+  it("launch preserves an explicitly disabled link rather than re-enabling it", async () => {
+    const s = await srv();
+    await s.ensureFundLaunchLink(STAFF, FUND_A);
+    await s.setFundLinkEnabled(STAFF, FUND_A, false);
+    await expect(s.ensureFundLaunchLink(STAFF, FUND_A)).rejects.toThrow(/disabled/);
+    expect(tables["fund_onboarding_links"]).toHaveLength(1);
+    expect(tables["fund_onboarding_links"]?.[0]?.["status"]).toBe("disabled");
+  });
+  it("launch-link creation retains exact-fund authorization and readiness", async () => {
+    const s = await srv();
+    await expect(s.ensureFundLaunchLink(MGR_B, FUND_A)).rejects.toThrow(/Forbidden/);
+    openFunds.delete(FUND_A);
+    await expect(s.ensureFundLaunchLink(MGR_A, FUND_A)).rejects.toThrow(/not open/);
+    expect(tables["fund_onboarding_links"] ?? []).toHaveLength(0);
+  });
   it("unauthorized users cannot see or manage a fund's link", async () => {
     const s = await srv();
     await expect(s.getFundLink(OUTSIDER, FUND_A)).rejects.toThrow(/Forbidden/);

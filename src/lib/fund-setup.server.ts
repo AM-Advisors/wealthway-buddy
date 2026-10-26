@@ -31,7 +31,6 @@ import {
   seriesMasterName,
   derivedRegulatoryAndEligibility,
   evaluateReadiness,
-  investorOnboardingPath,
   isFundStructure,
   launchApprovalError,
   nextVersion,
@@ -1407,20 +1406,23 @@ export async function decideLaunch(
  * link is derived from the offering record - never from client input.
  */
 export async function launchFund(userId: string, setupId: string) {
-  const { setup } = await assertSetupAccess(userId, setupId);
+  const { actor, setup } = await assertSetupAccess(userId, setupId);
   const { result } = await readinessFor(setupId);
   if (!result.ready || setup.launch_state !== "ready") {
     fail("This fund is not approved for investor onboarding yet.");
   }
   const { data: offering } = await db()
     .from("offerings")
-    .select("id,slug,name,legal_entity_name,min_investment_cents,reg_type,is_open")
+    .select("id,slug,name,legal_entity_name,min_investment_cents,reg_type,is_open,lifecycle_status")
     .eq("id", setup.offering_id)
     .maybeSingle();
   if (!offering?.slug) fail("That offering has no public reference yet.");
+  if (offering.lifecycle_status === "closed") fail("This fund is closed. Complete the reopening approval before launching.");
 
-  const url = investorOnboardingPath(offering.slug);
-  const { data: updated } = await db()
+  // Create the canonical entry point before opening the fund; link failure leaves it ready.
+  const { ensureFundLaunchLink } = await import("@/lib/fund-onboarding-link.server");
+  const url = await ensureFundLaunchLink(userId, setup.offering_id);
+  const { data: updated, error: launchError } = await db()
     .from("fund_setups")
     .update({
       launch_state: "launched",
@@ -1432,9 +1434,11 @@ export async function launchFund(userId: string, setupId: string) {
     .eq("id", setupId)
     .select("*")
     .single();
+  if (launchError || !updated) fail("Could not launch the fund. Please try again.");
 
   // A launched fund is open to its invited investors; the public page stays a separate switch.
-  await db().from("offerings").update({ is_open: true }).eq("id", setup.offering_id);
+  const { error: openError } = await db().from("offerings").update({ is_open: true }).eq("id", setup.offering_id);
+  if (openError) fail("The onboarding link is ready, but the fund could not be opened. Please refresh and check its status.");
 
   // Lock the reviewed regulatory configuration at launch.
   await db()
@@ -1461,7 +1465,7 @@ export async function launchFund(userId: string, setupId: string) {
     toStatus: "launched",
     detail: { url },
     actorUserId: userId,
-    actorRole: "harmonious",
+    actorRole: actor.isStaff ? "harmonious" : "fund_manager",
   });
 
   const { onFundLaunched } = await import("@/lib/drive.server");

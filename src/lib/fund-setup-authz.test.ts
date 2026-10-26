@@ -270,12 +270,18 @@ function builder(table: string) {
 vi.mock("@/integrations/supabase/client.server", () => ({
   supabaseAdmin: { from: (table: string) => builder(table) },
 }));
+const ensureLaunchLink = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/fund-onboarding-link.server", () => ({ ensureFundLaunchLink: ensureLaunchLink }));
+vi.mock("@/lib/drive.server", () => ({ onFundLaunched: vi.fn(async () => {}) }));
+vi.mock("@/lib/fund-alerts-kick.server", () => ({ kickFundAlerts: vi.fn(async () => {}) }));
 
 const server = await import("@/lib/fund-setup.server");
 const model = await import("@/lib/fund-setup-model");
 
 beforeEach(() => {
   writes = [];
+  ensureLaunchLink.mockReset();
+  ensureLaunchLink.mockResolvedValue(`https://app.harmonious.co/join/${"a".repeat(43)}`);
 });
 
 const inserts = (table: string) => writes.filter((w) => w.table === table && w.op === "insert");
@@ -344,6 +350,7 @@ describe("launch gate", () => {
 
   it("will not launch a fund that has no approval", async () => {
     await expect(server.launchFund(STAFF, SETUP_GAPS)).rejects.toThrow(/not approved/);
+    expect(ensureLaunchLink).not.toHaveBeenCalled();
   });
 
   it("refuses a launch decision from a fund manager", async () => {
@@ -370,9 +377,22 @@ describe("launch gate", () => {
 
   it("issues an investor URL that resolves only to the intended offering", async () => {
     const launch = await server.launchFund(STAFF, SETUP_READY);
-    expect(launch.investorOnboardingUrl).toBe("/invest/fund-r");
+    expect(ensureLaunchLink).toHaveBeenCalledWith(STAFF, FUND_R);
+    expect(launch.investorOnboardingUrl).toBe(`https://app.harmonious.co/join/${"a".repeat(43)}`);
+    expect(updates("fund_setups")[0]?.payload.investor_onboarding_url).toBe(launch.investorOnboardingUrl);
     expect(launch.offering.id).toBe(FUND_R);
     expect(model.investorOnboardingPath("fund-r")).not.toBe(model.investorOnboardingPath("fund-a"));
+  });
+  it("does not mark the fund launched or open when link creation fails", async () => {
+    ensureLaunchLink.mockRejectedValueOnce(new Error("Could not create the onboarding link"));
+    await expect(server.launchFund(STAFF, SETUP_READY)).rejects.toThrow(/Could not create/);
+    expect(updates("fund_setups")).toHaveLength(0);
+    expect(updates("offerings")).toHaveLength(0);
+    expect(inserts("fund_setup_events")).toHaveLength(0);
+  });
+  it("does not create another fund's link for an unrelated manager", async () => {
+    await expect(server.launchFund(MANAGER_A, SETUP_READY)).rejects.toThrow(/Forbidden/);
+    expect(ensureLaunchLink).not.toHaveBeenCalled();
   });
 });
 
