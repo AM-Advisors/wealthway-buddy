@@ -376,8 +376,8 @@ function AccountingOperations() {
 
 export const Route = createFileRoute("/_authenticated/ops/accounting")({
   validateSearch: (s: Record<string, unknown>): { tab?: string; invoice?: string } => ({
-    ...(typeof s.tab === "string" && ["queue", "exceptions", "rules", "ledger", "fees", "qbo", "alerts", "close"].includes(s.tab) ? { tab: s.tab } : {}),
-    ...(typeof s.invoice === "string" ? { invoice: s.invoice } : {}),
+    ...(typeof s['tab'] === "string" && ["queue", "exceptions", "rules", "ledger", "fees", "qbo", "alerts", "close"].includes(s['tab']) ? { tab: s['tab'] } : {}),
+    ...(typeof s['invoice'] === "string" ? { invoice: s['invoice'] } : {}),
   }),
   head: () => ({
     meta: [
