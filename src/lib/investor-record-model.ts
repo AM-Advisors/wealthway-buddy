@@ -423,3 +423,19 @@ export function profileNameMismatch(input: { firstName?: string | null; lastName
   if (first) return !tokens.some((t) => sameNameToken(t, first));
   return !tokens.some((t) => t === last);
 }
+
+/** True for related-person rows that are paperwork contacts, not owners or signers. */
+export function isPaperworkContactRole(role: string | null | undefined): boolean {
+  return String(role ?? "").startsWith("paperwork_contact");
+}
+
+/** Display label for a related-person role; paperwork contacts show their relationship. */
+export function relatedRoleLabel(role: string | null | undefined): string {
+  const r = String(role ?? "");
+  if (isPaperworkContactRole(r)) {
+    const rel = r.split(":")[1] ?? "";
+    const label = (PAPERWORK_CONTACT_LABELS as Record<string, string>)[rel];
+    return label ? `Paperwork contact · ${label}` : "Paperwork contact";
+  }
+  return r.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase());
+}
