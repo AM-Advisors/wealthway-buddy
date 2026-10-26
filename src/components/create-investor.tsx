@@ -1,3 +1,4 @@
+import { useInvestorRecordRoute } from "@/lib/use-investor-record-route";
 import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
@@ -19,6 +20,7 @@ type Related = { firstName: string; lastName: string; email: string; role: strin
 
 /** Search first, then Quick Add or Full Details. Every write re-authorizes on the server. */
 export function CreateInvestor({ fundId, isStaff, onDone }: { fundId: string; isStaff: boolean; onDone?: () => void }) {
+  const recordTo = useInvestorRecordRoute();
   const search = useServerFn(searchInvestorsFn);
   const create = useServerFn(createInvestorFn);
   const qc = useQueryClient();

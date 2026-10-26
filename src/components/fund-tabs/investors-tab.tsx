@@ -1,3 +1,4 @@
+import { useInvestorRecordRoute } from "@/lib/use-investor-record-route";
 import { InvestorEconomicsCard } from "@/components/fund-tabs/investor-economics";
 import { currentStep, STEP_STATE_LABELS, type StepState, type StepStatus } from "@/lib/investor-step-status";
 import { useState, type ReactNode } from "react";
@@ -36,6 +37,7 @@ import { ClassAssignmentCard } from "@/components/fund-setup-phase3";
 import { SideLetterRegistry } from "@/components/side-letter-registry";
 
 export function InvestorsTab({ fundId, workQueue }: { fundId: string; workQueue?: ReactNode }) {
+  const recordTo = useInvestorRecordRoute();
   const load = useServerFn(investorGridFn);
   const q = useQuery({ queryKey: ["fund-investor-grid", fundId], queryFn: () => load({ data: { fundId } }) });
   const loadReady = useServerFn(fundReadinessFn);
@@ -260,6 +262,7 @@ function Row({ k, v }: { k: string; v: React.ReactNode }) {
 }
 
 export function InvestorSheet({ fundId, id, onClose }: { fundId: string; id: string | null; onClose: () => void }) {
+  const recordTo = useInvestorRecordRoute();
   const load = useServerFn(investorDetailFn);
   const q = useQuery({ queryKey: ["fund-investor", fundId, id], queryFn: () => {
     if (!id) throw new Error("Select an investor to review.");

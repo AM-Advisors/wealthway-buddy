@@ -1,3 +1,4 @@
+import { useInvestorRecordRoute } from "@/lib/use-investor-record-route";
 import { useMemo, useState, type ReactNode } from "react";
 import { InvestorRecordsSync } from "@/components/investor-records-sync";
 import { funnelStageOf, managerBucketOf, FUNNEL_LABELS, MANAGER_BUCKET_LABELS } from "@/lib/dashboard-metrics";
@@ -48,6 +49,7 @@ const claimTone: Record<ClaimState, "outline" | "secondary"> = { prepared: "outl
 
 /** One Fund Investors roster: canonical Person → Profile → Investment rows, plus clearly separate pending invitations. */
 export function ManagerFundInvestors({ fundId, extraTabs }: { fundId: string; extraTabs?: { value: string; label: string; content: ReactNode }[] | undefined }) {
+  const recordTo = useInvestorRecordRoute();
   const [chooser, setChooser] = useState(false);
   const [tab, setTab] = useState("list");
   const qc = useQueryClient();
