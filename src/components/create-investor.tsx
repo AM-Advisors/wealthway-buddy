@@ -5,7 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { createInvestorFn, searchInvestorsFn } from "@/lib/investor-record.functions";
-import { ENTITY_TYPES, PROFILE_TYPES, PROFILE_TYPE_LABELS, validateQuickAdd, type SafeMatch } from "@/lib/investor-record-model";
+import { ENTITY_TYPES, PROFILE_TYPES, PROFILE_TYPE_LABELS, PAPERWORK_CONTACT_RELATIONSHIPS, PAPERWORK_CONTACT_LABELS, validateQuickAdd, type SafeMatch } from "@/lib/investor-record-model";
 import { prettyStatus } from "@/lib/status";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -34,6 +34,9 @@ export function CreateInvestor({ fundId, isStaff, onDone }: { fundId: string; is
   const [section, setSection] = useState<(typeof SECTIONS)[number]>("Contact");
   const [related, setRelated] = useState<Related[]>([]);
   const [busy, setBusy] = useState(false);
+  const [contactOn, setContactOn] = useState(false);
+  const [mismatchPrompt, setMismatchPrompt] = useState<string | null>(null);
+  const [mismatchConfirmed, setMismatchConfirmed] = useState(false);
 
   const cents = (v?: string) => (v ? Math.round(Number(v.replace(/[$,\s]/g, "")) * 100) || null : null);
   const runSearch = async () => {
@@ -47,9 +50,10 @@ export function CreateInvestor({ fundId, isStaff, onDone }: { fundId: string; is
   const save = async (continueToRecord: boolean) => {
     const amountCents = cents(f['amount']) ?? 0;
     if (!chosen) {
-      const errs = validateQuickAdd({ firstName: f['firstName'], lastName: f['lastName'], email: f['email'], profileType: f['profileType'], amountCents });
+      const errs = validateQuickAdd({ firstName: f['firstName'], lastName: f['lastName'], email: f['email'] || (contactOn ? f['contactEmail'] : ""), profileType: f['profileType'], amountCents });
       if (errs.length) return void toast.error(errs[0]);
     } else if (!(amountCents > 0)) return void toast.error("Enter the investment amount.");
+    if (mismatchPrompt && !mismatchConfirmed) return void toast.error("Confirm who is investing before saving.");
     setBusy(true);
     try {
       const details: Record<string, string> = {};
@@ -70,6 +74,8 @@ export function CreateInvestor({ fundId, isStaff, onDone }: { fundId: string; is
           sourceReferral: f['referral'] || null, managerNotes: f['managerNotes'] || null, internalNotes: isStaff ? f['internalNotes'] || null : null,
         },
         related: related.filter((r) => r.firstName && r.lastName).map((r) => ({ ...r, email: r.email || null, ownershipPercent: r.ownershipPercent ? Number(r.ownershipPercent) : null })),
+        contact: contactOn ? { firstName: f['contactFirstName'], lastName: f['contactLastName'], email: f['contactEmail'], relationship: f['contactRelationship'] } : null,
+        confirmedProfileMismatch: mismatchConfirmed,
       } });
       if (r.emailSent === false) toast.warning("Investor added, but the invitation was not sent. Open their record to check and resend the invitation.");
       else toast.success(r.emailSent ? "Investor added and invitation sent." : "Investor added: Incomplete, additional information required.");
@@ -77,7 +83,11 @@ export function CreateInvestor({ fundId, isStaff, onDone }: { fundId: string; is
       qc.invalidateQueries({ queryKey: ["fund-readiness", fundId] });
       onDone?.();
       if (continueToRecord) navigate({ to: recordTo, params: { fundId, onboardingId: r.onboardingId } });
-    } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
+    } catch (e) {
+      const msg = (e as Error).message;
+      if (msg.includes("Confirm who is investing")) { setMismatchPrompt(msg); setMismatchConfirmed(false); }
+      else toast.error(msg);
+    } finally { setBusy(false); }
   };
 
   const field = (k: string, label: string, props: Record<string, unknown> = {}) => (
@@ -101,6 +111,24 @@ export function CreateInvestor({ fundId, isStaff, onDone }: { fundId: string; is
           {field("firstName", type === "entity" ? "Contact first name" : "Legal first name")}{field("lastName", type === "entity" ? "Contact last name" : "Last name")}
           {field("email", type === "entity" ? "Contact email" : "Email", { type: "email" })}{type !== "individual" ? field("entityName", type === "trust" ? "Trust name" : "Legal business / entity name") : null}
         </div>
+        {type !== "entity" ? (
+          <div className="space-y-3 rounded-md border p-3">
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={contactOn} onChange={(e) => setContactOn(e.target.checked)} />
+              Someone else completes the paperwork and gets the invitation (spouse, assistant, advisor)
+            </label>
+            {contactOn ? (
+              <div className="grid gap-3 sm:grid-cols-2">
+                {field("contactFirstName", "Contact first name")}{field("contactLastName", "Contact last name")}
+                {field("contactEmail", "Contact email", { type: "email" })}
+                <div className="space-y-1"><Label>Relationship to the investor</Label>
+                  <Select value={f['contactRelationship'] ?? ""} onValueChange={set("contactRelationship")}><SelectTrigger><SelectValue placeholder="Choose" /></SelectTrigger>
+                    <SelectContent>{PAPERWORK_CONTACT_RELATIONSHIPS.map((r) => <SelectItem key={r} value={r}>{PAPERWORK_CONTACT_LABELS[r]}</SelectItem>)}</SelectContent></Select></div>
+                <p className="text-xs text-muted-foreground sm:col-span-2">The invitation and reminder emails go to the contact. The investor's legal name stays on the agreements, and the investor still signs (or an authority document goes on file).</p>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
         <Button variant="outline" size="sm" onClick={runSearch}>Search existing investors</Button>
 
         {matches ? (
@@ -178,6 +206,15 @@ export function CreateInvestor({ fundId, isStaff, onDone }: { fundId: string; is
           </div>
         ) : null}
 
+        {mismatchPrompt ? (
+          <div className="space-y-2 rounded-md border bg-muted p-3">
+            <p className="text-sm font-medium">{mismatchPrompt}</p>
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={mismatchConfirmed} onChange={(e) => setMismatchConfirmed(e.target.checked)} />
+              The investor named above is correct · save with this profile
+            </label>
+          </div>
+        ) : null}
         <div className="flex flex-wrap gap-2">
           <Button onClick={() => save(true)} disabled={busy}>{busy ? "Saving…" : isStaff ? "Save & Continue" : "Add & invite · Open record"}</Button>
           <Button variant="outline" onClick={() => save(false)} disabled={busy}>{isStaff ? "Save" : "Add & invite"}</Button>

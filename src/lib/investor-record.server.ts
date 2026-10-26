@@ -15,7 +15,7 @@ import {
   canManageFundRecords, sanitizePatch, sourceFor, rankMatches, validateQuickAdd, isProfileType,
   dbProfileType, formProfileType, profileLabelFor, recordStatus, RECORD_STATUS_LABELS, claimState, CLAIM_STATE_LABELS, sameValue, isMaterial,
   parseCsv, classifyBulk, bulkSummary, committable, parseAmountCents, activityFor, removalBlocker, normEmail,
-  planIncoming, PROFILE_TYPE_LABELS, planClaim,
+  planIncoming, PROFILE_TYPE_LABELS, planClaim, validPaperworkContact, profileNameMismatch, type PaperworkContactInput,
 } from "@/lib/investor-record-model";
 import { personCreationBlocker } from "@/lib/person-resolution";
 import { findPersonCandidates, resolvePersonServer, withPersonCreationLock } from "@/lib/person-resolution.server";
@@ -138,6 +138,10 @@ export async function createInvestor(userId: string, input: {
   allowPreLaunch?: boolean;
   /** Optional 9-digit SSN/ITIN/EIN; encrypted, only last 4 kept in plain. */
   taxId?: string | null;
+  /** Spouse/assistant/advisor who completes the paperwork: the invitation goes to them, the investor stays the party. */
+  contact?: PaperworkContactInput | null;
+  /** Required to save when a chosen individual profile carries a different first name than the investor. */
+  confirmedProfileMismatch?: boolean;
 }) {
   const actor = await fundActor(userId, input.offeringId);
   if (input.taxId && !/^\d{9}$/.test(input.taxId)) fail("The SSN / Tax ID must be 9 digits.");
@@ -151,7 +155,8 @@ export async function createInvestor(userId: string, input: {
     if (!data) fail("That investor record was not found.");
     person = data;
   } else {
-    const errs = validateQuickAdd({ firstName: input.person.firstName, lastName: input.person.lastName, email: input.person.email, profileType: input.profile.type, amountCents: input.investment.amountCents ?? 0 });
+    // A paperwork contact's email satisfies the email requirement: the invitation goes to them.
+    const errs = validateQuickAdd({ firstName: input.person.firstName, lastName: input.person.lastName, email: input.person.email || input.contact?.email || undefined, profileType: input.profile.type, amountCents: input.investment.amountCents ?? 0 });
     if (errs.length) fail(errs[0]!);
     // Canonical Person Resolution: email is a signal, not identity. Re-checked
     // inside the creation lock so concurrent saves can't both create.
@@ -172,8 +177,12 @@ export async function createInvestor(userId: string, input: {
   if (!isProfileType(input.profile.type) && !input.profileId) fail("Choose how they are investing.");
   let profileId = input.profileId ?? null;
   if (profileId) {
-    const { data: pr } = await db().from("investment_profiles").select("id, person_id, owner_user_id").eq("id", profileId).maybeSingle();
+    const { data: pr } = await db().from("investment_profiles").select("id, person_id, owner_user_id, legal_name, profile_type").eq("id", profileId).maybeSingle();
     if (!pr || !(pr.person_id === person.id || (person.user_id && pr.owner_user_id === person.user_id))) forbid("that investment profile does not belong to this investor.");
+    // Spouse/helper catch: an individual profile under a different first name needs an explicit confirmation.
+    if (!input.confirmedProfileMismatch && profileNameMismatch({ firstName: person.legal_first_name, lastName: person.legal_last_name, profileType: formProfileType(pr.profile_type), profileLegalName: pr.legal_name })) {
+      fail(`The investing profile is under "${pr.legal_name}" but the investor is ${`${person.legal_first_name ?? ""} ${person.legal_last_name ?? ""}`.trim()}. Confirm who is investing before saving.`);
+    }
   } else {
     const type = input.profile.type as ProfileType;
     const personName = `${person.legal_first_name ?? ""} ${person.legal_last_name ?? ""}`.trim() || "Investor";
@@ -234,6 +243,26 @@ export async function createInvestor(userId: string, input: {
   changes.push(...Object.entries(inv).map(([f, v]) => ({ offeringId: input.offeringId, onboardingId, table: "investor_onboardings", id: onboardingId!, field: f, from: null, to: v, source, actor: actor.userId })));
   for (const c of changes) if (!c.onboardingId) c.onboardingId = onboardingId;
 
+  // 3b. Paperwork contact: the invitation goes to the contact's email; the investor remains the investing party.
+  if (input.contact) {
+    const errs = validPaperworkContact(input.contact);
+    if (errs.length) fail(errs[0]!);
+    const investorName = `${person.legal_first_name ?? ""} ${person.legal_last_name ?? ""}`.trim() || null;
+    const { data: cInv, error: cErr } = await db().from("fund_invitations").insert({
+      offering_id: input.offeringId, email: normEmail(input.contact.email!), invited_name: investorName, invited_by: actor.userId,
+      token: crypto.randomUUID().replace(/-/g, ""), expires_at: new Date(Date.now() + 30 * 86_400_000).toISOString(),
+      status: "pending", onboarding_status: "invited", intended_amount_cents: input.investment.amountCents ?? null,
+      invitation_source: `${actor.isStaff ? "harmonious" : "manager"}:paperwork_contact`, invite_role: "investor", role: "investor",
+    }).select("id").single();
+    if (cErr) fail(cErr.message);
+    // The explicit contact invitation wins over any invitation auto-matched by the investor's own email.
+    const { error: linkErr } = await db().from("investor_onboardings").update({ invitation_id: cInv.id }).eq("id", onboardingId);
+    if (linkErr) fail(linkErr.message);
+    const { addRelatedPerson } = await import("@/lib/related-person.server");
+    await addRelatedPerson({ profileId: profileId!, offeringId: input.offeringId, firstName: input.contact.firstName!.trim(), lastName: input.contact.lastName!.trim(), email: input.contact.email ?? null, role: "paperwork_contact", isSigner: false, actorUserId: actor.userId, entrySource: source });
+    changes.push({ offeringId: input.offeringId, onboardingId, table: "fund_invitations", id: cInv.id, field: "paperwork_contact", from: null, to: { email: normEmail(input.contact.email!), relationship: input.contact.relationship }, source, actor: actor.userId });
+  }
+
   // 4. Related parties become their own (unclaimed) People on the profile.
   for (const r of input.related ?? []) {
     if (!RELATED_ROLES.has(r.role) || !r.firstName?.trim() || !r.lastName?.trim()) continue;
@@ -248,7 +277,7 @@ export async function createInvestor(userId: string, input: {
   await reconcileAfter([onboardingId], { actorUserId: actor.userId, trigger: "manual_investor_entry" });
   const connect = await import("@/lib/account-connect.server");
   if (input.taxId && profileId) await connect.recordProfileTin(profileId, input.taxId, { offeringId: input.offeringId, onboardingId }).catch((e) => console.error("[investor-record] tax ID match skipped", (e as Error).message));
-  if (!person.user_id) await connect.connectEmail(person.email);
+  if (!person.user_id && person.email) await connect.connectEmail(person.email);
   return { onboardingId: onboardingId!, personId: person.id as string, profileId: profileId! };
 }
 

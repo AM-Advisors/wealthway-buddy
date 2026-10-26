@@ -375,3 +375,51 @@ export const PENDING_MATCH_MESSAGE = {
   title: "We need to verify your existing investment record before you continue.",
   body: "Harmonious has been notified. You don't need to create another investment.",
 } as const;
+
+/* ---------------- paperwork contact & legal-name catch (pure) ---------------- */
+
+/** Relationships a paperwork contact may have to the investor. */
+export const PAPERWORK_CONTACT_RELATIONSHIPS = ["spouse", "family_member", "assistant", "advisor", "attorney", "other"] as const;
+export type PaperworkContactRelationship = (typeof PAPERWORK_CONTACT_RELATIONSHIPS)[number];
+export const PAPERWORK_CONTACT_LABELS: Record<PaperworkContactRelationship, string> = {
+  spouse: "Spouse", family_member: "Family member", assistant: "Assistant", advisor: "Advisor", attorney: "Attorney", other: "Other",
+};
+
+export type PaperworkContactInput = { firstName?: string | null; lastName?: string | null; email?: string | null; relationship?: string | null };
+
+/** A paperwork contact needs a name, a valid email and a known relationship. */
+export function validPaperworkContact(c: PaperworkContactInput | null | undefined): string[] {
+  if (!c) return [];
+  const e: string[] = [];
+  if (!String(c.firstName ?? "").trim() || !String(c.lastName ?? "").trim()) e.push("Enter the contact's first and last name.");
+  if (!isEmail(String(c.email ?? ""))) e.push("Enter the contact's valid email address.");
+  if (!PAPERWORK_CONTACT_RELATIONSHIPS.includes(String(c.relationship ?? "") as PaperworkContactRelationship)) e.push("Choose the contact's relationship to the investor.");
+  return e;
+}
+
+/** Prefix-tolerant name match: "Kim" matches "Kimberly", never "Joe". */
+function sameNameToken(a: string, b: string): boolean {
+  if (!a || !b) return false;
+  if (a === b) return true;
+  const [s, l] = a.length <= b.length ? [a, b] : [b, a];
+  return s.length >= 3 && l.startsWith(s);
+}
+
+/**
+ * True when a chosen individual/joint investing profile carries a legal name
+ * whose first name does not match the investor's, the spouse/helper mix-up
+ * this catches (Kimberly added under a "Joe Girardi" profile). Entity, trust
+ * and IRA profiles legitimately carry a different name.
+ */
+export function profileNameMismatch(input: { firstName?: string | null; lastName?: string | null; profileType?: string | null; profileLegalName?: string | null }): boolean {
+  const type = String(input.profileType ?? "");
+  if (type !== "individual" && type !== "joint") return false;
+  const legal = String(input.profileLegalName ?? "").trim().toLowerCase();
+  if (!legal) return false;
+  const first = String(input.firstName ?? "").trim().toLowerCase();
+  const last = String(input.lastName ?? "").trim().toLowerCase();
+  if (!first && !last) return false;
+  const tokens = legal.split(/[^a-z]+/).filter(Boolean);
+  if (first) return !tokens.some((t) => sameNameToken(t, first));
+  return !tokens.some((t) => t === last);
+}
