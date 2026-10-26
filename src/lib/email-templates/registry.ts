@@ -24,6 +24,7 @@ import { template as clientInvitation } from './client-invitation'
 import { template as clientWelcome } from './client-welcome'
 import { template as fundOnboardingWelcome } from './fund-onboarding-welcome'
 import { template as fundLive } from './fund-live'
+import { template as accreditationProfessionalRequest } from './accreditation-professional-request'
 import { template as invoiceIssued } from './invoice-issued'
 import { template as invoiceReminder } from './invoice-reminder'
 import { template as wireRequestApproved } from './wire-request-approved'
@@ -83,6 +84,7 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'client-welcome': clientWelcome,
   'fund-onboarding-welcome': fundOnboardingWelcome,
   'fund-live': fundLive,
+  'accreditation-professional-request': accreditationProfessionalRequest,
   'invoice-issued': invoiceIssued,
   'invoice-reminder': invoiceReminder,
   'wire-request-approved': wireRequestApproved,
