@@ -354,6 +354,9 @@ function Verify({ d, onboardingId }: { d: any; onboardingId: string }) {
     onError: (e: any) => toast.error(String(e?.message ?? e).replace(/^Forbidden:\s*/, "")),
   });
   const status = d.verification as string;
+  const verifyKeys = ["identity_verification", "entity_verification", "aml", "eligibility", "accreditation"];
+  const open = ((d.requirements ?? []) as any[]).filter((r) => verifyKeys.includes(r.key) && r.state !== "valid" && r.state !== "not_applicable");
+  const accreditationOnly = open.length > 0 && open.every((r) => r.key === "accreditation");
   return (
     <Card>
       <CardHeader>
@@ -367,12 +370,21 @@ function Verify({ d, onboardingId }: { d: any; onboardingId: string }) {
           <p className="text-sm">Verification in progress. We'll let you know if we need anything else.</p>
         ) : (
           <>
-            {status === "action_required" ? (
-              <p className="text-sm">Part of your verification needs to be completed or renewed.</p>
-            ) : null}
-            <Button onClick={() => start.mutate()} disabled={start.isPending}>
-              {start.isPending ? "Opening…" : "Start Verification"}
-            </Button>
+            {accreditationOnly ? (
+              <>
+                <p className="text-sm">Your identity is verified. The last part is confirming you're an accredited investor.</p>
+                <Button asChild><a href={`/onboarding/accreditation?onboarding=${onboardingId}`}>Confirm accreditation</a></Button>
+              </>
+            ) : (
+              <>
+                {status === "action_required" ? (
+                  <p className="text-sm">Part of your verification needs to be completed or renewed.</p>
+                ) : null}
+                <Button onClick={() => start.mutate()} disabled={start.isPending}>
+                  {start.isPending ? "Opening…" : "Start Verification"}
+                </Button>
+              </>
+            )}
           </>
         )}
       </CardContent>
