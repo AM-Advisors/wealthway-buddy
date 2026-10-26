@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { serviceCadenceAmount } from "./service-billing-cadence";
+import { serviceCadenceAmount, assertServiceCadenceChange } from "./service-billing-cadence";
 const roas = { pricing_type: "CUSTOM", contracted_annual_value: 48000, recurring_invoice_amount: 12000, billing_frequency: "QUARTERLY" };
 const rates = { annual_price: 36000, quarterly_price: 10000 };
 describe("ROAS White Glove billing choices", () => {
@@ -8,4 +8,6 @@ describe("ROAS White Glove billing choices", () => {
   it("annual is $48,000", () => expect(serviceCadenceAmount(roas, "ANNUAL", rates)).toBe(48000));
   it("preserves a recorded list quarterly rate", () => expect(serviceCadenceAmount({ pricing_type: "CURRENT", contracted_annual_value: 36000 }, "QUARTERLY", rates)).toBe(10000));
   it("does not invent a price when no terms exist", () => expect(serviceCadenceAmount({}, "MONTHLY")).toBeNull());
+  it("proposed billing choices can change without activation", () => expect(() => assertServiceCadenceChange("PROPOSED", "QUARTERLY", "MONTHLY")).not.toThrow());
+  it("contracted cadence changes require a new agreement", () => expect(() => assertServiceCadenceChange("ACTIVE", "QUARTERLY", "MONTHLY")).toThrow(/new agreement/));
 });

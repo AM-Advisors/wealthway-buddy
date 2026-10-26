@@ -108,9 +108,7 @@ export const saveServiceEngagement = createServerFn({ method: "POST" })
     if (id && !prior) throw new Error("Engagement not found.");
     const cadence = await import("@/lib/service-billing-cadence");
     const frequencyChanged = !!prior && fields.billing_frequency !== undefined && fields.billing_frequency !== prior.billing_frequency;
-    if (frequencyChanged && !["PROPOSED", "PENDING_AGREEMENT"].includes(prior.service_status)) {
-      throw new Error("Contracted billing frequency requires a new agreement. Prepare a proposed engagement instead.");
-    }
+    if (prior) cadence.assertServiceCadenceChange(prior.service_status, prior.billing_frequency, fields.billing_frequency);
     const ladders = await import("@/lib/service-ladders");
     if (!ladders.isValidCombination(fields.service_product, fields.service_level)) throw new Error(`That level isn't offered for ${ladders.isLadderProduct(fields.service_product) ? ladders.SERVICE_LADDERS[fields.service_product].label : "this product"}.`);
     const { data: price } = await d.from("service_pricing_versions").select("*")

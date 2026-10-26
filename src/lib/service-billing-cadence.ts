@@ -6,6 +6,11 @@ const billsPerYear: Record<ServiceCadence, number> = { MONTHLY: 12, QUARTERLY: 4
 export function isServiceCadence(value: string | null | undefined): value is ServiceCadence {
   return RECURRING_SERVICE_CADENCES.some(c => c === value);
 }
+export function assertServiceCadenceChange(status: string, previous: string | null | undefined, next: string | null | undefined) {
+  if (next !== undefined && next !== previous && !["PROPOSED", "PENDING_AGREEMENT"].includes(status)) {
+    throw new Error("Contracted billing frequency requires a new agreement. Prepare a proposed engagement instead.");
+  }
+}
 /** Negotiated terms retain their annual value; list pricing uses the recorded period rate. */
 export function serviceCadenceAmount(terms: Terms, cadence: ServiceCadence, rates?: Rates | null): number | null {
   const annual = terms.contracted_annual_value == null ? null : Number(terms.contracted_annual_value);
