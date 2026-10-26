@@ -171,7 +171,7 @@ export function installQaFetchMock(state: QaState): () => void {
     try {
       const body = init?.body;
       if (typeof body === "string") data = JSON.parse(body)?.data ?? null;
-      console.debug("[qa-sandbox]", fnName, JSON.stringify(data));
+      console.debug("[qa-sandbox]", fnName, typeof body, String(body).slice(0, 300));
     } catch {
       return fail("Could not read the request.");
     }
