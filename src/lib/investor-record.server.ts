@@ -155,7 +155,8 @@ export async function createInvestor(userId: string, input: {
     if (!data) fail("That investor record was not found.");
     person = data;
   } else {
-    const errs = validateQuickAdd({ firstName: input.person.firstName, lastName: input.person.lastName, email: input.person.email, profileType: input.profile.type, amountCents: input.investment.amountCents ?? 0 });
+    // A paperwork contact's email satisfies the email requirement: the invitation goes to them.
+    const errs = validateQuickAdd({ firstName: input.person.firstName, lastName: input.person.lastName, email: input.person.email || input.contact?.email || undefined, profileType: input.profile.type, amountCents: input.investment.amountCents ?? 0 });
     if (errs.length) fail(errs[0]!);
     // Canonical Person Resolution: email is a signal, not identity. Re-checked
     // inside the creation lock so concurrent saves can't both create.
@@ -176,8 +177,12 @@ export async function createInvestor(userId: string, input: {
   if (!isProfileType(input.profile.type) && !input.profileId) fail("Choose how they are investing.");
   let profileId = input.profileId ?? null;
   if (profileId) {
-    const { data: pr } = await db().from("investment_profiles").select("id, person_id, owner_user_id").eq("id", profileId).maybeSingle();
+    const { data: pr } = await db().from("investment_profiles").select("id, person_id, owner_user_id, legal_name, profile_type").eq("id", profileId).maybeSingle();
     if (!pr || !(pr.person_id === person.id || (person.user_id && pr.owner_user_id === person.user_id))) forbid("that investment profile does not belong to this investor.");
+    // Spouse/helper catch: an individual profile under a different first name needs an explicit confirmation.
+    if (!input.confirmedProfileMismatch && profileNameMismatch({ firstName: person.legal_first_name, lastName: person.legal_last_name, profileType: formProfileType(pr.profile_type), profileLegalName: pr.legal_name })) {
+      fail(`The investing profile is under "${pr.legal_name}" but the investor is ${`${person.legal_first_name ?? ""} ${person.legal_last_name ?? ""}`.trim()}. Confirm who is investing before saving.`);
+    }
   } else {
     const type = input.profile.type as ProfileType;
     const personName = `${person.legal_first_name ?? ""} ${person.legal_last_name ?? ""}`.trim() || "Investor";
