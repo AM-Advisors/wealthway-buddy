@@ -52,3 +52,14 @@ describe("canonicalizeApplications", () => {
     expect(kept[0]!.kyc_status).toBe("approved");
   });
 });
+
+import { verificationLabel } from "./verification-status";
+describe("verificationLabel", () => {
+  it("uses the staff wording and never shows raw stored values", () => {
+    expect(verificationLabel("approved")).toBe("Approved");
+    expect(verificationLabel("in_review")).toBe("Needs review");
+    expect(verificationLabel("rejected")).toBe("Declined");
+    expect(verificationLabel("not_started")).toBe("Not started");
+    expect(verificationLabel(null)).toBe("Not started");
+  });
+});
