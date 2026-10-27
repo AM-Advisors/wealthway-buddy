@@ -107,10 +107,8 @@ function finish(rows: AuditEntry[], filters: Filters): { entries: AuditEntry[] }
 
 /* ---------------------------------------------------------- money movement */
 
-export const listMoneyAudit = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .validator((d: unknown) => filterSchema.parse(d ?? {}))
-  .handler(async ({ data, context }) => {
+/** Plain handler, exported so checks can run it directly. */
+export const listMoneyAuditHandler = async ({ data, context }: { data: any; context: any }) => {
     await requireStaff(context);
     const since = sinceOf(data.days);
     const { fundName, personName, app, clientName } = await lookups(context);
@@ -268,7 +266,12 @@ export const listMoneyAudit = createServerFn({ method: "GET" })
       ? rows.filter((r) => r.fundName === fundName.get(data.offeringId as string))
       : rows;
     return finish(filtered, data);
-  });
+  };
+
+export const listMoneyAudit = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .validator((d: unknown) => filterSchema.parse(d ?? {}))
+  .handler(listMoneyAuditHandler);
 
 /* ------------------------------------------------------------ distributions */
 
@@ -302,10 +305,8 @@ export const listDistributionAudit = createServerFn({ method: "GET" })
 
 /* ----------------------------------------------------------- investor checks */
 
-export const listInvestorCheckAudit = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .validator((d: unknown) => filterSchema.parse(d ?? {}))
-  .handler(async ({ data, context }) => {
+/** Plain handler, exported so checks can run it directly. */
+export const listInvestorCheckAuditHandler = async ({ data, context }: { data: any; context: any }) => {
     await requireStaff(context);
     const since = sinceOf(data.days);
     const { fundName, personName, app } = await lookups(context);
@@ -435,7 +436,12 @@ export const listInvestorCheckAudit = createServerFn({ method: "GET" })
       ? rows.filter((r) => r.fundName === fundName.get(data.offeringId as string))
       : rows;
     return finish(filtered, data);
-  });
+  };
+
+export const listInvestorCheckAudit = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .validator((d: unknown) => filterSchema.parse(d ?? {}))
+  .handler(listInvestorCheckAuditHandler);
 
 /* ------------------------------------------------------------------ filings */
 

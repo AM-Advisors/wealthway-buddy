@@ -18,10 +18,8 @@ export type DeliveryLogEvent = {
 };
 
 /** Delivery history for onboarding emails: sends, rejections, bounces, complaints, unsubscribes. */
-export const listDeliveryLog = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .validator((data: unknown) => schema.parse(data ?? {}))
-  .handler(async ({ data, context }) => {
+/** Plain handler, exported so checks can run it directly. */
+export const listDeliveryLogHandler = async ({ data, context }: { data: any; context: any }) => {
     const { supabase, userId } = context;
     await authorizeEmailDiagnostics(supabase, userId, data);
 
@@ -58,7 +56,12 @@ export const listDeliveryLog = createServerFn({ method: "POST" })
         error: "Could not load delivery history right now.",
       };
     }
-  });
+  };
+
+export const listDeliveryLog = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((data: unknown) => schema.parse(data ?? {}))
+  .handler(listDeliveryLogHandler);
 
 export type DeliveryDetails = {
   recipient: string;
@@ -79,10 +82,8 @@ const detailsSchema = z.object({
 });
 
 /** Last-known provider response and message headers for a recipient's most recent onboarding email. */
-export const getDeliveryDetails = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .validator((data: unknown) => detailsSchema.parse(data))
-  .handler(async ({ data, context }): Promise<DeliveryDetails> => {
+/** Plain handler, exported so checks can run it directly. */
+export const getDeliveryDetailsHandler = async ({ data, context }: { data: any; context: any }): Promise<DeliveryDetails> => {
     const { supabase, userId } = context;
     await authorizeEmailDiagnostics(supabase, userId, data);
 
@@ -164,7 +165,12 @@ export const getDeliveryDetails = createServerFn({ method: "POST" })
       rawPayload: null,
       error: null,
     };
-  });
+  };
+
+export const getDeliveryDetails = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((data: unknown) => detailsSchema.parse(data))
+  .handler(getDeliveryDetailsHandler);
 
 export type EmailClickEvent = {
   id: string;
@@ -181,10 +187,8 @@ const clickSchema = z.object({
 });
 
 /** Recorded clicks on links inside onboarding emails (admins and fund managers). */
-export const listEmailClicks = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .validator((data: unknown) => clickSchema.parse(data ?? {}))
-  .handler(async ({ data, context }) => {
+/** Plain handler, exported so checks can run it directly. */
+export const listEmailClicksHandler = async ({ data, context }: { data: any; context: any }) => {
     const { supabase, userId } = context;
     await authorizeEmailDiagnostics(supabase, userId, data);
 
@@ -213,4 +217,9 @@ export const listEmailClicks = createServerFn({ method: "POST" })
       })) as EmailClickEvent[],
       error: null as string | null,
     };
-  });
+  };
+
+export const listEmailClicks = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((data: unknown) => clickSchema.parse(data ?? {}))
+  .handler(listEmailClicksHandler);
