@@ -39,11 +39,11 @@ export function verifiedPersonBackfill(
 
   const doc = normalized.document;
   if (blank(person.date_of_birth) && doc.dateOfBirth) {
-    update.date_of_birth = doc.dateOfBirth;
+    update["date_of_birth"] = doc.dateOfBirth;
     filledFields.push("date_of_birth");
   }
   if (blank(person.citizenship_country) && doc.issuingCountry) {
-    update.citizenship_country = doc.issuingCountry;
+    update["citizenship_country"] = doc.issuingCountry;
     filledFields.push("citizenship_country");
   }
 

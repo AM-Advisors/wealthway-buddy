@@ -42,10 +42,10 @@ const normalized = (overrides: Partial<NormalizedVerification> = {}): Normalized
 describe("verifiedPersonBackfill", () => {
   it("fills blank About You fields from verified data", () => {
     const r = verifiedPersonBackfill({}, normalized(), true);
-    expect(r.update.date_of_birth).toBe("1985-04-12");
-    expect(r.update.citizenship_country).toBe("United States");
-    expect(r.update.address_line1).toBe("100 Main St");
-    expect(r.update.city).toBe("Austin");
+    expect(r.update["date_of_birth"]).toBe("1985-04-12");
+    expect(r.update["citizenship_country"]).toBe("United States");
+    expect(r.update["address_line1"]).toBe("100 Main St");
+    expect(r.update["city"]).toBe("Austin");
     expect(r.filledFields).toContain("date_of_birth");
   });
 
@@ -55,10 +55,10 @@ describe("verifiedPersonBackfill", () => {
       normalized(),
       true,
     );
-    expect(r.update.date_of_birth).toBeUndefined();
-    expect(r.update.citizenship_country).toBeUndefined();
-    expect(r.update.city).toBeUndefined();
-    expect(r.update.address_line1).toBe("100 Main St");
+    expect(r.update["date_of_birth"]).toBeUndefined();
+    expect(r.update["citizenship_country"]).toBeUndefined();
+    expect(r.update["city"]).toBeUndefined();
+    expect(r.update["address_line1"]).toBe("100 Main St");
   });
 
   it("fills nothing when the check is not approved", () => {
@@ -71,7 +71,7 @@ describe("verifiedPersonBackfill", () => {
     const n = normalized();
     n.proofOfAddress = { ...n.proofOfAddress, status: "review" };
     const r = verifiedPersonBackfill({}, n, true);
-    expect(r.update.address_line1).toBeUndefined();
-    expect(r.update.date_of_birth).toBe("1985-04-12");
+    expect(r.update["address_line1"]).toBeUndefined();
+    expect(r.update["date_of_birth"]).toBe("1985-04-12");
   });
 });
