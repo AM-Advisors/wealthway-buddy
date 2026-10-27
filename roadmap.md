@@ -1,5 +1,13 @@
 # Roadmap
 
+## Connected commercial teams (2026-10-27)
+- [ ] Unify promotional email suppression and authorized audience eligibility across Marketing, CRM campaigns, Sales outreach and rep-confirmed flows; preserve transactional notices and evidenced re-consent.
+- [ ] Tighten contact/flow history visibility and align menus with existing server authority, without new role grants.
+- [ ] Connect website/import intake, reviewed contact matching, Sales assignment and active follow-up ownership; preserve source provenance and never auto-merge identities.
+- [ ] Reconcile CRM opportunity updates and Sales follow-up hooks without treating manual stages as signed contract or payment evidence.
+- [ ] Connect Marketing, Sales, Account Management and Accounting using existing client/deal/quote/SOW/invoice/fee/commission/forecast/payment-review records and scoped actions, not duplicate engines.
+- [ ] Add focused regression checks and fictional click-through coverage; durable authenticated acceptance requires independently isolated QA. No live sends, contract execution, accounting posting, transfers or publishing during QA.
+
 ## Finish remaining work (2026-10-27)
 - [x] Replaced the ten-second animation with an 85.8-second H.264/AAC narrated walkthrough, captions and illustrative fictional screens; shared guide mounted on fund join and fictional QA pages. All seven scenes visually inspected and app media URL returns the full file. AI narration, not a recorded person; no actual investor screen recordings.
 - [ ] External browser playback and investor-link live release: sandbox Chromium lacks H.264 support, so actual playback is unverified; publishing requires explicit approval. Durable investor onboarding still requires isolated synthetic QA.
