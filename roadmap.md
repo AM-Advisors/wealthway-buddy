@@ -1,5 +1,10 @@
 # Roadmap
 
+## ROAS annual K-1 and filing fees (2026-10-27)
+- [ ] Add LP and management annual K-1 sets at $2,500 each, due December 31 beginning 2026, to existing proposed commercial terms without duplicate services or approval bypass.
+- [ ] Calculate Form D and Blue Sky costs from recorded sale/jurisdiction evidence; identify missing inputs or variable-state review, no automatic filing or payment.
+- [ ] Verify saved terms and concrete annual amount/due-date tests; report invoice/filing preparation blockers.
+
 ## ROAS corrected billing and quarterly terms (2026-10-27)
 - [x] Voided the incorrect $19,000 current invoice through Alyssa's authenticated canonical billing function; read back void status/reason, original history retained.
 - [ ] Replacement paid invoices/LP partial receipt: need confirmed payment dates and source attribution, plus an authorized receipt-correction path; existing $11,500 historical receipt event cannot be deleted or silently reused. Setup paid invoice remains unchanged.
