@@ -204,10 +204,13 @@ export async function updateRequest(uid: string, d: {
   const db = await admin();
   const { data: r } = await db.from("fund_service_requests").select("*").eq("id", d.id).maybeSingle();
   if (!r) throw new Error("Request not found.");
-  if (d.transferToOperations) {
+  const salesToOperations = ["sales", "account_management"].includes(r.assigned_team) && d.assignedTeam === "operations";
+  if (d.transferToOperations || salesToOperations) {
     if (!["sales", "account_management"].includes(r.assigned_team)) throw new Error("This request is no longer assigned to Sales.");
-    validateOperationsTransfer({ owner: d.assignedTo ?? null, dueDate: d.dueDate ?? null, roles: s.staff.get(d.assignedTo ?? "") ?? [], status: r.status, taskId: r.task_id });
-    d = { ...d, assignedTeam: "operations", status: "IN_REVIEW" };
+    const receivingOwner = d.assignedTo !== undefined ? d.assignedTo : r.assigned_to;
+    const receivingDue = d.dueDate !== undefined ? d.dueDate : r.due_date;
+    validateOperationsTransfer({ owner: receivingOwner, dueDate: receivingDue, roles: s.staff.get(receivingOwner ?? "") ?? [], status: r.status, taskId: r.task_id });
+    d = { ...d, assignedTo: receivingOwner, dueDate: receivingDue, assignedTeam: "operations", ...(d.transferToOperations ? { status: "IN_REVIEW" } : {}) };
   }
   if (d.assignedTo && !s.staff.has(d.assignedTo)) throw new Error("Assign requests to Harmonious staff only.");
   if (d.assignedTeam !== undefined && !Object.hasOwn(TEAM_ROUTING, d.assignedTeam)) throw new Error("Unknown request team.");
