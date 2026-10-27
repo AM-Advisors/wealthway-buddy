@@ -4,6 +4,7 @@
  */
 import { seesWholeTeam } from "@/lib/staff-role-hierarchy";
 import { clientHealth } from "@/lib/account-health";
+import { withInvoiceBalances } from "./invoice-balance.server";
 
 const admin = async () => (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
 const DAY = 864e5;
@@ -38,11 +39,12 @@ export async function amDashboard(userId: string) {
     scoped(db.from("invoices").select("id, client_id, status, due_date, total_cents, paid_on, voided_at"), clientIds).is("paid_on", null).is("voided_at", null).limit(5000),
     scoped(db.from("service_requests").select("id, client_id, service_key, status, created_at"), clientIds).not("status", "in", "(activated,declined,withdrawn)").limit(2000),
     scoped(db.from("inbox_threads").select("id, client_id, subject, last_message_at"), clientIds).order("last_message_at", { ascending: false }).limit(500),
-    scoped(db.from("sales_quotes").select("id, client_id, quote_number, title, signed_at, onboarded_at, onboarded_offering_id, total_cents"), clientIds).eq("status", "signed").gte("signed_at", new Date(Date.now() - 30 * DAY).toISOString()).limit(500),
+    scoped(db.from("sales_quotes").select("id, client_id, quote_number, title, sow_id, signed_at, onboarded_at, onboarded_offering_id, onboarding_error, total_cents"), clientIds).eq("status", "signed").order("signed_at", { ascending: false }).limit(500),
     scoped(db.from("client_sows").select("id, client_id, title, termination_date, status"), clientIds).not("termination_date", "is", null).limit(2000),
   ]);
+  if ([clients, offers, setups, invoices, requests, threads, quotes, sows].some(result => result.error)) throw new Error("Couldn't load Account Management records. Please retry.");
   const C = (clients.data ?? []) as any[], O = (offers.data ?? []) as any[], S = (setups.data ?? []) as any[];
-  const I = ((invoices.data ?? []) as any[]).filter((i) => !["draft", "paid", "void"].includes(String(i.status)));
+  const I = (await withInvoiceBalances(((invoices.data ?? []) as any[]).filter((i) => !["draft", "paid", "void"].includes(String(i.status))))).filter(i => i.remaining_cents > 0);
   const R = (requests.data ?? []) as any[], T = (threads.data ?? []) as any[];
   // Messages whose last word came from the client side are "waiting".
   const tIds = T.map((t) => t.id);
@@ -72,13 +74,13 @@ export async function amDashboard(userId: string) {
   const soon = new Date(Date.now() + 90 * DAY).toISOString().slice(0, 10);
   return {
     team,
-    totals: { clients: C.length, activeFunds: S.filter((s) => s.launch_state === "launched").length, inSetup: S.filter((s) => s.launch_state !== "launched").length, unpaidInvoices: I.length, unpaidCents: I.reduce((t, i) => t + Number(i.total_cents ?? 0), 0), openRequests: R.length },
+    totals: { clients: C.length, activeFunds: S.filter((s) => s.launch_state === "launched").length, inSetup: S.filter((s) => s.launch_state !== "launched").length, unpaidInvoices: I.length, unpaidCents: I.reduce((t, i) => t + Number(i.remaining_cents ?? 0), 0), openRequests: R.length },
     book,
     healthCounts: { Healthy: book.filter((b) => b.health === "Healthy").length, "Needs attention": book.filter((b) => b.health === "Needs attention").length, "At risk": book.filter((b) => b.health === "At risk").length },
     stageCounts,
-    handoffs: ((quotes.data ?? []) as any[]).map((q) => {
+    handoffs: ((quotes.data ?? []) as any[]).filter(q => q.onboarding_error || !q.onboarded_offering_id || (q.signed_at && new Date(q.signed_at).getTime() >= Date.now() - 30 * DAY)).map((q) => {
       const st = S.find((s) => s.offering_id === q.onboarded_offering_id);
-      return { id: q.id, client: name.get(q.client_id) ?? "Client", clientId: q.client_id, quote: `Q-${q.quote_number}`, title: q.title, signedAt: q.signed_at, cents: Number(q.total_cents ?? 0), fundId: q.onboarded_offering_id, handedOff: !!q.onboarded_at, setupStarted: !!st && st.launch_state !== "not_ready" };
+      return { id: q.id, sowId: q.sow_id, client: name.get(q.client_id) ?? "Client", clientId: q.client_id, quote: `Q-${q.quote_number}`, title: q.title, signedAt: q.signed_at, cents: Number(q.total_cents ?? 0), fundId: q.onboarded_offering_id, handedOff: !!q.onboarded_offering_id && !q.onboarding_error, needsReview: !!q.onboarding_error, setupStarted: !!st && st.launch_state !== "not_ready" };
     }),
     renewals: ((sows.data ?? []) as any[]).filter((s) => s.termination_date >= today && s.termination_date <= soon)
       .map((s) => ({ id: s.id, client: name.get(s.client_id) ?? "Client", clientId: s.client_id, title: s.title, ends: s.termination_date, days: Math.ceil((new Date(s.termination_date).getTime() - Date.now()) / DAY) }))

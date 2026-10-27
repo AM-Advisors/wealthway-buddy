@@ -35,7 +35,7 @@ export async function loadCommercialWorkflow(context: any) {
   if (areas.sales) commissions = await (await import("./commissions.server")).commissionReport(context.userId, "1900-01-01", "2999-12-31");
   return { areas, inquiries, team, canQualify, finance, accountManagement, commissions, asOf: new Date().toISOString() };
 }
-export async function qualifyInquiry(context: any, input: { leadId: string; contactId?: string; ownerId: string }) {
+export async function qualifyInquiry(context: any, input: { leadId: string; contactId?: string | undefined; ownerId: string }) {
   await access(context);
   const { salesActor, salesTeam, reassignDeal } = await import("./sales-hub.server");
   const actor = await salesActor(context.userId);

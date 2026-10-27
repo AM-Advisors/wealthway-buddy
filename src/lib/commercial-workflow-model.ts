@@ -12,6 +12,6 @@ export function commercialAreas(roles: readonly string[]) {
 export function commercialBalanceTotals(invoices: { total_cents: unknown; status: string; recorded_paid_cents?: unknown; due_date?: string | null }[], today: string) {
   return invoices.filter(i => !["draft", "void", "cancelled", "canceled"].includes(i.status)).reduce((sum, invoice) => {
     const balance = invoiceBalance(invoice);
-    return { billed: sum.billed + balance.totalCents, received: sum.received + balance.paidCents, remaining: sum.remaining + balance.remainingCents, overdue: sum.overdue + (invoice.due_date && invoice.due_date < today ? balance.remainingCents : 0) };
+    return { billed: sum.billed + Math.max(0, Math.round(Number(invoice.total_cents) || 0)), received: sum.received + balance.paidCents, remaining: sum.remaining + balance.remainingCents, overdue: sum.overdue + (invoice.due_date && invoice.due_date < today ? balance.remainingCents : 0) };
   }, { billed: 0, received: 0, remaining: 0, overdue: 0 });
 }

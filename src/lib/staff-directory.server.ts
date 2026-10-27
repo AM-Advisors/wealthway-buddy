@@ -5,6 +5,7 @@
  * setManager (leadership only) and logActivity (self only, append-only).
  */
 import { MANAGED_ROLES } from "@/lib/staff-role-hierarchy";
+import { withInvoiceBalances } from "./invoice-balance.server";
 
 const admin = async () => (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
 
@@ -245,19 +246,21 @@ export async function financeOverview(viewer: string) {
   if (!isLeaderViewer(roles) && !TEAMS.finance.roles.some((r) => roles.includes(r))) throw new Error("Only the Accounting & Finance team and leadership can view this dashboard.");
   const yearAgo = new Date(); yearAgo.setMonth(yearAgo.getMonth() - 11, 1);
   const startMonth = yearAgo.toISOString().slice(0, 7);
-  const [{ data: inv }, { data: quotes }, { data: clients }] = await Promise.all([
+  const results = await Promise.all([
     db.from("invoices").select("id, number, client_id, status, issue_date, due_date, paid_on, total_cents, voided_at").order("issue_date", { ascending: false }).limit(5000),
     db.from("sales_quotes").select("id, quote_number, version, title, client_id, status, total_cents, valid_until, created_at").in("status", ["draft", "pending_approval", "approved", "sent"]).order("created_at", { ascending: false }).limit(500),
     db.from("clients").select("id, name, is_test_demo"),
   ]);
+  if (results.some(result => result.error)) throw new Error("Couldn't load Finance records. Please retry.");
+  const [{ data: inv }, { data: quotes }, { data: clients }] = results;
   const testIds = new Set(((clients ?? []) as any[]).filter((c) => c.is_test_demo).map((c) => c.id));
   if (testIds.size) {
     (inv as any[] | null)?.splice(0, (inv as any[]).length, ...((inv as any[]).filter((r) => !testIds.has(r.client_id))));
     (quotes as any[] | null)?.splice(0, (quotes as any[]).length, ...((quotes as any[]).filter((r) => !testIds.has(r.client_id))));
   }
   const name = new Map(((clients ?? []) as any[]).map((c) => [c.id, c.name as string]));
-  const invoices = ((inv ?? []) as any[]).filter((i) => !i.voided_at && i.status !== "void");
-  const paid = invoices.filter((i) => i.paid_on || i.status === "paid");
+  const invoices = await withInvoiceBalances(((inv ?? []) as any[]).filter((i) => !i.voided_at && i.status !== "void"));
+  const paid = invoices.filter((i) => i.recorded_paid_cents > 0 && i.status !== "draft");
   const months: string[] = [];
   for (let d = new Date(yearAgo); months.length < 12; d.setMonth(d.getMonth() + 1)) months.push(d.toISOString().slice(0, 7));
   const byMonth: Record<string, number> = Object.fromEntries(months.map((m) => [m, 0]));
@@ -266,14 +269,15 @@ export async function financeOverview(viewer: string) {
   for (const i of invoices) {
     const c = (byClient[i.client_id ?? "none"] ??= { client: name.get(i.client_id) ?? "No client", paid: 0, outstanding: 0, invoices: 0 });
     c.invoices++;
-    const cents = Number(i.total_cents ?? 0);
+    const cents = Number(i.recorded_paid_cents ?? 0);
     if (paid.includes(i)) {
       c.paid += cents;
-      const m = String(i.paid_on ?? i.issue_date ?? "").slice(0, 7);
-      if (m >= startMonth && m in byMonth) byMonth[m]! += cents;
-    } else if (i.status !== "draft") c.outstanding += cents;
+      const m = String(i.recorded_paid_on ?? i.paid_on ?? "").slice(0, 7);
+      if (m >= startMonth && m in byMonth) byMonth[m] = (byMonth[m] ?? 0) + cents;
+    }
+    if (i.status !== "draft") c.outstanding += Number(i.remaining_cents ?? 0);
   }
-  const unpaid = invoices.filter((i) => !paid.includes(i) && i.status !== "draft");
+  const unpaid = invoices.filter((i) => i.remaining_cents > 0 && i.status !== "draft");
   const q = (quotes ?? []) as any[];
   const staff = await allStaff(db);
   const members = [...staff.entries()].filter(([, r]) => TEAMS.finance.roles.some((x) => r.includes(x))).map(([id]) => id);
@@ -284,14 +288,14 @@ export async function financeOverview(viewer: string) {
   return {
     totals: {
       revenue12m: Object.values(byMonth).reduce((s, v) => s + v, 0),
-      outstanding: unpaid.reduce((s, i) => s + Number(i.total_cents ?? 0), 0),
-      overdue: unpaid.filter((i) => i.due_date && i.due_date < today).reduce((s, i) => s + Number(i.total_cents ?? 0), 0),
+      outstanding: unpaid.reduce((s, i) => s + Number(i.remaining_cents ?? 0), 0),
+      overdue: unpaid.filter((i) => i.due_date && i.due_date < today).reduce((s, i) => s + Number(i.remaining_cents ?? 0), 0),
       pendingQuotes: q.reduce((s, x) => s + Number(x.total_cents ?? 0), 0),
     },
     byMonth: months.map((m) => ({ month: m, cents: byMonth[m]! })),
     byClient: Object.values(byClient).sort((a, b) => b.paid + b.outstanding - (a.paid + a.outstanding)),
-    invoices: invoices.slice(0, 25).map((i) => ({ id: i.id, number: i.number, client: name.get(i.client_id) ?? "No client", status: paid.includes(i) ? "paid" : i.due_date && i.due_date < today && i.status !== "draft" ? "overdue" : i.status, issued: i.issue_date, due: i.due_date, paidOn: i.paid_on, cents: Number(i.total_cents ?? 0) })),
-    payments: paid.filter((i) => i.paid_on).sort((a, b) => String(b.paid_on).localeCompare(String(a.paid_on))).slice(0, 15).map((i) => ({ id: i.id, number: i.number, client: name.get(i.client_id) ?? "No client", paidOn: i.paid_on, cents: Number(i.total_cents ?? 0) })),
+    invoices: invoices.slice(0, 25).map((i) => ({ id: i.id, number: i.number, client: name.get(i.client_id) ?? "No client", status: i.status === "paid" ? "paid" : i.due_date && i.due_date < today && i.status !== "draft" && i.remaining_cents > 0 ? "overdue" : i.partially_paid ? "partially_paid" : i.status, issued: i.issue_date, due: i.due_date, paidOn: i.paid_on, cents: Number(i.total_cents ?? 0), receivedCents: i.recorded_paid_cents, remainingCents: i.remaining_cents })),
+    payments: paid.sort((a, b) => String(b.recorded_paid_on ?? b.paid_on ?? "").localeCompare(String(a.recorded_paid_on ?? a.paid_on ?? ""))).slice(0, 15).map((i) => ({ id: i.id, number: i.number, client: name.get(i.client_id) ?? "No client", paidOn: i.recorded_paid_on ?? i.paid_on ?? null, cents: Number(i.recorded_paid_cents ?? 0) })),
     quotes: q.slice(0, 25).map((x) => ({ id: x.id, label: `Q-${x.quote_number}${x.version > 1 ? ` v${x.version}` : ""}`, title: x.title, client: name.get(x.client_id) ?? "Prospect", status: x.status, validUntil: x.valid_until, cents: Number(x.total_cents ?? 0) })),
     activity: ((acts ?? []) as any[]).map((a) => ({ id: a.id, who: who.get(a.user_id) ?? "Staff member", kind: a.kind, label: a.label ?? a.path, at: a.created_at })),
   };
