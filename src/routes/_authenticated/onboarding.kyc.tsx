@@ -1,3 +1,4 @@
+import { verificationLabel } from "@/lib/verification-status";
 import { useStepView } from "@/hooks/use-step-view";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
@@ -212,7 +213,7 @@ function KycPage() {
         </div>
         {data?.application?.kyc_status && data.application.kyc_status !== "not_started" && (
           <Badge variant="secondary" className="capitalize">
-            {data.application.kyc_status.replace("_", " ")}
+            {verificationLabel(data.application.kyc_status)}
           </Badge>
         )}
       </div>

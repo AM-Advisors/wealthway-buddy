@@ -1,3 +1,4 @@
+import { verificationLabel } from "@/lib/verification-status";
 import { SearchableNativeSelect } from "@/components/ui/searchable-people-picker";
 import { addFundTitle } from "@/lib/drive-labels";
 import { useMemo, useState } from "react";
@@ -171,19 +172,13 @@ function EditClientDialog({ clientId, initial, staff, onClose }: { clientId: str
 
 /* ------------------------------------------------------------ people */
 
-function verificationLabel(s: string | null | undefined) {
-  if (s === "approved") return "Approved";
-  if (s === "declined") return "Declined";
-  if (s === "in_review" || s === "pending") return "In review";
-  return "Not started";
-}
 
 function VerificationBadges({ kyc, aml }: { kyc?: string | null; aml?: string | null }) {
   const variant = (s: string | null | undefined) => (s === "approved" ? "default" : s === "declined" ? "destructive" : "outline") as "default" | "destructive" | "outline";
   return (
     <>
-      <Badge variant={variant(kyc)}>KYC: {verificationLabel(kyc)}</Badge>
-      <Badge variant={variant(aml)}>AML: {verificationLabel(aml)}</Badge>
+      <Badge variant={variant(kyc)}>Identity: {verificationLabel(kyc)}</Badge>
+      <Badge variant={variant(aml)}>Screening: {verificationLabel(aml)}</Badge>
     </>
   );
 }

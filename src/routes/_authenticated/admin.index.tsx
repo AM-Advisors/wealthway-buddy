@@ -1,3 +1,4 @@
+import { verificationLabel } from "@/lib/verification-status";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
@@ -220,8 +221,8 @@ function AdminQueue() {
                   }`}
                 </p>
                 <div className="mt-3 flex flex-wrap gap-1.5">
-                  <Badge variant={statusTone(app.kyc_status)}>KYC {prettyStatus(app.kyc_status)}</Badge>
-                  <Badge variant={statusTone(app.aml_status)}>AML {prettyStatus(app.aml_status)}</Badge>
+                  <Badge variant={statusTone(app.kyc_status)}>Identity {verificationLabel(app.kyc_status)}</Badge>
+                  <Badge variant={statusTone(app.aml_status)}>Screening {verificationLabel(app.aml_status)}</Badge>
                   <Badge variant={statusTone(app.accreditation_status)}>
                     Accreditation {prettyStatus(app.accreditation_status)}
                   </Badge>

@@ -1,3 +1,4 @@
+import { verificationLabel } from "@/lib/verification-status";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -65,8 +66,8 @@ function tone(status: string): "default" | "secondary" | "destructive" {
 
 function checkText(row: ApprovalRow) {
   const parts = [
-    `identity ${row.kyc_status}`,
-    `screening ${row.aml_status}`,
+    `identity ${verificationLabel(row.kyc_status).toLowerCase()}`,
+    `screening ${verificationLabel(row.aml_status).toLowerCase()}`,
     `accreditation ${row.accreditation_status}`,
     `documents ${row.documents_status}`,
   ];

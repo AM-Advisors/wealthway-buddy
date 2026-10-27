@@ -36,11 +36,16 @@ export function identityCleared(kyc: CanonicalStatus, aml: CanonicalStatus) {
 
 /** Same words on every screen. Managers never see screening match detail. */
 export const VERIFICATION_LABEL: Record<CanonicalStatus, string> = {
-  approved: "Verified",
-  review: "Under review",
-  declined: "Not passed",
+  approved: "Approved",
+  review: "Needs review",
+  declined: "Declined",
   pending: "Not started",
 };
+
+/** One label for any stored identity/screening value. Never shows raw values. */
+export function verificationLabel(status: string | null | undefined): string {
+  return VERIFICATION_LABEL[canonicalVerificationStatus(status)];
+}
 
 type PersonRow = { user_id: string | null; kyc_status: string | null; aml_status: string | null; merged_into_person_id?: string | null };
 

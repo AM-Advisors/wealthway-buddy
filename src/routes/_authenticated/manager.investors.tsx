@@ -1,3 +1,4 @@
+import { verificationLabel } from "@/lib/verification-status";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
@@ -212,8 +213,8 @@ function ManagerInvestorsPage() {
                     </div>
                   </CardHeader>
                   <CardContent className="flex flex-wrap gap-1.5 pt-0">
-                    <Badge variant={statusTone(inv.kyc_status)}>Identity {prettyStatus(inv.kyc_status)}</Badge>
-                    <Badge variant={statusTone(inv.aml_status)}>AML {prettyStatus(inv.aml_status)}</Badge>
+                    <Badge variant={statusTone(inv.kyc_status)}>Identity {verificationLabel(inv.kyc_status)}</Badge>
+                    <Badge variant={statusTone(inv.aml_status)}>Screening {verificationLabel(inv.aml_status)}</Badge>
                     <Badge variant={statusTone(inv.accreditation_status)}>
                       Accreditation {prettyStatus(inv.accreditation_status)}
                     </Badge>

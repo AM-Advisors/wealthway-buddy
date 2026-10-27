@@ -1,3 +1,4 @@
+import { verificationLabel } from "@/lib/verification-status";
 import { useMemo, useState } from "react";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -167,7 +168,7 @@ export function FundCompliancePanel({ offeringId }: { offeringId: string }) {
                 <div className="rounded-md border p-3">
                   <p className="text-xs uppercase text-muted-foreground">Identity</p>
                   <Badge className="mt-1" variant={statusTone(inv.kyc.status)}>
-                    {statusWord(inv.kyc.status)}
+                    {verificationLabel(inv.kyc.status)}
                   </Badge>
                   <p className="mt-2 text-xs text-muted-foreground">
                     {inv.kyc.provider ? `${inv.kyc.provider} · ` : ""}
@@ -177,7 +178,7 @@ export function FundCompliancePanel({ offeringId }: { offeringId: string }) {
                 <div className="rounded-md border p-3">
                   <p className="text-xs uppercase text-muted-foreground">Screening</p>
                   <Badge className="mt-1" variant={statusTone(inv.aml.status)}>
-                    {statusWord(inv.aml.status)}
+                    {verificationLabel(inv.aml.status)}
                   </Badge>
                   <p className="mt-2 text-xs text-muted-foreground">
                     {inv.aml.matches > 0 ? `${inv.aml.matches} possible match(es) · ` : ""}

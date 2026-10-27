@@ -1,3 +1,4 @@
+import { verificationLabel } from "@/lib/verification-status";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -103,7 +104,7 @@ function CompliancePage() {
               <div className="rounded-md border p-3">
                 <p className="text-xs uppercase text-muted-foreground">Identity (KYC)</p>
                 <Badge className="mt-1" variant={statusTone(String(application.kyc_status))}>
-                  {statusWord(String(application.kyc_status))}
+                  {verificationLabel(application.kyc_status)}
                 </Badge>
                 <Button asChild size="sm" variant="outline" className="mt-3 w-full">
                   <Link to="/onboarding/kyc">Open the identity form</Link>
@@ -112,7 +113,7 @@ function CompliancePage() {
               <div className="rounded-md border p-3">
                 <p className="text-xs uppercase text-muted-foreground">Screening (AML)</p>
                 <Badge className="mt-1" variant={statusTone(String(application.aml_status))}>
-                  {statusWord(String(application.aml_status))}
+                  {verificationLabel(application.aml_status)}
                 </Badge>
                 <Button asChild size="sm" variant="outline" className="mt-3 w-full">
                   <Link to="/onboarding/aml">Open the AML questionnaire</Link>

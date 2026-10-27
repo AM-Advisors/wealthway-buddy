@@ -1,3 +1,4 @@
+import { verificationLabel } from "@/lib/verification-status";
 import { useEffect, useState } from "react";
 
 import { useServerFn } from "@tanstack/react-start";
@@ -168,8 +169,8 @@ export function InvestorReviewBoard({ offeringId }: { offeringId: string }) {
 
             <CardContent className="space-y-4 pt-0">
               <div className="flex flex-wrap gap-1.5">
-                <Badge variant={statusTone(inv.statuses.kyc)}>Identity {prettyStatus(inv.statuses.kyc)}</Badge>
-                <Badge variant={statusTone(inv.statuses.aml)}>AML {prettyStatus(inv.statuses.aml)}</Badge>
+                <Badge variant={statusTone(inv.statuses.kyc)}>Identity {verificationLabel(inv.statuses.kyc)}</Badge>
+                <Badge variant={statusTone(inv.statuses.aml)}>Screening {verificationLabel(inv.statuses.aml)}</Badge>
                 <Badge variant={statusTone(inv.statuses.accreditation)}>
                   Accreditation {prettyStatus(inv.statuses.accreditation)}
                 </Badge>
