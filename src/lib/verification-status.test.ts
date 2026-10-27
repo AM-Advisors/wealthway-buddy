@@ -42,13 +42,13 @@ describe("canonicalizeApplications", () => {
   const sb = (rows: any[]) => ({ from: () => ({ select: () => ({ in: async () => ({ data: rows }) }) }) });
   it("shows the person's review result over a stale approved application copy", async () => {
     const out = await canonicalizeApplications(sb([{ user_id: "u1", kyc_status: "review", aml_status: "approved" }]), [{ id: "a", user_id: "u1", kyc_status: "approved", aml_status: "approved" }]);
-    expect(out[0].kyc_status).toBe("review");
+    expect(out[0]!.kyc_status).toBe("review");
   });
   it("uses the fallback account when rows lack one, and keeps the copy if the person read fails", async () => {
     const out = await canonicalizeApplications(sb([{ user_id: "me", kyc_status: "declined", aml_status: null }]), [{ id: "a", kyc_status: "approved" }], "me");
-    expect(out[0].kyc_status).toBe("declined");
+    expect(out[0]!.kyc_status).toBe("declined");
     const broken = { from: () => { throw new Error("no access"); } };
     const kept = await canonicalizeApplications(broken, [{ id: "a", user_id: "u1", kyc_status: "approved" }]);
-    expect(kept[0].kyc_status).toBe("approved");
+    expect(kept[0]!.kyc_status).toBe("approved");
   });
 });
