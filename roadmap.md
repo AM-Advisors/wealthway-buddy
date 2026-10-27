@@ -1,5 +1,10 @@
 # Roadmap
 
+## Complete request-to-task handoff loop (2026-10-27)
+- [x] Added explicit Sales-to-Operations transfer with receiving Operations owner and deadline, atomic linked-task status, optimistic saves, and fund Requests tab task progress. Internal task details remain staff-only; client request status/deadline remain visible. Installed progress trigger confirmed; no existing records backfilled.
+- [x] Fictional transaction and assignment → transfer → completion click-through checks pass; desktop and 440px layout inspected without runtime errors or overflow.
+- [ ] Durable authenticated verification remains blocked by independently isolated QA evidence and synthetic sessions; fictional checks do not establish live delivery or saved-record acceptance.
+
 ## Fund request and task synchronization (2026-10-27)
 - [x] Primary linked task owner, team and due date synchronize atomically in both directions; review tasks, approvals and request status remain unchanged. Installed triggers confirmed through the database catalog; no existing assignments or records backfilled.
 - [x] Added authorized searchable receiving-owner control on requests and receiving-team control on tasks, with linked-screen refresh. Fifty-one focused fictional request/handoff tests pass, including ten synchronization transaction checks; preview build OK.

@@ -12,11 +12,12 @@ describe("fictional request and primary task routing transactions", () => {
   beforeAll(async () => {
     db = new PGlite();
     await db.exec(`create role service_role; create role anon; create role authenticated;
-      create table staff_tasks(id uuid primary key,offering_id uuid,related_workflow_type text,related_workflow_id uuid,source_ref text,assignee_user_id uuid,team text,due_date date,status text default 'open',updated_at timestamptz);
-      create table fund_service_requests(id uuid primary key,fund_id uuid,task_id uuid references staff_tasks(id),review_task_id uuid references staff_tasks(id),assigned_to uuid,assigned_team text,due_date date,status text default 'READY_FOR_APPROVAL',updated_at timestamptz);
+      create table staff_tasks(id uuid primary key,offering_id uuid,related_workflow_type text,related_workflow_id uuid,source_ref text,assignee_user_id uuid,team text,due_date date,status text default 'open',updated_at timestamptz,completed_at timestamptz,responsibility_status text,responsibility_manual boolean,information_request_type text,requested_information text);
+      create table fund_service_requests(id uuid primary key,fund_id uuid,task_id uuid references staff_tasks(id),review_task_id uuid references staff_tasks(id),assigned_to uuid,assigned_team text,due_date date,status text default 'READY_FOR_APPROVAL',updated_at timestamptz,completed_at timestamptz,responsibility_status text default 'CLIENT_APPROVAL_REQUIRED',request_type text default 'DOCUMENT',client_notes text);
       create table staff_task_events(task_id uuid,actor_user_id uuid,kind text,detail jsonb);
       create table fund_request_events(request_id uuid,fund_id uuid,actor_user_id uuid,kind text,client_visible boolean,detail jsonb);`);
     await db.exec(readFileSync("drizzle/migrations/0346_fund_request_task_routing_sync.sql", "utf8"));
+    await db.exec(readFileSync("drizzle/migrations/0347_complete_request_task_handoff.sql", "utf8"));
   });
   afterAll(async () => db.close());
   beforeEach(async () => {
@@ -77,5 +78,26 @@ describe("fictional request and primary task routing transactions", () => {
     await db.query("update staff_tasks set offering_id=null where id=$1", [task]);
     await expect(db.query("update fund_service_requests set due_date='2027-01-01' where id=$1", [request])).rejects.toThrow("link does not match");
     expect(await requestRow()).toMatchObject({ due_date: null });
+  });
+  it("moves a Sales request, owner, team, deadline and task progress together", async () => {
+    await db.query("update fund_service_requests set assigned_team='sales',status='SUBMITTED' where id=$1", [request]);
+    await db.query("update fund_service_requests set assigned_team='operations',assigned_to=$1,due_date='2026-11-15',status='IN_REVIEW',responsibility_status='HARMONIOUS_HANDLING' where id=$2", [owner, request]);
+    expect(await taskRow()).toEqual({ assignee_user_id: owner, team: "operations", due_date: "2026-11-15", status: "in_progress" });
+    expect(await requestRow()).toEqual({ assigned_to: owner, assigned_team: "operations", due_date: "2026-11-15", status: "IN_REVIEW" });
+    expect((await db.query("select status,team from staff_tasks where id=$1", [review])).rows[0]).toEqual({ status: "open", team: "sales" });
+  });
+  it("rolls back progress and routing together on a mismatched primary link", async () => {
+    await db.query("update staff_tasks set offering_id=null where id=$1", [task]);
+    await expect(db.query("update fund_service_requests set assigned_team='operations',assigned_to=$1,due_date='2026-11-15',status='IN_REVIEW' where id=$2", [owner, request])).rejects.toThrow("link does not match");
+    expect(await requestRow()).toMatchObject({ assigned_to: null, due_date: null, status: "READY_FOR_APPROVAL" });
+  });
+  it("request completion closes only its primary task", async () => {
+    await db.query("update fund_service_requests set status='COMPLETED',responsibility_status='COMPLETED' where id=$1", [request]);
+    expect(await taskRow()).toMatchObject({ status: "done" });
+    expect((await db.query("select status from staff_tasks where id=$1", [review])).rows[0]).toEqual({ status: "open" });
+  });
+  it("task progress never approves or completes the request", async () => {
+    await db.query("update staff_tasks set status='done' where id=$1", [task]);
+    expect(await requestRow()).toMatchObject({ status: "READY_FOR_APPROVAL" });
   });
 });

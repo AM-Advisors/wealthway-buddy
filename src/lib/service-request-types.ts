@@ -62,6 +62,7 @@ export const TEAM_ROUTING: Record<string, { label: string; taskTeam: string }> =
   entity_operations: { label: "Entity Operations", taskTeam: "operations" },
   reporting: { label: "Reporting", taskTeam: "operations" },
   account_management: { label: "Account Management", taskTeam: "sales" },
+  sales: { label: "Sales", taskTeam: "sales" },
   operations: { label: "Operations", taskTeam: "operations" },
 };
 
