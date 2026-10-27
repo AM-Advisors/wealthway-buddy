@@ -63,3 +63,10 @@ describe("verificationLabel", () => {
     expect(verificationLabel(null)).toBe("Not started");
   });
 });
+
+import { verificationLabel as vlabel } from "./verification-status";
+import { describe as d2, it as i2, expect as e2 } from "vitest";
+d2("verification label detail wording", () => {
+  i2("keeps in-progress checks distinct from not started", () => { e2(vlabel("in_progress")).toBe("In progress"); e2(vlabel("not_started")).toBe("Not started"); });
+  i2("keeps information-needed checks distinct from needs review", () => { e2(vlabel("info_requested")).toBe("More information needed"); e2(vlabel("review")).toBe("Needs review"); });
+});
