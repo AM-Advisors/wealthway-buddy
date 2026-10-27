@@ -50,7 +50,7 @@ function QuotePage() {
   const done = (msg: string) => () => { toast.success(msg); qc.invalidateQueries({ queryKey: ["sales-quote", id] }); qc.invalidateQueries({ queryKey: ["sales-quotes"] }); };
   const err = (e: Error) => toast.error(e.message);
   const submitFn = useServerFn(submitSalesQuote);
-  const submit = useMutation({ mutationFn: () => submitFn({ data: { id } }), onSuccess: done("Sent for approval"), onError: err });
+  const submit = useMutation({ mutationFn: () => submitFn({ data: { id } }), onSuccess: (r: any) => done(r?.autoApproved ? "At or above rate card, ready to send" : "Sent for approval")(), onError: err });
   const decideFn = useServerFn(decideSalesQuote);
   const decide = useMutation({ mutationFn: (approve: boolean) => decideFn({ data: { id, approve, note: note || null } }), onSuccess: done("Decision saved"), onError: err });
   const draftFn = useServerFn(draftQuoteAgreements);
@@ -100,7 +100,7 @@ function QuotePage() {
         {d.canEdit && !editing && <Button size="sm" variant="outline" onClick={() => setEditing(true)}>Edit</Button>}
         {(s === "approved" || s === "sent") && !details && <Button size="sm" variant="outline" onClick={() => setDetails({ title: d.quote.title ?? "", notes: d.quote.notes ?? "", validUntil: d.quote.valid_until ?? "" })}>Update quote</Button>}
         {(s === "approved" || s === "sent") && d.contact?.email && !mail && <Button size="sm" onClick={() => setMail({ subject: `Your Harmonious quote: ${d.quote.title}`, message: "" })}>{s === "sent" ? "Resend quote" : "Email quote"}</Button>}
-        {d.canEdit && <Button size="sm" onClick={() => submit.mutate()} disabled={submit.isPending || !!bookkeepingBlocker}>Submit for approval</Button>}
+        {d.canEdit && <Button size="sm" onClick={() => submit.mutate()} disabled={submit.isPending || !!bookkeepingBlocker}>{d.quote.needs_exec_approval ? "Submit for approval" : "Finalize quote"}</Button>}
         {s === "pending_approval" && (d.canApprove ? (
           <><Input className="h-9 max-w-xs" placeholder="Note (required to request changes)" value={note} onChange={(e) => setNote(e.target.value)} />
             <Button size="sm" onClick={() => decide.mutate(true)} disabled={decide.isPending}>Approve</Button>
