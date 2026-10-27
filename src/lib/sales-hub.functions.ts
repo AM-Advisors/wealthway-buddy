@@ -107,6 +107,14 @@ export const markSalesQuoteSent = createServerFn({ method: "POST" }).middleware(
   .handler(async ({ data, context }) => (await Q()).markSent(context.userId, data.id));
 export const reviseSalesQuote = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).validator((d) => idOnly.parse(d))
   .handler(async ({ data, context }) => (await Q()).newVersion(context.userId, data.id));
+export const archiveSalesQuote = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .validator((d) => z.object({ id: z.string().uuid(), archive: z.boolean() }).parse(d))
+  .handler(async ({ data, context }) => (await Q()).archiveQuote(context.userId, data));
+export const deleteSalesQuote = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .validator((d) => z.object({ id: z.string().uuid(), reason: z.string().trim().min(3).max(500) }).parse(d))
+  .handler(async ({ data, context }) => (await Q()).deleteQuote(context.userId, data));
+export const adjustSalesQuote = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).validator((d) => idOnly.parse(d))
+  .handler(async ({ data, context }) => (await Q()).adjustQuote(context.userId, data.id));
 export const markSalesQuoteLost = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator((d) => z.object({ id: z.string().uuid(), reason: z.string().min(1).max(500) }).parse(d))
   .handler(async ({ data, context }) => (await Q()).markLost(context.userId, data));
