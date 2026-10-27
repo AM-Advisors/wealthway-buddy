@@ -1,15 +1,15 @@
 import { z } from 'zod';
 const amount = z.number().finite().nonnegative().max(1e15);
-export const fundForecastInput = z.object({
+export const fundForecastSchema = z.object({
   model: z.literal('fund'), openingNav: amount, openingCash: amount.optional(),
   periods: z.array(z.object({
     period: z.string().max(30), calls: amount, distributions: amount, fees: amount, expenses: amount,
     gain: z.number().finite().min(-1e15).max(1e15),
     growth: z.number().finite().min(-1).max(10).optional(), realizedProceeds: amount.optional(),
   })).max(200),
-}).refine(a => (a.openingCash ?? 0) <= a.openingNav, { message: 'Opening cash cannot exceed opening NAV.' });
+});
+export const fundForecastInput = fundForecastSchema.refine(a => (a.openingCash ?? 0) <= a.openingNav, { message: 'Opening cash cannot exceed opening NAV.' });
 // The union needs an object; validate the cross-field invariant in the calculator.
-export const fundForecastSchema = fundForecastInput.innerType();
 export type FundForecastInput = z.infer<typeof fundForecastInput>;
 export function calculateFundCashFlow(raw: unknown) {
   const a = fundForecastInput.parse(raw);
