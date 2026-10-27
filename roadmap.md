@@ -2,8 +2,9 @@
 
 ## Exact investing-party verification and funding (2026-10-27)
 - [x] Use explicitly application-linked person checks for legacy funding reads/actions and investor/fund compliance details, without account-based matching or weakening pending/review/declined results.
-- [ ] Stage atomic future person-to-active-application verification synchronization with retained audit evidence; no backfill or live writes.
-- [ ] Run isolated regressions; durable authenticated funding acceptance remains blocked on independently isolated QA and synthetic sessions.
+- [x] Stage atomic future person-to-active-application verification synchronization with retained audit evidence; applies on draft acceptance only, no backfill or live writes. Account identity decisions remain separate and do not approve an investing party.
+- [x] All 72 offline exact-person, verification-decision and atomic synchronization regressions passed; preview build OK.
+- [ ] Durable authenticated funding acceptance remains blocked on independently isolated QA and synthetic sessions; no live verification, signing or money records changed.
 
 ## Monitoring document review and cross-tab inactivity (2026-10-22)
 - [x] Confirm and repair uploaded PDF/short Word review completion through shared in-page rendering, with explicit downloaded-copy confirmation on display failure; signing authority unchanged.
