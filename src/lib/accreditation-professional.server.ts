@@ -163,5 +163,6 @@ export async function acceptUpload(token: string, file: File, licenseNumber: str
   if (appRow?.accreditation_status !== "approved") await d.from("investor_applications").update({ accreditation_status: "review", updated_at: now }).eq("id", app.id);
   await logEvent(d, req.id, "uploaded", null, { document_id: doc?.id ?? null, size: file.size, type: file.type });
   void (await import("@/lib/accreditation-review.server")).notifyAccreditationPending(app.id).catch(() => {});
+  if (doc?.id) void (await import("@/lib/accreditation-ai.server")).checkDocument(doc.id, null).catch(() => {});
   return { ok: true };
 }

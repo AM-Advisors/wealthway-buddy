@@ -2381,6 +2381,13 @@
       "when": 1793058338085,
       "tag": "0339_accreditation_professional_requests",
       "breakpoints": true
+    },
+    {
+      "idx": 340,
+      "version": "7",
+      "when": 1793059030906,
+      "tag": "0340_accreditation_ai_checks",
+      "breakpoints": true
     }
   ]
 }
