@@ -400,6 +400,7 @@ import { Route as AuthenticatedMarketingStudioResearchRouteImport } from './rout
 import { Route as AuthenticatedOpsAreasAreaRouteImport } from './routes/_authenticated/ops.areas.$area'
 import { Route as AuthenticatedOpsBillingInvoicesRouteImport } from './routes/_authenticated/ops.billing.invoices'
 import { Route as AuthenticatedOpsBillingPaymentInstructionsRouteImport } from './routes/_authenticated/ops.billing.payment-instructions'
+import { Route as AuthenticatedOpsBillingPaymentsRouteImport } from './routes/_authenticated/ops.billing.payments'
 import { Route as AuthenticatedOpsBillingRoasUpdateRouteImport } from './routes/_authenticated/ops.billing.roas-update'
 import { Route as AuthenticatedOpsBillingSowsRouteImport } from './routes/_authenticated/ops.billing.sows'
 import { Route as AuthenticatedOpsClientsIndexRouteImport } from './routes/_authenticated/ops.clients.index'
@@ -2708,6 +2709,12 @@ const AuthenticatedOpsBillingPaymentInstructionsRoute =
     path: '/ops/billing/payment-instructions',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOpsBillingPaymentsRoute =
+  AuthenticatedOpsBillingPaymentsRouteImport.update({
+    id: '/ops/billing/payments',
+    path: '/ops/billing/payments',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOpsBillingRoasUpdateRoute =
   AuthenticatedOpsBillingRoasUpdateRouteImport.update({
     id: '/ops/billing/roas-update',
@@ -3603,6 +3610,7 @@ export interface FileRoutesByFullPath {
   '/ops/areas/$area': typeof AuthenticatedOpsAreasAreaRoute
   '/ops/billing/invoices': typeof AuthenticatedOpsBillingInvoicesRoute
   '/ops/billing/payment-instructions': typeof AuthenticatedOpsBillingPaymentInstructionsRoute
+  '/ops/billing/payments': typeof AuthenticatedOpsBillingPaymentsRoute
   '/ops/billing/roas-update': typeof AuthenticatedOpsBillingRoasUpdateRoute
   '/ops/billing/sows': typeof AuthenticatedOpsBillingSowsRoute
   '/ops/clients/$clientId': typeof AuthenticatedOpsClientsClientIdRoute
@@ -4074,6 +4082,7 @@ export interface FileRoutesByTo {
   '/ops/areas/$area': typeof AuthenticatedOpsAreasAreaRoute
   '/ops/billing/invoices': typeof AuthenticatedOpsBillingInvoicesRoute
   '/ops/billing/payment-instructions': typeof AuthenticatedOpsBillingPaymentInstructionsRoute
+  '/ops/billing/payments': typeof AuthenticatedOpsBillingPaymentsRoute
   '/ops/billing/roas-update': typeof AuthenticatedOpsBillingRoasUpdateRoute
   '/ops/billing/sows': typeof AuthenticatedOpsBillingSowsRoute
   '/ops/clients/$clientId': typeof AuthenticatedOpsClientsClientIdRoute
@@ -4555,6 +4564,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/areas/$area': typeof AuthenticatedOpsAreasAreaRoute
   '/_authenticated/ops/billing/invoices': typeof AuthenticatedOpsBillingInvoicesRoute
   '/_authenticated/ops/billing/payment-instructions': typeof AuthenticatedOpsBillingPaymentInstructionsRoute
+  '/_authenticated/ops/billing/payments': typeof AuthenticatedOpsBillingPaymentsRoute
   '/_authenticated/ops/billing/roas-update': typeof AuthenticatedOpsBillingRoasUpdateRoute
   '/_authenticated/ops/billing/sows': typeof AuthenticatedOpsBillingSowsRoute
   '/_authenticated/ops/clients/$clientId': typeof AuthenticatedOpsClientsClientIdRoute
@@ -5036,6 +5046,7 @@ export interface FileRouteTypes {
     | '/ops/areas/$area'
     | '/ops/billing/invoices'
     | '/ops/billing/payment-instructions'
+    | '/ops/billing/payments'
     | '/ops/billing/roas-update'
     | '/ops/billing/sows'
     | '/ops/clients/$clientId'
@@ -5507,6 +5518,7 @@ export interface FileRouteTypes {
     | '/ops/areas/$area'
     | '/ops/billing/invoices'
     | '/ops/billing/payment-instructions'
+    | '/ops/billing/payments'
     | '/ops/billing/roas-update'
     | '/ops/billing/sows'
     | '/ops/clients/$clientId'
@@ -5987,6 +5999,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/areas/$area'
     | '/_authenticated/ops/billing/invoices'
     | '/_authenticated/ops/billing/payment-instructions'
+    | '/_authenticated/ops/billing/payments'
     | '/_authenticated/ops/billing/roas-update'
     | '/_authenticated/ops/billing/sows'
     | '/_authenticated/ops/clients/$clientId'
@@ -8909,6 +8922,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsBillingPaymentInstructionsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ops/billing/payments': {
+      id: '/_authenticated/ops/billing/payments'
+      path: '/ops/billing/payments'
+      fullPath: '/ops/billing/payments'
+      preLoaderRoute: typeof AuthenticatedOpsBillingPaymentsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ops/billing/roas-update': {
       id: '/_authenticated/ops/billing/roas-update'
       path: '/ops/billing/roas-update'
@@ -10079,6 +10099,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsAreasAreaRoute: typeof AuthenticatedOpsAreasAreaRoute
   AuthenticatedOpsBillingInvoicesRoute: typeof AuthenticatedOpsBillingInvoicesRoute
   AuthenticatedOpsBillingPaymentInstructionsRoute: typeof AuthenticatedOpsBillingPaymentInstructionsRoute
+  AuthenticatedOpsBillingPaymentsRoute: typeof AuthenticatedOpsBillingPaymentsRoute
   AuthenticatedOpsBillingRoasUpdateRoute: typeof AuthenticatedOpsBillingRoasUpdateRoute
   AuthenticatedOpsBillingSowsRoute: typeof AuthenticatedOpsBillingSowsRoute
   AuthenticatedOpsClientsClientIdRoute: typeof AuthenticatedOpsClientsClientIdRoute
@@ -10446,6 +10467,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsBillingInvoicesRoute: AuthenticatedOpsBillingInvoicesRoute,
   AuthenticatedOpsBillingPaymentInstructionsRoute:
     AuthenticatedOpsBillingPaymentInstructionsRoute,
+  AuthenticatedOpsBillingPaymentsRoute: AuthenticatedOpsBillingPaymentsRoute,
   AuthenticatedOpsBillingRoasUpdateRoute:
     AuthenticatedOpsBillingRoasUpdateRoute,
   AuthenticatedOpsBillingSowsRoute: AuthenticatedOpsBillingSowsRoute,

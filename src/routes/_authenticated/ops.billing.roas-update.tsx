@@ -66,7 +66,7 @@ function RoasBillingUpdatePage() {
             One place for the corrected quote terms, recorded invoices, annual K-1 sets and conditional filing-fee review. Nothing here files, issues, charges or moves money.
           </p>
         </div>
-        <Button variant="outline" onClick={copyUpdateLink}>Copy update link</Button>
+        <div className="flex flex-wrap gap-2"><Button asChild><Link to="/ops/billing/payments" search={{ year: 2026 }}>Track payments</Link></Button><Button variant="outline" onClick={copyUpdateLink}>Copy update link</Button></div>
       </header>
 
       <section className="grid gap-4 md:grid-cols-3">

@@ -70,7 +70,7 @@ type NavItem = { id: string; title: string; url: string; icon: string; sub?: { t
 
 /** Key screens shown as sub-items under each Operations area (filtered by capability). */
 const OPS_SUB: Record<string, { title: string; url: string; always?: boolean }[]> = {
-  clients: [{ title: "ROAS billing update", url: "/ops/billing/roas-update" }],
+  clients: [{ title: "ROAS billing update", url: "/ops/billing/roas-update" }, { title: "ROAS payments", url: "/ops/billing/payments" }],
   funds: [{ title: "Service engagements", url: "/ops/service-engagements" }, { title: "Locked edit approvals", url: "/ops/locked-edits", always: true }, { title: "EIN / SS-4 queue", url: "/ops/ss4" }, { title: "Documents & signatures", url: "/ops/documents" }, { title: "HubSpot tickets", url: "/ops/hubspot-tickets" }, { title: "HubSpot deal migration", url: "/ops/hubspot-deals" }, { title: "Client Portal Launch", url: "/ops/client-portal-launch" }, { title: "Migrations", url: "/ops/fund-migration/requests" }],
   investors: [{ title: "Investor onboarding & KYC", url: "/admin/investor-onboarding" }],
   capital: [{ title: "Banking", url: "/ops/banking" }, { title: "Distributions", url: "/ops/distributions" }, { title: "Capital calls & funding", url: "/admin/funding" }],

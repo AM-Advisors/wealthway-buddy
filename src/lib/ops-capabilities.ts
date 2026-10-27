@@ -172,6 +172,7 @@ export const OPS_WORK_AREAS: OpsWorkArea[] = [
       { title: "Client statements of work", url: "/ops/billing/sows", description: "Signed quotes, their statements of work and billing schedules", step: "Track" },
       { title: "Client invoices", url: "/ops/billing/invoices", description: "Invoices by signed quote, with review and issue", step: "Track" },
       { title: "ROAS billing update", url: "/ops/billing/roas-update", description: "ROAS draft terms, invoices, K-1 sets and filing-fee review in one place", step: "Track" },
+      { title: "ROAS payments", url: "/ops/billing/payments", description: "Invoice balances, recorded received payments and annual K-1 set payment evidence", step: "Track" },
       { title: "Client invoice ACH & Wire", url: "/ops/billing/payment-instructions", description: "Harmonious client-invoice payment instructions. CEO and CRO only; separate from fund banking", step: "Track" },
       { title: "Unpaid invoices", url: "/admin/invoices", description: "Client invoices awaiting payment", step: "Track" },
       { title: "Incoming requests", url: "/admin/requests", description: "Requests from clients", cap: "tasks", step: "Track" },

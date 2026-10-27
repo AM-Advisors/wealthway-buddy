@@ -22,7 +22,7 @@ export const Route = createFileRoute("/_authenticated/ops/billing/invoices")({
           <h1 className="text-3xl">Client invoices</h1>
           <p className="text-sm text-muted-foreground">Each signed quote and the invoices its statement of work has produced. Review, issue and record payments below.</p>
         </div>
-        <Button asChild variant="outline"><Link to="/ops/billing/roas-update">ROAS billing update</Link></Button>
+        <div className="flex flex-wrap gap-2"><Button asChild variant="outline"><Link to="/ops/billing/payments" search={{ year: 2026 }}>ROAS payments</Link></Button><Button asChild variant="outline"><Link to="/ops/billing/roas-update">ROAS billing update</Link></Button></div>
       </header>
       <BillingPipeline view="invoices" />
       <section className="space-y-3">
