@@ -1,7 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 
 import { InvoicesBoard } from "@/components/invoices-board";
 import { BillingPipeline } from "@/components/ops-billing-pipeline";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/ops/billing/invoices")({
   head: () => ({
@@ -16,9 +17,12 @@ export const Route = createFileRoute("/_authenticated/ops/billing/invoices")({
   }),
   component: () => (
     <main className="mx-auto w-full max-w-5xl space-y-8 p-6">
-      <header className="space-y-1">
-        <h1 className="text-3xl">Client invoices</h1>
-        <p className="text-sm text-muted-foreground">Each signed quote and the invoices its statement of work has produced. Review, issue and record payments below.</p>
+      <header className="flex flex-wrap items-start justify-between gap-3">
+        <div className="space-y-1">
+          <h1 className="text-3xl">Client invoices</h1>
+          <p className="text-sm text-muted-foreground">Each signed quote and the invoices its statement of work has produced. Review, issue and record payments below.</p>
+        </div>
+        <Button asChild variant="outline"><Link to="/ops/billing/roas-update">ROAS billing update</Link></Button>
       </header>
       <BillingPipeline view="invoices" />
       <section className="space-y-3">
