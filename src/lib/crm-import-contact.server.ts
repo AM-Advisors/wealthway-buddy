@@ -1,4 +1,9 @@
 import { importContactDecision } from "./crm-import-contact-model";
+export async function matchImportedContact(db: any, actorId: string, source: string, externalId: string, fields: Record<string, unknown>) {
+  const result = await db.rpc("match_imported_crm_contact", { _actor: actorId, _source: source, _external_id: externalId, _fields: fields });
+  if (result.error) throw new Error("Couldn't match imported contact safely.");
+  return result.data as { kind: "linked" | "review"; contactId: string | null };
+}
 export async function importedContact(db: any, source: string, externalId: string, email: string | null) {
   const [link, legacy] = await Promise.all([
     db.from("crm_contact_source_links").select("contact_id").eq("external_source", source).eq("external_id", externalId).maybeSingle(),
