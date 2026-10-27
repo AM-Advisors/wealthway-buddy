@@ -585,6 +585,7 @@ async function applyDecision(input: ApplyInput): Promise<SyncResult> {
         document_expired: decision.documentExpired,
         reasons: decision.reasons,
         trigger: input.trigger,
+        verified_fields_filled: backfill.filledFields,
       },
     });
 
