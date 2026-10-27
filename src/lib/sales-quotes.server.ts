@@ -202,9 +202,18 @@ export async function submitQuote(userId: string, id: string) {
   if (linesError) throw new Error("Couldn't check the quote's service terms.");
   const stagedBlocker = bookkeepingDraftBlocker(quoteLines ?? []);
   if (stagedBlocker) throw new Error(stagedBlocker);
-  await db.from("sales_quotes").update({ status: "pending_approval", updated_at: new Date().toISOString() }).eq("id", id);
-  await event(id, "submitted", userId, q.needs_exec_approval ? "Below baseline: needs CEO or CRO" : "Needs Sales Manager approval");
-  return { ok: true };
+  const now = new Date().toISOString();
+  if (quoteAutoApproves(q.needs_exec_approval)) {
+    // At or above the rate card on every line: no approval step (user-approved rule).
+    const { data: done } = await db.from("sales_quotes").update({ status: "approved", approved_by: null, approved_at: now, decision_note: "At or above rate card: approved automatically", updated_at: now })
+      .eq("id", id).in("status", ["draft", "rejected"]).select("id");
+    if (!done?.length) throw new Error("The quote changed. Refresh and try again.");
+    await event(id, "approved", userId, "At or above rate card: approved automatically");
+    return { ok: true, autoApproved: true };
+  }
+  await db.from("sales_quotes").update({ status: "pending_approval", updated_at: now }).eq("id", id);
+  await event(id, "submitted", userId, "Below rate card: needs CEO or CRO");
+  return { ok: true, autoApproved: false };
 }
 
 export async function decideQuote(userId: string, d: { id: string; approve: boolean; note?: string | null  | undefined}) {

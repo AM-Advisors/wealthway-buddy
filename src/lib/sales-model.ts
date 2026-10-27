@@ -73,6 +73,9 @@ export const canDraftQuote = (roles: readonly string[]) =>
 export const canManageTeam = (roles: readonly string[]) => salesScope(roles) === "all" || salesScope(roles) === "team";
 export const EXEC_PRICE_ROLES = ["executive", "cro", "super_admin"];
 
+/** Quotes priced at or above the rate card on every line skip approval entirely. */
+export const quoteAutoApproves = (needsExec: boolean) => !needsExec;
+
 /** Below-baseline quotes need CEO/CRO; at/above baseline a Sales Manager may approve. Never the drafter. */
 export function quoteApprovalProblem(args: { actorId: string; actorRoles: readonly string[]; createdBy: string; needsExec: boolean }): string | null {
   if (args.actorId === args.createdBy) return "The person who drafted a quote can't approve it.";
