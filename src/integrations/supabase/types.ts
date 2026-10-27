@@ -49797,6 +49797,39 @@ export type Database = {
         }
         Relationships: []
       }
+      wix_staging_associations: {
+        Row: {
+          actor_id: string
+          created_at: string
+          id: string
+          kind: string
+          note: string | null
+          offering_id: string | null
+          wix_fund_id: string | null
+          wix_id: string
+        }
+        Insert: {
+          actor_id: string
+          created_at?: string
+          id?: string
+          kind: string
+          note?: string | null
+          offering_id?: string | null
+          wix_fund_id?: string | null
+          wix_id: string
+        }
+        Update: {
+          actor_id?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          note?: string | null
+          offering_id?: string | null
+          wix_fund_id?: string | null
+          wix_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
