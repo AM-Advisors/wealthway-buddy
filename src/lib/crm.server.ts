@@ -5,7 +5,7 @@ import { OPS_STAFF_ROLES } from "@/lib/ops-capabilities";
 import { companyContacts, contactFields } from "@/lib/crm-company-model";
 import { recordPromotionalUnsubscribe, suppressedPromotionalEmails } from "./promotional-email.server";
 import { normalizePromotionalEmail } from "./promotional-email-model";
-import { groupVisibleContacts, matchingVisibleContacts } from "./crm-contact-matching";
+import { groupVisibleContacts, matchingVisibleContacts, importedContactFields } from "./crm-contact-matching";
 import {
   campaignDecisionProblem, campaignEditProblem, campaignSendProblem, canCreate, canEdit, canReassign, canSee,
   DEAL_STAGE_LABELS, mergeUpdates, resolveAudience,
