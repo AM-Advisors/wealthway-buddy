@@ -1,5 +1,9 @@
 # Roadmap
 
+## Self Serve document generation (2026-10-27)
+- [ ] Allow exact-fund Self Serve managers to generate template drafts and require recorded approval before existing signing/publication paths.
+- [ ] Verify fictional permission, version and approval safeguards; durable authenticated signing needs isolated QA.
+
 ## Cross-source contact matching (2026-10-27)
 - [x] Match imported normalized emails within the same owner using an atomic source-link transaction; other-owner matches retain explicit review. Contact/company views group entitled same-scope matches and share original history; no login/person merges, historical deletions or access expansion.
 - [x] Thirteen fictional model/transaction checks pass; company contact → activity → email click-through inspected at desktop and 440px without runtime errors or overflow. Matching function confirmed installed; no live imports run or existing contacts rewritten.
