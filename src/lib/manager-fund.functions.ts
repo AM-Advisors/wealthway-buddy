@@ -1,3 +1,4 @@
+import { canonicalizeApplications } from "@/lib/verification-status";
 import { canonicalExecutionStatus } from "@/lib/document-execution-status";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
@@ -132,7 +133,7 @@ export const getManagerFundHome = createServerFn({ method: "GET" })
     if (appsRes.error) throw new Error(appsRes.error.message);
 
     const documents = (docsRes.data ?? []) as any[];
-    const applications = (appsRes.data ?? []) as any[];
+    const applications = await canonicalizeApplications(supabase, (appsRes.data ?? []) as any[]);
     const appIds = applications.map((a) => a.id as string);
     const userIds = [...new Set(applications.map((a) => a.user_id as string))];
     const personaIds = [

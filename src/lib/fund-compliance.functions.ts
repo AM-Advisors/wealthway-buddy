@@ -1,3 +1,4 @@
+import { canonicalizeApplications } from "@/lib/verification-status";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
@@ -59,7 +60,7 @@ export const getFundInvestorCompliance = createServerFn({ method: "POST" })
         .order("updated_at", { ascending: false }),
     ]);
 
-    const apps = (applications ?? []) as any[];
+    const apps = await canonicalizeApplications(supabase, (applications ?? []) as any[]);
     if (apps.length === 0) {
       return { offering: offering ?? null, isAdmin, investors: [], counts: emptyCounts() };
     }

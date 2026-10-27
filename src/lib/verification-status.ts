@@ -85,3 +85,24 @@ export async function loadPersonStatuses(supabase: any, userIds: string[]) {
     .in("user_id", userIds);
   return personStatusByUser(data ?? []);
 }
+
+/**
+ * Display-only: replace each application's stored kyc/aml copy with the
+ * canonical person result. Rows without user_id use fallbackUserId.
+ * Unreadable person rows fall back to the stored copy; nothing is written.
+ */
+export async function canonicalizeApplications<T extends Record<string, any>>(supabase: any, apps: T[] | null | undefined, fallbackUserId?: string): Promise<T[]> {
+  const list = (apps ?? []) as T[];
+  if (!list.length) return list;
+  const uid = (a: T) => (a.user_id as string | undefined) ?? fallbackUserId ?? "";
+  let persons: Map<string, { kyc: string | null; aml: string | null }>;
+  try {
+    persons = await loadPersonStatuses(supabase, [...new Set(list.map(uid).filter(Boolean))]);
+  } catch {
+    return list;
+  }
+  return list.map((a) => {
+    const merged = withCanonicalVerification({ ...a, user_id: uid(a) } as any, persons);
+    return { ...a, kyc_status: merged.kyc_status, aml_status: merged.aml_status };
+  });
+}

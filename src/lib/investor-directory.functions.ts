@@ -1,3 +1,4 @@
+import { canonicalizeApplications } from "@/lib/verification-status";
 // Administrator investor database: every investor on file, the step they are
 // on right now, and manual editing of their details when something needs
 // correcting by hand.
@@ -131,6 +132,7 @@ export const listInvestors = createServerFn({ method: "GET" })
     // One row per application, so an investor running several accounts or
     // several funds at once shows up once for each of them.
     const profileByUser = new Map(((profiles ?? []) as any[]).map((p) => [p.user_id as string, p]));
+    apps = await canonicalizeApplications(supabase, apps as any[]);
     const usersWithApps = new Set(((apps ?? []) as any[]).map((a) => a.user_id as string));
 
     const pairs: Array<{ p: any; app: any }> = [];
