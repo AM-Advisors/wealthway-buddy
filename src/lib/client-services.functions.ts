@@ -253,7 +253,7 @@ export const getMyServices = createServerFn({ method: "GET" })
 /** The client tells us what they want to do; we route it to the right team. */
 export const submitIntakeRequest = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         intent: z.enum([
@@ -362,7 +362,7 @@ export const listIntakeRequests = createServerFn({ method: "GET" })
 /** Staff move a router request along. */
 export const updateIntakeRequest = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         id: z.string().uuid(),
@@ -405,7 +405,7 @@ export const updateIntakeRequest = createServerFn({ method: "POST" })
 /** One of the client's own requests, with Harmonious step progress. */
 export const getMyIntakeRequest = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
     const { data: row, error } = await context.supabase
       .from("client_intake_requests")
@@ -429,7 +429,7 @@ export const getMyIntakeRequest = createServerFn({ method: "GET" })
 /** Client edits answers while Harmonious hasn't started review; every change is logged with before/after. */
 export const updateIntakeAnswers = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({ id: z.string().uuid(), answers: z.record(z.string(), z.string()), requestedServiceKeys: z.array(z.string()) }).parse(d),
   )
   .handler(async ({ context, data }) => {

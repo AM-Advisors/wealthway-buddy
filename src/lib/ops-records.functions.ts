@@ -20,45 +20,45 @@ const server = () => import("@/lib/ops-records.server");
 
 export const listOpsRecords = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => listInput.parse(data))
+  .validator((data: unknown) => listInput.parse(data))
   .handler(async ({ context, data }) => (await server()).listRecords(context, data));
 
 export const getOpsClientRecord = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => idInput.parse(data))
+  .validator((data: unknown) => idInput.parse(data))
   .handler(async ({ context, data }) => (await server()).clientRecord(context, data));
 
 export const getOpsClientTab = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => tabInput.parse(data))
+  .validator((data: unknown) => tabInput.parse(data))
   .handler(async ({ context, data }) => (await server()).clientTab(context, data));
 
 export const getOpsFundRecord = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => idInput.parse(data))
+  .validator((data: unknown) => idInput.parse(data))
   .handler(async ({ context, data }) => (await server()).fundRecord(context, data));
 
 export const getOpsFundTab = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => tabInput.parse(data))
+  .validator((data: unknown) => tabInput.parse(data))
   .handler(async ({ context, data }) => (await server()).fundTab(context, data));
 
 export const getOpsInvestorRecord = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => idInput.parse(data))
+  .validator((data: unknown) => idInput.parse(data))
   .handler(async ({ context, data }) => (await server()).investorRecord(context, data));
 
 export const getOpsInvestorTab = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => tabInput.parse(data))
+  .validator((data: unknown) => tabInput.parse(data))
   .handler(async ({ context, data }) => (await server()).investorTab(context, data));
 
 export const getOpsCompanyRecord = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => idInput.parse(data))
+  .validator((data: unknown) => idInput.parse(data))
   .handler(async ({ context, data }) => (await server()).companyRecord(context, data));
 
 export const getOpsCompanyTab = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => tabInput.parse(data))
+  .validator((data: unknown) => tabInput.parse(data))
   .handler(async ({ context, data }) => (await server()).companyTab(context, data));

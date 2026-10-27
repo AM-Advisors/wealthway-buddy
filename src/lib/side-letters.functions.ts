@@ -90,7 +90,7 @@ function toSnapshot(row: any): SideLetterSnapshot {
 
 export const listSideLetters = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ fundId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ fundId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const db = await admin();
     const kind = await actorKind(db, context.userId, data.fundId);
@@ -211,7 +211,7 @@ export const listSideLetters = createServerFn({ method: "GET" })
 
 export const proposeSideLetterChange = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         fundId: z.string().uuid(),
@@ -301,7 +301,7 @@ export const proposeSideLetterChange = createServerFn({ method: "POST" })
 
 export const decideSideLetterChange = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         requestId: z.string().uuid(),
@@ -378,7 +378,7 @@ export const decideSideLetterChange = createServerFn({ method: "POST" })
 
 export const recordMfnDecision = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         fundId: z.string().uuid(),
@@ -419,7 +419,7 @@ export const recordMfnDecision = createServerFn({ method: "POST" })
 /** Read-only: side letters attached to one investor onboarding on a Fund. */
 export const listInvestorSideLetters = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ fundId: z.string().uuid(), onboardingId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ fundId: z.string().uuid(), onboardingId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const db = await admin();
     const kind = await actorKind(db, context.userId, data.fundId);

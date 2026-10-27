@@ -6,7 +6,7 @@ import { invoiceSourceMatches, invoiceSowMatches } from "./client-billing-links"
 /** RLS-entitled invoice is the boundary; only its same-client original document is projected. */
 export const getInvoiceOriginalQuote = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i) => z.object({ invoiceId: z.string().uuid() }).parse(i))
+  .validator((i) => z.object({ invoiceId: z.string().uuid() }).parse(i))
   .handler(async ({ context, data }) => {
     const { data: inv, error } = await context.supabase.from("invoices").select("id, client_id, number, status, total_cents, due_date, sales_quote_id, sales_document_id, acceptance_key, sow_id").eq("id", data.invoiceId).neq("status", "draft").maybeSingle();
     if (error || !inv) throw new Error("Invoice not found or access unavailable.");

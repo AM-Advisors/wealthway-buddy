@@ -11,7 +11,7 @@ const emailSchema = z.object({ email: z.string().trim().email().max(255) });
  * Returns a boolean only - never any fund or investor detail.
  */
 export const checkInviteEligibility = createServerFn({ method: "POST" })
-  .inputValidator((data: unknown) => emailSchema.parse(data))
+  .validator((data: unknown) => emailSchema.parse(data))
   .handler(async ({ data }) => {
     const email = data.email.toLowerCase();
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");

@@ -19,7 +19,7 @@ export const getAlertPreference = createServerFn({ method: "GET" })
 
 export const setAlertPreference = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ alertsEnabled: z.boolean() }).parse(data))
+  .validator((data: unknown) => z.object({ alertsEnabled: z.boolean() }).parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { error } = await supabase

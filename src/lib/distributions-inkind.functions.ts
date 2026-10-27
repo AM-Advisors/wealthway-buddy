@@ -8,7 +8,7 @@ const authed = () => createServerFn({ method: "POST" }).middleware([requireSupab
 const cents = z.number().int().nonnegative().nullish();
 
 export const setupDistributionFn = authed()
-  .inputValidator(z.object({
+  .validator(z.object({
     offeringId: z.string().uuid(),
     kind: z.enum(["cash", "cash_and_shares", "shares"]),
     distributionType: z.enum(DISTRIBUTION_TYPES),
@@ -28,25 +28,25 @@ export const setupDistributionFn = authed()
   .handler(async ({ data, context }) => (await import("@/lib/distributions-inkind.server")).setupDistribution(context.userId, data));
 
 export const fundDistributionsFn = authed()
-  .inputValidator(z.object({ offeringId: z.string().uuid() }).parse)
+  .validator(z.object({ offeringId: z.string().uuid() }).parse)
   .handler(async ({ data, context }) => (await import("@/lib/distributions-inkind.server")).fundDistributions(context.userId, data.offeringId));
 
 export const distributionSheetFn = authed()
-  .inputValidator(z.object({ batchId: z.string().uuid() }).parse)
+  .validator(z.object({ batchId: z.string().uuid() }).parse)
   .handler(async ({ data, context }) => (await import("@/lib/distributions-inkind.server")).distributionSheet(context.userId, data.batchId));
 
 export const approveDistributionFeeFn = authed()
-  .inputValidator(z.object({ batchId: z.string().uuid() }).parse)
+  .validator(z.object({ batchId: z.string().uuid() }).parse)
   .handler(async ({ data, context }) => (await import("@/lib/distributions-inkind.server")).approveDistributionFee(context.userId, data.batchId));
 
 export const setShareDestinationFn = authed()
-  .inputValidator(z.object({ lineId: z.string().uuid(), destination: z.string().max(300) }).parse)
+  .validator(z.object({ lineId: z.string().uuid(), destination: z.string().max(300) }).parse)
   .handler(async ({ data, context }) => (await import("@/lib/distributions-inkind.server")).setShareDestination(context.userId, data.lineId, data.destination));
 
 export const distributionBankFileFn = authed()
-  .inputValidator(z.object({ batchId: z.string().uuid() }).parse)
+  .validator(z.object({ batchId: z.string().uuid() }).parse)
   .handler(async ({ data, context }) => (await import("@/lib/distributions-inkind.server")).distributionBankFile(context.userId, data.batchId));
 
 export const recordShareTransferFn = authed()
-  .inputValidator(z.object({ lineId: z.string().uuid(), event: z.enum(["instructed", "confirmed", "failed"]), confirmationRef: z.string().max(200).nullish(), note: z.string().max(1000).nullish() }).parse)
+  .validator(z.object({ lineId: z.string().uuid(), event: z.enum(["instructed", "confirmed", "failed"]), confirmationRef: z.string().max(200).nullish(), note: z.string().max(1000).nullish() }).parse)
   .handler(async ({ data, context }) => (await import("@/lib/distributions-inkind.server")).recordShareTransfer(context.userId, data));

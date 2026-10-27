@@ -71,7 +71,7 @@ const offeringInput = (data: unknown) => z.object({ offering_id: z.string().uuid
 
 export const getQuestionBoard = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(offeringInput)
+  .validator(offeringInput)
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     if (!(await canManage(supabase, data.offering_id))) {
@@ -170,7 +170,7 @@ export const getQuestionBoard = createServerFn({ method: "POST" })
 
 export const getQuestionScoreboard = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(offeringInput)
+  .validator(offeringInput)
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     if (!(await canManage(supabase, data.offering_id))) {
@@ -308,7 +308,7 @@ export const getQuestionScoreboard = createServerFn({ method: "POST" })
 
 export const saveQuestion = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         offering_id: z.string().uuid(),
@@ -362,7 +362,7 @@ export const saveQuestion = createServerFn({ method: "POST" })
 
 export const removeQuestion = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ offering_id: z.string().uuid(), id: z.string().uuid() }).parse(data),
   )
   .handler(async ({ data, context }) => {
@@ -376,7 +376,7 @@ export const removeQuestion = createServerFn({ method: "POST" })
 
 export const assignQuestion = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         offering_id: z.string().uuid(),
@@ -416,7 +416,7 @@ export const assignQuestion = createServerFn({ method: "POST" })
 
 export const unassignQuestion = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ offering_id: z.string().uuid(), assignment_id: z.string().uuid() }).parse(data),
   )
   .handler(async ({ data, context }) => {
@@ -432,7 +432,7 @@ export const unassignQuestion = createServerFn({ method: "POST" })
 
 export const setQuestionStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         offering_id: z.string().uuid(),
@@ -488,7 +488,7 @@ export const setQuestionStatus = createServerFn({ method: "POST" })
 
 export const replyToAnswer = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         offering_id: z.string().uuid(),
@@ -526,7 +526,7 @@ export const replyToAnswer = createServerFn({ method: "POST" })
 
 export const getMyQuestions = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(offeringInput)
+  .validator(offeringInput)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 
@@ -583,7 +583,7 @@ export const getMyQuestions = createServerFn({ method: "POST" })
 
 export const answerQuestion = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         offering_id: z.string().uuid(),

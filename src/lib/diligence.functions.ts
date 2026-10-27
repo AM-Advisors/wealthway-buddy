@@ -72,7 +72,7 @@ const offeringInput = (data: unknown) => z.object({ offering_id: z.string().uuid
 
 export const getDiligenceRoom = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(offeringInput)
+  .validator(offeringInput)
   .handler(async ({ data, context }) => {
     const { supabase } = context;
 
@@ -235,7 +235,7 @@ export const listDiligenceRooms = createServerFn({ method: "GET" })
 
 export const ensureDiligenceRoom = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         offering_id: z.string().uuid(),
@@ -307,7 +307,7 @@ export const ensureDiligenceRoom = createServerFn({ method: "POST" })
 /** Switches a room between the fund and startup diligence structures. */
 export const setDiligenceEntityType = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({ offering_id: z.string().uuid(), entity_type: z.enum(["fund", "startup"]) })
       .parse(data),
@@ -371,7 +371,7 @@ async function notifyManagersOfDiligenceEvent(
 
 export const addDiligenceDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         offering_id: z.string().uuid(),
@@ -436,7 +436,7 @@ export const addDiligenceDocument = createServerFn({ method: "POST" })
 
 export const removeDiligenceDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const { data: doc } = await supabase
@@ -460,7 +460,7 @@ export const removeDiligenceDocument = createServerFn({ method: "POST" })
 
 export const getDiligenceDownloadUrl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     // RLS only returns rows the caller is allowed to see.
@@ -488,7 +488,7 @@ export const getDiligenceDownloadUrl = createServerFn({ method: "POST" })
 /** Returns the file itself so it can be read inside the room without downloading. */
 export const getDiligenceFileForViewing = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const { data: doc } = await supabase
@@ -545,7 +545,7 @@ export const getDiligenceFileForViewing = createServerFn({ method: "POST" })
 /** Pulls in any files added straight into the fund's Box folder outside the app. */
 export const syncDiligenceFolder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(offeringInput)
+  .validator(offeringInput)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     if (!(await canManage(supabase, data.offering_id))) {
@@ -708,7 +708,7 @@ export function ndaHash(text: string, version: number) {
 /** Room-level NDA status for the signed-in person. */
 export const getDiligenceAccess = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(offeringInput)
+  .validator(offeringInput)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: room } = await supabase
@@ -748,7 +748,7 @@ export const getDiligenceAccess = createServerFn({ method: "POST" })
 
 export const acceptDiligenceNda = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({ offering_id: z.string().uuid(), signer_name: z.string().min(2).max(160) })
       .parse(data),
@@ -802,7 +802,7 @@ export const acceptDiligenceNda = createServerFn({ method: "POST" })
 
 export const updateDiligenceNda = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         offering_id: z.string().uuid(),
@@ -853,7 +853,7 @@ export const updateDiligenceNda = createServerFn({ method: "POST" })
 
 export const listDiligenceChecklist = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(offeringInput)
+  .validator(offeringInput)
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const { data: items, error } = await supabase
@@ -875,7 +875,7 @@ export const listDiligenceChecklist = createServerFn({ method: "POST" })
 
 export const saveChecklistItem = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         id: z.string().uuid().optional(),
@@ -947,7 +947,7 @@ export const saveChecklistItem = createServerFn({ method: "POST" })
 
 export const removeChecklistItem = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: item } = await supabase
@@ -975,7 +975,7 @@ export const removeChecklistItem = createServerFn({ method: "POST" })
 /** Creates a starter checklist covering the core diligence categories. */
 export const seedDiligenceChecklist = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(offeringInput)
+  .validator(offeringInput)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     if (!(await canManage(supabase, data.offering_id))) {
@@ -1027,7 +1027,7 @@ export const seedDiligenceChecklist = createServerFn({ method: "POST" })
 
 export const listDiligenceQuestions = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(offeringInput)
+  .validator(offeringInput)
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const { data: questions, error } = await supabase
@@ -1057,7 +1057,7 @@ export const listDiligenceQuestions = createServerFn({ method: "POST" })
 
 export const askDiligenceQuestion = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         offering_id: z.string().uuid(),
@@ -1104,7 +1104,7 @@ export const askDiligenceQuestion = createServerFn({ method: "POST" })
 
 export const replyToDiligenceQuestion = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({ question_id: z.string().uuid(), body: z.string().min(1).max(5000) })
       .parse(data),
@@ -1155,7 +1155,7 @@ export const replyToDiligenceQuestion = createServerFn({ method: "POST" })
 
 export const updateDiligenceQuestion = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         question_id: z.string().uuid(),
@@ -1203,7 +1203,7 @@ export const updateDiligenceQuestion = createServerFn({ method: "POST" })
 
 export const listDiligenceActivity = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ offering_id: z.string().uuid(), limit: z.number().int().min(1).max(200).default(50) }).parse(data),
   )
   .handler(async ({ data, context }) => {
@@ -1223,7 +1223,7 @@ export const listDiligenceActivity = createServerFn({ method: "POST" })
 /** Records that the signed-in person opened the room. Throttled to one entry per 30 minutes. */
 export const recordRoomVisit = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(offeringInput)
+  .validator(offeringInput)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: room } = await supabase
@@ -1278,7 +1278,7 @@ export const recordRoomVisit = createServerFn({ method: "POST" })
 /** Manager/admin view: who has actually opened the room and which documents they read. */
 export const getDiligenceEngagement = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(offeringInput)
+  .validator(offeringInput)
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     if (!(await canManage(supabase, data.offering_id))) {
@@ -1473,7 +1473,7 @@ export const getDiligenceEngagement = createServerFn({ method: "POST" })
 
 export const listDocumentVersions = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ document_id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ document_id: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const { data: versions, error } = await supabase
@@ -1488,7 +1488,7 @@ export const listDocumentVersions = createServerFn({ method: "POST" })
 /** Uploads a replacement file for a document and keeps the previous version. */
 export const addDocumentVersion = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         document_id: z.string().uuid(),
@@ -1588,7 +1588,7 @@ export const addDocumentVersion = createServerFn({ method: "POST" })
 
 export const getVersionDownloadUrl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: version } = await supabase
@@ -1628,7 +1628,7 @@ const STEP_ORDER = ["kyc", "aml", "accreditation", "documents", "funding"] as co
  */
 export const getDiligenceOnboarding = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(offeringInput)
+  .validator(offeringInput)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 
@@ -1746,7 +1746,7 @@ export const getDiligenceOnboarding = createServerFn({ method: "POST" })
  */
 export const startOnboardingFromRoom = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(offeringInput)
+  .validator(offeringInput)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 
@@ -1825,7 +1825,7 @@ export type CapTableRow = {
 
 export const listCapTable = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(offeringInput)
+  .validator(offeringInput)
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const { data: rows, error } = await supabase
@@ -1874,7 +1874,7 @@ const capRowSchema = z.object({
 
 export const saveCapTableRow = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => capRowSchema.parse(data))
+  .validator((data: unknown) => capRowSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     if (!(await canManage(supabase, data.offering_id))) {
@@ -1927,7 +1927,7 @@ export const saveCapTableRow = createServerFn({ method: "POST" })
 
 export const removeCapTableRow = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ offering_id: z.string().uuid(), id: z.string().uuid() }).parse(data),
   )
   .handler(async ({ data, context }) => {
@@ -2175,7 +2175,7 @@ export const getDiligenceRoomTraffic = createServerFn({ method: "GET" })
 /** Records that the signed-in person was shown the NDA. Throttled to one entry per 30 minutes. */
 export const recordNdaView = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(offeringInput)
+  .validator(offeringInput)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: room } = await supabase

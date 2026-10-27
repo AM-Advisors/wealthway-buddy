@@ -22,29 +22,29 @@ const pkg = z.object({
 });
 
 export const getContentWorkspace = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => id.parse(d)).handler(async ({ data, context }) => (await srv()).workspace(context.userId, data.id));
+  .validator((d) => id.parse(d)).handler(async ({ data, context }) => (await srv()).workspace(context.userId, data.id));
 export const generateContentPackage = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ id: z.string().uuid(), guidance: s(2000).nullish() }).parse(d))
+  .validator((d) => z.object({ id: z.string().uuid(), guidance: s(2000).nullish() }).parse(d))
   .handler(async ({ data, context }) => (await srv()).generate(context.userId, data.id, data.guidance ?? null));
 export const saveContentPackage = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ id: z.string().uuid(), package: pkg, note: s(500).nullish() }).parse(d))
+  .validator((d) => z.object({ id: z.string().uuid(), package: pkg, note: s(500).nullish() }).parse(d))
   .handler(async ({ data, context }) => (await srv()).save(context.userId, data.id, data.package as any, data.note ?? null));
 export const checkOriginality = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => id.parse(d)).handler(async ({ data, context }) => (await srv()).originality(context.userId, data.id));
+  .validator((d) => id.parse(d)).handler(async ({ data, context }) => (await srv()).originality(context.userId, data.id));
 export const recordContentReview = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ id: z.string().uuid(), kind: z.enum(REVIEW_KINDS), result: z.enum(["pass", "fail"]), note: s(1000).nullish() }).parse(d))
+  .validator((d) => z.object({ id: z.string().uuid(), kind: z.enum(REVIEW_KINDS), result: z.enum(["pass", "fail"]), note: s(1000).nullish() }).parse(d))
   .handler(async ({ data, context }) => (await srv()).review(context.userId, data.id, data.kind, data.result, data.note ?? null));
 export const contentToArticle = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ id: z.string().uuid(), category: s(60) }).parse(d))
+  .validator((d) => z.object({ id: z.string().uuid(), category: s(60) }).parse(d))
   .handler(async ({ data, context }) => (await srv()).toArticle(context.userId, data.id, data.category));
 export const contentToPosts = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => id.parse(d)).handler(async ({ data, context }) => (await srv()).toPosts(context.userId, data.id));
+  .validator((d) => id.parse(d)).handler(async ({ data, context }) => (await srv()).toPosts(context.userId, data.id));
 
 export const getContentStudioSources = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .handler(async ({ context }) => (await srv()).studioSources(context.userId));
 const g = z.string().max(1000).nullable();
 export const startContentPackage = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.discriminatedUnion("kind", [
+  .validator((d) => z.discriminatedUnion("kind", [
     z.object({ kind: z.literal("stories"), story_ids: z.array(z.string().uuid()).min(1).max(8), series_key: z.string().max(60), guidance: g }),
     z.object({ kind: z.literal("idea"), idea_id: z.string().uuid(), guidance: g }),
     z.object({ kind: z.literal("item"), item_id: z.string().uuid(), guidance: g }),

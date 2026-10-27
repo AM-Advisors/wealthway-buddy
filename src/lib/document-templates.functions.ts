@@ -164,7 +164,7 @@ export const listTemplatePacks = createServerFn({ method: "GET" })
  */
 export const applyTemplatePack = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({ offering_id: z.string().uuid(), pack: z.enum(["ilpa", "spv", "harmonious"]) })
       .parse(data),
@@ -259,7 +259,7 @@ export const applyTemplatePack = createServerFn({ method: "POST" })
  */
 export const getFundLegalDocuments = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({ offering_id: z.string().uuid().nullable().optional() })
       .optional()

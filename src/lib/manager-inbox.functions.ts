@@ -89,7 +89,7 @@ export const listInboxUploads = createServerFn({ method: "GET" })
 
 export const getInboxUploadUrl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await assertReviewer(supabase, userId);
@@ -116,7 +116,7 @@ const reviewSchema = z.object({
 
 export const setUploadReview = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => reviewSchema.parse(data))
+  .validator((data: unknown) => reviewSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await assertReviewer(supabase, userId);

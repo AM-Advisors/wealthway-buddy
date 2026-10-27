@@ -21,7 +21,7 @@ const viewSchema = z.object({ step: z.enum(STEP_KEYS) });
 /** Records that the signed-in investor opened an onboarding step (first and latest time). */
 export const recordStepView = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => viewSchema.parse(data))
+  .validator((data: unknown) => viewSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 
@@ -95,7 +95,7 @@ function isDone(step: StepKey, app: any) {
 /** Per-step open rate and completion across investor applications. */
 export const getStepEngagement = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => reportSchema.parse(data ?? {}))
+  .validator((data: unknown) => reportSchema.parse(data ?? {}))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await assertReviewer(supabase, userId);

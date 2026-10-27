@@ -43,7 +43,7 @@ async function sha256Hex(text: string) {
 
 export const getDocumentsStep = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(fundScope)
+  .validator(fundScope)
   .handler(async ({ data: scope, context }) => {
     const { supabase, userId } = context;
 
@@ -101,7 +101,7 @@ export const getDocumentsStep = createServerFn({ method: "GET" })
 
 export const saveSubscription = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     subscriptionSchema.extend({ offering_id: z.string().uuid().optional() }).parse(data),
   )
   .handler(async ({ data, context }) => {
@@ -162,7 +162,7 @@ export const saveSubscription = createServerFn({ method: "POST" })
 
 export const signDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     signatureSchema.extend({ offering_id: z.string().uuid().optional() }).parse(data),
   )
   .handler(async ({ data, context }) => {
@@ -359,7 +359,7 @@ export const signDocument = createServerFn({ method: "POST" })
 
 export const getSignedDocumentUrl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ signature_id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ signature_id: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
 

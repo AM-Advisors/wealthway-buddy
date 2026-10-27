@@ -20,7 +20,7 @@ async function email(context: any) {
 
 // New sign-ups haven't passed identity yet, so ordering uses the unverified middleware; access still waits on KYC.
 export const signSaasOrderFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuthUnverified])
-  .inputValidator(z.object({
+  .validator(z.object({
     companyName: z.string().trim().min(2).max(200), interval: z.enum(["annual", "quarterly"]), selection,
     signerName: z.string().trim().min(2).max(160), signerTitle: z.string().trim().max(120).optional(), msaAccepted: z.literal(true),
   }).parse)
@@ -31,19 +31,19 @@ export const signSaasOrderFn = createServerFn({ method: "POST" }).middleware([re
   });
 
 export const startSaasCheckoutFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuthUnverified])
-  .inputValidator(z.object({ orderId: z.string().uuid(), environment: z.enum(["sandbox", "live"]), returnUrl: z.string().url().max(500), method: z.enum(["card", "ach"]).default("card") }).parse)
+  .validator(z.object({ orderId: z.string().uuid(), environment: z.enum(["sandbox", "live"]), returnUrl: z.string().url().max(500), method: z.enum(["card", "ach"]).default("card") }).parse)
   .handler(async ({ data, context }) => (await srv()).startOrderCheckout(context.userId, await email(context), data.orderId, data.environment, data.returnUrl, data.method));
 
 export const chooseWireFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuthUnverified])
-  .inputValidator(z.object({ orderId: z.string().uuid() }).parse)
+  .validator(z.object({ orderId: z.string().uuid() }).parse)
   .handler(async ({ data, context }) => (await srv()).chooseWire(context.userId, data.orderId));
 
 export const confirmWireReceivedFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ orderId: z.string().uuid(), amountCents: z.number().int().min(1).max(100_000_000), note: z.string().max(1000).nullable() }).parse)
+  .validator(z.object({ orderId: z.string().uuid(), amountCents: z.number().int().min(1).max(100_000_000), note: z.string().max(1000).nullable() }).parse)
   .handler(async ({ data, context }) => (await srv()).confirmWireReceived(context.userId, data.orderId, data.amountCents, data.note));
 
 export const submitKybFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuthUnverified])
-  .inputValidator(z.object({
+  .validator(z.object({
     orderId: z.string().uuid(), legalName: z.string().trim().max(200), ein: z.string().trim().max(12),
     formationState: z.string().trim().max(60), entityType: z.string().trim().max(60),
     owners: z.array(z.object({ name: z.string().trim().max(160), percent: z.number().min(0).max(100) })).max(10),
@@ -51,7 +51,7 @@ export const submitKybFn = createServerFn({ method: "POST" }).middleware([requir
   .handler(async ({ data, context }) => (await srv()).submitKyb(context.userId, data.orderId, data));
 
 export const uploadKybDocumentFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuthUnverified])
-  .inputValidator(z.object({ orderId: z.string().uuid(), kind: z.enum(["formation", "ein_letter"]), fileName: z.string().min(1).max(200), mime: z.string().max(80), base64: z.string().max(14_000_000) }).parse)
+  .validator(z.object({ orderId: z.string().uuid(), kind: z.enum(["formation", "ein_letter"]), fileName: z.string().min(1).max(200), mime: z.string().max(80), base64: z.string().max(14_000_000) }).parse)
   .handler(async ({ data, context }) => (await srv()).uploadKybDocument(context.userId, data.orderId, data.kind, data.fileName, data.mime, data.base64));
 
 export const mySaasSetupFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuthUnverified])
@@ -64,9 +64,9 @@ export const staffSaasOrdersFn = createServerFn({ method: "POST" }).middleware([
   .handler(async ({ context }) => (await srv()).staffOrders(context.userId) as Promise<any>);
 
 export const decideKybFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ orderId: z.string().uuid(), approve: z.boolean(), note: z.string().max(2000).nullable() }).parse)
+  .validator(z.object({ orderId: z.string().uuid(), approve: z.boolean(), note: z.string().max(2000).nullable() }).parse)
   .handler(async ({ data, context }) => (await srv()).decideKyb(context.userId, data.orderId, data.approve, data.note));
 
 export const legalReviewSaasOrderFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ orderId: z.string().uuid() }).parse)
+  .validator(z.object({ orderId: z.string().uuid() }).parse)
   .handler(async ({ data, context }) => (await srv()).markLegalReviewed(context.userId, data.orderId));

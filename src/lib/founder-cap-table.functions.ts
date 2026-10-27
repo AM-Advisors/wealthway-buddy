@@ -97,7 +97,7 @@ function planFor(entitlementKeys: string[]) {
 
 export const getFounderCapTable = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({ clientId: z.string().uuid().optional().nullable() }).parse(d ?? {}),
   )
   .handler(async ({ data, context }) => {
@@ -180,7 +180,7 @@ const stakeholderInput = z.object({
 
 export const saveStakeholder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => stakeholderInput.parse(d))
+  .validator((d: unknown) => stakeholderInput.parse(d))
   .handler(async ({ data, context }) => {
     const who = await access(context, data.clientId);
     if (!who.clientId || who.clientId !== data.clientId || !who.canEdit) {
@@ -270,7 +270,7 @@ const holdingInput = z.object({
 
 export const saveHolding = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => holdingInput.parse(d))
+  .validator((d: unknown) => holdingInput.parse(d))
   .handler(async ({ data, context }) => {
     const who = await access(context, data.clientId);
     if (!who.clientId || who.clientId !== data.clientId || !who.canEdit) {
@@ -354,7 +354,7 @@ const importInput = z.object({
 
 export const importCapTable = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => importInput.parse(d))
+  .validator((d: unknown) => importInput.parse(d))
   .handler(async ({ data, context }) => {
     const who = await access(context, data.clientId);
     if (!who.clientId || who.clientId !== data.clientId || !who.canEdit) {
@@ -455,7 +455,7 @@ const transferInput = z.object({
 
 export const requestTransfer = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => transferInput.parse(d))
+  .validator((d: unknown) => transferInput.parse(d))
   .handler(async ({ data, context }) => {
     const who = await access(context, data.clientId);
     if (!who.clientId || who.clientId !== data.clientId || !who.canEdit) {
@@ -507,7 +507,7 @@ export const requestTransfer = createServerFn({ method: "POST" })
 
 export const decideTransfer = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         clientId: z.string().uuid(),

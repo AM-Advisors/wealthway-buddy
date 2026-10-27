@@ -50,7 +50,7 @@ const overviewSchema = z.object({ offeringId: z.string().uuid() });
 /** Investor roster plus stage counts for one fund. */
 export const getFundOverview = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => overviewSchema.parse(data))
+  .validator((data: unknown) => overviewSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await assertReviewer(supabase, userId);
@@ -128,7 +128,7 @@ const opsSchema = z.object({ offeringId: z.string().uuid() });
  */
 export const getFundSignedDocuments = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => opsSchema.parse(data))
+  .validator((data: unknown) => opsSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const roles = await assertReviewer(supabase, userId);
@@ -206,7 +206,7 @@ export const getFundSignedDocuments = createServerFn({ method: "GET" })
 /** Documents, wire confirmations, funding and open issue flags for one fund. */
 export const getFundOperations = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => opsSchema.parse(data))
+  .validator((data: unknown) => opsSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await assertReviewer(supabase, userId);
@@ -345,7 +345,7 @@ const flagSchema = z.object({
 /** Raise a delay or issue flag against an investor's application. */
 export const raiseApplicationFlag = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => flagSchema.parse(data))
+  .validator((data: unknown) => flagSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await assertReviewer(supabase, userId);
@@ -384,7 +384,7 @@ const resolveSchema = z.object({
 /** Close out a flag once the delay or issue has been handled. */
 export const resolveApplicationFlag = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => resolveSchema.parse(data))
+  .validator((data: unknown) => resolveSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await assertReviewer(supabase, userId);
@@ -423,7 +423,7 @@ const reviewSchema = z.object({ offeringId: z.string().uuid() });
 /** Per-investor review board: onboarding status, signed documents and wire requests. */
 export const getFundInvestorReview = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => reviewSchema.parse(data))
+  .validator((data: unknown) => reviewSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await assertReviewer(supabase, userId);
@@ -530,7 +530,7 @@ const wireDecisionSchema = z.object({
 /** One-click approve or reject of an investor's wire request, for admins and assigned fund managers. */
 export const decideWireAsReviewer = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => wireDecisionSchema.parse(data))
+  .validator((data: unknown) => wireDecisionSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const roles = await assertReviewer(supabase, userId);

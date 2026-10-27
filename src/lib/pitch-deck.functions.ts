@@ -97,7 +97,7 @@ export type PitchSlide = {
 /** Everything the viewer needs: deck details, ordered slides with image links. */
 export const getPitchDeck = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(offeringInput)
+  .validator(offeringInput)
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     if (!(await canView(supabase, data.offering_id))) {
@@ -165,7 +165,7 @@ export const getPitchDeck = createServerFn({ method: "POST" })
 /** Logs that someone opened the deck (throttled to once every 30 minutes). */
 export const recordDeckView = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(offeringInput)
+  .validator(offeringInput)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     if (!(await canView(supabase, data.offering_id))) return { recorded: false };
@@ -186,7 +186,7 @@ export const recordDeckView = createServerFn({ method: "POST" })
 /** Manager: deck title and summary. */
 export const savePitchDeckDetails = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         offering_id: z.string().uuid(),
@@ -213,7 +213,7 @@ export const savePitchDeckDetails = createServerFn({ method: "POST" })
 /** Manager: adds one slide image to the end of the deck. */
 export const addPitchSlide = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         offering_id: z.string().uuid(),
@@ -278,7 +278,7 @@ export const addPitchSlide = createServerFn({ method: "POST" })
 /** Manager: heading and caption for one slide. */
 export const savePitchSlideText = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         id: z.string().uuid(),
@@ -310,7 +310,7 @@ export const savePitchSlideText = createServerFn({ method: "POST" })
 /** Manager: moves a slide one place earlier or later. */
 export const movePitchSlide = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ id: z.string().uuid(), direction: z.enum(["up", "down"]) }).parse(data),
   )
   .handler(async ({ data, context }) => {
@@ -342,7 +342,7 @@ export const movePitchSlide = createServerFn({ method: "POST" })
 /** Manager: removes a slide and its image. */
 export const removePitchSlide = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: slide } = await supabase
@@ -364,7 +364,7 @@ export const removePitchSlide = createServerFn({ method: "POST" })
 /** Manager: uploads the downloadable deck file (PDF or PowerPoint). */
 export const uploadDeckFile = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         offering_id: z.string().uuid(),
@@ -415,7 +415,7 @@ export const uploadDeckFile = createServerFn({ method: "POST" })
 /** Manager: removes the downloadable deck file. */
 export const removeDeckFile = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(offeringInput)
+  .validator(offeringInput)
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     await assertManage(supabase, data.offering_id);
@@ -438,7 +438,7 @@ export const removeDeckFile = createServerFn({ method: "POST" })
 /** Anyone with room access: a short-lived download link for the deck file. */
 export const getDeckDownloadUrl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(offeringInput)
+  .validator(offeringInput)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     if (!(await canView(supabase, data.offering_id))) {

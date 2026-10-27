@@ -118,7 +118,7 @@ async function prefill(context: any, offeringId: string, signer?: { name: string
 
 export const ss4RequestContextFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ offeringId: z.string().uuid(), signerUserId: z.string().uuid().optional() }).parse(d))
+  .validator((d: unknown) => z.object({ offeringId: z.string().uuid(), signerUserId: z.string().uuid().optional() }).parse(d))
   .handler(async ({ context, data }) => {
     await requireStaffOrManager(context.userId, data.offeringId);
     const db = await admin();
@@ -137,7 +137,7 @@ export const ss4RequestContextFn = createServerFn({ method: "POST" })
 
 export const sendSs4RequestFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ offeringId: z.string().uuid(), signerUserId: z.string().uuid(), form: formSchema, note: z.string().trim().max(1000).optional() }).parse(d))
+  .validator((d: unknown) => z.object({ offeringId: z.string().uuid(), signerUserId: z.string().uuid(), form: formSchema, note: z.string().trim().max(1000).optional() }).parse(d))
   .handler(async ({ context, data }) => {
     await requireStaffOrManager(context.userId, data.offeringId);
     const db = await admin();
@@ -176,7 +176,7 @@ export const sendSs4RequestFn = createServerFn({ method: "POST" })
 
 export const cancelSs4RequestFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ requestId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ requestId: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
     const db = await admin();
     const { data: row } = await db.from("ss4_signature_requests").select("offering_id").eq("id", data.requestId).maybeSingle();
@@ -190,7 +190,7 @@ export const cancelSs4RequestFn = createServerFn({ method: "POST" })
 /** Send a signing reminder for an open SS-4 request (opens the SS-4; request unchanged). */
 export const resendSs4RequestFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ requestId: z.string().uuid(), overrideReason: z.string().trim().max(500).optional() }).parse(d))
+  .validator((d: unknown) => z.object({ requestId: z.string().uuid(), overrideReason: z.string().trim().max(500).optional() }).parse(d))
   .handler(async ({ context, data }) => {
     const db = await admin();
     const { data: r } = await db.from("ss4_signature_requests").select("id, offering_id, signer_user_id, status").eq("id", data.requestId).maybeSingle();
@@ -223,7 +223,7 @@ async function loadForSigner(userId: string, requestId: string) {
 
 export const getSs4SignRequestFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ requestId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ requestId: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
     const { db, r } = await loadForSigner(context.userId, data.requestId);
     const { data: o } = await db.from("offerings").select("name").eq("id", r.offering_id).maybeSingle();
@@ -245,7 +245,7 @@ export const getSs4SignRequestFn = createServerFn({ method: "POST" })
 
 export const signSs4RequestFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({
       requestId: z.string().uuid(),
       signerName: z.string().trim().min(2).max(120),
@@ -315,7 +315,7 @@ export const signSs4RequestFn = createServerFn({ method: "POST" })
 
 export const ss4SignedPdfUrlFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ requestId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ requestId: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
     const db = await admin();
     const { data: r } = await db.from("ss4_signature_requests").select("offering_id, signer_user_id, signed_pdf_path").eq("id", data.requestId).maybeSingle();

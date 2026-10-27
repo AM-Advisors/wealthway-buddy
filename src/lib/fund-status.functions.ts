@@ -18,7 +18,7 @@ async function viewer(uid: string, fundId: string) {
 
 export const fundStatusFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ offeringId: z.string().uuid() }).parse)
+  .validator(z.object({ offeringId: z.string().uuid() }).parse)
   .handler(async ({ data, context }) => {
     const v = await viewer(context.userId, data.offeringId);
     if (!canRequestStatusChange(v)) throw new Error("You don't have access to this Fund.");
@@ -42,7 +42,7 @@ export const fundStatusFn = createServerFn({ method: "POST" })
 
 export const closeFundFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ offeringId: z.string().uuid(), reason }).parse)
+  .validator(z.object({ offeringId: z.string().uuid(), reason }).parse)
   .handler(async ({ data, context }) => {
     const v = await viewer(context.userId, data.offeringId);
     if (!canRequestStatusChange(v)) throw new Error("Only this fund's managers or Harmonious Operations can close it.");
@@ -53,7 +53,7 @@ export const closeFundFn = createServerFn({ method: "POST" })
 
 export const requestReopenFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ offeringId: z.string().uuid(), reason }).parse)
+  .validator(z.object({ offeringId: z.string().uuid(), reason }).parse)
   .handler(async ({ data, context }) => {
     const v = await viewer(context.userId, data.offeringId);
     if (!canRequestStatusChange(v)) throw new Error("Only this fund's managers or Harmonious Operations can request reopening.");
@@ -67,7 +67,7 @@ export const requestReopenFn = createServerFn({ method: "POST" })
 
 export const decideReopenFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ requestId: z.string().uuid(), approve: z.boolean(), reason }).parse)
+  .validator(z.object({ requestId: z.string().uuid(), approve: z.boolean(), reason }).parse)
   .handler(async ({ data, context }) => {
     const { db } = await import("@/lib/fund-tabs.server");
     const { data: req } = await (await db()).from("fund_reopen_requests").select("id, offering_id, requested_by, status").eq("id", data.requestId).maybeSingle();

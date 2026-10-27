@@ -136,7 +136,7 @@ export const getMyComplianceCase = createServerFn({ method: "GET" })
 /** Fund-side detail for one investor: files plus the full trail. */
 export const getInvestorComplianceDetail = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({ offeringId: z.string().uuid(), applicationId: z.string().uuid() })
       .parse(data),
@@ -186,7 +186,7 @@ export const getInvestorComplianceDetail = createServerFn({ method: "POST" })
 /** A fund manager or admin filing a document they received for an investor. */
 export const recordFundUploadForInvestor = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         offeringId: z.string().uuid(),
@@ -241,7 +241,7 @@ export const recordFundUploadForInvestor = createServerFn({ method: "POST" })
 /** Approve, decline or ask for more information on one check. */
 export const decideComplianceCheck = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         offeringId: z.string().uuid(),

@@ -46,7 +46,7 @@ async function loadApplication(supabase: any, applicationId: string) {
 /** Everything said on one investor's private thread, oldest first. */
 export const listPortalMessages = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ application_id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ application_id: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const app = await loadApplication(supabase, data.application_id);
@@ -82,7 +82,7 @@ export const listPortalMessages = createServerFn({ method: "GET" })
 /** Post a message on the thread as the investor or as the fund team. */
 export const sendPortalMessage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         application_id: z.string().uuid(),

@@ -22,7 +22,7 @@ const since = z.object({ days: z.number().int().min(1).max(90).default(14) });
 
 export const emailHealthFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => since.parse(d ?? {}))
+  .validator((d: unknown) => since.parse(d ?? {}))
   .handler(async ({ data, context }) => {
     const db = await admin(context.userId);
     const from = new Date(Date.now() - data.days * 864e5).toISOString();
@@ -45,7 +45,7 @@ export const emailHealthFn = createServerFn({ method: "POST" })
 
 export const webhookLogFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => since.parse(d ?? {}))
+  .validator((d: unknown) => since.parse(d ?? {}))
   .handler(async ({ data, context }) => {
     const db = await admin(context.userId);
     const from = new Date(Date.now() - data.days * 864e5).toISOString();

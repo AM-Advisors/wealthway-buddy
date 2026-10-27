@@ -17,7 +17,7 @@ async function canManage(supabase: any, offeringId: string) {
 /** Manager uploads (or replaces) the NDA that investors must sign. */
 export const uploadNdaDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         offering_id: z.string().uuid(),
@@ -91,7 +91,7 @@ export const uploadNdaDocument = createServerFn({ method: "POST" })
 /** Turns Box signing on or off for the room's NDA. */
 export const setNdaSigningEnabled = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ offering_id: z.string().uuid(), enabled: z.boolean() }).parse(data),
   )
   .handler(async ({ data, context }) => {
@@ -110,7 +110,7 @@ export const setNdaSigningEnabled = createServerFn({ method: "POST" })
 /** What the signed-in person needs to know about signing this room's NDA. */
 export const getMyNdaSigning = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(offeringInput)
+  .validator(offeringInput)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 
@@ -150,7 +150,7 @@ export const getMyNdaSigning = createServerFn({ method: "POST" })
 /** Sends the room's NDA out for signature to the signed-in investor. */
 export const startNdaSigning = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(offeringInput)
+  .validator(offeringInput)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 
@@ -263,7 +263,7 @@ export const startNdaSigning = createServerFn({ method: "POST" })
 /** Pulls the latest Box state for the caller's own in-flight NDA request. */
 export const refreshMyNdaSignature = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(offeringInput)
+  .validator(offeringInput)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: signature } = await supabase
@@ -284,7 +284,7 @@ export const refreshMyNdaSignature = createServerFn({ method: "POST" })
 /** A short-lived link to the certified signed copy. */
 export const getSignedNdaUrl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     // RLS returns the row only to the signer, an admin or an assigned manager.
@@ -306,7 +306,7 @@ export const getSignedNdaUrl = createServerFn({ method: "POST" })
 /** Manager view: who has been sent the NDA, who opened it, who signed. */
 export const listNdaSignatures = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(offeringInput)
+  .validator(offeringInput)
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     if (!(await canManage(supabase, data.offering_id))) {

@@ -45,5 +45,5 @@ async function load(slug?: string): Promise<Article[]> {
 export const listPublishedClassroom = createServerFn({ method: "GET" }).handler(async () => load());
 
 export const getPublishedClassroomArticle = createServerFn({ method: "GET" })
-  .inputValidator((d) => z.object({ slug: z.string().max(200) }).parse(d))
+  .validator((d) => z.object({ slug: z.string().max(200) }).parse(d))
   .handler(async ({ data }) => (await load(data.slug))[0] ?? null);

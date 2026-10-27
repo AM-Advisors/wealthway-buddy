@@ -39,7 +39,7 @@ async function loadDocument(supabase: any, documentId: string) {
 /** Record an uploaded file against a fund document (the browser uploads to storage first). */
 export const attachOfferingDocumentFile = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         documentId: z.string().uuid(),
@@ -103,7 +103,7 @@ export const attachOfferingDocumentFile = createServerFn({ method: "POST" })
 /** Remove the uploaded file from a fund document. */
 export const removeOfferingDocumentFile = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ documentId: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ documentId: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     const doc = await loadDocument(context.supabase, data.documentId);
     await assertCanEdit(context.supabase, context.userId, doc.offering_id);
@@ -124,7 +124,7 @@ export const removeOfferingDocumentFile = createServerFn({ method: "POST" })
  */
 export const getOfferingDocumentFileUrl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ documentId: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ documentId: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     const doc = await loadDocument(context.supabase, data.documentId);
     if (!doc.file_path) throw new Error("This document has no uploaded file.");

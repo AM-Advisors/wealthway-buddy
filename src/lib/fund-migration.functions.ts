@@ -104,7 +104,7 @@ function normaliseRow(row: any) {
 
 export const getFundMigration = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ offeringId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ offeringId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const who = await requireStaff(context);
     await (await import("@/lib/fund-origin.server")).requireMigrationFund(data.offeringId);
@@ -154,7 +154,7 @@ export const listFundMigrations = createServerFn({ method: "GET" })
 
 export const saveFundMigration = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         offeringId: z.string().uuid(),
@@ -209,7 +209,7 @@ export const saveFundMigration = createServerFn({ method: "POST" })
 
 export const setMigrationStep = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         offeringId: z.string().uuid(),
@@ -268,7 +268,7 @@ const rowInput = z.object({
 
 export const stageMigrationRows = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({ offeringId: z.string().uuid(), rows: z.array(rowInput).min(1).max(2000) }).parse(d),
   )
   .handler(async ({ data, context }) => {
@@ -335,7 +335,7 @@ export const stageMigrationRows = createServerFn({ method: "POST" })
 
 export const saveMigrationRow = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => rowInput.extend({ offeringId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => rowInput.extend({ offeringId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const who = await requireSuper(context);
     const { email, name, errors } = normaliseRow(data);
@@ -394,7 +394,7 @@ export const saveMigrationRow = createServerFn({ method: "POST" })
 
 export const deleteMigrationRow = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     await requireSuper(context);
     const { data: row } = await context.supabase
@@ -456,7 +456,7 @@ async function ensureAccount(supabaseAdmin: any, email: string, name: string) {
 
 export const importMigrationRows = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({ offeringId: z.string().uuid(), rowIds: z.array(z.string().uuid()).optional() }).parse(d),
   )
   .handler(async ({ data, context }) => {
@@ -601,7 +601,7 @@ export const importMigrationRows = createServerFn({ method: "POST" })
 
 export const inviteMigratedInvestors = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({ offeringId: z.string().uuid(), rowIds: z.array(z.string().uuid()).optional() }).parse(d),
   )
   .handler(async ({ data, context }) => {

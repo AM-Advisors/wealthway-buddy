@@ -42,7 +42,7 @@ async function audit(
 /** Produces (or replaces) the statement for one closed investor. */
 export const generateStatementForApplication = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ application_id: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ application_id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: app } = await supabase
@@ -75,7 +75,7 @@ export const generateStatementForApplication = createServerFn({ method: "POST" }
 /** Produces statements for every closed investor in a fund. */
 export const generateStatementsForFund = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ offering_id: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ offering_id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     if (!(await canManage(supabase, data.offering_id))) {
@@ -128,7 +128,7 @@ export const listStatementSummaries = createServerFn({ method: "GET" })
 /** Every statement Harmonious has produced for one investor, newest first. */
 export const listStatementsForApplication = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ application_id: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ application_id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { data: rows, error } = await context.supabase
       .from("capital_account_statements")

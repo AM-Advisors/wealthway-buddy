@@ -10,11 +10,11 @@ export const getSourceReconciliation = createServerFn({ method: "GET" }).middlew
   .handler(async ({ context }) => (await S()).overview(context.userId));
 
 export const getSourceDecisionHistory = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ source, sourceRef: ref }).parse(d))
+  .validator((d) => z.object({ source, sourceRef: ref }).parse(d))
   .handler(async ({ context, data }) => (await S()).history(context.userId, data.source, data.sourceRef));
 
 export const recordSourceDecision = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({
+  .validator((d) => z.object({
     source, sourceRef: ref,
     decision: z.enum(["confirm_match", "reject_match", "mark_unresolved", "flag_duplicate", "link_fund", "request_evidence", "stage_for_import"]),
     reason: z.string().trim().min(3).max(1000),

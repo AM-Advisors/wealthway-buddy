@@ -16,7 +16,7 @@ const periodInput = z.object({
 
 export const getPerformanceQueue = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ fundId: uuid.optional() }).parse(data ?? {}))
+  .validator((data: unknown) => z.object({ fundId: uuid.optional() }).parse(data ?? {}))
   .handler(async ({ data, context }) => {
     const { performanceQueue } = await import("@/lib/performance.server");
     return performanceQueue(context.userId, data.fundId);
@@ -24,7 +24,7 @@ export const getPerformanceQueue = createServerFn({ method: "POST" })
 
 export const previewPerformance = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => periodInput.parse(data))
+  .validator((data: unknown) => periodInput.parse(data))
   .handler(async ({ data, context }) => {
     const { calculatePerformance } = await import("@/lib/performance.server");
     return calculatePerformance(context.userId, {
@@ -37,7 +37,7 @@ export const previewPerformance = createServerFn({ method: "POST" })
 
 export const preparePerformanceReport = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => periodInput.parse(data))
+  .validator((data: unknown) => periodInput.parse(data))
   .handler(async ({ data, context }) => {
     const { preparePerformance } = await import("@/lib/performance.server");
     const result = await preparePerformance(context.userId, {
@@ -55,7 +55,7 @@ export const preparePerformanceReport = createServerFn({ method: "POST" })
 
 export const decidePerformanceReport = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         runId: uuid,
@@ -71,7 +71,7 @@ export const decidePerformanceReport = createServerFn({ method: "POST" })
 
 export const amendPerformanceReport = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ runId: uuid, reason: z.string().trim().min(10).max(500) }).parse(data),
   )
   .handler(async ({ data, context }) => {
@@ -81,7 +81,7 @@ export const amendPerformanceReport = createServerFn({ method: "POST" })
 
 export const respondToPerformanceReport = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         runId: uuid,
@@ -97,7 +97,7 @@ export const respondToPerformanceReport = createServerFn({ method: "POST" })
 
 export const setPerformanceReportVisibility = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         runId: uuid,
@@ -116,7 +116,7 @@ export const setPerformanceReportVisibility = createServerFn({ method: "POST" })
 
 export const getPerformanceReport = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ runId: uuid }).parse(data))
+  .validator((data: unknown) => z.object({ runId: uuid }).parse(data))
   .handler(async ({ data, context }) => {
     const { performanceRunDetail } = await import("@/lib/performance.server");
     return performanceRunDetail(context.userId, data.runId);
@@ -124,7 +124,7 @@ export const getPerformanceReport = createServerFn({ method: "POST" })
 
 export const getPerformanceProvenance = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ runId: uuid, metricKey: z.string().trim().min(1).max(60) }).parse(data),
   )
   .handler(async ({ data, context }) => {
@@ -134,7 +134,7 @@ export const getPerformanceProvenance = createServerFn({ method: "POST" })
 
 export const getManagerPerformance = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ fundId: uuid.optional() }).parse(data ?? {}))
+  .validator((data: unknown) => z.object({ fundId: uuid.optional() }).parse(data ?? {}))
   .handler(async ({ data, context }) => {
     const { managerPerformance } = await import("@/lib/performance.server");
     return managerPerformance(context.userId, data.fundId);
@@ -142,7 +142,7 @@ export const getManagerPerformance = createServerFn({ method: "POST" })
 
 export const getInvestorPerformance = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(() => ({}))
+  .validator(() => ({}))
   .handler(async ({ context }) => {
     const { investorPerformanceView } = await import("@/lib/performance.server");
     return investorPerformanceView(context.userId);
@@ -150,7 +150,7 @@ export const getInvestorPerformance = createServerFn({ method: "POST" })
 
 export const listPerformanceMethodologies = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ fundId: uuid }).parse(data))
+  .validator((data: unknown) => z.object({ fundId: uuid }).parse(data))
   .handler(async ({ data, context }) => {
     const { listMethodologies } = await import("@/lib/performance.server");
     return listMethodologies(context.userId, data.fundId);
@@ -158,7 +158,7 @@ export const listPerformanceMethodologies = createServerFn({ method: "POST" })
 
 export const savePerformanceMethodology = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         fundId: uuid,
@@ -199,7 +199,7 @@ export const savePerformanceMethodology = createServerFn({ method: "POST" })
 
 export const savePerformanceBenchmark = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         fundId: uuid,
@@ -230,7 +230,7 @@ export const savePerformanceBenchmark = createServerFn({ method: "POST" })
 
 export const getPerformanceConfiguration = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ fundId: uuid }).parse(data))
+  .validator((data: unknown) => z.object({ fundId: uuid }).parse(data))
   .handler(async ({ data, context }) => {
     const { getPerformanceConfig } = await import("@/lib/performance.server");
     return getPerformanceConfig(context.userId, data.fundId);
@@ -238,7 +238,7 @@ export const getPerformanceConfiguration = createServerFn({ method: "POST" })
 
 export const savePerformanceConfiguration = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         fundId: uuid,

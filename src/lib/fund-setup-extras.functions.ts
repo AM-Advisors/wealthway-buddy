@@ -8,12 +8,12 @@ const t = (n: number) => z.string().trim().max(n).nullish();
 
 export const getFundSetupExtrasFn = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ offeringId: uuid }).parse)
+  .validator(z.object({ offeringId: uuid }).parse)
   .handler(async ({ data, context }) => (await x()).getExtras(context.userId, data.offeringId));
 
 export const saveFundProvidersFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(
+  .validator(
     z.object({
       offeringId: uuid,
       providers: z.object({
@@ -27,11 +27,11 @@ export const saveFundProvidersFn = createServerFn({ method: "POST" })
 
 export const uploadFormationEvidenceFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ offeringId: uuid, kind: z.enum(["formation", "certificate", "ein_letter"]), path: z.string().min(3).max(400) }).parse)
+  .validator(z.object({ offeringId: uuid, kind: z.enum(["formation", "certificate", "ein_letter"]), path: z.string().min(3).max(400) }).parse)
   .handler(async ({ data, context }) => (await x()).uploadEvidence(context.userId, data));
 
 export const uploadFormationFileFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ offeringId: uuid, kind: z.enum(["formation", "certificate", "ein_letter"]), fileName: z.string().min(1).max(200), base64: z.string().min(1).max(15_000_000) }).parse)
+  .validator(z.object({ offeringId: uuid, kind: z.enum(["formation", "certificate", "ein_letter"]), fileName: z.string().min(1).max(200), base64: z.string().min(1).max(15_000_000) }).parse)
   .handler(async ({ data, context }) => {
     const s = await x();
     const state = await s.getExtras(context.userId, data.offeringId);
@@ -47,7 +47,7 @@ export const uploadFormationFileFn = createServerFn({ method: "POST" }).middlewa
 
 export const addRegulatoryFilingFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(
+  .validator(
     z.object({
       offeringId: uuid, type: z.enum(["form_d", "blue_sky"]), kind: z.enum(["initial", "amendment", "renewal"]),
       state: z.string().trim().length(2).nullish(), accessionNumber: t(40), efdId: t(40),
@@ -58,5 +58,5 @@ export const addRegulatoryFilingFn = createServerFn({ method: "POST" })
 
 export const removeRegulatoryFilingFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ offeringId: uuid, id: uuid }).parse)
+  .validator(z.object({ offeringId: uuid, id: uuid }).parse)
   .handler(async ({ data, context }) => (await x()).removeFiling(context.userId, data));

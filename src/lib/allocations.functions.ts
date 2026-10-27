@@ -7,7 +7,7 @@ import { requireSupabaseAuth } from "@/lib/require-auth";
 
 export const listAllocationQueue = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { offering_id?: string } | undefined) => input ?? {})
+  .validator((input: { offering_id?: string } | undefined) => input ?? {})
   .handler(async ({ data, context }) => {
     const { allocationQueue } = await import("@/lib/allocations.server");
     return allocationQueue(context.userId, data.offering_id);
@@ -15,7 +15,7 @@ export const listAllocationQueue = createServerFn({ method: "GET" })
 
 export const getAllocationRun = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { run_id: string }) => input)
+  .validator((input: { run_id: string }) => input)
   .handler(async ({ data, context }) => {
     const { allocationDetail } = await import("@/lib/allocations.server");
     return allocationDetail(context.userId, data.run_id);
@@ -23,7 +23,7 @@ export const getAllocationRun = createServerFn({ method: "GET" })
 
 export const getInvestorCapitalOverview = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { offering_id: string }) => input)
+  .validator((input: { offering_id: string }) => input)
   .handler(async ({ data, context }) => {
     const { investorCapitalOverview } = await import("@/lib/allocations.server");
     return investorCapitalOverview(context.userId, data.offering_id);
@@ -31,7 +31,7 @@ export const getInvestorCapitalOverview = createServerFn({ method: "GET" })
 
 export const syncInvestorPositions = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { offering_id: string }) => input)
+  .validator((input: { offering_id: string }) => input)
   .handler(async ({ data, context }) => {
     const { ensurePositions } = await import("@/lib/allocations.server");
     return ensurePositions(context.userId, data.offering_id);
@@ -39,7 +39,7 @@ export const syncInvestorPositions = createServerFn({ method: "POST" })
 
 export const saveAllocationPolicySettings = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(
+  .validator(
     (input: {
       offering_id: string;
       basis: string;
@@ -67,7 +67,7 @@ export const saveAllocationPolicySettings = createServerFn({ method: "POST" })
 
 export const saveManagementFeeTerm = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(
+  .validator(
     (input: {
       offering_id: string;
       basis: string;
@@ -99,7 +99,7 @@ export const saveManagementFeeTerm = createServerFn({ method: "POST" })
 
 export const saveFundWaterfallTerms = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(
+  .validator(
     (input: {
       offering_id: string;
       structure: string;
@@ -125,7 +125,7 @@ export const saveFundWaterfallTerms = createServerFn({ method: "POST" })
 
 export const runAllocationCalculation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { nav_id: string }) => input)
+  .validator((input: { nav_id: string }) => input)
   .handler(async ({ data, context }) => {
     const { calculateAllocations } = await import("@/lib/allocations.server");
     return calculateAllocations(context.userId, { navId: data.nav_id });
@@ -133,7 +133,7 @@ export const runAllocationCalculation = createServerFn({ method: "POST" })
 
 export const decideAllocations = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { run_id: string; action: string; reason?: string }) => input)
+  .validator((input: { run_id: string; action: string; reason?: string }) => input)
   .handler(async ({ data, context }) => {
     const { decideAllocationRun } = await import("@/lib/allocations.server");
     return decideAllocationRun(context.userId, data.run_id, data.action as any, data.reason ?? "");
@@ -141,7 +141,7 @@ export const decideAllocations = createServerFn({ method: "POST" })
 
 export const submitAllocations = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { run_id: string }) => input)
+  .validator((input: { run_id: string }) => input)
   .handler(async ({ data, context }) => {
     const { submitAllocationRun } = await import("@/lib/allocations.server");
     return submitAllocationRun(context.userId, data.run_id);
@@ -149,7 +149,7 @@ export const submitAllocations = createServerFn({ method: "POST" })
 
 export const respondToAllocations = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { run_id: string; response: string; note?: string }) => input)
+  .validator((input: { run_id: string; response: string; note?: string }) => input)
   .handler(async ({ data, context }) => {
     const { managerRespondToAllocations } = await import("@/lib/allocations.server");
     return managerRespondToAllocations(
@@ -162,7 +162,7 @@ export const respondToAllocations = createServerFn({ method: "POST" })
 
 export const generateInvestorStatements = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { run_id: string }) => input)
+  .validator((input: { run_id: string }) => input)
   .handler(async ({ data, context }) => {
     const { generateStatements } = await import("@/lib/allocations.server");
     return generateStatements(context.userId, data.run_id);
@@ -170,7 +170,7 @@ export const generateInvestorStatements = createServerFn({ method: "POST" })
 
 export const decideInvestorStatement = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { statement_id: string; action: string; reason?: string }) => input)
+  .validator((input: { statement_id: string; action: string; reason?: string }) => input)
   .handler(async ({ data, context }) => {
     const { decideStatement } = await import("@/lib/allocations.server");
     return decideStatement(context.userId, data.statement_id, data.action as any, data.reason ?? "");
@@ -178,7 +178,7 @@ export const decideInvestorStatement = createServerFn({ method: "POST" })
 
 export const reviseInvestorStatement = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { statement_id: string; reason: string }) => input)
+  .validator((input: { statement_id: string; reason: string }) => input)
   .handler(async ({ data, context }) => {
     const { reviseStatement } = await import("@/lib/allocations.server");
     return reviseStatement(context.userId, data.statement_id, data.reason);
@@ -186,7 +186,7 @@ export const reviseInvestorStatement = createServerFn({ method: "POST" })
 
 export const requestAdjustment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(
+  .validator(
     (input: {
       position_id: string;
       classification: string;
@@ -210,7 +210,7 @@ export const requestAdjustment = createServerFn({ method: "POST" })
 
 export const decideAdjustment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { adjustment_id: string; decision: string; note?: string }) => input)
+  .validator((input: { adjustment_id: string; decision: string; note?: string }) => input)
   .handler(async ({ data, context }) => {
     const { decideCapitalAdjustment } = await import("@/lib/allocations.server");
     return decideCapitalAdjustment(
@@ -223,7 +223,7 @@ export const decideAdjustment = createServerFn({ method: "POST" })
 
 export const recordPositionTransfer = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(
+  .validator(
     (input: {
       from_position_id: string;
       to_position_id: string;
@@ -247,7 +247,7 @@ export const recordPositionTransfer = createServerFn({ method: "POST" })
 
 export const getCommitmentLedger = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { position_id: string; as_of?: string }) => input)
+  .validator((input: { position_id: string; as_of?: string }) => input)
   .handler(async ({ data, context }) => {
     const { commitmentLedger } = await import("@/lib/allocations.server");
     return commitmentLedger(context.userId, data.position_id, data.as_of);
@@ -255,7 +255,7 @@ export const getCommitmentLedger = createServerFn({ method: "GET" })
 
 export const getAllocationAsOf = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { position_id: string; as_of: string }) => input)
+  .validator((input: { position_id: string; as_of: string }) => input)
   .handler(async ({ data, context }) => {
     const { capitalAccountAsOf, ownershipAsOfDate } = await import("@/lib/allocations.server");
     const [account, ownershipPct] = await Promise.all([
@@ -274,7 +274,7 @@ export const listMyCapitalStatements = createServerFn({ method: "GET" })
 
 export const getMyStatement = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { statement_id: string }) => input)
+  .validator((input: { statement_id: string }) => input)
   .handler(async ({ data, context }) => {
     const { myStatementDetail } = await import("@/lib/allocations.server");
     return myStatementDetail(context.userId, data.statement_id);

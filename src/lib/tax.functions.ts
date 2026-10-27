@@ -28,21 +28,21 @@ const individual = () => import("@/lib/individual-tax.server");
 
 export const getTaxOperationsOverview = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ taxYear: year.optional() }).parse(d ?? {}))
+  .validator((d: unknown) => z.object({ taxYear: year.optional() }).parse(d ?? {}))
   .handler(async ({ data, context }) =>
     (await entity()).taxOperationsOverview(context.userId, data.taxYear),
   );
 
 export const getTaxYearDetail = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ taxYearId: uuid }).parse(d))
+  .validator((d: unknown) => z.object({ taxYearId: uuid }).parse(d))
   .handler(async ({ data, context }) =>
     (await entity()).taxYearDetail(context.userId, data.taxYearId),
   );
 
 export const openFundTaxYear = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         offeringId: uuid,
@@ -56,14 +56,14 @@ export const openFundTaxYear = createServerFn({ method: "POST" })
 
 export const refreshTaxYear = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ taxYearId: uuid }).parse(d))
+  .validator((d: unknown) => z.object({ taxYearId: uuid }).parse(d))
   .handler(async ({ data, context }) =>
     (await entity()).refreshTaxYearReadiness(context.userId, data.taxYearId),
   );
 
 export const setTaxYearStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ taxYearId: uuid, status: z.string() }).parse(d))
+  .validator((d: unknown) => z.object({ taxYearId: uuid, status: z.string() }).parse(d))
   .handler(async ({ data, context }) =>
     (await entity()).transitionTaxYear(context.userId, data.taxYearId, data.status),
   );
@@ -72,7 +72,7 @@ export const setTaxYearStatus = createServerFn({ method: "POST" })
 
 export const saveTaxDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         investmentProfileId: uuid.nullish(),
@@ -97,7 +97,7 @@ export const saveTaxDocument = createServerFn({ method: "POST" })
 
 export const reviewTaxDocumentFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         documentId: uuid,
@@ -114,7 +114,7 @@ export const reviewTaxDocumentFn = createServerFn({ method: "POST" })
 
 export const saveAdjustment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         id: uuid.optional(),
@@ -136,14 +136,14 @@ export const saveAdjustment = createServerFn({ method: "POST" })
 
 export const approveAdjustment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ adjustmentId: uuid }).parse(d))
+  .validator((d: unknown) => z.object({ adjustmentId: uuid }).parse(d))
   .handler(async ({ data, context }) =>
     (await entity()).approveBookTaxAdjustment(context.userId, data.adjustmentId),
   );
 
 export const getBookToTaxBridge = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ taxYearId: uuid }).parse(d))
+  .validator((d: unknown) => z.object({ taxYearId: uuid }).parse(d))
   .handler(async ({ data, context }) =>
     (await entity()).bookToTaxBridge(context.userId, data.taxYearId),
   );
@@ -152,14 +152,14 @@ export const getBookToTaxBridge = createServerFn({ method: "POST" })
 
 export const runTaxAllocationFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({ taxYearId: uuid, methodologyCode: z.string() }).parse(d),
   )
   .handler(async ({ data, context }) => (await entity()).runTaxAllocation(context.userId, data));
 
 export const finalizeTaxAllocationFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ runId: uuid }).parse(d))
+  .validator((d: unknown) => z.object({ runId: uuid }).parse(d))
   .handler(async ({ data, context }) =>
     (await entity()).finalizeTaxAllocation(context.userId, data.runId),
   );
@@ -168,12 +168,12 @@ export const finalizeTaxAllocationFn = createServerFn({ method: "POST" })
 
 export const prepare1065Fn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ taxYearId: uuid }).parse(d))
+  .validator((d: unknown) => z.object({ taxYearId: uuid }).parse(d))
   .handler(async ({ data, context }) => (await entity()).prepare1065(context.userId, data.taxYearId));
 
 export const setEntityReturnStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({ returnId: uuid, status: z.string(), note: z.string().optional() }).parse(d),
   )
   .handler(async ({ data, context }) =>
@@ -182,19 +182,19 @@ export const setEntityReturnStatus = createServerFn({ method: "POST" })
 
 export const generateK1Set = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ returnId: uuid }).parse(d))
+  .validator((d: unknown) => z.object({ returnId: uuid }).parse(d))
   .handler(async ({ data, context }) => (await entity()).generateK1s(context.userId, data.returnId));
 
 export const setK1Status = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ k1Id: uuid, status: z.string() }).parse(d))
+  .validator((d: unknown) => z.object({ k1Id: uuid, status: z.string() }).parse(d))
   .handler(async ({ data, context }) =>
     (await entity()).transitionK1(context.userId, data.k1Id, data.status),
   );
 
 export const amendK1Fn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({ k1Id: uuid, reason: z.string().min(1), boxes: z.record(z.string(), z.number()) }).parse(d),
   )
   .handler(async ({ data, context }) =>
@@ -205,7 +205,7 @@ export const amendK1Fn = createServerFn({ method: "POST" })
 
 export const recordWithholdingFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         offeringId: uuid,
@@ -231,7 +231,7 @@ export const recordWithholdingFn = createServerFn({ method: "POST" })
 
 export const build1042 = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({ offeringId: uuid, taxYear: year, taxYearId: uuid.nullish() }).parse(d),
   )
   .handler(async ({ data, context }) =>
@@ -242,7 +242,7 @@ export const build1042 = createServerFn({ method: "POST" })
 
 export const recordPayeePaymentFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         offeringId: uuid.nullish(),
@@ -267,14 +267,14 @@ export const recordPayeePaymentFn = createServerFn({ method: "POST" })
 
 export const determinePayeeReportingFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ paymentId: uuid }).parse(d))
+  .validator((d: unknown) => z.object({ paymentId: uuid }).parse(d))
   .handler(async ({ data, context }) =>
     (await entity()).determinePayeeReporting(context.userId, data.paymentId),
   );
 
 export const generate1099Fn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         taxYear: year,
@@ -290,14 +290,14 @@ export const generate1099Fn = createServerFn({ method: "POST" })
 
 export const set1099Status = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ formId: uuid, status: z.string() }).parse(d))
+  .validator((d: unknown) => z.object({ formId: uuid, status: z.string() }).parse(d))
   .handler(async ({ data, context }) =>
     (await entity()).transition1099(context.userId, data.formId, data.status),
   );
 
 export const correct1099Fn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({ formId: uuid, reason: z.string().min(1), boxes: z.record(z.string(), z.number()) })
       .parse(d),
@@ -308,7 +308,7 @@ export const correct1099Fn = createServerFn({ method: "POST" })
 
 export const reconcile1099 = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ taxYear: year }).parse(d))
+  .validator((d: unknown) => z.object({ taxYear: year }).parse(d))
   .handler(async ({ data, context }) =>
     (await entity()).reconcile1099Year(context.userId, data.taxYear),
   );
@@ -317,7 +317,7 @@ export const reconcile1099 = createServerFn({ method: "POST" })
 
 export const getFundTaxOverview = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({ offeringId: uuid, taxYear: year.optional() }).parse(d),
   )
   .handler(async ({ data, context }) =>
@@ -326,7 +326,7 @@ export const getFundTaxOverview = createServerFn({ method: "POST" })
 
 export const managerRespondToTaxReturn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         returnId: uuid,
@@ -343,14 +343,14 @@ export const managerRespondToTaxReturn = createServerFn({ method: "POST" })
 
 export const getInvestorTaxDocuments = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => viewer.parse(d ?? {}) ?? {})
+  .validator((d: unknown) => viewer.parse(d ?? {}) ?? {})
   .handler(async ({ data, context }) =>
     (await entity()).investorTaxDocuments(context.userId, data ?? {}),
   );
 
 export const getInvestorTaxForm = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         table: z.enum(["k1_forms", "form_1042s_records", "form_1099_records"]),
@@ -369,7 +369,7 @@ export const getInvestorTaxForm = createServerFn({ method: "POST" })
 
 export const getPersonalTaxCenter = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         householdId: uuid.optional(),
@@ -390,14 +390,14 @@ export const getPersonalTaxCenter = createServerFn({ method: "POST" })
 
 export const ensureTaxHousehold = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({ primaryUserId: uuid.optional(), name: z.string().optional() }).parse(d ?? {}),
   )
   .handler(async ({ data, context }) => (await individual()).ensureHousehold(context.userId, data));
 
 export const authorizeHouseholdMemberFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         householdId: uuid,
@@ -415,7 +415,7 @@ export const authorizeHouseholdMemberFn = createServerFn({ method: "POST" })
 
 export const openIndividualReturnFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({ householdId: uuid, taxYear: year, filingStatus: z.string().optional() }).parse(d),
   )
   .handler(async ({ data, context }) =>
@@ -424,7 +424,7 @@ export const openIndividualReturnFn = createServerFn({ method: "POST" })
 
 export const requestTaxInformation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({ householdId: uuid, taxYear: year, documentType: z.string(), note: z.string().optional() })
       .parse(d),
@@ -435,7 +435,7 @@ export const requestTaxInformation = createServerFn({ method: "POST" })
 
 export const saveIndividualDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         householdId: uuid,
@@ -454,21 +454,21 @@ export const saveIndividualDocument = createServerFn({ method: "POST" })
 
 export const importHarmoniousTaxForms = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ householdId: uuid, taxYear: year }).parse(d))
+  .validator((d: unknown) => z.object({ householdId: uuid, taxYear: year }).parse(d))
   .handler(async ({ data, context }) =>
     (await individual()).importHarmoniousDocuments(context.userId, data),
   );
 
 export const recalculateIndividualReturn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ returnId: uuid }).parse(d))
+  .validator((d: unknown) => z.object({ returnId: uuid }).parse(d))
   .handler(async ({ data, context }) =>
     (await individual()).recalculateReturn(context.userId, data.returnId),
   );
 
 export const setIndividualReturnStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({ returnId: uuid, status: z.string(), note: z.string().optional() }).parse(d),
   )
   .handler(async ({ data, context }) =>
@@ -482,21 +482,21 @@ export const setIndividualReturnStatus = createServerFn({ method: "POST" })
 
 export const taxpayerApprove = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ returnId: uuid }).parse(d))
+  .validator((d: unknown) => z.object({ returnId: uuid }).parse(d))
   .handler(async ({ data, context }) =>
     (await individual()).taxpayerApproveReturn(context.userId, data.returnId),
   );
 
 export const amendIndividualReturnFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ returnId: uuid, reason: z.string().min(1) }).parse(d))
+  .validator((d: unknown) => z.object({ returnId: uuid, reason: z.string().min(1) }).parse(d))
   .handler(async ({ data, context }) =>
     (await individual()).amendIndividualReturn(context.userId, data.returnId, data.reason),
   );
 
 export const saveStateTaxReturn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         id: uuid.optional(),

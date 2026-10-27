@@ -10,7 +10,7 @@ import { requireSupabaseAuth } from "@/lib/require-auth";
 const admin = async () => (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
 
 export const remindMsaFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((x: unknown) => z.object({ clientId: z.string().uuid(), overrideReason: z.string().trim().max(500).optional() }).parse(x))
+  .validator((x: unknown) => z.object({ clientId: z.string().uuid(), overrideReason: z.string().trim().max(500).optional() }).parse(x))
   .handler(async ({ data, context }) => {
     const { assertStaff } = await import("@/lib/fund-setup.server");
     await assertStaff(context.userId);
@@ -34,7 +34,7 @@ export const remindMsaFn = createServerFn({ method: "POST" }).middleware([requir
   });
 
 export const msaLastReminderFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((x: unknown) => z.object({ clientId: z.string().uuid() }).parse(x))
+  .validator((x: unknown) => z.object({ clientId: z.string().uuid() }).parse(x))
   .handler(async ({ data, context }) => {
     const { assertStaff } = await import("@/lib/fund-setup.server");
     await assertStaff(context.userId);
@@ -50,7 +50,7 @@ const KINDS = {
 
 /** One email per selected investor who still owes that item; skips everyone else with a reason. */
 export const remindInvestorItemFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((x: unknown) => z.object({ fundId: z.string().uuid(), onboardingIds: z.array(z.string().uuid()).min(1).max(200), kind: z.enum(["w9", "questionnaire"]), overrideReason: z.string().trim().max(500).optional() }).parse(x))
+  .validator((x: unknown) => z.object({ fundId: z.string().uuid(), onboardingIds: z.array(z.string().uuid()).min(1).max(200), kind: z.enum(["w9", "questionnaire"]), overrideReason: z.string().trim().max(500).optional() }).parse(x))
   .handler(async ({ data, context }) => {
     const { assertFund } = await import("@/lib/fund-tabs.server");
     await assertFund(context.userId, data.fundId);

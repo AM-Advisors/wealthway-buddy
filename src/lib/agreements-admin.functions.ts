@@ -228,7 +228,7 @@ export const listAgreementQueue = createServerFn({ method: "GET" })
 
 export const updatePricingLine = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         lineId: z.string().uuid(),
@@ -281,7 +281,7 @@ export const updatePricingLine = createServerFn({ method: "POST" })
 
 export const addPricingLine = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         snapshotId: z.string().uuid(),
@@ -327,7 +327,7 @@ export const addPricingLine = createServerFn({ method: "POST" })
 
 export const respondToChange = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         changeId: z.string().uuid(),
@@ -410,7 +410,7 @@ export const respondToChange = createServerFn({ method: "POST" })
 
 export const sendSowToClient = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ sowId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ sowId: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
     const who = await requireAuthority(context);
     const { data: sow } = await context.supabase
@@ -434,7 +434,7 @@ export const sendSowToClient = createServerFn({ method: "POST" })
 
 export const countersignSow = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         sowId: z.string().uuid(),
@@ -585,7 +585,7 @@ export const countersignSow = createServerFn({ method: "POST" })
 
 export const createAmendment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         sowId: z.string().uuid(),
@@ -647,7 +647,7 @@ export const createAmendment = createServerFn({ method: "POST" })
 
 export const executeAmendment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         amendmentId: z.string().uuid(),
@@ -721,7 +721,7 @@ const money = (cents: number) =>
 /** Returns the executed agreement as a branded, printable document. */
 export const getAgreementDocument = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ sowId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ sowId: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
     const { data: sow } = await context.supabase
       .from("client_sows")
@@ -835,7 +835,7 @@ export const getAgreementDocument = createServerFn({ method: "GET" })
 /** Read-only staff: ask the client's Sales owner to change an agreement (creates a task). */
 export const askSalesAboutAgreement = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ sowId: z.string().uuid(), note: z.string().trim().min(3).max(2000) }).parse(d))
+  .validator((d: unknown) => z.object({ sowId: z.string().uuid(), note: z.string().trim().min(3).max(2000) }).parse(d))
   .handler(async ({ context, data }) => {
     const who = await requireStaff(context);
     const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
@@ -857,7 +857,7 @@ export const askSalesAboutAgreement = createServerFn({ method: "POST" })
 /** Harmonious countersigns a client-signed MSA; only then is it active. */
 export const countersignMsa = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ agreementId: z.string().uuid(), signerName: z.string().min(2), signerTitle: z.string().min(1), typedSignature: z.string().min(2) }).parse(d))
+  .validator((d: unknown) => z.object({ agreementId: z.string().uuid(), signerName: z.string().min(2), signerTitle: z.string().min(1), typedSignature: z.string().min(2) }).parse(d))
   .handler(async ({ context, data }) => {
     const who = await requireSign(context);
     const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");

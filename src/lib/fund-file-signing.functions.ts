@@ -12,7 +12,7 @@ const SITE = "https://app.harmonious.co";
 const TEAM_EMAIL = "operations@harmonious.co";
 
 export const designateFundReplacementFn = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ fundId: z.string().uuid(), fileId: z.string().uuid(), documentId: z.string().uuid() }).parse)
+  .validator(z.object({ fundId: z.string().uuid(), fileId: z.string().uuid(), documentId: z.string().uuid() }).parse)
   .handler(async ({ data, context }) => {
     const { designateFundReplacement } = await import('@/lib/fund-document-replacement.server');
     return designateFundReplacement(context.userId, data.fundId, data.fileId, data.documentId);
@@ -20,7 +20,7 @@ export const designateFundReplacementFn = createServerFn({ method: 'POST' }).mid
 
 /** Staff registers reviewed replacement bytes; never overwrites an existing file or signature. */
 export const prepareOperatingAgreementCopyFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ fundId: z.string().uuid(), fileName: z.string().min(1).max(200), pdfBase64: z.string().max(28_000_000), docxBase64: z.string().max(28_000_000) }).parse)
+  .validator(z.object({ fundId: z.string().uuid(), fileName: z.string().min(1).max(200), pdfBase64: z.string().max(28_000_000), docxBase64: z.string().max(28_000_000) }).parse)
   .handler(async ({ data, context }) => {
     const s = await import("@/lib/fund-tabs.server");
     await s.assertFund(context.userId, data.fundId);
@@ -75,7 +75,7 @@ async function emailSigner(d: any, sig: any) {
 
 /** Who can sign this fund's documents, and the current signers per document. */
 export const fundSigningContextFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((x: unknown) => z.object({ fundId: z.string().uuid() }).parse(x))
+  .validator((x: unknown) => z.object({ fundId: z.string().uuid() }).parse(x))
   .handler(async ({ data, context }) => {
     const { assertFund } = await import("@/lib/fund-tabs.server");
     await assertFund(context.userId, data.fundId);
@@ -141,7 +141,7 @@ async function investorDetails(d: any, fundId: string, onboardingId: string) {
  * order includes them) and their own pre-filled signature page.
  */
 export const sendFileForSignatureFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((x: unknown) => z.object({
+  .validator((x: unknown) => z.object({
     fundId: z.string().uuid(), fileId: z.string().uuid(),
     onboardingId: z.string().uuid().optional(), onboardingIds: z.array(z.string().uuid()).max(500).optional(),
     managerUserId: z.string().uuid().optional(),
@@ -208,7 +208,7 @@ export const sendFileForSignatureFn = createServerFn({ method: "POST" }).middlew
  * signing order 1; the same signing page, reminders and audit apply.
  */
 export const sendFileToSignatoryFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((x: unknown) => z.object({ fundId: z.string().uuid(), fileId: z.string().uuid(), managerUserId: z.string().uuid() }).parse(x))
+  .validator((x: unknown) => z.object({ fundId: z.string().uuid(), fileId: z.string().uuid(), managerUserId: z.string().uuid() }).parse(x))
   .handler(async ({ data, context }) => {
     const { assertFund } = await import("@/lib/fund-tabs.server");
     await assertFund(context.userId, data.fundId);
@@ -254,7 +254,7 @@ async function loadForSigner(userId: string, email: string | undefined, id: stri
 }
 
 export const getSignatureFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((x: unknown) => z.object({ id: z.string().uuid() }).parse(x))
+  .validator((x: unknown) => z.object({ id: z.string().uuid() }).parse(x))
   .handler(async ({ data, context }) => {
     const { d, s } = await loadForSigner(context.userId, (context.claims as any)?.email, data.id);
     const [{ data: f }, { data: o }, { data: all }] = await Promise.all([
@@ -276,7 +276,7 @@ export const getSignatureFn = createServerFn({ method: "POST" }).middleware([req
   });
 
 export const signDocumentFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((x: unknown) => z.object({ id: z.string().uuid(), signedName: z.string().trim().min(2).max(200), consent: z.literal(true), userAgent: z.string().max(400).optional() }).parse(x))
+  .validator((x: unknown) => z.object({ id: z.string().uuid(), signedName: z.string().trim().min(2).max(200), consent: z.literal(true), userAgent: z.string().max(400).optional() }).parse(x))
   .handler(async ({ data, context }) => {
     const { d, s } = await loadForSigner(context.userId, (context.claims as any)?.email, data.id);
     if (s.status === "signed") throw new Error("You've already signed this document.");
@@ -312,7 +312,7 @@ export const signDocumentFn = createServerFn({ method: "POST" }).middleware([req
 
 /** Reminder for the signer whose turn it is: opens that signing page. Never signs anything. */
 export const remindFileSignerFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((x: unknown) => z.object({ signatureId: z.string().uuid(), overrideReason: z.string().trim().max(500).optional() }).parse(x))
+  .validator((x: unknown) => z.object({ signatureId: z.string().uuid(), overrideReason: z.string().trim().max(500).optional() }).parse(x))
   .handler(async ({ data, context }) => {
     const d = await db();
     const { data: s } = await d.from("fund_file_signatures").select("*").eq("id", data.signatureId).maybeSingle();
@@ -343,7 +343,7 @@ export const remindFileSignerFn = createServerFn({ method: "POST" }).middleware(
  * stays attached. Same signer row, email, reminders and audit as other fund files.
  */
 export const sendTemplateDocToSignatoryFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((x: unknown) => z.object({ fundId: z.string().uuid(), documentId: z.string().uuid(), managerUserId: z.string().uuid() }).parse(x))
+  .validator((x: unknown) => z.object({ fundId: z.string().uuid(), documentId: z.string().uuid(), managerUserId: z.string().uuid() }).parse(x))
   .handler(async ({ data, context }) => {
     const { assertFund } = await import("@/lib/fund-tabs.server");
     await assertFund(context.userId, data.fundId);
@@ -411,7 +411,7 @@ export const sendTemplateDocToSignatoryFn = createServerFn({ method: "POST" }).m
 
 /** Latest signature request per template document title on this fund, for the "Sent" status on the template card. */
 export const templateDocSendStatusFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((x: unknown) => z.object({ fundId: z.string().uuid() }).parse(x))
+  .validator((x: unknown) => z.object({ fundId: z.string().uuid() }).parse(x))
   .handler(async ({ data, context }) => {
     const { assertFund } = await import("@/lib/fund-tabs.server");
     await assertFund(context.userId, data.fundId);

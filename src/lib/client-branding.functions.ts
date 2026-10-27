@@ -73,7 +73,7 @@ export const listClientSetup = createServerFn({ method: "GET" })
 /** Starts the $100/month white-label card subscription. Branding turns on only after the payment confirms. */
 export const requestPaidWhitelabel = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ clientId: z.string().uuid(), environment: z.enum(["sandbox", "live"]), returnUrl: z.string().url().max(500) }).parse(d))
+  .validator((d: unknown) => z.object({ clientId: z.string().uuid(), environment: z.enum(["sandbox", "live"]), returnUrl: z.string().url().max(500) }).parse(d))
   .handler(async ({ data, context }): Promise<{ url: string } | { error: string }> => {
     if (!(await canEdit(context, data.clientId))) return { error: "You can't change this client's options." };
     const db = await admin();
@@ -105,7 +105,7 @@ export const requestPaidWhitelabel = createServerFn({ method: "POST" })
 /** Opens the billing page for the white-label subscription (card, invoices, cancel at period end). */
 export const openWhitelabelBilling = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ clientId: z.string().uuid(), environment: z.enum(["sandbox", "live"]), returnUrl: z.string().url().max(500) }).parse(d))
+  .validator((d: unknown) => z.object({ clientId: z.string().uuid(), environment: z.enum(["sandbox", "live"]), returnUrl: z.string().url().max(500) }).parse(d))
   .handler(async ({ data, context }): Promise<{ url: string } | { error: string }> => {
     if (!(await canEdit(context, data.clientId))) return { error: "Not allowed." };
     const db = await admin();
@@ -125,7 +125,7 @@ export const openWhitelabelBilling = createServerFn({ method: "POST" })
 /** Super Administrator unlocks white-labeling at no charge, or turns it back off. */
 export const setFreeWhitelabel = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ clientId: z.string().uuid(), unlock: z.boolean(), reason: z.string().trim().min(3).max(500) }).parse(d))
+  .validator((d: unknown) => z.object({ clientId: z.string().uuid(), unlock: z.boolean(), reason: z.string().trim().min(3).max(500) }).parse(d))
   .handler(async ({ data, context }) => {
     const roles = await rolesOf(context);
     if (!roles.includes("super_admin")) throw new Error("Only a Super Administrator can unlock white-labeling for free.");
@@ -146,7 +146,7 @@ export const setFreeWhitelabel = createServerFn({ method: "POST" })
 /** Save logo, fonts, colors and the requested app.(name).harmonious.co name. */
 export const saveClientBranding = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({
       clientId: z.string().uuid(),
       displayName: z.string().trim().max(120).nullable(),

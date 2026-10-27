@@ -136,7 +136,7 @@ export const getCapTableLeads = createServerFn({ method: "GET" })
 /** Move a request along: status, owner and the internal note. */
 export const updateCapTableLead = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         id: z.string().uuid(),

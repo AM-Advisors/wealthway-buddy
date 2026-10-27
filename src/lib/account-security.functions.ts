@@ -51,7 +51,7 @@ async function isRevoked(userId: string, iat: number | undefined) {
 /** Records a security event for the signed-in user; returns signOut if this session was revoked. */
 export const logSecurityEvent = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuthUnverified])
-  .inputValidator((d) => logSchema.parse(d))
+  .validator((d) => logSchema.parse(d))
   .handler(async ({ data, context }) => {
     const claims = context.claims as { email?: string; iat?: number; session_id?: string };
     const userId = context.userId;
@@ -151,7 +151,7 @@ export const generateRecoveryCodes = createServerFn({ method: "POST" })
 /** Uses a recovery code: removes the lost second-step methods so the user enrolls new ones. */
 export const useRecoveryCode = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuthUnverified])
-  .inputValidator((d) => z.object({ code: z.string().trim().min(6).max(20) }).parse(d))
+  .validator((d) => z.object({ code: z.string().trim().min(6).max(20) }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const code = data.code.toUpperCase();
@@ -192,7 +192,7 @@ async function requireAdmin(context: { supabase: any; userId: string }) {
 
 export const listSecurityActivity = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) =>
+  .validator((d) =>
     z
       .object({
         email: z.string().max(200).optional(),
@@ -237,7 +237,7 @@ export const listSecurityActivity = createServerFn({ method: "POST" })
 
 export const requestMfaReset = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuthUnverified])
-  .inputValidator((d) =>
+  .validator((d) =>
     z
       .object({
         email: z.string().trim().email().max(200),
@@ -274,7 +274,7 @@ export const requestMfaReset = createServerFn({ method: "POST" })
 
 export const decideMfaReset = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) =>
+  .validator((d) =>
     z
       .object({ id: z.string().uuid(), approve: z.boolean(), reason: z.string().trim().max(500).optional() })
       .parse(d),

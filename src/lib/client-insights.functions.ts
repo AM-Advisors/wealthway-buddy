@@ -15,7 +15,7 @@ const day = (v: unknown) => (v ? String(v).slice(0, 10) : "");
 /** Read-only costs, capital raised and recorded fees/carry for the caller's own client. */
 export const getClientInsights = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ clientId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ clientId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     await requireClient(context, data.clientId);
     const db = (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
@@ -71,7 +71,7 @@ export const getClientInsights = createServerFn({ method: "POST" })
 
 export const getDashboardPrefs = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ clientId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ clientId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { data: row } = await context.supabase.from("client_dashboard_prefs").select("layout, hidden, default_period, default_fund_id").eq("user_id", context.userId).eq("client_id", data.clientId).maybeSingle();
     return (row as any) ?? null;
@@ -79,7 +79,7 @@ export const getDashboardPrefs = createServerFn({ method: "POST" })
 
 export const saveDashboardPrefs = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({
+  .validator((d: unknown) => z.object({
     clientId: z.string().uuid(),
     layout: z.array(z.string().max(40)).max(30),
     hidden: z.array(z.string().max(40)).max(30),
@@ -105,7 +105,7 @@ export const listMyNotifications = createServerFn({ method: "GET" })
 
 export const markNotificationsRead = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ ids: z.array(z.string().uuid()).max(100).nullable() }).parse(d))
+  .validator((d: unknown) => z.object({ ids: z.array(z.string().uuid()).max(100).nullable() }).parse(d))
   .handler(async ({ data, context }) => {
     let q = context.supabase.from("client_notifications").update({ read_at: new Date().toISOString() }).eq("user_id", context.userId).is("read_at", null);
     if (data.ids) q = q.in("id", data.ids);

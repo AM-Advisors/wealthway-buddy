@@ -15,7 +15,7 @@ const KINDS: WorkspaceKind[] = ["investor", "fund_manager", "company", "professi
  */
 export const getAttention = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { workspace?: string } | undefined) => ({
+  .validator((input: { workspace?: string } | undefined) => ({
     workspace: input?.workspace ? String(input.workspace) : null,
   }))
   .handler(async ({ data, context }): Promise<AttentionResult | { workspace: null; groups: null }> => {

@@ -13,7 +13,7 @@ async function assertManagerOrStaff(userId: string, offeringId: string) {
 
 export const getCountersignTimingFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ offeringId: z.string().uuid() }).parse)
+  .validator(z.object({ offeringId: z.string().uuid() }).parse)
   .handler(async ({ data, context }) => {
     await assertManagerOrStaff(context.userId, data.offeringId);
     const db = (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
@@ -26,7 +26,7 @@ export const getCountersignTimingFn = createServerFn({ method: "POST" })
 
 export const setCountersignTimingFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ offeringId: z.string().uuid(), timing: z.enum(COUNTERSIGN_TIMINGS) }).parse)
+  .validator(z.object({ offeringId: z.string().uuid(), timing: z.enum(COUNTERSIGN_TIMINGS) }).parse)
   .handler(async ({ data, context }) => {
     await assertManagerOrStaff(context.userId, data.offeringId);
     const db = (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;

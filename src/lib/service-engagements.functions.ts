@@ -41,7 +41,7 @@ export const listServiceEngagements = createServerFn({ method: "GET" })
 
 export const getServiceEngagementDetail = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i) => z.object({ id: z.string().uuid() }).parse(i))
+  .validator((i) => z.object({ id: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
     await requireStaff(context.userId);
     const d = await db();
@@ -99,7 +99,7 @@ function cadencePrice(p: any, f: string | null | undefined) {
 
 export const saveServiceEngagement = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i) => Upsert.parse(i))
+  .validator((i) => Upsert.parse(i))
   .handler(async ({ data, context }) => {
     const { isAdmin } = await requireStaff(context.userId);
     const d = await db();
@@ -157,7 +157,7 @@ export const saveServiceEngagement = createServerFn({ method: "POST" })
 
 export const setEngagementEntitlement = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i) => z.object({
+  .validator((i) => z.object({
     engagement_id: z.string().uuid(), feature_key: z.string().min(2).max(80),
     mode: z.enum(["ADD", "REMOVE", "DEFAULT"]), limit_override: z.number().int().nullable().optional(),
     frequency_override: z.string().max(40).nullable().optional(), reason: z.string().max(500).nullable().optional(),
@@ -186,7 +186,7 @@ export const setEngagementEntitlement = createServerFn({ method: "POST" })
 /** Client-safe view for Fund > Services. Never returns notes, override reasons or internal data. */
 export const getFundServices = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i) => z.object({ fundId: z.string().uuid() }).parse(i))
+  .validator((i) => z.object({ fundId: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
     const { assertFund } = await import("@/lib/fund-tabs.server");
     await assertFund(context.userId, data.fundId);

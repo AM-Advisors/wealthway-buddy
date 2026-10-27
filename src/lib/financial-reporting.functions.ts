@@ -21,7 +21,7 @@ const periodInput = z.object({
 
 export const getReportingQueue = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ fundId: uuid.optional() }).parse(data ?? {}))
+  .validator((data: unknown) => z.object({ fundId: uuid.optional() }).parse(data ?? {}))
   .handler(async ({ data, context }) => {
     const { reportingQueue } = await import("@/lib/financial-reporting.server");
     return reportingQueue(context.userId, data.fundId);
@@ -29,7 +29,7 @@ export const getReportingQueue = createServerFn({ method: "POST" })
 
 export const getFinancialStatements = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => periodInput.parse(data))
+  .validator((data: unknown) => periodInput.parse(data))
   .handler(async ({ data, context }) => {
     const { financialStatementsForPeriod } = await import("@/lib/financial-reporting.server");
     return financialStatementsForPeriod(context.userId, data.fundId, {
@@ -41,7 +41,7 @@ export const getFinancialStatements = createServerFn({ method: "POST" })
 
 export const prepareStatements = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     periodInput.extend({ statements: z.array(z.enum(STATEMENTS)).optional() }).parse(data),
   )
   .handler(async ({ data, context }) => {
@@ -58,7 +58,7 @@ export const prepareStatements = createServerFn({ method: "POST" })
 
 export const decideFinancialReport = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         reportId: uuid,
@@ -74,7 +74,7 @@ export const decideFinancialReport = createServerFn({ method: "POST" })
 
 export const amendFinancialReport = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ reportId: uuid, reason: z.string().min(10).max(2000) }).parse(data),
   )
   .handler(async ({ data, context }) => {
@@ -84,7 +84,7 @@ export const amendFinancialReport = createServerFn({ method: "POST" })
 
 export const respondToFinancialReport = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         reportId: uuid,
@@ -100,7 +100,7 @@ export const respondToFinancialReport = createServerFn({ method: "POST" })
 
 export const setFinancialReportVisibility = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         reportId: uuid,
@@ -119,7 +119,7 @@ export const setFinancialReportVisibility = createServerFn({ method: "POST" })
 
 export const getFinancialReport = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ reportId: uuid }).parse(data))
+  .validator((data: unknown) => z.object({ reportId: uuid }).parse(data))
   .handler(async ({ data, context }) => {
     const { financialReportDetail } = await import("@/lib/financial-reporting.server");
     return financialReportDetail(context.userId, data.reportId);
@@ -127,7 +127,7 @@ export const getFinancialReport = createServerFn({ method: "POST" })
 
 export const getStatementLineProvenance = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ reportId: uuid, lineKey: z.string().min(1).max(120) }).parse(data),
   )
   .handler(async ({ data, context }) => {
@@ -137,7 +137,7 @@ export const getStatementLineProvenance = createServerFn({ method: "POST" })
 
 export const getTrialBalance = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ fundId: uuid, asOfDate: isoDate, periodStart: isoDate.optional() }).parse(data),
   )
   .handler(async ({ data, context }) => {
@@ -147,7 +147,7 @@ export const getTrialBalance = createServerFn({ method: "POST" })
 
 export const getGeneralLedger = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         fundId: uuid,
@@ -168,7 +168,7 @@ export const getGeneralLedger = createServerFn({ method: "POST" })
 
 export const getJournalRegister = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ fundId: uuid, periodStart: isoDate, periodEnd: isoDate }).parse(data),
   )
   .handler(async ({ data, context }) => {
@@ -178,7 +178,7 @@ export const getJournalRegister = createServerFn({ method: "POST" })
 
 export const getScheduleOfInvestments = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ fundId: uuid, asOfDate: isoDate }).parse(data))
+  .validator((data: unknown) => z.object({ fundId: uuid, asOfDate: isoDate }).parse(data))
   .handler(async ({ data, context }) => {
     const { scheduleOfInvestmentsAsOf } = await import("@/lib/financial-reporting.server");
     return scheduleOfInvestmentsAsOf(context.userId, data.fundId, data.asOfDate);
@@ -186,7 +186,7 @@ export const getScheduleOfInvestments = createServerFn({ method: "POST" })
 
 export const getCloseChecklist = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ fundId: uuid, periodEnd: isoDate }).parse(data))
+  .validator((data: unknown) => z.object({ fundId: uuid, periodEnd: isoDate }).parse(data))
   .handler(async ({ data, context }) => {
     const { ensureCloseChecklist } = await import("@/lib/financial-reporting.server");
     return ensureCloseChecklist(context.userId, data.fundId, data.periodEnd);
@@ -194,7 +194,7 @@ export const getCloseChecklist = createServerFn({ method: "POST" })
 
 export const updateCloseChecklistItem = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         itemId: uuid,
@@ -214,7 +214,7 @@ export const updateCloseChecklistItem = createServerFn({ method: "POST" })
 
 export const buildWorkpapers = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => periodInput.parse(data))
+  .validator((data: unknown) => periodInput.parse(data))
   .handler(async ({ data, context }) => {
     const { generateWorkpapers } = await import("@/lib/financial-reporting.server");
     return generateWorkpapers(context.userId, {
@@ -226,7 +226,7 @@ export const buildWorkpapers = createServerFn({ method: "POST" })
 
 export const listFundWorkpapers = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ fundId: uuid, periodEnd: isoDate.optional() }).parse(data),
   )
   .handler(async ({ data, context }) => {
@@ -236,7 +236,7 @@ export const listFundWorkpapers = createServerFn({ method: "POST" })
 
 export const decideWorkpaper = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         workpaperId: uuid,
@@ -252,7 +252,7 @@ export const decideWorkpaper = createServerFn({ method: "POST" })
 
 export const listStatementMappingVersions = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ fundId: uuid }).parse(data))
+  .validator((data: unknown) => z.object({ fundId: uuid }).parse(data))
   .handler(async ({ data, context }) => {
     const { listStatementMappings } = await import("@/lib/financial-reporting.server");
     return listStatementMappings(context.userId, data.fundId);
@@ -260,7 +260,7 @@ export const listStatementMappingVersions = createServerFn({ method: "POST" })
 
 export const getManagerFinancials = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ fundId: uuid.optional() }).parse(data ?? {}))
+  .validator((data: unknown) => z.object({ fundId: uuid.optional() }).parse(data ?? {}))
   .handler(async ({ data, context }) => {
     const { managerFinancials } = await import("@/lib/financial-reporting.server");
     return managerFinancials(context.userId, data.fundId);
@@ -275,7 +275,7 @@ export const getInvestorFinancials = createServerFn({ method: "POST" })
 
 export const createReportPackage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         fundId: uuid,
@@ -297,7 +297,7 @@ export const createReportPackage = createServerFn({ method: "POST" })
 
 export const listFundReportPackages = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ fundId: uuid }).parse(data))
+  .validator((data: unknown) => z.object({ fundId: uuid }).parse(data))
   .handler(async ({ data, context }) => {
     const { listReportPackages } = await import("@/lib/financial-reporting.server");
     return listReportPackages(context.userId, data.fundId);
@@ -305,7 +305,7 @@ export const listFundReportPackages = createServerFn({ method: "POST" })
 
 export const runFundReportPackage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ packageId: uuid, periodStart: isoDate, periodEnd: isoDate }).parse(data),
   )
   .handler(async ({ data, context }) => {

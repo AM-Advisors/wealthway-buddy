@@ -75,7 +75,7 @@ async function loadCompanies(context: any) {
 
 export const getCapTableWorkspace = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({ companyId: z.string().uuid().optional().nullable() }).parse(d ?? {}),
   )
   .handler(async ({ data, context }) => {
@@ -446,7 +446,7 @@ async function recordEvent(
 
 export const createCapCompany = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         clientId: z.string().uuid(),
@@ -503,7 +503,7 @@ export const createCapCompany = createServerFn({ method: "POST" })
 
 export const saveCapStakeholder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         companyId: z.string().uuid(),
@@ -568,7 +568,7 @@ export const saveCapStakeholder = createServerFn({ method: "POST" })
 
 export const issueCapSecurity = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         companyId: z.string().uuid(),
@@ -645,7 +645,7 @@ export const issueCapSecurity = createServerFn({ method: "POST" })
 
 export const recordCapTransaction = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         companyId: z.string().uuid(),
@@ -704,7 +704,7 @@ export const recordCapTransaction = createServerFn({ method: "POST" })
 /** Records a linked reversal of a finalized transaction. The original row is never edited. */
 export const reverseCapTransaction = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         companyId: z.string().uuid(),

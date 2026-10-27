@@ -11,7 +11,7 @@ export const opsWorkQueueFn = createServerFn({ method: "GET" }).middleware([requ
   });
 
 export const clientTimelineFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ clientId: z.string().uuid(), before: z.string().datetime().nullable().optional() }).parse)
+  .validator(z.object({ clientId: z.string().uuid(), before: z.string().datetime().nullable().optional() }).parse)
   .handler(async ({ data, context }) => {
     const { assertOpsStaff } = await import("@/lib/fund-manager-profile.server");
     await assertOpsStaff(context.userId);

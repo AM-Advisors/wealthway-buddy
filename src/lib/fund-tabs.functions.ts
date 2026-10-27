@@ -7,10 +7,10 @@ const fund = z.object({ fundId: z.string().uuid() });
 const uuid = z.string().uuid();
 
 const __auto = async <T,>(r: T, ref: { offeringId?: string; feeId?: string; documentId?: string }) => { await (await import("@/lib/fund-setup-extras.server")).autoCompleteAfterSave(ref); return r; };
-export const investorGridFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator(fund.parse)
+export const investorGridFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).validator(fund.parse)
   .handler(async ({ data, context }) => { const s = await srv(); await s.assertFund(context.userId, data.fundId); return s.investorGrid(data.fundId); });
 
-export const investorDetailFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator(fund.extend({ onboardingId: uuid }).parse)
+export const investorDetailFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).validator(fund.extend({ onboardingId: uuid }).parse)
   .handler(async ({ data, context }) => {
     const s = await srv(); const access = await s.assertFund(context.userId, data.fundId);
     const detail = await s.investorDetail(data.fundId, data.onboardingId);
@@ -20,31 +20,31 @@ export const investorDetailFn = createServerFn({ method: "POST" }).middleware([r
   });
 
 export const managerInvestorSignedCopyFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(fund.extend({ onboardingId: uuid, signatureId: uuid }).parse)
+  .validator(fund.extend({ onboardingId: uuid, signatureId: uuid }).parse)
   .handler(async ({ data, context }) => {
     const s = await srv();
     return (await import("./investor-review-evidence.server")).managerInvestorSignedCopy(await s.db(), context.userId, data);
   });
 
 export const managerInvestorTaxFormFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(fund.extend({ onboardingId: uuid, taxFormId: uuid }).parse)
+  .validator(fund.extend({ onboardingId: uuid, taxFormId: uuid }).parse)
   .handler(async ({ data, context }) => {
     const s = await srv();
     return (await import("./investor-review-evidence.server")).managerInvestorTaxForm(await s.db(), context.userId, data);
   });
 
 export const sendSubscriptionSignNoticeFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(fund.extend({ onboardingId: uuid }).parse)
+  .validator(fund.extend({ onboardingId: uuid }).parse)
   .handler(async ({ data, context }) => {
     const s = await srv();
     return (await import("./subscription-sign-notice.server")).sendSubscriptionSignNotice(await s.db(), context.userId, data);
   });
 
-export const fundTeamFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator(fund.parse)
+export const fundTeamFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).validator(fund.parse)
   .handler(async ({ data, context }) => { const s = await srv(); const a = await s.assertFund(context.userId, data.fundId); return { ...(await s.team(data.fundId)), staff: a.staff, me: context.userId }; });
 
 export const saveTeamMemberFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(fund.extend({
+  .validator(fund.extend({
     id: uuid.nullable(),
     fullName: z.string().trim().min(2).max(200), email: z.string().trim().email().max(320).or(z.literal("")),
     phone: z.string().trim().max(40), company: z.string().trim().max(200),
@@ -67,7 +67,7 @@ export const saveTeamMemberFn = createServerFn({ method: "POST" }).middleware([r
     return { ok: true };
   });
 
-export const removeTeamMemberFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator(fund.extend({ id: uuid }).parse)
+export const removeTeamMemberFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).validator(fund.extend({ id: uuid }).parse)
   .handler(async ({ data, context }) => {
     const s = await srv(); await s.assertFund(context.userId, data.fundId);
     await (await s.db()).from("fund_team_members").update({ removed_at: new Date().toISOString(), removed_by: context.userId }).eq("id", data.id).eq("offering_id", data.fundId);
@@ -76,28 +76,28 @@ export const removeTeamMemberFn = createServerFn({ method: "POST" }).middleware(
 
 const pct = z.number().min(0).max(100).nullable();
 export const setFeesFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(fund.extend({ managementFeePct: pct, managementFeeBasis: z.string().max(200), carryPct: pct, hurdlePct: pct, notes: z.string().max(2000) }).parse)
+  .validator(fund.extend({ managementFeePct: pct, managementFeeBasis: z.string().max(200), carryPct: pct, hurdlePct: pct, notes: z.string().max(2000) }).parse)
   .handler(async ({ data, context }) => { const s = await srv(); await s.assertFund(context.userId, data.fundId); return __auto(await s.setFees(context.userId, data.fundId, data), { offeringId: data.fundId }); });
 
-export const decideFeesFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator(z.object({ feeId: uuid, approve: z.boolean() }).parse)
+export const decideFeesFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).validator(z.object({ feeId: uuid, approve: z.boolean() }).parse)
   .handler(async ({ data, context }) => __auto(await (await srv()).decideFees(context.userId, data.feeId, data.approve), { feeId: data.feeId }));
 
-export const listFundFilesFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator(fund.parse)
+export const listFundFilesFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).validator(fund.parse)
   .handler(async ({ data, context }) => { const s = await srv(); await s.assertFund(context.userId, data.fundId); const a = await (await import("@/lib/fund-setup.server")).setupActor(context.userId); return s.listFiles(data.fundId, a.isStaff || a.offeringIds.includes(data.fundId)); });
 
 export const uploadFundFileFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(fund.extend({ title: z.string().trim().min(1).max(200), category: z.string().max(40), fileName: z.string().min(1).max(200), contentType: z.string().max(120), base64: z.string().max(28_000_000) }).parse)
+  .validator(fund.extend({ title: z.string().trim().min(1).max(200), category: z.string().max(40), fileName: z.string().min(1).max(200), contentType: z.string().max(120), base64: z.string().max(28_000_000) }).parse)
   .handler(async ({ data, context }) => { const s = await srv(); await s.assertFund(context.userId, data.fundId); return s.uploadFile(context.userId, data.fundId, data); });
 
-export const deleteFundFileFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator(fund.extend({ id: uuid }).parse)
+export const deleteFundFileFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).validator(fund.extend({ id: uuid }).parse)
   .handler(async ({ data, context }) => { const s = await srv(); await s.assertFund(context.userId, data.fundId); return s.deleteFile(context.userId, data.fundId, data.id); });
 
 export const setSignatureBoxesFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(fund.extend({ id: uuid, boxes: z.array(z.object({ signer: z.string().trim().min(1).max(200), role: z.string().max(60), label: z.string().max(200) })).max(20) }).parse)
+  .validator(fund.extend({ id: uuid, boxes: z.array(z.object({ signer: z.string().trim().min(1).max(200), role: z.string().max(60), label: z.string().max(200) })).max(20) }).parse)
   .handler(async ({ data, context }) => { const s = await srv(); await s.assertFund(context.userId, data.fundId); return s.setSignatureBoxes(data.fundId, data.id, data.boxes); });
 
 export const generateFundDocFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(fund.extend({ templateKey: z.string().max(60), values: z.record(z.string(), z.string().max(2000)), onboardingId: uuid.nullable().optional() }).parse)
+  .validator(fund.extend({ templateKey: z.string().max(60), values: z.record(z.string(), z.string().max(2000)), onboardingId: uuid.nullable().optional() }).parse)
   .handler(async ({ data, context }) => {
     const s = await srv(); await s.assertFund(context.userId, data.fundId);
     const { renderTemplate } = await import("@/lib/fund-doc-templates");
@@ -108,31 +108,31 @@ export const generateFundDocFn = createServerFn({ method: "POST" }).middleware([
     return s.saveGenerated(context.userId, data.fundId, { templateKey: data.templateKey, ...r });
   });
 
-export const fundBooksFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator(fund.parse)
+export const fundBooksFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).validator(fund.parse)
   .handler(async ({ data, context }) => { const s = await srv(); await s.assertFund(context.userId, data.fundId); return s.books(data.fundId); });
 
 export const tagTransactionFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(fund.extend({ bankTransactionId: uuid, onboardingId: uuid.nullable(), assetLabel: z.string().max(200).nullable() }).parse)
+  .validator(fund.extend({ bankTransactionId: uuid, onboardingId: uuid.nullable(), assetLabel: z.string().max(200).nullable() }).parse)
   .handler(async ({ data, context }) => { const s = await srv(); await s.assertFund(context.userId, data.fundId); return s.tagTransaction(context.userId, data.fundId, data); });
 
 export const addLedgerEntryFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(fund.extend({ entryDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), description: z.string().trim().min(2).max(300), category: z.string().max(80), direction: z.enum(["in", "out"]), amountCents: z.number().int().positive().max(1e13), bankTransactionId: uuid.nullable() }).parse)
+  .validator(fund.extend({ entryDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), description: z.string().trim().min(2).max(300), category: z.string().max(80), direction: z.enum(["in", "out"]), amountCents: z.number().int().positive().max(1e13), bankTransactionId: uuid.nullable() }).parse)
   .handler(async ({ data, context }) => { const s = await srv(); await s.assertFund(context.userId, data.fundId); return s.addEntry(context.userId, data.fundId, data); });
 
 export const voidLedgerEntryFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(fund.extend({ id: uuid, reason: z.string().trim().min(3).max(500) }).parse)
+  .validator(fund.extend({ id: uuid, reason: z.string().trim().min(3).max(500) }).parse)
   .handler(async ({ data, context }) => { const s = await srv(); await s.assertFund(context.userId, data.fundId); return s.voidEntry(context.userId, data.fundId, data.id, data.reason); });
 
-export const lastRemindersFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator(fund.parse)
+export const lastRemindersFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).validator(fund.parse)
   .handler(async ({ data, context }) => { const s = await srv(); await s.assertFund(context.userId, data.fundId); return s.lastReminders(data.fundId); });
 
 export const sendInvestorRemindersFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(fund.extend({ onboardingIds: z.array(uuid).min(1).max(100) }).parse)
+  .validator(fund.extend({ onboardingIds: z.array(uuid).min(1).max(100) }).parse)
   .handler(async ({ data, context }) => { const s = await srv(); await s.assertFund(context.userId, data.fundId); return s.sendReminders(context.userId, data.fundId, data.onboardingIds); });
 
 /** Fund EIN: only Harmonious staff and the fund's managers. The database RPC re-checks authority as the caller. */
 export const fundEinFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(fund.extend({ reveal: z.boolean().default(false) }).parse)
+  .validator(fund.extend({ reveal: z.boolean().default(false) }).parse)
   .handler(async ({ data, context }) => {
     const s = await srv(); const a = await s.assertFund(context.userId, data.fundId);
     const d = await s.db();
@@ -152,7 +152,7 @@ export const fundEinFn = createServerFn({ method: "POST" }).middleware([requireS
   });
 
 /** Account tab: approved financial statements, financial reviews and NAV for this fund (read-only). */
-export const fundAccountFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator(fund.parse)
+export const fundAccountFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).validator(fund.parse)
   .handler(async ({ data, context }) => {
     const s = await srv(); await s.assertFund(context.userId, data.fundId);
     const d = await s.db();
@@ -175,5 +175,5 @@ export const fundAccountFn = createServerFn({ method: "POST" }).middleware([requ
     return { statements: (st.data ?? []) as any[], reviews: (rv.data ?? []) as any[], nav: merged };
   });
 
-export const investorLevelsFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator(fund.parse)
+export const investorLevelsFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).validator(fund.parse)
   .handler(async ({ data, context }) => { const s = await srv(); await s.assertFund(context.userId, data.fundId); return s.investorLevels(data.fundId); });

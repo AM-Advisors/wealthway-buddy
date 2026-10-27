@@ -123,7 +123,7 @@ export const listFundBankAccounts = createServerFn({ method: "GET" })
 /** Records a fund's receiving account by hand so incoming wires can be matched to it. */
 export const saveFundBankAccount = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         fundId: z.string().uuid(),
@@ -209,7 +209,7 @@ export const saveFundBankAccount = createServerFn({ method: "POST" })
 /** Removes a hand-entered receiving account. */
 export const removeFundBankAccount = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ fundId: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ fundId: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const roles = await staffRoles(supabase, userId);

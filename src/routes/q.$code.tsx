@@ -3,7 +3,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 const resolve = createServerFn({ method: "GET" })
-  .inputValidator((d) => z.object({ code: z.string().max(32) }).parse(d))
+  .validator((d) => z.object({ code: z.string().max(32) }).parse(d))
   .handler(async ({ data }) => {
     const { resolveShortLink } = await import("@/lib/sales-acceptance.server");
     return { token: await resolveShortLink(data.code) };

@@ -79,7 +79,7 @@ async function loadApplication(supabase: any, userId: string, onboardingId?: str
 
 export const getAccreditation = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ onboardingId: onboardingRef }).parse(d ?? {}))
+  .validator((d: unknown) => z.object({ onboardingId: onboardingRef }).parse(d ?? {}))
   .handler(async ({ data: input, context }) => {
     const { supabase, userId } = context;
 
@@ -115,7 +115,7 @@ export const getAccreditation = createServerFn({ method: "GET" })
 
 export const submitSelfCertification = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => accreditation506bSchema.parse(data))
+  .validator((data: unknown) => accreditation506bSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const application = await loadApplication(supabase, userId, data.onboarding_id);
@@ -182,7 +182,7 @@ export const submitSelfCertification = createServerFn({ method: "POST" })
 
 export const submitVerificationRequest = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => accreditation506cSchema.parse(data))
+  .validator((data: unknown) => accreditation506cSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const application = await loadApplication(supabase, userId, data.onboarding_id);
@@ -243,7 +243,7 @@ export const submitVerificationRequest = createServerFn({ method: "POST" })
 
 export const recordEvidence = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => evidenceSchema.parse(data))
+  .validator((data: unknown) => evidenceSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const application = await loadApplication(supabase, userId, data.onboarding_id);

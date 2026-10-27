@@ -14,7 +14,7 @@ async function assertCanEdit(supabase: any, userId: string, offeringId: string) 
 
 export const getPaymentMethodsFn = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ offering_id: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ offering_id: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
     await assertCanEdit(context.supabase, context.userId, data.offering_id);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -24,7 +24,7 @@ export const getPaymentMethodsFn = createServerFn({ method: "GET" })
 
 export const savePaymentMethodsFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({
       offering_id: z.string().uuid(),
       methods: z.array(z.enum(PAYMENT_METHODS)).min(1, "Choose at least one payment method."),

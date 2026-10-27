@@ -136,7 +136,7 @@ const agreementInput = z.object({
 /** Create or update the agreement itself. Only draft and in-review terms can change. */
 export const saveProviderAgreement = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => agreementInput.parse(d))
+  .validator((d: unknown) => agreementInput.parse(d))
   .handler(async ({ data, context }) => {
     const who = await requireAuthority(context);
     const row = {
@@ -184,7 +184,7 @@ export const saveProviderAgreement = createServerFn({ method: "POST" })
 /** Add or change one price line. */
 export const saveAgreementRate = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         id: z.string().uuid().optional(),
@@ -240,7 +240,7 @@ export const saveAgreementRate = createServerFn({ method: "POST" })
 /** Remove a price line from a draft agreement. */
 export const removeAgreementRate = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const who = await requireAuthority(context);
     const { data: rate } = await context.supabase
@@ -269,7 +269,7 @@ export const removeAgreementRate = createServerFn({ method: "POST" })
 /** Add or change a condition that must be satisfied before the agreement goes live. */
 export const saveAgreementCondition = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         id: z.string().uuid().optional(),
@@ -317,7 +317,7 @@ export const saveAgreementCondition = createServerFn({ method: "POST" })
 /** Mark a condition as satisfied, or put it back outstanding. */
 export const setConditionMet = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({ id: z.string().uuid(), met: z.boolean() }).parse(d),
   )
   .handler(async ({ data, context }) => {
@@ -349,7 +349,7 @@ export const setConditionMet = createServerFn({ method: "POST" })
 /** Remove a condition from an agreement that is not yet live. */
 export const removeAgreementCondition = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const who = await requireAuthority(context);
     const { data: condition } = await context.supabase
@@ -378,7 +378,7 @@ export const removeAgreementCondition = createServerFn({ method: "POST" })
 /** Move an agreement through review, signature, activation and termination. */
 export const advanceProviderAgreement = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         id: z.string().uuid(),

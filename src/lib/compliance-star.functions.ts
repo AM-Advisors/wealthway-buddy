@@ -69,7 +69,7 @@ export const getStar = createServerFn({ method: "GET" }).middleware([requireSupa
   });
 
 export const importStarQuestions = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ rows: z.array(z.object({ question_id: z.string().trim().min(3).max(40), question: z.string().trim().min(3).max(4000), ccm_control_id: z.string().max(40).nullable() })).min(1).max(1000) }).parse(d))
+  .validator((d) => z.object({ rows: z.array(z.object({ question_id: z.string().trim().min(3).max(40), question: z.string().trim().min(3).max(4000), ccm_control_id: z.string().max(40).nullable() })).min(1).max(1000) }).parse(d))
   .handler(async ({ data, context }) => {
     const c = await ctxFor(context); need(c, EDIT);
     const rows = data.rows.map((r, i) => ({
@@ -82,7 +82,7 @@ export const importStarQuestions = createServerFn({ method: "POST" }).middleware
   });
 
 export const saveStarAnswer = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({
+  .validator((d) => z.object({
     question_id: z.string().max(40), answer: z.enum(["yes", "no", "na"]), responsibility: z.enum(["csp", "csc", "shared"]),
     explanation: z.string().trim().min(3).max(4000), control_keys: z.array(z.string().max(20)).max(30), evidence_ids: z.array(z.string().uuid()).max(30),
   }).parse(d))
@@ -95,7 +95,7 @@ export const saveStarAnswer = createServerFn({ method: "POST" }).middleware([req
   });
 
 export const approveStarAnswer = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ id: z.string().uuid() }).parse(d))
+  .validator((d) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const c = await ctxFor(context); need(c, EDIT);
     const { data: d } = await c.db.from("star_answers").select("*").eq("id", data.id).maybeSingle();
@@ -113,7 +113,7 @@ export const approveStarAnswer = createServerFn({ method: "POST" }).middleware([
   });
 
 export const recordStarEvent = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ action: z.enum(["owner_set", "submitted", "registry_url", "path_chosen", "gdpr_done", "quality_result"]), value: z.string().trim().min(1).max(500) }).parse(d))
+  .validator((d) => z.object({ action: z.enum(["owner_set", "submitted", "registry_url", "path_chosen", "gdpr_done", "quality_result"]), value: z.string().trim().min(1).max(500) }).parse(d))
   .handler(async ({ data, context }) => {
     const c = await ctxFor(context); need(c, EDIT);
     if (data.action === "registry_url" && !/^https:\/\/cloudsecurityalliance\.org\//.test(data.value)) throw new Error("Use the cloudsecurityalliance.org registry link.");
@@ -131,7 +131,7 @@ export const listStarReferences = createServerFn({ method: "GET" }).middleware([
   });
 
 export const openStarReference = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ id: z.string().uuid() }).parse(d))
+  .validator((d) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const c = await ctxFor(context); need(c, VIEW);
     const { data: r } = await c.db.from("star_reference_documents").select("storage_path").eq("id", data.id).maybeSingle();

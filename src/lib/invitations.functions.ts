@@ -251,7 +251,7 @@ export async function sendInvitationEmail(opts: {
  */
 export const inviteToFund = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => inviteSchema.parse(data))
+  .validator((data: unknown) => inviteSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId, claims } = context;
     const ctx = await reviewerContext(supabase, userId);
@@ -340,7 +340,7 @@ export function parsePeopleList(raw: string) {
 /** Invite a pasted list of people to one or more funds in a single pass. */
 export const inviteManyToFunds = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => bulkSchema.parse(data))
+  .validator((data: unknown) => bulkSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId, claims } = context;
     const ctx = await reviewerContext(supabase, userId);
@@ -418,7 +418,7 @@ export const inviteManyToFunds = createServerFn({ method: "POST" })
 /** Send the invitation email again for an existing invitation. */
 export const resendInvitation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId, claims } = context;
     const authz = await import("@/lib/reviewer-authz.server");
@@ -453,7 +453,7 @@ export const resendInvitation = createServerFn({ method: "POST" })
 /** Cancel an invitation and remove the access it granted. */
 export const revokeInvitation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { userId } = context;
     const authz = await import("@/lib/reviewer-authz.server");
@@ -533,7 +533,7 @@ const removeSchema = z.object({
 /** Remove someone's access to one fund. */
 export const removeFundAccess = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => removeSchema.parse(data))
+  .validator((data: unknown) => removeSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { userId } = context;
     const authz = await import("@/lib/reviewer-authz.server");
@@ -569,7 +569,7 @@ function maskEmail(email: string | null): string {
  */
 export const searchExistingInvestors = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ fundId: z.string().uuid(), q: z.string().trim().min(2).max(80) }).parse(d))
+  .validator((d: unknown) => z.object({ fundId: z.string().uuid(), q: z.string().trim().min(2).max(80) }).parse(d))
   .handler(async ({ data, context }) => {
     const ctx = await reviewerContext(context.supabase, context.userId);
     assertFundAllowed(ctx, data.fundId);
@@ -602,7 +602,7 @@ export const searchExistingInvestors = createServerFn({ method: "GET" })
 /** Attach an existing person to this exact fund, via the same grant path as invitations. */
 export const addExistingInvestorToFund = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ fundId: z.string().uuid(), userId: z.string().uuid(), sendEmail: z.boolean().default(false) }).parse(d))
+  .validator((d: unknown) => z.object({ fundId: z.string().uuid(), userId: z.string().uuid(), sendEmail: z.boolean().default(false) }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId, claims } = context;
     const ctx = await reviewerContext(supabase, userId);
@@ -632,7 +632,7 @@ export const addExistingInvestorToFund = createServerFn({ method: "POST" })
 /** Row-action lookup for one fund: user id, latest invitation id and whether the caller is staff. */
 export const getFundInvestorActions = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ fundId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ fundId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const ctx = await reviewerContext(context.supabase, context.userId);
     assertFundAllowed(ctx, data.fundId);
@@ -680,7 +680,7 @@ async function canManageFundTeam(ctx: any, userId: string, fundId: string) {
 
 export const getFundTeam = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ fundId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ fundId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const ctx = await reviewerContext(context.supabase, context.userId);
     assertFundAllowed(ctx, data.fundId);
@@ -711,7 +711,7 @@ export const getFundTeam = createServerFn({ method: "GET" })
 /** Staff only: search existing people to add as fund manager. Never creates accounts. */
 export const searchFundTeamCandidates = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ fundId: z.string().uuid(), q: z.string().trim().min(2).max(80) }).parse(d))
+  .validator((d: unknown) => z.object({ fundId: z.string().uuid(), q: z.string().trim().min(2).max(80) }).parse(d))
   .handler(async ({ data, context }) => {
     const ctx = await reviewerContext(context.supabase, context.userId);
     assertFundAllowed(ctx, data.fundId);
@@ -736,7 +736,7 @@ export const searchFundTeamCandidates = createServerFn({ method: "GET" })
 /** Staff only: give an existing person fund-manager access to this exact fund (audited, no email). */
 export const addFundTeamMember = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ fundId: z.string().uuid(), userId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ fundId: z.string().uuid(), userId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const ctx = await reviewerContext(supabase, userId);
@@ -757,7 +757,7 @@ export const addFundTeamMember = createServerFn({ method: "POST" })
 /** Staff only: remove fund-manager access to this fund only. Account, history and other funds are untouched. */
 export const removeFundTeamMember = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ fundId: z.string().uuid(), userId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ fundId: z.string().uuid(), userId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const ctx = await reviewerContext(supabase, userId);

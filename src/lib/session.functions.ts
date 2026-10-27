@@ -22,7 +22,7 @@ import {
  */
 export const resolveSession = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { intended?: string | null } | undefined) => input ?? {})
+  .validator((input: { intended?: string | null } | undefined) => input ?? {})
   .handler(async ({ data, context }) => {
     const facts = await gatherFacts(context);
     const intended = data.intended ? safeInternalPath(data.intended, "") : "";
@@ -59,7 +59,7 @@ export const resolveSession = createServerFn({ method: "POST" })
  */
 export const enterWorkspace = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { workspaceId: string }) => {
+  .validator((input: { workspaceId: string }) => {
     if (!input?.workspaceId) throw new Error("Choose a workspace.");
     return { workspaceId: String(input.workspaceId) };
   })

@@ -27,7 +27,7 @@ async function rolesOf(context: any) {
 /** What the client owes Harmonious for one fund, from the statement of work. */
 export const getResponsibilities = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ offeringId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ offeringId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const roles = await rolesOf(context);
     const [{ data: templates }, { data: items }, { data: fund }] = await Promise.all([
@@ -76,7 +76,7 @@ export const getResponsibilities = createServerFn({ method: "GET" })
 
 export const setResponsibilityStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         offeringId: z.string().uuid(),

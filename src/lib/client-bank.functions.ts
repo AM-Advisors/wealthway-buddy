@@ -132,7 +132,7 @@ export const getClientBankLinking = createServerFn({ method: "GET" })
 /** Starts the secure bank sign-in for one of the client's own funds. */
 export const startClientBankLink = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({ fundId: z.string().uuid(), consent: z.literal(true), policyVersion: z.string().min(1).max(40) })
       .parse(d),
@@ -160,7 +160,7 @@ export const startClientBankLink = createServerFn({ method: "POST" })
 /** Saves the connection once the client finishes signing in at their bank. */
 export const finishClientBankLink = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({ fundId: z.string().uuid(), publicToken: z.string().min(10).max(500) }).parse(d),
   )
   .handler(async ({ data, context }) => {
@@ -218,7 +218,7 @@ export const finishClientBankLink = createServerFn({ method: "POST" })
  *  client already declared, so a wire settles its invoice without staff typing. */
 export const refreshClientBankMatches = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ fundId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ fundId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { supabaseAdmin } = await assertClientFund(supabase, userId, data.fundId);
@@ -284,7 +284,7 @@ export const refreshClientBankMatches = createServerFn({ method: "POST" })
 /** Removes the client's bank connection for a fund. */
 export const disconnectClientBankLink = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ fundId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ fundId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { fund, supabaseAdmin } = await assertClientFund(supabase, userId, data.fundId);

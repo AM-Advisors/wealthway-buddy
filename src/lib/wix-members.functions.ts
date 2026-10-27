@@ -56,7 +56,7 @@ export const listWixSitesFn = createServerFn({ method: "POST" }).middleware([req
 
 /** Test Connection: one read-only member query. */
 export const testWixFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((x: unknown) => z.object({ siteId: z.string().uuid() }).parse(x))
+  .validator((x: unknown) => z.object({ siteId: z.string().uuid() }).parse(x))
   .handler(async ({ data, context }) => {
     await assertStaff(context.userId);
     const r = await wix("/members/v1/members/query", data.siteId, { query: { paging: { limit: 1 } } });
@@ -64,7 +64,7 @@ export const testWixFn = createServerFn({ method: "POST" }).middleware([requireS
   });
 
 export const importWixMembersFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((x: unknown) => z.object({ siteId: z.string().uuid() }).parse(x))
+  .validator((x: unknown) => z.object({ siteId: z.string().uuid() }).parse(x))
   .handler(async ({ data, context }) => {
     await assertStaff(context.userId);
     const db = await admin();
@@ -113,7 +113,7 @@ export const listWixMembersFn = createServerFn({ method: "POST" }).middleware([r
  * only, re-checks email first). Nothing is written to Wix; KYC/AML is never set.
  */
 export const reviewWixMemberFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((x: unknown) => z.object({ wixMemberId: z.string().min(1).max(100), action: z.enum(["link", "create"]) }).parse(x))
+  .validator((x: unknown) => z.object({ wixMemberId: z.string().min(1).max(100), action: z.enum(["link", "create"]) }).parse(x))
   .handler(async ({ data, context }) => {
     await assertStaff(context.userId);
     const db = await admin();

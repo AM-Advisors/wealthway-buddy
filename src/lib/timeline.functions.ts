@@ -77,7 +77,7 @@ async function editableFunds(supabase: any, userId: string) {
 /** Manager/admin view: their funds plus every key date on the selected fund. */
 export const getTimelineForEdit = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({ offering_id: z.string().uuid().nullable().optional() })
       .optional()
@@ -108,7 +108,7 @@ export const getTimelineForEdit = createServerFn({ method: "GET" })
 /** Create or update one key date. */
 export const saveTimelineEvent = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => eventSchema.parse(data))
+  .validator((data: unknown) => eventSchema.parse(data))
   .handler(async ({ context, data }) => {
     const { id, ...fields } = data;
     if (id) {
@@ -131,7 +131,7 @@ export const saveTimelineEvent = createServerFn({ method: "POST" })
 /** Remove a key date. */
 export const deleteTimelineEvent = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     const { error } = await context.supabase
       .from("offering_timeline_events")
@@ -144,7 +144,7 @@ export const deleteTimelineEvent = createServerFn({ method: "POST" })
 /** What the diligence room shows: the fund's visible key dates in order. */
 export const getFundTimeline = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ offering_id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ offering_id: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     const { data: rows } = await context.supabase
       .from("offering_timeline_events")

@@ -13,7 +13,7 @@ export type FundUpdate = { id: string; offeringId: string; fundName: string; hea
  */
 export const listFundUpdates = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ offeringId: z.string().uuid().optional(), limit: z.number().int().min(1).max(50).optional() }).parse(d ?? {}))
+  .validator((d: unknown) => z.object({ offeringId: z.string().uuid().optional(), limit: z.number().int().min(1).max(50).optional() }).parse(d ?? {}))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: mine } = await supabase.from("fund_managers").select("offering_id").eq("user_id", userId);

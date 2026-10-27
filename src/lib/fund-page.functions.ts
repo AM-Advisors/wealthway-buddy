@@ -46,7 +46,7 @@ export const listFundPages = createServerFn({ method: "GET" })
 /** Everything one fund page shows: description, documents and funding details. */
 export const getFundPage = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ fundId: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ fundId: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { isAdmin, offeringIds } = await reviewerScope(supabase, userId);
@@ -116,7 +116,7 @@ export const getFundPage = createServerFn({ method: "GET" })
 /** Full text of one fund document, for reading on the fund page. */
 export const getFundDocumentBody = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ documentId: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ documentId: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { isAdmin, offeringIds } = await reviewerScope(supabase, userId);

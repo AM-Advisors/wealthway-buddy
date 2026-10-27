@@ -39,7 +39,7 @@ export type ComplianceEvidence = {
 
 export const getFundInvestorCompliance = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ offeringId: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ offeringId: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { isAdmin } = await assertFundReviewer(supabase, userId, data.offeringId);
@@ -202,7 +202,7 @@ function emptyCounts() {
 /** Short-lived link to one investor's evidence file, for this fund's reviewers. */
 export const getComplianceEvidenceUrl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         offeringId: z.string().uuid(),

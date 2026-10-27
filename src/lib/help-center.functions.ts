@@ -23,7 +23,7 @@ async function approvals(context: any): Promise<Map<string, number>> {
 
 export const listHelpArticles = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ audience: z.enum(["client", "staff"]), workspaceKind: z.string().max(40).nullable().optional() }).parse(d))
+  .validator((d: unknown) => z.object({ audience: z.enum(["client", "staff"]), workspaceKind: z.string().max(40).nullable().optional() }).parse(d))
   .handler(async ({ data, context }): Promise<{ articles: HelpArticleView[]; roles: string[]; canApprove: boolean }> => {
     const { HELP_CATALOG } = await import("@/lib/help-catalog");
     const { articlesFor, clientHelpRolesFor, staffHelpRolesFor } = await import("@/lib/help-articles");
@@ -39,7 +39,7 @@ export const listHelpArticles = createServerFn({ method: "GET" })
 
 export const approveHelpArticle = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ slug: z.string().min(1).max(120), note: z.string().trim().min(3).max(500) }).parse(d))
+  .validator((d: unknown) => z.object({ slug: z.string().min(1).max(120), note: z.string().trim().min(3).max(500) }).parse(d))
   .handler(async ({ data, context }) => {
     const roles = await rolesOf(context);
     if (!roles.some((r) => APPROVERS.includes(r))) throw new Error("Only Super Admins and Operations leads can approve help articles.");

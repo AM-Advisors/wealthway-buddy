@@ -100,7 +100,7 @@ export const listManagerOnboardingDocs = createServerFn({ method: "GET" })
 
 export const submitManagerOnboardingDoc = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         storage_path: z.string().min(1).max(500),
@@ -132,7 +132,7 @@ export const submitManagerOnboardingDoc = createServerFn({ method: "POST" })
 
 export const openManagerOnboardingDoc = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const { data: row } = await supabase
@@ -151,7 +151,7 @@ export const openManagerOnboardingDoc = createServerFn({ method: "POST" })
 
 export const withdrawManagerOnboardingDoc = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: row } = await supabase
@@ -170,7 +170,7 @@ export const withdrawManagerOnboardingDoc = createServerFn({ method: "POST" })
 
 export const reviewManagerOnboardingDoc = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         id: z.string().uuid(),
@@ -213,7 +213,7 @@ export const reviewManagerOnboardingDoc = createServerFn({ method: "POST" })
 /** Retries filing an approved document into the shared folder. */
 export const refileManagerOnboardingDoc = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { isAdmin } = await roles(supabase, userId);

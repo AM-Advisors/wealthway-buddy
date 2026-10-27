@@ -152,7 +152,7 @@ const saveInput = z.object({
 /** Records or updates the account a client pays from. Only the last four digits are kept. */
 export const saveClientBankAccount = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => saveInput.parse(input))
+  .validator((input: unknown) => saveInput.parse(input))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const roles = await staffRoles(supabase, userId);
@@ -209,7 +209,7 @@ export const saveClientBankAccount = createServerFn({ method: "POST" })
 /** Removes an account a client no longer pays from. */
 export const removeClientBankAccount = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
+  .validator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const roles = await staffRoles(supabase, userId);

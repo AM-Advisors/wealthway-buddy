@@ -55,7 +55,7 @@ async function auditEvent(
 /** The fund's bank lines alongside the fee invoices they can settle. */
 export const getFundBankStatement = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ offeringId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ offeringId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const roles = await assertFundAccess(supabase, userId, data.offeringId);
@@ -158,7 +158,7 @@ export const getFundBankStatement = createServerFn({ method: "POST" })
 /** Ties one bank deposit to a fee invoice and records the invoice as paid. */
 export const matchBankLineToInvoice = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({ transactionId: z.string().uuid(), invoiceId: z.string().uuid() })
       .parse(d),
@@ -236,7 +236,7 @@ export const matchBankLineToInvoice = createServerFn({ method: "POST" })
 /** Undoes a bank match and puts the invoice back to issued. */
 export const unmatchBankLineFromInvoice = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ transactionId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ transactionId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: line } = await supabase

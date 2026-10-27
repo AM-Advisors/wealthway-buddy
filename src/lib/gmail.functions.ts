@@ -58,7 +58,7 @@ export const startGoogleConnect = createServerFn({ method: "POST" })
 
 export const completeGoogleConnection = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { code: string }) => z.object({ code: z.string().min(1) }).parse(input))
+  .validator((input: { code: string }) => z.object({ code: z.string().min(1) }).parse(input))
   .handler(async ({ data, context }) => {
     await requireStaff(context.userId);
     const { connectionAPIKey, connectorId } = await exchangeAppUserOAuthCode(GATEWAY_BASE_URL, data.code);
@@ -88,7 +88,7 @@ export const getMyGmailStatus = createServerFn({ method: "GET" })
 
 export const getMyGmailThreads = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { query?: string | undefined }) => z.object({ query: z.string().optional() }).parse(input))
+  .validator((input: { query?: string | undefined }) => z.object({ query: z.string().optional() }).parse(input))
   .handler(async ({ data, context }) => {
     await requireStaff(context.userId);
     const rows = await listGmailThreadsForUser(context.userId, data.query);
@@ -104,7 +104,7 @@ export const getGroupMailboxes = createServerFn({ method: "GET" })
 
 export const addGroupMailbox = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { label: string; envKey: string }) =>
+  .validator((input: { label: string; envKey: string }) =>
     z.object({ label: z.string().min(1).max(80), envKey: z.string().min(1) }).parse(input))
   .handler(async ({ data, context }) => {
     await registerGroupMailbox(context.userId, data.label, data.envKey);
@@ -113,7 +113,7 @@ export const addGroupMailbox = createServerFn({ method: "POST" })
 
 export const deleteGroupMailbox = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { id: string }) => z.object({ id: z.string().uuid() }).parse(input))
+  .validator((input: { id: string }) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     await removeGroupMailbox(context.userId, data.id);
     return { ok: true };
@@ -121,7 +121,7 @@ export const deleteGroupMailbox = createServerFn({ method: "POST" })
 
 export const sendGroupMailboxEmail = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { mailboxId: string; to: string; subject: string; body: string }) =>
+  .validator((input: { mailboxId: string; to: string; subject: string; body: string }) =>
     z.object({ mailboxId: z.string().uuid(), to: z.string().email(), subject: z.string().min(1), body: z.string().min(1) }).parse(input))
   .handler(async ({ data, context }) => {
     await sendFromGroupMailbox(context.userId, data.mailboxId, { to: data.to, subject: data.subject, body: data.body });
@@ -130,7 +130,7 @@ export const sendGroupMailboxEmail = createServerFn({ method: "POST" })
 
 export const getGroupMailboxThreads = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { mailboxId: string }) => z.object({ mailboxId: z.string().uuid() }).parse(input))
+  .validator((input: { mailboxId: string }) => z.object({ mailboxId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     return { threads: await listGroupMailboxThreads(context.userId, data.mailboxId) };
   });

@@ -7,7 +7,7 @@ const KIND_LABEL = { access: "Download my data", deletion: "Delete my data", cor
 /** GDPR data-subject request: recorded, then routed to Operations as a 30-day task. Never deletes anything itself. */
 export const submitPrivacyRequest = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuthUnverified])
-  .inputValidator((d) => z.object({ kind: z.enum(["access", "deletion", "correction"]), details: z.string().max(2000) }).parse(d))
+  .validator((d) => z.object({ kind: z.enum(["access", "deletion", "correction"]), details: z.string().max(2000) }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const email = String((context.claims as { email?: string }).email ?? "");

@@ -12,7 +12,7 @@ const ROLES = ["admin", "super_admin", "fund_administration", "operations", "fin
  */
 export const getSyntheticStatementPreviews = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({ offeringId: z.string().uuid(), channel: z.enum(["internal_preview", "internal_pdf", "investor_portal", "email", "public_link", "production_statement", "financial_report"]).default("internal_preview") }).parse(d),
   )
   .handler(async ({ data, context }) => {

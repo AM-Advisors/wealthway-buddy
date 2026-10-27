@@ -26,7 +26,7 @@ const inviteSchema = z.object({
  */
 export const inviteFundAccess = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => inviteSchema.parse(data))
+  .validator((data: unknown) => inviteSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await assertAdmin(supabase, userId);

@@ -77,7 +77,7 @@ const emptyMemo = {
 /** Manager/admin view: the funds they can edit plus the memo for the selected one. */
 export const getMemoForEdit = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({ offering_id: z.string().uuid().nullable().optional() })
       .optional()
@@ -110,7 +110,7 @@ export const getMemoForEdit = createServerFn({ method: "GET" })
 
 export const saveMemo = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => memoSchema.parse(data))
+  .validator((data: unknown) => memoSchema.parse(data))
   .handler(async ({ context, data }) => {
     const { supabase, userId } = context;
     const allowed = (await editableFunds(supabase, userId)).some((o) => o.id === data.offering_id);
@@ -132,7 +132,7 @@ export const saveMemo = createServerFn({ method: "POST" })
 /** Investor view: published memos for the funds this person is attached to. */
 export const getMemoForInvestor = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({ offering_id: z.string().uuid().nullable().optional() })
       .optional()

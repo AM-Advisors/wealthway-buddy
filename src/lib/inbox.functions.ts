@@ -28,7 +28,7 @@ export const inboxOverviewFn = createServerFn({ method: "GET" })
 
 export const inboxThreadFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const s = await srv();
     return s.loadThread(await s.inboxActor(context.userId), data.id);
@@ -36,7 +36,7 @@ export const inboxThreadFn = createServerFn({ method: "POST" })
 
 export const startInboxThreadFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({
       clientId: z.string().uuid(),
       channel: z.enum(["operations", "sales", "rep"]),
@@ -52,7 +52,7 @@ export const startInboxThreadFn = createServerFn({ method: "POST" })
 
 export const replyInboxFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid(), body: z.string().trim().min(1).max(5000) }).parse(d))
+  .validator((d: unknown) => z.object({ id: z.string().uuid(), body: z.string().trim().min(1).max(5000) }).parse(d))
   .handler(async ({ data, context }) => {
     const s = await srv();
     return s.reply(await s.inboxActor(context.userId), data.id, data.body);
@@ -60,7 +60,7 @@ export const replyInboxFn = createServerFn({ method: "POST" })
 
 export const startDirectThreadFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({ userId: z.string().uuid(), subject: z.string().trim().min(2).max(200), body: z.string().trim().min(1).max(5000) }).parse(d),
   )
   .handler(async ({ data, context }) => {

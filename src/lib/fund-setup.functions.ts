@@ -14,7 +14,7 @@ const idInput = z.object({ setupId: z.string().min(1) });
 
 export const createFundSetupFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(
+  .validator(
     z.object({
       offeringId: z.string().min(1),
       clientId: z.string().nullish(),
@@ -29,21 +29,21 @@ export const createFundSetupFn = createServerFn({ method: "POST" })
 
 export const updateFundInformationFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ setupId: z.string().min(1), patch: z.record(z.string(), z.any()) }).parse)
+  .validator(z.object({ setupId: z.string().min(1), patch: z.record(z.string(), z.any()) }).parse)
   .handler(async ({ data, context }) =>
     (await engine()).updateFundInformation(context.userId, data.setupId, data.patch),
   );
 
 export const setSetupStageFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ setupId: z.string().min(1), stage: z.string().min(1) }).parse)
+  .validator(z.object({ setupId: z.string().min(1), stage: z.string().min(1) }).parse)
   .handler(async ({ data, context }) =>
     (await engine()).setSetupStage(context.userId, data.setupId, data.stage),
   );
 
 export const savePartyFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(
+  .validator(
     z.object({
       id: z.string().optional(),
       setupId: z.string().min(1),
@@ -63,7 +63,7 @@ export const savePartyFn = createServerFn({ method: "POST" })
 
 export const updateSetupTaskFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(
+  .validator(
     z.object({
       taskId: z.string().min(1),
       status: z
@@ -81,7 +81,7 @@ export const updateSetupTaskFn = createServerFn({ method: "POST" })
 
 export const saveSetupDocumentFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(
+  .validator(
     z.object({
       setupId: z.string().min(1),
       docType: z.string().min(1),
@@ -97,14 +97,14 @@ export const saveSetupDocumentFn = createServerFn({ method: "POST" })
 
 export const transitionSetupDocumentFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ documentId: z.string().min(1), to: z.string().min(1) }).parse)
+  .validator(z.object({ documentId: z.string().min(1), to: z.string().min(1) }).parse)
   .handler(async ({ data, context }) =>
     (await engine()).transitionSetupDocument(context.userId, data.documentId, data.to),
   );
 
 export const advanceEntityFormationFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(
+  .validator(
     z.object({
       setupId: z.string().min(1),
       step: z.enum([
@@ -131,7 +131,7 @@ export const advanceEntityFormationFn = createServerFn({ method: "POST" })
 
 export const saveEconomicsFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(
+  .validator(
     z.object({
       setupId: z.string().min(1),
       terms: z.record(z.string(), z.any()),
@@ -146,14 +146,14 @@ export const saveEconomicsFn = createServerFn({ method: "POST" })
 
 export const approveEconomicsFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ versionId: z.string().min(1) }).parse)
+  .validator(z.object({ versionId: z.string().min(1) }).parse)
   .handler(async ({ data, context }) =>
     (await engine()).approveEconomics(context.userId, data.versionId),
   );
 
 export const saveTargetAssetFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(
+  .validator(
     z
       .object({ setupId: z.string().min(1), assetName: z.string().min(1) })
       .catchall(z.any()).parse,
@@ -162,7 +162,7 @@ export const saveTargetAssetFn = createServerFn({ method: "POST" })
 
 export const updateBankingFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(
+  .validator(
     z.object({
       setupId: z.string().min(1),
       status: z
@@ -178,19 +178,19 @@ export const updateBankingFn = createServerFn({ method: "POST" })
 
 export const markExistingAccountActiveFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ setupId: z.string().min(1), reason: z.string().min(10).max(500) }).parse)
+  .validator(z.object({ setupId: z.string().min(1), reason: z.string().min(10).max(500) }).parse)
   .handler(async ({ data, context }) => (await engine()).markExistingAccountActive(context.userId, context.supabase, data));
 
 export const releaseBankingInstructionsFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(idInput.parse)
+  .validator(idInput.parse)
   .handler(async ({ data, context }) =>
     (await engine()).releaseBankingInstructions(context.userId, data.setupId),
   );
 
 export const saveRegulatoryConfigFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(
+  .validator(
     z.object({
       setupId: z.string().min(1),
       selections: z.record(z.string(), z.any()),
@@ -204,14 +204,14 @@ export const saveRegulatoryConfigFn = createServerFn({ method: "POST" })
 
 export const reviewRegulatoryConfigFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ configId: z.string().min(1) }).parse)
+  .validator(z.object({ configId: z.string().min(1) }).parse)
   .handler(async ({ data, context }) =>
     (await engine()).reviewRegulatoryConfig(context.userId, data.configId),
   );
 
 export const saveEligibilityConfigFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(
+  .validator(
     z.object({
       setupId: z.string().min(1),
       rules: z.record(z.string(), z.any()),
@@ -224,14 +224,14 @@ export const saveEligibilityConfigFn = createServerFn({ method: "POST" })
 
 export const approveEligibilityConfigFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ configId: z.string().min(1) }).parse)
+  .validator(z.object({ configId: z.string().min(1) }).parse)
   .handler(async ({ data, context }) =>
     (await engine()).approveEligibilityConfig(context.userId, data.configId),
   );
 
 export const setOnboardingRequirementFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(
+  .validator(
     z.object({
       setupId: z.string().min(1),
       investorType: z.string().min(1),
@@ -246,7 +246,7 @@ export const setOnboardingRequirementFn = createServerFn({ method: "POST" })
 
 export const setLaunchConditionFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(
+  .validator(
     z.object({
       setupId: z.string().min(1),
       conditionKey: z.string().min(1),
@@ -260,14 +260,14 @@ export const setLaunchConditionFn = createServerFn({ method: "POST" })
 
 export const getReadinessFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(idInput.parse)
+  .validator(idInput.parse)
   .handler(async ({ data, context }) =>
     (await engine()).getReadiness(context.userId, data.setupId),
   );
 
 export const decideLaunchFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(
+  .validator(
     z.object({
       setupId: z.string().min(1),
       decision: z.enum(["approved", "declined"]),
@@ -278,12 +278,12 @@ export const decideLaunchFn = createServerFn({ method: "POST" })
 
 export const launchFundFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(idInput.parse)
+  .validator(idInput.parse)
   .handler(async ({ data, context }) => (await engine()).launchFund(context.userId, data.setupId));
 
 export const fundSetupDetailFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(idInput.parse)
+  .validator(idInput.parse)
   .handler(async ({ data, context }) =>
     (await engine()).fundSetupDetail(context.userId, data.setupId),
   );
@@ -294,12 +294,12 @@ export const fundAdministrationDashboardFn = createServerFn({ method: "POST" })
 
 export const clientFundSetupFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ setupId: z.string().optional() }).parse)
+  .validator(z.object({ setupId: z.string().optional() }).parse)
   .handler(async ({ data, context }) =>
     (await engine()).clientFundSetup(context.userId, data.setupId),
   );
 
 export const launchStatusFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ offeringId: z.string().uuid() }).parse)
+  .validator(z.object({ offeringId: z.string().uuid() }).parse)
   .handler(async ({ data, context }) => (await engine()).launchStatusForOffering(context.userId, data.offeringId));

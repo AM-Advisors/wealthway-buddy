@@ -26,7 +26,7 @@ const money = (cents: number) => `$${(cents / 100).toLocaleString("en-US")}`;
 /** The connected account, recent deposits, and the investors still expected to wire. */
 export const getBankFeed = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ fundId: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ fundId: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await assertFundAccess(supabase, userId, data.fundId);
@@ -137,7 +137,7 @@ export const getBankFeed = createServerFn({ method: "GET" })
 /** Starts the secure bank sign-in; the browser hands this token to Plaid Link. */
 export const startBankConnection = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ fundId: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ fundId: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await assertFundAccess(supabase, userId, data.fundId);
@@ -159,7 +159,7 @@ export const startBankConnection = createServerFn({ method: "POST" })
 /** Stores the connection after the user finishes the bank sign-in. */
 export const finishBankConnection = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ fundId: z.string().uuid(), publicToken: z.string().min(10).max(500) }).parse(data),
   )
   .handler(async ({ data, context }) => {
@@ -210,7 +210,7 @@ export const finishBankConnection = createServerFn({ method: "POST" })
 /** Pulls the last 90 days of deposits into the portal. */
 export const syncBankTransactions = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ fundId: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ fundId: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await assertFundAccess(supabase, userId, data.fundId);
@@ -276,7 +276,7 @@ export const syncBankTransactions = createServerFn({ method: "POST" })
 /** Confirms a deposit belongs to one investor and marks their funding received. */
 export const matchBankTransaction = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         transactionId: z.string().uuid(),
@@ -369,7 +369,7 @@ export const matchBankTransaction = createServerFn({ method: "POST" })
 /** Removes the bank connection for this fund. */
 export const disconnectBank = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ fundId: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ fundId: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await assertFundAccess(supabase, userId, data.fundId);
@@ -388,7 +388,7 @@ export const disconnectBank = createServerFn({ method: "POST" })
  */
 export const prefillWireFromBank = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ fundId: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ fundId: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await assertFundAccess(supabase, userId, data.fundId);

@@ -384,7 +384,7 @@ async function loadWorld(supabase: any, companyId: string): Promise<ExistingWorl
 
 export const getCapMigrations = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ companyId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ companyId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const [{ data: canManage }, { data: batches }, { data: stakeholders }, { data: company }] =
@@ -472,7 +472,7 @@ const rowInput = z.record(z.string(), z.any());
 
 export const createCapMigration = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         companyId: z.string().uuid(),
@@ -562,7 +562,7 @@ export async function writeRows(
 
 export const remapCapMigration = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         migrationId: z.string().uuid(),
@@ -607,7 +607,7 @@ export const remapCapMigration = createServerFn({ method: "POST" })
 
 export const setCapMigrationRow = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         rowId: z.string().uuid(),
@@ -642,7 +642,7 @@ export const setCapMigrationRow = createServerFn({ method: "POST" })
 
 export const requestCapConcierge = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({ migrationId: z.string().uuid(), note: z.string().trim().max(2000).optional().nullable() })
       .parse(d),
@@ -678,7 +678,7 @@ export const requestCapConcierge = createServerFn({ method: "POST" })
 
 export const cancelCapMigration = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ migrationId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ migrationId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const { data: batch } = await supabase
@@ -705,7 +705,7 @@ export const cancelCapMigration = createServerFn({ method: "POST" })
  */
 export const setCapMigrationReconciliation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         migrationId: z.string().uuid(),
@@ -761,7 +761,7 @@ export const setCapMigrationReconciliation = createServerFn({ method: "POST" })
  */
 export const setCapMigrationException = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         migrationId: z.string().uuid(),
@@ -834,7 +834,7 @@ export const setCapMigrationException = createServerFn({ method: "POST" })
  */
 export const importCapMigration = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         migrationId: z.string().uuid(),

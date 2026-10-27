@@ -165,7 +165,7 @@ const mapService = (s: any): CatalogService => ({
 /** The whole catalogue plus packages. Signed-in clients see active services only. */
 export const listServiceCatalog = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({ entityType: z.string().optional(), includeInactive: z.boolean().optional() })
       .parse(data ?? {}),
@@ -252,7 +252,7 @@ const serviceInput = z.object({
 /** Create or update one catalogue service. */
 export const saveCatalogService = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => serviceInput.parse(data))
+  .validator((data: unknown) => serviceInput.parse(data))
   .handler(async ({ context, data }) => {
     await requireAuthority(context);
 
@@ -319,7 +319,7 @@ export const saveCatalogService = createServerFn({ method: "POST" })
 /** Create or update a package and the services inside it. */
 export const saveServicePackage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         id: z.string().uuid().optional(),

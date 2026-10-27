@@ -46,7 +46,7 @@ const schema = z.object({ offeringId: z.string().uuid() });
 
 export const getManagerFundHome = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => schema.parse(data))
+  .validator((data: unknown) => schema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { isAdmin } = await reviewerContext(supabase, userId, data.offeringId);

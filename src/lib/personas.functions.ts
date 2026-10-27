@@ -146,7 +146,7 @@ export const listAccounts = createServerFn({ method: "GET" })
 /** Creates or updates one investing account. */
 export const saveAccount = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => accountSchema.parse(data))
+  .validator((data: unknown) => accountSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 
@@ -206,7 +206,7 @@ export const saveAccount = createServerFn({ method: "POST" })
 /** Switches which account the onboarding steps read and write. */
 export const setActiveAccount = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ accountId: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ accountId: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 
@@ -230,7 +230,7 @@ export const setActiveAccount = createServerFn({ method: "POST" })
 /** Removes an account that has not been used for an application yet. */
 export const deleteAccount = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ accountId: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ accountId: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 

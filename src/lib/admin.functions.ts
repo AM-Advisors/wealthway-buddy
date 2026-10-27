@@ -33,7 +33,7 @@ const queueSchema = z.object({
 
 export const listApplications = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => queueSchema.parse(data ?? {}))
+  .validator((data: unknown) => queueSchema.parse(data ?? {}))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await assertAdmin(supabase, userId);
@@ -86,7 +86,7 @@ export const listApplications = createServerFn({ method: "GET" })
 
 export const getApplicationDetail = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ applicationId: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ applicationId: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await assertAdmin(supabase, userId);
@@ -188,7 +188,7 @@ const decisionSchema = z.object({
 
 export const decideApplication = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => decisionSchema.parse(data))
+  .validator((data: unknown) => decisionSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const authz = await import("@/lib/reviewer-authz.server");
@@ -255,7 +255,7 @@ export const decideApplication = createServerFn({ method: "POST" })
 
 export const addAdminNote = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ applicationId: z.string().uuid(), body: z.string().trim().min(1).max(2000) }).parse(data),
   )
   .handler(async ({ data, context }) => {
@@ -274,7 +274,7 @@ export const addAdminNote = createServerFn({ method: "POST" })
 
 export const getAdminFileUrl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         bucket: z.enum(["accreditation-docs", "signed-documents"]),
@@ -300,7 +300,7 @@ const emailSchema = z.object({
 
 export const sendInvestorEmail = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => emailSchema.parse(data))
+  .validator((data: unknown) => emailSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const authz = await import("@/lib/reviewer-authz.server");
@@ -406,7 +406,7 @@ const invitationSchema = z.object({
 /** Sends the full onboarding invitation email to one address (admin only). */
 export const sendOnboardingInvitation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => invitationSchema.parse(data))
+  .validator((data: unknown) => invitationSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await assertAdmin(supabase, userId);
@@ -464,7 +464,7 @@ export const sendOnboardingInvitation = createServerFn({ method: "POST" })
 
 export const sendTestEmail = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => testEmailSchema.parse(data))
+  .validator((data: unknown) => testEmailSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await assertAdmin(supabase, userId);
@@ -523,7 +523,7 @@ const paymentDecisionSchema = z.object({
 
 export const decidePayment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => paymentDecisionSchema.parse(data))
+  .validator((data: unknown) => paymentDecisionSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const authz = await import("@/lib/reviewer-authz.server");
@@ -583,7 +583,7 @@ export const decidePayment = createServerFn({ method: "POST" })
 
 export const listDiditEvents = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ applicationId: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ applicationId: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await assertAdmin(supabase, userId);
@@ -607,7 +607,7 @@ const wireDecisionSchema = z.object({
 /** Approve or reject an investor-submitted wire confirmation before funds are marked received. */
 export const decideWireConfirmation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => wireDecisionSchema.parse(data))
+  .validator((data: unknown) => wireDecisionSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const authz = await import("@/lib/reviewer-authz.server");

@@ -23,7 +23,7 @@ async function relationshipFundIds(context: any) {
 
 export const getMyFunds = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ clientId: z.string().uuid().optional().nullable() }).parse(d ?? {}))
+  .validator((d: unknown) => z.object({ clientId: z.string().uuid().optional().nullable() }).parse(d ?? {}))
   .handler(async ({ data, context }) => {
     const facts = await relationshipFundIds(context);
     const all = [...new Set([...facts.managedFundIds, ...facts.investorFundIds])];
@@ -61,7 +61,7 @@ export const getMyFunds = createServerFn({ method: "GET" })
 /** Investor presentation of a Fund they invest in. Fund Managers use Fund 360 instead. */
 export const getInvestorFundView = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ offeringId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ offeringId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const facts = await relationshipFundIds(context);
     if (!facts.investorFundIds.includes(data.offeringId)) throw new Error("You don't have access to this fund.");
@@ -83,7 +83,7 @@ export const getInvestorFundView = createServerFn({ method: "GET" })
  */
 export const getInvestorFundPortal = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ offeringId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ offeringId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const uid = context.userId;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");

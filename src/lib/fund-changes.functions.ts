@@ -5,7 +5,7 @@ import { fundEditKeys, pendingFundChanges } from "@/lib/fund-change-model";
 
 export const getFundChanges = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ fundId: z.string().uuid() }).parse)
+  .validator(z.object({ fundId: z.string().uuid() }).parse)
   .handler(async ({ data, context }) => {
     const { isStaff } = await import("@/lib/fund-tabs.server");
     const staff = await isStaff(context.userId);

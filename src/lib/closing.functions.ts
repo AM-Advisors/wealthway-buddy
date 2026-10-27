@@ -157,7 +157,7 @@ export const listClosingBoard = createServerFn({ method: "GET" })
 /** Confirms the commitment is fully funded and stamps the closing date. */
 export const confirmClosing = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         application_id: z.string().uuid(),
@@ -299,7 +299,7 @@ export const confirmClosing = createServerFn({ method: "POST" })
 /** Reverses a closing when it was confirmed too early. */
 export const reopenClosing = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ application_id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ application_id: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: row } = await supabase
@@ -341,7 +341,7 @@ export const reopenClosing = createServerFn({ method: "POST" })
 /** Final documents attached to a closing (managers see any, investors their own). */
 export const listClosingDocuments = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ application_id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ application_id: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const { data: docs, error } = await supabase
@@ -355,7 +355,7 @@ export const listClosingDocuments = createServerFn({ method: "POST" })
 
 export const addClosingDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         application_id: z.string().uuid(),
@@ -397,7 +397,7 @@ export const addClosingDocument = createServerFn({ method: "POST" })
 
 export const removeClosingDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const { data: doc } = await supabase
@@ -418,7 +418,7 @@ export const removeClosingDocument = createServerFn({ method: "POST" })
 /** Short-lived download link; row access is already scoped by the access rules. */
 export const getClosingDocumentUrl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const { data: doc } = await supabase

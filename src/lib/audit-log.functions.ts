@@ -109,7 +109,7 @@ function finish(rows: AuditEntry[], filters: Filters): { entries: AuditEntry[] }
 
 export const listMoneyAudit = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => filterSchema.parse(d ?? {}))
+  .validator((d: unknown) => filterSchema.parse(d ?? {}))
   .handler(async ({ data, context }) => {
     await requireStaff(context);
     const since = sinceOf(data.days);
@@ -274,7 +274,7 @@ export const listMoneyAudit = createServerFn({ method: "GET" })
 
 export const listDistributionAudit = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => filterSchema.parse(d ?? {}))
+  .validator((d: unknown) => filterSchema.parse(d ?? {}))
   .handler(async ({ data, context }) => {
     await requireStaff(context);
     const since = sinceOf(data.days);
@@ -304,7 +304,7 @@ export const listDistributionAudit = createServerFn({ method: "GET" })
 
 export const listInvestorCheckAudit = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => filterSchema.parse(d ?? {}))
+  .validator((d: unknown) => filterSchema.parse(d ?? {}))
   .handler(async ({ data, context }) => {
     await requireStaff(context);
     const since = sinceOf(data.days);
@@ -441,7 +441,7 @@ export const listInvestorCheckAudit = createServerFn({ method: "GET" })
 
 export const listFilingAudit = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => filterSchema.parse(d ?? {}))
+  .validator((d: unknown) => filterSchema.parse(d ?? {}))
   .handler(async ({ data, context }) => {
     await requireStaff(context);
     const since = sinceOf(data.days);
@@ -476,7 +476,7 @@ export const listFilingAudit = createServerFn({ method: "GET" })
 
 export const listHoldAudit = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => filterSchema.parse(d ?? {}))
+  .validator((d: unknown) => filterSchema.parse(d ?? {}))
   .handler(async ({ data, context }) => {
     await requireStaff(context);
     const since = sinceOf(data.days);
@@ -513,7 +513,7 @@ export const listHoldAudit = createServerFn({ method: "GET" })
 
 export const listScopeAudit = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => filterSchema.parse(d ?? {}))
+  .validator((d: unknown) => filterSchema.parse(d ?? {}))
   .handler(async ({ data, context }) => {
     await requireStaff(context);
     const since = sinceOf(data.days);
@@ -576,7 +576,7 @@ export const formatAuditAmount = money;
  */
 export const listRecordChangeAudit = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => filterSchema.parse(d ?? {}))
+  .validator((d: unknown) => filterSchema.parse(d ?? {}))
   .handler(async ({ data, context }) => {
     await requireStaff(context);
     const since = sinceOf(data.days);

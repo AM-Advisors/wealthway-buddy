@@ -6,7 +6,7 @@ const srv = () => import("@/lib/fund-manager-profile.server");
 
 export const fundManagerProfileFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ fundId: z.string().uuid(), key: z.string().max(80).nullable() }).parse(d))
+  .validator((d: unknown) => z.object({ fundId: z.string().uuid(), key: z.string().max(80).nullable() }).parse(d))
   .handler(async ({ data, context }) => {
     const s = await srv();
     await s.assertOpsStaff(context.userId);
@@ -15,7 +15,7 @@ export const fundManagerProfileFn = createServerFn({ method: "POST" })
 
 export const messageFundManagerFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({
       fundId: z.string().uuid(),
       key: z.string().max(80),

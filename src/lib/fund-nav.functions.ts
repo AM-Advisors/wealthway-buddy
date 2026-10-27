@@ -9,7 +9,7 @@ const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 
 export const getNavQueue = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ fundId: uuid.optional() }).parse(data ?? {}))
+  .validator((data: unknown) => z.object({ fundId: uuid.optional() }).parse(data ?? {}))
   .handler(async ({ data, context }) => {
     const { navQueue } = await import("@/lib/nav.server");
     return navQueue(context.userId, data.fundId);
@@ -17,7 +17,7 @@ export const getNavQueue = createServerFn({ method: "POST" })
 
 export const calculateFundNav = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         fundId: uuid,
@@ -40,7 +40,7 @@ export const calculateFundNav = createServerFn({ method: "POST" })
 
 export const submitNav = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ navId: uuid }).parse(data))
+  .validator((data: unknown) => z.object({ navId: uuid }).parse(data))
   .handler(async ({ data, context }) => {
     const { submitNavForReview } = await import("@/lib/nav.server");
     return submitNavForReview(context.userId, data.navId);
@@ -48,7 +48,7 @@ export const submitNav = createServerFn({ method: "POST" })
 
 export const decideNav = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         navId: uuid,
@@ -75,7 +75,7 @@ export const decideNav = createServerFn({ method: "POST" })
 
 export const overrideNavWarning = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({ navId: uuid, code: z.enum(NAV_CHECK_CODES), reason: z.string().min(8).max(2000) })
       .parse(data),
@@ -87,7 +87,7 @@ export const overrideNavWarning = createServerFn({ method: "POST" })
 
 export const respondToNav = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         navId: uuid,
@@ -103,7 +103,7 @@ export const respondToNav = createServerFn({ method: "POST" })
 
 export const getNavDetail = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ navId: uuid }).parse(data))
+  .validator((data: unknown) => z.object({ navId: uuid }).parse(data))
   .handler(async ({ data, context }) => {
     const nav = await import("@/lib/nav.server");
     const [inputs, bridge, exceptions] = await Promise.all([
@@ -116,7 +116,7 @@ export const getNavDetail = createServerFn({ method: "POST" })
 
 export const getNavAsOf = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ fundId: uuid, asOfDate: isoDate }).parse(data))
+  .validator((data: unknown) => z.object({ fundId: uuid, asOfDate: isoDate }).parse(data))
   .handler(async ({ data, context }) => {
     const { getNAVAsOf } = await import("@/lib/nav.server");
     return getNAVAsOf(context.userId, data.fundId, data.asOfDate);
@@ -124,7 +124,7 @@ export const getNavAsOf = createServerFn({ method: "POST" })
 
 export const saveFundNavPolicy = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         fundId: uuid,

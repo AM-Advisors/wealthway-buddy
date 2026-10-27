@@ -22,7 +22,7 @@ async function assertStaff(uid: string) {
 
 export const opsQuickSearchFn = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((x: unknown) => z.object({ q: z.string().trim().max(120) }).parse(x))
+  .validator((x: unknown) => z.object({ q: z.string().trim().max(120) }).parse(x))
   .handler(async ({ data, context }) => {
     await assertStaff(context.userId);
     const s = data.q.replace(/[%,()]/g, " ").trim();

@@ -163,7 +163,7 @@ export const getSecurityCompliance = createServerFn({ method: "GET" })
 
 export const saveControlDetails = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({
+  .validator((d) => z.object({
     control_key: z.string().min(1).max(20),
     domain: z.string().min(2).max(10),
     executive_owner: z.string().max(120),
@@ -212,7 +212,7 @@ export const saveControlDetails = createServerFn({ method: "POST" })
 
 export const saveFramework = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({
+  .validator((d) => z.object({
     key: z.string().min(2).max(40), applicability: z.string().max(2000), scope_id: z.string().uuid().nullable(),
     program_status: z.enum(["not_started", "planned", "in_progress", "active", "paused"]),
     assessment_start: z.string().date().nullable(), assessment_end: z.string().date().nullable(), assessor: z.string().max(200), notes: z.string().max(4000),
@@ -229,7 +229,7 @@ export const saveFramework = createServerFn({ method: "POST" })
 
 export const saveScopeItem = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({
+  .validator((d) => z.object({
     id: z.string().uuid().optional(), scope_id: z.string().uuid(), item_type: z.enum(SCOPE_ITEM_TYPES),
     name: z.string().trim().min(1).max(160), notes: z.string().max(1000), in_scope: z.boolean(),
   }).parse(d))
@@ -251,7 +251,7 @@ export const saveScopeItem = createServerFn({ method: "POST" })
 
 export const saveEvidenceDetails = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({
+  .validator((d) => z.object({
     evidence_id: z.string().uuid(), expires_on: z.string().date().nullable(), sensitivity: z.enum(["internal", "restricted", "highly_restricted"]),
     systems: z.array(z.string().max(80)).max(30), collection_method: z.enum(["manual", "automated", "system_generated"]),
     control_keys: z.array(z.string().max(20)).max(50), requirement_ids: z.array(z.string().uuid()).max(100), file_sha256: z.string().regex(/^[a-f0-9]{64}$/).nullable(),
@@ -268,7 +268,7 @@ export const saveEvidenceDetails = createServerFn({ method: "POST" })
 
 export const logEvidenceView = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ evidence_id: z.string().uuid() }).parse(d))
+  .validator((d) => z.object({ evidence_id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const c = await ctxFor(context);
     need(c, "evidence_view");
@@ -290,7 +290,7 @@ const riskFields = z.object({
 
 export const saveRisk = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => riskFields.parse(d))
+  .validator((d) => riskFields.parse(d))
   .handler(async ({ data, context }) => {
     const c = await ctxFor(context);
     need(c, "risk_manage");
@@ -319,7 +319,7 @@ export const saveRisk = createServerFn({ method: "POST" })
 
 export const decideRiskAcceptance = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ risk_ref: z.string().max(20), action: z.enum(["request", "approve", "reject"]), reason: z.string().max(1000), expires: z.string().date().nullable() }).parse(d))
+  .validator((d) => z.object({ risk_ref: z.string().max(20), action: z.enum(["request", "approve", "reject"]), reason: z.string().max(1000), expires: z.string().date().nullable() }).parse(d))
   .handler(async ({ data, context }) => {
     const c = await ctxFor(context);
     need(c, "risk_manage");
@@ -353,7 +353,7 @@ export const decideRiskAcceptance = createServerFn({ method: "POST" })
 
 export const savePolicy = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({
+  .validator((d) => z.object({
     policy_ref: z.string().max(20).optional(), title: z.string().trim().min(3).max(200), category: z.string().min(2).max(80), owner: z.string().max(120),
     body: z.string().max(100_000), next_review: z.string().date().nullable(), control_keys: z.array(z.string().max(20)).max(50),
     requires_acknowledgment: z.boolean(), change_reason: z.string().trim().min(5).max(500),
@@ -381,7 +381,7 @@ export const savePolicy = createServerFn({ method: "POST" })
 
 export const transitionPolicy = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ policy_ref: z.string().max(20), to: z.enum(POLICY_STATUSES), reason: z.string().trim().min(5).max(500), effective_date: z.string().date().nullable() }).parse(d))
+  .validator((d) => z.object({ policy_ref: z.string().max(20), to: z.enum(POLICY_STATUSES), reason: z.string().trim().min(5).max(500), effective_date: z.string().date().nullable() }).parse(d))
   .handler(async ({ data, context }) => {
     const c = await ctxFor(context);
     need(c, "security_compliance_manage");
@@ -417,7 +417,7 @@ export const transitionPolicy = createServerFn({ method: "POST" })
 
 export const saveAudit = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({
+  .validator((d) => z.object({
     id: z.string().uuid().optional(), framework_key: z.string().max(40),
     audit_type: z.enum(["readiness", "soc2_type1", "soc2_type2", "iso_certification", "csa_assessment", "internal", "penetration_test", "other"]),
     scope_id: z.string().uuid().nullable(), period_start: z.string().date().nullable(), period_end: z.string().date().nullable(), assessor: z.string().max(200),
@@ -444,7 +444,7 @@ export const saveAudit = createServerFn({ method: "POST" })
 
 export const savePublication = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({
+  .validator((d) => z.object({
     id: z.string().uuid().optional(), item_type: z.enum(["assurance", "section", "document"]), item_key: z.string().trim().min(2).max(60),
     title: z.string().trim().min(2).max(200), body: z.string().max(20_000), framework_key: z.string().max(40).nullable(),
     assurance_status: z.enum(ASSURANCE_STATUSES).nullable(), audit_id: z.string().uuid().nullable(),
@@ -473,7 +473,7 @@ export const savePublication = createServerFn({ method: "POST" })
 
 export const transitionPublication = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ id: z.string().uuid(), to: z.enum(PUBLICATION_STATES), reason: z.string().trim().min(5).max(500) }).parse(d))
+  .validator((d) => z.object({ id: z.string().uuid(), to: z.enum(PUBLICATION_STATES), reason: z.string().trim().min(5).max(500) }).parse(d))
   .handler(async ({ data, context }) => {
     const c = await ctxFor(context);
     if (data.to === "internal_only" || data.to === "withdrawn") need(c, "security_compliance_manage");
@@ -496,7 +496,7 @@ export const transitionPublication = createServerFn({ method: "POST" })
 
 export const decideDocumentRequest = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ id: z.string().uuid(), status: z.enum(["approved", "declined", "fulfilled"]) }).parse(d))
+  .validator((d) => z.object({ id: z.string().uuid(), status: z.enum(["approved", "declined", "fulfilled"]) }).parse(d))
   .handler(async ({ data, context }) => {
     const c = await ctxFor(context);
     need(c, "security_compliance_manage");

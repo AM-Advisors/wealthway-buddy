@@ -97,7 +97,7 @@ export async function assertNoHold(
 
 export const listHolds = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         offeringId: z.string().uuid().optional(),
@@ -136,7 +136,7 @@ export const listHolds = createServerFn({ method: "GET" })
 
 export const placeHold = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         clientId: z.string().uuid().nullable().optional(),
@@ -190,7 +190,7 @@ export const placeHold = createServerFn({ method: "POST" })
 
 export const clearHold = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         id: z.string().uuid(),

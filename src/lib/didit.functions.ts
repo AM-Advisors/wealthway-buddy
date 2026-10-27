@@ -115,7 +115,7 @@ export const identityVerificationProgress = createServerFn({ method: "GET" })
  */
 export const reconcileIdentityVerifications = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { verificationId?: string | null } | undefined) => input ?? {})
+  .validator((input: { verificationId?: string | null } | undefined) => input ?? {})
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", userId);

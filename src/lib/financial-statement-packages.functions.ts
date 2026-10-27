@@ -12,7 +12,7 @@ export const listPackagesFn = createServerFn({ method: "POST" })
 
 export const savePackageFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({
+  .validator((d: unknown) => z.object({
     id: z.string().uuid().optional(), offeringId: z.string().uuid(), periodType: z.enum(["quarterly", "annual"]),
     periodStart: date, periodEnd: date, notes: z.string().max(10000),
   }).parse(d))
@@ -20,7 +20,7 @@ export const savePackageFn = createServerFn({ method: "POST" })
 
 export const packageActionFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({
+  .validator((d: unknown) => z.object({
     id: z.string().uuid(), action: z.enum(["submit", "review_pass", "return", "manager_approve", "manager_return"]),
     note: z.string().max(2000).nullish(),
   }).parse(d))
@@ -28,10 +28,10 @@ export const packageActionFn = createServerFn({ method: "POST" })
 
 export const packageHistoryFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => (await srv()).packageHistory(context.userId, data.id));
 
 export const notifyPackageManagersFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => (await srv()).notifyManagers(context.userId, data.id));

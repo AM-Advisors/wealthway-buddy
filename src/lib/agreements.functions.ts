@@ -156,7 +156,7 @@ async function currentPricingVersion(context: any) {
 
 export const getAgreementsHome = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({ clientId: z.string().uuid().nullish() }).parse(d ?? {}),
   )
   .handler(async ({ context, data }) => {
@@ -275,7 +275,7 @@ export const getAgreementsHome = createServerFn({ method: "GET" })
 
 export const getMsaWorkspace = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ clientId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ clientId: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
     const who = await whoIs(context);
     await assertClientAccess(context, who, data.clientId);
@@ -399,7 +399,7 @@ export const getMsaGateStatus = createServerFn({ method: "GET" })
 
 export const signMsa = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         clientId: z.string().uuid(),
@@ -466,7 +466,7 @@ async function notifyCountersign(clientId: string, label: string, actor: string)
 
 export const requestNewFund = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         clientId: z.string().uuid(),
@@ -633,7 +633,7 @@ export const requestNewFund = createServerFn({ method: "POST" })
 
 export const getSowWorkspace = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ sowId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ sowId: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
     const who = await whoIs(context);
     const { data: sow, error } = await context.supabase
@@ -841,7 +841,7 @@ async function loadSowForWrite(context: any, who: Who, sowId: string) {
 
 export const decideSection = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         sowId: z.string().uuid(),
@@ -929,7 +929,7 @@ export const decideSection = createServerFn({ method: "POST" })
 
 export const respondToCounter = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         changeId: z.string().uuid(),
@@ -1006,7 +1006,7 @@ export const respondToCounter = createServerFn({ method: "POST" })
 
 export const signSow = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         sowId: z.string().uuid(),

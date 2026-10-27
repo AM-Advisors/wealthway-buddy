@@ -28,7 +28,7 @@ async function canManage(supabase: any, userId: string, offeringId: string) {
  */
 export const getLegalDocumentReadership = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(offeringInput)
+  .validator(offeringInput)
   .handler(async ({ context, data }) => {
     const { supabase, userId } = context;
     if (!(await canManage(supabase, userId, data.offering_id))) {

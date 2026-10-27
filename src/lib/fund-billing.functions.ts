@@ -155,7 +155,7 @@ async function buildEvents(context: any, offeringId: string) {
 /** One fund's fee position: what is billable, what is invoiced, what is paid. */
 export const getFundBilling = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ offeringId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ offeringId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const who = await requireStaff(context);
     const { offering, events, fundWire, fundClosing, sharePrice } = await buildEvents(
@@ -271,7 +271,7 @@ export const getFundBilling = createServerFn({ method: "POST" })
 /** Put the fund's unbilled wire fees and closing costs on a draft invoice. */
 export const billFundFees = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         offeringId: z.string().uuid(),

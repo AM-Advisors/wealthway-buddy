@@ -60,7 +60,7 @@ export const listAccessPeople = createServerFn({ method: "GET" })
 
 export const getAccessProfile = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ userId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ userId: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
     await requireAccessViewer(context);
     const b = await loadBundle();

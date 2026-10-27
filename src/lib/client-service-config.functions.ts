@@ -45,7 +45,7 @@ export async function currentClientConfig(db: any, clientId: string) {
 
 export const getClientServiceSetup = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ clientId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ clientId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     await gate(context, "see");
     const db = await admin();
@@ -81,7 +81,7 @@ const configSchema = z.object({
 /** Appends a new version; the previous one is superseded, never overwritten. */
 export const saveClientServiceConfig = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ clientId: z.string().uuid(), config: configSchema, reason: z.string().trim().max(500).optional().default(""), mappingReview: z.array(z.string().max(80)).max(60).optional().default([]) }).parse(d))
+  .validator((d: unknown) => z.object({ clientId: z.string().uuid(), config: configSchema, reason: z.string().trim().max(500).optional().default(""), mappingReview: z.array(z.string().max(80)).max(60).optional().default([]) }).parse(d))
   .handler(async ({ data, context }) => {
     const { roles } = await gate(context, "prepare");
     const db = await admin();
@@ -122,7 +122,7 @@ export const saveClientServiceConfig = createServerFn({ method: "POST" })
 /** Proposed Fund services from the Client's current Expected Services (staff choose per Fund). */
 export const getProposedFundServices = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ clientId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ clientId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     await gate(context, "see");
     const db = await admin();

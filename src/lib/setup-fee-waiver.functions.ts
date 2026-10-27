@@ -17,7 +17,7 @@ async function callerCanWaive(context: any): Promise<boolean> {
 
 export const getSetupFeeWaiver = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ clientId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ clientId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { requireOperations } = await import("@/lib/ops-access.functions");
     await requireOperations(context, "clients", "see");
@@ -41,7 +41,7 @@ export const getSetupFeeWaiver = createServerFn({ method: "GET" })
 
 export const setSetupFeeWaiver = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ clientId: z.string().uuid(), waive: z.boolean(), reason: z.string().trim().min(3).max(1000) }).parse(d))
+  .validator((d: unknown) => z.object({ clientId: z.string().uuid(), waive: z.boolean(), reason: z.string().trim().min(3).max(1000) }).parse(d))
   .handler(async ({ data, context }) => {
     const { requireOperations } = await import("@/lib/ops-access.functions");
     await requireOperations(context, "clients", "see");

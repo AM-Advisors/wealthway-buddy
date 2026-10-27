@@ -62,7 +62,7 @@ const blank = (v: unknown) => {
 /** Everything behind one engagement: package, commercial terms, order, changes, signatures, delivery. */
 export const getEngagement = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ engagementId: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ engagementId: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     const who = await whoIs(context);
 
@@ -336,7 +336,7 @@ export const getEngagement = createServerFn({ method: "GET" })
 /** Create or update an engagement and its commercial terms. */
 export const saveEngagement = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         id: z.string().uuid().optional(),
@@ -422,7 +422,7 @@ export const saveEngagement = createServerFn({ method: "POST" })
 /** Statements of work for one client that aren't attached to an engagement yet. */
 export const listLinkableSows = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ clientId: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ clientId: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     const who = await whoIs(context);
     if (!who.isStaff) throw new Error("Forbidden: this area is for the Harmonious team.");

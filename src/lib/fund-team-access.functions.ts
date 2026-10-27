@@ -41,7 +41,7 @@ async function logEvent(db: any, e: Record<string, unknown>) {
 
 export const listFundTeamGrants = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ fundId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ fundId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const db = await admin();
     const manager = await isManagerOf(db, context.userId, data.fundId);
@@ -111,7 +111,7 @@ export const listGrantableFunds = createServerFn({ method: "GET" })
 
 export const grantFundTeamAccess = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         fundId: z.string().uuid(),
@@ -193,7 +193,7 @@ export const grantFundTeamAccess = createServerFn({ method: "POST" })
 
 export const changeFundTeamAccess = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         grantId: z.string().uuid(),
@@ -284,7 +284,7 @@ async function liveGrants(db: any, userId: string) {
 /** Overview + roster for a granted Fund. No banking, tax IDs, KYC or contact details. */
 export const getSharedFund = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ fundId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ fundId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const db = await admin();
     const grant = (await liveGrants(db, context.userId)).find((g) => g.offering_id === data.fundId);

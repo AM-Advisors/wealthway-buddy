@@ -20,7 +20,7 @@ export const listMyMessages = createServerFn({ method: "GET" })
 /** Full message body for one of the signed-in person's own messages. */
 export const readMyMessage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { data: row, error } = await context.supabase
       .from("client_messages")

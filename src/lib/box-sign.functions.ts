@@ -22,7 +22,7 @@ export const getSigningProvider = createServerFn({ method: "GET" }).handler(asyn
  */
 export const startBoxSigning = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => startSchema.parse(data))
+  .validator((data: unknown) => startSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 
@@ -366,7 +366,7 @@ export const refreshBoxSignatures = createServerFn({ method: "POST" })
  */
 export const syncFundSignatures = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ offering_id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ offering_id: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 
@@ -430,7 +430,7 @@ export const syncFundSignatures = createServerFn({ method: "POST" })
 /** Files a single signed document into Box on demand, for reviewers. */
 export const archiveSignedDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ signature_id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ signature_id: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 

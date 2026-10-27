@@ -105,7 +105,7 @@ const blank = (v: unknown) => {
 /** Every entity for one client, with its engagements counted. */
 export const listClientEntities = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ clientId: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ clientId: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     const who = await whoIs(context);
     if (!who.isStaff) {
@@ -204,7 +204,7 @@ export const listClientEntities = createServerFn({ method: "GET" })
 /** Create or update one entity. */
 export const saveEntity = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => entityInput.parse(data))
+  .validator((data: unknown) => entityInput.parse(data))
   .handler(async ({ context, data }) => {
     await requireAuthority(context);
 
@@ -260,7 +260,7 @@ export const saveEntity = createServerFn({ method: "POST" })
 /** One entity with its parent, children, engagements and linked fund. */
 export const getEntity = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ entityId: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ entityId: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     const who = await whoIs(context);
 
@@ -374,7 +374,7 @@ export const getEntity = createServerFn({ method: "GET" })
 /** Client-level terms that apply across every engagement. */
 export const saveClientTerms = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         clientId: z.string().uuid(),

@@ -6,7 +6,7 @@ import { can, capabilitiesFor } from "@/lib/ops-capabilities";
 /** Read-only fund launch steps (same Fund Setup tasks + launch conditions) for staff and that fund's managers. */
 export const getFundLaunchSteps = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ offeringId: z.string().uuid() }).parse)
+  .validator(z.object({ offeringId: z.string().uuid() }).parse)
   .handler(async ({ context, data }) => {
     const { data: roleRows } = await context.supabase.from("user_roles").select("role").eq("user_id", context.userId);
     const roles = (roleRows ?? []).map((r: any) => String(r.role));

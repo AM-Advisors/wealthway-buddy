@@ -47,7 +47,7 @@ async function applicationForOffering(supabase: any, userId: string, offeringId:
 
 export const getRoomApplication = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ offering_id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ offering_id: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId, claims } = context;
 
@@ -109,7 +109,7 @@ export const getRoomApplication = createServerFn({ method: "GET" })
 /** Saves the identity details without submitting them for review yet. */
 export const saveRoomIdentity = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     kycSchema.extend({ offering_id: z.string().uuid() }).parse(data),
   )
   .handler(async ({ data, context }) => {
@@ -178,7 +178,7 @@ export const saveRoomIdentity = createServerFn({ method: "POST" })
 /** Records an ID or proof-of-address file uploaded from inside the room. */
 export const recordRoomUpload = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         offering_id: z.string().uuid(),
@@ -243,7 +243,7 @@ const accreditationSchema = z.object({
 /** Saves the accreditation answers. A reviewer still has to approve them. */
 export const saveRoomAccreditation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => accreditationSchema.parse(data))
+  .validator((data: unknown) => accreditationSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const application = await applicationForOffering(supabase, userId, data.offering_id);
@@ -312,7 +312,7 @@ export const saveRoomAccreditation = createServerFn({ method: "POST" })
  */
 export const submitRoomApplication = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ offering_id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ offering_id: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const application = await applicationForOffering(supabase, userId, data.offering_id);

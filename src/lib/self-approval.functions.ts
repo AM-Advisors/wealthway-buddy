@@ -10,7 +10,7 @@ import { requireSupabaseAuth } from "@/lib/require-auth";
  */
 export const recordSelfApprovalFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ key: z.string().trim().min(3).max(300), reason: z.string().trim().min(10, "Give a reason (at least 10 characters).").max(1000) }).parse(d))
+  .validator((d) => z.object({ key: z.string().trim().min(3).max(300), reason: z.string().trim().min(10, "Give a reason (at least 10 characters).").max(1000) }).parse(d))
   .handler(async ({ data, context }) => {
     const userId = (context as any).userId as string;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");

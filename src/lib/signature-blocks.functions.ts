@@ -56,7 +56,7 @@ async function canEditFund(supabase: any, userId: string, offeringId: string) {
 /** The signature blocks a client has placed on one fund document. */
 export const listSignatureBlocks = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ documentId: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ documentId: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     const doc = await loadDoc(context.supabase, data.documentId);
     const canEdit = await canEditFund(context.supabase, context.userId, doc.offering_id);
@@ -90,7 +90,7 @@ export const listSignatureBlocks = createServerFn({ method: "POST" })
 /** Replace every block on a document with the layout the client just placed. */
 export const saveSignatureBlocks = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({ documentId: z.string().uuid(), blocks: z.array(blockSchema).max(200) })
       .parse(data),

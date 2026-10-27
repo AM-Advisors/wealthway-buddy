@@ -42,7 +42,7 @@ const OPEN_SERVICE = ["requested", "in_review", "quoted", "signed"];
 /** The four queues: extra services, wire requests, agreements and invoice queries. */
 export const listSignoffQueue = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ offeringId: z.string().uuid().optional() }).optional().parse(d))
+  .validator((d: unknown) => z.object({ offeringId: z.string().uuid().optional() }).optional().parse(d))
   .handler(async ({ context, data: input }) => {
     const who = await whoIs(context);
     if (!who.isStaff) throw new Error("Forbidden: this area is for the Harmonious team.");
@@ -217,7 +217,7 @@ export const listSignoffQueue = createServerFn({ method: "GET" })
  *  correction, or keep the invoice as it stands and re-ask the client. */
 export const resolveInvoiceQuery = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         id: z.string().uuid(),

@@ -53,7 +53,7 @@ export function toSalesforceLead(lead: z.output<typeof leadSchema>) {
  * membership, role, fund, company or any other application record.
  */
 export const submitLead = createServerFn({ method: "POST" })
-  .inputValidator((data: unknown) => leadSchema.parse(data))
+  .validator((data: unknown) => leadSchema.parse(data))
   .handler(async ({ data }) => {
     if (data.website) return { ok: true as const }; // silently drop bots
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");

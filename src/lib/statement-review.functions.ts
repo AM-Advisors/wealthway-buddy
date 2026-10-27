@@ -13,27 +13,27 @@ export const statementReviewQueueFn = createServerFn({ method: "GET" })
 
 export const decideStatementFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ statementId: z.string().uuid(), decision, note: z.string().max(2000).nullish() }).parse(d))
+  .validator((d: unknown) => z.object({ statementId: z.string().uuid(), decision, note: z.string().max(2000).nullish() }).parse(d))
   .handler(async ({ data, context }) => (await srv()).decideStatement(context.userId, data));
 
 export const notifyStatementsFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ offeringId: z.string().uuid(), statementIds: z.array(z.string().uuid()).optional() }).parse(d))
+  .validator((d: unknown) => z.object({ offeringId: z.string().uuid(), statementIds: z.array(z.string().uuid()).optional() }).parse(d))
   .handler(async ({ data, context }) => (await srv()).notifyStatements(context.userId, data));
 
 export const listReviewMemosFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ offeringId: z.string().uuid().optional() }).parse(d ?? {}))
+  .validator((d: unknown) => z.object({ offeringId: z.string().uuid().optional() }).parse(d ?? {}))
   .handler(async ({ data, context }) => (await srv()).listReviewMemos(context.userId, data.offeringId));
 
 export const memoFiguresFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ offeringId: z.string().uuid(), periodEnd: date }).parse(d))
+  .validator((d: unknown) => z.object({ offeringId: z.string().uuid(), periodEnd: date }).parse(d))
   .handler(async ({ data, context }) => (await srv()).memoFigures(context.userId, data.offeringId, data.periodEnd));
 
 export const saveReviewMemoFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({
+  .validator((d: unknown) => z.object({
     id: z.string().uuid().optional(), offeringId: z.string().uuid(), periodStart: date, periodEnd: date,
     title: z.string().min(3).max(200), summary: z.string().max(10000),
     findings: z.array(z.object({ area: z.string().max(100), observation: z.string().max(2000), action: z.string().max(2000).optional() })).max(50),
@@ -43,10 +43,10 @@ export const saveReviewMemoFn = createServerFn({ method: "POST" })
 
 export const decideReviewMemoFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid(), decision, note: z.string().max(2000).nullish() }).parse(d))
+  .validator((d: unknown) => z.object({ id: z.string().uuid(), decision, note: z.string().max(2000).nullish() }).parse(d))
   .handler(async ({ data, context }) => (await srv()).decideReviewMemo(context.userId, data));
 
 export const notifyReviewMemoFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => (await srv()).notifyReviewMemo(context.userId, data.id));

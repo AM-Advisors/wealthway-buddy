@@ -244,7 +244,7 @@ const caseDetail = (row: any, client: any, sow: any, retention: any[]) => {
 
 export const getOffboardingCase = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const who = await requireStaff(context);
     const { data: row, error } = await context.supabase
@@ -380,7 +380,7 @@ export const getMyOffboarding = createServerFn({ method: "GET" })
 
 export const openOffboardingCase = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         clientId: z.string().uuid(),
@@ -433,7 +433,7 @@ export const openOffboardingCase = createServerFn({ method: "POST" })
 
 export const updateOffboardingCase = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         id: z.string().uuid(),
@@ -491,7 +491,7 @@ export const updateOffboardingCase = createServerFn({ method: "POST" })
 
 export const seedSettlementLines = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const who = await requireAuthority(context);
     const { data: row } = await context.supabase
@@ -544,7 +544,7 @@ export const seedSettlementLines = createServerFn({ method: "POST" })
 
 export const saveSettlementLine = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         id: z.string().uuid(),
@@ -597,7 +597,7 @@ export const saveSettlementLine = createServerFn({ method: "POST" })
 
 export const recordExportDelivery = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         id: z.string().uuid(),
@@ -643,7 +643,7 @@ export const recordExportDelivery = createServerFn({ method: "POST" })
 
 export const saveRetentionRecord = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         recordId: z.string().uuid().nullable().optional(),
@@ -700,7 +700,7 @@ export const saveRetentionRecord = createServerFn({ method: "POST" })
 
 export const markRetentionReviewed = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const who = await requireAuthority(context);
     const { data: row } = await context.supabase
@@ -727,7 +727,7 @@ export const markRetentionReviewed = createServerFn({ method: "POST" })
 /** Removes one person's, or everyone's, access to the client workspace. Records stay. */
 export const removeClientAccess = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({ id: z.string().uuid(), memberId: z.string().uuid().optional() }).parse(d),
   )
   .handler(async ({ data, context }) => {
@@ -769,7 +769,7 @@ export const removeClientAccess = createServerFn({ method: "POST" })
 
 export const closeOffboardingCase = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({ id: z.string().uuid(), note: z.string().max(2000).optional() }).parse(d),
   )
   .handler(async ({ data, context }) => {
@@ -822,7 +822,7 @@ function csv(rows: (string | number | null)[][]) {
 /** Builds the client's data export as CSV text, one entry per dataset. */
 export const exportClientData = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ clientId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ clientId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { data: client } = await context.supabase
       .from("clients")

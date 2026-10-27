@@ -80,7 +80,7 @@ export const listPublicFunds = createServerFn({ method: "GET" }).handler(async (
 
 /** The whole public page for one fund, or null when it is not published. */
 export const getPublicFundPage = createServerFn({ method: "POST" })
-  .inputValidator((data: unknown) => z.object({ slug: z.string().trim().min(1).max(120) }).parse(data))
+  .validator((data: unknown) => z.object({ slug: z.string().trim().min(1).max(120) }).parse(data))
   .handler(async ({ data }): Promise<PublicFundPage | null> => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
@@ -238,7 +238,7 @@ export const getPublicFundPage = createServerFn({ method: "POST" })
 
 /** A visitor asks to be let into the fund's diligence room. */
 export const requestFundAccess = createServerFn({ method: "POST" })
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         slug: z.string().trim().min(1).max(120),
@@ -323,7 +323,7 @@ async function assertCanManage(supabase: any, offeringId: string) {
 /** Public-page settings for one fund, for the fund team. */
 export const getPublicPageSettings = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ offering_id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ offering_id: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     await assertCanManage(context.supabase, data.offering_id);
     const { data: offering } = await context.supabase
@@ -346,7 +346,7 @@ export const getPublicPageSettings = createServerFn({ method: "POST" })
 /** Turn the public page on or off and edit its headline and summary. */
 export const savePublicPageSettings = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         offering_id: z.string().uuid(),
@@ -432,7 +432,7 @@ export const listFundAccessRequests = createServerFn({ method: "GET" })
 /** Mark a request as invited, closed or back to new, with a note. */
 export const updateFundAccessRequest = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         id: z.string().uuid(),

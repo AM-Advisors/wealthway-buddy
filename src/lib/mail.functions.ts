@@ -18,7 +18,7 @@ async function log(userId: string, label: string) {
 
 export const listMail = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ mailbox, folder, search: z.string().max(300).optional(), pageToken: z.string().max(500).optional() }).parse(d))
+  .validator((d) => z.object({ mailbox, folder, search: z.string().max(300).optional(), pageToken: z.string().max(500).optional() }).parse(d))
   .handler(async ({ context, data }) => {
     const e = await engine();
     const { call, group } = await e.resolveMailbox(context.userId, data.mailbox);
@@ -33,7 +33,7 @@ export const listMail = createServerFn({ method: "POST" })
 
 export const getMailThread = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ mailbox, threadId: z.string().min(1).max(100) }).parse(d))
+  .validator((d) => z.object({ mailbox, threadId: z.string().min(1).max(100) }).parse(d))
   .handler(async ({ context, data }) => {
     const e = await engine();
     const { call, group } = await e.resolveMailbox(context.userId, data.mailbox);
@@ -44,7 +44,7 @@ export const getMailThread = createServerFn({ method: "POST" })
 
 export const sendMailMessage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ mailbox, message: outgoing, draftId: z.string().max(100).optional() }).parse(d))
+  .validator((d) => z.object({ mailbox, message: outgoing, draftId: z.string().max(100).optional() }).parse(d))
   .handler(async ({ context, data }) => {
     const e = await engine();
     const { call, group } = await e.resolveMailbox(context.userId, data.mailbox);
@@ -58,7 +58,7 @@ export const sendMailMessage = createServerFn({ method: "POST" })
 
 export const saveMailDraft = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ mailbox, message: outgoing, draftId: z.string().max(100).optional() }).parse(d))
+  .validator((d) => z.object({ mailbox, message: outgoing, draftId: z.string().max(100).optional() }).parse(d))
   .handler(async ({ context, data }) => {
     const e = await engine();
     const { call } = await e.resolveMailbox(context.userId, data.mailbox);
@@ -67,7 +67,7 @@ export const saveMailDraft = createServerFn({ method: "POST" })
 
 export const getMailDraft = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ mailbox, draftId: z.string().max(100) }).parse(d))
+  .validator((d) => z.object({ mailbox, draftId: z.string().max(100) }).parse(d))
   .handler(async ({ context, data }) => {
     const e = await engine();
     const { call } = await e.resolveMailbox(context.userId, data.mailbox);
@@ -76,7 +76,7 @@ export const getMailDraft = createServerFn({ method: "POST" })
 
 export const discardMailDraft = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ mailbox, draftId: z.string().max(100) }).parse(d))
+  .validator((d) => z.object({ mailbox, draftId: z.string().max(100) }).parse(d))
   .handler(async ({ context, data }) => {
     const e = await engine();
     const { call } = await e.resolveMailbox(context.userId, data.mailbox);
@@ -86,7 +86,7 @@ export const discardMailDraft = createServerFn({ method: "POST" })
 
 export const mailThreadAction = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ mailbox, threadId: z.string().max(100), action: z.enum(["archive", "inbox", "trash", "untrash", "read", "unread", "star", "unstar"]) }).parse(d))
+  .validator((d) => z.object({ mailbox, threadId: z.string().max(100), action: z.enum(["archive", "inbox", "trash", "untrash", "read", "unread", "star", "unstar"]) }).parse(d))
   .handler(async ({ context, data }) => {
     const e = await engine();
     const { call, group } = await e.resolveMailbox(context.userId, data.mailbox);
@@ -97,7 +97,7 @@ export const mailThreadAction = createServerFn({ method: "POST" })
 
 export const updateMailTicket = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({
+  .validator((d) => z.object({
     ticketId: z.string().uuid(), assigneeId: z.string().uuid().nullable().optional(),
     status: z.enum(["open", "in_progress", "waiting", "resolved"]).optional(), note: z.string().max(2000).optional(),
   }).parse(d))
@@ -109,7 +109,7 @@ export const updateMailTicket = createServerFn({ method: "POST" })
 
 export const getMailTicketBoard = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ mailboxId: z.string().uuid().nullable() }).parse(d))
+  .validator((d) => z.object({ mailboxId: z.string().uuid().nullable() }).parse(d))
   .handler(async ({ context, data }) => {
     const { requireStaff } = await import("@/lib/gmail.server");
     await requireStaff(context.userId);

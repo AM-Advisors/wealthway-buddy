@@ -24,7 +24,7 @@ const prepareSchema = z.object({
 /** A professional prepares something for the client to review. */
 export const prepareAssistedDraft = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => prepareSchema.parse(data))
+  .validator((data: unknown) => prepareSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { prepareDraft } = await import("@/lib/assisted-actions.server");
     return prepareDraft(context.userId, {
@@ -49,7 +49,7 @@ const uploadSchema = z.object({
 /** Records an upload made by a professional, with the whole agency chain. */
 export const recordAssistedDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => uploadSchema.parse(data))
+  .validator((data: unknown) => uploadSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { recordAssistedUpload } = await import("@/lib/assisted-actions.server");
     return recordAssistedUpload(context.userId, {
@@ -88,7 +88,7 @@ const reviewSchema = z.object({
 /** The client's own decision - approve, reject, or ask for changes. */
 export const reviewPreparedItem = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => reviewSchema.parse(data))
+  .validator((data: unknown) => reviewSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { reviewDraft } = await import("@/lib/assisted-actions.server");
     return reviewDraft(context.userId, data.draft_id, data.decision, data.note ?? null);
@@ -97,7 +97,7 @@ export const reviewPreparedItem = createServerFn({ method: "POST" })
 /** Full before / proposed / decision / final history of one prepared item. */
 export const getPreparedItemHistory = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ draft_id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ draft_id: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { draftHistory } = await import("@/lib/assisted-actions.server");
     return { events: await draftHistory(context.userId, data.draft_id) };

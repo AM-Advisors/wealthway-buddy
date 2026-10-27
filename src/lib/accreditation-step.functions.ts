@@ -10,7 +10,7 @@ import { ACCREDITATION_QUESTION_KEY, accreditationOutcome, basisFromAnswer, self
  */
 export const confirmAccreditationStepFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ onboardingId: z.string().uuid(), signature: z.string().trim().min(2).max(120) }).parse)
+  .validator(z.object({ onboardingId: z.string().uuid(), signature: z.string().trim().min(2).max(120) }).parse)
   .handler(async ({ data, context }) => {
     const { userId } = context;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -48,20 +48,20 @@ export const confirmAccreditationStepFn = createServerFn({ method: "POST" })
 /** 506(c) paperwork waiting on this fund's managers (Harmonious reviews from Operations). */
 export const listPendingAccreditationsFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ offeringId: z.string().uuid() }).parse)
+  .validator(z.object({ offeringId: z.string().uuid() }).parse)
   .handler(async ({ data, context }) => (await import("@/lib/accreditation-review.server")).listPending(context.userId, data.offeringId));
 
 export const accreditationFileUrlFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ documentId: z.string().uuid() }).parse)
+  .validator(z.object({ documentId: z.string().uuid() }).parse)
   .handler(async ({ data, context }) => (await import("@/lib/accreditation-review.server")).fileUrl(context.userId, data.documentId));
 
 export const decideAccreditationFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ applicationId: z.string().uuid(), decision: z.enum(["approved", "rejected"]), notes: z.string().trim().max(600).default("") }).parse)
+  .validator(z.object({ applicationId: z.string().uuid(), decision: z.enum(["approved", "rejected"]), notes: z.string().trim().max(600).default("") }).parse)
   .handler(async ({ data, context }) => (await import("@/lib/accreditation-review.server")).decide(context.userId, data));
 
 export const rerunAccreditationAiFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ documentId: z.string().uuid() }).parse)
+  .validator(z.object({ documentId: z.string().uuid() }).parse)
   .handler(async ({ data, context }) => (await import("@/lib/accreditation-review.server")).rerunAiCheck(context.userId, data.documentId));

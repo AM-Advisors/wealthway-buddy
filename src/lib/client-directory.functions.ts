@@ -139,7 +139,7 @@ const person = { email: z.string().trim().email().max(255), name: z.string().tri
 /** Adds the person to a fund's Team with default permissions; GP/signatory/banking still need confirmation. */
 export const assignContactToFundFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ ...person, offeringId: z.string().uuid(), teamRole: z.enum(["manager", "member"]) }).parse(d))
+  .validator((d: unknown) => z.object({ ...person, offeringId: z.string().uuid(), teamRole: z.enum(["manager", "member"]) }).parse(d))
   .handler(async ({ data, context }) => {
     const db = await staffDb(context);
     const email = low(data.email);
@@ -156,7 +156,7 @@ export const assignContactToFundFn = createServerFn({ method: "POST" })
 /** Adds the person to a cap table as a founder (reusing a holder with the same email) and logs it. */
 export const assignContactToCapTableFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ ...person, companyId: z.string().uuid(), title: z.string().trim().max(120).optional() }).parse(d))
+  .validator((d: unknown) => z.object({ ...person, companyId: z.string().uuid(), title: z.string().trim().max(120).optional() }).parse(d))
   .handler(async ({ data, context }) => {
     const db = await staffDb(context);
     const email = low(data.email);
@@ -176,7 +176,7 @@ export const assignContactToCapTableFn = createServerFn({ method: "POST" })
 /** Finds or creates the client contact for a founder (tagged Founder) so the standard contact invite can be sent. */
 export const ensureFounderContactFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ ...person, clientId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ ...person, clientId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const db = await staffDb(context);
     const email = low(data.email);

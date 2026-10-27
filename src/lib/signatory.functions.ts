@@ -69,7 +69,7 @@ const orgPatch = z.object({
 
 export const saveOrganizationProfile = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => orgPatch.parse(data))
+  .validator((data: unknown) => orgPatch.parse(data))
   .handler(async ({ data, context }) => {
     const { saveOrganizationVerification } = await import("@/lib/signatory-authority.server");
     return saveOrganizationVerification(
@@ -82,7 +82,7 @@ export const saveOrganizationProfile = createServerFn({ method: "POST" })
 
 export const reviewOrganization = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         organization_id: uuid,
@@ -114,7 +114,7 @@ export const listCredentials = createServerFn({ method: "GET" })
 
 export const upsertCredential = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         id: uuid.nullish(),
@@ -146,7 +146,7 @@ export const upsertCredential = createServerFn({ method: "POST" })
 
 export const decideCredential = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         credential_id: uuid,
@@ -171,7 +171,7 @@ export const listDelegationsAwaitingAcceptance = createServerFn({ method: "GET" 
 
 export const respondToDelegation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         delegation_id: uuid,
@@ -194,7 +194,7 @@ export const respondToDelegation = createServerFn({ method: "POST" })
 
 export const listAuthorityDocs = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ as_principal: z.boolean().default(false) }).parse(data),
   )
   .handler(async ({ data, context }) => {
@@ -209,7 +209,7 @@ export const listAuthorityDocs = createServerFn({ method: "POST" })
 /** A one-minute upload slot inside the delegation's own private folder. */
 export const startAuthorityUpload = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ delegation_id: uuid, file_name: z.string().min(1).max(300) }).parse(data),
   )
   .handler(async ({ data, context }) => {
@@ -220,7 +220,7 @@ export const startAuthorityUpload = createServerFn({ method: "POST" })
 /** Short-lived, audited read access to one authority document. */
 export const getAuthorityDocumentLink = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ document_id: uuid }).parse(data))
+  .validator((data: unknown) => z.object({ document_id: uuid }).parse(data))
   .handler(async ({ data, context }) => {
     const { getAuthorityDocumentUrl } = await import("@/lib/signatory-authority.server");
     return getAuthorityDocumentUrl(context.userId, data.document_id);
@@ -230,7 +230,7 @@ export const getAuthorityDocumentLink = createServerFn({ method: "POST" })
 
 export const submitAuthorityDoc = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         delegation_id: uuid,
@@ -260,7 +260,7 @@ export const submitAuthorityDoc = createServerFn({ method: "POST" })
 
 export const decideAuthorityDoc = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         document_id: uuid,
@@ -292,7 +292,7 @@ const signTarget = z.object({
 /** Dry run: tells the UI whether signing is possible, and why not if it isn't. */
 export const checkSignatoryAuthority = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => signTarget.parse(data))
+  .validator((data: unknown) => signTarget.parse(data))
   .handler(async ({ data, context }) => {
     const { resolveSignatoryAuthority } = await import("@/lib/signatory-authority.server");
     const decision = await resolveSignatoryAuthority(context.userId, data.delegation_id, {
@@ -311,7 +311,7 @@ export const checkSignatoryAuthority = createServerFn({ method: "POST" })
 
 export const startSigningStepUp = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => signTarget.parse(data))
+  .validator((data: unknown) => signTarget.parse(data))
   .handler(async ({ data, context }) => {
     const { resolveSignatoryAuthority, beginSigningStepUp } = await import(
       "@/lib/signatory-authority.server"
@@ -340,7 +340,7 @@ export const startSigningStepUp = createServerFn({ method: "POST" })
 
 export const confirmSigningStepUp = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ challenge_id: uuid, code: z.string().min(4).max(12) }).parse(data),
   )
   .handler(async ({ data, context }) => {
@@ -350,7 +350,7 @@ export const confirmSigningStepUp = createServerFn({ method: "POST" })
 
 export const signDocumentAsSignatory = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     signTarget
       .extend({
         step_up_id: uuid,
@@ -381,7 +381,7 @@ export const signDocumentAsSignatory = createServerFn({ method: "POST" })
 
 export const listMySignatures = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ as: z.enum(["principal", "signer"]).default("signer") }).parse(data),
   )
   .handler(async ({ data, context }) => {
@@ -405,7 +405,7 @@ export const getMySignatoryAuthority = createServerFn({ method: "GET" })
 
 export const revokeSignatory = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ delegation_id: uuid, reason: z.string().max(500).nullish() }).parse(data),
   )
   .handler(async ({ data, context }) => {

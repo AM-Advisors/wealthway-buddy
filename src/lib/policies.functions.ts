@@ -118,7 +118,7 @@ export const getCapTablePolicyStatus = createServerFn({ method: "GET" })
 
 export const acceptPolicies = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuthUnverified])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({ documentIds: z.array(z.string().uuid()).min(1), signerName: z.string().min(2).max(200) })
       .parse(d),
@@ -176,7 +176,7 @@ export const listPolicyDocuments = createServerFn({ method: "GET" })
 
 export const savePolicyDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         id: z.string().uuid().optional(),

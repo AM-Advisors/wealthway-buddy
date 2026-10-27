@@ -182,7 +182,7 @@ export const getOnboarding = createServerFn({ method: "GET" })
 
 export const submitKyc = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => kycSchema.parse(data))
+  .validator((data: unknown) => kycSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 
@@ -316,7 +316,7 @@ export const submitKyc = createServerFn({ method: "POST" })
 
 export const submitAml = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => amlSchema.parse(data))
+  .validator((data: unknown) => amlSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 

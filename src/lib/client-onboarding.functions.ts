@@ -109,7 +109,7 @@ async function audit(
 /** Every client with how far onboarding has got, plus the detail for one. */
 export const getClientOnboarding = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ clientId: z.string().uuid().nullable().optional() }).parse(d ?? {}))
+  .validator((d: unknown) => z.object({ clientId: z.string().uuid().nullable().optional() }).parse(d ?? {}))
   .handler(async ({ data, context }) => {
     const who = await requireStaff(context);
 
@@ -280,7 +280,7 @@ export const getClientOnboarding = createServerFn({ method: "POST" })
 
 export const inviteClientContact = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         clientId: z.string().uuid(),
@@ -443,7 +443,7 @@ async function sendClientWelcome(input: {
 /** Sends the welcome email again with a fresh one-time password link. */
 export const resendClientInvitation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const who = await requireManage(context);
     const { data: row } = await context.supabase
@@ -482,7 +482,7 @@ export const resendClientInvitation = createServerFn({ method: "POST" })
 
 export const cancelClientInvitation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const who = await requireManage(context);
     const { data: row } = await context.supabase
@@ -511,7 +511,7 @@ export const cancelClientInvitation = createServerFn({ method: "POST" })
 
 export const setContactAccess = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         id: z.string().uuid(),
@@ -562,7 +562,7 @@ export const setContactAccess = createServerFn({ method: "POST" })
 
 export const markOnboardingStep = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         clientId: z.string().uuid(),

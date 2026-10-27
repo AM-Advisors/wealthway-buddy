@@ -68,7 +68,7 @@ function scoped<T extends { offeringId: string | null }>(rows: T[], ids: string[
 
 export const listDocumentEvents = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         offeringId: z.string().uuid().nullable().optional(),

@@ -9,11 +9,11 @@ export const getFundMigrationRegistry = createServerFn({ method: "GET" }).middle
   .handler(async ({ context }) => (await S()).registry(context.userId));
 
 export const getFundMigrationHistory = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ key }).parse(d))
+  .validator((d) => z.object({ key }).parse(d))
   .handler(async ({ context, data }) => (await S()).history(context.userId, data.key));
 
 export const recordFundMigrationDecision = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({
+  .validator((d) => z.object({
     key,
     decision: z.enum(["approve_match", "reject_match", "confirm_duplicate", "not_duplicate", "confirm_archived", "set_parent", "not_a_fund", "queue_for_import", "needs_review"]),
     reason: z.string().trim().min(3).max(1000),

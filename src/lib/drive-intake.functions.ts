@@ -33,7 +33,7 @@ export const getDriveIntakeAccess = createServerFn({ method: "GET" })
 /** Browse or search inside one approved repository. Folders outside the root are never listed. */
 export const browseDrive = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ repository: repoSchema, folderId: idSchema.optional(), search: z.string().trim().max(100).optional(), offeringId: z.string().uuid().optional() }).parse(d))
+  .validator((d) => z.object({ repository: repoSchema, folderId: idSchema.optional(), search: z.string().trim().max(100).optional(), offeringId: z.string().uuid().optional() }).parse(d))
   .handler(async ({ data, context }) => {
     const s = await import("@/lib/drive-intake.server");
     const userId = await s.requireSuperAdmin(context, "browse");
@@ -106,7 +106,7 @@ export const browseDrive = createServerFn({ method: "POST" })
 /** Funds and each fund's invested profiles, for the association table. */
 export const getAssociationOptions = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ investorUserId: z.string().uuid().optional() }).parse(d ?? {}))
+  .validator((d) => z.object({ investorUserId: z.string().uuid().optional() }).parse(d ?? {}))
   .handler(async ({ data, context }) => {
     const s = await import("@/lib/drive-intake.server");
     await s.requireSuperAdmin(context, "association_options");
@@ -146,7 +146,7 @@ const rowSchema = z.object({
 /** Import confirmed rows. Each row is validated and imported independently. */
 export const importDriveFiles = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ rows: z.array(rowSchema).min(1).max(25) }).parse(d))
+  .validator((d) => z.object({ rows: z.array(rowSchema).min(1).max(25) }).parse(d))
   .handler(async ({ data, context }) => {
     const s = await import("@/lib/drive-intake.server");
     const userId = await s.requireSuperAdmin(context, "import");
@@ -164,7 +164,7 @@ export const importDriveFiles = createServerFn({ method: "POST" })
 /** Provenance list for Super Administrators (Fund 360, Investor 360, Operations). */
 export const listDriveImports = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ offeringId: z.string().uuid().optional(), investorUserId: z.string().uuid().optional() }).parse(d ?? {}))
+  .validator((d) => z.object({ offeringId: z.string().uuid().optional(), investorUserId: z.string().uuid().optional() }).parse(d ?? {}))
   .handler(async ({ data, context }) => {
     const { data: roles } = await (context as any).supabase.from("user_roles").select("role").eq("user_id", (context as any).userId);
     const { canUseDriveIntake } = await import("@/lib/drive-intake");
@@ -225,7 +225,7 @@ export const listDriveImports = createServerFn({ method: "POST" })
 /** Open the Harmonious copy (or the Drive original if still inside an approved root). */
 export const openDriveImport = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ id: z.string().uuid(), source: z.boolean().optional() }).parse(d))
+  .validator((d) => z.object({ id: z.string().uuid(), source: z.boolean().optional() }).parse(d))
   .handler(async ({ data, context }) => {
     const s = await import("@/lib/drive-intake.server");
     const userId = await s.requireSuperAdmin(context, "open");
@@ -250,7 +250,7 @@ export const openDriveImport = createServerFn({ method: "POST" })
 /** Assign an imported Drive document to a required fund document (append-only; latest wins). */
 export const assignDriveRequirement = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({
+  .validator((d) => z.object({
     documentId: z.string().uuid(),
     requirement: z.enum(["ein_letter","wire_instructions","ppm","operating_agreement","subscription_agreement","formation_certificate","lloa","investor_information","investor_kyc_form","w9","side_letter","other","none"]),
   }).parse(d))
@@ -282,7 +282,7 @@ const PACKET_CATEGORY: Record<string, "ppm" | "operating_agreement" | "subscript
  */
 export const linkDriveDocsToPacket = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ offeringId: z.string().uuid(), documentIds: z.array(z.string().uuid()).max(100).optional() }).parse(d))
+  .validator((d) => z.object({ offeringId: z.string().uuid(), documentIds: z.array(z.string().uuid()).max(100).optional() }).parse(d))
   .handler(async ({ data, context }) => {
     const s = await import("@/lib/drive-intake.server");
     const userId = await s.requireSuperAdmin(context, "link_to_packet");
@@ -330,7 +330,7 @@ const signatureBoxSchema = z.object({
 /** Investors in a fund (Investment Profiles) a document can be filed to. Super Admin only. */
 export const listDriveDocumentInvestors = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ offeringId: z.string().uuid() }).parse(d))
+  .validator((d) => z.object({ offeringId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const s = await import("@/lib/drive-intake.server");
     await s.requireSuperAdmin(context, "list_document_investors");
@@ -345,7 +345,7 @@ export const listDriveDocumentInvestors = createServerFn({ method: "POST" })
 /** Record specific document details (append-only; newest row wins). */
 export const setDriveDocumentDetails = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({
+  .validator((d) => z.object({
     documentId: z.string().uuid(),
     group: z.enum(["fund_document", "tax_deliverable"]),
     kind: z.string().max(40),

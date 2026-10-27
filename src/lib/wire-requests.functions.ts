@@ -93,7 +93,7 @@ export const listWireRequests = createServerFn({ method: "GET" })
 /** Investors on one fund, so a manager can attach a request to a person. */
 export const listWireRequestInvestors = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ offering_id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ offering_id: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await roles(supabase, userId);
@@ -126,7 +126,7 @@ export const listWireRequestInvestors = createServerFn({ method: "GET" })
 /** A fund manager asks for a wire to be approved. */
 export const createWireRequest = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         offering_id: z.string().uuid(),
@@ -178,7 +178,7 @@ export const createWireRequest = createServerFn({ method: "POST" })
 /** Admin approves or declines a request. */
 export const decideWireRequest = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         id: z.string().uuid(),

@@ -84,7 +84,7 @@ const OPEN_REQUEST_STATUSES = ["requested", "in_review"];
 /** One Harmonious person's desk: the clients they cover and what is waiting on them. */
 export const getMyDesk = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({ showAll: z.boolean().optional() }).parse(d ?? {}),
   )
   .handler(async ({ data, context }) => {
@@ -356,7 +356,7 @@ export const listClientCoverage = createServerFn({ method: "GET" })
 /** Put a Harmonious person on a client, or change whether they lead it. */
 export const assignClientStaff = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         clientId: z.string().uuid(),
@@ -404,7 +404,7 @@ export const assignClientStaff = createServerFn({ method: "POST" })
 /** Take a Harmonious person off a client. */
 export const unassignClientStaff = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const who = await whoIs(context);
     if (!who.canManage) {

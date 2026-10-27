@@ -54,7 +54,7 @@ async function audit(
 
 export const listCertificates = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ clientId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ clientId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const me = await who(context, data.clientId);
     const [{ data: certificates }, { data: accessRows }] = await Promise.all([
@@ -80,7 +80,7 @@ export const listCertificates = createServerFn({ method: "GET" })
 /** Creates the certificate for a share record that does not have one yet. */
 export const generateCertificate = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({ clientId: z.string().uuid(), holdingId: z.string().uuid() }).parse(d),
   )
   .handler(async ({ data, context }) => {
@@ -120,7 +120,7 @@ export const generateCertificate = createServerFn({ method: "POST" })
 /** A company signatory signs the certificate, which issues it. */
 export const signCertificate = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         clientId: z.string().uuid(),
@@ -171,7 +171,7 @@ export const signCertificate = createServerFn({ method: "POST" })
 /** Records a signed copy the company uploaded into private storage. */
 export const attachCertificateFile = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         clientId: z.string().uuid(),
@@ -208,7 +208,7 @@ export const attachCertificateFile = createServerFn({ method: "POST" })
 
 export const certificateFileUrl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({ clientId: z.string().uuid(), id: z.string().uuid() }).parse(d),
   )
   .handler(async ({ data, context }) => {
@@ -231,7 +231,7 @@ export const certificateFileUrl = createServerFn({ method: "POST" })
 
 export const cancelCertificate = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         clientId: z.string().uuid(),
@@ -297,7 +297,7 @@ export const cancelCertificate = createServerFn({ method: "POST" })
 
 export const inviteShareholder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         clientId: z.string().uuid(),
@@ -381,7 +381,7 @@ export const inviteShareholder = createServerFn({ method: "POST" })
 
 export const createHolderLink = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         clientId: z.string().uuid(),
@@ -421,7 +421,7 @@ export const createHolderLink = createServerFn({ method: "POST" })
 
 export const revokeHolderAccess = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({ clientId: z.string().uuid(), id: z.string().uuid() }).parse(d),
   )
   .handler(async ({ data, context }) => {
@@ -475,7 +475,7 @@ function holderPayload(company: any, holder: any, holdings: any[], certificates:
 
 /** Private-link view. Public on purpose: the unguessable token is the key. */
 export const getSharesByToken = createServerFn({ method: "POST" })
-  .inputValidator((d: unknown) => z.object({ token: z.string().min(20).max(200) }).parse(d))
+  .validator((d: unknown) => z.object({ token: z.string().min(20).max(200) }).parse(d))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { hashToken } = await import("@/lib/cap-certificates.server");

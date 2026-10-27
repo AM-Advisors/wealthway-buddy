@@ -36,7 +36,7 @@ export type PermissionDocument = {
 
 export const listInvestorPermissions = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ offeringId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ offeringId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     await assertManager(supabase, data.offeringId);
@@ -118,7 +118,7 @@ export const listInvestorPermissions = createServerFn({ method: "POST" })
 
 export const setCapTableVisibility = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         offeringId: z.string().uuid(),
@@ -149,7 +149,7 @@ export const setCapTableVisibility = createServerFn({ method: "POST" })
 
 export const setDocumentVisibility = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         offeringId: z.string().uuid(),
@@ -174,7 +174,7 @@ export const setDocumentVisibility = createServerFn({ method: "POST" })
 
 export const setDocumentAccess = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         offeringId: z.string().uuid(),
@@ -213,7 +213,7 @@ export const setDocumentAccess = createServerFn({ method: "POST" })
 /** Share (or unshare) one document with every investor in the fund at once. */
 export const setDocumentAccessForAll = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         offeringId: z.string().uuid(),

@@ -14,7 +14,7 @@ export const getWealthServices = createServerFn({ method: 'GET' }).middleware([r
   return { selections: selections.data ?? [], history, holdings: currentWealthHoldings(history, context.userId, new Date().toISOString().slice(0,10)), funds: (funds.data ?? []).map(f => ({ id: f.offering_id, name: (Array.isArray(f.offerings) ? f.offerings[0]?.name : (f.offerings as {name?:string} | null)?.name) ?? 'Fund' })) };
 });
 export const selectWealthServices = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ offeringId: z.string().uuid().nullable(), services: z.array(z.enum(['portfolio','report_cards'])).max(2) }).parse(d))
+  .validator((d: unknown) => z.object({ offeringId: z.string().uuid().nullable(), services: z.array(z.enum(['portfolio','report_cards'])).max(2) }).parse(d))
   .handler(async ({ context, data }) => {
     if (data.offeringId) {
       const r = await context.supabase.from('fund_managers').select('id').eq('offering_id', data.offeringId).eq('user_id', context.userId).limit(1);
@@ -25,7 +25,7 @@ export const selectWealthServices = createServerFn({ method: 'POST' }).middlewar
     return { ok: true };
   });
 export const saveWealthHolding = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ priorId: z.string().uuid().optional(), name: z.string().trim().min(1).max(160), assetClass: z.enum(WEALTH_ASSET_CLASSES), currency: z.string().regex(/^[A-Z]{3}$/), costCents: z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER).nullable(), valueCents: z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER).nullable(), asOf: date, sourceNote: z.string().trim().min(3).max(1000), archived: z.boolean().default(false) }).parse(d))
+  .validator((d: unknown) => z.object({ priorId: z.string().uuid().optional(), name: z.string().trim().min(1).max(160), assetClass: z.enum(WEALTH_ASSET_CLASSES), currency: z.string().regex(/^[A-Z]{3}$/), costCents: z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER).nullable(), valueCents: z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER).nullable(), asOf: date, sourceNote: z.string().trim().min(3).max(1000), archived: z.boolean().default(false) }).parse(d))
   .handler(async ({ context, data }) => {
     let holdingId = crypto.randomUUID();
     if (data.priorId) {

@@ -85,7 +85,7 @@ async function seed(supabase: any, offeringId: string, regType: string | null, u
 
 export const getFundCompliance = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ offeringId: z.string().uuid(), seed: z.boolean().optional() }).parse(data),
   )
   .handler(async ({ data, context }) => {
@@ -115,7 +115,7 @@ export const getFundCompliance = createServerFn({ method: "GET" })
 
 export const seedComplianceChecklist = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ offeringId: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ offeringId: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const supabase = context.supabase as any;
     await assertCanManage(supabase, context.userId, data.offeringId);
@@ -144,7 +144,7 @@ const saveSchema = z.object({
 
 export const saveComplianceItem = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => saveSchema.parse(data))
+  .validator((data: unknown) => saveSchema.parse(data))
   .handler(async ({ data, context }) => {
     const supabase = context.supabase as any;
     await assertCanManage(supabase, context.userId, data.offeringId);
@@ -186,7 +186,7 @@ export const saveComplianceItem = createServerFn({ method: "POST" })
 
 export const deleteComplianceItem = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ offeringId: z.string().uuid(), id: z.string().uuid() }).parse(data),
   )
   .handler(async ({ data, context }) => {

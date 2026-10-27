@@ -58,7 +58,7 @@ async function extractText(boxFileId: string, fileName: string, sizeBytes: numbe
  */
 export const askDiligenceAssistant = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         offering_id: z.string().uuid(),

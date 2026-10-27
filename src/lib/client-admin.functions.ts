@@ -27,7 +27,7 @@ const uuid = z.string().uuid();
 
 export const getClientAdmin = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ clientId: uuid }).parse(d))
+  .validator((d: unknown) => z.object({ clientId: uuid }).parse(d))
   .handler(async ({ data, context }) => {
     const { clientGate } = await import("@/lib/client-admin.server");
     const { db, caps } = await clientGate(context);
@@ -66,7 +66,7 @@ const clientPatch = z.object({
 /** Edit client metadata. Contracts, SOWs, funds and history are never touched. */
 export const updateClient = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ clientId: uuid, patch: clientPatch }).parse(d))
+  .validator((d: unknown) => z.object({ clientId: uuid, patch: clientPatch }).parse(d))
   .handler(async ({ data, context }) => {
     const { clientGate, applyUpdateClient } = await import("@/lib/client-admin.server");
     await clientGate(context, "edit_client");
@@ -78,7 +78,7 @@ export const updateClient = createServerFn({ method: "POST" })
 
 export const listClientPeople = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ clientId: uuid }).parse(d))
+  .validator((d: unknown) => z.object({ clientId: uuid }).parse(d))
   .handler(async ({ data, context }) => {
     const { clientGate } = await import("@/lib/client-admin.server");
     const { db, caps } = await clientGate(context);
@@ -170,7 +170,7 @@ const personInput = z.object({
 /** Add or edit a person. Roles are descriptive and grant no application authority. */
 export const saveClientPerson = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => personInput.parse(d))
+  .validator((d: unknown) => personInput.parse(d))
   .handler(async ({ data, context }) => {
     const { clientGate, audit } = await import("@/lib/client-admin.server");
     const { db, caps, userId } = await clientGate(context, "manage_people");
@@ -212,7 +212,7 @@ async function syncPrimary(db: any, clientId: string, _id: string, row: any) {
 /** Deactivate or restore a relationship. Nothing is deleted. */
 export const setClientPersonStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ clientId: uuid, id: uuid, active: z.boolean() }).parse(d))
+  .validator((d: unknown) => z.object({ clientId: uuid, id: uuid, active: z.boolean() }).parse(d))
   .handler(async ({ data, context }) => {
     const { clientGate, audit } = await import("@/lib/client-admin.server");
     const { db, userId } = await clientGate(context, "manage_people");
@@ -226,7 +226,7 @@ export const setClientPersonStatus = createServerFn({ method: "POST" })
 /** Associate a person with one fund or company. Descriptive only - portal access is unchanged. */
 export const setClientPersonScope = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({ clientId: uuid, contactId: uuid, offeringId: uuid.nullable().optional(), companyId: uuid.nullable().optional(), role: z.enum(RELATIONSHIP_ROLE_VALUES), add: z.boolean() }).parse(d),
   )
   .handler(async ({ data, context }) => {
@@ -256,7 +256,7 @@ export const setClientPersonScope = createServerFn({ method: "POST" })
 
 export const listClientFunds = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ clientId: uuid }).parse(d))
+  .validator((d: unknown) => z.object({ clientId: uuid }).parse(d))
   .handler(async ({ data, context }) => {
     const { clientGate, loadContractTerms, loadCoverageInputs } = await import("@/lib/client-admin.server");
     const { db, caps } = await clientGate(context);
@@ -313,7 +313,7 @@ export const listClientFunds = createServerFn({ method: "GET" })
 
 export const searchFundsToLink = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ clientId: uuid, q: z.string().trim().max(120) }).parse(d))
+  .validator((d: unknown) => z.object({ clientId: uuid, q: z.string().trim().max(120) }).parse(d))
   .handler(async ({ data, context }) => {
     const { clientGate } = await import("@/lib/client-admin.server");
     const { db } = await clientGate(context, "link_funds");
@@ -359,7 +359,7 @@ const createFundInput = z.object({
  */
 export const createClientFund = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => createFundInput.parse(d))
+  .validator((d: unknown) => createFundInput.parse(d))
   .handler(async ({ data, context }) => {
     const { clientGate, audit, loadCoverageInputs } = await import("@/lib/client-admin.server");
     const { db, caps, userId } = await clientGate(context, "link_funds");
@@ -425,7 +425,7 @@ export const createClientFund = createServerFn({ method: "POST" })
 /** Link an unassigned fund, or open a reviewed reassignment - never a silent move. */
 export const linkFundToClient = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ clientId: uuid, offeringId: uuid, reason: z.string().trim().max(1000).optional() }).parse(d))
+  .validator((d: unknown) => z.object({ clientId: uuid, offeringId: uuid, reason: z.string().trim().max(1000).optional() }).parse(d))
   .handler(async ({ data, context }) => {
     const { clientGate, audit, loadCoverageInputs } = await import("@/lib/client-admin.server");
     const { db, userId } = await clientGate(context, "link_funds");
@@ -451,7 +451,7 @@ export const linkFundToClient = createServerFn({ method: "POST" })
 /** A different person approves or rejects a reassignment. */
 export const decideFundReassignment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: uuid, approve: z.boolean(), note: z.string().trim().max(1000).optional() }).parse(d))
+  .validator((d: unknown) => z.object({ id: uuid, approve: z.boolean(), note: z.string().trim().max(1000).optional() }).parse(d))
   .handler(async ({ data, context }) => {
     const { clientGate, audit } = await import("@/lib/client-admin.server");
     const { db, userId } = await clientGate(context, "link_funds");
@@ -489,7 +489,7 @@ async function addSelections(db: any, userId: string, clientId: string, offering
 
 export const getServicesPricing = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ clientId: uuid }).parse(d))
+  .validator((d: unknown) => z.object({ clientId: uuid }).parse(d))
   .handler(async ({ data, context }) => {
     const { clientGate, loadCatalog, loadPricingInputs, priceSelections } = await import("@/lib/client-admin.server");
     const { db, caps } = await clientGate(context);
@@ -539,7 +539,7 @@ export const getServicesPricing = createServerFn({ method: "GET" })
 
 export const setServiceSelections = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({ clientId: uuid, offeringId: uuid.nullable(), add: z.array(z.string().max(80)).max(80).default([]), remove: z.array(uuid).max(80).default([]) }).parse(d),
   )
   .handler(async ({ data, context }) => {
@@ -565,7 +565,7 @@ export const setServiceSelections = createServerFn({ method: "POST" })
 /** Custom price for one selection only; global pricing is never changed. Needs a second approver. */
 export const overrideServicePrice = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => friendlyParse(z.object({ clientId: uuid, selectionId: uuid, cents: centsSchema, reason: z.string({ required_error: "Give a reason (at least 5 characters)." }).trim().min(5, "Give a reason (at least 5 characters).").max(1000) }), d))
+  .validator((d: unknown) => friendlyParse(z.object({ clientId: uuid, selectionId: uuid, cents: centsSchema, reason: z.string({ required_error: "Give a reason (at least 5 characters)." }).trim().min(5, "Give a reason (at least 5 characters).").max(1000) }), d))
   .handler(async ({ data, context }) => {
     const { clientGate, audit, loadCatalog, loadPricingInputs, priceSelections } = await import("@/lib/client-admin.server");
     const { db, userId } = await clientGate(context, "manage_pricing");
@@ -586,7 +586,7 @@ export const overrideServicePrice = createServerFn({ method: "POST" })
 
 export const decideServicePrice = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ clientId: uuid, selectionId: uuid, approve: z.boolean() }).parse(d))
+  .validator((d: unknown) => z.object({ clientId: uuid, selectionId: uuid, approve: z.boolean() }).parse(d))
   .handler(async ({ data, context }) => {
     const { clientGate, audit } = await import("@/lib/client-admin.server");
     const { db, userId } = await clientGate(context, "approve_pricing");
@@ -602,7 +602,7 @@ export const decideServicePrice = createServerFn({ method: "POST" })
 
 export const previewClientSow = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ clientId: uuid, offeringId: uuid.nullable(), templateId: uuid.nullable().optional() }).parse(d))
+  .validator((d: unknown) => z.object({ clientId: uuid, offeringId: uuid.nullable(), templateId: uuid.nullable().optional() }).parse(d))
   .handler(async ({ data, context }) => {
     const { clientGate, buildPreview } = await import("@/lib/client-admin.server");
     const { db } = await clientGate(context);
@@ -611,7 +611,7 @@ export const previewClientSow = createServerFn({ method: "GET" })
 
 export const generateClientSow = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({ clientId: uuid, offeringId: uuid.nullable(), templateId: uuid.nullable().optional(), overrideReason: z.string().trim().max(1000).optional() }).parse(d),
   )
   .handler(async ({ data, context }) => {
@@ -635,7 +635,7 @@ export const listSowTemplates = createServerFn({ method: "GET" })
 
 export const saveSowTemplate = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({
       name: z.string().trim().min(2).max(160),
       engagementType: z.enum(["fund_administration", "spv_administration", "client_services"]),
@@ -656,7 +656,7 @@ export const saveSowTemplate = createServerFn({ method: "POST" })
 
 export const setSowTemplateStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: uuid, status: z.enum(["approved", "retired"]) }).parse(d))
+  .validator((d: unknown) => z.object({ id: uuid, status: z.enum(["approved", "retired"]) }).parse(d))
   .handler(async ({ data, context }) => {
     const { clientGate, audit } = await import("@/lib/client-admin.server");
     const { db, userId } = await clientGate(context, "approve_terms");
