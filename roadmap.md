@@ -1,8 +1,9 @@
 # Roadmap
 
 ## Self Serve document generation (2026-10-27)
-- [ ] Allow exact-fund Self Serve managers to generate template drafts and require recorded approval before existing signing/publication paths.
-- [ ] Verify fictional permission, version and approval safeguards; durable authenticated signing needs isolated QA.
+- [x] Allow exact-fund Self Serve managers to generate approved-template drafts; independent exact-version approval/return and database gates precede existing activation/signing. Legacy starter/standard-form tools remain staff-only.
+- [x] Fictional generation, review and availability controls checked with blocked self-approval, no runtime errors and no mobile overflow; permission/version/database regressions passed.
+- [ ] Durable authenticated generation and signature delivery remain blocked on independently isolated QA and synthetic sessions; no live documents or signing emails changed.
 
 ## Cross-source contact matching (2026-10-27)
 - [x] Match imported normalized emails within the same owner using an atomic source-link transaction; other-owner matches retain explicit review. Contact/company views group entitled same-scope matches and share original history; no login/person merges, historical deletions or access expansion.
