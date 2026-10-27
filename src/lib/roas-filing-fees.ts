@@ -6,7 +6,7 @@ export const ROAS_FILING_FEES = {
   texasCapCents: 50000,
 } as const;
 
-export function roasFilingFeeRange(texasCents = ROAS_FILING_FEES.texasCapCents) {
+export function roasFilingFeeRange(texasCents: number = ROAS_FILING_FEES.texasCapCents) {
   if (!Number.isSafeInteger(texasCents) || texasCents < 0 || texasCents > ROAS_FILING_FEES.texasCapCents) {
     throw new Error("Texas notice fees must be between $0 and the $500 cap.");
   }
