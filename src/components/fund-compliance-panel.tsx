@@ -168,7 +168,7 @@ export function FundCompliancePanel({ offeringId }: { offeringId: string }) {
                 <div className="rounded-md border p-3">
                   <p className="text-xs uppercase text-muted-foreground">Identity</p>
                   <Badge className="mt-1" variant={statusTone(inv.kyc.status)}>
-                    {verificationLabel(inv.kyc.status)}
+                    {verificationLabel(inv.kyc.status, (inv.kyc as any).detail)}
                   </Badge>
                   <p className="mt-2 text-xs text-muted-foreground">
                     {inv.kyc.provider ? `${inv.kyc.provider} · ` : ""}
@@ -178,7 +178,7 @@ export function FundCompliancePanel({ offeringId }: { offeringId: string }) {
                 <div className="rounded-md border p-3">
                   <p className="text-xs uppercase text-muted-foreground">Screening</p>
                   <Badge className="mt-1" variant={statusTone(inv.aml.status)}>
-                    {verificationLabel(inv.aml.status)}
+                    {verificationLabel(inv.aml.status, (inv.aml as any).detail)}
                   </Badge>
                   <p className="mt-2 text-xs text-muted-foreground">
                     {inv.aml.matches > 0 ? `${inv.aml.matches} possible match(es) · ` : ""}

@@ -213,8 +213,8 @@ function ManagerInvestorsPage() {
                     </div>
                   </CardHeader>
                   <CardContent className="flex flex-wrap gap-1.5 pt-0">
-                    <Badge variant={statusTone(inv.kyc_status)}>Identity {verificationLabel(inv.kyc_status)}</Badge>
-                    <Badge variant={statusTone(inv.aml_status)}>Screening {verificationLabel(inv.aml_status)}</Badge>
+                    <Badge variant={statusTone(inv.kyc_status)}>Identity {verificationLabel(inv.kyc_status, (inv as any).kyc_status_detail)}</Badge>
+                    <Badge variant={statusTone(inv.aml_status)}>Screening {verificationLabel(inv.aml_status, (inv as any).aml_status_detail)}</Badge>
                     <Badge variant={statusTone(inv.accreditation_status)}>
                       Accreditation {prettyStatus(inv.accreditation_status)}
                     </Badge>

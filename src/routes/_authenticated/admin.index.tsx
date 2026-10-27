@@ -221,8 +221,8 @@ function AdminQueue() {
                   }`}
                 </p>
                 <div className="mt-3 flex flex-wrap gap-1.5">
-                  <Badge variant={statusTone(app.kyc_status)}>Identity {verificationLabel(app.kyc_status)}</Badge>
-                  <Badge variant={statusTone(app.aml_status)}>Screening {verificationLabel(app.aml_status)}</Badge>
+                  <Badge variant={statusTone(app.kyc_status)}>Identity {verificationLabel(app.kyc_status, (app as any).kyc_status_detail)}</Badge>
+                  <Badge variant={statusTone(app.aml_status)}>Screening {verificationLabel(app.aml_status, (app as any).aml_status_detail)}</Badge>
                   <Badge variant={statusTone(app.accreditation_status)}>
                     Accreditation {prettyStatus(app.accreditation_status)}
                   </Badge>

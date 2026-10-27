@@ -66,8 +66,8 @@ function tone(status: string): "default" | "secondary" | "destructive" {
 
 function checkText(row: ApprovalRow) {
   const parts = [
-    `identity ${verificationLabel(row.kyc_status).toLowerCase()}`,
-    `screening ${verificationLabel(row.aml_status).toLowerCase()}`,
+    `identity ${verificationLabel(row.kyc_status, (row as any).kyc_status_detail).toLowerCase()}`,
+    `screening ${verificationLabel(row.aml_status, (row as any).aml_status_detail).toLowerCase()}`,
     `accreditation ${row.accreditation_status}`,
     `documents ${row.documents_status}`,
   ];

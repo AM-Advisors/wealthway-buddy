@@ -162,6 +162,7 @@ export const getFundInvestorCompliance = createServerFn({ method: "POST" })
         commitmentCents: Number(app.commitment_cents ?? 0),
         kyc: {
           status: String(app.kyc_status),
+          detail: (app as any).kyc_status_detail ?? null,
           provider: (k?.provider as string | null) ?? null,
           decidedAt: (k?.completed_at as string | null) ?? (k?.updated_at as string | null) ?? null,
           expiredAt: (k?.expired_at as string | null) ?? null,
