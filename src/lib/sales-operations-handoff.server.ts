@@ -25,8 +25,12 @@ export async function loadFundHandoffs(context: any, fundId: string): Promise<Ha
   if (!quotes.data?.length) return { rows: [], owners: [] };
   const { staffDirectory } = await import("./harmonious-team.server");
   const owners = (await staffDirectory()).filter(s => s.eligible.operations);
+  const { data: receiverRoles, error: receiverError } = await db.from("user_roles").select("user_id").in("role", ["admin", "operations", "fund_administration"]);
+  if (receiverError) throw new Error("Couldn't load Operations owners.");
+  const receivers = new Set((receiverRoles ?? []).map(r => r.user_id));
+  const eligibleOwners = owners.filter(o => receivers.has(o.id));
   const writable = a.roles.some(r => ["admin", "super_admin", "operations", "fund_administration", "account_manager", "sales", "account_executive", "bdr", "sales_management", "cro", "executive"].includes(r)) && !fund.data.consolidated_into;
-  return { owners: owners.map(s => ({ id: s.id, name: s.name })), rows: quotes.data.map(q => {
+  return { owners: eligibleOwners.map(s => ({ id: s.id, name: s.name })), rows: quotes.data.map(q => {
     const t = tasks.data?.find(t => t.source_ref === `sales-handoff:${q.id}`);
     const terminal = t?.status === "done" || t?.status === "cancelled";
     return { quoteId: q.id, quoteNumber: String(q.quote_number), title: q.title, taskId: t?.id ?? null, ownerId: t?.assignee_user_id ?? null, ownerName: owners.find(s => s.id === t?.assignee_user_id)?.name ?? null, dueDate: t?.due_date ?? null, status: t?.status ?? "open", canAssign: writable && !terminal, canReceive: writable && t?.assignee_user_id === context.userId && a.roles.some(r => ["admin", "super_admin", "operations", "fund_administration"].includes(r)) };
@@ -46,7 +50,7 @@ export async function saveFundHandoff(context: any, input: { fundId: string; quo
 
 /** Called only by the canonical signed-quote handoff. Idempotent work item, no sends or access grants. */
 export async function ensureHandoffTask(db: any, quote: any, fundId: string) {
-  const saved = await db.from("staff_tasks").upsert({ title: "Sales to Operations handoff", source: "workflow", source_ref: `sales-handoff:${quote.id}`, team: "operations", client_id: quote.client_id, offering_id: fundId, created_by: quote.owner_user_id, related_workflow_type: "sales_handoff", related_workflow_id: quote.id }, { onConflict: "source,source_ref", ignoreDuplicates: true });
+  const saved = await db.from("staff_tasks").insert({ title: "Sales to Operations handoff", source: "workflow", source_ref: `sales-handoff:${quote.id}`, team: "operations", client_id: quote.client_id, offering_id: fundId, created_by: quote.owner_user_id, related_workflow_type: "sales_handoff", related_workflow_id: quote.id });
   // The existing source index is partial, so use explicit insert and unique-conflict handling instead.
   if (saved.error && saved.error.code !== "23505") throw new Error("Couldn't create Operations handoff task.");
 }
