@@ -53,7 +53,10 @@ export async function approvedTemplateVersions(offeringId: string): Promise<Set<
   if (!ids.length) return new Set();
   const { data: versions, error: versionError } = await db().from("document_template_versions").select("template_id, version, status").in("template_id", ids).eq("status", "approved");
   if (versionError) throw new Error(versionError.message);
-  return new Set((uses ?? []).filter((u: any) => (versions ?? []).some((v: any) => v.template_id === u.template_id && v.version === u.template_version)).map((u: any) => `${u.offering_document_id}:${u.fund_version}`));
+  const { data: guarded, error: guardedError } = await db().from("offering_document_versions").select("offering_document_id, version").eq("offering_id", offeringId).not("self_serve_review_state", "is", null);
+  if (guardedError) throw new Error("Could not check document review requirements.");
+  const guardedKeys = new Set((guarded ?? []).map((v: any) => `${v.offering_document_id}:${v.version}`));
+  return new Set((uses ?? []).filter((u: any) => !guardedKeys.has(`${u.offering_document_id}:${u.fund_version}`) && (versions ?? []).some((v: any) => v.template_id === u.template_id && v.version === u.template_version)).map((u: any) => `${u.offering_document_id}:${u.fund_version}`));
 }
 async function assertTemplateEditor(userId: string, d: any, version?: number) {
   void version; // self-serve: any version of the manager's own fund
@@ -80,6 +83,10 @@ export async function listSetupDocuments(userId: string, offeringId: string) {
       uploadedAt: v.created_at,
       effectiveDate: v.effective_date,
       approval: v.approval_status,
+      reviewState: v.self_serve_review_state ?? null,
+      canReview: v.created_by !== userId && v.self_serve_review_state === "pending",
+      reviewNote: v.self_serve_review_note ?? null,
+      generationIssues: (v.generation_issues ?? []) as string[],
       approvedTemplate: templates.has(`${d.id}:${v.version}`),
       signingStatus: v.signing_config_status,
       signingConfig: (v.signing_config ?? null) as SigningConfig | null,
@@ -155,11 +162,11 @@ export async function createSetupDocument(userId: string, input: { offeringId: s
 }
 
 /** Every upload appends a new version; nothing is overwritten. */
-export async function uploadDocumentVersion(userId: string, input: { documentId: string; filePath: string; fileName: string; fileSizeBytes: number; effectiveDate?: string | null | undefined }) {
+export async function uploadDocumentVersion(userId: string, input: { documentId: string; filePath: string; fileName: string; fileSizeBytes: number; effectiveDate?: string | null | undefined; selfServeGenerated?: boolean; generationIssues?: string[] }) {
   const d = await docRow(input.documentId);
   await assertStaff(userId, d.offering_id);
   if (!input.filePath.startsWith(`${d.offering_id}/`)) throw new Error("That file does not belong to this fund.");
-  const { data: latest } = await db().from("offering_document_versions").select("version, signing_config").eq("offering_document_id", d.id).order("version", { ascending: false }).limit(1).maybeSingle();
+  const { data: latest } = await db().from("offering_document_versions").select("version, signing_config, self_serve_review_state").eq("offering_document_id", d.id).order("version", { ascending: false }).limit(1).maybeSingle();
   const version = Number(latest?.version ?? 0) + 1;
   const { error } = await db().from("offering_document_versions").insert({
     offering_document_id: d.id,
@@ -172,6 +179,8 @@ export async function uploadDocumentVersion(userId: string, input: { documentId:
     created_by: userId,
     effective_date: input.effectiveDate || null,
     approval_status: "uploaded_review_required",
+    self_serve_review_state: input.selfServeGenerated || latest?.self_serve_review_state ? "pending" : null,
+    generation_issues: input.generationIssues ?? [],
     signing_config: null,
     signing_config_status: signingStatusForNewVersion(latest?.signing_config ?? null),
   });
@@ -192,11 +201,30 @@ export async function approveDocumentVersion(userId: string, input: { documentId
   const d = await docRow(input.documentId);
   await assertStaff(userId, d.offering_id);
   const v = await versionRow(d.id, input.version);
+  if (v.self_serve_review_state) return reviewGeneratedDocument(userId, { ...input, decision: "approve" });
   if (v.approval_status !== "uploaded_review_required") throw new Error("Only a version awaiting review can be approved.");
   await (await import("@/lib/legal-name-gate.server")).assertLegalName({ offeringId: d.offering_id }, "offering_document_approval");
   const { data: saved, error } = await db().from("offering_document_versions").update({ approval_status: "approved", approved_by: userId, approved_at: now() }).eq("id", v.id).eq("approval_status", "uploaded_review_required").select("id").maybeSingle();
   if (error || !saved) throw new Error("Document approval could not be saved. Please refresh and try again.");
   await event(d.offering_id, d.id, v.version, "version_approved", userId);
+  return { ok: true };
+}
+
+export async function reviewGeneratedDocument(userId: string, input: { documentId: string; version: number; decision: "approve" | "return"; note?: string | null | undefined }) {
+  const d = await docRow(input.documentId);
+  await assertRead(userId, d.offering_id);
+  const v = await versionRow(d.id, input.version);
+  const { generatedDocumentReviewError } = await import("./fund-document-generation-policy");
+  const validation = generatedDocumentReviewError({ ...v, generation_issues: input.decision === "return" ? [] : v.generation_issues }, userId, d.current_version);
+  if (validation) {
+    if (v.created_by !== userId || !(await (await import("./self-approval.server")).selfApprove(userId, "generated_document", [v.id]))) throw new Error(validation);
+    const remaining = generatedDocumentReviewError({ ...v, created_by: "override", generation_issues: input.decision === "return" ? [] : v.generation_issues }, userId, d.current_version);
+    if (remaining) throw new Error(remaining);
+  }
+  if (input.decision === "return" && !input.note?.trim()) throw new Error("Give a reason for returning this draft.");
+  if (input.decision === "approve") await (await import("./legal-name-gate.server")).assertLegalName({ offeringId: d.offering_id }, "offering_document_approval");
+  const { data: saved, error } = await db().from("offering_document_versions").update({ self_serve_review_state: input.decision === "approve" ? "approved" : "returned", self_serve_review_note: input.note?.trim() || null, approval_status: input.decision === "approve" ? "approved" : "uploaded_review_required", approved_by: userId, approved_at: now() }).eq("id", v.id).eq("self_serve_review_state", "pending").select("id").maybeSingle();
+  if (error || !saved) throw new Error(error?.message || "The draft changed. Refresh before reviewing.");
   return { ok: true };
 }
 
@@ -278,6 +306,7 @@ export async function activateDocumentVersion(
   await assertTemplateEditor(userId, d, input.version);
   const v = await versionRow(d.id, input.version);
   const templates = await approvedTemplateVersions(d.offering_id);
+  if (v.self_serve_review_state && v.self_serve_review_state !== "approved") throw new Error("Another authorized person must approve this draft before making it available.");
   if (v.approval_status === "uploaded_review_required" && !templates.has(`${d.id}:${v.version}`)) {
     // Self-serve: putting a version in use is the approval; recorded with who did it.
     await (await import("@/lib/legal-name-gate.server")).assertLegalName({ offeringId: d.offering_id }, "offering_document_approval");

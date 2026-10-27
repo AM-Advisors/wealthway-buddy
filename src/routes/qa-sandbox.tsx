@@ -6,7 +6,7 @@
  * anything not explicitly modeled is blocked.
  */
 import { createFileRoute, createRootRoute, createRoute, createRouter, RouterProvider, Outlet, createMemoryHistory, useParams, Link } from "@tanstack/react-router";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { CreateInvestor } from "@/components/create-investor";
 import { WireFromBankForm } from "@/components/wire-from-bank-form";
@@ -18,6 +18,7 @@ import { QA_FUND_ID, QA_FUND_NAME, QA_MANAGER_NAME } from "@/lib/qa-sandbox/fict
 import { QaBillingReadback } from "@/components/qa-billing-readback";
 import { InvestorOnboardingGuide } from "@/components/investor-onboarding-guide";
 import { QaCommercialWorkflow } from "@/components/qa-commercial-workflow";
+import { QaFundDocuments } from "@/components/qa-fund-documents";
 
 export const Route = createFileRoute("/qa-sandbox")({
   head: () => ({
@@ -90,8 +91,9 @@ function QaSandboxPage() {
 
 function SandboxShell({ children }: { children: React.ReactNode }) {
   const { state, role, setRole } = useQa();
+  const queryClient = useQueryClient();
   // Update the mock state synchronously so remounted queries see the new role.
-  const pick = (r: QaRole) => { state.role = r; setRole(r); };
+  const pick = (r: QaRole) => { state.role = r; setRole(r); void queryClient.invalidateQueries(); };
   return (
     <div className="min-h-screen bg-background">
       <div className="border-b bg-muted/60 px-4 py-3">
@@ -114,7 +116,7 @@ function SandboxShell({ children }: { children: React.ReactNode }) {
 
 function SandboxHome() {
   const { state, role } = useQa();
-  const [tab, setTab] = useState<"investor" | "wire" | "billing" | "guide" | "commercial">("investor");
+  const [tab, setTab] = useState<"investor" | "wire" | "billing" | "guide" | "commercial" | "documents">("investor");
   const [formKey, setFormKey] = useState(0);
   return (
     <>
@@ -132,12 +134,13 @@ function SandboxHome() {
             <Button size="sm" variant={tab === "wire" ? "default" : "outline"} onClick={() => setTab("wire")}>Wire sender</Button>
             <Button size="sm" variant={tab === "billing" ? "default" : "outline"} onClick={() => setTab("billing")}>Client billing</Button>
             <Button size="sm" variant={tab === "commercial" ? "default" : "outline"} onClick={() => setTab("commercial")}>Team workflow</Button>
+            <Button size="sm" variant={tab === "documents" ? "default" : "outline"} onClick={() => setTab("documents")}>Fund documents</Button>
             <Button size="sm" variant={tab === "guide" ? "default" : "outline"} onClick={() => setTab("guide")}>Investor walkthrough</Button>
             <Button size="sm" variant="ghost" onClick={() => setFormKey((k) => k + 1)}>Reset form</Button>
           </div>
           {tab === "investor" ? (
             <CreateInvestor key={formKey} fundId={QA_FUND_ID} isStaff={role === "staff"} />
-          ) : tab === "commercial" ? <QaCommercialWorkflow key={formKey} /> : tab === "billing" ? <QaBillingReadback key={formKey} /> : tab === "guide" ? <InvestorOnboardingGuide /> : (
+          ) : tab === "documents" ? <QaFundDocuments key={`${formKey}-${role}`} /> : tab === "commercial" ? <QaCommercialWorkflow key={formKey} /> : tab === "billing" ? <QaBillingReadback key={formKey} /> : tab === "guide" ? <InvestorOnboardingGuide /> : (
             <Card>
               <CardHeader><CardTitle className="text-base">Wire instructions</CardTitle></CardHeader>
               <CardContent><WireFromBankForm key={`${formKey}-${role}`} fundId={QA_FUND_ID} /></CardContent>

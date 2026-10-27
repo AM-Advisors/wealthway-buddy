@@ -9,7 +9,7 @@
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
 - Read src/lib/AGENTS.md for scoped rules, including exact-check review evidence reuse.
-- Fund generation is Harmonious-staff-only across templates, starter drafts and standard forms; DOCX autofill reads active fees, formats percentages and flags fixed legal conflicts without auto-activation — why: staff own generation, canonical facts never overwrite signed history.
+- Fund templates use fund-document-generation-access.server.ts: staff or exact-fund Self Serve managers; client drafts need independent version approval before signing. Legacy generators stay staff-only — why: canonical drafts, retained signed history.
 - Starter side-letter selections share sl_combined rendering in fund-doc-templates.ts, with separate values for each selected item; legacy keys remain readable — why: one document contains all requested terms without mixing fee/carry values or changing signed history.
 - Default investors use null class keys; ClassAssignmentCard and investor-scoped SideLetterRegistry link exceptions, with investor-term-fields preserving separate fee/carry/minimum inputs — why: defaults and signed history stay intact.
 - Operating Agreement sends verify recorded signatory/title and pin private PDFs; staff-designated signed replacements promote atomically new-only with stale-version guards. Tracker manual notes never execute or publish — why: exact copies and retained investor history.

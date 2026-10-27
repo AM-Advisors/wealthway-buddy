@@ -13,6 +13,16 @@ const newInvestor = {
 };
 
 describe("QA sandbox mock server", () => {
+  it("fictional generation requires independent review before availability", () => {
+    const state = createQaState("manager");
+    handleQaServerCall("generateFundTypeDocumentsFn", {}, state);
+    expect(() => handleQaServerCall("activateDocumentVersionFn", {}, state)).toThrow("Approve");
+    expect(() => handleQaServerCall("reviewGeneratedDocumentFn", { decision: "approve" }, state)).toThrow("Another");
+    state.role = "staff";
+    handleQaServerCall("reviewGeneratedDocumentFn", { decision: "approve" }, state);
+    handleQaServerCall("activateDocumentVersionFn", {}, state);
+    expect(state.documentDraft?.active).toBe(true);
+  });
   it("searches fictional people by email and masks the result", () => {
     const state = createQaState();
     const r = handleQaServerCall("searchInvestorsFn", { email: "casey.alden@example.com" }, state) as any;

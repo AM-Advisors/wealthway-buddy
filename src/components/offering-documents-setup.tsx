@@ -203,11 +203,11 @@ function DocumentRow({ doc, data, offeringId, onChanged }: { doc: Doc; data: Dat
           {pendingRequests.length > 0 && <Badge variant="secondary">{pendingRequests.length} change request(s)</Badge>}
           {latest && <Badge variant={latest.state === "ready_for_use" ? "default" : "secondary"}>{VERSION_STATE_LABELS[latest.state]}</Badge>}
           {previewVersion && <OfferingDocumentViewButton onClick={() => setViewVersion(previewVersion.version)} />}
-          {data.canEdit && latest?.approval === "uploaded_review_required" && !latest.approvedTemplate && (
+          {data.canEdit && latest?.approval === "uploaded_review_required" && !latest.approvedTemplate && (!latest.reviewState || latest.canReview || isSuper) && latest.reviewState !== "returned" && (
             <Button size="sm" variant="outline" disabled={busy} onClick={() => run(() => approve({ data: { documentId: doc.id, version: latest.version } }), "Document approved")}>Mark approved</Button>
           )}
           {(data.canEdit || doc.canConfigureTemplate) && latest && latest.approval !== "superseded" && !latest.isActive && latest.rolloutScope !== "single" && (
-            <Button size="sm" disabled={busy || !doc.usage || (needsSigning && latest.signingStatus !== "confirmed")} onClick={() => { setOpen(true); void startActivate(latest.version); }}>Approve and make available</Button>
+            <Button size="sm" disabled={busy || !doc.usage || (latest.reviewState && latest.reviewState !== "approved") || (needsSigning && latest.signingStatus !== "confirmed")} onClick={() => { setOpen(true); void startActivate(latest.version); }}>{latest.reviewState ? "Make available" : "Approve and make available"}</Button>
           )}
           {!data.canEdit && active && <Button size="sm" variant="outline" onClick={() => setShowRequest(!showRequest)}>Request a change</Button>}
           {data.canEdit && active && <Button size="sm" variant="outline" onClick={() => setOpen(true)}>Replace</Button>}

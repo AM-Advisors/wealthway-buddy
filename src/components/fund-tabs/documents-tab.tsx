@@ -158,7 +158,7 @@ export function DocumentsTab({ fundId }: { fundId: string }) {
                     ))}
                   </div>
                   <div className="flex items-center gap-2">
-                    {canGenerate && f.template_key === 'operating_agreement' && f.signing_order === 'manager_only' && f.url && <Button size="sm" variant="outline" onClick={() => { setReplacement(f); setReplacementDocument(''); }}>Use as replacement</Button>}
+                    {permission.data?.staff && f.template_key === 'operating_agreement' && f.signing_order === 'manager_only' && f.url && <Button size="sm" variant="outline" onClick={() => { setReplacement(f); setReplacementDocument(''); }}>Use as replacement</Button>}
                     {f.status !== "signed" && f.body && <Button size="sm" variant="outline" onClick={() => openSend(f)}>{f.status === "out_for_signature" ? "Resend" : "Send for signature"}</Button>}
                     <Badge variant={f.status === "signed" ? "default" : "outline"}>{STATUS[f.status] ?? f.status}</Badge>
                     {f.status !== "signed" && <Button size="sm" variant="outline" onClick={() => setBoxes(f)}>Signature boxes</Button>}
@@ -284,13 +284,13 @@ export function DocumentsTab({ fundId }: { fundId: string }) {
       {made && (
         <Dialog open onOpenChange={(o) => !o && setMade(null)}>
           <DialogContent className="max-w-lg">
-            <DialogHeader><DialogTitle>{made.title}</DialogTitle><DialogDescription>Added to the fund's offering documents. No additional Harmonious approval is required.</DialogDescription></DialogHeader>
+            <DialogHeader><DialogTitle>{made.title}</DialogTitle><DialogDescription>{permission.data?.staff ? "Added to the fund's offering documents." : "Draft created. Another fund manager or authorized Harmonious reviewer must approve this version before signing."}</DialogDescription></DialogHeader>
             <div className="space-y-3 text-sm">
               {made.signing?.roles?.length ? (
                 <div>
                   <p className="font-medium">Signature block</p>
                   <ol className="mt-1 list-decimal pl-5">{made.signing.roles.map((r: string) => <li key={r}>{ROLE[r] ?? r}</li>)}</ol>
-                  <p className="mt-1 text-xs text-muted-foreground">{made.signing.configured ? "Signing boxes set up and ready to send. You can still change them under Offering documents." : `Not set up yet: ${made.signing.message ?? "check the signing setup."}`}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{made.signing.configured ? "Signing boxes configured. Approval and availability are recorded separately." : `Not set up yet: ${made.signing.message ?? "check the signing setup."}`}</p>
                 </div>
               ) : <p className="text-muted-foreground">No signatures needed for this document.</p>}
               {made.autofill && <p className="text-xs text-muted-foreground">Filled {made.autofill.filled.length} field{made.autofill.filled.length === 1 ? "" : "s"} from the fund.{made.autofill.open.length ? ` Still blank: ${made.autofill.open.join(", ")}.` : ""}</p>}

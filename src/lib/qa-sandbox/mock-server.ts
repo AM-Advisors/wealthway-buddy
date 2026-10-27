@@ -41,6 +41,7 @@ function decodeCrossJson(node: any): any {
 import { rankMatches, validateQuickAdd, createNewBlocker } from "@/lib/investor-record-model";
 import { previewInvoiceFee } from "@/lib/invoice-fee-preview";
 import { fictionalFeeFacts, QA_FEE_ID } from "./fee-fixture";
+import { generatedDocumentReviewError } from "@/lib/fund-document-generation-policy";
 
 export type QaRole = "staff" | "manager";
 
@@ -52,10 +53,11 @@ export type QaState = {
   uploads: string[];
   /** Matches from the most recent search, so create can enforce the email blocker. */
   lastMatches: ReturnType<typeof rankMatches> | null;
+  documentDraft: { created_by: string; version: number; self_serve_review_state: string; generation_issues: string[]; active: boolean } | null;
 };
 
 export function createQaState(role: QaRole = "staff"): QaState {
-  return { role, wire: {}, createdInvestors: [], people: [...QA_PEOPLE], uploads: [], lastMatches: null };
+  return { role, wire: {}, createdInvestors: [], people: [...QA_PEOPLE], uploads: [], lastMatches: null, documentDraft: null };
 }
 
 const SERVER_FN_HEADER = "x-tsr-serverfn";
@@ -68,6 +70,7 @@ const KNOWN_FNS = [
   "prefillWireFromBank",
   "uploadFundFileFn",
   "previewInvoiceFeeEntry",
+  "fundDocumentGenerationAccessFn", "fundTypeTemplatesFn", "generateFundTypeDocumentsFn", "listFundTemplateDocumentsFn", "templateDocSendStatusFn", "reviewGeneratedDocumentFn", "activateDocumentVersionFn",
 ] as const;
 
 /** Map a server-function URL to the export name it was built from. Ids are base64 JSON: { file, export }. */
@@ -91,6 +94,30 @@ export class QaBlockedError extends Error {}
 /** Pure handler for one mocked server-function call. Throws Error with a user-facing message on failure. */
 export function handleQaServerCall(fnName: string, data: any, state: QaState): unknown {
   switch (fnName) {
+    case "fundDocumentGenerationAccessFn": return { templates: true, starter: false, staff: state.role === "staff" };
+    case "fundTypeTemplatesFn": return { fundType: "SPV", templates: [{ id: "qa-template", title: "Fablewood Operating Agreement", approvedVersion: 1, generated: Boolean(state.documentDraft) }] };
+    case "generateFundTypeDocumentsFn": {
+      state.documentDraft = { created_by: state.role, version: 1, self_serve_review_state: "pending", generation_issues: [], active: false };
+      return { made: [{ title: "Fablewood Operating Agreement", documentId: "qa-document", open: [] }] };
+    }
+    case "templateDocSendStatusFn": return {};
+    case "listFundTemplateDocumentsFn": {
+      const draft = state.documentDraft;
+      return draft ? [{ id: "qa-document", title: "Fablewood Operating Agreement", usedAt: "2026-10-27T08:00:00Z", version: 1, versionId: "qa-version", fileName: "fablewood.docx", isActive: draft.active, signers: [], signingStatus: "confirmed", canDelete: false, reviewState: draft.self_serve_review_state, canReview: draft.created_by !== state.role && draft.self_serve_review_state === "pending", generationIssues: [], approvedAt: draft.self_serve_review_state === "approved" ? "2026-10-27T08:05:00Z" : null }] : [];
+    }
+    case "reviewGeneratedDocumentFn": {
+      if (!state.documentDraft) throw new QaBlockedError("Generate a fictional draft first.");
+      const issue = generatedDocumentReviewError(state.documentDraft, state.role, 1);
+      if (issue) throw new Error(issue);
+      if (data?.decision === "return" && !data?.note?.trim()) throw new Error("Give a reason.");
+      state.documentDraft.self_serve_review_state = data?.decision === "approve" ? "approved" : "returned";
+      return { ok: true };
+    }
+    case "activateDocumentVersionFn": {
+      if (state.documentDraft?.self_serve_review_state !== "approved") throw new Error("Approve this version first.");
+      state.documentDraft.active = true;
+      return { ok: true, resign: 0 };
+    }
     case "searchInvestorsFn": {
       const matches = rankMatches(
         { email: data?.email ?? null, name: data?.name ?? null, entityName: data?.entityName ?? null },
