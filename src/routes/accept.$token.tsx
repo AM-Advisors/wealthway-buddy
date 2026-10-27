@@ -14,7 +14,7 @@ import { ClientSowReader } from "@/components/sales/client-sow-reader";
 import { CARD_SERVICE_FEE_LABEL } from "@/lib/card-fee";
 import { SOW_ROLE_DISCLAIMER } from "@/lib/agreement-templates";
 import { RESPONSE_STATUS } from "@/lib/sales-response-model";
-import { acceptanceRemittance, respondToSalesDocument, signAcceptance, viewAcceptance } from "@/lib/sales-acceptance.functions";
+import { acceptanceRemittance, addAcceptanceTeammate, respondToSalesDocument, signAcceptance, viewAcceptance } from "@/lib/sales-acceptance.functions";
 import { InvoiceDueDate } from "@/components/invoice-due-date";
 import { billingDate } from "@/lib/client-billing-links";
 
@@ -182,6 +182,8 @@ function AcceptPage() {
               </div>
             )}
             <MethodPicker value={method} onChange={setMethod} />
+            {(d as any).payer && <p className="text-sm text-muted-foreground">The invoice will also go to {(d as any).payer.name} ({(d as any).payer.email}).</p>}
+            {(d as any).canAddTeammate && <TeammateBox token={token} onDone={(handedOff) => handedOff ? qc.invalidateQueries({ queryKey: ["accept", token] }) : qc.invalidateQueries({ queryKey: ["accept", token] })} />}
             <label className="flex items-start gap-2 text-sm"><input type="checkbox" className="mt-1" checked={agree} onChange={(e) => setAgree(e.target.checked)} />
               <span>I approve and agree to this {KIND[d.kind]?.toLowerCase() ?? "document"} on behalf of my organization. Typing my name is my electronic signature.</span></label>
             <Button className="w-full" disabled={busy || !agree || (!!d.msa && !msaAgree) || !policiesOk || name.trim().length < 2} onClick={submit}>Sign and approve</Button>
@@ -201,6 +203,38 @@ function AcceptPage() {
         <TabsContent value="sow"><ClientSowReader sow={d.sow} /></TabsContent>
       </Tabs>
     </Shell>
+  );
+}
+
+/** The signer can pass signing to a teammate, or name who receives and pays the invoice. */
+function TeammateBox({ token, onDone }: { token: string; onDone: (handedOff: boolean) => void }) {
+  const add = useServerFn(addAcceptanceTeammate);
+  const [open, setOpen] = useState(false);
+  const [role, setRole] = useState<"sign" | "pay">("pay");
+  const [n, setN] = useState(""); const [e, setE] = useState(""); const [t, setT] = useState(""); const [busy, setBusy] = useState(false);
+  if (!open) return <Button type="button" size="sm" variant="outline" onClick={() => setOpen(true)}>Add someone from my team</Button>;
+  return (
+    <div className="space-y-3 rounded-md border p-3">
+      <p className="text-sm font-medium">Add someone from your team</p>
+      <div className="flex flex-wrap gap-2">
+        <Button type="button" size="sm" variant={role === "pay" ? "default" : "outline"} onClick={() => setRole("pay")}>They'll receive and pay the invoice</Button>
+        <Button type="button" size="sm" variant={role === "sign" ? "default" : "outline"} onClick={() => setRole("sign")}>They should sign instead of me</Button>
+      </div>
+      <div className="grid gap-2 sm:grid-cols-3">
+        <div><Label htmlFor="tm-n">Full name</Label><Input id="tm-n" value={n} onChange={(x) => setN(x.target.value)} /></div>
+        <div><Label htmlFor="tm-e">Email</Label><Input id="tm-e" type="email" value={e} onChange={(x) => setE(x.target.value)} /></div>
+        <div><Label htmlFor="tm-t">Title (optional)</Label><Input id="tm-t" value={t} onChange={(x) => setT(x.target.value)} /></div>
+      </div>
+      {role === "sign" && <p className="text-xs text-muted-foreground">We'll email them their own link to sign. Your link will stop working for signing.</p>}
+      <div className="flex gap-2">
+        <Button type="button" size="sm" disabled={busy || n.trim().length < 2 || !e.includes("@")} onClick={async () => {
+          setBusy(true);
+          try { const r = await add({ data: { token, role, fullName: n, email: e, title: t || null } }); toast.success(r.handedOff ? `Sent to ${n} to sign` : `${n} will receive the invoice`); setOpen(false); onDone(r.handedOff); }
+          catch (err) { toast.error((err as Error).message); } finally { setBusy(false); }
+        }}>Save</Button>
+        <Button type="button" size="sm" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
+      </div>
+    </div>
   );
 }
 

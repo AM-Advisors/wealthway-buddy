@@ -193,6 +193,8 @@ export async function viewForToken(token: string) {
     stale: r.kind !== "quote" && r.approvedVersion !== t.version,
     blocker: acc ? null : (replacedSigner(r, t.email) ?? signBlocker(r.kind, r.status, r.approvedVersion, t.version)),
     salesContact: await salesContactFor(db, r.clientId, r.ownerId).then((c) => c && { name: c.name, email: c.email }),
+    canAddTeammate: r.kind === "quote" && !!r.clientId,
+    payer: r.kind === "quote" ? await (async () => { const { data: qq } = await db.from("sales_quotes").select("billing_contact_id").eq("id", r.id).maybeSingle(); if (!qq?.billing_contact_id) return null; const { data: p } = await db.from("crm_contacts").select("full_name, email").eq("id", qq.billing_contact_id).maybeSingle(); return p ? { name: String(p.full_name), email: String(p.email ?? "") } : null; })() : null,
     policies: acc ? [] : (await policyNeedsFor(db, t.email)).needs,
     sections: (r.sections as any[]).filter((x) => x?.key !== "terms"), msa: acc ? null : await msaForClient(db, r.clientId), lines: lines.map((l) => ({ label: l.label, quantity: l.quantity, amountCents: l.amount_cents })),
     showPricing: r.showPricing,
