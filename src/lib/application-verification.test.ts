@@ -25,8 +25,11 @@ describe("exact investing-party funding verification", () => {
   it("never treats missing linked-person results as approved", () => {
     expect(investingPartyChecks(app, { kyc_status: null, aml_status: null }).kyc_status).toBe("not_started");
   });
-  it("preserves legacy application checks only without a linked person", async () => {
-    expect(await loadApplicationVerification(client([], null), app)).toEqual(app);
+  it("blocks stale legacy approval without an explicit investing-person link", async () => {
+    await expect(loadApplicationVerification(client([], null), app)).rejects.toThrow("link needs review");
+  });
+  it("blocks an investment that has no linked investing person", async () => {
+    await expect(loadApplicationVerification(client([{ person_id: null, offering_id: "fund-a" }], null), app)).rejects.toThrow("link needs review");
   });
   it("reads the explicitly linked person, not the login account", async () => {
     const db = client([{ person_id: "investor-person", offering_id: "fund-a" }], { kyc_status: "review", aml_status: "declined" });

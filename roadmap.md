@@ -1,5 +1,9 @@
 # Roadmap
 
+## Missing investment/application link safeguard (2026-10-27)
+- [ ] Remove stale-approval fallback for missing investing-person links and run offline regression tests.
+- [ ] Correct yavaxi6493's active Erebor link only after resolving conflicting application history: one signed $2,500,000 application, one canceled investment's verification application, versus active $50,000 investment. No safe automatic candidate established.
+
 ## Exact investing-party verification and funding (2026-10-27)
 - [x] Use explicitly application-linked person checks for legacy funding reads/actions and investor/fund compliance details, without account-based matching or weakening pending/review/declined results.
 - [x] Stage atomic future person-to-active-application verification synchronization with retained audit evidence; applies on draft acceptance only, no backfill or live writes. Account identity decisions remain separate and do not approve an investing party.

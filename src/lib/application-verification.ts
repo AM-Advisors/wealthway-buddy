@@ -21,7 +21,11 @@ export async function loadApplicationVerification<T extends ApplicationChecks>(s
     throw new Error("Your investment verification link needs review before continuing.");
   }
   const personId = rows[0]?.person_id;
-  if (!personId) return investingPartyChecks(app, null); // legacy application with no linked person
+  if (!personId) {
+    // No explicit relationship means the old approval cannot be attributed to
+    // this investing party. Never guess from account, fund, signature or amount.
+    throw new Error("Your investment verification link needs review before continuing.");
+  }
   const { data: person, error: personError } = await supabase.from("persons")
     .select("kyc_status, aml_status, merged_into_person_id").eq("id", personId).maybeSingle();
   if (personError || !person || person.merged_into_person_id) {
