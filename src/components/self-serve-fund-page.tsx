@@ -16,7 +16,7 @@ const areas = [
 export function SelfServeFundPage({ area, onAreaChange, sections }: { area: SelfServeArea; onAreaChange: (area: SelfServeArea) => void; sections: Record<SelfServeArea, () => ReactNode> }) {
   return <section className="min-w-0 space-y-5" aria-label="Manage your fund">
     <Tabs value={area} onValueChange={value => { const next = SELF_SERVE_AREAS.find(a => a === value); if (next) onAreaChange(next); }}>
-      <TabsList className="grid h-auto w-full grid-cols-2 gap-1 bg-muted p-1 sm:grid-cols-3 xl:grid-cols-6">
+      <TabsList className="grid h-auto w-full grid-cols-2 gap-1 bg-muted p-1 sm:grid-cols-3">
         {areas.map(a => <TabsTrigger key={a.value} value={a.value} className="h-auto min-h-11 gap-2 whitespace-normal px-2 py-2 text-left"><a.icon className="size-4 shrink-0" aria-hidden /><span>{a.label}</span></TabsTrigger>)}
       </TabsList>
       {areas.map(a => <TabsContent key={a.value} value={a.value} className="mt-5 min-w-0">{area === a.value && sections[a.value]()}</TabsContent>)}
