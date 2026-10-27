@@ -235,6 +235,10 @@ export function canonicalRedirect(
   }
 
   if (surface === "shared") return null;
+  // Harmonious staff open fund-manager screens from Operations. Keeping them on
+  // the Operations address keeps their existing sign-in and verification; the
+  // server still authorizes every request. Client addresses are unchanged.
+  if (host === opsHost && hasPrefix(pathname, "/manager")) return null;
   if (surface === "ops" && host !== opsHost) return { location: `${ops}${tail}`, status: 302 };
   if (surface === "client" && host !== clientHost) {
     return { location: `${client}${tail}`, status: 302 };
