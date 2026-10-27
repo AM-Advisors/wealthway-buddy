@@ -1,5 +1,10 @@
 # Roadmap
 
+## Sales to Operations handoff (2026-10-27)
+- [ ] Reuse canonical staff tasks for a quote-linked fund handoff, with receiving Operations owner, due date, acknowledgment and status on the fund page.
+- [ ] Add focused authorization, transition and fictional click-through checks; no live assignments, sends or money changes.
+- [ ] Durable authenticated save/read-back awaits independently isolated QA evidence and synthetic sessions.
+
 ## Connected commercial teams (2026-10-27)
 - [x] Unify promotional email suppression and authorized opt-in audiences across Marketing, CRM campaigns, Sales outreach and rep-confirmed flows; transactional notices remain separate and prior opt-outs cannot be silently cleared.
 - [x] Tighten contact/flow history visibility and align menus with existing server authority, without new role grants.
