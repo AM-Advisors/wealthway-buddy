@@ -12,6 +12,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { SearchableSelect, type SearchableOption } from "@/components/ui/searchable-select";
+import { requestTaskStatusLabel, type RequestTaskProgress } from "@/lib/fund-request-handoff-model";
+import { ArrowRight } from "lucide-react";
+
+export function RequestTaskProgressView({ task }: { task: RequestTaskProgress | null }) {
+  return <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground" aria-label="Linked task progress">
+    {task ? <><span>Task: {requestTaskStatusLabel(task.status)}</span><span>{task.team === "operations" ? "Operations" : task.team === "sales" ? "Sales" : task.team ?? "No team"}</span><span>{task.ownerName ?? "Unassigned"}</span><span>Due {task.dueDate ? fmtDate(task.dueDate) : "Not set"}</span></> : <span>Linked task not available</span>}
+  </div>;
+}
 
 const sel = "h-9 rounded-md border bg-background px-2 text-sm";
 const toB64 = (f: File) => new Promise<{ name: string; base64: string }>((res, rej) => { const r = new FileReader(); r.onload = () => res({ name: f.name, base64: String(r.result).split(",")[1] ?? "" }); r.onerror = rej; r.readAsDataURL(f); });
@@ -50,6 +58,7 @@ export function FundRequests({ fundId, preselect }: { fundId: string; preselect?
           <div className="min-w-0 flex-1">
             <p className="font-medium">{r.title}</p>
             <p className="text-xs text-muted-foreground">{requestType(r.request_type).label} · Submitted {fmtDate(r.submitted_at)}{r.due_date ? ` · Due ${fmtDate(r.due_date)}` : ""} · Updated {fmtDate(r.updated_at)}</p>
+            {q.data?.staff && <RequestTaskProgressView task={r.linkedTask} />}
           </div>
           <span className="text-xs text-muted-foreground">{REQUEST_STATUS_LABEL[r.status as keyof typeof REQUEST_STATUS_LABEL]}</span>
           <ResponsibilityBadge status={r.responsibility_status} />
@@ -146,6 +155,8 @@ function RequestDetail({ id, fundId, onBack }: { id: string; fundId: string; onB
           <ResponsibilityBadge status={r.responsibility_status} />
         </div>
         <p className="mt-1 text-sm text-muted-foreground">{REQUEST_STATUS_LABEL[r.status as keyof typeof REQUEST_STATUS_LABEL]} · {ENT[r.entitlement_status]}{r.entitlement_status !== "INCLUDED" ? " · this request may be outside your current service scope. Harmonious will review it before work begins." : ""}</p>
+        {staff && <RequestTaskProgressView task={r.linkedTask} />}
+        {!staff && <p className="mt-2 text-sm text-muted-foreground">Due {r.due_date ? fmtDate(r.due_date) : "Not set"}</p>}
         {r.client_notes && <p className="mt-2 rounded-md bg-muted p-2 text-sm">{r.client_notes}</p>}
         <ol className="mt-4 grid gap-2 sm:grid-cols-4">
           {stages.map((s: string, i: number) => (
@@ -191,10 +202,15 @@ function RequestDetail({ id, fundId, onBack }: { id: string; fundId: string; onB
   );
 }
 
-export function StaffControls({ r, stages, assignmentOptions, onSaved }: { r: any; stages: string[]; assignmentOptions: SearchableOption[]; onSaved: () => void }) {
+export function StaffControls({ r, stages, assignmentOptions, onSaved }: { r: any; stages: string[]; assignmentOptions: (SearchableOption & { operations?: boolean })[]; onSaved: () => void }) {
   const update = useServerFn(updateFundRequest);
   const [v, setV] = useState({ status: r.status, stage: r.stage, owner: r.assigned_to ?? "", team: r.assigned_team ?? "operations", due: r.due_date ?? "", client: r.client_notes ?? "", internal: r.internal_notes ?? "" });
   const [busy, setBusy] = useState(false);
+  const transfer = async () => {
+    setBusy(true);
+    try { await update({ data: { id: r.id, transferToOperations: true, assignedTo: v.owner || null, dueDate: v.due || null } }); toast.success("Transferred to Operations."); onSaved(); }
+    catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
+  };
   const save = async () => {
     setBusy(true);
     try { await update({ data: { id: r.id, ...(v.status !== r.status ? { status: v.status } : {}), ...(Number(v.stage) !== r.stage ? { stage: Number(v.stage) } : {}), ...(v.owner !== (r.assigned_to ?? "") ? { assignedTo: v.owner || null } : {}), ...(v.team !== (r.assigned_team ?? "operations") ? { assignedTeam: v.team } : {}), ...(v.due !== (r.due_date ?? "") ? { dueDate: v.due || null } : {}), ...(v.client !== (r.client_notes ?? "") ? { clientNotes: v.client || null } : {}), ...(v.internal !== (r.internal_notes ?? "") ? { internalNotes: v.internal || null } : {}) } }); toast.success("Request updated."); onSaved(); }
@@ -215,6 +231,7 @@ export function StaffControls({ r, stages, assignmentOptions, onSaved }: { r: an
       <Input value={v.client} onChange={(e) => setV({ ...v, client: e.target.value })} placeholder="Client-visible note (e.g. what information you need)" aria-label="Client note" />
       <Input value={v.internal} onChange={(e) => setV({ ...v, internal: e.target.value })} placeholder="Internal notes (never shown to the client)" aria-label="Internal notes" />
       <Button size="sm" disabled={busy} onClick={save}>Save</Button>
+      {["sales", "account_management"].includes(r.assigned_team) && isOpenRequest(r.status) && r.status !== "CANCELLATION_REVIEW" && <Button size="sm" variant="outline" disabled={busy || !v.due || !assignmentOptions.some(o => o.value === v.owner && o.operations)} onClick={transfer}><ArrowRight className="mr-2 size-4" />Transfer to Operations</Button>}
     </section>
   );
 }
