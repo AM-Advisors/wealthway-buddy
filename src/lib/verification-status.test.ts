@@ -79,7 +79,7 @@ d2("detail survives the person-record merge", () => {
     e2(vlabel(r.kyc_status, r.kyc_status_detail)).toBe("In progress");
   });
   i2("an approved person result never carries a stale detail", () => {
-    const r = wcv({ user_id: "u", kyc_status: "info_requested", aml_status: null }, psu([{ user_id: "u", kyc_status: "approved", aml_status: null }]));
+    const r = wcv({ user_id: "u", kyc_status: "info_requested", aml_status: null as string | null }, psu([{ user_id: "u", kyc_status: "approved", aml_status: null }]));
     e2(vlabel(r.kyc_status, r.kyc_status_detail)).toBe("Approved");
   });
 });
