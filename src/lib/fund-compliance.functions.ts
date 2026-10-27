@@ -169,6 +169,7 @@ export const getFundInvestorCompliance = createServerFn({ method: "POST" })
         },
         aml: {
           status: String(app.aml_status),
+          detail: (app as any).aml_status_detail ?? null,
           provider: (a?.provider as string | null) ?? null,
           decidedAt: (a?.completed_at as string | null) ?? (a?.updated_at as string | null) ?? null,
           matches,

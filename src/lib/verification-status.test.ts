@@ -70,3 +70,16 @@ d2("verification label detail wording", () => {
   i2("keeps in-progress checks distinct from not started", () => { e2(vlabel("in_progress")).toBe("In progress"); e2(vlabel("not_started")).toBe("Not started"); });
   i2("keeps information-needed checks distinct from needs review", () => { e2(vlabel("info_requested")).toBe("More information needed"); e2(vlabel("review")).toBe("Needs review"); });
 });
+
+import { withCanonicalVerification as wcv, personStatusByUser as psu } from "./verification-status";
+d2("detail survives the person-record merge", () => {
+  i2("person record in progress shows In progress, not Not started", () => {
+    const r = wcv({ user_id: "u", kyc_status: "not_started", aml_status: "not_started" }, psu([{ user_id: "u", kyc_status: "in_progress", aml_status: null }]));
+    e2(r.kyc_status).toBe("not_started");
+    e2(vlabel(r.kyc_status, r.kyc_status_detail)).toBe("In progress");
+  });
+  i2("an approved person result never carries a stale detail", () => {
+    const r = wcv({ user_id: "u", kyc_status: "info_requested", aml_status: null }, psu([{ user_id: "u", kyc_status: "approved", aml_status: null }]));
+    e2(vlabel(r.kyc_status, r.kyc_status_detail)).toBe("Approved");
+  });
+});
