@@ -20,6 +20,9 @@ import { FORM_SECTIONS, changedBySection, type FieldDef } from "@/lib/fund-setup
 import { FundOriginControl } from "@/components/fund-origin-control";
 import { FormationEvidenceSection } from "@/components/fund-setup-extras";
 import { FundW9Card } from "@/components/fund-w9-card";
+import { FundTeamAccessBox } from "@/components/fund-team-access-box";
+import { FundDocumentsHub } from "@/components/fund-documents-hub";
+import { Link } from "@tanstack/react-router";
 
 type Mode = "staff" | "manager";
 
@@ -28,7 +31,7 @@ type Mode = "staff" | "manager";
  * Mode only changes where Save goes: staff write to the fund record; managers submit for Harmonious review.
  * Every save is still authorized on the server.
  */
-export function FundSetupForm({ offeringId, mode, staffExtras }: { offeringId: string; mode: Mode; staffExtras?: React.ReactNode }) {
+export function FundSetupForm({ offeringId, mode, staffExtras, workspace = false }: { offeringId: string; mode: Mode; staffExtras?: React.ReactNode; workspace?: boolean }) {
   const qc = useQueryClient();
   const load = useServerFn(guidedSetupFn);
   const staffSave = useServerFn(staffSaveSetupFn);
@@ -68,7 +71,7 @@ export function FundSetupForm({ offeringId, mode, staffExtras }: { offeringId: s
         else { const r: any = await submit({ data: { offeringId, section: section as any, payload } }); if (!r?.applied) reviewed = true; }
       } catch (e: any) { failed.push(e?.message ?? "Could not save"); }
     }
-    if (failed.length) toast.error(failed[0]!);
+    if (failed.length) toast.error(failed[0] ?? "Could not save");
     else toast.success(`${label ? `${label}: ` : ""}${isStaff || !reviewed ? "Saved to the fund record" : "Sent to Harmonious for review"}`);
     if (!failed.length) setVals((cur) => keys ? Object.fromEntries(Object.entries(cur).filter(([k]) => !keys.includes(k))) : {});
     refresh();
@@ -137,7 +140,7 @@ export function FundSetupForm({ offeringId, mode, staffExtras }: { offeringId: s
   return (
     <div className="space-y-4 bg-background">
       <div className="flex items-center gap-3 rounded-2xl border bg-card px-3 py-3">
-        <Button variant="outline" size="icon" aria-label="Back" onClick={() => window.history.back()}><ChevronLeft className="h-4 w-4" /></Button>
+        {!workspace && <Button variant="outline" size="icon" aria-label="Back" onClick={() => window.history.back()}><ChevronLeft className="h-4 w-4" /></Button>}
         <div className="min-w-0 flex-1">
           <h2 className="truncate font-heading text-lg font-semibold">{allDone ? d.fundName : `Fund setup · ${d.fundName}`}</h2>
           {!allDone && <p className="text-xs text-muted-foreground">Launch readiness {d.launchPercent}%</p>}
@@ -161,13 +164,14 @@ export function FundSetupForm({ offeringId, mode, staffExtras }: { offeringId: s
           {(d.team as any[]).map((m, i) => <li key={i} className="rounded-xl border bg-background px-4 py-3"><span className="block text-xs capitalize text-muted-foreground">{String(m.role).replace(/_/g, " ")}</span>{m.name ?? "Not assigned"}</li>)}
         </ul>
         {isStaff ? <FundSignatoriesCard offeringId={offeringId} onChanged={refresh} /> : <p className="text-sm text-muted-foreground">Harmonious adds signers so each person completes an identity check. Signer on file: {prior["signers"] || "none yet"}.</p>}
+        {!isStaff && workspace && <FundTeamAccessBox fundId={offeringId} />}
       </SetupSection>
 
       <BankBox offeringId={offeringId} isStaff={isStaff} onChanged={refresh} />
       {!!(d.items as any[]).some((i) => i.section === "bank") && <History items={(d.items as any[]).filter((i) => i.section === "bank")} isStaff={isStaff} onChange={refresh} />}
 
       <SetupSection open={open} setOpen={setOpen} id="documents" title="Documents" status={<Chip tone={stepOf("document")?.status === "done" ? "done" : "miss"}>{stepOf("document")?.statusLabel ?? ""}</Chip>}>
-        {isStaff ? <OfferingDocumentsSetup offeringId={offeringId} onChanged={refresh} /> : <ManagerDocumentsChoice offeringId={offeringId} upload={<SubmitForm offeringId={offeringId} section="document" onDone={refresh} />} />}
+        {isStaff ? <OfferingDocumentsSetup offeringId={offeringId} onChanged={refresh} /> : workspace ? <Button asChild variant="outline"><Link to="/manager/fund/$fundId" params={{ fundId: offeringId }} search={{ area: "documents" }}>Manage fund documents</Link></Button> : <FundDocumentsHub fundId={offeringId} staff={false} />}
         <History items={(d.items as any[]).filter((i) => i.section === "document" || i.section === "fund_details" || i.section === "fees_team")} isStaff={isStaff} onChange={refresh} />
       </SetupSection>
 
@@ -175,7 +179,7 @@ export function FundSetupForm({ offeringId, mode, staffExtras }: { offeringId: s
         <ul className="space-y-1 text-sm">
           {(d.steps as any[]).filter((s) => s.step !== "launch").map((s) => <li key={s.step} className="flex justify-between gap-3 border-b py-2 last:border-0"><span className="capitalize">{String(s.step).replace(/_/g, " ")}</span><span className="text-muted-foreground">{s.statusLabel}</span></li>)}
         </ul>
-        <p className="text-sm text-muted-foreground">Harmonious launches the fund once every required item is in place.</p>
+        <p className="text-sm text-muted-foreground">Launch becomes available once the required fund details, reviews and signing setup are complete.</p>
       </SetupSection>}
 
       {isStaff && staffExtras && (
