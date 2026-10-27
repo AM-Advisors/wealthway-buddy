@@ -26,6 +26,7 @@ import {
   comparisonToMatch,
 } from "@/lib/address-compare";
 import { refreshOnboardingState } from "@/lib/identity.server";
+import { verifiedPersonBackfill } from "@/lib/kyc-person-backfill";
 
 const db = () => supabaseAdmin as any;
 
