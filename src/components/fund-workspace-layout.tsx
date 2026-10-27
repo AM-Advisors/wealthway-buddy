@@ -26,7 +26,7 @@ import { cn } from "@/lib/utils";
 
 const groups = [
   { label: "Fund", items: [
-    { slug: "", label: "Command Center", icon: Building2 },
+    { slug: "", label: "Manage fund", icon: Building2 },
     { slug: "approvals", label: "Approvals", icon: CheckSquare },
     { slug: "requests", label: "Requests", icon: Inbox },
     { slug: "calendar", label: "Calendar", icon: CalendarDays },
@@ -38,7 +38,7 @@ const groups = [
     { slug: "cap-table", label: "Cap Table", icon: Activity },
     { slug: "onboarding-link", label: "Onboarding Link", icon: Link2 },
   ] },
-  { label: "Operations", items: [
+  { label: "Fund records", items: [
     { slug: "assets", label: "Investments", icon: Activity },
     { slug: "transactions", label: "Capital", icon: WalletCards },
     { slug: "documents", label: "Documents", icon: FileText },

@@ -1,5 +1,10 @@
 # Roadmap
 
+## Self Serve fund page (2026-10-27)
+- [x] Replace the stacked manager fund overview with URL-selected setup, investors/invitations, documents, onboarding link, team and activity areas; mount selected tools only and retain their existing authorized saves and review controls.
+- [x] Remove staff-area links from client settings, add client portal shortcuts and correct client document audience; fictional navigation and review blocking checked, 57 focused safeguards passed.
+- [ ] Durable authenticated setup, launch and email delivery remain blocked by independently isolated QA and synthetic sessions. Signatory confirmation, bank verification, identity, financial reviews and legacy generators keep existing staff safeguards.
+
 ## Self Serve document generation (2026-10-27)
 - [x] Allow exact-fund Self Serve managers to generate approved-template drafts; independent exact-version approval/return and database gates precede existing activation/signing. Legacy starter/standard-form tools remain staff-only.
 - [x] Fictional generation, review and availability controls checked with blocked self-approval, no runtime errors and no mobile overflow; permission/version/database regressions passed.
