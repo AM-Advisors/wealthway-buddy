@@ -139,12 +139,12 @@ async function investorItems(ctx: Ctx, n: Names): Promise<AttentionItem[]> {
           ...base,
           id: `investor-kyc:${a.id}`,
           source: "investor.identity",
-          group: a.kyc_status === "pending" ? "harmonious_working" : "needs_you",
-          severity: a.kyc_status === "pending" ? "info" : "action",
+          group: (a.kyc_status === "pending" || a.kyc_status === "review") ? "harmonious_working" : "needs_you",
+          severity: (a.kyc_status === "pending" || a.kyc_status === "review") ? "info" : "action",
           title: "Identity verification",
           workflowState: String(a.kyc_status ?? "kyc_required"),
           status:
-            a.kyc_status === "pending"
+            (a.kyc_status === "pending" || a.kyc_status === "review")
               ? plainStatus("kyc_pending")
               : plainStatus("kyc_required"),
           href: "/onboarding/kyc",
