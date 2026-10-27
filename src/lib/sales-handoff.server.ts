@@ -50,6 +50,7 @@ export async function handoffSignedQuote(quoteId: string) {
       });
     }
     await db.from("sales_quotes").update({ onboarded_offering_id: offeringId, onboarding_error: null }).eq("id", q.id);
+    await (await import("@/lib/sales-operations-handoff.server")).ensureHandoffTask(db, q, offeringId);
     const total = `$${(Number(q.total_cents) / 100).toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
     const body = [
       `${client.legal_name} signed "${sow.title ?? q.title}" (quote Q-${q.quote_number}, ${total}).`,
