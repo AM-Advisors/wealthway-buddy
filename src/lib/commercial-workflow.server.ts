@@ -43,7 +43,7 @@ export async function qualifyInquiry(context: any, input: { leadId: string; cont
   const team = await salesTeam(actor);
   if (!team.some(t => t.id === input.ownerId)) throw new Error("Choose an eligible Sales owner.");
   const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
-  const result = await db.rpc("qualify_commercial_inquiry", { _actor: context.userId, _lead: input.leadId, _owner: input.ownerId, _contact: input.contactId ?? undefined });
+  const result = await db.rpc("qualify_commercial_inquiry", { _actor: context.userId, _lead: input.leadId, _owner: input.ownerId, ...(input.contactId ? { _contact: input.contactId } : {}) });
   if (result.error) throw new Error("Couldn't qualify this inquiry. Review matching contacts and the selected Sales owner, then retry.");
   return result.data;
 }

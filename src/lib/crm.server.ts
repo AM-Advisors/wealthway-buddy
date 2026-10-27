@@ -17,12 +17,13 @@ const SITE = "https://app.harmonious.co";
 export async function crmActor(userId: string): Promise<CrmActor & { opsStaff: boolean }> {
   const db = await admin();
   const now = new Date().toISOString();
-  const [{ data: roles }, { data: grants }, { data: fm }] = await Promise.all([
+  const [{ data: roles, error: roleError }, { data: grants, error: grantError }, { data: fm, error: fundError }] = await Promise.all([
     db.from("user_roles").select("role").eq("user_id", userId),
     db.from("access_permission_grants").select("permission, effect, effective_at, expires_at, revoked_at")
       .eq("user_id", userId).in("permission", ["administration.crm.view_all", "administration.crm.assign", "administration.campaigns.approve"]),
     db.from("fund_managers").select("offering_id").eq("user_id", userId),
   ]);
+  if (roleError || grantError || fundError) throw new Error("Couldn't verify contact access.");
   const r = ((roles ?? []) as any[]).map((x) => x.role as string);
   const sp = staffProfile(r);
   const active = ((grants ?? []) as any[]).filter((g) => !g.revoked_at && g.effective_at <= now && (!g.expires_at || g.expires_at > now));
@@ -190,7 +191,8 @@ export async function setConsent(userId: string, d: { contactId: string; consent
   if (c.consent === "unsubscribed" && d.consent === "opted_in" && !a.superUser) throw new Error("This person unsubscribed. Only a Super Administrator can record new consent, with their written permission.");
   if (d.consent === "opted_in" && c.email && (await suppressedPromotionalEmails(db, [c.email])).size) throw new Error("This address has a recorded email opt-out. It remains suppressed until an authorized, evidenced re-consent review.");
   if (d.consent === "unsubscribed" && c.email) await recordPromotionalUnsubscribe(db, c.email);
-  await db.from("crm_contacts").update({ consent: d.consent, consent_note: d.note, consent_recorded_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("id", c.id);
+  const saved = await db.from("crm_contacts").update({ consent: d.consent, consent_note: d.note, consent_recorded_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("id", c.id);
+  if (saved.error) throw new Error("Couldn't save consent. Please retry.");
   await logActivity({ scope: c.scope, offering_id: c.offering_id, contact_id: c.id, actor_user_id: userId, kind: "consent_changed", summary: `Email consent: ${d.consent.replace("_", " ")}`, details: { from: c.consent, to: d.consent, note: d.note } });
   return { ok: true };
 }
@@ -271,17 +273,19 @@ export async function saveDeal(userId: string, d: { id?: string | undefined; con
   if (d.id) {
     const { data: deal } = await db.from("crm_deals").select("*").eq("id", d.id).maybeSingle();
     if (!deal || !canEdit(a, deal)) throw new Error("Deal not found.");
-    await db.from("crm_deals").update({ ...fields, updated_at: new Date().toISOString() }).eq("id", d.id);
+    const salesStage = (await import("./sales-model")).normalizeStage(d.stage);
+    const saved = await db.from("crm_deals").update({ ...fields, sales_stage: salesStage, ...(deal.stage !== d.stage ? { stage_changed_at: new Date().toISOString() } : {}), updated_at: new Date().toISOString() }).eq("id", d.id);
+    if (saved.error) throw new Error("Couldn't save the deal. Please retry.");
     if (deal.stage !== d.stage) {
       await logActivity({ scope: deal.scope, offering_id: deal.offering_id, contact_id: deal.contact_id, deal_id: deal.id, actor_user_id: userId, kind: "stage_changed", summary: `${d.title}: ${DEAL_STAGE_LABELS[deal.stage as DealStage]} → ${DEAL_STAGE_LABELS[d.stage]}`, details: { from: deal.stage, to: d.stage } });
-      await (await import("./email-flows.server")).onStageChange(deal.id, (await import("./sales-model")).normalizeStage(d.stage));
+      await (await import("./email-flows.server")).onStageChange(deal.id, salesStage);
     } else {
       await logActivity({ scope: deal.scope, offering_id: deal.offering_id, contact_id: deal.contact_id, deal_id: deal.id, actor_user_id: userId, kind: "edited", summary: `Deal updated: ${d.title}`, details: { before: pick(deal, Object.keys(fields)), after: fields } });
     }
     return { id: d.id };
   }
   if (!c) throw new Error("Pick a contact.");
-  const { data: row, error } = await db.from("crm_deals").insert({ ...fields, scope: c.scope, offering_id: c.offering_id, contact_id: c.id, owner_user_id: userId, created_by: userId }).select("id").single();
+  const { data: row, error } = await db.from("crm_deals").insert({ ...fields, sales_stage: (await import("./sales-model")).normalizeStage(d.stage), stage_changed_at: new Date().toISOString(), scope: c.scope, offering_id: c.offering_id, contact_id: c.id, owner_user_id: userId, created_by: userId }).select("id").single();
   if (error) throw new Error("Could not add the deal.");
   await logActivity({ scope: c.scope, offering_id: c.offering_id, contact_id: c.id, deal_id: row.id, actor_user_id: userId, kind: "created", summary: `Deal opened: ${d.title} (${DEAL_STAGE_LABELS[d.stage]})` });
   return { id: row.id as string };
