@@ -4,6 +4,7 @@
 // that are In Review/Declined are never auto-approved. Every change is logged.
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { fetchDiditSessionDecision } from "@/lib/didit.server";
+import { mergeVerifiedPersonFields } from "@/lib/kyc-person-backfill";
 
 const db = () => supabaseAdmin as any;
 const s = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : null);
@@ -55,17 +56,18 @@ export async function autoApplyDiditForOnboarding(onboardingId: string, actorUse
   const { data: person } = await db().from("persons").select("*").eq("id", ob.person_id).maybeSingle();
   if (!person) return { applied: false, reason: "person not found" };
   const now = new Date().toISOString();
-  const update: any = {};
-  const changes: any[] = [];
-  const hasAddress = !!x.fields.address_line1 && !!x.fields.city;
-  for (const [field, value] of Object.entries(x.fields)) {
-    if (!value) continue;
-    if (field.startsWith("address_") || ["city", "region", "postal_code", "country"].includes(field)) { if (!hasAddress) continue; }
-    if (String(person[field] ?? "") === value) continue;
-    update[field] = value;
-    changes.push({ field, from: person[field] ?? null, to: value });
-  }
-  if (hasAddress && !person.residence_country && x.fields.country) { update.residence_country = x.fields.country; changes.push({ field: "residence_country", from: null, to: x.fields.country }); }
+  // Shared verified write-back rule set (verified-wins mode): approved facts
+  // replace differing values, address moves only as a complete group, and
+  // every write is logged below.
+  const fields: Record<string, string | null> = { ...x.fields };
+  if (!person.residence_country && x.fields.country) fields["residence_country"] = x.fields.country;
+  const merged = mergeVerifiedPersonFields(person, fields, "verified-wins");
+  const update: any = { ...merged.update };
+  const changes: any[] = merged.filledFields.map((field) => ({
+    field,
+    from: person[field] ?? null,
+    to: merged.update[field],
+  }));
   if (person.kyc_status !== "approved") { update.kyc_status = "approved"; update.kyc_verified_at = now; update.identity_verified_at = now; changes.push({ field: "kyc_status", from: person.kyc_status, to: "approved" }); }
   if (x.amlStatus && person.aml_status !== x.amlStatus) {
     update.aml_status = x.amlStatus;
