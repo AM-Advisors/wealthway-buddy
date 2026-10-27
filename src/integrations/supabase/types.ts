@@ -35112,6 +35112,7 @@ export type Database = {
           file_name: string | null
           file_path: string | null
           file_size_bytes: number | null
+          generation_issues: Json
           id: string
           note: string | null
           offering_document_id: string
@@ -35120,6 +35121,8 @@ export type Database = {
           rolled_out_by: string | null
           rollout_note: string | null
           rollout_scope: string | null
+          self_serve_review_note: string | null
+          self_serve_review_state: string | null
           signing_config: Json | null
           signing_config_confirmed_at: string | null
           signing_config_confirmed_by: string | null
@@ -35139,6 +35142,7 @@ export type Database = {
           file_name?: string | null
           file_path?: string | null
           file_size_bytes?: number | null
+          generation_issues?: Json
           id?: string
           note?: string | null
           offering_document_id: string
@@ -35147,6 +35151,8 @@ export type Database = {
           rolled_out_by?: string | null
           rollout_note?: string | null
           rollout_scope?: string | null
+          self_serve_review_note?: string | null
+          self_serve_review_state?: string | null
           signing_config?: Json | null
           signing_config_confirmed_at?: string | null
           signing_config_confirmed_by?: string | null
@@ -35166,6 +35172,7 @@ export type Database = {
           file_name?: string | null
           file_path?: string | null
           file_size_bytes?: number | null
+          generation_issues?: Json
           id?: string
           note?: string | null
           offering_document_id?: string
@@ -35174,6 +35181,8 @@ export type Database = {
           rolled_out_by?: string | null
           rollout_note?: string | null
           rollout_scope?: string | null
+          self_serve_review_note?: string | null
+          self_serve_review_state?: string | null
           signing_config?: Json | null
           signing_config_confirmed_at?: string | null
           signing_config_confirmed_by?: string | null
