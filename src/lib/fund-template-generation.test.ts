@@ -1,11 +1,11 @@
 import { beforeEach, expect, it, vi } from "vitest";
 import JSZip from "jszip";
 
-const state = vi.hoisted(() => ({ type: "Private equity", approved: true, archived: false, legalName: "Synthetic Equity LP", gp: null as string | null, output: null as Uint8Array | null, activated: 0, created: 0, feeStatus: "", feeError: false, fixedTerms: false }));
+const state = vi.hoisted(() => ({ level: "self_serve", upload: null as any, type: "Private equity", approved: true, archived: false, legalName: "Synthetic Equity LP", gp: null as string | null, output: null as Uint8Array | null, activated: 0, created: 0, feeStatus: "", feeError: false, fixedTerms: false }));
 vi.mock("@/lib/fund-setup.server", () => ({ setupActor: async (id: string) => ({ isStaff: id === "staff", offeringIds: ["fund"] }), forbid: (m: string) => { throw new Error(m); } }));
 vi.mock("@/lib/offering-document-setup.server", () => ({
   createSetupDocument: async () => { state.created++; return { id: "document" }; },
-  uploadDocumentVersion: async () => ({ version: 1 }),
+  uploadDocumentVersion: async (_uid: string, input: any) => { state.upload = input; return { version: 1 }; },
   activateDocumentVersion: async () => { state.activated++; },
   saveSigningConfig: async () => ({}), setDocumentUsage: async () => ({}),
 }));
@@ -14,7 +14,7 @@ vi.mock("@/integrations/supabase/client.server", () => ({ supabaseAdmin: {
     const rows: Record<string, unknown> = {
       document_templates: { id: "template", title: "Equity fund terms", category: "ppm", fund_types: ["Private equity"], archived_at: state.archived ? "2026-01-01" : null },
       document_template_versions: { version: 1, status: state.approved ? "approved" : "pending_approval", file_name: "model.docx", file_path: "model.docx" },
-      offerings: { fund_type: state.type, name: "Display name", legal_entity_name: state.legalName, gp_entity_name: state.gp },
+      offerings: { service_level: state.level, fund_type: state.type, name: "Display name", legal_entity_name: state.legalName, gp_entity_name: state.gp },
       offering_documents: { active_version: null, usage: "reference" },
       fund_fee_terms: { management_fee_pct: 6, management_fee_basis: "Committed capital", carry_pct: 15, hurdle_pct: null },
     };
@@ -34,17 +34,25 @@ vi.mock("@/integrations/supabase/client.server", () => ({ supabaseAdmin: {
 
 import { fundTemplateValues, useTemplateInFund, generateFundTypeDocuments } from "./fund-doc-templates.server";
 const input = { templateId: "template", version: 1, offeringId: "fund" };
-it("denies a fund manager single-template generation before any document is created", async () => {
-  await expect(useTemplateInFund("manager", input)).rejects.toThrow("only Harmonious");
+it("Self Serve managers generate a review-required draft without activation", async () => {
+  state.gp = "Synthetic GP LLC";
+  await useTemplateInFund("manager", input);
+  expect(state.created).toBe(1);
+  expect(state.output).not.toBeNull();
+  expect(state.upload.selfServeGenerated).toBe(true);
+  expect(state.activated).toBe(0);
+});
+it("denies paid-level manager bulk generation before creating documents", async () => {
+  state.level = "white_glove";
+  await expect(generateFundTypeDocuments("manager", "fund")).rejects.toThrow("Self Serve");
   expect(state.created).toBe(0);
   expect(state.output).toBeNull();
 });
-it("denies a fund manager bulk generation even when no documents are missing", async () => {
-  await expect(generateFundTypeDocuments("manager", "fund")).rejects.toThrow("only Harmonious");
+it("denies generation on another fund", async () => {
+  await expect(useTemplateInFund("manager", { ...input, offeringId: "other-fund" })).rejects.toThrow("do not manage");
   expect(state.created).toBe(0);
-  expect(state.output).toBeNull();
 });
-beforeEach(() => Object.assign(state, { type: "Private equity", approved: true, archived: false, legalName: "Synthetic Equity LP", gp: null, output: null, activated: 0, created: 0, feeStatus: "", feeError: false, fixedTerms: false }));
+beforeEach(() => Object.assign(state, { level: "self_serve", upload: null, type: "Private equity", approved: true, archived: false, legalName: "Synthetic Equity LP", gp: null, output: null, activated: 0, created: 0, feeStatus: "", feeError: false, fixedTerms: false }));
 it("generates from canonical legal name and reads the saved synthetic file back without publishing unresolved terms", async () => {
   const r = await useTemplateInFund("staff", input);
   expect(r.autofill?.filled).toEqual(["Fund Legal Name"]);

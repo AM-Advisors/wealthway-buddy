@@ -210,7 +210,7 @@ export async function approveDocumentVersion(userId: string, input: { documentId
   return { ok: true };
 }
 
-export async function reviewGeneratedDocument(userId: string, input: { documentId: string; version: number; decision: "approve" | "return"; note?: string | null }) {
+export async function reviewGeneratedDocument(userId: string, input: { documentId: string; version: number; decision: "approve" | "return"; note?: string | null | undefined }) {
   const d = await docRow(input.documentId);
   await assertRead(userId, d.offering_id);
   const v = await versionRow(d.id, input.version);
