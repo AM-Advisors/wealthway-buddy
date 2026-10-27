@@ -49963,6 +49963,7 @@ export type Database = {
         }[]
       }
       fund_dependency_preserved: { Args: { _tbl: string }; Returns: boolean }
+      fund_request_task_team: { Args: { _team: string }; Returns: string }
       fund_setup_entered_facts: {
         Args: { p_offering_id: string }
         Returns: {

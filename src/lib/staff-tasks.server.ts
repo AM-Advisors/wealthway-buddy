@@ -71,7 +71,7 @@ export async function createTask(viewer: string, d: { title: string; description
   return { id: data.id as string };
 }
 
-export async function updateTask(viewer: string, d: { id: string; status?: string | undefined; priority?: string | undefined; assignee?: string | null | undefined; dueDate?: string | null | undefined; note?: string | null | undefined }) {
+export async function updateTask(viewer: string, d: { id: string; status?: string | undefined; priority?: string | undefined; assignee?: string | null | undefined; team?: string | null | undefined; dueDate?: string | null | undefined; note?: string | null | undefined }) {
   const { db, staff, canWrite } = await ctx(viewer);
   if (!canWrite) throw new Error("Your role can view tasks but not change them.");
   const { data: t } = await db.from("staff_tasks").select("*").eq("id", d.id).maybeSingle();
@@ -85,6 +85,10 @@ export async function updateTask(viewer: string, d: { id: string; status?: strin
     patch.assignee_user_id = d.assignee; changes.assignee = [t.assignee_user_id, d.assignee];
   }
   if (d.dueDate !== undefined && d.dueDate !== t.due_date) { patch.due_date = d.dueDate || null; changes.due = [t.due_date, d.dueDate]; }
+  if (d.team !== undefined && d.team !== t.team) {
+    if (d.team && !Object.hasOwn(TEAMS, d.team)) throw new Error("Unknown task team.");
+    patch.team = d.team; changes.team = [t.team, d.team];
+  }
   if (Object.keys(changes).length) {
     const { error } = await db.from("staff_tasks").update(patch).eq("id", d.id);
     if (error) throw new Error(error.message);

@@ -22,7 +22,7 @@ export const updateTask = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((d) => z.object({
     id: z.string().uuid(), status: status.optional(), priority: priority.optional(),
-    assignee: z.string().uuid().nullable().optional(), dueDate: date, note: z.string().max(4000).nullable().optional(),
+    assignee: z.string().uuid().nullable().optional(), team: z.enum(["operations", "finance", "compliance", "marketing", "sales"]).nullable().optional(), dueDate: date, note: z.string().max(4000).nullable().optional(),
   }).parse(d))
   .handler(async ({ context, data }) => (await import("@/lib/staff-tasks.server")).updateTask(context.userId, data));
 

@@ -76,10 +76,13 @@ export async function getRequest(uid: string, id: string) {
   const { data: profs } = ids.length ? await db.from("profiles").select("user_id, legal_name, email").in("user_id", ids) : { data: [] };
   const nm = new Map(((profs ?? []) as any[]).map((p) => [p.user_id, p.legal_name || p.email]));
   const def = requestType(r.request_type);
+  const assignmentScope = staff ? await staffWriter(uid).catch(() => null) : null;
+  const assignmentIds = assignmentScope ? [...assignmentScope.staff.keys()] : [];
+  const assignmentNames = await db.from("profiles").select("user_id, legal_name, email").in("user_id", assignmentIds.length ? assignmentIds : ["00000000-0000-0000-0000-000000000000"]);
   const safe = staff ? { ...r, sla: slaState(r), assignedName: nm.get(r.assigned_to) ?? null, teamLabel: TEAM_ROUTING[r.assigned_team]?.label ?? r.assigned_team }
     : Object.fromEntries(Object.entries(r).filter(([k]) => CLIENT_COLS.split(", ").includes(k)));
   return {
-    staff, request: safe, stages: def.stages, irreversible: def.irreversible,
+    staff, canAssign: !!assignmentScope, assignmentOptions: ((assignmentNames.data ?? []) as any[]).map((p) => ({ value: p.user_id, label: p.legal_name || p.email || "Staff member" })), request: safe, stages: def.stages, irreversible: def.irreversible,
     messages: ((messages ?? []) as any[]).map((m) => ({ ...m, who: m.author_side === "HARMONIOUS" && !staff ? "Harmonious" : nm.get(m.author_user_id) ?? (m.author_side === "HARMONIOUS" ? "Harmonious" : "Fund manager") })),
     files: (files ?? []) as any[], events: ((events ?? []) as any[]).map(({ actor_user_id, ...e }) => e), approvals: (approvals ?? []) as any[],
   };
@@ -183,6 +186,7 @@ export async function updateRequest(uid: string, d: {
   const { data: r } = await db.from("fund_service_requests").select("*").eq("id", d.id).maybeSingle();
   if (!r) throw new Error("Request not found.");
   if (d.assignedTo && !s.staff.has(d.assignedTo)) throw new Error("Assign requests to Harmonious staff only.");
+  if (d.assignedTeam !== undefined && !Object.hasOwn(TEAM_ROUTING, d.assignedTeam)) throw new Error("Unknown request team.");
   const now = new Date();
   const patch: any = { updated_at: now.toISOString() };
   if (d.stage !== undefined) patch.stage = Math.max(0, Math.min(d.stage, requestType(r.request_type).stages.length - 1));
@@ -202,6 +206,8 @@ export async function updateRequest(uid: string, d: {
   }
   const { error } = await db.from("fund_service_requests").update(patch).eq("id", r.id);
   if (error) throw new Error(error.message);
+  const routingChanges = Object.fromEntries(["assigned_to", "assigned_team", "due_date"].filter((key) => key in patch && patch[key] !== r[key]).map((key) => [key, { from: r[key], to: patch[key] }]));
+  if (Object.keys(routingChanges).length) await ev(db, r, uid, "routing_updated", false, routingChanges);
   if (statusChanged) {
     await ev(db, r, uid, "status", true, { from: r.status, to: d.status, label: REQUEST_STATUS_LABEL[d.status!] });
     if (patch.sla_paused_at && !r.sla_paused_at) await ev(db, r, uid, "sla_paused", false, { status: d.status });
