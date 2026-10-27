@@ -2,7 +2,8 @@
 
 ## Missing investment/application link safeguard (2026-10-27)
 - [x] Remove stale-approval fallback for missing investing-person links; 73 offline tests passed and preview build OK. Missing links now block funding/compliance reads rather than imply Approved; no live records changed.
-- [ ] Correct yavaxi6493's active Erebor link only after resolving conflicting application history: one signed $2,500,000 application, one canceled investment's verification application, versus active $50,000 investment. No safe automatic candidate established.
+- [x] User confirmed the $50,000 investment is separate from the older signed $2,500,000 application; prepare an atomic dedicated-application action without copying approvals/signatures or reusing canceled history.
+- [ ] Apply the dedicated link to the active investment after draft acceptance installs the authorized action; no live records changed in this draft.
 
 ## Exact investing-party verification and funding (2026-10-27)
 - [x] Use explicitly application-linked person checks for legacy funding reads/actions and investor/fund compliance details, without account-based matching or weakening pending/review/declined results.

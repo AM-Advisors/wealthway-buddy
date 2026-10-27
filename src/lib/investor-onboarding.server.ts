@@ -2239,20 +2239,11 @@ export async function onboardPortalDetail(userId: string, onboardingId: string) 
  * sessions hang off. Create the one record (reusing any existing one) so
  * verification can start. Changes nothing about signatures, money or results.
  */
-export async function ensureVerificationApplication(row: { id: string; investor_user_id: string | null; offering_id: string }): Promise<string | null> {
+export async function ensureVerificationApplication(row: { id: string; investor_user_id: string | null; offering_id: string }, authenticatedDb: any): Promise<string | null> {
   if (!row.investor_user_id) return null;
-  const find = async () => {
-    const { data } = await db().from("investor_applications").select("id").eq("user_id", row.investor_user_id).eq("offering_id", row.offering_id).order("created_at", { ascending: true }).limit(1);
-    return (((data ?? []) as any[])[0]?.id as string | undefined) ?? null;
-  };
-  let id = await find();
-  if (!id) {
-    const { data, error } = await db().from("investor_applications").insert({ user_id: row.investor_user_id, offering_id: row.offering_id, source: "admin", current_step: "verification" }).select("id").single();
-    if (error) { console.error("ensureVerificationApplication", error); id = await find(); }
-    else id = (data as any).id;
-  }
-  if (id) await db().from("investor_onboardings").update({ application_id: id }).eq("id", row.id).is("application_id", null);
-  return id;
+  const { data, error } = await authenticatedDb.rpc("ensure_exact_investment_application", { p_onboarding_id: row.id });
+  if (error || typeof data !== "string") fail("We couldn't safely link this investment's verification. Please contact Harmonious.");
+  return data;
 }
 
 /**
@@ -2292,7 +2283,7 @@ export async function reusePriorVerification(row: any, actorUserId: string | nul
   return personCleared(row.person_id);
 }
 
-export async function startInvestmentVerification(userId: string, onboardingId: string, origin: string, returnPath?: string | null) {
+export async function startInvestmentVerification(userId: string, onboardingId: string, origin: string, returnPath?: string | null, authenticatedDb?: any) {
   const { row } = await assertInvestorOwns(userId, onboardingId);
   if (await reusePriorVerification(row, userId)) {
     if (["profile_selected", "verification"].includes(String(row.stage))) await touch(row.id, { stage: "verification" });
@@ -2301,17 +2292,9 @@ export async function startInvestmentVerification(userId: string, onboardingId: 
   }
   let applicationId = row.application_id as string | null;
   if (!applicationId) {
-    const { data } = await db()
-      .from("investor_applications")
-      .select("id")
-      .eq("user_id", row.investor_user_id)
-      .eq("offering_id", row.offering_id)
-      .order("created_at", { ascending: true })
-      .limit(1);
-    applicationId = ((data ?? []) as any[])[0]?.id ?? null;
-    if (applicationId) await touch(row.id, { application_id: applicationId });
+    if (!authenticatedDb) fail("We couldn't safely link this investment's verification. Please contact Harmonious.");
+    applicationId = await ensureVerificationApplication(row, authenticatedDb);
   }
-  if (!applicationId && row.investor_user_id) applicationId = await ensureVerificationApplication(row);
   if (!applicationId) {
     const { notifyInvestorBlocked } = await import("@/lib/investor-blocked-notify.server");
     await notifyInvestorBlocked({ onboardingId: row.id, offeringId: row.offering_id, investorUserId: row.investor_user_id ?? null, step: "Verification" });
