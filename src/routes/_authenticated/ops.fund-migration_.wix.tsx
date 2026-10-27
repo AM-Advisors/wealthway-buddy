@@ -195,7 +195,7 @@ function InvestorTable({ invs, data, currentFundId }: { invs: Inv[]; data: Data;
       <Table>
         <TableHeader><TableRow>
           <TableHead className="w-8"><Checkbox aria-label="Select all" checked={invs.length > 0 && picked.size === invs.length} onCheckedChange={(c) => setPicked(c ? new Set(invs.map((i) => i.id)) : new Set())} /></TableHead>
-          <TableHead>Investor</TableHead><TableHead>Email</TableHead><TableHead className="text-right">Committed</TableHead><TableHead className="text-right">Received</TableHead><TableHead>Wix fund name on record</TableHead>
+          <TableHead>Investor</TableHead><TableHead>Email</TableHead><TableHead className="text-right">Committed</TableHead><TableHead className="text-right">Received</TableHead><TableHead>Added in Wix</TableHead>
         </TableRow></TableHeader>
         <TableBody>{invs.map((i) => (
           <TableRow key={i.id}>
@@ -204,7 +204,7 @@ function InvestorTable({ invs, data, currentFundId }: { invs: Inv[]; data: Data;
             <TableCell className="text-xs">{i.email || <Badge variant="outline">No email</Badge>}</TableCell>
             <TableCell className="text-right">{usd(i.committed)}</TableCell>
             <TableCell className="text-right">{usd(i.received)}</TableCell>
-            <TableCell className="text-xs text-muted-foreground">{String(i.details?.fundName ?? i.details?.projectName ?? i.details?.fund ?? "")}</TableCell>
+            <TableCell className="text-xs text-muted-foreground">{i.details?._createdDate ? new Date(String((i.details._createdDate as any)?.$date ?? i.details._createdDate)).toLocaleDateString() : ""}</TableCell>
           </TableRow>
         ))}</TableBody>
       </Table>
