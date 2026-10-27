@@ -57,7 +57,7 @@ describe("authorization", () => {
     for (const n of ["viewAsInvestmentFn", "viewAsFundFn", "activeViewAsFn"]) {
       const s = fns.indexOf(`export const ${n}`);
       const e = fns.indexOf("export const", s + 5);
-      expect(fns.slice(s, e === -1 ? undefined : e)).not.toContain("inputValidator");
+      expect(fns.slice(s, e === -1 ? undefined : e)).not.toContain(".validator(");
     }
   });
 });
