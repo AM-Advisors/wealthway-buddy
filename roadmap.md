@@ -1,5 +1,13 @@
 # Roadmap
 
+## Finish remaining work (2026-10-27)
+- [ ] Replace the ten-second investor animation with a longer narrated four-step walkthrough and verify public media playback.
+- [ ] Extend fee accounting with a safe draft-preparation increment using existing accounting engines, without posting or activating services.
+- [ ] Expand fictional click-through coverage where safe; independently isolated durable financial QA remains required.
+- [ ] Hourly contact sync live release: requires explicit publishing approval; do not change the shared marketing scheduler cadence.
+- [ ] LaaSy Class B approval: requires an authorized reviewer or a permanently recorded Super Admin self-approval reason.
+- [ ] ROAS White Glove execution and bookkeeping activation: preserve commercial approval and release gates; no automatic live activation.
+
 ## Investor onboarding link during fund launch (2026-10-26)
 - [x] Reuse the canonical onboarding-link engine before marking a ready fund launched; preserve approvals and exact-fund authorization, reuse active links, refuse silently enabling disabled links, and retain ready state on link-creation failure. No real fund/link records changed.
 - [x] Forty-four fictional launch/link regression checks pass; launch returns and records the canonical join URL, with existing links readable through the manager's link reader.
