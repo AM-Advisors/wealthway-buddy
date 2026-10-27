@@ -86,12 +86,16 @@ export function personStatusByUser(rows: PersonRow[] | null | undefined) {
 export function withCanonicalVerification<T extends { user_id: string; kyc_status?: string | null; aml_status?: string | null }>(
   app: T,
   persons: Map<string, { kyc: string | null; aml: string | null }>,
-): T & { kyc_status: StoredStatus; aml_status: StoredStatus } {
+): T & { kyc_status: StoredStatus; aml_status: StoredStatus; kyc_status_detail: string | null; aml_status_detail: string | null } {
   const p = persons.get(app.user_id);
+  const kyc = effectiveCheckStatus(p?.kyc, app.kyc_status);
+  const aml = effectiveCheckStatus(p?.aml, app.aml_status);
   return {
     ...app,
-    kyc_status: toStored(effectiveCheckStatus(p?.kyc, app.kyc_status)),
-    aml_status: toStored(effectiveCheckStatus(p?.aml, app.aml_status)),
+    kyc_status: toStored(kyc),
+    aml_status: toStored(aml),
+    kyc_status_detail: effectiveDetail(p?.kyc, app.kyc_status, kyc),
+    aml_status_detail: effectiveDetail(p?.aml, app.aml_status, aml),
   };
 }
 
@@ -128,6 +132,6 @@ export async function canonicalizeApplications<T extends Record<string, any>>(su
   }
   return list.map((a) => {
     const merged = withCanonicalVerification({ ...a, user_id: uid(a) } as any, persons);
-    return { ...a, kyc_status: merged.kyc_status, aml_status: merged.aml_status };
+    return { ...a, kyc_status: merged.kyc_status, aml_status: merged.aml_status, kyc_status_detail: merged.kyc_status_detail, aml_status_detail: merged.aml_status_detail };
   });
 }
