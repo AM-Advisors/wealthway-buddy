@@ -212,7 +212,7 @@ function clean(value: string | null | undefined) {
 /** Manual correction of an investor's details by an administrator. */
 export const updateInvestorDetails = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => detailsSchema.parse(data))
+  .validator((data: unknown) => detailsSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await assertAdmin(supabase, userId);
@@ -283,7 +283,7 @@ const statusSchema = z.object({
  */
 export const setInvestorCheck = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => statusSchema.parse(data))
+  .validator((data: unknown) => statusSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await assertAdmin(supabase, userId);

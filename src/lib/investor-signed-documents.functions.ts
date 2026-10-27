@@ -4,7 +4,7 @@ import { requireSupabaseAuth } from "@/lib/require-auth";
 
 export const investorSignedDocumentsFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ onboardingId: z.string().uuid() }).parse)
+  .validator(z.object({ onboardingId: z.string().uuid() }).parse)
   .handler(async ({ context, data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { investorSignedDocuments } = await import("./investor-signed-documents.server");
@@ -13,7 +13,7 @@ export const investorSignedDocumentsFn = createServerFn({ method: "POST" })
 
 export const investorSignedCopyFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ onboardingId: z.string().uuid(), signatureId: z.string().uuid() }).parse)
+  .validator(z.object({ onboardingId: z.string().uuid(), signatureId: z.string().uuid() }).parse)
   .handler(async ({ context, data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { investorSignedCopy } = await import("./investor-signed-documents.server");

@@ -7,7 +7,7 @@ const offering = z.object({ offeringId: z.string().uuid() });
 /** Journey + funding facts for one fund on the investor's fund page. */
 export const investorFundStatusFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(offering.parse)
+  .validator(offering.parse)
   .handler(async ({ data, context }) => {
     const onboarding = await import("@/lib/investor-onboarding.server");
     const status = await onboarding.investorFundStatus(context.userId, data.offeringId);
@@ -30,7 +30,7 @@ export const investorFundStatusFn = createServerFn({ method: "POST" })
 /** This investor's capital calls for one fund (published/closed only). */
 export const myFundCapitalCallsFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(offering.parse)
+  .validator(offering.parse)
   .handler(async ({ data, context }) => {
     const calls = await (await import("@/lib/capital-calls.server")).myCapitalCalls(context.userId);
     return (calls as any[]).filter((c) => c.offeringId === data.offeringId);
@@ -39,7 +39,7 @@ export const myFundCapitalCallsFn = createServerFn({ method: "POST" })
 /** The investor's delivered K-1s for one fund (RLS limits to their own). */
 export const myFundK1sFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(offering.parse)
+  .validator(offering.parse)
   .handler(async ({ data, context }) => {
     const { data: rows, error } = await context.supabase
       .from("k1_forms")
@@ -57,7 +57,7 @@ export const myFundK1sFn = createServerFn({ method: "POST" })
 /** The investor confirms they received this K-1. A record, never an email. */
 export const acknowledgeK1Fn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ k1Id: z.string().uuid() }).parse)
+  .validator(z.object({ k1Id: z.string().uuid() }).parse)
   .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin

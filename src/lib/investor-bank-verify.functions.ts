@@ -15,7 +15,7 @@ async function investorRow(userId: string, onboardingId: string) {
 
 export const startInvestorBankVerifyFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(input.parse)
+  .validator(input.parse)
   .handler(async ({ data, context }) => {
     await investorRow(context.userId, data.onboardingId);
     const { createVerifyLinkToken } = await import("@/lib/plaid.server");
@@ -24,7 +24,7 @@ export const startInvestorBankVerifyFn = createServerFn({ method: "POST" })
 
 export const finishInvestorBankVerifyFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(input.extend({ publicToken: z.string().min(10).max(300) }).parse)
+  .validator(input.extend({ publicToken: z.string().min(10).max(300) }).parse)
   .handler(async ({ data, context }) => {
     const row = await investorRow(context.userId, data.onboardingId);
     const plaid = await import("@/lib/plaid.server");
@@ -66,7 +66,7 @@ export const finishInvestorBankVerifyFn = createServerFn({ method: "POST" })
 
 export const investorBankVerifyStatusFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(input.parse)
+  .validator(input.parse)
   .handler(async ({ data, context }) => {
     const { data: v } = await context.supabase.from("investor_bank_verifications" as any)
       .select("status, institution_name, account_mask, created_at").eq("onboarding_id", data.onboardingId)

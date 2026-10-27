@@ -92,7 +92,7 @@ function stageOf(input: {
 
 export const getInvestorOnboarding = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ companyId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ companyId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
 
@@ -180,7 +180,7 @@ export const getInvestorOnboarding = createServerFn({ method: "GET" })
  */
 export const inviteCapInvestor = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         companyId: z.string().uuid(),
@@ -259,7 +259,7 @@ export const inviteCapInvestor = createServerFn({ method: "POST" })
  */
 export const previewInvestorPortal = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({ companyId: z.string().uuid(), stakeholderId: z.string().uuid() })
       .parse(d),

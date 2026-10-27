@@ -27,7 +27,7 @@ export const getOwnProfileGap = createServerFn({ method: "GET" })
 
 export const saveOwnProfile = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuthUnverified])
-  .inputValidator((v: unknown) => z.object(Object.fromEntries(PROFILE_FIELDS.map((f) => [f, z.string().max(200).optional()]))).parse(v))
+  .validator((v: unknown) => z.object(Object.fromEntries(PROFILE_FIELDS.map((f) => [f, z.string().max(200).optional()]))).parse(v))
   .handler(async ({ context, data }) => {
     const d = await admin();
     const { data: person } = await d.from("persons").select(`id, ${PROFILE_FIELDS.join(", ")}`).eq("user_id", context.userId).is("merged_into_person_id", null).limit(1).maybeSingle();
@@ -46,7 +46,7 @@ export const saveOwnProfile = createServerFn({ method: "POST" })
 /** Creates (or reuses) the caller's own client organization so they can start a fund. MSA and the $2,500 fee follow. */
 export const startOwnFund = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((v: unknown) => z.object({ businessName: z.string().trim().min(2).max(160) }).parse(v))
+  .validator((v: unknown) => z.object({ businessName: z.string().trim().min(2).max(160) }).parse(v))
   .handler(async ({ context, data }) => {
     const d = await admin();
     const { data: links } = await d.from("client_users").select("client_id, client_role").eq("user_id", context.userId).is("revoked_at", null);

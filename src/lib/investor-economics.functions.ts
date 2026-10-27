@@ -7,7 +7,7 @@ const num = (v: unknown) => (v == null || v === "" ? null : Number.isFinite(Numb
 /** What each investor on a fund pays, resolved from recorded rows only. */
 export const getInvestorEconomics = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ fundId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ fundId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { classAssignments } = await import("@/lib/fund-setup-phase3.server");
     const ca = await classAssignments(context.userId, data.fundId);
@@ -32,7 +32,7 @@ export const getInvestorEconomics = createServerFn({ method: "GET" })
 /** Link a side letter created before its investor existed. Staff only; never changes its terms or status. */
 export const linkPendingSideLetter = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ fundId: z.string().uuid(), sideLetterId: z.string().uuid(), onboardingId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ fundId: z.string().uuid(), sideLetterId: z.string().uuid(), onboardingId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { isStaff } = await import("@/lib/fund-tabs.server");
     if (!(await isStaff(context.userId))) throw new Error("Only Harmonious can link a side letter to an investor.");

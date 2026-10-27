@@ -30,7 +30,7 @@ async function fundDocuments(context: any, offeringId: string): Promise<FundDocu
 
 export const getPrepContext = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ offeringId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ offeringId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const capacity = await capacityFor(context, data.offeringId);
     const docs = await fundDocuments(context, data.offeringId);
@@ -57,7 +57,7 @@ const draftInput = z.object({
 /** Save Draft - never sends, accepts, signs or funds anything. */
 export const saveInvestorDraft = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => draftInput.parse(d))
+  .validator((d: unknown) => draftInput.parse(d))
   .handler(async ({ data, context }) => {
     const capacity = await capacityFor(context, data.offeringId);
     const v = validatePrepFields(data.fields);
@@ -98,7 +98,7 @@ export const saveInvestorDraft = createServerFn({ method: "POST" })
 /** Send Onboarding - reuses the existing invitation engine. */
 export const sendPreparedInvestor = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ offeringId: z.string().uuid(), draftId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ offeringId: z.string().uuid(), draftId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const capacity = await capacityFor(context, data.offeringId);
     const { data: draft } = await context.supabase.from("investor_prep_drafts").select("*")

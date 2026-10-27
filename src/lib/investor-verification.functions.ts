@@ -5,7 +5,7 @@ import { requireSupabaseAuth } from "@/lib/require-auth";
 /** Safe verification summary for one investor login across funds the caller may review. */
 export const getInvestorVerificationSummary = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ investorUserId: z.string().uuid().optional(), applicationId: z.string().uuid().optional() }).parse(d))
+  .validator((d: unknown) => z.object({ investorUserId: z.string().uuid().optional(), applicationId: z.string().uuid().optional() }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const db = supabaseAdmin as any;

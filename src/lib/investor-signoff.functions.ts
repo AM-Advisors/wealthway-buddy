@@ -123,7 +123,7 @@ export const getMyInvestorSignoff = createServerFn({ method: "GET" })
 /** The investor signs off on their fund and commitment. */
 export const signInvestorCommitment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         application_id: z.string().uuid(),
