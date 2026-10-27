@@ -330,7 +330,8 @@ export async function loadReadinessInputs(rows: any[]) {
     setups: groupBy(setups, "offering_id"),
     configs: groupBy(configs, "setup_id"),
     personsById: new Map(pById.map((p) => [String(p.id), p])),
-    personsByUser: groupBy(pByUser, "user_id"),
+    // Merged-away duplicates are not real people; ignoring them matches the manager and Operations reader.
+    personsByUser: groupBy(pByUser.filter((p: any) => !p.merged_into_person_id), "user_id"),
     profiles: new Map(profiles.map((p) => [String(p.id), p])),
     entities: groupBy(evs, "profile_id"),
     related: groupBy(rels, "profile_id"),
