@@ -1,8 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
-vi.mock("@tanstack/react-start", () => ({ createServerFn: () => { const chain: any = { middleware: () => chain, validator: () => chain, handler: (...fns: unknown[]) => fns[fns.length - 1] }; return chain; } }));
 vi.mock("@/lib/require-auth", () => ({ requireSupabaseAuth: {} }));
-import { listMoneyAudit, listInvestorCheckAudit } from "./audit-log.functions";
-import { getCapAuditHistory } from "./captable-audit.functions";
+import { listMoneyAuditHandler as listMoneyAudit, listInvestorCheckAuditHandler as listInvestorCheckAudit } from "./audit-log.functions";
+import { getCapAuditHistoryHandler as getCapAuditHistory } from "./captable-audit.functions";
 function db() {
   return { from: (table: string) => {
     const result = table === "user_roles" ? { data: [{ role: "admin" }], error: null } : { data: [], error: { message: "private source failure" } };
