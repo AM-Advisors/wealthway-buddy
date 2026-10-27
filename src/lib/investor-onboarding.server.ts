@@ -1386,10 +1386,16 @@ export async function reviewQueue(
   const correctionCount = new Map<string, number>();
   for (const c of (corr ?? []) as any[]) correctionCount.set(c.onboarding_id, (correctionCount.get(c.onboarding_id) ?? 0) + 1);
 
+  // Read related records once per batch instead of per onboarding (was N+1 and timed out).
   const items = [] as any[];
-  for (const row of rows) {
-    const facts = await gatherFacts(row);
-    const exceptions = await openExceptions(row.id);
+  const BATCH = 60;
+  const batches: any[][] = [];
+  for (let i = 0; i < rows.length; i += BATCH) batches.push(rows.slice(i, i + BATCH));
+  const loaded = await Promise.all(batches.map((b) => loadReadinessInputs(b)));
+  const pairs: Array<[any, ReadinessInputs]> = [];
+  batches.forEach((b, i) => b.forEach((row) => pairs.push([row, loaded[i]!])));
+  const resolved = await Promise.all(pairs.map(async ([row, I]) => [row, await gatherFacts(row, I), I.exceptions.get(String(row.id)) ?? []] as const));
+  for (const [row, facts, exceptions] of resolved) {
     const bucket = queueBucket({
       stage: row.stage,
       fundingStatus: row.funding_status,

@@ -383,7 +383,7 @@ export function DocumentsStep({ offeringId }: { offeringId?: string }) {
                         <p className="text-xs text-muted-foreground">
                           {reviewed[doc.id]
                             ? "Document reviewed in full."
-                            : "Scroll to the end of the document to enable signing."}
+                            : "Read the document to the end, or confirm you have read the downloaded copy, to enable signing."}
                         </p>
                         <Button
                           type="button"

@@ -265,3 +265,10 @@ export function opsLeavesCurrentHost(currentHost: string, opsOrigin: string): bo
   if (!currentHost || isDevelopmentHost(currentHost)) return false;
   return currentHost.toLowerCase() !== hostOf(opsOrigin);
 }
+
+/** True on the Operations address, or on preview addresses while viewing a staff page. Display/timing only, never authority. */
+export function isStaffSurface(host: string, pathname: string): boolean {
+  const surface = applicationSurfaceForHost(host);
+  if (surface) return surface === "ops";
+  return surfaceForPath(pathname) === "ops";
+}

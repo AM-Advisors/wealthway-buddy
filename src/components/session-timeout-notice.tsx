@@ -5,11 +5,14 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { logSecurityEvent } from "@/lib/account-security.functions";
 import { clearStoredClientContext } from "@/lib/client-context-storage";
+import { isStaffSurface } from "@/lib/host-routing";
+import { createSessionActivity } from "@/lib/session-activity";
 import {
   SESSION_COUNTDOWN_SECONDS,
   formatCountdown,
   shouldWarn,
-  tickCountdown,
+  idleLimitFor,
+  remainingSessionSeconds,
 } from "@/lib/session-timeout-model";
 import {
   AlertDialog,
@@ -33,11 +36,15 @@ export function SessionTimeoutNotice() {
   const log = useServerFn(logSecurityEvent);
 
   const [signedIn, setSignedIn] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
   const [warn, setWarn] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(SESSION_COUNTDOWN_SECONDS);
   const warnRef = useRef(false);
   const secondsRef = useRef(SESSION_COUNTDOWN_SECONDS);
   const lastActivity = useRef(Date.now());
+  const activity = useRef<ReturnType<typeof createSessionActivity> | null>(null);
+  const warningDeadline = useRef(0);
+  const signingOut = useRef(false);
 
   const clearWarning = useCallback(() => {
     warnRef.current = false;
@@ -48,6 +55,8 @@ export function SessionTimeoutNotice() {
 
   const signOut = useCallback(
     async (action: string) => {
+      if (signingOut.current) return;
+      signingOut.current = true;
       await log({ data: { eventType: "sign_out", action } }).catch(() => {});
       await queryClient.cancelQueries();
       queryClient.clear();
@@ -64,42 +73,65 @@ export function SessionTimeoutNotice() {
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
       setSignedIn(!!session);
+      setUserId(session?.user.id ?? null);
+      if (session) signingOut.current = false;
       if (!session) clearWarning();
     });
     void supabase.auth.getSession().then(({ data }) => {
       setSignedIn(!!data.session);
+      setUserId(data.session?.user.id ?? null);
       lastActivity.current = Date.now();
     });
     return () => sub.subscription.unsubscribe();
   }, [clearWarning]);
 
   useEffect(() => {
+    clearWarning();
+    if (!userId) return;
+    const shared = createSessionActivity(userId, (time) => {
+      lastActivity.current = time;
+      clearWarning();
+    });
+    activity.current = shared;
+    lastActivity.current = shared.read();
+    return () => { shared.close(); activity.current = null; };
+  }, [userId, clearWarning]);
+
+  useEffect(() => {
     if (!signedIn) return;
     const h = setInterval(() => {
+      if (signingOut.current) return;
+      const latest = activity.current?.read();
+      if (latest && latest > lastActivity.current) {
+        lastActivity.current = latest;
+        clearWarning();
+      }
       if (!warnRef.current) {
         const idle = Date.now() - lastActivity.current;
-        if (shouldWarn(idle, warnRef.current)) {
+        const limit = idleLimitFor(isStaffSurface(window.location.host, window.location.pathname));
+        if (shouldWarn(idle, warnRef.current, limit)) {
           warnRef.current = true;
           secondsRef.current = SESSION_COUNTDOWN_SECONDS;
+          warningDeadline.current = Date.now() + SESSION_COUNTDOWN_SECONDS * 1000;
           setWarn(true);
           setSecondsLeft(SESSION_COUNTDOWN_SECONDS);
         }
       } else {
-        const next = tickCountdown(secondsRef.current);
+        const next = remainingSessionSeconds(warningDeadline.current, Date.now());
         secondsRef.current = next;
         setSecondsLeft(next);
         if (next === 0) void signOut("Signed out automatically after inactivity");
       }
     }, 1_000);
     return () => clearInterval(h);
-  }, [signedIn, signOut]);
+  }, [signedIn, signOut, clearWarning]);
 
   useEffect(() => {
     if (!signedIn) return;
     // Activity anywhere keeps the session alive; clicks inside the warning
     // dialog itself never reset it, so the countdown stays honest.
     const active = () => {
-      if (!warnRef.current) lastActivity.current = Date.now();
+      if (!warnRef.current) lastActivity.current = activity.current?.record() ?? Date.now();
     };
     const events: (keyof DocumentEventMap)[] = ["pointerdown", "keydown", "wheel", "mousemove", "touchstart", "scroll"];
     events.forEach((e) => document.addEventListener(e, active, { passive: true }));
@@ -109,7 +141,7 @@ export function SessionTimeoutNotice() {
   const staySignedIn = useCallback(() => {
     // Refresh the access token now so the continued session is fully valid.
     void supabase.auth.refreshSession().catch(() => {});
-    lastActivity.current = Date.now();
+    lastActivity.current = activity.current?.record(true) ?? Date.now();
     clearWarning();
   }, [clearWarning]);
 
