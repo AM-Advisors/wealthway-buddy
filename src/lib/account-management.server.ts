@@ -11,16 +11,18 @@ const DAY = 864e5;
 
 async function scope(userId: string) {
   const db = await admin();
-  const { data: r } = await db.from("user_roles").select("role").eq("user_id", userId);
+  const { data: r, error: roleError } = await db.from("user_roles").select("role").eq("user_id", userId);
+  if (roleError) throw new Error("Couldn't verify Account Management access.");
   const roles = ((r ?? []) as any[]).map((x) => String(x.role));
   const team = seesWholeTeam(roles) || roles.includes("executive") || roles.includes("leadership");
   if (!team && !roles.some((x) => ["account_manager", "client_success"].includes(x))) throw new Error("Account Management access only.");
   let clientIds: string[] | null = null;
   if (!team) {
-    const [{ data: a }, { data: b }] = await Promise.all([
+    const [{ data: a, error: aError }, { data: b, error: bError }] = await Promise.all([
       db.from("client_team_assignments").select("client_id").eq("user_id", userId),
       db.from("client_assignments").select("client_id").eq("staff_user_id", userId),
     ]);
+    if (aError || bError) throw new Error("Couldn't verify assigned clients.");
     clientIds = [...new Set([...((a ?? []) as any[]), ...((b ?? []) as any[])].map((x) => x.client_id))];
   }
   return { db, team, clientIds };

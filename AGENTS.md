@@ -66,4 +66,4 @@
 - Public security uses published content only, never certification status; see src/lib/AGENTS.md.
 - Fictional QA sandbox at /qa-sandbox (src/lib/qa-sandbox/) intercepts every server-function call client-side with in-memory fictional data and blocks anything not modeled; never point it at the real backend — why: isolated click-through testing without touching records, emails or money.
 - Invoice fee entry previews use invoice-fee-preview.ts with exact-client book ownership, explicit expense mappings, open periods and source-entry checks; previews never persist or post journals — why: accounting preparation remains inert until the isolated financial release is approved.
-- Fictional billing readbacks use local QA fixtures and the canonical balance/link/period models, never server reads or payment controls — why: connected navigation can be inspected without treating mock evidence as durable financial QA.
+- Fictional billing/team views use local fixtures, never live acceptance evidence. Commercial views reuse scoped readers; intake is atomic, import links reviewed, email opt-outs shared — why: no duplicate engine or new money authority.
