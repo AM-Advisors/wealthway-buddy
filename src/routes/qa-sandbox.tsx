@@ -6,7 +6,7 @@
  * anything not explicitly modeled is blocked.
  */
 import { createFileRoute, createRootRoute, createRoute, createRouter, RouterProvider, Outlet, createMemoryHistory, useParams, Link } from "@tanstack/react-router";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { CreateInvestor } from "@/components/create-investor";
 import { WireFromBankForm } from "@/components/wire-from-bank-form";
@@ -91,8 +91,9 @@ function QaSandboxPage() {
 
 function SandboxShell({ children }: { children: React.ReactNode }) {
   const { state, role, setRole } = useQa();
+  const queryClient = useQueryClient();
   // Update the mock state synchronously so remounted queries see the new role.
-  const pick = (r: QaRole) => { state.role = r; setRole(r); };
+  const pick = (r: QaRole) => { state.role = r; setRole(r); void queryClient.invalidateQueries(); };
   return (
     <div className="min-h-screen bg-background">
       <div className="border-b bg-muted/60 px-4 py-3">
