@@ -46,12 +46,25 @@ export const VERIFICATION_LABEL: Record<CanonicalStatus, string> = {
 const IN_PROGRESS = ["in_progress", "started", "processing", "pending_provider"];
 const INFO_NEEDED = ["info_requested", "more_info_needed", "more_information_needed", "resubmission_requested", "sent_back"];
 
-/** One label for any stored identity/screening value. Never shows raw values. */
-export function verificationLabel(status: string | null | undefined): string {
+/** The raw value when it carries wording the four canonical labels would lose. */
+export function verificationDetail(status: string | null | undefined): string | null {
   const s = String(status ?? "").trim().toLowerCase();
+  return IN_PROGRESS.includes(s) || INFO_NEEDED.includes(s) ? s : null;
+}
+
+/** One label for any stored identity/screening value. Never shows raw values. A detail from the source record wins when given. */
+export function verificationLabel(status: string | null | undefined, detail?: string | null): string {
+  const s = String(detail ?? status ?? "").trim().toLowerCase();
   if (IN_PROGRESS.includes(s)) return "In progress";
   if (INFO_NEEDED.includes(s)) return "More information needed";
   return VERIFICATION_LABEL[canonicalVerificationStatus(status)];
+}
+
+/** Detail from whichever source supplied the effective status. */
+function effectiveDetail(personStatus: string | null | undefined, applicationStatus: string | null | undefined, effective: CanonicalStatus) {
+  const source = canonicalVerificationStatus(personStatus) !== "pending" ? personStatus : (verificationDetail(personStatus) ? personStatus : applicationStatus);
+  const d = verificationDetail(source);
+  return d && canonicalVerificationStatus(d) === effective ? d : null;
 }
 
 type PersonRow = { user_id: string | null; kyc_status: string | null; aml_status: string | null; merged_into_person_id?: string | null };
