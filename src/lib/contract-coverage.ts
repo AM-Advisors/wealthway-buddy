@@ -229,7 +229,7 @@ export function normalizePriceInput(input: { model: string; amount?: string | nu
 
 /** Server-boundary cents field: finite non-negative integer or null, friendly error. */
 export const centsSchema = z
-  .number({ invalid_type_error: PRICE_INPUT_MESSAGE, required_error: PRICE_INPUT_MESSAGE })
+  .number({ error: PRICE_INPUT_MESSAGE })
   .refine((n) => Number.isFinite(n), PRICE_INPUT_MESSAGE)
   .refine((n) => Number.isInteger(n) && n >= 0 && n <= 10_000_000_000, PRICE_INPUT_MESSAGE);
 

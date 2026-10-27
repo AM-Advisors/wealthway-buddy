@@ -77,7 +77,7 @@ const ss4Schema = z
     applicant_phone: z.string().trim().max(40).default(""),
     applicant_fax: z.string().trim().max(40).default(""),
   })
-  .default({});
+  .prefault({});
 
 const FUND_TYPES = [
   "SPV",
