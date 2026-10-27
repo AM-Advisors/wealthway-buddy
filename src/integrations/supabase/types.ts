@@ -50106,6 +50106,15 @@ export type Database = {
           updated_at: string
         }[]
       }
+      match_imported_crm_contact: {
+        Args: {
+          _actor: string
+          _external_id: string
+          _fields: Json
+          _source: string
+        }
+        Returns: Json
+      }
       merge_persons: {
         Args: { _actor: string; _drop: string; _keep: string; _rule: string }
         Returns: Json
