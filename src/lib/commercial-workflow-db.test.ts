@@ -19,6 +19,10 @@ describe("fictional commercial transaction and ownership", () => {
       create table access_permission_grants(user_id uuid,permission text,effect text,revoked_at timestamptz,effective_at timestamptz,expires_at timestamptz);`);
     await db.exec(readFileSync("drizzle/migrations/0342_commercial_intake_and_contact_source_links.sql", "utf8"));
     await db.exec(readFileSync("drizzle/migrations/0343_commercial_suppression_and_atomic_intake.sql", "utf8"));
+    await db.exec(`alter table email_unsubscribes add column token uuid default gen_random_uuid(); alter table email_unsubscribes add unique(email);
+      alter table crm_contacts add column consent_recorded_at timestamptz;
+      alter table email_flow_enrollments add column stop_reason text; alter table email_flow_enrollments add column stopped_at timestamptz; alter table email_flow_enrollments add column next_due_at timestamptz;`);
+    await db.exec(readFileSync("drizzle/migrations/0344_commercial_contact_match_review_queue.sql", "utf8"));
   });
   afterAll(async () => db.close());
   beforeEach(async () => {
@@ -41,8 +45,18 @@ describe("fictional commercial transaction and ownership", () => {
     expect((await db.query("select owner_user_id,status from email_flow_enrollments order by status")).rows).toEqual([{ owner_user_id: actor, status: "active" }, { owner_user_id: owner, status: "completed" }]);
   });
   it("suppresses mixed-case opt-outs across all sources", async () => {
-    await db.exec(`insert into email_unsubscribes values(' PERSON@Example.test ',now())`);
+    await db.exec(`insert into email_unsubscribes(email,unsubscribed_at) values(' PERSON@Example.test ',now())`);
     expect((await db.query("select * from promotional_suppressed_emails(array['person@example.test'])")).rows).toEqual([{ email: "person@example.test" }]);
+  });
+  it("records unsubscribe atomically and retains the original unsubscribe token", async () => {
+    const contact = (await qualify()).rows[0]?.result.contact_id;
+    await db.query("insert into email_flow_enrollments(contact_id,owner_user_id,status) values($1,$2,'active')",[contact,owner]);
+    await db.exec("select record_promotional_unsubscribe(' PERSON@example.test ')");
+    const first = (await db.query("select token from email_unsubscribes")).rows;
+    await db.exec("select record_promotional_unsubscribe('person@example.test')");
+    expect((await db.query("select token from email_unsubscribes")).rows).toEqual(first);
+    expect((await db.query("select consent from crm_contacts")).rows).toEqual([{consent:'unsubscribed'}]);
+    expect((await db.query("select status from email_flow_enrollments")).rows).toEqual([{status:'stopped'}]);
   });
   it("rolls back all qualification writes when linking fails", async () => {
     await db.exec("alter table commercial_intake_links add constraint fictional_failure check(false) not valid");
