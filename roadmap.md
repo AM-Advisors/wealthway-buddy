@@ -1,5 +1,11 @@
 # Roadmap
 
+## Contracted bookkeeping, posting and reviewed reporting (2026-10-27)
+- [x] Rechecked current backend metadata: shared production only, no development instance. Reviewed QA evidence and QA origin are absent; 84 offline bookkeeping, fee and safety checks pass. No financial fixtures, enrollment, invoice issuance, posting, pricing publication or real records changed.
+- [ ] Establish independently isolated database/auth/storage, actual frontend/server binding, no production data/credentials and inert outbound integrations/jobs in Harmonious QA; security validation and synthetic sessions must pass before implementation resumes.
+- [ ] Build exact-entity executed-contract enrollment, canonical idempotent fee journal preparation/posting and independently reviewed report release in validated QA; blocked on the preceding isolation/security gate.
+- [ ] Run durable fictional quote → executed contract → enrollment → invoice → reviewed journal posting → released report read-back with separate synthetic actors; blocked on isolated QA and implementation. Proposed pricing and production activation retain separate release approval.
+
 ## Complete request-to-task handoff loop (2026-10-27)
 - [x] Added explicit Sales-to-Operations transfer with receiving Operations owner and deadline, atomic linked-task status, optimistic saves, and fund Requests tab task progress. Internal task details remain staff-only; client request status/deadline remain visible. Installed progress trigger confirmed; no existing records backfilled.
 - [x] Fictional transaction and assignment → transfer → completion click-through checks pass; desktop and 440px layout inspected without runtime errors or overflow.
