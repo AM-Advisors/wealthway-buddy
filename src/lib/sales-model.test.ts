@@ -32,3 +32,11 @@ describe("sales model", () => {
     expect(r.to).toBe("2026-11-01T00:00:00.000Z");
   });
 });
+
+import { quoteAutoApproves as autoOk, priceQuote as pq } from "./sales-model";
+describe("rate-card auto approval", () => {
+  const l = { serviceKey: "x", label: "x", quantity: 1, baselineUnitCents: 250000 };
+  it("skips approval at the rate card", () => expect(autoOk(pq([{ ...l, unitCents: 250000 }]).needsExecApproval)).toBe(true));
+  it("skips approval above the rate card", () => expect(autoOk(pq([{ ...l, unitCents: 750000 }]).needsExecApproval)).toBe(true));
+  it("needs approval below the rate card", () => expect(autoOk(pq([{ ...l, unitCents: 249999 }]).needsExecApproval)).toBe(false));
+});
