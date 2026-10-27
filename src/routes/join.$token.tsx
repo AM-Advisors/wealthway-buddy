@@ -56,7 +56,7 @@ function JoinPage() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-6 bg-background px-4 py-10">
       <section className="w-full max-w-md space-y-4 rounded-xl border bg-card p-6" aria-label="How onboarding works">
-        <video src={guideVideo.url} className="aspect-video w-full rounded-md" autoPlay muted loop playsInline controls />
+        <video src={guideVideo.url} className="aspect-video w-full rounded-md bg-muted" preload="metadata" playsInline controls aria-label="Narrated walkthrough of investor onboarding" />
         <h2 className="font-heading text-lg font-semibold">How onboarding works</h2>
         <ol className="space-y-2 text-sm text-muted-foreground">
           {GUIDE_STEPS.map(([t, d], i) => (
