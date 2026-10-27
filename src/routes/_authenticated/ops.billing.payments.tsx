@@ -8,7 +8,7 @@ import { getRoasPayments } from "@/lib/ops-billing.functions";
 
 const paymentsQuery = queryOptions({ queryKey: ["roas-payments"], queryFn: () => getRoasPayments() });
 export const Route = createFileRoute("/_authenticated/ops/billing/payments")({
-  validateSearch: (search: Record<string, unknown>) => ({ year: Number.isInteger(Number(search.year)) && Number(search.year) >= 2026 && Number(search.year) <= 9999 ? Number(search.year) : 2026 }),
+  validateSearch: (search: Record<string, unknown>) => ({ year: Number.isInteger(Number(search['year'])) && Number(search['year']) >= 2026 && Number(search['year']) <= 9999 ? Number(search['year']) : 2026 }),
   loader: ({ context }) => context.queryClient.ensureQueryData(paymentsQuery),
   errorComponent: ({ error }) => <PaymentsError error={error} />,
   notFoundComponent: () => <p className="p-6">Payment records not found.</p>,
@@ -22,9 +22,9 @@ export const Route = createFileRoute("/_authenticated/ops/billing/payments")({
   component: PaymentsPage,
 });
 
-function PaymentsError({ error }: { error: Error }) {
+function PaymentsError({ error }: { error: unknown }) {
   const router = useRouter();
-  return <div className="space-y-3 p-6" role="alert"><p>{error.message}</p><Button variant="outline" onClick={() => void router.invalidate()}>Try again</Button></div>;
+  return <div className="space-y-3 p-6" role="alert"><p>{error instanceof Error ? error.message : "Couldn't load payments. Please try again."}</p><Button variant="outline" onClick={() => void router.invalidate()}>Try again</Button></div>;
 }
 function PaymentsPage() {
   const { data, refetch, isFetching } = useSuspenseQuery(paymentsQuery);

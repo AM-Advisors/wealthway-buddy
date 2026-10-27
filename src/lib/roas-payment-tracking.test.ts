@@ -18,7 +18,7 @@ describe("ROAS payment evidence", () => {
   });
   it("does not infer a tax year from the payment deadline", () => {
     const { sets } = trackedK1Sets([{ ...invoice, periodStart: null, periodEnd: null }], [{ id: "line", invoiceId: invoice.id, label: "K-1 set", serviceKey: "tax_k1", amountCents: 250000 }], 2026);
-    expect(sets[0].taxYear).toBeNull();
+    expect(sets[0]?.taxYear).toBeNull();
   });
   it("does not mix a prior service year into selected K-1 sets", () => {
     expect(trackedK1Sets([invoice], [{ id: "line", invoiceId: invoice.id, label: "K-1 set", serviceKey: "tax_k1", amountCents: 250000 }], 2027).sets).toEqual([]);
