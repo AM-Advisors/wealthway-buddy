@@ -1,7 +1,8 @@
 # Roadmap
 
 ## Finish remaining work (2026-10-27)
-- [ ] Replace the ten-second investor animation with a longer narrated four-step walkthrough and verify public media playback.
+- [x] Replaced the ten-second animation with an 85.8-second H.264/AAC narrated walkthrough, captions and illustrative fictional screens; shared guide mounted on fund join and fictional QA pages. All seven scenes visually inspected and app media URL returns the full file. AI narration, not a recorded person; no actual investor screen recordings.
+- [ ] External browser playback and investor-link live release: sandbox Chromium lacks H.264 support, so actual playback is unverified; publishing requires explicit approval. Durable investor onboarding still requires isolated synthetic QA.
 - [x] Added read-only fee-entry previews with exact-client books, explicit expense/payable mappings, open-period and duplicate-source blockers. No draft writes or posting; durable preparation remains blocked by isolated financial QA and approved accounting release.
 - [x] Extended fictional click-through to connected quote, agreement, partial-payment invoice, reporting periods and the real fee-preview control. 3,867 tests pass; desktop fee dialog and 440px billing flow checked with no runtime errors. This is fictional evidence, not authenticated production verification.
 - [ ] Hourly contact sync live release: requires explicit publishing approval; do not change the shared marketing scheduler cadence.
