@@ -43363,6 +43363,7 @@ export type Database = {
           archived_at: string | null
           baseline_cents: number
           bdr_user_id: string | null
+          billing_contact_id: string | null
           client_id: string | null
           contact_id: string | null
           created_at: string
@@ -43399,6 +43400,7 @@ export type Database = {
           archived_at?: string | null
           baseline_cents?: number
           bdr_user_id?: string | null
+          billing_contact_id?: string | null
           client_id?: string | null
           contact_id?: string | null
           created_at?: string
@@ -43435,6 +43437,7 @@ export type Database = {
           archived_at?: string | null
           baseline_cents?: number
           bdr_user_id?: string | null
+          billing_contact_id?: string | null
           client_id?: string | null
           contact_id?: string | null
           created_at?: string
@@ -43466,6 +43469,13 @@ export type Database = {
           version?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "sales_quotes_billing_contact_id_fkey"
+            columns: ["billing_contact_id"]
+            isOneToOne: false
+            referencedRelation: "crm_contacts"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "sales_quotes_client_id_fkey"
             columns: ["client_id"]

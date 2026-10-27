@@ -19,7 +19,7 @@ import { SERVICE_LADDERS, adminQuoteKey, ADMIN_QUOTE_KEY_PREFIX, type LadderProd
 import { standardInclusions } from "@/lib/service-inclusions";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { draftQuoteFromSow, getQuoteCatalog, listSalesQuotes, listSowsForQuote, saveSalesQuote } from "@/lib/sales-hub.functions";
+import { addQuoteClientContact, createQuoteClient, draftQuoteFromSow, getQuoteCatalog, listSalesQuotes, listSowsForQuote, saveSalesQuote } from "@/lib/sales-hub.functions";
 import { QUOTE_STATUS_LABEL } from "@/lib/sales-model";
 import type { QuoteLineInput } from "@/lib/sales-model";
 import { Panel, money } from "@/components/sales/sales-ui";
@@ -140,7 +140,7 @@ function AdminLevelPicker({ onAdd, lines }: { onAdd: (key: string) => void; line
   );
 }
 
-export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; initial?: { id: string; title: string; clientId: string | null; contactId?: string | null; offeringId?: string | null; dealId?: string | null; validUntil: string | null; notes: string | null; expectedUpdatedAt?: string; sections?: unknown; lines: Line[] } }) {
+export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; initial?: { id: string; title: string; clientId: string | null; contactId?: string | null; billingContactId?: string | null; offeringId?: string | null; dealId?: string | null; validUntil: string | null; notes: string | null; expectedUpdatedAt?: string; sections?: unknown; lines: Line[] } }) {
   const qc = useQueryClient();
   const [dealId, setDealId] = useState<string>(initial?.dealId ?? "");
   const optFn = useServerFn(getSalesDocumentOptions);
@@ -148,6 +148,12 @@ export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; init
   const nav = useNavigate();
   const [clientId, setClientId] = useState<string | null>(initial?.clientId ?? null);
   const [offeringId, setOfferingId] = useState<string | null>(initial?.offeringId ?? null);
+  const [signerId, setSignerId] = useState<string | null>(initial?.contactId ?? null);
+  const [payerId, setPayerId] = useState<string | null>(initial?.billingContactId ?? null);
+  const [newClient, setNewClient] = useState<string | null>(null);
+  const [newContact, setNewContact] = useState<{ for: "sign" | "pay"; name: string; email: string } | null>(null);
+  const createClientFn = useServerFn(createQuoteClient);
+  const addContactFn = useServerFn(addQuoteClientContact);
   const [title, setTitle] = useState(initial?.title ?? "");
   const [validUntil, setValidUntil] = useState(initial?.validUntil ?? "");
   const [notes, setNotes] = useState(initial?.notes ?? "");
@@ -161,7 +167,7 @@ export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; init
   const c = useQuery({ queryKey: ["quote-catalog", clientId], queryFn: () => cat({ data: { clientId } }) });
   const save = useServerFn(saveSalesQuote);
   const m = useMutation({
-    mutationFn: () => save({ data: { id: initial?.id ?? null, title, clientId, contactId: clientId === initial?.clientId ? initial?.contactId ?? null : null, offeringId, dealId: dealId || null, validUntil: validUntil || null, notes: notes || null, expectedUpdatedAt: initial?.expectedUpdatedAt, sections, lines } }),
+    mutationFn: () => save({ data: { id: initial?.id ?? null, title, clientId, contactId: signerId, billingContactId: payerId, offeringId, dealId: dealId || null, validUntil: validUntil || null, notes: notes || null, expectedUpdatedAt: initial?.expectedUpdatedAt, sections, lines } }),
     onSuccess: (r) => { toast.success("Quote saved"); qc.invalidateQueries(); onCancel(); nav({ to: "/sales/quotes/$id", params: { id: r.id } }); },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -184,9 +190,9 @@ export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; init
     <Panel title={initial ? "Edit quote" : "New quote"}>
       <div className="grid gap-3 sm:grid-cols-4">
         <Input placeholder="Quote title" value={title} onChange={(e) => setTitle(e.target.value)} />
-        <SearchablePeoplePicker value={clientId ?? "none"} onValueChange={(v) => { setClientId(v === "none" ? null : v); setOfferingId(null); setLines(previous => previous.filter(l => !l.bookkeeping)); }}>
-          <SelectTrigger><SelectValue placeholder="Client" /></SelectTrigger>
-          <SelectContent><SelectItem value="none">Choose client…</SelectItem>{(c.data?.clients ?? []).map((cl: any) => <SelectItem key={cl.id} value={cl.id}>{cl.legal_name}</SelectItem>)}</SelectContent>
+        <SearchablePeoplePicker value={clientId ?? "none"} onValueChange={(v) => { if (v === "__new") { setNewClient(""); return; } setClientId(v === "none" ? null : v); setOfferingId(null); setSignerId(null); setPayerId(null); setLines(previous => previous.filter(l => !l.bookkeeping)); }}>
+          <SelectTrigger aria-label="Client"><SelectValue placeholder="Client" /></SelectTrigger>
+          <SelectContent><SelectItem value="none">Choose client…</SelectItem><SelectItem value="__new">+ Add new client</SelectItem>{(c.data?.clients ?? []).map((cl: any) => <SelectItem key={cl.id} value={cl.id}>{cl.legal_name}</SelectItem>)}</SelectContent>
         </SearchablePeoplePicker>
         <Select value={offeringId ?? "none"} onValueChange={(v) => setOfferingId(v === "none" ? null : v)} disabled={!clientId}>
           <SelectTrigger aria-label="Fund"><SelectValue placeholder="Fund" /></SelectTrigger>
@@ -194,8 +200,30 @@ export function QuoteBuilder({ onCancel, initial }: { onCancel: () => void; init
         </Select>
         <Input type="date" aria-label="Valid until" value={validUntil} onChange={(e) => setValidUntil(e.target.value)} />
       </div>
+      {newClient !== null && <div className="mt-3 flex flex-wrap items-end gap-2">
+        <div className="min-w-64 flex-1 space-y-1 text-sm"><span>New client name</span><Input autoFocus value={newClient} onChange={(e) => setNewClient(e.target.value)} placeholder="Legal name" /></div>
+        <Button size="sm" disabled={newClient.trim().length < 2} onClick={async () => { try { const r = await createClientFn({ data: { name: newClient } }); await qc.invalidateQueries({ queryKey: ["quote-catalog"] }); setClientId(r.id); setOfferingId(null); setSignerId(null); setPayerId(null); setNewClient(null); toast.success(r.reused ? `Using existing client ${r.name}` : `Added ${r.name}`); } catch (e) { toast.error((e as Error).message); } }}>Add client</Button>
+        <Button size="sm" variant="ghost" onClick={() => setNewClient(null)}>Cancel</Button>
+      </div>}
+      {clientId && <div className="mt-3 grid gap-3 sm:grid-cols-2">
+        {(["sign", "pay"] as const).map((who) => {
+          const value = who === "sign" ? signerId : payerId;
+          const set = who === "sign" ? setSignerId : setPayerId;
+          return <div key={who} className="space-y-1 text-sm"><span>{who === "sign" ? "Who signs" : "Who receives and pays the invoice"}</span>
+            <Select value={value ?? "none"} onValueChange={(v) => { if (v === "__new") { setNewContact({ for: who, name: "", email: "" }); return; } set(v === "none" ? null : v); }}>
+              <SelectTrigger aria-label={who === "sign" ? "Signer" : "Payer"}><SelectValue /></SelectTrigger>
+              <SelectContent><SelectItem value="none">{who === "sign" ? "Choose signer…" : "Same as signer"}</SelectItem><SelectItem value="__new">+ Add new contact</SelectItem>{(c.data?.contacts ?? []).map((p: any) => <SelectItem key={p.id} value={p.id}>{p.full_name} · {p.email}</SelectItem>)}</SelectContent>
+            </Select></div>;
+        })}
+      </div>}
+      {clientId && newContact && <div className="mt-3 flex flex-wrap items-end gap-2">
+        <div className="space-y-1 text-sm"><span>Full name</span><Input value={newContact.name} onChange={(e) => setNewContact({ ...newContact, name: e.target.value })} /></div>
+        <div className="space-y-1 text-sm"><span>Email</span><Input type="email" value={newContact.email} onChange={(e) => setNewContact({ ...newContact, email: e.target.value })} /></div>
+        <Button size="sm" disabled={newContact.name.trim().length < 2 || !newContact.email.includes("@")} onClick={async () => { try { const r = await addContactFn({ data: { clientId, fullName: newContact.name, email: newContact.email } }); await qc.invalidateQueries({ queryKey: ["quote-catalog", clientId] }); (newContact.for === "sign" ? setSignerId : setPayerId)(r.id); setNewContact(null); toast.success(`Added ${r.full_name}`); } catch (e) { toast.error((e as Error).message); } }}>Add {newContact.for === "sign" ? "signer" : "payer"}</Button>
+        <Button size="sm" variant="ghost" onClick={() => setNewContact(null)}>Cancel</Button>
+      </div>}
       <div className="mt-3 max-w-xl space-y-1 text-sm"><span>Deal</span>
-        <DealPicker deals={opts.data?.deals ?? []} value={dealId} clientId={clientId} contactId={clientId === initial?.clientId ? initial?.contactId ?? null : null} defaultTitle={title}
+        <DealPicker deals={opts.data?.deals ?? []} value={dealId} clientId={clientId} contactId={signerId} defaultTitle={title}
           onChange={(d) => { setDealId(d?.id ?? ""); if (d?.client_id && !clientId) setClientId(d.client_id); }} /></div>
       <AdminLevelPicker onAdd={add} lines={c.data?.lines ?? []} />
       <div className="mt-4">
