@@ -57,16 +57,16 @@ export async function autoApplyDiditForOnboarding(onboardingId: string, actorUse
   const now = new Date().toISOString();
   // Shared verified write-back rule set (verified-wins mode): approved facts
   // replace differing values, address moves only as a complete group, and
-  // every replacement is returned for logging.
-  const merged = mergeVerifiedPersonFields(
-    person,
-    { ...x.fields, residence_country: person.residence_country ? null : x.fields.country },
-    "verified-wins",
-  );
+  // every write is logged below.
+  const fields: Record<string, string | null> = { ...x.fields };
+  if (!person.residence_country && x.fields.country) fields["residence_country"] = x.fields.country;
+  const merged = mergeVerifiedPersonFields(person, fields, "verified-wins");
   const update: any = { ...merged.update };
-  const changes: any[] = merged.update["residence_country"] != null && person.residence_country
-    ? merged.changes
-    : [...merged.changes, ...(merged.update["residence_country"] ? [{ field: "residence_country", from: null, to: merged.update["residence_country"] }] : [])];
+  const changes: any[] = merged.filledFields.map((field) => ({
+    field,
+    from: person[field] ?? null,
+    to: merged.update[field],
+  }));
   if (person.kyc_status !== "approved") { update.kyc_status = "approved"; update.kyc_verified_at = now; update.identity_verified_at = now; changes.push({ field: "kyc_status", from: person.kyc_status, to: "approved" }); }
   if (x.amlStatus && person.aml_status !== x.amlStatus) {
     update.aml_status = x.amlStatus;
