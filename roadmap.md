@@ -1,5 +1,9 @@
 # Roadmap
 
+## Cross-source contact matching (2026-10-27)
+- [ ] Match normalized email across imported contacts and company contacts, with shared entitled history and retained source provenance; no login/person merges or access expansion.
+- [ ] Validate fictional duplicate matching, source links, history scoping and consent preservation; durable authenticated checks require isolated QA.
+
 ## Contracted bookkeeping, posting and reviewed reporting (2026-10-27)
 - [x] Rechecked current backend metadata: shared production only, no development instance. Reviewed QA evidence and QA origin are absent; 84 offline bookkeeping, fee and safety checks pass. No financial fixtures, enrollment, invoice issuance, posting, pricing publication or real records changed.
 - [ ] Establish independently isolated database/auth/storage, actual frontend/server binding, no production data/credentials and inert outbound integrations/jobs in Harmonious QA; security validation and synthetic sessions must pass before implementation resumes.
