@@ -43360,6 +43360,7 @@ export type Database = {
         Row: {
           approved_at: string | null
           approved_by: string | null
+          archived_at: string | null
           baseline_cents: number
           bdr_user_id: string | null
           client_id: string | null
@@ -43368,6 +43369,7 @@ export type Database = {
           created_by: string
           deal_id: string | null
           decision_note: string | null
+          deleted_at: string | null
           id: string
           msa_id: string | null
           needs_exec_approval: boolean
@@ -43394,6 +43396,7 @@ export type Database = {
         Insert: {
           approved_at?: string | null
           approved_by?: string | null
+          archived_at?: string | null
           baseline_cents?: number
           bdr_user_id?: string | null
           client_id?: string | null
@@ -43402,6 +43405,7 @@ export type Database = {
           created_by: string
           deal_id?: string | null
           decision_note?: string | null
+          deleted_at?: string | null
           id?: string
           msa_id?: string | null
           needs_exec_approval?: boolean
@@ -43428,6 +43432,7 @@ export type Database = {
         Update: {
           approved_at?: string | null
           approved_by?: string | null
+          archived_at?: string | null
           baseline_cents?: number
           bdr_user_id?: string | null
           client_id?: string | null
@@ -43436,6 +43441,7 @@ export type Database = {
           created_by?: string
           deal_id?: string | null
           decision_note?: string | null
+          deleted_at?: string | null
           id?: string
           msa_id?: string | null
           needs_exec_approval?: boolean

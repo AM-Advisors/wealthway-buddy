@@ -1,5 +1,5 @@
 /** Server-only quoting engine: rate-card quotes → approval → SOW/MSA drafts → signed. Never moves money. */
-import { canDraftQuote, cleanLineDetails, priceQuote, quoteApprovalProblem, quoteAutoApproves, type QuoteLineInput } from "@/lib/sales-model";
+import { canDraftQuote, cleanLineDetails, priceQuote, quoteApprovalProblem, quoteAutoApproves, quoteDeleteProblem, type QuoteLineInput } from "@/lib/sales-model";
 import { names, salesActor } from "@/lib/sales-hub.server";
 import { canAddSalesContact, type SalesContactInput } from "@/lib/sales-contact-model";
 import { BOOKKEEPING_KEY, bookkeepingConfigSchema, bookkeepingDraftBlocker, bookkeepingTerms, calculateBookkeeping } from "@/lib/bookkeeping-model";
@@ -74,7 +74,7 @@ async function syncFromAgreements(quotes: any[]) {
 export async function listQuotes(userId: string) {
   const a = await salesActor(userId);
   const db = await admin();
-  let q = db.from("sales_quotes").select("*").order("created_at", { ascending: false }).limit(500);
+  let q = db.from("sales_quotes").select("*").is("deleted_at", null).order("created_at", { ascending: false }).limit(500);
   if (a.visible) q = q.in("owner_user_id", a.visible);
   const rows = await syncFromAgreements(((await q).data ?? []) as any[]);
   const nm = await names(rows.map((r) => r.owner_user_id));
@@ -91,7 +91,7 @@ export async function getQuote(userId: string, id: string) {
   const a = await salesActor(userId);
   const db = await admin();
   const { data: q } = await db.from("sales_quotes").select("*").eq("id", id).maybeSingle();
-  if (!q || !canSee(a, q.owner_user_id)) throw new Error("Quote not found.");
+  if (!q || q.deleted_at || !canSee(a, q.owner_user_id)) throw new Error("Quote not found.");
   await syncFromAgreements([q]);
   const [{ data: lines }, { data: events }, versions] = await Promise.all([
     db.from("sales_quote_lines").select("*").eq("quote_id", id).order("sort_order"),
@@ -337,6 +337,48 @@ export async function newVersion(userId: string, id: string) {
   return { id: newId };
 }
 
+/** Archive hides a quote from the default list; reversible; history kept. Signed quotes stay put. */
+export async function archiveQuote(userId: string, d: { id: string; archive: boolean }) {
+  const a = await salesActor(userId);
+  const db = await admin();
+  const { data: q } = await db.from("sales_quotes").select("id, owner_user_id, status, deleted_at").eq("id", d.id).maybeSingle();
+  if (!q || q.deleted_at || !canSee(a, q.owner_user_id) || !canDraftQuote(a.roles)) throw new Error("This quote can't be archived.");
+  await db.from("sales_quotes").update({ archived_at: d.archive ? new Date().toISOString() : null, updated_at: new Date().toISOString() }).eq("id", q.id);
+  await event(q.id, d.archive ? "archived" : "unarchived", userId);
+  return { ok: true };
+}
+
+/** Delete removes a never-sent, unsigned quote from every view. The row and history are retained for audit. */
+export async function deleteQuote(userId: string, d: { id: string; reason: string }) {
+  const a = await salesActor(userId);
+  const db = await admin();
+  const { data: q } = await db.from("sales_quotes").select("id, owner_user_id, status, sent_at, sow_id, deleted_at").eq("id", d.id).maybeSingle();
+  if (!q || q.deleted_at || !canSee(a, q.owner_user_id) || !canDraftQuote(a.roles)) throw new Error("This quote can't be deleted.");
+  const problem = quoteDeleteProblem(q);
+  if (problem) throw new Error(problem);
+  const { data: done } = await db.from("sales_quotes").update({ deleted_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("id", q.id).eq("status", q.status).is("deleted_at", null).select("id");
+  if (!done?.length) throw new Error("The quote changed. Refresh and try again.");
+  await event(q.id, "deleted", userId, d.reason.trim());
+  return { ok: true };
+}
+
+/** Adjust: drafts edit in place; approved-but-unsent returns to draft; sent quotes get a new version. */
+export async function adjustQuote(userId: string, id: string) {
+  const a = await salesActor(userId);
+  if (!canDraftQuote(a.roles)) throw new Error("Your role can't adjust quotes.");
+  const db = await admin();
+  const { data: q } = await db.from("sales_quotes").select("id, owner_user_id, status, sent_at, sow_id, deleted_at").eq("id", id).maybeSingle();
+  if (!q || q.deleted_at || !canSee(a, q.owner_user_id)) throw new Error("This quote can't be adjusted.");
+  if (["draft", "rejected"].includes(q.status)) return { id };
+  if (["pending_approval", "approved"].includes(q.status) && !q.sent_at && !q.sow_id) {
+    const { data: done } = await db.from("sales_quotes").update({ status: "draft", approved_at: null, approved_by: null, updated_at: new Date().toISOString() }).eq("id", q.id).eq("status", q.status).select("id");
+    if (!done?.length) throw new Error("The quote changed. Refresh and try again.");
+    await event(q.id, "reopened", userId, "Returned to draft for adjustment");
+    return { id };
+  }
+  return newVersion(userId, id);
+}
+
 export async function markLost(userId: string, d: { id: string; reason: string }) {
   const a = await salesActor(userId);
   if (!d.reason.trim()) throw new Error("Add the reason this was lost.");
@@ -386,7 +428,7 @@ export async function linkedRecords(userId: string, id: string) {
   const a = await salesActor(userId);
   const db = await admin();
   const { data: q } = await db.from("sales_quotes").select("id, owner_user_id, client_id, deal_id, sow_id, quote_number, version, status, total_cents").eq("id", id).maybeSingle();
-  if (!q || !canSee(a, q.owner_user_id)) throw new Error("Quote not found.");
+  if (!q || q.deleted_at || !canSee(a, q.owner_user_id)) throw new Error("Quote not found.");
   const [client, deal, sow, invoices] = await Promise.all([
     q.client_id ? db.from("clients").select("id, legal_name").eq("id", q.client_id).maybeSingle().then((r: any) => r.data) : null,
     q.deal_id ? db.from("crm_deals").select("id, title, stage, sales_stage, amount_cents").eq("id", q.deal_id).maybeSingle().then((r: any) => r.data) : null,

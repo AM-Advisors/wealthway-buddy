@@ -2451,6 +2451,13 @@
       "when": 1793090778353,
       "tag": "0349_self_serve_document_review",
       "breakpoints": true
+    },
+    {
+      "idx": 350,
+      "version": "7",
+      "when": 1793125800123,
+      "tag": "0350_quote_archive_delete",
+      "breakpoints": true
     }
   ]
 }

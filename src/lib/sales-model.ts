@@ -73,6 +73,12 @@ export const canDraftQuote = (roles: readonly string[]) =>
 export const canManageTeam = (roles: readonly string[]) => salesScope(roles) === "all" || salesScope(roles) === "team";
 export const EXEC_PRICE_ROLES = ["executive", "cro", "super_admin"];
 
+/** Only quotes never sent to a client and never signed may be deleted; others can be archived. */
+export function quoteDeleteProblem(q: { status: string; sent_at?: string | null; sow_id?: string | null }): string | null {
+  if (q.sent_at || q.sow_id || ["sent", "signed", "superseded"].includes(q.status)) return "This quote was already sent or signed, so it can't be deleted. Archive it instead.";
+  return null;
+}
+
 /** Quotes priced at or above the rate card on every line skip approval entirely. */
 export const quoteAutoApproves = (needsExec: boolean) => !needsExec;
 

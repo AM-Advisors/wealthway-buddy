@@ -86,7 +86,7 @@ async function visibleDeals(a: Actor) {
 
 async function visibleQuotes(a: Actor) {
   const db = await admin();
-  let q = db.from("sales_quotes").select("*").neq("status", "superseded");
+  let q = db.from("sales_quotes").select("*").neq("status", "superseded").is("deleted_at", null).is("archived_at", null);
   if (a.visible) q = q.in("owner_user_id", a.visible);
   const { testDemoIds, isTestRow } = await import("@/lib/user-access.server");
   const td = await testDemoIds();

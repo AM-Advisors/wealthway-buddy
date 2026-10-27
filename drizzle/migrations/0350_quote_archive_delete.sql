@@ -1,0 +1,2 @@
+ALTER TABLE public.sales_quotes ADD COLUMN IF NOT EXISTS archived_at timestamptz, ADD COLUMN IF NOT EXISTS deleted_at timestamptz;
+COMMENT ON COLUMN public.sales_quotes.deleted_at IS 'Soft delete: hidden everywhere; only never-sent, unsigned quotes; history retained.';
