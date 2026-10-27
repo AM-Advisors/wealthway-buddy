@@ -49986,6 +49986,10 @@ export type Database = {
         Args: { _document_id: string }
         Returns: boolean
       }
+      ensure_exact_investment_application: {
+        Args: { p_onboarding_id: string }
+        Returns: string
+      }
       evaluate_journal_period_links: {
         Args: { _period: string }
         Returns: {
