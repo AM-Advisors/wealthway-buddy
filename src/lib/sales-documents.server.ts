@@ -149,7 +149,7 @@ export async function createOptions(userId: string) {
   const all = roles.some((r) => LEADER.includes(r));
   let deals = db.from("crm_deals").select("id, title, contact_id, client_id, owner_user_id").eq("scope", "harmonious").is("archived_at", null).order("updated_at", { ascending: false }).limit(200);
   let contacts = db.from("crm_contacts").select("id, full_name, email, organization, owner_user_id").eq("scope", "harmonious").is("archived_at", null).order("full_name").limit(500);
-  let quotes = db.from("sales_quotes").select("id, quote_number, title, client_id, contact_id, deal_id, total_cents, status, owner_user_id").order("created_at", { ascending: false }).limit(200);
+  let quotes = db.from("sales_quotes").select("id, quote_number, title, client_id, contact_id, deal_id, total_cents, status, owner_user_id").is("deleted_at", null).order("created_at", { ascending: false }).limit(200);
   if (!all) { deals = deals.eq("owner_user_id", userId); contacts = contacts.eq("owner_user_id", userId); quotes = quotes.eq("owner_user_id", userId); }
   const [d, c, q, cl] = await Promise.all([deals, contacts, quotes, db.from("clients").select("id, name").order("name").limit(500)]);
   return { deals: d.data ?? [], contacts: c.data ?? [], quotes: q.data ?? [], clients: cl.data ?? [] };

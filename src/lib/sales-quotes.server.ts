@@ -91,7 +91,7 @@ export async function getQuote(userId: string, id: string) {
   const a = await salesActor(userId);
   const db = await admin();
   const { data: q } = await db.from("sales_quotes").select("*").eq("id", id).maybeSingle();
-  if (!q || !canSee(a, q.owner_user_id)) throw new Error("Quote not found.");
+  if (!q || q.deleted_at || !canSee(a, q.owner_user_id)) throw new Error("Quote not found.");
   await syncFromAgreements([q]);
   const [{ data: lines }, { data: events }, versions] = await Promise.all([
     db.from("sales_quote_lines").select("*").eq("quote_id", id).order("sort_order"),
@@ -428,7 +428,7 @@ export async function linkedRecords(userId: string, id: string) {
   const a = await salesActor(userId);
   const db = await admin();
   const { data: q } = await db.from("sales_quotes").select("id, owner_user_id, client_id, deal_id, sow_id, quote_number, version, status, total_cents").eq("id", id).maybeSingle();
-  if (!q || !canSee(a, q.owner_user_id)) throw new Error("Quote not found.");
+  if (!q || q.deleted_at || !canSee(a, q.owner_user_id)) throw new Error("Quote not found.");
   const [client, deal, sow, invoices] = await Promise.all([
     q.client_id ? db.from("clients").select("id, legal_name").eq("id", q.client_id).maybeSingle().then((r: any) => r.data) : null,
     q.deal_id ? db.from("crm_deals").select("id, title, stage, sales_stage, amount_cents").eq("id", q.deal_id).maybeSingle().then((r: any) => r.data) : null,

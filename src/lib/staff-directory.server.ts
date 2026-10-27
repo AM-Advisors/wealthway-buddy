@@ -248,7 +248,7 @@ export async function financeOverview(viewer: string) {
   const startMonth = yearAgo.toISOString().slice(0, 7);
   const results = await Promise.all([
     db.from("invoices").select("id, number, client_id, status, issue_date, due_date, paid_on, total_cents, voided_at").order("issue_date", { ascending: false }).limit(5000),
-    db.from("sales_quotes").select("id, quote_number, version, title, client_id, status, total_cents, valid_until, created_at").in("status", ["draft", "pending_approval", "approved", "sent"]).order("created_at", { ascending: false }).limit(500),
+    db.from("sales_quotes").select("id, quote_number, version, title, client_id, status, total_cents, valid_until, created_at").in("status", ["draft", "pending_approval", "approved", "sent"]).is("deleted_at", null).is("archived_at", null).order("created_at", { ascending: false }).limit(500),
     db.from("clients").select("id, name, is_test_demo"),
   ]);
   if (results.some(result => result.error)) throw new Error("Couldn't load Finance records. Please retry.");
