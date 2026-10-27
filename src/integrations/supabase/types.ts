@@ -50129,7 +50129,22 @@ export type Database = {
         Args: { _file: string }
         Returns: boolean
       }
+      promotional_suppressed_emails: {
+        Args: { _emails: string[] }
+        Returns: {
+          email: string
+        }[]
+      }
       purge_security_events: { Args: never; Returns: number }
+      qualify_commercial_inquiry: {
+        Args: {
+          _actor: string
+          _contact?: string
+          _lead: string
+          _owner: string
+        }
+        Returns: Json
+      }
       read_offering_rp_identifier: {
         Args: { _offering: string }
         Returns: {
