@@ -1,8 +1,9 @@
 # Roadmap
 
 ## Fund request and task synchronization (2026-10-27)
-- [ ] Synchronize primary linked task owner, team and due date in both directions, preserving review tasks, approvals and request status.
-- [ ] Add owner/team controls and focused fictional transaction tests; durable authenticated read-back requires isolated QA evidence and synthetic sessions.
+- [x] Primary linked task owner, team and due date synchronize atomically in both directions; review tasks, approvals and request status remain unchanged. Installed triggers confirmed through the database catalog; no existing assignments or records backfilled.
+- [x] Added authorized searchable receiving-owner control on requests and receiving-team control on tasks, with linked-screen refresh. Fifty-one focused fictional request/handoff tests pass, including ten synchronization transaction checks; preview build OK.
+- [ ] Durable authenticated request → task → request click-through requires independently isolated QA evidence and synthetic sessions; not verified against the shared live backend.
 
 ## Sales to Operations handoff (2026-10-27)
 - [x] Reuse canonical staff tasks for a quote-linked fund handoff, with receiving Operations owner, due date, acknowledgment and status on the fund page. Receiving-owner transitions and task events save atomically; existing signed quotes show Needs assignment without page-load writes.
