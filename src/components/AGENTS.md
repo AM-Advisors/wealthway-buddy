@@ -1,0 +1,2 @@
+- OfferingDocumentReader keeps authorized source reads separate from OfferingDocumentContent's browser-only PDF/Word rendering; completion requires rendered-end progress or explicit downloaded-copy confirmation — why: embedded native viewers cannot report read progress and rendering must never sign.
+- SessionTimeoutNotice shares same-origin, account-scoped activity via session-activity.ts, checks the latest activity before expiry, and guards sign-out once — why: an idle tab must not end a session active elsewhere.

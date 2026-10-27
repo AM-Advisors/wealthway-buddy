@@ -118,7 +118,7 @@ export function ReviewPreparedDocuments({ onboardingId }: { onboardingId: string
               <>
                 <Button size="sm" variant="ghost" onClick={() => setOpen(open === d.documentId ? null : d.documentId)}>{open === d.documentId ? "Hide" : "View completed document"}</Button>
                 {open === d.documentId ? (
-                  <OfferingDocumentReader documentId={d.documentId} title={d.title} onReachedEnd={() => setReadDocument(d.documentId)} />
+                  <OfferingDocumentReader documentId={d.documentId} onboardingId={onboardingId} title={d.title} onReachedEnd={() => setReadDocument(d.documentId)} />
                 ) : null}
                 {d.blocker === "Please review the document before continuing to sign" && d.snapshotId ? (
                   <Button size="sm" disabled={m.isPending || open !== d.documentId || readDocument !== d.documentId} onClick={() => m.mutate(d.snapshotId)}>I've reviewed this document</Button>

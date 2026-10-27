@@ -8,7 +8,7 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
-- Read src/lib/AGENTS.md for scoped rules, including exact-check review evidence reuse.
+- Read src/lib/AGENTS.md and src/components/AGENTS.md for scoped rules (incl. exact-check review evidence reuse).
 - Fund templates use fund-document-generation-access.server.ts: staff or exact-fund Self Serve managers; client drafts need independent version approval before signing. Legacy generators stay staff-only — why: canonical drafts, retained signed history.
 - Starter side-letter selections share sl_combined rendering in fund-doc-templates.ts, with separate values for each selected item; legacy keys remain readable — why: one document contains all requested terms without mixing fee/carry values or changing signed history.
 - Default investors use null class keys; ClassAssignmentCard and investor-scoped SideLetterRegistry link exceptions, with investor-term-fields preserving separate fee/carry/minimum inputs — why: defaults and signed history stay intact.

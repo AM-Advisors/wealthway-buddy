@@ -1,3 +1,4 @@
+import { isStaffSurface } from "@/lib/host-routing";
 import { canEnrollPasskey } from "@/lib/passkeys";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useRouterState } from "@tanstack/react-router";
@@ -372,6 +373,9 @@ function ActivityTracker({
     evs.forEach((e) => window.addEventListener(e, bump, { passive: true }));
     const tick = window.setInterval(() => {
       const idle = Date.now() - last.current;
+      const staff = isStaffSurface(window.location.host, window.location.pathname);
+      // Staff idle limit is enforced by SessionTimeoutNotice (2 hours); this gate only adds its 30-minute limit elsewhere.
+      if (staff) return;
       if (idle >= IDLE_MS) {
         void send("session_timeout").finally(onSignOut);
       } else if (idle >= IDLE_MS - WARN_MS) setWarn(true);

@@ -1,5 +1,11 @@
 # Roadmap
 
+## Monitoring document review and cross-tab inactivity (2026-10-22)
+- [x] Confirm and repair uploaded PDF/short Word review completion through shared in-page rendering, with explicit downloaded-copy confirmation on display failure; signing authority unchanged.
+- [x] Share account-scoped browser activity across tabs, clear idle warnings after remote activity/Continue and guard automatic sign-out once.
+- [x] Ten focused regressions and fictional browser checks passed: PDF end gating, short PDF/Word, failed rendering fallback, cross-tab Continue, preserved active session and single timeout sign-out; preview build OK, no live services/data used.
+- [ ] Authenticated subscription save/read-back — blocked until independently isolated synthetic QA exists; no real investor signature or session changed.
+
 ## Staff ROAS payment tracking (2026-10-27)
 - [x] Add a staff-only payments page linked from ROAS billing and invoice navigation, using canonical invoice balances and recorded payment dates.
 - [x] Show annual LP and management K-1 terms separately with service-keyed invoice evidence; partial invoice receipts never imply a paid set, missing service periods remain unassigned.
