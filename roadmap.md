@@ -1,5 +1,9 @@
 # Roadmap
 
+## Self Serve fund page (2026-10-27)
+- [ ] Replace the stacked client fund overview with connected setup, investor invitation and document work areas using existing authorized tools.
+- [ ] Remove staff-area links from client settings; verify fictional navigation and retained review boundaries.
+
 ## Self Serve document generation (2026-10-27)
 - [x] Allow exact-fund Self Serve managers to generate approved-template drafts; independent exact-version approval/return and database gates precede existing activation/signing. Legacy starter/standard-form tools remain staff-only.
 - [x] Fictional generation, review and availability controls checked with blocked self-approval, no runtime errors and no mobile overflow; permission/version/database regressions passed.
