@@ -32,6 +32,6 @@ function PaymentsPage() {
   const navigate = Route.useNavigate();
   return <main className="mx-auto max-w-6xl space-y-6 px-4 py-8">
     <header className="flex flex-wrap items-start justify-between gap-3"><div className="space-y-2"><Badge variant="secondary">Staff only</Badge><h1 className="font-heading text-3xl font-semibold">ROAS payments</h1></div><div className="flex flex-wrap gap-2"><Button asChild variant="outline"><Link to="/ops/billing/roas-update">Billing overview</Link></Button><Button size="icon" variant="outline" aria-label="Refresh payments" title="Refresh payments" disabled={isFetching} onClick={() => void refetch()}><RefreshCw className="h-4 w-4" /></Button></div></header>
-    <RoasPaymentsView {...data} year={year} onYearChange={next => void navigate({ search: { year: next }, replace: true })} invoiceAction={id => <Button asChild variant="ghost" size="sm"><Link to="/ops/billing/invoices" search={{ invoice: id }}>Open</Link></Button>} />
+    <RoasPaymentsView {...data} year={year} onYearChange={next => void navigate({ search: { year: next }, replace: true })} />
   </main>;
 }
