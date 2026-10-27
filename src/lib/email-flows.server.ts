@@ -4,6 +4,7 @@
  * Stop rules: reply, unsubscribe, deal won/lost, meeting set. Forwards are an estimate only.
  */
 import { renderEmailHtml, renderEmailText, MARKETING_ACCESS } from "@/lib/marketing-model";
+import { suppressedPromotionalEmails } from "./promotional-email.server";
 
 const admin = async () => (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
 const SALES_ROLES = ["sales", "account_executive", "bdr", "sales_management", "cro", "account_manager"];
@@ -54,10 +55,14 @@ export async function getFlow(userId: string, id: string) {
     db.from("email_flow_enrollments").select("*").eq("flow_id", id).order("created_at", { ascending: false }).limit(300),
   ]);
   const cids = [...new Set(((enr ?? []) as any[]).map((e) => e.contact_id))];
-  const { data: contacts } = cids.length ? await db.from("crm_contacts").select("id, full_name, email, organization").in("id", cids) : { data: [] };
-  const cm = new Map(((contacts ?? []) as any[]).map((c) => [c.id, c]));
+  const { crmActor } = await import("./crm.server");
+  const { canSee } = await import("./crm-model");
+  const actor = await crmActor(userId);
+  const { data: contacts } = cids.length ? await db.from("crm_contacts").select("id, full_name, email, organization,scope,offering_id,owner_user_id").in("id", cids) : { data: [] };
+  const entitled = (contacts ?? []).filter((c: any) => canSee(actor, c));
+  const cm = new Map((entitled as any[]).map((c) => [c.id, { id: c.id, full_name: c.full_name, email: c.email, organization: c.organization }]));
   const canEdit = (await rolesOf(db, userId)).some((r) => FLOW_EDITORS.includes(r));
-  return { flow, steps: steps ?? [], canEdit, enrollments: ((enr ?? []) as any[]).map((e) => ({ ...e, contact: cm.get(e.contact_id) ?? null })) };
+  return { flow, steps: steps ?? [], canEdit, enrollments: ((enr ?? []) as any[]).filter(e => cm.has(e.contact_id)).map((e) => ({ ...e, contact: cm.get(e.contact_id) ?? null })) };
 }
 
 export async function saveFlow(userId: string, d: { id?: string | null | undefined; name: string; description?: string | null | undefined; audience: string; triggerKind: string; triggerStage?: string | null | undefined; steps: { delayDays: number; subject: string; body: string }[] }) {
@@ -111,6 +116,7 @@ async function stepCount(db: any, flowId: string) {
 
 async function enroll(db: any, flow: any, contact: any, via: string, actor: string | null, dealId: string | null) {
   if (!contact?.email || contact.consent === "unsubscribed") return false;
+  if ((await suppressedPromotionalEmails(db, [contact.email])).size) return false;
   const isClient = !!contact.client_id;
   if (flow.audience === "client" && !isClient) return false;
   if (flow.audience === "prospect" && isClient) return false;
@@ -254,6 +260,10 @@ export async function actOnFollowUp(userId: string, d: { enrollmentId: string; a
   }
   const rollback = () => db.from("email_flow_enrollments").update({ status: "active", next_step: e.next_step, next_due_at: e.next_due_at }).eq("id", e.id);
   if (!c?.email || c.consent === "unsubscribed") { await stopWhere(db, (q: any) => q.eq("id", e.id), "Unsubscribed"); throw new Error("This contact has unsubscribed or has no email, so the flow was stopped."); }
+  if ((await suppressedPromotionalEmails(db, [c.email])).size) {
+    await db.from("email_flow_enrollments").update({ status: "stopped", next_due_at: null, stop_reason: "Unsubscribed", stopped_at: new Date().toISOString() }).eq("id", e.id);
+    throw new Error("This address opted out of promotional email, so the flow was stopped.");
+  }
   const { data: opt } = await db.from("sales_channel_optouts").select("id").eq("contact_id", c.id).eq("channel", "email").maybeSingle();
   if (opt) { await stopWhere(db, (q: any) => q.eq("id", e.id), "Unsubscribed"); throw new Error("This contact opted out of email, so the flow was stopped."); }
   const { data: me } = await db.from("profiles").select("legal_name, email").eq("user_id", userId).maybeSingle();

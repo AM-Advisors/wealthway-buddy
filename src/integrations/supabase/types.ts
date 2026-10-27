@@ -7969,6 +7969,55 @@ export type Database = {
           },
         ]
       }
+      commercial_intake_links: {
+        Row: {
+          actor_id: string
+          contact_id: string
+          created_at: string
+          deal_id: string
+          id: string
+          lead_id: string
+        }
+        Insert: {
+          actor_id: string
+          contact_id: string
+          created_at?: string
+          deal_id: string
+          id?: string
+          lead_id: string
+        }
+        Update: {
+          actor_id?: string
+          contact_id?: string
+          created_at?: string
+          deal_id?: string
+          id?: string
+          lead_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commercial_intake_links_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "crm_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commercial_intake_links_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "crm_deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commercial_intake_links_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: true
+            referencedRelation: "marketing_leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       commission_cost_entries: {
         Row: {
           amount_cents: number
@@ -10467,6 +10516,41 @@ export type Database = {
           },
         ]
       }
+      crm_contact_source_links: {
+        Row: {
+          actor_id: string
+          contact_id: string
+          created_at: string
+          external_id: string
+          external_source: string
+          id: string
+        }
+        Insert: {
+          actor_id: string
+          contact_id: string
+          created_at?: string
+          external_id: string
+          external_source: string
+          id?: string
+        }
+        Update: {
+          actor_id?: string
+          contact_id?: string
+          created_at?: string
+          external_id?: string
+          external_source?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_contact_source_links_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "crm_contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       crm_contacts: {
         Row: {
           archived_at: string | null
@@ -10863,6 +10947,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      crm_import_match_reviews: {
+        Row: {
+          created_at: string
+          email: string
+          external_id: string
+          external_source: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          external_id: string
+          external_source: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          external_id?: string
+          external_source?: string
+          id?: string
+        }
+        Relationships: []
       }
       ct_activity_cases: {
         Row: {
@@ -50045,7 +50153,22 @@ export type Database = {
         Args: { _file: string }
         Returns: boolean
       }
+      promotional_suppressed_emails: {
+        Args: { _emails: string[] }
+        Returns: {
+          email: string
+        }[]
+      }
       purge_security_events: { Args: never; Returns: number }
+      qualify_commercial_inquiry: {
+        Args: {
+          _actor: string
+          _contact?: string
+          _lead: string
+          _owner: string
+        }
+        Returns: Json
+      }
       read_offering_rp_identifier: {
         Args: { _offering: string }
         Returns: {
@@ -50068,6 +50191,10 @@ export type Database = {
           iv: string
           key_version: number
         }[]
+      }
+      record_promotional_unsubscribe: {
+        Args: { _email: string }
+        Returns: undefined
       }
       register_stepup_attempt: {
         Args: { p_id: string; p_max: number; p_user_id: string }

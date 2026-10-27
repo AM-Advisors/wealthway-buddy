@@ -102,7 +102,8 @@ describe("Operations sidebar consolidation", () => {
     const s = { ...session(["investor"]), staffRoles: ["sales"] };
     const sales = getNavigation(s, "investor", "/sales");
     expect(sales.shell).toBe("ops");
-    expect(sales.operations.map((item) => item.url)).toEqual(expect.arrayContaining(["/sales", "/sales/crm", "/account-manager"]));
+    expect(sales.operations.map((item) => item.url)).toEqual(expect.arrayContaining(["/sales", "/sales/crm"]));
+    expect(sales.operations.some((item) => item.url === "/account-manager")).toBe(false);
     expect(sales.operations.every((item) => item.url.startsWith("/sales") || item.url.startsWith("/account-manager"))).toBe(true);
     expect(getNavigation(s, "investor", "/home").shell).toBe("client");
     expect(getNavigation(session(["investor"]), "investor", "/sales").shell).toBe("client");

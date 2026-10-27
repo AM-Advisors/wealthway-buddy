@@ -3,13 +3,15 @@ import {
   CONNECTED_OR_BEYOND, OPEN_STAGES, STAGE_WEIGHT, canManageTeam, canMoveToStage, legacyStage, normalizeStage, salesScope,
   type OutreachChannel, type SalesStage,
 } from "@/lib/sales-model";
+import { recordPromotionalUnsubscribe, suppressedPromotionalEmails } from "./promotional-email.server";
 
 const admin = async () => (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
 const SALES_TEAM_ROLES = ["sales", "account_executive", "bdr", "sales_management", "cro", "account_manager"];
 
 export async function salesActor(userId: string) {
   const db = await admin();
-  const { data } = await db.from("user_roles").select("role").eq("user_id", userId);
+  const { data, error } = await db.from("user_roles").select("role").eq("user_id", userId);
+  if (error) throw new Error("Couldn't verify Sales access.");
   const roles = ((data ?? []) as any[]).map((r) => String(r.role));
   const scope = salesScope(roles);
   if (scope === "none") throw new Error("The Sales area is for Harmonious Sales staff.");
@@ -17,12 +19,14 @@ export async function salesActor(userId: string) {
   if (scope === "own") visible = [userId];
   if (scope === "team") {
     // Everyone below this manager in the reporting chain (recursive); never the whole team by default.
-    const { data: lines } = await db.from("sales_reporting_lines").select("user_id, manager_user_id");
+    const { data: lines, error: lineError } = await db.from("sales_reporting_lines").select("user_id, manager_user_id");
+    if (lineError) throw new Error("Couldn't verify Sales team scope.");
     const all = (lines ?? []) as any[];
     const seen = new Set<string>([userId]);
     const queue = [userId];
     while (queue.length) {
-      const m = queue.shift()!;
+      const m = queue.shift();
+      if (!m) continue;
       for (const l of all) if (l.manager_user_id === m && !seen.has(l.user_id)) { seen.add(l.user_id); queue.push(l.user_id); }
     }
     visible = [...seen];
@@ -219,6 +223,7 @@ export async function sendOutreach(userId: string, d: { contactId: string; chann
   if (d.channel === "email") {
     if (!c.email) throw new Error("This contact has no email address.");
     if (c.consent === "unsubscribed") throw new Error("This contact has unsubscribed from email.");
+    if ((await suppressedPromotionalEmails(db, [c.email])).size) throw new Error("This address has opted out of promotional email.");
     // Send from the rep's own connected Google inbox when they have one;
     // otherwise fall back to the shared Harmonious sender.
     const { sendGmailAsUser } = await import("@/lib/gmail.server");
@@ -266,7 +271,10 @@ export async function recordOptOut(userId: string, d: { contactId: string; chann
   const c = await loadContact(a, d.contactId);
   const db = await admin();
   await db.from("sales_channel_optouts").upsert({ contact_id: c.id, channel: d.channel, recorded_by: userId, note: d.note ?? null }, { onConflict: "contact_id,channel", ignoreDuplicates: true });
-  if (d.channel === "email") await db.from("crm_contacts").update({ consent: "unsubscribed", consent_recorded_at: new Date().toISOString() }).eq("id", c.id);
+  if (d.channel === "email") {
+    if (c.email) await recordPromotionalUnsubscribe(db, c.email);
+    else await db.from("crm_contacts").update({ consent: "unsubscribed", consent_recorded_at: new Date().toISOString() }).eq("id", c.id);
+  }
   return { ok: true };
 }
 

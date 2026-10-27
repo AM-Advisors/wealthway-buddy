@@ -260,6 +260,7 @@ import { Route as AuthenticatedOpsClientApprovalsRouteImport } from './routes/_a
 import { Route as AuthenticatedOpsClientPortalLaunchRouteImport } from './routes/_authenticated/ops.client-portal-launch'
 import { Route as AuthenticatedOpsCloseRequestsRouteImport } from './routes/_authenticated/ops.close-requests'
 import { Route as AuthenticatedOpsCommandCenterRouteImport } from './routes/_authenticated/ops.command-center'
+import { Route as AuthenticatedOpsCommercialRouteImport } from './routes/_authenticated/ops.commercial'
 import { Route as AuthenticatedOpsComplianceRouteImport } from './routes/_authenticated/ops.compliance'
 import { Route as AuthenticatedOpsComplianceSchedulesRouteImport } from './routes/_authenticated/ops.compliance-schedules'
 import { Route as AuthenticatedOpsDistributionsRouteImport } from './routes/_authenticated/ops.distributions'
@@ -1892,6 +1893,12 @@ const AuthenticatedOpsCommandCenterRoute =
     path: '/ops/command-center',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOpsCommercialRoute =
+  AuthenticatedOpsCommercialRouteImport.update({
+    id: '/ops/commercial',
+    path: '/ops/commercial',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOpsComplianceRoute =
   AuthenticatedOpsComplianceRouteImport.update({
     id: '/ops/compliance',
@@ -3448,6 +3455,7 @@ export interface FileRoutesByFullPath {
   '/ops/client-portal-launch': typeof AuthenticatedOpsClientPortalLaunchRoute
   '/ops/close-requests': typeof AuthenticatedOpsCloseRequestsRoute
   '/ops/command-center': typeof AuthenticatedOpsCommandCenterRoute
+  '/ops/commercial': typeof AuthenticatedOpsCommercialRoute
   '/ops/compliance': typeof AuthenticatedOpsComplianceRoute
   '/ops/compliance-schedules': typeof AuthenticatedOpsComplianceSchedulesRoute
   '/ops/distributions': typeof AuthenticatedOpsDistributionsRoute
@@ -3918,6 +3926,7 @@ export interface FileRoutesByTo {
   '/ops/client-portal-launch': typeof AuthenticatedOpsClientPortalLaunchRoute
   '/ops/close-requests': typeof AuthenticatedOpsCloseRequestsRoute
   '/ops/command-center': typeof AuthenticatedOpsCommandCenterRoute
+  '/ops/commercial': typeof AuthenticatedOpsCommercialRoute
   '/ops/compliance': typeof AuthenticatedOpsComplianceRoute
   '/ops/compliance-schedules': typeof AuthenticatedOpsComplianceSchedulesRoute
   '/ops/distributions': typeof AuthenticatedOpsDistributionsRoute
@@ -4396,6 +4405,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/client-portal-launch': typeof AuthenticatedOpsClientPortalLaunchRoute
   '/_authenticated/ops/close-requests': typeof AuthenticatedOpsCloseRequestsRoute
   '/_authenticated/ops/command-center': typeof AuthenticatedOpsCommandCenterRoute
+  '/_authenticated/ops/commercial': typeof AuthenticatedOpsCommercialRoute
   '/_authenticated/ops/compliance': typeof AuthenticatedOpsComplianceRoute
   '/_authenticated/ops/compliance-schedules': typeof AuthenticatedOpsComplianceSchedulesRoute
   '/_authenticated/ops/distributions': typeof AuthenticatedOpsDistributionsRoute
@@ -4875,6 +4885,7 @@ export interface FileRouteTypes {
     | '/ops/client-portal-launch'
     | '/ops/close-requests'
     | '/ops/command-center'
+    | '/ops/commercial'
     | '/ops/compliance'
     | '/ops/compliance-schedules'
     | '/ops/distributions'
@@ -5345,6 +5356,7 @@ export interface FileRouteTypes {
     | '/ops/client-portal-launch'
     | '/ops/close-requests'
     | '/ops/command-center'
+    | '/ops/commercial'
     | '/ops/compliance'
     | '/ops/compliance-schedules'
     | '/ops/distributions'
@@ -5822,6 +5834,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/client-portal-launch'
     | '/_authenticated/ops/close-requests'
     | '/_authenticated/ops/command-center'
+    | '/_authenticated/ops/commercial'
     | '/_authenticated/ops/compliance'
     | '/_authenticated/ops/compliance-schedules'
     | '/_authenticated/ops/distributions'
@@ -7903,6 +7916,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsCommandCenterRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ops/commercial': {
+      id: '/_authenticated/ops/commercial'
+      path: '/ops/commercial'
+      fullPath: '/ops/commercial'
+      preLoaderRoute: typeof AuthenticatedOpsCommercialRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ops/compliance': {
       id: '/_authenticated/ops/compliance'
       path: '/ops/compliance'
@@ -9949,6 +9969,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsClientPortalLaunchRoute: typeof AuthenticatedOpsClientPortalLaunchRoute
   AuthenticatedOpsCloseRequestsRoute: typeof AuthenticatedOpsCloseRequestsRoute
   AuthenticatedOpsCommandCenterRoute: typeof AuthenticatedOpsCommandCenterRoute
+  AuthenticatedOpsCommercialRoute: typeof AuthenticatedOpsCommercialRoute
   AuthenticatedOpsComplianceRoute: typeof AuthenticatedOpsComplianceRoute
   AuthenticatedOpsComplianceSchedulesRoute: typeof AuthenticatedOpsComplianceSchedulesRoute
   AuthenticatedOpsDistributionsRoute: typeof AuthenticatedOpsDistributionsRoute
@@ -10290,6 +10311,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedOpsClientPortalLaunchRoute,
   AuthenticatedOpsCloseRequestsRoute: AuthenticatedOpsCloseRequestsRoute,
   AuthenticatedOpsCommandCenterRoute: AuthenticatedOpsCommandCenterRoute,
+  AuthenticatedOpsCommercialRoute: AuthenticatedOpsCommercialRoute,
   AuthenticatedOpsComplianceRoute: AuthenticatedOpsComplianceRoute,
   AuthenticatedOpsComplianceSchedulesRoute:
     AuthenticatedOpsComplianceSchedulesRoute,

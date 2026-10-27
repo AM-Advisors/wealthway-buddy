@@ -1,4 +1,3 @@
-import { InvoicesBoard } from "@/components/invoices-board";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -97,25 +96,22 @@ function FinanceOverview() {
   const monthLabel = (m: string) => new Date(m + "-01T00:00:00").toLocaleDateString(undefined, { month: "short", year: "2-digit" });
   return (<>
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-      <Stat label="Revenue collected (12 mo)" value={money(d.totals.revenue12m)} />
+      <Stat label="Recorded receipts (12 mo)" value={money(d.totals.revenue12m)} />
       <Stat label="Outstanding invoices" value={money(d.totals.outstanding)} />
       <Stat label="Overdue" value={money(d.totals.overdue)} />
       <Stat label="Pending quotes" value={money(d.totals.pendingQuotes)} hint={`${d.quotes.length} open`} />
     </div>
-    <Panel title="Invoice builder">
-      <p className="mb-3 text-sm text-muted-foreground">Create an invoice, add line items, send it to the client and track it through to paid.</p>
-      <InvoicesBoard />
-    </Panel>
+    <div className="flex flex-wrap gap-4 text-sm text-primary"><Link to="/ops/billing/invoices" className="underline">Invoices and payment preparation</Link><Link to="/ops/commercial" className="underline">Connected team workflow</Link><Link to="/ops/command-center" className="underline">Work and approvals</Link></div>
     <div className="grid gap-4 lg:grid-cols-2">
-      <Panel title="Revenue by month"><Bars money data={d.byMonth.map((m) => ({ name: monthLabel(m.month), value: m.cents }))} /></Panel>
-      <Panel title="Revenue by client"><Bars money data={d.byClient.slice(0, 10).map((c) => ({ name: c.client, value: c.paid }))} /></Panel>
+      <Panel title="Recorded receipts by month"><Bars money data={d.byMonth.map((m) => ({ name: monthLabel(m.month), value: m.cents }))} /></Panel>
+      <Panel title="Recorded receipts by client"><Bars money data={d.byClient.slice(0, 10).map((c) => ({ name: c.client, value: c.paid }))} /></Panel>
     </div>
     <Panel title="Clients">
       <Table head={["Client", "Invoices", "Collected", "Outstanding"]} rows={d.byClient.map((c) => [c.client, c.invoices, money(c.paid), money(c.outstanding)])} empty="No invoices yet." />
     </Panel>
     <div className="grid gap-4 lg:grid-cols-2">
       <Panel title="Recent invoices">
-        <Table head={["Invoice", "Client", "Due", "Status", "Amount"]} rows={d.invoices.map((i) => [i.number ?? "Draft", i.client, fmtDate(i.due), <Badge key="s" variant={i.status === "overdue" ? "destructive" : i.status === "paid" ? "default" : "secondary"}>{i.status.replace(/_/g, " ")}</Badge>, money(i.cents)])} empty="No invoices yet." />
+        <Table head={["Invoice", "Client", "Due", "Status", "Billed", "Received", "Remaining"]} rows={d.invoices.map((i) => [i.number ?? "Draft", i.client, fmtDate(i.due), <Badge key="s" variant={i.status === "overdue" ? "destructive" : i.status === "paid" ? "default" : "secondary"}>{i.status.replace(/_/g, " ")}</Badge>, money(i.cents), money(i.receivedCents), money(i.remainingCents)])} empty="No invoices yet." />
       </Panel>
       <Panel title="Payments received">
         <Table head={["Invoice", "Client", "Paid on", "Amount"]} rows={d.payments.map((p) => [p.number ?? " · ", p.client, fmtDate(p.paidOn), money(p.cents)])} empty="No payments recorded yet." />
