@@ -178,6 +178,23 @@ export async function saveContact(userId: string, d: ContactInput & { id?: strin
     return { id: d.id };
   }
   if (!canCreate(a, d.scope, d.offering_id)) throw new Error("You can't add contacts here.");
+  if (fields.email) {
+    let query = db.from("crm_contacts").select("*").eq("scope", d.scope).ilike("email", fields.email.replace(/[\\%_]/g, "\\$&")).is("archived_at", null).limit(100);
+    query = d.scope === "fund" ? query.eq("offering_id", d.offering_id) : query.is("offering_id", null);
+    const matches = await query;
+    if (matches.error) throw new Error("Couldn't check existing contacts.");
+    const existing = (matches.data ?? []).find((c: any) => canEdit(a, c) && c.owner_user_id === userId);
+    if (existing) {
+      const company = d.company_id ? await resolveCompany(a, d, existing) : {};
+      const fill = importedContactFields(existing, fields, "manual-new");
+      delete fill['company_id'];
+      delete fill['updated_at'];
+      const saved = await db.from("crm_contacts").update({ ...fill, ...company, updated_at: new Date().toISOString() }).eq("id", existing.id);
+      if (saved.error) throw new Error("Couldn't connect the existing contact.");
+      await logActivity({ scope: existing.scope, offering_id: existing.offering_id, contact_id: existing.id, actor_user_id: userId, kind: "edited", summary: "Existing contact connected by email" });
+      return { id: existing.id as string };
+    }
+  }
   fields = { ...fields, ...await resolveCompany(a, d, { scope: d.scope, offering_id: d.scope === "fund" ? d.offering_id : null, owner_user_id: userId }) };
   const { data: row, error } = await db.from("crm_contacts").insert({ ...fields, scope: d.scope, offering_id: d.scope === "fund" ? d.offering_id : null, owner_user_id: userId, created_by: userId }).select("id").single();
   if (error) throw new Error("Could not add the contact.");

@@ -20,6 +20,6 @@ export function groupVisibleContacts<T extends Contact>(actor: CrmActor, rows: T
 }
 /** Additional sources fill blanks only; never erase staff-maintained contact details. */
 export function importedContactFields(stored: Record<string, any>, incoming: Record<string, any>, source: string) {
-  if (stored.external_source === source) return incoming;
+  if (stored['external_source'] === source) return incoming;
   return Object.fromEntries(Object.entries(incoming).filter(([key, value]) => key === "updated_at" || key === "consent" || key.startsWith("consent_") || (!stored[key] && value)));
 }
