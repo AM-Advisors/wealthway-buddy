@@ -351,8 +351,9 @@ export const sendTemplateDocToSignatoryFn = createServerFn({ method: "POST" }).m
     const { data: doc } = await d.from("offering_documents").select("id, title, offering_id, active_version, removed_at").eq("id", data.documentId).maybeSingle();
     if (!doc || doc.offering_id !== data.fundId || doc.removed_at) throw new Error("Document not found.");
     if (doc.active_version == null) throw new Error("Put this document in use before sending it.");
-    const { data: v } = await d.from("offering_document_versions").select("file_path, file_name").eq("offering_document_id", doc.id).eq("version", doc.active_version).maybeSingle();
+    const { data: v } = await d.from("offering_document_versions").select("file_path, file_name, self_serve_review_state, approval_status, signing_config_status").eq("offering_document_id", doc.id).eq("version", doc.active_version).maybeSingle();
     if (!v?.file_path) throw new Error("This document has no file.");
+    if (v.self_serve_review_state && (v.self_serve_review_state !== "approved" || v.approval_status !== "approved" || v.signing_config_status !== "confirmed")) throw new Error("Approve this exact version and confirm its signing setup before sending.");
     const { data: mgr } = await d.from("fund_managers").select("user_id").eq("offering_id", data.fundId).eq("user_id", data.managerUserId).maybeSingle();
     if (!mgr) throw new Error("That person isn't a manager of this fund.");
     const { data: mp } = await d.from("profiles").select("legal_name, email").eq("user_id", data.managerUserId).maybeSingle();

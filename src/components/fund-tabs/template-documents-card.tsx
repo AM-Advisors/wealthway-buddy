@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { fundTemplateDocumentUrlFn, listFundTemplateDocumentsFn, removeFundTemplateDocumentFn } from "@/lib/fund-doc-templates.functions";
+import { fundTemplateDocumentUrlFn, listFundTemplateDocumentsFn, removeFundTemplateDocumentFn, reviewGeneratedDocumentFn } from "@/lib/fund-doc-templates.functions";
 import { fundSigningContextFn, sendTemplateDocToSignatoryFn, templateDocSendStatusFn } from "@/lib/fund-file-signing.functions";
 import { activateDocumentVersionFn } from "@/lib/fund-setup-canonical.functions";
 import { fmtDate } from "./shared";
@@ -21,6 +21,12 @@ export function TemplateDocumentsCard({ fundId }: { fundId: string }) {
   const list = useServerFn(listFundTemplateDocumentsFn);
   const del = useServerFn(removeFundTemplateDocumentFn);
   const activate = useServerFn(activateDocumentVersionFn);
+  const reviewDraft = useServerFn(reviewGeneratedDocumentFn);
+  const decision = useMutation({
+    mutationFn: (input: { documentId: string; version: number; decision: "approve" | "return"; note?: string }) => reviewDraft({ data: input }),
+    onSuccess: () => { toast.success("Review recorded"); void invalidateFund(qc, fundId); },
+    onError: (e: Error) => toast.error(e.message),
+  });
   const useVersion = useMutation({
     mutationFn: (d: any) => activate({ data: { documentId: d.id, version: d.version, scope: "new_only" } }),
     onSuccess: () => { toast.success("Ready to send"); void invalidateFund(qc, fundId); },
@@ -55,12 +61,15 @@ export function TemplateDocumentsCard({ fundId }: { fundId: string }) {
                     Made {fmtDate(d.usedAt)} · {d.signers.length ? `Signs: ${d.signers.map((r: string, i: number) => `${i + 1}. ${ROLE[r] ?? r}`).join(", ")}` : "No signatures"}
                   </p>
                   {(() => { const st = sq.data?.[d.title]; return st ? <p className="text-xs font-medium text-primary">{st.status === "signed" ? "Signed" : "Sent"} · {st.signer ?? "Fund manager"}{st.sentAt ? ` · ${fmtDate(st.sentAt)}` : ""}{st.status === "sent" ? " · waiting to sign" : ""}</p> : null; })()}
+                  {d.reviewState && <p className="text-xs text-muted-foreground">v{d.version} · {d.reviewState === "approved" ? `Approved ${fmtDate(d.approvedAt)}` : d.reviewState === "returned" ? "Returned, new version required" : "Awaiting independent review"}</p>}
+                  {d.generationIssues?.length > 0 && <p className="text-xs text-destructive">{d.generationIssues.join(" · ")}</p>}
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   {d.isActive && <Badge variant="outline">In use</Badge>}
                   <Button size="sm" variant="outline" disabled={!d.versionId} onClick={() => setReview(d)}>Review</Button>
+                  {d.canReview && <><Button size="sm" variant="outline" disabled={decision.isPending || d.generationIssues?.length > 0} onClick={() => { if (confirm(`Approve ${d.title} v${d.version}?`)) decision.mutate({ documentId: d.id, version: d.version, decision: "approve" }); }}>Approve draft</Button><Button size="sm" variant="ghost" disabled={decision.isPending} onClick={() => { const note = window.prompt("Reason for returning this draft"); if (note?.trim()) decision.mutate({ documentId: d.id, version: d.version, decision: "return", note }); }}>Return</Button></>}
                   {d.isActive && d.signers.length > 0 && d.signers.every((r: string) => r === "fund_signatory") && sq.data?.[d.title]?.status !== "signed" && <Button size="sm" onClick={() => setSendFor(d)}>{sq.data?.[d.title] ? "Resend" : "Send for signature"}</Button>}
-                  {!d.isActive && d.version && <Button size="sm" disabled={useVersion.isPending || (d.signers.length > 0 && d.signingStatus !== "confirmed")} onClick={() => useVersion.mutate(d)}>Use this version</Button>}
+                  {!d.isActive && d.version && <Button size="sm" disabled={useVersion.isPending || (d.reviewState && d.reviewState !== "approved") || (d.signers.length > 0 && d.signingStatus !== "confirmed")} onClick={() => useVersion.mutate(d)}>Use this version</Button>}
                   {d.canDelete && <Button size="sm" variant="ghost" disabled={rm.isPending} onClick={() => { if (confirm(`Delete "${d.title}"? It hasn't been sent, and it stays in Audit History.`)) rm.mutate(d); }}>Delete</Button>}
                 </div>
               </div>

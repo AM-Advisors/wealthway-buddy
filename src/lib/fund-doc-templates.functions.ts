@@ -6,6 +6,10 @@ import { DOCUMENT_CATEGORIES } from "@/lib/offering-document-model";
 const eng = () => import("./fund-doc-templates.server");
 const uuid = z.string().uuid();
 
+export const reviewGeneratedDocumentFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .validator((d) => z.object({ documentId: uuid, version: z.number().int().min(1), decision: z.enum(["approve", "return"]), note: z.string().trim().max(1000).nullish() }).parse(d))
+  .handler(async ({ data, context }) => (await import("./offering-document-setup.server")).reviewGeneratedDocument(context.userId, data));
+
 export const fundDocumentGenerationAccessFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator((d) => z.object({ offeringId: uuid }).parse(d))
   .handler(async ({ data, context }) => {
