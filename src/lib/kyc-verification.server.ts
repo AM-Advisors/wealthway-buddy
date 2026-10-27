@@ -26,6 +26,7 @@ import {
   comparisonToMatch,
 } from "@/lib/address-compare";
 import { refreshOnboardingState } from "@/lib/identity.server";
+import { verifiedPersonBackfill } from "@/lib/kyc-person-backfill";
 
 const db = () => supabaseAdmin as any;
 
@@ -557,6 +558,7 @@ async function applyDecision(input: ApplyInput): Promise<SyncResult> {
     .eq("id", verification.application_id);
 
   if (personId) {
+    const backfill = verifiedPersonBackfill(person ?? {}, normalized, decision.kyc === "approved");
     await db()
       .from("persons")
       .update({
@@ -565,6 +567,7 @@ async function applyDecision(input: ApplyInput): Promise<SyncResult> {
         kyc_verified_at: decision.kyc === "approved" ? nowIso : null,
         identity_verified_at: decision.kyc === "approved" ? nowIso : null,
         aml_screened_at: decision.aml === "approved" ? nowIso : null,
+        ...backfill.update,
         updated_at: nowIso,
       })
       .eq("id", personId);
@@ -583,6 +586,7 @@ async function applyDecision(input: ApplyInput): Promise<SyncResult> {
         document_expired: decision.documentExpired,
         reasons: decision.reasons,
         trigger: input.trigger,
+        verified_fields_filled: backfill.filledFields,
       },
     });
 
