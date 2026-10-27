@@ -23,7 +23,8 @@ export async function quoteCatalog(userId: string, clientId: string | null) {
   const { data: clients } = await db.from("clients").select("id, legal_name").order("legal_name");
   const adminLevels = await adminCatalog();
   const { data: funds } = clientId ? await db.from("offerings").select("id, name").eq("client_id", clientId).order("name") : { data: [] };
-  return { funds: (funds ?? []) as any[], versionId, adminLevels, lines: [...adminLevels, ...lines].map((l: any) => ({ serviceKey: l.serviceKey, label: l.label, baselineCents: l.baselineCents, quarterlyCents: l.quarterlyCents ?? null, source: l.baselineSource, pricingModel: l.pricingModel })), clients: (clients ?? []) as any[] };
+  const { data: contacts } = clientId ? await db.from("crm_contacts").select("id, full_name, email, title").eq("client_id", clientId).not("email", "is", null).order("full_name").limit(200) : { data: [] };
+  return { funds: (funds ?? []) as any[], contacts: (contacts ?? []) as any[], versionId, adminLevels, lines: [...adminLevels, ...lines].map((l: any) => ({ serviceKey: l.serviceKey, label: l.label, baselineCents: l.baselineCents, quarterlyCents: l.quarterlyCents ?? null, source: l.baselineSource, pricingModel: l.pricingModel })), clients: (clients ?? []) as any[] };
 }
 
 /** Administration levels as quote lines, keyed by product + level, from current pricing versions. */
@@ -111,7 +112,7 @@ export async function getQuote(userId: string, id: string) {
   };
 }
 
-export async function saveQuote(userId: string, d: { id?: string | null | undefined; title: string; clientId?: string | null | undefined; contactId?: string | null | undefined; dealId?: string | null | undefined; offeringId?: string | null | undefined; validUntil?: string | null | undefined; notes?: string | null | undefined; expectedUpdatedAt?: string | undefined; sections?: unknown; lines: QuoteLineInput[] }, sowPatch?: Record<string, unknown>) {
+export async function saveQuote(userId: string, d: { id?: string | null | undefined; title: string; clientId?: string | null | undefined; contactId?: string | null | undefined; dealId?: string | null | undefined; offeringId?: string | null | undefined; validUntil?: string | null | undefined; notes?: string | null | undefined; expectedUpdatedAt?: string | undefined; sections?: unknown; lines: QuoteLineInput[]; billingContactId?: string | null | undefined }, sowPatch?: Record<string, unknown>) {
   const a = await salesActor(userId);
   if (!canDraftQuote(a.roles)) throw new Error("Your role can't draft quotes.");
   if (!d.lines.length) throw new Error("Add at least one service.");
@@ -147,7 +148,7 @@ export async function saveQuote(userId: string, d: { id?: string | null | undefi
   const now = new Date().toISOString();
   let id = d.id ?? null;
   const row = { title: d.title.trim() || "Quote", client_id: d.clientId || null, contact_id: d.contactId || null, deal_id: d.dealId || null, offering_id: d.offeringId || null,
-    valid_until: d.validUntil || null, notes: d.notes || null, total_cents: priced.totalCents, baseline_cents: priced.baselineCents,
+    valid_until: d.validUntil || null, notes: d.notes || null, ...(d.billingContactId !== undefined ? { billing_contact_id: d.billingContactId || null } : {}), total_cents: priced.totalCents, baseline_cents: priced.baselineCents,
     needs_exec_approval: priced.needsExecApproval, pricing_version_id: base.versionId, updated_at: now,
     ...(d.sections !== undefined ? { sections: sanitizeQuoteSections(d.sections) } : {}) };
   const savedLines = priced.lines.map((l, i) => ({ service_key: l.serviceKey, label: l.label, quantity: l.quantity, unit_cents: l.unitCents,
@@ -377,6 +378,34 @@ export async function adjustQuote(userId: string, id: string) {
     return { id };
   }
   return newVersion(userId, id);
+}
+
+/** Sales may add a new client by name from the quote builder; setup details are completed later. */
+export async function createQuoteClient(userId: string, d: { name: string }) {
+  const a = await salesActor(userId);
+  if (!canDraftQuote(a.roles)) throw new Error("Your role can't add clients.");
+  const db = await admin();
+  const name = d.name.trim();
+  const { data: dup } = await db.from("clients").select("id, legal_name").ilike("legal_name", name).limit(1).maybeSingle();
+  if (dup) return { id: dup.id as string, name: dup.legal_name as string, reused: true };
+  const { data, error } = await db.from("clients").insert({ name, legal_name: name, status: "active" }).select("id").single();
+  if (error || !data) throw new Error("Couldn't add the client.");
+  return { id: data.id as string, name, reused: false };
+}
+
+/** Add a contact to a client from the quote builder (signer or payer). Reuses an existing same-email contact. */
+export async function addQuoteClientContact(userId: string, d: { clientId: string; fullName: string; email: string; title?: string | null | undefined }) {
+  const a = await salesActor(userId);
+  if (!canDraftQuote(a.roles)) throw new Error("Your role can't add contacts.");
+  const db = await admin();
+  const email = d.email.trim().toLowerCase();
+  const { data: existing } = await db.from("crm_contacts").select("id, full_name, email, title").eq("client_id", d.clientId).ilike("email", email).limit(1).maybeSingle();
+  if (existing) return existing as any;
+  const { data: cl } = await db.from("clients").select("legal_name").eq("id", d.clientId).maybeSingle();
+  if (!cl) throw new Error("Choose the client first.");
+  const { data, error } = await db.from("crm_contacts").insert({ full_name: d.fullName.trim(), email, title: d.title?.trim() || null, organization: cl.legal_name, client_id: d.clientId, scope: "harmonious", owner_user_id: userId, created_by: userId, source: "Quotes", tags: ["client"] } as any).select("id, full_name, email, title").single();
+  if (error || !data) throw new Error("Couldn't add the contact.");
+  return data as any;
 }
 
 export async function markLost(userId: string, d: { id: string; reason: string }) {

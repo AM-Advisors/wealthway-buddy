@@ -107,6 +107,12 @@ export const markSalesQuoteSent = createServerFn({ method: "POST" }).middleware(
   .handler(async ({ data, context }) => (await Q()).markSent(context.userId, data.id));
 export const reviseSalesQuote = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).validator((d) => idOnly.parse(d))
   .handler(async ({ data, context }) => (await Q()).newVersion(context.userId, data.id));
+export const createQuoteClient = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .validator((d) => z.object({ name: z.string().trim().min(2).max(200) }).parse(d))
+  .handler(async ({ data, context }) => (await Q()).createQuoteClient(context.userId, data));
+export const addQuoteClientContact = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .validator((d) => z.object({ clientId: z.string().uuid(), fullName: z.string().trim().min(2).max(200), email: z.string().trim().email().max(255), title: z.string().trim().max(200).nullish() }).parse(d))
+  .handler(async ({ data, context }) => (await Q()).addQuoteClientContact(context.userId, data));
 export const archiveSalesQuote = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator((d) => z.object({ id: z.string().uuid(), archive: z.boolean() }).parse(d))
   .handler(async ({ data, context }) => (await Q()).archiveQuote(context.userId, data));
