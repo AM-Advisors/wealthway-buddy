@@ -98,7 +98,17 @@ export async function approveRequest(userId: string, input: { id: string; note?:
   // 2. Wix investors → investor records + earlier subscriptions awaiting confirmation.
   const summary: { created: number; skipped: { name: string; reason: string }[] } = { created: 0, skipped: [] };
   if (wixFund) {
-    const { data: invs } = await db.from("wix_investment_staging").select("wix_id, full_name, entity_name, email, committed_cents, received_cents, details").eq("wix_fund_id", wixFund.wix_id).limit(2000);
+    // Staff assignments (append-only, latest wins) override the imported Wix fund link.
+    const { latestAssociations, effectiveWixFundId } = await import("@/lib/wix-association-model");
+    const { data: assocRows } = await db.from("wix_staging_associations").select("kind, wix_id, offering_id, wix_fund_id, created_at").eq("kind", "investment").limit(10000);
+    const invAssoc = latestAssociations((assocRows ?? []) as any, "investment");
+    const reassignedIn = [...invAssoc.values()].filter((x) => x.wix_fund_id === wixFund.wix_id).map((x) => x.wix_id);
+    const [{ data: own }, { data: moved }] = await Promise.all([
+      db.from("wix_investment_staging").select("wix_id, wix_fund_id, full_name, entity_name, email, committed_cents, received_cents, details").eq("wix_fund_id", wixFund.wix_id).limit(2000),
+      reassignedIn.length ? db.from("wix_investment_staging").select("wix_id, wix_fund_id, full_name, entity_name, email, committed_cents, received_cents, details").in("wix_id", reassignedIn) : Promise.resolve({ data: [] as any[] }),
+    ]);
+    const seen = new Set<string>();
+    const invs = [...(own ?? []), ...(moved ?? [])].filter((i: any) => !seen.has(i.wix_id) && seen.add(i.wix_id) && effectiveWixFundId(i.wix_fund_id, invAssoc.get(i.wix_id)) === wixFund.wix_id);
     const rec = await import("@/lib/investor-record.server");
     const prior = await import("@/lib/prior-subscription.server");
     for (const i of (invs ?? []) as any[]) {
