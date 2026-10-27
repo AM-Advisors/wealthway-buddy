@@ -11,8 +11,8 @@ export const fundDocumentGenerationAccessFn = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { assertFund, isStaff } = await import("@/lib/fund-tabs.server");
     await assertFund(context.userId, data.offeringId);
-    const actor = await (await import("@/lib/fund-setup.server")).setupActor(context.userId);
-    return { templates: actor.isStaff, starter: await isStaff(context.userId) };
+    const { actor, allowed } = await (await import("./fund-document-generation-access.server")).fundDocumentGenerationAccess(context.userId, data.offeringId);
+    return { templates: allowed, starter: await isStaff(context.userId), staff: actor.isStaff };
   });
 
 export const listTemplatesFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])

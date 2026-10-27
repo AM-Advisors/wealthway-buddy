@@ -158,7 +158,7 @@ export function DocumentsTab({ fundId }: { fundId: string }) {
                     ))}
                   </div>
                   <div className="flex items-center gap-2">
-                    {canGenerate && f.template_key === 'operating_agreement' && f.signing_order === 'manager_only' && f.url && <Button size="sm" variant="outline" onClick={() => { setReplacement(f); setReplacementDocument(''); }}>Use as replacement</Button>}
+                    {permission.data?.staff && f.template_key === 'operating_agreement' && f.signing_order === 'manager_only' && f.url && <Button size="sm" variant="outline" onClick={() => { setReplacement(f); setReplacementDocument(''); }}>Use as replacement</Button>}
                     {f.status !== "signed" && f.body && <Button size="sm" variant="outline" onClick={() => openSend(f)}>{f.status === "out_for_signature" ? "Resend" : "Send for signature"}</Button>}
                     <Badge variant={f.status === "signed" ? "default" : "outline"}>{STATUS[f.status] ?? f.status}</Badge>
                     {f.status !== "signed" && <Button size="sm" variant="outline" onClick={() => setBoxes(f)}>Signature boxes</Button>}

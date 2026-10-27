@@ -163,10 +163,10 @@ export async function decideTemplateVersion(userId: string, input: { templateId:
 
 /** Copies an approved template without duplicate fund-level Harmonious review. */
 export async function useTemplateInFund(userId: string, input: { templateId: string; version: number; offeringId: string }) {
-  await staff(userId);
-  return useTemplateInFundInner(userId, input);
+  const actor = await (await import("./fund-document-generation-access.server")).assertFundDocumentGeneration(userId, input.offeringId);
+  return useTemplateInFundInner(userId, input, !actor.isStaff);
 }
-async function useTemplateInFundInner(userId: string, input: { templateId: string; version: number; offeringId: string }) {
+async function useTemplateInFundInner(userId: string, input: { templateId: string; version: number; offeringId: string }, selfServe: boolean) {
   const { data: t } = await db().from("document_templates").select("*").eq("id", input.templateId).maybeSingle();
   if (!t || t.archived_at) throw new Error("Template not found.");
   const { data: fund, error: fundError } = await db().from("offerings").select("fund_type").eq("id", input.offeringId).maybeSingle();
@@ -195,13 +195,13 @@ async function useTemplateInFundInner(userId: string, input: { templateId: strin
     const { error } = await supabaseAdmin.storage.from(BUCKET).copy(v.file_path, dest);
     if (error) throw new Error(`Could not copy the file: ${error.message}`);
   }
-  const { version: fundVersion } = await uploadDocumentVersion(userId, { documentId, filePath: dest, fileName: v.file_name, fileSizeBytes: size });
+  const { version: fundVersion } = await uploadDocumentVersion(userId, { documentId, filePath: dest, fileName: v.file_name, fileSizeBytes: size, selfServeGenerated: selfServe, generationIssues: autofill?.open ?? [] });
   const { error: provenanceError } = await db().from("document_template_uses").insert({ template_id: t.id, template_version: v.version, offering_id: input.offeringId, offering_document_id: documentId, fund_version: fundVersion, used_by: userId });
   if (provenanceError) throw new Error(provenanceError.message);
   const signing = await autoSigningSetup(userId, { documentId, version: fundVersion, category, title: String(t.title ?? ""), offeringId: input.offeringId });
   // First use only; existing active versions require an explicit rollout choice.
   const { data: document } = await db().from("offering_documents").select("active_version, usage").eq("id", documentId).maybeSingle();
-  if (!autofill?.open.length && document && document.active_version == null && (document.usage !== "signature" || signing.configured)) {
+  if (!selfServe && !autofill?.open.length && document && document.active_version == null && (document.usage !== "signature" || signing.configured)) {
     if (!document.usage) await setDocumentUsage(userId, { documentId, usage: "reference", applicability: {} });
     await activateDocumentVersion(userId, { documentId, version: fundVersion, scope: "new_only" });
   }
@@ -296,13 +296,13 @@ export async function templateAutofillCheck(userId: string, input: { templateId:
 
 /** Documents made from Harmonious templates on one fund, newest first, with what can be done to each. */
 export async function listFundTemplateDocuments(userId: string, offeringId: string) {
-  await staffOrManager(userId, offeringId);
+  const actor = await staffOrManager(userId, offeringId);
   const { data: uses } = await db().from("document_template_uses").select("offering_document_id, fund_version, used_at, template_id").eq("offering_id", offeringId).order("used_at", { ascending: false });
   const ids = [...new Set(((uses ?? []) as any[]).map((u) => u.offering_document_id))];
   if (!ids.length) return [];
   const [{ data: docs }, { data: vers }, { data: sigs }, { data: sends }] = await Promise.all([
     db().from("offering_documents").select("id, title, document_category, active_version, removed_at").in("id", ids),
-    db().from("offering_document_versions").select("id, offering_document_id, version, file_name, approval_status, signing_config, signing_config_status").in("offering_document_id", ids),
+    db().from("offering_document_versions").select("*").in("offering_document_id", ids),
     db().from("document_signatures").select("offering_document_id").in("offering_document_id", ids),
     db().from("offering_document_sends").select("offering_document_id").in("offering_document_id", ids),
   ]);
@@ -313,7 +313,7 @@ export async function listFundTemplateDocuments(userId: string, offeringId: stri
     const u = ((uses ?? []) as any[]).find((x) => x.offering_document_id === id);
     const v = ((vers ?? []) as any[]).filter((x) => x.offering_document_id === id).sort((a, b) => b.version - a.version)[0];
     const locked = used.has(id) || d.active_version != null || ["approved", "active"].includes(v?.approval_status);
-    return { id, title: d.title as string, usedAt: u?.used_at as string, version: v?.version ?? null, isActive: d.active_version === v?.version, versionId: v?.id ?? null, fileName: v?.file_name ?? null, signers: ((v?.signing_config?.signers ?? []) as any[]).map((x) => x.role as string), signingStatus: v?.signing_config_status ?? null, canDelete: !locked };
+    return { id, title: d.title as string, usedAt: u?.used_at as string, version: v?.version ?? null, isActive: d.active_version === v?.version, versionId: v?.id ?? null, fileName: v?.file_name ?? null, signers: ((v?.signing_config?.signers ?? []) as any[]).map((x) => x.role as string), signingStatus: v?.signing_config_status ?? null, canDelete: !locked, reviewState: v?.self_serve_review_state ?? null, canReview: v?.self_serve_review_state === "pending" && v?.created_by !== userId && (actor.isStaff || actor.offeringIds.includes(offeringId)), generationIssues: v?.generation_issues ?? [], approvedBy: v?.approved_by ?? null, approvedAt: v?.approved_at ?? null };
   }).filter(Boolean);
 }
 
@@ -382,7 +382,7 @@ export async function fundTypeTemplates(userId: string, offeringId: string) {
 
 /** Generate every assigned template not yet generated for this fund (same path as using one template). */
 export async function generateFundTypeDocuments(userId: string, offeringId: string) {
-  await staff(userId);
+  await (await import("./fund-document-generation-access.server")).assertFundDocumentGeneration(userId, offeringId);
   const { templates } = await fundTypeTemplates(userId, offeringId);
   const made: { title: string; documentId: string; open: string[] }[] = [];
   for (const x of templates.filter((y) => !y.generated && y.approvedVersion != null)) {
