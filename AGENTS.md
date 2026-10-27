@@ -51,7 +51,7 @@
 
 - Forecast rules (projections only, ForecastInput forms, operating and fund cash-flow models): src/lib/AGENTS.md.
 
-- Billing cadence, invoice links and fee ownership rules: src/lib/AGENTS.md. Why: recorded terms and fee review, never automatic money or posting.
+- Billing and ROAS payment tracking rules: src/lib/AGENTS.md. Why: canonical receipts, no automatic posting.
 
 - Commission basis is gross profit from append-only cost entries/settings; expected signed-SOW rows are computed projections, never payable; existing queue/payout amounts remain historical.
 - Bookkeeping uses the shared quote engine with recorded proposed configurations and frozen line snapshots; database gates keep these draft-only until a separately approved release — why: staged pricing must never reach live signing, billing or enrollment.
