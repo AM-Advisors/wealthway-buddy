@@ -25,7 +25,7 @@ function stepFor(req: string | null): PortalStep | null {
 
 export const getMyPreparedInfo = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ onboardingId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ onboardingId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { draft, prov } = await ownContext(context.userId, data.onboardingId);
     if (!draft) return { hasPrepared: false as const, groups: [], complete: true };
@@ -35,7 +35,7 @@ export const getMyPreparedInfo = createServerFn({ method: "POST" })
 
 export const reviewPreparedField = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({
+  .validator((d: unknown) => z.object({
     onboardingId: z.string().uuid(), key: z.string().max(60),
     action: z.enum(["confirm", "correct"]), value: z.union([z.string().max(500), z.number()]).optional(),
   }).parse(d))
@@ -73,7 +73,7 @@ export const reviewPreparedField = createServerFn({ method: "POST" })
 
 export const getMyDocumentsForReview = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ onboardingId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ onboardingId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const x = await docContext(context.userId, data.onboardingId);
     const out: any[] = [];
@@ -108,7 +108,7 @@ export const getMyDocumentsForReview = createServerFn({ method: "POST" })
 /** Opening/reviewing is not signing; Box remains authoritative for signature completion. */
 export const markDocumentReviewed = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ onboardingId: z.string().uuid(), snapshotId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ onboardingId: z.string().uuid(), snapshotId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { db } = await ownContext(context.userId, data.onboardingId);
     const { data: s } = await db.from("investor_document_snapshots").select("id, status, onboarding_id, merge_values").eq("id", data.snapshotId).maybeSingle();

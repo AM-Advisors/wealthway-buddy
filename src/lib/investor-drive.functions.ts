@@ -42,7 +42,7 @@ async function pathOf(s: any, facts: any, rootId: string): Promise<string> {
 /** Investments (Fund + profile) this investor holds, with their Drive connection state. */
 export const getInvestorDriveIntake = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ investorUserId: uuid }).parse(d))
+  .validator((d: unknown) => z.object({ investorUserId: uuid }).parse(d))
   .handler(async ({ data, context }) => {
     const s = await import("@/lib/drive-intake.server");
     await s.requireSuperAdmin(context, "investor_drive_view");
@@ -83,7 +83,7 @@ export const getInvestorDriveIntake = createServerFn({ method: "POST" })
 /** Search folders only inside the approved restricted repository. */
 export const searchInvestorFolders = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ q: z.string().trim().min(2).max(100) }).parse(d))
+  .validator((d: unknown) => z.object({ q: z.string().trim().min(2).max(100) }).parse(d))
   .handler(async ({ data, context }) => {
     const { userId, root, s } = await gate(context, "search");
     const { folderProblem } = await import("@/lib/investor-drive");
@@ -101,7 +101,7 @@ export const searchInvestorFolders = createServerFn({ method: "POST" })
 /** Explicitly connect one existing folder to one Fund + Investment Profile. Never creates or renames. */
 export const connectInvestorFolder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ investorUserId: uuid, offeringId: uuid, profileId: uuid, folderId: idSchema, confirmPath: z.string().min(1).max(1000) }).parse(d))
+  .validator((d: unknown) => z.object({ investorUserId: uuid, offeringId: uuid, profileId: uuid, folderId: idSchema, confirmPath: z.string().min(1).max(1000) }).parse(d))
   .handler(async ({ data, context }) => {
     const { userId, root, s } = await gate(context, "connect");
     const { folderProblem } = await import("@/lib/investor-drive");
@@ -138,7 +138,7 @@ export const connectInvestorFolder = createServerFn({ method: "POST" })
 
 export const disconnectInvestorFolder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ connectionId: uuid }).parse(d))
+  .validator((d: unknown) => z.object({ connectionId: uuid }).parse(d))
   .handler(async ({ data, context }) => {
     const s = await import("@/lib/drive-intake.server");
     const userId = await s.requireSuperAdmin(context, "investor_drive_disconnect");
@@ -153,7 +153,7 @@ export const disconnectInvestorFolder = createServerFn({ method: "POST" })
 /** Read the connected folder (two levels) and compare with what Harmonious already holds. Nothing is imported. */
 export const checkInvestorFolder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ connectionId: uuid }).parse(d))
+  .validator((d: unknown) => z.object({ connectionId: uuid }).parse(d))
   .handler(async ({ data, context }) => {
     const { userId, root, s } = await gate(context, "check");
     const L = await import("@/lib/investor-drive");
@@ -197,7 +197,7 @@ export const checkInvestorFolder = createServerFn({ method: "POST" })
 /** Deliberate import of selected files through the canonical importer (dedupe, versions, private storage). */
 export const importInvestorDriveFiles = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({
       connectionId: uuid,
       files: z.array(z.object({ driveFileId: idSchema, documentType: z.enum(["subscription_agreement", "executed_subscription_agreement", "accreditation_evidence", "side_letter", "investor_correspondence", "other_investor"]), importAsNewVersion: z.boolean().default(false) })).min(1).max(25),

@@ -22,12 +22,12 @@ const onboardingInput = z.object({ onboardingId: z.string().min(1) });
 
 /** Public fund landing: launched offerings only, investor-facing fields only. */
 export const getOfferingLanding = createServerFn({ method: "POST" })
-  .inputValidator(z.object({ slug: z.string().min(1) }).parse)
+  .validator(z.object({ slug: z.string().min(1) }).parse)
   .handler(async ({ data }) => (await engine()).offeringLanding(data.slug));
 
 export const startOnboardingFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ slugOrId: z.string().min(1), invitationToken: z.string().nullish() }).parse)
+  .validator(z.object({ slugOrId: z.string().min(1), invitationToken: z.string().nullish() }).parse)
   .handler(async ({ data, context }) =>
     (await engine()).startOnboarding(context.userId, {
       slugOrId: data.slugOrId,
@@ -45,12 +45,12 @@ export const eligibleProfilesFn = createServerFn({ method: "GET" })
 
 export const onboardingDetailFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(onboardingInput.parse)
+  .validator(onboardingInput.parse)
   .handler(async ({ data, context }) => (await engine()).onboardingDetail(context.userId, data.onboardingId));
 
 export const chooseProfileFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(
+  .validator(
     z.object({
       onboardingId: z.string().min(1),
       profileId: z.string().nullish(),
@@ -74,12 +74,12 @@ export const chooseProfileFn = createServerFn({ method: "POST" })
 
 export const setInvestmentAmountFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ onboardingId: z.string().min(1), amountCents: z.number().int() }).parse)
+  .validator(z.object({ onboardingId: z.string().min(1), amountCents: z.number().int() }).parse)
   .handler(async ({ data, context }) => reconciled(data.onboardingId, context.userId, "setInvestmentAmount", (await engine()).setInvestmentAmount(context.userId, data)));
 
 export const saveQuestionnaireFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(
+  .validator(
     z.object({
       onboardingId: z.string().min(1),
       answers: z.record(z.string(), z.any()),
@@ -96,7 +96,7 @@ export const saveQuestionnaireFn = createServerFn({ method: "POST" })
 
 export const prepareSubscriptionDocumentsFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(onboardingInput.parse)
+  .validator(onboardingInput.parse)
   .handler(async ({ data, context }) => {
     await (await import("@/lib/investor-extras.server")).assertFeesAccepted(context.userId, data.onboardingId);
     return reconciled(data.onboardingId, context.userId, "prepareSubscriptionDocuments", (await engine()).prepareSubscriptionDocuments(context.userId, data.onboardingId));
@@ -104,7 +104,7 @@ export const prepareSubscriptionDocumentsFn = createServerFn({ method: "POST" })
 
 export const recordSubscriptionSignatureFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(
+  .validator(
     z.object({
       onboardingId: z.string().min(1),
       signerName: z.string().min(2).max(120),
@@ -122,7 +122,7 @@ export const recordSubscriptionSignatureFn = createServerFn({ method: "POST" })
 
 export const fundingInstructionsFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(onboardingInput.parse)
+  .validator(onboardingInput.parse)
   .handler(async ({ data, context }) => (await engine()).fundingInstructions(context.userId, data.onboardingId));
 
 const wireSentInput = onboardingInput.extend({
@@ -134,21 +134,21 @@ const wireSentInput = onboardingInput.extend({
 
 export const investorReportsFundsSentFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(wireSentInput.parse)
+  .validator(wireSentInput.parse)
   .handler(async ({ data, context }) =>
     reconciled(data.onboardingId, context.userId, "investorReportsFundsSent", (await engine()).investorReportsFundsSent(context.userId, data.onboardingId, data)),
   );
 
 export const investorFundingLedgerFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(onboardingInput.parse)
+  .validator(onboardingInput.parse)
   .handler(async ({ data, context }) => (await engine()).investorFundingLedger(context.userId, data.onboardingId));
 
 // ------------------------------------------------------ operations
 
 export const reviewQueueFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(
+  .validator(
     z
       .object({
         offeringId: z.string().nullish(),
@@ -169,12 +169,12 @@ export const reviewQueueFn = createServerFn({ method: "POST" })
 
 export const reviewDetailFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(onboardingInput.parse)
+  .validator(onboardingInput.parse)
   .handler(async ({ data, context }) => (await engine()).reviewDetail(context.userId, data.onboardingId));
 
 export const approveToFundFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(
+  .validator(
     z.object({ onboardingId: z.string().min(1), acceptedAmountCents: z.number().int().optional() }).parse,
   )
   .handler(async ({ data, context }) =>
@@ -186,17 +186,17 @@ export const approveToFundFn = createServerFn({ method: "POST" })
 
 export const setOnboardingStageFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ onboardingId: z.string().min(1), stage: z.string().min(1) }).parse)
+  .validator(z.object({ onboardingId: z.string().min(1), stage: z.string().min(1) }).parse)
   .handler(async ({ data, context }) => reconciled(data.onboardingId, context.userId, "setOnboardingStage", (await engine()).setOnboardingStage(context.userId, data)));
 
 export const assignOnboardingFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ onboardingId: z.string().min(1), assignee: z.string().nullable() }).parse)
+  .validator(z.object({ onboardingId: z.string().min(1), assignee: z.string().nullable() }).parse)
   .handler(async ({ data, context }) => (await engine()).assignOnboarding(context.userId, data));
 
 export const raiseExceptionFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(
+  .validator(
     z.object({
       onboardingId: z.string().min(1),
       type: z.string().min(1),
@@ -217,7 +217,7 @@ export const raiseExceptionFn = createServerFn({ method: "POST" })
 
 export const resolveExceptionFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ exceptionId: z.string().min(1), resolution: z.string().min(2) }).parse)
+  .validator(z.object({ exceptionId: z.string().min(1), resolution: z.string().min(2) }).parse)
   .handler(async ({ data, context }) => {
     const out = await (await engine()).resolveException(context.userId, data);
     await (await engine()).reconcileForException(data.exceptionId, context.userId);
@@ -226,7 +226,7 @@ export const resolveExceptionFn = createServerFn({ method: "POST" })
 
 export const applyBankActivityFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(
+  .validator(
     z.object({ bankTransactionId: z.string().min(1), onboardingId: z.string().nullish() }).parse,
   )
   .handler(async ({ data, context }) =>
@@ -238,7 +238,7 @@ export const applyBankActivityFn = createServerFn({ method: "POST" })
 
 export const acceptSubscriptionFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(
+  .validator(
     z.object({
       onboardingId: z.string().min(1),
       signerName: z.string().min(2),
@@ -249,7 +249,7 @@ export const acceptSubscriptionFn = createServerFn({ method: "POST" })
 
 export const closeInvestmentFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ onboardingId: z.string().min(1), closingDate: z.string().optional() }).parse)
+  .validator(z.object({ onboardingId: z.string().min(1), closingDate: z.string().optional() }).parse)
   .handler(async ({ data, context }) =>
     reconciled(data.onboardingId, context.userId, "closeInvestment", (await engine()).closeInvestment(context.userId, {
       onboardingId: data.onboardingId,
@@ -259,14 +259,14 @@ export const closeInvestmentFn = createServerFn({ method: "POST" })
 
 export const managerOnboardingBoardFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ offeringId: z.string().nullish() }).parse)
+  .validator(z.object({ offeringId: z.string().nullish() }).parse)
   .handler(async ({ data, context }) =>
     (await engine()).managerOnboardingBoard(context.userId, data.offeringId ?? null),
   );
 
 export const inviteInvestorFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(
+  .validator(
     z.object({
       offeringId: z.string().min(1),
       email: z.string().email(),
@@ -289,7 +289,7 @@ export const inviteInvestorFn = createServerFn({ method: "POST" })
 
 export const startInvestmentVerificationFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(onboardingInput.parse)
+  .validator(onboardingInput.parse)
   .handler(async ({ data, context }) => {
     const { getRequest } = await import("@tanstack/react-start/server");
     let origin = "https://app.harmonious.co";
@@ -306,23 +306,23 @@ export const startInvestmentVerificationFn = createServerFn({ method: "POST" })
 
 export const claimOnboardInvitationFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuthUnverified])
-  .inputValidator(z.object({ reference: z.string().regex(/^[A-Za-z0-9]{16,64}$/) }).parse)
+  .validator(z.object({ reference: z.string().regex(/^[A-Za-z0-9]{16,64}$/) }).parse)
   .handler(async ({ data, context }) => (await engine()).claimOnboardInvitation(context.userId, data.reference));
 
 export const onboardPortalDetailFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(onboardingInput.parse)
+  .validator(onboardingInput.parse)
   .handler(async ({ data, context }) => (await engine()).onboardPortalDetail(context.userId, data.onboardingId));
 
 export const resendOnboardInvitationFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ invitationId: z.string().uuid() }).parse)
+  .validator(z.object({ invitationId: z.string().uuid() }).parse)
   .handler(async ({ data, context }) => (await engine()).resendOnboardInvitation(context.userId, data.invitationId));
 
 /** Didit session that returns the investor to this exact investment in the portal. */
 export const startPortalVerificationFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(onboardingInput.parse)
+  .validator(onboardingInput.parse)
   .handler(async ({ data, context }) => {
     const { getRequest } = await import("@tanstack/react-start/server");
     let origin = "https://onboard.harmonious.co";
@@ -340,12 +340,12 @@ export const startPortalVerificationFn = createServerFn({ method: "POST" })
 // ------------------------------------------------ investment readiness
 export const investmentReadinessFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(onboardingInput.parse)
+  .validator(onboardingInput.parse)
   .handler(async ({ data, context }) => (await engine()).investmentReadiness(context.userId, data.onboardingId));
 
 export const fundReadinessFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ offeringId: z.string().uuid() }).parse)
+  .validator(z.object({ offeringId: z.string().uuid() }).parse)
   .handler(async ({ data, context }) => (await engine()).fundReadiness(context.userId, data.offeringId));
 
 export const readinessQueueFn = createServerFn({ method: "POST" })
@@ -355,5 +355,5 @@ export const readinessQueueFn = createServerFn({ method: "POST" })
 /** Explicitly authorized Harmonious-staff reconciliation for one investment (audited via readiness history). */
 export const staffReconcileReadinessFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(onboardingInput.parse)
+  .validator(onboardingInput.parse)
   .handler(async ({ data, context }) => (await engine()).staffReconcileReadiness(context.userId, data.onboardingId));

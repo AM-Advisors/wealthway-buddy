@@ -21,11 +21,11 @@ const investment = z.object({
 const related = z.array(z.object({ firstName: z.string().max(120), lastName: z.string().max(120), email: str, role: z.string().max(40), ownershipPercent: z.number().min(0).max(100).nullable().optional(), isSigner: z.boolean().optional() })).max(20);
 
 export const searchInvestorsFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ offeringId: uuid, email: str, name: str, entityName: str }).parse)
+  .validator(z.object({ offeringId: uuid, email: str, name: str, entityName: str }).parse)
   .handler(async ({ data, context }) => (await srv()).searchInvestors(context.userId, data as any));
 
 export const createInvestorFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(z.object({
+  .validator(z.object({
     offeringId: uuid, personId: uuid.nullable().optional(), profileId: uuid.nullable().optional(), confirmedNew: z.boolean().optional(),
     person, profile: z.object({ type: z.string().max(40), subType: str, legalName: str, details }), investment, related: related.optional(),
     taxId: z.string().regex(/^\d{9}$/, "The SSN / Tax ID must be 9 digits.").nullable().optional(),
@@ -33,43 +33,43 @@ export const createInvestorFn = createServerFn({ method: "POST" }).middleware([r
   .handler(async ({ data, context }) => (await srv()).createInvestorAndInvite(context.userId, data as any));
 
 export const updateInvestorRecordFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ onboardingId: uuid, person: person.optional(), profile: z.object({ legalName: str, details }).optional(), investment: investment.optional(), taxId: z.string().regex(/^\d{9}$/, "The tax ID must be 9 digits.").nullable().optional() }).parse)
+  .validator(z.object({ onboardingId: uuid, person: person.optional(), profile: z.object({ legalName: str, details }).optional(), investment: investment.optional(), taxId: z.string().regex(/^\d{9}$/, "The tax ID must be 9 digits.").nullable().optional() }).parse)
   .handler(async ({ data, context }) => (await import("@/lib/record-locks.server")).lockedSave("investor", context as any, data, async () => (await srv()).updateInvestorRecord(context.userId, data as any)));
 
 export const removeFromFundFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ onboardingId: uuid, reason: str }).parse)
+  .validator(z.object({ onboardingId: uuid, reason: str }).parse)
   .handler(async ({ data, context }) => (await srv()).removeFromFund(context.userId, data as any));
 
 export const fundInvestorRecordsFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ offeringId: uuid }).parse)
+  .validator(z.object({ offeringId: uuid }).parse)
   .handler(async ({ data, context }) => (await srv()).fundInvestorRecords(context.userId, data.offeringId));
 
 export const investorRecordDetailFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ onboardingId: uuid }).parse)
+  .validator(z.object({ onboardingId: uuid }).parse)
   .handler(async ({ data, context }) => (await srv()).investorRecordDetail(context.userId, data.onboardingId));
 
 export const resolveSuggestionFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ id: uuid, action: z.enum(["accept", "reject", "review_later"]) }).parse)
+  .validator(z.object({ id: uuid, action: z.enum(["accept", "reject", "review_later"]) }).parse)
   .handler(async ({ data, context }) => (await srv()).resolveSuggestion(context.userId, data));
 
 export const bulkPreviewFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ offeringId: uuid, csv: z.string().max(500_000) }).parse)
+  .validator(z.object({ offeringId: uuid, csv: z.string().max(500_000) }).parse)
   .handler(async ({ data, context }) => JSON.parse(JSON.stringify(await (await srv()).bulkPreview(context.userId, data))) as { importId: string; summary: Record<string, number>; rows: { index: number; cls: string; errors: string[]; name: string; email: string; amount: string; conflicts: { field: string; current: string | number | null; proposed: string | number | null }[] }[] });
 
 export const bulkCommitFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ importId: uuid, decisions: z.record(z.string(), z.enum(["keep", "use_imported", "later"])).optional() }).parse)
+  .validator(z.object({ importId: uuid, decisions: z.record(z.string(), z.enum(["keep", "use_imported", "later"])).optional() }).parse)
   .handler(async ({ data, context }) => (await srv()).bulkCommit(context.userId, data as any));
 
 export const bulkCancelFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ importId: uuid }).parse)
+  .validator(z.object({ importId: uuid }).parse)
   .handler(async ({ data, context }) => (await srv()).bulkCancel(context.userId, data.importId));
 
 export const prefillForInvestorFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ onboardingId: uuid }).parse)
+  .validator(z.object({ onboardingId: uuid }).parse)
   .handler(async ({ data, context }) => (await srv()).prefillForInvestor(context.userId, data.onboardingId));
 
 export const confirmInvestorInformationFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ onboardingId: uuid, corrections: z.record(z.string(), z.string().max(300)).optional() }).parse)
+  .validator(z.object({ onboardingId: uuid, corrections: z.record(z.string(), z.string().max(300)).optional() }).parse)
   .handler(async ({ data, context }) => (await srv()).confirmInvestorInformation(context.userId, data as any));
 
 /* ------------------------------------------------ related-person review (staff) */
@@ -85,7 +85,7 @@ export const listRelatedPersonReviewsFn = createServerFn({ method: "GET" })
 
 export const resolveRelatedPersonReviewFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({
+  .validator((d: unknown) => z.object({
     reviewId: z.string().uuid(), resolution: z.enum(["use_existing", "keep_new", "review_later"]),
     personId: z.string().uuid().nullable().optional(), note: z.string().trim().max(500).optional(),
   }).parse(d))
@@ -97,7 +97,7 @@ export const resolveRelatedPersonReviewFn = createServerFn({ method: "POST" })
   });
 
 export const readInvestorDocumentFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(z.object({
+  .validator(z.object({
     onboardingId: uuid, fileName: z.string().max(200),
     mimeType: z.enum(["application/pdf", "image/png", "image/jpeg", "image/webp"]),
     base64: z.string().max(14_000_000),
@@ -106,7 +106,7 @@ export const readInvestorDocumentFn = createServerFn({ method: "POST" }).middlew
 
 /** Reads a Google Sheet shared "anyone with the link" as CSV. Only docs.google.com sheet ids are fetched. */
 export const fetchGoogleSheetCsvFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ url: z.string().url().max(2000) }).parse)
+  .validator(z.object({ url: z.string().url().max(2000) }).parse)
   .handler(async ({ data }) => {
     const m = data.url.match(/docs\.google\.com\/spreadsheets\/d\/([a-zA-Z0-9_-]{20,})/);
     if (!m) throw new Error("That isn't a Google Sheets link.");
@@ -120,7 +120,7 @@ export const fetchGoogleSheetCsvFn = createServerFn({ method: "POST" }).middlewa
 const relatedInput = z.object({ firstName: z.string().trim().min(1).max(80), lastName: z.string().trim().min(1).max(80), email: z.string().trim().email().max(255).nullable().optional(), role: z.string().max(40), ownershipPercent: z.number().min(0).max(100).nullable().optional(), isSigner: z.boolean().optional() });
 
 export const editRelatedPartyFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(z.object({
+  .validator(z.object({
     onboardingId: uuid,
     add: relatedInput.optional(),
     update: z.object({ relationshipId: uuid, role: z.string().max(40), ownershipPercent: z.number().min(0).max(100).nullable().optional(), isSigner: z.boolean().optional() }).optional(),
@@ -129,7 +129,7 @@ export const editRelatedPartyFn = createServerFn({ method: "POST" }).middleware(
   .handler(async ({ data, context }) => (await srv()).editRelatedParty(context.userId, data as any));
 
 export const addDistributionDestinationFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(z.object({
+  .validator(z.object({
     onboardingId: uuid,
     label: z.string().trim().max(80).nullable().optional(),
     destination: z.object({

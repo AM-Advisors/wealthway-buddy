@@ -62,7 +62,7 @@ async function myFunds(supabase: any, userId: string) {
 
 export const listMyUploads = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({ fundId: z.string().uuid().nullish() })
       .partial()
@@ -86,7 +86,7 @@ export const listMyUploads = createServerFn({ method: "POST" })
 
 export const recordMyUpload = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         storage_path: z.string().min(1).max(500),
@@ -160,7 +160,7 @@ export const recordMyUpload = createServerFn({ method: "POST" })
 
 export const getMyUploadUrl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: row } = await supabase
@@ -180,7 +180,7 @@ export const getMyUploadUrl = createServerFn({ method: "POST" })
 
 export const deleteMyUpload = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: row } = await supabase
@@ -201,7 +201,7 @@ export const deleteMyUpload = createServerFn({ method: "POST" })
 /** Reviewer or owner retry when the shared-folder copy did not go through. */
 export const fileUploadToBox = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     // RLS decides whether this caller may see the row at all.

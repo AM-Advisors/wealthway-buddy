@@ -51,7 +51,7 @@ function build(caRows: any[], k1Rows: any[]) {
 /** The signed-in investor's (or cap-table holder's) own share of one fund. */
 export const investorShareFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ offeringId: z.string().uuid() }).parse)
+  .validator(z.object({ offeringId: z.string().uuid() }).parse)
   .handler(async ({ data, context }) => {
     const d = await db();
     const uid = context.userId;
@@ -77,7 +77,7 @@ export const investorShareFn = createServerFn({ method: "POST" })
 /** Harmonious / fund managers: every investor's K-1 tie status for a fund. Read-only. */
 export const capitalTieReportFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ offeringId: z.string().uuid() }).parse)
+  .validator(z.object({ offeringId: z.string().uuid() }).parse)
   .handler(async ({ data, context }) => {
     const { assertFund } = await import("@/lib/fund-tabs.server");
     await assertFund(context.userId, data.offeringId);
