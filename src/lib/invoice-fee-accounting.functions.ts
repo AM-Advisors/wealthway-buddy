@@ -22,3 +22,11 @@ export const assignInvoiceFeeTarget = createServerFn({ method: "POST" }).middlew
     await authorize(context, true);
     return (await import("./invoice-fee-accounting.server")).linkFeeTarget(context, data);
   });
+
+export async function previewInvoiceFeeEntryHandler({ context, data }: { context: any; data: { lineId: string; entryDate: string; category: string } }) {
+  await authorize(context, false, true);
+  return (await import("./invoice-fee-accounting.server")).previewFeeAccounting(context, data);
+}
+export const previewInvoiceFeeEntry = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .validator(z.object({ lineId: z.string().uuid(), entryDate: z.iso.date(), category: z.enum(["legal", "accounting", "audit_tax", "professional", "administration", "bank_fee", "organizational", "operating"]) }))
+  .handler(previewInvoiceFeeEntryHandler);
