@@ -1,5 +1,9 @@
 # Roadmap
 
+## Full Self Serve journey verification (2026-10-27)
+- [x] Rechecked current backend: production, no development instance. Reviewed E2E origin/evidence absent; existing preflight refused before browser navigation or writes. Six safety checks and 65 focused fictional setup/invitation/document checks passed.
+- [ ] Create fund → invite investor → upload document → independently approve → sign → read completed copy on fund page, blocked on independently isolated QA, verified storage/auth/runtime binding and synthetic sessions. No live fund, upload, email or signature was created; offline checks do not establish full journey success.
+
 ## Self Serve fund page (2026-10-27)
 - [x] Replace the stacked manager fund overview with URL-selected setup, investors/invitations, documents, onboarding link, team and activity areas; mount selected tools only and retain their existing authorized saves and review controls.
 - [x] Remove staff-area links from client settings, add client portal shortcuts and correct client document audience; fictional navigation and review blocking checked, 57 focused safeguards passed.
