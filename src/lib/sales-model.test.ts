@@ -40,3 +40,12 @@ describe("rate-card auto approval", () => {
   it("skips approval above the rate card", () => expect(autoOk(pq([{ ...l, unitCents: 750000 }]).needsExecApproval)).toBe(true));
   it("needs approval below the rate card", () => expect(autoOk(pq([{ ...l, unitCents: 249999 }]).needsExecApproval)).toBe(false));
 });
+
+import { quoteDeleteProblem } from "./sales-model";
+describe("quote delete rule", () => {
+  it("allows deleting a never-sent draft", () => expect(quoteDeleteProblem({ status: "draft" })).toBeNull());
+  it("allows deleting an approved quote not yet sent", () => expect(quoteDeleteProblem({ status: "approved" })).toBeNull());
+  it("blocks deleting a sent quote", () => expect(quoteDeleteProblem({ status: "sent", sent_at: "2026-10-27" })).not.toBeNull());
+  it("blocks deleting a signed quote", () => expect(quoteDeleteProblem({ status: "signed" })).not.toBeNull());
+  it("blocks deleting a quote with a SOW", () => expect(quoteDeleteProblem({ status: "approved", sow_id: "x" })).not.toBeNull());
+});
