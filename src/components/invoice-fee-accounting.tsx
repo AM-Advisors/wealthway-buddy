@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { assignInvoiceFeeTarget, listInvoiceFeeAccounting } from "@/lib/invoice-fee-accounting.functions";
+import { InvoiceFeePreview } from "@/components/invoice-fee-preview";
 
 export function InvoiceFeeAccounting({ invoiceId, canManage = false, shareLinks = false }: { invoiceId?: string | undefined; canManage?: boolean; shareLinks?: boolean }) {
   const load = useServerFn(listInvoiceFeeAccounting);
@@ -40,7 +41,7 @@ export function InvoiceFeeAccounting({ invoiceId, canManage = false, shareLinks 
       const target = targets.find(t => `${t.kind}:${t.id}` === selected);
       return <div key={row.id} className="space-y-2 border-b border-border py-3">
         <div className="flex flex-wrap justify-between gap-2"><div className="min-w-0"><p className="break-words font-medium">{row.label}</p><p className="text-xs text-muted-foreground">{row.number} · {row.issueDate ?? "Date not set"}{row.dueDate ? ` · due ${row.dueDate}` : ""}</p></div><span className="tabular-nums">{(row.amountCents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" })}</span></div>
-        <div className="flex flex-wrap items-center gap-2"><span className="text-sm">{row.target?.name ?? "Fund or company not assigned"}</span><Badge variant="outline">{row.accountingStatus}</Badge>{shareLinks ? <Button variant="ghost" size="sm" onClick={() => copyFeeLink(row.invoiceId)}>Copy link</Button> : null}</div>
+        <div className="flex flex-wrap items-center gap-2"><span className="text-sm">{row.target?.name ?? "Fund or company not assigned"}</span><Badge variant="outline">{row.accountingStatus}</Badge>{shareLinks ? <Button variant="ghost" size="sm" onClick={() => copyFeeLink(row.invoiceId)}>Copy link</Button> : null}{canManage && shareLinks ? <InvoiceFeePreview lineId={row.id} label={row.label} issueDate={row.issueDate} /> : null}</div>
         {canManage && !row.fixedFund && ["Needs assignment", "Awaiting accounting review"].includes(row.accountingStatus) ? <div className="grid gap-2 md:grid-cols-3">
           <SearchableSelect aria-label={`Fund or company for ${row.label}`} value={selected} onValueChange={value => setChoices(old => ({ ...old, [row.id]: value }))} options={targets.filter(t => t.client_id === row.clientId).map(t => ({ value: `${t.kind}:${t.id}`, label: t.name, detail: t.kind === "fund" ? "Fund" : "Company" }))} placeholder="Choose fund or company" />
           <Input aria-label={`Assignment reason for ${row.label}`} placeholder="Assignment reason" value={reasons[row.id] ?? ""} onChange={event => setReasons(old => ({ ...old, [row.id]: event.target.value }))} />

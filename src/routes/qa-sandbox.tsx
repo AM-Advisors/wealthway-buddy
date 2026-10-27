@@ -15,12 +15,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { createQaState, installQaFetchMock, type QaRole, type QaState } from "@/lib/qa-sandbox/mock-server";
 import { QA_FUND_ID, QA_FUND_NAME, QA_MANAGER_NAME } from "@/lib/qa-sandbox/fictional-data";
+import { QaBillingReadback } from "@/components/qa-billing-readback";
 
 export const Route = createFileRoute("/qa-sandbox")({
   head: () => ({
     meta: [
       { title: "Fictional QA sandbox | Harmonious" },
       { name: "description", content: "Isolated click-through sandbox with fictional funds, investors and accounts. No real records, emails or money." },
+      { property: "og:title", content: "Fictional QA sandbox | Harmonious" },
+      { property: "og:description", content: "Fictional investor and billing walkthroughs, without real records, emails or money." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex, nofollow" },
     ],
   }),
@@ -42,7 +47,9 @@ function QaSandboxPage() {
   const [queryClient] = useState(() => new QueryClient({ defaultOptions: { queries: { retry: false, staleTime: 0 } } }));
 
   useEffect(() => {
-    const restore = installQaFetchMock(stateRef.current!);
+    const state = stateRef.current;
+    if (!state) return;
+    const restore = installQaFetchMock(state);
     setReady(true);
     return restore;
   }, []);
@@ -53,7 +60,7 @@ function QaSandboxPage() {
   const router = useMemo(() => {
     const root = createRootRoute({
       component: () => (
-        <QaContext.Provider value={{ state: stateRef.current!, role, setRole }}>
+        <QaContext.Provider value={{ state: stateRef.current ?? createQaState("staff"), role, setRole }}>
           <SandboxShell>
             <Outlet />
           </SandboxShell>
@@ -105,7 +112,7 @@ function SandboxShell({ children }: { children: React.ReactNode }) {
 
 function SandboxHome() {
   const { state, role } = useQa();
-  const [tab, setTab] = useState<"investor" | "wire">("investor");
+  const [tab, setTab] = useState<"investor" | "wire" | "billing">("investor");
   const [formKey, setFormKey] = useState(0);
   return (
     <>
@@ -121,11 +128,12 @@ function SandboxHome() {
           <div className="flex flex-wrap gap-2" role="group" aria-label="Sandbox area">
             <Button size="sm" variant={tab === "investor" ? "default" : "outline"} onClick={() => setTab("investor")}>Add investor</Button>
             <Button size="sm" variant={tab === "wire" ? "default" : "outline"} onClick={() => setTab("wire")}>Wire sender</Button>
+            <Button size="sm" variant={tab === "billing" ? "default" : "outline"} onClick={() => setTab("billing")}>Client billing</Button>
             <Button size="sm" variant="ghost" onClick={() => setFormKey((k) => k + 1)}>Reset form</Button>
           </div>
           {tab === "investor" ? (
             <CreateInvestor key={formKey} fundId={QA_FUND_ID} isStaff={role === "staff"} />
-          ) : (
+          ) : tab === "billing" ? <QaBillingReadback key={formKey} /> : (
             <Card>
               <CardHeader><CardTitle className="text-base">Wire instructions</CardTitle></CardHeader>
               <CardContent><WireFromBankForm key={`${formKey}-${role}`} fundId={QA_FUND_ID} /></CardContent>
