@@ -24,7 +24,7 @@ export const updateFundRequest = createServerFn({ method: "POST" }).middleware([
   .validator((d) => z.object({
     id: z.string().uuid(), status: z.enum(REQUEST_STATUSES).optional(), stage: z.number().int().min(0).max(20).optional(), assignedTo: z.string().uuid().nullable().optional(),
     assignedTeam: z.string().max(60).optional(), dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(), clientNotes: z.string().max(2000).nullable().optional(),
-    internalNotes: z.string().max(4000).nullable().optional(), reason: z.string().max(2000).nullable().optional(),
+    internalNotes: z.string().max(4000).nullable().optional(), reason: z.string().max(2000).nullable().optional(), transferToOperations: z.boolean().optional(),
   }).parse(d)).handler(async ({ context, data }) => (await S()).updateRequest(context.userId, data));
 export const cancelFundRequest = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator((d) => z.object({ id: z.string().uuid(), reason: z.string().trim().min(3).max(1000) }).parse(d)).handler(async ({ context, data }) => (await S()).requestCancellation(context.userId, data.id, data.reason));

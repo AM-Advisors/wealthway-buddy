@@ -7,6 +7,8 @@
 import { requestType, requestResponsibility, SLA_PAUSED, entitlementFor, missingFields, isOpenRequest, TEAM_ROUTING, REQUEST_STATUS_LABEL, type RequestStatus } from "@/lib/service-request-types";
 import { staffWriter, entitledFeatures } from "@/lib/fund-calendar.server";
 import { notifyFundManagers } from "@/lib/client-work-notify.server";
+import { validateOperationsTransfer } from "./fund-request-handoff-model";
+import { staffProfile } from "./harmonious-staff";
 
 async function admin() { return (await import("@/integrations/supabase/client.server")).supabaseAdmin as any; }
 const BUCKET = "fund-formation";
@@ -25,8 +27,24 @@ export async function listRequests(uid: string, fundId: string) {
   const db = await admin();
   let q = db.from("fund_service_requests").select(staff ? "*" : CLIENT_COLS).eq("fund_id", fundId).order("created_at", { ascending: false }).limit(500);
   if (!staff) q = q.eq("client_visibility", true).neq("status", "DRAFT");
-  const { data } = await q;
-  return { staff, rows: (data ?? []) as any[] };
+  const { data, error } = await q;
+  if (error) throw new Error("Could not load fund requests.");
+  const rows = (data ?? []) as any[];
+  const progress = staff ? await linkedTaskProgress(db, rows) : new Map();
+  return { staff, rows: rows.map(r => staff ? { ...r, linkedTask: progress.get(r.task_id) ?? null } : r) };
+}
+
+/** Internal task data never enters the client request projection. */
+async function linkedTaskProgress(db: any, requests: any[]) {
+  const ids = requests.map(r => r.task_id).filter(Boolean);
+  if (!ids.length) return new Map();
+  const { data: tasks, error } = await db.from("staff_tasks").select("id,status,team,assignee_user_id,due_date,offering_id,related_workflow_id,related_workflow_type,source_ref").in("id", ids);
+  if (error) throw new Error("Could not load linked task progress.");
+  const owners = [...new Set((tasks ?? []).map((t: any) => t.assignee_user_id).filter(Boolean))];
+  const { data: profiles, error: profileError } = owners.length ? await db.from("profiles").select("user_id,legal_name,email").in("user_id", owners) : { data: [], error: null };
+  if (profileError) throw new Error("Could not load receiving owners.");
+  const names = new Map((profiles ?? []).map((p: any) => [p.user_id, p.legal_name || p.email]));
+  return new Map((tasks ?? []).filter((t: any) => requests.some(r => r.task_id === t.id && r.fund_id === t.offering_id && r.id === t.related_workflow_id && t.related_workflow_type === "fund_service_request" && t.source_ref === `fund_request:${r.id}`)).map((t: any) => [t.id, { id: t.id, status: t.status, team: t.team, ownerName: names.get(t.assignee_user_id) ?? null, dueDate: t.due_date }]));
 }
 
 export async function listAllRequests(uid: string) {
@@ -79,10 +97,11 @@ export async function getRequest(uid: string, id: string) {
   const assignmentScope = staff ? await staffWriter(uid).catch(() => null) : null;
   const assignmentIds = assignmentScope ? [...assignmentScope.staff.keys()] : [];
   const assignmentNames = await db.from("profiles").select("user_id, legal_name, email").in("user_id", assignmentIds.length ? assignmentIds : ["00000000-0000-0000-0000-000000000000"]);
+  const progress = staff ? await linkedTaskProgress(db, [r]) : new Map();
   const safe = staff ? { ...r, sla: slaState(r), assignedName: nm.get(r.assigned_to) ?? null, teamLabel: TEAM_ROUTING[r.assigned_team]?.label ?? r.assigned_team }
     : Object.fromEntries(Object.entries(r).filter(([k]) => CLIENT_COLS.split(", ").includes(k)));
   return {
-    staff, canAssign: !!assignmentScope, assignmentOptions: ((assignmentNames.data ?? []) as any[]).map((p) => ({ value: p.user_id, label: p.legal_name || p.email || "Staff member" })), request: safe, stages: def.stages, irreversible: def.irreversible,
+    staff, canAssign: !!assignmentScope, assignmentOptions: ((assignmentNames.data ?? []) as any[]).map((p) => ({ value: p.user_id, label: p.legal_name || p.email || "Staff member", operations: staffProfile(assignmentScope?.staff.get(p.user_id) ?? []).teams.includes("operations") })), request: staff ? { ...safe, linkedTask: progress.get(r.task_id) ?? null } : safe, stages: def.stages, irreversible: def.irreversible,
     messages: ((messages ?? []) as any[]).map((m) => ({ ...m, who: m.author_side === "HARMONIOUS" && !staff ? "Harmonious" : nm.get(m.author_user_id) ?? (m.author_side === "HARMONIOUS" ? "Harmonious" : "Fund manager") })),
     files: (files ?? []) as any[], events: ((events ?? []) as any[]).map(({ actor_user_id, ...e }) => e), approvals: (approvals ?? []) as any[],
   };
@@ -179,12 +198,17 @@ export async function postMessage(uid: string, d: { id: string; body: string; in
 
 export async function updateRequest(uid: string, d: {
   id: string; status?: RequestStatus | undefined; stage?: number | undefined; assignedTo?: string | null | undefined; assignedTeam?: string | undefined;
-  dueDate?: string | null | undefined; clientNotes?: string | null | undefined; internalNotes?: string | null | undefined; reason?: string | null | undefined;
+  dueDate?: string | null | undefined; clientNotes?: string | null | undefined; internalNotes?: string | null | undefined; reason?: string | null | undefined; transferToOperations?: boolean | undefined;
 }) {
   const s = await staffWriter(uid);
   const db = await admin();
   const { data: r } = await db.from("fund_service_requests").select("*").eq("id", d.id).maybeSingle();
   if (!r) throw new Error("Request not found.");
+  if (d.transferToOperations) {
+    if (!["sales", "account_management"].includes(r.assigned_team)) throw new Error("This request is no longer assigned to Sales.");
+    validateOperationsTransfer({ owner: d.assignedTo ?? null, dueDate: d.dueDate ?? null, roles: s.staff.get(d.assignedTo ?? "") ?? [], status: r.status, taskId: r.task_id });
+    d = { ...d, assignedTeam: "operations", status: "IN_REVIEW" };
+  }
   if (d.assignedTo && !s.staff.has(d.assignedTo)) throw new Error("Assign requests to Harmonious staff only.");
   if (d.assignedTeam !== undefined && !Object.hasOwn(TEAM_ROUTING, d.assignedTeam)) throw new Error("Unknown request team.");
   const now = new Date();
@@ -197,26 +221,22 @@ export async function updateRequest(uid: string, d: {
   if (d.internalNotes !== undefined) patch.internal_notes = d.internalNotes || null;
   const statusChanged = d.status && d.status !== r.status;
   if (statusChanged) {
-    patch.status = d.status; patch.responsibility_status = requestResponsibility(d.status!);
-    const wasPaused = SLA_PAUSED.has(r.status), nowPaused = SLA_PAUSED.has(d.status!);
+    patch.status = d.status; patch.responsibility_status = requestResponsibility(d.status ?? r.status);
+    const wasPaused = SLA_PAUSED.has(r.status), nowPaused = SLA_PAUSED.has(d.status ?? r.status);
     if (!wasPaused && nowPaused) patch.sla_paused_at = now.toISOString();
     if (wasPaused && !nowPaused && r.sla_paused_at) { patch.sla_paused_minutes = Number(r.sla_paused_minutes ?? 0) + Math.round((now.getTime() - Date.parse(r.sla_paused_at)) / 60000); patch.sla_paused_at = null; }
     if (d.status === "COMPLETED") { patch.completed_at = now.toISOString(); patch.stage = requestType(r.request_type).stages.length - 1; }
     if (!r.first_response_at && d.status !== "SUBMITTED") patch.first_response_at = now.toISOString();
   }
-  const { error } = await db.from("fund_service_requests").update(patch).eq("id", r.id);
+  const { data: saved, error } = await db.from("fund_service_requests").update(patch).eq("id", r.id).eq("updated_at", r.updated_at).select("id").maybeSingle();
   if (error) throw new Error(error.message);
+  if (!saved) throw new Error("This request changed. Refresh before saving again.");
   const routingChanges = Object.fromEntries(["assigned_to", "assigned_team", "due_date"].filter((key) => key in patch && patch[key] !== r[key]).map((key) => [key, { from: r[key], to: patch[key] }]));
   if (Object.keys(routingChanges).length) await ev(db, r, uid, "routing_updated", false, routingChanges);
   if (statusChanged) {
-    await ev(db, r, uid, "status", true, { from: r.status, to: d.status, label: REQUEST_STATUS_LABEL[d.status!] });
+    await ev(db, r, uid, "status", true, { from: r.status, to: d.status, label: REQUEST_STATUS_LABEL[d.status ?? r.status as RequestStatus] });
     if (patch.sla_paused_at && !r.sla_paused_at) await ev(db, r, uid, "sla_paused", false, { status: d.status });
     if (patch.sla_paused_minutes !== undefined) await ev(db, r, uid, "sla_resumed", false, { paused_minutes_total: patch.sla_paused_minutes });
-    if (r.task_id) {
-      const done = d.status === "COMPLETED" || d.status === "CANCELLED";
-      await db.from("staff_tasks").update(done ? { status: d.status === "COMPLETED" ? "done" : "cancelled", completed_at: now.toISOString(), responsibility_manual: false }
-        : { responsibility_status: patch.responsibility_status, responsibility_manual: false, status: "in_progress", ...(d.status === "WAITING_ON_CLIENT" ? { information_request_type: r.request_type, requested_information: d.clientNotes ?? r.client_notes ?? null } : {}) }).eq("id", r.task_id);
-    }
     if (d.status === "WAITING_ON_CLIENT") await notifyFundManagers(r.fund_id, "information_required", r.title, `/manager/fund/${r.fund_id}/requests`);
     if (d.status === "COMPLETED") await notifyFundManagers(r.fund_id, "request_completed", r.title, `/manager/fund/${r.fund_id}/requests`);
     if (r.client_visibility && !["WAITING_ON_CLIENT", "COMPLETED"].includes(d.status ?? "")) await notifyFundManagers(r.fund_id, "material_update", "Fund service request", `/client/funds/${r.fund_id}?tab=requests`);
@@ -243,7 +263,6 @@ export async function requestCancellation(uid: string, id: string, reason: strin
     return { status: "CANCELLATION_REVIEW" };
   }
   await db.from("fund_service_requests").update({ status: "CANCELLED", responsibility_status: "COMPLETED", completed_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("id", id);
-  if (r.task_id) await db.from("staff_tasks").update({ status: "cancelled", responsibility_manual: false }).eq("id", r.task_id);
   await ev(db, r, uid, "cancelled", true, { reason });
   return { status: "CANCELLED" };
 }
