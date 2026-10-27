@@ -1,5 +1,10 @@
 # Roadmap
 
+## Staff ROAS payment tracking (2026-10-27)
+- [ ] Add a staff-only payments page linked from ROAS billing and invoice navigation, using canonical invoice balances and recorded payment dates.
+- [ ] Show annual LP and management K-1 sets separately; partial invoice receipts never imply a paid set without allocation evidence.
+- [ ] Verify model, staff authorization and fictional page interactions; authenticated real-record verification requires independently isolated QA.
+
 ## ROAS billing update consolidation (2026-10-27)
 - [x] Added staff-only /ops/billing/roas-update as the one read-only place for the ROAS draft quote terms, recorded invoice balances, annual K-1 sets, conditional filing-fee range and next steps; linked from Operations billing and searchable navigation.
 - [ ] Authenticated page read-back remains blocked on independently isolated QA and synthetic sessions; no quote, invoice, filing, payment or approval changed.
