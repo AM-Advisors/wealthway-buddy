@@ -299,7 +299,7 @@ export const startInvestmentVerificationFn = createServerFn({ method: "POST" })
     } catch {
       /* production origin */
     }
-    return (await engine()).startInvestmentVerification(context.userId, data.onboardingId, origin);
+    return (await engine()).startInvestmentVerification(context.userId, data.onboardingId, origin, null, context.supabase);
   });
 
 // ------------------------------------------- onboard.harmonious.co portal
@@ -334,7 +334,7 @@ export const startPortalVerificationFn = createServerFn({ method: "POST" })
     }
     const { safeOnboardReturnPath } = await import("@/lib/onboard-portal-model");
     const returnPath = safeOnboardReturnPath(`/onboard/i/${data.onboardingId}`);
-    return (await engine()).startInvestmentVerification(context.userId, data.onboardingId, origin, returnPath);
+    return (await engine()).startInvestmentVerification(context.userId, data.onboardingId, origin, returnPath, context.supabase);
   });
 
 // ------------------------------------------------ investment readiness
