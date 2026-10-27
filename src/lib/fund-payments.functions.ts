@@ -50,7 +50,7 @@ async function quoteFor(db: any, kind: Target["kind"], t: Awaited<ReturnType<typ
 
 export const quoteFundPayment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => target.parse(d))
+  .validator((d: unknown) => target.parse(d))
   .handler(async ({ data, context }) => {
     const t = await resolveTarget(context, data);
     return quoteFor(await admin(), data.kind, t);
@@ -59,7 +59,7 @@ export const quoteFundPayment = createServerFn({ method: "POST" })
 /** Records the payment and opens embedded card checkout for exactly the quoted items. */
 export const startFundPayment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ target, environment: env, returnUrl: z.string().url().max(500) }).parse(d))
+  .validator((d: unknown) => z.object({ target, environment: env, returnUrl: z.string().url().max(500) }).parse(d))
   .handler(async ({ data, context }): Promise<{ paymentId: string; clientSecret: string } | { error: string }> => {
     let t;
     try { t = await resolveTarget(context, data.target); } catch (e) { return { error: (e as Error).message }; }
@@ -111,7 +111,7 @@ export const startFundPayment = createServerFn({ method: "POST" })
 /** Wire/ACH: records the payment as awaiting receipt and returns a reference code. Nothing activates until staff confirm receipt. */
 export const startOfflineFundPayment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ target, method: z.enum(["wire", "ach"]) }).parse(d))
+  .validator((d: unknown) => z.object({ target, method: z.enum(["wire", "ach"]) }).parse(d))
   .handler(async ({ data, context }): Promise<{ paymentId: string; reference: string; totalCents: number } | { error: string }> => {
     if (data.target.kind === "side_letter") return { error: "Side letters are paid by card." };
     let t;
@@ -160,7 +160,7 @@ export const listOfflineFundPayments = createServerFn({ method: "GET" })
 /** Staff: confirm a wire/ACH payment arrived. Manual reconciliation only - never automatic. */
 export const markFundPaymentReceived = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid(), note: z.string().min(3).max(500) }).parse(d))
+  .validator((d: unknown) => z.object({ id: z.string().uuid(), note: z.string().min(3).max(500) }).parse(d))
   .handler(async ({ data, context }) => {
     const { whoIsStaff } = await import("@/lib/service-catalog.functions");
     const who = await whoIsStaff(context);
@@ -211,7 +211,7 @@ export const markFundPaymentReceived = createServerFn({ method: "POST" })
 
 export const getFundPayment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { data: row } = await (context.supabase as any).from("fund_payments").select("id, status, total_cents, environment, stripe_session_id").eq("id", data.id).maybeSingle();
     if (!row) return null;

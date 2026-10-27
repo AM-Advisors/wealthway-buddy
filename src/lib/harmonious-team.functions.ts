@@ -32,7 +32,7 @@ async function history(filter: { client_id?: string; offering_id?: string }) {
 /** Internal team view for a Client or a Fund. Staff only. */
 export const getHarmoniousTeam = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ clientId: uuid.optional(), offeringId: uuid.optional() }).refine((v) => !!v.clientId !== !!v.offeringId).parse(d))
+  .validator((d: unknown) => z.object({ clientId: uuid.optional(), offeringId: uuid.optional() }).refine((v) => !!v.clientId !== !!v.offeringId).parse(d))
   .handler(async ({ data, context }) => {
     const roles = await requireStaff(context);
     const srv = await import("@/lib/harmonious-team.server");
@@ -91,7 +91,7 @@ async function assertAssignable(context: any, r: TeamRole, userId: string | null
 /** Set or clear a Client assignment. Inheriting Funds follow automatically. */
 export const setClientTeamMember = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ clientId: uuid, role, userId: uuid.nullable() }).parse(d))
+  .validator((d: unknown) => z.object({ clientId: uuid, role, userId: uuid.nullable() }).parse(d))
   .handler(async ({ data, context }) => {
     await assertAssignable(context, data.role, data.userId, { clientId: data.clientId });
     const db = await admin();
@@ -110,7 +110,7 @@ export const setClientTeamMember = createServerFn({ method: "POST" })
 /** Choose whether the client sees their Sales Team Member as their Sales Representative. Same people who may assign Sales. */
 export const setShowSalesRep = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ clientId: uuid, show: z.boolean() }).parse(d))
+  .validator((d: unknown) => z.object({ clientId: uuid, show: z.boolean() }).parse(d))
   .handler(async ({ data, context }) => {
     const roles = await requireStaff(context);
     const sc = await setupScope({ clientId: data.clientId });
@@ -123,7 +123,7 @@ export const setShowSalesRep = createServerFn({ method: "POST" })
 /** Override one assignment for one Fund, or reset it to the Client (userId null). */
 export const setFundTeamOverride = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ offeringId: uuid, role, userId: uuid.nullable() }).parse(d))
+  .validator((d: unknown) => z.object({ offeringId: uuid, role, userId: uuid.nullable() }).parse(d))
   .handler(async ({ data, context }) => {
     await assertAssignable(context, data.role, data.userId, { offeringId: data.offeringId });
     const srv = await import("@/lib/harmonious-team.server");
@@ -142,7 +142,7 @@ export const setFundTeamOverride = createServerFn({ method: "POST" })
 /** "Your Harmonious Team" for a Fund the caller can already read. Names only. */
 export const getMyHarmoniousContacts = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ offeringId: uuid }).parse(d))
+  .validator((d: unknown) => z.object({ offeringId: uuid }).parse(d))
   .handler(async ({ data, context }) => {
     const { data: visible } = await context.supabase.from("offerings").select("id").eq("id", data.offeringId).maybeSingle();
     if (!visible) return { contacts: [] };

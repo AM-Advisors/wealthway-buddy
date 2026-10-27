@@ -29,7 +29,7 @@ const listSchema = z.object({
  */
 export const listReviewerActivity = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => listSchema.parse(data ?? {}))
+  .validator((data: unknown) => listSchema.parse(data ?? {}))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const roles = await reviewerRoles(supabase, userId);

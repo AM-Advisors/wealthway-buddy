@@ -61,7 +61,7 @@ const money = (cents: number | null | undefined) =>
  */
 export const getClientPortalActivity = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         days: z.number().int().min(1).max(3650).nullable().optional(),

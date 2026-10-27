@@ -83,7 +83,7 @@ export const getMyGovernmentId = createServerFn({ method: "POST" })
 /** Server chooses the storage path; the browser only receives a one-time upload token. */
 export const startGovernmentIdUpload = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({
       side, documentType: docType,
       fileName: z.string().trim().min(1).max(200),
@@ -122,7 +122,7 @@ export const startGovernmentIdUpload = createServerFn({ method: "POST" })
 
 export const confirmGovernmentIdUpload = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const app = await myApplication(supabase, userId);
@@ -175,7 +175,7 @@ export const confirmGovernmentIdUpload = createServerFn({ method: "POST" })
 
 export const getMyGovernmentIdUrl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { userId } = context;
     const db = await admin();
@@ -196,7 +196,7 @@ async function requireIdReviewer(context: any) {
 /** Metadata for Harmonious reviewers. No image, no full document number. */
 export const getGovernmentIdReview = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ investorUserId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ investorUserId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     await requireIdReviewer(context);
     const db = await admin();
@@ -233,7 +233,7 @@ export const getGovernmentIdReview = createServerFn({ method: "POST" })
 
 export const getGovernmentIdReviewUrl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     await requireIdReviewer(context);
     const db = await admin();

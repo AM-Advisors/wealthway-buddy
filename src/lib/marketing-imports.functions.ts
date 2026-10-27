@@ -12,22 +12,22 @@ export const browseClickup = createServerFn({ method: "GET" }).middleware([requi
   .handler(async ({ context }) => (await srv()).clickupBrowse(context.userId));
 
 export const addClickupImport = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ kind: z.enum(["list", "space"]), refId: z.string().min(1).max(40), name: z.string().min(1).max(200), keepSyncing: z.boolean() }).parse(d))
+  .validator((d) => z.object({ kind: z.enum(["list", "space"]), refId: z.string().min(1).max(40), name: z.string().min(1).max(200), keepSyncing: z.boolean() }).parse(d))
   .handler(async ({ data, context }) => (await srv()).addClickupSource(context.userId, data));
 
 export const rerunClickupImport = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ id: z.string().uuid() }).parse(d))
+  .validator((d) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => (await srv()).runClickupSource(context.userId, data.id));
 
 export const updateClickupImport = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ id: z.string().uuid(), keepSyncing: z.boolean().optional(), remove: z.boolean().optional() }).parse(d))
+  .validator((d) => z.object({ id: z.string().uuid(), keepSyncing: z.boolean().optional(), remove: z.boolean().optional() }).parse(d))
   .handler(async ({ data, context }) => (await srv()).updateImportSource(context.userId, data.id, data));
 
 export const getHubspotStatus = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth])
   .handler(async ({ context }) => (await srv()).hubspotStatus(context.userId));
 
 export const runHubspotImport = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ parts: z.array(z.enum(["contacts", "deals", "email_history", "marketing_emails"])).min(1) }).parse(d))
+  .validator((d) => z.object({ parts: z.array(z.enum(["contacts", "deals", "email_history", "marketing_emails"])).min(1) }).parse(d))
   .handler(async ({ data, context }) => (await srv()).importHubspot(context.userId, data.parts));
 
 export const startHubspotConnect = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
@@ -54,7 +54,7 @@ export const startHubspotConnect = createServerFn({ method: "POST" }).middleware
   });
 
 export const completeHubspotConnect = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ code: z.string().min(1) }).parse(d))
+  .validator((d) => z.object({ code: z.string().min(1) }).parse(d))
   .handler(async ({ data, context }) => {
     const s = await srv();
     const { requireMarketing } = await import("@/lib/marketing.server");

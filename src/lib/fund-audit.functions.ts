@@ -25,7 +25,7 @@ const flat = (o: unknown) =>
 /** Read-only, merged audit history for one fund. Caller must have access to the fund. */
 export const fundAuditHistoryFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ fundId: z.string().uuid() }).parse)
+  .validator(z.object({ fundId: z.string().uuid() }).parse)
   .handler(async ({ data, context }) => {
     const s = await import("@/lib/fund-tabs.server");
     await s.assertFund(context.userId, data.fundId);
@@ -120,7 +120,7 @@ export const fundAuditHistoryFn = createServerFn({ method: "POST" })
 /** Staff add a note to the fund's history (e.g. a call, an off-platform change). Append-only. */
 export const addFundAuditNoteFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ fundId: z.string().uuid(), note: z.string().trim().min(3).max(1000) }).parse)
+  .validator(z.object({ fundId: z.string().uuid(), note: z.string().trim().min(3).max(1000) }).parse)
   .handler(async ({ data, context }) => {
     const s = await import("@/lib/fund-tabs.server");
     await s.assertFund(context.userId, data.fundId);

@@ -210,7 +210,7 @@ async function buildCapTable(
 /** The live cap table for one fund, for a manager, admin or permitted investor. */
 export const getFundCapTable = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ offering_id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ offering_id: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 
@@ -612,7 +612,7 @@ export type FundCapTableEditor = Awaited<ReturnType<typeof buildFundCapTable>>;
 /** Every investor position in one fund, with the numbers a manager can edit. */
 export const getCapTableEditor = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ offering_id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ offering_id: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     await assertCanManage(context.supabase, data.offering_id);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -816,7 +816,7 @@ export type CapPositionInput = z.infer<typeof positionSchema>;
 /** Manager edits one investor's shares, class, ownership and committed capital. */
 export const saveCapPosition = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => positionSchema.parse(data))
+  .validator((data: unknown) => positionSchema.parse(data))
   .handler(async ({ data, context }) => {
     await assertCanManage(context.supabase, data.offering_id);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -967,7 +967,7 @@ const FIELD_LABELS: Record<string, string> = {
 /** Trail of every ownership or commitment edit for a fund. */
 export const getCapTableLog = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ offering_id: z.string().uuid(), limit: z.number().int().min(1).max(500).optional() }).parse(data),
   )
   .handler(async ({ data, context }) => {

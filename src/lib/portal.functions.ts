@@ -71,7 +71,7 @@ export interface PortalWireConfirmation {
 /** Everything an investor needs to see about their own application in one read. */
 export const getPortal = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({ applicationId: z.string().uuid().nullable().optional() })
       .optional()

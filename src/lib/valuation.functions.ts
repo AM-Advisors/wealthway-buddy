@@ -16,7 +16,7 @@ const sourceType = z.enum(VALUATION_SOURCE_TYPES);
 
 export const getPortfolioAssets = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ fundId: uuid.optional() }).parse(data ?? {}))
+  .validator((data: unknown) => z.object({ fundId: uuid.optional() }).parse(data ?? {}))
   .handler(async ({ data, context }) => {
     const { listPortfolioAssets } = await import("@/lib/valuation.server");
     return listPortfolioAssets(context.userId, data.fundId);
@@ -24,7 +24,7 @@ export const getPortfolioAssets = createServerFn({ method: "POST" })
 
 export const savePortfolioAsset = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         id: uuid.optional(),
@@ -64,7 +64,7 @@ export const savePortfolioAsset = createServerFn({ method: "POST" })
 
 export const getValuationQueue = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ fundId: uuid.optional(), status: z.string().optional() }).parse(data ?? {}),
   )
   .handler(async ({ data, context }) => {
@@ -77,7 +77,7 @@ export const getValuationQueue = createServerFn({ method: "POST" })
 
 export const getValuationHistory = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ id: uuid }).parse(data))
+  .validator((data: unknown) => z.object({ id: uuid }).parse(data))
   .handler(async ({ data, context }) => {
     const { valuationHistory } = await import("@/lib/valuation.server");
     return valuationHistory(context.userId, data.id);
@@ -85,7 +85,7 @@ export const getValuationHistory = createServerFn({ method: "POST" })
 
 export const proposeAssetValuation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         assetId: uuid,
@@ -127,7 +127,7 @@ export const proposeAssetValuation = createServerFn({ method: "POST" })
 
 export const submitAssetValuation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ id: uuid }).parse(data))
+  .validator((data: unknown) => z.object({ id: uuid }).parse(data))
   .handler(async ({ data, context }) => {
     const { submitValuation } = await import("@/lib/valuation.server");
     return submitValuation(context.userId, data.id);
@@ -135,7 +135,7 @@ export const submitAssetValuation = createServerFn({ method: "POST" })
 
 export const decideAssetValuation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         id: uuid,
@@ -155,7 +155,7 @@ export const decideAssetValuation = createServerFn({ method: "POST" })
 
 export const respondToAssetValuation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         id: uuid,
@@ -175,7 +175,7 @@ export const respondToAssetValuation = createServerFn({ method: "POST" })
 
 export const addAssetValuationEvidence = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         valuationId: uuid,
@@ -201,7 +201,7 @@ export const addAssetValuationEvidence = createServerFn({ method: "POST" })
 
 export const getEvidenceLink = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ id: uuid }).parse(data))
+  .validator((data: unknown) => z.object({ id: uuid }).parse(data))
   .handler(async ({ data, context }) => {
     const { evidenceLink } = await import("@/lib/valuation.server");
     return evidenceLink(context.userId, data.id);
@@ -209,7 +209,7 @@ export const getEvidenceLink = createServerFn({ method: "POST" })
 
 export const prepareValuationGl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ id: uuid }).parse(data))
+  .validator((data: unknown) => z.object({ id: uuid }).parse(data))
   .handler(async ({ data, context }) => {
     const { prepareValuationJournal } = await import("@/lib/valuation.server");
     return prepareValuationJournal(context.userId, data.id);
@@ -217,7 +217,7 @@ export const prepareValuationGl = createServerFn({ method: "POST" })
 
 export const recordAssetRealization = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         assetId: uuid,
@@ -245,7 +245,7 @@ export const recordAssetRealization = createServerFn({ method: "POST" })
 
 export const prepareRealizationGl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ id: uuid }).parse(data))
+  .validator((data: unknown) => z.object({ id: uuid }).parse(data))
   .handler(async ({ data, context }) => {
     const { prepareRealizationJournal } = await import("@/lib/valuation.server");
     return prepareRealizationJournal(context.userId, data.id);
@@ -253,7 +253,7 @@ export const prepareRealizationGl = createServerFn({ method: "POST" })
 
 export const getPortfolioAsOf = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ fundId: uuid, date: isoDate }).parse(data))
+  .validator((data: unknown) => z.object({ fundId: uuid, date: isoDate }).parse(data))
   .handler(async ({ data, context }) => {
     const { portfolioAsOfDate } = await import("@/lib/valuation.server");
     return portfolioAsOfDate(context.userId, data.fundId, data.date);
@@ -261,7 +261,7 @@ export const getPortfolioAsOf = createServerFn({ method: "POST" })
 
 export const getStalePositions = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(() => ({}))
+  .validator(() => ({}))
   .handler(async ({ context }) => {
     const { stalePositions } = await import("@/lib/valuation.server");
     return stalePositions(context.userId);
@@ -269,7 +269,7 @@ export const getStalePositions = createServerFn({ method: "POST" })
 
 export const saveFundValuationPolicy = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         fundId: uuid,

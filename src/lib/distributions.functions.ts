@@ -13,7 +13,7 @@ const authed = () => createServerFn({ method: "POST" }).middleware([requireSupab
 // --------------------------------------------------------- destinations
 
 export const requestPaymentInstructionFn = authed()
-  .inputValidator(
+  .validator(
     (input: {
       investorUserId?: string | null;
       investmentProfileId?: string | null;
@@ -28,14 +28,14 @@ export const requestPaymentInstructionFn = authed()
   });
 
 export const recordInstructionStepUpFn = authed()
-  .inputValidator((input: { changeId: string; method: string }) => input)
+  .validator((input: { changeId: string; method: string }) => input)
   .handler(async ({ data, context }) => {
     const { recordInstructionStepUp } = await import("@/lib/distributions.server");
     return recordInstructionStepUp(context.userId, data.changeId, data.method);
   });
 
 export const verifyPaymentInstructionFn = authed()
-  .inputValidator(
+  .validator(
     (input: { changeId: string; method: string; independentNoticeChannel: string }) => input,
   )
   .handler(async ({ data, context }) => {
@@ -44,14 +44,14 @@ export const verifyPaymentInstructionFn = authed()
   });
 
 export const reviewPaymentInstructionFn = authed()
-  .inputValidator((input: { changeId: string }) => input)
+  .validator((input: { changeId: string }) => input)
   .handler(async ({ data, context }) => {
     const { reviewPaymentInstruction } = await import("@/lib/distributions.server");
     return reviewPaymentInstruction(context.userId, data.changeId);
   });
 
 export const approvePaymentInstructionFn = authed()
-  .inputValidator(
+  .validator(
     (input: { changeId: string; waiveCoolingOff?: boolean; waiverReason?: string | null }) => input,
   )
   .handler(async ({ data, context }) => {
@@ -68,7 +68,7 @@ export const myPaymentInstructionsFn = authed()
 // ------------------------------------------------------------- batches
 
 export const proposeDistributionFn = authed()
-  .inputValidator(
+  .validator(
     (input: {
       offeringId: string;
       distributionType: DistributionType;
@@ -91,35 +91,35 @@ export const proposeDistributionFn = authed()
   });
 
 export const requestDistributionFn = authed()
-  .inputValidator((input: { batchId: string }) => input)
+  .validator((input: { batchId: string }) => input)
   .handler(async ({ data, context }) => {
     const { requestDistribution } = await import("@/lib/distributions.server");
     return requestDistribution(context.userId, data.batchId);
   });
 
 export const reviewDistributionFn = authed()
-  .inputValidator((input: { batchId: string }) => input)
+  .validator((input: { batchId: string }) => input)
   .handler(async ({ data, context }) => {
     const { reviewDistribution } = await import("@/lib/distributions.server");
     return reviewDistribution(context.userId, data.batchId);
   });
 
 export const managerApproveDistributionFn = authed()
-  .inputValidator((input: { batchId: string }) => input)
+  .validator((input: { batchId: string }) => input)
   .handler(async ({ data, context }) => {
     const { managerApproveDistribution } = await import("@/lib/distributions.server");
     return managerApproveDistribution(context.userId, data.batchId);
   });
 
 export const investorConfirmDistributionFn = authed()
-  .inputValidator((input: { lineId: string; shareDestination?: string | null }) => ({ lineId: String(input.lineId), shareDestination: input.shareDestination == null ? null : String(input.shareDestination).slice(0, 200) }))
+  .validator((input: { lineId: string; shareDestination?: string | null }) => ({ lineId: String(input.lineId), shareDestination: input.shareDestination == null ? null : String(input.shareDestination).slice(0, 200) }))
   .handler(async ({ data, context }) => {
     const { investorConfirmDistribution } = await import("@/lib/distributions.server");
     return investorConfirmDistribution(context.userId, data.lineId, data.shareDestination);
   });
 
 export const adjustDistributionLineFn = authed()
-  .inputValidator(
+  .validator(
     (input: {
       lineId: string;
       newGrossCents: number;
@@ -134,28 +134,28 @@ export const adjustDistributionLineFn = authed()
   });
 
 export const approveStaleBasisFn = authed()
-  .inputValidator((input: { batchId: string; reason: string }) => ({ batchId: String(input.batchId), reason: String(input.reason ?? "").slice(0, 1000) }))
+  .validator((input: { batchId: string; reason: string }) => ({ batchId: String(input.batchId), reason: String(input.reason ?? "").slice(0, 1000) }))
   .handler(async ({ data, context }) => {
     const { approveStaleBasis } = await import("@/lib/distributions.server");
     return approveStaleBasis(context.userId, data.batchId, data.reason);
   });
 
 export const finalApproveDistributionFn = authed()
-  .inputValidator((input: { batchId: string }) => input)
+  .validator((input: { batchId: string }) => input)
   .handler(async ({ data, context }) => {
     const { finalApproveDistribution } = await import("@/lib/distributions.server");
     return finalApproveDistribution(context.userId, data.batchId);
   });
 
 export const supersedeDistributionFn = authed()
-  .inputValidator((input: { batchId: string; reason: string }) => input)
+  .validator((input: { batchId: string; reason: string }) => input)
   .handler(async ({ data, context }) => {
     const { supersedeDistribution } = await import("@/lib/distributions.server");
     return supersedeDistribution(context.userId, data.batchId, data.reason);
   });
 
 export const cancelDistributionFn = authed()
-  .inputValidator((input: { batchId: string; reason: string }) => input)
+  .validator((input: { batchId: string; reason: string }) => input)
   .handler(async ({ data, context }) => {
     const { cancelDistribution } = await import("@/lib/distributions.server");
     return cancelDistribution(context.userId, data.batchId, data.reason);
@@ -164,14 +164,14 @@ export const cancelDistributionFn = authed()
 // ----------------------------------------------------------- execution
 
 export const distributionExecutionCheckFn = authed()
-  .inputValidator((input: { lineId: string }) => input)
+  .validator((input: { lineId: string }) => input)
   .handler(async ({ data, context }) => {
     const { distributionExecutionCheck } = await import("@/lib/distributions.server");
     return distributionExecutionCheck(context.userId, data.lineId);
   });
 
 export const executeDistributionPaymentFn = authed()
-  .inputValidator(
+  .validator(
     (input: { lineId: string; externalReference: string; providerPaymentId?: string | null; sentOn?: string | null }) => ({
       lineId: String(input.lineId),
       sentOn: input.sentOn && /^\d{4}-\d{2}-\d{2}$/.test(String(input.sentOn)) ? String(input.sentOn) : null,
@@ -187,56 +187,56 @@ export const executeDistributionPaymentFn = authed()
   });
 
 export const reconcileDistributionPaymentFn = authed()
-  .inputValidator((input: { paymentId: string; bankTransactionId: string }) => input)
+  .validator((input: { paymentId: string; bankTransactionId: string }) => input)
   .handler(async ({ data, context }) => {
     const { reconcileDistributionPayment } = await import("@/lib/distributions.server");
     return reconcileDistributionPayment(context.userId, data);
   });
 
 export const postDistributionPaymentFn = authed()
-  .inputValidator((input: { paymentId: string }) => input)
+  .validator((input: { paymentId: string }) => input)
   .handler(async ({ data, context }) => {
     const { postDistributionPayment } = await import("@/lib/distributions.server");
     return postDistributionPayment(context.userId, data.paymentId);
   });
 
 export const reverseDistributionPaymentFn = authed()
-  .inputValidator((input: { paymentId: string; reason: string }) => input)
+  .validator((input: { paymentId: string; reason: string }) => input)
   .handler(async ({ data, context }) => {
     const { reverseDistributionPayment } = await import("@/lib/distributions.server");
     return reverseDistributionPayment(context.userId, data.paymentId, data.reason);
   });
 
 export const approveDistributionReconciliationFn = authed()
-  .inputValidator((input: { paymentId: string }) => ({ paymentId: String(input.paymentId) }))
+  .validator((input: { paymentId: string }) => ({ paymentId: String(input.paymentId) }))
   .handler(async ({ data, context }) => {
     const { approveDistributionReconciliation } = await import("@/lib/distributions.server");
     return approveDistributionReconciliation(context.userId, data.paymentId);
   });
 
 export const approveDistributionReversalFn = authed()
-  .inputValidator((input: { paymentId: string }) => ({ paymentId: String(input.paymentId) }))
+  .validator((input: { paymentId: string }) => ({ paymentId: String(input.paymentId) }))
   .handler(async ({ data, context }) => {
     const { approveDistributionReversal } = await import("@/lib/distributions.server");
     return approveDistributionReversal(context.userId, data.paymentId);
   });
 
 export const reviewDistributionWithholdingFn = authed()
-  .inputValidator((input: { batchId: string }) => ({ batchId: String(input.batchId) }))
+  .validator((input: { batchId: string }) => ({ batchId: String(input.batchId) }))
   .handler(async ({ data, context }) => {
     const { reviewDistributionWithholding } = await import("@/lib/distributions.server");
     return reviewDistributionWithholding(context.userId, data.batchId);
   });
 
 export const reissueDistributionPaymentFn = authed()
-  .inputValidator((input: { paymentId: string; reason: string }) => input)
+  .validator((input: { paymentId: string; reason: string }) => input)
   .handler(async ({ data, context }) => {
     const { reissueDistributionPayment } = await import("@/lib/distributions.server");
     return reissueDistributionPayment(context.userId, data.paymentId, data.reason);
   });
 
 export const recordProviderEventFn = authed()
-  .inputValidator(
+  .validator(
     (input: {
       provider: string;
       providerEventId: string;
@@ -257,14 +257,14 @@ export const recordProviderEventFn = authed()
   });
 
 export const resolveDistributionExceptionFn = authed()
-  .inputValidator((input: { exceptionId: string; resolution: string }) => input)
+  .validator((input: { exceptionId: string; resolution: string }) => input)
   .handler(async ({ data, context }) => {
     const { resolveDistributionException } = await import("@/lib/distributions.server");
     return resolveDistributionException(context.userId, data);
   });
 
 export const publishDistributionNoticeFn = authed()
-  .inputValidator((input: { lineId: string }) => input)
+  .validator((input: { lineId: string }) => input)
   .handler(async ({ data, context }) => {
     const { publishDistributionNotice } = await import("@/lib/distributions.server");
     return publishDistributionNotice(context.userId, data.lineId);
@@ -273,42 +273,42 @@ export const publishDistributionNoticeFn = authed()
 // --------------------------------------------------------------- views
 
 export const myDistributionsFn = authed()
-  .inputValidator((input: { investmentProfileId?: string | null } | undefined) => input ?? {})
+  .validator((input: { investmentProfileId?: string | null } | undefined) => input ?? {})
   .handler(async ({ data, context }) => {
     const { myDistributions } = await import("@/lib/distributions.server");
     return myDistributions(context.userId, data);
   });
 
 export const distributionForInvestorFn = authed()
-  .inputValidator((input: { lineId: string }) => input)
+  .validator((input: { lineId: string }) => input)
   .handler(async ({ data, context }) => {
     const { distributionForInvestor } = await import("@/lib/distributions.server");
     return distributionForInvestor(context.userId, data.lineId);
   });
 
 export const distributionsWorkspaceFn = authed()
-  .inputValidator((input: { offeringId?: string | null } | undefined) => input ?? {})
+  .validator((input: { offeringId?: string | null } | undefined) => input ?? {})
   .handler(async ({ data, context }) => {
     const { distributionsWorkspace } = await import("@/lib/distributions.server");
     return distributionsWorkspace(context.userId, data.offeringId ?? null);
   });
 
 export const managerDistributionBoardFn = authed()
-  .inputValidator((input: { offeringId?: string | null } | undefined) => input ?? {})
+  .validator((input: { offeringId?: string | null } | undefined) => input ?? {})
   .handler(async ({ data, context }) => {
     const { managerDistributionBoard } = await import("@/lib/distributions.server");
     return managerDistributionBoard(context.userId, data.offeringId ?? null);
   });
 
 export const distributionAuditTrailFn = authed()
-  .inputValidator((input: { batchId: string }) => input)
+  .validator((input: { batchId: string }) => input)
   .handler(async ({ data, context }) => {
     const { distributionAuditTrail } = await import("@/lib/distributions.server");
     return distributionAuditTrail(context.userId, data.batchId);
   });
 
 export const setDistributionPaymentSentDateFn = authed()
-  .inputValidator((input: { paymentId: string; sentOn: string; reason: string }) => ({
+  .validator((input: { paymentId: string; sentOn: string; reason: string }) => ({
     paymentId: String(input.paymentId),
     sentOn: String(input.sentOn),
     reason: String(input.reason ?? "").slice(0, 1000),

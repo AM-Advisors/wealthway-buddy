@@ -17,7 +17,7 @@ export const getBookkeepingConfiguration = createServerFn({ method: "GET" }).mid
 });
 
 export const saveBookkeepingConfiguration = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ configuration: bookkeepingConfigSchema, effectiveOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), reason: z.string().trim().min(3).max(1000) }))
+  .validator(z.object({ configuration: bookkeepingConfigSchema, effectiveOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), reason: z.string().trim().min(3).max(1000) }))
   .handler(async ({ context, data }) => {
     const { data: roles, error: roleError } = await context.supabase.from("user_roles").select("role").eq("user_id", context.userId);
     if (roleError || !roles?.some(r => ["executive", "cro", "super_admin"].includes(r.role))) throw new Error("Proposed rate changes require CEO, CRO or Super Administrator authority.");

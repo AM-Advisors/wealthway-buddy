@@ -26,7 +26,7 @@ export const addressProviderStatus = createServerFn({ method: "GET" }).handler(a
 /** Address suggestions, proxied so the lookup credential never reaches the browser. */
 export const suggestAddress = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { query: string; country?: string | null; sessionToken?: string | null }) =>
+  .validator((input: { query: string; country?: string | null; sessionToken?: string | null }) =>
     z
       .object({
         query: z.string().max(200),
@@ -47,7 +47,7 @@ export const suggestAddress = createServerFn({ method: "POST" })
 /** Expands a chosen suggestion into structured fields the user can still edit. */
 export const resolveAddressSuggestion = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { placeId: string; sessionToken?: string | null }) =>
+  .validator((input: { placeId: string; sessionToken?: string | null }) =>
     z
       .object({ placeId: z.string().min(1).max(400), sessionToken: z.string().max(80).nullable().optional() })
       .parse(input),
@@ -64,7 +64,7 @@ export const resolveAddressSuggestion = createServerFn({ method: "POST" })
  */
 export const previewAddressValidation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     addressInput.omit({ kind: true }).parse(input),
   )
   .handler(async ({ data }) => {
@@ -105,7 +105,7 @@ export const reconcileAddresses = createServerFn({ method: "POST" })
  */
 export const saveResidentialAddress = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => addressInput.parse(input))
+  .validator((input: unknown) => addressInput.parse(input))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 

@@ -20,7 +20,7 @@ export type DeliveryLogEvent = {
 /** Delivery history for onboarding emails: sends, rejections, bounces, complaints, unsubscribes. */
 export const listDeliveryLog = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => schema.parse(data ?? {}))
+  .validator((data: unknown) => schema.parse(data ?? {}))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await authorizeEmailDiagnostics(supabase, userId, data);
@@ -81,7 +81,7 @@ const detailsSchema = z.object({
 /** Last-known provider response and message headers for a recipient's most recent onboarding email. */
 export const getDeliveryDetails = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => detailsSchema.parse(data))
+  .validator((data: unknown) => detailsSchema.parse(data))
   .handler(async ({ data, context }): Promise<DeliveryDetails> => {
     const { supabase, userId } = context;
     await authorizeEmailDiagnostics(supabase, userId, data);
@@ -183,7 +183,7 @@ const clickSchema = z.object({
 /** Recorded clicks on links inside onboarding emails (admins and fund managers). */
 export const listEmailClicks = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => clickSchema.parse(data ?? {}))
+  .validator((data: unknown) => clickSchema.parse(data ?? {}))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await authorizeEmailDiagnostics(supabase, userId, data);

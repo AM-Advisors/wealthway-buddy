@@ -46,7 +46,7 @@ async function requireAdmin(supabase: any, userId: string) {
  */
 export const listAdminActivity = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => listSchema.parse(data ?? {}))
+  .validator((data: unknown) => listSchema.parse(data ?? {}))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await requireAdmin(supabase, userId);

@@ -18,7 +18,7 @@ const admin = async () => (await import("@/integrations/supabase/client.server")
  */
 export const getFundServicesPricing = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ offeringId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ offeringId: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
     const roles = await rolesOf(context);
     const internal = canViewCommercial(roles) || roles.some((r) => ["operations", "compliance", "fund_administration", "tax"].includes(r));
@@ -92,7 +92,7 @@ export const getSalesOverview = createServerFn({ method: "GET" })
  */
 export const priceFund = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({
+  .validator((d: unknown) => z.object({
     offeringId: z.string().uuid(), prices: z.record(z.string(), z.number().int().min(0)), reason: z.string().max(1000).optional(),
   }).parse(d))
   .handler(async ({ context, data }) => {
@@ -112,7 +112,7 @@ export const priceFund = createServerFn({ method: "POST" })
 /** Sales Management / Super User decides a below-baseline request (never their own). */
 export const decidePricingRequest = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({
+  .validator((d: unknown) => z.object({
     requestId: z.string().uuid(), approve: z.boolean(), scope: z.enum(["fund_only", "client_future"]).optional(), reason: z.string().min(3).max(1000),
   }).parse(d))
   .handler(async ({ context, data }) => {
@@ -148,7 +148,7 @@ export const decidePricingRequest = createServerFn({ method: "POST" })
 /** Client Pricing for future Funds - Sales Management / Super User only. */
 export const saveClientPricing = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({
+  .validator((d: unknown) => z.object({
     clientId: z.string().uuid(), serviceKey: z.string().min(1), priceCents: z.number().int().min(0),
     effectiveDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), expiresOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().or(z.literal("")),
     reason: z.string().min(3).max(1000),

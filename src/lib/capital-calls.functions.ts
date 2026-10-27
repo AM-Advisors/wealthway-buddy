@@ -19,7 +19,7 @@ const lineId = z.object({ lineId: z.string().min(1) });
 
 export const prepareCapitalCallFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(
+  .validator(
     z.object({
       offeringId: z.string().min(1),
       callType: z.enum(["whole_fund", "investor_specific"]),
@@ -56,36 +56,36 @@ export const prepareCapitalCallFn = createServerFn({ method: "POST" })
 
 export const requestCapitalCallFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(callId.parse)
+  .validator(callId.parse)
   .handler(async ({ data, context }) => (await engine()).requestCapitalCall(context.userId, data.callId));
 
 export const reviewCapitalCallFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(callId.parse)
+  .validator(callId.parse)
   .handler(async ({ data, context }) => (await engine()).reviewCapitalCall(context.userId, data.callId));
 
 export const publishCapitalCallFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(callId.parse)
+  .validator(callId.parse)
   .handler(async ({ data, context }) => (await engine()).publishCapitalCall(context.userId, data.callId));
 
 export const supersedeCapitalCallFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ callId: z.string().min(1), reason: z.string().min(4) }).parse)
+  .validator(z.object({ callId: z.string().min(1), reason: z.string().min(4) }).parse)
   .handler(async ({ data, context }) =>
     (await engine()).superseteCapitalCall(context.userId, data.callId, data.reason),
   );
 
 export const cancelCapitalCallFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ callId: z.string().min(1), reason: z.string().min(4) }).parse)
+  .validator(z.object({ callId: z.string().min(1), reason: z.string().min(4) }).parse)
   .handler(async ({ data, context }) =>
     (await engine()).cancelCapitalCall(context.userId, data.callId, data.reason),
   );
 
 export const capitalCallBoardFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ offeringId: z.string().nullish() }).parse)
+  .validator(z.object({ offeringId: z.string().nullish() }).parse)
   .handler(async ({ data, context }) =>
     (await engine()).capitalCallBoard(context.userId, data.offeringId ?? null),
   );
@@ -94,7 +94,7 @@ export const capitalCallBoardFn = createServerFn({ method: "POST" })
 
 export const draftFundingInstructionsFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(
+  .validator(
     z.object({
       offeringId: z.string().min(1),
       details: z.record(z.string(), z.any()),
@@ -115,21 +115,21 @@ export const draftFundingInstructionsFn = createServerFn({ method: "POST" })
 
 export const releaseFundingInstructionsFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ versionId: z.string().min(1) }).parse)
+  .validator(z.object({ versionId: z.string().min(1) }).parse)
   .handler(async ({ data, context }) =>
     (await engine()).releaseFundingInstructions(context.userId, data.versionId),
   );
 
 export const revokeFundingInstructionsFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ versionId: z.string().min(1), reason: z.string().min(4) }).parse)
+  .validator(z.object({ versionId: z.string().min(1), reason: z.string().min(4) }).parse)
   .handler(async ({ data, context }) =>
     (await engine()).revokeFundingInstructions(context.userId, data.versionId, data.reason),
   );
 
 export const fundingInstructionHistoryFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ offeringId: z.string().min(1) }).parse)
+  .validator(z.object({ offeringId: z.string().min(1) }).parse)
   .handler(async ({ data, context }) =>
     (await engine()).listFundingInstructionVersions(context.userId, data.offeringId),
   );
@@ -142,21 +142,21 @@ export const myCapitalCallsFn = createServerFn({ method: "GET" })
 
 export const capitalCallDetailFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(lineId.parse)
+  .validator(lineId.parse)
   .handler(async ({ data, context }): Promise<any> =>
     (await engine()).capitalCallForInvestor(context.userId, data.lineId),
   );
 
 export const reportTransferInitiatedFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(lineId.parse)
+  .validator(lineId.parse)
   .handler(async ({ data, context }) =>
     (await engine()).investorReportsTransferInitiated(context.userId, data.lineId),
   );
 
 export const fundingReceiptFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(lineId.parse)
+  .validator(lineId.parse)
   .handler(async ({ data, context }): Promise<any> =>
     (await engine()).fundingReceipt(context.userId, data.lineId),
   );
@@ -165,21 +165,21 @@ export const fundingReceiptFn = createServerFn({ method: "POST" })
 
 export const detectFundingMatchesFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ offeringId: z.string().min(1) }).parse)
+  .validator(z.object({ offeringId: z.string().min(1) }).parse)
   .handler(async ({ data, context }) =>
     (await engine()).detectFundingMatches(context.userId, data.offeringId),
   );
 
 export const fundingQueueFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ offeringId: z.string().nullish() }).parse)
+  .validator(z.object({ offeringId: z.string().nullish() }).parse)
   .handler(async ({ data, context }): Promise<any> =>
     (await engine()).fundingQueue(context.userId, data.offeringId ?? null),
   );
 
 export const decideFundingMatchFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(
+  .validator(
     z.object({
       matchId: z.string().min(1),
       decision: z.enum(["approve", "reject", "correct", "request_information"]),
@@ -200,40 +200,40 @@ export const decideFundingMatchFn = createServerFn({ method: "POST" })
 
 export const postFundingMatchFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ matchId: z.string().min(1) }).parse)
+  .validator(z.object({ matchId: z.string().min(1) }).parse)
   .handler(async ({ data, context }) => (await engine()).postFundingMatch(context.userId, data.matchId));
 
 export const reverseFundingMatchFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ matchId: z.string().min(1), reason: z.string().min(4) }).parse)
+  .validator(z.object({ matchId: z.string().min(1), reason: z.string().min(4) }).parse)
   .handler(async ({ data, context }) =>
     (await engine()).reverseFundingMatch(context.userId, data.matchId, data.reason),
   );
 
 export const resolveFundingExceptionFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ exceptionId: z.string().min(1), resolution: z.string().min(4) }).parse)
+  .validator(z.object({ exceptionId: z.string().min(1), resolution: z.string().min(4) }).parse)
   .handler(async ({ data, context }) =>
     (await engine()).resolveFundingException(context.userId, data.exceptionId, data.resolution),
   );
 
 export const closingDashboardFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ offeringId: z.string().nullish() }).parse)
+  .validator(z.object({ offeringId: z.string().nullish() }).parse)
   .handler(async ({ data, context }): Promise<any> =>
     (await engine()).closingDashboard(context.userId, data.offeringId ?? null),
   );
 
 export const managerFundingBoardFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ offeringId: z.string().nullish() }).parse)
+  .validator(z.object({ offeringId: z.string().nullish() }).parse)
   .handler(async ({ data, context }): Promise<any> =>
     (await engine()).managerFundingBoard(context.userId, data.offeringId ?? null),
   );
 
 export const fundingAuditTrailFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ onboardingId: z.string().min(1) }).parse)
+  .validator(z.object({ onboardingId: z.string().min(1) }).parse)
   .handler(async ({ data, context }): Promise<any> =>
     (await engine()).fundingAuditTrail(context.userId, data.onboardingId),
   );

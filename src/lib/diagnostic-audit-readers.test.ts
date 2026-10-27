@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-vi.mock("@tanstack/react-start", () => ({ createServerFn: () => { const chain: any = { middleware: () => chain, inputValidator: () => chain, handler: (fn: unknown) => fn }; return chain; } }));
+vi.mock("@tanstack/react-start", () => ({ createServerFn: () => { const chain: any = { middleware: () => chain, validator: () => chain, handler: (fn: unknown) => fn }; return chain; } }));
 vi.mock("@/lib/require-auth", () => ({ requireSupabaseAuth: {} }));
 import { listMoneyAudit, listInvestorCheckAudit } from "./audit-log.functions";
 import { getCapAuditHistory } from "./captable-audit.functions";

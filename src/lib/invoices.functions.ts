@@ -149,7 +149,7 @@ export const listInvoices = createServerFn({ method: "GET" })
  *  services, plus third-party costs not yet billed. */
 export const previewInvoice = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         clientId: z.string().uuid(),
@@ -189,7 +189,7 @@ async function collectLines(
 /** Create a draft invoice from the client's contracted fees and active services. */
 export const createInvoice = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         clientId: z.string().uuid(),
@@ -255,7 +255,7 @@ export const createInvoice = createServerFn({ method: "POST" })
 /** Add or change one line on a draft invoice. */
 export const saveInvoiceLine = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         id: z.string().uuid().optional(),
@@ -310,7 +310,7 @@ export const saveInvoiceLine = createServerFn({ method: "POST" })
 
 export const deleteInvoiceLine = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const who = await requireContractAuthority(context);
     const { data: line } = await context.supabase
@@ -344,7 +344,7 @@ async function checkRates(context: any, invoiceId: string, clientId: string) {
 /** Everything that must be true before money is asked for or moved. */
 export const reviewInvoiceRates = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     await requireStaff(context);
     const { data: invoice } = await context.supabase
@@ -359,7 +359,7 @@ export const reviewInvoiceRates = createServerFn({ method: "POST" })
 /** Marks a draft reviewed. The reviewer can't also issue it. */
 export const markInvoiceReviewed = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const who = await requireContractAuthority(context);
     const { data: invoice } = await context.supabase.from("invoices").select("id, status, client_id, created_by, reviewed_by").eq("id", data.id).maybeSingle();
@@ -375,7 +375,7 @@ export const markInvoiceReviewed = createServerFn({ method: "POST" })
 /** Starts card checkout for an issued invoice. Only the client's own people can pay; the webhook marks it paid. */
 export const startInvoiceCardPayment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid(), environment: z.enum(["sandbox", "live"]), returnUrl: z.string().url().max(2000) }).parse(d))
+  .validator((d: unknown) => z.object({ id: z.string().uuid(), environment: z.enum(["sandbox", "live"]), returnUrl: z.string().url().max(2000) }).parse(d))
   .handler(async ({ data, context }) => {
     const { data: links } = await context.supabase.from("client_users").select("client_id").eq("user_id", context.userId);
     const mine = new Set(((links ?? []) as any[]).map((l) => l.client_id));
@@ -413,7 +413,7 @@ export const startInvoiceCardPayment = createServerFn({ method: "POST" })
 /** Issue a draft: stamp the number, the issue date and the payment due date. */
 export const issueInvoice = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         id: z.string().uuid(),
@@ -564,7 +564,7 @@ export const issueInvoice = createServerFn({ method: "POST" })
 /** Who the invoice email reached, and whether anything went wrong. Staff only. */
 export const getInvoiceDelivery = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     await requireStaff(context);
     const { data: invoice } = await context.supabase
@@ -587,7 +587,7 @@ export const getInvoiceDelivery = createServerFn({ method: "POST" })
 /** Send the invoice email again to the client's decision makers. */
 export const resendInvoiceEmail = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const who = await requireContractAuthority(context);
     const { data: invoice } = await context.supabase
@@ -653,7 +653,7 @@ export const resendInvoiceEmail = createServerFn({ method: "POST" })
 
 export const recordInvoicePayment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         id: z.string().uuid(),
@@ -691,7 +691,7 @@ export const recordInvoicePayment = createServerFn({ method: "POST" })
 
 export const voidInvoice = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({ id: z.string().uuid(), reason: z.string().trim().min(3).max(500) }).parse(d),
   )
   .handler(async ({ data, context }) => {
@@ -722,7 +722,7 @@ export const voidInvoice = createServerFn({ method: "POST" })
 /** Ask the client to approve an issued invoice (or re-ask after a dispute). */
 export const requestInvoiceApproval = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const who = await requireContractAuthority(context);
     const { data: invoice } = await context.supabase
@@ -802,7 +802,7 @@ export const listMyInvoices = createServerFn({ method: "GET" })
 /** A client contact approves or disputes their own invoice. */
 export const respondToInvoice = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         id: z.string().uuid(),
@@ -827,7 +827,7 @@ export const respondToInvoice = createServerFn({ method: "POST" })
 /** Turn an approved invoice into a wire instruction for dual approval. */
 export const raiseInvoiceWire = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         id: z.string().uuid(),
@@ -908,7 +908,7 @@ export const raiseInvoiceWire = createServerFn({ method: "POST" })
  *  has arrived before the invoice is marked paid. Guarded in the database. */
 export const declareInvoicePayment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         id: z.string().uuid(),

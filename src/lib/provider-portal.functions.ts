@@ -110,7 +110,7 @@ async function assertMember(context: any, providerId: string) {
  *  have submitted, the documents they have sent and where each one stands. */
 export const getProviderPortal = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({ providerId: z.string().uuid().optional().nullable() }).parse(d ?? {}),
   )
   .handler(async ({ data, context }) => {
@@ -160,7 +160,7 @@ export const getProviderPortal = createServerFn({ method: "GET" })
  *  record the cost - nothing is billed to a client until Harmonious accepts it. */
 export const submitProviderExpense = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         providerId: z.string().uuid(),
@@ -213,7 +213,7 @@ export const submitProviderExpense = createServerFn({ method: "POST" })
 /** A provider takes back a cost that hasn't been reviewed yet. */
 export const withdrawProviderExpense = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { data: existing } = await context.supabase
       .from("provider_expense_submissions")
@@ -248,7 +248,7 @@ export const withdrawProviderExpense = createServerFn({ method: "POST" })
  *  certificate, a tax form or a security report. */
 export const submitProviderDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         providerId: z.string().uuid(),
@@ -294,7 +294,7 @@ export const submitProviderDocument = createServerFn({ method: "POST" })
 /** A short-lived link to a provider file, for whoever is allowed to read it. */
 export const getProviderFileUrl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ path: z.string().min(3) }).parse(d))
+  .validator((d: unknown) => z.object({ path: z.string().min(3) }).parse(d))
   .handler(async ({ data, context }) => {
     const { data: signed, error } = await context.supabase.storage
       .from(PROVIDER_BUCKET)
@@ -365,7 +365,7 @@ export const getProviderSubmissionsBoard = createServerFn({ method: "GET" })
  *  pass-through cost against the client and fund, so it can be billed on. */
 export const reviewProviderExpense = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         id: z.string().uuid(),
@@ -450,7 +450,7 @@ export const reviewProviderExpense = createServerFn({ method: "POST" })
 /** Harmonious accepts or rejects a document a provider uploaded. */
 export const reviewProviderDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         id: z.string().uuid(),
@@ -494,7 +494,7 @@ export const reviewProviderDocument = createServerFn({ method: "POST" })
 /** Give a provider contact access to the portal, or take it away. */
 export const setProviderContact = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         providerId: z.string().uuid(),

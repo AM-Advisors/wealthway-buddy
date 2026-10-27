@@ -13,7 +13,7 @@ import { requireSupabaseAuth } from "@/lib/require-auth";
  *  investor the statement belongs to. */
 export const getClientRecords = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({ clientId: z.string().uuid().optional().nullable() }).parse(d ?? {}),
   )
   .handler(async ({ data, context }) => {

@@ -37,7 +37,7 @@ const mask = (v: unknown) => {
 
 export const getFundOnboardingSettings = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ offeringId: z.string().uuid() }).parse)
+  .validator(z.object({ offeringId: z.string().uuid() }).parse)
   .handler(async ({ data, context }) => {
     const auth = await fundAuthority(context.supabase, context.userId, data.offeringId);
     if (!auth.allowed) throw new Error("Forbidden: you are not assigned to this fund.");
@@ -120,7 +120,7 @@ export const getFundOnboardingSettings = createServerFn({ method: "POST" })
 
 export const saveInvestorProgressFrequency = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ offeringId: z.string().uuid(), investor: z.enum(PROGRESS_FREQUENCIES), manager: z.enum(PROGRESS_FREQUENCIES) }).parse)
+  .validator(z.object({ offeringId: z.string().uuid(), investor: z.enum(PROGRESS_FREQUENCIES), manager: z.enum(PROGRESS_FREQUENCIES) }).parse)
   .handler(async ({ data, context }) => {
     const auth = await fundAuthority(context.supabase, context.userId, data.offeringId);
     if (!auth.allowed) throw new Error("Forbidden: you are not assigned to this fund.");
@@ -131,7 +131,7 @@ export const saveInvestorProgressFrequency = createServerFn({ method: "POST" })
 
 export const saveDocumentSigningConfig = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(
+  .validator(
     z.object({
       documentId: z.string().uuid(),
       signingMode: z.enum(["investor_only", "dual"]),
@@ -192,7 +192,7 @@ export const saveDocumentSigningConfig = createServerFn({ method: "POST" })
 /** Wire instructions for one investment - fresh sign-in required, audited. */
 export const revealWireInstructionsFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ onboardingId: z.string().uuid() }).parse)
+  .validator(z.object({ onboardingId: z.string().uuid() }).parse)
   .handler(async ({ data, context }) => {
     const engine = await import("@/lib/investor-onboarding.server");
     return engine.revealWireInstructions(context.userId, data.onboardingId, context.claims);
@@ -205,7 +205,7 @@ export const revealWireInstructionsFn = createServerFn({ method: "POST" })
  */
 export const countersignDetailFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ signerId: z.string().uuid(), open: z.boolean().optional() }).parse)
+  .validator(z.object({ signerId: z.string().uuid(), open: z.boolean().optional() }).parse)
   .handler(async ({ data, context }) => {
     const db = await admin();
     const { data: me } = await db

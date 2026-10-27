@@ -122,7 +122,7 @@ const grantSchema = z.object({
  */
 export const grantReadOnlyAccess = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => grantSchema.parse(data))
+  .validator((data: unknown) => grantSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { userId } = context;
     const needsAssist = data.capabilities.some((c) => PHASE_3B_CAPABILITIES.includes(c as any));
@@ -250,7 +250,7 @@ const changeSchema = z.object({
 /** Suspend, resume, or move the expiry date of an existing grant. */
 export const changeAccessGrant = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => changeSchema.parse(data))
+  .validator((data: unknown) => changeSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");

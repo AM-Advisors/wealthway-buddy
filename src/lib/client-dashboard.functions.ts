@@ -9,7 +9,7 @@ const CLASS_GROUPS: Record<string, string> = { common: "Common", preferred: "Pre
 /** Read-only cap table dashboard for a client: totals, ownership mix, activity, stakeholder KYC. */
 export const getClientCapDashboard = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ clientId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ clientId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const db = supabaseAdmin as any;

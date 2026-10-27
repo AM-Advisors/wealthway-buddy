@@ -23,7 +23,7 @@ function recordsStatus(m: any, kind: "fund" | "investor"): string {
 
 export const getFundDriveStatus = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ offeringId: z.string().uuid() }).parse(d))
+  .validator((d) => z.object({ offeringId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { capabilities } = await requireOperations(context, "documents", "see");
     const s = await db();
@@ -51,7 +51,7 @@ export const getFundDriveStatus = createServerFn({ method: "GET" })
 
 export const syncFundDrive = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) =>
+  .validator((d) =>
     z.object({ offeringId: z.string().uuid(), linkFolderId: linkSchema.optional(), reason: z.string().max(300).optional() }).parse(d),
   )
   .handler(async ({ data, context }) => {
@@ -69,7 +69,7 @@ export const syncFundDrive = createServerFn({ method: "POST" })
 /** Investor 360: one row per fund + profile, resolved from stored mappings only. */
 export const getInvestorDrive = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ investorUserId: z.string().uuid() }).parse(d))
+  .validator((d) => z.object({ investorUserId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { capabilities } = await requireOperations(context, "documents", "see");
     const s = await db();
@@ -108,7 +108,7 @@ export const getInvestorDrive = createServerFn({ method: "GET" })
 
 export const syncInvestorDrive = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) =>
+  .validator((d) =>
     z.object({ offeringId: z.string().uuid(), profileId: z.string().uuid(), linkFolderId: linkSchema.optional(), reason: z.string().max(300).optional() }).parse(d),
   )
   .handler(async ({ data, context }) => {
@@ -129,7 +129,7 @@ export const syncInvestorDrive = createServerFn({ method: "POST" })
 /** Operations fund page: create and sync investor records folders for every investor in the fund. */
 export const syncAllInvestorDrive = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ offeringId: z.string().uuid() }).parse(d))
+  .validator((d) => z.object({ offeringId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     await requireOperations(context, "documents", "prepare");
     const userId = (context as any).userId as string;
@@ -165,7 +165,7 @@ export const syncAllInvestorDrive = createServerFn({ method: "POST" })
 
 export const listDriveExceptions = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ includeResolved: z.boolean().optional() }).parse(d ?? {}))
+  .validator((d) => z.object({ includeResolved: z.boolean().optional() }).parse(d ?? {}))
   .handler(async ({ data, context }) => {
     const { capabilities } = await requireOperations(context, "documents", "see");
     const s = await db();
@@ -193,7 +193,7 @@ export const listDriveExceptions = createServerFn({ method: "GET" })
 
 export const retryDriveException = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ id: z.string().uuid() }).parse(d))
+  .validator((d) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     await requireOperations(context, "documents", "prepare");
     const userId = (context as any).userId as string;

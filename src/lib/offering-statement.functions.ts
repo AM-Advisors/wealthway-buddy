@@ -135,7 +135,7 @@ async function fundFees(offeringId: string) {
 /** Manager/admin view: the funds they run plus the offering statement for one of them. */
 export const getOfferingStatementForEdit = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({ offering_id: z.string().uuid().nullable().optional() })
       .optional()
@@ -173,7 +173,7 @@ export const getOfferingStatementForEdit = createServerFn({ method: "GET" })
 /** Save the fund's offering terms, optionally publishing them to the diligence room. */
 export const saveOfferingStatement = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => statementSchema.parse(data))
+  .validator((data: unknown) => statementSchema.parse(data))
   .handler(async ({ context, data }) => {
     const { offering_id, is_published, ...fields } = data;
 
@@ -209,7 +209,7 @@ export const saveOfferingStatement = createServerFn({ method: "POST" })
 /** What the diligence room shows: the published statement (fund team also sees drafts). */
 export const getOfferingStatement = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ offering_id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ offering_id: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     const { data: row } = await context.supabase
       .from("offering_statements")

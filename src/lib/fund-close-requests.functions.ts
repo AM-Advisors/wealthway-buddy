@@ -32,7 +32,7 @@ const fundInput = (d: unknown) => z.object({ fundId: z.string().uuid() }).parse(
 /** Read-only, informational tabs: Banking, Taxes, Assets. Nothing here needs approval. */
 export const getFundTabsData = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(fundInput)
+  .validator(fundInput)
   .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const db = supabaseAdmin as any;
@@ -54,7 +54,7 @@ export const getFundTabsData = createServerFn({ method: "GET" })
 /** Investors who could be in a close, with readiness from open readiness tasks. */
 export const getCloseCandidates = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(fundInput)
+  .validator(fundInput)
   .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const db = supabaseAdmin as any;
@@ -84,7 +84,7 @@ export const getCloseCandidates = createServerFn({ method: "GET" })
 
 export const listFundCloseRequests = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(fundInput)
+  .validator(fundInput)
   .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const db = supabaseAdmin as any;
@@ -97,7 +97,7 @@ export const listFundCloseRequests = createServerFn({ method: "GET" })
 
 export const createFundCloseRequest = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({
+  .validator((d) => z.object({
     fundId: z.string().uuid(),
     onboardingIds: z.array(z.string().uuid()).min(1, "Pick at least one investor.").max(500),
     targetDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable(),
@@ -178,7 +178,7 @@ export const listAllCloseRequests = createServerFn({ method: "GET" })
 
 export const updateFundCloseRequestStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({
+  .validator((d) => z.object({
     id: z.string().uuid(),
     status: z.enum(["in_review", "completed", "returned"]),
     note: z.string().max(1000).optional().default(""),

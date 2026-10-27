@@ -67,7 +67,7 @@ async function loadClientContracts(db: any, clientId: string) {
 /** Client → documents graph, lifecycle, termination summary, conflicts. */
 export const getContractFamily = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ clientId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ clientId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { contractCaps } = await gate(context, "view_contracts");
     const db = await admin();
@@ -93,7 +93,7 @@ export const getContractFamily = createServerFn({ method: "GET" })
 /** Compare Versions - side-by-side on structured terms with links to source language. */
 export const compareContractDocuments = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ beforeId: z.string().uuid(), afterId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ beforeId: z.string().uuid(), afterId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { roles } = await gate(context, "view_contracts");
     if (data.beforeId === data.afterId) throw new Error("Choose two different documents.");
@@ -137,7 +137,7 @@ const relInput = z.object({
 /** A reviewer records how two documents relate. Never inferred from upload order. */
 export const recordContractRelationship = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => relInput.parse(d))
+  .validator((d: unknown) => relInput.parse(d))
   .handler(async ({ data, context }) => {
     const { roles } = await gate(context, "review_precedence");
     const problem = relationshipProblem({
@@ -188,7 +188,7 @@ export const recordContractRelationship = createServerFn({ method: "POST" })
 /** A different person with Approve Precedence approves or rejects a pending determination. */
 export const decideContractRelationship = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid(), approve: z.boolean(), note: z.string().trim().max(1000).nullable().optional() }).parse(d))
+  .validator((d: unknown) => z.object({ id: z.string().uuid(), approve: z.boolean(), note: z.string().trim().max(1000).nullable().optional() }).parse(d))
   .handler(async ({ data, context }) => {
     const { roles } = await gate(context, "approve_precedence");
     const db = await admin();
@@ -210,7 +210,7 @@ export const decideContractRelationship = createServerFn({ method: "POST" })
 
 export const retireContractRelationship = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid(), reason: z.string().trim().min(3).max(1000) }).parse(d))
+  .validator((d: unknown) => z.object({ id: z.string().uuid(), reason: z.string().trim().min(3).max(1000) }).parse(d))
   .handler(async ({ data, context }) => {
     const { roles } = await gate(context, "review_precedence");
     const db = await admin();
@@ -229,7 +229,7 @@ export const retireContractRelationship = createServerFn({ method: "POST" })
 /** Client + Fund + Service + Date → approved contract price (or a conflict, never a guess). */
 export const resolveClientContractPrice = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({ clientId: z.string().uuid(), serviceKey: z.string().max(80), offeringId: z.string().uuid().nullable(), onDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/) }).parse(d),
   )
   .handler(async ({ data, context }) => {
@@ -247,7 +247,7 @@ export const resolveClientContractPrice = createServerFn({ method: "GET" })
 
 export const getStandardAgreementSetup = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ clientId: z.string().uuid(), draftId: z.string().uuid().nullable().optional() }).parse(d))
+  .validator((d: unknown) => z.object({ clientId: z.string().uuid(), draftId: z.string().uuid().nullable().optional() }).parse(d))
   .handler(async ({ data, context }) => {
     const { contractCaps } = await gate(context, "generate_standard");
     const db = await admin();
@@ -311,7 +311,7 @@ const stdFields = z.object({
 /** Draft pinned to one exact approved template version. Only allowed fields are filled. */
 export const saveStandardAgreementDraft = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({ clientId: z.string().uuid(), draftId: z.string().uuid().nullable().optional(), msaVersionId: z.string().uuid(), fields: stdFields, serviceKeys: z.array(z.string().max(80)).max(50).default([]) }).parse(d),
   )
   .handler(async ({ data, context }) => {
@@ -371,7 +371,7 @@ export const saveStandardAgreementDraft = createServerFn({ method: "POST" })
 /** Authorized Harmonious review of the preview - must be a different person than the preparer. */
 export const approveStandardAgreementPreview = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ draftId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ draftId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { roles } = await gate(context, "approve_terms");
     const db = await admin();
@@ -393,7 +393,7 @@ export const approveStandardAgreementPreview = createServerFn({ method: "POST" }
  */
 export const sendStandardAgreement = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ draftId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ draftId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { roles } = await gate(context, "generate_standard");
     const db = await admin();
@@ -421,7 +421,7 @@ export const sendStandardAgreement = createServerFn({ method: "POST" })
  */
 export const syncStandardAgreementExecution = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ draftId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ draftId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { roles } = await gate(context, "view_contracts");
     const db = await admin();
@@ -481,7 +481,7 @@ export const listContractGrants = createServerFn({ method: "GET" })
 
 export const setContractGrant = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({ userId: z.string().uuid(), capability: z.enum(CONTRACT_CAPABILITIES.map((c) => c.value) as [string, ...string[]]), grant: z.boolean(), reason: z.string().trim().min(3).max(500) }).parse(d),
   )
   .handler(async ({ data, context }) => {

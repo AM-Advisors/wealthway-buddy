@@ -27,7 +27,7 @@ export const getWealthFinancialRecords=createServerFn({method:'GET'}).middleware
   return {ownerId:context.userId,history:(records.data??[]) as WealthFinancialRecord[],cash};
 });
 export const saveWealthFinancialRecord=createServerFn({method:'POST'}).middleware([requireSupabaseAuth])
- .inputValidator((d:unknown)=>z.object({priorId:z.string().uuid().optional(),kind:z.enum(['liability','inflow','outflow']),name:z.string().trim().min(1).max(160),currency:z.string().regex(/^[A-Z]{3}$/),amountCents:z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER),effectiveDate:z.string().regex(/^\d{4}-\d{2}-\d{2}$/),sourceNote:z.string().trim().min(3).max(1000)}).parse(d))
+ .validator((d:unknown)=>z.object({priorId:z.string().uuid().optional(),kind:z.enum(['liability','inflow','outflow']),name:z.string().trim().min(1).max(160),currency:z.string().regex(/^[A-Z]{3}$/),amountCents:z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER),effectiveDate:z.string().regex(/^\d{4}-\d{2}-\d{2}$/),sourceNote:z.string().trim().min(3).max(1000)}).parse(d))
  .handler(async({context,data})=>{
   let recordId=crypto.randomUUID();
   if(data.priorId){const p=await context.supabase.from('personal_wealth_financial_records').select('record_id,kind').eq('id',data.priorId).eq('owner_user_id',context.userId).maybeSingle();if(p.error||!p.data||p.data.kind!==data.kind)throw new Error('The prior record is not available.');recordId=p.data.record_id;}

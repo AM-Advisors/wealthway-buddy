@@ -32,7 +32,7 @@ export const listMyProfessionalClients = createServerFn({ method: "GET" })
 /** Everything one delegation permits, section by section. */
 export const getDelegatedClient = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => delegationInput.parse(data))
+  .validator((data: unknown) => delegationInput.parse(data))
   .handler(async ({ data, context }) => {
     const { buildDelegatedClientView } = await import("@/lib/professional-access.server");
     const view = await buildDelegatedClientView(context.userId, data.delegation_id);
@@ -59,7 +59,7 @@ export const getProfessionalOverview = createServerFn({ method: "GET" })
 /** Audit trail for one delegation. */
 export const getDelegationActivity = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => delegationInput.parse(data))
+  .validator((data: unknown) => delegationInput.parse(data))
   .handler(async ({ data, context }) => {
     const { delegationActivity } = await import("@/lib/professional-access.server");
     return { events: await delegationActivity(context.userId, data.delegation_id) };

@@ -30,7 +30,7 @@ async function requireStaff(context: any) {
 /** The rate options available to one fund, plus what it uses today. */
 export const getFundFeeRates = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ offeringId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ offeringId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const who = await requireStaff(context);
     const { FUND_FEE_KINDS, resolveFeeRates } = await import("@/lib/fee-rates.server");
@@ -129,7 +129,7 @@ export const listFundFeeSources = createServerFn({ method: "GET" })
 /** Point a fund's fee at a rate, or set a one-off rate with a reason. */
 export const setFundFeeSource = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         offeringId: z.string().uuid(),
@@ -221,7 +221,7 @@ export const setFundFeeSource = createServerFn({ method: "POST" })
 /** Suggested fee for a service request, from the client's agreed rates first. */
 export const getServiceRateSuggestion = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({ clientId: z.string().uuid(), serviceKey: z.string().min(1).max(80) }).parse(d),
   )
   .handler(async ({ data, context }) => {

@@ -17,7 +17,7 @@ const addDays = (d: string, n: number) => { const x = new Date(d + "T00:00:00Z")
 const addYears = (d: string, n: number) => { const x = new Date(d + "T00:00:00Z"); x.setUTCFullYear(x.getUTCFullYear() + n); return x.toISOString().slice(0, 10); };
 
 export type RegulatoryData = { staff: boolean; filings: any[]; fees: any[]; calendar: CalendarItem[] };
-export const fundRegulatoryFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator((v: unknown) => fund.parse(v))
+export const fundRegulatoryFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).validator((v: unknown) => fund.parse(v))
   .handler(async ({ data, context }): Promise<RegulatoryData> => {
     const s = await srv(); const a = await s.assertFund(context.userId, data.fundId); const d = await s.db();
     const [{ data: closeF }, { data: setupF }, { data: fees }, { data: reqs }] = await Promise.all([
@@ -56,7 +56,7 @@ export const fundRegulatoryFn = createServerFn({ method: "POST" }).middleware([r
   });
 
 export const saveFranchiseFeeFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(fund.extend({ id: z.string().uuid().nullable(), state: z.string().trim().min(2).max(40), description: z.string().max(200), amountCents: z.number().int().min(0).max(1e10), dueDate: day, filedOn: day, confirmation: z.string().max(100) }).parse)
+  .validator(fund.extend({ id: z.string().uuid().nullable(), state: z.string().trim().min(2).max(40), description: z.string().max(200), amountCents: z.number().int().min(0).max(1e10), dueDate: day, filedOn: day, confirmation: z.string().max(100) }).parse)
   .handler(async ({ data, context }) => {
     const s = await srv(); await s.assertFund(context.userId, data.fundId); const d = await s.db();
     const row = { state: data.state.toUpperCase(), description: data.description || null, amount_cents: data.amountCents, due_date: data.dueDate, filed_on: data.filedOn, confirmation_number: data.confirmation || null };
@@ -67,7 +67,7 @@ export const saveFranchiseFeeFn = createServerFn({ method: "POST" }).middleware(
     return { ok: true };
   });
 
-export const removeFranchiseFeeFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator(fund.extend({ id: z.string().uuid() }).parse)
+export const removeFranchiseFeeFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).validator(fund.extend({ id: z.string().uuid() }).parse)
   .handler(async ({ data, context }) => {
     const s = await srv(); await s.assertFund(context.userId, data.fundId);
     await (await s.db()).from("fund_franchise_fees").update({ removed_at: new Date().toISOString(), removed_by: context.userId }).eq("id", data.id).eq("offering_id", data.fundId).is("filed_on", null);

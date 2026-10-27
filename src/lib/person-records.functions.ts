@@ -38,7 +38,7 @@ const nm = (p: any) => p.preferred_name || [p.legal_first_name, p.legal_last_nam
 const COLS = "id, legal_first_name, legal_middle_name, legal_last_name, preferred_name, email, secondary_email, phone, secondary_phone, date_of_birth, citizenship_country, residence_country, address_line1, address_line2, city, region, postal_code, country, kyc_status, aml_status, kyc_verified_at, aml_screened_at, user_id, is_test_demo";
 
 export const listPersonRecordsFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((x: unknown) => z.object({ search: z.string().trim().max(100).default("") }).parse(x))
+  .validator((x: unknown) => z.object({ search: z.string().trim().max(100).default("") }).parse(x))
   .handler(async ({ data, context }) => {
     await assertStaff(context.userId);
     const d = await db();
@@ -65,7 +65,7 @@ const personFields = z.object({
 });
 
 export const savePersonRecordFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((x: unknown) => z.object({ id: z.string().uuid().optional(), fields: personFields }).parse(x))
+  .validator((x: unknown) => z.object({ id: z.string().uuid().optional(), fields: personFields }).parse(x))
   .handler(async ({ data, context }) => {
     await assertStaff(context.userId);
     const d = await db();
@@ -101,7 +101,7 @@ export const savePersonRecordFn = createServerFn({ method: "POST" }).middleware(
 
 /** Full KYC: create a Didit session prefilled with the person's details and email them the link. */
 export const sendKycLinkFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((x: unknown) => z.object({ personId: z.string().uuid() }).parse(x))
+  .validator((x: unknown) => z.object({ personId: z.string().uuid() }).parse(x))
   .handler(async ({ data, context }) => {
     await assertStaff(context.userId);
     const d = await db();
@@ -113,7 +113,7 @@ export const sendKycLinkFn = createServerFn({ method: "POST" }).middleware([requ
 
 /** Pull the latest Didit result for a link check; approved results apply to the person (Didit is the authority). */
 export const refreshKycLinkFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((x: unknown) => z.object({ requestId: z.string().uuid() }).parse(x))
+  .validator((x: unknown) => z.object({ requestId: z.string().uuid() }).parse(x))
   .handler(async ({ data, context }) => {
     await assertStaff(context.userId);
     const d = await db();
@@ -138,7 +138,7 @@ export const refreshKycLinkFn = createServerFn({ method: "POST" }).middleware([r
 
 /** Document-only: check an uploaded license/passport and run AML. Images are sent to Didit, never stored. */
 export const runDocumentCheckFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((x: unknown) => z.object({
+  .validator((x: unknown) => z.object({
     personId: z.string().uuid(), documentType: z.enum(["drivers_license", "passport"]),
     front: z.object({ base64: z.string().max(14_000_000), contentType: z.string().max(60), fileName: z.string().max(200) }),
     back: z.object({ base64: z.string().max(14_000_000), contentType: z.string().max(60), fileName: z.string().max(200) }).optional(),
@@ -188,7 +188,7 @@ export const runDocumentCheckFn = createServerFn({ method: "POST" }).middleware(
  * authority, so staff then request an updated check with sendKycLinkFn.
  */
 export const recordPriorKycFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((x: unknown) => z.object({
+  .validator((x: unknown) => z.object({
     personId: z.string().uuid(),
     provider: z.string().trim().min(1).max(100),
     checkedOn: z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/, "Use YYYY-MM-DD"),
@@ -212,7 +212,7 @@ export const recordPriorKycFn = createServerFn({ method: "POST" }).middleware([r
 
 /** One person's editable details + recent checks, for the account page. */
 export const getPersonRecordFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((x: unknown) => z.object({ personId: z.string().uuid() }).parse(x))
+  .validator((x: unknown) => z.object({ personId: z.string().uuid() }).parse(x))
   .handler(async ({ data, context }) => {
     await assertStaff(context.userId);
     const d = await db();

@@ -80,7 +80,7 @@ export const listTaxProfileFunds = createServerFn({ method: "GET" })
 /** Every tax document filed for one fund, newest first. */
 export const getFundTaxProfile = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ offeringId: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ offeringId: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     const who = await requireFundAccess(context, data.offeringId);
 
@@ -139,7 +139,7 @@ export const getFundTaxProfile = createServerFn({ method: "GET" })
 /** Managers file a W-9, W-8 or K-1 for their fund; operations still reviews it. */
 export const uploadFundTaxDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         offeringId: z.string().uuid(),
@@ -212,7 +212,7 @@ export const uploadFundTaxDocument = createServerFn({ method: "POST" })
 /** Short-lived private link, for approved managers of that fund only. */
 export const getFundTaxUrl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ offeringId: z.string().uuid(), id: z.string().uuid() }).parse(data),
   )
   .handler(async ({ context, data }) => {
@@ -236,7 +236,7 @@ export const getFundTaxUrl = createServerFn({ method: "POST" })
 /** A manager can pull back their own upload while it is still waiting on review. */
 export const removeFundTaxDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ offeringId: z.string().uuid(), id: z.string().uuid() }).parse(data),
   )
   .handler(async ({ context, data }) => {

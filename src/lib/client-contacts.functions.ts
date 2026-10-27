@@ -37,7 +37,7 @@ async function loadContact(db: any, id: string) {
 
 export const listClientContacts = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ clientId: z.string().uuid().nullable().optional() }).parse(d ?? {}))
+  .validator((d: unknown) => z.object({ clientId: z.string().uuid().nullable().optional() }).parse(d ?? {}))
   .handler(async ({ data, context }) => {
     const a = await access(context, data.clientId);
     if (!a) return null;
@@ -87,7 +87,7 @@ export const listClientContacts = createServerFn({ method: "POST" })
 
 export const getContactHistory = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const db = await admin();
     const c = await loadContact(db, data.id);
@@ -111,7 +111,7 @@ const contactInput = z.object({
 
 export const saveClientContact = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => contactInput.parse(d))
+  .validator((d: unknown) => contactInput.parse(d))
   .handler(async ({ data, context }) => {
     const a = await access(context, data.clientId);
     if (!a?.canEdit) throw new Error("Only the client's general partners or Harmonious can edit contacts.");
@@ -156,7 +156,7 @@ export const saveClientContact = createServerFn({ method: "POST" })
 
 export const setClientContactActive = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid(), active: z.boolean() }).parse(d))
+  .validator((d: unknown) => z.object({ id: z.string().uuid(), active: z.boolean() }).parse(d))
   .handler(async ({ data, context }) => {
     const db = await admin();
     const c = await loadContact(db, data.id);
@@ -172,7 +172,7 @@ export const setClientContactActive = createServerFn({ method: "POST" })
 /** Sends one invite email - only when a person clicks Invite / Resend. Same-day repeats are deduplicated. */
 export const inviteClientContact = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const db = await admin();
     const c = await loadContact(db, data.id);
@@ -205,7 +205,7 @@ export const inviteClientContact = createServerFn({ method: "POST" })
 
 export const cancelClientContactInvite = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const db = await admin();
     const c = await loadContact(db, data.id);

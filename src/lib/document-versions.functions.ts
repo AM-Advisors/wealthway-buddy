@@ -29,7 +29,7 @@ async function assertCanEdit(supabase: any, userId: string, offeringId: string) 
 /** The full change history of a fund's legal documents, newest first. */
 export const listDocumentVersions = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ offering_id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ offering_id: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     await assertCanEdit(context.supabase, context.userId, data.offering_id);
 
@@ -93,7 +93,7 @@ export const listDocumentVersions = createServerFn({ method: "GET" })
 /** Short-lived download link for one historic version of a document. */
 export const getDocumentVersionUrl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ version_id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ version_id: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     const { data: version } = await context.supabase
       .from("offering_document_versions")
@@ -116,7 +116,7 @@ export const getDocumentVersionUrl = createServerFn({ method: "POST" })
 /** Put an earlier version back in front of investors, keeping it in the history. */
 export const restoreDocumentVersion = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ version_id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ version_id: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     const { data: version } = await context.supabase
       .from("offering_document_versions")
@@ -159,7 +159,7 @@ export const restoreDocumentVersion = createServerFn({ method: "POST" })
  */
 export const refreshTemplateDocuments = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ offering_id: z.string().uuid(), pack: z.enum(["ilpa", "spv", "harmonious"]) }).parse(data),
   )
   .handler(async ({ context, data }) => {

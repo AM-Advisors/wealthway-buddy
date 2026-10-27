@@ -32,7 +32,7 @@ export const getPublishedTrustItems = createServerFn({ method: "GET" }).handler(
 });
 
 export const requestTrustDocument = createServerFn({ method: "POST" })
-  .inputValidator((d) => z.object({
+  .validator((d) => z.object({
     publication_id: z.string().uuid(), requester_name: z.string().trim().min(1).max(120), requester_email: z.string().trim().email().max(200),
     company: z.string().trim().max(160), reason: z.string().trim().max(1000),
   }).parse(d))

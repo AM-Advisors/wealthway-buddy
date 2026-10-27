@@ -123,7 +123,7 @@ export const getApprovalQueue = createServerFn({ method: "GET" })
 
 export const decideApplicationApproval = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         applicationId: z.string().uuid(),

@@ -37,7 +37,7 @@ async function liveGrant(db: any, userId: string, fundId: string) {
 
 export const listMyFundDrafts = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ fundId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ fundId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const db = await admin();
     if (!(await liveGrant(db, context.userId, data.fundId))) throw new Error("Forbidden: you don't have access to that fund.");
@@ -63,7 +63,7 @@ export const listMyFundDrafts = createServerFn({ method: "GET" })
 
 export const saveFundDraft = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         fundId: z.string().uuid(),
@@ -102,7 +102,7 @@ export const saveFundDraft = createServerFn({ method: "POST" })
 
 export const withdrawFundDraft = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ draftId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ draftId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const db = await admin();
     const { data: ex } = await db.from("fund_team_drafts").select("author_user_id, status").eq("id", data.draftId).maybeSingle();
@@ -113,7 +113,7 @@ export const withdrawFundDraft = createServerFn({ method: "POST" })
 
 export const listFundDraftsForReview = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ fundId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ fundId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const db = await admin();
     if (!(await isManagerOf(db, context.userId, data.fundId))) return { drafts: [] };
@@ -142,7 +142,7 @@ export const listFundDraftsForReview = createServerFn({ method: "GET" })
 
 export const reviewFundDraft = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({ draftId: z.string().uuid(), decision: z.enum(["used", "returned"]), note: z.string().max(1000).optional() }).parse(d),
   )
   .handler(async ({ data, context }) => {

@@ -45,7 +45,7 @@ async function log(db: any, userId: string, offeringId: string, roomId: string |
 
 export const getDealReview = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(slugInput.parse)
+  .validator(slugInput.parse)
   .handler(async ({ data, context: ctx }) => {
     const { db, offering, room } = await context(data.slug);
     const [{ data: statement }, { data: assets }] = await Promise.all([
@@ -82,7 +82,7 @@ export const getDealReview = createServerFn({ method: "POST" })
 
 export const acceptDealReviewNda = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(slugInput.extend({ signer_name: z.string().trim().min(2).max(160) }).parse)
+  .validator(slugInput.extend({ signer_name: z.string().trim().min(2).max(160) }).parse)
   .handler(async ({ data, context: ctx }) => {
     const { db, offering, room } = await context(data.slug);
     if (!room?.nda_required) return { ok: true };
@@ -100,7 +100,7 @@ export const acceptDealReviewNda = createServerFn({ method: "POST" })
 
 export const openDealReviewDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(slugInput.extend({ id: z.string().uuid() }).parse)
+  .validator(slugInput.extend({ id: z.string().uuid() }).parse)
   .handler(async ({ data, context: ctx }) => {
     const { db, offering, room } = await context(data.slug);
     if (!room || !prospectDocumentsVisible(offering)) throw new Error("That document is not available.");
@@ -121,7 +121,7 @@ export const openDealReviewDocument = createServerFn({ method: "POST" })
 /** Manager toggle: show a deal room document before commitment. */
 export const setPreCommitmentVisibility = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ id: z.string().uuid(), show: z.boolean() }).parse)
+  .validator(z.object({ id: z.string().uuid(), show: z.boolean() }).parse)
   .handler(async ({ data, context: ctx }) => {
     const { data: doc } = await ctx.supabase.from("diligence_documents").select("id, offering_id").eq("id", data.id).maybeSingle();
     if (!doc) throw new Error("That document is not available.");

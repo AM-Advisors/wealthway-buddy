@@ -65,7 +65,7 @@ function capPlanFor(serviceKeys: string[]): string | null {
 
 export const getOnboardingProgress = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({ stallDays: z.number().int().min(1).max(120).default(7) }).parse(d ?? {}),
   )
   .handler(async ({ data, context }) => {

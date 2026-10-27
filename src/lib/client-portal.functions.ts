@@ -12,7 +12,7 @@ import { sendTemplateEmail } from "@/lib/email-templates/send-email";
  *  client records they are attached to. Harmonious staff areas stay separate. */
 export const getClientPortal = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({ clientId: z.string().uuid().optional().nullable() }).parse(d ?? {}),
   )
   .handler(async ({ data, context }) => {
@@ -228,7 +228,7 @@ async function sowForViewer(context: any, sowId: string) {
  *  only a contact on that client, never a draft, never an approved agreement. */
 export const signClientSow = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         sowId: z.string().uuid(),
@@ -267,7 +267,7 @@ export const signClientSow = createServerFn({ method: "POST" })
  *  the same send. Never throws - a failed email must not break the portal. */
 export const maybeSendClientWelcome = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({ clientId: z.string().uuid().optional().nullable() }).parse(d ?? {}),
   )
   .handler(async ({ data, context }) => {
@@ -334,7 +334,7 @@ export const maybeSendClientWelcome = createServerFn({ method: "POST" })
 /** The client sends the agreement back with a reason instead of signing it. */
 export const sendBackClientSow = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({ sowId: z.string().uuid(), reason: z.string().trim().min(3).max(2000) }).parse(d),
   )
   .handler(async ({ data, context }) => {
@@ -350,7 +350,7 @@ export const sendBackClientSow = createServerFn({ method: "POST" })
  *  already read the agreement row get one, so row access is the gate. */
 export const getSowDocumentUrl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({ sowId: z.string().uuid(), download: z.boolean().default(false) }).parse(d),
   )
   .handler(async ({ data, context }) => {
@@ -372,7 +372,7 @@ export const getSowDocumentUrl = createServerFn({ method: "POST" })
  *  any money moves. */
 export const createClientWireRequest = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         offeringId: z.string().uuid(),

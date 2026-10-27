@@ -7,22 +7,22 @@ const uuid = z.string().uuid();
 
 export const searchFundsFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ name: z.string().max(200).nullish(), legalName: z.string().max(200).nullish(), excludeId: uuid.nullish() }).parse(d))
+  .validator((d: unknown) => z.object({ name: z.string().max(200).nullish(), legalName: z.string().max(200).nullish(), excludeId: uuid.nullish() }).parse(d))
   .handler(async ({ context, data }) => (await engine()).searchFunds(context, data));
 
 export const investorSyncStatusFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ offeringId: uuid }).parse(d))
+  .validator((d: unknown) => z.object({ offeringId: uuid }).parse(d))
   .handler(async ({ context, data }) => (await engine()).syncStatus(context, data.offeringId));
 
 export const runInvestorSyncFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ offeringId: uuid }).parse(d))
+  .validator((d: unknown) => z.object({ offeringId: uuid }).parse(d))
   .handler(async ({ context, data }) => (await engine()).runInvestorRecordsSync(context, data.offeringId));
 
 export const resolveSyncItemFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({
       itemId: uuid,
       action: z.enum(["open", "create_investor", "link", "add_to_fund", "not_investor", "review_later", "create_folder", "mark_reviewed", "dismiss"]),
@@ -38,5 +38,5 @@ export const resolveSyncItemFn = createServerFn({ method: "POST" })
 
 export const renameFundFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ offeringId: uuid, name: z.string().trim().min(2).max(160), reason: z.string().trim().min(3).max(500), effectiveDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullish() }).parse(d))
+  .validator((d: unknown) => z.object({ offeringId: uuid, name: z.string().trim().min(2).max(160), reason: z.string().trim().min(3).max(500), effectiveDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullish() }).parse(d))
   .handler(async ({ context, data }) => (await engine()).renameFund(context, data));

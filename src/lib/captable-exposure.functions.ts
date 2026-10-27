@@ -124,7 +124,7 @@ function matchStakeholder(
 
 export const getCapExposure = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { companyId: string }) =>
+  .validator((input: { companyId: string }) =>
     z.object({ companyId: z.string().uuid() }).parse(input),
   )
   .handler(async ({ data, context }) => {
@@ -346,7 +346,7 @@ export const getCapExposure = createServerFn({ method: "GET" })
 
 export const createClaimInvite = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: {
+  .validator((input: {
     companyId: string;
     claimantName: string;
     claimantEmail: string;
@@ -399,7 +399,7 @@ export const createClaimInvite = createServerFn({ method: "POST" })
 
 export const revokeClaimInvite = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { companyId: string; inviteId: string }) =>
+  .validator((input: { companyId: string; inviteId: string }) =>
     z.object({ companyId: z.string().uuid(), inviteId: z.string().uuid() }).parse(input),
   )
   .handler(async ({ data, context }) => {
@@ -421,7 +421,7 @@ export const revokeClaimInvite = createServerFn({ method: "POST" })
 
 export const saveCapIssuer = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: {
+  .validator((input: {
     companyId: string;
     id?: string | null;
     name: string;
@@ -484,7 +484,7 @@ export const saveCapIssuer = createServerFn({ method: "POST" })
 
 export const reviewExposureClaim = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: {
+  .validator((input: {
     companyId: string;
     claimId: string;
     decision: "under_review" | "verify" | "verify_adjusted" | "info" | "dispute";
@@ -571,7 +571,7 @@ export const reviewExposureClaim = createServerFn({ method: "POST" })
 
 export const openActivityCase = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: {
+  .validator((input: {
     companyId: string;
     claimId?: string | null;
     title: string;
@@ -625,7 +625,7 @@ export const openActivityCase = createServerFn({ method: "POST" })
 
 export const updateActivityCase = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: {
+  .validator((input: {
     companyId: string;
     caseId: string;
     status: "open" | "investigating" | "resolved" | "closed";
@@ -669,7 +669,7 @@ export const updateActivityCase = createServerFn({ method: "POST" })
 
 export const addActivityCaseNote = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { companyId: string; caseId: string; note: string }) =>
+  .validator((input: { companyId: string; caseId: string; note: string }) =>
     z
       .object({
         companyId: z.string().uuid(),
@@ -740,7 +740,7 @@ export const getMyExposureClaims = createServerFn({ method: "GET" })
 
 export const submitExposureClaim = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: {
+  .validator((input: {
     companyId: string;
     claimantName: string;
     claimantType: string;
@@ -797,7 +797,7 @@ export const submitExposureClaim = createServerFn({ method: "POST" })
 
 export const withdrawMyExposureClaim = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { claimId: string }) =>
+  .validator((input: { claimId: string }) =>
     z.object({ claimId: z.string().uuid() }).parse(input),
   )
   .handler(async ({ data, context }) => {
@@ -827,7 +827,7 @@ export const withdrawMyExposureClaim = createServerFn({ method: "POST" })
 
 export const addExposureClaimDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { companyId: string; claimId: string; title: string; reference: string }) =>
+  .validator((input: { companyId: string; claimId: string; title: string; reference: string }) =>
     z
       .object({
         companyId: z.string().uuid(),

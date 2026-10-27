@@ -9,11 +9,11 @@ export const getFlows = createServerFn({ method: "GET" }).middleware([requireSup
   .handler(async ({ context }) => (await F()).listFlows(context.userId));
 
 export const getFlow = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => id.parse(d))
+  .validator((d) => id.parse(d))
   .handler(async ({ data, context }) => (await F()).getFlow(context.userId, data.id));
 
 export const saveFlow = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({
+  .validator((d) => z.object({
     id: z.string().uuid().nullish(), name: z.string().min(1).max(200), description: z.string().max(2000).nullish(),
     audience: z.enum(["prospect", "client", "any"]), triggerKind: z.enum(["manual", "stage_change", "client_signed", "email_click"]),
     triggerStage: z.string().max(40).nullish(),
@@ -22,18 +22,18 @@ export const saveFlow = createServerFn({ method: "POST" }).middleware([requireSu
   .handler(async ({ data, context }) => (await F()).saveFlow(context.userId, data));
 
 export const setFlowStatus = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ id: z.string().uuid(), status: z.enum(["active", "paused", "archived"]) }).parse(d))
+  .validator((d) => z.object({ id: z.string().uuid(), status: z.enum(["active", "paused", "archived"]) }).parse(d))
   .handler(async ({ data, context }) => (await F()).setFlowStatus(context.userId, data.id, data.status));
 
 export const enrollInFlow = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ flowId: z.string().uuid(), contactId: z.string().uuid() }).parse(d))
+  .validator((d) => z.object({ flowId: z.string().uuid(), contactId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => (await F()).enrollContact(context.userId, data));
 
 export const getMyFollowUps = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth])
   .handler(async ({ context }) => (await F()).myFollowUps(context.userId));
 
 export const actOnFollowUp = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ enrollmentId: z.string().uuid(), action: z.enum(["send", "skip", "stop"]), subject: z.string().max(300).nullish(), body: z.string().max(10000).nullish() }).parse(d))
+  .validator((d) => z.object({ enrollmentId: z.string().uuid(), action: z.enum(["send", "skip", "stop"]), subject: z.string().max(300).nullish(), body: z.string().max(10000).nullish() }).parse(d))
   .handler(async ({ data, context }) => (await F()).actOnFollowUp(context.userId, data));
 
 export const getMarketingEngagement = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth])

@@ -36,7 +36,7 @@ export const getFundRequestOptions = createServerFn({ method: "GET" })
 
 export const submitFundSetupRequest = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         clientId: z.string().uuid().nullish(),
@@ -130,7 +130,7 @@ export const getMyFundRequests = createServerFn({ method: "GET" })
 
 export const getFundSetupTracker = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ requestId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ requestId: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
     const [request] = await loadRequests(context, data.requestId);
     if (!request) throw new Error("This fund request is not available.");

@@ -85,7 +85,7 @@ export const getMySubscription = createServerFn({ method: "GET" })
  */
 export const confirmSubscription = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => subscriptionSchema.parse(data))
+  .validator((data: unknown) => subscriptionSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const application = await loadApplication(supabase, userId);
@@ -187,7 +187,7 @@ async function assertReviewer(supabase: any, userId: string, offeringId: string)
 /** Live commitment balance for one fund: confirmed, received, still to come. */
 export const getFundCommitmentBalance = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ fundId: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ fundId: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await assertReviewer(supabase, userId, data.fundId);

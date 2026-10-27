@@ -21,7 +21,7 @@ const docScope = z.object({
 /** Signing state for every document in the investor's fund. */
 export const getSigningStates = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ offering_id: z.string().uuid().optional() }).parse(data ?? {}),
   )
   .handler(async ({ data, context }) => {
@@ -88,7 +88,7 @@ export const getSigningStates = createServerFn({ method: "POST" })
  */
 export const startSigningSession = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => docScope.parse(data))
+  .validator((data: unknown) => docScope.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const applicationId = await applicationIdForOffering(supabase, userId, data.offering_id);
@@ -109,7 +109,7 @@ export const startSigningSession = createServerFn({ method: "POST" })
  */
 export const refreshSigningState = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => docScope.parse(data))
+  .validator((data: unknown) => docScope.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const applicationId = await applicationIdForOffering(supabase, userId, data.offering_id);
@@ -144,7 +144,7 @@ export const refreshSigningState = createServerFn({ method: "POST" })
 /** Every signing request Operations may see, with per-signer state. */
 export const listSignatureRequests = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({ offering_id: z.string().uuid().optional(), limit: z.number().int().max(200).optional() })
       .parse(data ?? {}),
@@ -231,7 +231,7 @@ const staffAction = z.object({
 /** Resend or cancel an outstanding request. Executed history is never touched. */
 export const actOnSignatureRequest = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => staffAction.parse(data))
+  .validator((data: unknown) => staffAction.parse(data))
   .handler(async ({ data, context }) => {
     const { capabilities } = await requireOperations(
       context,

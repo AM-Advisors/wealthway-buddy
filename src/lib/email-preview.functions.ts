@@ -34,7 +34,7 @@ const renderSchema = z.object({
 
 export const renderEmailPreview = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => renderSchema.parse(data))
+  .validator((data: unknown) => renderSchema.parse(data))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
 
@@ -108,7 +108,7 @@ const lastPreviewSendByUser = new Map<string, number>();
 /** Sends the currently previewed version to one address (admin only). */
 export const sendPreviewTest = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => sendTestSchema.parse(data))
+  .validator((data: unknown) => sendTestSchema.parse(data))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
     const { supabase, userId } = context;

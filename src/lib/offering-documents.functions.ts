@@ -7,7 +7,7 @@ const inputSchema = z.object({ document_id: z.string().uuid(), onboarding_id: z.
 /** Read the entitled source file, not a PDF rendered from an empty metadata body. */
 export const readOfferingDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => inputSchema.parse(data))
+  .validator((data: unknown) => inputSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: document, error } = await supabase.from("offering_documents")
@@ -70,7 +70,7 @@ function slugify(value: string) {
  */
 export const downloadOfferingDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => inputSchema.parse(data))
+  .validator((data: unknown) => inputSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
 
@@ -121,7 +121,7 @@ async function assertAdmin(supabase: any, userId: string) {
 /** Admin-only: renders the whole fund packet (cover, wire instructions, every document) as one PDF. */
 export const downloadOfferingPacket = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ offering_id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ offering_id: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await assertAdmin(supabase, userId);

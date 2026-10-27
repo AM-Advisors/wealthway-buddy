@@ -85,7 +85,7 @@ const maskAccount = (value: string) => {
 
 export const getFundWireInstructions = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ offering_id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ offering_id: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     const { isAdmin, offeringIds } = await managedOfferingIds(context.supabase, context.userId);
     if (!isAdmin && !(offeringIds ?? []).includes(data.offering_id)) {
@@ -105,7 +105,7 @@ export const getFundWireInstructions = createServerFn({ method: "GET" })
 
 export const saveManagedWireInstructions = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => wireSchema.parse(data))
+  .validator((data: unknown) => wireSchema.parse(data))
   .handler(async ({ context, data }) => {
     const { isAdmin } = await managedOfferingIds(context.supabase, context.userId);
     // Banking is entered by Harmonious in Fund Setup (versioned, maker-checker).

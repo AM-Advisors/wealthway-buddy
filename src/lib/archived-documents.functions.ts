@@ -8,7 +8,7 @@ const STAFF = ["admin", "super_admin", "operations", "fund_administration", "leg
 /** Archived documents + earlier versions with the investors each still applies to. Staff or this fund's managers only. Read-only. */
 export const listArchivedFundDocumentsFn = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ fundId: z.string().uuid() }).parse(d))
+  .validator((d) => z.object({ fundId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const db = supabaseAdmin as any;

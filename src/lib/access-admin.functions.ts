@@ -99,7 +99,7 @@ const admin = async () => (await import("@/integrations/supabase/client.server")
 
 export const assignAccessRole = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ targetUserId: z.string().uuid(), roleKey: z.string().min(2).max(80), scope, reason, ...dates }).parse(d))
+  .validator((d: unknown) => z.object({ targetUserId: z.string().uuid(), roleKey: z.string().min(2).max(80), scope, reason, ...dates }).parse(d))
   .handler(async ({ context, data }) => {
     const p = await prepare(context);
     const change: AccessChange = { kind: "assign_role", targetUserId: data.targetUserId, roleKey: data.roleKey, scope: data.scope as any };
@@ -144,7 +144,7 @@ export const assignAccessRole = createServerFn({ method: "POST" })
 
 export const revokeAccessRole = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ targetUserId: z.string().uuid(), roleKey: z.string(), assignmentId: z.string().uuid().nullable(), reason }).parse(d))
+  .validator((d: unknown) => z.object({ targetUserId: z.string().uuid(), roleKey: z.string(), assignmentId: z.string().uuid().nullable(), reason }).parse(d))
   .handler(async ({ context, data }) => {
     const p = await prepare(context);
     const a = data.assignmentId ? p.b.assignments.find((x: any) => x.id === data.assignmentId && x.user_id === data.targetUserId && !x.revoked_at) : null;
@@ -174,7 +174,7 @@ export const revokeAccessRole = createServerFn({ method: "POST" })
 
 export const grantAccessPermission = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ targetUserId: z.string().uuid(), permission: z.string().max(80), effect: z.enum(["allow", "deny"]), scope, reason, ...dates }).parse(d))
+  .validator((d: unknown) => z.object({ targetUserId: z.string().uuid(), permission: z.string().max(80), effect: z.enum(["allow", "deny"]), scope, reason, ...dates }).parse(d))
   .handler(async ({ context, data }) => {
     const p = await prepare(context);
     await gate(p, { kind: "grant", targetUserId: data.targetUserId, permission: data.permission, effect: data.effect, scope: data.scope as any }, data.reason);
@@ -193,7 +193,7 @@ export const grantAccessPermission = createServerFn({ method: "POST" })
 
 export const revokeAccessPermission = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ targetUserId: z.string().uuid(), grantId: z.string().uuid(), reason }).parse(d))
+  .validator((d: unknown) => z.object({ targetUserId: z.string().uuid(), grantId: z.string().uuid(), reason }).parse(d))
   .handler(async ({ context, data }) => {
     const p = await prepare(context);
     const g = p.b.pgrants.find((x: any) => x.id === data.grantId && x.user_id === data.targetUserId && !x.revoked_at);
@@ -209,7 +209,7 @@ export const revokeAccessPermission = createServerFn({ method: "POST" })
 
 export const setAccountClassification = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ targetUserId: z.string().uuid(), classification: z.enum(ACCOUNT_CLASSIFICATIONS), confirmed: z.literal(true), reason }).parse(d))
+  .validator((d: unknown) => z.object({ targetUserId: z.string().uuid(), classification: z.enum(ACCOUNT_CLASSIFICATIONS), confirmed: z.literal(true), reason }).parse(d))
   .handler(async ({ context, data }) => {
     const p = await prepare(context);
     // Same authority as suspending/restoring: global access administration, never self.
@@ -233,7 +233,7 @@ export const setAccountClassification = createServerFn({ method: "POST" })
 
 export const setAccountState = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ targetUserId: z.string().uuid(), suspended: z.boolean(), reason }).parse(d))
+  .validator((d: unknown) => z.object({ targetUserId: z.string().uuid(), suspended: z.boolean(), reason }).parse(d))
   .handler(async ({ context, data }) => {
     const p = await prepare(context);
     await gate(p, { kind: "account_state", targetUserId: data.targetUserId, suspended: data.suspended }, data.reason);
@@ -254,7 +254,7 @@ const permList = z.array(z.string()).max(PERMISSIONS.length).refine((l) => l.eve
 
 export const saveRoleDefinition = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({
       mode: z.enum(["create", "clone", "edit", "deactivate"]),
       roleKey: z.string().regex(/^[a-z][a-z0-9_]{2,40}$/, "Use lowercase letters, numbers and underscores."),
@@ -331,7 +331,7 @@ export const getAccessAdminContext = createServerFn({ method: "GET" })
 /** Explain one decision for the person matrix (canonical resolver only). */
 export const explainAccess = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ targetUserId: z.string().uuid(), permission: z.string(), scope }).parse(d))
+  .validator((d: unknown) => z.object({ targetUserId: z.string().uuid(), permission: z.string(), scope }).parse(d))
   .handler(async ({ context, data }) => {
     const p = await prepare(context);
     if (!authorize(p.actor, "administration.manage_access", { type: "global", id: null }).allowed && !p.actor.roles.includes("admin")) {
@@ -411,7 +411,7 @@ export const listClientAccountsForAccess = createServerFn({ method: "GET" })
  */
 export const setClientMembership = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ targetUserId: z.string().uuid(), clientId: z.string().uuid(), add: z.boolean(), role: z.enum(["member", "admin"]).default("member"), reason }).parse(d))
+  .validator((d: unknown) => z.object({ targetUserId: z.string().uuid(), clientId: z.string().uuid(), add: z.boolean(), role: z.enum(["member", "admin"]).default("member"), reason }).parse(d))
   .handler(async ({ context, data }) => {
     await requireAccessViewer(context);
     const p = await prepare(context);

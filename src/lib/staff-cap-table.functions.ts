@@ -49,7 +49,7 @@ async function audit(
 
 export const getStaffCapTables = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({ clientId: z.string().uuid().optional().nullable() }).parse(d ?? {}),
   )
   .handler(async ({ data, context }) => {
@@ -152,7 +152,7 @@ export const getStaffCapTables = createServerFn({ method: "GET" })
 /** Creates the draft certificate for a share record that has none. */
 export const staffCreateCertificate = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({ clientId: z.string().uuid(), holdingId: z.string().uuid() }).parse(d),
   )
   .handler(async ({ data, context }) => {
@@ -192,7 +192,7 @@ export const staffCreateCertificate = createServerFn({ method: "POST" })
 /** Issues a draft certificate, naming the company signatory who authorized it. */
 export const staffIssueCertificate = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         clientId: z.string().uuid(),
@@ -245,7 +245,7 @@ export const staffIssueCertificate = createServerFn({ method: "POST" })
 /** Cancels a live certificate, optionally replacing it with a fresh draft. */
 export const staffCancelCertificate = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         clientId: z.string().uuid(),

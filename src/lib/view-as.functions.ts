@@ -8,12 +8,12 @@ const sid = (claims: any) => (claims?.session_id ? String(claims.session_id) : n
 
 export const listPerspectivesFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ onboardingId: z.string().uuid().nullish(), offeringId: z.string().uuid().nullish() }).parse)
+  .validator(z.object({ onboardingId: z.string().uuid().nullish(), offeringId: z.string().uuid().nullish() }).parse)
   .handler(async ({ data, context }) => (await va()).listPerspectives(context.userId, { onboardingId: data.onboardingId ?? null, offeringId: data.offeringId ?? null }));
 
 export const startViewAsFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({
+  .validator(z.object({
     perspective: z.enum(["investor", "fund_manager"]),
     subjectUserId: z.string().uuid(),
     offeringId: z.string().uuid(),
@@ -56,5 +56,5 @@ export const returnToClientViewFn = createServerFn({ method: "POST" })
 
 export const viewAsPageFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ page: z.string().max(80) }).parse)
+  .validator(z.object({ page: z.string().max(80) }).parse)
   .handler(async ({ data, context }) => (await va()).viewAsPage(context.userId, sid(context.claims), data.page));

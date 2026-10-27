@@ -213,7 +213,7 @@ export async function assertFundConditions(
 
 export const getFundConditions = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ offeringId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ offeringId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const roles = await rolesOf(context);
     const result = await evaluateFundConditions(context.supabase, data.offeringId);
@@ -271,7 +271,7 @@ async function recordClearance(
 /** Clears one blocking condition for one fund, with a recorded reason. */
 export const clearFundCondition = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         offeringId: z.string().uuid(),
@@ -301,7 +301,7 @@ export const clearFundCondition = createServerFn({ method: "POST" })
 /** Acknowledges the additional per-investor fee so onboarding can continue. */
 export const acknowledgeFeeThreshold = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         offeringId: z.string().uuid(),

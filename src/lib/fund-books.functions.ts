@@ -8,22 +8,22 @@ const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 const fund = z.object({ fundId: uuid });
 
 export const uploadStatementFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(fund.extend({ fileName: z.string().min(1).max(200), contentType: z.string().max(120), base64: z.string().max(28_000_000) }).parse)
+  .validator(fund.extend({ fileName: z.string().min(1).max(200), contentType: z.string().max(120), base64: z.string().max(28_000_000) }).parse)
   .handler(async ({ data, context }) => (await srv()).uploadStatement(context.userId, data.fundId, data));
 
-export const listStatementsFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator(fund.parse)
+export const listStatementsFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).validator(fund.parse)
   .handler(async ({ data, context }) => (await srv()).listStatements(context.userId, data.fundId) as Promise<any[]>);
 
 export const updateStatementLineFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(fund.extend({ lineId: uuid, category: z.string().max(60).nullable(), onboardingId: uuid.nullable(), skip: z.boolean() }).parse)
+  .validator(fund.extend({ lineId: uuid, category: z.string().max(60).nullable(), onboardingId: uuid.nullable(), skip: z.boolean() }).parse)
   .handler(async ({ data, context }) => (await srv()).updateLine(context.userId, data.fundId, data));
 
 export const applyStatementFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(fund.extend({ uploadId: uuid }).parse)
+  .validator(fund.extend({ uploadId: uuid }).parse)
   .handler(async ({ data, context }) => (await srv()).applyStatement(context.userId, data.fundId, data.uploadId));
 
 export const addFundAssetFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(fund.extend({
+  .validator(fund.extend({
     issuerName: z.string().trim().min(1).max(200), assetName: z.string().trim().min(1).max(200),
     assetClass: z.enum(["private_common", "private_preferred", "safe", "convertible_note", "debt", "fund_interest", "spv_interest", "real_estate", "digital_security", "cash_equivalent", "other"]),
     instrument: z.string().max(100).nullable(), acquisitionDate: date.nullable(), costCents: z.number().int().min(0).max(1e13), ownershipPct: z.number().min(0).max(100).nullish(), note: z.string().max(2000).nullish(), statementLineId: uuid.nullish(),
@@ -31,23 +31,23 @@ export const addFundAssetFn = createServerFn({ method: "POST" }).middleware([req
   .handler(async ({ data, context }) => (await srv()).addAsset(context.userId, data.fundId, data));
 
 export const recordAssetMarkFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(fund.extend({ assetId: uuid, valueCents: z.number().int().min(0).max(1e13), date, method: z.enum(["recent_financing", "transaction_price", "secondary_transaction", "market_comparable", "public_market", "cost", "appraisal", "manager_mark", "third_party", "other"]), note: z.string().max(2000).nullable() }).parse)
+  .validator(fund.extend({ assetId: uuid, valueCents: z.number().int().min(0).max(1e13), date, method: z.enum(["recent_financing", "transaction_price", "secondary_transaction", "market_comparable", "public_market", "cost", "appraisal", "manager_mark", "third_party", "other"]), note: z.string().max(2000).nullable() }).parse)
   .handler(async ({ data, context }) => (await srv()).recordMark(context.userId, data.fundId, data));
 
 export const decideAssetMarkFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(fund.extend({ valuationId: uuid, approve: z.boolean(), note: z.string().max(2000).nullable() }).parse)
+  .validator(fund.extend({ valuationId: uuid, approve: z.boolean(), note: z.string().max(2000).nullable() }).parse)
   .handler(async ({ data, context }) => (await srv()).decideMark(context.userId, data.fundId, data.valuationId, data.approve, data.note));
 
 export const booksFiguresFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(fund.extend({ start: date, end: date, taxYear: z.number().int().min(2000).max(2100) }).parse)
+  .validator(fund.extend({ start: date, end: date, taxYear: z.number().int().min(2000).max(2100) }).parse)
   .handler(async ({ data, context }) => (await srv()).booksFigures(context.userId, data.fundId, data) as Promise<any>);
 
-export const k1ReadinessFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator(fund.parse)
+export const k1ReadinessFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).validator(fund.parse)
   .handler(async ({ data, context }) => (await srv()).k1Readiness(context.userId, data.fundId));
 
 /** Staff only: save the books-built statements as a draft package for the existing statement review. */
 export const saveStatementDraftFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(fund.extend({ periodType: z.enum(["quarterly", "annual"]), start: date, end: date }).parse)
+  .validator(fund.extend({ periodType: z.enum(["quarterly", "annual"]), start: date, end: date }).parse)
   .handler(async ({ data, context }) => {
     const s = await srv();
     const f = await s.booksFigures(context.userId, data.fundId, { start: data.start, end: data.end, taxYear: Number(data.end.slice(0, 4)) });
@@ -63,43 +63,43 @@ export const saveStatementDraftFn = createServerFn({ method: "POST" }).middlewar
     return { ok: true };
   });
 
-export const listLiabilitiesFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator(fund.parse)
+export const listLiabilitiesFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).validator(fund.parse)
   .handler(async ({ data, context }) => (await srv()).listLiabilities(context.userId, data.fundId) as Promise<any[]>);
 
 export const addLiabilityFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(fund.extend({ description: z.string().trim().min(1).max(200), kind: z.enum(["accrued_expense", "payable", "loan", "management_fee_payable", "other"]), amountCents: z.number().int().min(1).max(1e13), incurredOn: date, note: z.string().max(2000).nullable() }).parse)
+  .validator(fund.extend({ description: z.string().trim().min(1).max(200), kind: z.enum(["accrued_expense", "payable", "loan", "management_fee_payable", "other"]), amountCents: z.number().int().min(1).max(1e13), incurredOn: date, note: z.string().max(2000).nullable() }).parse)
   .handler(async ({ data, context }) => (await srv()).addLiability(context.userId, data.fundId, data));
 
 export const settleLiabilityFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(fund.extend({ id: uuid, settledOn: date }).parse)
+  .validator(fund.extend({ id: uuid, settledOn: date }).parse)
   .handler(async ({ data, context }) => (await srv()).settleLiability(context.userId, data.fundId, data.id, data.settledOn));
 
 const cents = z.number().int().min(0).max(1e13);
 const dir = z.enum(["in", "out"]);
 
 export const createManualStatementFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(fund.extend({ bankName: z.string().max(120).nullable(), accountMask: z.string().max(20).nullable(), periodStart: date, periodEnd: date, openingCents: z.number().int().min(-1e13).max(1e13), closingCents: z.number().int().min(-1e13).max(1e13) }).parse)
+  .validator(fund.extend({ bankName: z.string().max(120).nullable(), accountMask: z.string().max(20).nullable(), periodStart: date, periodEnd: date, openingCents: z.number().int().min(-1e13).max(1e13), closingCents: z.number().int().min(-1e13).max(1e13) }).parse)
   .handler(async ({ data, context }) => (await srv()).createManualStatement(context.userId, data.fundId, data));
 
 export const addManualLineFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(fund.extend({ uploadId: uuid, postedOn: date, description: z.string().trim().min(1).max(500), amountCents: cents, direction: dir, category: z.string().max(60).nullable() }).parse)
+  .validator(fund.extend({ uploadId: uuid, postedOn: date, description: z.string().trim().min(1).max(500), amountCents: cents, direction: dir, category: z.string().max(60).nullable() }).parse)
   .handler(async ({ data, context }) => (await srv()).addManualLine(context.userId, data.fundId, data));
 
 export const removeManualLineFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(fund.extend({ lineId: uuid }).parse)
+  .validator(fund.extend({ lineId: uuid }).parse)
   .handler(async ({ data, context }) => (await srv()).removeManualLine(context.userId, data.fundId, data.lineId));
 
 export const addManualTransactionFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(fund.extend({ postedOn: date, description: z.string().trim().min(1).max(500), amountCents: cents, direction: dir, reference: z.string().max(120).nullable(), category: z.string().max(60).nullable(), onboardingId: uuid.nullable() }).parse)
+  .validator(fund.extend({ postedOn: date, description: z.string().trim().min(1).max(500), amountCents: cents, direction: dir, reference: z.string().max(120).nullable(), category: z.string().max(60).nullable(), onboardingId: uuid.nullable() }).parse)
   .handler(async ({ data, context }) => (await srv()).addManualTransaction(context.userId, data.fundId, data));
 
 export const uploadBillCopyFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(fund.extend({ expenseId: uuid, fileName: z.string().min(1).max(200), contentType: z.string().max(120), base64: z.string().max(28_000_000) }).parse)
+  .validator(fund.extend({ expenseId: uuid, fileName: z.string().min(1).max(200), contentType: z.string().max(120), base64: z.string().max(28_000_000) }).parse)
   .handler(async ({ data, context }) => (await srv()).uploadBillCopy(context.userId, data.fundId, data));
 
 export const openBillCopyFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(fund.extend({ expenseId: uuid }).parse)
+  .validator(fund.extend({ expenseId: uuid }).parse)
   .handler(async ({ data, context }) => (await srv()).openBillCopy(context.userId, data.fundId, data.expenseId));
 
-export const accountingSummaryFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator(fund.parse)
+export const accountingSummaryFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).validator(fund.parse)
   .handler(async ({ data, context }) => (await srv()).accountingSummary(context.userId, data.fundId));

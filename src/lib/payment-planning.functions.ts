@@ -12,7 +12,7 @@ const schema = z.object({
 });
 
 export const savePaymentPlan = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => schema.parse(d))
+  .validator((d: unknown) => schema.parse(d))
   .handler(async ({ data, context }) => {
     paymentPlanDates(data.firstDueOn, data.cadence);
     const items = [...new Map(data.items.map(item => [item.id, item])).values()];
@@ -55,7 +55,7 @@ export const savePaymentPlan = createServerFn({ method: "POST" }).middleware([re
   });
 
 export const getPaymentPlans = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ scope: schema.shape.scope }).parse(d))
+  .validator((d: unknown) => z.object({ scope: schema.shape.scope }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: plans, error } = await supabaseAdmin.from("payment_plan_versions").select("id, cadence, first_due_on, items, created_at").eq("actor_id", context.userId).eq("scope", data.scope).order("created_at", { ascending: false }).limit(20);

@@ -164,7 +164,7 @@ const clientInput = z.object({
 
 export const saveClient = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => clientInput.parse(d))
+  .validator((d: unknown) => clientInput.parse(d))
   .handler(async ({ data, context }) => {
     const who = await requireContractAuthority(context);
     const row = {
@@ -206,7 +206,7 @@ export const saveClient = createServerFn({ method: "POST" })
 
 export const assignFundToClient = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({ offeringId: z.string().uuid(), clientId: z.string().uuid().nullable() }).parse(d),
   )
   .handler(async ({ data, context }) => {
@@ -245,7 +245,7 @@ const sowInput = z.object({
 
 export const saveSow = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => sowInput.parse(d))
+  .validator((d: unknown) => sowInput.parse(d))
   .handler(async ({ data, context }) => {
     const who = await requireContractAuthority(context);
     const row = {
@@ -314,7 +314,7 @@ export const getServiceCatalog = createServerFn({ method: "GET" })
  */
 export const getClientScope = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({ clientId: z.string().uuid(), offeringId: z.string().uuid().optional() })
       .parse(d),
@@ -383,7 +383,7 @@ export const getClientScope = createServerFn({ method: "GET" })
 /** The scope picture for one fund, resolved through the fund's client. */
 export const getFundScope = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ offeringId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ offeringId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const who = await whoIs(context);
     const { data: fund, error } = await context.supabase
@@ -468,7 +468,7 @@ const entitlementInput = z.object({
 
 export const setEntitlement = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => entitlementInput.parse(d))
+  .validator((d: unknown) => entitlementInput.parse(d))
   .handler(async ({ data, context }) => {
     const who = await requireContractAuthority(context);
 
@@ -553,7 +553,7 @@ export const setEntitlement = createServerFn({ method: "POST" })
 
 export const requestService = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         clientId: z.string().uuid(),
@@ -612,7 +612,7 @@ export const requestService = createServerFn({ method: "POST" })
  */
 export const proposeRateToClient = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         clientId: z.string().uuid(),
@@ -814,7 +814,7 @@ async function loadRequest(context: any, id: string) {
 /** Staff: acknowledge the request and start scoping it. */
 export const startServiceReview = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({ id: z.string().uuid(), note: z.string().trim().max(2000).optional().or(z.literal("")) }).parse(d),
   )
   .handler(async ({ data, context }) => {
@@ -841,7 +841,7 @@ export const startServiceReview = createServerFn({ method: "POST" })
 /** Staff: propose the fee, basis, start date and amendment terms. */
 export const quoteServiceRequest = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         id: z.string().uuid(),
@@ -928,7 +928,7 @@ export const quoteServiceRequest = createServerFn({ method: "POST" })
 /** Staff: decline with a reason the client can read. */
 export const declineServiceRequest = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({ id: z.string().uuid(), reason: z.string().trim().min(2).max(2000) }).parse(d),
   )
   .handler(async ({ data, context }) => {
@@ -961,7 +961,7 @@ export const declineServiceRequest = createServerFn({ method: "POST" })
 /** Staff: switch the service on after the client has signed. */
 export const activateServiceRequest = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         id: z.string().uuid(),
@@ -1077,7 +1077,7 @@ export const activateServiceRequest = createServerFn({ method: "POST" })
 /** Client: sign the quoted amendment. The guarded RPC does the checks. */
 export const acceptServiceQuote = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         requestId: z.string().uuid(),
@@ -1099,7 +1099,7 @@ export const acceptServiceQuote = createServerFn({ method: "POST" })
 /** Client: withdraw their own request before it is active. */
 export const withdrawServiceRequest = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ requestId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ requestId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { error } = await context.supabase.rpc("withdraw_service_request", {
       _request_id: data.requestId,
@@ -1129,7 +1129,7 @@ export const getPricing = createServerFn({ method: "GET" })
 
 export const savePricingItem = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         id: z.string().uuid().optional(),
@@ -1188,7 +1188,7 @@ export const savePricingItem = createServerFn({ method: "POST" })
 
 export const createPricingVersion = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         label: z.string().trim().min(2).max(120),
@@ -1234,7 +1234,7 @@ export const createPricingVersion = createServerFn({ method: "POST" })
 
 export const publishPricingVersion = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const who = await requireContractAuthority(context);
     const { error } = await context.supabase
@@ -1248,7 +1248,7 @@ export const publishPricingVersion = createServerFn({ method: "POST" })
 
 export const saveClientPrice = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         id: z.string().uuid().optional(),
@@ -1314,7 +1314,7 @@ export const listProviders = createServerFn({ method: "GET" })
 
 export const saveProvider = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         id: z.string().uuid().optional(),
@@ -1374,7 +1374,7 @@ export const saveProvider = createServerFn({ method: "POST" })
 
 export const listContractAudit = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         clientId: z.string().uuid().optional(),
@@ -1431,7 +1431,7 @@ export const getPricingBoard = createServerFn({ method: "GET" })
 
 export const deletePricingItem = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const who = await requireContractAuthority(context);
     const { data: row } = await context.supabase
@@ -1456,7 +1456,7 @@ export const deletePricingItem = createServerFn({ method: "POST" })
 
 export const deleteClientPrice = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const who = await requireContractAuthority(context);
     const { data: row } = await context.supabase
@@ -1478,7 +1478,7 @@ export const deleteClientPrice = createServerFn({ method: "POST" })
 
 export const archivePricingVersion = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const who = await requireContractAuthority(context);
     const { error } = await context.supabase
@@ -1560,7 +1560,7 @@ export const listSowApprovals = createServerFn({ method: "GET" })
 /** Administrator decision on a signed statement of work. */
 export const decideSowApproval = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         id: z.string().uuid(),
@@ -1630,7 +1630,7 @@ export const decideSowApproval = createServerFn({ method: "POST" })
  *  before signing. Stored privately; the portal only ever gets a short-lived link. */
 export const uploadSowDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         id: z.string().uuid(),

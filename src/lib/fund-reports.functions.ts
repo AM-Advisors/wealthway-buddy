@@ -7,7 +7,7 @@ const srv = () => import("@/lib/fund-tabs.server");
 const cents = z.number().int().min(-1e13).max(1e13).optional();
 
 export const fundReportsFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ fundId: z.string().uuid() }).parse)
+  .validator(z.object({ fundId: z.string().uuid() }).parse)
   .handler(async ({ data, context }) => {
     const s = await srv(); const a = await s.assertFund(context.userId, data.fundId); const d = await s.db();
     const [{ data: set }, { data: drafts }] = await Promise.all([
@@ -18,7 +18,7 @@ export const fundReportsFn = createServerFn({ method: "POST" }).middleware([requ
   });
 
 export const setReportFrequencyFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ fundId: z.string().uuid(), frequency: z.enum(["monthly", "quarterly"]) }).parse)
+  .validator(z.object({ fundId: z.string().uuid(), frequency: z.enum(["monthly", "quarterly"]) }).parse)
   .handler(async ({ data, context }) => {
     const s = await srv(); await s.assertFund(context.userId, data.fundId); const d = await s.db();
     const { error } = await d.from("fund_report_settings").upsert({ offering_id: data.fundId, frequency: data.frequency, updated_by: context.userId, updated_at: new Date().toISOString() });
@@ -28,7 +28,7 @@ export const setReportFrequencyFn = createServerFn({ method: "POST" }).middlewar
 
 /** Client figures in -> platform-built draft out. Paid items need a confirmed payment; Harmonious approves before it is final. */
 export const submitReportFiguresFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(z.object({
+  .validator(z.object({
     fundId: z.string().uuid(), kind: z.enum(["nav", "financial_review"]),
     periodStart: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), periodEnd: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
     inputs: z.object({
@@ -72,7 +72,7 @@ export const submitReportFiguresFn = createServerFn({ method: "POST" }).middlewa
 
 /** Harmonious staff approve or return a draft. The submitter can never approve their own. */
 export const decideReportFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ id: z.string().uuid(), approve: z.boolean(), note: z.string().max(2000).optional() }).parse)
+  .validator(z.object({ id: z.string().uuid(), approve: z.boolean(), note: z.string().max(2000).optional() }).parse)
   .handler(async ({ data, context }) => {
     const s = await srv(); if (!(await s.isStaff(context.userId))) throw new Error("Only Harmonious can approve reports.");
     const d = await s.db();

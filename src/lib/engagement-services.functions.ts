@@ -86,7 +86,7 @@ const mapEngagementService = (s: any) => ({
 /** Everything that hangs off one engagement's services: lines, change orders, workflows. */
 export const getEngagementServices = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ engagementId: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ engagementId: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     const { data: engagement, error } = await context.supabase
       .from("client_engagements")
@@ -196,7 +196,7 @@ export const getEngagementServices = createServerFn({ method: "GET" })
 /** Staff put catalog services onto an engagement, snapshotting today's pricing. */
 export const addServicesToEngagement = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         engagementId: z.string().uuid(),
@@ -287,7 +287,7 @@ export const addServicesToEngagement = createServerFn({ method: "POST" })
  */
 export const executeEngagementServices = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ engagementId: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ engagementId: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     const who = await whoIsStaff(context);
     if (!who.canManage) throw new Error("Forbidden: executing an engagement needs contract authority.");
@@ -374,7 +374,7 @@ async function instantiateWorkflows(context: any, engagement: any, services: any
 /** A client asks to add, cancel or change a service. Nothing executed is touched. */
 export const requestServiceChange = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         engagementId: z.string().uuid(),
@@ -493,7 +493,7 @@ export const requestServiceChange = createServerFn({ method: "POST" })
 /** Harmonious quotes, declines or withdraws a change order. */
 export const decideChangeOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         changeOrderId: z.string().uuid(),
@@ -545,7 +545,7 @@ export const decideChangeOrder = createServerFn({ method: "POST" })
 /** The client accepts a quoted change order by typing their legal name. */
 export const signChangeOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         changeOrderId: z.string().uuid(),
@@ -599,7 +599,7 @@ export const signChangeOrder = createServerFn({ method: "POST" })
 /** Harmonious countersigns; the change order takes effect and workflows start. */
 export const executeChangeOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         changeOrderId: z.string().uuid(),

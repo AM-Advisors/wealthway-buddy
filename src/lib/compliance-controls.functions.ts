@@ -93,7 +93,7 @@ const reasonZ = z.string().trim().min(5, "Give a reason (at least 5 characters).
 
 export const saveControlVersion = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({
+  .validator((d) => z.object({
     control_key: z.string().trim().regex(/^[A-Z]{2,4}-\d{2,3}$/, "Use an ID like AC-07."), name: z.string().trim().min(3), objective: z.string().max(2000), description: z.string().max(4000),
     control_type: z.enum(CONTROL_TYPES), system_process: z.string().max(200), owner_label: z.string().max(200), operator_user_id: z.string().uuid().nullable(), reviewer_user_id: z.string().uuid().nullable(),
     frequency: z.enum(FREQUENCIES), evidence_requirements: z.string().max(2000), implementation: z.string().max(2000), sod_required: z.boolean(), change_reason: reasonZ,
@@ -109,7 +109,7 @@ export const saveControlVersion = createServerFn({ method: "POST" })
 
 export const addControlMapping = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ control_key: z.string(), requirement_id: z.string().uuid() }).parse(d))
+  .validator((d) => z.object({ control_key: z.string(), requirement_id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const c = await ctxFor(context);
     need(c, "administration.controls.edit");
@@ -119,7 +119,7 @@ export const addControlMapping = createServerFn({ method: "POST" })
 
 export const addRequirement = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ framework: z.string().trim().min(2).max(60), code: z.string().trim().min(1).max(60), title: z.string().trim().min(2).max(200) }).parse(d))
+  .validator((d) => z.object({ framework: z.string().trim().min(2).max(60), code: z.string().trim().min(1).max(60), title: z.string().trim().min(2).max(200) }).parse(d))
   .handler(async ({ data, context }) => {
     const c = await ctxFor(context);
     need(c, "administration.controls.approve");
@@ -129,7 +129,7 @@ export const addRequirement = createServerFn({ method: "POST" })
 
 export const recordControlStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ control_key: z.string(), status: z.enum(CONTROL_STATUSES), evidence_id: z.string().uuid().nullable(), note: reasonZ }).parse(d))
+  .validator((d) => z.object({ control_key: z.string(), status: z.enum(CONTROL_STATUSES), evidence_id: z.string().uuid().nullable(), note: reasonZ }).parse(d))
   .handler(async ({ data, context }) => {
     const c = await ctxFor(context);
     need(c, "administration.controls.review");
@@ -143,7 +143,7 @@ export const recordControlStatus = createServerFn({ method: "POST" })
 
 export const addManualEvidence = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({
+  .validator((d) => z.object({
     control_key: z.string(), evidence_type: z.string().trim().min(2).max(100), source: z.string().trim().min(2).max(200),
     period_start: z.string().date().nullable(), period_end: z.string().date().nullable(), artifact_reference: z.string().trim().min(2).max(500),
     note: z.string().max(1000), supersedes_id: z.string().uuid().nullable(),
@@ -166,7 +166,7 @@ const EVIDENCE_FRAMEWORKS = ["SOC 2", "ISO 27001", "GDPR", "Other"] as const;
  */
 export const registerEvidenceDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({
+  .validator((d) => z.object({
     control_key: z.string(), framework: z.enum(EVIDENCE_FRAMEWORKS),
     evidence_type: z.string().trim().min(2).max(100), source: z.string().trim().min(2).max(200),
     period_start: z.string().date().nullable(), period_end: z.string().date().nullable(),
@@ -192,7 +192,7 @@ export const registerEvidenceDocument = createServerFn({ method: "POST" })
 /** Short-lived signed download link; staff with evidence view permission only. */
 export const downloadEvidenceDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ evidence_id: z.string().uuid() }).parse(d))
+  .validator((d) => z.object({ evidence_id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const c = await ctxFor(context);
     need(c, "administration.evidence.view");
@@ -207,7 +207,7 @@ export const downloadEvidenceDocument = createServerFn({ method: "POST" })
 /** Reads access state only; it never changes it. */
 export const collectRbacEvidence = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ query: z.enum(Object.keys(EVIDENCE_QUERIES) as [keyof typeof EVIDENCE_QUERIES, ...(keyof typeof EVIDENCE_QUERIES)[]]), period_start: z.string().date(), period_end: z.string().date(), supersedes_id: z.string().uuid().nullable().optional() }).parse(d))
+  .validator((d) => z.object({ query: z.enum(Object.keys(EVIDENCE_QUERIES) as [keyof typeof EVIDENCE_QUERIES, ...(keyof typeof EVIDENCE_QUERIES)[]]), period_start: z.string().date(), period_end: z.string().date(), supersedes_id: z.string().uuid().nullable().optional() }).parse(d))
   .handler(async ({ data, context }) => {
     const c = await ctxFor(context);
     need(c, "administration.evidence.collect");
@@ -223,7 +223,7 @@ export const collectRbacEvidence = createServerFn({ method: "POST" })
 
 export const reviewEvidence = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ evidence_id: z.string().uuid(), decision: z.enum(["accepted", "exception"]), note: z.string().trim().max(1000) }).parse(d))
+  .validator((d) => z.object({ evidence_id: z.string().uuid(), decision: z.enum(["accepted", "exception"]), note: z.string().trim().max(1000) }).parse(d))
   .handler(async ({ data, context }) => {
     const c = await ctxFor(context);
     need(c, "administration.evidence.review");
@@ -240,7 +240,7 @@ export const reviewEvidence = createServerFn({ method: "POST" })
 
 export const createAccessReview = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ title: z.string().trim().min(5).max(200), population: z.enum(["privileged", "staff", "scoped"]), period_start: z.string().date(), period_end: z.string().date(), reviewer_user_id: z.string().uuid() }).parse(d))
+  .validator((d) => z.object({ title: z.string().trim().min(5).max(200), population: z.enum(["privileged", "staff", "scoped"]), period_start: z.string().date(), period_end: z.string().date(), reviewer_user_id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const c = await ctxFor(context);
     need(c, "administration.access_reviews.manage");
@@ -253,7 +253,7 @@ export const createAccessReview = createServerFn({ method: "POST" })
 /** Records a decision only; revoking/reducing access still happens in Access Control. */
 export const decideAccessReview = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ review_id: z.string().uuid(), item_key: z.string().max(400), decision: z.enum(["approve", "revoke", "reduce", "investigate", "complete"]), note: z.string().trim().max(1000), target: z.string().max(200).nullable().optional() }).parse(d))
+  .validator((d) => z.object({ review_id: z.string().uuid(), item_key: z.string().max(400), decision: z.enum(["approve", "revoke", "reduce", "investigate", "complete"]), note: z.string().trim().max(1000), target: z.string().max(200).nullable().optional() }).parse(d))
   .handler(async ({ data, context }) => {
     const c = await ctxFor(context);
     const review = (await c.db.from("compliance_access_reviews").select("*").eq("id", data.review_id).single()).data;
@@ -279,7 +279,7 @@ export const decideAccessReview = createServerFn({ method: "POST" })
 
 export const saveRecord = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ kind: z.string(), record_ref: z.string().nullable(), title: z.string().trim().min(2).max(200), status: z.string(), data: z.record(z.string(), z.union([z.string().max(4000), z.boolean(), z.null()])), change_reason: z.string().trim().max(500) }).parse(d))
+  .validator((d) => z.object({ kind: z.string(), record_ref: z.string().nullable(), title: z.string().trim().min(2).max(200), status: z.string(), data: z.record(z.string(), z.union([z.string().max(4000), z.boolean(), z.null()])), change_reason: z.string().trim().max(500) }).parse(d))
   .handler(async ({ data, context }) => {
     const c = await ctxFor(context);
     const spec = REGISTERS[data.kind];

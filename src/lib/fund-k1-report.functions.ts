@@ -17,7 +17,7 @@ async function investorsOf(d: any, fundId: string) {
 }
 
 export const fundK1ReportsFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ fundId: z.string().uuid() }).parse)
+  .validator(z.object({ fundId: z.string().uuid() }).parse)
   .handler(async ({ data, context }) => {
     const s = await srv(); const a = await s.assertFund(context.userId, data.fundId); const d = await s.db();
     const { data: rows } = await d.from("fund_report_drafts").select("id, period_start, period_end, inputs, computed, status, submitted_at, decided_at, decision_note").eq("offering_id", data.fundId).eq("kind", "k1").order("period_end", { ascending: false }).limit(20);
@@ -26,7 +26,7 @@ export const fundK1ReportsFn = createServerFn({ method: "POST" }).middleware([re
 
 /** Client year totals in -> per-investor K-1 draft out. Paid with the Tax/K-1 price; Harmonious approves before tax records are written. */
 export const submitK1FiguresFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(z.object({
+  .validator(z.object({
     fundId: z.string().uuid(), taxYear: z.number().int().min(2000).max(2100),
     totals: z.object({ ordinary_income: cents, interest: cents, dividends: cents, st_gain: cents, lt_gain: cents, sec1231: cents, deductions: cents, distributions: cents }),
     notes: z.string().max(2000).optional(),
@@ -70,7 +70,7 @@ export const submitK1FiguresFn = createServerFn({ method: "POST" }).middleware([
 
 /** Harmonious approval writes draft K-1s into the fund's tax year (status draft; tax team still reviews and delivers). Nothing is filed. */
 export const decideK1ReportFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ id: z.string().uuid(), approve: z.boolean(), note: z.string().max(2000).optional() }).parse)
+  .validator(z.object({ id: z.string().uuid(), approve: z.boolean(), note: z.string().max(2000).optional() }).parse)
   .handler(async ({ data, context }) => {
     const s = await srv(); if (!(await s.isStaff(context.userId))) throw new Error("Only Harmonious can approve K-1 reports.");
     const d = await s.db();

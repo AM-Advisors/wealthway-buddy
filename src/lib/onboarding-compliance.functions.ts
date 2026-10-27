@@ -15,12 +15,12 @@ const engine = () => import("@/lib/onboarding-compliance.server");
 
 export const investorComplianceFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ onboardingId: z.string().uuid() }).parse)
+  .validator(z.object({ onboardingId: z.string().uuid() }).parse)
   .handler(async ({ data, context }) => (await engine()).investorComplianceView(context.userId, data.onboardingId));
 
 export const certifyTaxFormFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(
+  .validator(
     z.object({
       onboardingId: z.string().uuid(),
       formType: z.enum(["w9", "w8ben", "w8bene", "w8eci", "w8exp", "w8imy"]),
@@ -35,7 +35,7 @@ export const certifyTaxFormFn = createServerFn({ method: "POST" })
 
 export const submitBadActorFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(
+  .validator(
     z.object({
       onboardingId: z.string().uuid(),
       answers: z.record(z.string().max(40), z.enum(["yes", "no"])),
@@ -46,7 +46,7 @@ export const submitBadActorFn = createServerFn({ method: "POST" })
 
 export const certifyFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(
+  .validator(
     z.object({
       onboardingId: z.string().uuid(),
       key: z.enum(["accuracy", "authority_capacity", "offering_representations", "electronic_records", "privacy_terms"]),
@@ -66,12 +66,12 @@ const taxAnswers = z.object({
 
 export const submitTaxFactsFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ onboardingId: z.string().uuid(), answers: taxAnswers }).parse)
+  .validator(z.object({ onboardingId: z.string().uuid(), answers: taxAnswers }).parse)
   .handler(async ({ data, context }) => (await engine()).submitTaxFacts(context.userId, data));
 
 export const previewTaxFormFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(
+  .validator(
     z.object({
       onboardingId: z.string().uuid(),
       formType: z.enum(["w9", "w8ben", "w8bene", "w8eci", "w8exp", "w8imy"]),
@@ -84,12 +84,12 @@ export const previewTaxFormFn = createServerFn({ method: "POST" })
 
 export const myTaxDocumentUrlFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ onboardingId: z.string().uuid() }).parse)
+  .validator(z.object({ onboardingId: z.string().uuid() }).parse)
   .handler(async ({ data, context }) => (await engine()).investorTaxDocumentUrl(context.userId, data.onboardingId));
 
 export const submitAmlFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(
+  .validator(
     z.object({
       onboardingId: z.string().uuid(),
       answers: z.record(z.string().max(40), z.string().max(600)),
@@ -100,12 +100,12 @@ export const submitAmlFn = createServerFn({ method: "POST" })
 
 export const submitDemographicsFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ onboardingId: z.string().uuid(), answers: z.record(z.string().max(40), z.string().max(60)) }).parse)
+  .validator(z.object({ onboardingId: z.string().uuid(), answers: z.record(z.string().max(40), z.string().max(60)) }).parse)
   .handler(async ({ data, context }) => (await engine()).submitDemographics(context.userId, data));
 
 export const submitEligibilityFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(
+  .validator(
     z.object({
       onboardingId: z.string().uuid(),
       key: z.string().max(60),
@@ -117,22 +117,22 @@ export const submitEligibilityFn = createServerFn({ method: "POST" })
 
 export const staffTaxEvidenceFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(
+  .validator(
     z.object({ taxFormId: z.string().uuid(), kind: z.enum(["document", "tin"]), purpose: z.string().trim().min(5).max(300) }).parse,
   )
   .handler(async ({ data, context }) => (await engine()).staffTaxEvidence(context.userId, data));
 
 export const getEligibilitySetupFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ offeringId: z.string().uuid() }).parse)
+  .validator(z.object({ offeringId: z.string().uuid() }).parse)
   .handler(async ({ data, context }) => (await engine()).getEligibilitySetup(context.userId, data.offeringId));
 
 export const saveEligibilityDraftFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ offeringId: z.string().uuid(), requirements: z.array(z.record(z.string(), z.unknown())).max(30) }).parse)
+  .validator(z.object({ offeringId: z.string().uuid(), requirements: z.array(z.record(z.string(), z.unknown())).max(30) }).parse)
   .handler(async ({ data, context }) => (await engine()).saveEligibilityDraft(context.userId, data));
 
 export const approveEligibilityDraftFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ offeringId: z.string().uuid(), draftId: z.string().uuid() }).parse)
+  .validator(z.object({ offeringId: z.string().uuid(), draftId: z.string().uuid() }).parse)
   .handler(async ({ data, context }) => (await engine()).approveEligibilityDraft(context.userId, data));

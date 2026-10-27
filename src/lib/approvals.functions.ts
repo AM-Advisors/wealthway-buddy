@@ -15,18 +15,18 @@ const input = {
 };
 
 export const listFundApprovals = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ fundId: z.string().uuid() }).parse(d)).handler(async ({ context, data }) => (await S()).listApprovals(context.userId, data.fundId));
+  .validator((d) => z.object({ fundId: z.string().uuid() }).parse(d)).handler(async ({ context, data }) => (await S()).listApprovals(context.userId, data.fundId));
 export const listAllApprovals = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth]).handler(async ({ context }) => (await S()).listAllApprovals(context.userId));
-export const getApproval = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth]).inputValidator((d) => id.parse(d)).handler(async ({ context, data }) => (await S()).getApproval(context.userId, data.id));
-export const createApproval = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator((d) => z.object(input).parse(d)).handler(async ({ context, data }) => (await S()).createApproval(context.userId, data));
-export const submitApprovalForReview = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator((d) => id.parse(d)).handler(async ({ context, data }) => (await S()).submitForReview(context.userId, data.id));
+export const getApproval = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth]).validator((d) => id.parse(d)).handler(async ({ context, data }) => (await S()).getApproval(context.userId, data.id));
+export const createApproval = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).validator((d) => z.object(input).parse(d)).handler(async ({ context, data }) => (await S()).createApproval(context.userId, data));
+export const submitApprovalForReview = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).validator((d) => id.parse(d)).handler(async ({ context, data }) => (await S()).submitForReview(context.userId, data.id));
 export const completeApprovalReview = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ id: z.string().uuid(), reason: z.string().max(1000).nullable().optional() }).parse(d)).handler(async ({ context, data }) => (await S()).completeReview(context.userId, data.id, data.reason));
+  .validator((d) => z.object({ id: z.string().uuid(), reason: z.string().max(1000).nullable().optional() }).parse(d)).handler(async ({ context, data }) => (await S()).completeReview(context.userId, data.id, data.reason));
 export const decideApproval = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ id: z.string().uuid(), decision: z.enum(["APPROVE", "REQUEST_CHANGES"]), certified: z.boolean(), confirmText: z.string().max(300).nullable().optional(), comment: z.string().max(4000).nullable().optional(), version: z.number().int().min(1) }).parse(d))
+  .validator((d) => z.object({ id: z.string().uuid(), decision: z.enum(["APPROVE", "REQUEST_CHANGES"]), certified: z.boolean(), confirmText: z.string().max(300).nullable().optional(), comment: z.string().max(4000).nullable().optional(), version: z.number().int().min(1) }).parse(d))
   .handler(async ({ context, data }) => (await S()).decide(context.userId, data));
 export const reviseApproval = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ ...input, id: z.string().uuid(), reason: z.string().trim().min(5).max(1000) }).parse(d)).handler(async ({ context, data }) => (await S()).revise(context.userId, data));
+  .validator((d) => z.object({ ...input, id: z.string().uuid(), reason: z.string().trim().min(5).max(1000) }).parse(d)).handler(async ({ context, data }) => (await S()).revise(context.userId, data));
 export const withdrawApproval = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ id: z.string().uuid(), reason: z.string().trim().min(5).max(1000) }).parse(d)).handler(async ({ context, data }) => (await S()).withdraw(context.userId, data.id, data.reason));
-export const completeApproval = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator((d) => id.parse(d)).handler(async ({ context, data }) => (await S()).completeApproval(context.userId, data.id));
+  .validator((d) => z.object({ id: z.string().uuid(), reason: z.string().trim().min(5).max(1000) }).parse(d)).handler(async ({ context, data }) => (await S()).withdraw(context.userId, data.id, data.reason));
+export const completeApproval = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).validator((d) => id.parse(d)).handler(async ({ context, data }) => (await S()).completeApproval(context.userId, data.id));

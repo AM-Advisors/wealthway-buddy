@@ -6,7 +6,7 @@ import { CONTRACT_STRUCTURES, clientAgreementNotice } from "@/lib/commercial-agr
 /** Full commercial agreement status for Operations (Client 360 / Fund 360). */
 export const getCommercialAgreementStatus = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ clientId: z.string().uuid().optional(), offeringId: z.string().uuid().optional() }).parse(d))
+  .validator((d: unknown) => z.object({ clientId: z.string().uuid().optional(), offeringId: z.string().uuid().optional() }).parse(d))
   .handler(async ({ context, data }) => {
     const { contractGate } = await import("@/lib/contract-access.server");
     const { contractCaps } = await contractGate(context, "view_contracts");
@@ -23,7 +23,7 @@ export const getCommercialAgreementStatus = createServerFn({ method: "GET" })
 
 export const updateContractStructure = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ clientId: z.string().uuid(), structure: z.enum(CONTRACT_STRUCTURES), reason: z.string().trim().max(500).optional() }).parse(d))
+  .validator((d: unknown) => z.object({ clientId: z.string().uuid(), structure: z.enum(CONTRACT_STRUCTURES), reason: z.string().trim().max(500).optional() }).parse(d))
   .handler(async ({ context, data }) => {
     const { contractGate } = await import("@/lib/contract-access.server");
     await contractGate(context, "correct_terms");
@@ -37,7 +37,7 @@ export const updateContractStructure = createServerFn({ method: "POST" })
  */
 export const getFundAgreementNotice = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ offeringId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ offeringId: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
     const { data: o } = await context.supabase.from("offerings").select("id, client_id").eq("id", data.offeringId).maybeSingle();
     const clientId = (o as any)?.client_id as string | undefined;
@@ -50,7 +50,7 @@ export const getFundAgreementNotice = createServerFn({ method: "GET" })
 /** Client team members eligible to sign the MSA, plus the current designee. */
 export const getMsaSignerOptions = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ clientId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ clientId: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
     const { contractGate } = await import("@/lib/contract-access.server");
     const { contractCaps } = await contractGate(context, "view_contracts");
@@ -73,7 +73,7 @@ export const getMsaSignerOptions = createServerFn({ method: "GET" })
 
 export const setMsaSigner = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ clientId: z.string().uuid(), userId: z.string().uuid().nullable() }).parse(d))
+  .validator((d: unknown) => z.object({ clientId: z.string().uuid(), userId: z.string().uuid().nullable() }).parse(d))
   .handler(async ({ context, data }) => {
     const { contractGate } = await import("@/lib/contract-access.server");
     await contractGate(context, "correct_terms");

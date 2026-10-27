@@ -35,7 +35,7 @@ export type FunnelStep = {
  */
 export const getOnboardingFunnel = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => schema.parse(data ?? {}))
+  .validator((data: unknown) => schema.parse(data ?? {}))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await assertReviewer(supabase, userId);
@@ -284,7 +284,7 @@ export const getOnboardingFunnel = createServerFn({ method: "GET" })
  */
 export const getBoxSigningFunnel = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => schema.parse(data ?? {}))
+  .validator((data: unknown) => schema.parse(data ?? {}))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await assertReviewer(supabase, userId);

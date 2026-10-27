@@ -75,7 +75,7 @@ export const listAdminReview = createServerFn({ method: "GET" })
 /** Grant or remove one Harmonious role for one person. */
 export const setStaffRole = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         userId: z.string().uuid(),
@@ -97,7 +97,7 @@ export const setStaffRole = createServerFn({ method: "POST" })
 /** Invite someone who does not have an account yet; access applies on first sign-in. */
 export const inviteStaff = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         email: z.string().trim().email().max(200),
@@ -135,7 +135,7 @@ export const inviteStaff = createServerFn({ method: "POST" })
 /** Withdraw an invitation that has not been used yet. */
 export const cancelStaffInvitation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     await requireAdmin(context);
     const { error } = await context.supabase

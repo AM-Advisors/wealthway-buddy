@@ -53,7 +53,7 @@ async function actorFor(context: any) {
  */
 export const getPreparationContext = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ offering_id: z.string().uuid().optional() }).parse(data ?? {}),
   )
   .handler(async ({ data, context }) => {
@@ -153,7 +153,7 @@ export const getPreparationContext = createServerFn({ method: "POST" })
 /** Saves a reusable field layout as a new template version. */
 export const saveSigningTemplate = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         template_id: z.string().uuid().nullable().optional(),
@@ -191,7 +191,7 @@ export const saveSigningTemplate = createServerFn({ method: "POST" })
 /** The final review shown before sending. Pure summary - nothing is sent here. */
 export const reviewPreparedAgreement = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         application_id: z.string().uuid(),
@@ -253,7 +253,7 @@ export const reviewPreparedAgreement = createServerFn({ method: "POST" })
 /** Sends the prepared agreement through Box Sign. Authority is rechecked here. */
 export const sendPreparedAgreement = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         application_id: z.string().uuid(),
@@ -288,7 +288,7 @@ export const sendPreparedAgreement = createServerFn({ method: "POST" })
  */
 export const listAgreementPipeline = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ offering_id: z.string().uuid().optional() }).parse(data ?? {}),
   )
   .handler(async ({ data, context }) => {

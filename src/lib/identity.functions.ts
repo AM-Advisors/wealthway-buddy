@@ -105,7 +105,7 @@ export const getMyIdentity = createServerFn({ method: "GET" })
 /** Saves the person's own details. Verification states are untouched. */
 export const saveMyPersonalInfo = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => personSchema.parse(data))
+  .validator((data: unknown) => personSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { userId } = context;
     const { ensurePerson, refreshOnboardingState } = await server();
@@ -152,7 +152,7 @@ const profileSchema = z.object({
 /** Creates another way for this person to invest. */
 export const createInvestmentProfile = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => profileSchema.parse(data))
+  .validator((data: unknown) => profileSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { userId } = context;
     const { ensurePerson } = await server();
@@ -209,7 +209,7 @@ const relationshipSchema = z.object({
  */
 export const addProfileRelationship = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => relationshipSchema.parse(data))
+  .validator((data: unknown) => relationshipSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { userId } = context;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -254,7 +254,7 @@ const kybSchema = z.object({
 /** Submits entity/trust details for review. Only staff can approve them. */
 export const submitEntityVerification = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => kybSchema.parse(data))
+  .validator((data: unknown) => kybSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { userId } = context;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -311,7 +311,7 @@ export const submitEntityVerification = createServerFn({ method: "POST" })
 /** "Choose how you're investing": the caller's profiles with their readiness. */
 export const listEligibleProfiles = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ offeringId: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ offeringId: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { userId } = context;
     const { canInvest } = await server();

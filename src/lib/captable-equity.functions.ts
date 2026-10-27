@@ -273,7 +273,7 @@ export const getMyEquity = createServerFn({ method: "GET" })
 /** A holder accepting the terms of their own grant. Recordkeeping only. */
 export const acceptCapGrant = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({ securityId: z.string().uuid(), legalName: z.string().trim().min(2).max(160) })
       .parse(d),
@@ -319,7 +319,7 @@ export const acceptCapGrant = createServerFn({ method: "POST" })
 /** A holder asking to exercise vested options. Stays pending until recorded. */
 export const requestCapExercise = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         securityId: z.string().uuid(),
@@ -373,7 +373,7 @@ export const requestCapExercise = createServerFn({ method: "POST" })
 
 export const withdrawCapExercise = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { error } = await context.supabase
       .from("ct_exercise_requests")
@@ -392,7 +392,7 @@ export const withdrawCapExercise = createServerFn({ method: "POST" })
  */
 export const getCapHolderDesk = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         companyId: z.string().uuid(),
@@ -499,7 +499,7 @@ export const getCapHolderDesk = createServerFn({ method: "GET" })
 
 export const saveHolderPermissions = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         companyId: z.string().uuid(),
@@ -554,7 +554,7 @@ export const saveHolderPermissions = createServerFn({ method: "POST" })
  */
 export const decideCapExercise = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         id: z.string().uuid(),
@@ -614,7 +614,7 @@ export const decideCapExercise = createServerFn({ method: "POST" })
 /** Invite a holder by recording their email so their account matches on sign-in. */
 export const setHolderEmail = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         companyId: z.string().uuid(),

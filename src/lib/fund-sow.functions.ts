@@ -105,7 +105,7 @@ export const listFundSetupAgreements = createServerFn({ method: "GET" })
 /** The signed statement of work behind one fund, for the fund page gate. */
 export const getFundAgreement = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ offeringId: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ offeringId: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     const { data: offering, error } = await context.supabase
       .from("offerings")

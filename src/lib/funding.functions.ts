@@ -176,7 +176,7 @@ async function assertFundable(
 
 export const getFunding = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(fundScope)
+  .validator(fundScope)
   .handler(async ({ data: scope, context }) => {
     const { supabase, userId } = context;
 
@@ -313,7 +313,7 @@ export async function fundProgress(offeringId: string, targetCents: number | nul
 
 export const acknowledgeFunding = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     acknowledgeSchema.extend({ offering_id: z.string().uuid().optional() }).parse(data),
   )
   .handler(async ({ data, context }) => {
@@ -343,7 +343,7 @@ export const acknowledgeFunding = createServerFn({ method: "POST" })
 
 export const chooseWire = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(fundScope)
+  .validator(fundScope)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const application = await loadFundingApplication(supabase, userId, data.offering_id);
@@ -390,7 +390,7 @@ export const chooseWire = createServerFn({ method: "POST" })
 
 export const markWireSent = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     wireSentSchema.extend({ offering_id: z.string().uuid().optional() }).parse(data),
   )
   .handler(async ({ data, context }) => {
@@ -426,7 +426,7 @@ export const markWireSent = createServerFn({ method: "POST" })
  */
 export const submitWireConfirmation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     wireConfirmationSchema.extend({ offering_id: z.string().uuid().optional() }).parse(data),
   )
   .handler(async ({ data, context }) => {
@@ -503,7 +503,7 @@ export const submitWireConfirmation = createServerFn({ method: "POST" })
 
 export const startAchDebit = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     achSchema.extend({ offering_id: z.string().uuid().optional() }).parse(data),
   )
   .handler(async ({ data, context }) => {

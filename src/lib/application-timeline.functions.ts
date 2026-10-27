@@ -98,7 +98,7 @@ function pretty(value: string | null) {
 /** Full step-by-step journey for every investor in one fund, from invitation to funding. */
 export const getFundTimelines = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => schema.parse(data))
+  .validator((data: unknown) => schema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await reviewerScope(supabase, userId, data.offeringId);

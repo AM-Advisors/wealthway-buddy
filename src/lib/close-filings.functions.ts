@@ -23,7 +23,7 @@ async function staffDb(uid: string) {
 
 export const approveFundCloseRequest = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid(), note: z.string().max(1000).optional().default("") }).parse(d))
+  .validator((d: unknown) => z.object({ id: z.string().uuid(), note: z.string().max(1000).optional().default("") }).parse(d))
   .handler(async ({ data, context }) => {
     const db = await staffDb(context.userId);
     const { data: cur } = await db.from("fund_close_requests").select("status, requested_by").eq("id", data.id).maybeSingle();
@@ -42,7 +42,7 @@ export const approveFundCloseRequest = createServerFn({ method: "POST" })
 
 export const generateCloseFilings = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const db = await staffDb(context.userId);
     const { data: req } = await db.from("fund_close_requests").select("id, status, offering_id, onboarding_ids, target_date, details").eq("id", data.id).maybeSingle();
@@ -91,7 +91,7 @@ export const generateCloseFilings = createServerFn({ method: "POST" })
 
 export const listCloseFilings = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const db = await staffDb(context.userId);
     const { data: rows } = await db.from("fund_close_filings").select("*").eq("close_request_id", data.id).order("filing_type", { ascending: false }).order("jurisdiction");
@@ -100,7 +100,7 @@ export const listCloseFilings = createServerFn({ method: "GET" })
 
 export const recordCloseFiling = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({
+  .validator((d: unknown) => z.object({
     id: z.string().uuid(),
     outcome: z.enum(["filed", "not_required"]),
     confirmationNumber: z.string().trim().max(100).optional().default(""),
@@ -129,7 +129,7 @@ export const recordCloseFiling = createServerFn({ method: "POST" })
 
 export const getFilingForm = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const db = await staffDb(context.userId);
     const { data: filing } = await db.from("fund_close_filings").select("*").eq("id", data.id).maybeSingle();

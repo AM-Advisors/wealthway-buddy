@@ -104,7 +104,7 @@ async function log(context: any, roles: string[], entry: Record<string, unknown>
 
 export const listPaymentInstructions = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({ offeringId: z.string().uuid().optional() }).parse(d ?? {}),
   )
   .handler(async ({ data, context }) => {
@@ -150,7 +150,7 @@ export const listPaymentInstructions = createServerFn({ method: "GET" })
 
 export const createPaymentInstruction = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         offeringId: z.string().uuid().nullable().optional(),
@@ -224,7 +224,7 @@ export const createPaymentInstruction = createServerFn({ method: "POST" })
 
 export const updatePaymentChecks = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         id: z.string().uuid(),
@@ -261,7 +261,7 @@ export const updatePaymentChecks = createServerFn({ method: "POST" })
 
 export const decidePaymentInstruction = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         id: z.string().uuid(),
@@ -365,7 +365,7 @@ export const decidePaymentInstruction = createServerFn({ method: "POST" })
 /** A short-lived link to the paperwork behind one payment, for the team only. */
 export const getPaymentDocumentUrl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     await requireStaff(context);
     const { data: instruction } = await context.supabase

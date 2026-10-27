@@ -118,7 +118,7 @@ const profileSchema = z.object({
 
 export const saveManagerProfile = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => profileSchema.parse(data))
+  .validator((data: unknown) => profileSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const clean = (value: string | undefined) => {

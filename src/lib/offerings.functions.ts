@@ -282,7 +282,7 @@ const DOCUMENT_FIELDS = ["title", "doc_type", "requires_signature", "sort_order"
 
 export const saveOffering = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => offeringSchema.parse(data))
+  .validator((data: unknown) => offeringSchema.parse(data))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
 
@@ -481,7 +481,7 @@ export const saveOffering = createServerFn({ method: "POST" })
 
 export const saveOfferingDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => documentSchema.parse(data))
+  .validator((data: unknown) => documentSchema.parse(data))
   .handler(async ({ context, data }) => {
     await assertCanEditOffering(context.supabase, context.userId, data.offering_id);
 
@@ -541,7 +541,7 @@ export const saveOfferingDocument = createServerFn({ method: "POST" })
 
 export const deleteOfferingDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     const { data: target } = await context.supabase
       .from("offering_documents")
@@ -592,7 +592,7 @@ export const deleteOfferingDocument = createServerFn({ method: "POST" })
 
 export const listOfferingAuditEvents = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         offering_id: z.string().uuid(),

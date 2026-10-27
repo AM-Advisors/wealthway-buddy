@@ -48,7 +48,7 @@ const orgSchema = z.object({
 /** Create a professional firm. Staff only - a firm is never self-serve. */
 export const createProfessionalOrganization = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => orgSchema.parse(data))
+  .validator((data: unknown) => orgSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await assertStaff(supabase, userId);
@@ -89,7 +89,7 @@ const membershipSchema = z.object({
 /** Seat someone at a firm. Membership by itself grants no client access. */
 export const inviteOrganizationMember = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => membershipSchema.parse(data))
+  .validator((data: unknown) => membershipSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await assertStaff(supabase, userId);
@@ -133,7 +133,7 @@ const membershipStatusSchema = z.object({
 /** Activate, suspend or remove a seat. History is kept, never hard-deleted. */
 export const setMembershipStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => membershipStatusSchema.parse(data))
+  .validator((data: unknown) => membershipStatusSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await assertStaff(supabase, userId);
@@ -193,7 +193,7 @@ const grantSchema = z.object({
  */
 export const grantDelegation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => grantSchema.parse(data))
+  .validator((data: unknown) => grantSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 
@@ -295,7 +295,7 @@ const revokeSchema = z.object({
 /** Revoke immediately. The row stays for the record; access stops at once. */
 export const revokeDelegation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => revokeSchema.parse(data))
+  .validator((data: unknown) => revokeSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");

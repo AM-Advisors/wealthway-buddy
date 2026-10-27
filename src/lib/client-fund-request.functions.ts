@@ -53,7 +53,7 @@ const requestSchema = z.record(z.string(), z.any());
 /** Create or update a draft request (kept in client_fund_intakes as status request_draft). */
 export const saveFundRequestDraft = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({ clientId: z.string().uuid(), draftId: z.string().uuid().nullable().optional(), request: requestSchema }).parse(d),
   )
   .handler(async ({ data, context }) => {
@@ -65,7 +65,7 @@ export const saveFundRequestDraft = createServerFn({ method: "POST" })
 
 export const getFundRequestDraft = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ draftId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ draftId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const db = await admin();
     const { data: row } = await db.from("client_fund_intakes").select("id, client_id, status, details").eq("id", data.draftId).maybeSingle();
@@ -77,7 +77,7 @@ export const getFundRequestDraft = createServerFn({ method: "GET" })
 /** Upload a supporting document for a request (stored privately; Harmonious reviews before use). */
 export const uploadFundRequestFile = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({
       clientId: z.string().uuid(),
       kind: z.string().max(60),
@@ -103,7 +103,7 @@ export const uploadFundRequestFile = createServerFn({ method: "POST" })
 /** Send the request: creates a closed Fund + pre-filled Fund Setup and tells Harmonious Operations. */
 export const submitFundRequest = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({ clientId: z.string().uuid(), draftId: z.string().uuid().nullable().optional(), request: requestSchema, paymentId: z.string().uuid().nullable().optional() }).parse(d),
   )
   .handler(async ({ data, context }) => {
@@ -302,7 +302,7 @@ export const submitFundRequest = createServerFn({ method: "POST" })
 /** Client Home: requests in flight, fund progress and money totals (funded = reconciled only). */
 export const getClientHome = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ clientId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ clientId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { data: roles } = await context.supabase.from("user_roles").select("role").eq("user_id", context.userId);
     const staff = ((roles ?? []) as any[]).some((r) => STAFF_ROLES.includes(r.role));

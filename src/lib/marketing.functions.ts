@@ -17,18 +17,18 @@ export const getMarketingDashboard = createServerFn({ method: "GET" }).middlewar
   .handler(async ({ context }) => (await srv()).dashboard(context.userId));
 
 export const getMarketingCalendar = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ from: z.string().datetime(), to: z.string().datetime() }).parse(d))
+  .validator((d) => z.object({ from: z.string().datetime(), to: z.string().datetime() }).parse(d))
   .handler(async ({ data, context }) => (await srv()).calendar(context.userId, data.from, data.to));
 
 export const getMarketingPosts = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth])
   .handler(async ({ context }) => (await srv()).listPosts(context.userId));
 
 export const getMarketingPost = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => id.parse(d))
+  .validator((d) => id.parse(d))
   .handler(async ({ data, context }) => (await srv()).getPost(context.userId, data.id));
 
 export const saveMarketingPost = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({
+  .validator((d) => z.object({
     id: z.string().uuid().nullish(), title: z.string().max(200), body: z.string().max(63000),
     channels: z.array(z.enum(["linkedin", "facebook", "instagram"])).max(3), imagePaths: z.array(z.string().max(300)).max(10),
     scheduledAt: z.string().datetime().nullable(),
@@ -36,40 +36,40 @@ export const saveMarketingPost = createServerFn({ method: "POST" }).middleware([
   .handler(async ({ data, context }) => (await srv()).savePost(context.userId, data));
 
 export const decideMarketingPost = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => decision.parse(d))
+  .validator((d) => decision.parse(d))
   .handler(async ({ data, context }) => (await srv()).decidePost(context.userId, data.id, data.action, data.note));
 
 export const retryMarketingPost = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => id.parse(d))
+  .validator((d) => id.parse(d))
   .handler(async ({ data, context }) => (await srv()).retryPost(context.userId, data.id));
 
 export const uploadMarketingAsset = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ fileName: z.string().max(200), contentType: z.string().max(100), base64: z.string().max(21_000_000) }).parse(d))
+  .validator((d) => z.object({ fileName: z.string().max(200), contentType: z.string().max(100), base64: z.string().max(21_000_000) }).parse(d))
   .handler(async ({ data, context }) => (await srv()).uploadAsset(context.userId, data.fileName, data.contentType, data.base64));
 
 export const getMarketingChannels = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth])
   .handler(async ({ context }) => (await srv()).channelStatus(context.userId));
 
 export const setMarketingChannel = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ channel: z.enum(["linkedin", "facebook", "instagram"]), accountRef: z.string().trim().max(80), displayName: z.string().max(120).nullable() }).parse(d))
+  .validator((d) => z.object({ channel: z.enum(["linkedin", "facebook", "instagram"]), accountRef: z.string().trim().max(80), displayName: z.string().max(120).nullable() }).parse(d))
   .handler(async ({ data, context }) => (await srv()).setChannel(context.userId, data.channel, data.accountRef, data.displayName));
 
 export const getMarketingAudiences = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth])
   .handler(async ({ context }) => (await srv()).listAudiences(context.userId));
 
 export const createMarketingAudience = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ name: z.string().trim().min(1).max(120), sources: z.array(z.enum(["sales", "clients", "investors", "csv"])).min(1), csv: z.string().max(5_000_000).nullish() }).parse(d))
+  .validator((d) => z.object({ name: z.string().trim().min(1).max(120), sources: z.array(z.enum(["sales", "clients", "investors", "csv"])).min(1), csv: z.string().max(5_000_000).nullish() }).parse(d))
   .handler(async ({ data, context }) => (await srv()).createAudience(context.userId, data));
 
 export const getMarketingEmails = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth])
   .handler(async ({ context }) => (await srv()).listEmails(context.userId));
 
 export const getMarketingEmail = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => id.parse(d))
+  .validator((d) => id.parse(d))
   .handler(async ({ data, context }) => (await srv()).getEmail(context.userId, data.id));
 
 export const saveMarketingEmail = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({
+  .validator((d) => z.object({
     id: z.string().uuid().nullish(), name: z.string().max(200), subject: z.string().max(200), preheader: z.string().max(200).nullable(),
     blocks: z.array(block).max(60), audienceId: z.string().uuid().nullable(), scheduledAt: z.string().datetime().nullable(),
     attachmentAssetIds: z.array(z.string().uuid()).max(5).optional(),
@@ -77,15 +77,15 @@ export const saveMarketingEmail = createServerFn({ method: "POST" }).middleware(
   .handler(async ({ data, context }) => (await srv()).saveEmail(context.userId, data));
 
 export const decideMarketingEmail = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => decision.parse(d))
+  .validator((d) => decision.parse(d))
   .handler(async ({ data, context }) => (await srv()).decideEmail(context.userId, data.id, data.action, data.note));
 
 export const sendMarketingTestEmail = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => id.parse(d))
+  .validator((d) => id.parse(d))
   .handler(async ({ data, context }) => (await srv()).sendTestEmail(context.userId, data.id));
 
 export const marketingDraftCopy = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ kind: z.enum(["linkedin", "facebook", "instagram", "email", "subject"]), brief: z.string().trim().min(3).max(3000), current: z.string().max(20000).nullish() }).parse(d))
+  .validator((d) => z.object({ kind: z.enum(["linkedin", "facebook", "instagram", "email", "subject"]), brief: z.string().trim().min(3).max(3000), current: z.string().max(20000).nullish() }).parse(d))
   .handler(async ({ data, context }) => {
     await (await srv()).requireMarketing(context.userId);
     const { draftCopy } = await import("@/lib/marketing-ai.server");
@@ -93,7 +93,7 @@ export const marketingDraftCopy = createServerFn({ method: "POST" }).middleware(
   });
 
 export const marketingGenerateImage = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ prompt: z.string().trim().min(3).max(2000) }).parse(d))
+  .validator((d) => z.object({ prompt: z.string().trim().min(3).max(2000) }).parse(d))
   .handler(async ({ data, context }) => {
     const s = await srv();
     await s.requireMarketing(context.userId);
@@ -104,11 +104,11 @@ export const marketingGenerateImage = createServerFn({ method: "POST" }).middlew
 
 /** Public: unsubscribe link from a marketing email (token is the only key). */
 export const unsubscribeEmail = createServerFn({ method: "POST" })
-  .inputValidator((d) => z.object({ token: z.string().regex(/^[a-f0-9]{20,80}$/) }).parse(d))
+  .validator((d) => z.object({ token: z.string().regex(/^[a-f0-9]{20,80}$/) }).parse(d))
   .handler(async ({ data }) => (await srv()).unsubscribeByToken(data.token));
 
 export const marketingSuggestPostLayout = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ title: z.string().max(300), body: z.string().trim().min(10).max(5000), style: z.enum(["cards", "statement", "stat", "quote", "checklist", "photo", "event", "carousel"]).default("cards") }).parse(d))
+  .validator((d) => z.object({ title: z.string().max(300), body: z.string().trim().min(10).max(5000), style: z.enum(["cards", "statement", "stat", "quote", "checklist", "photo", "event", "carousel"]).default("cards") }).parse(d))
   .handler(async ({ data, context }) => {
     await (await srv()).requireMarketing(context.userId);
     const { suggestPostLayout } = await import("@/lib/marketing-ai.server");
@@ -117,7 +117,7 @@ export const marketingSuggestPostLayout = createServerFn({ method: "POST" }).mid
 
 /** Returns a data URL (not stored) so the browser can render it under the layout. */
 export const marketingBackgroundArt = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ theme: z.string().trim().min(3).max(2000) }).parse(d))
+  .validator((d) => z.object({ theme: z.string().trim().min(3).max(2000) }).parse(d))
   .handler(async ({ data, context }) => {
     await (await srv()).requireMarketing(context.userId);
     const { generateBackground } = await import("@/lib/marketing-ai.server");

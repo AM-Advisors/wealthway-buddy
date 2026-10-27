@@ -8,7 +8,7 @@ const txnType = z.enum(CASH_TRANSACTION_TYPES);
 
 export const runCashClassification = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ fundId: uuid }).parse(data))
+  .validator((data: unknown) => z.object({ fundId: uuid }).parse(data))
   .handler(async ({ data, context }) => {
     const { classifyFundCash } = await import("@/lib/reconciliation.server");
     return classifyFundCash(context.userId, data.fundId);
@@ -16,7 +16,7 @@ export const runCashClassification = createServerFn({ method: "POST" })
 
 export const getReconciliationQueue = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ fundId: uuid.optional(), status: z.string().optional() }).parse(data ?? {}),
   )
   .handler(async ({ data, context }) => {
@@ -29,7 +29,7 @@ export const getReconciliationQueue = createServerFn({ method: "POST" })
 
 export const getReconciliationHistory = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ id: uuid }).parse(data))
+  .validator((data: unknown) => z.object({ id: uuid }).parse(data))
   .handler(async ({ data, context }) => {
     const { reconciliationHistory } = await import("@/lib/reconciliation.server");
     return reconciliationHistory(context.userId, data.id);
@@ -37,7 +37,7 @@ export const getReconciliationHistory = createServerFn({ method: "POST" })
 
 export const decideReconciliation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         id: uuid,
@@ -72,7 +72,7 @@ export const decideReconciliation = createServerFn({ method: "POST" })
 
 export const approveReconciliationAsParty = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({ id: uuid, decision: z.enum(["approve", "reject"]), reason: z.string().max(2000).optional() })
       .parse(data),
@@ -88,7 +88,7 @@ export const approveReconciliationAsParty = createServerFn({ method: "POST" })
 
 export const prepareJournalForItem = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ id: uuid }).parse(data))
+  .validator((data: unknown) => z.object({ id: uuid }).parse(data))
   .handler(async ({ data, context }) => {
     const { prepareReconciliationJournal } = await import("@/lib/reconciliation.server");
     return prepareReconciliationJournal(context.userId, data.id);
@@ -96,7 +96,7 @@ export const prepareJournalForItem = createServerFn({ method: "POST" })
 
 export const advanceJournalForItem = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ id: uuid, to: z.enum(["reviewed", "approved", "posted"]) }).parse(data),
   )
   .handler(async ({ data, context }) => {
@@ -106,7 +106,7 @@ export const advanceJournalForItem = createServerFn({ method: "POST" })
 
 export const reverseReconciliationPosting = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ id: uuid, reason: z.string().min(4).max(2000) }).parse(data))
+  .validator((data: unknown) => z.object({ id: uuid, reason: z.string().min(4).max(2000) }).parse(data))
   .handler(async ({ data, context }) => {
     const { reverseAndCorrectReconciliation } = await import("@/lib/reconciliation.server");
     return reverseAndCorrectReconciliation(context.userId, data.id, data.reason);
@@ -114,7 +114,7 @@ export const reverseReconciliationPosting = createServerFn({ method: "POST" })
 
 export const getAccountingExceptions = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ fundId: uuid.optional() }).parse(data ?? {}))
+  .validator((data: unknown) => z.object({ fundId: uuid.optional() }).parse(data ?? {}))
   .handler(async ({ data, context }) => {
     const { exceptionQueue } = await import("@/lib/reconciliation.server");
     return exceptionQueue(context.userId, data.fundId ? { offeringId: data.fundId } : {});
@@ -122,7 +122,7 @@ export const getAccountingExceptions = createServerFn({ method: "POST" })
 
 export const closeAccountingException = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         id: uuid,
@@ -138,7 +138,7 @@ export const closeAccountingException = createServerFn({ method: "POST" })
 
 export const getAccountingOperations = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ fundId: uuid.optional() }).parse(data ?? {}))
+  .validator((data: unknown) => z.object({ fundId: uuid.optional() }).parse(data ?? {}))
   .handler(async ({ data, context }) => {
     const { accountingOperations } = await import("@/lib/reconciliation.server");
     return accountingOperations(context.userId, data.fundId);
@@ -146,7 +146,7 @@ export const getAccountingOperations = createServerFn({ method: "POST" })
 
 export const getCloseReadiness = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ periodId: uuid }).parse(data))
+  .validator((data: unknown) => z.object({ periodId: uuid }).parse(data))
   .handler(async ({ data, context }) => {
     const { closeReadinessForPeriod } = await import("@/lib/reconciliation.server");
     return closeReadinessForPeriod(context.userId, data.periodId);
@@ -154,7 +154,7 @@ export const getCloseReadiness = createServerFn({ method: "POST" })
 
 export const getPostingRules = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ fundId: uuid.optional() }).parse(data ?? {}))
+  .validator((data: unknown) => z.object({ fundId: uuid.optional() }).parse(data ?? {}))
   .handler(async ({ data, context }) => {
     const { listPostingRules } = await import("@/lib/reconciliation.server");
     return listPostingRules(context.userId, data.fundId);
@@ -162,7 +162,7 @@ export const getPostingRules = createServerFn({ method: "POST" })
 
 export const savePostingRuleFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         supersedesId: uuid.nullable().optional(),

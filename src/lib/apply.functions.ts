@@ -104,7 +104,7 @@ export const listFundsToJoin = createServerFn({ method: "GET" })
 /** Create this investor's application to join a fund and start the onboarding steps. */
 export const applyToFund = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         offering_id: z.string().uuid(),

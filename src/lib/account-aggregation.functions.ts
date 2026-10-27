@@ -15,7 +15,7 @@ export const getPersonalAccountFeeds = createServerFn({ method: 'GET' }).middlew
   return { ...accountFeedConfiguration(), connections: connections.data ?? [], snapshots: latestFeedSnapshots(history, context.userId, new Date().toISOString(), connections.data ?? []), history };
 });
 export const startPersonalAccountFeed = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ kind: z.enum(['bank', 'brokerage']), consent: z.literal(true), consentVersion: z.literal(ACCOUNT_FEED_CONSENT_VERSION), connectionId: z.string().uuid().optional() }).parse(d))
+  .validator((d: unknown) => z.object({ kind: z.enum(['bank', 'brokerage']), consent: z.literal(true), consentVersion: z.literal(ACCOUNT_FEED_CONSENT_VERSION), connectionId: z.string().uuid().optional() }).parse(d))
   .handler(async ({ context, data }) => {
     const { startAccountFeedLink, accountFeedConfiguration } = await import('./account-aggregation-provider.server');
     if (!accountFeedConfiguration().configured) throw new Error('Account connections are not configured yet.');
@@ -27,7 +27,7 @@ export const startPersonalAccountFeed = createServerFn({ method: 'POST' }).middl
     return { linkToken: result.link_token, consentId };
   });
 export const finishPersonalAccountFeed = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ publicToken: z.string().min(10).max(1000).nullable(), consentId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ publicToken: z.string().min(10).max(1000).nullable(), consentId: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
     const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
     const consent = await supabaseAdmin.from('personal_account_connection_events').select('*').eq('id', data.consentId).eq('owner_user_id', context.userId).eq('action', 'consented').gte('created_at', new Date(Date.now() - 30 * 60_000).toISOString()).maybeSingle();
@@ -54,10 +54,10 @@ export const finishPersonalAccountFeed = createServerFn({ method: 'POST' }).midd
     return refreshOwnedAccountFeed(context.userId, connectionId);
   });
 export const refreshPersonalAccountFeed = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ connectionId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ connectionId: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => (await import('./account-aggregation.server')).refreshOwnedAccountFeed(context.userId, data.connectionId));
 export const disconnectPersonalAccountFeed = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ connectionId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ connectionId: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
     const helper = await import('./account-aggregation.server');
     const c = await helper.ownedFeedConnection(context.userId, data.connectionId);

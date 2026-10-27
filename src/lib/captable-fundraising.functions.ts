@@ -78,7 +78,7 @@ async function recordEvent(
 
 export const getCapFundraising = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ companyId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ companyId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const companyId = data.companyId;
     const [{ data: rounds }, { data: investments }, { data: stakeholders }, { data: classes }] =
@@ -189,7 +189,7 @@ export const getCapFundraising = createServerFn({ method: "GET" })
 
 export const saveCapRound = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         companyId: z.string().uuid(),
@@ -239,7 +239,7 @@ export const saveCapRound = createServerFn({ method: "POST" })
 
 export const saveRoundInvestment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         companyId: z.string().uuid(),
@@ -321,7 +321,7 @@ export const saveRoundInvestment = createServerFn({ method: "POST" })
 
 export const setInvestmentStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         companyId: z.string().uuid(),
@@ -373,7 +373,7 @@ export const setInvestmentStatus = createServerFn({ method: "POST" })
 /** Issues the security and writes the transaction the cap table is derived from. */
 export const closeRoundInvestment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         companyId: z.string().uuid(),

@@ -6,7 +6,7 @@ import { requireSupabaseAuth } from "@/lib/require-auth";
 /** Staff-only list of sent reminders with delivery, open, click and in-portal read tracking. */
 export const listReminderTracking = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ days: z.number().int().min(1).max(365) }).parse(d))
+  .validator((d: unknown) => z.object({ days: z.number().int().min(1).max(365) }).parse(d))
   .handler(async ({ data, context }) => {
     const { assertOpsStaff } = await import("@/lib/fund-manager-profile.server");
     await assertOpsStaff(context.userId);

@@ -9,7 +9,7 @@ const STAFF_ROLES = ["admin", "super_admin", "operations", "fund_administration"
 /** Read-only Fund Cap Table. Re-checks the caller's relationship to the exact Fund every call. */
 export const getFundCapTable = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ fundId: z.string().uuid() }).parse(d))
+  .validator((d) => z.object({ fundId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const db = supabaseAdmin as any;
@@ -111,7 +111,7 @@ export async function isClientMemberOfFund(db: any, uid: string, fundId: string)
 /** Client-portal Fund page: details, setup progress, Harmonious steps and side letter summary. */
 export const getClientFund = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ fundId: z.string().uuid() }).parse(d))
+  .validator((d) => z.object({ fundId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const db = supabaseAdmin as any;

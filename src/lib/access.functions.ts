@@ -80,7 +80,7 @@ const assignmentSchema = z.object({
 
 export const assignFundAccess = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => assignmentSchema.parse(data))
+  .validator((data: unknown) => assignmentSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await assertAdmin(supabase, userId);
@@ -115,7 +115,7 @@ export const assignFundAccess = createServerFn({ method: "POST" })
 
 export const revokeFundAccess = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ id: z.string().uuid(), kind: z.enum(["manager", "investor"]) }).parse(data),
   )
   .handler(async ({ data, context }) => {
@@ -147,7 +147,7 @@ export const revokeFundAccess = createServerFn({ method: "POST" })
 
 export const listLoginAttempts = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         result: z.enum(["all", "success", "failure"]).default("all"),

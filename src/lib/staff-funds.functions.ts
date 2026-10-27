@@ -61,7 +61,7 @@ export const listStaffClients = createServerFn({ method: "GET" })
 const newFund = z.object({ name: z.string().trim().min(2).max(160), clientId: z.string().uuid(), fundType: z.enum(["SPV", "Venture Capital", "Private Equity", "Hedge Fund"]), regType: z.enum(["506b", "506c", "regcf", "rega", "regaplus"]) });
 export const createStaffFund = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(newFund.parse)
+  .validator(newFund.parse)
   .handler(async ({ context, data }) => {
     await staff(context);
     const { requireOperations } = await import("@/lib/ops-access.functions");
@@ -103,7 +103,7 @@ export const createStaffFund = createServerFn({ method: "POST" })
 
 export const getStaffFundSetup = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ offeringId: z.string().uuid() }).parse)
+  .validator(z.object({ offeringId: z.string().uuid() }).parse)
   .handler(async ({ context, data }) => {
     const { roles } = await staff(context);
     const db = (await import("@/integrations/supabase/client.server")).supabaseAdmin;
@@ -149,7 +149,7 @@ export const getStaffFundSetup = createServerFn({ method: "POST" })
 const details = z.object({ offeringId: z.string().uuid(), summary: z.string().max(1000) });
 export const saveStaffFundSummary = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(details.parse)
+  .validator(details.parse)
   .handler(async ({ context, data }) => {
     await staff(context);
     const { requireOperations } = await import("@/lib/ops-access.functions");
@@ -170,7 +170,7 @@ export const saveStaffFundSummary = createServerFn({ method: "POST" })
 /** Super Administrators only: counts shown before a permanent Fund deletion. */
 export const getFundDeletionImpact = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ offeringId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ offeringId: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
     const { roles } = await staff(context);
     if (!roles.includes("super_admin")) throw new Error("Only Super Administrators can delete funds.");
@@ -183,7 +183,7 @@ export const getFundDeletionImpact = createServerFn({ method: "GET" })
 /** Super Administrators only: permanent, logged Fund deletion (typed name + reason). */
 export const deleteFundPermanently = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({
+  .validator((d: unknown) => z.object({
     offeringId: z.string().uuid(),
     confirmName: z.string().max(200),
     reason: z.string().trim().min(5).max(1000),
@@ -204,7 +204,7 @@ export const deleteFundPermanently = createServerFn({ method: "POST" })
 /** Display-only demo flag: hides a fund from the Operations Funds list and counts. Never changes access. */
 export const setFundDemoFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ fundId: z.string().uuid(), isDemo: z.boolean(), reason: z.string().trim().min(3).max(500) }).parse)
+  .validator(z.object({ fundId: z.string().uuid(), isDemo: z.boolean(), reason: z.string().trim().min(3).max(500) }).parse)
   .handler(async ({ context, data }) => {
     await staff(context);
     const { requireOperations } = await import("@/lib/ops-access.functions");
@@ -225,7 +225,7 @@ export const setFundDemoFn = createServerFn({ method: "POST" })
 
 export const getFundDemoFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ fundId: z.string().uuid() }).parse)
+  .validator(z.object({ fundId: z.string().uuid() }).parse)
   .handler(async ({ context, data }) => {
     await staff(context);
     const db = (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;

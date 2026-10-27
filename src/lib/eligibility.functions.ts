@@ -66,7 +66,7 @@ async function rulesFor(context: any, clientId: string | null) {
  */
 export const checkFundEligibility = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ offeringId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ offeringId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const roles = await rolesOf(context);
     const { data: fund, error } = await context.supabase
@@ -139,7 +139,7 @@ export const checkFundEligibility = createServerFn({ method: "GET" })
 
 export const listEligibilityRules = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({ clientId: z.string().uuid().optional() }).parse(d ?? {}),
   )
   .handler(async ({ data, context }) => {
@@ -153,7 +153,7 @@ export const listEligibilityRules = createServerFn({ method: "GET" })
 /** Records a per-engagement change to a rule, kept on the statement of work. */
 export const setEligibilityOverride = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         sowId: z.string().uuid(),

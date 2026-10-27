@@ -40,7 +40,7 @@ async function viewerFor(context: any) {
 
 export const listVisibleImportedDocuments = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ offeringId: z.string().uuid().optional(), search: z.string().max(120).optional() }).parse(d ?? {}))
+  .validator((d) => z.object({ offeringId: z.string().uuid().optional(), search: z.string().max(120).optional() }).parse(d ?? {}))
   .handler(async ({ data, context }) => {
     const { visibleImports, presentImport } = await import("@/lib/drive-import-visibility");
     const { documentTypeLabel } = await import("@/lib/drive-intake");
@@ -64,7 +64,7 @@ export const listVisibleImportedDocuments = createServerFn({ method: "POST" })
 
 export const openVisibleImportedDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ id: z.string().uuid() }).parse(d))
+  .validator((d) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { audienceFor } = await import("@/lib/drive-import-visibility");
     const { db, viewer } = await viewerFor(context);

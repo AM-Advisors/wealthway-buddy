@@ -16,7 +16,7 @@ async function phoneForUser(userId: string): Promise<string | null> {
 /** Remember this device for 30 days. Requires a verified second step (aal2). */
 export const rememberThisDeviceFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ deviceId: z.string().max(100).optional() }).parse(d))
+  .validator((d) => z.object({ deviceId: z.string().max(100).optional() }).parse(d))
   .handler(async ({ data, context }) => {
     if ((context.claims as any)?.aal !== "aal2") throw new Error("Verify your second step first.");
     return (await srv()).createTrustedDevice(context.userId, data.deviceId ?? null);
@@ -24,7 +24,7 @@ export const rememberThisDeviceFn = createServerFn({ method: "POST" })
 
 export const checkTrustedDeviceFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuthUnverified])
-  .inputValidator((d) => z.object({ token: z.string().min(10).max(200) }).parse(d))
+  .validator((d) => z.object({ token: z.string().min(10).max(200) }).parse(d))
   .handler(async ({ data, context }) => (await srv()).checkTrustedDevice(context.userId, data.token));
 
 export const getMyTrustedDevicesFn = createServerFn({ method: "GET" })
@@ -33,7 +33,7 @@ export const getMyTrustedDevicesFn = createServerFn({ method: "GET" })
 
 export const revokeTrustedDeviceFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ id: z.string().uuid(), reason: z.string().trim().max(200).default("removed by user") }).parse(d))
+  .validator((d) => z.object({ id: z.string().uuid(), reason: z.string().trim().max(200).default("removed by user") }).parse(d))
   .handler(async ({ data, context }) => (await srv()).revokeTrustedDevice(context.userId, data.id, data.reason));
 
 export const revokeAllTrustedDevicesFn = createServerFn({ method: "POST" })
@@ -43,7 +43,7 @@ export const revokeAllTrustedDevicesFn = createServerFn({ method: "POST" })
 /** Emails a single-use 6-digit code to the signed-in account's verified address. */
 export const requestMfaEmailCodeFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuthUnverified])
-  .inputValidator((d) => z.object({ purpose: z.string().trim().max(60).default("step_up") }).parse(d))
+  .validator((d) => z.object({ purpose: z.string().trim().max(60).default("step_up") }).parse(d))
   .handler(async ({ data, context }) => {
     const claims = context.claims as { email?: string; email_verified?: boolean };
     if (claims.email_verified === false) throw new Error("Confirm your email address first.");
@@ -58,7 +58,7 @@ export const requestMfaEmailCodeFn = createServerFn({ method: "POST" })
 
 export const verifyMfaEmailCodeFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuthUnverified])
-  .inputValidator((d) =>
+  .validator((d) =>
     z.object({ code: z.string().trim().regex(/^\d{6}$/), purpose: z.string().trim().max(60).default("step_up") }).parse(d),
   )
   .handler(async ({ data, context }) => (await srv()).verifyFallbackCode(context.userId, data.code, data.purpose));
@@ -80,7 +80,7 @@ export const getMfaSmsStatusFn = createServerFn({ method: "GET" })
 /** Texts a single-use 6-digit code to the mobile number on this account. */
 export const requestMfaSmsCodeFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuthUnverified])
-  .inputValidator((d) => z.object({ purpose: z.string().trim().max(60).default("step_up") }).parse(d))
+  .validator((d) => z.object({ purpose: z.string().trim().max(60).default("step_up") }).parse(d))
   .handler(async ({ data, context }) => {
     const { sendSmsCode } = await srv();
     return sendSmsCode(context.userId, await phoneForUser(context.userId), data.purpose);
@@ -88,7 +88,7 @@ export const requestMfaSmsCodeFn = createServerFn({ method: "POST" })
 
 export const verifyMfaSmsCodeFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuthUnverified])
-  .inputValidator((d) =>
+  .validator((d) =>
     z.object({ code: z.string().trim().regex(/^\d{6}$/), purpose: z.string().trim().max(60).default("step_up") }).parse(d),
   )
   .handler(async ({ data, context }) => (await srv()).verifySmsCode(context.userId, data.code, data.purpose));

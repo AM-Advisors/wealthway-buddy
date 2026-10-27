@@ -274,7 +274,7 @@ async function notifyOperations(opts: {
 
 export const reviewBankRequest = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         id: z.string().uuid(),
@@ -334,7 +334,7 @@ export const reviewBankRequest = createServerFn({ method: "POST" })
 
 export const reviewEntityDetails = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         offeringId: z.string().uuid(),
@@ -382,7 +382,7 @@ export const reviewEntityDetails = createServerFn({ method: "POST" })
 
 export const uploadTaxDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         offeringId: z.string().uuid(),
@@ -445,7 +445,7 @@ export const uploadTaxDocument = createServerFn({ method: "POST" })
 
 export const reviewTaxDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         id: z.string().uuid(),
@@ -471,7 +471,7 @@ export const reviewTaxDocument = createServerFn({ method: "POST" })
 
 export const deleteTaxDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     await requireOperations(context);
     const { data: row } = await context.supabase
@@ -492,7 +492,7 @@ export const deleteTaxDocument = createServerFn({ method: "POST" })
 /** Short-lived private link to a tax document. Operations and admins only. */
 export const getTaxDocumentUrl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     await requireOperations(context);
     const { data: row, error } = await context.supabase
@@ -513,7 +513,7 @@ export const getTaxDocumentUrl = createServerFn({ method: "POST" })
 /** Short-lived private link to a fund's generated Form SS-4. */
 export const getOpsSs4Url = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ offeringId: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ offeringId: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     await requireOperations(context);
     const { data: detail } = await context.supabase
@@ -563,7 +563,7 @@ export const listOperationsTeam = createServerFn({ method: "GET" })
 
 export const inviteOperationsMember = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         email: z.string().trim().email("Enter a valid email address").max(255),
@@ -642,7 +642,7 @@ export const inviteOperationsMember = createServerFn({ method: "POST" })
 
 export const removeOperationsMember = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ userId: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ userId: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     const who = await requireOperations(context);
     if (!who.isAdmin) throw new Error("Only an administrator can remove operations staff.");

@@ -32,7 +32,7 @@ export async function grantCapEntitlement(db: any, clientId: string, tier: strin
 /** The caller's cap tables and whether any is active (paid/free subscription or an existing included plan). */
 export const getMyCapTables = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ environment: envSchema.optional() }).parse(d ?? {}))
+  .validator((d: unknown) => z.object({ environment: envSchema.optional() }).parse(d ?? {}))
   .handler(async ({ data, context }) => {
     const w = await who(context);
     if (!w.clientId) return { clientId: null, canManage: false, hasActive: false, subscriptions: [] as any[] };
@@ -53,7 +53,7 @@ export const getMyCapTables = createServerFn({ method: "POST" })
 
 export const getCapTableSubscription = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { data: row } = await (context.supabase as any).from("cap_table_subscriptions").select("id, status, tier, company_name").eq("id", data.id).maybeSingle();
     return (row ?? null) as { id: string; status: string; tier: string; company_name: string } | null;
@@ -62,7 +62,7 @@ export const getCapTableSubscription = createServerFn({ method: "POST" })
 /** Starts a cap table: records the company and subscription, then opens card checkout for paid tiers. */
 export const startCapTableCheckout = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({
+  .validator((d: unknown) => z.object({
     companyName: z.string().trim().min(1).max(200),
     legalName: z.string().trim().max(200).optional(),
     tier: z.enum(["free", "starter", "growth", "scale", "enterprise"]),
@@ -135,7 +135,7 @@ export const startCapTableCheckout = createServerFn({ method: "POST" })
 /** Opens the billing page where clients change tier, update their card or cancel. */
 export const openCapTableBillingPortal = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ environment: envSchema, returnUrl: z.string().url().max(500) }).parse(d))
+  .validator((d: unknown) => z.object({ environment: envSchema, returnUrl: z.string().url().max(500) }).parse(d))
   .handler(async ({ data, context }): Promise<{ url: string } | { error: string }> => {
     const w = await who(context);
     if (!w.clientId || !w.canManage) return { error: "Not allowed." };

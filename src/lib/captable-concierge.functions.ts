@@ -167,7 +167,7 @@ async function notifyFounder(
 
 export const startConciergeCase = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         migrationId: z.string().uuid(),
@@ -235,7 +235,7 @@ export const startConciergeCase = createServerFn({ method: "POST" })
 /** Everything the founder sees about their own case. Internal notes excluded. */
 export const getMyConciergeCase = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ migrationId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ migrationId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const { data: row } = await supabase
@@ -264,7 +264,7 @@ export const getMyConciergeCase = createServerFn({ method: "POST" })
 
 export const answerConciergeException = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({ exceptionId: z.string().uuid(), response: z.string().trim().min(1).max(2000) }).parse(d),
   )
   .handler(async ({ data, context }) => {
@@ -299,7 +299,7 @@ export const answerConciergeException = createServerFn({ method: "POST" })
 
 export const submitFounderReview = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         caseId: z.string().uuid(),
@@ -410,7 +410,7 @@ export const getConciergeQueue = createServerFn({ method: "GET" })
 
 export const getConciergeCase = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ caseId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ caseId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     await assertSpecialist(context);
     const { supabase, userId } = context;
@@ -507,7 +507,7 @@ export const getConciergeCase = createServerFn({ method: "POST" })
 
 export const assignConciergeCase = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         caseId: z.string().uuid(),
@@ -559,7 +559,7 @@ export const assignConciergeCase = createServerFn({ method: "POST" })
 
 export const setConciergeStage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ caseId: z.string().uuid(), stage: stageEnum }).parse(d))
+  .validator((d: unknown) => z.object({ caseId: z.string().uuid(), stage: stageEnum }).parse(d))
   .handler(async ({ data, context }) => {
     await assertSpecialist(context);
     const { supabase } = context;
@@ -584,7 +584,7 @@ export const setConciergeStage = createServerFn({ method: "POST" })
 
 export const raiseConciergeException = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         caseId: z.string().uuid(),
@@ -634,7 +634,7 @@ export const raiseConciergeException = createServerFn({ method: "POST" })
 
 export const resolveConciergeException = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ exceptionId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ exceptionId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     await assertSpecialist(context);
     const { supabase, userId } = context;
@@ -675,7 +675,7 @@ export const resolveConciergeException = createServerFn({ method: "POST" })
 
 export const addConciergeNote = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({ caseId: z.string().uuid(), body: z.string().trim().min(1).max(4000) }).parse(d),
   )
   .handler(async ({ data, context }) => {
@@ -691,7 +691,7 @@ export const addConciergeNote = createServerFn({ method: "POST" })
 
 export const sendForFounderReview = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ caseId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ caseId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     await assertSpecialist(context);
     const { supabase } = context;
@@ -833,7 +833,7 @@ function pick(row: Record<string, any>, keys: string[]): string {
  */
 export const startMigrationAssistant = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         companyId: z.string().uuid(),

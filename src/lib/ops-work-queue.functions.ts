@@ -36,12 +36,12 @@ const server = () => import("@/lib/ops-work-queue.server");
 
 export const getOpsWorkQueue = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => queueInput.parse(data ?? {}))
+  .validator((data: unknown) => queueInput.parse(data ?? {}))
   .handler(async ({ context, data }) => (await server()).workQueue(context as any, data as any));
 
 export const getOpsRecentActivity = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ limit: z.number().int().min(1).max(50).optional() }).parse(data ?? {}))
+  .validator((data: unknown) => z.object({ limit: z.number().int().min(1).max(50).optional() }).parse(data ?? {}))
   .handler(async ({ context, data }) =>
     (await server()).recentOperationsActivity(context as any, data.limit ?? 20),
   );

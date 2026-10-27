@@ -10,7 +10,7 @@ export const getOrgTimezone = createServerFn({ method: "POST" }).middleware([req
   });
 
 export const setOrgTimezone = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ timezone: z.string().min(1).max(60) }).parse(d))
+  .validator((d) => z.object({ timezone: z.string().min(1).max(60) }).parse(d))
   .handler(async ({ data, context }) => {
     const { isValidTz } = await import("@/lib/org-timezone");
     if (!isValidTz(data.timezone)) throw new Error("Unknown time zone.");

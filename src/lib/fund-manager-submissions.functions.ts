@@ -8,12 +8,12 @@ const short = z.union([z.string().max(500), z.number()]).nullish();
 
 export const listFundSubmissionsFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ offeringId: uuid }).parse)
+  .validator(z.object({ offeringId: uuid }).parse)
   .handler(async ({ data, context }) => (await eng()).listSubmissions(context.userId, data.offeringId));
 
 export const submitFundInfoFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(
+  .validator(
     z.object({
       offeringId: uuid,
       section: z.enum(["fund_details", "fees_team", "bank", "document"]),
@@ -26,10 +26,10 @@ export const submitFundInfoFn = createServerFn({ method: "POST" })
 
 export const submissionFileFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ id: uuid }).parse)
+  .validator(z.object({ id: uuid }).parse)
   .handler(async ({ data, context }) => (await eng()).fileLink(context.userId, data.id));
 
 export const reviewFundSubmissionFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ id: uuid, decision: z.enum(["approve", "return"]), note: z.string().max(1000).nullish() }).parse)
+  .validator(z.object({ id: uuid, decision: z.enum(["approve", "return"]), note: z.string().max(1000).nullish() }).parse)
   .handler(async ({ data, context }) => (await eng()).review(context.supabase, context.userId, data));

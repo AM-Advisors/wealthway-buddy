@@ -6,11 +6,11 @@ const srv = () => import("@/lib/prior-verification.server");
 const s = z.string().trim().max(200).optional();
 
 export const investorMissingInfoFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ onboardingId: z.string().uuid() }).parse)
+  .validator(z.object({ onboardingId: z.string().uuid() }).parse)
   .handler(async ({ data, context }) => (await srv()).missingInfo(context.userId, data.onboardingId));
 
 export const loadPriorVerificationFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(z.object({
+  .validator(z.object({
     onboardingId: z.string().uuid(),
     provider: z.string().trim().min(1, "Name where the earlier check was done.").max(100),
     checkedOn: z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/, "Use YYYY-MM-DD for the check date."),

@@ -47,7 +47,7 @@ export type AdminApplicationInput = z.infer<typeof applicationSchema>;
  */
 export const createInvestorApplication = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => applicationSchema.parse(data))
+  .validator((data: unknown) => applicationSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await assertFullAdmin(supabase, userId);

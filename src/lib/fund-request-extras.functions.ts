@@ -27,7 +27,7 @@ async function requireMember(context: any, clientId: string) {
  */
 export const checkFeeRecipientKyc = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ clientId: z.string().uuid(), emails: z.array(z.string().trim().email().max(255)).max(25) }).parse(d))
+  .validator((d: unknown) => z.object({ clientId: z.string().uuid(), emails: z.array(z.string().trim().email().max(255)).max(25) }).parse(d))
   .handler(async ({ data, context }) => {
     await requireMember(context, data.clientId);
     const db = await admin();
@@ -43,7 +43,7 @@ export const checkFeeRecipientKyc = createServerFn({ method: "POST" })
 /** Email a fee recipient asking them to complete identity verification (explicit click only). */
 export const inviteFeeRecipientKyc = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({ clientId: z.string().uuid(), name: z.string().trim().min(1).max(160), email: z.string().trim().email().max(255), fundName: z.string().trim().max(200).default("") }).parse(d),
   )
   .handler(async ({ data, context }) => {
@@ -73,7 +73,7 @@ export const inviteFeeRecipientKyc = createServerFn({ method: "POST" })
 /** Current bank setup packets (staff-uploaded) with short-lived download links. */
 export const listBankPackets = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ clientId: z.string().uuid().nullable().optional(), bank: z.enum(BANKS).nullable().optional() }).parse(d))
+  .validator((d: unknown) => z.object({ clientId: z.string().uuid().nullable().optional(), bank: z.enum(BANKS).nullable().optional() }).parse(d))
   .handler(async ({ data, context }) => {
     const staff = await isStaff(context);
     if (!staff) {
@@ -94,7 +94,7 @@ export const listBankPackets = createServerFn({ method: "POST" })
 
 export const uploadBankPacket = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({
       bank: z.enum(BANKS), title: z.string().trim().min(1).max(160), checklist: z.string().trim().max(4000).default(""),
       fileName: z.string().min(1).max(200), contentType: z.string().max(120), base64: z.string().max(28_000_000),
@@ -117,7 +117,7 @@ export const uploadBankPacket = createServerFn({ method: "POST" })
 /** Retire (never delete) a packet so new requests stop seeing it. */
 export const retireBankPacket = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     if (!(await isStaff(context))) throw new Error("Only the Harmonious team can manage bank packets.");
     const db = await admin();

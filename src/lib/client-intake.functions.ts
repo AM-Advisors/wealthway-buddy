@@ -156,7 +156,7 @@ export const getIntakeRequirement = createServerFn({ method: "GET" })
 /** Saves what they have typed so far so they can come back to it. */
 export const saveFundIntakeDraft = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({ clientId: z.string().uuid(), details: detailsSchema }).parse(d),
   )
   .handler(async ({ data, context }) => {
@@ -199,7 +199,7 @@ export const saveFundIntakeDraft = createServerFn({ method: "POST" })
 /** Creates the fund from the details given, and opens the portal. */
 export const submitFundIntake = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({ clientId: z.string().uuid(), details: detailsSchema }).parse(d),
   )
   .handler(async ({ data, context }) => {
@@ -290,7 +290,7 @@ export const submitFundIntake = createServerFn({ method: "POST" })
 /** Staff view: the fund details a client submitted. */
 export const getClientIntakes = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ clientId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ clientId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const who = await membership(context);
     if (!who.isStaff) throw new Error("Forbidden: this area is for the Harmonious team.");

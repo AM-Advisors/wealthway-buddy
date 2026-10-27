@@ -43,7 +43,7 @@ function newToken() {
 /** Everything the private packet page shows for one fund. */
 export const getOfferingPacket = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ fundId: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ fundId: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await assertFundAccess(supabase, userId, data.fundId);
@@ -87,7 +87,7 @@ export const getOfferingPacket = createServerFn({ method: "GET" })
 /** Creates a shareable link that always serves the current packet PDF. */
 export const createPacketLink = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         fundId: z.string().uuid(),
@@ -124,7 +124,7 @@ export const createPacketLink = createServerFn({ method: "POST" })
 /** Turns a shared link off immediately. */
 export const revokePacketLink = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ linkId: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ linkId: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 
@@ -148,7 +148,7 @@ export const revokePacketLink = createServerFn({ method: "POST" })
 /** People connected to this fund who can be sent the packet. */
 export const listPacketRecipients = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ fundId: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ fundId: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await assertFundAccess(supabase, userId, data.fundId);
@@ -183,7 +183,7 @@ export const listPacketRecipients = createServerFn({ method: "GET" })
 /** Creates (or reuses) a packet link and emails it to one investor. */
 export const emailPacketToInvestor = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         fundId: z.string().uuid(),
@@ -293,7 +293,7 @@ export const emailPacketToInvestor = createServerFn({ method: "POST" })
  */
 export const getMyPacketLink = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ fundId: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ fundId: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 

@@ -324,7 +324,7 @@ const valuationSchema = z.object({
 /** Record (or update) what the fund is worth on a date. */
 export const saveFundValuation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => valuationSchema.parse(data))
+  .validator((data: unknown) => valuationSchema.parse(data))
   .handler(async ({ data, context }) => {
     await assertCanManage(context.supabase, context.userId, data.offering_id);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -346,7 +346,7 @@ export const saveFundValuation = createServerFn({ method: "POST" })
 /** Record money paid back out to investors. */
 export const saveFundDistribution = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         offering_id: z.string().uuid(),
@@ -369,7 +369,7 @@ export const saveFundDistribution = createServerFn({ method: "POST" })
 /** Remove a valuation or distribution entry. */
 export const removePerformanceEntry = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         offering_id: z.string().uuid(),

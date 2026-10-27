@@ -14,7 +14,7 @@ export const listCompliancePolicyFn = createServerFn({ method: "POST" })
 
 export const createPolicyDraftFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({
+  .validator(z.object({
     kind: z.enum(["high_risk_jurisdiction", "edd_amount_threshold"]),
     countryCode: z.string().trim().length(2).nullable().optional(),
     riskClassification: z.string().trim().min(2).max(80).nullable().optional(),
@@ -30,7 +30,7 @@ export const createPolicyDraftFn = createServerFn({ method: "POST" })
 
 export const decidePolicyEntryFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ id: z.string().uuid(), action: z.enum(["approve", "retire"]) }).parse)
+  .validator(z.object({ id: z.string().uuid(), action: z.enum(["approve", "retire"]) }).parse)
   .handler(async ({ data, context }) => (await ops()).decidePolicyEntry(context.userId, data));
 
 export const listLegalWordingFn = createServerFn({ method: "POST" })
@@ -39,7 +39,7 @@ export const listLegalWordingFn = createServerFn({ method: "POST" })
 
 export const createWordingDraftFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({
+  .validator(z.object({
     requirementKey: z.string().trim().regex(/^[a-z0-9_:.-]{3,80}$/),
     title: z.string().trim().min(3).max(200),
     wording: z.string().trim().min(10).max(20000),
@@ -49,5 +49,5 @@ export const createWordingDraftFn = createServerFn({ method: "POST" })
 
 export const decideWordingFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ id: z.string().uuid(), action: z.enum(["approve", "retire"]) }).parse)
+  .validator(z.object({ id: z.string().uuid(), action: z.enum(["approve", "retire"]) }).parse)
   .handler(async ({ data, context }) => (await ops()).decideWording(context.userId, data));

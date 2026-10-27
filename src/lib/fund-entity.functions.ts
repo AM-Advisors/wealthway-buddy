@@ -130,7 +130,7 @@ function normalizeEin(value: string) {
 
 export const getFundEntity = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ offering_id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ offering_id: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     const isAdmin = await assertCanManageFund(context.supabase, context.userId, data.offering_id);
 
@@ -186,7 +186,7 @@ export const getFundEntity = createServerFn({ method: "POST" })
 
 export const saveFundEntity = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => saveSchema.parse(data))
+  .validator((data: unknown) => saveSchema.parse(data))
   .handler(async ({ context, data }) => {
     await assertCanManageFund(context.supabase, context.userId, data.offering_id);
 
@@ -224,7 +224,7 @@ export const saveFundEntity = createServerFn({ method: "POST" })
 
 export const generateSs4 = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ offering_id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ offering_id: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     await assertCanManageFund(context.supabase, context.userId, data.offering_id);
 
@@ -285,7 +285,7 @@ export const generateSs4 = createServerFn({ method: "POST" })
 
 export const getSs4Url = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ offering_id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ offering_id: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     const isAdmin = await assertCanManageFund(context.supabase, context.userId, data.offering_id);
 
@@ -326,7 +326,7 @@ async function attachEinToBankRequests(offeringId: string, ein: string | null | 
 
 export const requestBankSetup = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         offering_id: z.string().uuid(),
@@ -404,7 +404,7 @@ export const requestBankSetup = createServerFn({ method: "POST" })
 
 export const updateBankSetupStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         id: z.string().uuid(),
@@ -433,7 +433,7 @@ export type MercuryReadiness = {
 
 export const getMercuryReadiness = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ offering_id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ offering_id: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     await assertCanManageFund(context.supabase, context.userId, data.offering_id);
     const { mercuryReadiness } = await import("@/lib/mercury-onboarding.server");
@@ -442,7 +442,7 @@ export const getMercuryReadiness = createServerFn({ method: "POST" })
 
 export const startMercuryApplication = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({
       offering_id: z.string().uuid(),
       address: z.object({
@@ -476,7 +476,7 @@ export const startMercuryApplication = createServerFn({ method: "POST" })
 /** Banking setup owner (fund manager or Harmonious) plus open bank requests. */
 export const getBankingChoiceFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ offering_id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ offering_id: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     await assertCanManageFund(context.supabase, context.userId, data.offering_id);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -492,7 +492,7 @@ export const getBankingChoiceFn = createServerFn({ method: "POST" })
 
 export const setBankingChoiceFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ offering_id: z.string().uuid(), setup_by: z.enum(["fund", "harmonious"]) }).parse(data))
+  .validator((data: unknown) => z.object({ offering_id: z.string().uuid(), setup_by: z.enum(["fund", "harmonious"]) }).parse(data))
   .handler(async ({ context, data }) => {
     await assertCanManageFund(context.supabase, context.userId, data.offering_id);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -504,7 +504,7 @@ export const setBankingChoiceFn = createServerFn({ method: "POST" })
 /** Who obtains the EIN, and save an EIN the fund got itself (SS-4 answers untouched). */
 export const getEinChoiceFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ offering_id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ offering_id: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     const isAdmin = await assertCanManageFund(context.supabase, context.userId, data.offering_id);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -514,7 +514,7 @@ export const getEinChoiceFn = createServerFn({ method: "POST" })
 
 export const setEinChoiceFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ offering_id: z.string().uuid(), setup_by: z.enum(["fund", "harmonious"]) }).parse(data))
+  .validator((data: unknown) => z.object({ offering_id: z.string().uuid(), setup_by: z.enum(["fund", "harmonious"]) }).parse(data))
   .handler(async ({ context, data }) => {
     await assertCanManageFund(context.supabase, context.userId, data.offering_id);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -525,7 +525,7 @@ export const setEinChoiceFn = createServerFn({ method: "POST" })
 
 export const saveFundEinFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ offering_id: z.string().uuid(), ein: z.string().trim().regex(/^\d{2}-?\d{7}$/, "An EIN looks like 12-3456789") }).parse(data))
+  .validator((data: unknown) => z.object({ offering_id: z.string().uuid(), ein: z.string().trim().regex(/^\d{2}-?\d{7}$/, "An EIN looks like 12-3456789") }).parse(data))
   .handler(async ({ context, data }) => {
     await assertCanManageFund(context.supabase, context.userId, data.offering_id);
     const { data: detail } = await context.supabase.rpc("get_offering_entity_details", { p_offering_id: data.offering_id }).maybeSingle();

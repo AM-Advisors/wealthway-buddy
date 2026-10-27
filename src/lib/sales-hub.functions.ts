@@ -10,11 +10,11 @@ const S = () => import("@/lib/sales-hub.server");
 const Q = () => import("@/lib/sales-quotes.server");
 const opt = z.string().nullish();
 
-export const getSalesDashboard = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth]).inputValidator((d) => period.parse(d))
+export const getSalesDashboard = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth]).validator((d) => period.parse(d))
   .handler(async ({ data, context }) => { const r = range(data); const s = await S(); return { ...(await s.dashboard(context.userId, r.from, r.to)), lossReasons: await s.lossReasons(context.userId, r.from, r.to), range: r }; });
 
 export const getOutreachList = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => period.extend({ ownerId: z.string().optional(), channel: z.string().optional(), serviceKey: z.string().optional(), contactId: z.string().optional() }).parse(d))
+  .validator((d) => period.extend({ ownerId: z.string().optional(), channel: z.string().optional(), serviceKey: z.string().optional(), contactId: z.string().optional() }).parse(d))
   .handler(async ({ data, context }) => {
     const r = data.contactId ? { from: undefined, to: undefined } : range(data);
     return (await S()).listOutreach(context.userId, { from: r.from, to: r.to, ownerId: data.ownerId, channel: data.channel, serviceKey: data.serviceKey === "unassigned" ? undefined : data.serviceKey, contactId: data.contactId });
@@ -24,23 +24,23 @@ export const getOutreachContacts = createServerFn({ method: "GET" }).middleware(
   .handler(async ({ context }) => (await S()).contactsForOutreach(context.userId));
 
 export const logSalesOutreach = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ contactId: z.string().uuid(), channel: z.enum(OUTREACH_CHANNELS), direction: z.enum(["outbound", "inbound"]), subject: opt, body: z.string().max(20000).nullish(), occurredAt: opt, serviceKey: opt, visibility: z.enum(["team", "private"]) }).parse(d))
+  .validator((d) => z.object({ contactId: z.string().uuid(), channel: z.enum(OUTREACH_CHANNELS), direction: z.enum(["outbound", "inbound"]), subject: opt, body: z.string().max(20000).nullish(), occurredAt: opt, serviceKey: opt, visibility: z.enum(["team", "private"]) }).parse(d))
   .handler(async ({ data, context }) => (await S()).logOutreach(context.userId, data));
 
 export const sendSalesOutreach = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ contactId: z.string().uuid(), channel: z.enum(["email", "text", "whatsapp"]), subject: opt, body: z.string().min(1).max(5000), serviceKey: opt, visibility: z.enum(["team", "private"]) }).parse(d))
+  .validator((d) => z.object({ contactId: z.string().uuid(), channel: z.enum(["email", "text", "whatsapp"]), subject: opt, body: z.string().min(1).max(5000), serviceKey: opt, visibility: z.enum(["team", "private"]) }).parse(d))
   .handler(async ({ data, context }) => (await S()).sendOutreach(context.userId, data));
 
 export const recordSalesOptOut = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ contactId: z.string().uuid(), channel: z.enum(["email", "text", "whatsapp"]), note: opt }).parse(d))
+  .validator((d) => z.object({ contactId: z.string().uuid(), channel: z.enum(["email", "text", "whatsapp"]), note: opt }).parse(d))
   .handler(async ({ data, context }) => (await S()).recordOptOut(context.userId, data));
 
 export const parseLinkedInText = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ text: z.string().min(1).max(40000) }).parse(d))
+  .validator((d) => z.object({ text: z.string().min(1).max(40000) }).parse(d))
   .handler(async ({ data, context }) => (await S()).parseLinkedIn(context.userId, data));
 
 export const saveLinkedInMessages = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({
+  .validator((d) => z.object({
     contactId: z.string().uuid(), serviceKey: opt,
     messages: z.array(z.object({ date: z.string().nullable(), direction: z.enum(["outbound", "inbound"]), text: z.string().min(1).max(10000), visibility: z.enum(["team", "private"]) })).max(200),
     contactFields: z.object({ title: opt, organization: opt, linkedin_url: opt }),
@@ -48,125 +48,125 @@ export const saveLinkedInMessages = createServerFn({ method: "POST" }).middlewar
   .handler(async ({ data, context }) => (await S()).saveLinkedInImport(context.userId, data));
 
 export const moveSalesStage = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ dealId: z.string().uuid(), stage: z.enum(SALES_STAGES), connectedVia: opt, followUpAt: opt, lossReason: opt, note: opt, serviceKey: opt, amountCents: z.number().int().min(0).nullish() }).parse(d))
+  .validator((d) => z.object({ dealId: z.string().uuid(), stage: z.enum(SALES_STAGES), connectedVia: opt, followUpAt: opt, lossReason: opt, note: opt, serviceKey: opt, amountCents: z.number().int().min(0).nullish() }).parse(d))
   .handler(async ({ data, context }) => (await S()).moveStage(context.userId, data));
 
 export const getRepOverview = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => period.extend({ repId: z.string().uuid().optional() }).parse(d))
+  .validator((d) => period.extend({ repId: z.string().uuid().optional() }).parse(d))
   .handler(async ({ data, context }) => { const r = range(data); return (await S()).repOverview(context.userId, data.repId ?? context.userId, r.from, r.to); });
 
 export const getSalesTeam = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth])
   .handler(async ({ context }) => { const s = await S(); const a = await s.salesActor(context.userId); return { me: context.userId, scope: a.scope, team: await s.salesTeam(a) }; });
 
 export const setSalesTarget = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ repId: z.string().uuid(), periodStart: z.string(), periodEnd: z.string(), revenueTargetCents: z.number().int().min(0), outreachTarget: z.number().int().min(0) }).parse(d))
+  .validator((d) => z.object({ repId: z.string().uuid(), periodStart: z.string(), periodEnd: z.string(), revenueTargetCents: z.number().int().min(0), outreachTarget: z.number().int().min(0) }).parse(d))
   .handler(async ({ data, context }) => (await S()).setTarget(context.userId, data));
 
 export const setSalesManager = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ repId: z.string().uuid(), managerId: z.string().uuid().nullable() }).parse(d))
+  .validator((d) => z.object({ repId: z.string().uuid(), managerId: z.string().uuid().nullable() }).parse(d))
   .handler(async ({ data, context }) => (await S()).setReportingLine(context.userId, data));
 
 export const reassignSalesDeal = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ dealId: z.string().uuid(), ownerId: z.string().uuid() }).parse(d))
+  .validator((d) => z.object({ dealId: z.string().uuid(), ownerId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => (await S()).reassignDeal(context.userId, data));
 
 export const roundRobinDeals = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ dealIds: z.array(z.string().uuid()).min(1).max(200) }).parse(d))
+  .validator((d) => z.object({ dealIds: z.array(z.string().uuid()).min(1).max(200) }).parse(d))
   .handler(async ({ data, context }) => (await S()).roundRobin(context.userId, data));
 
 // ---------------- quotes
 const line = z.object({ serviceKey: z.string(), label: z.string(), quantity: z.number().min(0), unitCents: z.number().min(0), baselineUnitCents: z.number().min(0), billingFrequency: z.enum(["one_time", "monthly", "quarterly", "annual"]).optional(), firstBillOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullish(), bookkeeping: bookkeepingInputSchema.optional(), details: z.object({ scope: z.string().max(2000).optional(), included: z.array(z.string().max(300)).max(20).optional(), excluded: z.array(z.string().max(300)).max(20).optional() }).nullish() });
 
 export const getQuoteCatalog = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ clientId: z.string().uuid().nullish() }).parse(d))
+  .validator((d) => z.object({ clientId: z.string().uuid().nullish() }).parse(d))
   .handler(async ({ data, context }) => (await Q()).quoteCatalog(context.userId, data.clientId ?? null));
 
 export const listSalesQuotes = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth])
   .handler(async ({ context }) => (await Q()).listQuotes(context.userId));
 
 export const getSalesQuote = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ id: z.string().uuid() }).parse(d))
+  .validator((d) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => (await Q()).getQuote(context.userId, data.id));
 
 export const saveSalesQuote = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ id: z.string().uuid().nullish(), title: z.string().max(200), clientId: z.string().uuid().nullish(), contactId: z.string().uuid().nullish(), dealId: z.string().uuid().nullish(), offeringId: z.string().uuid().nullish(), validUntil: opt, notes: z.string().max(5000).nullish(), expectedUpdatedAt: z.string().optional(), sections: z.array(z.object({ key: z.string().max(40), title: z.string().max(120), body: z.string().max(20000), included: z.boolean() })).max(20).optional(), lines: z.array(line).max(50) }).parse(d))
+  .validator((d) => z.object({ id: z.string().uuid().nullish(), title: z.string().max(200), clientId: z.string().uuid().nullish(), contactId: z.string().uuid().nullish(), dealId: z.string().uuid().nullish(), offeringId: z.string().uuid().nullish(), validUntil: opt, notes: z.string().max(5000).nullish(), expectedUpdatedAt: z.string().optional(), sections: z.array(z.object({ key: z.string().max(40), title: z.string().max(120), body: z.string().max(20000), included: z.boolean() })).max(20).optional(), lines: z.array(line).max(50) }).parse(d))
   .handler(async ({ data, context }) => (await Q()).saveQuote(context.userId, data));
 
 const idOnly = z.object({ id: z.string().uuid() });
 export const addSalesQuoteContact = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ id: z.string().uuid(), fullName: z.string().trim().min(2).max(200), email: z.string().trim().email().max(255), organization: z.string().trim().max(200).nullish(), title: z.string().trim().max(200).nullish(), phone: z.string().trim().max(40).nullish() }).parse(d))
+  .validator((d) => z.object({ id: z.string().uuid(), fullName: z.string().trim().min(2).max(200), email: z.string().trim().email().max(255), organization: z.string().trim().max(200).nullish(), title: z.string().trim().max(200).nullish(), phone: z.string().trim().max(40).nullish() }).parse(d))
   .handler(async ({ data, context }) => (await Q()).addQuoteContact(context.userId, data.id, data));
-export const submitSalesQuote = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator((d) => idOnly.parse(d))
+export const submitSalesQuote = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).validator((d) => idOnly.parse(d))
   .handler(async ({ data, context }) => (await Q()).submitQuote(context.userId, data.id));
 export const decideSalesQuote = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ id: z.string().uuid(), approve: z.boolean(), note: opt }).parse(d))
+  .validator((d) => z.object({ id: z.string().uuid(), approve: z.boolean(), note: opt }).parse(d))
   .handler(async ({ data, context }) => (await Q()).decideQuote(context.userId, data));
-export const draftQuoteAgreements = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator((d) => idOnly.parse(d))
+export const draftQuoteAgreements = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).validator((d) => idOnly.parse(d))
   .handler(async ({ data, context }) => (await Q()).createAgreements(context.userId, data.id));
-export const markSalesQuoteSent = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator((d) => idOnly.parse(d))
+export const markSalesQuoteSent = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).validator((d) => idOnly.parse(d))
   .handler(async ({ data, context }) => (await Q()).markSent(context.userId, data.id));
-export const reviseSalesQuote = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator((d) => idOnly.parse(d))
+export const reviseSalesQuote = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).validator((d) => idOnly.parse(d))
   .handler(async ({ data, context }) => (await Q()).newVersion(context.userId, data.id));
 export const markSalesQuoteLost = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ id: z.string().uuid(), reason: z.string().min(1).max(500) }).parse(d))
+  .validator((d) => z.object({ id: z.string().uuid(), reason: z.string().min(1).max(500) }).parse(d))
   .handler(async ({ data, context }) => (await Q()).markLost(context.userId, data));
 
 export const listSowsForQuote = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ clientId: z.string().uuid() }).parse(d))
+  .validator((d) => z.object({ clientId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => (await Q()).sowsForQuote(context.userId, data.clientId));
 
 export const draftQuoteFromSow = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ sowId: z.string().uuid() }).parse(d))
+  .validator((d) => z.object({ sowId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => (await Q()).quoteFromSow(context.userId, data.sowId));
 
-export const getCroDashboard = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth]).inputValidator((d) => period.parse(d))
+export const getCroDashboard = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth]).validator((d) => period.parse(d))
   .handler(async ({ data, context }) => { const r = range(data); return { ...(await (await S()).croDashboard(context.userId, r.from, r.to)), range: r }; });
 
 const C = () => import("@/lib/commissions.server");
 const rates = z.object({ ae: z.number(), ae_cap_table: z.number(), sales_manager: z.number(), cro: z.number(), ceo: z.number(), bdr: z.number() });
-export const getCommissions = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth]).inputValidator((d) => period.parse(d))
+export const getCommissions = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth]).validator((d) => period.parse(d))
   .handler(async ({ data, context }) => { const r = range(data); return { ...(await (await C()).commissionReport(context.userId, r.from, r.to)), range: r }; });
 export const saveCommissionRates = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ rates, reason: z.string().trim().min(3).max(500) }).parse(d))
+  .validator((d) => z.object({ rates, reason: z.string().trim().min(3).max(500) }).parse(d))
   .handler(async ({ data, context }) => (await C()).setCommissionRates(context.userId, data.rates, data.reason));
 export const saveQuoteBdr = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ quoteId: z.string().uuid(), bdrId: z.string().uuid().nullable() }).parse(d))
+  .validator((d) => z.object({ quoteId: z.string().uuid(), bdrId: z.string().uuid().nullable() }).parse(d))
   .handler(async ({ data, context }) => (await C()).setQuoteBdr(context.userId, data.quoteId, data.bdrId));
 
 export const recordCommissionPayouts = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ items: z.array(z.object({ lineId: z.string().uuid(), userId: z.string().uuid(), layer: z.string() })).min(1).max(500), payoutDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), reference: z.string().min(1).max(200), note: z.string().max(1000).nullish() }).parse(d))
+  .validator((d) => z.object({ items: z.array(z.object({ lineId: z.string().uuid(), userId: z.string().uuid(), layer: z.string() })).min(1).max(500), payoutDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), reference: z.string().min(1).max(200), note: z.string().max(1000).nullish() }).parse(d))
   .handler(async ({ data, context }) => (await C()).recordCommissionPayouts(context.userId, data.items, data.payoutDate, data.reference, data.note ?? null));
 export const reverseCommissionPayout = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ payoutId: z.string().uuid(), reason: z.string().min(1).max(1000) }).parse(d))
+  .validator((d) => z.object({ payoutId: z.string().uuid(), reason: z.string().min(1).max(1000) }).parse(d))
   .handler(async ({ data, context }) => (await C()).reverseCommissionPayout(context.userId, data.payoutId, data.reason));
 
-export const getSalesLinkedRecords = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth]).inputValidator((d) => idOnly.parse(d))
+export const getSalesLinkedRecords = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth]).validator((d) => idOnly.parse(d))
   .handler(async ({ data, context }) => (await Q()).linkedRecords(context.userId, data.id));
 
 export const getLinkedQuoteForSow = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth])
-  .inputValidator(d => z.object({ sowId: z.string().uuid() }).parse(d))
+  .validator(d => z.object({ sowId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => (await Q()).linkedQuoteForSow(context.userId, data.sowId));
 
 export const getScheduledPayments = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth])
   .handler(async ({ context }) => (await C()).scheduledPayments(context.userId));
 
 export const saveCommissionCosts = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ invoiceId: z.string().uuid().optional(), sowId: z.string().uuid().optional(), serviceKey: z.string().min(1), kind: z.enum(["provider", "deal"]), amountCents: z.number().int().nonnegative(), supersedesId: z.string().uuid().optional(), reason: z.string().trim().min(1) }))
+  .validator(z.object({ invoiceId: z.string().uuid().optional(), sowId: z.string().uuid().optional(), serviceKey: z.string().min(1), kind: z.enum(["provider", "deal"]), amountCents: z.number().int().nonnegative(), supersedesId: z.string().uuid().optional(), reason: z.string().trim().min(1) }))
   .handler(async ({ data, context }) => (await C()).saveCommissionCosts(context.userId, data));
 export const saveCommissionCostSettings = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ serviceCostPct: z.record(z.string(), z.number().min(0).max(100)), overheadPct: z.number().min(0).max(100), reason: z.string().trim().min(1) }))
+  .validator(z.object({ serviceCostPct: z.record(z.string(), z.number().min(0).max(100)), overheadPct: z.number().min(0).max(100), reason: z.string().trim().min(1) }))
   .handler(async ({ data, context }) => (await C()).saveCommissionCostSettings(context.userId, data));
 
 export const updateSalesQuoteDetails = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ id: z.string().uuid(), title: z.string().trim().min(1).max(200), notes: z.string().max(5000).nullish(), validUntil: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullish() }).parse(d))
+  .validator((d) => z.object({ id: z.string().uuid(), title: z.string().trim().min(1).max(200), notes: z.string().max(5000).nullish(), validUntil: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullish() }).parse(d))
   .handler(async ({ data, context }) => (await Q()).updateQuoteDetails(context.userId, data));
 export const changeSalesQuoteSigner = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ id: z.string().uuid(), fullName: z.string().trim().min(2).max(200), email: z.string().trim().email().max(255), organization: z.string().trim().max(200).nullish(), title: z.string().trim().max(200).nullish(), phone: z.string().trim().max(40).nullish() }).parse(d))
+  .validator((d) => z.object({ id: z.string().uuid(), fullName: z.string().trim().min(2).max(200), email: z.string().trim().email().max(255), organization: z.string().trim().max(200).nullish(), title: z.string().trim().max(200).nullish(), phone: z.string().trim().max(40).nullish() }).parse(d))
   .handler(async ({ data, context }) => (await Q()).changeQuoteSigner(context.userId, data.id, data));
 export const sendSalesQuoteEmail = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ id: z.string().uuid(), subject: z.string().trim().min(1).max(200), message: z.string().max(5000).nullish() }).parse(d))
+  .validator((d) => z.object({ id: z.string().uuid(), subject: z.string().trim().min(1).max(200), message: z.string().max(5000).nullish() }).parse(d))
   .handler(async ({ data, context }) => (await Q()).sendQuoteEmail(context.userId, data));
 
 export const createQuoteDeal = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ title: z.string().trim().min(1).max(200), contactId: z.string().uuid().nullish(), clientId: z.string().uuid().nullish() }).parse(d))
+  .validator((d) => z.object({ title: z.string().trim().min(1).max(200), contactId: z.string().uuid().nullish(), clientId: z.string().uuid().nullish() }).parse(d))
   .handler(async ({ data, context }) => (await S()).createQuoteDeal(context.userId, data));

@@ -109,7 +109,7 @@ async function securityBalance(context: any, companyId: string, securityId: stri
 
 export const getCapSecondaries = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ companyId: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ companyId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const companyId = data.companyId;
 
@@ -249,7 +249,7 @@ export const getCapSecondaries = createServerFn({ method: "GET" })
 
 export const saveSecondaryTransfer = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         companyId: z.string().uuid(),
@@ -335,7 +335,7 @@ export const saveSecondaryTransfer = createServerFn({ method: "POST" })
 /** Records the transfer-restriction review outcome. */
 export const reviewTransferRestrictions = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         companyId: z.string().uuid(),
@@ -377,7 +377,7 @@ export const reviewTransferRestrictions = createServerFn({ method: "POST" })
 /** Records the right of first refusal outcome. */
 export const recordRofrDecision = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         companyId: z.string().uuid(),
@@ -427,7 +427,7 @@ export const recordRofrDecision = createServerFn({ method: "POST" })
 /** Records the company's consent decision. */
 export const recordTransferConsent = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         companyId: z.string().uuid(),
@@ -471,7 +471,7 @@ export const recordTransferConsent = createServerFn({ method: "POST" })
 
 export const withdrawSecondaryTransfer = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         companyId: z.string().uuid(),
@@ -502,7 +502,7 @@ export const withdrawSecondaryTransfer = createServerFn({ method: "POST" })
 /** Records a signed document against the transfer file. */
 export const addTransferDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         companyId: z.string().uuid(),
@@ -545,7 +545,7 @@ export const addTransferDocument = createServerFn({ method: "POST" })
  */
 export const closeSecondaryTransfer = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z
       .object({
         companyId: z.string().uuid(),

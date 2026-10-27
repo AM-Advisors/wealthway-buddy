@@ -6,34 +6,34 @@ const srv = () => import("@/lib/marketing-research.server");
 const id = z.object({ id: z.string().uuid() });
 
 export const getResearchFeed = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ days: z.number().int().min(1).max(30) }).parse(d))
+  .validator((d) => z.object({ days: z.number().int().min(1).max(30) }).parse(d))
   .handler(async ({ data, context }) => (await srv()).feed(context.userId, data.days));
 export const runResearchNow = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ ideas: z.boolean() }).parse(d))
+  .validator((d) => z.object({ ideas: z.boolean() }).parse(d))
   .handler(async ({ data, context }) => (await srv()).runNow(context.userId, data.ideas));
 export const dismissResearchStory = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => id.parse(d)).handler(async ({ data, context }) => (await srv()).dismissStory(context.userId, data.id));
+  .validator((d) => id.parse(d)).handler(async ({ data, context }) => (await srv()).dismissStory(context.userId, data.id));
 export const ackResearchAlert = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => id.parse(d)).handler(async ({ data, context }) => (await srv()).ackAlert(context.userId, data.id));
+  .validator((d) => id.parse(d)).handler(async ({ data, context }) => (await srv()).ackAlert(context.userId, data.id));
 export const addResearchStory = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({
+  .validator((d) => z.object({
     source_key: z.string().max(60), headline: z.string().min(5).max(500), url: z.string().url().max(2000),
     published_at: z.string().datetime().nullable(), summary: z.string().max(3000), primary_source_url: z.string().url().max(2000).nullable(),
   }).parse(d))
   .handler(async ({ data, context }) => (await srv()).addStory(context.userId, data));
 export const convertResearchIdea = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ id: z.string().uuid(), publish_at: z.string().datetime().nullable() }).parse(d))
+  .validator((d) => z.object({ id: z.string().uuid(), publish_at: z.string().datetime().nullable() }).parse(d))
   .handler(async ({ data, context }) => (await srv()).convertIdea(context.userId, data.id, data.publish_at));
 export const getItemCitations = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => id.parse(d)).handler(async ({ data, context }) => (await srv()).citations(context.userId, data.id));
+  .validator((d) => id.parse(d)).handler(async ({ data, context }) => (await srv()).citations(context.userId, data.id));
 export const getFormDIntel = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ weekOf: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable(), q: z.string().max(100) }).parse(d))
+  .validator((d) => z.object({ weekOf: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable(), q: z.string().max(100) }).parse(d))
   .handler(async ({ data, context }) => (await srv()).formD(context.userId, data.weekOf, data.q));
 export const getResearchHealth = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .handler(async ({ context }) => (await srv()).healthDashboard(context.userId));
 export const researchAlertAction = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ id: z.string().uuid(), action: z.enum(["acknowledge", "resolve", "escalate"]), note: z.string().max(1000).nullable() }).parse(d))
+  .validator((d) => z.object({ id: z.string().uuid(), action: z.enum(["acknowledge", "resolve", "escalate"]), note: z.string().max(1000).nullable() }).parse(d))
   .handler(async ({ data, context }) => (await srv()).alertAction(context.userId, data.id, data.action, data.note));
 export const retryResearchIngestion = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ source: z.string().max(60).nullable() }).parse(d))
+  .validator((d) => z.object({ source: z.string().max(60).nullable() }).parse(d))
   .handler(async ({ data, context }) => { const r: any = await (await srv()).retryIngestion(context.userId, data.source); return { skipped: r?.skipped ?? null, added: r?.ingest?.added ?? 0, errors: (r?.ingest?.errors ?? []) as string[] }; });

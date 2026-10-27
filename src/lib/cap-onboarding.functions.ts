@@ -83,7 +83,7 @@ export async function assertCapOnboarding(context: any, clientId: string) {
 
 export const getCapOnboarding = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({ clientId: z.string().uuid().optional().nullable() }).parse(d ?? {}),
   )
   .handler(async ({ data, context }) => {
@@ -111,7 +111,7 @@ export const getCapOnboarding = createServerFn({ method: "GET" })
 /** Save progress without finishing. */
 export const saveCapOnboarding = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({ clientId: z.string().uuid(), details: detailsSchema }).parse(d),
   )
   .handler(async ({ data, context }) => {
@@ -132,7 +132,7 @@ export const saveCapOnboarding = createServerFn({ method: "POST" })
 /** Finish setup: this is what unlocks recording shares. */
 export const completeCapOnboarding = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
+  .validator((d: unknown) =>
     z.object({ clientId: z.string().uuid(), details: detailsSchema }).parse(d),
   )
   .handler(async ({ data, context }) => {
