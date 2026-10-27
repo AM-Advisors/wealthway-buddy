@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { invalidateFundWork } from "@/components/fund-approvals";
 
 export const Route = createFileRoute("/_authenticated/ops/tasks")({
   head: () => ({ meta: [
@@ -157,6 +158,8 @@ function TaskRow({ t, staff, canWrite, open, onToggle }: { t: any; staff: { id: 
     try {
       await update({ data: { id: t.id, ...patch } as any });
       qc.invalidateQueries({ queryKey: ["staff-tasks"] }); qc.invalidateQueries({ queryKey: ["staff-task-history", t.id] });
+      if (t.offering_id) invalidateFundWork(qc, t.offering_id);
+      if (t.related_workflow_type === "fund_service_request") qc.invalidateQueries({ queryKey: ["fund-request", t.related_workflow_id] });
     } catch (e) { toast.error((e as Error).message); }
   };
   return (
@@ -201,6 +204,8 @@ function TaskRow({ t, staff, canWrite, open, onToggle }: { t: any; staff: { id: 
             <div className="flex flex-wrap gap-2">
               <Select value={t.priority} onValueChange={(v) => save({ priority: v })}><SelectTrigger className="h-8 w-32" aria-label="Priority"><SelectValue /></SelectTrigger>
                 <SelectContent>{Object.entries(PRIORITY).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select>
+              <Select value={t.team ?? UNASSIGNED} onValueChange={(v) => save({ team: v === UNASSIGNED ? null : v })}><SelectTrigger className="h-8 w-48" aria-label="Receiving team"><SelectValue /></SelectTrigger>
+                <SelectContent><SelectItem value={UNASSIGNED}>Unassigned</SelectItem>{Object.entries(TEAMS).filter(([key]) => t.related_workflow_type !== "fund_service_request" || key !== "marketing").map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select>
               <Input type="date" defaultValue={t.due_date ?? ""} onBlur={(e) => e.target.value !== (t.due_date ?? "") && save({ dueDate: e.target.value || null })} aria-label="Due date" className="h-8 w-44" />
             </div>
           )}

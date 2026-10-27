@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { SearchableSelect, type SearchableOption } from "@/components/ui/searchable-select";
 
 const sel = "h-9 rounded-md border bg-background px-2 text-sm";
 const toB64 = (f: File) => new Promise<{ name: string; base64: string }>((res, rej) => { const r = new FileReader(); r.onload = () => res({ name: f.name, base64: String(r.result).split(",")[1] ?? "" }); r.onerror = rej; r.readAsDataURL(f); });
@@ -125,7 +126,8 @@ function RequestDetail({ id, fundId, onBack }: { id: string; fundId: string; onB
   const refresh = () => { q.refetch(); invalidateFundWork(qc, fundId); };
   if (q.isLoading) return <p className="text-sm text-muted-foreground">Loading…</p>;
   if (q.error) return <div><Button size="sm" variant="ghost" onClick={onBack}>← Requests</Button><p className="text-sm text-destructive">{(q.error as Error).message}</p></div>;
-  const { request: r, staff, stages, messages, files, events, approvals, irreversible } = q.data! as any;
+  if (!q.data) return null;
+  const { request: r, staff, canAssign, assignmentOptions, stages, messages, files, events, approvals, irreversible } = q.data as any;
   const send = async () => {
     try { await post({ data: { id, body, internal, file: file ? await toB64(file) : null } }); setBody(""); setFile(null); refresh(); } catch (e) { toast.error((e as Error).message); }
   };
@@ -157,7 +159,7 @@ function RequestDetail({ id, fundId, onBack }: { id: string; fundId: string; onB
         {!staff && isOpenRequest(r.status) && r.status !== "CANCELLATION_REVIEW" && <Button size="sm" variant="ghost" className="mt-3" onClick={doCancel}>{irreversible && r.stage > 1 ? "Ask to cancel" : "Cancel request"}</Button>}
       </section>
 
-      {staff && <StaffControls r={r} stages={stages} onSaved={refresh} />}
+      {staff && canAssign && <StaffControls key={r.updated_at} r={r} stages={stages} assignmentOptions={assignmentOptions} onSaved={refresh} />}
 
       <section className="rounded-xl border bg-card p-4">
         <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Messages</h3>
@@ -189,12 +191,14 @@ function RequestDetail({ id, fundId, onBack }: { id: string; fundId: string; onB
   );
 }
 
-function StaffControls({ r, stages, onSaved }: { r: any; stages: string[]; onSaved: () => void }) {
+export function StaffControls({ r, stages, assignmentOptions, onSaved }: { r: any; stages: string[]; assignmentOptions: SearchableOption[]; onSaved: () => void }) {
   const update = useServerFn(updateFundRequest);
-  const [v, setV] = useState({ status: r.status, stage: r.stage, team: r.assigned_team ?? "operations", due: r.due_date ?? "", client: r.client_notes ?? "", internal: r.internal_notes ?? "" });
+  const [v, setV] = useState({ status: r.status, stage: r.stage, owner: r.assigned_to ?? "", team: r.assigned_team ?? "operations", due: r.due_date ?? "", client: r.client_notes ?? "", internal: r.internal_notes ?? "" });
+  const [busy, setBusy] = useState(false);
   const save = async () => {
-    try { await update({ data: { id: r.id, status: v.status, stage: Number(v.stage), assignedTeam: v.team, dueDate: v.due || null, clientNotes: v.client || null, internalNotes: v.internal || null } }); toast.success("Request updated."); onSaved(); }
-    catch (e) { toast.error((e as Error).message); }
+    setBusy(true);
+    try { await update({ data: { id: r.id, ...(v.status !== r.status ? { status: v.status } : {}), ...(Number(v.stage) !== r.stage ? { stage: Number(v.stage) } : {}), ...(v.owner !== (r.assigned_to ?? "") ? { assignedTo: v.owner || null } : {}), ...(v.team !== (r.assigned_team ?? "operations") ? { assignedTeam: v.team } : {}), ...(v.due !== (r.due_date ?? "") ? { dueDate: v.due || null } : {}), ...(v.client !== (r.client_notes ?? "") ? { clientNotes: v.client || null } : {}), ...(v.internal !== (r.internal_notes ?? "") ? { internalNotes: v.internal || null } : {}) } }); toast.success("Request updated."); onSaved(); }
+    catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
   };
   return (
     <section className="space-y-2 rounded-xl border bg-card p-4 text-sm">
@@ -202,6 +206,7 @@ function StaffControls({ r, stages, onSaved }: { r: any; stages: string[]; onSav
       <p className="text-xs text-muted-foreground">{TEAM_ROUTING[r.assigned_team]?.label ?? r.assigned_team} · {r.assignedName ?? "Unassigned"} · Priority {r.priority}{r.urgent_reason ? ` (${r.urgent_reason})` : ""} · {ENT[r.entitlement_status]}
         {` · Response SLA ${r.sla_hours != null ? `${r.sla_hours} hours` : "Not configured"} (Source: ${r.sla_source ?? "—"})`}{r.sla ? ` · ${r.sla.paused ? "paused" : r.sla.breached ? "breached" : `${r.sla.hoursLeft}h left`}` : ""}</p>
       <div className="flex flex-wrap gap-2">
+        <SearchableSelect aria-label="Receiving owner" className="w-56" disabled={busy} value={v.owner} onValueChange={(owner) => setV({ ...v, owner })} options={[{ value: "", label: "Unassigned" }, ...assignmentOptions]} />
         <select aria-label="Status" value={v.status} onChange={(e) => setV({ ...v, status: e.target.value })} className={sel}>{REQUEST_STATUSES.map((s) => <option key={s} value={s}>{REQUEST_STATUS_LABEL[s]}</option>)}</select>
         <select aria-label="Stage" value={v.stage} onChange={(e) => setV({ ...v, stage: Number(e.target.value) })} className={sel}>{stages.map((s, i) => <option key={s} value={i}>{s}</option>)}</select>
         <select aria-label="Team" value={v.team} onChange={(e) => setV({ ...v, team: e.target.value })} className={sel}>{Object.entries(TEAM_ROUTING).map(([k, t]) => <option key={k} value={k}>{t.label}</option>)}</select>
@@ -209,7 +214,7 @@ function StaffControls({ r, stages, onSaved }: { r: any; stages: string[]; onSav
       </div>
       <Input value={v.client} onChange={(e) => setV({ ...v, client: e.target.value })} placeholder="Client-visible note (e.g. what information you need)" aria-label="Client note" />
       <Input value={v.internal} onChange={(e) => setV({ ...v, internal: e.target.value })} placeholder="Internal notes (never shown to the client)" aria-label="Internal notes" />
-      <Button size="sm" onClick={save}>Save</Button>
+      <Button size="sm" disabled={busy} onClick={save}>Save</Button>
     </section>
   );
 }
