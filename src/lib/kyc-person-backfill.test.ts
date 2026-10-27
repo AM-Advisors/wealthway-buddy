@@ -26,6 +26,8 @@ const normalized = (): NormalizedVerification =>
     },
     liveness: { status: "approved", warnings: [] },
     faceMatch: { status: "approved", score: 0.99, warnings: [] },
+    aml: { status: "approved", hits: 0, warnings: [] },
+    warnings: [],
     proofOfAddress: {
       status: "approved",
       extracted: {
