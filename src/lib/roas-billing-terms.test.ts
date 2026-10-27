@@ -1,7 +1,19 @@
 import { describe, expect, it } from "vitest";
-import { quarterCharge, ROAS_BILLING_TERMS as terms } from "./roas-billing-terms";
+import { quarterCharge, roasAnnualK1Charges, ROAS_BILLING_TERMS as terms } from "./roas-billing-terms";
 
 describe("confirmed ROAS billing", () => {
+  it("prices one annual 2026 K-1 set for each entity at $2,500 due December 31", () => {
+    expect(roasAnnualK1Charges(2026)).toEqual([
+      { entity: "LP entity", amountCents: 250000, dueOn: "2026-12-31" },
+      { entity: "Management company", amountCents: 250000, dueOn: "2026-12-31" },
+    ]);
+  });
+  it("repeats $5,000 of K-1 sets on December 31 each following year", () => {
+    const charges = roasAnnualK1Charges(2027);
+    expect(charges.reduce((sum, charge) => sum + charge.amountCents, 0)).toBe(500000);
+    expect(charges.map(charge => charge.dueOn)).toEqual(["2027-12-31", "2027-12-31"]);
+  });
+  it("does not prepare annual K-1 charges before 2026", () => expect(() => roasAnnualK1Charges(2025)).toThrow());
   it("keeps setup at $7,500 including 100 investors", () => {
     expect(terms.setupCents).toBe(750000);
     expect(terms.includedInvestorCount).toBe(100);

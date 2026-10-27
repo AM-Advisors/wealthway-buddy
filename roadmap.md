@@ -1,5 +1,11 @@
 # Roadmap
 
+## ROAS annual K-1 and filing fees (2026-10-27)
+- [x] Added separate LP and management annual K-1 sets at $2,500 each, first bill December 31, 2026, to the existing ROAS draft quote through Alyssa's authenticated save; saved rows read back. No duplicate quote, issuance, signing or activation.
+- [x] Prepared conditional fee review in docs/roas-filing-fee-review.md using recorded states and official sources: $160 Harmonious fee, state subtotal $950/$1,850 plus Texas up to $500, excluding unverified processing/late charges. No notices, payments or close approvals performed.
+- [ ] Final filing total/payment preparation blocked on actual first-sale dates, aggregate offering amount, investing-party jurisdictions and any externally filed notices; $635,000 of commitments and zero recorded funding do not establish those facts.
+- [x] Twenty-one annual amount/due-date/cadence tests passed; preview build OK. Authenticated quote rows read back; normal Sales page remains at Checking your access, so UI acceptance unverified. Invoice/SOW issuance retains quote approval; no filings or payments performed.
+
 ## ROAS corrected billing and quarterly terms (2026-10-27)
 - [x] Voided the incorrect $19,000 current invoice through Alyssa's authenticated canonical billing function; read back void status/reason, original history retained.
 - [ ] Replacement paid invoices/LP partial receipt: need confirmed payment dates and source attribution, plus an authorized receipt-correction path; existing $11,500 historical receipt event cannot be deleted or silently reused. Setup paid invoice remains unchanged.
