@@ -3,6 +3,8 @@
 import { staffProfile } from "@/lib/harmonious-staff";
 import { OPS_STAFF_ROLES } from "@/lib/ops-capabilities";
 import { companyContacts, contactFields } from "@/lib/crm-company-model";
+import { recordPromotionalUnsubscribe, suppressedPromotionalEmails } from "./promotional-email.server";
+import { normalizePromotionalEmail } from "./promotional-email-model";
 import {
   campaignDecisionProblem, campaignEditProblem, campaignSendProblem, canCreate, canEdit, canReassign, canSee,
   DEAL_STAGE_LABELS, mergeUpdates, resolveAudience,
@@ -186,6 +188,8 @@ export async function setConsent(userId: string, d: { contactId: string; consent
   const { data: c } = await db.from("crm_contacts").select("*").eq("id", d.contactId).maybeSingle();
   if (!c || !canEdit(a, c)) throw new Error("Contact not found.");
   if (c.consent === "unsubscribed" && d.consent === "opted_in" && !a.superUser) throw new Error("This person unsubscribed. Only a Super Administrator can record new consent, with their written permission.");
+  if (d.consent === "opted_in" && c.email && (await suppressedPromotionalEmails(db, [c.email])).size) throw new Error("This address has a recorded email opt-out. It remains suppressed until an authorized, evidenced re-consent review.");
+  if (d.consent === "unsubscribed" && c.email) await recordPromotionalUnsubscribe(db, c.email);
   await db.from("crm_contacts").update({ consent: d.consent, consent_note: d.note, consent_recorded_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("id", c.id);
   await logActivity({ scope: c.scope, offering_id: c.offering_id, contact_id: c.id, actor_user_id: userId, kind: "consent_changed", summary: `Email consent: ${d.consent.replace("_", " ")}`, details: { from: c.consent, to: d.consent, note: d.note } });
   return { ok: true };
@@ -270,6 +274,7 @@ export async function saveDeal(userId: string, d: { id?: string | undefined; con
     await db.from("crm_deals").update({ ...fields, updated_at: new Date().toISOString() }).eq("id", d.id);
     if (deal.stage !== d.stage) {
       await logActivity({ scope: deal.scope, offering_id: deal.offering_id, contact_id: deal.contact_id, deal_id: deal.id, actor_user_id: userId, kind: "stage_changed", summary: `${d.title}: ${DEAL_STAGE_LABELS[deal.stage as DealStage]} → ${DEAL_STAGE_LABELS[d.stage]}`, details: { from: deal.stage, to: d.stage } });
+      await (await import("./email-flows.server")).onStageChange(deal.id, (await import("./sales-model")).normalizeStage(d.stage));
     } else {
       await logActivity({ scope: deal.scope, offering_id: deal.offering_id, contact_id: deal.contact_id, deal_id: deal.id, actor_user_id: userId, kind: "edited", summary: `Deal updated: ${d.title}`, details: { before: pick(deal, Object.keys(fields)), after: fields } });
     }
@@ -354,7 +359,9 @@ export async function sendCampaign(userId: string, d: { id: string; confirmCount
   if (!c) throw new Error("Campaign not found.");
   const p = campaignSendProblem(a, c);
   if (p) throw new Error(p);
-  const { included } = resolveAudience(await audienceContacts(c.scope, c.offering_id, a, c.owner_user_id), c.audience ?? {});
+  const selected = resolveAudience(await audienceContacts(c.scope, c.offering_id, a, c.owner_user_id), c.audience ?? {}).included;
+  const suppressed = await suppressedPromotionalEmails(db, selected.flatMap(contact => contact.email ? [contact.email] : []));
+  const included = selected.filter(contact => contact.email && !suppressed.has(normalizePromotionalEmail(contact.email)));
   if (included.length !== d.confirmCount) throw new Error(`The audience changed to ${included.length}. Review and confirm again.`);
   if (!included.length) throw new Error("No one in this audience can be emailed.");
   // Claim the send so a double-click can't send twice.
@@ -390,8 +397,9 @@ export async function unsubscribeByToken(token: string) {
   const db = await admin();
   const { data: r } = await db.from("crm_campaign_recipients").select("contact_id, campaign_id").eq("unsubscribe_token", token).maybeSingle();
   if (!r) return false;
-  const { data: c } = await db.from("crm_contacts").select("id, scope, offering_id, consent").eq("id", r.contact_id).maybeSingle();
+  const { data: c } = await db.from("crm_contacts").select("id, email, scope, offering_id, consent").eq("id", r.contact_id).maybeSingle();
   if (!c) return false;
+  if (c.email) await recordPromotionalUnsubscribe(db, c.email);
   if (c.consent !== "unsubscribed") {
     await db.from("crm_contacts").update({ consent: "unsubscribed", consent_recorded_at: new Date().toISOString(), consent_note: "Unsubscribed from email link", updated_at: new Date().toISOString() }).eq("id", c.id);
     await logActivity({ scope: c.scope, offering_id: c.offering_id, contact_id: c.id, campaign_id: r.campaign_id, actor_user_id: null as any, kind: "consent_changed", summary: "Unsubscribed via email link", details: { from: c.consent, to: "unsubscribed" } });

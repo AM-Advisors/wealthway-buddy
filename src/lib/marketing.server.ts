@@ -7,6 +7,8 @@ import {
   CHANNELS, MARKETING_ACCESS, MARKETING_APPROVERS, emailProblems, parseCsvEmails, postProblems,
   renderEmailHtml, renderEmailText, type EmailBlock,
 } from "@/lib/marketing-model";
+import { entitledBroadcastContacts, recordPromotionalUnsubscribe, suppressedPromotionalEmails } from "./promotional-email.server";
+import { normalizePromotionalEmail } from "./promotional-email-model";
 
 const admin = async () => (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
 const BUCKET = "marketing-assets";
@@ -196,13 +198,7 @@ export async function linkedinDisconnect(userId: string) {
 
 /* ---------- Audiences ---------- */
 async function unsubscribedSet(db: any, emails: string[]) {
-  if (!emails.length) return new Set<string>();
-  const out = new Set<string>();
-  for (let i = 0; i < emails.length; i += 500) {
-    const { data } = await db.from("email_unsubscribes").select("email").in("email", emails.slice(i, i + 500)).not("unsubscribed_at", "is", null);
-    for (const r of (data ?? []) as any[]) out.add(r.email);
-  }
-  return out;
+  return suppressedPromotionalEmails(db, emails);
 }
 
 export async function listAudiences(userId: string) {
@@ -216,25 +212,28 @@ export async function listAudiences(userId: string) {
 export async function createAudience(userId: string, d: { name: string; sources: string[]; csv?: string | null | undefined }) {
   const { db } = await requireMarketing(userId);
   const members = new Map<string, string | null>();
+  const eligible = await entitledBroadcastContacts(userId, db);
+  const byEmail = new Map(eligible.map((c: any) => [normalizePromotionalEmail(c.email), c]));
   const add = (email: string | null | undefined, name: string | null | undefined) => { const e = email?.trim().toLowerCase(); if (e && /@/.test(e) && !members.has(e)) members.set(e, name ?? null); };
   if (d.sources.includes("sales")) {
-    const { data } = await db.from("crm_contacts").select("email, full_name, consent").eq("scope", "harmonious").is("archived_at", null).not("email", "is", null).limit(10000);
-    for (const c of (data ?? []) as any[]) if (c.consent !== "unsubscribed") add(c.email, c.full_name);
+    for (const c of eligible) if (c.scope === "harmonious") add(c.email, c.full_name);
   }
   if (d.sources.includes("clients")) {
     const { data } = await db.from("client_contacts").select("email, full_name").is("deactivated_at", null).not("email", "is", null).limit(10000);
-    for (const c of (data ?? []) as any[]) add(c.email, c.full_name);
+    for (const c of (data ?? []) as any[]) if (byEmail.has(normalizePromotionalEmail(c.email))) add(c.email, c.full_name);
   }
   if (d.sources.includes("investors")) {
     const { data: r } = await db.from("user_roles").select("user_id").eq("role", "investor").limit(10000);
     const ids = ((r ?? []) as any[]).map((x) => x.user_id);
     for (let i = 0; i < ids.length; i += 500) {
       const { data } = await db.from("profiles").select("email, legal_name").in("user_id", ids.slice(i, i + 500));
-      for (const p of (data ?? []) as any[]) add(p.email, p.legal_name);
+      for (const p of (data ?? []) as any[]) if (byEmail.has(normalizePromotionalEmail(p.email))) add(p.email, p.legal_name);
     }
   }
-  if (d.sources.includes("csv") && d.csv) for (const m of parseCsvEmails(d.csv)) add(m.email, m.full_name);
-  if (!members.size) throw new Error("No email addresses found for those sources.");
+  if (d.sources.includes("csv") && d.csv) for (const m of parseCsvEmails(d.csv)) if (byEmail.has(m.email)) add(m.email, m.full_name);
+  const suppressed = await unsubscribedSet(db, [...members.keys()]);
+  for (const email of suppressed) members.delete(email);
+  if (!members.size) throw new Error("No contacts with recorded opt-in and permitted access were found. Record consent through CRM first.");
   const { data: a, error } = await db.from("marketing_audiences").insert({ name: d.name.slice(0, 120), sources: d.sources, created_by: userId }).select("id").single();
   if (error) throw new Error(error.message);
   const rows = [...members].map(([email, full_name]) => ({ audience_id: a.id, email, full_name }));
@@ -309,6 +308,7 @@ export async function decideEmail(userId: string, id: string, action: "submit" |
 }
 
 async function unsubscribeUrl(db: any, email: string) {
+  email = normalizePromotionalEmail(email);
   await db.from("email_unsubscribes").upsert({ email }, { onConflict: "email", ignoreDuplicates: true });
   const { data } = await db.from("email_unsubscribes").select("token").eq("email", email).single();
   return `${SITE}/unsubscribe/${data.token}`;
@@ -333,11 +333,7 @@ export async function unsubscribeByToken(token: string) {
   const db = await admin();
   const { data } = await db.from("email_unsubscribes").select("email, unsubscribed_at").eq("token", token).maybeSingle();
   if (!data) return { ok: false as const };
-  if (!data.unsubscribed_at) {
-    await db.from("email_unsubscribes").update({ unsubscribed_at: new Date().toISOString() }).eq("token", token);
-    await db.from("crm_contacts").update({ consent: "unsubscribed", consent_recorded_at: new Date().toISOString(), consent_note: "Unsubscribed via email link" }).ilike("email", data.email);
-    await (await import("@/lib/email-flows.server")).onUnsubscribe(data.email);
-  }
+  await recordPromotionalUnsubscribe(db, data.email);
   return { ok: true as const };
 }
 
@@ -368,6 +364,11 @@ export async function runDue() {
   const { data: emails } = await db.from("marketing_emails").select("*").in("status", ["scheduled", "approved"]).lte("scheduled_at", now).limit(5);
   for (const e of (emails ?? []) as any[]) {
     if (isStale(e.scheduled_at, new Date())) { result.staleHeld++; continue; }
+    // Recheck the audience creator's entitlement and positive consent before every real broadcast.
+    const audience = await db.from("marketing_audiences").select("created_by").eq("id", e.audience_id).maybeSingle();
+    if (audience.error || !audience.data) throw new Error("Couldn't verify audience ownership. Nothing was sent.");
+    const permittedContacts = await entitledBroadcastContacts(audience.data.created_by, db);
+    const permittedEmails = new Set(permittedContacts.map((c: any) => normalizePromotionalEmail(c.email)));
     const { data: claimed } = await db.from("marketing_emails").update({ status: "sending" }).eq("id", e.id).in("status", ["scheduled", "approved"]).select("id");
     if (!claimed?.length) continue;
     const { data: members } = await db.from("marketing_audience_members").select("email").eq("audience_id", e.audience_id).limit(20000);
@@ -378,7 +379,7 @@ export async function runDue() {
     const files = await (await import("@/lib/marketing-drive.server")).attachmentsFor(db, e.attachment_asset_ids ?? []).catch((err) => { console.error("attachments", err); return []; });
     let failed = 0;
     for (const to of list) {
-      if (unsub.has(to)) { await db.from("marketing_email_sends").insert({ email_id: e.id, recipient: to, status: "skipped_unsubscribed" }); continue; }
+      if (unsub.has(normalizePromotionalEmail(to)) || !permittedEmails.has(normalizePromotionalEmail(to))) { await db.from("marketing_email_sends").insert({ email_id: e.id, recipient: to, status: "skipped_unsubscribed" }); continue; }
       try {
         const url = await unsubscribeUrl(db, to);
         const { trackMarketingHtml } = await import("@/lib/email-tracking.server");

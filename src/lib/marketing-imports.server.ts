@@ -8,6 +8,7 @@ import { serviceError } from "@/lib/service-error";
 import { requireMarketing } from "@/lib/marketing.server";
 import { callAsAppUser, appUserReconnectRequired } from "@/integrations/lovable/appUserConnector";
 import { getConnectionKeyForUser } from "@/lib/app-user-connections.server";
+import { recordPromotionalUnsubscribe } from "./promotional-email.server";
 
 const admin = async () => (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
 export const GATEWAY_BASE_URL = "https://connector-gateway.lovable.dev";
@@ -264,6 +265,7 @@ export async function importHubspot(userId: string, parts: HubspotPart[]) {
           const p = c.properties ?? {};
           const name = [p.firstname, p.lastname].filter(Boolean).join(" ").trim() || p.email || "HubSpot contact";
           const optOut = String(p.hs_email_optout) === "true";
+          if (optOut && p.email) await recordPromotionalUnsubscribe(db, p.email);
           const { data: ex } = await db.from("crm_contacts").select("id, consent, full_name, email, phone, organization, title").eq("external_source", "hubspot").eq("external_id", String(c.id)).maybeSingle();
           let rowId = ex?.id as string | undefined;
           if (!rowId && p.email) {
@@ -371,7 +373,6 @@ export async function importHubspot(userId: string, parts: HubspotPart[]) {
 
 /** Email history for one contact (Sales/Marketing staff). */
 export async function contactEmailHistory(userId: string, contactId: string) {
-  const { db } = await requireMarketing(userId);
-  const { data } = await db.from("crm_email_history").select("id, direction, subject, snippet, sent_at").eq("contact_id", contactId).order("sent_at", { ascending: false }).limit(200);
-  return data ?? [];
+  await requireMarketing(userId);
+  return (await (await import("./crm.server")).contactDetail(userId, contactId)).emails;
 }
