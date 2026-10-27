@@ -17,6 +17,7 @@ import { createQaState, installQaFetchMock, type QaRole, type QaState } from "@/
 import { QA_FUND_ID, QA_FUND_NAME, QA_MANAGER_NAME } from "@/lib/qa-sandbox/fictional-data";
 import { QaBillingReadback } from "@/components/qa-billing-readback";
 import { InvestorOnboardingGuide } from "@/components/investor-onboarding-guide";
+import { QaCommercialWorkflow } from "@/components/qa-commercial-workflow";
 
 export const Route = createFileRoute("/qa-sandbox")({
   head: () => ({
@@ -113,7 +114,7 @@ function SandboxShell({ children }: { children: React.ReactNode }) {
 
 function SandboxHome() {
   const { state, role } = useQa();
-  const [tab, setTab] = useState<"investor" | "wire" | "billing" | "guide">("investor");
+  const [tab, setTab] = useState<"investor" | "wire" | "billing" | "guide" | "commercial">("investor");
   const [formKey, setFormKey] = useState(0);
   return (
     <>
@@ -130,12 +131,13 @@ function SandboxHome() {
             <Button size="sm" variant={tab === "investor" ? "default" : "outline"} onClick={() => setTab("investor")}>Add investor</Button>
             <Button size="sm" variant={tab === "wire" ? "default" : "outline"} onClick={() => setTab("wire")}>Wire sender</Button>
             <Button size="sm" variant={tab === "billing" ? "default" : "outline"} onClick={() => setTab("billing")}>Client billing</Button>
+            <Button size="sm" variant={tab === "commercial" ? "default" : "outline"} onClick={() => setTab("commercial")}>Team workflow</Button>
             <Button size="sm" variant={tab === "guide" ? "default" : "outline"} onClick={() => setTab("guide")}>Investor walkthrough</Button>
             <Button size="sm" variant="ghost" onClick={() => setFormKey((k) => k + 1)}>Reset form</Button>
           </div>
           {tab === "investor" ? (
             <CreateInvestor key={formKey} fundId={QA_FUND_ID} isStaff={role === "staff"} />
-          ) : tab === "billing" ? <QaBillingReadback key={formKey} /> : tab === "guide" ? <InvestorOnboardingGuide /> : (
+          ) : tab === "commercial" ? <QaCommercialWorkflow key={formKey} /> : tab === "billing" ? <QaBillingReadback key={formKey} /> : tab === "guide" ? <InvestorOnboardingGuide /> : (
             <Card>
               <CardHeader><CardTitle className="text-base">Wire instructions</CardTitle></CardHeader>
               <CardContent><WireFromBankForm key={`${formKey}-${role}`} fundId={QA_FUND_ID} /></CardContent>
