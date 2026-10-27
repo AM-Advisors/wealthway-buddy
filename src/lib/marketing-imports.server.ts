@@ -74,8 +74,14 @@ async function upsertClickupContact(db: any, t: any, body: string, actorId: stri
   const email = (body.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0] ?? null)?.toLowerCase() ?? null;
   const tags = ["clickup", ...((t.tags ?? []) as any[]).map((x) => String(x.name).toLowerCase())].slice(0, 20);
   const fields = { full_name: String(t.name).slice(0, 200), tags, updated_at: new Date().toISOString(), ...(email ? { email } : {}) };
-  const { data: ex } = await db.from("crm_contacts").select("id").eq("external_source", "clickup").eq("external_id", String(t.id)).maybeSingle();
-  if (ex) { await db.from("crm_contacts").update(fields).eq("id", ex.id); return; }
+  const { data: ex } = await db.from("crm_contacts").select("id, full_name, tags, email").eq("external_source", "clickup").eq("external_id", String(t.id)).maybeSingle();
+  if (ex) {
+    // Skip the write when nothing changed; repeated syncs used to rewrite every contact.
+    const { updated_at: _u, ...compare } = fields;
+    if (!rowDiffers(ex, compare)) return;
+    await db.from("crm_contacts").update(fields).eq("id", ex.id);
+    return;
+  }
   const { error } = await db.from("crm_contacts").insert({ ...fields, scope: "harmonious", owner_user_id: actorId, created_by: actorId, source: "ClickUp", consent: "unknown", external_source: "clickup", external_id: String(t.id) });
   if (!error) r.contacts = (r.contacts ?? 0) + 1; else console.error("clickup contact", t.id, error.message);
 }
@@ -258,7 +264,7 @@ export async function importHubspot(userId: string, parts: HubspotPart[]) {
           const p = c.properties ?? {};
           const name = [p.firstname, p.lastname].filter(Boolean).join(" ").trim() || p.email || "HubSpot contact";
           const optOut = String(p.hs_email_optout) === "true";
-          const { data: ex } = await db.from("crm_contacts").select("id, consent").eq("external_source", "hubspot").eq("external_id", String(c.id)).maybeSingle();
+          const { data: ex } = await db.from("crm_contacts").select("id, consent, full_name, email, phone, organization, title").eq("external_source", "hubspot").eq("external_id", String(c.id)).maybeSingle();
           let rowId = ex?.id as string | undefined;
           if (!rowId && p.email) {
             const { data: byEmail } = await db.from("crm_contacts").select("id, consent").eq("scope", "harmonious").ilike("email", p.email).is("external_id", null).limit(1).maybeSingle();
@@ -266,9 +272,12 @@ export async function importHubspot(userId: string, parts: HubspotPart[]) {
           }
           const fields: any = { full_name: name.slice(0, 200), email: p.email || null, phone: p.phone || null, organization: p.company || null, title: p.jobtitle || null, updated_at: new Date().toISOString() };
           // An unsubscribe in either system wins; never re-subscribe someone.
-          if (optOut) { fields.consent = "unsubscribed"; fields.consent_recorded_at = new Date().toISOString(); fields.consent_note = "Opted out in HubSpot"; unsub++; }
+          if (optOut && ex?.consent !== "unsubscribed") { fields.consent = "unsubscribed"; fields.consent_recorded_at = new Date().toISOString(); fields.consent_note = "Opted out in HubSpot"; unsub++; }
+          const { updated_at: _u, ...compare } = fields;
+          const unchanged = !!ex && !rowDiffers(ex, compare);
           if (parts.includes("contacts") || !rowId) {
-            if (rowId) { await db.from("crm_contacts").update(fields).eq("id", rowId); updated++; }
+            if (rowId && unchanged) { /* nothing changed; skip the write */ }
+            else if (rowId) { await db.from("crm_contacts").update(fields).eq("id", rowId); updated++; }
             else {
               const { data: ins, error } = await db.from("crm_contacts").insert({ ...fields, scope: "harmonious", owner_user_id: userId, created_by: userId, source: "HubSpot", tags: ["hubspot"], consent: fields.consent ?? "unknown", external_source: "hubspot", external_id: String(c.id) }).select("id").single();
               if (error) continue;

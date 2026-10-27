@@ -37,12 +37,15 @@ export async function recordMissed(now: Date) {
   const db = await admin();
   const from = new Date(now.getTime() - 48 * 3600_000);
   const out: Record<string, number> = {};
+  // One read for every job's recent slots and one for the log start, instead of two per job.
+  const [{ data: recent }, { data: first }] = await Promise.all([
+    db.from("marketing_job_runs").select("job_key, slot_key").in("job_key", JOBS.map((j) => j.key)).gte("created_at", new Date(from.getTime() - 86400_000).toISOString()).limit(10000),
+    db.from("marketing_job_runs").select("created_at").order("created_at").limit(1),
+  ]);
+  // The scheduler log starts with Phase 0; don't report slots before the first record of any job.
+  const since = first?.[0] ? new Date(Math.max(from.getTime(), new Date(first[0].created_at).getTime())) : now;
   for (const job of JOBS) {
-    const { data } = await db.from("marketing_job_runs").select("slot_key").eq("job_key", job.key).gte("created_at", new Date(from.getTime() - 86400_000).toISOString()).limit(2000);
-    const have = new Set(((data ?? []) as any[]).map((r) => r.slot_key));
-    // The scheduler log starts with Phase 0; don't report slots before the first record of any job.
-    const { data: first } = await db.from("marketing_job_runs").select("created_at").order("created_at").limit(1);
-    const since = first?.[0] ? new Date(Math.max(from.getTime(), new Date(first[0].created_at).getTime())) : now;
+    const have = new Set(((recent ?? []) as any[]).filter((r) => r.job_key === job.key).map((r) => r.slot_key));
     const missed = missedSlots(job, since, now, have);
     if (missed.length) await db.from("marketing_job_runs").upsert(missed.map((s) => ({ job_key: job.key, slot_key: s, status: "missed" })), { onConflict: "job_key,slot_key", ignoreDuplicates: true });
     out[job.key] = missed.length;
