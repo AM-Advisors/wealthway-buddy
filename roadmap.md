@@ -1,5 +1,11 @@
 # Roadmap
 
+## ROAS corrected billing and quarterly terms (2026-10-27)
+- [ ] Retire the incorrect $19,000 current invoice through an audited authorized correction, preserving original history and avoiding duplicate receipts.
+- [ ] Record the user-confirmed paid setup, LP Q3 financials, annual management charge and partial LP annual charge; connect exact client/entity sources.
+- [ ] Prepare management financials from Q4 2026 and prorated White Glove from August 24, with quarter-end financial due dates and quarter-start White Glove due dates, in invoices/services and linked draft quote/SOW; retain approval gates.
+- [ ] Validate concrete amounts, proration and due dates with focused tests and authorized saved read-back; no automatic money movement or synthetic live QA.
+
 ## Full Self Serve journey verification (2026-10-27)
 - [x] Rechecked current backend: production, no development instance. Reviewed E2E origin/evidence absent; existing preflight refused before browser navigation or writes. Six safety checks and 65 focused fictional setup/invitation/document checks passed.
 - [ ] Create fund → invite investor → upload document → independently approve → sign → read completed copy on fund page, blocked on independently isolated QA, verified storage/auth/runtime binding and synthetic sessions. No live fund, upload, email or signature was created; offline checks do not establish full journey success.
