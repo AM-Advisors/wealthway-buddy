@@ -27,7 +27,7 @@ export type JobDef = {
 export const JOBS: JobDef[] = [
   { key: "publishing_queue", label: "Publishing queue (posts + emails)", everyMin: 5, catchUp: false },
   { key: "linkedin_personal", label: "Personal LinkedIn scheduled posts", everyMin: 5, catchUp: false },
-  { key: "clickup_sync", label: "ClickUp synchronization", everyMin: 5, catchUp: false },
+  { key: "clickup_sync", label: "ClickUp synchronization", everyMin: 60, minute: 15, catchUp: false },
   { key: "drive_sync", label: "Drive synchronization", everyMin: 60, minute: 0, catchUp: true },
   { key: "research", label: "Research ingestion, analysis, Form D digest (ideas in the 12:30 UTC run)", everyMin: 60, minute: 30, catchUp: true },
   { key: "metrics", label: "Platform metrics collection", everyMin: 1440, hour: 13, minute: 40, catchUp: true },
