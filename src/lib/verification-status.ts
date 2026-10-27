@@ -42,8 +42,15 @@ export const VERIFICATION_LABEL: Record<CanonicalStatus, string> = {
   pending: "Not started",
 };
 
+/** Display-only refinements that keep useful wording; the canonical status is unchanged. */
+const IN_PROGRESS = ["in_progress", "started", "processing", "pending_provider"];
+const INFO_NEEDED = ["info_requested", "more_info_needed", "more_information_needed", "resubmission_requested", "sent_back"];
+
 /** One label for any stored identity/screening value. Never shows raw values. */
 export function verificationLabel(status: string | null | undefined): string {
+  const s = String(status ?? "").trim().toLowerCase();
+  if (IN_PROGRESS.includes(s)) return "In progress";
+  if (INFO_NEEDED.includes(s)) return "More information needed";
   return VERIFICATION_LABEL[canonicalVerificationStatus(status)];
 }
 
