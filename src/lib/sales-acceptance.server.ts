@@ -419,7 +419,55 @@ async function notifyAfterSign(db: any, r: Loaded, acc: any, inv: { id: string; 
         ...base, recipientName: acc.signer_name, forSigner: true,
         actionUrl: `${CLIENT_PORTAL_BASE}/client/invoices?invoice=${inv.id}`, actionLabel: "View and pay your invoice" } });
     }
+    // Invoice to the payer chosen on the quote, when it's someone other than the signer.
+    if (r.kind === "quote") {
+      const { data: qq } = await db.from("sales_quotes").select("billing_contact_id").eq("id", r.id).maybeSingle();
+      const { data: payer } = qq?.billing_contact_id ? await db.from("crm_contacts").select("full_name, email").eq("id", qq.billing_contact_id).maybeSingle() : { data: null };
+      const payerEmail = payer?.email ? String(payer.email).toLowerCase() : null;
+      if (payerEmail && payerEmail !== String(acc.signer_email ?? "").toLowerCase()) {
+        await sendTemplateEmail("sale-signed", payerEmail, { idempotencyKey: `sale-signed:${acc.id}:payer`, templateData: {
+          ...base, recipientName: payer!.full_name, forSigner: true,
+          actionUrl: `${CLIENT_PORTAL_BASE}/client/invoices?invoice=${inv.id}`, actionLabel: "View and pay your invoice" } });
+      }
+    }
   } catch (e) { console.error("accept notify failed", e); }
+}
+
+/**
+ * The current signer, from their own link and before signing, can name a teammate to sign
+ * instead or to receive and pay the invoice. Recorded as the client's action (no staff actor).
+ */
+export async function teammateByToken(d: { token: string; role: "sign" | "pay"; fullName: string; email: string; title?: string | null | undefined; ip: string | null }) {
+  const t = await fromToken(d.token);
+  if (t.kind !== "quote") throw new Error("Ask your Harmonious contact to change who signs this document.");
+  const db = await admin();
+  const r = await loadRecord(db, t.kind, t.id);
+  const blocker = signBlockerForRecord(r, t.email);
+  if (blocker) throw new Error(blocker);
+  if (await acceptanceFor(db, acceptanceKey(t.kind, t.id, t.version))) throw new Error("This quote is already signed.");
+  if (!r.clientId || !r.ownerId) throw new Error("Ask your Harmonious contact to add your teammate.");
+  const email = d.email.trim().toLowerCase();
+  if (d.role === "sign" && email === String(t.email).toLowerCase()) throw new Error("That's already you.");
+  const { data: existing } = await db.from("crm_contacts").select("id").eq("client_id", r.clientId).ilike("email", email).limit(1).maybeSingle();
+  let contactId = existing?.id as string | undefined;
+  if (!contactId) {
+    const { data: cl } = await db.from("clients").select("legal_name").eq("id", r.clientId).maybeSingle();
+    const { data: c, error } = await db.from("crm_contacts").insert({ full_name: d.fullName.trim(), email, title: d.title?.trim() || null, organization: cl?.legal_name ?? null, client_id: r.clientId, scope: "harmonious", owner_user_id: r.ownerId, created_by: r.ownerId, source: "Client sign link", tags: ["client"] } as any).select("id").single();
+    if (error || !c) throw new Error("Couldn't add your teammate.");
+    contactId = c.id as string;
+  }
+  const patch = d.role === "sign" ? { contact_id: contactId } : { billing_contact_id: contactId };
+  const { data: saved } = await db.from("sales_quotes").update({ ...patch, updated_at: new Date().toISOString() }).eq("id", t.id).in("status", ["approved", "sent"]).select("id");
+  if (!saved?.length) throw new Error("This quote changed. Ask your Harmonious contact for a new link.");
+  await db.from("sales_quote_events").insert({ quote_id: t.id, event: d.role === "sign" ? "client_signer_changed" : "client_payer_changed", actor_id: null, note: `${t.email} (client, via sign link) → ${email}` });
+  if (d.role === "sign") {
+    const url = await acceptLinkFor("quote", t.id, t.version, email);
+    const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+    await sendTemplateEmail("signing-reminder", email, { idempotencyKey: `quote-handoff:${t.id}:${t.version}:${email}`, templateData: {
+      recipientName: d.fullName.trim(), documentTitle: r.title, fundName: "your organization", steps: ["Review the quote", "Sign and approve"],
+      requestedBy: t.email, ctaUrl: url, ctaLabel: "Review and sign" } });
+  }
+  return { ok: true, handedOff: d.role === "sign" };
 }
 
 /** Approved Harmonious wire/ACH details, masked unless revealed. Every read is logged. */

@@ -319,7 +319,7 @@ export async function newVersion(userId: string, id: string) {
   const { data: q } = await db.from("sales_quotes").select("*").eq("id", id).maybeSingle();
   if (!q || !canSee(a, q.owner_user_id) || ["signed", "superseded"].includes(q.status)) throw new Error("This quote can't be revised.");
   const { data: lines } = await db.from("sales_quote_lines").select("*").eq("quote_id", id).order("sort_order");
-  const { id: newId } = await saveQuote(userId, { title: q.title, clientId: q.client_id, contactId: q.contact_id, dealId: q.deal_id, offeringId: q.offering_id, validUntil: q.valid_until, notes: q.notes,
+  const { id: newId } = await saveQuote(userId, { title: q.title, clientId: q.client_id, contactId: q.contact_id, billingContactId: q.billing_contact_id ?? null, dealId: q.deal_id, offeringId: q.offering_id, validUntil: q.valid_until, notes: q.notes,
     lines: ((lines ?? []) as any[]).map((l) => ({ serviceKey: l.service_key, label: l.label, quantity: Number(l.quantity), unitCents: Number(l.unit_cents), baselineUnitCents: Number(l.baseline_unit_cents), billingFrequency: l.billing_frequency ?? "one_time", firstBillOn: l.first_bill_on ?? null, bookkeeping: l.bookkeeping_snapshot ?? undefined, details: l.service_details ?? undefined })) });
   if (q.sow_id) {
     // The old SOW stays with its old quote/version; the revision gets its own unsigned draft.
