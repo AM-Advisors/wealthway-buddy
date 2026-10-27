@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { loadPersonStatuses, withCanonicalVerification } from "@/lib/verification-status";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/lib/require-auth";
 
@@ -58,9 +59,9 @@ export const listApplications = createServerFn({ method: "GET" })
 
     const { data: applications, error } = await query;
     if (error) throw new Error(error.message);
-    const rows = applications ?? [];
-
-    const userIds = [...new Set(rows.map((r: any) => r.user_id))];
+    const userIds = [...new Set((applications ?? []).map((r: any) => r.user_id as string))];
+    const personStatuses = await loadPersonStatuses(supabase, userIds);
+    const rows = (applications ?? []).map((r: any) => withCanonicalVerification(r, personStatuses));
     const offeringIds = [...new Set(rows.map((r: any) => r.offering_id))];
 
     const [{ data: profiles }, { data: offerings }] = await Promise.all([
