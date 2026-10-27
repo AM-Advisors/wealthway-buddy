@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/lib/require-auth";
 import { applicationIdForOffering } from "@/lib/active-application";
+import { loadApplicationVerification } from "@/lib/application-verification";
 
 /** Funding happens inside a fund, so every call may name the fund it is for. */
 const fundScope = (data: unknown) =>
@@ -132,7 +133,7 @@ async function loadFundingApplication(supabase: any, userId: string, offeringId?
     .maybeSingle();
   if (error) throw new Error(error.message);
   if (!data) throw new Error("No application found.");
-  return data;
+  return loadApplicationVerification(supabase, data);
 }
 
 async function assertFundable(
@@ -180,7 +181,7 @@ export const getFunding = createServerFn({ method: "GET" })
   .handler(async ({ data: scope, context }) => {
     const { supabase, userId } = context;
 
-    const { data: application } = await supabase
+    const { data: storedApplication, error: applicationError } = await supabase
       .from("investor_applications")
       .select(
         "id, offering_id, kyc_status, aml_status, accreditation_status, documents_status, funding_status, commitment_cents, manager_review_status, manager_review_notes",
@@ -189,7 +190,8 @@ export const getFunding = createServerFn({ method: "GET" })
       .eq("id", await applicationIdForOffering(supabase, userId, scope.offering_id))
       .maybeSingle();
 
-    if (!application)
+    if (applicationError) throw new Error("We couldn't load your investment. Please try again.");
+    if (!storedApplication)
       return {
         application: null,
         offering: null,
@@ -201,6 +203,8 @@ export const getFunding = createServerFn({ method: "GET" })
         },
         wireConfirmations: [] as any[],
       };
+
+    const application = await loadApplicationVerification(supabase, storedApplication);
 
     const { data: offeringRow } = await supabase
       .from("offerings")

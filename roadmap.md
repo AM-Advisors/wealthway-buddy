@@ -1,5 +1,10 @@
 # Roadmap
 
+## Exact investing-party verification and funding (2026-10-27)
+- [x] Use explicitly application-linked person checks for legacy funding reads/actions and investor/fund compliance details, without account-based matching or weakening pending/review/declined results.
+- [ ] Stage atomic future person-to-active-application verification synchronization with retained audit evidence; no backfill or live writes.
+- [ ] Run isolated regressions; durable authenticated funding acceptance remains blocked on independently isolated QA and synthetic sessions.
+
 ## Monitoring document review and cross-tab inactivity (2026-10-22)
 - [x] Confirm and repair uploaded PDF/short Word review completion through shared in-page rendering, with explicit downloaded-copy confirmation on display failure; signing authority unchanged.
 - [x] Share account-scoped browser activity across tabs, clear idle warnings after remote activity/Continue and guard automatic sign-out once.

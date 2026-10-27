@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/lib/require-auth";
 import { activeApplicationId } from "@/lib/active-application";
+import { loadApplicationVerification } from "@/lib/application-verification";
 import { logComplianceEvent } from "@/lib/kyc-aml.server";
 
 /**
@@ -126,7 +127,7 @@ export const getMyComplianceCase = createServerFn({ method: "GET" })
     ]);
 
     return {
-      application,
+      application: await loadApplicationVerification(supabase, application),
       offering: offering ?? null,
       documents: (documents ?? []) as any[],
       trail: trailMap.get(String(application.id)) ?? [],
@@ -175,7 +176,7 @@ export const getInvestorComplianceDetail = createServerFn({ method: "POST" })
 
     return {
       role,
-      application,
+      application: await loadApplicationVerification(supabase, application),
       documents: (documents ?? []) as any[],
       trail: trailMap.get(String(application.id)) ?? [],
       kycResult: (kyc as any)?.result ?? null,
