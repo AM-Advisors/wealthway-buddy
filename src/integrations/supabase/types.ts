@@ -50290,6 +50290,17 @@ export type Database = {
         Args: { p_offering_id: string; p_path: string }
         Returns: undefined
       }
+      save_sales_operations_handoff: {
+        Args: {
+          _action: string
+          _actor: string
+          _due?: string
+          _fund: string
+          _owner?: string
+          _quote: string
+        }
+        Returns: string
+      }
       save_wire_instructions: {
         Args: { p_details: Json; p_offering_id: string }
         Returns: undefined
