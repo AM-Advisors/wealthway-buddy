@@ -141,3 +141,37 @@ export const getRoasBillingUpdate = createServerFn({ method: "GET" })
       })),
     };
   });
+
+/** Read-only exact-client payment projection. No receipt notes or bank references leave the server. */
+export async function getRoasPaymentsHandler({ context }: { context: any }) {
+  if (!context.userId) throw new Error("Sign in to view payments.");
+  const { data: roleRows, error: roleError } = await context.supabase.from("user_roles").select("role").eq("user_id", context.userId);
+  if (roleError || !(roleRows ?? []).some((row: { role: string }) => (STAFF_ROLES as readonly string[]).includes(row.role))) {
+    throw new Error("Forbidden: this area is for the Harmonious team.");
+  }
+  const clientId = "f831e9f7-1850-4646-b991-c1a4bc211bc8";
+  const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
+  const { data: rows, error } = await db.from("invoices")
+    .select("id, client_id, number, status, total_cents, paid_on, due_date, period_start, period_end")
+    .eq("client_id", clientId).order("created_at", { ascending: false });
+  if (error) throw new Error("Couldn't load ROAS payments. Please try again.");
+  const { withInvoiceBalances } = await import("@/lib/invoice-balance.server");
+  const invoices = await withInvoiceBalances(rows ?? []);
+  const ids = invoices.map(invoice => invoice.id);
+  const lineResult = ids.length ? await db.from("invoice_lines")
+    .select("id, invoice_id, label, service_key, amount_cents").in("invoice_id", ids).order("sort_order") : { data: [], error: null };
+  if (lineResult.error) throw new Error("Couldn't load invoice services. Please try again.");
+  return {
+    invoices: invoices.map(invoice => ({
+      id: invoice.id, number: invoice.number, status: invoice.status,
+      totalCents: Number(invoice.total_cents), paidCents: invoice.recorded_paid_cents,
+      remainingCents: invoice.remaining_cents, paidOn: invoice.status === "paid" ? invoice.paid_on ?? invoice.recorded_paid_on : invoice.recorded_paid_on,
+      dueDate: invoice.due_date, periodStart: invoice.period_start, periodEnd: invoice.period_end,
+    })),
+    lines: (lineResult.data ?? []).map(line => ({ id: line.id, invoiceId: line.invoice_id, label: line.label, serviceKey: line.service_key, amountCents: Number(line.amount_cents) })),
+  };
+}
+
+export const getRoasPayments = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(getRoasPaymentsHandler);
