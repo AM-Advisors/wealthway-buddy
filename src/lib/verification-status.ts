@@ -94,7 +94,7 @@ export async function loadPersonStatuses(supabase: any, userIds: string[]) {
 export async function canonicalizeApplications<T extends Record<string, any>>(supabase: any, apps: T[] | null | undefined, fallbackUserId?: string): Promise<T[]> {
   const list = (apps ?? []) as T[];
   if (!list.length) return list;
-  const uid = (a: T) => (a.user_id as string | undefined) ?? fallbackUserId ?? "";
+  const uid = (a: T) => (a["user_id"] as string | undefined) ?? fallbackUserId ?? "";
   let persons: Map<string, { kyc: string | null; aml: string | null }>;
   try {
     persons = await loadPersonStatuses(supabase, [...new Set(list.map(uid).filter(Boolean))]);
