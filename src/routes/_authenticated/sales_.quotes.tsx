@@ -19,7 +19,7 @@ import { SERVICE_LADDERS, adminQuoteKey, ADMIN_QUOTE_KEY_PREFIX, type LadderProd
 import { standardInclusions } from "@/lib/service-inclusions";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { draftQuoteFromSow, getQuoteCatalog, listSalesQuotes, listSowsForQuote, saveSalesQuote } from "@/lib/sales-hub.functions";
+import { addQuoteClientContact, createQuoteClient, draftQuoteFromSow, getQuoteCatalog, listSalesQuotes, listSowsForQuote, saveSalesQuote } from "@/lib/sales-hub.functions";
 import { QUOTE_STATUS_LABEL } from "@/lib/sales-model";
 import type { QuoteLineInput } from "@/lib/sales-model";
 import { Panel, money } from "@/components/sales/sales-ui";
