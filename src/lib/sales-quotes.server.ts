@@ -1,5 +1,5 @@
 /** Server-only quoting engine: rate-card quotes → approval → SOW/MSA drafts → signed. Never moves money. */
-import { canDraftQuote, cleanLineDetails, priceQuote, quoteApprovalProblem, type QuoteLineInput } from "@/lib/sales-model";
+import { canDraftQuote, cleanLineDetails, priceQuote, quoteApprovalProblem, quoteAutoApproves, type QuoteLineInput } from "@/lib/sales-model";
 import { names, salesActor } from "@/lib/sales-hub.server";
 import { canAddSalesContact, type SalesContactInput } from "@/lib/sales-contact-model";
 import { BOOKKEEPING_KEY, bookkeepingConfigSchema, bookkeepingDraftBlocker, bookkeepingTerms, calculateBookkeeping } from "@/lib/bookkeeping-model";
