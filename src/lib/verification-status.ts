@@ -61,11 +61,27 @@ export function personStatusByUser(rows: PersonRow[] | null | undefined) {
 export function withCanonicalVerification<T extends { user_id: string; kyc_status?: string | null; aml_status?: string | null }>(
   app: T,
   persons: Map<string, { kyc: string | null; aml: string | null }>,
-): T & { kyc_status: CanonicalStatus; aml_status: CanonicalStatus } {
+): T & { kyc_status: StoredStatus; aml_status: StoredStatus } {
   const p = persons.get(app.user_id);
   return {
     ...app,
-    kyc_status: effectiveCheckStatus(p?.kyc, app.kyc_status),
-    aml_status: effectiveCheckStatus(p?.aml, app.aml_status),
+    kyc_status: toStored(effectiveCheckStatus(p?.kyc, app.kyc_status)),
+    aml_status: toStored(effectiveCheckStatus(p?.aml, app.aml_status)),
   };
+}
+
+/** Existing screens use the stored vocabulary; keep it so badges look the same. */
+export type StoredStatus = "approved" | "review" | "declined" | "not_started";
+export function toStored(s: CanonicalStatus): StoredStatus {
+  return s === "pending" ? "not_started" : s;
+}
+
+/** Load canonical person results for the given login accounts. Unreadable rows fall back safely. */
+export async function loadPersonStatuses(supabase: any, userIds: string[]) {
+  if (!userIds.length) return personStatusByUser([]);
+  const { data } = await supabase
+    .from("persons")
+    .select("user_id, kyc_status, aml_status, merged_into_person_id")
+    .in("user_id", userIds);
+  return personStatusByUser(data ?? []);
 }

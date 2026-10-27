@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/lib/require-auth";
 import { isReconciledFunding } from "@/lib/funding-status";
+import { loadPersonStatuses, withCanonicalVerification } from "@/lib/verification-status";
 
 async function assertReviewer(supabase: any, userId: string) {
   const { data, error } = await supabase
@@ -73,8 +74,9 @@ export const getFundOverview = createServerFn({ method: "GET" })
       .limit(500);
     if (error) throw new Error(error.message);
 
-    const applications = rows ?? [];
-    const userIds = [...new Set(applications.map((r: any) => r.user_id as string))];
+    const userIds = [...new Set((rows ?? []).map((r: any) => r.user_id as string))];
+    const personStatuses = await loadPersonStatuses(supabase, userIds);
+    const applications = (rows ?? []).map((r: any) => withCanonicalVerification(r, personStatuses));
     const { data: profiles } = userIds.length
       ? await supabase
           .from("profiles")
@@ -217,7 +219,8 @@ export const getFundOperations = createServerFn({ method: "GET" })
       .eq("offering_id", data.offeringId)
       .limit(500);
     if (appsError) throw new Error(appsError.message);
-    const applications = (apps ?? []) as any[];
+    const reviewPersons = await loadPersonStatuses(supabase, [...new Set(((apps ?? []) as any[]).map((a) => a.user_id as string))]);
+    const applications = ((apps ?? []) as any[]).map((a) => withCanonicalVerification(a, reviewPersons));
     const appIds = applications.map((a) => a.id as string);
 
     const { data: docs, error: docsError } = await supabase
@@ -437,7 +440,8 @@ export const getFundInvestorReview = createServerFn({ method: "GET" })
       .order("updated_at", { ascending: false })
       .limit(500);
     if (appsError) throw new Error(appsError.message);
-    const applications = (apps ?? []) as any[];
+    const reviewPersons = await loadPersonStatuses(supabase, [...new Set(((apps ?? []) as any[]).map((a) => a.user_id as string))]);
+    const applications = ((apps ?? []) as any[]).map((a) => withCanonicalVerification(a, reviewPersons));
     const appIds = applications.map((a) => a.id as string);
 
     const { data: docs, error: docsError } = await supabase
@@ -692,7 +696,7 @@ export const getManagerPanelSummary = createServerFn({ method: "GET" })
       supabase
         .from("investor_applications")
         .select(
-          "id, offering_id, kyc_status, aml_status, accreditation_status, documents_status, funding_status, commitment_cents",
+          "id, offering_id, user_id, kyc_status, aml_status, accreditation_status, documents_status, funding_status, commitment_cents",
         )
         .in("offering_id", ids)
         .limit(2000),
@@ -711,7 +715,8 @@ export const getManagerPanelSummary = createServerFn({ method: "GET" })
     ]);
     if (appsRes.error) throw new Error(appsRes.error.message);
 
-    const applications = (appsRes.data ?? []) as any[];
+    const dashPersons = await loadPersonStatuses(supabase, [...new Set(((appsRes.data ?? []) as any[]).map((a) => a.user_id as string))]);
+    const applications = ((appsRes.data ?? []) as any[]).map((a) => withCanonicalVerification(a, dashPersons));
     const appIds = applications.map((a) => a.id as string);
 
     const [{ data: wires }, { data: payments }] = appIds.length
