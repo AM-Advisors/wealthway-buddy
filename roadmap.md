@@ -1,5 +1,9 @@
 # Roadmap
 
+## ROAS billing update consolidation (2026-10-27)
+- [x] Added staff-only /ops/billing/roas-update as the one read-only place for the ROAS draft quote terms, recorded invoice balances, annual K-1 sets, conditional filing-fee range and next steps; linked from Operations billing and searchable navigation.
+- [ ] Authenticated page read-back remains blocked on independently isolated QA and synthetic sessions; no quote, invoice, filing, payment or approval changed.
+
 ## ROAS annual K-1 and filing fees (2026-10-27)
 - [x] Added separate LP and management annual K-1 sets at $2,500 each, first bill December 31, 2026, to the existing ROAS draft quote through Alyssa's authenticated save; saved rows read back. No duplicate quote, issuance, signing or activation.
 - [x] Prepared conditional fee review in docs/roas-filing-fee-review.md using recorded states and official sources: $160 Harmonious fee, state subtotal $950/$1,850 plus Texas up to $500, excluding unverified processing/late charges. No notices, payments or close approvals performed.
