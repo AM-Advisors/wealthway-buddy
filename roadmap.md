@@ -1,7 +1,7 @@
 # Roadmap
 
 ## Missing investment/application link safeguard (2026-10-27)
-- [ ] Remove stale-approval fallback for missing investing-person links and run offline regression tests.
+- [x] Remove stale-approval fallback for missing investing-person links; 73 offline tests passed and preview build OK. Missing links now block funding/compliance reads rather than imply Approved; no live records changed.
 - [ ] Correct yavaxi6493's active Erebor link only after resolving conflicting application history: one signed $2,500,000 application, one canceled investment's verification application, versus active $50,000 investment. No safe automatic candidate established.
 
 ## Exact investing-party verification and funding (2026-10-27)
