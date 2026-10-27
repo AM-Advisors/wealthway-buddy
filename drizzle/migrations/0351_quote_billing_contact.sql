@@ -1,0 +1,2 @@
+ALTER TABLE public.sales_quotes ADD COLUMN IF NOT EXISTS billing_contact_id uuid REFERENCES public.crm_contacts(id);
+COMMENT ON COLUMN public.sales_quotes.billing_contact_id IS 'Client contact who receives the invoice and pays; signer is contact_id.';
