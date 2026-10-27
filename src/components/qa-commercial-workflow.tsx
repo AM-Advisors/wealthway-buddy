@@ -9,6 +9,8 @@ import { Input } from "./ui/input";
 import { SearchableSelect } from "./ui/searchable-select";
 import { validateOperationsTransfer, type RequestTaskProgress } from "@/lib/fund-request-handoff-model";
 import { ArrowRight } from "lucide-react";
+import { groupVisibleContacts } from "@/lib/crm-contact-matching";
+import { CrmCompanyPanel } from "./crm-company-panel";
 export function QaCommercialWorkflow() {
   const [data, setData] = useState(fictionalCommercialWorkflow);
   const [handoff, setHandoff] = useState<HandoffData>({ owners: [{ id: "qa-ops", name: "Morgan Reed" }], rows: [{ quoteId: "qa-quote-1", quoteNumber: "FABLE-Q001", title: "Fablewood Ventures fund setup", taskId: null, ownerId: null, ownerName: null, dueDate: null, status: "open", canAssign: true, canReceive: false }] });
@@ -17,7 +19,15 @@ export function QaCommercialWorkflow() {
     setData(current => ({ ...current, inquiries: current.inquiries.filter(i => i.id !== input.leadId) }));
   }} /><FundSalesHandoffView data={handoff} onSave={async input => {
     setHandoff(current => ({ ...current, rows: current.rows.map(row => row.quoteId !== input.quoteId ? row : input.action === "assign" ? { ...row, ownerId: input.ownerId ?? null, ownerName: "Morgan Reed", dueDate: input.dueDate ?? null, canReceive: true, status: "open" } : { ...row, status: input.action === "acknowledge" ? "in_progress" : "done", canAssign: input.action !== "complete", canReceive: input.action !== "complete" }) }));
-  }} /><QaRequestTransfer /></div>;
+  }} /><QaRequestTransfer /><QaMatchedContacts /></div>;
+}
+
+function QaMatchedContacts() {
+  const [open, setOpen] = useState(false);
+  const actor = { userId: "qa-rep", superUser: false, viewAll: false, canAssign: false, canApproveCampaigns: false, harmoniousStaff: true, managedFunds: new Set<string>() };
+  const row = { scope: "harmonious" as const, offering_id: null, owner_user_id: "qa-rep", full_name: "Taylor Brook", company_id: "qa-company", tags: [], consent: "unknown" };
+  const contacts = groupVisibleContacts(actor, [{ ...row, id: "qa-clickup", email: "Taylor@example.test" }, { ...row, id: "qa-hubspot", email: "taylor@example.test" }]);
+  return <section className="border-t pt-4" aria-label="Matched contacts"><h2 className="mb-3 text-lg font-semibold">Juniper Ridge Ventures</h2><CrmCompanyPanel data={{ contacts, activity: [{ id: "qa-note", contact_id: "qa-clickup", summary: "Introduction recorded", actor_name: "Avery Quinn", created_at: "2026-10-27T08:00:00Z" }], emails: [{ id: "qa-email", contact_id: "qa-hubspot", subject: "Fund setup follow-up", snippet: "Fictional follow-up from the shared contact history.", direction: "incoming", sent_at: "2026-10-27T08:05:00Z" }], deals: [] }} onContact={() => setOpen(true)} onAdd={() => {}} onConnect={() => {}} onDeal={() => {}} />{open && <p className="mt-3 text-sm">Taylor Brook · taylor@example.test · Introduction recorded · Fund setup follow-up</p>}</section>;
 }
 
 function QaRequestTransfer() {

@@ -1,5 +1,10 @@
 # Roadmap
 
+## Cross-source contact matching (2026-10-27)
+- [x] Match imported normalized emails within the same owner using an atomic source-link transaction; other-owner matches retain explicit review. Contact/company views group entitled same-scope matches and share original history; no login/person merges, historical deletions or access expansion.
+- [x] Thirteen fictional model/transaction checks pass; company contact → activity → email click-through inspected at desktop and 440px without runtime errors or overflow. Matching function confirmed installed; no live imports run or existing contacts rewritten.
+- [ ] Durable authenticated import/read-back requires isolated QA; live release requires explicit publishing approval.
+
 ## Contracted bookkeeping, posting and reviewed reporting (2026-10-27)
 - [x] Rechecked current backend metadata: shared production only, no development instance. Reviewed QA evidence and QA origin are absent; 84 offline bookkeeping, fee and safety checks pass. No financial fixtures, enrollment, invoice issuance, posting, pricing publication or real records changed.
 - [ ] Establish independently isolated database/auth/storage, actual frontend/server binding, no production data/credentials and inert outbound integrations/jobs in Harmonious QA; security validation and synthetic sessions must pass before implementation resumes.

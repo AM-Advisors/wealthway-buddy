@@ -5,6 +5,7 @@ import { OPS_STAFF_ROLES } from "@/lib/ops-capabilities";
 import { companyContacts, contactFields } from "@/lib/crm-company-model";
 import { recordPromotionalUnsubscribe, suppressedPromotionalEmails } from "./promotional-email.server";
 import { normalizePromotionalEmail } from "./promotional-email-model";
+import { groupVisibleContacts, matchingVisibleContacts, importedContactFields } from "./crm-contact-matching";
 import {
   campaignDecisionProblem, campaignEditProblem, campaignSendProblem, canCreate, canEdit, canReassign, canSee,
   DEAL_STAGE_LABELS, mergeUpdates, resolveAudience,
@@ -93,8 +94,8 @@ export async function crmWorkspace(userId: string, filter: { scope: Scope | "all
   return {
     me: { userId, superUser: a.superUser, viewAll: a.viewAll, canAssign: a.superUser || a.canAssign, canApprove: a.superUser || a.canApproveCampaigns, harmonious: a.harmoniousStaff },
     fundOptions: fundOptions as { id: string; name: string }[],
-    contacts: contacts.map(decorate),
-    companies: ((companyResult.data ?? []) as any[]).filter((r) => canSee(a, r) || contacts.some((c) => c.company_id === r.id)).map((r) => ({ ...r, contact_count: contacts.filter((c) => c.company_id === r.id && !c.archived_at).length })),
+    contacts: groupVisibleContacts(a, contacts).map(decorate),
+    companies: ((companyResult.data ?? []) as any[]).filter((r) => canSee(a, r) || contacts.some((c) => c.company_id === r.id)).map((r) => ({ ...r, contact_count: groupVisibleContacts(a, contacts.filter((c) => c.company_id === r.id && !c.archived_at)).length })),
     deals: deals.map(decorate),
     campaigns: campaigns.map((x) => ({ ...decorate(x), decided_by_name: x.decided_by ? ppl.get(x.decided_by) ?? null : null, recipients: counts.get(x.id) ?? {} })),
   };
@@ -105,9 +106,12 @@ export async function contactDetail(userId: string, contactId: string) {
   const db = await admin();
   const { data: c } = await db.from("crm_contacts").select("*").eq("id", contactId).maybeSingle();
   if (!c || !canSee(a, c)) throw new Error("Contact not found.");
+  const matches = c.email ? await db.from("crm_contacts").select("*").ilike("email", c.email.trim().replace(/[\\%_]/g, "\\$&")).limit(100) : { data: [c], error: null };
+  if (matches.error) throw new Error("Couldn't load contact matches.");
+  const ids = matchingVisibleContacts(a, c, matches.data ?? []).map((r: any) => r.id);
   const [activityResult, emailResult] = await Promise.all([
-    db.from("crm_activity").select("*").eq("contact_id", contactId).order("created_at", { ascending: false }).limit(200),
-    db.from("crm_email_history").select("id, external_source, direction, subject, snippet, sent_at").eq("contact_id", contactId).order("sent_at", { ascending: false }).limit(100),
+    db.from("crm_activity").select("*").in("contact_id", ids).order("created_at", { ascending: false }).limit(200),
+    db.from("crm_email_history").select("id, external_source, direction, subject, snippet, sent_at").in("contact_id", ids).order("sent_at", { ascending: false }).limit(100),
   ]);
   if (activityResult.error || emailResult.error) throw new Error("Couldn't load contact history. Try again.");
   const act = activityResult.data, emails = emailResult.data;
@@ -145,10 +149,10 @@ export async function companyDetail(userId: string, companyId: string) {
     db.from("crm_contacts").select("*").eq("company_id", companyId).order("full_name"),
   ]);
   if (companyResult.error || contactResult.error) throw new Error("Couldn't load company.");
-  const contacts = companyContacts(a, companyId, (contactResult.data ?? []) as any[]);
+  const contacts = groupVisibleContacts(a, companyContacts(a, companyId, (contactResult.data ?? []) as any[]));
   const company = companyResult.data;
   if (!company || (!canSee(a, company) && !contacts.length)) throw new Error("Company not found.");
-  const ids = contacts.map((c: any) => c.id);
+  const ids = contacts.flatMap((c: any) => c.matchedContactIds);
   if (!ids.length) return { company, contacts, activity: [], emails: [], deals: [] };
   const [activity, emails, deals] = await Promise.all([
     db.from("crm_activity").select("id, contact_id, kind, summary, created_at, actor_user_id").in("contact_id", ids).order("created_at", { ascending: false }).limit(200),
@@ -174,6 +178,23 @@ export async function saveContact(userId: string, d: ContactInput & { id?: strin
     return { id: d.id };
   }
   if (!canCreate(a, d.scope, d.offering_id)) throw new Error("You can't add contacts here.");
+  if (fields.email) {
+    let query = db.from("crm_contacts").select("*").eq("scope", d.scope).ilike("email", fields.email.replace(/[\\%_]/g, "\\$&")).is("archived_at", null).limit(100);
+    query = d.scope === "fund" ? query.eq("offering_id", d.offering_id) : query.is("offering_id", null);
+    const matches = await query;
+    if (matches.error) throw new Error("Couldn't check existing contacts.");
+    const existing = (matches.data ?? []).find((c: any) => canEdit(a, c) && c.owner_user_id === userId);
+    if (existing) {
+      const company = d.company_id ? await resolveCompany(a, d, existing) : {};
+      const fill = importedContactFields(existing, fields, "manual-new");
+      delete fill['company_id'];
+      delete fill['updated_at'];
+      const saved = await db.from("crm_contacts").update({ ...fill, ...company, updated_at: new Date().toISOString() }).eq("id", existing.id);
+      if (saved.error) throw new Error("Couldn't connect the existing contact.");
+      await logActivity({ scope: existing.scope, offering_id: existing.offering_id, contact_id: existing.id, actor_user_id: userId, kind: "edited", summary: "Existing contact connected by email" });
+      return { id: existing.id as string };
+    }
+  }
   fields = { ...fields, ...await resolveCompany(a, d, { scope: d.scope, offering_id: d.scope === "fund" ? d.offering_id : null, owner_user_id: userId }) };
   const { data: row, error } = await db.from("crm_contacts").insert({ ...fields, scope: d.scope, offering_id: d.scope === "fund" ? d.offering_id : null, owner_user_id: userId, created_by: userId }).select("id").single();
   if (error) throw new Error("Could not add the contact.");

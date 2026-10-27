@@ -9,7 +9,8 @@ import { requireMarketing } from "@/lib/marketing.server";
 import { callAsAppUser, appUserReconnectRequired } from "@/integrations/lovable/appUserConnector";
 import { getConnectionKeyForUser } from "@/lib/app-user-connections.server";
 import { recordPromotionalUnsubscribe } from "./promotional-email.server";
-import { importedContact } from "./crm-import-contact.server";
+import { matchImportedContact } from "./crm-import-contact.server";
+import { importedContactFields } from "./crm-contact-matching";
 
 const admin = async () => (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
 export const GATEWAY_BASE_URL = "https://connector-gateway.lovable.dev";
@@ -75,11 +76,12 @@ function classify(task: any) {
 async function upsertClickupContact(db: any, t: any, body: string, actorId: string, r: any) {
   const email = (body.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0] ?? null)?.toLowerCase() ?? null;
   const tags = ["clickup", ...((t.tags ?? []) as any[]).map((x) => String(x.name).toLowerCase())].slice(0, 20);
-  const fields = { full_name: String(t.name).slice(0, 200), tags, updated_at: new Date().toISOString(), ...(email ? { email } : {}) };
-  const decision = await importedContact(db, "clickup", String(t.id), email);
+  let fields = { full_name: String(t.name).slice(0, 200), tags, updated_at: new Date().toISOString(), ...(email ? { email } : {}) };
+  const decision = await matchImportedContact(db, actorId, "clickup", String(t.id), fields);
   if (decision.kind === "review") { r.contactsAwaitingMatchReview = (r.contactsAwaitingMatchReview ?? 0) + 1; return; }
-  const { data: ex } = decision.contactId ? await db.from("crm_contacts").select("id, full_name, tags, email").eq("id", decision.contactId).maybeSingle() : { data: null };
+  const { data: ex } = decision.contactId ? await db.from("crm_contacts").select("id, full_name, tags, email,external_source").eq("id", decision.contactId).maybeSingle() : { data: null };
   if (ex) {
+    fields = { ...importedContactFields(ex, fields, "clickup"), tags: [...new Set([...(ex.tags ?? []), ...tags])] } as typeof fields;
     // Skip the write when nothing changed; repeated syncs used to rewrite every contact.
     const { updated_at: _u, ...compare } = fields;
     if (!rowDiffers(ex, compare)) return;
@@ -269,11 +271,11 @@ export async function importHubspot(userId: string, parts: HubspotPart[]) {
           const name = [p.firstname, p.lastname].filter(Boolean).join(" ").trim() || p.email || "HubSpot contact";
           const optOut = String(p.hs_email_optout) === "true";
           if (optOut && p.email) await recordPromotionalUnsubscribe(db, p.email);
-          const decision = await importedContact(db, "hubspot", String(c.id), p.email ?? null);
+          const decision = await matchImportedContact(db, userId, "hubspot", String(c.id), { full_name: name.slice(0, 200), email: p.email ?? null, phone: p.phone ?? null, organization: p.company ?? null, title: p.jobtitle ?? null, tags: ["hubspot"] });
           if (decision.kind === "review") { result["contactsAwaitingMatchReview"] = Number(result["contactsAwaitingMatchReview"] ?? 0) + 1; continue; }
-          const { data: ex } = decision.contactId ? await db.from("crm_contacts").select("id, consent, full_name, email, phone, organization, title").eq("id", decision.contactId).maybeSingle() : { data: null };
+          const { data: ex } = decision.contactId ? await db.from("crm_contacts").select("id, consent, full_name, email, phone, organization, title,external_source").eq("id", decision.contactId).maybeSingle() : { data: null };
           let rowId = ex?.id as string | undefined;
-          const fields: any = { full_name: name.slice(0, 200), email: p.email || null, phone: p.phone || null, organization: p.company || null, title: p.jobtitle || null, updated_at: new Date().toISOString() };
+          const fields: any = importedContactFields(ex ?? {}, { full_name: name.slice(0, 200), email: p.email?.trim().toLowerCase() || null, phone: p.phone || null, organization: p.company || null, title: p.jobtitle || null, updated_at: new Date().toISOString() }, "hubspot");
           // An unsubscribe in either system wins; never re-subscribe someone.
           if (optOut && ex?.consent !== "unsubscribed") { fields.consent = "unsubscribed"; fields.consent_recorded_at = new Date().toISOString(); fields.consent_note = "Opted out in HubSpot"; unsub++; }
           const { updated_at: _u, ...compare } = fields;

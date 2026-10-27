@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export function CrmCompanyPanel({ data, onContact, onAdd, onConnect, onDeal }: { data: any; onContact: (id: string) => void; onAdd: () => void; onConnect: () => void; onDeal: (deal: any) => void }) {
-  const names = new Map((data.contacts as any[]).map((c) => [c.id, c.full_name]));
+  const names = new Map<string, string>((data.contacts as any[]).flatMap((c) => (c.matchedContactIds ?? [c.id]).map((id: string): [string, string] => [id, String(c.full_name)])));
   const time = (date: string | null) => date ? new Date(date).toLocaleString() : "Date not recorded";
   return <div className="min-w-0 space-y-4">
     <div className="flex flex-wrap gap-2"><Button size="sm" onClick={onAdd}>Add contact</Button><Button size="sm" variant="outline" onClick={onConnect}>Connect existing contact</Button></div>
