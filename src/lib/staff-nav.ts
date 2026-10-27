@@ -8,9 +8,11 @@ export const LEADERS = ["super_admin", "executive"] as const;
 export const NAV_ROLES = {
   operations: ["operations", "fund_administration", "admin", ...LEADERS],
   finance: ["finance", "tax", "fund_administration", "admin", ...LEADERS],
-  sales: ["sales", "account_executive", "bdr", "sales_management", "cro", ...LEADERS],
+  sales: ["sales", "account_executive", "bdr", "sales_management", "cro", "account_manager", "admin", ...LEADERS],
   accountManagement: ["account_manager", "client_success", "cro", "sales_management", ...LEADERS],
   marketing: ["marketing_manager", "marketing_specialist", "marketing_contributor", "compliance_reviewer", "executive_approver", "admin", ...LEADERS],
+  marketingPublishing: ["marketing_manager", "marketing_specialist", "admin", ...LEADERS],
+  commercial: ["sales", "account_executive", "bdr", "sales_management", "cro", "account_manager", "client_success", "marketing_manager", "marketing_specialist", "finance", "tax", "fund_administration", "admin", "leadership", ...LEADERS],
   leadership: ["leadership", "admin", ...LEADERS],
   /** People & Access → Employees, Test & Demo, Roles, Invites & access. */
   peopleEmployees: ["leadership", "admin", "operations_lead", ...LEADERS],

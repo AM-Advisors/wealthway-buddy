@@ -242,7 +242,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
     ]),
   ];
 
-  const showSales = salesOnly || canSee("sales", staffRoles);
+  const showSales = canSee("sales", staffRoles);
   const salesItems: NavItem[] = showSales ? [
     ...(isSalesLeader ? [{ id: "sales-cro", title: "CRO dashboard", url: "/sales/cro", icon: "report" }] : []),
     { id: "sales-dashboard", title: "Sales dashboard", url: "/sales/dashboard", icon: "report" },
@@ -273,7 +273,8 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
   ] : [];
 
   const showMk = canSee("marketing", staffRoles);
-  const mkItems: NavItem[] = showMk ? [
+  const publishing = canSee("marketingPublishing", staffRoles);
+  const mkItems: NavItem[] = showMk ? publishing ? [
     { id: "mk-dashboard", title: "Overview", url: "/marketing", icon: "report" },
     { id: "mk-posts", title: "Social posts", url: "/marketing/posts", icon: "document" },
     { id: "mk-content", title: "Content & design", url: "/marketing/studio", icon: "document", sub: [
@@ -293,7 +294,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
     { id: "mk-channels", title: "Accounts & channels", url: "/marketing/channels", icon: "settings", sub: [
       { title: "Channels", url: "/marketing/channels" }, { title: "LinkedIn accounts", url: "/marketing/linkedin" },
     ] },
-  ] : [];
+  ] : [{ id: "mk-editorial", title: "Editorial studio", url: "/marketing/studio", icon: "document" }, { id: "mk-editorial-calendar", title: "Editorial calendar", url: "/marketing/studio/calendar", icon: "tasks" }] : [];
 
   if (!salesOnly && (leader || has("finance", "account_manager", "client_success", "operations"))) financeItems.push({ id: "payment-reminders", title: "Payment reminders", url: "/ops/payment-reminders", icon: "money" });
   const navGrants = ((session as { opsNavGrants?: { url: string; title: string }[] } | null)?.opsNavGrants ?? []);
@@ -301,6 +302,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
   // One home per screen across the whole menu; recomputed only when roles or grants change.
   const groups = useMemo(() => {
     const deduped = dedupeNav([
+      { id: "commercial", label: "Connected workflow", items: canSee("commercial", staffRoles) ? [{ id: "commercial-workflow", title: "Client and revenue workflow", url: "/ops/commercial", icon: "briefcase" }] : [] },
       { id: "operations", label: "Operations", items: opsItems },
       { id: "finance", label: "Accounting & Finance", items: financeItems },
       { id: "sales", label: "Sales", items: salesItems },
@@ -441,6 +443,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
             <SidebarFavorites collapsed={collapsed} onNavigate={close} />
             <NavSection id="operations" label="Operations" items={G("operations")} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={opsActive} />
             <NavSection id="finance" label="Accounting & Finance" items={G("finance")} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={opsActive} />
+            <NavSection id="commercial" label="Connected workflow" items={G("commercial")} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={exact} />
             <NavSection id="sales" label="Sales" items={G("sales")} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={exact} />
             <NavSection id="account-management" label="Account Management" items={G("account-management")} pathname={pathname} collapsed={collapsed} onNavigate={close} isActive={exact} />
             <NavSection id="marketing" label="Marketing" items={G("marketing")} pathname={pathname} collapsed={collapsed} onNavigate={close} compactGroups isActive={(i) => i.url === "/marketing" ? pathname === i.url : i.sub ? i.sub.some((s) => s.url === "/marketing/studio" ? pathname === s.url || pathname.startsWith("/marketing/studio/content/") : pathname === s.url || pathname.startsWith(`${s.url}/`)) : pathname === i.url || pathname.startsWith(`${i.url}/`)} />
