@@ -10948,6 +10948,30 @@ export type Database = {
           },
         ]
       }
+      crm_import_match_reviews: {
+        Row: {
+          created_at: string
+          email: string
+          external_id: string
+          external_source: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          external_id: string
+          external_source: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          external_id?: string
+          external_source?: string
+          id?: string
+        }
+        Relationships: []
+      }
       ct_activity_cases: {
         Row: {
           case_type: string
@@ -50167,6 +50191,10 @@ export type Database = {
           iv: string
           key_version: number
         }[]
+      }
+      record_promotional_unsubscribe: {
+        Args: { _email: string }
+        Returns: undefined
       }
       register_stepup_attempt: {
         Args: { p_id: string; p_max: number; p_user_id: string }
