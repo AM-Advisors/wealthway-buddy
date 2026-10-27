@@ -71,6 +71,7 @@ const KNOWN_FNS = [
   "uploadFundFileFn",
   "previewInvoiceFeeEntry",
   "fundDocumentGenerationAccessFn", "fundTypeTemplatesFn", "generateFundTypeDocumentsFn", "listFundTemplateDocumentsFn", "templateDocSendStatusFn", "reviewGeneratedDocumentFn", "activateDocumentVersionFn",
+  "getFundLinkFn",
 ] as const;
 
 /** Map a server-function URL to the export name it was built from. Ids are base64 JSON: { file, export }. */
@@ -94,6 +95,7 @@ export class QaBlockedError extends Error {}
 /** Pure handler for one mocked server-function call. Throws Error with a user-facing message on failure. */
 export function handleQaServerCall(fnName: string, data: any, state: QaState): unknown {
   switch (fnName) {
+    case "getFundLinkFn": return { fundName: QA_FUND_NAME, url: "https://example.test/join/fictional-only", status: "active", createdAt: "2026-10-27T08:00:00Z", regeneratedAt: null, lastUsedAt: null, starts: 0, canManage: false };
     case "fundDocumentGenerationAccessFn": return { templates: true, starter: false, staff: state.role === "staff" };
     case "fundTypeTemplatesFn": return { fundType: "SPV", templates: [{ id: "qa-template", title: "Fablewood Operating Agreement", approvedVersion: 1, generated: Boolean(state.documentDraft) }] };
     case "generateFundTypeDocumentsFn": {

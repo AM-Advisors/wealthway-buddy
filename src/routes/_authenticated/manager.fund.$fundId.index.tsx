@@ -15,7 +15,7 @@ import { FundTeamAccessBox } from "@/components/fund-team-access-box";
 import { ManagerDraftReview } from "@/components/fund-team-drafts";
 
 export const Route = createFileRoute("/_authenticated/manager/fund/$fundId/")({
-  validateSearch: (search: Record<string, unknown>): { area: SelfServeArea } => ({ area: SELF_SERVE_AREAS.find(a => a === search.area) ?? "setup" }),
+  validateSearch: (search: Record<string, unknown>): { area?: SelfServeArea | undefined } => ({ area: SELF_SERVE_AREAS.find(a => a === search["area"]) }),
   head: () => ({ meta: [
     { title: "Manage your fund | Harmonious" },
     { name: "description", content: "Set up your fund, invite investors, manage versioned documents and share your investor onboarding link." },
@@ -29,7 +29,7 @@ export const Route = createFileRoute("/_authenticated/manager/fund/$fundId/")({
 function Overview() {
   const { fundId } = Route.useParams();
   const navigate = useNavigate();
-  const { area } = Route.useSearch();
+  const { area = "setup" } = Route.useSearch();
   const go = (t: "calendar" | "investors" | "capital" | "approvals" | "requests") => navigate({ to: ({ calendar: "/manager/fund/$fundId/calendar", investors: "/manager/fund/$fundId/investors", capital: "/manager/fund/$fundId/transactions", approvals: "/manager/fund/$fundId/approvals", requests: "/manager/fund/$fundId/requests" } as const)[t], params: { fundId } });
   return <SelfServeFundPage area={area} onAreaChange={next => { void navigate({ to: "/manager/fund/$fundId", params: { fundId }, search: { area: next } }); }} sections={{
     setup: () => <div className="space-y-6"><FundSetupForm offeringId={fundId} mode="manager" workspace /><ManagerLaunchCard fundId={fundId} /></div>,

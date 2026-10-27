@@ -299,7 +299,7 @@ export function FundWorkspace({ fundId, tab, onTab, mode = "client", extraTabs =
         <TabsContent value="approvals">{tab === "approvals" && <FundApprovalsHub fundId={fundId} staff={staff} initial="approvals" />}</TabsContent>
         <TabsContent value="requests">{tab === "requests" && <FundApprovalsHub fundId={fundId} staff={staff} initial="requests" />}</TabsContent>
         <TabsContent value="services"><FundServicesTab fundId={fundId} /></TabsContent>
-        <TabsContent value="documents"><FundDocumentsHub fundId={fundId} staff /></TabsContent>
+        <TabsContent value="documents"><FundDocumentsHub fundId={fundId} staff={staff} /></TabsContent>
         <TabsContent value="audit"><AuditHistoryTab fundId={fundId} /></TabsContent>
         <TabsContent value="regulatory"><RegulatoryTab fundId={fundId} /></TabsContent>
 

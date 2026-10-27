@@ -11,10 +11,9 @@ import { FUND_TYPES } from "@/lib/fund-setup-canonical";
 import { BankBox, EditSheet, EinBox, SummaryBox } from "@/components/fund-setup-boxes";
 import { fieldSectionComplete } from "@/lib/fund-setup-complete";
 import { fundEinFn } from "@/lib/fund-tabs.functions";
-import { SubmitForm, History } from "@/components/fund-manager-setup-loader";
+import { History } from "@/components/fund-manager-setup-loader";
 import { FundSignatoriesCard } from "@/components/fund-signatories-card";
 import { OfferingDocumentsSetup } from "@/components/offering-documents-setup";
-import { ManagerDocumentsChoice } from "@/components/manager-documents-choice";
 import { FORM_SECTIONS, changedBySection, type FieldDef } from "@/lib/fund-setup-form-model";
 
 import { FundOriginControl } from "@/components/fund-origin-control";
