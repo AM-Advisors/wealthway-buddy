@@ -4,6 +4,7 @@
 // that are In Review/Declined are never auto-approved. Every change is logged.
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { fetchDiditSessionDecision } from "@/lib/didit.server";
+import { mergeVerifiedPersonFields } from "@/lib/kyc-person-backfill";
 
 const db = () => supabaseAdmin as any;
 const s = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : null);
