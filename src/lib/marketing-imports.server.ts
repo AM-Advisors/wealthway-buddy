@@ -270,7 +270,7 @@ export async function importHubspot(userId: string, parts: HubspotPart[]) {
           const optOut = String(p.hs_email_optout) === "true";
           if (optOut && p.email) await recordPromotionalUnsubscribe(db, p.email);
           const decision = await importedContact(db, "hubspot", String(c.id), p.email ?? null);
-          if (decision.kind === "review") { result.contactsAwaitingMatchReview = Number(result.contactsAwaitingMatchReview ?? 0) + 1; continue; }
+          if (decision.kind === "review") { result["contactsAwaitingMatchReview"] = Number(result["contactsAwaitingMatchReview"] ?? 0) + 1; continue; }
           const { data: ex } = decision.contactId ? await db.from("crm_contacts").select("id, consent, full_name, email, phone, organization, title").eq("id", decision.contactId).maybeSingle() : { data: null };
           let rowId = ex?.id as string | undefined;
           const fields: any = { full_name: name.slice(0, 200), email: p.email || null, phone: p.phone || null, organization: p.company || null, title: p.jobtitle || null, updated_at: new Date().toISOString() };
