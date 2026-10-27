@@ -442,7 +442,7 @@ export async function teammateByToken(d: { token: string; role: "sign" | "pay"; 
   if (t.kind !== "quote") throw new Error("Ask your Harmonious contact to change who signs this document.");
   const db = await admin();
   const r = await loadRecord(db, t.kind, t.id);
-  const blocker = signBlockerForRecord(r, t.email);
+  const blocker = replacedSigner(r, t.email) ?? (["approved", "sent"].includes(r.status) && r.version === t.version ? null : "This link is no longer current.");
   if (blocker) throw new Error(blocker);
   if (await acceptanceFor(db, acceptanceKey(t.kind, t.id, t.version))) throw new Error("This quote is already signed.");
   if (!r.clientId || !r.ownerId) throw new Error("Ask your Harmonious contact to add your teammate.");
