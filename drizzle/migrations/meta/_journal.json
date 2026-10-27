@@ -2388,6 +2388,13 @@
       "when": 1793059030906,
       "tag": "0340_accreditation_ai_checks",
       "breakpoints": true
+    },
+    {
+      "idx": 341,
+      "version": "7",
+      "when": 1793074288753,
+      "tag": "0341_lock_staff_permission_checks",
+      "breakpoints": true
     }
   ]
 }
