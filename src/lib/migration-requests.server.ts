@@ -96,7 +96,7 @@ export async function approveRequest(userId: string, input: { id: string; note?:
   }
 
   // 2. Wix investors → investor records + earlier subscriptions awaiting confirmation.
-  const summary: { created: number; skipped: { name: string; reason: string }[] } = { created: 0, skipped: [] };
+  const summary: { created: number; skipped: { name: string; reason: string }[]; noEmail?: string[] } = { created: 0, skipped: [] };
   if (wixFund) {
     // Staff assignments (append-only, latest wins) override the imported Wix fund link.
     const { latestAssociations, effectiveWixFundId } = await import("@/lib/wix-association-model");
@@ -117,7 +117,6 @@ export async function approveRequest(userId: string, input: { id: string; note?:
       const label = entityName || i.full_name || "(unnamed)";
       try {
         const email = String(i.email || d.investorsEmail || "").trim();
-        if (!email) throw new Error("No email in Wix");
         const commit = Number(i.committed_cents) || 0;
         if (commit <= 0) throw new Error("No committed amount");
         const parts = String(i.full_name || d.firstName || "").trim().split(/\s+/).filter(Boolean);
@@ -126,11 +125,12 @@ export async function approveRequest(userId: string, input: { id: string; note?:
         const trust = /\btrust\b/i.test(entityName ?? "");
         const created: any = await rec.createInvestor(userId, {
           offeringId,
-          person: { firstName: first, lastName: last, email },
+          person: { firstName: first, lastName: last, ...(email ? { email } : {}) },
           profile: { type: entityName ? (trust ? "trust" : "entity") : "individual", ...(entityName && !trust ? { subType: "other_entity" } : {}), legalName: entityName || `${first} ${last}` } as any,
           investment: { amountCents: commit, commitmentCents: commit },
-          allowPreLaunch: true, confirmedNew: true,
+          allowPreLaunch: true, confirmedNew: true, allowMissingEmail: true,
         } as any);
+        if (!email) summary.noEmail = [...(summary.noEmail ?? []), label];
         const onboardingId: string | undefined = created?.onboardingId;
         if (!onboardingId) throw new Error("Investor record wasn't created");
         const signed = String(d._createdDate || new Date().toISOString()).slice(0, 10);

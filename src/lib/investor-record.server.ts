@@ -142,8 +142,11 @@ export async function createInvestor(userId: string, input: {
   contact?: PaperworkContactInput | null;
   /** Required to save when a chosen individual profile carries a different first name than the investor. */
   confirmedProfileMismatch?: boolean;
+  /** Staff-only migration imports: save a record without an email (it cannot be invited until one is added). */
+  allowMissingEmail?: boolean;
 }) {
   const actor = await fundActor(userId, input.offeringId);
+  if (input.allowMissingEmail && !actor.isStaff) forbid("only staff can save an investor without an email.");
   if (input.taxId && !/^\d{9}$/.test(input.taxId)) fail("The SSN / Tax ID must be 9 digits.");
   const source: EntrySource = input.source ?? sourceFor(actor);
   const changes: Change[] = [];
@@ -157,7 +160,9 @@ export async function createInvestor(userId: string, input: {
   } else {
     // A paperwork contact's email satisfies the email requirement: the invitation goes to them.
     const errs = validateQuickAdd({ firstName: input.person.firstName, lastName: input.person.lastName, email: input.person.email || input.contact?.email || undefined, profileType: input.profile.type, amountCents: input.investment.amountCents ?? 0 });
-    if (errs.length) fail(errs[0]!);
+    const noEmailOk = input.allowMissingEmail && !String(input.person.email ?? "").trim() && !input.contact?.email;
+    const blocking = noEmailOk ? errs.filter((e) => e !== "Enter a valid email address.") : errs;
+    if (blocking.length) fail(blocking[0]!);
     // Canonical Person Resolution: email is a signal, not identity. Re-checked
     // inside the creation lock so concurrent saves can't both create.
     const signals = { email: input.person.email ?? null, firstName: input.person.firstName ?? null, lastName: input.person.lastName ?? null };
@@ -226,8 +231,10 @@ export async function createInvestor(userId: string, input: {
       if (error) fail(error.message);
     }
   }
-  const { data: invitation } = await db().from("fund_invitations").select("id").eq("offering_id", input.offeringId).ilike("email", normEmail(person.email))
-    .eq("invite_role", "investor").not("status", "in", "(revoked,cancelled,expired)").order("created_at", { ascending: false }).limit(1);
+  const { data: invitation } = person.email
+    ? await db().from("fund_invitations").select("id").eq("offering_id", input.offeringId).ilike("email", normEmail(person.email))
+      .eq("invite_role", "investor").not("status", "in", "(revoked,cancelled,expired)").order("created_at", { ascending: false }).limit(1)
+    : { data: [] as any[] };
   if (!onboardingId) {
     const { data: created, error } = await db().from("investor_onboardings").insert({
       offering_id: input.offeringId, investor_user_id: person.user_id ?? null, person_id: person.id, investment_profile_id: profileId,
