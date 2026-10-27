@@ -1,9 +1,9 @@
 # Roadmap
 
 ## ROAS annual K-1 and filing fees (2026-10-27)
-- [ ] Add LP and management annual K-1 sets at $2,500 each, due December 31 beginning 2026, to existing proposed commercial terms without duplicate services or approval bypass.
+- [x] Added separate LP and management annual K-1 sets at $2,500 each, first bill December 31, 2026, to the existing ROAS draft quote through Alyssa's authenticated save; saved rows read back. No duplicate quote, issuance, signing or activation.
 - [ ] Calculate Form D and Blue Sky costs from recorded sale/jurisdiction evidence; identify missing inputs or variable-state review, no automatic filing or payment.
-- [ ] Verify saved terms and concrete annual amount/due-date tests; report invoice/filing preparation blockers.
+- [x] Twenty-one annual amount/due-date/cadence tests passed; preview build OK. Authenticated quote rows read back; normal Sales page remains at Checking your access, so UI acceptance unverified. Invoice/SOW issuance retains quote approval; no filings or payments performed.
 
 ## ROAS corrected billing and quarterly terms (2026-10-27)
 - [x] Voided the incorrect $19,000 current invoice through Alyssa's authenticated canonical billing function; read back void status/reason, original history retained.
