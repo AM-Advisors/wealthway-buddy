@@ -3,6 +3,7 @@
 ## Missing investment/application link safeguard (2026-10-27)
 - [x] Remove stale-approval fallback for missing investing-person links; 73 offline tests passed and preview build OK. Missing links now block funding/compliance reads rather than imply Approved; no live records changed.
 - [x] User confirmed the $50,000 investment is separate from the older signed $2,500,000 application; prepare an atomic dedicated-application action without copying approvals/signatures or reusing canceled history.
+- [x] All 82 offline verification and separate-application transaction tests passed; preview build OK. Creation/link/audit rollback and retry checks passed without live writes, sessions, emails or decisions.
 - [ ] Apply the dedicated link to the active investment after draft acceptance installs the authorized action; no live records changed in this draft.
 
 ## Exact investing-party verification and funding (2026-10-27)
