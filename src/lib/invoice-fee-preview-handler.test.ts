@@ -9,7 +9,7 @@ function context(roles: string[], error: unknown = null) {
 }
 describe("fee entry preview authorization", () => {
   beforeEach(() => preview.mockReset());
-  it.each([[], ["user"], ["sales"], ["fund_manager"]])("denies callers without accounting authority: %j", async roles => {
+  it.each([{ roles: [] }, { roles: ["user"] }, { roles: ["sales"] }, { roles: ["fund_manager"] }])("denies callers without accounting authority: $roles", async ({ roles }) => {
     await expect(previewInvoiceFeeEntryHandler({ context: context(roles), data })).rejects.toThrow("authority");
     expect(preview).not.toHaveBeenCalled();
   });
