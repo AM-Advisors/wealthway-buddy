@@ -24,7 +24,7 @@ export const leadSchema = z.object({
       utmTerm: opt(200),
       referrer: opt(300),
     })
-    .default({}),
+    .prefault({}),
 });
 export type LeadInput = z.input<typeof leadSchema>;
 
