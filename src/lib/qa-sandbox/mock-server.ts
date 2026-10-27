@@ -39,6 +39,8 @@ function decodeCrossJson(node: any): any {
   return null;
 }
 import { rankMatches, validateQuickAdd, createNewBlocker } from "@/lib/investor-record-model";
+import { previewInvoiceFee } from "@/lib/invoice-fee-preview";
+import { fictionalFeeFacts, QA_FEE_ID } from "./fee-fixture";
 
 export type QaRole = "staff" | "manager";
 
@@ -65,6 +67,7 @@ const KNOWN_FNS = [
   "saveManagedWireInstructions",
   "prefillWireFromBank",
   "uploadFundFileFn",
+  "previewInvoiceFeeEntry",
 ] as const;
 
 /** Map a server-function URL to the export name it was built from. Ids are base64 JSON: { file, export }. */
@@ -158,6 +161,11 @@ export function handleQaServerCall(fnName: string, data: any, state: QaState): u
       const name = String(data?.fileName ?? "wire-instructions");
       state.uploads.push(name);
       return { ok: true, fileId: `qa-file-${state.uploads.length}` };
+    }
+    case "previewInvoiceFeeEntry": {
+      if (state.role !== "staff") throw new Error("You don't have authority for these fee records.");
+      if (data?.lineId !== QA_FEE_ID) throw new QaBlockedError("Only the fictional invoice fee can be previewed here.");
+      return previewInvoiceFee(fictionalFeeFacts(), { entryDate: String(data?.entryDate ?? ""), category: String(data?.category ?? "") });
     }
     default:
       throw new QaBlockedError(`Blocked in the fictional QA sandbox: ${fnName}`);

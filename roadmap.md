@@ -1,5 +1,14 @@
 # Roadmap
 
+## Finish remaining work (2026-10-27)
+- [x] Replaced the ten-second animation with an 85.8-second H.264/AAC narrated walkthrough, captions and illustrative fictional screens; shared guide mounted on fund join and fictional QA pages. All seven scenes visually inspected and app media URL returns the full file. AI narration, not a recorded person; no actual investor screen recordings.
+- [ ] External browser playback and investor-link live release: sandbox Chromium lacks H.264 support, so actual playback is unverified; publishing requires explicit approval. Durable investor onboarding still requires isolated synthetic QA.
+- [x] Added read-only fee-entry previews with exact-client books, explicit expense/payable mappings, open-period and duplicate-source blockers. No draft writes or posting; durable preparation remains blocked by isolated financial QA and approved accounting release.
+- [x] Extended fictional click-through to connected quote, agreement, partial-payment invoice, reporting periods and the real fee-preview control. 3,867 tests pass; desktop fee dialog and 440px billing flow checked with no runtime errors. This is fictional evidence, not authenticated production verification.
+- [ ] Hourly contact sync live release: requires explicit publishing approval; do not change the shared marketing scheduler cadence.
+- [ ] LaaSy Class B approval: requires an authorized reviewer or a permanently recorded Super Admin self-approval reason.
+- [ ] ROAS White Glove execution and bookkeeping activation: preserve commercial approval and release gates; no automatic live activation.
+
 ## Investor onboarding link during fund launch (2026-10-26)
 - [x] Reuse the canonical onboarding-link engine before marking a ready fund launched; preserve approvals and exact-fund authorization, reuse active links, refuse silently enabling disabled links, and retain ready state on link-creation failure. No real fund/link records changed.
 - [x] Forty-four fictional launch/link regression checks pass; launch returns and records the canonical join URL, with existing links readable through the manager's link reader.

@@ -1,5 +1,6 @@
 import type { FeeTarget } from "./invoice-fee-accounting";
 import { feeEligible, feeTargetError } from "./invoice-fee-accounting";
+import { previewInvoiceFee, type FeePreviewFacts } from "./invoice-fee-preview";
 
 export async function readFeeAccounting(context: any, invoiceId?: string) {
   let query = context.supabase.from("invoices").select("id,client_id,number,status,issue_date,due_date,offering_id,invoice_lines(id,label,amount_cents,offering_id,service_key)").in("status", ["issued", "paid"]).order("issue_date", { ascending: false }).limit(300);
@@ -50,4 +51,32 @@ export async function linkFeeTarget(context: any, input: { lineId: string; targe
   const saved = await supabaseAdmin.from("billing_record_events").insert({ entity_kind: "invoice_line", entity_id: line.id, client_id: invoice.client_id, actor_id: context.userId, event_kind: "accounting_target_linked", detail: { target_id: target.id, target_kind: target.kind, invoice_id: invoice.id, reason: input.reason } });
   if (saved.error) throw new Error("Couldn't save the fee assignment. Please retry.");
   return { ok: true };
+}
+
+/** Authorized read-only preview. No journal writes, posting, receipt inference or service activation. */
+export async function previewFeeAccounting(context: any, input: { lineId: string; entryDate: string; category: string }) {
+  const { data: line, error } = await context.supabase.from("invoice_lines").select("id,label,amount_cents,offering_id,service_key,invoices!inner(id,client_id,status,number,offering_id)").eq("id", input.lineId).maybeSingle();
+  if (error || !line) throw new Error("That invoice fee isn't available.");
+  const invoice = Array.isArray(line.invoices) ? line.invoices[0] : line.invoices;
+  if (!invoice) throw new Error("That invoice isn't available.");
+  const view = await readFeeAccounting(context, invoice.id);
+  const row = view.rows.find((r: any) => r.id === line.id);
+  if (!row) throw new Error("Only issued invoice fees outside proposed bookkeeping pricing can be previewed.");
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data: books, error: bookError } = await supabaseAdmin.from("ledger_books").select("id,client_id,offering_id,client_entity_id,basis").eq("client_id", invoice.client_id).eq("is_active", true);
+  if (bookError) throw new Error("Couldn't verify accounting book ownership.");
+  const bookIds = (books ?? []).filter(b => row.target && (row.target.kind === "fund" ? b.offering_id === row.target.id && !b.client_entity_id : b.client_entity_id === row.target.id && !b.offering_id)).map(b => b.id);
+  const [{ data: periods, error: periodError }, { data: mappings, error: mappingError }, { data: accounts, error: accountError }, { data: journals, error: journalError }] = await Promise.all([
+    bookIds.length ? supabaseAdmin.from("accounting_periods").select("book_id,period_start,period_end,status").in("book_id", bookIds).lte("period_start", input.entryDate).gte("period_end", input.entryDate) : Promise.resolve({ data: [], error: null }),
+    bookIds.length ? supabaseAdmin.from("fund_account_mappings").select("book_id,purpose,account_id").in("book_id", bookIds).eq("active", true) : Promise.resolve({ data: [], error: null }),
+    bookIds.length ? supabaseAdmin.from("chart_of_accounts").select("id,book_id,code,name,account_type").in("book_id", bookIds).eq("is_active", true) : Promise.resolve({ data: [], error: null }),
+    supabaseAdmin.from("journal_entries").select("id,status,source_id").eq("source_table", "invoice_lines").eq("source_id", line.id),
+  ]);
+  if (periodError || mappingError || accountError || journalError) throw new Error("Couldn't verify fee accounting prerequisites. Please retry.");
+  const facts: FeePreviewFacts = {
+    clientId: invoice.client_id, number: invoice.number, status: invoice.status,
+    line: { ...line, amount_cents: Number(line.amount_cents), offering_id: line.offering_id ?? invoice.offering_id },
+    target: row.target, books: books ?? [], periods: periods ?? [], mappings: mappings ?? [], accounts: accounts ?? [], journals: journals ?? [],
+  };
+  return previewInvoiceFee(facts, input);
 }
