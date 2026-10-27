@@ -16,12 +16,8 @@ export async function suppressedPromotionalEmails(db: any, emails: string[]): Pr
 export async function recordPromotionalUnsubscribe(db: any, rawEmail: string) {
   const email = normalizePromotionalEmail(rawEmail);
   if (!email) return;
-  const now = new Date().toISOString();
-  const global = await db.from("email_unsubscribes").upsert({ email, unsubscribed_at: now }, { onConflict: "email" });
-  if (global.error) throw new Error("Couldn't save the email preference. Please retry.");
-  const contacts = await db.from("crm_contacts").update({ consent: "unsubscribed", consent_recorded_at: now }).ilike("email", email.replace(/[\\%_]/g, "\\$&"));
-  if (contacts.error) throw new Error("Couldn't finish saving the email preference. Please retry.");
-  await (await import("./email-flows.server")).onUnsubscribe(email);
+  const result = await db.rpc("record_promotional_unsubscribe", { _email: email });
+  if (result.error) throw new Error("Couldn't save the email preference. Please retry.");
 }
 
 /** Caller must first authorize the CRM record. Only explicit consent can enter a broadcast audience. */

@@ -9,5 +9,9 @@ export async function importedContact(db: any, source: string, externalId: strin
   if (linkedId || !email) return importContactDecision(linkedId, []);
   const result = await db.from("crm_contacts").select("id,full_name,email").eq("scope", "harmonious").ilike("email", email.trim().replace(/[\\%_]/g, "\\$&")).is("archived_at", null).limit(2);
   if (result.error) throw new Error("Couldn't check existing imported contacts.");
+  if (result.data?.length) {
+    const review = await db.from("crm_import_match_reviews").upsert({ external_source: source, external_id: externalId, email: email.trim().toLowerCase() }, { onConflict: "external_source,external_id", ignoreDuplicates: true });
+    if (review.error) throw new Error("Couldn't save the contact match for review.");
+  }
   return importContactDecision(null, result.data ?? []);
 }

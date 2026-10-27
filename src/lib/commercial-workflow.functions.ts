@@ -5,3 +5,6 @@ export const getCommercialWorkflow = createServerFn({ method: "GET" }).middlewar
 export const qualifyCommercialInquiry = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator(z.object({ leadId: z.string().uuid(), contactId: z.string().uuid().optional(), ownerId: z.string().uuid() }))
   .handler(async ({ context, data }) => (await import("./commercial-workflow.server")).qualifyInquiry(context, data));
+export const linkCommercialImport = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .validator(z.object({ reviewId: z.string().uuid(), contactId: z.string().uuid() }))
+  .handler(async ({ context, data }) => (await import("./commercial-workflow.server")).linkImportedContact(context, data));
