@@ -400,6 +400,7 @@ import { Route as AuthenticatedMarketingStudioResearchRouteImport } from './rout
 import { Route as AuthenticatedOpsAreasAreaRouteImport } from './routes/_authenticated/ops.areas.$area'
 import { Route as AuthenticatedOpsBillingInvoicesRouteImport } from './routes/_authenticated/ops.billing.invoices'
 import { Route as AuthenticatedOpsBillingPaymentInstructionsRouteImport } from './routes/_authenticated/ops.billing.payment-instructions'
+import { Route as AuthenticatedOpsBillingRoasUpdateRouteImport } from './routes/_authenticated/ops.billing.roas-update'
 import { Route as AuthenticatedOpsBillingSowsRouteImport } from './routes/_authenticated/ops.billing.sows'
 import { Route as AuthenticatedOpsClientsIndexRouteImport } from './routes/_authenticated/ops.clients.index'
 import { Route as AuthenticatedOpsClientsClientIdRouteImport } from './routes/_authenticated/ops.clients.$clientId'
@@ -2707,6 +2708,12 @@ const AuthenticatedOpsBillingPaymentInstructionsRoute =
     path: '/ops/billing/payment-instructions',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOpsBillingRoasUpdateRoute =
+  AuthenticatedOpsBillingRoasUpdateRouteImport.update({
+    id: '/ops/billing/roas-update',
+    path: '/ops/billing/roas-update',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOpsBillingSowsRoute =
   AuthenticatedOpsBillingSowsRouteImport.update({
     id: '/ops/billing/sows',
@@ -3596,6 +3603,7 @@ export interface FileRoutesByFullPath {
   '/ops/areas/$area': typeof AuthenticatedOpsAreasAreaRoute
   '/ops/billing/invoices': typeof AuthenticatedOpsBillingInvoicesRoute
   '/ops/billing/payment-instructions': typeof AuthenticatedOpsBillingPaymentInstructionsRoute
+  '/ops/billing/roas-update': typeof AuthenticatedOpsBillingRoasUpdateRoute
   '/ops/billing/sows': typeof AuthenticatedOpsBillingSowsRoute
   '/ops/clients/$clientId': typeof AuthenticatedOpsClientsClientIdRoute
   '/ops/clients/founders': typeof AuthenticatedOpsClientsFoundersRoute
@@ -4066,6 +4074,7 @@ export interface FileRoutesByTo {
   '/ops/areas/$area': typeof AuthenticatedOpsAreasAreaRoute
   '/ops/billing/invoices': typeof AuthenticatedOpsBillingInvoicesRoute
   '/ops/billing/payment-instructions': typeof AuthenticatedOpsBillingPaymentInstructionsRoute
+  '/ops/billing/roas-update': typeof AuthenticatedOpsBillingRoasUpdateRoute
   '/ops/billing/sows': typeof AuthenticatedOpsBillingSowsRoute
   '/ops/clients/$clientId': typeof AuthenticatedOpsClientsClientIdRoute
   '/ops/clients/founders': typeof AuthenticatedOpsClientsFoundersRoute
@@ -4546,6 +4555,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/areas/$area': typeof AuthenticatedOpsAreasAreaRoute
   '/_authenticated/ops/billing/invoices': typeof AuthenticatedOpsBillingInvoicesRoute
   '/_authenticated/ops/billing/payment-instructions': typeof AuthenticatedOpsBillingPaymentInstructionsRoute
+  '/_authenticated/ops/billing/roas-update': typeof AuthenticatedOpsBillingRoasUpdateRoute
   '/_authenticated/ops/billing/sows': typeof AuthenticatedOpsBillingSowsRoute
   '/_authenticated/ops/clients/$clientId': typeof AuthenticatedOpsClientsClientIdRoute
   '/_authenticated/ops/clients/founders': typeof AuthenticatedOpsClientsFoundersRoute
@@ -5026,6 +5036,7 @@ export interface FileRouteTypes {
     | '/ops/areas/$area'
     | '/ops/billing/invoices'
     | '/ops/billing/payment-instructions'
+    | '/ops/billing/roas-update'
     | '/ops/billing/sows'
     | '/ops/clients/$clientId'
     | '/ops/clients/founders'
@@ -5496,6 +5507,7 @@ export interface FileRouteTypes {
     | '/ops/areas/$area'
     | '/ops/billing/invoices'
     | '/ops/billing/payment-instructions'
+    | '/ops/billing/roas-update'
     | '/ops/billing/sows'
     | '/ops/clients/$clientId'
     | '/ops/clients/founders'
@@ -5975,6 +5987,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/areas/$area'
     | '/_authenticated/ops/billing/invoices'
     | '/_authenticated/ops/billing/payment-instructions'
+    | '/_authenticated/ops/billing/roas-update'
     | '/_authenticated/ops/billing/sows'
     | '/_authenticated/ops/clients/$clientId'
     | '/_authenticated/ops/clients/founders'
@@ -8896,6 +8909,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOpsBillingPaymentInstructionsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ops/billing/roas-update': {
+      id: '/_authenticated/ops/billing/roas-update'
+      path: '/ops/billing/roas-update'
+      fullPath: '/ops/billing/roas-update'
+      preLoaderRoute: typeof AuthenticatedOpsBillingRoasUpdateRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ops/billing/sows': {
       id: '/_authenticated/ops/billing/sows'
       path: '/ops/billing/sows'
@@ -10059,6 +10079,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsAreasAreaRoute: typeof AuthenticatedOpsAreasAreaRoute
   AuthenticatedOpsBillingInvoicesRoute: typeof AuthenticatedOpsBillingInvoicesRoute
   AuthenticatedOpsBillingPaymentInstructionsRoute: typeof AuthenticatedOpsBillingPaymentInstructionsRoute
+  AuthenticatedOpsBillingRoasUpdateRoute: typeof AuthenticatedOpsBillingRoasUpdateRoute
   AuthenticatedOpsBillingSowsRoute: typeof AuthenticatedOpsBillingSowsRoute
   AuthenticatedOpsClientsClientIdRoute: typeof AuthenticatedOpsClientsClientIdRoute
   AuthenticatedOpsClientsFoundersRoute: typeof AuthenticatedOpsClientsFoundersRoute
@@ -10425,6 +10446,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsBillingInvoicesRoute: AuthenticatedOpsBillingInvoicesRoute,
   AuthenticatedOpsBillingPaymentInstructionsRoute:
     AuthenticatedOpsBillingPaymentInstructionsRoute,
+  AuthenticatedOpsBillingRoasUpdateRoute:
+    AuthenticatedOpsBillingRoasUpdateRoute,
   AuthenticatedOpsBillingSowsRoute: AuthenticatedOpsBillingSowsRoute,
   AuthenticatedOpsClientsClientIdRoute: AuthenticatedOpsClientsClientIdRoute,
   AuthenticatedOpsClientsFoundersRoute: AuthenticatedOpsClientsFoundersRoute,
