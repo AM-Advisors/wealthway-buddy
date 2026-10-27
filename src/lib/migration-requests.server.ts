@@ -125,7 +125,7 @@ export async function approveRequest(userId: string, input: { id: string; note?:
         const trust = /\btrust\b/i.test(entityName ?? "");
         const created: any = await rec.createInvestor(userId, {
           offeringId,
-          person: { firstName: first, lastName: last, email },
+          person: { firstName: first, lastName: last, ...(email ? { email } : {}) },
           profile: { type: entityName ? (trust ? "trust" : "entity") : "individual", ...(entityName && !trust ? { subType: "other_entity" } : {}), legalName: entityName || `${first} ${last}` } as any,
           investment: { amountCents: commit, commitmentCents: commit },
           allowPreLaunch: true, confirmedNew: true, allowMissingEmail: true,
