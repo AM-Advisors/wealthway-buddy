@@ -142,8 +142,11 @@ export async function createInvestor(userId: string, input: {
   contact?: PaperworkContactInput | null;
   /** Required to save when a chosen individual profile carries a different first name than the investor. */
   confirmedProfileMismatch?: boolean;
+  /** Staff-only migration imports: save a record without an email (it cannot be invited until one is added). */
+  allowMissingEmail?: boolean;
 }) {
   const actor = await fundActor(userId, input.offeringId);
+  if (input.allowMissingEmail && !actor.isStaff) forbid("only staff can save an investor without an email.");
   if (input.taxId && !/^\d{9}$/.test(input.taxId)) fail("The SSN / Tax ID must be 9 digits.");
   const source: EntrySource = input.source ?? sourceFor(actor);
   const changes: Change[] = [];
