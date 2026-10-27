@@ -49,6 +49,10 @@ function QuotesPage() {
   const load = useServerFn(listSalesQuotes);
   const q = useQuery({ queryKey: ["sales-quotes"], queryFn: () => load() });
   const [building, setBuilding] = useState(false);
+  const [showArchived, setShowArchived] = useState(false);
+  const all = (q.data?.quotes ?? []) as any[];
+  const archivedCount = all.filter((r) => r.archived_at).length;
+  const shown = all.filter((r) => showArchived ? !!r.archived_at : !r.archived_at);
   return (
     <main className="mx-auto max-w-6xl space-y-6 px-4 py-10">
       <SalesDealDocsTabs />
@@ -59,11 +63,12 @@ function QuotesPage() {
       {q.error && <p className="text-sm text-destructive">{(q.error as Error).message}</p>}
       {building && <QuoteBuilder onCancel={() => setBuilding(false)} />}
       {q.data?.canDraft && <FromSow />}
-      <Panel title="All quotes">
+      <Panel title={showArchived ? "Archived quotes" : "All quotes"}>
+        {(archivedCount > 0 || showArchived) && <div className="mb-3"><Button size="sm" variant="ghost" onClick={() => setShowArchived(!showArchived)}>{showArchived ? "Back to active quotes" : `Show archived (${archivedCount})`}</Button></div>}
         <Table>
           <TableHeader><TableRow><TableHead>Quote</TableHead><TableHead>Client</TableHead><TableHead>Fund</TableHead><TableHead>Owner</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Total</TableHead></TableRow></TableHeader>
           <TableBody>
-            {(q.data?.quotes ?? []).map((r: any) => (
+            {shown.map((r: any) => (
               <TableRow key={r.id}>
                 <TableCell><Link to="/sales/quotes/$id" params={{ id: r.id }} className="font-medium text-foreground hover:underline">Q-{r.quote_number} v{r.version} · {r.title}</Link></TableCell>
                 <TableCell>{r.clientName ?? "-"}</TableCell>

@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
-  decideSalesQuote, draftQuoteAgreements, getSalesLinkedRecords, getSalesQuote, markSalesQuoteLost, markSalesQuoteSent, reviseSalesQuote, submitSalesQuote,
+  decideSalesQuote, draftQuoteAgreements, getSalesLinkedRecords, getSalesQuote, markSalesQuoteLost, markSalesQuoteSent, archiveSalesQuote, deleteSalesQuote, adjustSalesQuote, reviseSalesQuote, submitSalesQuote,
 } from "@/lib/sales-hub.functions";
 import { QUOTE_STATUS_LABEL } from "@/lib/sales-model";
 import { getQuoteAcceptLink } from "@/lib/sales-acceptance.functions";
@@ -61,6 +61,12 @@ function QuotePage() {
   const sent = useMutation({ mutationFn: () => sentFn({ data: { id } }), onSuccess: done("Marked sent"), onError: err });
   const reviseFn = useServerFn(reviseSalesQuote);
   const revise = useMutation({ mutationFn: () => reviseFn({ data: { id } }), onSuccess: (r) => { toast.success("New version created"); nav({ to: "/sales/quotes/$id", params: { id: r.id } }); }, onError: err });
+  const archiveFn = useServerFn(archiveSalesQuote);
+  const archive = useMutation({ mutationFn: (v: boolean) => archiveFn({ data: { id, archive: v } }), onSuccess: (_r, v) => done(v ? "Quote archived" : "Quote restored")(), onError: err });
+  const deleteFn = useServerFn(deleteSalesQuote);
+  const del = useMutation({ mutationFn: (reason: string) => deleteFn({ data: { id, reason } }), onSuccess: () => { toast.success("Quote deleted"); qc.invalidateQueries({ queryKey: ["sales-quotes"] }); nav({ to: "/sales/quotes" }); }, onError: err });
+  const adjustFn = useServerFn(adjustSalesQuote);
+  const adjust = useMutation({ mutationFn: () => adjustFn({ data: { id } }), onSuccess: (r) => { qc.invalidateQueries({ queryKey: ["sales-quotes"] }); if (r.id !== id) { toast.success("New version ready to adjust"); nav({ to: "/sales/quotes/$id", params: { id: r.id } }); } else { qc.invalidateQueries({ queryKey: ["sales-quote", id] }).then(() => setEditing(true)); } }, onError: err });
   const lostFn = useServerFn(markSalesQuoteLost);
   const lost = useMutation({ mutationFn: () => lostFn({ data: { id, reason: note } }), onSuccess: done("Marked lost"), onError: err });
 
@@ -96,6 +102,9 @@ function QuotePage() {
       <ActionBar secondary={<>
         {(s === "approved" || s === "sent") && <Button size="sm" variant="outline" onClick={() => link.mutate()} disabled={link.isPending}>Copy sign link</Button>}
         {!["signed", "superseded"].includes(s) && <Button size="sm" variant="ghost" onClick={() => revise.mutate()} disabled={revise.isPending}>New version</Button>}
+        {!["signed", "superseded"].includes(s) && !d.canEdit && <Button size="sm" variant="outline" onClick={() => adjust.mutate()} disabled={adjust.isPending}>Adjust</Button>}
+        <Button size="sm" variant="ghost" onClick={() => archive.mutate(!d.quote.archived_at)} disabled={archive.isPending}>{d.quote.archived_at ? "Restore" : "Archive"}</Button>
+        {!d.quote.sent_at && !d.quote.sow_id && !["sent", "signed", "superseded"].includes(s) && <Button size="sm" variant="ghost" className="text-destructive" disabled={del.isPending} onClick={() => { const reason = window.prompt("Why delete this quote? It will disappear from every list; its history is kept."); if (reason && reason.trim().length >= 3) del.mutate(reason.trim()); }}>Delete</Button>}
       </>}>
         {d.canEdit && !editing && <Button size="sm" variant="outline" onClick={() => setEditing(true)}>Edit</Button>}
         {(s === "approved" || s === "sent") && !details && <Button size="sm" variant="outline" onClick={() => setDetails({ title: d.quote.title ?? "", notes: d.quote.notes ?? "", validUntil: d.quote.valid_until ?? "" })}>Update quote</Button>}
