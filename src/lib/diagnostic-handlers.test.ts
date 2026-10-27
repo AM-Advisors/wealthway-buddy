@@ -1,10 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({ results: {} as Record<string, { data: unknown[]; error: unknown }>, staff: vi.fn().mockResolvedValue(undefined) }));
-vi.mock("@tanstack/react-start", () => ({ createServerFn: () => { const chain: any = { middleware: () => chain, validator: () => chain, handler: (fn: unknown) => fn }; return chain; } }));
 vi.mock("@/lib/require-auth", () => ({ requireSupabaseAuth: {} }));
 vi.mock("@/lib/investor-onboarding.server", () => ({ assertStaff: mocks.staff }));
 vi.mock("@/integrations/supabase/client.server", () => ({ supabaseAdmin: { from: (table: string) => { const chain: any = { select: () => chain, gte: () => chain, order: () => chain, limit: () => Promise.resolve(mocks.results[table] ?? { data: [], error: null }) }; return chain; } } }));
-import { emailHealthFn, webhookLogFn } from "./ops-health.functions";
+import { emailHealthHandler as emailHealthFn, webhookLogHandler as webhookLogFn } from "./ops-health.functions";
 const run = (fn: unknown) => (fn as (args: unknown) => Promise<any>)({ data: { days: 7 }, context: { userId: "synthetic-staff" } });
 describe("existing health handlers with mocked offline sources", () => {
   it("surfaces failed email reads rather than an empty success", async () => {
@@ -22,7 +21,7 @@ describe("existing health handlers with mocked offline sources", () => {
       { event_id: "processed", received_at: "2026-10-21T12:00:03Z", processed_at: "2026-10-21T12:00:04Z", error: null },
     ] } };
     const output = await run(webhookLogFn);
-    expect(output.events.map((e: any) => e.status).sort()).toEqual(["Processing failed", "Received — processing unconfirmed", "Successfully processed"].sort());
+    expect(output.events.map((e: any) => e.status).sort()).toEqual(["Processing failed", "Received: processing unconfirmed", "Successfully processed"].sort());
     expect(JSON.stringify(output)).not.toContain("secret payload");
   });
 });

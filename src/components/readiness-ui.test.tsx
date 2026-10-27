@@ -73,7 +73,7 @@ describe("View client perspective", () => {
     expect(h.match(/data-perspective=/g)?.length).toBe(2);
     expect(h).toContain("Jane Smith");
     expect(h).toContain("Fund Manager");
-    expect(html(<PerspectiveList items={[]} onPick={() => {}} />)).toContain("No client perspective is available yet");
+    expect(html(<PerspectiveList items={[]} onPick={() => {}} />)).toContain("No eligible account is available to preview");
   });
 });
 

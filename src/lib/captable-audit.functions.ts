@@ -39,21 +39,8 @@ function n(value: unknown) {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
-export const getCapAuditHistory = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .validator((d: unknown) =>
-    z
-      .object({
-        companyId: z.string().uuid(),
-        stakeholderId: z.string().uuid().optional().nullable(),
-        entityType: z.string().trim().max(40).optional().nullable(),
-        from: z.string().trim().max(20).optional().nullable(),
-        to: z.string().trim().max(20).optional().nullable(),
-        limit: z.number().int().min(50).max(1000).default(400),
-      })
-      .parse(d ?? {}),
-  )
-  .handler(async ({ data, context }) => {
+/** Plain handler, exported so checks can run it directly. */
+export const getCapAuditHistoryHandler = async ({ data, context }: { data: any; context: any }) => {
     const { supabase } = context;
     const companyId = data.companyId;
 
@@ -289,4 +276,20 @@ export const getCapAuditHistory = createServerFn({ method: "GET" })
       documents: docRows,
       summary,
     };
-  });
+  };
+
+export const getCapAuditHistory = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .validator((d: unknown) =>
+    z
+      .object({
+        companyId: z.string().uuid(),
+        stakeholderId: z.string().uuid().optional().nullable(),
+        entityType: z.string().trim().max(40).optional().nullable(),
+        from: z.string().trim().max(20).optional().nullable(),
+        to: z.string().trim().max(20).optional().nullable(),
+        limit: z.number().int().min(50).max(1000).default(400),
+      })
+      .parse(d ?? {}),
+  )
+  .handler(getCapAuditHistoryHandler);

@@ -74,7 +74,8 @@ describe("wire reveal needs fresh authentication", () => {
     expect(body).toMatch(/wire_instructions_revealed/);
     expect(body).toMatch(/instruction_version/);
     // Only the released, current banking record is ever used.
-    expect(s).toMatch(/investor_instructions_released/);
+    expect(s).toMatch(/released_wire_details/);
+    expect(s).toMatch(/wireReleaseState\(row.offering_id\)/);
   });
 });
 

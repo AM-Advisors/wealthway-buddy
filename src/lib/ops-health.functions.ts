@@ -20,10 +20,8 @@ async function admin(userId: string) {
 
 const since = z.object({ days: z.number().int().min(1).max(90).default(14) });
 
-export const emailHealthFn = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .validator((d: unknown) => since.parse(d ?? {}))
-  .handler(async ({ data, context }) => {
+/** Plain handler, exported so checks can run it directly. */
+export const emailHealthHandler = async ({ data, context }: { data: any; context: any }) => {
     const db = await admin(context.userId);
     const from = new Date(Date.now() - data.days * 864e5).toISOString();
     const result = await db
@@ -41,12 +39,15 @@ export const emailHealthFn = createServerFn({ method: "POST" })
     const counts: Record<string, number> = {};
     for (const r of list) counts[r.type] = (counts[r.type] ?? 0) + 1;
     return { counts, events: list };
-  });
+  };
 
-export const webhookLogFn = createServerFn({ method: "POST" })
+export const emailHealthFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((d: unknown) => since.parse(d ?? {}))
-  .handler(async ({ data, context }) => {
+  .handler(emailHealthHandler);
+
+/** Plain handler, exported so checks can run it directly. */
+export const webhookLogHandler = async ({ data, context }: { data: any; context: any }) => {
     const db = await admin(context.userId);
     const from = new Date(Date.now() - data.days * 864e5).toISOString();
     const [didit, box, plaid] = await Promise.all([
@@ -61,7 +62,12 @@ export const webhookLogFn = createServerFn({ method: "POST" })
       ...((plaid.data ?? []) as any[]).map((r) => ({ id: `p-${r.id}`, source: "Bank linking", kind: `${r.webhook_type}/${r.webhook_code}`, status: webhookProcessingState({ processedAt: r.processed_at, status: r.status }), detail: r.detail ? "Processing detail recorded (withheld)" : null, at: r.received_at, processedAt: r.processed_at, attempts: r.attempts })),
     ].sort((a, b) => String(b.at).localeCompare(String(a.at)));
     return { events };
-  });
+  };
+
+export const webhookLogFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((d: unknown) => since.parse(d ?? {}))
+  .handler(webhookLogHandler);
 
 export const systemStatusFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
