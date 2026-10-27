@@ -68,3 +68,76 @@ export const getBillingPipeline = createServerFn({ method: "GET" })
       })),
     };
   });
+
+/**
+ * Read-only ROAS billing consolidation for staff. It gathers the existing
+ * quote, invoice and receipt projections without approving, issuing, filing
+ * or moving money.
+ */
+export const getRoasBillingUpdate = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const ctx = context as any;
+    const { data: roleRows } = await ctx.supabase.from("user_roles").select("role").eq("user_id", ctx.userId);
+    const roles = ((roleRows ?? []) as any[]).map((r) => String(r.role));
+    if (!roles.some((r) => (STAFF_ROLES as readonly string[]).includes(r))) {
+      throw new Error("Forbidden: this area is for the Harmonious team.");
+    }
+
+    const quoteId = "d5a7e354-0122-4db2-83b5-73bd9dd91f9a";
+    const clientId = "f831e9f7-1850-4646-b991-c1a4bc211bc8";
+    const fundId = "acb8193f-35fc-41cc-9ee5-629bde3e11b2";
+    const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
+    const [quoteResult, linesResult, invoicesResult, fundResult] = await Promise.all([
+      (db as any).from("sales_quotes").select("id, quote_number, version, title, status, total_cents, valid_until, updated_at").eq("id", quoteId).maybeSingle(),
+      (db as any).from("sales_quote_lines").select("id, label, quantity, unit_cents, line_cents, billing_frequency, first_bill_on, sort_order").eq("quote_id", quoteId).order("sort_order"),
+      (db as any).from("invoices").select("id, client_id, number, status, approval_status, total_cents, issue_date, due_date, paid_on, voided_at, void_reason, period_start, period_end, created_at").eq("client_id", clientId).order("created_at", { ascending: false }),
+      (db as any).from("offerings").select("id, name").eq("id", fundId).maybeSingle(),
+    ]);
+    if (quoteResult.error || linesResult.error || invoicesResult.error || fundResult.error) {
+      throw new Error("Couldn't load the ROAS billing update. Please try again.");
+    }
+    if (!quoteResult.data) throw new Error("The ROAS draft quote could not be found.");
+
+    const { withInvoiceBalances } = await import("@/lib/invoice-balance.server");
+    const invoices = await withInvoiceBalances((invoicesResult.data ?? []) as any[]);
+    return {
+      clientName: "Roas Capital Management",
+      fundName: fundResult.data?.name ?? "ROAS Hedge LP",
+      quote: {
+        id: quoteResult.data.id,
+        number: `Q-${quoteResult.data.quote_number} v${quoteResult.data.version}`,
+        title: quoteResult.data.title,
+        status: quoteResult.data.status,
+        totalCents: Number(quoteResult.data.total_cents ?? 0),
+        validUntil: quoteResult.data.valid_until ?? null,
+        updatedAt: quoteResult.data.updated_at ?? null,
+      },
+      lines: ((linesResult.data ?? []) as any[]).map((line) => ({
+        id: line.id,
+        label: line.label,
+        quantity: Number(line.quantity ?? 0),
+        unitCents: Number(line.unit_cents ?? 0),
+        lineCents: Number(line.line_cents ?? 0),
+        billingFrequency: line.billing_frequency ?? "one_time",
+        firstBillOn: line.first_bill_on ?? null,
+      })),
+      invoices: invoices.map((invoice: any) => ({
+        id: invoice.id,
+        number: invoice.number ?? null,
+        status: invoice.status,
+        approvalStatus: invoice.approval_status ?? null,
+        totalCents: Number(invoice.total_cents ?? 0),
+        paidCents: Number(invoice.recorded_paid_cents ?? 0),
+        remainingCents: Number(invoice.remaining_cents ?? 0),
+        partiallyPaid: Boolean(invoice.partially_paid),
+        issueDate: invoice.issue_date ?? null,
+        dueDate: invoice.due_date ?? null,
+        paidOn: invoice.paid_on ?? invoice.recorded_paid_on ?? null,
+        voidedAt: invoice.voided_at ?? null,
+        voidReason: invoice.void_reason ?? null,
+        periodStart: invoice.period_start ?? null,
+        periodEnd: invoice.period_end ?? null,
+      })),
+    };
+  });
