@@ -1,3 +1,4 @@
+import { canonicalizeApplications } from "@/lib/verification-status";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
@@ -112,7 +113,7 @@ export const getFundTimelines = createServerFn({ method: "GET" })
       .order("updated_at", { ascending: false })
       .limit(300);
     if (appsError) throw new Error(appsError.message);
-    const applications = (apps ?? []) as any[];
+    const applications = await canonicalizeApplications(supabase, (apps ?? []) as any[]);
     const appIds = applications.map((a) => a.id as string);
     const userIds = [...new Set(applications.map((a) => a.user_id as string))];
 

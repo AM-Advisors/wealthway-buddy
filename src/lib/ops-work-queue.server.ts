@@ -1,3 +1,4 @@
+import { canonicalizeApplications } from "@/lib/verification-status";
 /**
  * Server side of the Operations work queue (server-only module).
  *
@@ -248,7 +249,8 @@ async function identityItems(s: any, lookup: Lookup, now: Date) {
         .limit(SOURCE_LIMIT),
     ),
   );
-  const byApp = new Map((applications as any[]).map((a) => [a.id, a]));
+  const canonicalApps = await canonicalizeApplications(s, applications as any[]);
+  const byApp = new Map(canonicalApps.map((a: any) => [a.id, a]));
   await fillPeople(s, lookup, (applications as any[]).map((a) => a.user_id));
 
   const [kyc, accreditation] = await Promise.all([

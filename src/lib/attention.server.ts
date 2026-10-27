@@ -1,3 +1,4 @@
+import { canonicalizeApplications } from "@/lib/verification-status";
 /**
  * Server side of the Action Center (server-only module).
  *
@@ -121,7 +122,7 @@ async function investorItems(ctx: Ctx, n: Names): Promise<AttentionItem[]> {
     ),
   );
 
-  for (const a of applications as any[]) {
+  for (const a of (await canonicalizeApplications(s, applications as any[], ctx.userId)) as any[]) {
     const fundName = n.funds.get(a.offering_id) ?? null;
     const base = {
       workspace: "investor" as WorkspaceKind,

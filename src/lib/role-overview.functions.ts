@@ -1,3 +1,4 @@
+import { canonicalizeApplications } from "@/lib/verification-status";
 import { createServerFn } from "@tanstack/react-start";
 
 import { requireSupabaseAuth } from "@/lib/require-auth";
@@ -57,7 +58,7 @@ export const getRoleOverview = createServerFn({ method: "GET" })
       .eq("user_id", userId)
       .order("created_at", { ascending: false });
 
-    const myAppRows = (myApps ?? []) as any[];
+    const myAppRows = await canonicalizeApplications(supabase, (myApps ?? []) as any[], userId);
     const myOfferingIds = [...new Set(myAppRows.map((a) => a.offering_id as string))];
 
     // ---------- Reviewer scope ----------

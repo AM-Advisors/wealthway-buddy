@@ -1,3 +1,4 @@
+import { canonicalizeApplications } from "@/lib/verification-status";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
@@ -54,7 +55,7 @@ export const getOnboardingFunnel = createServerFn({ method: "GET" })
 
     const { data: appRows, error: appError } = await appQuery;
     if (appError) throw new Error(appError.message);
-    const applications = (appRows ?? []) as any[];
+    const applications = await canonicalizeApplications(supabase, (appRows ?? []) as any[]);
     const appIds = applications.map((a) => a.id as string);
 
     const empty = { data: [] as any[] };
@@ -299,7 +300,7 @@ export const getBoxSigningFunnel = createServerFn({ method: "GET" })
     if (data.offeringId) appQuery = appQuery.eq("offering_id", data.offeringId);
     const { data: appRows, error: appError } = await appQuery;
     if (appError) throw new Error(appError.message);
-    const applications = (appRows ?? []) as any[];
+    const applications = await canonicalizeApplications(supabase, (appRows ?? []) as any[]);
     const appIds = applications.map((a) => a.id as string);
 
     const empty = { data: [] as any[] };
