@@ -2,8 +2,8 @@
 
 ## Finish remaining work (2026-10-27)
 - [ ] Replace the ten-second investor animation with a longer narrated four-step walkthrough and verify public media playback.
-- [ ] Extend fee accounting with a safe draft-preparation increment using existing accounting engines, without posting or activating services.
-- [ ] Expand fictional click-through coverage where safe; independently isolated durable financial QA remains required.
+- [x] Added read-only fee-entry previews with exact-client books, explicit expense/payable mappings, open-period and duplicate-source blockers. No draft writes or posting; durable preparation remains blocked by isolated financial QA and approved accounting release.
+- [x] Extended fictional click-through to connected quote, agreement, partial-payment invoice, reporting periods and the real fee-preview control. 3,867 tests pass; desktop fee dialog and 440px billing flow checked with no runtime errors. This is fictional evidence, not authenticated production verification.
 - [ ] Hourly contact sync live release: requires explicit publishing approval; do not change the shared marketing scheduler cadence.
 - [ ] LaaSy Class B approval: requires an authorized reviewer or a permanently recorded Super Admin self-approval reason.
 - [ ] ROAS White Glove execution and bookkeeping activation: preserve commercial approval and release gates; no automatic live activation.
