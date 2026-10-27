@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({ results: {} as Record<string, { data: unknown[]; error: unknown }>, staff: vi.fn().mockResolvedValue(undefined) }));
-vi.mock("@tanstack/react-start", () => ({ createServerFn: () => { const chain: any = { middleware: () => chain, inputValidator: () => chain, handler: (fn: unknown) => fn }; return chain; } }));
+vi.mock("@tanstack/react-start", () => ({ createServerFn: () => { const chain: any = { middleware: () => chain, validator: () => chain, handler: (fn: unknown) => fn }; return chain; } }));
 vi.mock("@/lib/require-auth", () => ({ requireSupabaseAuth: {} }));
 vi.mock("@/lib/investor-onboarding.server", () => ({ assertStaff: mocks.staff }));
 vi.mock("@/integrations/supabase/client.server", () => ({ supabaseAdmin: { from: (table: string) => { const chain: any = { select: () => chain, gte: () => chain, order: () => chain, limit: () => Promise.resolve(mocks.results[table] ?? { data: [], error: null }) }; return chain; } } }));
