@@ -1,8 +1,8 @@
 # Roadmap
 
 ## Sales to Operations handoff (2026-10-27)
-- [ ] Reuse canonical staff tasks for a quote-linked fund handoff, with receiving Operations owner, due date, acknowledgment and status on the fund page.
-- [ ] Add focused authorization, transition and fictional click-through checks; no live assignments, sends or money changes.
+- [x] Reuse canonical staff tasks for a quote-linked fund handoff, with receiving Operations owner, due date, acknowledgment and status on the fund page. Receiving-owner transitions and task events save atomically; existing signed quotes show Needs assignment without page-load writes.
+- [x] Seventeen focused handoff/commission tests pass; fictional assignment → acknowledgment → completion inspected on desktop and 440px screens, no runtime errors or overflow. Preview build OK; no live assignments, sends or money changes.
 - [ ] Durable authenticated save/read-back awaits independently isolated QA evidence and synthetic sessions.
 
 ## Connected commercial teams (2026-10-27)
