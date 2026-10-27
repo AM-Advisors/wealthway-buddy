@@ -565,7 +565,7 @@ export const setServiceSelections = createServerFn({ method: "POST" })
 /** Custom price for one selection only; global pricing is never changed. Needs a second approver. */
 export const overrideServicePrice = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((d: unknown) => friendlyParse(z.object({ clientId: uuid, selectionId: uuid, cents: centsSchema, reason: z.string({ required_error: "Give a reason (at least 5 characters)." }).trim().min(5, "Give a reason (at least 5 characters).").max(1000) }), d))
+  .validator((d: unknown) => friendlyParse(z.object({ clientId: uuid, selectionId: uuid, cents: centsSchema, reason: z.string({ error: "Give a reason (at least 5 characters)." }).trim().min(5, "Give a reason (at least 5 characters).").max(1000) }), d))
   .handler(async ({ data, context }) => {
     const { clientGate, audit, loadCatalog, loadPricingInputs, priceSelections } = await import("@/lib/client-admin.server");
     const { db, userId } = await clientGate(context, "manage_pricing");
