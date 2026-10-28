@@ -320,7 +320,6 @@ export async function returnHelp(userId: string, requestId: string, note: string
 export async function submitForApproval(userId: string, id: string) {
   const a = await access(userId, id);
   if (!a.isOwner || a.doc.status !== "draft") throw new Error("Only a draft can be submitted by its owner.");
-  if (a.doc.direction === "response" && !(await publishedMsa(a.db))) throw new Error("No published Master Services Agreement is available for the Terms section. Ask Legal to publish one first.");
   await a.db.from("sales_documents").update({ status: "submitted", updated_at: new Date().toISOString() }).eq("id", id);
   await event(a.db, id, userId, "submitted", { version: a.doc.current_version });
   return { ok: true };

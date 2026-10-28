@@ -249,15 +249,11 @@ export async function draftAgreements(userId: string, q: any) {
   const { data: lines } = await db.from("sales_quote_lines").select("*").eq("quote_id", q.id).order("sort_order");
   const stagedBlocker = bookkeepingDraftBlocker(lines ?? []);
   if (stagedBlocker) throw new Error(stagedBlocker);
-  let msaId: string | null = null;
-  const { data: msas } = await db.from("client_msa_agreements").select("id, executed_at, status").eq("client_id", q.client_id).order("created_at", { ascending: false });
+  // No MSA draft per quote: the client accepts the MSA once, at their first signing, with the other terms.
+  const { data: msas } = await db.from("client_msa_agreements").select("id").eq("client_id", q.client_id).order("created_at", { ascending: false }).limit(1);
   const existing = ((msas ?? []) as any[])[0];
+  const msaId: string | null = existing?.id ?? null;
   const { data: msaVersion } = await db.from("msa_versions").select("id").eq("status", "published").order("effective_date", { ascending: false }).limit(1).maybeSingle();
-  if (existing) msaId = existing.id;
-  else if (msaVersion) {
-    const { data: m } = await db.from("client_msa_agreements").insert({ client_id: q.client_id, msa_version_id: msaVersion.id, status: "in_review" }).select("id").single();
-    msaId = m?.id ?? null;
-  }
   const { data: sow, error } = await db.from("client_sows").insert({
     client_id: q.client_id, title: q.title, sow_type: "services", status: "draft", stage: "draft", created_by: userId,
     msa_version_id: msaVersion?.id ?? null, notes: `Created from Sales quote Q-${q.quote_number} v${q.version}`,
@@ -266,7 +262,7 @@ export async function draftAgreements(userId: string, q: any) {
   }).select("id").single();
   if (error) { console.error("SOW draft failed", error); throw new Error("Couldn't create the SOW draft."); }
   await db.from("sales_quotes").update({ sow_id: sow.id, msa_id: msaId, updated_at: new Date().toISOString() }).eq("id", q.id);
-  await event(q.id, "agreements_drafted", userId, msaId && !existing ? "SOW and MSA drafted" : "SOW drafted");
+  await event(q.id, "agreements_drafted", userId, "SOW drafted");
   return { sowId: sow.id as string };
 }
 

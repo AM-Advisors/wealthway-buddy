@@ -326,17 +326,11 @@ function AgreementPacket({ packet, onChange }: { packet: any; onChange: () => vo
         <li className="flex justify-between"><Link to="/sales/quotes/$id" params={{ id: quote.id }} className="font-medium hover:underline">Quote Q-{quote.quote_number} v{quote.version}</Link><span><Badge variant="outline">{String(quote.status).replace(/_/g, " ")}</Badge> {money(quote.total_cents)}</span></li>
         <li className="flex justify-between"><span>Statement of Work</span><Badge variant="outline">{PSTAT(sow, !!(sow?.executed_at || sow?.client_signed_at))}</Badge></li>
       </ul>
-      <Accordion type="single" collapsible>
-        <AccordionItem value="msa-status" className="border-b-0">
-          <AccordionTrigger className="gap-3"><span className="flex items-center gap-2"><LockKeyhole className="h-4 w-4 shrink-0 text-muted-foreground" />Master Services Agreement</span></AccordionTrigger>
-          <AccordionContent><Badge variant="outline">{msa ? PSTAT(msa, !!msa.executed_at) : quote.sow_id ? "Already on file" : "Not created"}</Badge></AccordionContent>
-        </AccordionItem>
-      </Accordion>
       <div className="mt-3 flex flex-wrap gap-2">
         {["draft", "rejected"].includes(quote.status) && <Button size="sm" disabled={busy} onClick={() => go(() => sub({ data: { id: quote.id } }), "Quote sent for approval")}>Submit quote for approval</Button>}
-        {quote.status === "approved" && !quote.sow_id && <Button size="sm" disabled={busy} onClick={() => go(() => mk({ data: { id: quote.id } }), "MSA and SOW packet created")}>Create MSA + SOW packet</Button>}
+        {quote.status === "approved" && !quote.sow_id && <Button size="sm" disabled={busy} onClick={() => go(() => mk({ data: { id: quote.id } }), "SOW created")}>Create SOW</Button>}
       </div>
-      <p className="mt-2 text-xs text-muted-foreground">The MSA is only added when the client has none on file. Both are built from these same service lines and are signed together in the agreement flow. Billing starts only after signing.</p>
+      <p className="mt-2 text-xs text-muted-foreground">The SOW is built from these same service lines. A new client accepts the Master Services Agreement once, the first time they sign, along with the other terms.</p>
     </Panel>
   );
 }

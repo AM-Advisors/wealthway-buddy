@@ -112,7 +112,7 @@ export function pricingText(lines: LockFacts["lines"]): string {
     for (const l of oneTime) out.push(`- ${cleanLabel(l.label)}${Number(l.quantity) > 1 ? ` (x${l.quantity})` : ""}: ${money(Number(l.line_cents))}`);
   }
   out.push("");
-  out.push("How to get started: accept this proposal, sign the MSA and SOW we send you, and your first invoice follows. You can pay each invoice online by card.");
+  out.push("How to get started: sign and approve this quote, and your invoice follows. You can pay each invoice online by card.");
   out.push("(Pricing from the approved quote.)");
   return out.join("\n");
 }
@@ -164,7 +164,8 @@ export function applyLockedSections(kind: DocKind, direction: DocDirection, sect
     const i = out.findIndex((s) => s.key === "services");
     if (i >= 0) out[i] = svc; else { const p = out.findIndex((s) => s.key === "pricing"); out.splice(p >= 0 ? p : out.length, 0, svc); }
   }
-  return aboutLast(out);
+  // The MSA is never part of a quote or proposal: a client accepts it once, at their first signing, with the other terms.
+  return aboutLast(out.filter((s) => s.key !== "terms"));
 }
 
 const SOW_MARK = "Services from your Statement of Work:";
