@@ -63,6 +63,11 @@ describe("fund setup canonical rules", () => {
     expect(e.managementFee?.ratePercent).toBe(2);
     expect(classErrors([{ key: "a", name: "A" }, { key: "a", name: "A" }])).toContain('Class "A" appears twice.');
   });
+  it("accepts a 2% annual capital-account fee without turning quarterly payment into a quarterly rate", () => {
+    const terms = { managementFee: { ratePercent: 2, basis: "capital_account_balance" as const, frequency: "annual" as const, paymentTerms: "Payable quarterly in arrears" }, carry: { ratePercent: 0 } };
+    expect(economicsErrors(terms)).toEqual([]);
+    expect(effectiveEconomics(terms, { key: "a1", name: "A-1" }).managementFee).toEqual({ ratePercent: 2, basis: "capital_account_balance", frequency: "annual", paymentTerms: "Payable quarterly in arrears" });
+  });
   it("investments only reference an existing class", () => {
     const classes = [{ key: "class_a", name: "Class A" }];
     expect(classAssignmentError({ hasMultipleClasses: true, classes, classKey: "class_a" })).toBeNull();

@@ -8,10 +8,11 @@ const uuid = z.string().uuid();
 const fee = z
   .object({
     ratePercent: z.number().min(0).max(100).nullable(),
-    basis: z.enum(["committed_capital", "invested_capital", "nav", "flat"]).nullable(),
+    basis: z.enum(["committed_capital", "invested_capital", "capital_account_balance", "nav", "flat"]).nullable(),
     frequency: z.enum(["annual", "per_capital_call", "one_time", "quarterly", "monthly"]).nullable(),
     effectiveFrom: z.string().max(20).nullish(),
     effectiveTo: z.string().max(20).nullish(),
+    paymentTerms: z.string().max(500).nullish(),
   })
   .nullable();
 const carry = z.object({ ratePercent: z.number().min(0).max(100).nullable(), applicability: z.string().max(200).nullish() }).nullable();
@@ -31,6 +32,7 @@ const fundClass = z.object({
   carry: carry.optional(),
   preferredReturnPercent: z.number().min(0).max(100).nullish(),
   minInvestmentCents: z.number().int().min(0).nullish(),
+  maxInvestmentCents: z.number().int().min(0).nullish(),
   orgExpenseTreatment: z.string().max(200).nullish(),
   distributionFrequency: z.string().max(100).nullish(),
   appliesTo: z.string().max(200).nullish(),

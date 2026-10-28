@@ -549,7 +549,7 @@ export function EconomicsCard({ d, offeringId, onSaved }: { d: D; offeringId: st
           <Field label="Basis">
             <select className="h-9 w-full rounded-md border bg-background px-2 text-sm" disabled={!d.canEdit || isNa("managementFee")} value={isNa("managementFee") ? "na" : fee.basis ?? ""} onChange={(e) => setFee({ basis: e.target.value || null })}>
               {isNa("managementFee") ? <option value="na">Not applicable</option> : <option value="">-</option>}
-              <option value="committed_capital">Committed capital</option><option value="invested_capital">Invested capital</option><option value="nav">NAV</option><option value="flat">Flat amount</option>
+              <option value="committed_capital">Committed capital</option><option value="invested_capital">Invested capital</option><option value="capital_account_balance">Capital account balance</option><option value="nav">NAV</option><option value="flat">Flat amount</option>
             </select>
           </Field>
           <Field label="Frequency">
@@ -603,7 +603,7 @@ export function EconomicsCard({ d, offeringId, onSaved }: { d: D; offeringId: st
                   </div>
                   <Field label="Fee basis">
                     <select className="h-9 w-full rounded-md border bg-background px-2 text-sm" disabled={!d.canEdit || cNa("managementFee") || !c.managementFee} value={c.managementFee?.basis ?? ""} onChange={(e) => upd({ managementFee: { ...(c.managementFee ?? fee), basis: (e.target.value || null) as any } })}>
-                      <option value="">Same as shared</option><option value="committed_capital">Committed capital</option><option value="invested_capital">Invested capital</option><option value="nav">NAV</option><option value="flat">Flat amount</option>
+                      <option value="">Same as shared</option><option value="committed_capital">Committed capital</option><option value="invested_capital">Invested capital</option><option value="capital_account_balance">Capital account balance</option><option value="nav">NAV</option><option value="flat">Flat amount</option>
                     </select>
                   </Field>
                   <Field label="Fee frequency">
