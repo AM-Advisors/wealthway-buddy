@@ -64,7 +64,7 @@ export async function isGloballyBlocked(uid: string) {
 export type PersonType = "Employee" | "Fund Manager" | "Founder" | "Client contact" | "Investor" | "User";
 export async function directory(viewer: string) {
   const db = await requireAccessViewer(viewer);
-  const [users, roles, cu, ftm, contacts, profiles, states, persons, si, ci, fi, ftg, off] = await Promise.all([
+  const [users, roles, cu, ftm, contacts, profiles, states, persons, si, ci, fi, ftg, off, fm] = await Promise.all([
     allAuthUsers(db),
     db.from("user_roles").select("user_id, role").limit(50000),
     db.from("client_users").select("user_id, client_id").limit(50000),
@@ -78,9 +78,10 @@ export async function directory(viewer: string) {
     db.from("fund_invitations").select("id, email, invited_name, invited_by, status, created_at, last_sent_at, offering_id, invite_role, is_test_demo").eq("status", "pending").is("accepted_at", null).limit(5000),
     db.from("fund_team_grants").select("grantee_user_id, role, scope, offering_id").eq("status", "active").not("grantee_user_id", "is", null).limit(50000),
     db.from("offerings").select("id, name").limit(20000),
+    db.from("fund_managers").select("user_id, offering_id").limit(50000),
   ]);
   const by = <T,>(rows: any[], k: string) => { const m = new Map<string, T[]>(); for (const r of rows ?? []) if (r[k]) m.set(r[k], [...(m.get(r[k]) ?? []), r]); return m; };
-  const R = by<any>(roles.data, "user_id"), CU = by<any>(cu.data, "user_id"), F = by<any>(ftm.data, "user_id"), C = by<any>(contacts.data, "user_id"), S = by<any>(states.data, "user_id"), FTG = by<any>(ftg.data, "grantee_user_id");
+  const R = by<any>(roles.data, "user_id"), CU = by<any>(cu.data, "user_id"), F = by<any>(ftm.data, "user_id"), C = by<any>(contacts.data, "user_id"), S = by<any>(states.data, "user_id"), FM = by<any>(fm.data, "user_id"), FTG = by<any>(ftg.data, "grantee_user_id");
   const OFF = new Map(((off.data ?? []) as any[]).map((o) => [o.id, String(o.name ?? "")]));
   const P = new Map(((profiles.data ?? []) as any[]).map((p) => [p.user_id, p]));
   const investorUsers = new Set(((persons.data ?? []) as any[]).map((p) => p.user_id));
@@ -89,7 +90,7 @@ export async function directory(viewer: string) {
     const isFounder = (C.get(u.id) ?? []).some((c: any) => (c.designations ?? []).some((d: string) => /founder/i.test(d)));
     const types: PersonType[] = [];
     if (r.some((x) => STAFF.includes(x))) types.push("Employee");
-    if (F.get(u.id)?.length || r.includes("fund_manager")) types.push("Fund Manager");
+    if (F.get(u.id)?.length || FM.get(u.id)?.length || r.includes("fund_manager")) types.push("Fund Manager");
     if (isFounder) types.push("Founder");
     if (CU.get(u.id)?.length) types.push("Client contact");
     if (investorUsers.has(u.id) || r.includes("investor")) types.push("Investor");
@@ -97,7 +98,7 @@ export async function directory(viewer: string) {
     const global = st.find((s) => s.scope === "global");
     const p = P.get(u.id);
     const ftg = (FTG.get(u.id) ?? []) as any[];
-    const funds = [...new Set((F.get(u.id) ?? []).map((x: any) => OFF.get(x.offering_id)).filter(Boolean))] as string[];
+    const funds = [...new Set([...(F.get(u.id) ?? []), ...(FM.get(u.id) ?? [])].map((x: any) => OFF.get(x.offering_id)).filter(Boolean))] as string[];
     if (ftg.some((g) => g.scope === "all_funds" || g.scope === "all_managed")) funds.push("All funds");
     return {
       kind: "user" as const, id: u.id, email: u.email ?? p?.email ?? "", name: p?.legal_name || u.user_metadata?.full_name || "",
