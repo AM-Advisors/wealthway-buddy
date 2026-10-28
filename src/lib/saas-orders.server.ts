@@ -224,9 +224,15 @@ export async function myEntitlements(uid: string): Promise<string[] | null> {
   if (!link) return null;
   const { data: c } = await d.from("clients").select("menu_gating").eq("id", link.client_id).maybeSingle();
   if (c?.menu_gating !== "entitlements") return null;
-  const { data: ents } = await d.from("service_entitlements").select("service_key").eq("client_id", link.client_id).eq("status", "included");
+  const [{ data: ents }, { count: managed }] = await Promise.all([
+    d.from("service_entitlements").select("service_key").eq("client_id", link.client_id).eq("status", "included"),
+    d.from("fund_managers").select("id", { count: "exact", head: true }).eq("user_id", uid),
+  ]);
   const { menuKeysFromServices } = await import("@/lib/saas-order-model");
-  return menuKeysFromServices(((ents ?? []) as any[]).map((e) => String(e.service_key)));
+  const keys = menuKeysFromServices(((ents ?? []) as any[]).map((e) => String(e.service_key)));
+  // Fund managers always see their funds; the menu grants no extra access.
+  if ((managed ?? 0) > 0 && !keys.includes("fund_platform")) keys.push("fund_platform");
+  return keys;
 }
 
 export async function staffOrders(uid: string) {
