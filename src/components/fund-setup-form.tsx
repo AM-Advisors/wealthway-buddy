@@ -116,14 +116,11 @@ export function FundSetupForm({ offeringId, mode, staffExtras, workspace = false
       </div>
     );
     const fields = <div className="space-y-3">{s.fields.map((f) => <div key={f.key}>{renderField(f)}</div>)}</div>;
-    if (id === "fees" && d.hasMultipleClasses !== false && editingSection !== id) {
-      // Multi-class funds show each class's terms; the component renders nothing for single-class funds.
-    }
     if (!ret && !waiting(s.fields[0]?.section ?? "") && fieldSectionComplete(required, prior, changed && editingSection !== id)) {
       return (
-        <div key={id}>
+        <div key={id} className="[&:has(>section[aria-label='Fees_and_terms_by_class'])>[data-fees-defaults]]:hidden">
           {id === "fees" && <FundClassSummary offeringId={offeringId} onEdit={() => setEditingSection(id)} />}
-          <div className={id === "fees" ? "[section[aria-label='Fees and terms by class']+&]:hidden" : ""}>
+          <div data-fees-defaults={id === "fees" || undefined}>
           <SummaryBox title={s.title} rows={s.fields.map((f) => [f.label, display(f)] as [string, React.ReactNode])} onEdit={() => setEditingSection(id)} />
           </div>
           <EditSheet open={editingSection === id} onOpenChange={(o) => { if (!o) { setVals((cur) => Object.fromEntries(Object.entries(cur).filter(([k]) => !keys.includes(k)))); setEditingSection(null); } }} title={s.title}>
