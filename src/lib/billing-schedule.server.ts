@@ -3,7 +3,7 @@
  * Drafts, then issueScheduledDrafts sends only exact signed-SOW amounts; nothing here
  * charges or moves money.
  */
-import { duePeriods, isFrequency, scheduleRef, type BillingFrequency } from "@/lib/invoice-schedule-model";
+import { duePeriods, isFrequency, periodFor, scheduleRef, type BillingFrequency } from "@/lib/invoice-schedule-model";
 
 const admin = async () => (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
 const today = () => new Date().toISOString().slice(0, 10);
@@ -25,11 +25,16 @@ export async function syncSchedules() {
     const { data: existing } = await db.from("invoice_schedules").select("line_index").eq("sow_id", sow.id);
     const have = new Set(((existing ?? []) as any[]).map((r) => r.line_index));
     const start = String(sow.effective_date ?? sow.approved_at ?? today()).slice(0, 10);
-    const rows = lines.map((l: any, i: number) => ({ l, i })).filter(({ l, i }: any) => !have.has(i) && Number(l.amount_cents) > 0).map(({ l, i }: any) => ({
-      sow_id: sow.id, client_id: sow.client_id, line_index: i, service_key: l.service_key ?? null, label: String(l.label ?? "Service"),
-      amount_cents: Math.round(Number(l.amount_cents) || 0), frequency: isFrequency(l.billing_frequency) ? l.billing_frequency : "one_time",
-      next_due_on: String(l.first_bill_on ?? start).slice(0, 10),
-    }));
+    // A quote package already issued invoices through this date: the schedule resumes after it.
+    const { data: pkg } = await db.from("sales_quotes").select("package_issued_through").eq("sow_id", sow.id).not("package_issued_through", "is", null).limit(1).maybeSingle();
+    const billedThrough: string | null = pkg?.package_issued_through ?? null;
+    const rows = lines.map((l: any, i: number) => ({ l, i })).filter(({ l, i }: any) => !have.has(i) && Number(l.amount_cents) > 0).map(({ l, i }: any) => {
+      const frequency: BillingFrequency = isFrequency(l.billing_frequency) ? l.billing_frequency : "one_time";
+      let next: string | null = String(l.first_bill_on ?? start).slice(0, 10);
+      while (billedThrough && next && next <= billedThrough) next = frequency === "one_time" ? null : periodFor(frequency, next).next;
+      return { sow_id: sow.id, client_id: sow.client_id, line_index: i, service_key: l.service_key ?? null, label: String(l.label ?? "Service"),
+        amount_cents: Math.round(Number(l.amount_cents) || 0), frequency, next_due_on: next ?? billedThrough, active: !!next };
+    });
     if (!rows.length) continue;
     const { error } = await db.from("invoice_schedules").insert(rows);
     if (!error) created += rows.length;

@@ -184,3 +184,6 @@ export const sendSalesQuoteEmail = createServerFn({ method: "POST" }).middleware
 export const createQuoteDeal = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator((d) => z.object({ title: z.string().trim().min(1).max(200), contactId: z.string().uuid().nullish(), clientId: z.string().uuid().nullish() }).parse(d))
   .handler(async ({ data, context }) => (await S()).createQuoteDeal(context.userId, data));
+export const sendSalesQuotePackage = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .validator((d) => z.object({ id: z.string().uuid(), subject: z.string().trim().min(1).max(200), message: z.string().max(5000).nullish() }).parse(d))
+  .handler(async ({ data, context }) => (await Q()).sendQuotePackage(context.userId, data));

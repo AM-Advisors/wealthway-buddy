@@ -1,0 +1,2 @@
+ALTER TABLE public.sales_quotes ADD COLUMN IF NOT EXISTS package_issued_through date, ADD COLUMN IF NOT EXISTS package_issued_at timestamptz;
+COMMENT ON COLUMN public.sales_quotes.package_issued_through IS 'Last billing date already invoiced by the one-click quote package send; schedules and signing must not bill on or before it.';

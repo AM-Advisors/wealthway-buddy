@@ -527,3 +527,63 @@ export async function sendQuoteEmail(userId: string, d: { id: string; subject: s
   await event(q.id, resend ? "resent" : "emailed", userId, email);
   return { ok: true, resent: resend };
 }
+
+/**
+ * One click: draft the SOW, email the quote for signature, and issue every invoice
+ * the quote bills through Dec 31 of next year, each with its own due date.
+ * User-approved rule: the quote's approval is the second check, so invoices must
+ * match the approved quote lines exactly. Idempotent per line/period. Never charges.
+ */
+export async function sendQuotePackage(userId: string, d: { id: string; subject: string; message?: string | null | undefined }) {
+  const a = await salesActor(userId);
+  const db = await admin();
+  const { data: q } = await db.from("sales_quotes").select("*").eq("id", d.id).maybeSingle();
+  if (!q || !canSee(a, q.owner_user_id)) throw new Error("Quote not found.");
+  const { packageBlocker, packageInvoicePlan, packageThrough } = await import("@/lib/quote-package-model");
+  const blocked = packageBlocker(q);
+  if (blocked) throw new Error(blocked);
+  const { sowId } = await draftAgreements(userId, q);
+  await sendQuoteEmail(userId, { id: q.id, subject: d.subject, message: d.message });
+  const { data: lines } = await db.from("sales_quote_lines").select("*").eq("quote_id", q.id).order("sort_order");
+  const start = new Date().toISOString().slice(0, 10);
+  const through = packageThrough(start);
+  const plan = packageInvoicePlan(q.id, q.version ?? 1, (lines ?? []) as any[], start, through);
+  const { data: billed } = plan.length ? await db.from("invoice_lines").select("source_ref").in("source_ref", plan.map((p) => p.ref)) : { data: [] };
+  const done = new Set(((billed ?? []) as any[]).map((b) => b.source_ref));
+  const { data: client } = await db.from("clients").select("legal_name, name").eq("id", q.client_id).maybeSingle();
+  const { notifyClientAdminsWith, money, CLIENT_PORTAL_BASE } = await import("@/lib/client-notify.server");
+  const issued: { number: string; dueOn: string; amountCents: number }[] = [];
+  const now = new Date().toISOString();
+  for (const p of plan) {
+    if (done.has(p.ref)) continue;
+    const year = start.slice(0, 4);
+    let inv: any = null;
+    for (let attempt = 0; attempt < 5 && !inv; attempt++) {
+      const { count } = await db.from("invoices").select("id", { count: "exact", head: true }).not("number", "is", null).like("number", `HRM-${year}-%`);
+      const number = `HRM-${year}-${String((count ?? 0) + 1 + attempt).padStart(4, "0")}`;
+      const { data, error } = await db.from("invoices").insert({
+        client_id: q.client_id, offering_id: q.offering_id ?? null, sales_quote_id: q.id, sow_id: sowId, number, status: "issued",
+        issue_date: start, due_date: p.dueOn < start ? start : p.dueOn, net_days: 0, period_start: p.periodStart, period_end: p.periodEnd,
+        total_cents: p.amountCents, note: `${p.label}, ${p.periodStart} to ${p.periodEnd}. Issued with quote Q-${q.quote_number} v${q.version}.`,
+        issued_at: now, issued_by: userId, created_by: userId, approval_status: "pending", approval_requested_at: now, rate_variance_cents: 0,
+        issue_self_reason: "Issued with its approved quote; the quote approval is the second check.",
+      }).select("id, number").single();
+      if (!error) inv = data;
+      else if (error.code !== "23505") { console.error("package invoice failed", error); throw new Error(`Sent ${issued.length} invoices, then one failed. Send again to finish; nothing is duplicated.`); }
+    }
+    if (!inv) throw new Error(`Sent ${issued.length} invoices, then numbering collided. Send again to finish.`);
+    const { error: le } = await db.from("invoice_lines").insert({ invoice_id: inv.id, source: "manual", service_key: p.serviceKey, label: p.label, quantity: 1, unit_cents: p.amountCents, amount_cents: p.amountCents, offering_id: q.offering_id ?? null, source_ref: p.ref });
+    if (le) { await db.from("invoices").update({ status: "void", voided_at: now, void_reason: "Already billed for this period." }).eq("id", inv.id); continue; }
+    await db.from("billing_record_events").insert({ entity_kind: "invoice", entity_id: inv.id, client_id: q.client_id, event_kind: "package_invoice_issued", detail: { number: inv.number, quote_id: q.id, due: p.dueOn } }).then(() => null, () => null);
+    const dueDate = p.dueOn < start ? start : p.dueOn;
+    await notifyClientAdminsWith(q.client_id, "invoice-issued", `invoice-issued:${inv.id}`, (person) => ({
+      contactName: person.name, clientName: client?.legal_name || client?.name || "your organization", invoiceNumber: inv.number,
+      amount: money(p.amountCents), issueDate: start, dueDate, periodLabel: `${p.periodStart} to ${p.periodEnd}`,
+      lines: [{ label: p.label, amount: money(p.amountCents) }], payUrl: `${CLIENT_PORTAL_BASE}/client/invoices?invoice=${inv.id}`, note: "",
+    })).catch(() => console.error("[package] client notice failed"));
+    issued.push({ number: inv.number, dueOn: dueDate, amountCents: p.amountCents });
+  }
+  await db.from("sales_quotes").update({ package_issued_through: through, package_issued_at: now, updated_at: now }).eq("id", q.id);
+  await event(q.id, "package_sent", userId, `SOW, quote and ${issued.length} invoices through ${through}`);
+  return { ok: true, sowId, through, invoices: issued, totalCents: issued.reduce((s, i) => s + i.amountCents, 0) };
+}
