@@ -1264,7 +1264,7 @@ export async function onboardingDetail(userId: string, onboardingId: string): Pr
     fundingBlockedReasons: fundingGate.reasons,
     countersignTiming: facts.countersignTiming,
     awaitingCountersign: !row.approved_to_fund_at && fundingGate.allowed,
-    questionnaire: questionnaire ? { version: questionnaire.version, questions: locks?.questions ?? questionnaire.questions } : null,
+    questionnaire: questionnaire ? { version: questionnaire.version, questions: locks?.questions ?? questionnaire.questions, sectionTitle: (questionnaire as any).sectionTitle ?? null, sectionStartKey: (questionnaire as any).sectionStartKey ?? null } : null,
     questionnaireResponses: { ...fillMissingInvestorAnswers((row.questionnaire_responses ?? {}) as Record<string, unknown>, locks?.supplied ?? {}, (questionnaire?.questions ?? []).map((q: Question) => q.key)), ...Object.fromEntries(Object.entries(locks?.locked ?? {}).filter(([, v]) => v != null)) },
     questionnaireLocked: locks?.locked ?? {},
     documentTemplateVersion: row.document_template_version as number | null,

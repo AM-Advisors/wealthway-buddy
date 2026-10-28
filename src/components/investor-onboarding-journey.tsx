@@ -454,6 +454,9 @@ function QuestionnaireForm({ d, done, locked, onSave, saving }: { d: any; onboar
         <fieldset disabled={locked} className="space-y-4">
           {questions.map((q, n) => isAccreditationQuestion(q.key) || !questionVisible(q, answers) ? null : (
             <div key={q.key} className="space-y-1.5">
+              {q.key === d.questionnaire.sectionStartKey && d.questionnaire.sectionTitle && (
+                <div className="border-t pt-4"><p className="font-heading text-sm font-semibold">{d.questionnaire.sectionTitle}</p><p className="text-xs text-muted-foreground">Questions from this fund's subscription agreement that weren't asked above.</p></div>
+              )}
               <Label htmlFor={q.key} className="leading-snug">{n + 1}. {q.label}{q.required && !q.satisfiedBy ? " *" : ""}</Label>
               {q.locked ? (
                 <div id={q.key} className="rounded-md border bg-muted px-3 py-2 text-sm">
