@@ -15,6 +15,9 @@ beforeEach(async () => {
     INSERT INTO offering_documents VALUES ('${manager}',1,NULL);
     INSERT INTO fund_managers VALUES ('${manager}','${manager}'),('${manager}','${reviewer}');`);
   await db.exec(readFileSync("drizzle/migrations/0349_self_serve_document_review.sql", "utf8"));
+  // Apply the current routine-review policy after the original immutable-history schema.
+  const current = readFileSync("drizzle/migrations/0361_single_routine_document_reviews.sql", "utf8");
+  await db.exec(current.slice(0, current.indexOf("CREATE OR REPLACE FUNCTION public.guard_side_letter_change_request")));
   await db.exec(`INSERT INTO offering_document_versions(id,offering_id,offering_document_id,version,file_path,created_by,approval_status,self_serve_review_state) VALUES ('${manager}','${manager}','${manager}',1,'private/draft.docx','${manager}','uploaded_review_required','pending');`);
 });
 afterEach(async () => { await db.close(); });
@@ -22,7 +25,10 @@ const approve = (who: string) => db.exec(`UPDATE offering_document_versions SET 
 it("generation cannot activate without an approval", async () => {
   await expect(db.exec(`UPDATE offering_documents SET active_version=1`)).rejects.toThrow("Approve");
 });
-it("self-approval is refused transactionally", async () => { await expect(approve(manager)).rejects.toThrow("different person"); });
+it("an authorized exact-fund preparer approves transactionally with recorded evidence", async () => {
+  await approve(manager);
+  expect((await db.query<{ actor_user_id: string }>("SELECT actor_user_id FROM offering_document_events")).rows[0]?.actor_user_id).toBe(manager);
+});
 it("another exact-fund manager approves and activation preserves review evidence", async () => {
   await approve(reviewer);
   await db.exec(`UPDATE offering_documents SET active_version=1`);

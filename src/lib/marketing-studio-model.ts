@@ -1,4 +1,5 @@
 /** Marketing Studio: pure editorial workflow rules (client + server). No I/O. */
+import { routineApprovalAllowed } from "./routine-approval-policy";
 export const STUDIO_STATUSES = [
   "idea", "researching", "drafting", "fact_check", "design", "internal_review",
   "ceo_approval", "approved", "scheduled", "published", "performance_review",
@@ -45,13 +46,13 @@ export function moveProblem(m: MoveInput): string | null {
   const superSelf = self && m.roles.includes("super_admin");
   if (m.to === "design" || m.to === "ceo_approval") {
     if (!has(m.roles, STUDIO_REVIEWERS)) return "A reviewer must pass this step.";
-    if (self && !superSelf) return "Someone other than the author must review this.";
+    if (self && !routineApprovalAllowed("marketing_post", has(m.roles, STUDIO_REVIEWERS))) return "Only an authorized reviewer can review this.";
     if (superSelf && !note) return "Super Admin self-review needs a reason.";
   }
   if (m.to === "approved") {
     if ((m.unverifiedClaims ?? 0) > 0) return "Some factual claims have no primary source. Verify or remove them before approval.";
     if (!has(m.roles, STUDIO_EXECUTIVES)) return "Only an executive approver can approve.";
-    if (self && !superSelf) return "Someone other than the author must approve this.";
+    if (self && !routineApprovalAllowed("marketing_post", has(m.roles, STUDIO_EXECUTIVES))) return "Only an authorized executive can approve this.";
     if (superSelf && !note) return "Super Admin self-approval needs a reason.";
   }
   if (m.to === "scheduled" || m.to === "published" || m.to === "performance_review") {

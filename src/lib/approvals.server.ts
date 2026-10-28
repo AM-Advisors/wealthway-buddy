@@ -8,6 +8,7 @@
 import { approvalType, requiredApproversByPolicy, CLIENT_VISIBLE_APPROVAL_STATUSES } from "@/lib/approval-types";
 import { staffWriter } from "@/lib/fund-calendar.server";
 import { notifyFundManagers } from "@/lib/client-work-notify.server";
+import { routineApprovalType } from "./routine-approval-policy";
 
 async function admin() { return (await import("@/integrations/supabase/client.server")).supabaseAdmin as any; }
 
@@ -142,6 +143,15 @@ export async function submitForReview(uid: string, id: string) {
   const db = await admin();
   const { data: a } = await db.from("approvals").select("*").eq("id", id).maybeSingle();
   if (!a || a.status !== "DRAFT") throw new Error("Only drafts can be sent for internal review.");
+  // Routine requests go straight to the existing client decision; no invented staff approval.
+  if (routineApprovalType(a.approval_type) && a.approval_amount == null) {
+    const { data: sent, error } = await db.from("approvals").update({ status: "AWAITING_APPROVAL", requested_at: new Date().toISOString() }).eq("id", id).eq("status", "DRAFT").select("*").maybeSingle();
+    if (error || !sent) throw new Error("This draft changed. Refresh before requesting approval.");
+    await log(db, sent, uid, "approval_requested", null, true, { routine_single_approval: true });
+    await syncTask(db, sent, "CLIENT_APPROVAL_REQUIRED");
+    await notifyFundManagers(a.fund_id, "approval_required", a.title, `/manager/fund/${a.fund_id}/approvals`);
+    return { ok: true };
+  }
   await db.from("approvals").update({ status: "INTERNAL_REVIEW" }).eq("id", id);
   await log(db, a, uid, "internal_review_requested", null, false);
   await (await import("@/lib/ops-slack-notify.server")).notifySubmission({ kind: "approval_submitted", title: `Sent for internal review: ${a.title ?? a.approval_type ?? "approval"}`, offeringId: a.fund_id ?? null, clientId: a.client_id ?? null, submittedBy: uid, ref: a.id });
@@ -154,7 +164,7 @@ export async function completeReview(uid: string, id: string, reason?: string | 
   const db = await admin();
   const { data: a } = await db.from("approvals").select("*").eq("id", id).maybeSingle();
   if (!a || a.status !== "INTERNAL_REVIEW") throw new Error("This approval isn't waiting for internal review.");
-  if (a.prepared_by === uid) {
+  if (a.prepared_by === uid && !(routineApprovalType(a.approval_type) && a.approval_amount == null)) {
     if (!s.roles.includes("super_admin")) throw new Error("A different Harmonious team member must complete the internal review.");
     if (!reason || reason.trim().length < 10) throw new Error("Give a reason (10+ characters) to review your own work.");
     await db.from("self_approval_overrides").insert({ user_id: uid, action: "approval_internal_review", resource_id: id, reason: reason.trim() } as any).then(() => undefined, () => undefined);
