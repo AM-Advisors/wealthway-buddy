@@ -426,7 +426,7 @@ function PresetSelect({ options, value, na, onChange, disabled, suffix = "", pre
         else if (v === "") { setCustom(false); onChange(null, false); }
         else { setCustom(false); onChange(Number(v), false); }
       }}>
-        <option value="">{allowDefault ? "Same as fund default" : "-"}</option>
+        <option value="">{allowDefault ? "Same as fund default" : "Not set"}</option>
         {options.map((o) => <option key={o} value={String(o)}>{prefix}{o.toLocaleString()}{suffix}</option>)}
         <option value="other">Other…</option>
         <option value="na">Not applicable</option>
@@ -448,7 +448,7 @@ function TextPresetSelect({ options, value, na, onChange, disabled }: { options:
         else if (v === "") { setCustom(false); onChange(null, false); }
         else { setCustom(false); onChange(v, false); }
       }}>
-        <option value="">-</option>
+        <option value="">Not set</option>
         {options.map((o) => <option key={o} value={o}>{o}</option>)}
         <option value="other">Other…</option>
         <option value="na">Not applicable</option>
