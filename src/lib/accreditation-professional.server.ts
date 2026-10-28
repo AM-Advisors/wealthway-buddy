@@ -78,6 +78,9 @@ export async function createRequest(userId: string, input: { onboardingId: strin
   await logEvent(d, req.id, "requested", userId, { role: input.role });
   try { await sendRequestEmail(d, req, token, onb.application_id); await logEvent(d, req.id, "sent", userId); }
   catch (e) { console.error("accreditation pro email", e); await logEvent(d, req.id, "send_failed", userId); throw new Error("The request was saved but the email could not be sent. Try Resend."); }
+  void (await import("@/lib/accreditation-review.server")).notifyAccreditationActivity(onb.application_id, {
+    kind: "professional_request_sent", professionalName: req.professional_name, professionalRole: req.professional_role, requestId: req.id, resent: false,
+  }).catch(() => {});
   return { ok: true };
 }
 
@@ -104,6 +107,9 @@ export async function resendRequest(userId: string, requestId: string) {
   if (error) throw new Error("Could not resend.");
   await sendRequestEmail(d, updated, token, req.application_id);
   await logEvent(d, requestId, "resent", userId);
+  void (await import("@/lib/accreditation-review.server")).notifyAccreditationActivity(req.application_id, {
+    kind: "professional_request_sent", professionalName: updated.professional_name, professionalRole: updated.professional_role, requestId, resent: true,
+  }).catch(() => {});
   return { ok: true };
 }
 
@@ -162,7 +168,9 @@ export async function acceptUpload(token: string, file: File, licenseNumber: str
   const { data: appRow } = await d.from("investor_applications").select("accreditation_status").eq("id", app.id).maybeSingle();
   if (appRow?.accreditation_status !== "approved") await d.from("investor_applications").update({ accreditation_status: "review", updated_at: now }).eq("id", app.id);
   await logEvent(d, req.id, "uploaded", null, { document_id: doc?.id ?? null, size: file.size, type: file.type });
-  void (await import("@/lib/accreditation-review.server")).notifyAccreditationPending(app.id).catch(() => {});
+  void (await import("@/lib/accreditation-review.server")).notifyAccreditationActivity(app.id, {
+    kind: "professional_letter_uploaded", professionalName: req.professional_name, documentId: doc?.id ?? null, requestId: req.id,
+  }).catch(() => {});
   if (doc?.id) void (await import("@/lib/accreditation-ai.server")).checkDocument(doc.id, null).catch(() => {});
   return { ok: true };
 }
