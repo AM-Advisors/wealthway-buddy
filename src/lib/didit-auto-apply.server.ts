@@ -113,3 +113,35 @@ export async function autoApplyDiditSession(sessionId: string | null) {
     try { await autoApplyDiditForOnboarding(r.id); } catch (e) { console.error("[didit-auto]", (e as Error).message); }
   }
 }
+
+/**
+ * Staff-approved account identity check: fill still-blank person details
+ * from the verified session (fill-blank mode, so typed answers stay) and mark
+ * the person verified. Used when no onboarding links the session.
+ */
+export async function applyApprovedAccountCheck(personId: string | null, sessionId: string | null, actorUserId: string) {
+  if (!personId || !sessionId) return { applied: false };
+  const decision = await fetchDiditSessionDecision(sessionId);
+  if (!decision) return { applied: false };
+  const x = extractDiditDetails(decision);
+  const { data: person } = await db().from("persons").select("*").eq("id", personId).maybeSingle();
+  if (!person) return { applied: false };
+  const now = new Date().toISOString();
+  const { legal_first_name: _f, legal_last_name: _l, ...facts } = x.fields as Record<string, string | null>;
+  if (facts["country"]) facts["residence_country"] = facts["country"];
+  const merged = mergeVerifiedPersonFields(person, facts, "fill-blank");
+  const update: any = { ...merged.update };
+  if (person.kyc_status !== "approved") Object.assign(update, { kyc_status: "approved", kyc_verified_at: now, identity_verified_at: now });
+  if (x.amlStatus === "approved" && person.aml_status !== "approved") Object.assign(update, { aml_status: "approved", aml_screened_at: now });
+  if (!Object.keys(update).length) return { applied: true, changed: 0 };
+  update.updated_at = now;
+  const { error } = await db().from("persons").update(update).eq("id", personId);
+  if (error) throw new Error(error.message);
+  await db().from("person_onboarding_events").insert({
+    person_id: personId, from_state: person.onboarding_state ?? null, to_state: person.onboarding_state ?? "kyc_pending",
+    actor_kind: "staff", actor_user_id: actorUserId,
+    reason: "Staff-approved identity check applied to blank details",
+    detail: { fields: Object.keys(update) },
+  });
+  return { applied: true, changed: Object.keys(update).length };
+}
