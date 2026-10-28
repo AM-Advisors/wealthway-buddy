@@ -1,5 +1,11 @@
 # Roadmap
 
+## Linked legacy investor navigation
+- [x] Route legacy roster names and Open investor actions to uniquely linked same-fund canonical onboardings; use their canonical menus, retain legacy fallback and existing authorization. No live records changed.
+- [x] 71 focused regressions passed and fictional linked/unlinked navigation/menu checks passed; preview build OK. No real records, sessions or emails used.
+- [x] Expanded navigation edge cases and reran 149 focused link, host, investor-record, authorization and QA-safety tests: all passed. Fictional menu click-through passed without runtime errors; independent review found no routing regression. Full roster name/Open consistency across both surfaces remains unverified by a component-level browser test.
+- [ ] Authenticated roster-to-record read-back remains blocked on independently isolated QA and synthetic sessions.
+
 ## ROAS 2026 and 2027 invoice correction (2026-10-28)
 - [x] Correct the initial White Glove proration to $4,956.52 for Q3 2026 (August 24 through September 30, due now), without changing Q4 or future renewals; 20 focused tests passed. Invoice issuance remains blocked as below.
 - [x] Update entity-specific planning terms, reported paid/due/future display and January 1 future-year visibility on both staff billing pages; invoice receipts remain separate.

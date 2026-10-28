@@ -6,7 +6,9 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Link as LinkIcon, MoreHorizontal, Plus, X } from "lucide-react";
+import { Link as LinkIcon, Plus, X } from "lucide-react";
+import { InvestorActionsMenu } from "@/components/investor-actions-menu";
+import { linkedInvestorRecords } from "@/lib/linked-investor-navigation";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AddExistingInvestor } from "@/components/add-existing-investor";
@@ -34,7 +36,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 
 type Panel = "existing" | "create" | "invite" | "records" | "prep" | "bulkInvite" | null;
 const PANEL_FROM_SEARCH: Record<string, Panel> = { existing: "existing", create: "create", records: "records", invite: "invite", prep: "prep", bulk: "bulkInvite" };
@@ -86,6 +88,7 @@ export function ManagerFundInvestors({ fundId, extraTabs }: { fundId: string; ex
   const readinessRows = ((readiness.data as any)?.rows ?? []) as any[];
   const readinessById = useMemo(() => new Map(readinessRows.map((r) => [r.onboardingId, r])), [readinessRows]);
   const items = records.data?.items ?? [];
+  const linkedRecords = linkedInvestorRecords(fundId, items);
   // Invitations: onboarding invites not yet opened + fund-access invitees who haven't started. Never shown as investments.
   const pendingOnboard = (((board.data as any)?.items ?? []) as any[]).filter((i) => String(i.id).startsWith("invite:"));
   const pendingAccess = actions.data?.pending ?? [];
@@ -107,30 +110,26 @@ export function ManagerFundInvestors({ fundId, extraTabs }: { fundId: string; ex
   if (records.error) return <p className="text-sm text-destructive">{(records.error as Error).message}</p>;
 
   const rowMenu = (r: (typeof items)[number]) => (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild><Button size="icon" variant="ghost" aria-label={`Actions for ${r.name}`}><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem asChild><Link to={recordTo} params={{ fundId, onboardingId: r.onboardingId }}>Open investor</Link></DropdownMenuItem>
-        <DropdownMenuItem asChild><Link to={recordTo} params={{ fundId, onboardingId: r.onboardingId }} search={{ tab: "profile" }}>{r.hasAccount && !isStaff ? "Suggest detail changes" : "Edit investor details"}</Link></DropdownMenuItem>
-        <DropdownMenuItem asChild><Link to={recordTo} params={{ fundId, onboardingId: r.onboardingId }} search={{ tab: "investment" }}>Edit investment</Link></DropdownMenuItem>
-        <DropdownMenuItem asChild><Link to={recordTo} params={{ fundId, onboardingId: r.onboardingId }} search={{ tab: "readiness" }}>View readiness</Link></DropdownMenuItem>
-        {isStaff && r.hasAccount ? <DropdownMenuItem asChild><Link to="/ops/readiness">View client perspective</Link></DropdownMenuItem> : null}
-        <DropdownMenuSeparator />
-        <DropdownMenuItem className="text-destructive" onClick={() => { if (window.confirm(`Remove ${r.name} from this Fund? Their person record, other Funds and history are kept.`)) run(() => remove({ data: { onboardingId: r.onboardingId } }), "Removed from Fund"); }}>Remove from Fund</DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <InvestorActionsMenu
+      name={r.name}
+      open={<Link to={recordTo} params={{ fundId, onboardingId: r.onboardingId }}>Open investor</Link>}
+      details={<Link to={recordTo} params={{ fundId, onboardingId: r.onboardingId }} search={{ tab: "profile" }}>{r.hasAccount && !isStaff ? "Suggest detail changes" : "Edit investor details"}</Link>}
+      investment={<Link to={recordTo} params={{ fundId, onboardingId: r.onboardingId }} search={{ tab: "investment" }}>Edit investment</Link>}
+      readiness={<Link to={recordTo} params={{ fundId, onboardingId: r.onboardingId }} search={{ tab: "readiness" }}>View readiness</Link>}
+      perspective={isStaff && r.hasAccount ? <Link to="/ops/readiness">View client perspective</Link> : undefined}
+      removal={<DropdownMenuItem className="text-destructive" onClick={() => { if (window.confirm(`Remove ${r.name} from this Fund? Their person record, other Funds and history are kept.`)) run(() => remove({ data: { onboardingId: r.onboardingId } }), "Removed from Fund"); }}>Remove from Fund</DropdownMenuItem>}
+    />
   );
   const legacyMenu = (applicationId: string, name: string) => {
     const a = actions.data?.rows[applicationId];
+    const userId = a?.userId;
     return (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild><Button size="icon" variant="ghost" aria-label={`Actions for ${name}`}><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem asChild><Link to={applicationTo} params={{ applicationId }}>Open investor</Link></DropdownMenuItem>
-          {a?.invitationId ? <ResendInviteMenuItem target={{ kind: "fund", id: a.invitationId }} /> : null}
-          {a?.userId ? <><DropdownMenuSeparator /><DropdownMenuItem className="text-destructive" onClick={() => { if (window.confirm(`Revoke ${name}'s access to this fund? Their account and past records are kept.`)) run(() => revoke({ data: { userId: a.userId!, offeringId: fundId, role: "investor" } }), "Fund access revoked"); }}>Revoke fund access</DropdownMenuItem></> : null}
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <InvestorActionsMenu
+        name={name}
+        open={<Link to={applicationTo} params={{ applicationId }}>Open investor</Link>}
+        invitation={a?.invitationId ? <ResendInviteMenuItem target={{ kind: "fund", id: a.invitationId }} label="Resend invitation" /> : undefined}
+        removal={userId ? <DropdownMenuItem className="text-destructive" onClick={() => { if (window.confirm(`Revoke ${name}'s access to this fund? Their account and past records are kept.`)) run(() => revoke({ data: { userId, offeringId: fundId, role: "investor" } }), "Fund access revoked"); }}>Revoke fund access</DropdownMenuItem> : undefined}
+      />
     );
   };
   const readinessCell = (id: string) => {
@@ -223,13 +222,13 @@ export function ManagerFundInvestors({ fundId, extraTabs }: { fundId: string; ex
                     <div className="min-w-0"><Badge variant={s.tone}>{s.label}</Badge><p className="mt-1 truncate text-xs text-muted-foreground">{nextLine(s.rc)}</p></div>
                   </Link>{rowMenu(r)}
                 </li>); })}
-              {shownLegacy.map((row: any) => { const s = managerRowFromApplication(row); return (
+              {shownLegacy.map((row: any) => { const s = managerRowFromApplication(row); const linked = linkedRecords.get(row.applicationId); return (
                 <li key={row.applicationId} className="flex items-center gap-3 p-3 hover:bg-muted/30">
-                  <Link to={applicationTo} params={{ applicationId: row.applicationId }} className="grid min-w-0 flex-1 gap-1 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,2fr)] sm:items-center sm:gap-4">
+                  <Link {...(linked ? { to: recordTo, params: { fundId, onboardingId: linked.onboardingId } } : { to: applicationTo, params: { applicationId: row.applicationId } })} className="grid min-w-0 flex-1 gap-1 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,2fr)] sm:items-center sm:gap-4">
                     <div className="min-w-0"><p className="truncate font-medium">{s.investor}</p><p className="truncate text-xs text-muted-foreground">{prettyStatus(s.investingAs)} · Earlier application</p></div>
                     <p className="text-sm">{money(s.commitmentCents)}</p>
                     <div className="min-w-0"><Badge variant="outline">{prettyStatus(row.stage)}</Badge><p className="mt-1 truncate text-xs text-muted-foreground">{s.nextAction}</p></div>
-                  </Link>{legacyMenu(row.applicationId, s.investor)}
+                  </Link>{linked ? rowMenu(linked) : legacyMenu(row.applicationId, s.investor)}
                 </li>); })}
             </ul>}
           {isStaff ? <InvestorRecordsSync fundId={fundId} /> : null}
