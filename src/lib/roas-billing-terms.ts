@@ -11,7 +11,7 @@ export const ROAS_BILLING_TERMS = {
   managementFinancialsStart: "2026-10-01",
   whiteGloveQuarterlyCents: 1200000,
   whiteGloveStart: "2026-08-24",
-  whiteGloveInitialProratedCents: 695652,
+  whiteGloveInitialProratedCents: 495652,
   k1SetCents: 250000,
   k1FirstYear: 2026,
 } as const;
@@ -41,7 +41,7 @@ export function roasChargesForYear(year: number): RoasCharge[] {
     rows.push({ key: `${year}:${entity}:${service}:${period}`, entity, service, cadence, year, period, dueOn, amountCents, reportedPaidCents });
   };
   if (year === 2026) {
-    // Explicit agreed initial amount supersedes formula proration for this charge only.
+    // Agreed Q3 initial amount: 38 of 92 quarter days at $12,000, due now.
     add("lp", "White Glove Services, prorated", "Quarterly", "Aug 24 to Sep 30, 2026", ROAS_BILLING_TERMS.whiteGloveStart, ROAS_BILLING_TERMS.whiteGloveInitialProratedCents);
   }
   for (let quarter = year === 2026 ? 3 : 1; quarter <= 4; quarter++) {
