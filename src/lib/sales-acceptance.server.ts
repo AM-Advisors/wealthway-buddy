@@ -248,6 +248,15 @@ async function linkSowToAcceptance(db: any, r: Loaded, acc: any): Promise<string
 }
 
 async function createInvoiceFromAcceptance(db: any, r: Loaded, acc: any, sowId: string | null = null) {
+  // Already billed by the one-click package send: signing must never invoice again.
+  if (r.quoteId) {
+    const { data: pq } = await db.from("sales_quotes").select("package_issued_at").eq("id", r.quoteId).maybeSingle();
+    if (pq?.package_issued_at) {
+      const { data: first } = await db.from("invoices").select("id, number, total_cents, due_date").eq("sales_quote_id", r.quoteId).neq("status", "void").order("due_date").limit(1).maybeSingle();
+      if (first) return { id: first.id as string, number: first.number as string, totalCents: Number(first.total_cents), dueDate: first.due_date as string };
+      return { error: "Your invoices were already sent with this quote." };
+    }
+  }
   const lines = invoiceLinesFromQuote(r.lines);
   if (!r.clientId) return { error: "No client account is linked yet; Harmonious will issue the invoice." };
   if (!lines.length) return { error: "No priced quote is linked; Harmonious will issue the invoice." };
