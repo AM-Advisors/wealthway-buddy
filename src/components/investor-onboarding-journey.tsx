@@ -438,7 +438,7 @@ function QuestionnaireForm({ d, done, locked, onSave, saving }: { d: any; onboar
     setAnswers((current) => Object.fromEntries(Object.entries(fillMissingInvestorAnswers(current, incoming, Object.keys(incoming), [...dirty.current])).map(([key, value]) => [key, String(value ?? "")])));
   }, [savedKey]);
   const lockedVals = (d.questionnaireLocked ?? {}) as Record<string, string | null>;
-  const visible = questions.filter((q) => questionVisible(q, answers));
+  const visible = questions.filter((q) => !isAccreditationQuestion(q.key) && questionVisible(q, answers));
   const missing = visible.filter((q) => q.required && !q.satisfiedBy && !String(answers[q.key] ?? "").trim());
   const set = (k: string, v: string) => { dirty.current.add(k); setAnswers((a) => ({ ...a, [k]: v })); };
   return (
@@ -452,7 +452,7 @@ function QuestionnaireForm({ d, done, locked, onSave, saving }: { d: any; onboar
       </div>
       {open ? (
         <fieldset disabled={locked} className="space-y-4">
-          {questions.map((q, n) => !questionVisible(q, answers) ? null : (
+          {questions.map((q, n) => isAccreditationQuestion(q.key) || !questionVisible(q, answers) ? null : (
             <div key={q.key} className="space-y-1.5">
               <Label htmlFor={q.key} className="leading-snug">{n + 1}. {q.label}{q.required && !q.satisfiedBy ? " *" : ""}</Label>
               {q.locked ? (
