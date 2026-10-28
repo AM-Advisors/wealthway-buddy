@@ -81,6 +81,46 @@ export async function decide(userId: string, input: { applicationId: string; dec
   return { ok: true };
 }
 
+/**
+ * Tells the fund's managers (email + in-portal bell) and Harmonious (#operations)
+ * about each accreditation event: every proof upload, every verification-letter
+ * request and every letter a professional uploads. Per-event references keep
+ * retries from notifying twice. Best-effort: never throws.
+ */
+export async function notifyAccreditationActivity(applicationId: string, event: import("@/lib/accreditation-activity-copy").AccreditationActivity) {
+  try {
+    const { accreditationActivityCopy, accreditationActivityRef } = await import("@/lib/accreditation-activity-copy");
+    const d = await db();
+    const { data: app } = await d.from("investor_applications").select("offering_id, user_id").eq("id", applicationId).maybeSingle();
+    if (!app) return;
+    const [{ data: fund }, { data: prof }] = await Promise.all([
+      d.from("offerings").select("name, client_id").eq("id", app.offering_id).maybeSingle(),
+      d.from("profiles").select("legal_name").eq("user_id", app.user_id).maybeSingle(),
+    ]);
+    const investor = prof?.legal_name || "An investor";
+    const fundName = fund?.name ?? "your fund";
+    const copy = accreditationActivityCopy(event, investor, fundName);
+    const ref = accreditationActivityRef(event);
+    const portalPath = `/manager/fund/${app.offering_id}/approvals`;
+    await d.from("notification_events").insert({
+      event_kind: "client_work_update", offering_id: app.offering_id, application_id: applicationId,
+      investor_user_id: app.user_id, field: `accreditation_${event.kind}`,
+      metadata: { audience: "managers", headline: copy.headline, intro: copy.intro, portal_path: portalPath },
+    }).then(() => undefined, () => undefined);
+    const { data: mgrs } = await d.from("fund_managers").select("user_id").eq("offering_id", app.offering_id);
+    const rows = ((mgrs ?? []) as any[]).filter((m) => m.user_id).map((m) => ({
+      user_id: m.user_id, client_id: fund?.client_id ?? null, kind: `accreditation_${event.kind}`,
+      title: copy.headline, body: copy.intro, path: portalPath, dedupe_key: ref,
+    }));
+    for (const r of rows) await d.from("client_notifications").insert(r).then(() => undefined, () => undefined);
+    try { (await import("@/lib/manager-alerts.server")).kickManagerAlerts(); } catch { /* best effort */ }
+    try {
+      const { notifySubmission } = await import("@/lib/ops-slack-notify.server");
+      await notifySubmission({ kind: "accreditation_pending", title: copy.headline, offeringId: app.offering_id, ref, once: true, path: `/ops/fund/${app.offering_id}` } as any);
+    } catch (e) { console.error("accreditation activity slack", e); }
+  } catch (e) { console.error("accreditation activity notify", e); }
+}
+
 /** Tells Harmonious (#operations) and the fund's managers that 506(c) paperwork is waiting. Best-effort. */
 export async function notifyAccreditationPending(applicationId: string) {
   const d = await db();
