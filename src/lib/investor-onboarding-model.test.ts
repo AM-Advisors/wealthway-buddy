@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { ACCREDITATION_QUESTION_KEY } from "@/lib/accreditation-step";
 
 import {
   amountError,
