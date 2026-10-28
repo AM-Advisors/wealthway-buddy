@@ -1,4 +1,4 @@
-/** Server-only quoting engine: rate-card quotes → approval → SOW/MSA drafts → signed. Never moves money. */
+/** Server-only quoting engine: rate-card quotes → approval → SOW draft → signed (MSA accepted once at first signing). Never moves money. */
 import { canDraftQuote, cleanLineDetails, priceQuote, quoteApprovalProblem, quoteAutoApproves, quoteDeleteProblem, type QuoteLineInput } from "@/lib/sales-model";
 import { names, salesActor } from "@/lib/sales-hub.server";
 import { canAddSalesContact, type SalesContactInput } from "@/lib/sales-contact-model";
