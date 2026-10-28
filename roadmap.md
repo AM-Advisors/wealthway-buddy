@@ -1,5 +1,10 @@
 # Roadmap
 
+## AI questions from custom fund agreements
+- [ ] Read explicitly selected fund document versions and draft source-backed additional questions and answer choices for staff and exact-fund managers.
+- [ ] Reuse safe exact-party recorded facts without AI-generated answers or changes to approvals, signatures or existing responses.
+- [ ] Validate model output, persistent denial handling and fictional UI; authenticated persistence remains blocked pending independently isolated QA.
+
 ## ROAS email agreement recovery
 - [x] Searched all three accessible email connections; matching Sales Email is operations@harmonious.co. Recovered the September 8 completed MSA and August 24 LPA signature-request copy through the connector, archived through Alyssa's authorized uploadFundFileFn, and verified downloaded saved bytes by SHA-256. No activation, approval, contract status or signature changes.
 - [x] Excluded duplicate/partial MSA notices, unrelated investor correspondence, formation/EIN documents and tax reminders from agreement imports. No additional PPM/subscription attachments found in these connected mailboxes.
