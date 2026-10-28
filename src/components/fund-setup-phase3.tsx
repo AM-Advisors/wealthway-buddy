@@ -36,6 +36,8 @@ import {
   type FilingResponsibility,
   type ServiceChoice,
 } from "@/lib/fund-setup-phase3";
+import { Search } from "lucide-react";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { RegulatoryFilingsCard } from "@/components/fund-setup-extras";
@@ -449,11 +451,11 @@ export function ClassAssignmentCard({ offeringId, onboardingId }: { offeringId: 
   const q = useQuery({ queryKey: ["class-assign", offeringId], queryFn: () => load({ data: { offeringId } }) });
   const [pending, setPending] = useState<{ id: string; key: string | null; warnings: string[]; blocked: boolean } | null>(null);
   const [busy, setBusy] = useState(false);
+  const [search, setSearch] = useState("");
+  if (q.isError) return <p role="alert" className="text-sm text-destructive">Investor classes couldn’t be loaded.</p>;
   if (!q.data || q.data.classes.length === 0) return null;
   const d = q.data;
   const canAssign = d.status === "approved";
-  const defFee = d.defaults?.managementFee?.ratePercent;
-  const defCarry = d.defaults?.carry?.ratePercent;
   const nameOf = (k: string | null) => d.classes.find((c) => c.key === k)?.name ?? "Fund default terms";
   const refresh = () => { void invalidateFund(qc, offeringId); void qc.invalidateQueries({ queryKey: ["class-assign", offeringId] }); };
   const start = async (id: string, key: string | null, quiet = false) => {
@@ -469,6 +471,7 @@ export function ClassAssignmentCard({ offeringId, onboardingId }: { offeringId: 
     }
   };
   const rows = d.investments.filter((i) => !onboardingId || i.id === onboardingId);
+  const visibleRows = rows.filter((i) => i.investor.toLowerCase().includes(search.toLowerCase()));
   const suggestable = rows.filter((i) => !i.classKey && i.suggestion.status === "assigned");
   const applyAll = async () => {
     setBusy(true);
@@ -479,44 +482,17 @@ export function ClassAssignmentCard({ offeringId, onboardingId }: { offeringId: 
     refresh();
   };
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <CardTitle className="text-base">Classes, terms & fees</CardTitle>
-          <Badge variant={canAssign ? "default" : "outline"}>{canAssign ? "Approved terms" : "Draft, awaiting approval"}</Badge>
-        </div>
-        <p className="text-sm text-muted-foreground">
-          {canAssign
-            ? "Choose which class applies to each investor. A suggestion is shown from the investment amount."
-            : "These terms are still a draft. You can review them and the suggested class for each investor, but classes can only be assigned once the terms are approved."}
-        </p>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {!onboardingId && (
-          <div className="grid gap-3 sm:grid-cols-2">
-            {d.classes.map((c) => {
-              const count = d.investments.filter((i) => i.classKey === c.key).length;
-              const range = c.minInvestmentCents != null || c.maxInvestmentCents != null
-                ? `${money(c.minInvestmentCents) ?? "$0"}${c.maxInvestmentCents != null ? ` up to ${money(c.maxInvestmentCents)}` : " or more"}`
-                : "Any amount";
-              return (
-                <div key={c.key} className="rounded-lg border bg-card p-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="font-medium leading-tight">{c.name}</p>
-                    <Badge variant="secondary" className="shrink-0">{count} investor{count === 1 ? "" : "s"}</Badge>
-                  </div>
-                  <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-sm">
-                    <dt className="text-muted-foreground">Amount</dt><dd>{range}</dd>
-                    <dt className="text-muted-foreground">Management fee</dt><dd>{pct(c.managementFee?.ratePercent ?? defFee, "Not set")}</dd>
-                    <dt className="text-muted-foreground">Carry</dt><dd>{pct(c.carry?.ratePercent ?? defCarry, "Not set")}</dd>
-                    <dt className="text-muted-foreground">Preferred return</dt><dd>{c.preferredReturnPercent ? `${c.preferredReturnPercent}%` : "None"}</dd>
-                  </dl>
-                  {c.otherDifferences && <p className="mt-2 text-xs text-muted-foreground">{c.otherDifferences}</p>}
-                </div>
-              );
-            })}
-          </div>
-        )}
+    <section className="min-w-0 space-y-4" aria-label="Investor class assignments">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h3 className="font-medium">Investor assignments</h3>
+        <Badge variant={canAssign ? "default" : "secondary"}>{canAssign ? "Approved terms" : "Assignments locked until approval"}</Badge>
+      </div>
+      <div className="grid grid-cols-2 gap-4 border-y py-3 text-sm sm:grid-cols-3">
+        <div><p className="text-muted-foreground">Investors</p><p className="text-lg font-semibold">{rows.length}</p></div>
+        <div><p className="text-muted-foreground">Assigned to a class</p><p className="text-lg font-semibold">{rows.filter((i) => i.classKey).length}</p></div>
+        <div><p className="text-muted-foreground">Overlapping ranges</p><p className="text-lg font-semibold">{rows.filter((i) => !i.classKey && i.suggestion.status === "choose").length}</p></div>
+      </div>
+      {!onboardingId && <div className="relative max-w-sm"><Search className="absolute left-3 top-2.5 size-4 text-muted-foreground" /><Input aria-label="Search investors" placeholder="Search investors" className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} /></div>}
         <div className="space-y-2">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="text-sm font-medium">{onboardingId ? "This investor" : `Investors (${rows.length})`}</p>
@@ -524,7 +500,7 @@ export function ClassAssignmentCard({ offeringId, onboardingId }: { offeringId: 
               <Button size="sm" variant="outline" disabled={busy} onClick={applyAll}>Apply suggested class to {suggestable.length}</Button>
             )}
           </div>
-          {rows.map((i) => {
+          {visibleRows.map((i) => {
             const s = i.suggestion;
             const hint = s.status === "assigned" ? `Suggested: ${nameOf(s.key)}`
               : s.status === "choose" ? `Fits ${s.keys.map(nameOf).join(" or ")}, please choose`
@@ -532,25 +508,22 @@ export function ClassAssignmentCard({ offeringId, onboardingId }: { offeringId: 
               : s.status === "no_amount" ? "No amount yet" : null;
             const mismatch = i.classKey && s.status === "assigned" && s.key !== i.classKey;
             return (
-              <div key={i.id} className="flex flex-col gap-2 rounded-md border p-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+              <div key={i.id} className="flex flex-col gap-3 border-b py-4 text-sm sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0">
                   <p className="font-medium break-words">{i.investor}</p>
                   <p className="text-xs text-muted-foreground">{money(i.amountCents) ?? "No amount"}{hint ? ` · ${hint}` : ""}</p>
                   {mismatch && <p className="text-xs text-destructive">The assigned class doesn't match the amount.</p>}
                 </div>
-                <select
-                  className="w-full rounded-md border bg-background px-2 py-2 text-sm disabled:opacity-60 sm:w-56"
-                  value={i.classKey ?? ""}
-                  disabled={!canAssign}
-                  onChange={(e) => start(i.id, e.target.value || null)}
-                  aria-label={`Class for ${i.investor}`}
-                >
-                  <option value="">Fund default terms</option>
-                  {d.classes.map((c) => <option key={c.key} value={c.key}>{c.name}</option>)}
-                </select>
+                <div className="w-full sm:w-56 sm:shrink-0">
+                  <Select value={i.classKey ?? "fund-default"} disabled={!canAssign || busy} onValueChange={(value) => { void start(i.id, value === "fund-default" ? null : value); }}>
+                    <SelectTrigger aria-label={`Class for ${i.investor}`}><SelectValue /></SelectTrigger>
+                    <SelectContent><SelectItem value="fund-default">Fund default terms</SelectItem>{d.classes.map((c) => <SelectItem key={c.key} value={c.key}>{c.name}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
               </div>
             );
           })}
+          {visibleRows.length === 0 && <p className="py-4 text-sm text-muted-foreground">No investors found.</p>}
         </div>
         {pending && (
           <div className="rounded-md border border-destructive/40 p-3 text-sm">
@@ -563,8 +536,7 @@ export function ClassAssignmentCard({ offeringId, onboardingId }: { offeringId: 
             <Button size="sm" variant="ghost" className="mt-2" onClick={() => setPending(null)}>Cancel</Button>
           </div>
         )}
-      </CardContent>
-    </Card>
+    </section>
   );
 }
 
