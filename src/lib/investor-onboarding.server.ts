@@ -797,7 +797,12 @@ export async function publishedQuestionnaire(offeringId: string) {
     .eq("status", "published")
     .order("version", { ascending: false })
     .limit(1);
-  return ((data ?? []) as any[])[0] ?? STANDARD_QUESTIONNAIRE;
+  const base = ((data ?? []) as any[])[0] ?? STANDARD_QUESTIONNAIRE;
+  // The fund's approved additional section, minus anything the base already asks.
+  const { data: sec } = await db().from("fund_questionnaire_sections").select("title, version, questions").eq("offering_id", offeringId).eq("status", "approved").order("version", { ascending: false }).limit(1);
+  const section = ((sec ?? []) as any[])[0] ?? null;
+  const { mergeSection } = await import("@/lib/fund-questionnaire-section");
+  return mergeSection(base, section);
 }
 
 /** The person's most recent Didit session: their own verification, else a staff-confirmed link. */
@@ -873,7 +878,7 @@ export async function saveQuestionnaire(
     questionnaire_responses: answers,
     questionnaire_source: "harmonious",
     questionnaire_didit_session_id: await latestDiditSessionFor(row.person_id ?? null),
-    ...(input.submit ? { questionnaire_version: questionnaire?.version ?? 1, questionnaire_submitted_at: nowIso() } : {}),
+    ...(input.submit ? { questionnaire_version: questionnaire?.version ?? 1, questionnaire_section_version: (questionnaire as any)?.sectionVersion ?? null, questionnaire_submitted_at: nowIso() } : {}),
   });
   try {
     const { autoApplyDiditForOnboarding } = await import("@/lib/didit-auto-apply.server");
