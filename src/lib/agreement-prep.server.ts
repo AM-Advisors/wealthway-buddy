@@ -395,6 +395,9 @@ export async function sendPreparedAgreement(
   const investorLabel =
     subscription?.ownership_title ?? investor?.legal_name ?? investor?.email ?? "Investor";
 
+  // Series from the amount the investor entered, using the fund's approved class ranges.
+  const series = await signingSeries(admin, doc.offering_id, application.id, subscription?.commitment_cents ?? null);
+
   const prefillFor = (roleKey: string): PrefillContext => {
     const signer = input.signers.find((s) => s.roleKey === roleKey);
     return {
@@ -404,6 +407,7 @@ export async function sendPreparedAgreement(
       signerTitle: roleLabel(roleKey),
       fundName: offering?.name ?? null,
       commitmentCents: subscription?.commitment_cents ?? null,
+      seriesName: series,
     };
   };
 
