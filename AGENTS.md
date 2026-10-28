@@ -22,7 +22,7 @@
 - Diagnostics reuse existing health/audit/email/job readers and diagnostic-read.ts/diagnostic-filter.ts; omit provider text/notes; recipient-only emails are admin-only; staleness is display-only — why: privacy.
 - Sales menus follow resolved staff roles; invoice ACH/wire links reuse /ops/billing/payment-instructions and its remittance engine — why: no duplicate settings or implied authority.
 - Server functions import requireSupabaseAuth only from src/lib/require-auth.ts, never the generated module — why: light context avoids preview typecheck limits.
-- Fund workspace keeps fund/audience and mounts selected tabs only; bank surfaces share FundBankingReview + BankInstructionRelease using existing review/status/release functions — why: connected actions, unchanged authority.
+- Fund workspace mounts selected tabs only; primary Approvals uses fund-setup-reviews and existing fee/document/question tools; banking shares FundBankingReview + BankInstructionRelease — why: discoverable actions, unchanged authority.
 - Setup %: fund-launch-summary.ts; banking: bankSetupStatus; launch: ManagerLaunchCard; setup refresh: invalidateFund — why: shared facts, scoped refresh.
 - Launch links reuse ensureFundLaunchLink before launch state changes; active tokens persist and disabled links need explicit enablement — why: no launched fund without its canonical entry point.
 - Fund origin separates new/migration workflows; investor-progress-email uses canonical steps, audit frequency and the existing drain — why: no inferred takeover or duplicate engine.

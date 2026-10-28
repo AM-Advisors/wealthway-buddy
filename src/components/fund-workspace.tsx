@@ -107,7 +107,7 @@ const MORE: { value: string; label: string }[] = [
   { value: "calendar", label: "Calendar" }, { value: "regulatory", label: "Regulatory" }, { value: "services", label: "Services" },
 ];
 
-function FundTabBar({ fundId, mode, tab, onTab, extraTabs, todoCount }: { fundId: string; mode: FundWorkspaceMode; tab: string; onTab: (t: string) => void; extraTabs: ExtraTab[]; todoCount: number }) {
+export function FundTabBar({ fundId, mode, tab, onTab, extraTabs, todoCount }: { fundId: string; mode: FundWorkspaceMode; tab: string; onTab: (t: string) => void; extraTabs: ExtraTab[]; todoCount: number }) {
   const hasSetup = extraTabs.some((x) => x.value === "setup");
   const primary = PRIMARY
     .map((p) => (p.value === "setup" && !hasSetup ? { ...p, value: "details", group: p.group.filter((g) => g !== "setup") } : p))
