@@ -18,6 +18,7 @@ import { declareInvoicePayment, listMyInvoices, respondToInvoice } from "@/lib/i
 import { invoiceBalance } from "@/lib/invoice-balance";
 import { InvoicePeriodSummary } from "@/components/invoice-period-summary";
 import { InvoiceDueDate } from "@/components/invoice-due-date";
+import { PeriodDownloads } from "@/components/period-downloads";
 
 export const Route = createFileRoute("/_authenticated/client/invoices")({
   validateSearch: (s: Record<string, unknown>): { invoice?: string } => typeof s['invoice'] === "string" ? { invoice: s['invoice'] } : {},
@@ -171,6 +172,7 @@ function ClientInvoicesPage() {
 
       {!isLoading && !error && <>
         <InvoicePeriodSummary invoices={invoices} />
+        <PeriodDownloads mode="client" />
         <PaymentPlanner scope="invoices" rows={invoices.map(inv => ({ id: inv.id, label: inv.number ?? "Invoice", cents: Number(inv.total_cents), date: inv.status === "paid" ? inv.paid_on : inv.due_date ?? inv.issue_date, status: inv.status, currency: inv.currency ?? "USD" }))} />
       </>}
       {error ? <p role="alert" className="mt-6 text-sm text-destructive">{error.message}</p> : isLoading ? (
