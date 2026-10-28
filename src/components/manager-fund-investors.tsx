@@ -1,4 +1,4 @@
-import { useInvestorRecordRoute } from "@/lib/use-investor-record-route";
+import { useApplicationRoute, useInvestorRecordRoute } from "@/lib/use-investor-record-route";
 import { useMemo, useState, type ReactNode } from "react";
 import { InvestorRecordsSync } from "@/components/investor-records-sync";
 import { funnelStageOf, managerBucketOf, FUNNEL_LABELS, MANAGER_BUCKET_LABELS } from "@/lib/dashboard-metrics";
@@ -50,6 +50,7 @@ const claimTone: Record<ClaimState, "outline" | "secondary"> = { prepared: "outl
 /** One Fund Investors roster: canonical Person → Profile → Investment rows, plus clearly separate pending invitations. */
 export function ManagerFundInvestors({ fundId, extraTabs }: { fundId: string; extraTabs?: { value: string; label: string; content: ReactNode }[] | undefined }) {
   const recordTo = useInvestorRecordRoute();
+  const applicationTo = useApplicationRoute();
   const [chooser, setChooser] = useState(false);
   const [tab, setTab] = useState("list");
   const qc = useQueryClient();
@@ -125,7 +126,7 @@ export function ManagerFundInvestors({ fundId, extraTabs }: { fundId: string; ex
       <DropdownMenu>
         <DropdownMenuTrigger asChild><Button size="icon" variant="ghost" aria-label={`Actions for ${name}`}><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem asChild><Link to="/manager/$applicationId" params={{ applicationId }}>Open application</Link></DropdownMenuItem>
+          <DropdownMenuItem asChild><Link to={applicationTo} params={{ applicationId }}>Open investor</Link></DropdownMenuItem>
           {a?.invitationId ? <ResendInviteMenuItem target={{ kind: "fund", id: a.invitationId }} /> : null}
           {a?.userId ? <><DropdownMenuSeparator /><DropdownMenuItem className="text-destructive" onClick={() => { if (window.confirm(`Revoke ${name}'s access to this fund? Their account and past records are kept.`)) run(() => revoke({ data: { userId: a.userId!, offeringId: fundId, role: "investor" } }), "Fund access revoked"); }}>Revoke fund access</DropdownMenuItem></> : null}
         </DropdownMenuContent>
@@ -224,7 +225,7 @@ export function ManagerFundInvestors({ fundId, extraTabs }: { fundId: string; ex
                 </li>); })}
               {shownLegacy.map((row: any) => { const s = managerRowFromApplication(row); return (
                 <li key={row.applicationId} className="flex items-center gap-3 p-3 hover:bg-muted/30">
-                  <Link to="/manager/$applicationId" params={{ applicationId: row.applicationId }} className="grid min-w-0 flex-1 gap-1 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,2fr)] sm:items-center sm:gap-4">
+                  <Link to={applicationTo} params={{ applicationId: row.applicationId }} className="grid min-w-0 flex-1 gap-1 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,2fr)] sm:items-center sm:gap-4">
                     <div className="min-w-0"><p className="truncate font-medium">{s.investor}</p><p className="truncate text-xs text-muted-foreground">{prettyStatus(s.investingAs)} · Earlier application</p></div>
                     <p className="text-sm">{money(s.commitmentCents)}</p>
                     <div className="min-w-0"><Badge variant="outline">{prettyStatus(row.stage)}</Badge><p className="mt-1 truncate text-xs text-muted-foreground">{s.nextAction}</p></div>
