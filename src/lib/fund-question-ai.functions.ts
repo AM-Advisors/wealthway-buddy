@@ -14,16 +14,17 @@ export const draftDocumentQuestionsFn = createServerFn({ method: "POST" })
     if (error) throw new Error("Could not load current fund questions.");
     const abort = new AbortController();
     const encoder = new TextEncoder();
+    let heartbeat: ReturnType<typeof setInterval> | undefined;
     const stream = new ReadableStream<Uint8Array>({
       start(controller) {
         controller.enqueue(encoder.encode("\n"));
-        const heartbeat = setInterval(() => controller.enqueue(encoder.encode("\n")), 10000);
+        heartbeat = setInterval(() => { if (!abort.signal.aborted) controller.enqueue(encoder.encode("\n")); }, 10000);
         void ai.generateDocumentQuestions(client, { ...data, existing: sections?.[0]?.questions ?? [] }, abort.signal)
-          .then((result) => controller.enqueue(encoder.encode(JSON.stringify({ result }) + "\n")))
+          .then((result) => { if (!abort.signal.aborted) controller.enqueue(encoder.encode(JSON.stringify({ result }) + "\n")); })
           .catch((error) => { if (!abort.signal.aborted) controller.enqueue(encoder.encode(JSON.stringify({ error: error instanceof Error ? error.message : "AI could not read the agreement." }) + "\n")); })
           .finally(() => { clearInterval(heartbeat); if (!abort.signal.aborted) controller.close(); });
       },
-      cancel() { abort.abort(); },
+      cancel() { abort.abort(); clearInterval(heartbeat); },
     });
     return new Response(stream, { headers: { "Content-Type": "application/x-ndjson", "Cache-Control": "no-store" } });
   });

@@ -38,7 +38,7 @@ export function FundQuestionSectionCard({ offeringId }: { offeringId: string }) 
   const staff = q.data.staff;
   const editable = q.data.canDraft && (!!draft || !live || newVersion);
   const asked = new Set<string>(shown?.alreadyAskedKeys ?? []);
-  const upd = (i: number, p: Partial<Q>) => { setDirty(true); setQs((cur) => cur.map((x, j) => (j === i ? { ...x, ...p } : x))); };
+  const upd = (i: number, p: Partial<Q>) => { setDirty(true); setQs((cur) => cur.map((x, j) => (j === i ? { ...x, ...p, ...(p.label !== undefined || p.type !== undefined ? { prefillKey: null } : {}) } : x))); };
 
   return (
     <section aria-label="Additional fund questions" className="space-y-4 rounded-2xl border bg-card p-4 sm:p-5">
