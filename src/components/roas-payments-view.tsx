@@ -4,13 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { paymentTotals, trackedK1Sets, type TrackedInvoice, type TrackedLine } from "@/lib/roas-payment-tracking";
+import { RoasChargeSchedule } from "@/components/roas-charge-schedule";
 
 const money = (cents: number) => (cents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" });
 const date = (value: string | null) => value?.slice(0, 10) ?? "Not recorded";
 
-export function RoasPaymentsView({ invoices, lines, year, onYearChange, invoiceAction }: {
+export function RoasPaymentsView({ invoices, lines, year, onYearChange, invoiceAction, asOf }: {
   invoices: TrackedInvoice[]; lines: TrackedLine[]; year: number; onYearChange: (year: number) => void;
   invoiceAction?: (id: string) => React.ReactNode;
+  asOf?: string;
 }) {
   const [showHistory, setShowHistory] = useState(false);
   const totals = paymentTotals(invoices);
@@ -27,6 +29,7 @@ export function RoasPaymentsView({ invoices, lines, year, onYearChange, invoiceA
     <TableCell className="text-right tabular-nums">{money(invoice.totalCents)}</TableCell><TableCell className="text-right tabular-nums">{money(invoice.paidCents)}</TableCell><TableCell className="text-right tabular-nums">{money(invoice.remainingCents)}</TableCell><TableCell>{invoiceAction?.(invoice.id)}</TableCell>
   </TableRow>);
   return <div className="space-y-8">
+    {asOf && <RoasChargeSchedule asOf={asOf} />}
     <dl className="grid gap-5 border-y py-5 sm:grid-cols-3">
       {[["Current invoiced", totals.billedCents], ["Recorded received", totals.receivedCents], ["Outstanding", totals.balanceCents]].map(([name, value]) => <div key={name}><dt className="text-sm text-muted-foreground">{name}</dt><dd className="mt-1 text-2xl font-semibold tabular-nums">{money(Number(value))}</dd></div>)}
     </dl>

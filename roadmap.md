@@ -1,5 +1,10 @@
 # Roadmap
 
+## ROAS 2026 and 2027 invoice correction (2026-10-28)
+- [x] Update entity-specific planning terms, reported paid/due/future display and January 1 future-year visibility on both staff billing pages; invoice receipts remain separate.
+- [ ] Record corrected invoice/schedule data through canonical authorized workflows: blocked by the unsigned, pending SOW and required invoice review; no invoices issued or recurring services activated.
+- [x] 28 focused checks passed for concrete amounts, annual/quarterly due dates, balances and year visibility; authenticated page inspection stopped at authenticator enrollment, no bypass.
+
 ## Missing investment/application link safeguard (2026-10-27)
 - [x] Remove stale-approval fallback for missing investing-person links; 73 offline tests passed and preview build OK. Missing links now block funding/compliance reads rather than imply Approved; no live records changed.
 - [x] User confirmed the $50,000 investment is separate from the older signed $2,500,000 application; prepare an atomic dedicated-application action without copying approvals/signatures or reusing canceled history.

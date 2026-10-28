@@ -102,6 +102,7 @@ export const getRoasBillingUpdate = createServerFn({ method: "GET" })
     const { withInvoiceBalances } = await import("@/lib/invoice-balance.server");
     const invoices = await withInvoiceBalances((invoicesResult.data ?? []) as any[]);
     return {
+      asOf: new Date().toISOString().slice(0, 10),
       clientName: "Roas Capital Management",
       fundName: fundResult.data?.name ?? "ROAS Hedge LP",
       quote: {
@@ -162,6 +163,7 @@ export async function getRoasPaymentsHandler({ context }: { context: any }) {
     .select("id, invoice_id, label, service_key, amount_cents").in("invoice_id", ids).order("sort_order") : { data: [], error: null };
   if (lineResult.error) throw new Error("Couldn't load invoice services. Please try again.");
   return {
+    asOf: new Date().toISOString().slice(0, 10),
     invoices: invoices.map(invoice => ({
       id: invoice.id, number: invoice.number, status: invoice.status,
       totalCents: Number(invoice.total_cents), paidCents: invoice.recorded_paid_cents,
