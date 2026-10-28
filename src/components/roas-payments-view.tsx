@@ -16,6 +16,7 @@ export function RoasPaymentsView({ invoices, lines, year, onYearChange, invoiceA
   const totals = paymentTotals(invoices);
   const { sets, expected } = trackedK1Sets(invoices, lines, year);
   const visible = invoices.filter(invoice => showHistory || invoice.status !== "void");
+  const received = invoices.filter(invoice => invoice.paidCents > 0 && ["paid", "issued"].includes(invoice.status));
   const voided = visible.filter(invoice => invoice.status === "void");
   const settled = (invoice: TrackedInvoice) => invoice.status === "paid" || invoice.remainingCents === 0;
   const unpaid = visible.filter(invoice => invoice.status !== "void" && !settled(invoice));
