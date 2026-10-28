@@ -17,6 +17,7 @@ import {
   type InvestmentProfileType,
 } from "@/lib/identity-model";
 import { isReconciledFunding } from "@/lib/funding-status";
+import { ACCREDITATION_QUESTION_KEY } from "@/lib/accreditation-step";
 
 // ------------------------------------------------------------------ stages
 
