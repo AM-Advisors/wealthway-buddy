@@ -759,7 +759,32 @@ export async function approveEconomics(userId: string, versionId: string) {
     actorUserId: userId,
     actorRole: "harmonious",
   });
+  await syncInvestorClassesFromEconomics(version.setup_id, data);
   return data;
+}
+
+// Approved economics become the fund's live class list. Prior live rows are
+// end-dated, never deleted, so earlier assignments keep their history.
+async function syncInvestorClassesFromEconomics(setupId: string, version: any) {
+  const classes = Array.isArray(version?.classes) ? version.classes : [];
+  if (!classes.length) return;
+  const { data: setup } = await db()
+    .from("fund_setups")
+    .select("offering_id")
+    .eq("id", setupId)
+    .maybeSingle();
+  const offeringId = (setup as any)?.offering_id;
+  if (!offeringId) return;
+  const { classRowsFromEconomics } = await import("./economics-class-records");
+  const today = nowIso().slice(0, 10);
+  await db()
+    .from("investor_classes")
+    .update({ effective_to: today, updated_at: nowIso() })
+    .eq("offering_id", offeringId)
+    .is("effective_to", null);
+  const rows = classRowsFromEconomics(offeringId, classes, version.version ?? 1, today);
+  const { error } = await db().from("investor_classes").insert(rows as any);
+  if (error) fail(`Economics approved, but class records failed: ${error.message}`);
 }
 
 // --------------------------------------------------------- target assets
