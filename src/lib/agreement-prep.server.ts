@@ -547,3 +547,32 @@ export async function sendPreparedAgreement(
   void context;
   return { signatureId, signRequestId: detail.id, signerCount: ordered.length };
 }
+
+/**
+ * The series name an agreement is prepared with. Funds without amount ranges
+ * return the recorded class (if any). A single matching range is recorded on
+ * the investment; when several fit (e.g. A-3 or B), a fund manager or
+ * Harmonious must record the choice first; amounts below every minimum stop.
+ */
+async function signingSeries(admin: any, offeringId: string, applicationId: string, cents: number | null): Promise<string | null> {
+  const { resolveSigningClass } = await import("@/lib/class-tiers");
+  const [{ data: o }, { data: setup }, { data: ob }] = await Promise.all([
+    admin.from("offerings").select("has_multiple_classes").eq("id", offeringId).maybeSingle(),
+    admin.from("fund_setups").select("id").eq("offering_id", offeringId).maybeSingle(),
+    admin.from("investor_onboardings").select("id, offering_class_key").eq("application_id", applicationId).maybeSingle(),
+  ]);
+  if (!o?.has_multiple_classes || !setup) return null;
+  const { data: approved } = await admin.from("fund_economics_versions").select("classes").eq("setup_id", setup.id).eq("status", "approved").maybeSingle();
+  const classes = (approved?.classes ?? []) as any[];
+  const pick = resolveSigningClass(classes, cents, ob?.offering_class_key ?? null);
+  if (pick.status === "no_ranges") return classes.find((c) => c.key === ob?.offering_class_key)?.name ?? null;
+  if (pick.status === "no_amount") refuse("Enter the investment amount before this agreement is prepared.");
+  if (pick.status === "below_minimum") refuse(`The amount is below this fund's $${(pick.minimumCents / 100).toLocaleString("en-US")} minimum.`);
+  if (pick.status === "choose") {
+    const names = pick.keys.map((k) => classes.find((c) => c.key === k)?.name ?? k).join(" or ");
+    refuse(`This amount qualifies for ${names}. A fund manager or Harmonious must choose the series before signing.`);
+  }
+  if (pick.status !== "assigned") return null;
+  if (ob && ob.offering_class_key !== pick.key) await admin.from("investor_onboardings").update({ offering_class_key: pick.key }).eq("id", ob.id);
+  return classes.find((c) => c.key === pick.key)?.name ?? pick.key;
+}
