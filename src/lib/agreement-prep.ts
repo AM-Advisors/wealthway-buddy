@@ -106,6 +106,9 @@ export const PREFILL_TOKENS = [
   { value: "signer_title", label: "Signer title / capacity" },
   { value: "fund_name", label: "Fund name" },
   { value: "commitment_amount", label: "Commitment amount" },
+  { value: "series_subscribed", label: "Series / class subscribed" },
+  { value: "series_a_amount", label: "Series A amount (blank unless Series A)" },
+  { value: "series_b_amount", label: "Series B amount (blank unless Series B)" },
   { value: "today", label: "Today's date" },
 ] as const;
 
@@ -118,6 +121,7 @@ export interface PrefillContext {
   signerTitle?: string | null;
   fundName?: string | null;
   commitmentCents?: number | null;
+  seriesName?: string | null;
   today?: string;
 }
 
@@ -140,6 +144,12 @@ export function resolvePrefill(token: string | null | undefined, ctx: PrefillCon
       return ctx.fundName ?? "";
     case "commitment_amount":
       return money(ctx.commitmentCents);
+    case "series_subscribed":
+      return ctx.seriesName ?? "";
+    case "series_a_amount":
+      return /series\s+a/i.test(ctx.seriesName ?? "") ? money(ctx.commitmentCents) : "";
+    case "series_b_amount":
+      return /series\s+b/i.test(ctx.seriesName ?? "") ? money(ctx.commitmentCents) : "";
     case "today":
       return ctx.today ?? new Date().toISOString().slice(0, 10);
     default:

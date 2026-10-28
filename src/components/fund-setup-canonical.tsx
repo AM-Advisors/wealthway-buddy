@@ -576,6 +576,10 @@ function EconomicsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; o
                     <PresetSelect disabled={!d.canEdit} options={MIN_PRESETS} allowDefault na={cNa("minInvestment")} value={c.minInvestmentCents != null ? c.minInvestmentCents / 100 : null}
                       onChange={(v, na) => upd({ notApplicable: toggle(c, "minInvestment", na), minInvestmentCents: na || v == null ? null : Math.round(v * 100) })} prefix="$" />
                   </Field>
+                  <Field label="Up to, not including ($), blank for no top">
+                    <Input disabled={!d.canEdit} inputMode="numeric" value={c.maxInvestmentCents != null ? String(c.maxInvestmentCents / 100) : ""} placeholder="No top"
+                      onChange={(e) => { const n = Number(e.target.value.replace(/[^0-9.]/g, "")); upd({ maxInvestmentCents: e.target.value.trim() && Number.isFinite(n) && n > 0 ? Math.round(n * 100) : null }); }} />
+                  </Field>
                   <Field label="Applies to (which investors)"><Input disabled={!d.canEdit} value={c.appliesTo ?? ""} placeholder="e.g. Founding investors" onChange={(e) => upd({ appliesTo: e.target.value })} /></Field>
                   <Field label="Organizational expenses"><Input disabled={!d.canEdit} value={c.orgExpenseTreatment ?? ""} placeholder="Same as fund default" onChange={(e) => upd({ orgExpenseTreatment: e.target.value || null })} /></Field>
                   <Field label="Distribution frequency"><Input disabled={!d.canEdit} value={c.distributionFrequency ?? ""} placeholder="Same as fund default" onChange={(e) => upd({ distributionFrequency: e.target.value || null })} /></Field>

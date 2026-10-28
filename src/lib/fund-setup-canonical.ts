@@ -111,6 +111,8 @@ export type FundClass = {
   carry?: Carry | null;
   preferredReturnPercent?: number | null;
   minInvestmentCents?: number | null;
+  /** Exclusive upper bound of the amount range; null means no top. */
+  maxInvestmentCents?: number | null;
   orgExpenseTreatment?: string | null;
   distributionFrequency?: string | null;
   /** Which investors the class is for (e.g. "Founders", "Investors over $1M"). */
