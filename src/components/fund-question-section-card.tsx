@@ -33,6 +33,18 @@ export function FundQuestionSectionCard({ offeringId }: { offeringId: string }) 
   const refresh = () => qc.invalidateQueries({ queryKey: key });
   const save = useMutation({ mutationFn: (override?: Q[]) => saveFn({ data: { offeringId, sectionId: draft?.id ?? null, title, questions: (override ?? qs) as any, sourceNote: aiDraft?.sourceNote ?? shown?.source_note, sourceDocuments: aiDraft?.sourceDocuments ?? shown?.source_documents ?? [] } }), onSuccess: () => { toast.success("Draft saved"); setDirty(false); setAiDraft(null); void refresh(); }, onError: (e: Error) => toast.error(e.message) });
   const approve = useMutation({ mutationFn: () => { if (!draft || dirty) throw new Error("Save and review the current draft first."); return approveFn({ data: { sectionId: draft.id } }); }, onSuccess: () => { toast.success("Questions approved; investors now see them"); void refresh(); }, onError: (e: Error) => toast.error(e.message) });
+  // Saves the current draft, then approves the saved version in one step.
+  const saveApprove = useMutation({
+    mutationFn: async () => {
+      await saveFn({ data: { offeringId, sectionId: draft?.id ?? null, title, questions: qs as any, sourceNote: aiDraft?.sourceNote ?? shown?.source_note, sourceDocuments: aiDraft?.sourceDocuments ?? shown?.source_documents ?? [] } });
+      const fresh: any = await list({ data: { offeringId } });
+      const draftId = ((fresh?.sections ?? []) as any[]).find((s) => s.status === "draft")?.id;
+      if (!draftId) throw new Error("Saved, but the draft could not be approved. Approve it from the approvals list.");
+      return approveFn({ data: { sectionId: draftId } });
+    },
+    onSuccess: () => { toast.success("Questions saved and approved; investors now see them"); setDirty(false); setAiDraft(null); void refresh(); },
+    onError: (e: Error) => toast.error(e.message),
+  });
   if (q.isPending) return null;
   if (q.isError || !q.data) return <p role="alert" className="text-sm text-destructive">{q.error?.message ?? "Could not load fund questions."}</p>;
   const staff = q.data.staff;
@@ -81,6 +93,7 @@ export function FundQuestionSectionCard({ offeringId }: { offeringId: string }) 
         <div className="flex flex-wrap gap-2 border-t pt-4">
           <Button size="sm" variant="outline" onClick={() => { setDirty(true); setQs((cur) => [...cur, { key: `fs_q${Date.now().toString(36)}`, label: "", type: "text", required: true }]); }}><Plus className="size-4" />Add question</Button>
           <Button size="sm" disabled={save.isPending} onClick={() => save.mutate(undefined)}><Save className="size-4" />Save draft</Button>
+          {staff && (dirty || !draft) && <Button size="sm" variant="outline" disabled={saveApprove.isPending || save.isPending || approve.isPending} onClick={() => saveApprove.mutate(undefined)}><CheckCircle2 className="size-4" />{saveApprove.isPending ? "Saving…" : "Save & approve"}</Button>}
           {staff && draft && <Button size="sm" variant="outline" disabled={approve.isPending || save.isPending || dirty} onClick={() => approve.mutate()}><CheckCircle2 className="size-4" />Approve for investors</Button>}
         </div>
       )}

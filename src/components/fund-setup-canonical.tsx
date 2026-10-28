@@ -670,6 +670,17 @@ export function EconomicsCard({ d, offeringId, onSaved }: { d: D; offeringId: st
         {d.canEdit && (
           <div className="flex flex-wrap items-center gap-3 border-t py-4">
             <Button disabled={busy} onClick={() => run(() => save({ data: { offeringId, terms: terms as any, classes: multi ? (classes as any) : [], classDifferencesConfirmed: confirmed } }), "Economics saved as a draft")}><Save className="size-4" />{busy ? "Saving…" : "Save terms draft"}</Button>
+            {d.canEdit && d.economics.canApprove && unsaved && (
+              <Button variant="outline" disabled={busy}
+                onClick={() => void run(async () => {
+                  const saved: any = await save({ data: { offeringId, terms: terms as any, classes: multi ? (classes as any) : [], classDifferencesConfirmed: confirmed } });
+                  const versionId = saved?.id ?? d.economics.versionId;
+                  if (!versionId) throw new Error("Saved, but the version could not be approved. Approve it from the approvals list.");
+                  await approve({ data: { versionId } });
+                }, "Economics saved and approved")}>
+                <CheckCircle2 className="size-4" />{busy ? "Saving…" : "Save & approve"}
+              </Button>
+            )}
             {d.economics.canApprove && d.economics.status === "draft" && d.economics.versionId && (
               <Button variant="outline" disabled={busy || unsaved} title={unsaved ? "Save changes before reviewing this version" : undefined}
                 onClick={() => { const versionId = d.economics.versionId; if (versionId) void run(() => approve({ data: { versionId } }), "Economics approved"); }}>
