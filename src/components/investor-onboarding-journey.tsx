@@ -503,7 +503,7 @@ function AccreditationStep({ d, onboardingId, done }: { d: any; onboardingId: st
   const saveFn = useServerFn(saveQuestionnaireFn);
   const recordFn = useServerFn(recordEvidence);
   const savedAnswers = (d.questionnaireResponses ?? {}) as Record<string, unknown>;
-  const [name, setName] = useState(String(savedAnswers.name_of_subscriber ?? ""));
+  const [name, setName] = useState(String(savedAnswers["name_of_subscriber"] ?? ""));
   const [category, setCategory] = useState(String(savedAnswers[ACCREDITATION_QUESTION_KEY] ?? ""));
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
