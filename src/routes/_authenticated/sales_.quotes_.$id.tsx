@@ -19,7 +19,7 @@ import { Panel, money } from "@/components/sales/sales-ui";
 import { QuoteBuilder } from "./sales_.quotes";
 import { AddSalesContact } from "@/components/sales/add-sales-contact";
 import { canAddSalesContact } from "@/lib/sales-contact-model";
-import { addSalesQuoteContact, changeSalesQuoteSigner, sendSalesQuoteEmail, updateSalesQuoteDetails } from "@/lib/sales-hub.functions";
+import { addSalesQuoteContact, changeSalesQuoteSigner, sendSalesQuoteEmail, sendSalesQuotePackage, updateSalesQuoteDetails } from "@/lib/sales-hub.functions";
 import { Textarea } from "@/components/ui/textarea";
 import { bookkeepingDraftBlocker } from "@/lib/bookkeeping-model";
 
@@ -73,11 +73,12 @@ function QuotePage() {
   const detailsFn = useServerFn(updateSalesQuoteDetails);
   const signerFn = useServerFn(changeSalesQuoteSigner);
   const emailFn = useServerFn(sendSalesQuoteEmail);
+  const packageFn = useServerFn(sendSalesQuotePackage);
   const [details, setDetails] = useState<{ title: string; notes: string; validUntil: string } | null>(null);
   const [mail, setMail] = useState<{ subject: string; message: string } | null>(null);
   const [changingSigner, setChangingSigner] = useState(false);
   const saveDetails = useMutation({ mutationFn: () => detailsFn({ data: { id, title: details!.title, notes: details!.notes || null, validUntil: details!.validUntil || null } }), onSuccess: () => { setDetails(null); done("Quote updated")(); }, onError: err });
-  const sendMail = useMutation({ mutationFn: () => emailFn({ data: { id, subject: mail!.subject, message: mail!.message || null } }), onSuccess: (r) => { setMail(null); done(r.resent ? "Quote resent" : "Quote emailed")(); }, onError: err });
+  const sendMail = useMutation({ mutationFn: async () => { const data = { id, subject: mail!.subject, message: mail!.message || null }; if ((mail as any)?.pkg) { const r = await packageFn({ data }); return `Quote, SOW and ${r.invoices.length} invoices sent through ${r.through}`; } const r = await emailFn({ data }); return r.resent ? "Quote resent" : "Quote emailed"; }, onSuccess: (msg) => { setMail(null); done(msg)(); }, onError: err });
 
   const linkedFn = useServerFn(getSalesLinkedRecords);
   const linked = useQuery({ queryKey: ["sales-linked", id], queryFn: () => linkedFn({ data: { id } }) });
@@ -108,7 +109,8 @@ function QuotePage() {
       </>}>
         {d.canEdit && !editing && <Button size="sm" variant="outline" onClick={() => setEditing(true)}>Edit</Button>}
         {(s === "approved" || s === "sent") && !details && <Button size="sm" variant="outline" onClick={() => setDetails({ title: d.quote.title ?? "", notes: d.quote.notes ?? "", validUntil: d.quote.valid_until ?? "" })}>Update quote</Button>}
-        {(s === "approved" || s === "sent") && d.contact?.email && !mail && <Button size="sm" onClick={() => setMail({ subject: `Your Harmonious quote: ${d.quote.title}`, message: "" })}>{s === "sent" ? "Resend quote" : "Email quote"}</Button>}
+        {(s === "approved" || s === "sent") && d.contact?.email && !mail && !(d.quote as any).package_issued_at && <Button size="sm" onClick={() => setMail({ subject: `Your Harmonious quote, agreement and invoices: ${d.quote.title}`, message: "", pkg: true } as any)}>Send quote, SOW and invoices</Button>}
+        {(s === "approved" || s === "sent") && d.contact?.email && !mail && <Button size="sm" variant="outline" onClick={() => setMail({ subject: `Your Harmonious quote: ${d.quote.title}`, message: "" })}>{s === "sent" ? "Resend quote" : "Email quote"}</Button>}
         {d.canEdit && <Button size="sm" onClick={() => submit.mutate()} disabled={submit.isPending || !!bookkeepingBlocker}>{d.quote.needs_exec_approval ? "Submit for approval" : "Finalize quote"}</Button>}
         {s === "pending_approval" && (d.canApprove ? (
           <><Input className="h-9 max-w-xs" placeholder="Note (required to request changes)" value={note} onChange={(e) => setNote(e.target.value)} />
@@ -132,9 +134,10 @@ function QuotePage() {
         </Panel>
       )}
       {mail && (
-        <Panel title={s === "sent" ? "Resend quote" : "Email quote"}>
+        <Panel title={(mail as any).pkg ? "Send quote, SOW and invoices" : s === "sent" ? "Resend quote" : "Email quote"}>
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">To {d.contact?.full_name} ({d.contact?.email}) with their personal sign link.</p>
+            {(mail as any).pkg && <p className="text-sm text-foreground">This also creates the SOW and issues every invoice on this quote through December 31 of next year, each with its own due date. The client gets an email for each invoice. Signing later won't bill again.</p>}
             <div><label className="text-sm font-medium" htmlFor="qm-subject">Subject</label><Input id="qm-subject" value={mail.subject} onChange={(e) => setMail({ ...mail, subject: e.target.value })} /></div>
             <div><label className="text-sm font-medium" htmlFor="qm-msg">Your message (optional)</label><Textarea id="qm-msg" rows={3} value={mail.message} onChange={(e) => setMail({ ...mail, message: e.target.value })} /></div>
             <div className="flex gap-2"><Button size="sm" onClick={() => sendMail.mutate()} disabled={sendMail.isPending || !mail.subject.trim()}>Send</Button><Button size="sm" variant="ghost" onClick={() => setMail(null)}>Cancel</Button></div>
