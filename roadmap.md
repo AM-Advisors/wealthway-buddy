@@ -1,5 +1,10 @@
 # Roadmap
 
+## Fund approval discoverability
+- [ ] Use Fees & terms consistently and expose Approvals directly on fund pages.
+- [ ] Bring existing fees, document and additional-question review controls into the Approvals area without changing authority or approving records.
+- [ ] Check fictional navigation and compact layout; authenticated approval remains blocked on independently isolated QA.
+
 ## ROAS documented class fees and carry
 - [x] Read subscription Section 1 and its incorporated LPA Sections 2.4(b), 10.4(c)-(d), 10.7. Saved existing draft through Alyssa's authorized canonical save: all four classes 2% annual capital-account fee, quarterly arrears; 0% Section 3.4 incentive allocation with separate B tiered allocation recorded. Preserved ranges, preferred returns and draft status, no approval/publication.
 - [x] Database read-back confirms exact terms, retained ranges and no approver; 51 focused tests passed and preview build OK.
