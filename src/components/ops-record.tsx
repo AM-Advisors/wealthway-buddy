@@ -70,12 +70,17 @@ function when(value?: string | null) {
   return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleDateString();
 }
 
+const ACRONYMS = /\b(kyc|kyb|aml|ein|ssn|tin|ppm|sow|rfq|rfp|lp|gp|spv|nav|ach|id)\b/gi;
+
 function humanise(key: string) {
   return key
     .replace(/([a-z])([A-Z])/g, "$1 $2")
     .replace(/[_-]+/g, " ")
-    .replace(/^./, (c) => c.toUpperCase());
+    .replace(/^./, (c) => c.toUpperCase())
+    .replace(ACRONYMS, (m) => m.toUpperCase());
 }
+
+const STATUS_COLUMN = /(status|state|kyc|kyb|aml|accreditation|verification|screening|stage|decision)$/i;
 
 function cell(key: string, value: unknown) {
   if (value === null || value === undefined || value === "") return "-";
@@ -83,6 +88,10 @@ function cell(key: string, value: unknown) {
   if (/(_at|_on|date|At|Date)$/.test(key)) return when(String(value));
   if (typeof value === "boolean") return value ? "Yes" : "No";
   if (typeof value === "object") return "-";
+  if (typeof value === "string" && STATUS_COLUMN.test(key) && /^[a-z][a-z0-9_]*$/.test(value)) {
+    const label = prettyStatus(value).replace(/^./, (c) => c.toUpperCase());
+    return <Badge variant={statusTone(value)}>{label}</Badge>;
+  }
   return String(value);
 }
 
