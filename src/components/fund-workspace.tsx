@@ -24,7 +24,7 @@ import { CloseRequestReview } from "@/components/close-request-review";
 import { FundDistributions } from "@/components/fund-distributions";
 import { listAllCloseRequests } from "@/lib/fund-close-requests.functions";
 import { useServerFn } from "@tanstack/react-start";
-import { CheckCircle2, ChevronDown, ChevronRight, Clock } from "lucide-react";
+import { CheckCircle2, ChevronDown, ChevronRight, Clock, ClipboardCheck } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
@@ -90,6 +90,7 @@ const CLOSE_STATUS: Record<string, string> = {
 /** Primary tabs, each owning a group of the original tab values (old addresses keep working). */
 const PRIMARY: { value: string; label: string; group: string[] }[] = [
   { value: "overview", label: "Overview", group: ["overview"] },
+  { value: "approvals", label: "Approvals", group: ["approvals"] },
   { value: "setup", label: "Fund Details", group: ["setup", "details", "team"] },
   { value: "investors", label: "Investors", group: ["investors"] },
   { value: "assets", label: "Asset Details", group: ["assets"] },
@@ -102,7 +103,7 @@ const SUB_LABEL: Record<string, string> = { setup: "Checklist", details: "Fund d
 const SETUP_GROUP = ["setup", "details", "team", "banking"];
 const MERGED_SECTIONS = [{ id: "fs-setup", label: "Progress" }, { id: "fs-launch", label: "Launch status" }, { id: "setup-details", label: "Fund details" }, { id: "setup-economics", label: "Fees & terms" }, { id: "setup-documents", label: "Documents" }, { id: "fund-operations", label: "EIN, tax & sign-off" }, { id: "fs-team", label: "Team" }, { id: "fs-banking", label: "Banking" }];
 const MORE: { value: string; label: string }[] = [
-  { value: "todos", label: "To dos" }, { value: "approvals", label: "Approvals" }, { value: "requests", label: "Requests" },
+  { value: "todos", label: "To dos" }, { value: "requests", label: "Requests" },
   { value: "calendar", label: "Calendar" }, { value: "regulatory", label: "Regulatory" }, { value: "services", label: "Services" },
 ];
 
@@ -121,6 +122,13 @@ function FundTabBar({ fundId, mode, tab, onTab, extraTabs, todoCount }: { fundId
     : <Link to="/client/funds/$fundId" params={{ fundId }} search={(prev) => ({ ...prev, tab: value as FundTab })} resetScroll={false} role="tab" aria-selected={selected} className={className}>{text}</Link>;
   return (
     <div id="fund-workspace-tabs" className="sticky top-0 z-20 space-y-2 bg-background pt-2">
+      {tab !== "approvals" && <div className="flex justify-end">
+        <Button size="sm" variant="outline" asChild>
+          {mode === "harmonious"
+            ? <Link to="/ops/fund/$fundId" params={{ fundId }} search={(prev) => ({ ...prev, tab: "approvals" })} resetScroll={false}><ClipboardCheck className="size-4" />Review approvals</Link>
+            : <Link to="/client/funds/$fundId" params={{ fundId }} search={(prev) => ({ ...prev, tab: "approvals" })} resetScroll={false}><ClipboardCheck className="size-4" />Review approvals</Link>}
+        </Button>
+      </div>}
       <div role="tablist" aria-label="Fund tabs" className="flex items-center gap-1 overflow-x-auto border-b pb-2">
         {primary.map((p) => (
           <span key={p.value} className="shrink-0">{tabLink(p.value, p.label, pill(active?.value === p.value), active?.value === p.value)}</span>
