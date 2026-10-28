@@ -22882,6 +22882,41 @@ export type Database = {
           },
         ]
       }
+      fund_questionnaire_ai_state: {
+        Row: {
+          blocked_at: string
+          blocked_message: string
+          blocked_status: number
+          offering_id: string
+          reset_at: string | null
+          reset_by: string | null
+        }
+        Insert: {
+          blocked_at?: string
+          blocked_message: string
+          blocked_status: number
+          offering_id: string
+          reset_at?: string | null
+          reset_by?: string | null
+        }
+        Update: {
+          blocked_at?: string
+          blocked_message?: string
+          blocked_status?: number
+          offering_id?: string
+          reset_at?: string | null
+          reset_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_questionnaire_ai_state_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: true
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fund_questionnaire_sections: {
         Row: {
           approval_reason: string | null
@@ -22893,6 +22928,7 @@ export type Database = {
           prepared_at: string
           prepared_by: string | null
           questions: Json
+          source_documents: Json
           source_note: string | null
           status: string
           title: string
@@ -22908,6 +22944,7 @@ export type Database = {
           prepared_at?: string
           prepared_by?: string | null
           questions?: Json
+          source_documents?: Json
           source_note?: string | null
           status?: string
           title?: string
@@ -22923,6 +22960,7 @@ export type Database = {
           prepared_at?: string
           prepared_by?: string | null
           questions?: Json
+          source_documents?: Json
           source_note?: string | null
           status?: string
           title?: string

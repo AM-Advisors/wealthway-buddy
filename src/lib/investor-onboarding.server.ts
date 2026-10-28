@@ -852,7 +852,8 @@ export async function subscriptionLocks(row: any, questions: Question[]) {
         ? { ...q, satisfiedBy: "Your completed Verification already includes your ID and date of birth." }
         : q,
   );
-  return { locked, supplied: suppliedInvestorAnswers(person, profile), questions: decorated };
+  const { mappedQuestionFacts } = await import("./fund-question-ai-model");
+  return { locked, supplied: mappedQuestionFacts(questions, suppliedInvestorAnswers(person, profile)), questions: decorated };
 }
 
 export async function saveQuestionnaire(
