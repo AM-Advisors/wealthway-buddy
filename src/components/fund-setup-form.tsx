@@ -23,6 +23,7 @@ import { FundTeamAccessBox } from "@/components/fund-team-access-box";
 import { FundDocumentsHub } from "@/components/fund-documents-hub";
 import { Link } from "@tanstack/react-router";
 import { FundClassSummary } from "@/components/fund-class-summary";
+import { FundQuestionSectionCard } from "@/components/fund-question-section-card";
 
 type Mode = "staff" | "manager";
 
@@ -174,6 +175,7 @@ export function FundSetupForm({ offeringId, mode, staffExtras, workspace = false
       {!!(d.items as any[]).some((i) => i.section === "bank") && <History items={(d.items as any[]).filter((i) => i.section === "bank")} isStaff={isStaff} onChange={refresh} />}
 
       <SetupSection open={open} setOpen={setOpen} id="documents" title="Documents" status={<Chip tone={stepOf("document")?.status === "done" ? "done" : "miss"}>{stepOf("document")?.statusLabel ?? ""}</Chip>}>
+        <FundQuestionSectionCard offeringId={offeringId} />
         {isStaff ? <OfferingDocumentsSetup offeringId={offeringId} onChanged={refresh} /> : workspace ? <Button asChild variant="outline"><Link to="/manager/fund/$fundId" params={{ fundId: offeringId }} search={{ area: "documents" }}>Manage fund documents</Link></Button> : <FundDocumentsHub fundId={offeringId} staff={false} />}
         <History items={(d.items as any[]).filter((i) => i.section === "document" || i.section === "fund_details" || i.section === "fees_team")} isStaff={isStaff} onChange={refresh} />
       </SetupSection>

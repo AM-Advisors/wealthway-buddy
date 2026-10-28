@@ -22882,6 +22882,62 @@ export type Database = {
           },
         ]
       }
+      fund_questionnaire_sections: {
+        Row: {
+          approval_reason: string | null
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          id: string
+          offering_id: string
+          prepared_at: string
+          prepared_by: string | null
+          questions: Json
+          source_note: string | null
+          status: string
+          title: string
+          version: number
+        }
+        Insert: {
+          approval_reason?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          id?: string
+          offering_id: string
+          prepared_at?: string
+          prepared_by?: string | null
+          questions?: Json
+          source_note?: string | null
+          status?: string
+          title?: string
+          version: number
+        }
+        Update: {
+          approval_reason?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          id?: string
+          offering_id?: string
+          prepared_at?: string
+          prepared_by?: string | null
+          questions?: Json
+          source_note?: string | null
+          status?: string
+          title?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_questionnaire_sections_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fund_record_sync_events: {
         Row: {
           actor_id: string | null
@@ -27955,6 +28011,7 @@ export type Database = {
           position_id: string | null
           questionnaire_didit_session_id: string | null
           questionnaire_responses: Json
+          questionnaire_section_version: number | null
           questionnaire_source: string | null
           questionnaire_submitted_at: string | null
           questionnaire_version: number | null
@@ -28006,6 +28063,7 @@ export type Database = {
           position_id?: string | null
           questionnaire_didit_session_id?: string | null
           questionnaire_responses?: Json
+          questionnaire_section_version?: number | null
           questionnaire_source?: string | null
           questionnaire_submitted_at?: string | null
           questionnaire_version?: number | null
@@ -28057,6 +28115,7 @@ export type Database = {
           position_id?: string | null
           questionnaire_didit_session_id?: string | null
           questionnaire_responses?: Json
+          questionnaire_section_version?: number | null
           questionnaire_source?: string | null
           questionnaire_submitted_at?: string | null
           questionnaire_version?: number | null
