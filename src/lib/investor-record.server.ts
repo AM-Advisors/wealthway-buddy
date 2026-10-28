@@ -533,7 +533,7 @@ function personName(p: any) { return (p?.preferred_name || `${p?.legal_first_nam
 export async function fundInvestorRecords(userId: string, offeringId: string) {
   const actor = await fundActor(userId, offeringId);
   const { data: rows } = await db().from("investor_onboardings")
-    .select("id, person_id, investor_user_id, investment_profile_id, stage, requested_amount_cents, commitment_amount_cents, accepted_amount_cents, entry_source, investor_confirmed_at, invitation_id, created_at")
+    .select("id, application_id, offering_id, person_id, investor_user_id, investment_profile_id, stage, requested_amount_cents, commitment_amount_cents, accepted_amount_cents, entry_source, investor_confirmed_at, invitation_id, created_at")
     .eq("offering_id", offeringId).is("removed_at", null).not("stage", "in", "(declined,cancelled)").order("created_at", { ascending: false });
   const list = (rows ?? []) as any[];
   const personIds = [...new Set(list.map((r) => r.person_id).filter(Boolean))];
@@ -561,7 +561,7 @@ export async function fundInvestorRecords(userId: string, offeringId: string) {
         openConflicts: open.filter((s) => s.source !== "fund_manager").length, openReviews: open.filter((s) => s.source === "fund_manager").length,
       });
       return {
-        onboardingId: r.id, name: personName(p) ?? "Investor", email: p?.email ?? null,
+        onboardingId: r.id, applicationId: r.application_id ?? null, offeringId: r.offering_id, name: personName(p) ?? "Investor", email: p?.email ?? null,
         profileLabel: pr?.display_label ?? null, profileType: pr ? PROFILE_TYPE_LABELS[formProfileType(pr.profile_type)] : null,
         amountCents: r.requested_amount_cents, commitmentCents: r.commitment_amount_cents,
         ...(actor.isStaff ? { acceptedCents: r.accepted_amount_cents } : {}),
