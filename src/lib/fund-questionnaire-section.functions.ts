@@ -16,7 +16,7 @@ const tabs = () => import("@/lib/fund-tabs.server");
 /** Staff or the fund's managers can read; returns the fund's sections and which questions are new. */
 export const listQuestionSectionsFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ offeringId: uuid }).parse)
+  .validator(z.object({ offeringId: uuid }).parse)
   .handler(async ({ data, context }) => {
     const t = await tabs();
     const access = await t.assertFund(context.userId, data.offeringId);
@@ -38,7 +38,7 @@ export const listQuestionSectionsFn = createServerFn({ method: "POST" })
 
 export const saveQuestionSectionDraftFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ offeringId: uuid, sectionId: uuid.nullish(), title: z.string().min(1).max(200), questions: z.array(question).max(80) }).parse)
+  .validator(z.object({ offeringId: uuid, sectionId: uuid.nullish(), title: z.string().min(1).max(200), questions: z.array(question).max(80) }).parse)
   .handler(async ({ data, context }) => {
     const t = await tabs();
     if (!(await t.isStaff(context.userId))) throw new Error("Only Harmonious staff can edit fund questions.");
@@ -61,7 +61,7 @@ export const saveQuestionSectionDraftFn = createServerFn({ method: "POST" })
 /** Second-person approval (Super Admins may self-approve with a logged reason). Retires the prior approved version. */
 export const approveQuestionSectionFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ sectionId: uuid }).parse)
+  .validator(z.object({ sectionId: uuid }).parse)
   .handler(async ({ data, context }) => {
     const t = await tabs();
     if (!(await t.isStaff(context.userId))) throw new Error("Only Harmonious staff can approve fund questions.");
