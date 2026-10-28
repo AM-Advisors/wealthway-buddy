@@ -6,7 +6,7 @@ const uuid = z.string().uuid();
 const question = z.object({
   key: z.string().min(4).max(80),
   label: z.string().min(1).max(600),
-  type: z.enum(["text", "textarea", "select", "boolean", "number", "date"]),
+  type: z.enum(["yes_no", "text", "number", "currency", "date", "select", "multi_select", "certification"]),
   required: z.boolean().optional(),
   options: z.array(z.string().max(300)).max(30).optional(),
   showWhen: z.any().optional(),

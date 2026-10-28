@@ -5,8 +5,8 @@ describe("fund questionnaire section", () => {
   it("never asks a question twice by key or wording", () => {
     const out = newSectionQuestions(base as any, [
       { key: "fs_email", label: "Email (required)", type: "text" },
-      { key: "fs_sof", label: "Source of funds", type: "textarea" },
-      { key: "fs_sof2", label: "Source of Funds", type: "textarea" },
+      { key: "fs_sof", label: "Source of funds", type: "text" },
+      { key: "fs_sof2", label: "Source of Funds", type: "text" },
     ] as any);
     expect(out.map((q) => q.key)).toEqual(["fs_sof"]);
   });
