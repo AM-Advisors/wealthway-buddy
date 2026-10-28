@@ -4,6 +4,6 @@ export function routineApprovalAllowed(action: string, authorizedApprover: boole
   return authorizedApprover && ROUTINE_APPROVAL_ACTIONS.some((candidate) => candidate === action);
 }
 /** Unknown and financially consequential Approval Center categories stay protected. */
-export function routineApprovalType(type: string): boolean {
-  return type === "SERVICE_CHANGE" || type === "ENTITY_ACTION";
+export function routineApprovalType(type: string, amount?: unknown): boolean {
+  return amount == null && (type === "SERVICE_CHANGE" || type === "ENTITY_ACTION");
 }

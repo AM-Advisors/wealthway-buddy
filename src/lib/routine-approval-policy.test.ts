@@ -10,5 +10,7 @@ it.each(["payment", "banking", "tax_filing", "accreditation", "identity", "acces
 it("only simplifies known nonfinancial Approval Center categories", () => {
   expect(routineApprovalType("SERVICE_CHANGE")).toBe(true);
   expect(routineApprovalType("ENTITY_ACTION")).toBe(true);
+  expect(routineApprovalType("SERVICE_CHANGE", 100)).toBe(false);
+  expect(routineApprovalType("ENTITY_ACTION", 0)).toBe(false);
   for (const type of ["PAYMENT", "BANKING", "NAV", "REPORT_RELEASE", "REGULATORY", "INVESTOR_TRANSFER", "OTHER"]) expect(routineApprovalType(type)).toBe(false);
 });

@@ -514,8 +514,8 @@ export function EconomicsCard({ d, offeringId, onSaved }: { d: D; offeringId: st
         </Badge>
       </header>
       <div className="border-l-2 border-primary bg-muted/40 px-4 py-3 text-sm">
-        <p className="font-medium">{d.economics.status === "draft" ? "Pending independent review" : d.economics.approvedVersion ? "Approved terms in use" : "Terms not yet saved"}</p>
-        <p className="mt-1 text-muted-foreground">{d.economics.status === "draft" ? `${d.economics.preparedByMe ? "Another Harmonious reviewer must approve this saved version." : "This saved version is ready for an authorized reviewer."}${d.economics.approvedVersion ? ` Approved v${d.economics.approvedVersion} remains in use.` : " Classes cannot be assigned until approval."}` : "Saving changes creates a draft. Signed records and approved terms remain unchanged."}</p>
+        <p className="font-medium">{d.economics.status === "draft" ? "Pending approval" : d.economics.approvedVersion ? "Approved terms in use" : "Terms not yet saved"}</p>
+        <p className="mt-1 text-muted-foreground">{d.economics.status === "draft" ? `Ready for an authorized approval.${d.economics.approvedVersion ? ` Approved v${d.economics.approvedVersion} remains in use.` : " Classes cannot be assigned until approval."}` : "Saving changes creates a draft. Signed records and approved terms remain unchanged."}</p>
       </div>
       <Tabs defaultValue={multi ? "classes" : "defaults"} className="min-w-0">
         <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1">

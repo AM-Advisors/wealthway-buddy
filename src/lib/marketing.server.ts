@@ -1,6 +1,6 @@
 /**
  * Marketing: posts, emails, audiences, calendar, approvals and the scheduler. Server-only.
- * Every write re-checks the caller's role; approver must differ from author (maker-checker).
+ * Every write re-checks the caller's role; routine content needs one explicit authorized approval.
  * Nothing publishes or sends unless approved; published/sent items are locked.
  */
 import {

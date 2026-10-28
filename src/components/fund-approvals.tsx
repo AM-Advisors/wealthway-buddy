@@ -103,7 +103,7 @@ function ApprovalDetail({ id, fundId, onBack, onOpen }: { id: string; fundId: st
   if (q.error) return <div><Button size="sm" variant="ghost" onClick={onBack}>← Approvals</Button><p className="text-sm text-destructive">{(q.error as Error).message}</p></div>;
   if (!q.data) return <p className="text-sm text-muted-foreground">Loading approval…</p>;
   const { approval: a, staff, canDecide, certification, highRisk, events, decisions, versions } = q.data;
-  const routine = routineApprovalType(a.approval_type) && a.approval_amount == null;
+  const routine = routineApprovalType(a.approval_type, a.approval_amount);
   const newer = versions.find((x: any) => x.version > a.version);
   return (
     <div className="space-y-4">
