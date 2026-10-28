@@ -280,6 +280,36 @@ export type Database = {
           },
         ]
       }
+      account_auto_links: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          kind: string
+          scope_id: string
+          source_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          kind: string
+          scope_id: string
+          source_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          kind?: string
+          scope_id?: string
+          source_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       account_identity_check_events: {
         Row: {
           actor_user_id: string | null
@@ -49910,6 +49940,8 @@ export type Database = {
         Args: { _actor: string; _offering: string; _reason: string }
         Returns: undefined
       }
+      connect_listed_entries: { Args: { _uid: string }; Returns: number }
+      connect_my_listed_entries: { Args: never; Returns: number }
       consolidate_duplicate_fund: {
         Args: {
           _actor: string

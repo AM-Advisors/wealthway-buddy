@@ -2486,6 +2486,13 @@
       "when": 1793136428470,
       "tag": "0354_separate_investment_application",
       "breakpoints": true
+    },
+    {
+      "idx": 355,
+      "version": "7",
+      "when": 1793204300669,
+      "tag": "0355_auto_connect_listed_people",
+      "breakpoints": true
     }
   ]
 }
