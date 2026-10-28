@@ -68,3 +68,27 @@ export function changedBySection(vals: Record<string, string>, prior: Record<str
   }
   return out;
 }
+
+/** Display rows for one fund class in the Setup summary card (display only). */
+export function classSummaryRows(c: {
+  name: string;
+  managementFee?: { ratePercent: number | null; basis?: string | null; frequency?: string | null; paymentTerms?: string | null } | null;
+  carry?: { ratePercent: number | null; applicability?: string | null } | null;
+  preferredReturnPercent?: number | null;
+  minInvestmentCents?: number | null;
+  maxInvestmentCents?: number | null;
+  otherDifferences?: string | null;
+}): { title: string; range: string; rows: [string, string][] } {
+  const money = (cents: number) => { const d = cents / 100; return d >= 1000 && d % 1000 === 0 ? `$${d / 1000}K` : `$${d.toLocaleString("en-US")}`; };
+  const min = c.minInvestmentCents ?? null, max = c.maxInvestmentCents ?? null;
+  const range = min != null && max != null ? `${money(min)} to under ${money(max)}` : min != null ? `${money(min)} and up` : max != null ? `Under ${money(max)}` : "Any amount";
+  const f = c.managementFee;
+  const freq: Record<string, string> = { annual: "per year", quarterly: "per quarter", per_capital_call: "per capital call", one_time: "one time" };
+  const basis = f?.basis ? ` on ${f.basis.replace(/_/g, " ")}` : "";
+  const fee = f?.ratePercent != null ? `${f.ratePercent}%${f.frequency ? ` ${freq[f.frequency] ?? f.frequency.replace(/_/g, " ")}` : ""}${basis}${f.paymentTerms ? `, ${f.paymentTerms}` : ""}` : "None";
+  const carry = c.carry?.ratePercent != null && c.carry.ratePercent > 0 ? `${c.carry.ratePercent}%` : c.carry?.applicability ? "Tiered profit sharing" : "None";
+  const pref = c.preferredReturnPercent != null && c.preferredReturnPercent > 0 ? `${c.preferredReturnPercent}%` : "None";
+  const rows: [string, string][] = [["Investment range", range], ["Management fee", fee], ["Carried interest", carry], ["Preferred return", pref]];
+  if (c.carry?.applicability) rows.push(["Profit sharing", c.carry.applicability]);
+  return { title: c.name, range, rows };
+}
