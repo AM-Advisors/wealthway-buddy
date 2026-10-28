@@ -463,14 +463,30 @@ export async function classAssignments(userId: string, offeringId: string) {
   const { data: approved } = setup
     ? await db().from("fund_economics_versions").select("classes, terms").eq("setup_id", setup.id).eq("status", "approved").maybeSingle()
     : { data: null };
-  const { data: rows } = await db().from("investor_onboardings").select("id, person_id, offering_class_key, stage, requested_amount_cents").eq("offering_id", offeringId).is("removed_at", null);
+  // Display-only: when nothing is approved yet, show the latest draft so terms can be reviewed. Assignment still requires approval.
+  const { data: draft } = setup && !approved
+    ? await db().from("fund_economics_versions").select("classes, terms, version").eq("setup_id", setup.id).neq("status", "approved").order("version", { ascending: false }).limit(1).maybeSingle()
+    : { data: null };
+  const source = (approved ?? draft) as any;
+  const { data: rows } = await db().from("investor_onboardings").select("id, person_id, offering_class_key, stage, requested_amount_cents, commitment_amount_cents, questionnaire_responses").eq("offering_id", offeringId).is("removed_at", null).is("merged_into_onboarding_id", null);
   const personIds = ((rows ?? []) as any[]).map((r) => r.person_id).filter(Boolean);
   const { data: people } = personIds.length ? await db().from("persons").select("id, legal_first_name, legal_last_name").in("id", personIds) : { data: [] };
   const name = new Map(((people ?? []) as any[]).map((p) => [p.id, [p.legal_first_name, p.legal_last_name].filter(Boolean).join(" ")]));
+  const { classForAmount } = await import("@/lib/class-tiers");
+  const classes = ((source?.classes ?? []) as any[]).map((c) => ({
+    key: c.key as string, name: c.name as string, managementFee: c.managementFee ?? null, carry: c.carry ?? null,
+    preferredReturnPercent: c.preferredReturnPercent ?? null, minInvestmentCents: c.minInvestmentCents ?? null, maxInvestmentCents: c.maxInvestmentCents ?? null,
+    appliesTo: c.appliesTo ?? null, otherDifferences: c.otherDifferences ?? null,
+  }));
   return {
-    classes: ((approved?.classes ?? []) as any[]).map((c) => ({ key: c.key, name: c.name, managementFee: c.managementFee ?? null, carry: c.carry ?? null, minInvestmentCents: c.minInvestmentCents ?? null })),
-    defaults: approved?.terms ?? null,
-    investments: ((rows ?? []) as any[]).map((r) => ({ id: r.id, investor: name.get(r.person_id) || "Investor", classKey: r.offering_class_key as string | null, stage: r.stage as string })),
+    status: approved ? ("approved" as const) : draft ? ("draft" as const) : ("none" as const),
+    classes,
+    defaults: source?.terms ?? null,
+    investments: ((rows ?? []) as any[]).map((r) => {
+      const amountCents = (r.commitment_amount_cents ?? r.requested_amount_cents ?? null) as number | null;
+      const qName = typeof r.questionnaire_responses?.name_of_subscriber === "string" ? r.questionnaire_responses.name_of_subscriber : "";
+      return { id: r.id, investor: name.get(r.person_id) || qName || "Investor", classKey: r.offering_class_key as string | null, stage: r.stage as string, amountCents, suggestion: classForAmount(classes as any, amountCents) };
+    }),
   };
 }
 
