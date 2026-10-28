@@ -173,7 +173,7 @@ function linkedCell(row: any, key: string) {
   );
 }
 
-function Summary({ items }: { items: { label: string; value: string }[] }) {
+function Summary({ items }: { items: { label: string; value: import("react").ReactNode }[] }) {
   return (
     <dl className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
       {items.map((item) => (
