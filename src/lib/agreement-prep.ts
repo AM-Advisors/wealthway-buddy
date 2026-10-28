@@ -144,6 +144,12 @@ export function resolvePrefill(token: string | null | undefined, ctx: PrefillCon
       return ctx.fundName ?? "";
     case "commitment_amount":
       return money(ctx.commitmentCents);
+    case "series_subscribed":
+      return ctx.seriesName ?? "";
+    case "series_a_amount":
+      return /series\s+a/i.test(ctx.seriesName ?? "") ? money(ctx.commitmentCents) : "";
+    case "series_b_amount":
+      return /series\s+b/i.test(ctx.seriesName ?? "") ? money(ctx.commitmentCents) : "";
     case "today":
       return ctx.today ?? new Date().toISOString().slice(0, 10);
     default:
