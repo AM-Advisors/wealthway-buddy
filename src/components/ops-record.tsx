@@ -73,7 +73,7 @@ function when(value?: string | null) {
 
 const ACRONYMS = /\b(kyc|kyb|aml|ein|ssn|tin|ppm|sow|rfq|rfp|lp|gp|spv|nav|ach|id)\b/gi;
 
-function humanise(key: string) {
+export function humanise(key: string) {
   return key
     .replace(/([a-z])([A-Z])/g, "$1 $2")
     .replace(/[_-]+/g, " ")
@@ -83,7 +83,7 @@ function humanise(key: string) {
 
 const STATUS_COLUMN = /(status|state|kyc|kyb|aml|accreditation|verification|screening|stage|decision)$/i;
 
-function cell(key: string, value: unknown) {
+export function cell(key: string, value: unknown) {
   if (value === null || value === undefined || value === "") return "-";
   if (/cents$/i.test(key) || /Cents$/.test(key)) return money(Number(value));
   if (/(_at|_on|date|At|Date)$/.test(key)) return when(String(value));
