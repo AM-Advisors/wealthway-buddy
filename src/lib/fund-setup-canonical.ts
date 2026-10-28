@@ -78,7 +78,7 @@ export function structureForFundType(fundType: string | null | undefined): strin
   return "other";
 }
 
-export const FEE_BASES = ["committed_capital", "invested_capital", "nav", "flat"] as const;
+export const FEE_BASES = ["committed_capital", "invested_capital", "capital_account_balance", "nav", "flat"] as const;
 export const FEE_FREQUENCIES = ["annual", "per_capital_call", "one_time", "quarterly", "monthly"] as const;
 /** Choices offered for new entries; quarterly/monthly remain readable on older funds. */
 export const FEE_FREQUENCY_CHOICES = [["annual", "Per year"], ["per_capital_call", "Per capital call"], ["one_time", "One time"]] as const;
@@ -90,6 +90,7 @@ export type ManagementFee = {
   frequency: (typeof FEE_FREQUENCIES)[number] | null;
   effectiveFrom?: string | null;
   effectiveTo?: string | null;
+  paymentTerms?: string | null;
 };
 export type Carry = { ratePercent: number | null; applicability?: string | null };
 export type EconomicTerms = {
@@ -153,7 +154,7 @@ export function classDifferences(defaults: EconomicTerms & { minInvestmentCents?
     }),
   });
   const fee = defaults.managementFee;
-  const feeTxt = (f: ManagementFee | null | undefined) => (f?.ratePercent == null ? "-" : `${f.ratePercent}%${f.basis ? ` of ${f.basis.replace(/_/g, " ")}` : ""}${f.frequency ? `, ${f.frequency.replace(/_/g, " ")}` : ""}`);
+  const feeTxt = (f: ManagementFee | null | undefined) => (f?.ratePercent == null ? "-" : `${f.ratePercent}%${f.basis ? ` of ${f.basis.replace(/_/g, " ")}` : ""}${f.frequency ? `, ${f.frequency.replace(/_/g, " ")}` : ""}${f.paymentTerms ? `. ${f.paymentTerms}` : ""}`);
   return [
     row("Management fee", feeTxt(fee), (c) => (na(c, "managementFee") ? "Not applicable" : c.managementFee?.ratePercent != null ? feeTxt({ ...(fee ?? {}), ...c.managementFee } as ManagementFee) : null)),
     row("Minimum investment", money(defaults.minInvestmentCents), (c) => (na(c, "minInvestment") ? "Not applicable" : c.minInvestmentCents != null ? money(c.minInvestmentCents) : null)),
