@@ -1,4 +1,5 @@
-/** Collateral Studio persistence: drafts, maker-checker approval, exported PDF storage. Server-only. */
+/** Collateral Studio persistence: drafts, explicit authorized approval, exported PDF storage. Server-only. */
+import { routineApprovalAllowed } from "./routine-approval-policy";
 import { brandProblems } from "@/lib/marketing-brand";
 import { requireMarketing } from "@/lib/marketing.server";
 
@@ -53,7 +54,7 @@ export async function decideCollateral(userId: string, id: string, action: "subm
   } else {
     if (c.status !== "submitted") throw new Error("Only submitted collateral can be approved or sent back.");
     if (!canApprove) throw new Error("Only a Marketing Manager or leadership can approve.");
-    if (c.author_id === userId && !(await (await import("@/lib/self-approval.server")).selfApprove(userId, "marketing_collateral", [id]))) throw new Error("Someone other than the author must approve.");
+    if (!routineApprovalAllowed("marketing_collateral", canApprove)) throw new Error("An authorized marketing approver is required.");
     await db.from("marketing_collateral").update(action === "approve" ? { status: "approved", approved_by: userId, approved_at: new Date().toISOString() } : { status: "rejected" }).eq("id", id);
   }
   await log(db, id, action === "submit" ? "submitted" : action === "approve" ? "approved" : "sent_back", userId, note);

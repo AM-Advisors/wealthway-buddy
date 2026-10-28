@@ -720,10 +720,7 @@ export async function approveEconomics(userId: string, versionId: string) {
     .maybeSingle();
   if (!version) fail("That economics version was not found.");
   if (version.status !== "draft") fail("Only a draft economics version can be approved.");
-  const { routineApprovalAllowed } = await import("./routine-approval-policy");
-  if (version.prepared_by === userId && !routineApprovalAllowed("fund_economics", true)) {
-    fail("The person who prepared economic terms cannot also approve them.");
-  }
+  // assertStaff above is the approval gate; an authorized preparer may explicitly approve.
 
   // The prior approved version becomes history; it is never overwritten.
   const { data: rows } = await db()

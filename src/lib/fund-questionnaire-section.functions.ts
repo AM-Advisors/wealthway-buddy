@@ -76,7 +76,7 @@ export const saveQuestionSectionDraftFn = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-/** Second-person approval (Super Admins may self-approve with a logged reason). Retires the prior approved version. */
+/** One explicit staff approval. Source review and version immutability remain required. */
 export const approveQuestionSectionFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator(z.object({ sectionId: uuid }).parse)
@@ -95,11 +95,7 @@ export const approveQuestionSectionFn = createServerFn({ method: "POST" })
       const { data: version, error } = await db.from("offering_document_versions").select("approval_status").eq("id", source.id).eq("offering_id", row.offering_id).eq("offering_document_id", source.documentId).eq("version", source.version).maybeSingle();
       if (error || !sourceAgreementApproved(version)) throw new Error("Approve the source agreement version before publishing its questions.");
     }
-    const { routineApprovalAllowed } = await import("./routine-approval-policy");
-    if (row.prepared_by === context.userId && !routineApprovalAllowed("fund_questionnaire_section", true)) {
-      const { selfApprove } = await import("@/lib/self-approval.server");
-      if (!(await selfApprove(context.userId, "fund_questionnaire_section.approve", [row.id]))) throw new Error("A different Harmonious reviewer must approve questions you prepared.");
-    }
+    // Staff authority is checked above; saving or AI analysis never supplies this approval.
     await db.from("fund_questionnaire_sections").update({ status: "retired" }).eq("offering_id", row.offering_id).eq("status", "approved");
     const { error } = await db.from("fund_questionnaire_sections").update({ status: "approved", approved_by: context.userId, approved_at: new Date().toISOString() }).eq("id", row.id).eq("status", "draft");
     if (error) throw new Error(error.message);
