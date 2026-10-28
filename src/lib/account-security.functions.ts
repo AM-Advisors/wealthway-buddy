@@ -76,6 +76,10 @@ export const logSecurityEvent = createServerFn({ method: "POST" })
       const origin = new URL(getRequest()?.url ?? "https://app.harmonious.co").origin;
       await trackDeviceAndAlert({ userId, email: claims.email ?? null, deviceHash, geo, origin });
     }
+    if (data.eventType === "sign_in") {
+      // Connect client contact and fund team entries saved under this verified email.
+      await context.supabase.rpc("connect_my_listed_entries").then(() => undefined, () => undefined);
+    }
     return { signOut: false, recorded: accepted };
   });
 
