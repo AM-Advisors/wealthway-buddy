@@ -458,15 +458,17 @@ function TextPresetSelect({ options, value, na, onChange, disabled }: { options:
   );
 }
 
-function EconomicsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; onSaved: () => void }) {
+export function EconomicsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; onSaved: () => void }) {
   const save = useServerFn(saveFundEconomicsFn);
   const saveFields = useServerFn(saveFundSetupFieldsFn);
   const approve = useServerFn(approveEconomicsFn);
   const [terms, setTerms] = useState<EconomicTerms>({ managementFee: emptyFee as any, carry: { ratePercent: null } });
   const [classes, setClasses] = useState<FundClass[]>([]);
+  const [savedSnapshot, setSavedSnapshot] = useState("");
   useEffect(() => {
     setTerms({ managementFee: (d.economics.terms?.managementFee ?? emptyFee) as any, carry: d.economics.terms?.carry ?? { ratePercent: null }, preferredReturnPercent: d.economics.terms?.preferredReturnPercent ?? null, orgExpenseTreatment: d.economics.terms?.orgExpenseTreatment ?? null, distributionFrequency: d.economics.terms?.distributionFrequency ?? null, notApplicable: d.economics.terms?.notApplicable ?? [] });
     setClasses(d.economics.classes ?? []);
+    setSavedSnapshot(JSON.stringify({ terms: { managementFee: (d.economics.terms?.managementFee ?? emptyFee), carry: d.economics.terms?.carry ?? { ratePercent: null }, preferredReturnPercent: d.economics.terms?.preferredReturnPercent ?? null, orgExpenseTreatment: d.economics.terms?.orgExpenseTreatment ?? null, distributionFrequency: d.economics.terms?.distributionFrequency ?? null, notApplicable: d.economics.terms?.notApplicable ?? [] }, classes: d.economics.classes ?? [] }));
   }, [d]);
   const fee = terms.managementFee ?? (emptyFee as any);
   const setFee = (p: any) => setTerms({ ...terms, managementFee: { ...fee, ...p } });
@@ -485,6 +487,7 @@ function EconomicsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; o
   };
   const countErr = multi ? classCountError(planned, classes) : null;
   const diffs = classDifferences({ ...terms, minInvestmentCents: d.offering.minInvestmentCents ?? null }, classes);
+  const unsaved = savedSnapshot !== "" && JSON.stringify({ terms, classes }) !== savedSnapshot;
   const isNa = (k: EconomicTermKey) => !!terms.notApplicable?.includes(k);
   const setNa = (k: EconomicTermKey, on: boolean, patch: Partial<EconomicTerms> = {}) =>
     setTerms((t) => {
@@ -505,7 +508,8 @@ function EconomicsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; o
           <h2 className="text-xl font-semibold">Fees and terms</h2>
           <p className="text-sm text-muted-foreground">{d.offering.legalName || "Fund terms"}</p>
         </div>
-        <Badge variant={d.economics.status === "approved" ? "default" : "secondary"}>
+        <Badge variant={d.economics.status === "approved" && !unsaved ? "default" : "secondary"}>
+          {unsaved ? "Unsaved changes · " : ""}
           {d.economics.status === "draft" ? `Draft v${d.economics.version}` : d.economics.approvedVersion ? `Approved v${d.economics.approvedVersion}` : "Not recorded"}
         </Badge>
       </header>
@@ -581,7 +585,7 @@ function EconomicsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; o
             </div>
             {classes.length > 0 ? <Table aria-label="Class terms comparison" className="min-w-[660px]">
               <TableHeader><TableRow className="bg-muted/50"><TableHead className="w-44">Term</TableHead><TableHead className="min-w-36">Fund default</TableHead>{classes.map((c, i) => <TableHead key={i} className="min-w-36"><div className="flex items-center gap-2"><span className="font-semibold text-foreground">{c.name || "Unnamed class"}</span>{d.canEdit && <Button size="icon" variant="ghost" aria-label={`Edit ${c.name || "class"}`} title={`Edit ${c.name || "class"}`} onClick={() => setEditingClass(i)}><Pencil className="size-4" /></Button>}</div></TableHead>)}</TableRow></TableHeader>
-              <TableBody>{diffs.map((r) => <TableRow key={r.term}><TableCell className="font-medium">{r.term}</TableCell><TableCell className="text-muted-foreground">{r.fundDefault}</TableCell>{r.perClass.map((v, i) => <TableCell key={i} className={v.differs ? "font-medium text-primary" : "text-muted-foreground"}>{v.value}</TableCell>)}</TableRow>)}</TableBody>
+              <TableBody>{diffs.map((r) => <TableRow key={r.term}><TableCell className="font-medium">{r.term}</TableCell><TableCell className="text-muted-foreground">{r.fundDefault === "-" ? "Not set" : r.fundDefault}</TableCell>{r.perClass.map((v, i) => <TableCell key={i} className={v.differs ? "font-medium text-primary" : "text-muted-foreground"}>{v.value === "-" ? "Not set" : v.value}</TableCell>)}</TableRow>)}<TableRow><TableCell className="font-medium">Maximum investment (exclusive)</TableCell><TableCell className="text-muted-foreground">No maximum</TableCell>{classes.map((c, i) => <TableCell key={i}>{c.maxInvestmentCents == null ? "No maximum" : `$${(c.maxInvestmentCents / 100).toLocaleString("en-US")}`}</TableCell>)}</TableRow></TableBody>
             </Table> : <p className="py-6 text-sm text-muted-foreground">No classes recorded.</p>}
             {countErr && <p role="alert" className="text-sm text-destructive">{countErr}</p>}
             {classes.map((c, i) => {
@@ -667,7 +671,7 @@ function EconomicsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; o
           <div className="flex flex-wrap items-center gap-3 border-t py-4">
             <Button disabled={busy} onClick={() => run(() => save({ data: { offeringId, terms: terms as any, classes: multi ? (classes as any) : [], classDifferencesConfirmed: confirmed } }), "Economics saved as a draft")}><Save className="size-4" />{busy ? "Saving…" : "Save terms draft"}</Button>
             {d.economics.status === "draft" && d.economics.versionId && (
-              <Button variant="outline" disabled={busy || d.economics.preparedByMe} title={d.economics.preparedByMe ? "A different Harmonious reviewer must approve" : undefined}
+              <Button variant="outline" disabled={busy || unsaved || d.economics.preparedByMe} title={unsaved ? "Save changes before reviewing this version" : d.economics.preparedByMe ? "A different Harmonious reviewer must approve" : undefined}
                 onClick={() => { const versionId = d.economics.versionId; if (versionId) void run(() => approve({ data: { versionId } }), "Economics approved"); }}>
                 <CheckCircle2 className="size-4" />{d.economics.preparedByMe ? "Awaiting second reviewer" : "Approve saved version"}
               </Button>
