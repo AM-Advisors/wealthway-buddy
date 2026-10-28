@@ -438,6 +438,9 @@ function AdminCard({ d, offeringId, onChanged }: { d: D; offeringId: string; onC
 
 // ------------------------------------------------------------------ Class assignment
 
+const money = (c: number | null | undefined) => (c == null ? null : `$${(c / 100).toLocaleString("en-US", { maximumFractionDigits: 0 })}`);
+const pct = (v: number | null | undefined, fallback: string) => (v == null ? fallback : `${v}%`);
+
 export function ClassAssignmentCard({ offeringId, onboardingId }: { offeringId: string; onboardingId?: string }) {
   const qc = useQueryClient();
   const load = useServerFn(classAssignmentsFn);
@@ -445,42 +448,110 @@ export function ClassAssignmentCard({ offeringId, onboardingId }: { offeringId: 
   const change = useServerFn(changeInvestmentClassFn);
   const q = useQuery({ queryKey: ["class-assign", offeringId], queryFn: () => load({ data: { offeringId } }) });
   const [pending, setPending] = useState<{ id: string; key: string | null; warnings: string[]; blocked: boolean } | null>(null);
+  const [busy, setBusy] = useState(false);
   if (!q.data || q.data.classes.length === 0) return null;
+  const d = q.data;
+  const canAssign = d.status === "approved";
+  const defFee = d.defaults?.managementFee?.ratePercent;
+  const defCarry = d.defaults?.carry?.ratePercent;
+  const nameOf = (k: string | null) => d.classes.find((c) => c.key === k)?.name ?? "Fund default terms";
   const refresh = () => { void invalidateFund(qc, offeringId); void qc.invalidateQueries({ queryKey: ["class-assign", offeringId] }); };
-  const start = async (id: string, key: string | null) => {
+  const start = async (id: string, key: string | null, quiet = false) => {
     try {
       const r = await preview({ data: { onboardingId: id } });
-      if (r.warnings.length || r.blocked) return setPending({ id, key, warnings: r.warnings, blocked: r.blocked });
+      if (r.warnings.length || r.blocked) { if (!quiet) setPending({ id, key, warnings: r.warnings, blocked: r.blocked }); return false; }
       await change({ data: { onboardingId: id, classKey: key, acknowledged: false } });
-      toast.success("Class assigned");
-      refresh();
+      if (!quiet) { toast.success("Class assigned"); refresh(); }
+      return true;
     } catch (e: any) {
-      toast.error(e.message);
+      if (!quiet) toast.error(e.message);
+      return false;
     }
+  };
+  const rows = d.investments.filter((i) => !onboardingId || i.id === onboardingId);
+  const suggestable = rows.filter((i) => !i.classKey && i.suggestion.status === "assigned");
+  const applyAll = async () => {
+    setBusy(true);
+    let ok = 0;
+    for (const i of suggestable) if (i.suggestion.status === "assigned" && (await start(i.id, i.suggestion.key, true))) ok++;
+    setBusy(false);
+    toast.success(`${ok} of ${suggestable.length} assigned${ok < suggestable.length ? ". Open the rest one by one to review." : ""}`);
+    refresh();
   };
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Default terms / class association</CardTitle>
-        <p className="text-sm text-muted-foreground">Only classes on the approved economics can be chosen. Class terms are shown for context and can't be edited here.</p>
-      </CardHeader>
-      <CardContent className="space-y-2">
-        <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-          {q.data.classes.map((c) => (
-            <span key={c.key} className="rounded border px-2 py-1">
-              {c.name}: fee {c.managementFee?.ratePercent ?? "default"}% · carry {c.carry?.ratePercent ?? "default"}%
-            </span>
-          ))}
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <CardTitle className="text-base">Classes, terms & fees</CardTitle>
+          <Badge variant={canAssign ? "default" : "outline"}>{canAssign ? "Approved terms" : "Draft, awaiting approval"}</Badge>
         </div>
-        {q.data.investments.filter((i) => !onboardingId || i.id === onboardingId).map((i) => (
-          <div key={i.id} className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-2 text-sm">
-            <span>{i.investor}</span>
-            <select className="rounded-md border bg-background px-2 py-1 text-sm" value={i.classKey ?? ""} onChange={(e) => start(i.id, e.target.value || null)} aria-label={`Class for ${i.investor}`}>
-              <option value="">Fund default terms</option>
-              {q.data.classes.map((c) => <option key={c.key} value={c.key}>{c.name}</option>)}
-            </select>
+        <p className="text-sm text-muted-foreground">
+          {canAssign
+            ? "Choose which class applies to each investor. A suggestion is shown from the investment amount."
+            : "These terms are still a draft. You can review them and the suggested class for each investor, but classes can only be assigned once the terms are approved."}
+        </p>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {!onboardingId && (
+          <div className="grid gap-3 sm:grid-cols-2">
+            {d.classes.map((c) => {
+              const count = d.investments.filter((i) => i.classKey === c.key).length;
+              const range = c.minInvestmentCents != null || c.maxInvestmentCents != null
+                ? `${money(c.minInvestmentCents) ?? "$0"}${c.maxInvestmentCents != null ? ` up to ${money(c.maxInvestmentCents)}` : " or more"}`
+                : "Any amount";
+              return (
+                <div key={c.key} className="rounded-lg border bg-card p-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="font-medium leading-tight">{c.name}</p>
+                    <Badge variant="secondary" className="shrink-0">{count} investor{count === 1 ? "" : "s"}</Badge>
+                  </div>
+                  <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-sm">
+                    <dt className="text-muted-foreground">Amount</dt><dd>{range}</dd>
+                    <dt className="text-muted-foreground">Management fee</dt><dd>{pct(c.managementFee?.ratePercent ?? defFee, "Not set")}</dd>
+                    <dt className="text-muted-foreground">Carry</dt><dd>{pct(c.carry?.ratePercent ?? defCarry, "Not set")}</dd>
+                    <dt className="text-muted-foreground">Preferred return</dt><dd>{c.preferredReturnPercent ? `${c.preferredReturnPercent}%` : "None"}</dd>
+                  </dl>
+                  {c.otherDifferences && <p className="mt-2 text-xs text-muted-foreground">{c.otherDifferences}</p>}
+                </div>
+              );
+            })}
           </div>
-        ))}
+        )}
+        <div className="space-y-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-sm font-medium">{onboardingId ? "This investor" : `Investors (${rows.length})`}</p>
+            {canAssign && !onboardingId && suggestable.length > 0 && (
+              <Button size="sm" variant="outline" disabled={busy} onClick={applyAll}>Apply suggested class to {suggestable.length}</Button>
+            )}
+          </div>
+          {rows.map((i) => {
+            const s = i.suggestion;
+            const hint = s.status === "assigned" ? `Suggested: ${nameOf(s.key)}`
+              : s.status === "choose" ? `Fits ${s.keys.map(nameOf).join(" or ")}, please choose`
+              : s.status === "below_minimum" ? `Below the ${money(s.minimumCents)} minimum`
+              : s.status === "no_amount" ? "No amount yet" : null;
+            const mismatch = i.classKey && s.status === "assigned" && s.key !== i.classKey;
+            return (
+              <div key={i.id} className="flex flex-col gap-2 rounded-md border p-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                  <p className="font-medium break-words">{i.investor}</p>
+                  <p className="text-xs text-muted-foreground">{money(i.amountCents) ?? "No amount"}{hint ? ` · ${hint}` : ""}</p>
+                  {mismatch && <p className="text-xs text-destructive">The assigned class doesn't match the amount.</p>}
+                </div>
+                <select
+                  className="w-full rounded-md border bg-background px-2 py-2 text-sm disabled:opacity-60 sm:w-56"
+                  value={i.classKey ?? ""}
+                  disabled={!canAssign}
+                  onChange={(e) => start(i.id, e.target.value || null)}
+                  aria-label={`Class for ${i.investor}`}
+                >
+                  <option value="">Fund default terms</option>
+                  {d.classes.map((c) => <option key={c.key} value={c.key}>{c.name}</option>)}
+                </select>
+              </div>
+            );
+          })}
+        </div>
         {pending && (
           <div className="rounded-md border border-destructive/40 p-3 text-sm">
             <ul className="list-disc pl-5 text-muted-foreground">{pending.warnings.map((w) => <li key={w}>{w}</li>)}</ul>
