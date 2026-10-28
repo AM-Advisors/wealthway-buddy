@@ -517,7 +517,7 @@ function EconomicsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; o
           </div>
           <p className="text-xs text-muted-foreground">{multi ? `Enter each of the ${planned ?? "planned"} classes below and confirm how they differ.` : "Fund default terms apply unless an investor has separately approved side-letter exceptions."}</p>
         </section>
-        <h3 className="text-sm font-medium">Fund default terms</h3>
+        <h3 className="text-sm font-medium">{multi ? "Shared terms (every class uses these unless its own terms say otherwise)" : "Fund default terms"}</h3>
         <section className="grid gap-3 sm:grid-cols-4">
           <Field label="Management fee (%)">
             <PresetSelect disabled={!d.canEdit} options={FEE_PRESETS} na={isNa("managementFee")} value={fee.ratePercent}
@@ -557,13 +557,32 @@ function EconomicsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; o
 
         {multi && (
           <section className="space-y-3">
-            <h3 className="text-sm font-medium">Class terms — separate from fund defaults</h3>
+            <h3 className="text-sm font-medium">Terms by class</h3>
+            <p className="text-xs text-muted-foreground">Name each class, then set the fees and terms that go with it. Fees, carry, hurdle and amount range move together under the class name, and investors are placed in a class by name.</p>
             {classes.map((c, i) => {
               const upd = (p: Partial<FundClass>) => setClasses(classes.map((x, j) => (j === i ? { ...x, ...p } : x)));
               const cNa = (k: EconomicTermKey) => !!c.notApplicable?.includes(k);
               return (
                 <div key={i} className="grid gap-3 rounded-md border p-3 sm:grid-cols-4">
-                  <Field label="Class name"><Input disabled={!d.canEdit} value={c.name} onChange={(e) => upd({ name: e.target.value })} /></Field>
+                  <div className="sm:col-span-4 flex flex-wrap items-end gap-3 border-b pb-3">
+                    <Field label="Class name"><Input className="w-56 font-medium" disabled={!d.canEdit} value={c.name} placeholder="e.g. Series A-1" onChange={(e) => upd({ name: e.target.value })} /></Field>
+                    <p className="pb-2 text-xs text-muted-foreground">Fees and terms for {c.name?.trim() || "this class"}</p>
+                  </div>
+                  <Field label="Fee basis">
+                    <select className="h-9 w-full rounded-md border bg-background px-2 text-sm" disabled={!d.canEdit || cNa("managementFee") || !c.managementFee} value={c.managementFee?.basis ?? ""} onChange={(e) => upd({ managementFee: { ...(c.managementFee ?? fee), basis: (e.target.value || null) as any } })}>
+                      <option value="">Same as shared</option><option value="committed_capital">Committed capital</option><option value="invested_capital">Invested capital</option><option value="nav">NAV</option><option value="flat">Flat amount</option>
+                    </select>
+                  </Field>
+                  <Field label="Fee frequency">
+                    <select className="h-9 w-full rounded-md border bg-background px-2 text-sm" disabled={!d.canEdit || cNa("managementFee") || !c.managementFee} value={c.managementFee?.frequency ?? ""} onChange={(e) => upd({ managementFee: { ...(c.managementFee ?? fee), frequency: (e.target.value || null) as any } })}>
+                      <option value="">Same as shared</option>
+                      {FEE_FREQUENCY_CHOICES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                    </select>
+                  </Field>
+                  <Field label="Preferred return / hurdle (%)">
+                    <PresetSelect disabled={!d.canEdit} options={HURDLE_PRESETS} allowDefault na={cNa("preferredReturn")} value={c.preferredReturnPercent ?? null}
+                      onChange={(v, na) => upd({ notApplicable: toggle(c, "preferredReturn", na), preferredReturnPercent: na ? null : v })} suffix="%" />
+                  </Field>
                   <Field label="Mgmt fee (%)">
                     <PresetSelect disabled={!d.canEdit} options={FEE_PRESETS} allowDefault na={cNa("managementFee")} value={c.managementFee?.ratePercent ?? null}
                       onChange={(v, na) => upd({ notApplicable: toggle(c, "managementFee", na), managementFee: na || v == null ? null : { ...(c.managementFee ?? fee), ratePercent: v } })} suffix="%" />
