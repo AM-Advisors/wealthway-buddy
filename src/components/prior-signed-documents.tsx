@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -38,6 +38,18 @@ export function PriorSignedDocuments({ fundId, onboardingId }: { fundId: string;
   const [note, setNote] = useState("");
   const [replacesId, setReplacesId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const formRef = useRef<HTMLDivElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const openForm = (setup?: () => void) => {
+    setAdding(true);
+    setup?.();
+    // Wait for the form to render, then bring it into view and focus the file picker.
+    requestAnimationFrame(() => {
+      formRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      fileRef.current?.focus();
+    });
+  };
 
   const reset = () => { setAdding(false); setFile(null); setTitle(""); setSignedOn(""); setNote(""); setReplacesId(null); };
   const save = async () => {
