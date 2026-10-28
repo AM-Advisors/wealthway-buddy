@@ -86,6 +86,14 @@ export const approveQuestionSectionFn = createServerFn({ method: "POST" })
     const db = await t.db();
     const { data: row } = await db.from("fund_questionnaire_sections").select("*").eq("id", data.sectionId).maybeSingle();
     if (!row || row.status !== "draft") throw new Error("That draft wasn't found.");
+    const { validateSectionQuestions } = await import("./fund-questionnaire-section");
+    const invalid = validateSectionQuestions(row.questions);
+    if (invalid) throw new Error(invalid);
+    // Analysis may read pending uploads, but investor questions cannot publish ahead of their source agreements.
+    for (const source of row.source_documents ?? []) {
+      const { data: version, error } = await db.from("offering_document_versions").select("approval_status").eq("id", source.id).eq("offering_id", row.offering_id).eq("offering_document_id", source.documentId).eq("version", source.version).maybeSingle();
+      if (error || version?.approval_status !== "approved") throw new Error("Approve the source agreement version before publishing its questions.");
+    }
     if (row.prepared_by === context.userId) {
       const { selfApprove } = await import("@/lib/self-approval.server");
       if (!(await selfApprove(context.userId, "fund_questionnaire_section.approve", [row.id]))) throw new Error("A different Harmonious reviewer must approve questions you prepared.");
