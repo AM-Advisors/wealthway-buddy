@@ -2,7 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { fillMissingInvestorAnswers } from "@/lib/subscription-prefill";
 import { acknowledgeDocumentFn } from "@/lib/fund-setup-canonical.functions";
 import { confirmAccreditationStepFn } from "@/lib/accreditation-step.functions";
-import { ACCREDITATION_QUESTION_KEY, selfCertificationAllowed } from "@/lib/accreditation-step";
+import { ACCREDITATION_QUESTION_KEY, basisFromAnswer, evidenceForBasis, isAccreditationQuestion, selfCertificationAllowed } from "@/lib/accreditation-step";
+import { recordEvidence } from "@/lib/accreditation.functions";
+import { ProfessionalRequestPanel } from "@/components/accreditation-professional-request";
+import standardQuestions from "@/lib/standard-investor-questionnaire.json";
 import { InvestorBankVerify } from "@/components/investor-bank-verify";
 import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -435,7 +438,7 @@ function QuestionnaireForm({ d, done, locked, onSave, saving }: { d: any; onboar
     setAnswers((current) => Object.fromEntries(Object.entries(fillMissingInvestorAnswers(current, incoming, Object.keys(incoming), [...dirty.current])).map(([key, value]) => [key, String(value ?? "")])));
   }, [savedKey]);
   const lockedVals = (d.questionnaireLocked ?? {}) as Record<string, string | null>;
-  const visible = questions.filter((q) => questionVisible(q, answers));
+  const visible = questions.filter((q) => !isAccreditationQuestion(q.key) && questionVisible(q, answers));
   const missing = visible.filter((q) => q.required && !q.satisfiedBy && !String(answers[q.key] ?? "").trim());
   const set = (k: string, v: string) => { dirty.current.add(k); setAnswers((a) => ({ ...a, [k]: v })); };
   return (
@@ -449,7 +452,7 @@ function QuestionnaireForm({ d, done, locked, onSave, saving }: { d: any; onboar
       </div>
       {open ? (
         <fieldset disabled={locked} className="space-y-4">
-          {questions.map((q, n) => !questionVisible(q, answers) ? null : (
+          {questions.map((q, n) => isAccreditationQuestion(q.key) || !questionVisible(q, answers) ? null : (
             <div key={q.key} className="space-y-1.5">
               <Label htmlFor={q.key} className="leading-snug">{n + 1}. {q.label}{q.required && !q.satisfiedBy ? " *" : ""}</Label>
               {q.locked ? (
@@ -490,36 +493,116 @@ function QuestionnaireForm({ d, done, locked, onSave, saving }: { d: any; onboar
   );
 }
 
-function AccreditationStep({ d, onboardingId, questionnaireDone, done }: { d: any; onboardingId: string; questionnaireDone: boolean; done: () => void }) {
+const STANDARD_ACCREDITATION_OPTIONS: string[] =
+  (standardQuestions as any).questions?.find((q: any) => q.key === ACCREDITATION_QUESTION_KEY)?.options ?? [];
+
+function AccreditationStep({ d, onboardingId, done }: { d: any; onboardingId: string; questionnaireDone: boolean; done: () => void }) {
   const req = (d.requirements ?? []).find((r: any) => r.key === "accreditation");
   const confirmFn = useServerFn(confirmAccreditationStepFn);
   const confirm = useAction(confirmFn, "Accreditation confirmed.", done);
-  const [name, setName] = useState(String((d.questionnaireResponses ?? {}).name_of_subscriber ?? ""));
+  const saveFn = useServerFn(saveQuestionnaireFn);
+  const recordFn = useServerFn(recordEvidence);
+  const savedAnswers = (d.questionnaireResponses ?? {}) as Record<string, unknown>;
+  const [name, setName] = useState(String(savedAnswers["name_of_subscriber"] ?? ""));
+  const [category, setCategory] = useState(String(savedAnswers[ACCREDITATION_QUESTION_KEY] ?? ""));
+  const [busy, setBusy] = useState(false);
+  const [uploading, setUploading] = useState(false);
   if (!req || req.state === "not_applicable") return null;
-  const category = (d.questionnaireResponses ?? {})[ACCREDITATION_QUESTION_KEY] as string | undefined;
   const selfCert = selfCertificationAllowed(d.exemption);
+  const accQuestion = (d.questionnaire?.questions ?? []).find((q: any) => q.key === ACCREDITATION_QUESTION_KEY);
+  const options: string[] = accQuestion?.options?.length ? accQuestion.options : STANDARD_ACCREDITATION_OPTIONS;
+  const basis = basisFromAnswer(category);
+  const evidence = evidenceForBasis(basis);
+  const primaryEvidence = evidence.find((o) => o.method !== "third_party_letter") ?? evidence[0];
+  const settled = req.state === "valid" || req.state === "review_required";
+
+  async function chooseCategory(value: string) {
+    setCategory(value);
+    if (!value || value === String(savedAnswers[ACCREDITATION_QUESTION_KEY] ?? "")) return;
+    setBusy(true);
+    try {
+      await saveFn({ data: { onboardingId, answers: { ...savedAnswers, [ACCREDITATION_QUESTION_KEY]: value }, submit: false } as any });
+      toast.success("Accreditation answer saved.");
+      done();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not save your answer");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 25 * 1024 * 1024) {
+      toast.error("Files must be 25 MB or smaller.");
+      return;
+    }
+    setUploading(true);
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      const uid = userData.user?.id;
+      if (!uid) throw new Error("Session expired. Sign in again.");
+      const path = `${uid}/${crypto.randomUUID()}-${file.name.replace(/[^\w.\-]/g, "_")}`;
+      const { error } = await supabase.storage.from("accreditation-docs").upload(path, file);
+      if (error) throw new Error(error.message);
+      await recordFn({ data: { storage_path: path, file_name: file.name, doc_kind: (primaryEvidence?.defaultKind ?? "other") as never, onboarding_id: onboardingId } });
+      toast.success("Document uploaded. The fund manager or Harmonious will review it.");
+      done();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
+  }
+
   return (
-    <div className="space-y-2 rounded-md border p-4">
+    <div className="space-y-3 rounded-md border p-4">
       <div className="flex items-center justify-between gap-2">
         <h3 className="text-sm font-semibold">Accreditation</h3>
         <Badge variant={req.state === "valid" ? "default" : "outline"}>
           {req.state === "valid" ? "Verified" : req.state === "review_required" ? "Under review" : "To confirm"}
         </Badge>
       </div>
+      <div className="space-y-1.5">
+        <Label htmlFor={ACCREDITATION_QUESTION_KEY} className="leading-snug">{accQuestion?.label ?? "Select the accreditation that applies to you"}</Label>
+        <Select value={category} onValueChange={(v) => void chooseCategory(v)} disabled={busy || settled}>
+          <SelectTrigger id={ACCREDITATION_QUESTION_KEY}><SelectValue placeholder="Choose one" /></SelectTrigger>
+          <SelectContent>{options.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
+        </Select>
+      </div>
       {req.state === "valid" ? (
         <p className="text-sm text-muted-foreground">Your accredited investor status is verified. Nothing more is needed.</p>
       ) : req.state === "review_required" ? (
         <p className="text-sm text-muted-foreground">Your accreditation paperwork is being verified by the fund manager or Harmonious. You can keep signing in the meantime.</p>
-      ) : !questionnaireDone || !category ? (
-        <p className="text-sm text-muted-foreground">Submit the questionnaire above; your accredited-investor answer carries over here.</p>
+      ) : !category ? (
+        <p className="text-sm text-muted-foreground">Choose the category that applies to you and we'll show exactly what this fund needs.</p>
       ) : !selfCert ? (
-        <div className="space-y-2 text-sm">
-          <p>This fund requires verified accreditation. Upload proof (tax returns, statements) or a verification letter.</p>
-          <Button asChild size="sm"><a href={`/onboarding/accreditation?onboarding=${onboardingId}`}>Upload proof</a></Button>
+        <div className="space-y-3 text-sm">
+          <p>This fund is offered under Rule 506(c), so your accredited status must be verified with documents. Based on your answer, you can provide:</p>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {evidence.map((o) => (
+              <div key={o.method} className="rounded-md border p-3">
+                <p className="text-sm font-medium">{o.title}</p>
+                <ul className="mt-1 list-disc space-y-0.5 pl-4 text-xs text-muted-foreground">{o.provide.map((p) => <li key={p}>{p}</li>)}</ul>
+              </div>
+            ))}
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="acc-evidence-upload">Upload your proof</Label>
+            <Input id="acc-evidence-upload" type="file" accept=".pdf,.png,.jpg,.jpeg,.heic" disabled={uploading} onChange={(e) => void onFile(e)} />
+            <p className="text-xs text-muted-foreground">{uploading ? "Uploading…" : "PDF or image, up to 25 MB. Uploading sends it for review; you can keep signing in the meantime."}</p>
+          </div>
+          <div className="space-y-1.5">
+            <p className="text-sm font-medium">Or ask a professional to confirm it</p>
+            <p className="text-xs text-muted-foreground">We email your CPA, attorney, investment adviser or broker-dealer a secure link to upload a verification letter. They only see your name and the fund name.</p>
+            <ProfessionalRequestPanel onboardingId={onboardingId} />
+          </div>
         </div>
       ) : (
         <div className="space-y-3 text-sm">
-          <p><span className="text-muted-foreground">From your questionnaire:</span> {category}</p>
+          <p><span className="text-muted-foreground">Your category:</span> {category}</p>
           <div className="max-w-sm">
             <Label htmlFor="acc-sign">Type your full legal name to confirm</Label>
             <Input id="acc-sign" value={name} onChange={(e) => setName(e.target.value)} />

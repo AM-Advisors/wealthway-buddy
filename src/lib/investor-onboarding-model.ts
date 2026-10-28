@@ -17,6 +17,7 @@ import {
   type InvestmentProfileType,
 } from "@/lib/identity-model";
 import { isReconciledFunding } from "@/lib/funding-status";
+import { ACCREDITATION_QUESTION_KEY } from "@/lib/accreditation-step";
 
 // ------------------------------------------------------------------ stages
 
@@ -858,6 +859,7 @@ export function validateQuestionnaire(
 ): { valid: boolean; errors: { key: string; message: string }[] } {
   const errors: { key: string; message: string }[] = [];
   for (const q of questions) {
+    if (q.key === ACCREDITATION_QUESTION_KEY) continue; // answered in the Accreditation section
     if (!questionVisible(q, answers)) continue;
     const value = answers[q.key];
     const empty =

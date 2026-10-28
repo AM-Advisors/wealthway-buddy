@@ -21,8 +21,33 @@ describe("accreditation step", () => {
   });
 });
 
-import { accreditationOutcome } from "@/lib/accreditation-step";
+import { accreditationOutcome, evidenceForBasis, isAccreditationQuestion, ACCREDITATION_QUESTION_KEY } from "@/lib/accreditation-step";
 describe("who checks accreditation", () => {
   it("506(b) needs no reviewer", () => expect(accreditationOutcome("506b")).toBe("approved"));
   it("506(c) waits for the fund manager or Harmonious", () => expect(accreditationOutcome("506c")).toBe("review"));
+});
+
+describe("evidence required for each answer", () => {
+  it("income answers need income documents and allow a professional letter", () => {
+    expect(evidenceForBasis("income").map((o) => o.method)).toEqual(["income_documents", "third_party_letter"]);
+  });
+  it("net worth answers need statements and allow a professional letter", () => {
+    expect(evidenceForBasis("net_worth").map((o) => o.method)).toEqual(["net_worth_documents", "third_party_letter"]);
+  });
+  it("license holders need their license record", () => {
+    expect(evidenceForBasis("professional_certification").map((o) => o.method)).toEqual(["professional_license", "third_party_letter"]);
+  });
+  it("entities need entity documents", () => {
+    expect(evidenceForBasis("entity_assets").map((o) => o.method)).toEqual(["entity_documents", "third_party_letter"]);
+  });
+  it("knowledgeable employees can use a professional letter", () => {
+    expect(evidenceForBasis("knowledgeable_employee").map((o) => o.method)).toEqual(["third_party_letter"]);
+  });
+  it("no answer shows only the professional letter path", () => {
+    expect(evidenceForBasis(null).map((o) => o.method)).toEqual(["third_party_letter"]);
+  });
+  it("identifies the accreditation question key", () => {
+    expect(isAccreditationQuestion(ACCREDITATION_QUESTION_KEY)).toBe(true);
+    expect(isAccreditationQuestion("email")).toBe(false);
+  });
 });

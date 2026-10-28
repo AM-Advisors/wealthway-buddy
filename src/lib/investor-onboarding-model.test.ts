@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { ACCREDITATION_QUESTION_KEY } from "@/lib/accreditation-step";
 
 import {
   amountError,
@@ -312,6 +313,15 @@ describe("questionnaire", () => {
     expect(
       validateQuestionnaire(questions, { employed: false, certify: true, source: "lottery" }).valid,
     ).toBe(false);
+  });
+
+  it("does not require the accreditation question, which is answered in the Accreditation section", () => {
+    const withAccreditation: Question[] = [
+      ...questions,
+      { key: ACCREDITATION_QUESTION_KEY, label: "Please Select the Accreditation that applies to you", type: "select", options: ["Net worth over $1 million"], required: true },
+    ];
+    const out = validateQuestionnaire(withAccreditation, { employed: false, certify: true });
+    expect(out.valid).toBe(true);
   });
 });
 
