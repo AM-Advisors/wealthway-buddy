@@ -1,7 +1,27 @@
 /** Maps the questionnaire's accredited-investor answer to a self-certification basis. Pure. */
+import { EVIDENCE_OPTIONS, type EvidenceMethod, type EvidenceOption } from "@/lib/accreditation-evidence-options";
+
 export const ACCREDITATION_QUESTION_KEY = "please_select_the_accreditation_that_applies_to_you";
 
 export type AccreditationBasis = "income" | "net_worth" | "professional_certification" | "entity_assets" | "knowledgeable_employee";
+
+/** The accreditation category question is asked in the Accreditation section, not the questionnaire form. */
+export function isAccreditationQuestion(key: string): boolean {
+  return key === ACCREDITATION_QUESTION_KEY;
+}
+
+/** Evidence that can prove each basis on a verified (506(c)) offering. A professional letter always works. */
+export function evidenceForBasis(basis: AccreditationBasis | null): EvidenceOption[] {
+  const primary: Record<AccreditationBasis, EvidenceMethod[]> = {
+    income: ["income_documents"],
+    net_worth: ["net_worth_documents"],
+    professional_certification: ["professional_license"],
+    entity_assets: ["entity_documents"],
+    knowledgeable_employee: [],
+  };
+  const methods = basis ? primary[basis] : [];
+  return EVIDENCE_OPTIONS.filter((o) => methods.includes(o.method) || o.method === "third_party_letter");
+}
 
 export function basisFromAnswer(answer: unknown): AccreditationBasis | null {
   const a = String(answer ?? "").toLowerCase();
