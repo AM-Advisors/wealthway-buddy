@@ -34,6 +34,15 @@ describe("confirmed ROAS billing", () => {
   });
   it("makes full-quarter White Glove $12,000 due October 1", () => expect(quarterCharge("2026-10-01", terms.whiteGloveQuarterlyCents, "advance")).toMatchObject({ amountCents: 1200000, dueOn: "2026-10-01" }));
   it("shows $12,000 White Glove Q4 due now for the LP", () => expect(roasChargesForYear(2026).find(c => c.service === "White Glove Services")).toMatchObject({ entity: "lp", amountCents: 1200000, dueOn: "2026-10-01", reportedPaidCents: 0 }));
+  it("adds the explicit $6,956.52 initial White Glove charge starting August 24 due now", () => {
+    const charge = roasChargesForYear(2026).find(c => c.service === "White Glove Services, prorated");
+    expect(charge).toMatchObject({ entity: "lp", amountCents: 695652, dueOn: "2026-08-24", period: "Aug 24 to Sep 30, 2026", reportedPaidCents: 0 });
+    expect(roasChargeSummary(charge ? [charge] : [], "2026-10-28").dueNowCents).toBe(695652);
+  });
+  it("never repeats the initial proration in future years", () => {
+    expect(roasChargesForYear(2027).filter(c => c.service === "White Glove Services, prorated")).toEqual([]);
+    expect(roasChargesForYear(2028).filter(c => c.service === "White Glove Services, prorated")).toEqual([]);
+  });
   it("keeps Q3 LP financials paid and Q4 due December 31", () => expect(roasChargesForYear(2026).filter(c => c.service === "Hedge fund financials").map(c => [c.dueOn, c.reportedPaidCents])).toEqual([["2026-09-30", 750000], ["2026-12-31", 0]]));
   it("bills $7,500 LP financials on every 2027 quarter end", () => expect(roasChargesForYear(2027).filter(c => c.service === "Hedge fund financials").map(c => [c.dueOn, c.amountCents])).toEqual([["2027-03-31", 750000], ["2027-06-30", 750000], ["2027-09-30", 750000], ["2027-12-31", 750000]]));
   it("renews both $2,500 entity fees August 31, 2027", () => expect(roasChargesForYear(2027).filter(c => c.service === "Annual entity fee").map(c => [c.dueOn, c.amountCents, c.reportedPaidCents])).toEqual([["2027-08-31", 250000, 0], ["2027-08-31", 250000, 0]]));
@@ -47,6 +56,6 @@ describe("confirmed ROAS billing", () => {
     expect(roasVisibleYears("2027-12-31")).toEqual([2026, 2027]);
     expect(roasVisibleYears("2028-01-01")).toEqual([2026, 2027, 2028]);
   });
-  it("separates $11,000 reported paid, $13,500 due now and $20,000 future in 2026", () => expect(roasChargeSummary(roasChargesForYear(2026), "2026-10-28")).toEqual({ totalCents: 4450000, reportedPaidCents: 1100000, dueNowCents: 1350000, futureCents: 2000000 }));
+  it("separates $11,000 reported paid, $20,456.52 due now and $20,000 future in 2026", () => expect(roasChargeSummary(roasChargesForYear(2026), "2026-10-28")).toEqual({ totalCents: 5145652, reportedPaidCents: 1100000, dueNowCents: 2045652, futureCents: 2000000 }));
   it("shows all $95,500 of 2027 as future with no invented payments", () => expect(roasChargeSummary(roasChargesForYear(2027), "2026-10-28")).toEqual({ totalCents: 9550000, reportedPaidCents: 0, dueNowCents: 0, futureCents: 9550000 }));
 });

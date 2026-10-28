@@ -11,6 +11,7 @@ export const ROAS_BILLING_TERMS = {
   managementFinancialsStart: "2026-10-01",
   whiteGloveQuarterlyCents: 1200000,
   whiteGloveStart: "2026-08-24",
+  whiteGloveInitialProratedCents: 695652,
   k1SetCents: 250000,
   k1FirstYear: 2026,
 } as const;
@@ -39,6 +40,10 @@ export function roasChargesForYear(year: number): RoasCharge[] {
   const add = (entity: RoasCharge["entity"], service: string, cadence: RoasCharge["cadence"], period: string, dueOn: string, amountCents: number, reportedPaidCents = 0) => {
     rows.push({ key: `${year}:${entity}:${service}:${period}`, entity, service, cadence, year, period, dueOn, amountCents, reportedPaidCents });
   };
+  if (year === 2026) {
+    // Explicit agreed initial amount supersedes formula proration for this charge only.
+    add("lp", "White Glove Services, prorated", "Quarterly", "Aug 24 to Sep 30, 2026", ROAS_BILLING_TERMS.whiteGloveStart, ROAS_BILLING_TERMS.whiteGloveInitialProratedCents);
+  }
   for (let quarter = year === 2026 ? 3 : 1; quarter <= 4; quarter++) {
     const end = new Date(Date.UTC(year, quarter * 3, 0)).toISOString().slice(0, 10);
     add("lp", "Hedge fund financials", "Quarterly", `Q${quarter} ${year}`, end, 750000, year === 2026 && quarter === 3 ? 750000 : 0);
