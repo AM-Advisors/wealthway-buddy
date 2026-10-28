@@ -12,7 +12,7 @@ import { FundDocumentQuestionDraft, type DocumentQuestionsResult } from "./fund-
 type Q = { key: string; label: string; type: string; required?: boolean; options?: string[]; sourceReference?: string; sourceQuote?: string; prefillKey?: string | null };
 const TYPES: [string, string][] = [["yes_no", "Yes / No"], ["text", "Written answer"], ["select", "Pick one"], ["multi_select", "Pick any"], ["number", "Number"], ["currency", "Dollar amount"], ["date", "Date"]];
 
-/** Fund-specific questions added after the standard investor questionnaire. Staff edit; a second reviewer approves. */
+/** Fund-specific questions use one explicit authorized staff approval. */
 export function FundQuestionSectionCard({ offeringId }: { offeringId: string }) {
   const qc = useQueryClient();
   const list = useServerFn(listQuestionSectionsFn);
@@ -81,7 +81,7 @@ export function FundQuestionSectionCard({ offeringId }: { offeringId: string }) 
         <div className="flex flex-wrap gap-2 border-t pt-4">
           <Button size="sm" variant="outline" onClick={() => { setDirty(true); setQs((cur) => [...cur, { key: `fs_q${Date.now().toString(36)}`, label: "", type: "text", required: true }]); }}><Plus className="size-4" />Add question</Button>
           <Button size="sm" disabled={save.isPending} onClick={() => save.mutate(undefined)}><Save className="size-4" />Save draft</Button>
-          {staff && draft && <Button size="sm" variant="outline" disabled={approve.isPending || save.isPending || dirty} onClick={() => approve.mutate()} title={draft.preparedByMe ? "A different reviewer approves; Super Admins can approve with a reason" : undefined}><CheckCircle2 className="size-4" />Approve for investors</Button>}
+          {staff && draft && <Button size="sm" variant="outline" disabled={approve.isPending || save.isPending || dirty} onClick={() => approve.mutate()}><CheckCircle2 className="size-4" />Approve for investors</Button>}
         </div>
       )}
     </section>

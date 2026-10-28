@@ -46,10 +46,11 @@ describe("fund setup canonical rules", () => {
     expect(setupCompletion({ ...statuses, review: { status: "complete" }, classes: { status: "not_applicable" } })).toBe(14);
     expect(setupCompletion({ ...statuses, classes: { status: "complete" } })).toBe(13);
   });
-  it("economics stay incomplete until approved by a second reviewer", () => {
+  it("economics stay incomplete until explicitly approved", () => {
     const s = sectionStatuses({ ...base, minInvestmentCents: 100, targetRaiseCents: 1, managementFeeSet: true, carrySet: true, economicsStatus: "draft" });
     expect(s.offering_economics.status).toBe("in_progress");
-    expect(s.offering_economics.next).toMatch(/second/);
+    const approved = sectionStatuses({ ...base, minInvestmentCents: 100, targetRaiseCents: 1, managementFeeSet: true, carrySet: true, economicsStatus: "approved" });
+    expect(approved.offering_economics.status).toBe("complete");
   });
   it("validates structured management fee without inferring terms", () => {
     expect(economicsErrors({ managementFee: { ratePercent: 2, basis: null, frequency: null }, carry: null })).toHaveLength(2);

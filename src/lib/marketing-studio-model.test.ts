@@ -7,14 +7,14 @@ describe("marketing studio workflow", () => {
     expect(moveProblem({ ...base, from: "idea", to: "researching", roles: ["marketing_contributor"] })).toBeNull();
     expect(moveProblem({ ...base, from: "idea", to: "drafting", roles: ["marketing_manager"] })).toMatch(/one step/);
   });
-  it("requires a reviewer other than the author", () => {
+  it("requires reviewer authority, not a different author", () => {
     expect(moveProblem({ ...base, from: "fact_check", to: "design", roles: ["marketing_contributor"] })).toMatch(/reviewer/);
-    expect(moveProblem({ ...base, authorId: "a", from: "fact_check", to: "design", roles: ["compliance_reviewer"] })).toMatch(/other than/);
+    expect(moveProblem({ ...base, authorId: "a", from: "fact_check", to: "design", roles: ["compliance_reviewer"] })).toBeNull();
     expect(moveProblem({ ...base, from: "fact_check", to: "design", roles: ["compliance_reviewer"] })).toBeNull();
   });
-  it("approval needs an executive, never the author (super admin needs a reason)", () => {
+  it("approval needs an executive, including the author (existing Super Admin reason retained)", () => {
     expect(moveProblem({ ...base, from: "ceo_approval", to: "approved", roles: ["marketing_manager"] })).toMatch(/executive/);
-    expect(moveProblem({ ...base, authorId: "a", from: "ceo_approval", to: "approved", roles: ["executive"] })).toMatch(/other than/);
+    expect(moveProblem({ ...base, authorId: "a", from: "ceo_approval", to: "approved", roles: ["executive"] })).toBeNull();
     expect(moveProblem({ ...base, authorId: "a", from: "ceo_approval", to: "approved", roles: ["super_admin"] })).toMatch(/reason/);
     expect(moveProblem({ ...base, authorId: "a", from: "ceo_approval", to: "approved", roles: ["super_admin"], note: "CEO away" })).toBeNull();
   });

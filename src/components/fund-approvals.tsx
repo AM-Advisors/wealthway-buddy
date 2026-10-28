@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { FundChangeReviews } from "@/components/fund-change-reviews";
+import { routineApprovalType } from "@/lib/routine-approval-policy";
 
 const money = (n: number | string | null | undefined, cur = "USD") => (n == null ? null : Number(n).toLocaleString("en-US", { style: "currency", currency: cur, maximumFractionDigits: 0 }));
 const sel = "h-8 rounded-md border bg-background px-2 text-sm";
@@ -102,6 +103,7 @@ function ApprovalDetail({ id, fundId, onBack, onOpen }: { id: string; fundId: st
   if (q.error) return <div><Button size="sm" variant="ghost" onClick={onBack}>← Approvals</Button><p className="text-sm text-destructive">{(q.error as Error).message}</p></div>;
   if (!q.data) return <p className="text-sm text-muted-foreground">Loading approval…</p>;
   const { approval: a, staff, canDecide, certification, highRisk, events, decisions, versions } = q.data;
+  const routine = routineApprovalType(a.approval_type, a.approval_amount);
   const newer = versions.find((x: any) => x.version > a.version);
   return (
     <div className="space-y-4">
@@ -147,7 +149,7 @@ function ApprovalDetail({ id, fundId, onBack, onOpen }: { id: string; fundId: st
           <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Harmonious actions</h3>
           <Input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Reason (withdraw, or Super Admin self-review)" aria-label="Reason" className="h-8" />
           <div className="flex flex-wrap gap-2">
-            {a.status === "DRAFT" && <Button size="sm" disabled={busy} onClick={() => act(() => fns.review({ data: { id: a.id } }), "Sent for internal review.")}>Send for internal review</Button>}
+            {a.status === "DRAFT" && <Button size="sm" disabled={busy} onClick={() => act(() => fns.review({ data: { id: a.id } }), routine ? "Sent to the fund manager for approval." : "Sent for internal review.")}>{routine ? "Request client approval" : "Send for internal review"}</Button>}
             {a.status === "INTERNAL_REVIEW" && <Button size="sm" disabled={busy} onClick={() => act(() => fns.complete({ data: { id: a.id, reason: reason || null } }), "Reviewed and sent to the fund manager.")}>Complete review & request client approval</Button>}
             {a.status === "APPROVED" && <Button size="sm" disabled={busy} onClick={() => act(() => fns.done({ data: { id: a.id } }), "Marked complete.")}>Mark workflow complete</Button>}
             {["DRAFT", "INTERNAL_REVIEW", "AWAITING_APPROVAL", "CHANGES_REQUESTED", "APPROVED"].includes(a.status) && !newer && <Button size="sm" variant="outline" onClick={() => setRevising(!revising)}>Create new version</Button>}

@@ -150,6 +150,7 @@ export async function fundSetupOverview(userId: string, offeringId: string, hasE
       : null,
     termApplies: termApplies(o.fund_type),
     economics: {
+      canApprove: actor.isStaff,
       versionId: current?.id ?? null,
       status: current?.status ?? null,
       version: current?.version ?? null,

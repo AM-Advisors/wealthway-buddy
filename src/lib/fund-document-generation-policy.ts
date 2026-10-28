@@ -3,7 +3,7 @@ export function mayGenerateFundDocuments(isStaff: boolean, managesFund: boolean,
 }
 
 export function generatedDocumentReviewError(v: { created_by: string; version: number; self_serve_review_state?: string | null; generation_issues?: string[] }, reviewer: string, currentVersion: number): string | null {
-  if (v.created_by === reviewer) return "Another authorized person must review this draft.";
+  // Reviewer authority is checked by the server and matching database trigger, not creator identity.
   if (v.version !== currentVersion) return "Review the current version, not an earlier draft.";
   if (v.self_serve_review_state !== "pending") return "This draft has already been reviewed. Create a new version for changes.";
   if (v.generation_issues?.length) return "Resolve the missing fields or conflicting legal terms in a new version before approval.";

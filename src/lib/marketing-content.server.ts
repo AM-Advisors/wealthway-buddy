@@ -9,6 +9,7 @@ import { aiJson } from "@/lib/marketing-research.server";
 import { COPY_RULES } from "@/lib/marketing-brand";
 import { CLAIM_CLASSES, REG_INTERPRETATION_REVIEWERS, SERVICE_PAGES, buildArticleSchema, canonicalFor, normalizeClass, type SitePage } from "@/lib/marketing-seo-model";
 import { MARKETING_ORIGIN } from "@/lib/marketing/site-config";
+import { routineApprovalAllowed } from "./routine-approval-policy";
 
 const admin = async () => (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
 const MODEL = "openai/gpt-6-astra";
@@ -194,8 +195,7 @@ export async function review(userId: string, itemId: string, kind: string, resul
       if (interp && !roles.some((r) => REG_INTERPRETATION_REVIEWERS.includes(r))) throw new Error("This package interprets regulations, so compliance must be passed by a compliance reviewer or executive.");
     }
     const self = item.author_id === userId || (await db.from("marketing_content_packages").select("id").eq("item_id", itemId).eq("version", item.package_version).eq("created_by", userId).maybeSingle()).data;
-    if (self && !roles.includes("super_admin")) throw new Error("Someone other than the author must review this.");
-    if (self && !n) throw new Error("Super Admin self-review needs a reason.");
+    if (self && !routineApprovalAllowed("marketing_post", roles.some((r) => STUDIO_REVIEWERS.includes(r)))) throw new Error("Only an authorized reviewer can review this package.");
   }
   if (result === "fail" && !n) throw new Error("Say what needs to change.");
   const { error } = await db.from("marketing_content_reviews").insert({ item_id: itemId, package_version: item.package_version, kind, result, note: n || null, actor_id: userId });

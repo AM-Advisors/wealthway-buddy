@@ -319,12 +319,12 @@ export const decideSideLetterChange = createServerFn({ method: "POST" })
     if (data.decision === "withdrawn") {
       if (req.proposed_by !== context.userId) throw new Error("Only the proposer can withdraw.");
     } else {
-      if (!canApprove({ actorId: context.userId, actorKind: kind, proposedBy: req.proposed_by === context.userId && canApprove({ actorId: context.userId, actorKind: kind, proposedBy: "" }) && (await (await import("@/lib/self-approval.server")).selfApprove(context.userId, "side_letter", [req.id])) ? "" : req.proposed_by }))
-        throw new Error("You cannot decide this proposal. A different eligible person must approve it.");
+      if (!canApprove({ actorId: context.userId, actorKind: kind, proposedBy: req.proposed_by }))
+        throw new Error("Only authorized staff or this fund's managers can decide this proposal.");
       if (data.decision === "declined" && !data.reason?.trim()) throw new Error("A decline reason is required.");
     }
 
-    const { error } = await db
+    const { data: decided, error } = await db
       .from("side_letter_change_requests")
       .update({
         status: data.decision,
@@ -333,8 +333,10 @@ export const decideSideLetterChange = createServerFn({ method: "POST" })
         decision_reason: data.reason?.trim() || null,
       })
       .eq("id", req.id)
-      .eq("status", "pending");
-    if (error) throw new Error(error.message.includes("proposer") ? "You cannot decide your own proposal." : "Could not record the decision.");
+      .eq("status", "pending")
+      .select("id")
+      .maybeSingle();
+    if (error || !decided) throw new Error("Could not record the decision. Refresh the proposal before trying again.");
 
     const { data: letter } = await db.from("side_letters").select("*").eq("id", req.side_letter_id).single();
     if (data.decision === "approved") {

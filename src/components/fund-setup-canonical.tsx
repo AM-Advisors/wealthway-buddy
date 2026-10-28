@@ -514,8 +514,8 @@ export function EconomicsCard({ d, offeringId, onSaved }: { d: D; offeringId: st
         </Badge>
       </header>
       <div className="border-l-2 border-primary bg-muted/40 px-4 py-3 text-sm">
-        <p className="font-medium">{d.economics.status === "draft" ? "Pending independent review" : d.economics.approvedVersion ? "Approved terms in use" : "Terms not yet saved"}</p>
-        <p className="mt-1 text-muted-foreground">{d.economics.status === "draft" ? `${d.economics.preparedByMe ? "Another Harmonious reviewer must approve this saved version." : "This saved version is ready for an authorized reviewer."}${d.economics.approvedVersion ? ` Approved v${d.economics.approvedVersion} remains in use.` : " Classes cannot be assigned until approval."}` : "Saving changes creates a draft. Signed records and approved terms remain unchanged."}</p>
+        <p className="font-medium">{d.economics.status === "draft" ? "Pending approval" : d.economics.approvedVersion ? "Approved terms in use" : "Terms not yet saved"}</p>
+        <p className="mt-1 text-muted-foreground">{d.economics.status === "draft" ? `Ready for an authorized approval.${d.economics.approvedVersion ? ` Approved v${d.economics.approvedVersion} remains in use.` : " Classes cannot be assigned until approval."}` : "Saving changes creates a draft. Signed records and approved terms remain unchanged."}</p>
       </div>
       <Tabs defaultValue={multi ? "classes" : "defaults"} className="min-w-0">
         <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1">
@@ -670,10 +670,10 @@ export function EconomicsCard({ d, offeringId, onSaved }: { d: D; offeringId: st
         {d.canEdit && (
           <div className="flex flex-wrap items-center gap-3 border-t py-4">
             <Button disabled={busy} onClick={() => run(() => save({ data: { offeringId, terms: terms as any, classes: multi ? (classes as any) : [], classDifferencesConfirmed: confirmed } }), "Economics saved as a draft")}><Save className="size-4" />{busy ? "Saving…" : "Save terms draft"}</Button>
-            {d.economics.status === "draft" && d.economics.versionId && (
-              <Button variant="outline" disabled={busy || unsaved || d.economics.preparedByMe} title={unsaved ? "Save changes before reviewing this version" : d.economics.preparedByMe ? "A different Harmonious reviewer must approve" : undefined}
+            {d.economics.canApprove && d.economics.status === "draft" && d.economics.versionId && (
+              <Button variant="outline" disabled={busy || unsaved} title={unsaved ? "Save changes before reviewing this version" : undefined}
                 onClick={() => { const versionId = d.economics.versionId; if (versionId) void run(() => approve({ data: { versionId } }), "Economics approved"); }}>
-                <CheckCircle2 className="size-4" />{d.economics.preparedByMe ? "Awaiting second reviewer" : "Approve saved version"}
+                <CheckCircle2 className="size-4" />Approve saved version
               </Button>
             )}
           </div>
