@@ -117,7 +117,7 @@ function QuotePage() {
             <Button size="sm" onClick={() => decide.mutate(true)} disabled={decide.isPending}>Approve</Button>
             <Button size="sm" variant="outline" onClick={() => decide.mutate(false)} disabled={decide.isPending}>Request changes</Button></>
         ) : <span className="text-sm text-muted-foreground">{d.approvalBlocker}</span>)}
-        {s === "approved" && !d.quote.sow_id && <Button size="sm" onClick={() => draft.mutate()} disabled={draft.isPending}>Create SOW{d.quote.msa_id ? "" : " and MSA"} drafts</Button>}
+        {s === "approved" && !d.quote.sow_id && <Button size="sm" onClick={() => draft.mutate()} disabled={draft.isPending}>Create SOW draft</Button>}
         {s === "approved" && d.quote.sow_id && <Button size="sm" onClick={() => sent.mutate()} disabled={sent.isPending}>Mark sent to client</Button>}
         {s === "sent" && <span className="text-sm text-muted-foreground">Waiting for the client to sign.</span>}
         {s === "signed" && <span className="text-sm text-foreground">Signed {d.quote.signed_at ? new Date(d.quote.signed_at).toLocaleDateString() : ""}. Counted as revenue closed.</span>}

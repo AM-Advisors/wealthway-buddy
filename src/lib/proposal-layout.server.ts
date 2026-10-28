@@ -118,7 +118,7 @@ export async function renderProposalPdf(doc: any, rawSections: Section[], lines:
     if (other) text(`Billed ${BW["monthly"]}: ${usd(other)}`, sans, 10, INK, 6, cols[0]! + 8);
     if (oneTime) text(`One-time fees: ${usd(oneTime)}, billed once when you sign`, sans, 10, INK, 6, cols[0]! + 8);
     y -= 6;
-    text("How to get started: sign and approve this proposal. When you sign, you'll also accept our Master Services Agreement (only the first time, or when it's updated), and your invoice follows. You can pay each invoice online by card.", sans, 10, MUTED, 6, cols[0]! + 8);
+    text("How to get started: sign and approve this proposal. Your invoice follows. You can pay each invoice online by card.", sans, 10, MUTED, 6, cols[0]! + 8);
     y -= 30;
   }
 

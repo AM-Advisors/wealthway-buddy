@@ -15,7 +15,7 @@ describe("controlled proposal sections", () => {
   it("About Harmonious is always the approved wording", () => expect(body("about")).toBe(ABOUT_HARMONIOUS));
   it("pricing comes only from the quote", () => { expect(body("pricing")).toContain("$12,000.00"); expect(body("pricing")).not.toContain("$5"); });
   it("summary is generated from quote and prospect", () => expect(body("summary")).toBe("Harmonious proposes White Glove Fund Administration for Roas Capital Management, prepared for Ross Vincent Mahoney."));
-  it("typed terms are replaced by the MSA notice when no MSA is given", () => expect(body("terms")).not.toBe("Rep terms"));
+  it("quotes never carry MSA terms, even typed ones", () => expect(out.some((s) => s.key === "terms")).toBe(false));
   it("proposal services section drops typed prices", () => {
     const p = applyLockedSections("proposal", "response", [{ key: "services", title: "Services", body: "We do admin\n- Admin: $1" }], facts);
     expect(p.find((s) => s.key === "services")!.body).not.toContain("$1\n");
@@ -44,18 +44,13 @@ _t("pricing line never shows a cadence in the name that contradicts its billing 
 
 import { applyLockedSections as _als, NO_MSA_TERMS as _nomsa } from "./sales-documents-model";
 const _msa = { version: "v3.0", effectiveDate: "2026-01-01", sections: [{ section_no: "1", title: "Services framework", body: "Harmonious provides services." }, { section_no: "2", title: "Fees and payment", body: "Fees are due on invoice." }] };
-_t("terms section is the published MSA and replaces typed terms", () => {
+_t("the published MSA is never added to a quote, typed terms are dropped", () => {
   const out = _als("rfq", "response", [{ key: "terms", title: "Terms", body: "Net 15, our own terms" }], { msa: _msa, organization: "Roas", contactName: null, lines: [] });
-  const t = out.find((x) => x.key === "terms")!;
-  _e(t.title).toBe("Terms: Master Services Agreement");
-  _e(t.body).not.toContain("v3.0");
-  _e(t.body).toContain("1. Services framework\nHarmonious provides services.");
-  _e(t.body).toContain("2. Fees and payment");
-  _e(t.body).not.toContain("Net 15");
+  _e(out.some((x) => x.key === "terms")).toBe(false);
 });
-_t("terms fall back to MSA notice when none is published", () => {
-  const out = _als("proposal", "response", [], { msa: null, organization: null, contactName: null, lines: [] });
-  _e(out.find((x) => x.key === "terms")!.body).toBe(_nomsa);
+_t("no MSA section when none is published", () => {
+  const out = _als("proposal", "response", [], { msa: null, organization: "Roas", contactName: null, lines: [] });
+  _e(out.some((x) => x.key === "terms")).toBe(false);
 });
 _t("pricing shows quarterly and annual bills only, never a monthly rate", () => {
   const out = _pt([
