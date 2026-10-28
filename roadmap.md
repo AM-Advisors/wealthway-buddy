@@ -3,7 +3,9 @@
 ## ROAS 2026 and 2027 invoice correction (2026-10-28)
 - [x] Correct the initial White Glove proration to $4,956.52 for Q3 2026 (August 24 through September 30, due now), without changing Q4 or future renewals; 20 focused tests passed. Invoice issuance remains blocked as below.
 - [x] Update entity-specific planning terms, reported paid/due/future display and January 1 future-year visibility on both staff billing pages; invoice receipts remain separate.
-- [ ] Record corrected invoice/schedule data through canonical authorized workflows: blocked by the unsigned, pending SOW and required invoice review; no invoices issued or recurring services activated.
+- [x] Correct quote and SOW lines to the final prices (management financials annual $7,500, management annual charge $2,500, LP annual $2,500, White Glove Q3 prorated $4,956.52 added), link the SOW to ROAS Hedge LP, and send it for client review with a sign request notification for Ross at next login (2026-10-28).
+- [x] Create draft invoices with the Mercury payment links: White Glove Q3+Q4 $16,956.52 (ROAS Hedge LP) and management company balance $1,500; both drafts pending SOW signature.
+- [ ] Issue and send the two draft invoices after Ross or James signs the SOW and the invoices pass review; no invoices issued or recurring services activated yet.
 - [x] 28 focused checks passed for concrete amounts, annual/quarterly due dates, balances and year visibility; authenticated page inspection stopped at authenticator enrollment, no bypass.
 
 ## Missing investment/application link safeguard (2026-10-27)
