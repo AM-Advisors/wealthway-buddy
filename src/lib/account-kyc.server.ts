@@ -160,8 +160,9 @@ export async function decideAccountCheck(uid: string, checkId: string, action: "
   if (c.session_id && action !== "send_back") await pushProviderStatus(String(c.session_id), action === "approve" ? "Approved" : "Declined", note);
   if (action === "approve") {
     try {
-      const { autoApplyDiditSession } = await import("@/lib/didit-auto-apply.server");
+      const { autoApplyDiditSession, applyApprovedAccountCheck } = await import("@/lib/didit-auto-apply.server");
       if (c.session_id) await autoApplyDiditSession(String(c.session_id));
+      await applyApprovedAccountCheck(c.person_id ?? null, c.session_id ? String(c.session_id) : null, uid);
     } catch (e) { console.error("[account-kyc] auto-apply after approval", e instanceof Error ? e.message : String(e)); }
   }
   return { ok: true };
