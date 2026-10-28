@@ -1,5 +1,10 @@
 # Roadmap
 
+## Fees and terms screen redesign
+- [x] Simplify canonical terms editing, side-by-side class comparison, focused class editing, investor assignment and approval status without changing terms or authority.
+- [x] 56 existing terms, class and authorization checks passed; actual controls rendered with fictional data and blocked record requests. Comparison, editor, defaults, search and approval locks inspected at desktop and 440px without runtime errors or page overflow. Preview build OK.
+- [ ] Authenticated save/approval/assignment read-back blocked on independently isolated QA and synthetic sessions; no live terms, investors or approvals changed.
+
 ## Linked legacy investor navigation
 - [x] Route legacy roster names and Open investor actions to uniquely linked same-fund canonical onboardings; use their canonical menus, retain legacy fallback and existing authorization. No live records changed.
 - [x] 71 focused regressions passed and fictional linked/unlinked navigation/menu checks passed; preview build OK. No real records, sessions or emails used.

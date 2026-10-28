@@ -28,12 +28,15 @@ import {
   multipleClassesFromAnswer,
 } from "@/lib/fund-setup-canonical";
 import { OfferingDocumentsSetup } from "@/components/offering-documents-setup";
-import { FundSetupPhase3 } from "@/components/fund-setup-phase3";
+import { ClassAssignmentCard, FundSetupPhase3 } from "@/components/fund-setup-phase3";
 import { FundServicesCard } from "@/components/fund-services-card";
 import { FormationRecordCard } from "@/components/formation-record-card";
 import { RequiredHere, LaunchRequirements } from "@/components/fund-setup-checklist";
 import { staffSetupApplies } from "@/lib/staff-setup-applicability";
 import { FundSignatoriesCard } from "@/components/fund-signatories-card";
+import { Pencil, Plus, Save, CheckCircle2 } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -116,7 +119,7 @@ export function FundSetupCanonical({ offeringId, staffOnly = false, hideLaunch =
       <div id="setup-signatories" className="scroll-mt-32 space-y-2"><RequiredHere section="setup-signatories" /><FundSignatoriesCard offeringId={offeringId} onChanged={refresh} /></div>
       <div id="setup-economics" className="scroll-mt-32 space-y-2"><RequiredHere section="setup-economics" /><EconomicsCard d={d} offeringId={offeringId} onSaved={refresh} /></div>
       <div id="setup-documents" className="scroll-mt-32 space-y-2"><RequiredHere section="setup-documents" /><OfferingDocumentsSetup offeringId={offeringId} onChanged={refresh} /></div>
-      <FundSetupPhase3 offeringId={offeringId} onChanged={refresh} />
+      <FundSetupPhase3 offeringId={offeringId} onChanged={refresh} showClasses={false} />
       <FormationRecordCard offeringId={offeringId} />
       <FundServicesCard offeringId={offeringId} onChanged={refresh} />
       <LaunchRequirements />
@@ -423,7 +426,7 @@ function PresetSelect({ options, value, na, onChange, disabled, suffix = "", pre
         else if (v === "") { setCustom(false); onChange(null, false); }
         else { setCustom(false); onChange(Number(v), false); }
       }}>
-        <option value="">{allowDefault ? "Same as fund default" : "-"}</option>
+        <option value="">{allowDefault ? "Same as fund default" : "Not set"}</option>
         {options.map((o) => <option key={o} value={String(o)}>{prefix}{o.toLocaleString()}{suffix}</option>)}
         <option value="other">Other…</option>
         <option value="na">Not applicable</option>
@@ -445,7 +448,7 @@ function TextPresetSelect({ options, value, na, onChange, disabled }: { options:
         else if (v === "") { setCustom(false); onChange(null, false); }
         else { setCustom(false); onChange(v, false); }
       }}>
-        <option value="">-</option>
+        <option value="">Not set</option>
         {options.map((o) => <option key={o} value={o}>{o}</option>)}
         <option value="other">Other…</option>
         <option value="na">Not applicable</option>
@@ -455,15 +458,17 @@ function TextPresetSelect({ options, value, na, onChange, disabled }: { options:
   );
 }
 
-function EconomicsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; onSaved: () => void }) {
+export function EconomicsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; onSaved: () => void }) {
   const save = useServerFn(saveFundEconomicsFn);
   const saveFields = useServerFn(saveFundSetupFieldsFn);
   const approve = useServerFn(approveEconomicsFn);
   const [terms, setTerms] = useState<EconomicTerms>({ managementFee: emptyFee as any, carry: { ratePercent: null } });
   const [classes, setClasses] = useState<FundClass[]>([]);
+  const [savedSnapshot, setSavedSnapshot] = useState("");
   useEffect(() => {
     setTerms({ managementFee: (d.economics.terms?.managementFee ?? emptyFee) as any, carry: d.economics.terms?.carry ?? { ratePercent: null }, preferredReturnPercent: d.economics.terms?.preferredReturnPercent ?? null, orgExpenseTreatment: d.economics.terms?.orgExpenseTreatment ?? null, distributionFrequency: d.economics.terms?.distributionFrequency ?? null, notApplicable: d.economics.terms?.notApplicable ?? [] });
     setClasses(d.economics.classes ?? []);
+    setSavedSnapshot(JSON.stringify({ terms: { managementFee: (d.economics.terms?.managementFee ?? emptyFee), carry: d.economics.terms?.carry ?? { ratePercent: null }, preferredReturnPercent: d.economics.terms?.preferredReturnPercent ?? null, orgExpenseTreatment: d.economics.terms?.orgExpenseTreatment ?? null, distributionFrequency: d.economics.terms?.distributionFrequency ?? null, notApplicable: d.economics.terms?.notApplicable ?? [] }, classes: d.economics.classes ?? [] }));
   }, [d]);
   const fee = terms.managementFee ?? (emptyFee as any);
   const setFee = (p: any) => setTerms({ ...terms, managementFee: { ...fee, ...p } });
@@ -473,6 +478,8 @@ function EconomicsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; o
   const [countDraft, setCountDraft] = useState(String(planned ?? (multi ? 2 : "")));
   const [confirmed, setConfirmed] = useState(false);
   const [sideLettersOpen, setSideLettersOpen] = useState(false);
+  const [editingClass, setEditingClass] = useState<number | null>(null);
+  const [busy, setBusy] = useState(false);
   useEffect(() => { setMultiAnswer(multi || planned === 1); setCountDraft(String(planned ?? (multi ? 2 : ""))); }, [multi, planned]);
   const saveClassAnswer = (yes: boolean, count: number | null) => {
     const a = multipleClassesFromAnswer({ yes, count });
@@ -480,6 +487,7 @@ function EconomicsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; o
   };
   const countErr = multi ? classCountError(planned, classes) : null;
   const diffs = classDifferences({ ...terms, minInvestmentCents: d.offering.minInvestmentCents ?? null }, classes);
+  const unsaved = savedSnapshot !== "" && JSON.stringify({ terms, classes }) !== savedSnapshot;
   const isNa = (k: EconomicTermKey) => !!terms.notApplicable?.includes(k);
   const setNa = (k: EconomicTermKey, on: boolean, patch: Partial<EconomicTerms> = {}) =>
     setTerms((t) => {
@@ -489,19 +497,34 @@ function EconomicsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; o
     });
 
   const run = async (fn: () => Promise<unknown>, ok: string) => {
-    try { await fn(); toast.success(ok); onSaved(); } catch (e: any) { toast.error(e.message); }
+    setBusy(true);
+    try { await fn(); toast.success(ok); onSaved(); } catch (e: any) { toast.error(e.message); } finally { setBusy(false); }
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Economics & Classes</CardTitle>
-        <p className="text-sm text-muted-foreground">
-          {d.economics.status === "draft" ? `Draft v${d.economics.version} · needs approval by a second Harmonious reviewer.` : d.economics.approvedVersion ? `Approved v${d.economics.approvedVersion}. Saving creates a new draft; the approved version stays in use until the new one is approved.` : "No economics recorded yet."}
-        </p>
-      </CardHeader>
-      <CardContent className="space-y-5">
-        <section className="space-y-2 rounded-md border p-3">
+    <section className="min-w-0 space-y-5" aria-label="Fees and terms">
+      <header className="flex flex-wrap items-start justify-between gap-3 border-b pb-4">
+        <div className="space-y-1">
+          <h2 className="text-xl font-semibold">Fees and terms</h2>
+          <p className="text-sm text-muted-foreground">{d.offering.legalName || "Fund terms"}</p>
+        </div>
+        <Badge variant={d.economics.status === "approved" && !unsaved ? "default" : "secondary"}>
+          {unsaved ? "Unsaved changes · " : ""}
+          {d.economics.status === "draft" ? `Draft v${d.economics.version}` : d.economics.approvedVersion ? `Approved v${d.economics.approvedVersion}` : "Not recorded"}
+        </Badge>
+      </header>
+      <div className="border-l-2 border-primary bg-muted/40 px-4 py-3 text-sm">
+        <p className="font-medium">{d.economics.status === "draft" ? "Pending independent review" : d.economics.approvedVersion ? "Approved terms in use" : "Terms not yet saved"}</p>
+        <p className="mt-1 text-muted-foreground">{d.economics.status === "draft" ? `${d.economics.preparedByMe ? "Another Harmonious reviewer must approve this saved version." : "This saved version is ready for an authorized reviewer."}${d.economics.approvedVersion ? ` Approved v${d.economics.approvedVersion} remains in use.` : " Classes cannot be assigned until approval."}` : "Saving changes creates a draft. Signed records and approved terms remain unchanged."}</p>
+      </div>
+      <Tabs defaultValue={multi ? "classes" : "defaults"} className="min-w-0">
+        <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1">
+          <TabsTrigger value="defaults">Fund defaults</TabsTrigger>
+          {multi && <TabsTrigger value="classes">Classes ({classes.length})</TabsTrigger>}
+          {multi && <TabsTrigger value="investors">Investor assignments</TabsTrigger>}
+        </TabsList>
+        <TabsContent value="defaults" className="space-y-5 pt-3">
+        <section className="space-y-2 border-b pb-4">
           <Label>Will this fund have multiple classes?</Label>
           <div className="flex flex-wrap items-end gap-3">
             <select aria-label="Multiple classes" className="h-9 rounded-md border bg-background px-2 text-sm" disabled={!d.canEdit} value={multiAnswer ? "yes" : "no"}
@@ -517,8 +540,8 @@ function EconomicsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; o
           </div>
           <p className="text-xs text-muted-foreground">{multi ? `Enter each of the ${planned ?? "planned"} classes below and confirm how they differ.` : "Fund default terms apply unless an investor has separately approved side-letter exceptions."}</p>
         </section>
-        <h3 className="text-sm font-medium">{multi ? "Shared terms (every class uses these unless its own terms say otherwise)" : "Fund default terms"}</h3>
-        <section className="grid gap-3 sm:grid-cols-4">
+        <h3 className="text-sm font-medium">{multi ? "Fund defaults" : "Fund default terms"}</h3>
+        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <Field label="Management fee (%)">
             <PresetSelect disabled={!d.canEdit} options={FEE_PRESETS} na={isNa("managementFee")} value={fee.ratePercent}
               onChange={(v, na) => { setNa("managementFee", na); setFee(na ? { ratePercent: null, basis: null, frequency: null } : { ratePercent: v, basis: fee.basis ?? (v != null ? "committed_capital" : null), frequency: fee.frequency ?? (v != null ? "annual" : null) }); }} suffix="%" />
@@ -553,20 +576,30 @@ function EconomicsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; o
               onChange={(v, na) => setNa("distributionFrequency", na, { distributionFrequency: na ? null : v })} />
           </Field>
         </section>
-        <p className="text-xs text-muted-foreground">Pick a common value, "Other…" to type your own, or "Not applicable". Not applicable counts as answered.</p>
-
+        </TabsContent>
         {multi && (
-          <section className="space-y-3">
-            <h3 className="text-sm font-medium">Terms by class</h3>
-            <p className="text-xs text-muted-foreground">Name each class, then set the fees and terms that go with it. Fees, carry, hurdle and amount range move together under the class name, and investors are placed in a class by name.</p>
+          <TabsContent value="classes" className="min-w-0 space-y-4 pt-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h3 className="font-medium">Class comparison</h3>
+              {d.canEdit && (planned == null || classes.length < planned) && <Button size="sm" variant="outline" onClick={() => { setClasses([...classes, { key: "", name: `Class ${String.fromCharCode(65 + classes.length)}` }]); setEditingClass(classes.length); }}><Plus className="size-4" />Add class</Button>}
+            </div>
+            {classes.length > 0 ? <Table aria-label="Class terms comparison" className="min-w-[660px]">
+              <TableHeader><TableRow className="bg-muted/50"><TableHead className="w-44">Term</TableHead><TableHead className="min-w-36">Fund default</TableHead>{classes.map((c, i) => <TableHead key={i} className="min-w-36"><div className="flex items-center gap-2"><span className="font-semibold text-foreground">{c.name || "Unnamed class"}</span>{d.canEdit && <Button size="icon" variant="ghost" aria-label={`Edit ${c.name || "class"}`} title={`Edit ${c.name || "class"}`} onClick={() => setEditingClass(i)}><Pencil className="size-4" /></Button>}</div></TableHead>)}</TableRow></TableHeader>
+              <TableBody>{diffs.map((r) => <TableRow key={r.term}><TableCell className="font-medium">{r.term}</TableCell><TableCell className="text-muted-foreground">{r.fundDefault === "-" ? "Not set" : r.fundDefault}</TableCell>{r.perClass.map((v, i) => <TableCell key={i} className={v.differs ? "font-medium text-primary" : "text-muted-foreground"}>{v.value === "-" ? "Not set" : v.value}</TableCell>)}</TableRow>)}<TableRow><TableCell className="font-medium">Maximum investment (exclusive)</TableCell><TableCell className="text-muted-foreground">No maximum</TableCell>{classes.map((c, i) => <TableCell key={i}>{c.maxInvestmentCents == null ? "No maximum" : `$${(c.maxInvestmentCents / 100).toLocaleString("en-US")}`}</TableCell>)}</TableRow></TableBody>
+            </Table> : <p className="py-6 text-sm text-muted-foreground">No classes recorded.</p>}
+            {countErr && <p role="alert" className="text-sm text-destructive">{countErr}</p>}
             {classes.map((c, i) => {
               const upd = (p: Partial<FundClass>) => setClasses(classes.map((x, j) => (j === i ? { ...x, ...p } : x)));
               const cNa = (k: EconomicTermKey) => !!c.notApplicable?.includes(k);
+              if (editingClass !== i) return null;
               return (
-                <div key={i} className="grid gap-3 rounded-md border p-3 sm:grid-cols-4">
-                  <div className="sm:col-span-4 flex flex-wrap items-end gap-3 border-b pb-3">
+                <Dialog key={i} open onOpenChange={(open) => { if (!open) setEditingClass(null); }}>
+                <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-3xl">
+                <DialogHeader><DialogTitle>{c.name || "New class"}</DialogTitle><DialogDescription>Changes are part of the fees and terms draft, not live terms.</DialogDescription></DialogHeader>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="sm:col-span-2 flex flex-wrap items-end gap-3 border-b pb-3">
                     <Field label="Class name"><Input className="w-56 font-medium" disabled={!d.canEdit} value={c.name} placeholder="e.g. Series A-1" onChange={(e) => upd({ name: e.target.value })} /></Field>
-                    <p className="pb-2 text-xs text-muted-foreground">Fees and terms for {c.name?.trim() || "this class"}</p>
+                    
                   </div>
                   <Field label="Fee basis">
                     <select className="h-9 w-full rounded-md border bg-background px-2 text-sm" disabled={!d.canEdit || cNa("managementFee") || !c.managementFee} value={c.managementFee?.basis ?? ""} onChange={(e) => upd({ managementFee: { ...(c.managementFee ?? fee), basis: (e.target.value || null) as any } })}>
@@ -603,36 +636,25 @@ function EconomicsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; o
                   <Field label="Organizational expenses"><Input disabled={!d.canEdit} value={c.orgExpenseTreatment ?? ""} placeholder="Same as fund default" onChange={(e) => upd({ orgExpenseTreatment: e.target.value || null })} /></Field>
                   <Field label="Distribution frequency"><Input disabled={!d.canEdit} value={c.distributionFrequency ?? ""} placeholder="Same as fund default" onChange={(e) => upd({ distributionFrequency: e.target.value || null })} /></Field>
                   <Field label="Assets / allocation"><Input disabled={!d.canEdit} value={c.assetScope ?? ""} placeholder="All fund assets" onChange={(e) => upd({ assetScope: e.target.value || null })} /></Field>
-                  <div className="sm:col-span-4"><Field label="Other differences"><Textarea rows={2} disabled={!d.canEdit} value={c.otherDifferences ?? ""} placeholder="Anything else that's different for this class" onChange={(e) => upd({ otherDifferences: e.target.value || null })} /></Field></div>
-                  {d.canEdit && <Button variant="ghost" className="self-end" onClick={() => setClasses(classes.filter((_, j) => j !== i))}>Remove</Button>}
+                  <div className="sm:col-span-2"><Field label="Other differences"><Textarea rows={2} disabled={!d.canEdit} value={c.otherDifferences ?? ""} placeholder="Anything else that's different for this class" onChange={(e) => upd({ otherDifferences: e.target.value || null })} /></Field></div>
+                                  </div>
+                <div className="flex justify-between gap-3 border-t pt-4">
+                  {d.canEdit && <Button variant="ghost" onClick={() => { setClasses(classes.filter((_, j) => j !== i)); setEditingClass(null); }}>Remove class</Button>}
+                  <Button onClick={() => setEditingClass(null)}>Done</Button>
                 </div>
+                </DialogContent></Dialog>
               );
             })}
-            {d.canEdit && (planned == null || classes.length < planned) && <Button variant="outline" onClick={() => setClasses([...classes, { key: "", name: `Class ${String.fromCharCode(65 + classes.length)}` }])}>Add class</Button>}
-            {countErr && <p className="text-sm text-destructive">{countErr}</p>}
-            {classes.length > 0 && (
-              <div className="overflow-x-auto rounded-md border">
-                <table className="w-full text-xs">
-                  <thead><tr className="border-b bg-muted/40"><th className="p-2 text-left">Term</th><th className="p-2 text-left">Fund default</th>{classes.map((c, i) => <th key={i} className="p-2 text-left">{c.name}</th>)}</tr></thead>
-                  <tbody>
-                    {diffs.map((r) => (
-                      <tr key={r.term} className="border-b last:border-0">
-                        <td className="p-2 font-medium">{r.term}</td><td className="p-2">{r.fundDefault}</td>
-                        {r.perClass.map((p, i) => <td key={i} className={`p-2 ${p.differs ? "font-medium text-primary" : "text-muted-foreground"}`}>{p.value}</td>)}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
             {classes.length > 0 && d.canEdit && (
               <label className="flex items-start gap-2 text-sm">
                 <Checkbox checked={confirmed} onCheckedChange={(v) => setConfirmed(v === true)} />
                 <span>I've reviewed how each class differs from the fund default for its group of investors.</span>
               </label>
             )}
-          </section>
+          </TabsContent>
         )}
+        {multi && <TabsContent value="investors" className="pt-3"><ClassAssignmentCard offeringId={offeringId} /></TabsContent>}
+        </Tabs>
 
         <section className="border-t pt-4">
           <h3 className="mb-2 text-sm font-medium">Investor-specific waivers / changes</h3>
@@ -646,17 +668,16 @@ function EconomicsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; o
         </Dialog>}
 
         {d.canEdit && (
-          <div className="flex flex-wrap gap-2">
-            <Button onClick={() => run(() => save({ data: { offeringId, terms: terms as any, classes: multi ? (classes as any) : [], classDifferencesConfirmed: confirmed } }), "Economics saved as a draft")}>Save economics draft</Button>
+          <div className="flex flex-wrap items-center gap-3 border-t py-4">
+            <Button disabled={busy} onClick={() => run(() => save({ data: { offeringId, terms: terms as any, classes: multi ? (classes as any) : [], classDifferencesConfirmed: confirmed } }), "Economics saved as a draft")}><Save className="size-4" />{busy ? "Saving…" : "Save terms draft"}</Button>
             {d.economics.status === "draft" && d.economics.versionId && (
-              <Button variant="outline" disabled={d.economics.preparedByMe} title={d.economics.preparedByMe ? "A different Harmonious reviewer must approve" : undefined}
-                onClick={() => run(() => approve({ data: { versionId: d.economics.versionId! } }), "Economics approved")}>
-                {d.economics.preparedByMe ? "Awaiting second reviewer" : "Approve economics"}
+              <Button variant="outline" disabled={busy || unsaved || d.economics.preparedByMe} title={unsaved ? "Save changes before reviewing this version" : d.economics.preparedByMe ? "A different Harmonious reviewer must approve" : undefined}
+                onClick={() => { const versionId = d.economics.versionId; if (versionId) void run(() => approve({ data: { versionId } }), "Economics approved"); }}>
+                <CheckCircle2 className="size-4" />{d.economics.preparedByMe ? "Awaiting second reviewer" : "Approve saved version"}
               </Button>
             )}
           </div>
         )}
-      </CardContent>
-    </Card>
+    </section>
   );
 }
