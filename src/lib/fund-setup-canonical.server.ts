@@ -313,6 +313,14 @@ export async function assignInvestmentClass(userId: string, input: { onboardingI
     : { data: null };
   const err = classAssignmentError({ hasMultipleClasses: !!o?.has_multiple_classes, classes: (approved?.classes ?? []) as FundClass[], classKey: input.classKey });
   if (err) throw new Error(err);
+  if (input.classKey) {
+    const { classFitsAmount, hasRanges } = await import("@/lib/class-tiers");
+    const classes = (approved?.classes ?? []) as FundClass[];
+    const { data: amt } = await db().from("investor_onboardings").select("commitment_amount_cents, accepted_amount_cents, requested_amount_cents").eq("id", row.id).maybeSingle();
+    const cents = Number(amt?.commitment_amount_cents ?? amt?.accepted_amount_cents ?? amt?.requested_amount_cents ?? 0);
+    const cls = classes.find((c) => c.key === input.classKey);
+    if (cls && hasRanges(classes) && cents > 0 && !classFitsAmount(cls, cents)) throw new Error(`${cls.name} does not apply to this investment amount.`);
+  }
   await db().from("investor_onboardings").update({ offering_class_key: input.classKey }).eq("id", row.id);
   return { ok: true };
 }
