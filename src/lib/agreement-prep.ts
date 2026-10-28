@@ -106,6 +106,9 @@ export const PREFILL_TOKENS = [
   { value: "signer_title", label: "Signer title / capacity" },
   { value: "fund_name", label: "Fund name" },
   { value: "commitment_amount", label: "Commitment amount" },
+  { value: "series_subscribed", label: "Series / class subscribed" },
+  { value: "series_a_amount", label: "Series A amount (blank unless Series A)" },
+  { value: "series_b_amount", label: "Series B amount (blank unless Series B)" },
   { value: "today", label: "Today's date" },
 ] as const;
 
@@ -118,6 +121,7 @@ export interface PrefillContext {
   signerTitle?: string | null;
   fundName?: string | null;
   commitmentCents?: number | null;
+  seriesName?: string | null;
   today?: string;
 }
 
