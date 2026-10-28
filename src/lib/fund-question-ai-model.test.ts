@@ -1,8 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { documentQuestionDraft, mappedQuestionFacts, type QuestionAiOutput } from "./fund-question-ai-model";
+import { documentQuestionDraft, mappedQuestionFacts, sourceAgreementApproved, type QuestionAiOutput } from "./fund-question-ai-model";
 import { fillMissingInvestorAnswers } from "./subscription-prefill";
 const output = (): QuestionAiOutput => ({ title: "Fund questions", questions: [{ label: "Subscriber city?", type: "text", required: true, options: [], sourceReference: "Subscription v4 page 2", sourceQuote: "Subscriber city", prefillKey: "city" }], alreadyCovered: [], warnings: [] });
 describe("document questionnaire drafts", () => {
+  it("keeps document-based questions unpublished until their exact source is approved", () => {
+    expect(sourceAgreementApproved({ approval_status: "pending" })).toBe(false);
+    expect(sourceAgreementApproved(null)).toBe(false);
+    expect(sourceAgreementApproved({ approval_status: "approved" })).toBe(true);
+  });
   it("adds document-backed questions and choices without replacing existing questions", () => {
     const existing = [{ key: "fs_old", label: "Source of funds?", type: "text" as const }];
     const result = documentQuestionDraft(output(), [], existing);

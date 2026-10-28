@@ -17,6 +17,10 @@ export const questionAiOutput = z.object({
 export type QuestionAiOutput = z.infer<typeof questionAiOutput>;
 export type DocumentQuestion = Question & { sourceReference?: string; sourceQuote?: string; prefillKey?: string | null };
 
+export function sourceAgreementApproved(version: { approval_status: string } | null) {
+  return version?.approval_status === "approved";
+}
+
 export function documentQuestionDraft(output: QuestionAiOutput, base: Question[], existing: DocumentQuestion[]) {
   if (output.questions.length > 80) throw new Error("The document has too many questions. Select fewer agreements.");
   const additions: DocumentQuestion[] = output.questions.map((q, i) => {

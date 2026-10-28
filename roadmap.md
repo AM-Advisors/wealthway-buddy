@@ -1,9 +1,10 @@
 # Roadmap
 
 ## AI questions from custom fund agreements
-- [ ] Read explicitly selected fund document versions and draft source-backed additional questions and answer choices for staff and exact-fund managers.
-- [ ] Reuse safe exact-party recorded facts without AI-generated answers or changes to approvals, signatures or existing responses.
-- [ ] Validate model output, persistent denial handling and fictional UI; authenticated persistence remains blocked pending independently isolated QA.
+- [x] Read explicitly selected PDF/Word fund versions and draft source-backed questions and answer choices for staff/exact-fund managers in the existing question editor. Source approvals precede question publication, saved provenance immutable.
+- [x] Safe exact-party factual mappings feed existing blank-only prefill; existing answers retained, no AI-generated certifications, signatures or eligibility decisions. Dirty edits disable approval and AI regeneration.
+- [x] Actual streamed AI call read a fictional Word agreement and returned two evidence-backed questions; fictional desktop/440px document selection, evidence and dirty-approval locks passed without overflow/runtime errors. Focused regressions passed; preview build OK. No real agreements, answers or approvals changed.
+- [ ] Authenticated document → AI → draft save → independent approval → investor answer read-back blocked pending independently isolated QA and synthetic sessions; no client-ready claim.
 
 ## ROAS email agreement recovery
 - [x] Searched all three accessible email connections; matching Sales Email is operations@harmonious.co. Recovered the September 8 completed MSA and August 24 LPA signature-request copy through the connector, archived through Alyssa's authorized uploadFundFileFn, and verified downloaded saved bytes by SHA-256. No activation, approval, contract status or signature changes.
