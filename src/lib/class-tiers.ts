@@ -27,7 +27,7 @@ export function classForAmount(classes: FundClass[], cents: number | null | unde
   if (!hasRanges(classes)) return { status: "no_ranges" };
   if (cents == null || !Number.isFinite(cents) || cents <= 0) return { status: "no_amount" };
   const fits = classes.filter((c) => classFitsAmount(c, cents)).map((c) => c.key);
-  if (fits.length === 1) return { status: "assigned", key: fits[0] };
+  if (fits.length === 1) return { status: "assigned", key: fits[0]! };
   if (fits.length > 1) return { status: "choose", keys: fits };
   const mins = classes.map((c) => c.minInvestmentCents).filter((m): m is number => m != null);
   return { status: "below_minimum", minimumCents: mins.length ? Math.min(...mins) : 0 };
@@ -46,5 +46,5 @@ export function resolveSigningClass(classes: FundClass[], cents: number | null |
 /** "A" or "B" from a series name, used for the separate amount lines on the signature page. */
 export function seriesGroup(name: string | null | undefined): "A" | "B" | null {
   const m = /series\s+([ab])/i.exec(name ?? "");
-  return m ? (m[1].toUpperCase() as "A" | "B") : null;
+  return m?.[1] ? (m[1].toUpperCase() as "A" | "B") : null;
 }
