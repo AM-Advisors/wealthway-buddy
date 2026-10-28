@@ -1,5 +1,9 @@
 # Roadmap
 
+## Fees and terms screen redesign
+- [ ] Simplify canonical terms editing, side-by-side class comparison, investor assignment and approval status without changing terms or authority.
+- [ ] Check fictional interactions and compact layout; preserve live records and approval gates.
+
 ## Linked legacy investor navigation
 - [x] Route legacy roster names and Open investor actions to uniquely linked same-fund canonical onboardings; use their canonical menus, retain legacy fallback and existing authorization. No live records changed.
 - [x] 71 focused regressions passed and fictional linked/unlinked navigation/menu checks passed; preview build OK. No real records, sessions or emails used.
