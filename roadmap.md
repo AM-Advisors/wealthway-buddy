@@ -1,5 +1,11 @@
 # Roadmap
 
+## ROAS email agreement recovery
+- [x] Searched all three accessible email connections; matching Sales Email is operations@harmonious.co. Recovered the September 8 completed MSA and August 24 LPA signature-request copy through the connector, archived through Alyssa's authorized uploadFundFileFn, and verified downloaded saved bytes by SHA-256. No activation, approval, contract status or signature changes.
+- [x] Excluded duplicate/partial MSA notices, unrelated investor correspondence, formation/EIN documents and tax reminders from agreement imports. No additional PPM/subscription attachments found in these connected mailboxes.
+- [ ] Signed Business BSA Profile retrieved but not placed in the fund's general document library: requires a staff-only compliance archive destination, since general fund files are client-readable.
+
+
 ## Fund approval discoverability
 - [x] Use Fees & terms in setup labels and expose primary Approvals plus a visible Review approvals shortcut on fund pages. Historical task titles remain unchanged.
 - [x] Staff Approvals opens Fund setup approvals with existing Fees & terms, Documents and Investor questions review tools, mounted only when selected; no authority or records changed.
