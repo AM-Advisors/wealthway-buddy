@@ -74,11 +74,11 @@ export function PriorSignedDocuments({ fundId, onboardingId }: { fundId: string;
   const kindOptions = Object.entries(KINDS).filter(([k]) => !(hasActiveSub && !replacesId && k === "subscription_agreement"));
   return (
     <div className="space-y-4">
-    <OutsideSubscription fundId={fundId} onboardingId={onboardingId} onLoad={() => { setAdding(true); setKind("subscription_agreement"); setTitle("Subscription Agreement"); }} />
+    <OutsideSubscription fundId={fundId} onboardingId={onboardingId} onLoad={() => openForm(() => { setKind("subscription_agreement"); setTitle("Subscription Agreement"); })} />
     <section className="space-y-2" aria-label="Previously signed documents">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h4 className="font-medium">Signed before joining Harmonious</h4>
-        {!adding && <Button size="sm" variant="outline" onClick={() => { setAdding(true); if (hasActiveSub) setKind("other"); }}>{(q.data ?? []).length ? "Load another document" : "Load a completed document"}</Button>}
+        {!adding && <Button size="sm" variant="outline" onClick={() => openForm(() => { if (hasActiveSub) setKind("other"); })}>{(q.data ?? []).length ? "Load another document" : "Load a completed document"}</Button>}
       </div>
       <p className="text-xs text-muted-foreground">Upload documents this investor already completed elsewhere. They are kept permanently for the record and don't change the investor's steps.</p>
       {q.isError ? <p className="text-destructive">{(q.error as Error).message} <Button size="sm" variant="link" onClick={() => q.refetch()}>Retry</Button></p>
@@ -95,12 +95,12 @@ export function PriorSignedDocuments({ fundId, onboardingId }: { fundId: string;
                 try { const r = await open({ data: { fundId, onboardingId, documentId: d.id } }); const a = document.createElement("a"); a.href = r.url; a.download = ""; a.rel = "noreferrer"; a.click(); }
                 catch (e) { toast.error(e instanceof Error ? e.message : "The document could not be opened."); }
               }}>Download</Button>
-              {!d.replaced && <Button size="sm" variant="ghost" onClick={() => { setAdding(true); setReplacesId(d.id); setKind(d.kind as Kind); setTitle(d.title); }}>Replace</Button>}
+              {!d.replaced && <Button size="sm" variant="ghost" onClick={() => openForm(() => { setReplacesId(d.id); setKind(d.kind as Kind); setTitle(d.title); })}>Replace</Button>}
             </div>
           </div>
         )) : !adding && <p className="text-muted-foreground">No documents loaded.</p>}
       {adding && (
-        <div className="space-y-2 rounded-lg border p-3">
+        <div ref={formRef} className="space-y-2 rounded-lg border p-3">
           {replacesId && <p className="text-xs text-muted-foreground">Replacing a document. The earlier copy stays on record.</p>}
           <Select value={kind} onValueChange={(v) => setKind(v as Kind)}>
             <SelectTrigger aria-label="Document type"><SelectValue /></SelectTrigger>
@@ -108,7 +108,7 @@ export function PriorSignedDocuments({ fundId, onboardingId }: { fundId: string;
           </Select>
           <Input aria-label="Document name" placeholder={KINDS[kind]} value={title} maxLength={200} onChange={(e) => setTitle(e.target.value)} />
           <label className="block text-xs text-muted-foreground">Date signed<Input type="date" value={signedOn} max={new Date().toISOString().slice(0, 10)} onChange={(e) => setSignedOn(e.target.value)} /></label>
-          <Input type="file" aria-label="Signed document file" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+          <Input ref={fileRef} type="file" aria-label="Signed document file" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
           <Input aria-label="Note" placeholder={replacesId ? "Reason for replacement (required)" : "Note (optional)"} value={note} maxLength={500} onChange={(e) => setNote(e.target.value)} />
           <div className="flex gap-2">
             <Button size="sm" disabled={busy} onClick={save}>{busy ? "Saving…" : "Save document"}</Button>
