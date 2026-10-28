@@ -3,6 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { InvoicesBoard } from "@/components/invoices-board";
 import { BillingPipeline } from "@/components/ops-billing-pipeline";
 import { Button } from "@/components/ui/button";
+import { PeriodDownloads } from "@/components/period-downloads";
 
 export const Route = createFileRoute("/_authenticated/ops/billing/invoices")({
   head: () => ({
@@ -25,6 +26,7 @@ export const Route = createFileRoute("/_authenticated/ops/billing/invoices")({
         <div className="flex flex-wrap gap-2"><Button asChild variant="outline"><Link to="/ops/billing/payments" search={{ year: 2026 }}>ROAS payments</Link></Button><Button asChild variant="outline"><Link to="/ops/billing/roas-update">ROAS billing update</Link></Button></div>
       </header>
       <BillingPipeline view="invoices" />
+      <PeriodDownloads mode="staff" />
       <section className="space-y-3">
         <h2 className="text-xl">Review and issue</h2>
         <InvoicesBoard />
