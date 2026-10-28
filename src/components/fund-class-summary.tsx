@@ -13,7 +13,7 @@ export function FundClassSummary({ offeringId, onEdit }: { offeringId: string; o
   if (!d?.offering?.hasMultipleClasses || !(d.economics?.classes?.length > 0)) return null;
   const approved = d.economics.status === "approved";
   return (
-    <section aria-label="Fees and terms by class" className="space-y-4 rounded-2xl border bg-card p-4 sm:p-5">
+    <section data-class-summary aria-label="Fees and terms by class" className="space-y-4 rounded-2xl border bg-card p-4 sm:p-5">
       <div className="flex flex-wrap items-center gap-3">
         <CheckCircle2 className={`size-5 ${approved ? "text-accent" : "text-muted-foreground"}`} />
         <h3 className="flex-1 font-heading text-lg font-semibold text-primary">Fees & Terms</h3>

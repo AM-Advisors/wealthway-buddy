@@ -118,7 +118,7 @@ export function FundSetupForm({ offeringId, mode, staffExtras, workspace = false
     const fields = <div className="space-y-3">{s.fields.map((f) => <div key={f.key}>{renderField(f)}</div>)}</div>;
     if (!ret && !waiting(s.fields[0]?.section ?? "") && fieldSectionComplete(required, prior, changed && editingSection !== id)) {
       return (
-        <div key={id} className="[&:has(>section[aria-label='Fees_and_terms_by_class'])>[data-fees-defaults]]:hidden">
+        <div key={id} className="[&:has(>[data-class-summary])>[data-fees-defaults]]:hidden">
           {id === "fees" && <FundClassSummary offeringId={offeringId} onEdit={() => setEditingSection(id)} />}
           <div data-fees-defaults={id === "fees" || undefined}>
           <SummaryBox title={s.title} rows={s.fields.map((f) => [f.label, display(f)] as [string, React.ReactNode])} onEdit={() => setEditingSection(id)} />
