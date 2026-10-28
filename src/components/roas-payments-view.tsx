@@ -17,19 +17,39 @@ export function RoasPaymentsView({ invoices, lines, year, onYearChange, invoiceA
   const { sets, expected } = trackedK1Sets(invoices, lines, year);
   const visible = invoices.filter(invoice => showHistory || invoice.status !== "void");
   const received = invoices.filter(invoice => invoice.paidCents > 0 && ["paid", "issued"].includes(invoice.status));
+  const voided = visible.filter(invoice => invoice.status === "void");
+  const settled = (invoice: TrackedInvoice) => invoice.status === "paid" || invoice.remainingCents === 0;
+  const unpaid = visible.filter(invoice => invoice.status !== "void" && !settled(invoice));
+  const paid = visible.filter(invoice => invoice.status !== "void" && settled(invoice));
+  const invoiceRows = (list: TrackedInvoice[]) => list.map(invoice => <TableRow key={invoice.id}>
+    <TableCell><span className="font-medium">{invoice.number ?? "Draft invoice"}</span><p className="text-xs text-muted-foreground">Due {date(invoice.dueDate)}</p></TableCell>
+    <TableCell><Badge variant={invoice.status === "paid" ? "secondary" : "outline"}>{invoice.status === "issued" && invoice.paidCents > 0 && invoice.remainingCents > 0 ? "Partially paid" : invoice.status.replace(/_/g, " ")}</Badge></TableCell>
+    <TableCell className="text-right tabular-nums">{money(invoice.totalCents)}</TableCell><TableCell className="text-right tabular-nums">{money(invoice.paidCents)}</TableCell><TableCell className="text-right tabular-nums">{money(invoice.remainingCents)}</TableCell><TableCell>{invoiceAction?.(invoice.id)}</TableCell>
+  </TableRow>);
   return <div className="space-y-8">
     <dl className="grid gap-5 border-y py-5 sm:grid-cols-3">
       {[["Current invoiced", totals.billedCents], ["Recorded received", totals.receivedCents], ["Outstanding", totals.balanceCents]].map(([name, value]) => <div key={name}><dt className="text-sm text-muted-foreground">{name}</dt><dd className="mt-1 text-2xl font-semibold tabular-nums">{money(Number(value))}</dd></div>)}
     </dl>
-    <section className="space-y-3" aria-label="Invoice balances">
-      <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-xl font-semibold">Invoice balances</h2><Button variant="outline" size="sm" aria-pressed={showHistory} onClick={() => setShowHistory(value => !value)}>{showHistory ? "Hide voided" : "Show voided history"}</Button></div>
-      <Table><TableHeader><TableRow><TableHead>Invoice / due</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Invoiced</TableHead><TableHead className="text-right">Received</TableHead><TableHead className="text-right">Balance</TableHead><TableHead><span className="sr-only">Invoice actions</span></TableHead></TableRow></TableHeader>
-        <TableBody>{visible.map(invoice => <TableRow key={invoice.id}>
-          <TableCell><span className="font-medium">{invoice.number ?? "Draft invoice"}</span><p className="text-xs text-muted-foreground">Due {date(invoice.dueDate)}</p></TableCell>
-          <TableCell><Badge variant={invoice.status === "paid" ? "secondary" : "outline"}>{invoice.status === "issued" && invoice.paidCents > 0 && invoice.remainingCents > 0 ? "Partially paid" : invoice.status.replace(/_/g, " ")}</Badge></TableCell>
-          <TableCell className="text-right tabular-nums">{money(invoice.totalCents)}</TableCell><TableCell className="text-right tabular-nums">{money(invoice.paidCents)}</TableCell><TableCell className="text-right tabular-nums">{money(invoice.remainingCents)}</TableCell><TableCell>{invoiceAction?.(invoice.id)}</TableCell>
-        </TableRow>)}</TableBody></Table>
-      {!visible.length && <p className="text-sm text-muted-foreground">No current invoices recorded.</p>}
+    <section className="space-y-4" aria-label="Invoices">
+      <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-xl font-semibold">Invoices</h2><Button variant="outline" size="sm" aria-pressed={showHistory} onClick={() => setShowHistory(value => !value)}>{showHistory ? "Hide voided" : "Show voided history"}</Button></div>
+      <div className="space-y-3">
+        <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Unpaid invoices ({unpaid.length})</h3>
+        <Table><TableHeader><TableRow><TableHead>Invoice / due</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Invoiced</TableHead><TableHead className="text-right">Received</TableHead><TableHead className="text-right">Balance</TableHead><TableHead><span className="sr-only">Invoice actions</span></TableHead></TableRow></TableHeader>
+          <TableBody>{invoiceRows(unpaid)}</TableBody></Table>
+        {!unpaid.length && <p className="text-sm text-muted-foreground">No unpaid invoices recorded.</p>}
+      </div>
+      <div className="space-y-3">
+        <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Paid invoices ({paid.length})</h3>
+        <Table><TableHeader><TableRow><TableHead>Invoice / due</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Invoiced</TableHead><TableHead className="text-right">Received</TableHead><TableHead className="text-right">Balance</TableHead><TableHead><span className="sr-only">Invoice actions</span></TableHead></TableRow></TableHeader>
+          <TableBody>{invoiceRows(paid)}</TableBody></Table>
+        {!paid.length && <p className="text-sm text-muted-foreground">No paid invoices recorded.</p>}
+      </div>
+      {showHistory && <div className="space-y-3">
+        <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Voided history ({voided.length})</h3>
+        <Table><TableHeader><TableRow><TableHead>Invoice / due</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Invoiced</TableHead><TableHead className="text-right">Received</TableHead><TableHead className="text-right">Balance</TableHead><TableHead><span className="sr-only">Invoice actions</span></TableHead></TableRow></TableHeader>
+          <TableBody>{invoiceRows(voided)}</TableBody></Table>
+        {!voided.length && <p className="text-sm text-muted-foreground">No voided invoices.</p>}
+      </div>}
     </section>
     <section className="space-y-3" aria-label="Payments received"><h2 className="text-xl font-semibold">Payments received</h2>
       <Table><TableHeader><TableRow><TableHead>Invoice</TableHead><TableHead>Recorded payment date</TableHead><TableHead className="text-right">Received to date</TableHead><TableHead>Evidence</TableHead></TableRow></TableHeader><TableBody>{received.map(invoice => <TableRow key={invoice.id}><TableCell>{invoice.number ?? "Invoice"}</TableCell><TableCell>{date(invoice.paidOn)}</TableCell><TableCell className="text-right tabular-nums">{money(invoice.paidCents)}</TableCell><TableCell>{invoice.status === "paid" ? "Invoice settled" : "Recorded receipt total"}</TableCell></TableRow>)}</TableBody></Table>
