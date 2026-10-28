@@ -1,5 +1,10 @@
 # Roadmap
 
+## Single-approval simplification
+- [ ] Replace routine second-person checks with one authorized human approval across fund setup, questions, documents and internal workflows; keep money, identity, access and required legal signatures protected.
+- [ ] Separate optional countersign requirements from contractual signatures; prospective versioned changes only, no retrospective execution or automatic approval of pending ROAS items.
+- [ ] Consolidate duplicate review screens and verify affected saves/statuses with isolated fictional tests; approve scoped plan before cross-platform rule changes.
+
 ## AI questions from custom fund agreements
 - [x] Read explicitly selected PDF/Word fund versions and draft source-backed questions and answer choices for staff/exact-fund managers in the existing question editor. Source approvals precede question publication, saved provenance immutable.
 - [x] Safe exact-party factual mappings feed existing blank-only prefill; existing answers retained, no AI-generated certifications, signatures or eligibility decisions. Dirty edits disable approval and AI regeneration.
