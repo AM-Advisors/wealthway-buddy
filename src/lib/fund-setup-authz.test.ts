@@ -424,8 +424,9 @@ describe("document and economics history", () => {
     expect(patches).toContain("approved");
   });
 
-  it("does not let the preparer approve their own economic terms", async () => {
-    await expect(server.approveEconomics(STAFF, "econ-v2")).rejects.toThrow(/cannot also approve/);
+  it("lets an authorized staff preparer explicitly approve their saved economic terms", async () => {
+    await server.approveEconomics(STAFF, "econ-v2");
+    expect(updates("fund_economics_versions").some((w) => w.payload.status === "approved" && w.payload.approved_by === STAFF)).toBe(true);
   });
 
   it("will not accept an entity step without its supporting document", async () => {

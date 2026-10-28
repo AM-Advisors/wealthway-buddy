@@ -76,7 +76,7 @@ export function SideLetterRegistry({ fundId, onboardingId }: { fundId: string; o
         data: { fundId, sideLetterId: d.sideLetterId, onboardingId: d.onboardingId, kind: d.mode, snapshot: d.snapshot, reason: d.reason },
       }),
     onSuccess: () => {
-      toast.success("Proposal recorded. A different person must approve it.");
+      toast.success("Proposal recorded. Ready for approval.");
       setDraft(null);
       refresh();
     },
@@ -117,7 +117,7 @@ export function SideLetterRegistry({ fundId, onboardingId }: { fundId: string; o
           <div>
             <CardTitle>Side letters</CardTitle>
             <CardDescription>
-              Record of investor-specific terms. Changes need approval by a different person. Side letters never change fees,
+              Record of investor-specific terms. Changes need an authorized approval. Side letters never change fees,
               capital accounts or distributions automatically, and never block onboarding or launch.
             </CardDescription>
           </div>
@@ -340,7 +340,7 @@ function DraftForm({
     <Card>
       <CardHeader>
         <CardTitle>{title}</CardTitle>
-        <CardDescription>This creates a proposal. It takes effect only after a different eligible person approves it.</CardDescription>
+        <CardDescription>Proposal awaiting authorized approval.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {!terminating ? (
@@ -500,7 +500,7 @@ function PendingRow({
         </div>
       ) : isMine ? (
         <div className="flex items-center gap-2">
-          <span className="text-muted-foreground">Waiting for a different person to approve.</span>
+          <span className="text-muted-foreground">Waiting for an authorized approval.</span>
           <Button size="sm" variant="ghost" disabled={busy} onClick={() => onDecide("withdrawn")}>Withdraw</Button>
         </div>
       ) : (

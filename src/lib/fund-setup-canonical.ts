@@ -303,10 +303,10 @@ export function sectionStatuses(f: SetupFacts): Record<CanonicalSection, Result>
     [f.targetRaiseCents != null, "Set the target raise"],
     [f.managementFeeSet, "Enter the management fee"],
     [f.carrySet, "Enter the carry"],
-    [f.economicsStatus === "approved", "Have a second Harmonious reviewer approve the economics"],
+    [f.economicsStatus === "approved", "Approve the saved economics version"],
   ]);
   if (offering.status === "in_progress" && f.economicsStatus === "draft" && f.managementFeeSet && f.carrySet) {
-    offering = { status: "in_progress", next: "Have a second Harmonious reviewer approve the economics" };
+    offering = { status: "in_progress", next: "Approve the saved economics version" };
   }
   const planned = f.plannedClassCount ?? null;
   const classes: Result = !f.hasMultipleClasses

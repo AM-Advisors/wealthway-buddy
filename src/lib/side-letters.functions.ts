@@ -319,8 +319,8 @@ export const decideSideLetterChange = createServerFn({ method: "POST" })
     if (data.decision === "withdrawn") {
       if (req.proposed_by !== context.userId) throw new Error("Only the proposer can withdraw.");
     } else {
-      if (!canApprove({ actorId: context.userId, actorKind: kind, proposedBy: req.proposed_by === context.userId && canApprove({ actorId: context.userId, actorKind: kind, proposedBy: "" }) && (await (await import("@/lib/self-approval.server")).selfApprove(context.userId, "side_letter", [req.id])) ? "" : req.proposed_by }))
-        throw new Error("You cannot decide this proposal. A different eligible person must approve it.");
+      if (!canApprove({ actorId: context.userId, actorKind: kind, proposedBy: req.proposed_by }))
+        throw new Error("Only authorized staff or this fund's managers can decide this proposal.");
       if (data.decision === "declined" && !data.reason?.trim()) throw new Error("A decline reason is required.");
     }
 

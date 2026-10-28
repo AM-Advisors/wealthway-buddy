@@ -84,7 +84,7 @@ export async function listSetupDocuments(userId: string, offeringId: string) {
       effectiveDate: v.effective_date,
       approval: v.approval_status,
       reviewState: v.self_serve_review_state ?? null,
-      canReview: v.created_by !== userId && v.self_serve_review_state === "pending",
+      canReview: v.self_serve_review_state === "pending",
       reviewNote: v.self_serve_review_note ?? null,
       generationIssues: (v.generation_issues ?? []) as string[],
       approvedTemplate: templates.has(`${d.id}:${v.version}`),
@@ -216,11 +216,7 @@ export async function reviewGeneratedDocument(userId: string, input: { documentI
   const v = await versionRow(d.id, input.version);
   const { generatedDocumentReviewError } = await import("./fund-document-generation-policy");
   const validation = generatedDocumentReviewError({ ...v, generation_issues: input.decision === "return" ? [] : v.generation_issues }, userId, d.current_version);
-  if (validation) {
-    if (v.created_by !== userId || !(await (await import("./self-approval.server")).selfApprove(userId, "generated_document", [v.id]))) throw new Error(validation);
-    const remaining = generatedDocumentReviewError({ ...v, created_by: "override", generation_issues: input.decision === "return" ? [] : v.generation_issues }, userId, d.current_version);
-    if (remaining) throw new Error(remaining);
-  }
+  if (validation) throw new Error(validation);
   if (input.decision === "return" && !input.note?.trim()) throw new Error("Give a reason for returning this draft.");
   if (input.decision === "approve") await (await import("./legal-name-gate.server")).assertLegalName({ offeringId: d.offering_id }, "offering_document_approval");
   const { data: saved, error } = await db().from("offering_document_versions").update({ self_serve_review_state: input.decision === "approve" ? "approved" : "returned", self_serve_review_note: input.note?.trim() || null, approval_status: input.decision === "approve" ? "approved" : "uploaded_review_required", approved_by: userId, approved_at: now() }).eq("id", v.id).eq("self_serve_review_state", "pending").select("id").maybeSingle();
@@ -306,7 +302,7 @@ export async function activateDocumentVersion(
   await assertTemplateEditor(userId, d, input.version);
   const v = await versionRow(d.id, input.version);
   const templates = await approvedTemplateVersions(d.offering_id);
-  if (v.self_serve_review_state && v.self_serve_review_state !== "approved") throw new Error("Another authorized person must approve this draft before making it available.");
+  if (v.self_serve_review_state && v.self_serve_review_state !== "approved") throw new Error("Approve this draft before making it available.");
   if (v.approval_status === "uploaded_review_required" && !templates.has(`${d.id}:${v.version}`)) {
     // Self-serve: putting a version in use is the approval; recorded with who did it.
     await (await import("@/lib/legal-name-gate.server")).assertLegalName({ offeringId: d.offering_id }, "offering_document_approval");
@@ -434,7 +430,6 @@ export async function decideChangeRequest(userId: string, input: { id: string; d
   if (!r) throw new Error("That request was not found.");
   await assertStaff(userId, r.offering_id);
   if (r.status !== "pending") throw new Error("That request was already decided.");
-  if (r.requested_by === userId && !(await (await import("@/lib/self-approval.server")).selfApprove(userId, "document_change", [r.id]))) throw new Error("A different Harmonious team member must decide this request.");
   if (input.decision === "decline" && !input.note?.trim()) throw new Error("Give a reason for declining.");
   let createdVersion: number | null = null;
   if (input.decision === "accept") {

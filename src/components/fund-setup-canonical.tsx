@@ -670,7 +670,7 @@ export function EconomicsCard({ d, offeringId, onSaved }: { d: D; offeringId: st
         {d.canEdit && (
           <div className="flex flex-wrap items-center gap-3 border-t py-4">
             <Button disabled={busy} onClick={() => run(() => save({ data: { offeringId, terms: terms as any, classes: multi ? (classes as any) : [], classDifferencesConfirmed: confirmed } }), "Economics saved as a draft")}><Save className="size-4" />{busy ? "Saving…" : "Save terms draft"}</Button>
-            {d.economics.status === "draft" && d.economics.versionId && (
+            {d.economics.canApprove && d.economics.status === "draft" && d.economics.versionId && (
               <Button variant="outline" disabled={busy || unsaved} title={unsaved ? "Save changes before reviewing this version" : undefined}
                 onClick={() => { const versionId = d.economics.versionId; if (versionId) void run(() => approve({ data: { versionId } }), "Economics approved"); }}>
                 <CheckCircle2 className="size-4" />Approve saved version

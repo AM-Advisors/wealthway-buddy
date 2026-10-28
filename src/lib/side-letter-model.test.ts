@@ -26,7 +26,8 @@ describe("mfnCandidates", () => {
 });
 
 describe("approval eligibility", () => {
-  it("blocks self-approval", () => expect(canApprove({ actorId: "u", actorKind: "staff", proposedBy: "u" })).toBe(false));
+  it("allows authorized staff to approve their own proposal", () => expect(canApprove({ actorId: "u", actorKind: "staff", proposedBy: "u" })).toBe(true));
+  it("allows an exact-fund manager to approve their own proposal", () => expect(canApprove({ actorId: "m", actorKind: "manager", proposedBy: "m" })).toBe(true));
   it("lets another manager approve", () => expect(canApprove({ actorId: "m2", actorKind: "manager", proposedBy: "m1" })).toBe(true));
   it("lets a sole manager approve a staff proposal", () => expect(canApprove({ actorId: "m1", actorKind: "manager", proposedBy: "staff" })).toBe(true));
   it("never lets assistants approve", () => expect(canApprove({ actorId: "a", actorKind: "assistant", proposedBy: "m" })).toBe(false));
