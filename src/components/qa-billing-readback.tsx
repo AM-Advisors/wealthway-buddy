@@ -17,7 +17,7 @@ export function QaBillingReadback() {
   return <section className="space-y-5" aria-label="Fictional client billing">
     <div className="flex flex-wrap gap-2" role="group" aria-label="Billing document"><Button variant={view === "invoice" ? "default" : "outline"} onClick={() => setView("invoice")}>Invoice</Button><Button disabled={!quoteLinked} variant={view === "quote" ? "default" : "outline"} onClick={() => setView("quote")}>Original quote</Button><Button disabled={!sowLinked} variant={view === "sow" ? "default" : "outline"} onClick={() => setView("sow")}>Agreement</Button></div>
     <Button variant={view === "payments" ? "default" : "outline"} onClick={() => setView("payments")}>Staff payment tracking</Button>
-    {view === "payments" ? <RoasPaymentsView year={taxYear} onYearChange={setTaxYear} invoices={[
+    {view === "payments" ? <RoasPaymentsView asOf="2026-10-28" year={taxYear} onYearChange={setTaxYear} invoices={[
       { id: "fictional-k1-paid", number: "FABLE-K001", status: "paid", totalCents: 250000, paidCents: 250000, remainingCents: 0, paidOn: "2026-10-12", dueDate: "2026-12-31", periodStart: "2026-01-01", periodEnd: "2026-12-31" },
       { id: "fictional-k1-partial", number: "FABLE-K002", status: "issued", totalCents: 500000, paidCents: 100000, remainingCents: 400000, paidOn: "2026-10-20", dueDate: "2026-12-31", periodStart: "2026-01-01", periodEnd: "2026-12-31" },
       { id: "fictional-void", number: "FABLE-VOID", status: "void", totalCents: 1900000, paidCents: 0, remainingCents: 0, paidOn: null, dueDate: null, periodStart: null, periodEnd: null },

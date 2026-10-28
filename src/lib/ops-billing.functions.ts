@@ -102,6 +102,7 @@ export const getRoasBillingUpdate = createServerFn({ method: "GET" })
     const { withInvoiceBalances } = await import("@/lib/invoice-balance.server");
     const invoices = await withInvoiceBalances((invoicesResult.data ?? []) as any[]);
     return {
+      asOf: new Date().toISOString().slice(0, 10),
       clientName: "Roas Capital Management",
       fundName: fundResult.data?.name ?? "ROAS Hedge LP",
       quote: {

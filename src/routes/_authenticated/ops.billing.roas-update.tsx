@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getRoasBillingUpdate } from "@/lib/ops-billing.functions";
+import { RoasChargeSchedule } from "@/components/roas-charge-schedule";
 import { ROAS_FILING_FEES, roasFilingFeeRange } from "@/lib/roas-filing-fees";
 
 export const Route = createFileRoute("/_authenticated/ops/billing/roas-update")({
@@ -91,9 +92,11 @@ function RoasBillingUpdatePage() {
         </Card>
       </section>
 
+      <RoasChargeSchedule asOf={data.asOf} />
+
       <Card>
         <CardHeader>
-          <CardTitle>Draft quote terms</CardTitle>
+          <CardTitle>Recorded quote terms</CardTitle>
           <CardDescription>{data.clientName} · {data.fundName} · quote total {money(data.quote.totalCents)}</CardDescription>
         </CardHeader>
         <CardContent>
@@ -161,7 +164,7 @@ function RoasBillingUpdatePage() {
         </CardHeader>
         <CardContent>
           <ol className="list-decimal space-y-2 pl-5 text-sm">
-            <li>Approve the draft quote through the normal second-person review.</li>
+            <li>Update the quote to the corrected annual and quarterly terms above. Quotes at or above the rate card need no extra approval.</li>
             <li>Create the linked SOW after approval, then send it for client signature.</li>
             <li>Prepare replacement invoices only after payment dates and source attribution are confirmed.</li>
             <li>Confirm the filing facts above before any Form D, state notice or payment preparation.</li>
