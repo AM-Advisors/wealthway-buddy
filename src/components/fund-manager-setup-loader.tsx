@@ -22,7 +22,7 @@ const DOC_KINDS = [
   ["subscription_agreement", "Subscription Agreement"],
   ["other", "Other document"],
 ] as const;
-const SECTION_LABEL: Record<Section, string> = { fund_details: "Fund details", fees_team: "Fees & team", bank: "Bank / wire instructions", document: "Document" };
+const SECTION_LABEL: Record<Section, string> = { fund_details: "Fund details", fees_team: "Fees & terms", bank: "Bank / wire instructions", document: "Document" };
 
 function toBase64(file: File): Promise<string> {
   return new Promise((res, rej) => {

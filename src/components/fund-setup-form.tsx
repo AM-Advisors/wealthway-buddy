@@ -102,7 +102,8 @@ export function FundSetupForm({ offeringId, mode, staffExtras, workspace = false
   };
 
   const fieldSection = (id: string) => {
-    const s = FORM_SECTIONS.find((x) => x.id === id)!;
+    const s = FORM_SECTIONS.find((x) => x.id === id);
+    if (!s) return null;
     const ret = returned("fund_details");
     const keys = s.fields.map((f) => f.key);
     const changed = keys.some((k) => k in vals && (vals[k] ?? "") !== (prior[k] ?? ""));
@@ -182,7 +183,7 @@ export function FundSetupForm({ offeringId, mode, staffExtras, workspace = false
 
       {!allDone && <SetupSection open={open} setOpen={setOpen} id="launch" title="Review & Launch" status={<Chip tone={d.launchPercent >= 100 ? "done" : "miss"}>{d.launchPercent}%</Chip>}>
         <ul className="space-y-1 text-sm">
-          {(d.steps as any[]).filter((s) => s.step !== "launch").map((s) => <li key={s.step} className="flex justify-between gap-3 border-b py-2 last:border-0"><span className="capitalize">{String(s.step).replace(/_/g, " ")}</span><span className="text-muted-foreground">{s.statusLabel}</span></li>)}
+          {(d.steps as any[]).filter((s) => s.step !== "launch").map((s) => <li key={s.step} className="flex justify-between gap-3 border-b py-2 last:border-0"><span className="capitalize">{s.step === "fees_team" ? "Fees & terms" : String(s.step).replace(/_/g, " ")}</span><span className="text-muted-foreground">{s.statusLabel}</span></li>)}
         </ul>
         <p className="text-sm text-muted-foreground">Launch becomes available once the required fund details, reviews and signing setup are complete.</p>
       </SetupSection>}
@@ -194,7 +195,7 @@ export function FundSetupForm({ offeringId, mode, staffExtras, workspace = false
             <h4 className="text-sm font-semibold">Waiting on Harmonious</h4>
             {forUs.length ? <ul className="mt-2 space-y-2 text-sm">{forUs.map((s) => (
               <li key={s.step} className="flex flex-wrap justify-between gap-2 border-b pb-2 last:border-0">
-                <span><span className="capitalize">{String(s.step).replace(/_/g, " ")}</span>{s.missing?.length ? <span className="block text-xs text-muted-foreground">Missing: {(s.missing as string[]).join(", ")}</span> : null}</span>
+                <span><span className="capitalize">{s.step === "fees_team" ? "Fees & terms" : String(s.step).replace(/_/g, " ")}</span>{s.missing?.length ? <span className="block text-xs text-muted-foreground">Missing: {(s.missing as string[]).join(", ")}</span> : null}</span>
                 <a className="text-primary underline" href={`#setup-form-${s.step === "document" ? "documents" : s.step}`}>Go to step</a>
               </li>))}</ul>
               : <p className="mt-1 text-sm text-muted-foreground">Nothing needed from Harmonious right now.</p>}
