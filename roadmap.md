@@ -1,5 +1,10 @@
 # Roadmap
 
+## ROAS documented class fees and carry
+- [x] Read subscription Section 1 and its incorporated LPA Sections 2.4(b), 10.4(c)-(d), 10.7. Saved existing draft through Alyssa's authorized canonical save: all four classes 2% annual capital-account fee, quarterly arrears; 0% Section 3.4 incentive allocation with separate B tiered allocation recorded. Preserved ranges, preferred returns and draft status, no approval/publication.
+- [x] Database read-back confirms exact terms, retained ranges and no approver; 51 focused tests passed and preview build OK.
+- [ ] Normal UI read-back blocked by authenticator requirement; no MFA bypass attempted.
+
 ## Fees and terms screen redesign
 - [x] Simplify canonical terms editing, side-by-side class comparison, focused class editing, investor assignment and approval status without changing terms or authority.
 - [x] 56 existing terms, class and authorization checks passed; actual controls rendered with fictional data and blocked record requests. Comparison, editor, defaults, search and approval locks inspected at desktop and 440px without runtime errors or page overflow. Preview build OK.
