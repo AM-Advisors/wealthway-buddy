@@ -93,6 +93,7 @@ export function FundQuestionSectionCard({ offeringId }: { offeringId: string }) 
         <div className="flex flex-wrap gap-2 border-t pt-4">
           <Button size="sm" variant="outline" onClick={() => { setDirty(true); setQs((cur) => [...cur, { key: `fs_q${Date.now().toString(36)}`, label: "", type: "text", required: true }]); }}><Plus className="size-4" />Add question</Button>
           <Button size="sm" disabled={save.isPending} onClick={() => save.mutate(undefined)}><Save className="size-4" />Save draft</Button>
+          {staff && (dirty || !draft) && <Button size="sm" variant="outline" disabled={saveApprove.isPending || save.isPending || approve.isPending} onClick={() => saveApprove.mutate(undefined)}><CheckCircle2 className="size-4" />{saveApprove.isPending ? "Saving…" : "Save & approve"}</Button>}
           {staff && draft && <Button size="sm" variant="outline" disabled={approve.isPending || save.isPending || dirty} onClick={() => approve.mutate()}><CheckCircle2 className="size-4" />Approve for investors</Button>}
         </div>
       )}
