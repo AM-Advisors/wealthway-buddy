@@ -252,13 +252,16 @@ export const recordEvidence = createServerFn({ method: "POST" })
       throw new Error("Invalid upload path.");
     }
 
-    const { error } = await supabase.from("accreditation_documents").insert({
+    const { data: doc, error } = await supabase.from("accreditation_documents").insert({
       application_id: application.id,
       storage_path: data.storage_path,
       file_name: data.file_name,
       doc_kind: data.doc_kind,
-    });
+    }).select("id").single();
     if (error) throw new Error(error.message);
 
+    void (await import("@/lib/accreditation-review.server")).notifyAccreditationActivity(application.id, {
+      kind: "evidence_uploaded", fileName: data.file_name, docKind: data.doc_kind, documentId: doc?.id ?? null,
+    }).catch(() => {});
     return { ok: true };
   });
