@@ -1,4 +1,4 @@
-/** Server-only quoting engine: rate-card quotes → approval → SOW/MSA drafts → signed. Never moves money. */
+/** Server-only quoting engine: rate-card quotes → approval → SOW draft → signed (MSA accepted once at first signing). Never moves money. */
 import { canDraftQuote, cleanLineDetails, priceQuote, quoteApprovalProblem, quoteAutoApproves, quoteDeleteProblem, type QuoteLineInput } from "@/lib/sales-model";
 import { names, salesActor } from "@/lib/sales-hub.server";
 import { canAddSalesContact, type SalesContactInput } from "@/lib/sales-contact-model";
@@ -538,6 +538,9 @@ export async function sendQuotePackage(userId: string, d: { id: string; subject:
   const { packageBlocker, packageInvoicePlan, packageThrough } = await import("@/lib/quote-package-model");
   const blocked = packageBlocker(q);
   if (blocked) throw new Error(blocked);
+  // Never bill on top of invoices already prepared for this client: that would double-charge.
+  const { count: waiting } = await db.from("invoices").select("id", { count: "exact", head: true }).eq("client_id", q.client_id).eq("status", "draft");
+  if (waiting) throw new Error(`This client already has ${waiting} draft invoice${waiting === 1 ? "" : "s"} waiting. Send or cancel those first so nothing is billed twice.`);
   const { sowId } = await draftAgreements(userId, q);
   await sendQuoteEmail(userId, { id: q.id, subject: d.subject, message: d.message });
   const { data: lines } = await db.from("sales_quote_lines").select("*").eq("quote_id", q.id).order("sort_order");
