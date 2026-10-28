@@ -43410,6 +43410,8 @@ export type Database = {
           onboarded_offering_id: string | null
           onboarding_error: string | null
           owner_user_id: string
+          package_issued_at: string | null
+          package_issued_through: string | null
           pricing_version_id: string | null
           quote_number: number
           sections: Json | null
@@ -43447,6 +43449,8 @@ export type Database = {
           onboarded_offering_id?: string | null
           onboarding_error?: string | null
           owner_user_id: string
+          package_issued_at?: string | null
+          package_issued_through?: string | null
           pricing_version_id?: string | null
           quote_number?: number
           sections?: Json | null
@@ -43484,6 +43488,8 @@ export type Database = {
           onboarded_offering_id?: string | null
           onboarding_error?: string | null
           owner_user_id?: string
+          package_issued_at?: string | null
+          package_issued_through?: string | null
           pricing_version_id?: string | null
           quote_number?: number
           sections?: Json | null
