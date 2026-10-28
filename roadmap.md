@@ -1,9 +1,10 @@
 # Roadmap
 
 ## Single-approval simplification
-- [ ] Replace routine second-person checks with one authorized human approval across fund setup, questions, documents and internal workflows; keep money, identity, access and required legal signatures protected.
-- [ ] Separate optional countersign requirements from contractual signatures; prospective versioned changes only, no retrospective execution or automatic approval of pending ROAS items.
-- [ ] Consolidate duplicate review screens and verify affected saves/statuses with isolated fictional tests; approve scoped plan before cross-platform rule changes.
+- [x] Replace routine preparer separation with one existing-authorized human approval for economics, questions, document reviews, record-only side letters and marketing content. Matching document/side-letter DB checks retain exact-fund authority and history. Amount-free SERVICE_CHANGE/ENTITY_ACTION bypass the staff handoff only, fund-manager decision and configured counts retained. Money, identity, access and live-release gates unchanged; no pending ROAS approval.
+- [x] Separate approvals from contractual signatures: existing MSA and fund countersignatures retained because counterpart/electronic-signature language does not establish single-party completion. No retrospective execution or policy waiver.
+- [x] Approved scoped plan, kept shared fund Approvals screen, removed covered second-reviewer prompts and checked the authorized preparer's enabled fees approval on fictional desktop/440px views. 128 focused policy, authorization, transactional document/history and protected-financial tests passed; preview build OK.
+- [ ] Authenticated save → approval → investor read-back blocked pending independently isolated backend and synthetic sessions. No live records used for QA. Optional signature removal waits on a reviewed governing version expressly allowing it.
 
 ## AI questions from custom fund agreements
 - [x] Read explicitly selected PDF/Word fund versions and draft source-backed questions and answer choices for staff/exact-fund managers in the existing question editor. Source approvals precede question publication, saved provenance immutable.
