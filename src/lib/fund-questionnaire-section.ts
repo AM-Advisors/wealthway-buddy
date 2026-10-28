@@ -27,8 +27,9 @@ export function mergeSection<T extends { questions?: Question[] }>(base: T, sect
   if (!section) return base;
   const baseQs = base.questions ?? [];
   const extra = newSectionQuestions(baseQs, section.questions);
-  if (!extra.length) return base;
-  return { ...base, questions: [...baseQs, ...extra], sectionTitle: section.title, sectionVersion: section.version, sectionStartKey: extra[0]!.key };
+  const first = extra[0];
+  if (!first) return base;
+  return { ...base, questions: [...baseQs, ...extra], sectionTitle: section.title, sectionVersion: section.version, sectionStartKey: first.key };
 }
 
 /** Validates a draft before saving: unique fs_ keys, labels, and options for select questions. */
@@ -39,7 +40,7 @@ export function validateSectionQuestions(qs: Question[]): string | null {
     if (keys.has(q.key)) return `Question key ${q.key} is used twice.`;
     keys.add(q.key);
     if (!q.label.trim()) return "Every question needs wording.";
-    if (q.type === "select" && !(q.options?.length)) return `"${q.label}" needs answer choices.`;
+    if ((q.type === "select" || q.type === "multi_select") && !(q.options?.length)) return `"${q.label}" needs answer choices.`;
   }
   return null;
 }
