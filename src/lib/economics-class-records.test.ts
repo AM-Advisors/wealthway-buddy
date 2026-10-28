@@ -17,13 +17,13 @@ describe("classRowsFromEconomics", () => {
     expect(rows.map((r) => r.preferred_return_bps)).toEqual([1600, 1800, 2000, 0]);
   });
   it("keeps ranges and labels", () => {
-    expect(rows[0].terms.minInvestmentCents).toBe(5_000_000);
-    expect(rows[0].terms.maxInvestmentCents).toBe(10_000_000);
-    expect(rows[1].series_label).toBe("Series A-2");
+    expect(rows[0]?.terms["minInvestmentCents"]).toBe(5_000_000);
+    expect(rows[0]?.terms["maxInvestmentCents"]).toBe(10_000_000);
+    expect(rows[1]?.series_label).toBe("Series A-2");
   });
   it("records Series B lock-up, leaves fee/carry blank", () => {
-    expect(rows[3].liquidity_terms).toMatch(/lock-up/);
-    expect(rows[3].management_fee_bps).toBeNull();
-    expect(rows[3].carry_bps).toBeNull();
+    expect(rows[3]?.liquidity_terms).toMatch(/lock-up/);
+    expect(rows[3]?.management_fee_bps).toBeNull();
+    expect(rows[3]?.carry_bps).toBeNull();
   });
 });
