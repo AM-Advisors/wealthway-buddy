@@ -1,7 +1,7 @@
 # Roadmap
 
 ## ROAS 2026 and 2027 invoice correction (2026-10-28)
-- [x] Add the explicit $6,956.52 initial White Glove proration from August 24, 2026, due now, without changing Q4 or future renewals; 30 focused tests passed and sandbox display confirmed $20,456.52 due now. Invoice issuance remains blocked as below.
+- [x] Correct the initial White Glove proration to $4,956.52 for Q3 2026 (August 24 through September 30, due now), without changing Q4 or future renewals; 20 focused tests passed. Invoice issuance remains blocked as below.
 - [x] Update entity-specific planning terms, reported paid/due/future display and January 1 future-year visibility on both staff billing pages; invoice receipts remain separate.
 - [ ] Record corrected invoice/schedule data through canonical authorized workflows: blocked by the unsigned, pending SOW and required invoice review; no invoices issued or recurring services activated.
 - [x] 28 focused checks passed for concrete amounts, annual/quarterly due dates, balances and year visibility; authenticated page inspection stopped at authenticator enrollment, no bypass.
