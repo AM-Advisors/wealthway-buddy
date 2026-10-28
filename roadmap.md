@@ -1,9 +1,10 @@
 # Roadmap
 
 ## Fund approval discoverability
-- [ ] Use Fees & terms consistently and expose Approvals directly on fund pages.
-- [ ] Bring existing fees, document and additional-question review controls into the Approvals area without changing authority or approving records.
-- [ ] Check fictional navigation and compact layout; authenticated approval remains blocked on independently isolated QA.
+- [x] Use Fees & terms in setup labels and expose primary Approvals plus a visible Review approvals shortcut on fund pages. Historical task titles remain unchanged.
+- [x] Staff Approvals opens Fund setup approvals with existing Fees & terms, Documents and Investor questions review tools, mounted only when selected; no authority or records changed.
+- [x] 25 existing fee, question and document safeguards passed; fictional shortcut and review-section click-through inspected at 440px without overflow or runtime errors. Preview build OK.
+- [ ] Authenticated approval/read-back blocked on independently isolated QA; no live approval performed. Fictional navigation harness is not evidence of authenticated fund access.
 
 ## ROAS documented class fees and carry
 - [x] Read subscription Section 1 and its incorporated LPA Sections 2.4(b), 10.4(c)-(d), 10.7. Saved existing draft through Alyssa's authorized canonical save: all four classes 2% annual capital-account fee, quarterly arrears; 0% Section 3.4 incentive allocation with separate B tiered allocation recorded. Preserved ranges, preferred returns and draft status, no approval/publication.
