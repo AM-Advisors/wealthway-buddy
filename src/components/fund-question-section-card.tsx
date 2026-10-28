@@ -27,7 +27,7 @@ export function FundQuestionSectionCard({ offeringId }: { offeringId: string }) 
   const [qs, setQs] = useState<Q[]>([]);
   useEffect(() => { setTitle(shown?.title ?? "Additional fund questions"); setQs(((shown?.questions ?? []) as Q[]).map((x) => ({ ...x }))); }, [shown?.id]);
   const refresh = () => qc.invalidateQueries({ queryKey: key });
-  const save = useMutation({ mutationFn: () => saveFn({ data: { offeringId, sectionId: draft?.id ?? null, title, questions: qs as any } }), onSuccess: () => { toast.success("Draft saved"); void refresh(); }, onError: (e: Error) => toast.error(e.message) });
+  const save = useMutation({ mutationFn: (override?: Q[]) => saveFn({ data: { offeringId, sectionId: draft?.id ?? null, title, questions: (override ?? qs) as any } }), onSuccess: () => { toast.success("Draft saved"); void refresh(); }, onError: (e: Error) => toast.error(e.message) });
   const approve = useMutation({ mutationFn: () => approveFn({ data: { sectionId: draft!.id } }), onSuccess: () => { toast.success("Questions approved; investors now see them"); void refresh(); }, onError: (e: Error) => toast.error(e.message) });
   if (q.isPending || q.isError) return null;
   const staff = q.data!.staff;
@@ -42,7 +42,7 @@ export function FundQuestionSectionCard({ offeringId }: { offeringId: string }) 
         <Badge variant={draft ? "secondary" : live ? "default" : "outline"}>{draft ? `Draft v${draft.version}, awaiting approval` : live ? `Approved v${live.version}` : "None yet"}</Badge>
       </div>
       <p className="text-sm text-muted-foreground">These appear after the {q.data!.baseCount} standard questions. Anything already asked there is skipped automatically, and investors' saved answers fill in again.</p>
-      {staff && !draft && live && <Button size="sm" variant="outline" onClick={() => { setQs(live.questions.map((x: Q) => ({ ...x }))); save.mutate(); }}>Start a new version</Button>}
+      {staff && !draft && live && <Button size="sm" variant="outline" onClick={() => save.mutate(live.questions.map((x: Q) => ({ ...x })))}>Start a new version</Button>}
       {shown?.source_note && <p className="rounded-lg bg-muted p-3 text-xs">{shown.source_note}</p>}
       {editable && <Input aria-label="Section title" value={title} onChange={(e) => setTitle(e.target.value)} />}
       <ol className="space-y-4">
@@ -71,7 +71,7 @@ export function FundQuestionSectionCard({ offeringId }: { offeringId: string }) 
       {editable && (
         <div className="flex flex-wrap gap-2 border-t pt-4">
           <Button size="sm" variant="outline" onClick={() => setQs((cur) => [...cur, { key: `fs_q${Date.now().toString(36)}`, label: "", type: "text", required: true }])}><Plus className="size-4" />Add question</Button>
-          <Button size="sm" disabled={save.isPending} onClick={() => save.mutate()}><Save className="size-4" />Save draft</Button>
+          <Button size="sm" disabled={save.isPending} onClick={() => save.mutate(undefined)}><Save className="size-4" />Save draft</Button>
           {draft && <Button size="sm" variant="outline" disabled={approve.isPending} onClick={() => approve.mutate()} title={draft.preparedByMe ? "A different reviewer approves; Super Admins can approve with a reason" : undefined}><CheckCircle2 className="size-4" />Approve for investors</Button>}
         </div>
       )}
