@@ -720,7 +720,8 @@ export async function approveEconomics(userId: string, versionId: string) {
     .maybeSingle();
   if (!version) fail("That economics version was not found.");
   if (version.status !== "draft") fail("Only a draft economics version can be approved.");
-  if (version.prepared_by === userId) {
+  const { routineApprovalAllowed } = await import("./routine-approval-policy");
+  if (version.prepared_by === userId && !routineApprovalAllowed("fund_economics", true)) {
     fail("The person who prepared economic terms cannot also approve them.");
   }
 

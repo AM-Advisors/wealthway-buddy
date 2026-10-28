@@ -4,6 +4,7 @@
  * readiness or launch. MFN outcomes are explicit human decisions.
  */
 
+import { routineApprovalAllowed } from "./routine-approval-policy";
 export const TERM_CATEGORIES = [
   { key: "fee_discount", label: "Fee discount" },
   { key: "carry_reduction", label: "Carry reduction" },
@@ -91,17 +92,15 @@ export function mfnCandidates(
 export type ActorKind = "staff" | "manager" | "assistant" | "viewer" | "none";
 
 /**
- * Who may approve a pending change. Never the proposer. Staff can approve
- * anything; a manager can approve another manager's or staff's proposal on
- * the same Fund. A sole manager's own proposals therefore go to Harmonious.
+ * Staff or exact-fund managers may approve routine proposals, including their
+ * own preparation. Assistants/viewers retain proposal-only or read-only rights.
  */
 export function canApprove(input: {
   actorId: string;
   actorKind: ActorKind;
   proposedBy: string;
 }): boolean {
-  if (input.actorId === input.proposedBy) return false;
-  return input.actorKind === "staff" || input.actorKind === "manager";
+  return routineApprovalAllowed("side_letter", input.actorKind === "staff" || input.actorKind === "manager");
 }
 
 export function canPropose(kind: ActorKind): boolean {

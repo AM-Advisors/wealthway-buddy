@@ -9,6 +9,7 @@ import {
 } from "@/lib/marketing-model";
 import { entitledBroadcastContacts, recordPromotionalUnsubscribe, suppressedPromotionalEmails } from "./promotional-email.server";
 import { normalizePromotionalEmail } from "./promotional-email-model";
+import { routineApprovalAllowed } from "./routine-approval-policy";
 
 const admin = async () => (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
 const BUCKET = "marketing-assets";
@@ -76,7 +77,7 @@ export async function getPost(userId: string, id: string) {
     imageUrls: await signed(db, p.image_paths ?? []),
     targets: targets ?? [],
     history: ((history ?? []) as any[]).map((h) => ({ ...h, actor_name: n.get(h.actor_id) ?? "" })),
-    canApprove: canApprove && p.author_id !== userId,
+    canApprove: routineApprovalAllowed("marketing_post", canApprove),
     isAuthor: p.author_id === userId,
   };
 }
@@ -120,7 +121,7 @@ export async function decidePost(userId: string, id: string, action: "submit" | 
   } else {
     if (p.status !== "submitted") throw new Error("Only submitted posts can be approved or sent back.");
     if (!canApprove) throw new Error("Only a Marketing Manager or leadership can approve.");
-    if (p.author_id === userId && !(await (await import("@/lib/self-approval.server")).selfApprove(userId, "marketing_post", [id]))) throw new Error("Someone other than the author must approve.");
+    if (!routineApprovalAllowed("marketing_post", canApprove)) throw new Error("You cannot approve this post.");
     if (action === "approve") {
       const scheduled_at = p.scheduled_at ?? new Date().toISOString();
       await db.from("marketing_posts").update({ status: "scheduled", scheduled_at, approved_by: userId, approved_at: new Date().toISOString() }).eq("id", id);
@@ -265,7 +266,7 @@ export async function getEmail(userId: string, id: string) {
     email: { ...e, author_name: n.get(e.author_id) ?? "" },
     history: ((history ?? []) as any[]).map((h) => ({ ...h, actor_name: n.get(h.actor_id) ?? "" })),
     sends: tally,
-    canApprove: canApprove && e.author_id !== userId,
+    canApprove: routineApprovalAllowed("marketing_email", canApprove),
   };
 }
 
@@ -298,7 +299,7 @@ export async function decideEmail(userId: string, id: string, action: "submit" |
   } else {
     if (e.status !== "submitted") throw new Error("Only submitted emails can be approved or sent back.");
     if (!canApprove) throw new Error("Only a Marketing Manager or leadership can approve.");
-    if (e.author_id === userId && !(await (await import("@/lib/self-approval.server")).selfApprove(userId, "marketing_email", [id]))) throw new Error("Someone other than the author must approve.");
+    if (!routineApprovalAllowed("marketing_email", canApprove)) throw new Error("You cannot approve this email.");
     if (action === "approve") await db.from("marketing_emails").update({ status: "scheduled", scheduled_at: e.scheduled_at ?? new Date().toISOString(), approved_by: userId, approved_at: new Date().toISOString() }).eq("id", id);
     else await db.from("marketing_emails").update({ status: "rejected" }).eq("id", id);
   }
@@ -405,7 +406,7 @@ export async function calendar(userId: string, from: string, to: string) {
     db.from("marketing_emails").select("id, name, status, scheduled_at, sent_at, campaign_id, author_id, external_source").or(`and(scheduled_at.gte.${from},scheduled_at.lt.${to}),and(sent_at.gte.${from},sent_at.lt.${to})`),
   ]);
   // Display hint only — decidePost/decideEmail re-check role and maker-checker server-side.
-  const mayApprove = (a: string | null) => !!canApprove && a !== userId;
+  const mayApprove = (_author: string | null) => routineApprovalAllowed("marketing_post", canApprove);
   return [
     ...((posts ?? []) as any[]).map((p) => ({ kind: "post" as const, id: p.id, title: p.title, status: p.status, channels: p.channels as string[], at: p.published_at ?? p.scheduled_at, campaignId: p.campaign_id as string | null, source: p.external_source as string | null, canApprove: mayApprove(p.author_id) })),
     ...((emails ?? []) as any[]).map((e) => ({ kind: "email" as const, id: e.id, title: e.name, status: e.status, channels: ["email"], at: e.sent_at ?? e.scheduled_at, campaignId: e.campaign_id as string | null, source: e.external_source as string | null, canApprove: mayApprove(e.author_id) })),

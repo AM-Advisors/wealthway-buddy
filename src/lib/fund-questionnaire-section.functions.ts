@@ -95,7 +95,8 @@ export const approveQuestionSectionFn = createServerFn({ method: "POST" })
       const { data: version, error } = await db.from("offering_document_versions").select("approval_status").eq("id", source.id).eq("offering_id", row.offering_id).eq("offering_document_id", source.documentId).eq("version", source.version).maybeSingle();
       if (error || !sourceAgreementApproved(version)) throw new Error("Approve the source agreement version before publishing its questions.");
     }
-    if (row.prepared_by === context.userId) {
+    const { routineApprovalAllowed } = await import("./routine-approval-policy");
+    if (row.prepared_by === context.userId && !routineApprovalAllowed("fund_questionnaire_section", true)) {
       const { selfApprove } = await import("@/lib/self-approval.server");
       if (!(await selfApprove(context.userId, "fund_questionnaire_section.approve", [row.id]))) throw new Error("A different Harmonious reviewer must approve questions you prepared.");
     }
