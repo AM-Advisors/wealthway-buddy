@@ -755,7 +755,12 @@ function Sign({ d, onboardingId, done }: { d: any; onboardingId: string; done: (
           </div>
         );
       case "submit": {
-        if (d.executedSnapshot) return <p className="text-sm text-muted-foreground">Signed and submitted. Copies are in your Documents.</p>;
+        if (d.executedSnapshot) return (
+          <div className="space-y-1 text-sm">
+            <p>Signed and submitted. Copies are in your Documents.</p>
+            <p className="text-muted-foreground">Next: Fund. Once the fund manager approves your subscription, wiring instructions appear in the Fund step and we email you. It takes about 1 minute.</p>
+          </div>
+        );
         const left = tasks.filter((t) => t.key !== "submit" && t.state !== "complete");
         if (left.length) {
           return (
