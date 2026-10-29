@@ -1357,9 +1357,35 @@ export async function fundingInstructions(userId: string, onboardingId: string) 
   const { normalizePaymentMethods, PAYMENT_METHOD_TIMELINE } = await import("@/lib/payment-methods");
   const { data: pm } = await db().from("offerings").select("payment_methods, check_payable_to, check_mail_address").eq("id", row.offering_id).maybeSingle();
   const methods = normalizePaymentMethods((pm as any)?.payment_methods).filter((m) => m !== "ach" || !!shown.domestic);
+  // Sending bank and account name the investor already reported on an earlier
+  // wire (this fund or a prior one) so they never retype their wire details.
+  let savedWire: { sendingBank: string | null; senderName: string | null } | null = null;
+  const profileRows = row.investment_profile_id
+    ? db().from("investor_onboardings").select("id").eq("investment_profile_id", row.investment_profile_id)
+    : db().from("investor_onboardings").select("id").eq("investor_user_id", row.investor_user_id);
+  const { data: sameInvestorRows } = await profileRows;
+  const sameIds = ((sameInvestorRows ?? []) as any[]).map((r) => r.id as string);
+  if (sameIds.length) {
+    const { data: lastReport } = await db()
+      .from("investor_onboarding_events")
+      .select("detail, created_at")
+      .eq("event", "investor_reports_funds_sent")
+      .in("onboarding_id", sameIds)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (lastReport) {
+      const rd = (lastReport.detail ?? {}) as Record<string, unknown>;
+      savedWire = {
+        sendingBank: typeof rd.sendingBank === "string" && rd.sendingBank.trim() ? rd.sendingBank : null,
+        senderName: typeof rd.senderName === "string" && rd.senderName.trim() ? rd.senderName : null,
+      };
+    }
+  }
   return {
     unlocked: true,
     reasons: [] as string[],
+    saved: savedWire,
     instructions: {
       methods: methods.map((m) => ({ method: m, timeline: PAYMENT_METHOD_TIMELINE[m] })),
       check: methods.includes("check") ? { payableTo: (pm as any)?.check_payable_to ?? null, mailTo: (pm as any)?.check_mail_address ?? null } : null,
