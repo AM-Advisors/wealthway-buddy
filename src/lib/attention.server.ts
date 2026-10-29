@@ -1016,7 +1016,7 @@ async function professionalItems(ctx: Ctx): Promise<AttentionItem[]> {
           .limit(20),
       ),
     );
-    for (const a of applications as any[]) {
+    for (const a of (await canonicalizeApplications(supabaseAdmin, applications as any[], d.principal_user_id)) as any[]) {
       if (done(a.kyc_status) && done(a.accreditation_status)) continue;
       out.push(
         buildAttentionItem({

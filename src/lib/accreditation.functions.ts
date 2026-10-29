@@ -1,3 +1,4 @@
+import { canonicalizeApplications } from "@/lib/verification-status";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/lib/require-auth";
@@ -71,7 +72,11 @@ async function loadApplication(supabase: any, userId: string, onboardingId?: str
     .maybeSingle();
   if (error) throw new Error(error.message);
   if (!data) throw new Error("No application found. Reload and try again.");
-  if (data.kyc_status === "not_started" || data.aml_status === "not_started") {
+  const [c] = await canonicalizeApplications(supabase, [data as any], userId);
+  if (c.kyc_status === "not_started" || c.aml_status === "not_started") {
+    throw new Error("Complete identity verification and the AML questionnaire first.");
+  }
+  if (false && data.kyc_status === "not_started" || data.aml_status === "not_started") {
     throw new Error("Complete identity verification and the AML questionnaire first.");
   }
   return data as AppRow;
