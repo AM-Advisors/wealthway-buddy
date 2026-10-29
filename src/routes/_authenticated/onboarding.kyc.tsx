@@ -257,6 +257,7 @@ function KycPage() {
               <Text
                 label={isEntity ? "EIN" : "SSN / ITIN"}
                 name="tax_id"
+                type="password"
                 form={form}
                 set={set}
                 errors={errors}

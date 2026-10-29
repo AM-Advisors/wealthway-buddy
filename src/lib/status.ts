@@ -7,8 +7,11 @@ export function statusTone(status: string) {
   return "secondary" as const;
 }
 
-export function prettyStatus(status: string) {
-  return status.replace(/_/g, " ");
+/** Display only: turns stored values like "not_started" into "Not started". Stored values never change. */
+export function prettyStatus(status: string | null | undefined) {
+  const text = String(status ?? "").trim().replace(/_/g, " ").toLowerCase();
+  if (!text) return "Not started";
+  return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
 export function money(cents?: number | null) {

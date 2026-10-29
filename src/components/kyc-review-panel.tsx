@@ -3,6 +3,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { CheckCircle2, XCircle, Clock, MinusCircle, Image as ImageIcon } from "lucide-react";
+import { prettyStatus } from "@/lib/status";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { verificationImagesFn } from "@/lib/account-kyc.functions";
@@ -76,14 +77,14 @@ export function KycReviewPanel({ rd, checkId }: { rd: ReviewDetails; checkId: st
         </Card>}
         {(rd.liveness || rd.faceMatch) && <Card title="Liveness & face match" s={[rd.liveness?.status, rd.faceMatch?.status].includes("fail") ? "fail" : [rd.liveness?.status, rd.faceMatch?.status].every((x) => x === "pass") ? "pass" : "review"}>
           <Grid>
-            <Row k="Liveness" v={rd.liveness ? `${rd.liveness.raw ?? "Not recorded"}${rd.liveness.score != null ? ` · ${rd.liveness.score}%` : ""}` : "Not done"} />
+            <Row k="Liveness" v={rd.liveness ? `${rd.liveness.raw ? prettyStatus(rd.liveness.raw) : "Not recorded"}${rd.liveness.score != null ? ` · ${rd.liveness.score}%` : ""}` : "Not done"} />
             <Row k="Method" v={rd.liveness?.method?.toLowerCase()} />
-            <Row k="Face match" v={rd.faceMatch ? `${rd.faceMatch.raw ?? "Not recorded"}${rd.faceMatch.score != null ? ` · ${rd.faceMatch.score}%` : ""}` : "Not done"} />
+            <Row k="Face match" v={rd.faceMatch ? `${rd.faceMatch.raw ? prettyStatus(rd.faceMatch.raw) : "Not recorded"}${rd.faceMatch.score != null ? ` · ${rd.faceMatch.score}%` : ""}` : "Not done"} />
             <Row k="Estimated age" v={rd.liveness?.ageEstimate != null ? Math.round(rd.liveness.ageEstimate) : null} />
           </Grid>
         </Card>}
         {rd.aml && <Card title="Watchlist / AML" s={rd.aml.totalHits > 0 && rd.aml.status === "pass" ? "review" : rd.aml.status}>
-          <p className="mb-2 text-sm">{rd.aml.totalHits} possible match{rd.aml.totalHits === 1 ? "" : "es"} · provider result {rd.aml.raw ?? " · "}</p>
+          <p className="mb-2 text-sm">{rd.aml.totalHits} possible match{rd.aml.totalHits === 1 ? "" : "es"} · provider result {rd.aml.raw ? prettyStatus(rd.aml.raw) : "Not recorded"}</p>
           {!!rd.aml.hits.length && <ul className="max-h-72 space-y-2 overflow-auto print:max-h-none">{rd.aml.hits.map((h, i) => (
             <li key={i} className="rounded-md border px-3 py-2 text-xs">
               <div className="flex flex-wrap items-center justify-between gap-2"><span className="font-medium text-sm">{h.caption ?? "Unnamed"}</span><span className="flex gap-1">{h.pep && <Badge variant="destructive">PEP</Badge>}{h.matchScore != null && <Badge variant="outline">Name match {h.matchScore}%</Badge>}{h.riskScore != null && <Badge variant="secondary">Risk {h.riskScore}</Badge>}</span></div>
