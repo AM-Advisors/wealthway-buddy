@@ -36,6 +36,7 @@ export type InboxItem = {
   fund_name: string | null;
   investor_name: string | null;
   investor_email: string | null;
+  canReview: boolean;
 };
 
 export const listInboxUploads = createServerFn({ method: "GET" })
@@ -66,12 +67,15 @@ export const listInboxUploads = createServerFn({ method: "GET" })
 
     const fundMap = new Map((funds ?? []).map((f: any) => [f.id, f.name as string]));
     const profileMap = new Map((profiles ?? []).map((p: any) => [p.user_id, p]));
+    const actor = await (await import("./fund-setup.server")).setupActor(userId);
+    const { MANAGER_REVIEW_KINDS } = await import("./investor-upload-review.server");
 
     const items: InboxItem[] = rows.map((r) => ({
       ...(r as any),
       fund_name: fundMap.get(r.offering_id) ?? null,
       investor_name: profileMap.get(r.user_id)?.legal_name ?? null,
       investor_email: profileMap.get(r.user_id)?.email ?? null,
+      canReview: r.review_status === "new" && (actor.isStaff || (actor.offeringIds.includes(r.offering_id) && (MANAGER_REVIEW_KINDS as readonly string[]).includes(r.doc_kind))),
     }));
 
     return {

@@ -1,8 +1,8 @@
 # Roadmap
 
 ## Manager investor documents and tax forms
-- [ ] Enable exact-fund manager upload and approval of supporting documents and signed W-9/W-8 copies, retaining certification, identity and tax-return release boundaries.
-- [ ] Test own-upload approval, unrelated-fund denial and retained originals; verify fictional controls.
+- [x] Exact-fund managers upload and approve supporting documents and signed W-9/W-8 copies on investor Documents; inbox uses the same guarded review. Certification, identity, accreditation, bank and tax-return release remain separate.
+- [x] 21 focused safeguards passed; fictional manager upload → approve → approved-copy read-back verified without runtime errors. Preview build OK; no live copies or decisions changed.
 - [ ] Durable authenticated verification requires independently isolated QA and synthetic sessions.
 
 ## Fund manager responsibility and simple progress
