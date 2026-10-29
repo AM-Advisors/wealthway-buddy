@@ -982,3 +982,11 @@ function FundingLedger({ onboardingId }: { onboardingId: string }) {
     </div>
   );
 }
+
+const VERIFY_HELP: Record<string, { title: string; fix: string }> = {
+  identity_verification: { title: "ID check", fix: "Tap Start Verification and retake photos of your ID and a selfie. Your ID must be unexpired and fully in frame." },
+  entity_verification: { title: "Entity check", fix: "Tap Start Verification and upload your entity's formation documents and the people who own or control it." },
+  aml: { title: "Compliance screening", fix: "Nothing for you to do right now. The fund team is reviewing it and will contact you if anything is needed." },
+  eligibility: { title: "Eligibility", fix: "Tap Start Verification to confirm your country and investor details." },
+  accreditation: { title: "Accredited investor proof", fix: "After verification, confirm accreditation and upload proof. You can keep signing while it's reviewed." },
+};
