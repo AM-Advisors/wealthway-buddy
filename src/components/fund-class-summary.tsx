@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { CheckCircle2, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ApprovalButton } from "@/components/approval-button";
 import { getFundSetupOverview } from "@/lib/fund-setup-canonical.functions";
 import { classSummaryRows } from "@/lib/fund-setup-form-model";
 import { approveEconomicsFn } from "@/lib/fund-setup.functions";
@@ -33,7 +34,7 @@ export function FundClassSummary({ offeringId, onEdit }: { offeringId: string; o
         <h3 className="min-w-0 flex-1 basis-40 font-heading text-lg font-semibold text-primary">Fees & Terms</h3>
         <span className={`rounded-full px-3 py-1 text-xs font-medium ${approved ? "bg-accent/15 text-foreground" : "bg-muted text-muted-foreground"}`}>{approved ? "Approved" : "Draft, awaiting approval"}</span>
         <div className="flex flex-wrap items-center gap-2">
-          {d.economics.canApprove && d.economics.status === "draft" && d.economics.versionId && <Button size="sm" disabled={approve.isPending} onClick={() => approve.mutate()}><CheckCircle2 className="size-4" />{approve.isPending ? "Approving…" : "Approve"}</Button>}
+          {d.economics.canApprove && d.economics.status === "draft" && d.economics.versionId && <ApprovalButton title={`Approve fees and terms, version ${d.economics.version}?`} description="These saved fees and class terms will become the current approved terms. Existing signed agreements will not change." disabled={approve.isPending} onApprove={() => approve.mutate()}><CheckCircle2 className="size-4" />{approve.isPending ? "Approving…" : "Approve terms"}</ApprovalButton>}
           <Button size="sm" variant="outline" disabled={approve.isPending} onClick={onEdit}><Pencil className="size-4" />Edit</Button>
         </div>
       </div>
@@ -49,8 +50,8 @@ export function FundClassSummary({ offeringId, onEdit }: { offeringId: string; o
               <dl className="grid gap-3 sm:grid-cols-2">
                 {s.rows.filter(([k]) => k !== "Investment range").map(([k, v]) => (
                   <div key={k} className={k === "Profit sharing" ? "sm:col-span-2" : ""}>
-                    <dt className="text-xs text-muted-foreground">{k}</dt>
-                    <dd className="text-sm">{v}</dd>
+                    <dt className="text-base text-muted-foreground">{k}</dt>
+                    <dd className="text-lg font-medium">{v}</dd>
                   </div>
                 ))}
               </dl>

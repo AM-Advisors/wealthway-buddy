@@ -40,6 +40,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ApprovalButton } from "@/components/approval-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -57,7 +58,7 @@ const num = (v: string) => (v.trim() === "" ? null : Number(v));
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="space-y-1">
-      <Label className="text-xs">{label}</Label>
+      <Label className="text-base">{label}</Label>
       {children}
     </div>
   );
@@ -662,23 +663,23 @@ export function EconomicsCard({ d, offeringId, onSaved }: { d: D; offeringId: st
 
         {d.economics.canEdit && (
           <div className="flex flex-wrap items-center gap-3 border-t py-4">
-            <Button disabled={busy} onClick={() => run(() => save({ data: { offeringId, terms: terms as any, classes: multi ? (classes as any) : [], classDifferencesConfirmed: confirmed } }), "Economics saved as a draft")}><Save className="size-4" />{busy ? "Saving…" : "Save terms draft"}</Button>
+            <Button className="min-h-11 text-base" variant={d.economics.canApprove && (unsaved || d.economics.status === "draft") ? "outline" : "default"} disabled={busy} onClick={() => run(() => save({ data: { offeringId, terms: terms as any, classes: multi ? (classes as any) : [], classDifferencesConfirmed: confirmed } }), "Fees and terms saved as a draft")}><Save className="size-4" />{busy ? "Saving…" : "Save draft"}</Button>
             {d.economics.canEdit && d.economics.canApprove && unsaved && (
-              <Button variant="outline" disabled={busy}
-                onClick={() => void run(async () => {
+              <ApprovalButton title="Save and approve these fees and terms?" description={`${d.offering.legalName || "This fund"}: your current changes will become the approved terms. Existing signed agreements will not change.`} disabled={busy}
+                onApprove={() => void run(async () => {
                   const saved: any = await save({ data: { offeringId, terms: terms as any, classes: multi ? (classes as any) : [], classDifferencesConfirmed: confirmed } });
                   const versionId = saved?.id ?? d.economics.versionId;
                   if (!versionId) throw new Error("Saved, but the version could not be approved. Approve it from the approvals list.");
                   await approve({ data: { versionId } });
                 }, "Economics saved and approved")}>
                 <CheckCircle2 className="size-4" />{busy ? "Saving…" : "Save & approve"}
-              </Button>
+              </ApprovalButton>
             )}
             {d.economics.canApprove && d.economics.status === "draft" && d.economics.versionId && (
-              <Button variant="outline" disabled={busy || unsaved} title={unsaved ? "Save changes before reviewing this version" : undefined}
-                onClick={() => { const versionId = d.economics.versionId; if (versionId) void run(() => approve({ data: { versionId } }), "Economics approved"); }}>
-                <CheckCircle2 className="size-4" />Approve saved version
-              </Button>
+              <ApprovalButton title={`Approve fees and terms, version ${d.economics.version}?`} description={`${d.offering.legalName || "This fund"}: these saved terms will become the current approved terms. Existing signed agreements will not change.`} disabled={busy || unsaved}
+                onApprove={() => { const versionId = d.economics.versionId; if (versionId) void run(() => approve({ data: { versionId } }), "Fees and terms approved"); }}>
+                <CheckCircle2 className="size-4" />Approve terms
+              </ApprovalButton>
             )}
           </div>
         )}
