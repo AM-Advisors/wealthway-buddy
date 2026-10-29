@@ -15,6 +15,8 @@ const TEAM = [
 export async function commandCenter(uid: string, fundId: string) {
   const { assertFund } = await import("@/lib/fund-tabs.server");
   const { staff } = await assertFund(uid, fundId);
+  const actor = await (await import("@/lib/fund-setup.server")).setupActor(uid);
+  const managerScope = staff || actor.offeringIds.includes(fundId);
   const db = (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
   const today = new Date().toISOString().slice(0, 10);
   const from = new Date(Date.now() - 120 * 86_400_000).toISOString().slice(0, 10);
@@ -33,7 +35,7 @@ export async function commandCenter(uid: string, fundId: string) {
     db.from("fund_service_requests").select("id, status, responsibility_status, client_visibility").eq("fund_id", fundId).not("status", "in", "(COMPLETED,CANCELLED,DRAFT)"),
     db.from("approval_events").select("action, created_at, approval_id, approvals(title)").eq("fund_id", fundId).eq("client_visible", true).in("action", ["approval_requested", "approved", "changes_requested", "workflow_completed"]).order("created_at", { ascending: false }).limit(8),
     db.from("fund_request_events").select("kind, created_at, request_id, detail, fund_service_requests(title)").eq("fund_id", fundId).eq("client_visible", true).in("kind", ["submitted", "submitted_by_staff", "client_provided_information", "cancelled"]).order("created_at", { ascending: false }).limit(8),
-    (await import("@/lib/fund-setup-guided.server")).guidedState(uid, fundId),
+    managerScope ? (await import("@/lib/fund-setup-canonical.server")).fundSetupOverview(uid, fundId) : Promise.resolve(null),
   ]);
   const approvalsAwaiting = (apprRaw ?? []) as any[];
   // Documents waiting for this person's signature (their own requests only).
@@ -95,10 +97,10 @@ export async function commandCenter(uid: string, fundId: string) {
 
   return {
     staff, today,
-    managerName: setupProgress.managerName,
+    managerName: "Assigned fund managers",
     managerWork: [
-      ...setupProgress.steps.filter(s => s.status !== "done" && s.step !== "launch").map(s => ({ id: `setup:${s.step}`, title: `${({ fund_details: "Complete fund details", team: "Confirm team & signers", fees_team: "Review fees & terms", bank: "Complete bank verification", document: "Review fund documents" } as Record<string, string>)[s.step] ?? "Review setup"}`, area: s.step === "bank" ? "banking" : s.step === "document" ? "documents" : "setup", waitingOn: s.owner, due: null as string | null })),
-      ...approvalsAwaiting.map(a => ({ id: a.id as string, title: a.title as string, area: "approvals", due: (a.due_date ?? null) as string | null, waitingOn: setupProgress.managerName })),
+      ...Object.entries(setupProgress?.statuses ?? {}).filter(([key, s]) => key !== "review" && s.status !== "complete" && s.status !== "not_applicable").map(([key, s]) => ({ id: `setup:${key}`, title: s.next ?? "Review fund setup", area: key === "banking" ? "banking" : key === "offering_documents" ? "documents" : "setup", waitingOn: null, due: null as string | null })),
+      ...approvalsAwaiting.map(a => ({ id: a.id as string, title: a.title as string, area: "approvals", due: (a.due_date ?? null) as string | null, waitingOn: null })),
     ],
     fund: { id: fundId, name: fund?.name ?? fund?.legal_entity_name ?? "Fund" },
     engagement: eng ? { product: eng.service_product, level: eng.service_level, status: eng.service_status } : null,
