@@ -1,5 +1,9 @@
 # Roadmap
 
+## Manager-approved wire instructions
+- [ ] Connect manager approval to eligible investor wire access without a separate Harmonious admission.
+- [ ] Keep exact-investor access, verification, approved banking and final admission safeguards; test canonical gate.
+
 ## Approval foolproofing
 - [x] Shared approval confirmation offers Go back and a five-second Undo before submission; completed history remains unchanged.
 - [x] Applied to fund terms, questions and investor copy approvals; larger relevant text and a named primary next action.
