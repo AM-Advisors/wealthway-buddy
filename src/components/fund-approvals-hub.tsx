@@ -16,9 +16,9 @@ export function FundApprovalsHub({ fundId, staff, initial = "waiting" }: { fundI
       </div>
     <Tabs value={tab} onValueChange={setTab}>
       <TabsList className="h-auto w-full flex-wrap justify-start gap-1">
-        {staff && <TabsTrigger value="setup">Fund setup approvals</TabsTrigger>}
-        <TabsTrigger value="waiting">Open items</TabsTrigger>
-        <TabsTrigger value="approvals">{staff ? "Other approvals" : "Approvals"}</TabsTrigger>
+        {staff && <TabsTrigger value="setup">Fund setup</TabsTrigger>}
+        <TabsTrigger value="waiting">Fund updates</TabsTrigger>
+        <TabsTrigger value="approvals">Investor approvals</TabsTrigger>
         <TabsTrigger value="requests">Requests</TabsTrigger>
       </TabsList>
       {staff && <TabsContent value="setup">{tab === "setup" && <FundSetupReviews fundId={fundId} />}</TabsContent>}
