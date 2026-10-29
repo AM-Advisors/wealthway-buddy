@@ -1087,8 +1087,8 @@ export async function lastWireReportForProfile(profileId: string, excludeOnboard
     .maybeSingle();
   if (!ev) return null;
   const d = (ev.detail ?? {}) as Record<string, unknown>;
-  const sendingBank = typeof d.sendingBank === "string" && d.sendingBank.trim() ? d.sendingBank.trim() : null;
-  const senderName = typeof d.senderName === "string" && d.senderName.trim() ? d.senderName.trim() : null;
+  const sendingBank = typeof d["sendingBank"] === "string" && d["sendingBank"].trim() ? d["sendingBank"].trim() : null;
+  const senderName = typeof d["senderName"] === "string" && d["senderName"].trim() ? d["senderName"].trim() : null;
   return sendingBank || senderName ? { sendingBank, senderName } : null;
 }
 
@@ -1404,8 +1404,8 @@ export async function fundingInstructions(userId: string, onboardingId: string) 
     if (lastReport) {
       const rd = (lastReport.detail ?? {}) as Record<string, unknown>;
       savedWire = {
-        sendingBank: typeof rd.sendingBank === "string" && rd.sendingBank.trim() ? rd.sendingBank : null,
-        senderName: typeof rd.senderName === "string" && rd.senderName.trim() ? rd.senderName : null,
+        sendingBank: typeof rd["sendingBank"] === "string" && rd["sendingBank"].trim() ? rd["sendingBank"] : null,
+        senderName: typeof rd["senderName"] === "string" && rd["senderName"].trim() ? rd["senderName"] : null,
       };
     }
   }

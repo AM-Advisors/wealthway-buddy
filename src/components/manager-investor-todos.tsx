@@ -4,7 +4,8 @@ import { useServerFn } from "@tanstack/react-start";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { managerInvestorTodosFn, type ManagerInvestorTodo } from "@/lib/manager-investor-todos.functions";
+import { managerInvestorTodosFn } from "@/lib/manager-investor-todos.functions";
+import type { ManagerInvestorTodo } from "@/lib/manager-investor-todos-model";
 import { useInvestorRecordRoute } from "@/lib/use-investor-record-route";
 
 /** Everything waiting on a fund's investors, in one list the manager can work through. */
