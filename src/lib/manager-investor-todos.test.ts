@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildInvestorTodos } from "./manager-investor-todos.server";
+import { buildInvestorTodos } from "./manager-investor-todos-model";
 
 const inv = (over: Partial<Parameters<typeof buildInvestorTodos>[0]["investors"][number]> = {}) => ({
   onboardingId: "ob1",
@@ -60,5 +60,18 @@ describe("buildInvestorTodos", () => {
     });
     expect(items[0]!.label).toBe("Check needs review");
     expect(JSON.stringify(items)).not.toContain("hit");
+  });
+
+  it("deduplicates two uploads of the same kind", () => {
+    const items = buildInvestorTodos({
+      investors: [inv()],
+      newDocs: [
+        { onboardingId: "ob1", docKind: "tax_form" },
+        { onboardingId: "ob1", docKind: "tax_form" },
+      ],
+      accreditationPendingApplicationIds: new Set<string>(),
+      signaturePending: [],
+    });
+    expect(items).toHaveLength(1);
   });
 });
