@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useServerFn } from '@tanstack/react-start';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { ApprovalButton } from '@/components/approval-button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { uploadOnboardingDocForFn, managerUploadReviewsFn, managerUploadUrlFn, managerReviewUploadFn } from '@/lib/investor-extras.functions';
 import { Badge } from '@/components/ui/badge';
@@ -31,7 +32,7 @@ export function UploadForInvestor({ onboardingId }: { onboardingId: string }) {
     } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
   };
   return (
-    <Card><CardHeader><CardTitle className="text-base">Investor documents &amp; tax forms</CardTitle></CardHeader>
+    <Card><CardHeader><CardTitle className="text-xl">Investor documents &amp; tax forms</CardTitle></CardHeader>
       <CardContent className="flex flex-wrap items-center gap-2 text-sm">
         <select aria-label="Document type" className="h-9 rounded-md border bg-background px-2" value={kind} onChange={(e) => setKind(e.target.value as any)}>{KINDS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>
         <input aria-label="File" type="file" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
@@ -41,7 +42,7 @@ export function UploadForInvestor({ onboardingId }: { onboardingId: string }) {
         {q.isPending && <p className="text-sm text-muted-foreground">Loading documents…</p>}
         {q.isError && <p role="alert" className="text-sm text-destructive">Documents could not be loaded.</p>}
         <ul className="divide-y">{q.data?.map((row: { id: string; fileName: string; kind: string; status: string; note: string | null; canReview: boolean }) => <li key={row.id} className="space-y-2 py-3">
-          <div className="flex flex-wrap items-center justify-between gap-2"><p className="min-w-0 break-all text-sm font-medium">{row.fileName}</p><Badge variant="outline">{row.status === 'accepted' ? 'Approved copy' : row.status === 'needs_followup' ? 'More information needed' : 'Awaiting review'}</Badge></div>
+          <div className="flex flex-wrap items-center justify-between gap-2"><p className="min-w-0 break-all text-base font-medium">{row.fileName}</p><Badge variant="outline">{row.status === 'accepted' ? 'Approved copy' : row.status === 'needs_followup' ? 'More information needed' : 'Awaiting review'}</Badge></div>
           {row.note && <p className="text-sm text-muted-foreground">{row.note}</p>}
           <div className="flex flex-wrap gap-2"><Button size="sm" variant="outline" disabled={busy} onClick={async () => {
             const tab = window.open('about:blank', '_blank');
@@ -51,7 +52,7 @@ export function UploadForInvestor({ onboardingId }: { onboardingId: string }) {
           {reviewing === row.id && <div className="space-y-3 border-t pt-3">
             {row.kind === 'tax_form' && <p className="text-sm text-muted-foreground">Approve this signed copy only. The investor’s certification and required tax checks remain separate.</p>}
             <Textarea aria-label="Review note" placeholder="Review note" value={note} onChange={e => setNote(e.target.value)} />
-            <div className="flex flex-wrap gap-2"><Button size="sm" disabled={busy} onClick={() => decide(row.id, 'accepted')}>Approve copy</Button><Button size="sm" variant="outline" disabled={busy || !note.trim()} onClick={() => decide(row.id, 'needs_followup')}>Request more</Button><Button size="sm" variant="ghost" disabled={busy} onClick={() => setReviewing(null)}>Cancel</Button></div>
+            <div className="flex flex-wrap gap-2"><ApprovalButton title="Approve this document copy?" description={`${row.fileName}. This approves the uploaded copy only, not the investor’s identity, accreditation, tax certification or funding.`} disabled={busy} onApprove={() => { void decide(row.id, 'accepted'); }}>Approve copy</ApprovalButton><Button className="min-h-11 text-base" variant="outline" disabled={busy || !note.trim()} onClick={() => decide(row.id, 'needs_followup')}>Request more</Button><Button className="min-h-11 text-base" variant="ghost" disabled={busy} onClick={() => setReviewing(null)}>Go back</Button></div>
           </div>}
         </li>)}</ul>
       </CardContent></Card>

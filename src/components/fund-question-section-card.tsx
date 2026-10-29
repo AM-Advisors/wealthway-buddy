@@ -5,6 +5,7 @@ import { CheckCircle2, Plus, Save, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ApprovalButton } from "@/components/approval-button";
 import { Input } from "@/components/ui/input";
 import { approveQuestionSectionFn, listQuestionSectionsFn, saveQuestionSectionDraftFn } from "@/lib/fund-questionnaire-section.functions";
 import { FundDocumentQuestionDraft, type DocumentQuestionsResult } from "./fund-document-question-draft";
@@ -57,7 +58,7 @@ export function FundQuestionSectionCard({ offeringId }: { offeringId: string }) 
       <div className="flex flex-wrap items-center gap-3">
         <h3 className="flex-1 font-heading text-lg font-semibold text-primary">Additional fund questions</h3>
         <Badge variant={draft ? "secondary" : live ? "default" : "outline"}>{draft ? `Draft v${draft.version}, awaiting approval` : live ? `Approved v${live.version}` : "None yet"}</Badge>
-        {staff && draft && <Button size="sm" disabled={approve.isPending || save.isPending || saveApprove.isPending || dirty} title={dirty ? "Save changes before approving" : undefined} onClick={() => approve.mutate()}><CheckCircle2 className="size-4" />{approve.isPending ? "Approving…" : "Approve"}</Button>}
+        {staff && draft && <ApprovalButton title={`Approve ${qs.length} fund questions, version ${draft.version}?`} description="Investors will see these saved questions. Their existing answers and signed documents will stay unchanged." disabled={approve.isPending || save.isPending || saveApprove.isPending || dirty} onApprove={() => approve.mutate()}><CheckCircle2 className="size-4" />{approve.isPending ? "Approving…" : "Approve questions"}</ApprovalButton>}
       </div>
       <p className="text-sm text-muted-foreground">{q.data.baseCount} standard questions · {qs.length} additional questions</p>
       {dirty && <Badge variant="outline">Unsaved changes</Badge>}
@@ -70,7 +71,7 @@ export function FundQuestionSectionCard({ offeringId }: { offeringId: string }) 
           <li key={x.key} className="space-y-2 rounded-xl border bg-background p-4">
             <div className="flex items-start gap-2">
               <span className="pt-2 text-sm text-muted-foreground">{i + 1}.</span>
-              {editable ? <textarea className="min-h-16 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={x.label} onChange={(e) => upd(i, { label: e.target.value })} /> : <p className="flex-1 pt-2 text-sm">{x.label}</p>}
+              {editable ? <textarea className="min-h-16 w-full rounded-md border border-input bg-background px-3 py-2 text-base" value={x.label} onChange={(e) => upd(i, { label: e.target.value })} /> : <p className="flex-1 pt-2 text-base leading-relaxed">{x.label}</p>}
               {editable && <Button size="icon" variant="ghost" aria-label="Remove question" onClick={() => { setDirty(true); setQs((cur) => cur.filter((_, j) => j !== i)); }}><Trash2 className="size-4" /></Button>}
             </div>
             <div className="flex flex-wrap items-center gap-3 pl-6 text-xs">
@@ -93,8 +94,8 @@ export function FundQuestionSectionCard({ offeringId }: { offeringId: string }) 
       {editable && (
         <div className="flex flex-wrap gap-2 border-t pt-4">
           <Button size="sm" variant="outline" onClick={() => { setDirty(true); setQs((cur) => [...cur, { key: `fs_q${Date.now().toString(36)}`, label: "", type: "text", required: true }]); }}><Plus className="size-4" />Add question</Button>
-          <Button size="sm" disabled={save.isPending} onClick={() => save.mutate(undefined)}><Save className="size-4" />Save draft</Button>
-          {staff && (dirty || !draft) && <Button size="sm" variant="outline" disabled={saveApprove.isPending || save.isPending || approve.isPending} onClick={() => saveApprove.mutate(undefined)}><CheckCircle2 className="size-4" />{saveApprove.isPending ? "Saving…" : "Save & approve"}</Button>}
+          <Button className="min-h-11 text-base" variant={staff && (dirty || !draft) ? "outline" : "default"} disabled={save.isPending} onClick={() => save.mutate(undefined)}><Save className="size-4" />Save draft</Button>
+          {staff && (dirty || !draft) && <ApprovalButton title={`Save and approve ${qs.length} fund questions?`} description="Your current changes will be saved and approved for investors to answer. Existing signed documents will not change." disabled={saveApprove.isPending || save.isPending || approve.isPending} onApprove={() => saveApprove.mutate(undefined)}><CheckCircle2 className="size-4" />{saveApprove.isPending ? "Saving…" : "Save & approve"}</ApprovalButton>}
         </div>
       )}
     </section>

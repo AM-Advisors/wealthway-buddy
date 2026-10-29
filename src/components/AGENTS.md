@@ -3,3 +3,4 @@
 - SessionTimeoutNotice shares same-origin, account-scoped activity via session-activity.ts, checks the latest activity before expiry, and guards sign-out once — why: an idle tab must not end a session active elsewhere.
 
 - Staff and manager investor status renders InvestmentChecklist; the investor page shows only InvestorOnboardingJourney (same requirement results) and hides post-close tabs until close; never add page-local missing/open-item lists — why: pages disagreed and duplicate step lists confused investors.
+- Fund terms, additional questions and investor copy approvals use ApprovalButton: one confirmation with cancelable pending submission; never reverse a completed decision from the browser. Why: accidental clicks can be undone without erasing approved history or changing authority.

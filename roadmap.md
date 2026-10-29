@@ -1,5 +1,11 @@
 # Roadmap
 
+## Approval foolproofing
+- [x] Shared approval confirmation offers Go back and a five-second Undo before submission; completed history remains unchanged.
+- [x] Applied to fund terms, questions and investor copy approvals; larger relevant text and a named primary next action.
+- [x] 16 focused tests passed; phone-size fictional Go back → Undo → confirm → approved-copy read-back passed without runtime errors.
+- [ ] Durable authenticated verification requires independently isolated QA and synthetic sessions; other approval surfaces are not covered by this scoped pass.
+
 ## Manager investor documents and tax forms
 - [x] Exact-fund managers upload and approve supporting documents and signed W-9/W-8 copies on investor Documents; inbox uses the same guarded review. Certification, identity, accreditation, bank and tax-return release remain separate.
 - [x] 21 focused safeguards passed; fictional manager upload → approve → approved-copy read-back verified without runtime errors. Preview build OK; no live copies or decisions changed.
