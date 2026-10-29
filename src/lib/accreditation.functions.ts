@@ -76,9 +76,6 @@ async function loadApplication(supabase: any, userId: string, onboardingId?: str
   if (c.kyc_status === "not_started" || c.aml_status === "not_started") {
     throw new Error("Complete identity verification and the AML questionnaire first.");
   }
-  if (false && data.kyc_status === "not_started" || data.aml_status === "not_started") {
-    throw new Error("Complete identity verification and the AML questionnaire first.");
-  }
   return data as AppRow;
 }
 
