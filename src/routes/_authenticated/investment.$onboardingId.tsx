@@ -54,6 +54,8 @@ function InvestmentPage() {
   if (ctx.isPending) return <main className="mx-auto max-w-3xl px-4 py-10"><p className="text-sm text-muted-foreground">Loading your investment…</p></main>;
   if (ctx.error) return <main className="mx-auto max-w-3xl px-4 py-10"><LoadError audience="account" error={ctx.error} what="Your investment details" onRetry={() => void ctx.refetch()} /></main>;
 
+  // Until the investment closes, show only the guided steps and documents; reports come later.
+  const onboarding = !["closed", "declined", "cancelled"].includes(String(ctx.data?.stage ?? ""));
   return (
     <main className="mx-auto max-w-3xl space-y-6 px-4 py-10">
       <header className="space-y-1">
@@ -61,7 +63,7 @@ function InvestmentPage() {
         <h1 className="text-2xl font-semibold">{ctx.data?.offering?.name ?? "Your investment"}</h1>
       </header>
       <nav className="flex flex-wrap gap-1 border-b pb-2" aria-label="Investment sections">
-        {INVESTMENT_TABS.map((t) => (
+        {INVESTMENT_TABS.filter((t) => !onboarding || t.id === "overview" || t.id === "documents").map((t) => (
           <Button key={t.id} asChild size="sm" variant={t.id === tab ? "default" : "ghost"}>
             <Link to="/investment/$onboardingId" params={{ onboardingId }} search={t.id === "overview" ? {} : { tab: t.id }}>
               {t.title}
@@ -72,7 +74,6 @@ function InvestmentPage() {
 
       {tab === "overview" || tab === "onboarding" ? (
         <>
-          <InvestmentChecklist onboardingId={onboardingId} />
           <InvestorOnboardingJourney onboardingId={onboardingId} requestedStep={search.step} />
           {ctx.data?.executedSnapshot ? <InvestorSignedDocuments onboardingId={onboardingId} /> : null}
           {tab === "onboarding" ? <ConfirmYourInformation onboardingId={onboardingId} /> : null}
