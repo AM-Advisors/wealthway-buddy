@@ -854,7 +854,7 @@ export async function subscriptionLocks(row: any, questions: Question[]) {
   );
   const { mappedQuestionFacts } = await import("./fund-question-ai-model");
   // Same investing profile, other funds, newest first: reuse factual answers only.
-  const { priorFactAnswers } = await import("@/lib/subscription-prefill");
+  const { priorFactAnswers, wireBankFacts } = await import("@/lib/subscription-prefill");
   const { data: priorRows } = row.investment_profile_id
     ? await db().from("investor_onboardings").select("questionnaire_responses").eq("investment_profile_id", row.investment_profile_id).neq("id", row.id).is("removed_at", null).not("questionnaire_submitted_at", "is", null).order("questionnaire_submitted_at", { ascending: false }).limit(5)
     : { data: [] as any[] };
