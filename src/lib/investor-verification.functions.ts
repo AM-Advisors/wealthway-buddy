@@ -24,6 +24,12 @@ export const getInvestorVerificationSummary = createServerFn({ method: "GET" })
     const { data: apps } = await q;
     const visible = ((apps ?? []) as any[]).filter((a) => isAdmin || managedIds.has(String(a.offering_id)));
     const ids = visible.map((a) => a.id);
+    const userIds = Array.from(new Set(visible.map((a) => String(a.user_id)).filter(Boolean)));
+    // Canonical person status wins: account-check approvals update persons, application copies can go stale.
+    const [{ data: persons }] = userIds.length
+      ? await db.from("persons").select("id, user_id, kyc_status, aml_status, kyc_verified_at, aml_screened_at, identity_verified_at").in("user_id", userIds)
+      : [{ data: [] }];
+    const pBy = new Map(((persons ?? []) as any[]).map((p) => [String(p.user_id), p]));
     const [{ data: kyc }, { data: aml }] = ids.length
       ? await Promise.all([
           db.from("kyc_verifications").select("application_id, status, completed_at, updated_at").in("application_id", ids),
@@ -34,15 +40,25 @@ export const getInvestorVerificationSummary = createServerFn({ method: "GET" })
     const aBy = new Map(((aml ?? []) as any[]).map((k) => [k.application_id, k]));
     return {
       items: visible.map((a) => {
+        const person = pBy.get(String(a.user_id));
         const k = kBy.get(a.id); const s = aBy.get(a.id);
-        const kState = checkState(a.kyc_status ?? k?.status);
-        const aState = checkState(a.aml_status ?? s?.status);
+        const kState = checkState(person?.kyc_status ?? a.kyc_status ?? k?.status);
+        const aState = checkState(person?.aml_status ?? a.aml_status ?? s?.status);
         const n = matchCount(s?.matches);
         return {
           applicationId: a.id as string, offeringId: a.offering_id as string, fund: a.offerings?.name ?? "Fund",
           ownRecord: String(a.user_id) === context.userId,
-          kyc: { state: kState, at: k?.completed_at ?? k?.updated_at ?? null, reason: reviewReason("kyc", kState, 0) },
-          aml: { state: aState, at: s?.completed_at ?? s?.updated_at ?? null, matches: n, reason: reviewReason("aml", aState, n) },
+          kyc: {
+            state: kState,
+            at: person?.kyc_verified_at ?? k?.completed_at ?? k?.updated_at ?? null,
+            reason: reviewReason("kyc", kState, 0),
+          },
+          aml: {
+            state: aState,
+            at: person?.aml_screened_at ?? s?.completed_at ?? s?.updated_at ?? null,
+            matches: n,
+            reason: reviewReason("aml", aState, n),
+          },
         };
       }),
     };
