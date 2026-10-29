@@ -1,5 +1,9 @@
 # Roadmap
 
+## ROAS existing investor paperwork and verification
+- [ ] Inspect Doug’s existing paperwork and exact-investing-party details, retaining signed originals and current confirmations.
+- [ ] Review all ROAS investor verification connections and reuse only exact-party evidence through existing authorized services; ambiguous identities require review.
+
 ## Erebor Kim contact correction
 - [x] Recorded verification-document name is Kimberly Girardi; submitted expected name is Joe Girardi, with a name-mismatch warning. Existing individual investment remains Kimberly’s; no identity or approval transferred.
 - [ ] Correct Kim’s contact email to pinklady55@comcast.net through the existing authorized review. Blocked by requester authenticator setup; no email changed. The previous dantegirardi28@gmail.com remains recorded, and its investing-party identity requires explicit confirmation before reassignment.
