@@ -157,3 +157,57 @@ export async function notifyAccreditationPending(applicationId: string) {
     } catch (e) { console.error("accreditation email", e); }
   }
 }
+
+/**
+ * Proof uploaded straight onto an onboarding (no application yet). The fund's
+ * managers or Harmonious approve it or ask for more; never the investor themself.
+ * Approval records a fund-scoped profile accreditation; the original file is kept.
+ */
+async function onboardingProofDoc(d: any, userId: string, documentId: string) {
+  const { data: doc } = await d.from("investor_documents").select("id, onboarding_id, offering_id, user_id, investment_profile_id, storage_path, doc_kind, review_status").eq("id", documentId).maybeSingle();
+  if (!doc || doc.doc_kind !== "accreditation_proof") throw new Error("Accreditation proof not found.");
+  await assertManager(d, userId, doc.offering_id);
+  return doc;
+}
+
+export async function onboardingProofUrl(userId: string, documentId: string) {
+  const d = await db();
+  const doc = await onboardingProofDoc(d, userId, documentId);
+  const { data, error } = await d.storage.from("investor-uploads").createSignedUrl(doc.storage_path, 300);
+  if (error || !data) throw new Error("Couldn't open the file.");
+  return { url: data.signedUrl as string };
+}
+
+export async function decideOnboardingProof(userId: string, input: { documentId: string; decision: "approved" | "more_needed"; notes: string }) {
+  const d = await db();
+  const doc = await onboardingProofDoc(d, userId, input.documentId);
+  const { data: ob } = await d.from("investor_onboardings").select("id, investor_user_id, investment_profile_id, questionnaire_responses").eq("id", doc.onboarding_id).maybeSingle();
+  if (!ob) throw new Error("Investment not found.");
+  if (ob.investor_user_id === userId || doc.user_id === userId) throw new Error("You can't verify your own accreditation.");
+  if (doc.review_status !== "new") throw new Error("This proof has already been reviewed.");
+  if (input.decision === "more_needed" && input.notes.length < 3) throw new Error("Say what's missing so the investor knows what to send.");
+  const now = new Date().toISOString();
+  const up = await d.from("investor_documents").update({
+    review_status: input.decision === "approved" ? "accepted" : "needs_followup",
+    review_note: input.notes || null, reviewed_by: userId, reviewed_at: now,
+  }).eq("id", doc.id).eq("review_status", "new");
+  if (up.error) throw new Error(up.error.message);
+  const profileId = ob.investment_profile_id ?? doc.investment_profile_id;
+  if (profileId) {
+    const { ACCREDITATION_QUESTION_KEY, basisFromAnswer } = await import("@/lib/accreditation-step");
+    const basis = basisFromAnswer((ob.questionnaire_responses ?? {})[ACCREDITATION_QUESTION_KEY]);
+    const patch = input.decision === "approved"
+      ? { status: "approved", basis, verification_method: "document_review", verifier_kind: "reviewer", verified_at: now, expires_at: new Date(Date.now() + 90 * 86400000).toISOString(), updated_at: now }
+      : { status: "pending", basis, verification_method: "document_review", updated_at: now };
+    const { data: existing } = await d.from("profile_accreditations").select("id, status").eq("profile_id", profileId).eq("offering_id", doc.offering_id).maybeSingle();
+    const res = existing
+      ? existing.status === "approved" && input.decision !== "approved" ? { error: null } : await d.from("profile_accreditations").update(patch).eq("id", existing.id)
+      : await d.from("profile_accreditations").insert({ profile_id: profileId, offering_id: doc.offering_id, evidence: { documents: [{ id: doc.id }] }, ...patch });
+    if (res.error) throw new Error(res.error.message);
+    await d.from("investment_profile_events").insert({ profile_id: profileId, actor_id: userId, event: input.decision === "approved" ? "accreditation_proof_approved" : "accreditation_proof_more_needed", detail: { document_id: doc.id, onboarding_id: ob.id, notes: input.notes || null } });
+  }
+  try {
+    await (await import("@/lib/investor-onboarding.server")).reconcileInvestmentReadiness(ob.id, { actorUserId: userId, trigger: "accreditation_decided" } as any);
+  } catch { /* readiness refresh never undoes the decision */ }
+  return { ok: true };
+}
