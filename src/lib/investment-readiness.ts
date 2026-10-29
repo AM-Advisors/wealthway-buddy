@@ -254,6 +254,9 @@ function fundingItem(input: ReadinessInput, preFundingDone: boolean, blockingExc
   return [approval, { ...base, key: "funding", label: "Capital received and reconciled", source: REQUIREMENT_SOURCE["funding"]!, ...funding }];
 }
 
+/** Questions the subscription agreement itself asks; a loaded outside-signed copy already answers them. */
+const OUTSIDE_SIGNED_ANSWERS = new Set(["bad_actor", "bsa_aml"]);
+
 export function computeReadiness(input: ReadinessInput): ReadinessResult {
   const terminal = (["closed", "declined", "cancelled"] as const).find((t) => t === input.stage) ?? null;
   const items: ReadinessItem[] = [];
@@ -265,7 +268,7 @@ export function computeReadiness(input: ReadinessInput): ReadinessResult {
     if (input.priorSubscription && stage === "subscription" && m.status !== "complete" && m.status !== "not_applicable") {
       m = { status: "complete", owner: null, action: null };
       reason = `Signed before Harmonious on ${input.priorSubscription.signedOn} (prior subscription confirmed).`;
-    } else if (input.outsideSubscription && stage === "subscription" && m.status !== "complete" && m.status !== "not_applicable") {
+    } else if (input.outsideSubscription && (stage === "subscription" || OUTSIDE_SIGNED_ANSWERS.has(r.key)) && m.status !== "complete" && m.status !== "not_applicable") {
       m = { status: "complete", owner: null, action: null };
       reason = `Signed outside the platform on ${input.outsideSubscription.signedOn}; copy loaded by Harmonious.`;
     }

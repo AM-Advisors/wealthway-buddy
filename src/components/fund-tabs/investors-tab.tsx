@@ -37,6 +37,7 @@ import { PriorSignedDocuments } from "@/components/prior-signed-documents";
 import { ClassAssignmentCard } from "@/components/fund-setup-phase3";
 import { SideLetterRegistry } from "@/components/side-letter-registry";
 import { InvestmentChecklist } from "@/components/investment-readiness";
+import { OnboardingProofReview } from "@/components/onboarding-proof-review";
 
 export function InvestorsTab({ fundId, workQueue }: { fundId: string; workQueue?: ReactNode }) {
   const recordTo = useInvestorRecordRoute();
@@ -411,7 +412,7 @@ export function InvestorReviewPanel({ fundId, id, embedded = false }: { fundId: 
                 {a.attestedAt && <div className="flex justify-between gap-3 border-b pb-2"><dt className="text-muted-foreground">Confirmed by investor</dt><dd>{fmtDate(a.attestedAt)}</dd></div>}
                 {a.verifiedAt && <div className="flex justify-between gap-3 border-b pb-2"><dt className="text-muted-foreground">Verified</dt><dd>{fmtDate(a.verifiedAt)}</dd></div>}
                 {a.expiresAt && <div className="flex justify-between gap-3 border-b pb-2"><dt className="text-muted-foreground">Expires</dt><dd>{fmtDate(a.expiresAt)}</dd></div>}
-                {a.documents.map((doc: { id: string; name: string; kind: string; uploadedAt: string }) => <div key={doc.id} className="border-b pb-2"><p className="break-words font-medium">{doc.name}</p><p className="text-xs capitalize text-muted-foreground">{doc.kind} · {fmtDate(doc.uploadedAt)}</p></div>)}
+                {a.documents.map((doc: { id: string; name: string; kind: string; uploadedAt: string; reviewable?: boolean }) => <div key={doc.id} className="border-b pb-2"><p className="break-words font-medium">{doc.name}</p><p className="text-xs capitalize text-muted-foreground">{doc.kind} · {fmtDate(doc.uploadedAt)}</p>{"reviewable" in doc && <OnboardingProofReview documentId={doc.id} reviewable={!!doc.reviewable} onDone={() => q.refetch()} />}</div>)}
               </dl>; })() : <p className="text-muted-foreground">Accreditation has not been completed.</p>}
             </section>
           </>}
