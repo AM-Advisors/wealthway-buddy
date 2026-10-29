@@ -101,6 +101,7 @@ export async function commandCenter(uid: string, fundId: string, hasEin = false)
     managerWork: [
       ...Object.entries(setupProgress?.statuses ?? {}).filter(([key, s]) => key !== "review" && s.status !== "complete" && s.status !== "not_applicable").map(([key, s]) => ({ id: `setup:${key}`, title: s.next ?? "Review fund setup", area: key === "banking" ? "banking" : key === "offering_documents" ? "documents" : "setup", waitingOn: null, due: null as string | null })),
       ...approvalsAwaiting.map(a => ({ id: a.id as string, title: a.title as string, area: "approvals", due: (a.due_date ?? null) as string | null, waitingOn: null })),
+      ...open.filter(t => staff ? t.client_visibility : true).filter(t => !approvalsAwaiting.some(a => a.task_id === t.id)).map(t => ({ id: t.id as string, title: t.title as string, area: "requests", due: (t.due_date ?? null) as string | null, waitingOn: t.waitingOn?.name ?? null })),
     ],
     fund: { id: fundId, name: fund?.name ?? fund?.legal_entity_name ?? "Fund" },
     engagement: eng ? { product: eng.service_product, level: eng.service_level, status: eng.service_status } : null,

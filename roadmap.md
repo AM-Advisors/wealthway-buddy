@@ -1,9 +1,10 @@
 # Roadmap
 
 ## Fund manager responsibility and simple progress
-- [ ] Delegate supported fund-specific work to exact-fund managers through canonical authorization, retaining protected identity, money, access and signatures.
-- [ ] Show one clear manager next action and responsible party; reuse existing staff queue for stalled-item visibility.
-- [ ] Test manager scope, unrelated-fund denial and protected boundaries; validate fictional UI without production activity.
+- [x] Exact-fund managers save and approve versioned economics and manage recorded fund signers; shared person edits, bank checks, financial release, signatures and global identity remain protected. No live records changed.
+- [x] One next action on manager setup and activity, with expanded open work and responsibility; existing Operations queue continues to show stalled onboarding and fund drafts, without new assignments or queues.
+- [x] Focused manager/history/signer safeguards and fictional Continue-to-documents checks pass without runtime errors; preview build OK.
+- [ ] Durable manager save/approve/read-back and wider handoff acceptance blocked on independently isolated QA with synthetic sessions. Legacy submissions, protected reviews and report release are not represented as fully delegated.
 
 ## ROAS existing investor paperwork and verification
 - [x] Read current verification results for all ten recorded ROAS investors, each with a saved session reference; Doug already has 23 saved questionnaire answers and recorded personal-information confirmation.
