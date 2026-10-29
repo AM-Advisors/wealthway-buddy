@@ -1,3 +1,4 @@
+import { useEffect, useState, type ReactNode } from "react";
 import { invalidateFund } from "@/lib/fund-query-keys";
 import { ServiceProvidersSection } from "@/components/fund-setup-extras";
 import { useEffect, useState } from "react";
@@ -131,6 +132,9 @@ export function FundSetupCanonical({ offeringId, staffOnly = false, hideLaunch =
 
 const jump = (id: string) => (e: React.MouseEvent) => {
   e.preventDefault();
+  window.dispatchEvent(new CustomEvent("fund-setup-jump", { detail: id }));
+  setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+  return;
   document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
 };
 
@@ -697,9 +701,9 @@ export function EconomicsCard({ d, offeringId, onSaved }: { d: D; offeringId: st
 
 const ANCHOR_STEP: Record<string, number> = { "setup-details": 0, "setup-signatories": 0, "setup-economics": 1, "setup-documents": 2 };
 
-function GuidedSetup({ steps }: { steps: { label: string; body: React.ReactNode }[] }) {
-  const [i, setI] = React.useState(0);
-  React.useEffect(() => {
+function GuidedSetup({ steps }: { steps: { label: string; body: ReactNode }[] }) {
+  const [i, setI] = useState(0);
+  useEffect(() => {
     const onJump = (e: Event) => { const id = (e as CustomEvent<string>).detail; setI(ANCHOR_STEP[id] ?? 3); };
     window.addEventListener("fund-setup-jump", onJump);
     return () => window.removeEventListener("fund-setup-jump", onJump);
