@@ -1,35 +1,35 @@
-import { useState } from "react";
 import { FundApprovals } from "@/components/fund-approvals";
 import { FundRequests } from "@/components/fund-requests";
 import { ManagerFundReviews } from "@/components/manager-fund-reviews";
 import { SideLetterNeeds } from "@/components/side-letter-needs";
 import { AccreditationReviews } from "@/components/accreditation-reviews";
 import { FundUpdatesPanel } from "@/components/investor-onboarding-extras";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FundSetupReviews } from "@/components/fund-setup-reviews";
 
-/** One approvals & requests area shared by fund managers and Harmonious. Layout only; each section's server functions decide authority. */
-export function FundApprovalsHub({ fundId, staff, initial = "waiting" }: { fundId: string; staff: boolean; initial?: "waiting" | "approvals" | "requests" }) {
-  const [tab, setTab] = useState<string>(staff && initial === "approvals" ? "setup" : initial);
-  return <section className="space-y-4">
-    <div><h2 className="text-xl">Approvals &amp; requests</h2>
-      </div>
-    <Tabs value={tab} onValueChange={setTab}>
-      <TabsList className="h-auto w-full flex-wrap justify-start gap-1">
-        {staff && <TabsTrigger value="setup">Fund setup</TabsTrigger>}
-        <TabsTrigger value="waiting">Fund updates</TabsTrigger>
-        <TabsTrigger value="approvals">Investor approvals</TabsTrigger>
-        <TabsTrigger value="requests">Requests</TabsTrigger>
-      </TabsList>
-      {staff && <TabsContent value="setup">{tab === "setup" && <FundSetupReviews fundId={fundId} />}</TabsContent>}
-      <TabsContent value="waiting">{tab === "waiting" && <FundUpdatesPanel fundId={fundId} />}</TabsContent>
-      <TabsContent value="approvals">{tab === "approvals" && <div className="space-y-6">
-        <SideLetterNeeds offeringId={fundId} />
-        <AccreditationReviews offeringId={fundId} />
-        {!staff && <ManagerFundReviews fundId={fundId} />}
-        <FundApprovals fundId={fundId} />
-      </div>}</TabsContent>
-      <TabsContent value="requests">{tab === "requests" && <FundRequests fundId={fundId} />}</TabsContent>
-    </Tabs>
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return <div className="space-y-3"><h3 className="text-base font-medium text-muted-foreground">{title}</h3>{children}</div>;
+}
+
+/**
+ * Approvals or Requests body for a fund. The surrounding page/tab already names the view,
+ * so this renders no heading or inner tab row. Layout only; each section's server functions decide authority.
+ */
+export function FundApprovalsHub({ fundId, staff, initial = "approvals" }: { fundId: string; staff: boolean; initial?: "waiting" | "approvals" | "requests" }) {
+  if (initial === "approvals") {
+    return <section className="space-y-8">
+      {staff && <Section title="Fund setup"><FundSetupReviews fundId={fundId} /></Section>}
+      <Section title="Investors">
+        <div className="space-y-6">
+          <SideLetterNeeds offeringId={fundId} />
+          <AccreditationReviews offeringId={fundId} />
+          {!staff && <ManagerFundReviews fundId={fundId} />}
+          <FundApprovals fundId={fundId} />
+        </div>
+      </Section>
+    </section>;
+  }
+  return <section className="space-y-8">
+    <Section title="Open requests"><FundRequests fundId={fundId} /></Section>
+    <Section title="Fund updates"><FundUpdatesPanel fundId={fundId} /></Section>
   </section>;
 }
