@@ -196,6 +196,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
     { id: "ops-command", title: "Command Center", url: "/ops/command-center", icon: "report", sub: [{ title: "Overview", url: "/ops/command-center" }, ...commandSub] },
     ...(leader || has("operations", "fund_administration") ? [{ id: "dash-ops", title: "Operations dashboard", url: "/ops/dashboards/operations", icon: "report" }] : []),
     ...(allowedUrls.has("/ops/queue") ? [{ id: "queue", title: "Work queue", url: "/ops/queue", icon: "tasks" }] : []),
+    ...(allowedUrls.has("/ops/queue") ? [{ id: "stalled", title: "Stalled items", url: "/ops/stalled", icon: "tasks" }] : []),
     ...sections.filter((s) => !["home", "administration", ...FINANCE_IDS].includes(s.id)).map(toItem),
   ];
   const regulatorySub = [{ title: "Close requests", url: "/ops/close-requests" }, { title: "Security & Compliance", url: "/ops/security-compliance" }].filter((x) => allowedUrls.has(x.url));
