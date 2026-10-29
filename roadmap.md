@@ -845,3 +845,7 @@
 ## Fictional QA sandbox (2026-10-26)
 - [x] /qa-sandbox renders the real investor form and wire sender against an in-memory fictional backend (fictional fund Fablewood Ventures I LP, manager, investors, bank); all server calls intercepted, unmodeled calls blocked, nothing persisted or emailed.
 - [x] Verified click-through: search match with masked email, duplicate-email blocker, confirmed create to fictional record page, wire prefill/save, fund-manager view hides staff-only wire controls. 8 mock tests pass; build OK.
+
+## Investor status cleanup
+- [x] Investor panel and investor investment page use the one shared readiness checklist.
+- [ ] Approvals list and funding readiness wording aligned to the same checklist.
