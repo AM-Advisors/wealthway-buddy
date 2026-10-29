@@ -52,6 +52,21 @@ export function isReconciledFunding(status: string | null | undefined): boolean 
   return (RECONCILED_FUNDING_VALUES as readonly string[]).includes(String(status ?? ""));
 }
 
+/**
+ * One funding value from the two stored copies (investment record and older
+ * application record). Reconciled money on either copy counts as Funded, so
+ * every screen agrees; otherwise the investment record wins. Display only.
+ */
+export function effectiveFundingStatus(onboardingStatus: string | null | undefined, applicationStatus: string | null | undefined): string | null {
+  if (isReconciledFunding(onboardingStatus)) return String(onboardingStatus);
+  if (isReconciledFunding(applicationStatus)) return "funded";
+  const o = String(onboardingStatus ?? "");
+  if (o && o !== "not_funded" && o !== "not_started") return o;
+  const a = String(applicationStatus ?? "");
+  if (a && a !== "not_funded" && a !== "not_started") return a;
+  return onboardingStatus ?? applicationStatus ?? null;
+}
+
 export function isPendingReconciliation(status: string | null | undefined): boolean {
   return PENDING_RECONCILIATION.has(String(status ?? ""));
 }
