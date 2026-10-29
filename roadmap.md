@@ -1,5 +1,10 @@
 # Roadmap
 
+## Approval foolproofing
+- [ ] Add shared approval confirmation with cancelable undo before submission; completed history remains unchanged.
+- [ ] Apply to fund terms, questions and investor copy approvals; enlarge relevant text and clarify the primary next action.
+- [ ] Test cancellation/submission rules and fictional approval flow; durable checks remain blocked on isolated QA.
+
 ## Manager investor documents and tax forms
 - [x] Exact-fund managers upload and approve supporting documents and signed W-9/W-8 copies on investor Documents; inbox uses the same guarded review. Certification, identity, accreditation, bank and tax-return release remain separate.
 - [x] 21 focused safeguards passed; fictional manager upload → approve → approved-copy read-back verified without runtime errors. Preview build OK; no live copies or decisions changed.
