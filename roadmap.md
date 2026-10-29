@@ -1,8 +1,9 @@
 # Roadmap
 
 ## Manager-approved wire instructions
-- [ ] Connect manager approval to eligible investor wire access without a separate Harmonious admission.
-- [ ] Keep exact-investor access, verification, approved banking and final admission safeguards; test canonical gate.
+- [x] Confirmed canonical manager approval already opens investor wire access before final admission; made Approve to send funds explicit with confirmation/undo and a clear investor Next button.
+- [x] Bank-read errors now surface with retry; wire-sent reporting appears only after instructions load. 78 tests passed; preview build OK. No approvals, bank changes or wires performed.
+- [ ] Authenticated approval → investor read-back needs independently isolated QA and synthetic sessions; legacy application-only wire reader remains separate and was not widened.
 
 ## Approval foolproofing
 - [x] Shared approval confirmation offers Go back and a five-second Undo before submission; completed history remains unchanged.
