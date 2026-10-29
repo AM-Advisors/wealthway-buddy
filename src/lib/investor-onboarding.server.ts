@@ -859,7 +859,12 @@ export async function subscriptionLocks(row: any, questions: Question[]) {
     ? await db().from("investor_onboardings").select("questionnaire_responses").eq("investment_profile_id", row.investment_profile_id).neq("id", row.id).is("removed_at", null).not("questionnaire_submitted_at", "is", null).order("questionnaire_submitted_at", { ascending: false }).limit(5)
     : { data: [] as any[] };
   const prior = priorFactAnswers(((priorRows ?? []) as any[]).map((r) => (r.questionnaire_responses ?? {}) as Record<string, unknown>));
-  return { locked, supplied: { ...prior, ...mappedQuestionFacts(questions, suppliedInvestorAnswers(person, profile)) }, questions: decorated };
+  let wireFacts: Record<string, string> = {};
+  if (row.investment_profile_id) {
+    const wire = await lastWireReportForProfile(row.investment_profile_id as string, row.id as string);
+    wireFacts = wireBankFacts(wire, questions.map((q) => q.key));
+  }
+  return { locked, supplied: { ...wireFacts, ...prior, ...mappedQuestionFacts(questions, suppliedInvestorAnswers(person, profile)) }, questions: decorated };
 }
 
 export async function saveQuestionnaire(
@@ -1063,6 +1068,28 @@ async function syncInvitation(row: any) {
     .from("fund_invitations")
     .update({ onboarding_status: invitationStatusForStage(String(data?.stage ?? row.stage) as OnboardingStage) })
     .eq("id", row.invitation_id);
+}
+
+/** Sending bank and account name from the investor's most recent wire report for
+ *  this investing profile, so later wires and later funds prefill it instead of
+ *  asking again. Factual only: never bank numbers or certifications. */
+export async function lastWireReportForProfile(profileId: string, excludeOnboardingId?: string) {
+  const { data: rows } = await db().from("investor_onboardings").select("id").eq("investment_profile_id", profileId).is("removed_at", null);
+  const ids = ((rows ?? []) as any[]).map((r) => r.id as string).filter((id) => id !== excludeOnboardingId);
+  if (!ids.length) return null;
+  const { data: ev } = await db()
+    .from("investor_onboarding_events")
+    .select("detail, created_at")
+    .eq("event", "investor_reports_funds_sent")
+    .in("onboarding_id", ids)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (!ev) return null;
+  const d = (ev.detail ?? {}) as Record<string, unknown>;
+  const sendingBank = typeof d.sendingBank === "string" && d.sendingBank.trim() ? d.sendingBank.trim() : null;
+  const senderName = typeof d.senderName === "string" && d.senderName.trim() ? d.senderName.trim() : null;
+  return sendingBank || senderName ? { sendingBank, senderName } : null;
 }
 
 /** "I sent my funds" - informational only; it never makes an investment funded. */
