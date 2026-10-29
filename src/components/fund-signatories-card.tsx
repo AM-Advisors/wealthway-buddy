@@ -7,6 +7,7 @@ import { Star, Trash2, UserPlus } from "lucide-react";
 import { listFundSignatoriesFn, addFundSignatoryFn, updateFundSignatoryFn, inviteFundPersonFn } from "@/lib/fund-setup-canonical.functions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ApprovalButton } from "@/components/approval-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -87,8 +88,8 @@ export function FundSignatoriesCard({ offeringId, onChanged }: { offeringId: str
                   <div className="flex gap-1">
                     {s.kyc !== "verified" && s.contactId && <Button size="sm" variant="ghost" onClick={async () => { try { await invite({ data: { offeringId, contactKey: `contact:${s.contactId}` } }); toast.success("Identity check and onboarding invitation sent"); } catch (e: any) { toast.error(e.message); } }}>Send ID check</Button>}
                     <Button size="sm" variant="ghost" onClick={() => setEdit({ id: s.id, preferredName: s.preferredName ?? "", title: s.title ?? "", email: s.email ?? "" })}>Edit</Button>
-                    {!s.isPrimary && <Button size="sm" variant="ghost" onClick={() => act(s.id, { makePrimary: true })}><Star className="mr-1 h-3.5 w-3.5" />Make primary</Button>}
-                    <Button size="sm" variant="ghost" aria-label={`Remove ${s.name}`} onClick={() => act(s.id, { remove: true })}><Trash2 className="h-3.5 w-3.5" /></Button>
+                    {!s.isPrimary && <ApprovalButton size="sm" variant="ghost" title={`Make ${s.name} the main signer?`} description="New fund documents will name this person as the main signer. Documents already signed do not change." confirmLabel="Make main signer" undoLabel="Undo" waitingTitle="Change waiting to save" waitingNote="You have 5 seconds to undo. Nothing has changed yet." historyNote="The change is recorded in the fund history." onApprove={() => act(s.id, { makePrimary: true })}><Star className="mr-1 h-3.5 w-3.5" />Make primary</ApprovalButton>}
+                    <ApprovalButton size="sm" variant="ghost" aria-label={`Remove ${s.name}`} title={`Remove ${s.name} as a signer?`} description="They will no longer sign new fund documents. Documents they already signed stay valid." confirmLabel="Remove signer" undoLabel="Undo" waitingTitle="Removal waiting to save" waitingNote="You have 5 seconds to undo. Nothing has changed yet." historyNote="The removal is recorded in the fund history." onApprove={() => act(s.id, { remove: true })}><Trash2 className="h-3.5 w-3.5" /></ApprovalButton>
                   </div>
                 )}
               </li>
