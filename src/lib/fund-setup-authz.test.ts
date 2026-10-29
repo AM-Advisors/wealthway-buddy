@@ -397,6 +397,25 @@ describe("launch gate", () => {
 });
 
 describe("document and economics history", () => {
+  it("lets the exact-fund manager create a new fees draft", async () => {
+    const draft = await server.saveEconomics(MANAGER_A, { setupId: SETUP_A, terms: { managementFeePct: 3 } });
+    expect(draft.status).toBe("draft");
+    expect(draft.prepared_by).toBe(MANAGER_A);
+    expect(draft.supersedes_id).toBe("econ-v1");
+  });
+  it("lets the exact-fund manager approve saved fees", async () => {
+    await server.approveEconomics(MANAGER_A, "econ-v2");
+    expect(updates("fund_economics_versions").some(w => w.payload.approved_by === MANAGER_A)).toBe(true);
+  });
+  it("denies another fund's manager fees approval and save", async () => {
+    await expect(server.approveEconomics(MANAGER_B, "econ-v2")).rejects.toThrow(/Forbidden/);
+    await expect(server.saveEconomics(MANAGER_B, { setupId: SETUP_A, terms: {} })).rejects.toThrow(/Forbidden/);
+    expect(writes).toHaveLength(0);
+  });
+  it("does not let managers overwrite approved fees", async () => {
+    await expect(server.saveEconomics(MANAGER_A, { setupId: SETUP_A, terms: {}, versionId: "econ-v1" })).rejects.toThrow(/preserved/);
+    expect(writes).toHaveLength(0);
+  });
   it("adds a new document version instead of rewriting the old one", async () => {
     const created = await server.saveSetupDocument(STAFF, {
       setupId: SETUP_A,

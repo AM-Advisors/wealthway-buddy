@@ -653,7 +653,7 @@ export async function saveEconomics(
     versionId?: string | undefined;
   },
 ) {
-  await assertStaff(userId);
+  await assertSetupAccess(userId, input.setupId);
   const { data: rows } = await db()
     .from("fund_economics_versions")
     .select("*")
@@ -712,15 +712,15 @@ export async function saveEconomics(
 }
 
 export async function approveEconomics(userId: string, versionId: string) {
-  await assertStaff(userId);
   const { data: version } = await db()
     .from("fund_economics_versions")
     .select("*")
     .eq("id", versionId)
     .maybeSingle();
   if (!version) fail("That economics version was not found.");
+  await assertSetupAccess(userId, version.setup_id);
   if (version.status !== "draft") fail("Only a draft economics version can be approved.");
-  // assertStaff above is the approval gate; an authorized preparer may explicitly approve.
+  // Exact-fund authority comes from the saved version; routine approval is explicit.
 
   // The prior approved version becomes history; it is never overwritten.
   const { data: rows } = await db()
