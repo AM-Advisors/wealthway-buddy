@@ -25,7 +25,7 @@ export async function uploadReviewContext(userId: string, documentId: string) {
   return { d, row, actor };
 }
 
-export async function reviewInvestorUpload(userId: string, input: { id: string; status: "new" | "accepted" | "needs_followup"; note?: string | null }) {
+export async function reviewInvestorUpload(userId: string, input: { id: string; status: "new" | "accepted" | "needs_followup"; note?: string | null | undefined }) {
   const { d, row, actor } = await uploadReviewContext(userId, input.id);
   if (!actor.isStaff && !(MANAGER_REVIEW_KINDS as readonly string[]).includes(row.doc_kind)) throw new Error("Use the dedicated identity, accreditation or bank review for this document.");
   if (input.status === "new") throw new Error("Reviewed originals are retained. Upload a new copy for another review.");

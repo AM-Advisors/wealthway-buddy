@@ -40,7 +40,7 @@ export function UploadForInvestor({ onboardingId }: { onboardingId: string }) {
       <CardContent className="space-y-3">
         {q.isPending && <p className="text-sm text-muted-foreground">Loading documents…</p>}
         {q.isError && <p role="alert" className="text-sm text-destructive">Documents could not be loaded.</p>}
-        <ul className="divide-y">{q.data?.map(row => <li key={row.id} className="space-y-2 py-3">
+        <ul className="divide-y">{q.data?.map((row: { id: string; fileName: string; kind: string; status: string; note: string | null; canReview: boolean }) => <li key={row.id} className="space-y-2 py-3">
           <div className="flex flex-wrap items-center justify-between gap-2"><p className="min-w-0 break-all text-sm font-medium">{row.fileName}</p><Badge variant="outline">{row.status === 'accepted' ? 'Approved copy' : row.status === 'needs_followup' ? 'More information needed' : 'Awaiting review'}</Badge></div>
           {row.note && <p className="text-sm text-muted-foreground">{row.note}</p>}
           <div className="flex flex-wrap gap-2"><Button size="sm" variant="outline" disabled={busy} onClick={async () => {
