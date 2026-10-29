@@ -4,6 +4,7 @@ import { canDecide, checkState, matchCount, noteRequired, reviewReason } from ".
 describe("investor verification summary", () => {
   it("maps statuses", () => {
     expect(checkState("review")).toBe("needs_review");
+    expect(checkState("under_review")).toBe("needs_review");
     expect(checkState("approved")).toBe("approved");
     expect(checkState("failed")).toBe("declined");
     expect(checkState(null)).toBe("pending");
