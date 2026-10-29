@@ -1,5 +1,3 @@
-import { InvestorVerificationCard } from "@/components/investor-verification-card";
-import { PersonalInvestmentLinkCard } from "@/components/personal-investment-link";
 import { InvestorReviewPanel } from "@/components/fund-tabs/investors-tab";
 import { UploadForInvestor } from "@/components/upload-for-investor";
 import { InvestorStepHistory } from "@/components/investor-step-history";
@@ -12,8 +10,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { investorRecordDetailFn, resolveSuggestionFn, updateInvestorRecordFn } from "@/lib/investor-record.functions";
-import { listInvestorSideLetters } from "@/lib/side-letters.functions";
-import { TERM_CATEGORIES, MFN_SCOPES } from "@/lib/side-letter-model";
 import { CLAIM_STATE_LABELS, SOURCE_LABELS, type EntrySource } from "@/lib/investor-record-model";
 import { money, prettyStatus } from "@/lib/status";
 import { Badge } from "@/components/ui/badge";
@@ -45,8 +41,6 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
   const resolve = useServerFn(resolveSuggestionFn);
   const qc = useQueryClient();
   const { data, isLoading, error } = useQuery({ queryKey: ["investor-record", onboardingId], queryFn: () => load({ data: { onboardingId } }) });
-  const loadSideLetters = useServerFn(listInvestorSideLetters);
-  const { data: sideLetters } = useQuery({ queryKey: ["investor-side-letters", onboardingId], queryFn: () => loadSideLetters({ data: { fundId, onboardingId } }) });
   const [edit, setEdit] = useState<Record<string, string>>({});
   const set = (k: string) => (e: { target: { value: string } }) => setEdit((s) => ({ ...s, [k]: e.target.value }));
   const refresh = () => { qc.invalidateQueries({ queryKey: ["investor-record", onboardingId] }); qc.invalidateQueries({ queryKey: ["fund-investor-records", fundId] }); };
@@ -141,34 +135,5 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
       {tab === "activity" ? <InvestorStepHistory offeringId={fundId} onboardingId={onboardingId} /> : null}
       {tab === "activity" ? <Card><CardContent className="pt-6">{data.activity.length ? <ul className="divide-y text-sm">{data.activity.map((a: any, i: number) => <li key={i} className="py-2"><p>{a.label}</p><p className="text-xs text-muted-foreground">{new Date(a.at).toLocaleString()} · {a.source}{a.field ? ` · ${a.field}: ${JSON.stringify(a.from)} → ${JSON.stringify(a.to)}` : ""}</p></li>)}</ul> : <p className="text-sm text-muted-foreground">No activity yet.</p>}</CardContent></Card> : null}
     </section>
-  );
-}
-
-function QuestionnaireCard({ q }: { q: { items: { key: string; label: string; answer: string | null }[]; source: string | null; submittedAt: string | null; diditSession: string | null } | undefined }) {
-  if (!q || !q.items.length) return <Card><CardHeader><CardTitle className="text-base">Investor questionnaire</CardTitle></CardHeader><CardContent className="text-sm text-muted-foreground">This Fund has no questionnaire yet.</CardContent></Card>;
-  const answered = q.items.filter((i) => i.answer).length;
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Investor questionnaire</CardTitle>
-        <p className="text-xs text-muted-foreground">
-          {answered} of {q.items.length} answered
-          {q.source ? ` · ${q.source === "didit" ? "Answered during identity verification" : "Answered in Harmonious"}` : ""}
-          {q.submittedAt ? ` · ${new Date(q.submittedAt).toLocaleDateString()}` : ""}
-          {q.diditSession ? ` · Verification ref ${q.diditSession}` : " · No verification linked"}
-        </p>
-      </CardHeader>
-      <CardContent>
-        <dl className="divide-y text-sm">
-          {q.items.map((i) => (
-            <div key={i.key} className="grid gap-1 py-2 sm:grid-cols-3">
-              <dt className="text-muted-foreground sm:col-span-2">{i.label}</dt>
-              <dd>{i.answer ?? <span className="text-muted-foreground">Not answered</span>}</dd>
-            </div>
-          ))}
-        </dl>
-        <p className="mt-3 text-xs text-muted-foreground">Tax IDs and bank account details are never shown here; they are kept in their own protected steps.</p>
-      </CardContent>
-    </Card>
   );
 }
