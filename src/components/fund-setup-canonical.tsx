@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { invalidateFund } from "@/lib/fund-query-keys";
 import { ServiceProvidersSection } from "@/components/fund-setup-extras";
 import { useEffect, useState } from "react";
@@ -108,28 +109,31 @@ export function FundSetupCanonical({ offeringId, staffOnly = false, hideLaunch =
         </CardContent>
       </Card>
 
-      <nav aria-label="Fund Setup sections" className="sticky top-16 z-20 -mx-1 flex gap-1 overflow-x-auto rounded-md border bg-background/95 p-1 backdrop-blur">
-        {JUMP_LINKS.map(([id, label]) => (
-          <a key={id} href={`#${id}`} onClick={jump(id)} className="shrink-0 rounded px-2.5 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground">{label}</a>
-        ))}
-      </nav>
-
-      <LegalNameCard d={d} offeringId={offeringId} onSaved={refresh} />
-      <div id="setup-details" className="scroll-mt-32 space-y-2"><RequiredHere section="setup-details" /><DetailsCard d={d} offeringId={offeringId} onSaved={refresh} /></div>
-      <div id="setup-signatories" className="scroll-mt-32 space-y-2"><RequiredHere section="setup-signatories" /><FundSignatoriesCard offeringId={offeringId} onChanged={refresh} /></div>
-      <div id="setup-economics" className="scroll-mt-32 space-y-2"><RequiredHere section="setup-economics" /><EconomicsCard d={d} offeringId={offeringId} onSaved={refresh} /></div>
-      <div id="setup-documents" className="scroll-mt-32 space-y-2"><RequiredHere section="setup-documents" /><OfferingDocumentsSetup offeringId={offeringId} onChanged={refresh} /></div>
-      <FundSetupPhase3 offeringId={offeringId} onChanged={refresh} showClasses={false} />
-      <FormationRecordCard offeringId={offeringId} />
-      <FundServicesCard offeringId={offeringId} onChanged={refresh} />
-      <LaunchRequirements />
+      <GuidedSetup
+        steps={[
+          { label: "Basics", body: <>
+            <LegalNameCard d={d} offeringId={offeringId} onSaved={refresh} />
+            <div id="setup-details" className="scroll-mt-32 space-y-2"><RequiredHere section="setup-details" /><DetailsCard d={d} offeringId={offeringId} onSaved={refresh} /></div>
+            <div id="setup-signatories" className="scroll-mt-32 space-y-2"><RequiredHere section="setup-signatories" /><FundSignatoriesCard offeringId={offeringId} onChanged={refresh} /></div>
+          </> },
+          { label: "Fees & terms", body: <div id="setup-economics" className="scroll-mt-32 space-y-2"><RequiredHere section="setup-economics" /><EconomicsCard d={d} offeringId={offeringId} onSaved={refresh} /></div> },
+          { label: "Documents & questions", body: <div id="setup-documents" className="scroll-mt-32 space-y-2"><RequiredHere section="setup-documents" /><OfferingDocumentsSetup offeringId={offeringId} onChanged={refresh} /></div> },
+          { label: "Banking", body: <FundSetupPhase3 offeringId={offeringId} onChanged={refresh} showClasses={false} /> },
+          { label: "Review & approve", body: <>
+            <FormationRecordCard offeringId={offeringId} />
+            <FundServicesCard offeringId={offeringId} onChanged={refresh} />
+            <LaunchRequirements />
+          </> },
+        ]}
+      />
     </div>
   );
 }
 
 const jump = (id: string) => (e: React.MouseEvent) => {
   e.preventDefault();
-  document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  window.dispatchEvent(new CustomEvent("fund-setup-jump", { detail: id }));
+  setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
 };
 
 const SECTION_ANCHOR: Record<string, string> = {
@@ -143,17 +147,6 @@ const SECTION_ANCHOR: Record<string, string> = {
   review: "setup-launch",
 };
 
-const JUMP_LINKS: [string, string][] = [
-  ["setup-details", "Details"],
-  ["setup-signatories", "Signatories"],
-  ["setup-economics", "Economics"],
-  ["setup-documents", "Documents"],
-  ["setup-entity", "Entity & EIN"],
-  ["setup-banking", "Banking"],
-  ["setup-admin", "Regulatory"],
-  ["setup-services", "Services"],
-  ["setup-launch", "Launch"],
-];
 
 type D = Awaited<ReturnType<typeof getFundSetupOverview>>;
 
@@ -690,5 +683,36 @@ export function EconomicsCard({ d, offeringId, onSaved }: { d: D; offeringId: st
           </div>
         )}
     </section>
+  );
+}
+
+const ANCHOR_STEP: Record<string, number> = { "setup-details": 0, "setup-signatories": 0, "setup-economics": 1, "setup-documents": 2, "setup-services": 4, "setup-launch": 4 };
+
+function GuidedSetup({ steps }: { steps: { label: string; body: ReactNode }[] }) {
+  const [i, setI] = useState(0);
+  useEffect(() => {
+    const onJump = (e: Event) => { const id = (e as CustomEvent<string>).detail; setI(ANCHOR_STEP[id] ?? 3); };
+    window.addEventListener("fund-setup-jump", onJump);
+    return () => window.removeEventListener("fund-setup-jump", onJump);
+  }, []);
+  const go = (n: number) => { setI(n); requestAnimationFrame(() => document.getElementById("guided-setup")?.scrollIntoView({ behavior: "smooth", block: "start" })); };
+  return (
+    <div id="guided-setup" className="scroll-mt-20 space-y-4">
+      <ol aria-label="Fund setup steps" className="sticky top-16 z-20 flex gap-1 overflow-x-auto rounded-md border bg-background/95 p-1 backdrop-blur">
+        {steps.map((s, n) => (
+          <li key={s.label} className="shrink-0">
+            <button type="button" onClick={() => go(n)} aria-current={n === i ? "step" : undefined}
+              className={`flex items-center gap-2 rounded px-2.5 py-1.5 text-xs ${n === i ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}>
+              <span className="font-medium">{n + 1}</span>{s.label}
+            </button>
+          </li>
+        ))}
+      </ol>
+      <div className="space-y-6">{steps[i]?.body}</div>
+      <div className="flex justify-between gap-2 border-t pt-4">
+        <Button variant="outline" disabled={i === 0} onClick={() => go(i - 1)}>Back</Button>
+        {i < steps.length - 1 ? <Button onClick={() => go(i + 1)}>Next: {steps[i + 1]?.label}</Button> : null}
+      </div>
+    </div>
   );
 }
