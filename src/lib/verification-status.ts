@@ -130,10 +130,12 @@ export async function canonicalizeApplications<T extends Record<string, any>>(su
   } catch {
     return list;
   }
-  return list.map((a) => {
+  const out = list.map((a) => {
     const merged = withCanonicalVerification({ ...a, user_id: uid(a) } as any, persons);
     return { ...a, kyc_status: merged.kyc_status, aml_status: merged.aml_status, kyc_status_detail: merged.kyc_status_detail, aml_status_detail: merged.aml_status_detail };
   });
+  const { canonicalizeApplicationFunding } = await import("@/lib/funding-canonical");
+  return canonicalizeApplicationFunding(supabase, out);
 }
 
 /** One plain-language identity + screening line wherever a roster shows KYC/AML.
