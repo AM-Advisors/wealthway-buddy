@@ -849,3 +849,5 @@
 ## Investor status cleanup
 - [x] Investor panel and investor investment page use the one shared readiness checklist.
 - [ ] Approvals list and funding readiness wording aligned to the same checklist.
+- [ ] One approvals inbox across funds with approve-from-list and plain-language items.
+- [ ] Accreditation approval for investors whose proof was uploaded before an application exists (e.g. Doug).
