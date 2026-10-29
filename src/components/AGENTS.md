@@ -4,3 +4,4 @@
 
 - Staff and manager investor status renders InvestmentChecklist; the investor page shows only InvestorOnboardingJourney (same requirement results) and hides post-close tabs until close; never add page-local missing/open-item lists — why: pages disagreed and duplicate step lists confused investors.
 - Fund terms, additional questions and investor copy approvals use ApprovalButton: one confirmation with cancelable pending submission; never reverse a completed decision from the browser. Why: accidental clicks can be undone without erasing approved history or changing authority.
+- Fund workspace tabs come only from src/lib/fund-tab-map.ts (8 top tabs, one sub-view row, old tab values redirect); each fund detail renders in exactly one tab — why: no duplicates, everything within 2 clicks.
