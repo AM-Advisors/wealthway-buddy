@@ -135,3 +135,21 @@ export async function canonicalizeApplications<T extends Record<string, any>>(su
     return { ...a, kyc_status: merged.kyc_status, aml_status: merged.aml_status, kyc_status_detail: merged.kyc_status_detail, aml_status_detail: merged.aml_status_detail };
   });
 }
+
+/** One plain-language identity + screening line wherever a roster shows KYC/AML.
+ * Display only: it never decides authority and never shows screening detail. */
+export function identityScreeningSummary(
+  kyc: string | null | undefined,
+  aml: string | null | undefined,
+): { ok: boolean; label: string } {
+  const k = canonicalVerificationStatus(kyc);
+  const a = canonicalVerificationStatus(aml);
+  if (k === "approved" && a === "approved") return { ok: true, label: "Identity and screening approved" };
+  if (k === "declined" || a === "declined") return { ok: false, label: "Check needs review" };
+  if (k === "review" && a === "review") return { ok: false, label: "ID check and screening under review" };
+  if (k === "approved") return { ok: false, label: "ID approved · screening under review" };
+  if (a === "approved") return { ok: false, label: "Screening clear · ID check under review" };
+  if (verificationDetail(kyc) || verificationDetail(aml)) return { ok: false, label: "In progress" };
+  if (k === "review" || a === "review") return { ok: false, label: "Under review" };
+  return { ok: false, label: "Not started" };
+}
