@@ -1,3 +1,4 @@
+import { canonicalizeApplications } from "@/lib/verification-status";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
@@ -1632,7 +1633,7 @@ export const getDiligenceOnboarding = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 
-    const [{ data: room }, { data: application }, { data: access }] = await Promise.all([
+    const [{ data: room }, { data: rawApplication }, { data: access }] = await Promise.all([
       supabase
         .from("diligence_rooms")
         .select("id, nda_required, nda_version")
@@ -1653,6 +1654,7 @@ export const getDiligenceOnboarding = createServerFn({ method: "POST" })
         .eq("offering_id", data.offering_id)
         .maybeSingle(),
     ]);
+    const application = rawApplication ? (await canonicalizeApplications(supabase, [rawApplication as any], userId))[0] : null;
 
     let ndaAccepted = true;
     if (room?.nda_required) {

@@ -1,3 +1,4 @@
+import { canonicalizeApplications } from "@/lib/verification-status";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
@@ -209,7 +210,8 @@ export const getGovernmentIdReview = createServerFn({ method: "POST" })
       db.from("offerings").select("id, name").in("id", ((apps ?? []) as any[]).map((a) => a.offering_id).filter(Boolean)),
     ]);
     const nameBy = new Map(((offerings ?? []) as any[]).map((o) => [o.id, o.name]));
-    const items = ((apps ?? []) as any[]).map((a) => {
+    const canonApps = await canonicalizeApplications(db, (apps ?? []) as any[], data.investorUserId);
+    const items = canonApps.map((a: any) => {
       const k = ((kyc ?? []) as any[]).find((r) => r.application_id === a.id);
       const r = (k?.result ?? {}) as Record<string, any>;
       const files = ((docs ?? []) as any[]).filter((d) => d.application_id === a.id);

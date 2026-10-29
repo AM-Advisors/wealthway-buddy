@@ -1,3 +1,4 @@
+import { canonicalizeApplications } from "@/lib/verification-status";
 // Fund manager approval step: an investor's file must be approved by an
 // assigned fund manager (or an administrator) before funding opens. Approving
 // also sends the investor their welcome message with the diligence room link.
@@ -66,7 +67,7 @@ export const getApprovalQueue = createServerFn({ method: "GET" })
     const { data: apps, error } = await query;
     if (error) throw new Error(error.message);
 
-    const rows = (apps ?? []) as any[];
+    const rows = (await canonicalizeApplications(supabase, (apps ?? []) as any[])) as any[];
     const userIds = Array.from(
       new Set(rows.flatMap((r) => [r.user_id, r.manager_reviewed_by].filter(Boolean))),
     );
