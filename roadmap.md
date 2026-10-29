@@ -1,5 +1,10 @@
 # Roadmap
 
+## Uploaded tax-form handoff
+- [x] Exact-investment uploaded tax copies show certification review pending, not an investor reupload task. Valid certified forms and renewal requirements retain precedence.
+- [x] Investor Sign acknowledges the copy already on file; investor-record checklist opens Documents or verification Details directly. No tax certification, compliance or funding decisions changed.
+- [ ] Authorized tax certification of Doug's outside-signed W-9 still needs the existing protected tax workflow; uploaded-copy acceptance cannot certify it. Durable investor read-back requires independently isolated QA.
+
 ## Investor onboarding simplification (2026-10-29)
 - [x] One plain-language identity + screening line on fund rosters and investor detail badges; raw KYC/AML values and duplicated prefixes removed.
 - [x] Saved wire details (sending bank, sender name) prefill future wire confirmations and the funding-bank questionnaire questions.

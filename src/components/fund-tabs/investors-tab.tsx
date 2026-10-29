@@ -299,7 +299,7 @@ export function InvestorSheet({ fundId, id, onClose }: { fundId: string; id: str
   );
 }
 
-export function InvestorReviewPanel({ fundId, id, embedded = false }: { fundId: string; id: string | null; embedded?: boolean }) {
+export function InvestorReviewPanel({ fundId, id, embedded = false, onOpenItem }: { fundId: string; id: string | null; embedded?: boolean; onOpenItem?: (key: string) => void }) {
   const load = useServerFn(investorDetailFn);
   const approve = useServerFn(approveToFundFn);
   const downloadSigned = useServerFn(managerInvestorSignedCopyFn);
@@ -337,7 +337,7 @@ export function InvestorReviewPanel({ fundId, id, embedded = false }: { fundId: 
               }}>{approving ? "Approving…" : "Approve to send funds"}</ApprovalButton>}
             </section>
           )}
-          {id && <section aria-label="Investment status"><InvestmentChecklist onboardingId={id} /><p className="mt-2 text-xs text-muted-foreground">One checklist shared by investors, fund managers and Operations. See the History tab for who completed each step and when.</p></section>}
+          {id && <section aria-label="Investment status"><InvestmentChecklist onboardingId={id} onOpenItem={onOpenItem} /></section>}
           <section className="grid grid-cols-2 gap-3">
             <div className="rounded-lg border p-3"><p className="text-xs text-muted-foreground">Committed</p><p className="text-lg font-semibold">{usd(d.committedCents)}</p></div>
             <div className="rounded-lg border p-3"><p className="text-xs text-muted-foreground">Received</p><p className="text-lg font-semibold">{usd(d.receivedCents)}</p>
