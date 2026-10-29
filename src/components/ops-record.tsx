@@ -373,7 +373,7 @@ export function OpsRecordPage({ type, id }: { type: OpsRecordType; id: string })
         ) : null}
         <Summary items={summaryFor(type, record)} />
         {type === "client" ? (
-          <ClientOverviewActions clientId={id} goTo={(tab) => navigate({ to: ".", search: { tab } as any })} />
+          <ClientOverviewActions clientId={id} goTo={(tab) => navigate({ to: ".", search: (prev) => ({ ...(prev as any), tab }), replace: true, scroll: false })} />
         ) : null}
         {type === "client" ? <HarmoniousTeamCard clientId={id} /> : null}
         {type === "fund" ? <HarmoniousTeamCard offeringId={id} /> : null}
@@ -396,7 +396,7 @@ export function OpsRecordPage({ type, id }: { type: OpsRecordType; id: string })
             key={tab.id}
             size="sm"
             variant={tab.id === active ? "default" : "ghost"}
-            onClick={() => navigate({ to: ".", search: { tab: tab.id } as any })}
+            onClick={() => navigate({ to: ".", search: (prev) => ({ ...(prev as any), tab: tab.id }), replace: true, scroll: false })}
           >
             {tab.title}
           </Button>
