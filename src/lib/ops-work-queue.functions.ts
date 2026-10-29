@@ -45,3 +45,8 @@ export const getOpsRecentActivity = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) =>
     (await server()).recentOperationsActivity(context as any, data.limit ?? 20),
   );
+
+/** Harmonious-only list of stalled fund and investor work. Staff access is checked on the server. */
+export const getStalledWork = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => (await server()).stalledWork(context as any));

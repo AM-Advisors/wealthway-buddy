@@ -11,3 +11,10 @@ describe("stalled items", () => {
   });
   it("names who it waits on", () => expect(waitingLabel("2026-10-28T11:00:00Z", now)).toBe("Waiting on the fund manager for 1 day"));
 });
+
+import { investorStageAction } from "./stalled-items";
+describe("investor stall actions", () => {
+  it("signing stage waits on the investor to sign", () => expect(investorStageAction("signature")).toEqual({ action: "Investor needs to sign the subscription documents", owner: "Investor" }));
+  it("review stage waits on the fund manager", () => expect(investorStageAction("harmonious_review")?.owner).toBe("Fund manager"));
+  it("closed investments are never stalled", () => expect(investorStageAction("closed")).toBeNull());
+});

@@ -1317,3 +1317,33 @@ export async function pendingApprovalItemsForAlerts(s: any): Promise<WorkItem[]>
   const collected = await Promise.all(COLLECTORS.map(({ load }) => load(s, lookup, now).catch(() => [] as WorkItem[])));
   return collected.flat().filter(summaryIsSafe).filter((i) => i.requiredAction === "review" || i.requiredAction === "approve");
 }
+
+/** Harmonious-only stalled list: fund setup work plus investors idle 7+ days. Read only. */
+export async function stalledWork(context: Ctx) {
+  const { capabilities } = await requireOperations(context);
+  const { INVESTOR_STALL_DAYS, investorStageAction, daysWaiting } = await import("@/lib/stalled-items");
+  const s = context.supabase;
+  const now = new Date();
+  const lookup = await lookups(s);
+  const out: { id: string; kind: "fund" | "investor"; fundId: string; fundName: string | null; investorName: string | null; action: string; owner: string; days: number | null; href: string }[] = [];
+  if (can(capabilities, "funds", "see")) {
+    for (const i of (await fundSetupDraftItems(s, lookup, now)) as any[]) {
+      if (i.workflowState !== "stalled" && !String(i.source).endsWith("_stalled")) continue;
+      out.push({ id: i.id, kind: "fund", fundId: i.fundId, fundName: i.fundName, investorName: null, action: String(i.title).replace(/^Stalled · /, ""), owner: "Fund manager", days: daysWaiting(i.at, now), href: destinationFor(i) });
+    }
+  }
+  if (can(capabilities, "onboarding", "see") || can(capabilities, "investors", "see")) {
+    const cutoff = new Date(now.getTime() - INVESTOR_STALL_DAYS * 86_400_000).toISOString();
+    const obs = (await safely(async () => rows(await s.from("investor_onboardings").select("id, offering_id, stage, funding_status, person_id, last_activity_at, updated_at").is("removed_at", null).lt("updated_at", cutoff).limit(SOURCE_LIMIT)))) as any[];
+    const pids = [...new Set(obs.map((o) => o.person_id).filter(Boolean))];
+    const people = pids.length ? ((await safely(async () => rows(await s.from("persons").select("id, preferred_name, legal_first_name, legal_last_name").in("id", pids)))) as any[]) : [];
+    const name = new Map(people.map((p) => [p.id, p.preferred_name || [p.legal_first_name, p.legal_last_name].filter(Boolean).join(" ")]));
+    for (const o of obs) {
+      const step = investorStageAction(o.stage);
+      const since = o.last_activity_at ?? o.updated_at;
+      if (!step || ["funded", "settled"].includes(String(o.funding_status)) || (daysWaiting(since, now) ?? 0) < INVESTOR_STALL_DAYS) continue;
+      out.push({ id: `investor:${o.id}`, kind: "investor", fundId: o.offering_id, fundName: lookup.funds.get(o.offering_id)?.name ?? null, investorName: name.get(o.person_id) || "Unnamed investor", action: step.action, owner: step.owner, days: daysWaiting(since, now), href: `/ops/fund/${o.offering_id}/investor/${o.id}` });
+    }
+  }
+  return out.sort((a, b) => (b.days ?? 0) - (a.days ?? 0));
+}

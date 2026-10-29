@@ -21,3 +21,19 @@ export function waitingLabel(since: string | null | undefined, now: Date): strin
   if (d === null) return "Waiting on the fund manager";
   return d === 0 ? "Waiting on the fund manager since today" : `Waiting on the fund manager for ${d} day${d === 1 ? "" : "s"}`;
 }
+
+/** Exact next action and who owns it for an investor stuck at a stage. */
+export const STAGE_ACTION: Record<string, { action: string; owner: "Investor" | "Fund manager" }> = {
+  profile_selected: { action: "Investor needs to finish About You", owner: "Investor" },
+  eligibility: { action: "Investor needs to answer the eligibility questions", owner: "Investor" },
+  verification: { action: "Investor needs to finish the ID check", owner: "Investor" },
+  tax: { action: "Investor needs to complete the tax form", owner: "Investor" },
+  signature: { action: "Investor needs to sign the subscription documents", owner: "Investor" },
+  harmonious_review: { action: "Fund manager needs to approve the investor to send funds", owner: "Fund manager" },
+  approved_to_fund: { action: "Investor needs to send the wire", owner: "Investor" },
+  awaiting_funds: { action: "Fund manager needs to match the received wire", owner: "Fund manager" },
+};
+export const INVESTOR_STALL_DAYS = 7;
+export function investorStageAction(stage: string | null | undefined) {
+  return STAGE_ACTION[String(stage ?? "")] ?? null;
+}
