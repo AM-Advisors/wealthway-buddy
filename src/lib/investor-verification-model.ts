@@ -5,7 +5,7 @@ export function checkState(status: string | null | undefined): CheckState {
   const s = String(status ?? "").toLowerCase();
   if (["approved", "clear", "passed", "verified"].includes(s)) return "approved";
   if (["declined", "rejected", "failed", "match", "hit"].includes(s)) return "declined";
-  if (["review", "needs_review", "in_review", "manual_review", "flagged", "submitted"].includes(s)) return "needs_review";
+  if (["review", "needs_review", "in_review", "under_review", "manual_review", "flagged", "submitted"].includes(s)) return "needs_review";
   return "pending";
 }
 
