@@ -854,7 +854,7 @@
 
 ## Simplify investor onboarding and fund setup (Oct 29)
 - [x] Investor page: one step list, only Overview/Documents until close
-- [ ] Investor: one question per screen group, hide non-applicable, skip already-answered
+- [x] Investor: questions in short pages, already-known answers collapsed, Yes/No buttons
 - [ ] Investor: clearer verification retry/help
 - [ ] Investor: sign all documents in one pass; funding instructions on one screen
 - [ ] Fund setup: guided wizard (Basics → Fees & terms → Documents & questions → Banking → Review & approve), advanced hidden
