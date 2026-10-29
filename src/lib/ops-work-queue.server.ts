@@ -745,7 +745,8 @@ async function documentItems(s: any, lookup: Lookup, now: Date, fundId?: string)
   let q = s
     .from("investor_documents")
     .select("id, user_id, offering_id, doc_kind, review_status, uploaded_at")
-    .eq("review_status", "pending")
+    // Uploads arrive as "new"; "pending" is kept for older rows.
+    .in("review_status", ["new", "pending"])
     .limit(SOURCE_LIMIT);
   if (fundId) q = q.eq("offering_id", fundId);
   const docs = await safely(async () => rows(await q));
@@ -758,8 +759,8 @@ async function documentItems(s: any, lookup: Lookup, now: Date, fundId?: string)
       recordType: "investor",
       recordId: d.user_id,
       recordTab: "documents",
-      title: `${lookup.people.get(d.user_id) ?? "Investor"} | ${String(d.doc_kind ?? "document").replace(/_/g, " ")}`,
-      reason: "Uploaded document is waiting for review",
+      title: `${lookup.people.get(d.user_id) ?? "Investor"} | ${d.doc_kind === "accreditation_proof" ? "accreditation proof" : String(d.doc_kind ?? "document").replace(/_/g, " ")}`,
+      reason: d.doc_kind === "accreditation_proof" ? "Accreditation proof uploaded; review it before funding" : "Uploaded document is waiting for review",
       workflowState: String(d.review_status),
       requiredAction: "review",
       fundId: d.offering_id ?? null,
