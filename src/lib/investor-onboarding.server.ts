@@ -854,12 +854,17 @@ export async function subscriptionLocks(row: any, questions: Question[]) {
   );
   const { mappedQuestionFacts } = await import("./fund-question-ai-model");
   // Same investing profile, other funds, newest first: reuse factual answers only.
-  const { priorFactAnswers } = await import("@/lib/subscription-prefill");
+  const { priorFactAnswers, wireBankFacts } = await import("@/lib/subscription-prefill");
   const { data: priorRows } = row.investment_profile_id
     ? await db().from("investor_onboardings").select("questionnaire_responses").eq("investment_profile_id", row.investment_profile_id).neq("id", row.id).is("removed_at", null).not("questionnaire_submitted_at", "is", null).order("questionnaire_submitted_at", { ascending: false }).limit(5)
     : { data: [] as any[] };
   const prior = priorFactAnswers(((priorRows ?? []) as any[]).map((r) => (r.questionnaire_responses ?? {}) as Record<string, unknown>));
-  return { locked, supplied: { ...prior, ...mappedQuestionFacts(questions, suppliedInvestorAnswers(person, profile)) }, questions: decorated };
+  let wireFacts: Record<string, string> = {};
+  if (row.investment_profile_id) {
+    const wire = await lastWireReportForProfile(row.investment_profile_id as string, row.id as string);
+    wireFacts = wireBankFacts(wire, questions.map((q) => q.key));
+  }
+  return { locked, supplied: { ...wireFacts, ...prior, ...mappedQuestionFacts(questions, suppliedInvestorAnswers(person, profile)) }, questions: decorated };
 }
 
 export async function saveQuestionnaire(
@@ -1063,6 +1068,28 @@ async function syncInvitation(row: any) {
     .from("fund_invitations")
     .update({ onboarding_status: invitationStatusForStage(String(data?.stage ?? row.stage) as OnboardingStage) })
     .eq("id", row.invitation_id);
+}
+
+/** Sending bank and account name from the investor's most recent wire report for
+ *  this investing profile, so later wires and later funds prefill it instead of
+ *  asking again. Factual only: never bank numbers or certifications. */
+export async function lastWireReportForProfile(profileId: string, excludeOnboardingId?: string) {
+  const { data: rows } = await db().from("investor_onboardings").select("id").eq("investment_profile_id", profileId).is("removed_at", null);
+  const ids = ((rows ?? []) as any[]).map((r) => r.id as string).filter((id) => id !== excludeOnboardingId);
+  if (!ids.length) return null;
+  const { data: ev } = await db()
+    .from("investor_onboarding_events")
+    .select("detail, created_at")
+    .eq("event", "investor_reports_funds_sent")
+    .in("onboarding_id", ids)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (!ev) return null;
+  const d = (ev.detail ?? {}) as Record<string, unknown>;
+  const sendingBank = typeof d["sendingBank"] === "string" && d["sendingBank"].trim() ? d["sendingBank"].trim() : null;
+  const senderName = typeof d["senderName"] === "string" && d["senderName"].trim() ? d["senderName"].trim() : null;
+  return sendingBank || senderName ? { sendingBank, senderName } : null;
 }
 
 /** "I sent my funds" - informational only; it never makes an investment funded. */
@@ -1357,9 +1384,35 @@ export async function fundingInstructions(userId: string, onboardingId: string) 
   const { normalizePaymentMethods, PAYMENT_METHOD_TIMELINE } = await import("@/lib/payment-methods");
   const { data: pm } = await db().from("offerings").select("payment_methods, check_payable_to, check_mail_address").eq("id", row.offering_id).maybeSingle();
   const methods = normalizePaymentMethods((pm as any)?.payment_methods).filter((m) => m !== "ach" || !!shown.domestic);
+  // Sending bank and account name the investor already reported on an earlier
+  // wire (this fund or a prior one) so they never retype their wire details.
+  let savedWire: { sendingBank: string | null; senderName: string | null } | null = null;
+  const profileRows = row.investment_profile_id
+    ? db().from("investor_onboardings").select("id").eq("investment_profile_id", row.investment_profile_id)
+    : db().from("investor_onboardings").select("id").eq("investor_user_id", row.investor_user_id);
+  const { data: sameInvestorRows } = await profileRows;
+  const sameIds = ((sameInvestorRows ?? []) as any[]).map((r) => r.id as string);
+  if (sameIds.length) {
+    const { data: lastReport } = await db()
+      .from("investor_onboarding_events")
+      .select("detail, created_at")
+      .eq("event", "investor_reports_funds_sent")
+      .in("onboarding_id", sameIds)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (lastReport) {
+      const rd = (lastReport.detail ?? {}) as Record<string, unknown>;
+      savedWire = {
+        sendingBank: typeof rd["sendingBank"] === "string" && rd["sendingBank"].trim() ? rd["sendingBank"] : null,
+        senderName: typeof rd["senderName"] === "string" && rd["senderName"].trim() ? rd["senderName"] : null,
+      };
+    }
+  }
   return {
     unlocked: true,
     reasons: [] as string[],
+    saved: savedWire,
     instructions: {
       methods: methods.map((m) => ({ method: m, timeline: PAYMENT_METHOD_TIMELINE[m] })),
       check: methods.includes("check") ? { payableTo: (pm as any)?.check_payable_to ?? null, mailTo: (pm as any)?.check_mail_address ?? null } : null,

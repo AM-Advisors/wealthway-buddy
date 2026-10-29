@@ -6,6 +6,7 @@
  * files anything or sends email.
  */
 import { investorSteps } from "@/lib/investor-step-status";
+import { identityScreeningSummary } from "@/lib/verification-status";
 import { currentProfileTaxDetails } from "@/lib/profile-tax-details.server";
 import { canonicalFundingState, CANONICAL_FUNDING_LABELS, isReconciledFunding } from "@/lib/funding-status";
 
@@ -118,7 +119,7 @@ export async function investorGrid(fundId: string) {
       missing,
       committedCents,
       receivedCents: isReconciledFunding(o.funding_status) ? o.funded_amount_cents ?? null : null,
-      kycLabel: `${entity ? "KYB" : "KYC"}/AML: ${String(kyc).replace(/_/g, " ")} / ${String(aml).replace(/_/g, " ")}`,
+      kycLabel: `${entity ? "KYB" : "KYC"}: ${identityScreeningSummary(kyc, aml).label}`,
       kycOk,
       docs,
       wiring: CANONICAL_FUNDING_LABELS[funding],

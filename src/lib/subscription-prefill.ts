@@ -146,6 +146,18 @@ export const REUSABLE_PRIOR_KEY_PREFIXES = [
   "is_the_jurisdiction_where_the_wiring_institution",
 ] as const;
 
+/** Funding-bank question keys are prefilled from the investor's saved wire report. */
+export const WIRE_BANK_KEY_PREFIX = "name_of_the_bank_from_which_the_subscriber";
+
+/** The bank an earlier wire already came from, mapped onto this fund's funding-bank questions. */
+export function wireBankFacts(wire: { sendingBank: string | null } | null | undefined, keys: string[]): Record<string, string> {
+  const bank = wire?.sendingBank?.trim();
+  if (!bank) return {};
+  const out: Record<string, string> = {};
+  for (const key of keys) if (key.startsWith(WIRE_BANK_KEY_PREFIX)) out[key] = bank;
+  return out;
+}
+
 export function priorFactAnswers(prior: Record<string, unknown>[]): Record<string, string> {
   const out: Record<string, string> = {};
   for (const answers of prior) {

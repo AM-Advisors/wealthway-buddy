@@ -83,3 +83,25 @@ d2("detail survives the person-record merge", () => {
     e2(vlabel(r.kyc_status, r.kyc_status_detail)).toBe("Approved");
   });
 });
+
+import { identityScreeningSummary } from "./verification-status";
+describe("identityScreeningSummary", () => {
+  it("shows one combined approval when both are clear", () => {
+    const s = identityScreeningSummary("approved", "clear");
+    expect(s.ok).toBe(true);
+    expect(s.label).toBe("Identity and screening approved");
+  });
+  it("keeps one-sided progress in plain words, never raw values", () => {
+    expect(identityScreeningSummary("approved", "in_review").label).toBe("ID approved · screening under review");
+    expect(identityScreeningSummary("not_started", "approved").label).toBe("Screening clear · ID check under review");
+    expect(identityScreeningSummary("in_review", "pending").label).toBe("Under review");
+  });
+  it("flags a decline or match without exposing screening detail", () => {
+    expect(identityScreeningSummary("approved", "hit").label).toBe("Check needs review");
+    expect(identityScreeningSummary("rejected", "approved").ok).toBe(false);
+  });
+  it("distinguishes in progress from not started", () => {
+    expect(identityScreeningSummary("in_progress", null).label).toBe("In progress");
+    expect(identityScreeningSummary("not_started", "not_started").label).toBe("Not started");
+  });
+});

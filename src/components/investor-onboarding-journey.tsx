@@ -897,6 +897,7 @@ function Fund({ d, onboardingId, done }: { d: any; onboardingId: string; done: (
               defaultAmountCents={amount}
               pending={sent.isPending}
               already={!!d.investorReportsSent}
+              saved={f?.saved ?? null}
               onSubmit={(v) => sent.mutate({ data: { onboardingId, ...v } } as any)}
             />}
           </>
@@ -910,10 +911,11 @@ function Fund({ d, onboardingId, done }: { d: any; onboardingId: string; done: (
   );
 }
 
-function WireSentForm({ defaultAmountCents, pending, already, onSubmit }: {
+function WireSentForm({ defaultAmountCents, pending, already, saved, onSubmit }: {
   defaultAmountCents: number | null;
   pending: boolean;
   already: boolean;
+  saved: { sendingBank: string | null; senderName: string | null } | null;
   onSubmit: (v: { sentOn: string | null; amountCents: number | null; sendingBank: string | null; reference: string | null; senderName: string | null }) => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -922,6 +924,10 @@ function WireSentForm({ defaultAmountCents, pending, already, onSubmit }: {
   const [bank, setBank] = useState("");
   const [ref, setRef] = useState("");
   const [sender, setSender] = useState("");
+  // Wire details the investor already gave us fill in each time the form opens.
+  useEffect(() => {
+    if (open) { setBank(saved?.sendingBank ?? ""); setSender(saved?.senderName ?? ""); }
+  }, [open, saved?.sendingBank, saved?.senderName]);
   if (!open) {
     return (
       <Button variant="outline" onClick={() => setOpen(true)}>
@@ -933,6 +939,7 @@ function WireSentForm({ defaultAmountCents, pending, already, onSubmit }: {
   return (
     <div className="space-y-3 rounded-md border p-4">
       <p className="text-sm font-medium">Confirm your wire</p>
+      {saved?.sendingBank || saved?.senderName ? <p className="text-xs text-muted-foreground">Your saved wire details are filled in below.</p> : null}
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1"><Label htmlFor="w-date">Date sent</Label><Input id="w-date" type="date" value={sentOn} onChange={(e) => setSentOn(e.target.value)} /></div>
         <div className="space-y-1"><Label htmlFor="w-amt">Amount sent ($)</Label><Input id="w-amt" inputMode="decimal" value={amt} onChange={(e) => setAmt(e.target.value)} /></div>

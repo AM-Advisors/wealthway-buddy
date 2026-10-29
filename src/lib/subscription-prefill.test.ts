@@ -71,3 +71,15 @@ describe("answers reused from another fund", () => {
     expect(priorFactAnswers([{ subscriber_s_address_of_residence: "New" }, { subscriber_s_address_of_residence: "Old" }])["subscriber_s_address_of_residence"]).toBe("New");
   });
 });
+
+import { wireBankFacts } from "./subscription-prefill";
+describe("wireBankFacts", () => {
+  it("fills the funding-bank question from the saved wire report", () => {
+    const out = wireBankFacts({ sendingBank: "Chase" }, ["name_of_the_bank_from_which_the_subscriber_will_wire_funds", "other_question"]);
+    expect(out).toEqual({ name_of_the_bank_from_which_the_subscriber_will_wire_funds: "Chase" });
+  });
+  it("stays empty without a saved bank", () => {
+    expect(wireBankFacts(null, ["name_of_the_bank_from_which_the_subscriber_will_wire_funds"])).toEqual({});
+    expect(wireBankFacts({ sendingBank: "   " }, ["name_of_the_bank_from_which_the_subscriber_will_wire_funds"])).toEqual({});
+  });
+});

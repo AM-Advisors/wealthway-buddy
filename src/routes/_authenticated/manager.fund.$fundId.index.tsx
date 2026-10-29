@@ -9,6 +9,7 @@ import { FormationRecordCard } from "@/components/formation-record-card";
 import { ManagerCloseSheets } from "@/components/accounting-phase5";
 import { SELF_SERVE_AREAS, SelfServeFundPage, type SelfServeArea } from "@/components/self-serve-fund-page";
 import { ManagerFundInvestors } from "@/components/manager-fund-investors";
+import { ManagerInvestorTodoList } from "@/components/manager-investor-todos";
 import { FundDocumentsHub } from "@/components/fund-documents-hub";
 import { FundOnboardingLinkCard } from "@/components/fund-onboarding-link";
 import { FundTeamAccessBox } from "@/components/fund-team-access-box";
@@ -37,7 +38,7 @@ function Overview() {
   };
   return <SelfServeFundPage area={area} onAreaChange={next => { void navigate({ to: "/manager/fund/$fundId", params: { fundId }, search: { area: next } }); }} sections={{
     setup: () => <div className="space-y-6"><FundCommandCenter fundId={fundId} nextActionOnly onNavigate={go} /><FundSetupForm offeringId={fundId} mode="manager" workspace /><ManagerLaunchCard fundId={fundId} /></div>,
-    investors: () => <ManagerFundInvestors fundId={fundId} />,
+    investors: () => <div className="space-y-6"><ManagerInvestorTodoList fundId={fundId} /><ManagerFundInvestors fundId={fundId} /></div>,
     documents: () => <FundDocumentsHub fundId={fundId} staff={false} />,
     link: () => <FundOnboardingLinkCard fundId={fundId} />,
     team: () => <div className="space-y-6"><FundTeamAccessBox fundId={fundId} /><ManagerDraftReview fundId={fundId} /></div>,
