@@ -133,7 +133,7 @@ export function InvestorOnboardingJourney({
       <Card>
         <CardContent className="space-y-5 pt-6">
           <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm"><span className="font-medium">Progress</span><span className="text-muted-foreground">{h.progressPercent}%</span></div>
+            <div className="flex items-center justify-between text-sm"><span className="font-medium">Progress</span><span className="text-muted-foreground">{h.progressPercent}%{!h.complete && minutesLeft(steps) > 0 ? ` · about ${minutesLeft(steps)} min left` : ""}</span></div>
             <div className="h-2 overflow-hidden rounded-full bg-muted"><div className="h-full bg-primary transition-all" style={{ width: `${h.progressPercent}%` }} /></div>
           </div>
 
@@ -168,6 +168,7 @@ export function InvestorOnboardingJourney({
                     {s.label}
                   </span>
                   <span className="mt-1 line-clamp-2 text-xs text-muted-foreground">{s.message}</span>
+                  {s.state !== "complete" && <span className="mt-1 text-xs text-muted-foreground">About {STEP_MINUTES[s.key]} min</span>}
                 </button>
               </li>
             ))}
