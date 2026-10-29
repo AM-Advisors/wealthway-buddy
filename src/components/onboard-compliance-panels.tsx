@@ -336,12 +336,12 @@ export function TaxSignPanel({ onboardingId, done, locked = false, subscriberNam
   if (q.isPending) return <p className="text-sm text-muted-foreground">Loading your tax form…</p>;
   if (q.error || !q.data) return <LoadError error={q.error} what="Your tax form" onRetry={() => void q.refetch()} audience="account" />;
   if (q.data.tax.state === "not_applicable") return null;
-  if (locked && q.data.tax.state !== "valid") {
+  if (locked && q.data.tax.state !== "valid" && !q.data.tax.uploadedCopy) {
     return <Card><CardContent className="pt-6 text-sm text-muted-foreground">Your IRS tax form ({q.data.tax.form?.title ?? "chosen in question 9"}) is next. Submit the investor questions above to open it.</CardContent></Card>;
   }
   return (
     <section aria-label="Tax form" className="space-y-4">
-      {q.data.tax.state !== "valid" && !q.data.tax.form && q.data.taxIntake.state !== "valid" ? (
+      {q.data.tax.state !== "valid" && !q.data.tax.uploadedCopy && !q.data.tax.form && q.data.taxIntake.state !== "valid" ? (
         <TaxIntakeCard key={JSON.stringify(q.data.taxIntake.answers)} onboardingId={onboardingId} d={q.data} refresh={refresh} />
       ) : null}
       <TaxFormSignaturePanel onboardingId={onboardingId} done={done} defaultName={subscriberName ?? null} />
@@ -385,6 +385,14 @@ function TaxFormSignaturePanel({ onboardingId, done, defaultName }: { onboarding
   });
   if (!q.data) return null;
   const d = q.data;
+  if (d.tax.uploadedCopy && d.tax.state === "review_required" && !updating) {
+    return <section aria-label="Uploaded tax form" className="space-y-3 border-l-4 border-primary pl-4">
+      <h3 className="text-lg font-semibold">Tax form received</h3>
+      <p className="break-words text-base">{d.tax.uploadedCopy.fileName}</p>
+      <p className="text-base text-muted-foreground">Your copy is on file. Harmonious needs to confirm its tax certification. You do not need to upload it again.</p>
+      <Button variant="outline" onClick={() => setUpdating(true)}>Replace with a newly signed form</Button>
+    </section>;
+  }
   if (d.tax.state === "valid" && !updating) {
     return (
       <Card><CardContent className="flex flex-col gap-2 pt-6 text-sm sm:flex-row sm:items-center sm:justify-between">

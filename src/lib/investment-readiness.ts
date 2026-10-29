@@ -194,7 +194,7 @@ function fromRequirement(r: RequirementResult): Pick<ReadinessItem, "status" | "
   const s: RequirementState = r.state;
   if (s === "valid") return { status: "complete", owner: null, action: null };
   if (s === "not_applicable") return { status: "not_applicable", owner: null, action: null };
-  if (s === "review_required") return { status: "under_review", owner: "harmonious", action: `Review ${r.label.toLowerCase()}` };
+  if (s === "review_required") return { status: "under_review", owner: "harmonious", action: r.key === "tax_documentation" ? "Review uploaded tax form certification" : `Review ${r.label.toLowerCase()}` };
   if (s === "refresh_required") return { status: "needs_investor", owner: "investor", action: `Update ${r.label.toLowerCase()}` };
   if (HARMONIOUS_WHEN_MISSING.has(r.key)) {
     return { status: "needs_harmonious", owner: "harmonious", action: r.key === "aml" ? "Complete compliance screening" : "Prepare subscription documents" };

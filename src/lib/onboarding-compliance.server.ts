@@ -4,6 +4,7 @@
  * functions after the caller's access to the onboarding is checked.
  */
 import { usPersonFromVerification } from "@/lib/subscription-prefill";
+import { pendingTaxUpload, taxStateWithUpload, type TaxUpload } from "@/lib/tax-upload-state";
 import {
   BAD_ACTOR_QUESTIONNAIRE_VERSION,
   BAD_ACTOR_WORDING_STATUS,
@@ -136,6 +137,7 @@ export type Stage2Inputs = {
   certs: Map<string, any[]>;
   amounts: Map<string, any>;
   managers: Set<string>;
+  taxUploads?: Map<string, TaxUpload[]>;
 };
 
 /** One read per table for every onboarding. Same filters and ordering as the per-row reads. */
@@ -144,7 +146,7 @@ export async function loadStage2Inputs(obs: Stage2Input["onboarding"][]): Promis
   const obIds = obs.map((o) => o.id);
   const offIds = obs.map((o) => o.offering_id);
   const profIds = obs.map((o) => o.investment_profile_id);
-  const [offs, setups, facts, forms, qrs, certs, amounts, mgrs] = await Promise.all([
+  const [offs, setups, facts, forms, qrs, certs, amounts, mgrs, taxUploads] = await Promise.all([
     readIn(offIds, (c) => d.from("offerings").select("id, reg_type").in("id", c)),
     readIn(offIds, (c) => d.from("fund_setups").select("id, offering_id").in("offering_id", c)),
     readIn(profIds, (c) => d.from("investor_tax_facts").select("id, answers, created_at, investment_profile_id").in("investment_profile_id", c).is("superseded_by", null).order("created_at", { ascending: false })),
@@ -153,6 +155,7 @@ export async function loadStage2Inputs(obs: Stage2Input["onboarding"][]): Promis
     readIn(obIds, (c) => d.from("investor_certifications").select("onboarding_id, certification_key, certification_version, evidence, created_at").in("onboarding_id", c).order("created_at", { ascending: true })),
     readIn(obIds, (c) => d.from("investor_onboardings").select("id, requested_amount_cents, accepted_amount_cents").in("id", c)),
     readIn(offIds, (c) => d.from("fund_managers").select("offering_id, user_id").in("offering_id", c)),
+    readIn(obIds, (c) => d.from("investor_documents").select("id, onboarding_id, investment_profile_id, user_id, doc_kind, review_status, file_name").in("onboarding_id", c).eq("doc_kind", "tax_form").order("uploaded_at", { ascending: false })),
   ]);
   const configs = await readIn(setups.map((s) => s.id), (c) => d.from("fund_eligibility_configs").select("setup_id, rules, version").in("setup_id", c).eq("status", "approved").order("version", { ascending: false }));
   const cfgBySetup = groupBy(configs, "setup_id");
@@ -176,6 +179,7 @@ export async function loadStage2Inputs(obs: Stage2Input["onboarding"][]): Promis
     rules, taxFacts: factMap, forms: groupBy(forms, "investment_profile_id"), badActor: ba, aml, certs: certMap,
     amounts: new Map(amounts.map((a) => [String(a.id), { requested_amount_cents: a.requested_amount_cents, accepted_amount_cents: a.accepted_amount_cents }])),
     managers: new Set(mgrs.map((m) => `${m.offering_id}:${m.user_id}`)),
+    taxUploads: groupBy(taxUploads, "onboarding_id"),
   };
 }
 
@@ -256,9 +260,11 @@ export async function resolveStage2(input: Stage2Input, pre?: Stage2Inputs) {
       : facts
         ? { state: "review_required", reason: "Tax Classification: Needs Review" }
         : { state: "missing", reason: "Answer a few tax questions." };
-  const tax = !facts && routing.status !== "determined" && input.taxRequired
+  const taxBase = !facts && routing.status !== "determined" && input.taxRequired
     ? { state: "missing" as const, reason: "Answer the tax questions first." }
     : taxRequirementState({ required: input.taxRequired, routing, profileId, forms: (forms ?? []) as any[], nowIso: input.nowIso });
+  const uploadedTaxForm = pendingTaxUpload(p.taxUploads?.get(input.onboarding.id) ?? [], input.onboarding);
+  const tax = taxStateWithUpload(taxBase, uploadedTaxForm);
 
   const baConfig = (rules['badActor'] ?? null) as BadActorConfig | null;
   const roleSet = new Set<string>();
@@ -297,6 +303,7 @@ export async function resolveStage2(input: Stage2Input, pre?: Stage2Inputs) {
     taxFactsAnswers: facts?.answers ?? null,
     taxClassificationState,
     taxState: tax,
+    uploadedTaxForm,
     amlState,
     badActorApplies: baApplies,
     badActorState: badActor,
@@ -461,6 +468,7 @@ export async function investorComplianceView(userId: string, onboardingId: strin
       form: r.routing.status === "determined" ? IRS_FORM_REVISIONS[r.routing.formType] : null,
       needsTin: r.routing.status === "determined" && r.routing.formType === "w9",
       tinKind: isIndividualProfile(profile.profile_type) || profile.profile_type === "ira" ? "ssn" : "ein",
+      uploadedCopy: r.uploadedTaxForm ? { id: r.uploadedTaxForm.id, fileName: r.uploadedTaxForm.file_name } : null,
       current: current?.[0]
         ? { formType: current[0].form_type, revision: current[0].irs_revision, tinMasked: current[0].tin_last4 ? `•••-••-${current[0].tin_last4}` : null, certifiedAt: current[0].certified_at, expiresOn: current[0].expires_on }
         : null,
