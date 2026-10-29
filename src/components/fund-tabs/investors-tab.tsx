@@ -35,6 +35,7 @@ import { InvestorPriorVerification } from "@/components/investor-prior-verificat
 import { PriorSignedDocuments } from "@/components/prior-signed-documents";
 import { ClassAssignmentCard } from "@/components/fund-setup-phase3";
 import { SideLetterRegistry } from "@/components/side-letter-registry";
+import { InvestmentChecklist } from "@/components/investment-readiness";
 
 export function InvestorsTab({ fundId, workQueue }: { fundId: string; workQueue?: ReactNode }) {
   const recordTo = useInvestorRecordRoute();
@@ -335,19 +336,7 @@ export function InvestorReviewPanel({ fundId, id, embedded = false }: { fundId: 
               <div className="mt-2 h-1.5 rounded-full bg-muted"><div className="h-1.5 rounded-full bg-primary" style={{ width: `${pct}%` }} /></div></div>
           </section>
 
-          <section>
-            <h4 className="mb-2 font-medium">Progress</h4>
-            <ol className="space-y-2">
-              {(d.steps as StepStatus[]).map((st, i) => (
-                <li key={st.key} className="flex items-center gap-3 rounded-md border p-2">
-                  <span className={`flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-medium ${STATE_DOT[st.state]}`}>{i + 1}</span>
-                  <span className="flex-1"><span className="font-medium">{st.label}</span><span className="block text-xs text-muted-foreground">{st.detail}</span></span>
-                  <Badge variant={st.state === "complete" ? "secondary" : st.state === "blocked" ? "destructive" : "outline"}>{STEP_STATE_LABELS[st.state]}</Badge>
-                </li>
-              ))}
-            </ol>
-            <p className="mt-2 text-xs text-muted-foreground">See the History tab for who completed each step and when.</p>
-          </section>
+          {id && <section aria-label="Investment status"><InvestmentChecklist onboardingId={id} /><p className="mt-2 text-xs text-muted-foreground">One checklist shared by investors, fund managers and Operations. See the History tab for who completed each step and when.</p></section>}
 
           {d.reviewEvidence && <>
             <section className="space-y-3" aria-label="Signed fund documents">
@@ -401,11 +390,10 @@ export function InvestorReviewPanel({ fundId, id, embedded = false }: { fundId: 
             </section>
           </>}
 
-          {(d.openItems.length > 0 || d.canApproveSubscription) && (
+          {d.canApproveSubscription && (
             <section className="rounded-lg border border-primary/40 bg-primary/5 p-3">
-              <h4 className="mb-1 font-medium">Open items</h4>
-              <ul className="list-disc space-y-0.5 pl-5">{d.openItems.map((t: string) => <li key={t}>{t}</li>)}</ul>
-              {d.canApproveSubscription && <Button className="mt-3" disabled={approving} onClick={async () => {
+              <h4 className="mb-1 font-medium">Ready for your approval</h4>
+              {<Button className="mt-3" disabled={approving} onClick={async () => {
                 if (!id) return;
                 setApproving(true);
                 try { await approve({ data: { onboardingId: id } }); toast.success("Subscription approved"); await q.refetch(); }
@@ -430,12 +418,6 @@ export function InvestorReviewPanel({ fundId, id, embedded = false }: { fundId: 
             }}>{sendingSign ? "Sending…" : "Email signing link"}</Button>
           </section>
 
-          {d.missing.length > 0 && (
-            <section className="rounded-lg border border-destructive/40 bg-destructive/5 p-3">
-              <h4 className="mb-1 font-medium">Missing info for the fund manager to obtain</h4>
-              <ul className="list-disc space-y-0.5 pl-5">{d.missing.map((t: string) => <li key={t}>{t}</li>)}</ul>
-            </section>
-          )}
 
           <section>
             <h4 className="mb-1 font-medium">Contact</h4>
