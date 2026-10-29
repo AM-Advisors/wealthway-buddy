@@ -55,3 +55,19 @@ describe("subscription prefill", () => {
     expect(usPersonFromVerification({ isIndividual: true })).toBeNull();
   });
 });
+
+import { priorFactAnswers } from "./subscription-prefill";
+describe("answers reused from another fund", () => {
+  it("reuses address and funding bank", () => {
+    const out = priorFactAnswers([{ subscriber_s_address_of_residence: "1 Main St", name_of_the_bank_from_which_the_subscriber_s_payment_to_the_: "Chase" }]);
+    expect(out["subscriber_s_address_of_residence"]).toBe("1 Main St");
+    expect(out["name_of_the_bank_from_which_the_subscriber_s_payment_to_the_"]).toBe("Chase");
+  });
+  it("never reuses accreditation, consent or compliance answers", () => {
+    const out = priorFactAnswers([{ please_select_the_accreditation_that_applies_to_you: "Net worth", i_agree_to_electronic_delivery_of_disclosures_and_schedule_k: "Yes", has_the_subscriber_been_convicted_within_the_past_ten_years_: "No" }]);
+    expect(Object.keys(out)).toEqual([]);
+  });
+  it("newest fund wins", () => {
+    expect(priorFactAnswers([{ subscriber_s_address_of_residence: "New" }, { subscriber_s_address_of_residence: "Old" }])["subscriber_s_address_of_residence"]).toBe("New");
+  });
+});

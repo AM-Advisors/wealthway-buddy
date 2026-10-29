@@ -187,8 +187,12 @@ export function ReadinessSurface({ r, viewer, title, subtitle, action }: { r: an
     <div className="space-y-6 rounded-xl border bg-card p-5 sm:p-6">
       <ReadinessHeader r={r} title={title} subtitle={subtitle} action={action} />
       <AttentionNeeded r={r} viewer={viewer} />
-      <StageJourney r={r} viewer={viewer} />
-      {viewer === "staff" ? <AuditDetails r={r} /> : null}
+      {viewer === "staff" ? <><StageJourney r={r} viewer={viewer} /><AuditDetails r={r} /></> : (
+        <details className="group">
+          <summary className="cursor-pointer text-sm font-medium text-muted-foreground">Show all steps</summary>
+          <div className="mt-4"><StageJourney r={r} viewer={viewer} /></div>
+        </details>
+      )}
     </div>
   );
 }
