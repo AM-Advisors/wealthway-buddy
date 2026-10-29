@@ -1152,7 +1152,7 @@ async function fundRequestItems(s: any, lookup: Lookup, now: Date) {
 async function fundSetupDraftItems(s: any, lookup: Lookup, now: Date) {
   const econ = (await safely(async () => rows(await s.from("fund_economics_versions").select("id, setup_id, version, updated_at, created_at, fund_setups!inner(offering_id)").eq("status", "draft").limit(SOURCE_LIMIT)))) as any[];
   const qs = (await safely(async () => rows(await s.from("fund_questionnaire_sections").select("id, offering_id, version, created_at").eq("status", "draft").limit(SOURCE_LIMIT)))) as any[];
-  const item = (id: string, fundId: string, title: string, reason: string, at: string | null, stall = STALL_DAYS.setupDraft, source = "funds.setup_draft", state = "draft") => {
+  const item = (id: string, fundId: string, title: string, reason: string, at: string | null, stall: number = STALL_DAYS.setupDraft, source = "funds.setup_draft", state = "draft") => {
     const stalled = isStalled(at, now, stall);
     return build(lookup, now, { id, source, area: "funds", recordType: "fund", recordId: fundId, recordTab: "setup", title: stalled ? `Stalled · ${title}` : title, reason: `${reason}. ${waitingLabel(at, now)}.`, workflowState: stalled ? "stalled" : state, requiredAction: "approve", fundId, dueDate: null, at } as any);
   };

@@ -893,3 +893,9 @@
 - [ ] One funding screen with wire details saved once; investor never re-enters banking for the same fund.
 - [ ] One manager to-do list across investors of a fund (documents, proofs, signatures, verification, funding).
 - [ ] Cut remaining onboarding questions: fewer plain-word questions, reuse verified facts and prior answers.
+
+## Foolproofing: launch, team and signers, stalled visibility (2026-10-29)
+- [x] Launch fund uses confirm + 5-second undo with plain next-step wording; server still re-checks every launch requirement.
+- [x] Remove signer, make main signer and remove team member use confirm + undo; signed documents and history unchanged.
+- [x] Operations queue flags manager-owned work once stalled (drafts 3 days, ready-not-launched 3 days, signer ID check 7 days), display-only. 5 rule tests pass.
+- [ ] Authenticated on-screen check blocked by authenticator sign-in in testing.
