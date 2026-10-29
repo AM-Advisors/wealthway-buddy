@@ -69,4 +69,3 @@
 - One-click quote package (sendQuotePackage + quote-package-model.ts) drafts the SOW, emails the quote and issues every invoice through Dec 31 next year; the quote's approval is the issue check, and signing/schedules skip anything already billed via package_issued_through — why: no gaps or double billing between quote, SOW and invoices.
 - Investor roster menus share InvestorActionsMenu; only unique explicit same-fund application links from the authorized roster use canonical routes/actions. Unlinked or ambiguous legacy records keep legacy routes, disabled unsupported actions and distinct revocation/removal. Why: navigation must not infer identity or authority.
 
-- Investor status everywhere renders InvestmentChecklist from investment-readiness.ts; never add page-local missing/open-item lists — why: pages disagreed and confused users.
