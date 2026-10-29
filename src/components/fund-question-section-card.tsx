@@ -57,6 +57,7 @@ export function FundQuestionSectionCard({ offeringId }: { offeringId: string }) 
       <div className="flex flex-wrap items-center gap-3">
         <h3 className="flex-1 font-heading text-lg font-semibold text-primary">Additional fund questions</h3>
         <Badge variant={draft ? "secondary" : live ? "default" : "outline"}>{draft ? `Draft v${draft.version}, awaiting approval` : live ? `Approved v${live.version}` : "None yet"}</Badge>
+        {staff && draft && <Button size="sm" disabled={approve.isPending || save.isPending || saveApprove.isPending || dirty} title={dirty ? "Save changes before approving" : undefined} onClick={() => approve.mutate()}><CheckCircle2 className="size-4" />{approve.isPending ? "Approving…" : "Approve"}</Button>}
       </div>
       <p className="text-sm text-muted-foreground">{q.data.baseCount} standard questions · {qs.length} additional questions</p>
       {dirty && <Badge variant="outline">Unsaved changes</Badge>}
@@ -94,7 +95,6 @@ export function FundQuestionSectionCard({ offeringId }: { offeringId: string }) 
           <Button size="sm" variant="outline" onClick={() => { setDirty(true); setQs((cur) => [...cur, { key: `fs_q${Date.now().toString(36)}`, label: "", type: "text", required: true }]); }}><Plus className="size-4" />Add question</Button>
           <Button size="sm" disabled={save.isPending} onClick={() => save.mutate(undefined)}><Save className="size-4" />Save draft</Button>
           {staff && (dirty || !draft) && <Button size="sm" variant="outline" disabled={saveApprove.isPending || save.isPending || approve.isPending} onClick={() => saveApprove.mutate(undefined)}><CheckCircle2 className="size-4" />{saveApprove.isPending ? "Saving…" : "Save & approve"}</Button>}
-          {staff && draft && <Button size="sm" variant="outline" disabled={approve.isPending || save.isPending || dirty} onClick={() => approve.mutate()}><CheckCircle2 className="size-4" />Approve for investors</Button>}
         </div>
       )}
     </section>
