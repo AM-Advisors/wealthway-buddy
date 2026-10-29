@@ -36,7 +36,7 @@ function Overview() {
     return navigate({ to: ({ calendar: "/manager/fund/$fundId/calendar", investors: "/manager/fund/$fundId/investors", capital: "/manager/fund/$fundId/transactions", approvals: "/manager/fund/$fundId/approvals", requests: "/manager/fund/$fundId/requests" } as const)[t], params: { fundId } });
   };
   return <SelfServeFundPage area={area} onAreaChange={next => { void navigate({ to: "/manager/fund/$fundId", params: { fundId }, search: { area: next } }); }} sections={{
-    setup: () => <div className="space-y-6"><FundSetupForm offeringId={fundId} mode="manager" workspace /><ManagerLaunchCard fundId={fundId} /></div>,
+    setup: () => <div className="space-y-6"><FundCommandCenter fundId={fundId} nextActionOnly onNavigate={go} /><FundSetupForm offeringId={fundId} mode="manager" workspace /><ManagerLaunchCard fundId={fundId} /></div>,
     investors: () => <ManagerFundInvestors fundId={fundId} />,
     documents: () => <FundDocumentsHub fundId={fundId} staff={false} />,
     link: () => <FundOnboardingLinkCard fundId={fundId} />,

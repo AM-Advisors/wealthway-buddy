@@ -35,7 +35,10 @@ export async function commandCenter(uid: string, fundId: string) {
     db.from("fund_service_requests").select("id, status, responsibility_status, client_visibility").eq("fund_id", fundId).not("status", "in", "(COMPLETED,CANCELLED,DRAFT)"),
     db.from("approval_events").select("action, created_at, approval_id, approvals(title)").eq("fund_id", fundId).eq("client_visible", true).in("action", ["approval_requested", "approved", "changes_requested", "workflow_completed"]).order("created_at", { ascending: false }).limit(8),
     db.from("fund_request_events").select("kind, created_at, request_id, detail, fund_service_requests(title)").eq("fund_id", fundId).eq("client_visible", true).in("kind", ["submitted", "submitted_by_staff", "client_provided_information", "cancelled"]).order("created_at", { ascending: false }).limit(8),
-    managerScope ? (await import("@/lib/fund-setup-canonical.server")).fundSetupOverview(uid, fundId) : Promise.resolve(null),
+    managerScope ? (async () => {
+      const detail = await (await import("@/lib/fund-setup-extras.server")).setupExtrasDetail(uid, fundId);
+      return (await import("@/lib/fund-setup-canonical.server")).fundSetupOverview(uid, fundId, Boolean(detail.ein));
+    })() : Promise.resolve(null),
   ]);
   const approvalsAwaiting = (apprRaw ?? []) as any[];
   // Documents waiting for this person's signature (their own requests only).

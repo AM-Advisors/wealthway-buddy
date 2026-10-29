@@ -32,7 +32,7 @@ function Card({ title, children, className, action }: { title: string; children:
 }
 const Empty = ({ title, body }: { title: string; body: string }) => <div className="text-sm"><p className="font-medium text-foreground">{title}</p><p className="text-muted-foreground">{body}</p></div>;
 
-export function FundCommandCenter({ fundId, onNavigate }: { fundId: string; onNavigate?: (t: CommandTarget) => void }) {
+export function FundCommandCenter({ fundId, onNavigate, nextActionOnly = false }: { fundId: string; onNavigate?: (t: CommandTarget) => void; nextActionOnly?: boolean }) {
   const load = useServerFn(getCommandCenter);
   const q = useQuery({ queryKey: ["fund-command-center", fundId], queryFn: () => load({ data: { fundId } }) });
   const [filter, setFilter] = useState<ResponsibilityStatus | null>(null);
@@ -56,6 +56,7 @@ export function FundCommandCenter({ fundId, onNavigate }: { fundId: string; onNa
   const filtered = filter ? d.tasks.filter((t) => t.status !== "done" && t.status !== "cancelled" && asResponsibility(t.responsibility_status) === filter) : [];
   const handling = showAllHandling ? d.handling : d.handling.slice(0, 6);
   const isCore = d.engagement?.level === "CORE" && d.engagement?.product === "SPV_ADMINISTRATION";
+  if (nextActionOnly) return onNavigate ? <FundManagerNextAction items={d.managerWork} today={d.today} managerName={d.managerName} onNavigate={area => onNavigate(area as CommandTarget)} /> : null;
 
   return (
     <div className="space-y-4">

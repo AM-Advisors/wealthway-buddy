@@ -266,9 +266,11 @@ export async function addFundSignatory(userId: string, input: AddSignatoryInput)
     const { data: c } = await db().from("client_contacts").select("*").eq("id", contactId).maybeSingle();
     if (!c || c.client_id !== o.client_id) throw new Error("That contact is not on this Fund's Client.");
     if (!actor.isStaff && !c.person_id) forbid("this person must finish connecting their identity before being selected as a signer.");
-    personId = await personForContact(userId, c, Boolean(input.confirmSeparate));
-    const d = new Set<string>(c.designations ?? []); d.add("Signatory");
-    await db().from("client_contacts").update({ designations: [...d] }).eq("id", contactId);
+    personId = actor.isStaff ? await personForContact(userId, c, Boolean(input.confirmSeparate)) : c.person_id;
+    if (actor.isStaff) {
+      const d = new Set<string>(c.designations ?? []); d.add("Signatory");
+      await db().from("client_contacts").update({ designations: [...d] }).eq("id", contactId);
+    }
   }
 
   const { count } = await db().from("fund_signatories").select("id", { count: "exact", head: true }).eq("offering_id", input.offeringId).eq("status", "active");
