@@ -1,5 +1,10 @@
 # Roadmap
 
+## Fund manager responsibility and simple progress
+- [ ] Delegate supported fund-specific work to exact-fund managers through canonical authorization, retaining protected identity, money, access and signatures.
+- [ ] Show one clear manager next action and responsible party; reuse existing staff queue for stalled-item visibility.
+- [ ] Test manager scope, unrelated-fund denial and protected boundaries; validate fictional UI without production activity.
+
 ## ROAS existing investor paperwork and verification
 - [x] Read current verification results for all ten recorded ROAS investors, each with a saved session reference; Doug already has 23 saved questionnaire answers and recorded personal-information confirmation.
 - [x] Located Doug’s October 9 prior subscription copy and uploaded September statement marked new accreditation proof; identity is approved, AML remains review. Eight provider sessions report Approved; Dinesh and Michael remain In Review. No decisions changed.
