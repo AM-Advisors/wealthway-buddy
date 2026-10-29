@@ -116,6 +116,7 @@ export async function fundSetupOverview(userId: string, offeringId: string, hasE
 
   return {
     canEdit: actor.isStaff,
+    isStaff: actor.isStaff,
     offering: {
       id: o.id,
       displayName: o.name,

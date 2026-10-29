@@ -24,7 +24,7 @@ export async function commandCenter(uid: string, fundId: string) {
   let cq = db.from("fund_calendar_items").select("id, title, category, due_date, status, report_status, responsible_party, period_label, task_id, client_visibility").eq("fund_id", fundId).neq("status", "CANCELLED").gte("due_date", from).lte("due_date", to).order("due_date").limit(1000);
   if (!staff) { tq = tq.eq("client_visibility", true); cq = cq.eq("client_visibility", true); }
 
-  const [{ data: fund }, { data: engs }, { data: tasksRaw }, { data: itemsRaw }, { data: calls }, { data: apprRaw }, { data: reqRaw }, { data: aEv }, { data: rEv }] = await Promise.all([
+  const [{ data: fund }, { data: engs }, { data: tasksRaw }, { data: itemsRaw }, { data: calls }, { data: apprRaw }, { data: reqRaw }, { data: aEv }, { data: rEv }, setupProgress] = await Promise.all([
     db.from("offerings").select("id, name, legal_entity_name").eq("id", fundId).maybeSingle(),
     db.from("service_engagements").select(`service_product, service_level, service_status, ${TEAM.map((t) => t[0]).join(", ")}`).eq("fund_id", fundId).not("service_status", "in", "(CANCELLED,EXPIRED)").order("created_at", { ascending: false }).limit(1),
     tq, cq,
@@ -33,6 +33,7 @@ export async function commandCenter(uid: string, fundId: string) {
     db.from("fund_service_requests").select("id, status, responsibility_status, client_visibility").eq("fund_id", fundId).not("status", "in", "(COMPLETED,CANCELLED,DRAFT)"),
     db.from("approval_events").select("action, created_at, approval_id, approvals(title)").eq("fund_id", fundId).eq("client_visible", true).in("action", ["approval_requested", "approved", "changes_requested", "workflow_completed"]).order("created_at", { ascending: false }).limit(8),
     db.from("fund_request_events").select("kind, created_at, request_id, detail, fund_service_requests(title)").eq("fund_id", fundId).eq("client_visible", true).in("kind", ["submitted", "submitted_by_staff", "client_provided_information", "cancelled"]).order("created_at", { ascending: false }).limit(8),
+    (await import("@/lib/fund-setup-guided.server")).guidedState(uid, fundId),
   ]);
   const approvalsAwaiting = (apprRaw ?? []) as any[];
   // Documents waiting for this person's signature (their own requests only).
@@ -94,6 +95,11 @@ export async function commandCenter(uid: string, fundId: string) {
 
   return {
     staff, today,
+    managerName: setupProgress.managerName,
+    managerWork: [
+      ...setupProgress.steps.filter(s => s.status !== "done" && s.step !== "launch").map(s => ({ id: `setup:${s.step}`, title: `${({ fund_details: "Complete fund details", team: "Confirm team & signers", fees_team: "Review fees & terms", bank: "Complete bank verification", document: "Review fund documents" } as Record<string, string>)[s.step] ?? "Review setup"}`, area: s.step === "bank" ? "banking" : s.step === "document" ? "documents" : "setup", waitingOn: s.owner, due: null as string | null })),
+      ...approvalsAwaiting.map(a => ({ id: a.id as string, title: a.title as string, area: "approvals", due: (a.due_date ?? null) as string | null, waitingOn: setupProgress.managerName })),
+    ],
     fund: { id: fundId, name: fund?.name ?? fund?.legal_entity_name ?? "Fund" },
     engagement: eng ? { product: eng.service_product, level: eng.service_level, status: eng.service_status } : null,
     team: eng ? TEAM.filter(([k]) => eng[k]).map(([k, role]) => ({ role, name: nm.get(eng[k]) ?? "Harmonious team member" })) : [],
