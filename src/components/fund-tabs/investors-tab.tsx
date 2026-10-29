@@ -9,6 +9,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ApprovalButton } from "@/components/approval-button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -325,14 +326,15 @@ export function InvestorReviewPanel({ fundId, id, embedded = false }: { fundId: 
         <div className={embedded ? "space-y-6 text-sm" : "space-y-6 p-6 text-sm"}>
           {d.canApproveSubscription && (
             <section className="rounded-lg border border-primary/40 bg-primary/5 p-3">
-              <h4 className="mb-1 font-medium">Ready for your approval</h4>
-              {<Button className="mt-3" disabled={approving} onClick={async () => {
+              <h4 className="mb-1 text-lg font-medium">Approve investor to send funds</h4>
+              <p className="text-base">The investor can view the fund’s released bank details after approval and completed checks. No separate Harmonious admission is needed to send the wire.</p>
+              {<ApprovalButton title="Approve this investor to send funds?" description="The investor will be notified to view this fund’s released bank details in their account. This does not record a payment or complete final admission." className="mt-3" disabled={approving} onApprove={async () => {
                 if (!id) return;
                 setApproving(true);
-                try { await approve({ data: { onboardingId: id } }); toast.success("Subscription approved"); await q.refetch(); }
+                try { await approve({ data: { onboardingId: id } }); toast.success("Investor approved to send funds"); await q.refetch(); }
                 catch (error) { toast.error(error instanceof Error ? error.message : "Subscription could not be approved."); }
                 finally { setApproving(false); }
-              }}>{approving ? "Approving…" : "Approve subscription"}</Button>}
+              }}>{approving ? "Approving…" : "Approve to send funds"}</ApprovalButton>}
             </section>
           )}
           {id && <section aria-label="Investment status"><InvestmentChecklist onboardingId={id} /><p className="mt-2 text-xs text-muted-foreground">One checklist shared by investors, fund managers and Operations. See the History tab for who completed each step and when.</p></section>}
