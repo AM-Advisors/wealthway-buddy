@@ -1,8 +1,8 @@
 # Roadmap
 
 ## Erebor Kim contact correction
-- [ ] Check the exact verification-document last name and separate Kim’s contact email from the investor email without transferring verification or login ownership.
-- [ ] Apply the confirmed correction through existing authorized review and retain the prior email for the correct investor, pending verification.
+- [x] Recorded verification-document name is Kimberly Girardi; submitted expected name is Joe Girardi, with a name-mismatch warning. Existing individual investment remains Kimberly’s; no identity or approval transferred.
+- [ ] Correct Kim’s contact email to pinklady55@comcast.net through the existing authorized review. Blocked by requester authenticator setup; no email changed. The previous dantegirardi28@gmail.com remains recorded, and its investing-party identity requires explicit confirmation before reassignment.
 
 ## Direct Fund Setup approval buttons
 - [x] Put Approve beside Edit on saved class terms and at the additional-question heading, reusing existing version approval and permissions without changing records.
