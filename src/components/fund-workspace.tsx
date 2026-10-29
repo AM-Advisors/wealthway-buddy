@@ -1,6 +1,5 @@
 import { ForecastWorkspace, useForecastAccess } from "@/components/forecast-workspace";
 import { fundOriginLabel, migrationApplies } from "@/lib/fund-origin";
-import { useEffect } from "react";
 import { ReadinessQueue } from "@/components/investment-readiness";
 import { FundMigrationStatus } from "@/components/fund-migration-status";
 import { MigrationPaymentsCard } from "@/components/migration-payments-card";
@@ -24,13 +23,11 @@ import { CloseRequestReview } from "@/components/close-request-review";
 import { FundDistributions } from "@/components/fund-distributions";
 import { listAllCloseRequests } from "@/lib/fund-close-requests.functions";
 import { useServerFn } from "@tanstack/react-start";
-import { CheckCircle2, ChevronDown, ChevronRight, Clock, ClipboardCheck } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import { getClientFund, getFundCapTable } from "@/lib/fund-cap-table.functions";
 import { getFundTabsData, listFundCloseRequests } from "@/lib/fund-close-requests.functions";
 import { TodosTab } from "@/components/fund-tabs/todos-tab";
@@ -139,13 +136,11 @@ export function FundWorkspace({ fundId, tab: rawTab, onTab, mode = "client", ext
   const loadReg = useServerFn(fundRegulatoryFn);
   const rq = useQuery({ queryKey: ["fund-regulatory", fundId], queryFn: () => loadReg({ data: { fundId } }) });
 
-  const isMerged = extraTabs.some((x) => x.value === "setup");
   const ready = !!fq.data;
   if (fq.isLoading) return <p className="text-sm text-muted-foreground">Loading fund…</p>;
   if (fq.error || !fq.data) return <p className="text-sm text-destructive">{(fq.error as any)?.message ?? "Couldn't load this fund."}</p>;
   const { setup, steps, sideLetters } = fq.data;
   const f = fq.data.fund as any;
-  const pending = steps.filter((s) => !s.done);
   const cap = cq.data;
   const td = tq.data;
   // Operations: Setup, Fund details, Team and Banking live on one page so the fund can be managed without jumping between tabs.
