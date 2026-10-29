@@ -24,6 +24,8 @@ import { FundDocumentsHub } from "@/components/fund-documents-hub";
 import { Link } from "@tanstack/react-router";
 import { FundClassSummary } from "@/components/fund-class-summary";
 import { FundQuestionSectionCard } from "@/components/fund-question-section-card";
+import { EconomicsCard } from "@/components/fund-setup-canonical";
+import { getFundSetupOverview } from "@/lib/fund-setup-canonical.functions";
 
 type Mode = "staff" | "manager";
 
@@ -160,7 +162,7 @@ export function FundSetupForm({ offeringId, mode, staffExtras, workspace = false
       <EinBox offeringId={offeringId} onChanged={refresh} />
       <FundW9Card offeringId={offeringId} />
       {fieldSection("offering")}
-      {fieldSection("fees")}
+      <ManagerTerms offeringId={offeringId} onChanged={refresh} />
 
       <SetupSection open={open} setOpen={setOpen} id="team" title="Team & Signatory" status={<Chip tone={stepOf("team")?.status === "done" ? "done" : "miss"}>{stepOf("team")?.statusLabel ?? ""}</Chip>}>
         <ul className="grid gap-2 text-sm sm:grid-cols-2">
@@ -168,7 +170,7 @@ export function FundSetupForm({ offeringId, mode, staffExtras, workspace = false
           <li className="rounded-xl border bg-background px-4 py-3"><span className="block text-xs text-muted-foreground">Administrator</span>{d.administrator}</li>
           {(d.team as any[]).map((m, i) => <li key={i} className="rounded-xl border bg-background px-4 py-3"><span className="block text-xs capitalize text-muted-foreground">{String(m.role).replace(/_/g, " ")}</span>{m.name ?? "Not assigned"}</li>)}
         </ul>
-        {isStaff ? <FundSignatoriesCard offeringId={offeringId} onChanged={refresh} /> : <p className="text-sm text-muted-foreground">Harmonious adds signers so each person completes an identity check. Signer on file: {prior["signers"] || "none yet"}.</p>}
+        <FundSignatoriesCard offeringId={offeringId} onChanged={refresh} />
         {!isStaff && workspace && <FundTeamAccessBox fundId={offeringId} />}
       </SetupSection>
 
@@ -210,6 +212,14 @@ export function FundSetupForm({ offeringId, mode, staffExtras, workspace = false
 function Chip({ tone, children }: { tone: "done" | "miss" | "wait"; children: React.ReactNode }) {
   const c = tone === "done" ? "bg-accent/15 text-foreground" : tone === "wait" ? "bg-muted text-muted-foreground" : "bg-destructive/10 text-destructive";
   return <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${c}`}>{children}</span>;
+}
+
+function ManagerTerms({ offeringId, onChanged }: { offeringId: string; onChanged: () => void }) {
+  const load = useServerFn(getFundSetupOverview);
+  const q = useQuery({ queryKey: ["fund-setup-canonical", offeringId], queryFn: () => load({ data: { offeringId } }) });
+  if (q.isPending) return <p className="text-sm text-muted-foreground">Loading fees & terms…</p>;
+  if (!q.data || q.isError) return <p role="alert" className="text-sm text-destructive">Fees & terms could not be loaded.</p>;
+  return <EconomicsCard d={q.data} offeringId={offeringId} onSaved={onChanged} />;
 }
 
 function SetupSection({ id, title, status, action, children, open, setOpen }: { id: string; title: string; status?: React.ReactNode; action?: React.ReactNode; children: React.ReactNode; open: Record<string, boolean>; setOpen: React.Dispatch<React.SetStateAction<Record<string, boolean>>> }) {
