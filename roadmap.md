@@ -1,5 +1,9 @@
 # Roadmap
 
+## Erebor Kim contact correction
+- [ ] Check the exact verification-document last name and separate Kim’s contact email from the investor email without transferring verification or login ownership.
+- [ ] Apply the confirmed correction through existing authorized review and retain the prior email for the correct investor, pending verification.
+
 ## Direct Fund Setup approval buttons
 - [x] Put Approve beside Edit on saved class terms and at the additional-question heading, reusing existing version approval and permissions without changing records.
 - [x] Verified visible heading approvals on desktop and 440px, clean-draft enablement, unsaved-question lock and hidden unauthorized terms action; 50 safeguards passed, preview build OK. No real approvals performed.
