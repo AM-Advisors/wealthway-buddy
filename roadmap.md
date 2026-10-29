@@ -881,3 +881,9 @@
 - [ ] Investor: sign all documents in one pass; funding instructions on one screen
 - [ ] Fund setup: guided wizard (Basics → Fees & terms → Documents & questions → Banking → Review & approve), advanced hidden
 - [ ] Fund setup: one approvals list at the end
+
+## Onboarding simplification round two
+- [ ] One combined KYC/AML status line wherever investor verification appears; screening details stay private to staff.
+- [ ] One funding screen with wire details saved once; investor never re-enters banking for the same fund.
+- [ ] One manager to-do list across investors of a fund (documents, proofs, signatures, verification, funding).
+- [ ] Cut remaining onboarding questions: fewer plain-word questions, reuse verified facts and prior answers.
