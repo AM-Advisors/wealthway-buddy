@@ -19,7 +19,7 @@ async function factsFor(rows: any[]): Promise<{ fact: InvestmentFact; row: any; 
   const out = [] as { fact: InvestmentFact; row: any; result: any }[];
   // One batched read for all rows (same code path as single readiness).
   const all = await readinessForMany(rows);
-  const canonFunding = await canonicalizeOnboardingFunding((await import("@/integrations/supabase/client.server")).supabaseAdmin, rows);
+  const canonFunding = await canonicalizeOnboardingFunding(db(), rows);
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i];
     const { result } = all[i]!;
