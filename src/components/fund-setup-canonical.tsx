@@ -147,17 +147,6 @@ const SECTION_ANCHOR: Record<string, string> = {
   review: "setup-launch",
 };
 
-const JUMP_LINKS: [string, string][] = [
-  ["setup-details", "Details"],
-  ["setup-signatories", "Signatories"],
-  ["setup-economics", "Economics"],
-  ["setup-documents", "Documents"],
-  ["setup-entity", "Entity & EIN"],
-  ["setup-banking", "Banking"],
-  ["setup-admin", "Regulatory"],
-  ["setup-services", "Services"],
-  ["setup-launch", "Launch"],
-];
 
 type D = Awaited<ReturnType<typeof getFundSetupOverview>>;
 
@@ -697,7 +686,7 @@ export function EconomicsCard({ d, offeringId, onSaved }: { d: D; offeringId: st
   );
 }
 
-const ANCHOR_STEP: Record<string, number> = { "setup-details": 0, "setup-signatories": 0, "setup-economics": 1, "setup-documents": 2 };
+const ANCHOR_STEP: Record<string, number> = { "setup-details": 0, "setup-signatories": 0, "setup-economics": 1, "setup-documents": 2, "setup-services": 4, "setup-launch": 4 };
 
 function GuidedSetup({ steps }: { steps: { label: string; body: ReactNode }[] }) {
   const [i, setI] = useState(0);
@@ -719,10 +708,10 @@ function GuidedSetup({ steps }: { steps: { label: string; body: ReactNode }[] })
           </li>
         ))}
       </ol>
-      <div className="space-y-6">{steps[i].body}</div>
+      <div className="space-y-6">{steps[i]?.body}</div>
       <div className="flex justify-between gap-2 border-t pt-4">
         <Button variant="outline" disabled={i === 0} onClick={() => go(i - 1)}>Back</Button>
-        {i < steps.length - 1 ? <Button onClick={() => go(i + 1)}>Next: {steps[i + 1].label}</Button> : null}
+        {i < steps.length - 1 ? <Button onClick={() => go(i + 1)}>Next: {steps[i + 1]?.label}</Button> : null}
       </div>
     </div>
   );
