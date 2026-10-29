@@ -54,6 +54,7 @@ export type QaState = {
   /** Matches from the most recent search, so create can enforce the email blocker. */
   lastMatches: ReturnType<typeof rankMatches> | null;
   documentDraft: { created_by: string; version: number; self_serve_review_state: string; generation_issues: string[]; active: boolean } | null;
+  investorCopies?: { id: string; fileName: string; kind: string; status: string; note: string | null; canReview: boolean }[];
 };
 
 export function createQaState(role: QaRole = "staff"): QaState {
@@ -72,6 +73,7 @@ const KNOWN_FNS = [
   "previewInvoiceFeeEntry",
   "fundDocumentGenerationAccessFn", "fundTypeTemplatesFn", "generateFundTypeDocumentsFn", "listFundTemplateDocumentsFn", "templateDocSendStatusFn", "reviewGeneratedDocumentFn", "activateDocumentVersionFn",
   "getFundLinkFn",
+  "uploadOnboardingDocForFn", "managerUploadReviewsFn", "managerReviewUploadFn", "managerUploadUrlFn",
 ] as const;
 
 /** Map a server-function URL to the export name it was built from. Ids are base64 JSON: { file, export }. */
@@ -95,6 +97,19 @@ export class QaBlockedError extends Error {}
 /** Pure handler for one mocked server-function call. Throws Error with a user-facing message on failure. */
 export function handleQaServerCall(fnName: string, data: any, state: QaState): unknown {
   switch (fnName) {
+    case "managerUploadReviewsFn": return state.investorCopies ?? [];
+    case "uploadOnboardingDocForFn": {
+      const copies = state.investorCopies ??= [];
+      copies.push({ id: `fictional-copy-${copies.length}`, fileName: data.fileName, kind: data.kind, status: "new", note: null, canReview: ["entity_formation", "operating_agreement", "ownership_list", "tax_form"].includes(data.kind) });
+      return { ok: true };
+    }
+    case "managerReviewUploadFn": {
+      const row = state.investorCopies?.find(r => r.id === data.id);
+      if (!row?.canReview || row.status !== "new") throw new Error("This copy cannot be reviewed.");
+      row.status = data.status; row.note = data.note; row.canReview = false;
+      return { ok: true };
+    }
+    case "managerUploadUrlFn": return { url: "about:blank" };
     case "getFundLinkFn": return { fundName: QA_FUND_NAME, url: "https://example.test/join/fictional-only", status: "active", createdAt: "2026-10-27T08:00:00Z", regeneratedAt: null, lastUsedAt: null, starts: 0, canManage: false };
     case "fundDocumentGenerationAccessFn": return { templates: true, starter: false, staff: state.role === "staff" };
     case "fundTypeTemplatesFn": return { fundType: "SPV", templates: [{ id: "qa-template", title: "Fablewood Operating Agreement", approvedVersion: 1, generated: Boolean(state.documentDraft) }] };
