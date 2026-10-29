@@ -1,3 +1,4 @@
+import { canonicalizeApplicationFunding, canonicalizeOnboardingFunding } from "@/lib/funding-canonical";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
@@ -76,7 +77,7 @@ export const getFundOverview = createServerFn({ method: "GET" })
 
     const userIds = [...new Set((rows ?? []).map((r: any) => r.user_id as string))];
     const personStatuses = await loadPersonStatuses(supabase, userIds);
-    const applications = (rows ?? []).map((r: any) => withCanonicalVerification(r, personStatuses));
+    const applications = await canonicalizeApplicationFunding(supabase, (rows ?? []).map((r: any) => withCanonicalVerification(r, personStatuses)));
     const { data: profiles } = userIds.length
       ? await supabase
           .from("profiles")
@@ -220,7 +221,7 @@ export const getFundOperations = createServerFn({ method: "GET" })
       .limit(500);
     if (appsError) throw new Error(appsError.message);
     const reviewPersons = await loadPersonStatuses(supabase, [...new Set(((apps ?? []) as any[]).map((a) => a.user_id as string))]);
-    const applications = ((apps ?? []) as any[]).map((a) => withCanonicalVerification(a, reviewPersons));
+    const applications = await canonicalizeApplicationFunding(supabase, ((apps ?? []) as any[]).map((a) => withCanonicalVerification(a, reviewPersons)));
     const appIds = applications.map((a) => a.id as string);
 
     const { data: docs, error: docsError } = await supabase
@@ -441,7 +442,7 @@ export const getFundInvestorReview = createServerFn({ method: "GET" })
       .limit(500);
     if (appsError) throw new Error(appsError.message);
     const reviewPersons = await loadPersonStatuses(supabase, [...new Set(((apps ?? []) as any[]).map((a) => a.user_id as string))]);
-    const applications = ((apps ?? []) as any[]).map((a) => withCanonicalVerification(a, reviewPersons));
+    const applications = await canonicalizeApplicationFunding(supabase, ((apps ?? []) as any[]).map((a) => withCanonicalVerification(a, reviewPersons)));
     const appIds = applications.map((a) => a.id as string);
 
     const { data: docs, error: docsError } = await supabase
@@ -716,7 +717,7 @@ export const getManagerPanelSummary = createServerFn({ method: "GET" })
     if (appsRes.error) throw new Error(appsRes.error.message);
 
     const dashPersons = await loadPersonStatuses(supabase, [...new Set(((appsRes.data ?? []) as any[]).map((a) => a.user_id as string))]);
-    const applications = ((appsRes.data ?? []) as any[]).map((a) => withCanonicalVerification(a, dashPersons));
+    const applications = await canonicalizeApplicationFunding(supabase, ((appsRes.data ?? []) as any[]).map((a) => withCanonicalVerification(a, dashPersons)));
     const appIds = applications.map((a) => a.id as string);
 
     const [{ data: wires }, { data: payments }] = appIds.length
