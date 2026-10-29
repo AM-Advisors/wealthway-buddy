@@ -653,7 +653,7 @@ export async function saveEconomics(
     versionId?: string | undefined;
   },
 ) {
-  await assertStaff(userId);
+  const { actor } = await assertSetupAccess(userId, input.setupId);
   const { data: rows } = await db()
     .from("fund_economics_versions")
     .select("*")
@@ -706,21 +706,21 @@ export async function saveEconomics(
     event: "economics_version_created",
     toStatus: "draft",
     actorUserId: userId,
-    actorRole: "harmonious",
+    actorRole: actor.isStaff ? "harmonious" : "client",
   });
   return data;
 }
 
 export async function approveEconomics(userId: string, versionId: string) {
-  await assertStaff(userId);
   const { data: version } = await db()
     .from("fund_economics_versions")
     .select("*")
     .eq("id", versionId)
     .maybeSingle();
   if (!version) fail("That economics version was not found.");
+  const { actor } = await assertSetupAccess(userId, version.setup_id);
   if (version.status !== "draft") fail("Only a draft economics version can be approved.");
-  // assertStaff above is the approval gate; an authorized preparer may explicitly approve.
+  // Exact-fund authority comes from the saved version; routine approval is explicit.
 
   // The prior approved version becomes history; it is never overwritten.
   const { data: rows } = await db()
@@ -755,7 +755,7 @@ export async function approveEconomics(userId: string, versionId: string) {
     fromStatus: "draft",
     toStatus: "approved",
     actorUserId: userId,
-    actorRole: "harmonious",
+    actorRole: actor.isStaff ? "harmonious" : "client",
   });
   await syncInvestorClassesFromEconomics(version.setup_id, data);
   return data;

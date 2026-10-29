@@ -10,6 +10,7 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { setupActor, forbid } from "@/lib/fund-setup.server";
 import { resolvePersonServer, withPersonCreationLock } from "@/lib/person-resolution.server";
 import { planContactSave } from "@/lib/client-contacts-model";
+import { managesExactFund } from "@/lib/fund-manager-responsibility";
 
 const db = () => supabaseAdmin as any;
 const legalOf = (p: any) => [p?.legal_first_name, p?.legal_middle_name, p?.legal_last_name].filter(Boolean).join(" ");
@@ -174,7 +175,8 @@ export async function listFundSignatories(userId: string, offeringId: string) {
       .map((p) => ({ key: `person:${p.id}`, name: nameOf(p), detail: p.email ?? "Fund manager", source: "Fund manager", email: (p.email ?? null) as string | null, kyc: (kyc.get(p.id) ?? "none") as KycState, hasAccount: true })),
   ];
   return {
-    canEdit: actor.isStaff,
+    canEdit: managesExactFund(actor, offeringId),
+    canEditPerson: actor.isStaff,
     hasClient: Boolean(o?.client_id),
     signatories: ((rows ?? []) as any[]).map((r) => ({
       id: r.id as string, personId: r.person_id as string, name: nameOf(pMap.get(r.person_id)), legalName: legalOf(pMap.get(r.person_id)) || null, preferredName: (pMap.get(r.person_id)?.preferred_name ?? null) as string | null, email: (pMap.get(r.person_id)?.email ?? null) as string | null,
@@ -226,7 +228,7 @@ export type AddSignatoryInput = {
 
 export async function addFundSignatory(userId: string, input: AddSignatoryInput) {
   const actor = await staffFor(userId, input.offeringId);
-  if (!actor.isStaff) forbid("only Harmonious can change Fund signatories.");
+  if (!actor.isStaff && input.newPerson) forbid("invite the person first, then choose their recorded identity from the list.");
   const { data: o } = await db().from("offerings").select("client_id").eq("id", input.offeringId).maybeSingle();
   if (!o) throw new Error("Fund not found.");
   let personId: string | null = null;
@@ -263,9 +265,12 @@ export async function addFundSignatory(userId: string, input: AddSignatoryInput)
   if (contactId) {
     const { data: c } = await db().from("client_contacts").select("*").eq("id", contactId).maybeSingle();
     if (!c || c.client_id !== o.client_id) throw new Error("That contact is not on this Fund's Client.");
-    personId = await personForContact(userId, c, Boolean(input.confirmSeparate));
-    const d = new Set<string>(c.designations ?? []); d.add("Signatory");
-    await db().from("client_contacts").update({ designations: [...d] }).eq("id", contactId);
+    if (!actor.isStaff && !c.person_id) forbid("this person must finish connecting their identity before being selected as a signer.");
+    personId = actor.isStaff ? await personForContact(userId, c, Boolean(input.confirmSeparate)) : c.person_id;
+    if (actor.isStaff) {
+      const d = new Set<string>(c.designations ?? []); d.add("Signatory");
+      await db().from("client_contacts").update({ designations: [...d] }).eq("id", contactId);
+    }
   }
 
   const { count } = await db().from("fund_signatories").select("id", { count: "exact", head: true }).eq("offering_id", input.offeringId).eq("status", "active");
@@ -289,7 +294,7 @@ export async function addFundSignatory(userId: string, input: AddSignatoryInput)
 
 export async function updateFundSignatory(userId: string, input: { offeringId: string; id: string; title?: string | null | undefined; capacity?: string | null | undefined; preferredName?: string | null | undefined; email?: string | null | undefined; makePrimary?: boolean | undefined; remove?: boolean | undefined }) {
   const actor = await staffFor(userId, input.offeringId);
-  if (!actor.isStaff) forbid("only Harmonious can change Fund signatories.");
+  if (!actor.isStaff && (input.preferredName !== undefined || input.email !== undefined)) forbid("personal identity and account details must be changed by the person, not the fund manager.");
   const { data: row } = await db().from("fund_signatories").select("*").eq("id", input.id).eq("offering_id", input.offeringId).eq("status", "active").maybeSingle();
   if (!row) throw new Error("Signatory not found.");
   if (input.remove) {

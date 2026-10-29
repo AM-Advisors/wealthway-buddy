@@ -1,5 +1,11 @@
 # Roadmap
 
+## Fund manager responsibility and simple progress
+- [x] Exact-fund managers save and approve versioned economics and manage recorded fund signers; shared person edits, bank checks, financial release, signatures and global identity remain protected. No live records changed.
+- [x] One next action on manager setup and activity, with expanded open work and responsibility; existing Operations queue continues to show stalled onboarding and fund drafts, without new assignments or queues.
+- [x] Focused manager/history/signer safeguards and fictional Continue-to-documents checks pass without runtime errors; preview build OK.
+- [ ] Durable manager save/approve/read-back and wider handoff acceptance blocked on independently isolated QA with synthetic sessions. Legacy submissions, protected reviews and report release are not represented as fully delegated.
+
 ## ROAS existing investor paperwork and verification
 - [x] Read current verification results for all ten recorded ROAS investors, each with a saved session reference; Doug already has 23 saved questionnaire answers and recorded personal-information confirmation.
 - [x] Located Doug’s October 9 prior subscription copy and uploaded September statement marked new accreditation proof; identity is approved, AML remains review. Eight provider sessions report Approved; Dinesh and Michael remain In Review. No decisions changed.

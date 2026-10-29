@@ -30,7 +30,7 @@
 - Marketing/email/CSA STAR/direct signing-email rules: src/lib/AGENTS.md.
 - Operations and Account Managers may review/approve others' internal work via src/lib/ops-capabilities.ts (never their own; money paths use capabilitiesFor(roles, { moneyPath: true })); tax, money and administration keep their own approvers - why: user-approved peer approval without widening money authority.
 - Fund Drive: offerings.drive_folder_url is the main folder; offerings.drive_links holds staff-only labeled links — why: multiple folders, unchanged permissions.
-- Shared Fund Setup: fund-setup-form.tsx + fund-setup-form-model.ts; saved terms/questions use existing version approvals at headings; mode never grants authority — why: one form, discoverable approvals.
+- Shared Fund Setup uses canonical version approvals; FundManagerNextAction projects exact-fund work. Managers edit versioned economics and recorded signers, not global identity — why: one form, protected history.
 - Request/task routing and progress sync atomically, not approvals; task details staff-only; payment skip needs funds/prepare — why: no drift.
 - People & Access is the only directory; activity views show recorded evidence, never online presence; View account resets use admin-checked account-security — why: truthful audit, unchanged authority.
 - Ops Funds dashboard reads per-investor readiness from onboarding_readiness_summaries (written by reconcileInvestmentReadiness, refreshed a few stale rows per load), never live computeReadiness for every investor — why: the live loop exceeded Worker request/time limits.

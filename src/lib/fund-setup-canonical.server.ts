@@ -116,6 +116,7 @@ export async function fundSetupOverview(userId: string, offeringId: string, hasE
 
   return {
     canEdit: actor.isStaff,
+    isStaff: actor.isStaff,
     offering: {
       id: o.id,
       displayName: o.name,
@@ -150,7 +151,8 @@ export async function fundSetupOverview(userId: string, offeringId: string, hasE
       : null,
     termApplies: termApplies(o.fund_type),
     economics: {
-      canApprove: actor.isStaff,
+      canApprove: actor.isStaff || actor.offeringIds.includes(offeringId),
+      canEdit: actor.isStaff || actor.offeringIds.includes(offeringId),
       versionId: current?.id ?? null,
       status: current?.status ?? null,
       version: current?.version ?? null,
@@ -279,7 +281,7 @@ export async function saveFundEconomics(
   userId: string,
   input: { offeringId: string; terms: EconomicTerms; classes: FundClass[]; changeReason?: string | null; classDifferencesConfirmed?: boolean | null },
 ) {
-  await assertStaffFor(userId, input.offeringId);
+  await assertRead(userId, input.offeringId);
   const errors = [...economicsErrors(input.terms), ...classErrors(input.classes)];
   if (errors.length) throw new Error(errors[0]);
   const { data: o } = await db().from("offerings").select("fund_type, has_multiple_classes, planned_class_count").eq("id", input.offeringId).maybeSingle();

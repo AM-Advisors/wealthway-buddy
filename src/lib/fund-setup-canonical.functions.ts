@@ -127,7 +127,7 @@ export const saveFundEconomicsFn = createServerFn({ method: "POST" })
   .validator(
     z.object({ offeringId: uuid, terms, classes: z.array(fundClass).max(20), changeReason: z.string().max(500).nullish(), classDifferencesConfirmed: z.boolean().nullish() }).parse,
   )
-  .handler(async ({ data, context }) => __auto(await (await import("@/lib/record-locks.server")).lockedSave("economics", context as any, data, async () => (await engine()).saveFundEconomics(context.userId, data as any)), { offeringId: (data as any).offeringId, documentId: (data as any).documentId }));
+  .handler(async ({ data, context }) => __auto(await (await engine()).saveFundEconomics(context.userId, data as any), { offeringId: data.offeringId }));
 
 export const assignInvestmentClassFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

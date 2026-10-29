@@ -9,8 +9,9 @@ import { RESPONSIBILITY_LABEL, RESPONSIBILITY_CLIENT_EXPLANATION, asResponsibili
 import { HEALTH_LABEL, CATEGORY_HEALTH_LABEL, type Health, type CategoryHealth } from "@/lib/fund-command-health";
 import { serviceLevelLabel, fmtDate, titleCase } from "@/lib/service-engagement-labels";
 import { CALENDAR_CATEGORIES } from "@/lib/fund-calendar-templates";
+import { FundManagerNextAction } from "@/components/fund-manager-next-action";
 
-export type CommandTarget = "calendar" | "investors" | "capital" | "approvals" | "requests";
+export type CommandTarget = "calendar" | "investors" | "capital" | "approvals" | "requests" | "setup" | "documents" | "banking" | "accounting";
 
 const HEALTH_TONE: Record<Health | CategoryHealth, string> = {
   HEALTHY: "border-primary/30 bg-primary/5 text-primary", IN_PROGRESS: "border-primary/30 bg-primary/5 text-primary",
@@ -31,7 +32,7 @@ function Card({ title, children, className, action }: { title: string; children:
 }
 const Empty = ({ title, body }: { title: string; body: string }) => <div className="text-sm"><p className="font-medium text-foreground">{title}</p><p className="text-muted-foreground">{body}</p></div>;
 
-export function FundCommandCenter({ fundId, onNavigate }: { fundId: string; onNavigate?: (t: CommandTarget) => void }) {
+export function FundCommandCenter({ fundId, onNavigate, nextActionOnly = false }: { fundId: string; onNavigate?: (t: CommandTarget) => void; nextActionOnly?: boolean }) {
   const load = useServerFn(getCommandCenter);
   const q = useQuery({ queryKey: ["fund-command-center", fundId], queryFn: () => load({ data: { fundId } }) });
   const [filter, setFilter] = useState<ResponsibilityStatus | null>(null);
@@ -39,7 +40,8 @@ export function FundCommandCenter({ fundId, onNavigate }: { fundId: string; onNa
   const [showAllHandling, setShowAllHandling] = useState(false);
   if (q.isLoading) return <p className="text-sm text-muted-foreground">Loading Command Center…</p>;
   if (q.error) return <p className="text-sm text-destructive">{(q.error as Error).message}</p>;
-  const d = q.data!;
+  const d = q.data;
+  if (!d) return <p role="alert">Fund progress could not be loaded.</p>;
   const lvl = d.engagement ? serviceLevelLabel(d.engagement.level, d.engagement.product) : null;
   const admin = d.team.find((t) => t.role === "Primary Administrator")?.name;
   const lead = d.team.find((t) => t.role === "Relationship Lead")?.name;
@@ -54,9 +56,11 @@ export function FundCommandCenter({ fundId, onNavigate }: { fundId: string; onNa
   const filtered = filter ? d.tasks.filter((t) => t.status !== "done" && t.status !== "cancelled" && asResponsibility(t.responsibility_status) === filter) : [];
   const handling = showAllHandling ? d.handling : d.handling.slice(0, 6);
   const isCore = d.engagement?.level === "CORE" && d.engagement?.product === "SPV_ADMINISTRATION";
+  if (nextActionOnly) return onNavigate ? <FundManagerNextAction items={d.managerWork} today={d.today} managerName={d.managerName} onNavigate={area => onNavigate(area as CommandTarget)} /> : null;
 
   return (
     <div className="space-y-4">
+      {onNavigate && <FundManagerNextAction items={d.managerWork} today={d.today} managerName={d.managerName} onNavigate={area => onNavigate(area as CommandTarget)} />}
       {/* Header */}
       <section className="rounded-xl border bg-card p-4">
         <div className="flex flex-wrap items-start justify-between gap-3">

@@ -536,36 +536,36 @@ export function EconomicsCard({ d, offeringId, onSaved }: { d: D; offeringId: st
         <h3 className="text-sm font-medium">{multi ? "Fund defaults" : "Fund default terms"}</h3>
         <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <Field label="Management fee (%)">
-            <PresetSelect disabled={!d.canEdit} options={FEE_PRESETS} na={isNa("managementFee")} value={fee.ratePercent}
+            <PresetSelect disabled={!d.economics.canEdit} options={FEE_PRESETS} na={isNa("managementFee")} value={fee.ratePercent}
               onChange={(v, na) => { setNa("managementFee", na); setFee(na ? { ratePercent: null, basis: null, frequency: null } : { ratePercent: v, basis: fee.basis ?? (v != null ? "committed_capital" : null), frequency: fee.frequency ?? (v != null ? "annual" : null) }); }} suffix="%" />
           </Field>
           <Field label="Basis">
-            <select className="h-9 w-full rounded-md border bg-background px-2 text-sm" disabled={!d.canEdit || isNa("managementFee")} value={isNa("managementFee") ? "na" : fee.basis ?? ""} onChange={(e) => setFee({ basis: e.target.value || null })}>
+            <select className="h-9 w-full rounded-md border bg-background px-2 text-sm" disabled={!d.economics.canEdit || isNa("managementFee")} value={isNa("managementFee") ? "na" : fee.basis ?? ""} onChange={(e) => setFee({ basis: e.target.value || null })}>
               {isNa("managementFee") ? <option value="na">Not applicable</option> : <option value="">-</option>}
               <option value="committed_capital">Committed capital</option><option value="invested_capital">Invested capital</option><option value="capital_account_balance">Capital account balance</option><option value="nav">NAV</option><option value="flat">Flat amount</option>
             </select>
           </Field>
           <Field label="Frequency">
-            <select className="h-9 w-full rounded-md border bg-background px-2 text-sm" disabled={!d.canEdit || isNa("managementFee")} value={isNa("managementFee") ? "na" : fee.frequency ?? ""} onChange={(e) => setFee({ frequency: e.target.value || null })}>
+            <select className="h-9 w-full rounded-md border bg-background px-2 text-sm" disabled={!d.economics.canEdit || isNa("managementFee")} value={isNa("managementFee") ? "na" : fee.frequency ?? ""} onChange={(e) => setFee({ frequency: e.target.value || null })}>
               {isNa("managementFee") ? <option value="na">Not applicable</option> : <option value="">-</option>}
               {FEE_FREQUENCY_CHOICES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
               {fee.frequency === "quarterly" || fee.frequency === "monthly" ? <option value={fee.frequency}>{FEE_FREQUENCY_LABEL[fee.frequency]} (older setting)</option> : null}
             </select>
           </Field>
           <Field label="Carry (%)">
-            <PresetSelect disabled={!d.canEdit} options={CARRY_PRESETS} na={isNa("carry")} value={terms.carry?.ratePercent ?? null}
+            <PresetSelect disabled={!d.economics.canEdit} options={CARRY_PRESETS} na={isNa("carry")} value={terms.carry?.ratePercent ?? null}
               onChange={(v, na) => { setNa("carry", na, { carry: { ...(terms.carry ?? {}), ratePercent: na ? null : v } }); }} suffix="%" />
           </Field>
           <Field label="Preferred return / hurdle (%)">
-            <PresetSelect disabled={!d.canEdit} options={HURDLE_PRESETS} na={isNa("preferredReturn")} value={terms.preferredReturnPercent ?? null}
+            <PresetSelect disabled={!d.economics.canEdit} options={HURDLE_PRESETS} na={isNa("preferredReturn")} value={terms.preferredReturnPercent ?? null}
               onChange={(v, na) => setNa("preferredReturn", na, { preferredReturnPercent: na ? null : v })} suffix="%" />
           </Field>
           <Field label="Formation expense treatment">
-            <TextPresetSelect disabled={!d.canEdit} options={ORG_EXPENSE_PRESETS} na={isNa("orgExpense")} value={terms.orgExpenseTreatment ?? null}
+            <TextPresetSelect disabled={!d.economics.canEdit} options={ORG_EXPENSE_PRESETS} na={isNa("orgExpense")} value={terms.orgExpenseTreatment ?? null}
               onChange={(v, na) => setNa("orgExpense", na, { orgExpenseTreatment: na ? null : v })} />
           </Field>
           <Field label="Distribution frequency">
-            <TextPresetSelect disabled={!d.canEdit} options={DISTRIBUTION_PRESETS} na={isNa("distributionFrequency")} value={terms.distributionFrequency ?? null}
+            <TextPresetSelect disabled={!d.economics.canEdit} options={DISTRIBUTION_PRESETS} na={isNa("distributionFrequency")} value={terms.distributionFrequency ?? null}
               onChange={(v, na) => setNa("distributionFrequency", na, { distributionFrequency: na ? null : v })} />
           </Field>
         </section>
@@ -574,10 +574,10 @@ export function EconomicsCard({ d, offeringId, onSaved }: { d: D; offeringId: st
           <TabsContent value="classes" className="min-w-0 space-y-4 pt-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h3 className="font-medium">Class comparison</h3>
-              {d.canEdit && (planned == null || classes.length < planned) && <Button size="sm" variant="outline" onClick={() => { setClasses([...classes, { key: "", name: `Class ${String.fromCharCode(65 + classes.length)}` }]); setEditingClass(classes.length); }}><Plus className="size-4" />Add class</Button>}
+              {d.economics.canEdit && (planned == null || classes.length < planned) && <Button size="sm" variant="outline" onClick={() => { setClasses([...classes, { key: "", name: `Class ${String.fromCharCode(65 + classes.length)}` }]); setEditingClass(classes.length); }}><Plus className="size-4" />Add class</Button>}
             </div>
             {classes.length > 0 ? <Table aria-label="Class terms comparison" className="min-w-[660px]">
-              <TableHeader><TableRow className="bg-muted/50"><TableHead className="w-44">Term</TableHead><TableHead className="min-w-36">Fund default</TableHead>{classes.map((c, i) => <TableHead key={i} className="min-w-36"><div className="flex items-center gap-2"><span className="font-semibold text-foreground">{c.name || "Unnamed class"}</span>{d.canEdit && <Button size="icon" variant="ghost" aria-label={`Edit ${c.name || "class"}`} title={`Edit ${c.name || "class"}`} onClick={() => setEditingClass(i)}><Pencil className="size-4" /></Button>}</div></TableHead>)}</TableRow></TableHeader>
+              <TableHeader><TableRow className="bg-muted/50"><TableHead className="w-44">Term</TableHead><TableHead className="min-w-36">Fund default</TableHead>{classes.map((c, i) => <TableHead key={i} className="min-w-36"><div className="flex items-center gap-2"><span className="font-semibold text-foreground">{c.name || "Unnamed class"}</span>{d.economics.canEdit && <Button size="icon" variant="ghost" aria-label={`Edit ${c.name || "class"}`} title={`Edit ${c.name || "class"}`} onClick={() => setEditingClass(i)}><Pencil className="size-4" /></Button>}</div></TableHead>)}</TableRow></TableHeader>
               <TableBody>{diffs.map((r) => <TableRow key={r.term}><TableCell className="font-medium">{r.term}</TableCell><TableCell className="text-muted-foreground">{r.fundDefault === "-" ? "Not set" : r.fundDefault}</TableCell>{r.perClass.map((v, i) => <TableCell key={i} className={v.differs ? "font-medium text-primary" : "text-muted-foreground"}>{v.value === "-" ? "Not set" : v.value}</TableCell>)}</TableRow>)}<TableRow><TableCell className="font-medium">Maximum investment (exclusive)</TableCell><TableCell className="text-muted-foreground">No maximum</TableCell>{classes.map((c, i) => <TableCell key={i}>{c.maxInvestmentCents == null ? "No maximum" : `$${(c.maxInvestmentCents / 100).toLocaleString("en-US")}`}</TableCell>)}</TableRow></TableBody>
             </Table> : <p className="py-6 text-sm text-muted-foreground">No classes recorded.</p>}
             {countErr && <p role="alert" className="text-sm text-destructive">{countErr}</p>}
@@ -591,54 +591,54 @@ export function EconomicsCard({ d, offeringId, onSaved }: { d: D; offeringId: st
                 <DialogHeader><DialogTitle>{c.name || "New class"}</DialogTitle><DialogDescription>Changes are part of the fees and terms draft, not live terms.</DialogDescription></DialogHeader>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="sm:col-span-2 flex flex-wrap items-end gap-3 border-b pb-3">
-                    <Field label="Class name"><Input className="w-56 font-medium" disabled={!d.canEdit} value={c.name} placeholder="e.g. Series A-1" onChange={(e) => upd({ name: e.target.value })} /></Field>
+                    <Field label="Class name"><Input className="w-56 font-medium" disabled={!d.economics.canEdit} value={c.name} placeholder="e.g. Series A-1" onChange={(e) => upd({ name: e.target.value })} /></Field>
                     
                   </div>
                   <Field label="Fee basis">
-                    <select className="h-9 w-full rounded-md border bg-background px-2 text-sm" disabled={!d.canEdit || cNa("managementFee") || !c.managementFee} value={c.managementFee?.basis ?? ""} onChange={(e) => upd({ managementFee: { ...(c.managementFee ?? fee), basis: (e.target.value || null) as any } })}>
+                    <select className="h-9 w-full rounded-md border bg-background px-2 text-sm" disabled={!d.economics.canEdit || cNa("managementFee") || !c.managementFee} value={c.managementFee?.basis ?? ""} onChange={(e) => upd({ managementFee: { ...(c.managementFee ?? fee), basis: (e.target.value || null) as any } })}>
                       <option value="">Same as shared</option><option value="committed_capital">Committed capital</option><option value="invested_capital">Invested capital</option><option value="capital_account_balance">Capital account balance</option><option value="nav">NAV</option><option value="flat">Flat amount</option>
                     </select>
                   </Field>
                   <Field label="Fee frequency">
-                    <select className="h-9 w-full rounded-md border bg-background px-2 text-sm" disabled={!d.canEdit || cNa("managementFee") || !c.managementFee} value={c.managementFee?.frequency ?? ""} onChange={(e) => upd({ managementFee: { ...(c.managementFee ?? fee), frequency: (e.target.value || null) as any } })}>
+                    <select className="h-9 w-full rounded-md border bg-background px-2 text-sm" disabled={!d.economics.canEdit || cNa("managementFee") || !c.managementFee} value={c.managementFee?.frequency ?? ""} onChange={(e) => upd({ managementFee: { ...(c.managementFee ?? fee), frequency: (e.target.value || null) as any } })}>
                       <option value="">Same as shared</option>
                       {FEE_FREQUENCY_CHOICES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
                     </select>
                   </Field>
                   <Field label="Preferred return / hurdle (%)">
-                    <PresetSelect disabled={!d.canEdit} options={HURDLE_PRESETS} allowDefault na={cNa("preferredReturn")} value={c.preferredReturnPercent ?? null}
+                    <PresetSelect disabled={!d.economics.canEdit} options={HURDLE_PRESETS} allowDefault na={cNa("preferredReturn")} value={c.preferredReturnPercent ?? null}
                       onChange={(v, na) => upd({ notApplicable: toggle(c, "preferredReturn", na), preferredReturnPercent: na ? null : v })} suffix="%" />
                   </Field>
                   <Field label="Mgmt fee (%)">
-                    <PresetSelect disabled={!d.canEdit} options={FEE_PRESETS} allowDefault na={cNa("managementFee")} value={c.managementFee?.ratePercent ?? null}
+                    <PresetSelect disabled={!d.economics.canEdit} options={FEE_PRESETS} allowDefault na={cNa("managementFee")} value={c.managementFee?.ratePercent ?? null}
                       onChange={(v, na) => upd({ notApplicable: toggle(c, "managementFee", na), managementFee: na || v == null ? null : { ...(c.managementFee ?? fee), ratePercent: v } })} suffix="%" />
                   </Field>
                   <Field label="Carry (%)">
-                    <PresetSelect disabled={!d.canEdit} options={CARRY_PRESETS} allowDefault na={cNa("carry")} value={c.carry?.ratePercent ?? null}
+                    <PresetSelect disabled={!d.economics.canEdit} options={CARRY_PRESETS} allowDefault na={cNa("carry")} value={c.carry?.ratePercent ?? null}
                       onChange={(v, na) => upd({ notApplicable: toggle(c, "carry", na), carry: na || v == null ? null : { ratePercent: v } })} suffix="%" />
                   </Field>
                   <Field label="Minimum ($)">
-                    <PresetSelect disabled={!d.canEdit} options={MIN_PRESETS} allowDefault na={cNa("minInvestment")} value={c.minInvestmentCents != null ? c.minInvestmentCents / 100 : null}
+                    <PresetSelect disabled={!d.economics.canEdit} options={MIN_PRESETS} allowDefault na={cNa("minInvestment")} value={c.minInvestmentCents != null ? c.minInvestmentCents / 100 : null}
                       onChange={(v, na) => upd({ notApplicable: toggle(c, "minInvestment", na), minInvestmentCents: na || v == null ? null : Math.round(v * 100) })} prefix="$" />
                   </Field>
                   <Field label="Up to, not including ($), blank for no top">
-                    <Input disabled={!d.canEdit} inputMode="numeric" value={c.maxInvestmentCents != null ? String(c.maxInvestmentCents / 100) : ""} placeholder="No top"
+                    <Input disabled={!d.economics.canEdit} inputMode="numeric" value={c.maxInvestmentCents != null ? String(c.maxInvestmentCents / 100) : ""} placeholder="No top"
                       onChange={(e) => { const n = Number(e.target.value.replace(/[^0-9.]/g, "")); upd({ maxInvestmentCents: e.target.value.trim() && Number.isFinite(n) && n > 0 ? Math.round(n * 100) : null }); }} />
                   </Field>
-                  <Field label="Applies to (which investors)"><Input disabled={!d.canEdit} value={c.appliesTo ?? ""} placeholder="e.g. Founding investors" onChange={(e) => upd({ appliesTo: e.target.value })} /></Field>
-                  <Field label="Organizational expenses"><Input disabled={!d.canEdit} value={c.orgExpenseTreatment ?? ""} placeholder="Same as fund default" onChange={(e) => upd({ orgExpenseTreatment: e.target.value || null })} /></Field>
-                  <Field label="Distribution frequency"><Input disabled={!d.canEdit} value={c.distributionFrequency ?? ""} placeholder="Same as fund default" onChange={(e) => upd({ distributionFrequency: e.target.value || null })} /></Field>
-                  <Field label="Assets / allocation"><Input disabled={!d.canEdit} value={c.assetScope ?? ""} placeholder="All fund assets" onChange={(e) => upd({ assetScope: e.target.value || null })} /></Field>
-                  <div className="sm:col-span-2"><Field label="Other differences"><Textarea rows={2} disabled={!d.canEdit} value={c.otherDifferences ?? ""} placeholder="Anything else that's different for this class" onChange={(e) => upd({ otherDifferences: e.target.value || null })} /></Field></div>
+                  <Field label="Applies to (which investors)"><Input disabled={!d.economics.canEdit} value={c.appliesTo ?? ""} placeholder="e.g. Founding investors" onChange={(e) => upd({ appliesTo: e.target.value })} /></Field>
+                  <Field label="Organizational expenses"><Input disabled={!d.economics.canEdit} value={c.orgExpenseTreatment ?? ""} placeholder="Same as fund default" onChange={(e) => upd({ orgExpenseTreatment: e.target.value || null })} /></Field>
+                  <Field label="Distribution frequency"><Input disabled={!d.economics.canEdit} value={c.distributionFrequency ?? ""} placeholder="Same as fund default" onChange={(e) => upd({ distributionFrequency: e.target.value || null })} /></Field>
+                  <Field label="Assets / allocation"><Input disabled={!d.economics.canEdit} value={c.assetScope ?? ""} placeholder="All fund assets" onChange={(e) => upd({ assetScope: e.target.value || null })} /></Field>
+                  <div className="sm:col-span-2"><Field label="Other differences"><Textarea rows={2} disabled={!d.economics.canEdit} value={c.otherDifferences ?? ""} placeholder="Anything else that's different for this class" onChange={(e) => upd({ otherDifferences: e.target.value || null })} /></Field></div>
                                   </div>
                 <div className="flex justify-between gap-3 border-t pt-4">
-                  {d.canEdit && <Button variant="ghost" onClick={() => { setClasses(classes.filter((_, j) => j !== i)); setEditingClass(null); }}>Remove class</Button>}
+                  {d.economics.canEdit && <Button variant="ghost" onClick={() => { setClasses(classes.filter((_, j) => j !== i)); setEditingClass(null); }}>Remove class</Button>}
                   <Button onClick={() => setEditingClass(null)}>Done</Button>
                 </div>
                 </DialogContent></Dialog>
               );
             })}
-            {classes.length > 0 && d.canEdit && (
+            {classes.length > 0 && d.economics.canEdit && (
               <label className="flex items-start gap-2 text-sm">
                 <Checkbox checked={confirmed} onCheckedChange={(v) => setConfirmed(v === true)} />
                 <span>I've reviewed how each class differs from the fund default for its group of investors.</span>
@@ -660,10 +660,10 @@ export function EconomicsCard({ d, offeringId, onSaved }: { d: D; offeringId: st
           </DialogContent>
         </Dialog>}
 
-        {d.canEdit && (
+        {d.economics.canEdit && (
           <div className="flex flex-wrap items-center gap-3 border-t py-4">
             <Button disabled={busy} onClick={() => run(() => save({ data: { offeringId, terms: terms as any, classes: multi ? (classes as any) : [], classDifferencesConfirmed: confirmed } }), "Economics saved as a draft")}><Save className="size-4" />{busy ? "Saving…" : "Save terms draft"}</Button>
-            {d.canEdit && d.economics.canApprove && unsaved && (
+            {d.economics.canEdit && d.economics.canApprove && unsaved && (
               <Button variant="outline" disabled={busy}
                 onClick={() => void run(async () => {
                   const saved: any = await save({ data: { offeringId, terms: terms as any, classes: multi ? (classes as any) : [], classDifferencesConfirmed: confirmed } });

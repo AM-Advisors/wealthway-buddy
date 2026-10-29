@@ -73,11 +73,11 @@ export function FundSignatoriesCard({ offeringId, onChanged }: { offeringId: str
                   <p className="text-xs text-muted-foreground">{[s.title, s.capacity, s.email].filter(Boolean).join(" · ") || "No title yet"}</p>
                   {edit?.id === s.id && (
                     <div className="mt-2 grid gap-2 sm:grid-cols-3">
-                      <div className="space-y-1"><Label className="text-xs">Goes by</Label><Input placeholder="e.g. middle name" value={edit.preferredName} onChange={(e) => setEdit({ ...edit, preferredName: e.target.value })} /></div>
+                      {d.canEditPerson && <div className="space-y-1"><Label className="text-xs">Goes by</Label><Input placeholder="e.g. middle name" value={edit.preferredName} onChange={(e) => setEdit({ ...edit, preferredName: e.target.value })} /></div>}
                       <div className="space-y-1"><Label className="text-xs">Signatory title</Label><Input value={edit.title} onChange={(e) => setEdit({ ...edit, title: e.target.value })} /></div>
-                      <div className="space-y-1"><Label className="text-xs">Email</Label><Input type="email" value={edit.email} onChange={(e) => setEdit({ ...edit, email: e.target.value })} /></div>
+                      {d.canEditPerson && <div className="space-y-1"><Label className="text-xs">Email</Label><Input type="email" value={edit.email} onChange={(e) => setEdit({ ...edit, email: e.target.value })} /></div>}
                       <div className="flex gap-2 sm:col-span-3">
-                        <Button size="sm" onClick={() => act(s.id, { preferredName: edit.preferredName || null, title: edit.title || null, email: edit.email || null })}>Save</Button>
+                        <Button size="sm" onClick={() => act(s.id, { title: edit.title || null, ...(d.canEditPerson ? { preferredName: edit.preferredName || null, email: edit.email || null } : {}) })}>Save</Button>
                         <Button size="sm" variant="ghost" onClick={() => setEdit(null)}>Cancel</Button>
                       </div>
                     </div>
@@ -100,9 +100,9 @@ export function FundSignatoriesCard({ offeringId, onChanged }: { offeringId: str
           <div className="space-y-3 rounded-md border bg-muted/30 p-3">
             <div className="flex gap-2">
               <Button size="sm" variant={mode === "pick" ? "default" : "outline"} onClick={() => setMode("pick")}>Choose listed person</Button>
-              <Button size="sm" variant={mode === "new" ? "default" : "outline"} onClick={() => setMode("new")} disabled={!d.hasClient}>
+              {d.canEditPerson && <Button size="sm" variant={mode === "new" ? "default" : "outline"} onClick={() => setMode("new")} disabled={!d.hasClient}>
                 <UserPlus className="mr-1 h-3.5 w-3.5" />Add new person
-              </Button>
+              </Button>}
             </div>
             {mode === "pick" ? (
               <div className="space-y-1">
