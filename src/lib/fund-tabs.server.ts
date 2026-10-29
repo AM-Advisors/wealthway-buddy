@@ -102,7 +102,7 @@ export async function investorGrid(fundId: string) {
     if (!committedCents) missing.push("Commitment amount");
     if (!o.questionnaire_submitted_at) missing.push("Questionnaire");
     if (!kycOk) missing.push(entity ? "KYB/AML check" : "KYC/AML check");
-    if (docs !== "Signed") missing.push("Signed subscription");
+    if (docs !== "Signed" && docs !== "Signed (outside platform)") missing.push("Signed subscription");
     return {
       id: o.id as string,
       name: personName(p),
@@ -145,7 +145,9 @@ export async function investorDetail(fundId: string, onboardingId: string) {
   const [{ data: letters }, { data: tasks }, { data: docs }] = await Promise.all([
     d.from("side_letters").select("id, status, effective_date, terms").eq("onboarding_id", onboardingId),
     d.from("investment_readiness_tasks").select("title, resolved_at").eq("onboarding_id", onboardingId).order("created_at"),
-    o.application_id ? d.from("investor_documents").select("id, file_name, doc_kind, uploaded_at, review_status").eq("application_id", o.application_id) : Promise.resolve({ data: [] }),
+    o.application_id
+      ? d.from("investor_documents").select("id, file_name, doc_kind, uploaded_at, review_status").or(`application_id.eq.${o.application_id},onboarding_id.eq.${onboardingId}`)
+      : d.from("investor_documents").select("id, file_name, doc_kind, uploaded_at, review_status").eq("onboarding_id", onboardingId),
   ]);
   const p = o.persons ?? {};
   const grid = (await investorGrid(fundId)).find((r) => r.id === onboardingId);
