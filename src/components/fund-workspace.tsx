@@ -23,7 +23,7 @@ import { CloseRequestReview } from "@/components/close-request-review";
 import { FundDistributions } from "@/components/fund-distributions";
 import { listAllCloseRequests } from "@/lib/fund-close-requests.functions";
 import { useServerFn } from "@tanstack/react-start";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 import { Badge } from "@/components/ui/badge";
