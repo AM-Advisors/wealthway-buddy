@@ -37,7 +37,7 @@ export async function investorReviewEvidence(db: any, userId: string, fundId: st
   const questionnaire = row.questionnaire_submitted_at ? questions
     .filter((q) => questionVisible(q, answers) && !SENSITIVE_TITLE.test(`${q.key} ${q.label}`))
     .map((q) => ({ key: q.key, label: q.label, answer: displayAnswer(answers[q.key]) })) : [];
-  const accreditation = await loadAccreditation(db, row.application_id);
+  const accreditation = await loadAccreditation(db, row.application_id, row.id);
   return {
     signedDocuments,
     acknowledgments: (ackResult.data ?? []).map((a: any) => ({ id: a.id as string, title: documentResult.data?.find((d: any) => d.id === a.offering_document_id)?.title ?? "Fund document", version: a.version as number, acknowledgedAt: a.acknowledged_at as string })),
@@ -50,15 +50,32 @@ export async function investorReviewEvidence(db: any, userId: string, fundId: st
 
 const ACCREDITATION_STATUS: Record<string, string> = { approved: "Verified", pending: "Awaiting review", in_review: "Awaiting review", rejected: "Sent back", not_started: "Not started", expired: "Expired" };
 
-async function loadAccreditation(db: any, applicationId: string | null) {
-  if (!applicationId) return null;
+const UPLOAD_REVIEW_STATUS: Record<string, string> = { new: "Proof uploaded, awaiting review", in_review: "Proof uploaded, awaiting review", approved: "Proof approved", accepted: "Proof approved", rejected: "Proof sent back" };
+
+/** Proof uploaded on the onboarding before an application exists; display-only, never an approval. */
+async function loadOnboardingProof(db: any, onboardingId: string) {
+  const { data, error } = await db.from("investor_documents").select("id, doc_kind, file_name, uploaded_at, review_status")
+    .eq("onboarding_id", onboardingId).eq("doc_kind", "accreditation_proof").order("uploaded_at", { ascending: false });
+  if (error) throw new Error("Accreditation could not be loaded.");
+  const rows = (data ?? []) as any[];
+  if (!rows.length) return null;
+  return {
+    regType: null as string | null, basis: null as string | null,
+    status: UPLOAD_REVIEW_STATUS[rows[0].review_status] ?? "Proof uploaded, awaiting review",
+    attestedAt: null as string | null, verifiedAt: null as string | null, expiresAt: null as string | null, relationship: null as string | null,
+    documents: rows.map((d) => ({ id: d.id as string, name: d.file_name as string, kind: String(d.doc_kind).replace(/_/g, " "), uploadedAt: d.uploaded_at as string })),
+  };
+}
+
+async function loadAccreditation(db: any, applicationId: string | null, onboardingId?: string) {
+  if (!applicationId) return onboardingId ? loadOnboardingProof(db, onboardingId) : null;
   const [rec, docs] = await Promise.all([
     db.from("accreditation_records").select("reg_type, method, status, attested_at, verified_at, expires_at, pre_existing_relationship, questionnaire").eq("application_id", applicationId).maybeSingle(),
     db.from("accreditation_documents").select("id, doc_kind, file_name, uploaded_at").eq("application_id", applicationId),
   ]);
   if (rec.error || docs.error) throw new Error("Accreditation could not be loaded.");
   const r = rec.data;
-  if (!r) return null;
+  if (!r) return onboardingId ? loadOnboardingProof(db, onboardingId) : null;
   const q = (r.questionnaire ?? {}) as Record<string, unknown>;
   const relationship = [q["relationship_type"], q["relationship_duration"]].filter((v) => typeof v === "string" && v).join(" · ") || r.pre_existing_relationship || null;
   return {
