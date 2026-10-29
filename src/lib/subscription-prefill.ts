@@ -132,3 +132,27 @@ export function usPersonFromVerification(f: { isIndividual: boolean; citizenship
   if (!c || !String(c).trim()) return null;
   return isUS(c);
 }
+
+/**
+ * Factual answers the same investing profile gave in another fund (address,
+ * funding bank). Never certifications, consents, accreditation or yes/no
+ * compliance statements: those are re-confirmed for every fund.
+ */
+export const REUSABLE_PRIOR_KEY_PREFIXES = [
+  "subscriber_s_address_of_residence",
+  "address_for_delivery_and_notices",
+  "name_of_the_bank_from_which_the_subscriber",
+  "is_the_funding_bank_located_in_the_united_states",
+  "is_the_jurisdiction_where_the_wiring_institution",
+] as const;
+
+export function priorFactAnswers(prior: Record<string, unknown>[]): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const answers of prior) {
+    for (const [key, value] of Object.entries(answers ?? {})) {
+      if (key in out || typeof value !== "string" || !value.trim()) continue;
+      if (REUSABLE_PRIOR_KEY_PREFIXES.some((p) => key.startsWith(p))) out[key] = value.trim();
+    }
+  }
+  return out;
+}

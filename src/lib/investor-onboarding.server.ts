@@ -853,7 +853,13 @@ export async function subscriptionLocks(row: any, questions: Question[]) {
         : q,
   );
   const { mappedQuestionFacts } = await import("./fund-question-ai-model");
-  return { locked, supplied: mappedQuestionFacts(questions, suppliedInvestorAnswers(person, profile)), questions: decorated };
+  // Same investing profile, other funds, newest first: reuse factual answers only.
+  const { priorFactAnswers } = await import("@/lib/subscription-prefill");
+  const { data: priorRows } = row.investment_profile_id
+    ? await db().from("investor_onboardings").select("questionnaire_responses").eq("investment_profile_id", row.investment_profile_id).neq("id", row.id).is("removed_at", null).not("questionnaire_submitted_at", "is", null).order("questionnaire_submitted_at", { ascending: false }).limit(5)
+    : { data: [] as any[] };
+  const prior = priorFactAnswers(((priorRows ?? []) as any[]).map((r) => (r.questionnaire_responses ?? {}) as Record<string, unknown>));
+  return { locked, supplied: { ...prior, ...mappedQuestionFacts(questions, suppliedInvestorAnswers(person, profile)) }, questions: decorated };
 }
 
 export async function saveQuestionnaire(
