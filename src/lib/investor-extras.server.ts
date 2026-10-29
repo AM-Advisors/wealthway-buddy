@@ -34,6 +34,26 @@ async function ownOnboarding(userId: string, onboardingId: string) {
 
 export type OnboardingUpload = { id: string; fileName: string; kind: string; uploadedAt: string; status: string; note: string | null; canDelete: boolean };
 
+export async function managerUploadReviews(userId: string, onboardingId: string) {
+  const d = await db();
+  const { data: ob } = await d.from("investor_onboardings").select("id, offering_id, removed_at").eq("id", onboardingId).maybeSingle();
+  if (!ob || ob.removed_at) throw new Error("This investment isn't available.");
+  const { assertUploadReviewer, MANAGER_REVIEW_KINDS } = await import("./investor-upload-review.server");
+  const actor = await assertUploadReviewer(userId, ob.offering_id);
+  const { data, error } = await d.from("investor_documents").select("id, file_name, doc_kind, review_status, review_note, uploaded_at").eq("onboarding_id", ob.id).eq("offering_id", ob.offering_id).order("uploaded_at", { ascending: false });
+  if (error) throw new Error("Documents could not be loaded.");
+  return (data ?? []).map((r: any) => ({ id: r.id as string, fileName: r.file_name as string, kind: r.doc_kind as string, status: r.review_status as string, note: r.review_note as string | null, canReview: r.review_status === "new" && (actor.isStaff || (MANAGER_REVIEW_KINDS as readonly string[]).includes(r.doc_kind)) }));
+}
+
+export async function managerUploadUrl(userId: string, onboardingId: string, id: string) {
+  const { uploadReviewContext } = await import("./investor-upload-review.server");
+  const { d, row } = await uploadReviewContext(userId, id);
+  if (row.onboarding_id !== onboardingId) throw new Error("That file isn't part of this investment.");
+  const { data, error } = await d.storage.from("investor-uploads").createSignedUrl(row.storage_path, 300);
+  if (error || !data) throw new Error("The document could not be opened.");
+  return { url: data.signedUrl as string };
+}
+
 export async function listUploads(userId: string, onboardingId: string): Promise<OnboardingUpload[]> {
   const { d, ob } = await ownOnboarding(userId, onboardingId);
   const data = await loadProfileDocumentEvidence(d, ob);

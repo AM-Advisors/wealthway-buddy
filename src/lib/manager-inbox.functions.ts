@@ -120,42 +120,5 @@ export const setUploadReview = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await assertReviewer(supabase, userId);
-
-    const { data: row } = await supabase
-      .from("investor_documents")
-      .select("id, offering_id, application_id, file_name, doc_kind")
-      .eq("id", data.id)
-      .maybeSingle();
-    if (!row) throw new Error("That file is not available.");
-
-    const { error } = await supabase
-      .from("investor_documents")
-      .update({
-        review_status: data.status,
-        review_note: data.note?.trim() ? data.note.trim() : null,
-        reviewed_by: data.status === "new" ? null : userId,
-        reviewed_at: data.status === "new" ? null : new Date().toISOString(),
-      })
-      .eq("id", data.id);
-    if (error) throw new Error(error.message);
-
-    await (
-      await import("@/lib/reviewer-activity.server")
-    ).logReviewerActivity(supabase, {
-      actorId: userId,
-      applicationId: (row.application_id as string) ?? null,
-      offeringId: (row.offering_id as string) ?? null,
-      action: "upload_reviewed",
-      area: (row.doc_kind as string) ?? "documents",
-      outcome:
-        data.status === "accepted"
-          ? "approved"
-          : data.status === "needs_followup"
-            ? "delayed"
-            : "reopened",
-      summary: `Investor upload "${row.file_name}" marked ${data.status.replace("_", " ")}`,
-      note: data.note ?? null,
-    });
-
-    return { ok: true };
+    return (await import("./investor-upload-review.server")).reviewInvestorUpload(userId, data);
   });
