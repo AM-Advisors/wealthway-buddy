@@ -1,7 +1,7 @@
 import { ManagerLaunchCard } from "@/components/manager-launch-card";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { FundSetupForm } from "@/components/fund-setup-form";
-import { FundCommandCenter } from "@/components/fund-command-center";
+import { FundCommandCenter, type CommandTarget } from "@/components/fund-command-center";
 
 import { ManagerFundDashboard } from "@/components/manager-fund-dashboard";
 import { FundUpdatesFeed } from "@/components/fund-updates-feed";
@@ -30,7 +30,11 @@ function Overview() {
   const { fundId } = Route.useParams();
   const navigate = useNavigate();
   const { area = "setup" } = Route.useSearch();
-  const go = (t: "calendar" | "investors" | "capital" | "approvals" | "requests") => navigate({ to: ({ calendar: "/manager/fund/$fundId/calendar", investors: "/manager/fund/$fundId/investors", capital: "/manager/fund/$fundId/transactions", approvals: "/manager/fund/$fundId/approvals", requests: "/manager/fund/$fundId/requests" } as const)[t], params: { fundId } });
+  const go = (t: CommandTarget) => {
+    if (t === "setup" || t === "documents") return navigate({ to: "/manager/fund/$fundId", params: { fundId }, search: { area: t } });
+    if (t === "banking" || t === "accounting") return navigate({ to: "/manager/fund-banking/$fundId", params: { fundId } });
+    return navigate({ to: ({ calendar: "/manager/fund/$fundId/calendar", investors: "/manager/fund/$fundId/investors", capital: "/manager/fund/$fundId/transactions", approvals: "/manager/fund/$fundId/approvals", requests: "/manager/fund/$fundId/requests" } as const)[t], params: { fundId } });
+  };
   return <SelfServeFundPage area={area} onAreaChange={next => { void navigate({ to: "/manager/fund/$fundId", params: { fundId }, search: { area: next } }); }} sections={{
     setup: () => <div className="space-y-6"><FundSetupForm offeringId={fundId} mode="manager" workspace /><ManagerLaunchCard fundId={fundId} /></div>,
     investors: () => <ManagerFundInvestors fundId={fundId} />,
