@@ -29,7 +29,7 @@ import {
   setInvestmentAmountFn,
   startInvestmentVerificationFn,
 } from "@/lib/investor-onboarding.functions";
-import { investorHomeSummary, nextJourneyStep, openableStep, type JourneyStep, type JourneyStepView } from "@/lib/investor-journey-model";
+import { investorHomeSummary, nextJourneyStep, openableStep, minutesLeft, STEP_MINUTES, type JourneyStep, type JourneyStepView } from "@/lib/investor-journey-model";
 import { kycFieldsFor } from "@/lib/kyc-fields";
 import { DealReview } from "@/components/deal-review";
 import { Badge } from "@/components/ui/badge";
