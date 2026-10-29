@@ -4,7 +4,7 @@
  * Facebook/Instagram: Meta Graph API with META_PAGE_ACCESS_TOKEN; page / IG business ids from marketing_channels.
  */
 const GATEWAY = "https://connector-gateway.lovable.dev";
-const GRAPH = "https://graph.facebook.com/v21.0";
+const GRAPH = "https://graph.facebook.com/v26.0";
 
 async function fail(res: Response, what: string): Promise<never> {
   console.error(`${what} failed [${res.status}]`);
