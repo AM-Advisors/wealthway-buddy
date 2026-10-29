@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { invalidateFund } from "@/lib/fund-query-keys";
 import { ServiceProvidersSection } from "@/components/fund-setup-extras";
 import { useEffect, useState } from "react";
@@ -134,8 +134,6 @@ const jump = (id: string) => (e: React.MouseEvent) => {
   e.preventDefault();
   window.dispatchEvent(new CustomEvent("fund-setup-jump", { detail: id }));
   setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
-  return;
-  document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
 };
 
 const SECTION_ANCHOR: Record<string, string> = {
