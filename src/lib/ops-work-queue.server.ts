@@ -1150,7 +1150,7 @@ async function fundRequestItems(s: any, lookup: Lookup, now: Date) {
 /** Fund setup drafts waiting for approval (fees & terms, extra questions). */
 async function fundSetupDraftItems(s: any, lookup: Lookup, now: Date) {
   const econ = (await safely(async () => rows(await s.from("fund_economics_versions").select("id, setup_id, version, updated_at, created_at, fund_setups!inner(offering_id)").eq("status", "draft").limit(SOURCE_LIMIT)))) as any[];
-  const qs = (await safely(async () => rows(await s.from("fund_questionnaire_sections").select("id, offering_id, version, updated_at, created_at").eq("status", "draft").limit(SOURCE_LIMIT)))) as any[];
+  const qs = (await safely(async () => rows(await s.from("fund_questionnaire_sections").select("id, offering_id, version, created_at").eq("status", "draft").limit(SOURCE_LIMIT)))) as any[];
   const item = (id: string, fundId: string, title: string, reason: string, at: string | null) =>
     build(lookup, now, { id, source: "funds.setup_draft", area: "funds", recordType: "fund", recordId: fundId, recordTab: "setup", title, reason, workflowState: "draft", requiredAction: "approve", fundId, dueDate: null, at } as any);
   return [
