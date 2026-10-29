@@ -23,7 +23,8 @@ export function investorSteps(i: {
   const k = String(i.kyc).toLowerCase(), a = String(i.aml).toLowerCase();
   const verification = OK.includes(k) && OK.includes(a) ? s("verification", "complete", "KYC/KYB and AML clear")
     : BAD.includes(k) || BAD.includes(a) ? s("verification", "blocked", "Check needs review before signing")
-    : REVIEW.includes(k) || REVIEW.includes(a) ? s("verification", "waiting_harmonious", "Identity check under review")
+    : REVIEW.includes(k) || REVIEW.includes(a) ? s("verification", "waiting_harmonious",
+        OK.includes(k) ? "ID approved · compliance screening under review" : OK.includes(a) ? "Screening clear · ID check under review" : "ID check and compliance screening under review")
     : k !== "not_started" ? s("verification", "in_progress", "Identity check started")
     : s("verification", "not_started", "Identity check not started");
   const sign = i.signed ? s("sign", "complete", "Subscription signed")
