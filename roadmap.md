@@ -1,5 +1,9 @@
 # Roadmap
 
+## Direct Fund Setup approval buttons
+- [x] Put Approve beside Edit on saved class terms and at the additional-question heading, reusing existing version approval and permissions without changing records.
+- [ ] Verify fictional approval controls and existing safeguards; durable authenticated approval remains blocked on independently isolated QA.
+
 ## Single-approval simplification
 - [x] Replace routine preparer separation with one existing-authorized human approval for economics, questions, document reviews, record-only side letters and marketing content. Matching document/side-letter DB checks retain exact-fund authority and history. Amount-free SERVICE_CHANGE/ENTITY_ACTION bypass the staff handoff only, fund-manager decision and configured counts retained. Money, identity, access and live-release gates unchanged; no pending ROAS approval.
 - [x] Separate approvals from contractual signatures: existing MSA and fund countersignatures retained because counterpart/electronic-signature language does not establish single-party completion. No retrospective execution or policy waiver.
