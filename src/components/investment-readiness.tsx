@@ -2,7 +2,7 @@ import { LoadError } from "@/components/load-error";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Link } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
 import { AlertCircle, Check, ChevronDown, Circle, Inbox, Search } from "lucide-react";
 import { fundReadinessFn, investmentReadinessFn, readinessQueueFn } from "@/lib/investor-onboarding.functions";
 import { viewAsFundFn, viewAsInvestmentFn } from "@/lib/view-as.functions";
@@ -400,6 +400,7 @@ type QTab = "harmonious" | "investor" | "fund_manager" | "all";
 const QTAB_LABEL: Record<QTab, string> = { harmonious: "Needs Harmonious", investor: "Waiting on Investor", fund_manager: "Waiting on Fund Manager", all: "All" };
 
 function TriageDrawer({ item, onClose }: { item: any | null; onClose: () => void }) {
+  const onOps = useRouterState({ select: (st) => st.location.pathname.startsWith("/ops") });
   return (
     <Sheet open={!!item} onOpenChange={(o) => !o && onClose()}>
       <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-xl">
@@ -412,7 +413,10 @@ function TriageDrawer({ item, onClose }: { item: any | null; onClose: () => void
             <div className="space-y-4">
               {item.onboardingId ? <InvestmentChecklist onboardingId={item.onboardingId} /> : null}
               <div className="flex flex-wrap gap-3">
-                {item.offeringId ? <Button asChild size="sm"><Link to="/manager/fund/$fundId/investors" params={{ fundId: item.offeringId }}>Open Investment</Link></Button> : null}
+                {item.offeringId ? <Button asChild size="sm">{onOps && item.onboardingId
+                  ? <Link to="/ops/fund/$fundId/investor/$onboardingId" params={{ fundId: item.offeringId, onboardingId: item.onboardingId }}>Open Investment</Link>
+                  : onOps ? <Link to="/ops/fund/$fundId" params={{ fundId: item.offeringId }} search={{ tab: "investors" } as never}>Open Investment</Link>
+                  : <Link to="/manager/fund/$fundId/investors" params={{ fundId: item.offeringId }}>Open Investment</Link>}</Button> : null}
               </div>
             </div>
           </>
