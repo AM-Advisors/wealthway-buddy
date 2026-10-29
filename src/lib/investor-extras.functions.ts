@@ -66,3 +66,15 @@ export const uploadOnboardingDocForFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator(z.object({ onboardingId: uuid, kind: KIND, fileName: z.string().min(1).max(255), contentType: z.string().max(120), base64: z.string().min(1).max(21_000_000) }).parse)
   .handler(async ({ data, context }): Promise<{ ok: boolean }> => (await x()).uploadDocFor(context.userId, data));
+
+export const managerUploadReviewsFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .validator(z.object({ onboardingId: uuid }).parse)
+  .handler(async ({ data, context }) => (await x()).managerUploadReviews(context.userId, data.onboardingId));
+
+export const managerUploadUrlFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .validator(z.object({ onboardingId: uuid, id: uuid }).parse)
+  .handler(async ({ data, context }) => (await x()).managerUploadUrl(context.userId, data.onboardingId, data.id));
+
+export const managerReviewUploadFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .validator(z.object({ id: uuid, status: z.enum(["accepted", "needs_followup"]), note: z.string().trim().max(1000).nullish() }).parse)
+  .handler(async ({ data, context }) => (await import("./investor-upload-review.server")).reviewInvestorUpload(context.userId, data));

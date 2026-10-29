@@ -248,16 +248,16 @@ function ManagerInboxPage() {
                       File it
                     </Button>
                   ) : null}
-                  {item.review_status !== "accepted" ? (
+                  {item.canReview ? (
                     <Button
                       size="sm"
                       disabled={reviewMutation.isPending}
                       onClick={() => reviewMutation.mutate({ id: item.id, status: "accepted" })}
                     >
-                      Accept
+                      Approve copy
                     </Button>
                   ) : null}
-                  {item.review_status !== "needs_followup" ? (
+                  {item.canReview ? (
                     <Button
                       size="sm"
                       variant="secondary"
@@ -273,16 +273,6 @@ function ManagerInboxPage() {
                       }}
                     >
                       Needs follow-up
-                    </Button>
-                  ) : null}
-                  {item.review_status !== "new" ? (
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      disabled={reviewMutation.isPending}
-                      onClick={() => reviewMutation.mutate({ id: item.id, status: "new" })}
-                    >
-                      Reopen
                     </Button>
                   ) : null}
                   <Button asChild size="sm" variant="ghost">

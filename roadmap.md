@@ -1,5 +1,10 @@
 # Roadmap
 
+## Manager investor documents and tax forms
+- [x] Exact-fund managers upload and approve supporting documents and signed W-9/W-8 copies on investor Documents; inbox uses the same guarded review. Certification, identity, accreditation, bank and tax-return release remain separate.
+- [x] 21 focused safeguards passed; fictional manager upload → approve → approved-copy read-back verified without runtime errors. Preview build OK; no live copies or decisions changed.
+- [ ] Durable authenticated verification requires independently isolated QA and synthetic sessions.
+
 ## Fund manager responsibility and simple progress
 - [x] Exact-fund managers save and approve versioned economics and manage recorded fund signers; shared person edits, bank checks, financial release, signatures and global identity remain protected. No live records changed.
 - [x] One next action on manager setup and activity, with expanded open work and responsibility; existing Operations queue continues to show stalled onboarding and fund drafts, without new assignments or queues.
