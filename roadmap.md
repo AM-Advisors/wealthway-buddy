@@ -1,5 +1,10 @@
 # Roadmap
 
+## ROAS existing investor paperwork and verification
+- [x] Read current verification results for all ten recorded ROAS investors, each with a saved session reference; Doug already has 23 saved questionnaire answers and recorded personal-information confirmation.
+- [x] Located Doug’s October 9 prior subscription copy and uploaded September statement marked new accreditation proof; identity is approved, AML remains review. Eight provider sessions report Approved; Dinesh and Michael remain In Review. No decisions changed.
+- [ ] Open Doug’s private paperwork, review accreditation applicability, and save any missing exact-party facts/connections through existing authorized services. Blocked by Alyssa’s normal authenticator sign-in gate; no private copies opened, answers overwritten, certifications submitted or verification/funding approved.
+
 ## Erebor Kim contact correction
 - [x] Recorded verification-document name is Kimberly Girardi; submitted expected name is Joe Girardi, with a name-mismatch warning. Existing individual investment remains Kimberly’s; no identity or approval transferred.
 - [ ] Correct Kim’s contact email to pinklady55@comcast.net through the existing authorized review. Blocked by requester authenticator setup; no email changed. The previous dantegirardi28@gmail.com remains recorded, and its investing-party identity requires explicit confirmation before reassignment.
