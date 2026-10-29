@@ -9,7 +9,10 @@ const category = z.enum(["ACCOUNTING", "NAV", "INVESTOR", "CAPITAL", "REPORTING"
 
 export const getCommandCenter = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth]).validator((d) => fund.parse(d))
-  .handler(async ({ context, data }) => (await import("@/lib/fund-command-center.server")).commandCenter(context.userId, data.fundId));
+  .handler(async ({ context, data }) => {
+    const { data: entity } = await context.supabase.rpc("get_offering_entity_details", { p_offering_id: data.fundId }).maybeSingle();
+    return (await import("@/lib/fund-command-center.server")).commandCenter(context.userId, data.fundId, Boolean((entity as any)?.ein));
+  });
 
 export const getFundCalendar = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth]).validator((d) => fund.parse(d))
