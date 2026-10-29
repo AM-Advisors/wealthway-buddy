@@ -52,6 +52,7 @@ import { CentsBarChart, CentsDonut } from "@/components/fund-tabs/charts";
 import { RequestHarmoniousButton } from "@/components/fund-tabs/request-harmonious";
 import { fundEinFn } from "@/lib/fund-tabs.functions";
 import { FundChangeSummary } from "@/components/fund-change-summary";
+import { FUND_SUB_LABEL, FUND_TOP_TABS, normalizeFundTab, topTabFor } from "@/lib/fund-tab-map";
 
 const nice = (v: string | null | undefined) => (v ? v.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) : "");
 
@@ -68,7 +69,7 @@ export function EinField({ fundId }: { fundId: string }) {
   return <div><dt className="text-xs text-muted-foreground">EIN</dt><dd>{body}</dd></div>;
 }
 
-export const FUND_TABS = ["overview", "approvals", "requests", "calendar", "distributions", "services", "todos", "details", "team", "investors", "documents", "banking", "accounting", "assets", "closes", "regulatory", "audit"] as const;
+export const FUND_TABS = ["overview", "setup", "activity", "forecasts", "formation", "record", "approvals", "requests", "calendar", "distributions", "services", "todos", "details", "team", "investors", "documents", "banking", "accounting", "assets", "closes", "regulatory", "audit"] as const;
 export type FundTab = (typeof FUND_TABS)[number];
 type Tab = FundTab;
 export type FundWorkspaceMode = "client" | "harmonious";
@@ -87,67 +88,29 @@ const CLOSE_STATUS: Record<string, string> = {
   approved: "Approved: filings in progress",
 };
 
-/** Primary tabs, each owning a group of the original tab values (old addresses keep working). */
-const PRIMARY: { value: string; label: string; group: string[] }[] = [
-  { value: "overview", label: "Overview", group: ["overview"] },
-  { value: "approvals", label: "Approvals", group: ["approvals"] },
-  { value: "setup", label: "Fund Details", group: ["setup", "details", "team"] },
-  { value: "investors", label: "Investors", group: ["investors"] },
-  { value: "assets", label: "Asset Details", group: ["assets"] },
-  { value: "banking", label: "Banking", group: ["banking"] },
-  { value: "accounting", label: "Accounting", group: ["accounting", "closes", "distributions"] },
-  { value: "documents", label: "Documents", group: ["documents"] },
-  { value: "audit", label: "Audit History", group: ["audit"] },
-];
-const SUB_LABEL: Record<string, string> = { setup: "Checklist", details: "Fund details", team: "Team", banking: "Banking", accounting: "Accounting", assets: "Assets", closes: "Closes", distributions: "Distributions" };
-const SETUP_GROUP = ["setup", "details", "team", "banking"];
-const MERGED_SECTIONS = [{ id: "fs-setup", label: "Progress" }, { id: "fs-launch", label: "Launch status" }, { id: "setup-details", label: "Fund details" }, { id: "setup-economics", label: "Fees & terms" }, { id: "setup-documents", label: "Documents" }, { id: "fund-operations", label: "EIN, tax & sign-off" }, { id: "fs-team", label: "Team" }, { id: "fs-banking", label: "Banking" }];
-const MORE: { value: string; label: string }[] = [
-  { value: "todos", label: "To dos" }, { value: "requests", label: "Requests" },
-  { value: "calendar", label: "Calendar" }, { value: "regulatory", label: "Regulatory" }, { value: "services", label: "Services" },
-];
-
-export function FundTabBar({ fundId, mode, tab, onTab, extraTabs, todoCount }: { fundId: string; mode: FundWorkspaceMode; tab: string; onTab: (t: string) => void; extraTabs: ExtraTab[]; todoCount: number }) {
-  const hasSetup = extraTabs.some((x) => x.value === "setup");
-  const primary = PRIMARY
-    .map((p) => (p.value === "setup" && !hasSetup ? { ...p, value: "details", group: p.group.filter((g) => g !== "setup") } : p))
-    .map((p) => (p.value === "setup" && hasSetup ? { ...p, label: "Fund Setup" } : p));
-  const active = primary.find((p) => p.group.includes(tab));
-  const more = [...MORE, ...extraTabs.filter((x) => x.value !== "setup").map((x) => ({ value: x.value, label: x.label }))];
-  const moreActive = !active ? more.find((m) => m.value === tab) : undefined;
-  const label = (m: { value: string; label: string }) => (m.value === "todos" && todoCount ? `${m.label} (${todoCount})` : m.label);
-  const pill = (on: boolean) => cn("shrink-0 rounded-md border px-3.5 py-1.5 text-sm font-medium transition-colors", on ? "border-border bg-muted text-foreground" : "border-transparent text-muted-foreground hover:text-foreground");
+export function FundTabBar({ fundId, mode, tab, extraTabs }: { fundId: string; mode: FundWorkspaceMode; tab: string; extraTabs: ExtraTab[] }) {
+  // Eight top tabs; each sub-view is one more click. Sub-views only show when this fund has them.
+  const has = new Set<string>([...FUND_TABS, ...extraTabs.map((x) => x.value)]);
+  if (mode !== "harmonious") { has.delete("formation"); has.delete("record"); }
+  if (!extraTabs.some((x) => x.value === "forecasts")) has.delete("forecasts");
+  const active = topTabFor(tab);
+  const pill = (on: boolean) => cn("shrink-0 rounded-md border px-3.5 py-2 text-base font-medium transition-colors", on ? "border-border bg-muted text-foreground" : "border-transparent text-muted-foreground hover:text-foreground");
   const tabLink = (value: string, text: string, className: string, selected?: boolean) => mode === "harmonious"
     ? <Link to="/ops/fund/$fundId" params={{ fundId }} search={(prev) => ({ ...prev, tab: value })} resetScroll={false} role="tab" aria-selected={selected} className={className}>{text}</Link>
     : <Link to="/client/funds/$fundId" params={{ fundId }} search={(prev) => ({ ...prev, tab: value as FundTab })} resetScroll={false} role="tab" aria-selected={selected} className={className}>{text}</Link>;
+  const subs = active.group.filter((g) => has.has(g));
   return (
     <div id="fund-workspace-tabs" className="sticky top-0 z-20 space-y-2 bg-background pt-2">
-      {tab !== "approvals" && <div className="flex justify-end">
-        <Button size="sm" variant="outline" asChild>
-          {mode === "harmonious"
-            ? <Link to="/ops/fund/$fundId" params={{ fundId }} search={(prev) => ({ ...prev, tab: "approvals" })} resetScroll={false}><ClipboardCheck className="size-4" />Review approvals</Link>
-            : <Link to="/client/funds/$fundId" params={{ fundId }} search={(prev) => ({ ...prev, tab: "approvals" })} resetScroll={false}><ClipboardCheck className="size-4" />Review approvals</Link>}
-        </Button>
-      </div>}
       <div role="tablist" aria-label="Fund tabs" className="flex items-center gap-1 overflow-x-auto border-b pb-2">
-        {primary.map((p) => (
-          <span key={p.value} className="shrink-0">{tabLink(p.value, p.label, pill(active?.value === p.value), active?.value === p.value)}</span>
-        ))}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className={cn(pill(!!moreActive), "inline-flex h-auto items-center gap-1")}>{moreActive ? `More: ${label(moreActive)}` : todoCount ? `More (${todoCount})` : "More"}<ChevronDown className="h-3.5 w-3.5" /></Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {more.map((m) => <DropdownMenuItem key={m.value} asChild>{tabLink(m.value, label(m), "cursor-pointer")}</DropdownMenuItem>)}
-            <DropdownMenuSeparator />
-            {!hasSetup && ["details", "team", "banking"].map((v) => <DropdownMenuItem key={v} onSelect={() => onTab(v)}>{SUB_LABEL[v]}</DropdownMenuItem>)}
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {FUND_TOP_TABS.map((p) => {
+          const first = p.group.find((g) => has.has(g)) ?? p.value;
+          return <span key={p.value} className="shrink-0">{tabLink(first, p.label, pill(active.value === p.value), active.value === p.value)}</span>;
+        })}
       </div>
-      {active && active.group.length > 1 && !(hasSetup && active.value === "setup") && (
-        <div className="flex gap-1 overflow-x-auto">
-          {active.group.map((g) => (
-            <span key={g} className="shrink-0">{tabLink(g, SUB_LABEL[g] ?? g, cn("inline-flex rounded-md border px-3 py-1 text-xs transition-colors", tab === g ? "border-primary bg-primary text-primary-foreground" : "text-muted-foreground hover:border-primary hover:text-foreground"), tab === g)}</span>
+      {subs.length > 1 && (
+        <div className="flex gap-1 overflow-x-auto" aria-label={`${active.label} views`}>
+          {subs.map((g) => (
+            <span key={g} className="shrink-0">{tabLink(g, FUND_SUB_LABEL[g] ?? g, cn("inline-flex rounded-md border px-3 py-1.5 text-sm transition-colors", tab === g ? "border-primary bg-primary text-primary-foreground" : "text-muted-foreground hover:border-primary hover:text-foreground"), tab === g)}</span>
           ))}
         </div>
       )}
@@ -159,10 +122,11 @@ function Empty({ text }: { text: string }) {
   return <p className="py-6 text-center text-sm text-muted-foreground">{text}</p>;
 }
 
-export function FundWorkspace({ fundId, tab, onTab, mode = "client", extraTabs = [], headerExtra }: { fundId: string; tab: string; onTab: (t: string) => void; mode?: FundWorkspaceMode; extraTabs?: ExtraTab[]; headerExtra?: React.ReactNode }) {
+export function FundWorkspace({ fundId, tab: rawTab, onTab, mode = "client", extraTabs = [], headerExtra }: { fundId: string; tab: string; onTab: (t: string) => void; mode?: FundWorkspaceMode; extraTabs?: ExtraTab[]; headerExtra?: React.ReactNode }) {
   const forecastAccess = useForecastAccess({subjectType:"fund",subjectId:fundId});
   if (forecastAccess.data?.enabled) extraTabs = [...extraTabs, {value:"forecasts",label:"Forecasts",content:<ForecastWorkspace subjectType="fund" subjectId={fundId}/>}];
   const staff = mode === "harmonious";
+  const tab = normalizeFundTab(rawTab);
   const [closeOpen, setCloseOpen] = useState(false);
   const loadFund = useServerFn(getClientFund);
   const loadCap = useServerFn(getFundCapTable);
@@ -177,11 +141,6 @@ export function FundWorkspace({ fundId, tab, onTab, mode = "client", extraTabs =
 
   const isMerged = extraTabs.some((x) => x.value === "setup");
   const ready = !!fq.data;
-  useEffect(() => {
-    if (!isMerged || !ready || !["details", "team", "banking"].includes(tab)) return;
-    const t = setTimeout(() => document.getElementById(tab === "details" ? "setup-details" : `fs-${tab}`)?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
-    return () => clearTimeout(t);
-  }, [isMerged, ready, tab]);
   if (fq.isLoading) return <p className="text-sm text-muted-foreground">Loading fund…</p>;
   if (fq.error || !fq.data) return <p className="text-sm text-destructive">{(fq.error as any)?.message ?? "Couldn't load this fund."}</p>;
   const { setup, steps, sideLetters } = fq.data;
@@ -210,24 +169,6 @@ export function FundWorkspace({ fundId, tab, onTab, mode = "client", extraTabs =
 
           <FeesSection fundId={fundId} />
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Setup progress</CardTitle>
-              <CardDescription>{pending.length ? `${pending.length} step${pending.length === 1 ? "" : "s"} still open.` : steps.length ? "All setup steps are complete." : "Harmonious hasn't started setup for this fund yet."}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {setup.percent != null && <Progress value={setup.percent} />}
-              {mode === "harmonious" ? <p className="text-sm text-muted-foreground">Each step is listed and completed in its section on the <button type="button" className="underline" onClick={() => onTab?.("setup")}>Setup tab</button>.</p> : <div className="space-y-1.5">
-                {steps.map((s, i) => (
-                  <div key={i} className="flex items-center gap-3 text-sm">
-                    {s.done ? <CheckCircle2 className="size-4 text-primary" /> : <Clock className="size-4 text-muted-foreground" />}
-                    <span className={s.done ? "" : "text-muted-foreground"}>{s.label}</span>
-                    {!s.done && <Badge variant="outline" className="ml-auto">{s.status === "review" ? "Sent: Harmonious reviewing" : s.owner === "Harmonious" ? "Harmonious: pending" : "Waiting on you"}</Badge>}
-                  </div>
-                ))}
-              </div>}
-            </CardContent>
-          </Card>
   </>;
   const bankingBody = <>
           {!!td?.banks.length && (
@@ -262,13 +203,22 @@ export function FundWorkspace({ fundId, tab, onTab, mode = "client", extraTabs =
         </div>
       </div>
 
+      <Tabs value={tab} onValueChange={onTab}>
+        <FundTabBar fundId={fundId} mode={mode} tab={tab} extraTabs={extraTabs} />
+
+        {extraTabs.map((x) => x.value === "setup"
+          ? <TabsContent key="setup" value="setup" className="space-y-10">{x.content}<section className="space-y-4 border-t pt-6"><h2 className="font-heading text-xl font-semibold">Team and signers</h2><TeamTab fundId={fundId} /></section></TabsContent>
+          : <TabsContent key={x.value} value={x.value}>{x.content}</TabsContent>)}
+        {!merged && <TabsContent value="setup" className="space-y-5">{detailsBody}<section className="space-y-4 border-t pt-6"><h2 className="font-heading text-xl font-semibold">Team and signers</h2><TeamTab fundId={fundId} /></section></TabsContent>}
+        <TabsContent value="distributions"><FundDistributions fundId={fundId} mode={mode} /></TabsContent>
+        <TabsContent value="overview" className="space-y-5">
       <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {[
-          { l: "Setup complete", t: extraTabs.some((x) => x.value === "setup") ? "setup" : "details", v: setup.percent == null ? "-" : `${setup.percent}%` },
+          { l: "Setup complete", t: "setup", v: setup.percent == null ? "-" : `${setup.percent}%` },
           { l: "Investors", t: "investors", v: cap ? String(cap.totals.investors) : "-" },
           { l: "Committed", t: "investors", v: cap ? usd(cap.totals.commitCents) : "-" },
           { l: "Funded (reconciled)", t: "investors", v: cap ? usd(cap.totals.fundedCents) : "-" },
-          { l: "Open to dos", t: "todos", v: String(steps.filter((s) => s.owner === "You" && !s.done && s.status !== "review").length) },
+          { l: "Open to dos", t: "overview", v: String(steps.filter((s) => s.owner === "You" && !s.done && s.status !== "review").length) },
           { l: "Next deadline", t: "calendar", v: (() => { const n = nextDeadline((rq.data?.calendar ?? []) as any); return n ? `${n.date}` : "-"; })() },
         ].map((k) => (
           <button key={k.l} type="button" onClick={() => onTab(k.t)} className="group rounded-lg border bg-card p-4 text-left transition-colors hover:border-primary hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
@@ -279,30 +229,11 @@ export function FundWorkspace({ fundId, tab, onTab, mode = "client", extraTabs =
       </div>
 
       <FundChangeSummary fundId={fundId} onNavigate={onTab} />
-      <Tabs value={tab} onValueChange={onTab}>
-        <FundTabBar fundId={fundId} mode={mode} tab={tab} onTab={onTab} extraTabs={extraTabs} todoCount={steps.filter((s) => s.owner === "You" && !s.done && s.status !== "review" && !s.answer?.trim()).length} />
-
-        {extraTabs.map((x) => x.value === "setup" && merged ? (!SETUP_GROUP.includes(tab) ? null :
-          <TabsContent key="setup" value={tab}>
-            <div className="grid gap-6 lg:grid-cols-[11rem_minmax(0,1fr)]">
-              <nav aria-label="Setup sections" className="flex gap-1 overflow-x-auto lg:sticky lg:top-4 lg:h-fit lg:flex-col">
-                {MERGED_SECTIONS.map((m) => <button key={m.id} type="button" onClick={() => document.getElementById(m.id)?.scrollIntoView({ behavior: "smooth", block: "start" })} className="shrink-0 rounded-md px-3 py-1.5 text-left text-sm text-muted-foreground hover:bg-muted hover:text-foreground">{m.label}</button>)}
-              </nav>
-              <div className="min-w-0 space-y-10">
-                <section id="fs-setup" className="scroll-mt-4 space-y-4">{x.content}</section>
-                <section id="fs-team" className="scroll-mt-4 space-y-4 border-t pt-6"><h2 className="font-heading text-xl font-semibold">Team</h2><TeamTab fundId={fundId} /></section>
-                <section id="fs-banking" className="scroll-mt-4 space-y-5 border-t pt-6"><h2 className="font-heading text-xl font-semibold">Banking</h2>{bankingBody}</section>
-              </div>
-            </div>
-          </TabsContent>
-        ) : <TabsContent key={x.value} value={x.value}>{x.content}</TabsContent>)}
-        <TabsContent value="distributions"><FundDistributions fundId={fundId} mode={mode} /></TabsContent>
-        <TabsContent value="todos" className="space-y-4">
+          <FundChangeSummary fundId={fundId} onNavigate={onTab} />
+          {tab === "overview" && <FundCommandCenter fundId={fundId} onNavigate={(t) => onTab(t === "capital" ? "distributions" : t)} />}
           {staff && <HarmoniousTodos steps={steps as any} onSetup={() => onTab("setup")} />}
           <TodosTab fundId={fundId} steps={steps.filter((s) => s.owner === "You" && !s.done) as any} />
         </TabsContent>
-        {!merged && <TabsContent value="team"><TeamTab fundId={fundId} /></TabsContent>}
-        <TabsContent value="overview"><FundCommandCenter fundId={fundId} onNavigate={(t) => onTab(t === "capital" ? "distributions" : t)} /></TabsContent>
         <TabsContent value="calendar"><FundCalendar fundId={fundId} /></TabsContent>
         <TabsContent value="approvals">{tab === "approvals" && <FundApprovalsHub fundId={fundId} staff={staff} initial="approvals" />}</TabsContent>
         <TabsContent value="requests">{tab === "requests" && <FundApprovalsHub fundId={fundId} staff={staff} initial="requests" />}</TabsContent>
@@ -311,8 +242,7 @@ export function FundWorkspace({ fundId, tab, onTab, mode = "client", extraTabs =
         <TabsContent value="audit"><AuditHistoryTab fundId={fundId} /></TabsContent>
         <TabsContent value="regulatory"><RegulatoryTab fundId={fundId} /></TabsContent>
 
-        {!merged && <TabsContent value="details" className="space-y-5">{detailsBody}</TabsContent>}
-        {!merged && <TabsContent value="banking" className="space-y-5">{bankingBody}</TabsContent>}
+        <TabsContent value="banking" className="space-y-5">{bankingBody}</TabsContent>
 
         <TabsContent value="investors" className="space-y-4">{staff && migrationApplies(f.fund_origin) && <FundMigrationStatus fundId={fundId} />}{staff && migrationApplies(f.fund_origin) && <MigrationPaymentsCard fundId={fundId} />}<ManagerFundInvestors fundId={fundId} extraTabs={staff ? [{ value: "queue", label: "Work queue", content: <ReadinessQueue offeringId={fundId} initialTab="all" /> }] : undefined} /><CapitalTieReport offeringId={fundId} /></TabsContent>
 
