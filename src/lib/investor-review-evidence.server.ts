@@ -50,7 +50,7 @@ export async function investorReviewEvidence(db: any, userId: string, fundId: st
 
 const ACCREDITATION_STATUS: Record<string, string> = { approved: "Verified", pending: "Awaiting review", in_review: "Awaiting review", rejected: "Sent back", not_started: "Not started", expired: "Expired" };
 
-const UPLOAD_REVIEW_STATUS: Record<string, string> = { new: "Proof uploaded, awaiting review", in_review: "Proof uploaded, awaiting review", approved: "Proof approved", accepted: "Proof approved", rejected: "Proof sent back" };
+const UPLOAD_REVIEW_STATUS: Record<string, string> = { new: "Proof uploaded, awaiting review", in_review: "Proof uploaded, awaiting review", approved: "Proof approved", accepted: "Proof approved", needs_followup: "More proof requested", rejected: "Proof sent back" };
 
 /** Proof uploaded on the onboarding before an application exists; display-only, never an approval. */
 async function loadOnboardingProof(db: any, onboardingId: string) {
@@ -63,7 +63,7 @@ async function loadOnboardingProof(db: any, onboardingId: string) {
     regType: null as string | null, basis: null as string | null,
     status: UPLOAD_REVIEW_STATUS[rows[0].review_status] ?? "Proof uploaded, awaiting review",
     attestedAt: null as string | null, verifiedAt: null as string | null, expiresAt: null as string | null, relationship: null as string | null,
-    documents: rows.map((d) => ({ id: d.id as string, name: d.file_name as string, kind: String(d.doc_kind).replace(/_/g, " "), uploadedAt: d.uploaded_at as string })),
+    documents: rows.map((d) => ({ id: d.id as string, name: d.file_name as string, kind: String(d.doc_kind).replace(/_/g, " "), uploadedAt: d.uploaded_at as string, reviewable: (d.review_status ?? "new") === "new" })),
   };
 }
 

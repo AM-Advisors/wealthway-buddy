@@ -146,4 +146,13 @@ describe("subscription signed outside the platform", () => {
   it("never completes funding", () => {
     expect(item(computeReadiness(input({ outsideSubscription: { signedOn: "2026-09-01" } }, reqs({ sig: false }))), "funding").status).not.toBe("complete");
   });
+  it("counts the financial background and compliance answers in the signed agreement", () => {
+    const r = reqs({ sig: false }).map((x) => (x.key === "bsa_aml" || x.key === "bad_actor" ? { ...x, state: "missing" as const } : x));
+    const res = computeReadiness(input({ outsideSubscription: { signedOn: "2026-09-01" } }, r));
+    expect(item(res, "bsa_aml").status).toBe("complete");
+    expect(item(res, "bad_actor").status).toBe("complete");
+  });
+  it("still asks for a missing tax form", () => {
+    expect(item(computeReadiness(input({ outsideSubscription: { signedOn: "2026-09-01" } }, reqs({ sig: false, tax: "missing" }))), "tax_documentation").status).toBe("needs_investor");
+  });
 });

@@ -65,3 +65,13 @@ export const rerunAccreditationAiFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator(z.object({ documentId: z.string().uuid() }).parse)
   .handler(async ({ data, context }) => (await import("@/lib/accreditation-review.server")).rerunAiCheck(context.userId, data.documentId));
+
+export const onboardingProofUrlFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator(z.object({ documentId: z.string().uuid() }).parse)
+  .handler(async ({ data, context }) => (await import("@/lib/accreditation-review.server")).onboardingProofUrl(context.userId, data.documentId));
+
+export const decideOnboardingProofFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator(z.object({ documentId: z.string().uuid(), decision: z.enum(["approved", "more_needed"]), notes: z.string().trim().max(600).default("") }).parse)
+  .handler(async ({ data, context }) => (await import("@/lib/accreditation-review.server")).decideOnboardingProof(context.userId, data));
