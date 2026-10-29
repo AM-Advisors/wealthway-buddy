@@ -381,8 +381,19 @@ function Verify({ d, onboardingId }: { d: any; onboardingId: string }) {
               </>
             ) : (
               <>
-                {status === "action_required" ? (
-                  <p className="text-sm">Part of your verification needs to be completed or renewed.</p>
+                {status === "action_required" && open.length > 0 ? (
+                  <div className="space-y-2 rounded-md border p-3">
+                    <p className="text-sm font-medium">Here's what's left, and how to fix it:</p>
+                    <ul className="space-y-2 text-sm">
+                      {open.map((r) => (
+                        <li key={r.key}>
+                          <span className="font-medium">{VERIFY_HELP[r.key]?.title ?? "Verification"}</span>
+                          <span className="block text-muted-foreground">{VERIFY_HELP[r.key]?.fix ?? "Start verification again and follow the steps."}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <p className="text-xs text-muted-foreground">Tips: use good light, a valid ID that isn't expired, and make sure your name matches your ID. Still stuck? Reply to your invitation email and the fund team will help.</p>
+                  </div>
                 ) : null}
                 <Button onClick={() => start.mutate()} disabled={start.isPending}>
                   {start.isPending ? "Opening…" : "Start Verification"}
