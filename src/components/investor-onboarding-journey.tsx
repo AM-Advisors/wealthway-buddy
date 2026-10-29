@@ -381,8 +381,19 @@ function Verify({ d, onboardingId }: { d: any; onboardingId: string }) {
               </>
             ) : (
               <>
-                {status === "action_required" ? (
-                  <p className="text-sm">Part of your verification needs to be completed or renewed.</p>
+                {status === "action_required" && open.length > 0 ? (
+                  <div className="space-y-2 rounded-md border p-3">
+                    <p className="text-sm font-medium">Here's what's left, and how to fix it:</p>
+                    <ul className="space-y-2 text-sm">
+                      {open.map((r) => (
+                        <li key={r.key}>
+                          <span className="font-medium">{VERIFY_HELP[r.key]?.title ?? "Verification"}</span>
+                          <span className="block text-muted-foreground">{VERIFY_HELP[r.key]?.fix ?? "Start verification again and follow the steps."}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <p className="text-xs text-muted-foreground">Tips: use good light, a valid ID that isn't expired, and make sure your name matches your ID. Still stuck? Reply to your invitation email and the fund team will help.</p>
+                  </div>
                 ) : null}
                 <Button onClick={() => start.mutate()} disabled={start.isPending}>
                   {start.isPending ? "Opening…" : "Start Verification"}
@@ -971,3 +982,11 @@ function FundingLedger({ onboardingId }: { onboardingId: string }) {
     </div>
   );
 }
+
+const VERIFY_HELP: Record<string, { title: string; fix: string }> = {
+  identity_verification: { title: "ID check", fix: "Tap Start Verification and retake photos of your ID and a selfie. Your ID must be unexpired and fully in frame." },
+  entity_verification: { title: "Entity check", fix: "Tap Start Verification and upload your entity's formation documents and the people who own or control it." },
+  aml: { title: "Compliance screening", fix: "Nothing for you to do right now. The fund team is reviewing it and will contact you if anything is needed." },
+  eligibility: { title: "Eligibility", fix: "Tap Start Verification to confirm your country and investor details." },
+  accreditation: { title: "Accredited investor proof", fix: "After verification, confirm accreditation and upload proof. You can keep signing while it's reviewed." },
+};
