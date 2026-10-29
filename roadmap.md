@@ -851,3 +851,11 @@
 - [ ] Approvals list and funding readiness wording aligned to the same checklist.
 - [ ] One approvals inbox across funds with approve-from-list and plain-language items.
 - [ ] Accreditation approval for investors whose proof was uploaded before an application exists (e.g. Doug).
+
+## Simplify investor onboarding and fund setup (Oct 29)
+- [x] Investor page: one step list, only Overview/Documents until close
+- [ ] Investor: one question per screen group, hide non-applicable, skip already-answered
+- [ ] Investor: clearer verification retry/help
+- [ ] Investor: sign all documents in one pass; funding instructions on one screen
+- [ ] Fund setup: guided wizard (Basics → Fees & terms → Documents & questions → Banking → Review & approve), advanced hidden
+- [ ] Fund setup: one approvals list at the end
