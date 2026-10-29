@@ -442,53 +442,81 @@ function QuestionnaireForm({ d, done, locked, onSave, saving }: { d: any; onboar
   const visible = questions.filter((q) => !isAccreditationQuestion(q.key) && questionVisible(q, answers));
   const missing = visible.filter((q) => q.required && !q.satisfiedBy && !String(answers[q.key] ?? "").trim());
   const set = (k: string, v: string) => { dirty.current.add(k); setAnswers((a) => ({ ...a, [k]: v })); };
+  // Answers we already have (verified records, earlier funds, saved progress) sit in one
+  // collapsed list to check; the rest are asked a few at a time. Fixed at first render so
+  // questions don't jump while the investor types.
+  const [prefilled] = useState(() => new Set(questions.filter((q) => q.locked || q.satisfiedBy || String(answers[q.key] ?? "").trim()).map((q) => q.key)));
+  const toAsk = visible.filter((q) => !prefilled.has(q.key));
+  const known = visible.filter((q) => prefilled.has(q.key));
+  const PAGE = 5;
+  const pages = Math.max(1, Math.ceil(toAsk.length / PAGE));
+  const [page, setPage] = useState(0);
+  const pg = Math.min(page, pages - 1);
+  const pageQs = toAsk.slice(pg * PAGE, pg * PAGE + PAGE);
+  const pageMissing = pageQs.filter((q) => q.required && !q.satisfiedBy && !String(answers[q.key] ?? "").trim());
+  const [showKnown, setShowKnown] = useState(false);
+  const renderQ = (q: any) => (
+    <div key={q.key} className="space-y-1.5">
+      <Label htmlFor={q.key} className="leading-snug">{q.label}{q.required && !q.satisfiedBy ? " *" : ""}</Label>
+      {q.locked ? (
+        <div id={q.key} className="rounded-md border bg-muted px-3 py-2 text-sm">
+          {lockedVals[q.key] || answers[q.key] || <span className="text-muted-foreground">Fills in after Verification</span>}
+        </div>
+      ) : q.type === "document" ? (
+        q.satisfiedBy ? <p className="text-sm text-muted-foreground">{q.satisfiedBy}</p> : (
+          <QuestionUpload fundId={d.offering?.id ?? null} value={answers[q.key] ?? ""} onUploaded={(id) => set(q.key, id)} />
+        )
+      ) : q.type === "yes_no" ? (
+        <div id={q.key} className="flex gap-2">
+          {["Yes", "No"].map((o) => <Button key={o} type="button" size="sm" variant={answers[q.key] === o ? "default" : "outline"} onClick={() => set(q.key, o)}>{o}</Button>)}
+        </div>
+      ) : q.type === "select" ? (
+        <Select value={answers[q.key] ?? ""} onValueChange={(v) => set(q.key, v)}>
+          <SelectTrigger id={q.key}><SelectValue placeholder="Choose one" /></SelectTrigger>
+          <SelectContent>{(q.options ?? []).map((o: string) => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
+        </Select>
+      ) : q.type === "number" || q.type === "currency" ? (
+        <Input id={q.key} inputMode="decimal" value={answers[q.key] ?? ""} onChange={(e) => set(q.key, e.target.value)} />
+      ) : q.type === "date" ? (
+        <Input id={q.key} type="date" value={answers[q.key] ?? ""} onChange={(e) => set(q.key, e.target.value)} />
+      ) : (
+        <Input id={q.key} value={answers[q.key] ?? ""} onChange={(e) => set(q.key, e.target.value)} />
+      )}
+    </div>
+  );
+  const last = pg >= pages - 1;
   return (
     <div className="space-y-4 rounded-md border p-4">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-sm font-medium">Investor questionnaire</p>
-          <p className="text-xs text-muted-foreground">{done ? "Your answers are saved." : `${visible.length - missing.length} of ${visible.length} answered. Questions marked * are required. Locked answers come from your Verification and commitment.`}</p>
+          <p className="text-xs text-muted-foreground">{done ? "Your answers are saved." : toAsk.length ? `${toAsk.length} question${toAsk.length === 1 ? "" : "s"} to answer · page ${pg + 1} of ${pages}` : "Everything is filled in. Check it and submit."}</p>
         </div>
         {done && !locked ? <Button variant="outline" size="sm" onClick={() => setOpen((o) => !o)}>{open ? "Close" : "Review answers"}</Button> : done ? <Badge>Complete</Badge> : null}
       </div>
       {open ? (
         <fieldset disabled={locked} className="space-y-4">
-          {questions.map((q, n) => isAccreditationQuestion(q.key) || !questionVisible(q, answers) ? null : (
-            <div key={q.key} className="space-y-1.5">
-              {q.key === d.questionnaire.sectionStartKey && d.questionnaire.sectionTitle && (
-                <div className="border-t pt-4"><p className="font-heading text-sm font-semibold">{d.questionnaire.sectionTitle}</p><p className="text-xs text-muted-foreground">Questions from this fund's subscription agreement that weren't asked above.</p></div>
-              )}
-              <Label htmlFor={q.key} className="leading-snug">{n + 1}. {q.label}{q.required && !q.satisfiedBy ? " *" : ""}</Label>
-              {q.locked ? (
-                <div id={q.key} className="rounded-md border bg-muted px-3 py-2 text-sm">
-                  {lockedVals[q.key] || answers[q.key] || <span className="text-muted-foreground">Fills in after Verification</span>}
-                </div>
-              ) : q.type === "document" ? (
-                q.satisfiedBy ? <p className="text-sm text-muted-foreground">{q.satisfiedBy}</p> : (
-                  <QuestionUpload fundId={d.offering?.id ?? null} value={answers[q.key] ?? ""} onUploaded={(id) => set(q.key, id)} />
-                )
-              ) : q.type === "select" || q.type === "yes_no" ? (
-                <Select value={answers[q.key] ?? ""} onValueChange={(v) => set(q.key, v)}>
-                  <SelectTrigger id={q.key}><SelectValue placeholder="Choose one" /></SelectTrigger>
-                  <SelectContent>{(q.type === "yes_no" ? ["Yes", "No"] : (q.options ?? [])).map((o: string) => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
-                </Select>
-              ) : q.type === "number" || q.type === "currency" ? (
-                <Input id={q.key} inputMode="decimal" value={answers[q.key] ?? ""} onChange={(e) => set(q.key, e.target.value)} />
-              ) : q.type === "date" ? (
-                <Input id={q.key} type="date" value={answers[q.key] ?? ""} onChange={(e) => set(q.key, e.target.value)} />
-              ) : (
-                <Input id={q.key} value={answers[q.key] ?? ""} onChange={(e) => set(q.key, e.target.value)} />
-              )}
+          {known.length > 0 && (
+            <div className="rounded-md border bg-muted/40 p-3">
+              <button type="button" className="flex w-full items-center justify-between text-left text-sm font-medium" onClick={() => setShowKnown((v) => !v)}>
+                <span>We already filled in {known.length} answer{known.length === 1 ? "" : "s"}</span>
+                <span className="text-xs text-muted-foreground">{showKnown ? "Hide" : "Check them"}</span>
+              </button>
+              {showKnown && <div className="mt-3 space-y-4">{known.map(renderQ)}</div>}
             </div>
-          ))}
+          )}
+          {pageQs.map(renderQ)}
           {highRiskYes(questions, answers).length > 0 ? (
             <div role="status" className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm">{HIGH_RISK_REVIEW_MESSAGE}</div>
           ) : null}
           <p className="text-xs text-muted-foreground">Don't enter your tax ID or bank account numbers here. Harmonious asks for them in separate, protected steps.</p>
           {!locked ? (
             <div className="flex flex-wrap gap-2">
-              <Button disabled={saving || missing.length > 0} onClick={() => onSave(answers, true)}>{done ? "Save changes" : "Submit answers"}</Button>
-              <Button variant="outline" disabled={saving} onClick={() => onSave(answers, false)}>Save for later</Button>
+              {pg > 0 && <Button variant="outline" onClick={() => setPage(pg - 1)}>Back</Button>}
+              {last
+                ? <Button disabled={saving || missing.length > 0} onClick={() => onSave(answers, true)}>{done ? "Save changes" : "Submit answers"}</Button>
+                : <Button disabled={saving || pageMissing.length > 0} onClick={() => { onSave(answers, false); setPage(pg + 1); }}>Next</Button>}
+              {last && missing.length > 0 && <p className="w-full text-xs text-muted-foreground">Still needed: {missing.length} answer{missing.length === 1 ? "" : "s"}{missing.some((q) => prefilled.has(q.key)) ? " in the filled-in list above" : ""}.</p>}
             </div>
           ) : null}
         </fieldset>
