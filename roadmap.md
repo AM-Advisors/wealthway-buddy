@@ -1,5 +1,11 @@
 # Roadmap
 
+## Investor onboarding simplification (2026-10-29)
+- [x] One plain-language identity + screening line on fund rosters and investor detail badges; raw KYC/AML values and duplicated prefixes removed.
+- [x] Saved wire details (sending bank, sender name) prefill future wire confirmations and the funding-bank questionnaire questions.
+- [x] One cross-investor to-do list on the manager fund page linking uploaded documents, accreditation, subscription approvals, countersignatures, verification and questionnaire work; exact-fund authorization retained.
+- [x] 41 focused tests pass. Durable authenticated read-back blocked on independently isolated QA.
+
 ## Manager-approved wire instructions
 - [x] Confirmed canonical manager approval already opens investor wire access before final admission; made Approve to send funds explicit with confirmation/undo and a clear investor Next button.
 - [x] Bank-read errors now surface with retry; wire-sent reporting appears only after instructions load. 78 tests passed; preview build OK. No approvals, bank changes or wires performed.
