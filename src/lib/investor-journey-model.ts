@@ -25,6 +25,14 @@ export const JOURNEY_STEP_LABELS: Record<JourneyStep, string> = {
   fund: "Fund",
 };
 
+/** Target investor minutes per step (fund documents excluded); the whole flow aims for 10. */
+export const STEP_MINUTES: Record<JourneyStep, number> = { about: 2, verify: 3, sign: 4, fund: 1 };
+
+/** Minutes left across steps the investor still has to act on. */
+export function minutesLeft(steps: { key: JourneyStep; state: StepState }[]): number {
+  return steps.filter((s) => s.state === "action_required" || s.state === "locked").reduce((n, s) => n + STEP_MINUTES[s.key], 0);
+}
+
 /** Which internal requirements sit underneath each investor-facing step. */
 export const STEP_REQUIREMENTS: Record<JourneyStep, readonly RequirementKey[]> = {
   about: ["account", "investment_profile", "beneficial_owners", "investment_amount"],
