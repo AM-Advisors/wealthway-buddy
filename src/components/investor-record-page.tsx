@@ -1,5 +1,4 @@
 import { InvestorVerificationCard } from "@/components/investor-verification-card";
-import { PersonalInvestmentLinkCard } from "@/components/personal-investment-link";
 import { InvestorReviewPanel } from "@/components/fund-tabs/investors-tab";
 import { UploadForInvestor } from "@/components/upload-for-investor";
 import { InvestorStepHistory } from "@/components/investor-step-history";
@@ -12,10 +11,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { investorRecordDetailFn, resolveSuggestionFn, updateInvestorRecordFn } from "@/lib/investor-record.functions";
-import { listInvestorSideLetters } from "@/lib/side-letters.functions";
-import { TERM_CATEGORIES, MFN_SCOPES } from "@/lib/side-letter-model";
 import { CLAIM_STATE_LABELS, SOURCE_LABELS, type EntrySource } from "@/lib/investor-record-model";
-import { money, prettyStatus } from "@/lib/status";
+import { prettyStatus } from "@/lib/status";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,18 +22,26 @@ import { Textarea } from "@/components/ui/textarea";
 
 export const INVESTOR_RECORD_TABS = ["overview", "investment", "profile", "onboarding", "readiness", "documents", "activity", "history"] as const;
 export type InvestorRecordTab = (typeof INVESTOR_RECORD_TABS)[number];
+/** Four visible tabs; older links to merged tabs still land in the right place. */
+const VISIBLE_TABS = ["overview", "details", "documents", "activity"] as const;
+type VisibleTab = (typeof VISIBLE_TABS)[number];
+const TAB_LABEL: Record<VisibleTab, string> = { overview: "Overview", details: "Details", documents: "Documents", activity: "Activity" };
+function visibleTab(t?: InvestorRecordTab): VisibleTab {
+  if (t === "investment" || t === "profile") return "details";
+  if (t === "documents") return "documents";
+  if (t === "activity" || t === "history") return "activity";
+  return "overview";
+}
 
 export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: string; onboardingId: string; initial?: InvestorRecordTab | undefined }) {
   // Staff open records on the Operations address; links stay there so the sign-in is kept.
   const onOps = useRouterState({ select: (st) => st.location.pathname.startsWith("/ops") });
-  const [tab, setTab] = useState<InvestorRecordTab>(initial ?? "overview");
+  const [tab, setTab] = useState<VisibleTab>(visibleTab(initial));
   const load = useServerFn(investorRecordDetailFn);
   const update = useServerFn(updateInvestorRecordFn);
   const resolve = useServerFn(resolveSuggestionFn);
   const qc = useQueryClient();
   const { data, isLoading, error } = useQuery({ queryKey: ["investor-record", onboardingId], queryFn: () => load({ data: { onboardingId } }) });
-  const loadSideLetters = useServerFn(listInvestorSideLetters);
-  const { data: sideLetters } = useQuery({ queryKey: ["investor-side-letters", onboardingId], queryFn: () => loadSideLetters({ data: { fundId, onboardingId } }) });
   const [edit, setEdit] = useState<Record<string, string>>({});
   const set = (k: string) => (e: { target: { value: string } }) => setEdit((s) => ({ ...s, [k]: e.target.value }));
   const refresh = () => { qc.invalidateQueries({ queryKey: ["investor-record", onboardingId] }); qc.invalidateQueries({ queryKey: ["fund-investor-records", fundId] }); };
@@ -67,47 +72,15 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
         <div className="flex flex-wrap gap-2">
           {staff && data.overview.investorUserId ? <Button asChild size="sm" variant="outline"><Link to="/ops/investors/$investorId" params={{ investorId: data.overview.investorUserId }} search={{ tab: undefined }}>Open Investor 360</Link></Button> : null}
           {data.overview.removed ? <Badge variant="destructive">Removed from Fund</Badge> : null}
-          <Badge variant={data.claimState === "prepared" ? "outline" : "secondary"}>{CLAIM_STATE_LABELS[data.claimState]}</Badge>
+          {data.claimState === "prepared" ? <Badge variant="outline">{CLAIM_STATE_LABELS[data.claimState]}</Badge> : null}
           {data.pendingReviewCount ? <Badge variant="secondary">{data.pendingReviewCount} awaiting Harmonious review</Badge> : null}
         </div>
       </div>
-      <div className="flex gap-1 overflow-x-auto border-b pb-1">{INVESTOR_RECORD_TABS.map((t) => <Button key={t} size="sm" variant={t === tab ? "default" : "ghost"} className="shrink-0" onClick={() => setTab(t)}>{prettyStatus(t)}</Button>)}</div>
+      <div className="flex gap-1 overflow-x-auto border-b pb-1">{VISIBLE_TABS.map((t) => <Button key={t} size="sm" variant={t === tab ? "default" : "ghost"} className="shrink-0" onClick={() => setTab(t)}>{TAB_LABEL[t]}</Button>)}</div>
 
-      {tab === "history" ? <InvestorStepHistory offeringId={fundId} onboardingId={onboardingId} /> : null}
+      
       {tab === "overview" ? <div className="grid gap-4 md:grid-cols-2">
         <Card className="md:col-span-2"><CardHeader><CardTitle className="text-base">Status, review & actions</CardTitle></CardHeader><CardContent><InvestorReviewPanel fundId={fundId} id={onboardingId} embedded /></CardContent></Card>
-        {staff && data.overview.investorUserId ? <div className="md:col-span-2"><InvestorVerificationCard investorUserId={data.overview.investorUserId} /></div> : null}
-        <Card><CardHeader><CardTitle className="text-base">Investment</CardTitle></CardHeader><CardContent className="space-y-1 text-sm">
-          <p>Amount: {money(inv.amountCents)}</p><p>Commitment: {money(inv.commitmentCents)}</p>{staff ? <p>Accepted: {money(inv.acceptedCents)}</p> : null}<p>Funded: {money(inv.fundedCents)}</p></CardContent></Card>
-        <PersonalInvestmentLinkCard onboardingId={onboardingId} />
-        <Card className="md:col-span-2"><CardHeader><CardTitle className="text-base">Side letter</CardTitle></CardHeader><CardContent className="space-y-3 text-sm">
-          {sideLetters === undefined ? <p className="text-muted-foreground">Loading side letters…</p>
-            : sideLetters.length === 0 ? <p className="text-muted-foreground">No side letter for this investor. Use “Edit investor fees & minimum” below to propose this investor's own terms.</p>
-            : sideLetters.map((l) => <div key={l.id} className="space-y-1 rounded-md border p-3">
-              <div className="flex flex-wrap items-center gap-2">
-                <Badge variant={l.status === "active" ? "default" : "outline"}>{prettyStatus(l.status)}</Badge>
-                <span className="text-muted-foreground">Version {l.version}</span>
-                {l.expiry === "expired" ? <Badge variant="destructive">Expired</Badge> : l.expiry === "expiring" ? <Badge variant="secondary">Expiring soon</Badge> : null}
-                {l.snapshot.mfnEnabled ? <Badge variant="secondary">MFN · {MFN_SCOPES.find((s) => s.key === l.snapshot.mfnScope)?.label ?? "Most favoured nation"}</Badge> : null}
-              </div>
-              <p className="text-muted-foreground">
-                {l.snapshot.effectiveDate ? `Effective ${l.snapshot.effectiveDate}` : "No effective date"}
-                {l.snapshot.expiryDate ? ` · expires ${l.snapshot.expiryDate}` : ""}
-                {l.snapshot.documentReference ? ` · ${l.snapshot.documentReference}` : ""}
-              </p>
-              {l.snapshot.terms.length ? <ul className="list-disc space-y-1 pl-5">
-                {l.snapshot.terms.map((t) => <li key={t.id}>
-                  <span className="font-medium">{TERM_CATEGORIES.find((c) => c.key === t.category)?.label ?? prettyStatus(t.category)}</span>
-                  {t.value ? ` · ${t.value}` : ""}: {t.description}
-                  {t.applicability ? <span className="text-muted-foreground"> ({t.applicability})</span> : null}
-                </li>)}
-              </ul> : <p className="text-muted-foreground">No terms recorded.</p>}
-            </div>)}
-          <Link to={onOps ? "/ops/fund/$fundId" : "/manager/fund/$fundId/side-letters"} params={{ fundId }} className="inline-block text-primary hover:underline">Open Fund side letters</Link>
-        </CardContent></Card>
-        <Card><CardHeader><CardTitle className="text-base">Readiness</CardTitle></CardHeader><CardContent className="space-y-1 text-sm">
-          <p className="font-medium">{data.readiness.label}</p>{data.readiness.nextAction ? <p className="text-muted-foreground">Next: {data.readiness.nextAction}</p> : null}
-          <p className="text-muted-foreground">{p?.verificationLabel}</p></CardContent></Card>
         {staff && data.suggestions.length ? <Card className="md:col-span-2"><CardHeader><CardTitle className="text-base">Information conflicts & suggested updates</CardTitle></CardHeader><CardContent className="divide-y">
           {data.suggestions.map((s) => <div key={s.id} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm">
             <div><p className="font-medium">{prettyStatus(s.field)}</p><p className="text-muted-foreground">Harmonious record: {JSON.stringify(s.current)} · {SOURCE_LABELS[s.source as EntrySource] ?? s.source}: {JSON.stringify(s.proposed)}{s.status === "review_later" ? " · marked for later" : ""}</p></div>
@@ -115,7 +88,7 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
           </div>)}</CardContent></Card> : null}
       </div> : null}
 
-      {tab === "investment" ? <Card><CardContent className="grid gap-3 pt-6 sm:grid-cols-2">
+      {tab === "details" ? <Card><CardContent className="grid gap-3 pt-6 sm:grid-cols-2">
         {field("amount", "Investment amount (USD)", inv.amountCents ? inv.amountCents / 100 : "")}
         {field("commitment", "Commitment amount (USD)", inv.commitmentCents ? inv.commitmentCents / 100 : "")}
         {staff ? field("accepted", "Accepted amount (USD)", inv.acceptedCents ? inv.acceptedCents / 100 : "") : null}
@@ -131,7 +104,8 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
         } })}>{data.detailsEditMode === "suggest" ? "Submit investment changes" : "Save investment"}</Button>
       </CardContent></Card> : null}
 
-      {tab === "profile" ? <div className="space-y-4">
+      {tab === "details" ? <div className="space-y-4">
+        {staff && data.overview.investorUserId ? <InvestorVerificationCard investorUserId={data.overview.investorUserId} /> : null}
         <Card><CardHeader><CardTitle className="text-base">Contact</CardTitle>
           {data.contactEditMode === "suggest" ? <p className="text-sm text-muted-foreground">Changes need review because signing or funding has started, or this contact is shared with another investment.</p>
             : data.claimState === "prepared" ? <p className="text-sm text-muted-foreground">Prepared record: entered by {SOURCE_LABELS[data.overview.enteredBy as EntrySource] ?? "the Fund team"}, not by the investor. Nobody has access to it until the investor signs in with this email, and they'll be asked to confirm it.</p> : null}
@@ -157,45 +131,11 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
         {!data.overview.removed ? <DistributionBankCard onboardingId={onboardingId} hasAccount={Boolean((data as any).investorHasAccount)} /> : null}
       </div> : null}
 
-      {tab === "onboarding" ? <QuestionnaireCard q={(data as any).questionnaire} /> : null}
-      {tab === "onboarding" ? <Card><CardContent className="space-y-1 pt-6 text-sm"><p>Stage: {prettyStatus(data.overview.stage)}</p><p>{p?.hasAccount ? "The investor has signed in." : "The investor hasn't signed in yet. When they sign in with this email or use the Fund's onboarding link, they continue this same investment."}</p><p>{data.overview.investorConfirmedAt ? "The investor confirmed the prepared information." : "Investor confirmation of prepared information is pending."}</p></CardContent></Card> : null}
-
-      {tab === "readiness" ? <Card><CardHeader><CardTitle className="text-base">{data.readiness.label}</CardTitle></CardHeader><CardContent><ul className="divide-y text-sm">{data.readiness.stages.map((s: any) => <li key={s.key} className="flex justify-between py-2"><span>{s.label}</span><span className="text-muted-foreground">{prettyStatus(s.status)}</span></li>)}</ul>
-        <Link to={onOps ? "/ops/fund/$fundId" : "/manager/fund/$fundId/investors"} params={{ fundId }} className="mt-3 inline-block text-sm text-primary hover:underline">Open Fund readiness</Link></CardContent></Card> : null}
-
       {tab === "documents" ? <div className="space-y-4">{!data.overview.removed ? <UploadForInvestor onboardingId={onboardingId} /> : null}{staff ? <InvestorDocumentAi onboardingId={onboardingId} /> : null}<InvestorRecordDocuments offeringId={fundId} onboardingId={onboardingId} /><Card><CardContent className="pt-6 text-sm text-muted-foreground">Values read from imported documents show up as suggested updates for Harmonious to review; they never overwrite this record automatically.
         <div className="mt-2"><Link to={onOps ? "/ops/fund/$fundId" : "/manager/fund/$fundId/documents"} params={{ fundId }} className="text-primary hover:underline">Open Fund documents</Link></div></CardContent></Card></div> : null}
 
+      {tab === "activity" ? <InvestorStepHistory offeringId={fundId} onboardingId={onboardingId} /> : null}
       {tab === "activity" ? <Card><CardContent className="pt-6">{data.activity.length ? <ul className="divide-y text-sm">{data.activity.map((a: any, i: number) => <li key={i} className="py-2"><p>{a.label}</p><p className="text-xs text-muted-foreground">{new Date(a.at).toLocaleString()} · {a.source}{a.field ? ` · ${a.field}: ${JSON.stringify(a.from)} → ${JSON.stringify(a.to)}` : ""}</p></li>)}</ul> : <p className="text-sm text-muted-foreground">No activity yet.</p>}</CardContent></Card> : null}
     </section>
-  );
-}
-
-function QuestionnaireCard({ q }: { q: { items: { key: string; label: string; answer: string | null }[]; source: string | null; submittedAt: string | null; diditSession: string | null } | undefined }) {
-  if (!q || !q.items.length) return <Card><CardHeader><CardTitle className="text-base">Investor questionnaire</CardTitle></CardHeader><CardContent className="text-sm text-muted-foreground">This Fund has no questionnaire yet.</CardContent></Card>;
-  const answered = q.items.filter((i) => i.answer).length;
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Investor questionnaire</CardTitle>
-        <p className="text-xs text-muted-foreground">
-          {answered} of {q.items.length} answered
-          {q.source ? ` · ${q.source === "didit" ? "Answered during identity verification" : "Answered in Harmonious"}` : ""}
-          {q.submittedAt ? ` · ${new Date(q.submittedAt).toLocaleDateString()}` : ""}
-          {q.diditSession ? ` · Verification ref ${q.diditSession}` : " · No verification linked"}
-        </p>
-      </CardHeader>
-      <CardContent>
-        <dl className="divide-y text-sm">
-          {q.items.map((i) => (
-            <div key={i.key} className="grid gap-1 py-2 sm:grid-cols-3">
-              <dt className="text-muted-foreground sm:col-span-2">{i.label}</dt>
-              <dd>{i.answer ?? <span className="text-muted-foreground">Not answered</span>}</dd>
-            </div>
-          ))}
-        </dl>
-        <p className="mt-3 text-xs text-muted-foreground">Tax IDs and bank account details are never shown here; they are kept in their own protected steps.</p>
-      </CardContent>
-    </Card>
   );
 }
