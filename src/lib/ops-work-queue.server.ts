@@ -1,3 +1,4 @@
+import { STALL_DAYS, isStalled, waitingLabel } from "@/lib/stalled-items";
 import { canonicalizeApplications } from "@/lib/verification-status";
 /**
  * Server side of the Operations work queue (server-only module).
@@ -1151,11 +1152,20 @@ async function fundRequestItems(s: any, lookup: Lookup, now: Date) {
 async function fundSetupDraftItems(s: any, lookup: Lookup, now: Date) {
   const econ = (await safely(async () => rows(await s.from("fund_economics_versions").select("id, setup_id, version, updated_at, created_at, fund_setups!inner(offering_id)").eq("status", "draft").limit(SOURCE_LIMIT)))) as any[];
   const qs = (await safely(async () => rows(await s.from("fund_questionnaire_sections").select("id, offering_id, version, created_at").eq("status", "draft").limit(SOURCE_LIMIT)))) as any[];
-  const item = (id: string, fundId: string, title: string, reason: string, at: string | null) =>
-    build(lookup, now, { id, source: "funds.setup_draft", area: "funds", recordType: "fund", recordId: fundId, recordTab: "setup", title, reason, workflowState: "draft", requiredAction: "approve", fundId, dueDate: null, at } as any);
+  const item = (id: string, fundId: string, title: string, reason: string, at: string | null, stall: number = STALL_DAYS.setupDraft, source = "funds.setup_draft", state = "draft") => {
+    const stalled = isStalled(at, now, stall);
+    return build(lookup, now, { id, source, area: "funds", recordType: "fund", recordId: fundId, recordTab: "setup", title: stalled ? `Stalled · ${title}` : title, reason: `${reason}. ${waitingLabel(at, now)}.`, workflowState: stalled ? "stalled" : state, requiredAction: "approve", fundId, dueDate: null, at } as any);
+  };
+  // Manager-owned launch and signer work, shown only once it has stalled.
+  const ready = (await safely(async () => rows(await s.from("fund_setups").select("id, offering_id, launch_state, launch_approved_at, updated_at").eq("launch_state", "ready").is("launched_at", null).limit(SOURCE_LIMIT)))) as any[];
+  const signers = (await safely(async () => rows(await s.from("fund_signatories").select("id, offering_id, added_at, persons(kyc_status)").eq("status", "active").limit(SOURCE_LIMIT)))) as any[];
   return [
     ...econ.map((v) => item(`fund-economics:${v.id}`, v.fund_setups?.offering_id, "Fees & terms draft", `Version ${v.version} is waiting for approval`, v.updated_at ?? v.created_at ?? null)),
     ...qs.map((v) => item(`fund-questions:${v.id}`, v.offering_id, "Extra fund questions draft", `Version ${v.version} is waiting for approval`, v.updated_at ?? v.created_at ?? null)),
+    ...ready.filter((r) => isStalled(r.launch_approved_at ?? r.updated_at, now, STALL_DAYS.launchReady))
+      .map((r) => item(`fund-launch:${r.id}`, r.offering_id, "Ready to launch, not launched", "Setup is complete but the fund has not been launched", r.launch_approved_at ?? r.updated_at, STALL_DAYS.launchReady, "funds.launch_stalled", "ready")),
+    ...signers.filter((g) => g.persons?.kyc_status !== "approved" && isStalled(g.added_at, now, STALL_DAYS.signerCheck))
+      .map((g) => item(`fund-signer:${g.id}`, g.offering_id, "Signer ID check not finished", "A fund signer has not completed the identity check", g.added_at, STALL_DAYS.signerCheck, "funds.signer_stalled", "signer_check")),
   ].filter((x: any) => x.recordId);
 }
 

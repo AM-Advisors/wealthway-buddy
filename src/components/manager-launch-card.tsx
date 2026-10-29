@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { ApprovalButton } from "@/components/approval-button";
 import { launchStatusFn, decideLaunchFn, launchFundFn } from "@/lib/fund-setup.functions";
 import { invalidateFund } from "@/lib/fund-query-keys";
 
@@ -31,13 +31,13 @@ export function ManagerLaunchCard({ fundId }: { fundId: string }) {
       <h2 className="text-lg">Launch</h2>
       {s.blockers.length ? (
         <>
-          <p className="text-sm text-muted-foreground">Finish these before launching:</p>
-          <ul className="mt-1 list-disc pl-5 text-sm">{s.blockers.map((b) => <li key={b.key}>{b.label}</li>)}</ul>
+          <p className="text-base text-muted-foreground">Finish these before launching:</p>
+          <ul className="mt-1 list-disc pl-5 text-base">{s.blockers.map((b) => <li key={b.key}>{b.label}</li>)}</ul>
         </>
       ) : (
         <div className="flex flex-wrap items-center gap-3">
-          <p className="text-sm text-muted-foreground">Everything is complete. You can open investor onboarding.</p>
-          <Button size="sm" disabled={busy} onClick={() => { if (window.confirm("Launch this fund for investor onboarding?")) void run(); }}>Launch fund</Button>
+          <p className="text-base text-muted-foreground">Everything is complete. Next: launch the fund so investors can start.</p>
+          <ApprovalButton disabled={busy} title="Launch this fund?" description="Investors with the fund link can start onboarding right away. Your settings stay as they are." confirmLabel="Launch fund" undoLabel="Undo launch" waitingTitle="Launch waiting to send" waitingNote="You have 5 seconds to undo. The fund is not launched yet." historyNote="The launch is recorded in the fund history." onApprove={() => void run()}>{busy ? "Launching…" : "Launch fund"}</ApprovalButton>
         </div>
       )}
     </section>

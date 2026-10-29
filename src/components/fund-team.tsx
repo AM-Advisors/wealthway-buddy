@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { addFundTeamMember, getFundTeam, removeFundTeamMember, searchFundTeamCandidates } from "@/lib/invitations.functions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ApprovalButton } from "@/components/approval-button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -45,11 +46,10 @@ export function FundTeam({ fundId }: { fundId: string }) {
             <div className="flex items-center gap-2">
               <Badge variant="secondary">{m.role.replace(/_/g, " ")}</Badge>
               {removable && d.canManage ? (
-                <Button size="sm" variant="ghost" disabled={busy} onClick={() => {
-                  if (!confirm(`Remove ${m.name} from this fund's team? Only access to this fund is removed.`)) return;
+                <ApprovalButton size="sm" variant="ghost" disabled={busy} title={`Remove ${m.name} from this fund's team?`} description="Only their access to this fund is removed. Their account and other funds stay the same." confirmLabel="Remove from fund" undoLabel="Undo" waitingTitle="Removal waiting to save" waitingNote="You have 5 seconds to undo. Nothing has changed yet." historyNote="The removal is recorded in the fund history." onApprove={() => {
                   setBusy(true);
                   remove({ data: { fundId, userId: m.userId } }).then(() => { toast.success("Removed from this fund."); refresh(); }, err).finally(() => setBusy(false));
-                }}>Remove from fund</Button>
+                }}>Remove from fund</ApprovalButton>
               ) : null}
             </div>
           </div>
