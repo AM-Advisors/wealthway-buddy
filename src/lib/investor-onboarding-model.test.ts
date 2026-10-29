@@ -195,7 +195,7 @@ describe("funding", () => {
     ).toBe("reconciliation_pending");
   });
 
-  it("keeps funding locked until Harmonious approves", () => {
+  it("opens funding after fund-manager approval without final admission", () => {
     const rows = req();
     const locked = canInvestorFund({
       stage: "harmonious_review",
@@ -211,6 +211,9 @@ describe("funding", () => {
       openBlockingExceptions: 0,
     });
     expect(open.allowed).toBe(true);
+    const waiting = { stage: "awaiting_funds" as const, requirements: rows, approvedToFundAt: NOW, openBlockingExceptions: 0 };
+    expect(canInvestorFund(waiting).allowed).toBe(true);
+    expect(canCloseInvestment({ ...waiting, fundingStatus: "not_funded", fundingReconciled: false, acceptedAt: null, acceptedAmountCents: null }).allowed).toBe(false);
   });
 
   it("locks funding again while a blocking issue is open", () => {

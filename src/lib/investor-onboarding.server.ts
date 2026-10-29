@@ -1324,7 +1324,8 @@ export async function fundingInstructions(userId: string, onboardingId: string) 
   if (!gate.allowed) return { unlocked: false, reasons: gate.reasons, instructions: null };
 
   // Server read of the released version only (investor access already checked above).
-  const { data: wire } = await db().rpc("released_wire_details", { p_offering_id: row.offering_id });
+  const { data: wire, error: wireError } = await db().rpc("released_wire_details", { p_offering_id: row.offering_id });
+  if (wireError) fail("We couldn't load the fund's released bank details. Please try again.");
   const rawDetails = (wire as Record<string, unknown> | null) ?? null;
   // Show only the instructions that apply: USA-only, international-only, or (for "both") by where the investor is located.
   const { instructionsForInvestor, DOMESTIC_WIRE_FIELDS, INTL_WIRE_FIELDS } = await import("@/lib/wire-scope");

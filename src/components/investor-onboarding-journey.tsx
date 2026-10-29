@@ -852,15 +852,17 @@ function Fund({ d, onboardingId, done }: { d: any; onboardingId: string; done: (
         <CardDescription>Investment {money(amount)}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <p className="text-sm">{step?.message}</p>
+        <p className="text-base">{step?.message}</p>
         {d.approvedToFund && d.fundingStatus !== "funded" ? (
           <>
             {!reveal ? (
-              <Button onClick={() => setReveal(true)}>View Secure Wiring Instructions</Button>
+              <div className="space-y-3"><p className="text-base">You can send your wire once the fund’s bank details are available below. You do not need to wait for final admission.</p><Button className="min-h-12 h-auto whitespace-normal text-base" onClick={() => setReveal(true)}>Next: View wire instructions</Button></div>
             ) : funding.isLoading ? (
               <p className="text-sm text-muted-foreground">Loading…</p>
+            ) : funding.isError ? (
+              <div role="alert" className="space-y-3"><p className="text-base text-destructive">We couldn’t load your wire instructions. No bank details have been shown.</p><Button variant="outline" className="min-h-11 text-base" onClick={() => void funding.refetch()}>Try again</Button></div>
             ) : f?.unlocked ? (
-              <div className="space-y-2 rounded-md border p-4 text-sm">
+              <div className="space-y-2 rounded-md border p-4 text-base">
                 <p><strong>Bank:</strong> {f.instructions.bankName ?? "-"}</p>
                 {f.instructions.details && typeof f.instructions.details === "object"
                   ? Object.entries(f.instructions.details).map(([k, v]) => (
@@ -891,12 +893,12 @@ function Fund({ d, onboardingId, done }: { d: any; onboardingId: string; done: (
                 {(f?.reasons ?? ["Funding is not open yet."]).map((r: string) => <li key={r}>{r}</li>)}
               </ul>
             )}
-            <WireSentForm
+            {f?.unlocked && <WireSentForm
               defaultAmountCents={amount}
               pending={sent.isPending}
               already={!!d.investorReportsSent}
               onSubmit={(v) => sent.mutate({ data: { onboardingId, ...v } } as any)}
-            />
+            />}
           </>
         ) : null}
         {d.approvedToFund ? <FundingLedger onboardingId={onboardingId} /> : null}

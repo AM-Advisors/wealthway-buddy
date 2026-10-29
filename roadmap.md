@@ -1,5 +1,10 @@
 # Roadmap
 
+## Manager-approved wire instructions
+- [x] Confirmed canonical manager approval already opens investor wire access before final admission; made Approve to send funds explicit with confirmation/undo and a clear investor Next button.
+- [x] Bank-read errors now surface with retry; wire-sent reporting appears only after instructions load. 78 tests passed; preview build OK. No approvals, bank changes or wires performed.
+- [ ] Authenticated approval → investor read-back needs independently isolated QA and synthetic sessions; legacy application-only wire reader remains separate and was not widened.
+
 ## Approval foolproofing
 - [x] Shared approval confirmation offers Go back and a five-second Undo before submission; completed history remains unchanged.
 - [x] Applied to fund terms, questions and investor copy approvals; larger relevant text and a named primary next action.
