@@ -11,7 +11,7 @@ export function FundManagerNextAction({ items, today, managerName, onNavigate }:
         <h2 className="font-heading text-2xl">{next ? "Next action" : "No action waiting"}</h2>
         {next ? <><p className="break-words text-lg font-medium">{next.title}</p><p className="text-base text-muted-foreground">{next.waitingOn ? `Waiting on: ${next.waitingOn}` : "Ready for your review"}{next.due ? ` · ${next.due < today ? "Overdue since" : "Due"} ${next.due}` : ""}</p></> : <CheckCircle2 className="size-5 text-primary" aria-hidden />}
       </div>
-      {next && <Button className="min-h-12 w-full text-base sm:w-auto" onClick={() => onNavigate(next.area)}>Next: {next.title}<ArrowRight className="size-4" aria-hidden /></Button>}
+      {next && <Button className="min-h-12 h-auto w-full whitespace-normal text-base sm:w-auto" onClick={() => onNavigate(next.area)}>Next: {next.title}<ArrowRight className="size-4" aria-hidden /></Button>}
     </div>
     <details className="text-base">
       <summary className="cursor-pointer py-2 font-medium">All responsibilities{items.length ? ` · ${items.length} open items` : ""}</summary>

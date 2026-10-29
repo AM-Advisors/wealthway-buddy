@@ -702,17 +702,17 @@ function GuidedSetup({ steps }: { steps: { label: string; body: ReactNode }[] })
       <ol aria-label="Fund setup steps" className="sticky top-16 z-20 flex gap-1 overflow-x-auto rounded-md border bg-background/95 p-1 backdrop-blur">
         {steps.map((s, n) => (
           <li key={s.label} className="shrink-0">
-            <button type="button" onClick={() => go(n)} aria-current={n === i ? "step" : undefined}
-              className={`flex items-center gap-2 rounded px-2.5 py-1.5 text-xs ${n === i ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}>
+            <Button type="button" variant={n === i ? "default" : "ghost"} onClick={() => go(n)} aria-current={n === i ? "step" : undefined}
+              className="min-h-11 gap-2 px-3 text-base">
               <span className="font-medium">{n + 1}</span>{s.label}
-            </button>
+            </Button>
           </li>
         ))}
       </ol>
       <div className="space-y-6">{steps[i]?.body}</div>
       <div className="flex justify-between gap-2 border-t pt-4">
-        <Button variant="outline" disabled={i === 0} onClick={() => go(i - 1)}>Back</Button>
-        {i < steps.length - 1 ? <Button onClick={() => go(i + 1)}>Next: {steps[i + 1]?.label}</Button> : null}
+        <Button className="min-h-11 text-base" variant="outline" disabled={i === 0} onClick={() => go(i - 1)}>Back</Button>
+        {i < steps.length - 1 ? <Button className="min-h-11 h-auto whitespace-normal text-base" onClick={() => go(i + 1)}>Next: {steps[i + 1]?.label}</Button> : null}
       </div>
     </div>
   );
