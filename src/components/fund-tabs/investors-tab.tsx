@@ -403,7 +403,7 @@ export function InvestorReviewPanel({ fundId, id, embedded = false }: { fundId: 
             </section>
           )}
 
-          <section className="rounded-lg border p-3">
+          {d.docs !== "Signed" && d.docs !== "Signed (outside platform)" && <section className="rounded-lg border p-3">
             <h4 className="mb-1 font-medium">Subscription Agreement</h4>
             <p className="text-muted-foreground">Email the investor a link that opens the signing step of their investment.</p>
             <Button size="sm" variant="outline" className="mt-2" disabled={sendingSign} onClick={async () => {
@@ -416,7 +416,7 @@ export function InvestorReviewPanel({ fundId, id, embedded = false }: { fundId: 
               } catch (error) { toast.error(error instanceof Error ? error.message : "The email could not be sent."); }
               finally { setSendingSign(false); }
             }}>{sendingSign ? "Sending…" : "Email signing link"}</Button>
-          </section>
+          </section>}
 
 
           <section>

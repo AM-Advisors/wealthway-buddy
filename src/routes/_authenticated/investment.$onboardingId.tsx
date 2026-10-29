@@ -14,6 +14,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { onboardingDetailFn } from "@/lib/investor-onboarding.functions";
 import { INVESTMENT_TABS, normalizeInvestmentTab } from "@/lib/investment-workspace";
 import { LoadError } from "@/components/load-error";
+import { InvestmentChecklist } from "@/components/investment-readiness";
 
 export const Route = createFileRoute("/_authenticated/investment/$onboardingId")({
   head: () => ({
@@ -71,6 +72,7 @@ function InvestmentPage() {
 
       {tab === "overview" || tab === "onboarding" ? (
         <>
+          <InvestmentChecklist onboardingId={onboardingId} />
           <InvestorOnboardingJourney onboardingId={onboardingId} requestedStep={search.step} />
           {ctx.data?.executedSnapshot ? <InvestorSignedDocuments onboardingId={onboardingId} /> : null}
           {tab === "onboarding" ? <ConfirmYourInformation onboardingId={onboardingId} /> : null}
