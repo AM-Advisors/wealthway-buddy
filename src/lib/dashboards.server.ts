@@ -1,3 +1,4 @@
+import { canonicalizeApplicationFunding, canonicalizeOnboardingFunding } from "@/lib/funding-canonical";
 /**
  * Role dashboards - server aggregation. Every number is built here, from
  * records the caller is authorized to see, using the shared definitions in
@@ -18,13 +19,14 @@ async function factsFor(rows: any[]): Promise<{ fact: InvestmentFact; row: any; 
   const out = [] as { fact: InvestmentFact; row: any; result: any }[];
   // One batched read for all rows (same code path as single readiness).
   const all = await readinessForMany(rows);
+  const canonFunding = await canonicalizeOnboardingFunding((await import("@/integrations/supabase/client.server")).supabaseAdmin, rows);
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i];
     const { result } = all[i]!;
     out.push({
       row, result,
       fact: {
-        onboardingId: row.id, offeringId: row.offering_id, fundingStatus: row.funding_status ?? null, stage: row.stage ?? null,
+        onboardingId: row.id, offeringId: row.offering_id, fundingStatus: (canonFunding[i]?.funding_status ?? row.funding_status) ?? null, stage: row.stage ?? null,
         intendedCents: row.accepted_amount_cents ?? row.requested_amount_cents ?? null, approved: !!row.approved_to_fund_at,
         createdAt: row.created_at ?? null, readiness: result,
       },

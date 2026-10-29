@@ -1,3 +1,4 @@
+import { canonicalizeApplicationFunding, canonicalizeOnboardingFunding } from "@/lib/funding-canonical";
 import { createServerFn } from "@tanstack/react-start";
 import { loadPersonStatuses, withCanonicalVerification } from "@/lib/verification-status";
 import { z } from "zod";
@@ -61,7 +62,7 @@ export const listApplications = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
     const userIds = [...new Set((applications ?? []).map((r: any) => r.user_id as string))];
     const personStatuses = await loadPersonStatuses(supabase, userIds);
-    const rows = (applications ?? []).map((r: any) => withCanonicalVerification(r, personStatuses));
+    const rows = await canonicalizeApplicationFunding(supabase, (applications ?? []).map((r: any) => withCanonicalVerification(r, personStatuses)));
     const offeringIds = [...new Set(rows.map((r: any) => r.offering_id))];
 
     const [{ data: profiles }, { data: offerings }] = await Promise.all([
