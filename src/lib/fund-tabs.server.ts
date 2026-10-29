@@ -64,6 +64,12 @@ export async function investorGrid(fundId: string) {
     ? await (await db()).from("persons").select("id, legal_first_name, legal_last_name, preferred_name, email, phone, kyc_status, aml_status, date_of_birth, citizenship_country, address_line1, city, postal_code, tax_id_last4").in("id", ids)
     : { data: [] as any[] };
   const byId = new Map(((people ?? []) as any[]).map((p) => [p.id, p]));
+  const appIds = [...new Set(((data ?? []) as any[]).map((o) => o.application_id).filter(Boolean))] as string[];
+  const { data: appRows } = appIds.length
+    ? await (await db()).from("investor_applications").select("id, funding_status").in("id", appIds)
+    : { data: [] as any[] };
+  const appFunding = new Map(((appRows ?? []) as any[]).map((a) => [a.id, a.funding_status as string | null]));
+  const { effectiveFundingStatus } = await import("@/lib/funding-status");
   const outsideStates = await (await import("@/lib/prior-signed-documents.server")).outsideSubscriptionStates(await db(), ((data ?? []) as any[]).map((o) => o.id));
   const profileIds = [...new Set(((data ?? []) as any[]).map((o) => o.investment_profile_id).filter(Boolean))] as string[];
   const taxDetails = await currentProfileTaxDetails(await db(), profileIds);
@@ -88,7 +94,7 @@ export async function investorGrid(fundId: string) {
     const taxIdLast4 = taxDetails.get(o.investment_profile_id)?.last4 || o.investment_profiles?.tax_id_last4 || (!entity ? p.tax_id_last4 : null) || null;
     const kyc = p.kyc_status ?? "not_started";
     const aml = p.aml_status ?? "not_started";
-    const funding = canonicalFundingState({ fundingStatus: o.funding_status, approvedToFund: !!o.approved_to_fund_at, instructionsReleased: !!o.approved_to_fund_at && fundRelease.available });
+    const funding = canonicalFundingState({ fundingStatus: effectiveFundingStatus(o.funding_status, appFunding.get(o.application_id)), approvedToFund: !!o.approved_to_fund_at, instructionsReleased: !!o.approved_to_fund_at && fundRelease.available });
     const kycOk = ["verified", "approved", "passed", "clear"].includes(kyc) && ["clear", "passed", "approved", "verified"].includes(aml);
     const committedCents = o.commitment_amount_cents ?? o.accepted_amount_cents ?? o.requested_amount_cents ?? null;
     const docs = docStatus(o, outsideStates.get(o.id));
