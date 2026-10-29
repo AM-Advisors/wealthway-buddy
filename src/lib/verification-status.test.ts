@@ -94,7 +94,7 @@ describe("identityScreeningSummary", () => {
   it("keeps one-sided progress in plain words, never raw values", () => {
     expect(identityScreeningSummary("approved", "in_review").label).toBe("ID approved · screening under review");
     expect(identityScreeningSummary("not_started", "approved").label).toBe("Screening clear · ID check under review");
-    expect(identityScreeningSummary("in_review", "pending").label).toBe("ID check and screening under review");
+    expect(identityScreeningSummary("in_review", "pending").label).toBe("Under review");
   });
   it("flags a decline or match without exposing screening detail", () => {
     expect(identityScreeningSummary("approved", "hit").label).toBe("Check needs review");
