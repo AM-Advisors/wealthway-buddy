@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { FundOnboardingLinkCard } from "@/components/fund-onboarding-link";
@@ -317,27 +318,52 @@ export function InvestorReviewPanel({ fundId, id, embedded = false }: { fundId: 
   return (
     <div>
       {embedded && d && <div className="mb-4 flex flex-wrap items-center gap-2">
-        <Badge variant={d.kycOk ? "secondary" : "outline"}>KYC/AML: {d.kycLabel}</Badge>
-        <Badge variant={String(d.docs).startsWith("Signed") && !String(d.docs).includes("pending") ? "secondary" : "outline"}>Docs: {d.docs}</Badge>
-        <Badge variant={d.wiring === "Funded" ? "secondary" : "outline"}>Wiring: {d.wiring}</Badge>
         {d.investorUserId && <Button asChild size="sm" variant="outline" className="ml-auto"><Link to="/manager/messages" search={{ open: d.applicationId ?? undefined }}>Message</Link></Button>}
       </div>}
         {q.isLoading ? <p className="p-6 text-sm text-muted-foreground">Loading…</p> : q.error ? <div role="alert" className="space-y-2 p-6"><p className="text-sm text-destructive">Investor details couldn’t load.</p><Button variant="outline" onClick={() => void q.refetch()}>Retry</Button></div> : d && (
         <div className={embedded ? "space-y-6 text-sm" : "space-y-6 p-6 text-sm"}>
-          {id && !embedded && <PersonalInvestmentLinkCard onboardingId={id} />}
-          {id && <InvestorEmailHistory onboardingId={id} />}
-          {id && <InvestorQuickEdit onboardingId={id} onSaved={() => q.refetch()} />}
-          {id && <InvestorPriorVerification onboardingId={id} onSaved={() => q.refetch()} />}
-          {id && <InvestorHelpers onboardingId={id} />}
-          {id && <InvestorPeopleAndContacts onboardingId={id} onSaved={() => q.refetch()} />}
+          {d.canApproveSubscription && (
+            <section className="rounded-lg border border-primary/40 bg-primary/5 p-3">
+              <h4 className="mb-1 font-medium">Ready for your approval</h4>
+              {<Button className="mt-3" disabled={approving} onClick={async () => {
+                if (!id) return;
+                setApproving(true);
+                try { await approve({ data: { onboardingId: id } }); toast.success("Subscription approved"); await q.refetch(); }
+                catch (error) { toast.error(error instanceof Error ? error.message : "Subscription could not be approved."); }
+                finally { setApproving(false); }
+              }}>{approving ? "Approving…" : "Approve subscription"}</Button>}
+            </section>
+          )}
+          {id && <section aria-label="Investment status"><InvestmentChecklist onboardingId={id} /><p className="mt-2 text-xs text-muted-foreground">One checklist shared by investors, fund managers and Operations. See the History tab for who completed each step and when.</p></section>}
           <section className="grid grid-cols-2 gap-3">
             <div className="rounded-lg border p-3"><p className="text-xs text-muted-foreground">Committed</p><p className="text-lg font-semibold">{usd(d.committedCents)}</p></div>
             <div className="rounded-lg border p-3"><p className="text-xs text-muted-foreground">Received</p><p className="text-lg font-semibold">{usd(d.receivedCents)}</p>
               <div className="mt-2 h-1.5 rounded-full bg-muted"><div className="h-1.5 rounded-full bg-primary" style={{ width: `${pct}%` }} /></div></div>
           </section>
-
-          {id && <section aria-label="Investment status"><InvestmentChecklist onboardingId={id} /><p className="mt-2 text-xs text-muted-foreground">One checklist shared by investors, fund managers and Operations. See the History tab for who completed each step and when.</p></section>}
-
+          <Tabs defaultValue="details" className="space-y-4">
+            <TabsList className="h-auto w-full flex-wrap justify-start gap-1">
+              <TabsTrigger value="details">Details</TabsTrigger><TabsTrigger value="documents">Documents</TabsTrigger><TabsTrigger value="terms">Terms</TabsTrigger><TabsTrigger value="actions">Actions</TabsTrigger>
+            </TabsList>
+            <TabsContent value="details" className="space-y-6">
+          <section>
+            <h4 className="mb-1 font-medium">Contact</h4>
+            <dl className="divide-y">
+              <Row k="Email" v={d.email} /><Row k="Phone" v={d.phone} /><Row k="Address" v={d.address} /><Row k="Citizenship" v={d.citizenship} />
+              {d.assetLabel === "Individual" && <Row k="Date of birth" v={d.dateOfBirth} />}
+            </dl>
+          </section>
+          <section>
+            <h4 className="mb-1 font-medium">Investment</h4>
+            <dl className="divide-y">
+              <Row k="Terms" v={d.classLabel} /><Row k="Investing as" v={d.assetLabel} /><Row k="Tax ID" v={d.taxIdLast4 ? `•••• ${d.taxIdLast4}` : null} />
+              <Row k="Investment date" v={d.investmentDate ? fmtDate(d.investmentDate) : null} />
+              <Row k="Stage" v={STAGE_LABELS[d.stage as OnboardingStage] ?? d.stage.replace(/_/g, " ")} />
+              <Row k="Latest activity" v={fmtDate(d.lastActivity)} />
+            </dl>
+            {d.classApplicable && d.canManageTermAssociations && <Button size="sm" variant="outline" className="mt-2" onClick={() => setTermAssociation("class")}>Associate class</Button>}
+          </section>
+            </TabsContent>
+            <TabsContent value="documents" className="space-y-6">
           {d.reviewEvidence && <>
             <section className="space-y-3" aria-label="Signed fund documents">
               <h4 className="font-medium">Signed fund documents</h4>
@@ -389,20 +415,22 @@ export function InvestorReviewPanel({ fundId, id, embedded = false }: { fundId: 
               </dl>; })() : <p className="text-muted-foreground">Accreditation has not been completed.</p>}
             </section>
           </>}
-
-          {d.canApproveSubscription && (
-            <section className="rounded-lg border border-primary/40 bg-primary/5 p-3">
-              <h4 className="mb-1 font-medium">Ready for your approval</h4>
-              {<Button className="mt-3" disabled={approving} onClick={async () => {
-                if (!id) return;
-                setApproving(true);
-                try { await approve({ data: { onboardingId: id } }); toast.success("Subscription approved"); await q.refetch(); }
-                catch (error) { toast.error(error instanceof Error ? error.message : "Subscription could not be approved."); }
-                finally { setApproving(false); }
-              }}>{approving ? "Approving…" : "Approve subscription"}</Button>}
-            </section>
-          )}
-
+          <section>
+            <h4 className="mb-1 font-medium">Documents</h4>
+            {d.documents.length ? (
+              <ul className="divide-y rounded-md border">{d.documents.map((x: any) => <li key={x.id} className="flex justify-between gap-2 p-2"><span className="break-all">{x.file_name}</span><span className="shrink-0 text-xs capitalize text-muted-foreground">{String(x.doc_kind).replace(/_/g, " ")}</span></li>)}</ul>
+            ) : <p className="text-muted-foreground">No documents uploaded for this deal yet.</p>}
+          </section>
+            </TabsContent>
+            <TabsContent value="terms" className="space-y-6">
+          <section>
+            <h4 className="mb-1 font-medium">Side letters</h4>
+            {!embedded && (d.sideLetters.length ? d.sideLetters.map((s: any) => <p key={s.id}><Badge variant="secondary" className="mr-2 capitalize">{s.status}</Badge>{s.effective_date ? fmtDate(s.effective_date) : ""}</p>) : <p className="text-muted-foreground">None.</p>)}
+            {embedded && <p className="text-muted-foreground">Full side-letter history is in the Side letter card above.</p>}
+            <Button size="sm" variant="outline" className="mt-2" onClick={() => setTermAssociation("side_letter")}>Edit investor fees & minimum</Button>
+          </section>
+            </TabsContent>
+            <TabsContent value="actions" className="space-y-6">
           {d.docs !== "Signed" && d.docs !== "Signed (outside platform)" && <section className="rounded-lg border p-3">
             <h4 className="mb-1 font-medium">Subscription Agreement</h4>
             <p className="text-muted-foreground">Email the investor a link that opens the signing step of their investment.</p>
@@ -417,40 +445,14 @@ export function InvestorReviewPanel({ fundId, id, embedded = false }: { fundId: 
               finally { setSendingSign(false); }
             }}>{sendingSign ? "Sending…" : "Email signing link"}</Button>
           </section>}
-
-
-          <section>
-            <h4 className="mb-1 font-medium">Contact</h4>
-            <dl className="divide-y">
-              <Row k="Email" v={d.email} /><Row k="Phone" v={d.phone} /><Row k="Address" v={d.address} /><Row k="Citizenship" v={d.citizenship} />
-              {d.assetLabel === "Individual" && <Row k="Date of birth" v={d.dateOfBirth} />}
-            </dl>
-          </section>
-
-          <section>
-            <h4 className="mb-1 font-medium">Investment</h4>
-            <dl className="divide-y">
-              <Row k="Terms" v={d.classLabel} /><Row k="Investing as" v={d.assetLabel} /><Row k="Tax ID" v={d.taxIdLast4 ? `•••• ${d.taxIdLast4}` : null} />
-              <Row k="Investment date" v={d.investmentDate ? fmtDate(d.investmentDate) : null} />
-              <Row k="Stage" v={STAGE_LABELS[d.stage as OnboardingStage] ?? d.stage.replace(/_/g, " ")} />
-              <Row k="Latest activity" v={fmtDate(d.lastActivity)} />
-            </dl>
-            {d.classApplicable && d.canManageTermAssociations && <Button size="sm" variant="outline" className="mt-2" onClick={() => setTermAssociation("class")}>Associate class</Button>}
-          </section>
-
-          <section>
-            <h4 className="mb-1 font-medium">Documents</h4>
-            {d.documents.length ? (
-              <ul className="divide-y rounded-md border">{d.documents.map((x: any) => <li key={x.id} className="flex justify-between gap-2 p-2"><span className="break-all">{x.file_name}</span><span className="shrink-0 text-xs capitalize text-muted-foreground">{String(x.doc_kind).replace(/_/g, " ")}</span></li>)}</ul>
-            ) : <p className="text-muted-foreground">No documents uploaded for this deal yet.</p>}
-          </section>
-
-          <section>
-            <h4 className="mb-1 font-medium">Side letters</h4>
-            {!embedded && (d.sideLetters.length ? d.sideLetters.map((s: any) => <p key={s.id}><Badge variant="secondary" className="mr-2 capitalize">{s.status}</Badge>{s.effective_date ? fmtDate(s.effective_date) : ""}</p>) : <p className="text-muted-foreground">None.</p>)}
-            {embedded && <p className="text-muted-foreground">Full side-letter history is in the Side letter card above.</p>}
-            <Button size="sm" variant="outline" className="mt-2" onClick={() => setTermAssociation("side_letter")}>Edit investor fees & minimum</Button>
-          </section>
+          {id && !embedded && <PersonalInvestmentLinkCard onboardingId={id} />}
+          {id && <InvestorEmailHistory onboardingId={id} />}
+          {id && <InvestorQuickEdit onboardingId={id} onSaved={() => q.refetch()} />}
+          {id && <InvestorPriorVerification onboardingId={id} onSaved={() => q.refetch()} />}
+          {id && <InvestorHelpers onboardingId={id} />}
+          {id && <InvestorPeopleAndContacts onboardingId={id} onSaved={() => q.refetch()} />}
+            </TabsContent>
+          </Tabs>
         </div>
       )}
       {id && termAssociation && <Dialog open onOpenChange={(o) => !o && setTermAssociation(null)}>
