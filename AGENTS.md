@@ -35,7 +35,7 @@
 - People & Access is the only directory; activity views show recorded evidence, never online presence; View account resets use admin-checked account-security — why: truthful audit, unchanged authority.
 - Ops Funds dashboard reads per-investor readiness from onboarding_readiness_summaries (written by reconcileInvestmentReadiness, refreshed a few stale rows per load), never live computeReadiness for every investor — why: the live loop exceeded Worker request/time limits.
 - Investor surfaces: /investment/$onboardingId workspace; /investor-reporting?section= canonical reports (old pages redirect); /admin/investors redirects to Ops Investor 360; capital reads onboardings with application history; funding/wire retain applications pending review — why: connected views without money-path changes.
-- LoadError handles failures; reports load active tabs; Sign shares TaxSignPanel and verified email; OfferingDocumentReader reads entitled files — why: reliability.
+- Sign shares TaxSignPanel; tax-upload-state projects exact-investment copies as review pending, never certified. LoadError and document readers stay shared — why: no duplicate tax work.
 - Investor classes use offerings.has_multiple_classes — why: no inferred classes.
 - approveToFund allows admin staff/exact-fund managers, never self — why: staff approve, signatories sign; money/identity unchanged.
 - Inbox channels and the automatic fund onboarding email depend on the fund's active service level via src/lib/inbox-policy.ts — why: one rule for Self Serve vs paid.

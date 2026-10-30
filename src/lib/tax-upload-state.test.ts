@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { pendingTaxUpload, taxStateWithUpload, type TaxUpload } from "./tax-upload-state";
+import { determineOnboardingRequirements } from "./investor-onboarding-model";
+import { computeReadiness } from "./investment-readiness";
 
 const investment = { id: "doug-investment", investment_profile_id: "doug-profile", investor_user_id: "doug" };
 const copy: TaxUpload = { id: "w9", onboarding_id: investment.id, investment_profile_id: investment.investment_profile_id, user_id: "doug", doc_kind: "tax_form", review_status: "accepted", file_name: "signed-w9.pdf" };
@@ -24,5 +26,19 @@ describe("uploaded tax-form handoff", () => {
   });
   it("an expired certified form still requires renewal", () => {
     expect(taxStateWithUpload({ state: "refresh_required" }, copy).state).toBe("refresh_required");
+  });
+  it("an accepted copy remains a blocker owned by Harmonious, not a new investor submission", () => {
+    const requirements = determineOnboardingRequirements({
+      offering: { accreditationRequired: false, kycRequired: true, kybRequired: false, amlRequired: true, taxDocumentRequired: true, subscriptionQuestionnaireRequired: false },
+      person: { personId: "person", kycStatus: "approved", amlStatus: "clear" },
+      profile: { profileId: investment.investment_profile_id, profileType: "individual", relatedPeople: [] },
+      subscription: { requestedAmountCents: 5_000_000, documentsPrepared: true, signatureStatus: "completed" },
+      compliance: { tax: taxStateWithUpload({ state: "missing" }, copy) },
+      nowIso: "2026-10-29T23:54:00Z",
+    });
+    const result = computeReadiness({ requirements, stage: "harmonious_review", fundingStatus: "not_funded", approvedToFundAt: null, acceptedAt: null, acceptedAmountCents: null, closedAt: null, exceptions: [] });
+    expect(result.items.find((item) => item.key === "tax_documentation")).toMatchObject({ status: "under_review", owner: "harmonious", blocking: true });
+    expect(result.items.find((item) => item.key === "approved_to_fund")?.status).toBe("not_started");
+    expect(result.closeReady).toBe(false);
   });
 });
