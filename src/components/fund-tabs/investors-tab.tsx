@@ -453,7 +453,7 @@ export function InvestorReviewPanel({ fundId, id, embedded = false, onOpenItem }
                 setSendingSign(kind);
                 try {
                   const r = await sendSign({ data: { fundId, onboardingId: id, kind } });
-                  if (r.sent) toast.success(`${label} sent to the investor`);
+                  if (r.sent) toast.success(r.invited ? `Invite and ${label} sent to the investor` : `${label} sent to the investor`);
                   else toast.message(r.reason === "recipient_suppressed" ? "This investor has turned off emails, so it wasn't sent." : "Already sent today, or the email wasn't sent.");
                 } catch (error) { toast.error(error instanceof Error ? error.message : "The email could not be sent."); }
                 finally { setSendingSign(false); }

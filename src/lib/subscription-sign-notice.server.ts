@@ -25,20 +25,36 @@ export async function sendSubscriptionSignNotice(db: any, actorId: string, input
   if (error) throw new Error('Investment unavailable.')
   if (!ob || ob.offering_id !== input.fundId || ob.removed_at) throw new Error('Investment not found for this fund.')
   if (CLOSED.includes(ob.stage)) throw new Error('This investment is no longer open.')
-  if (!ob.investor_user_id) throw new Error("The investor hasn't created their account yet. Send their invitation first.")
-  const { data: auth, error: authError } = await db.auth.admin.getUserById(ob.investor_user_id)
-  if (authError || !auth?.user?.email) throw new Error('Investor email unavailable.')
+  // Not invited yet: send their personal invite first (same authorized link engine), then the item as its own email.
+  let invited = false
+  let recipient: string | null = null
+  let recipientName: string | undefined
+  if (!ob.investor_user_id) {
+    const { data: person } = await db.from('investor_onboardings').select('persons(email, legal_first_name)').eq('id', ob.id).maybeSingle()
+    recipient = String((person as any)?.persons?.email ?? '').trim().toLowerCase() || null
+    recipientName = (person as any)?.persons?.legal_first_name || undefined
+    if (!recipient) throw new Error("Add the investor's email first.")
+    const links = await import('@/lib/investor-onboarding.server')
+    const cur: any = await links.getPersonalLink(actorId, ob.id)
+    if (!cur.link) await links.createPersonalLink(actorId, ob.id)
+    if (cur.link?.state !== 'claimed') { await links.sendPersonalLink(actorId, ob.id); invited = true }
+  } else {
+    const { data: auth, error: authError } = await db.auth.admin.getUserById(ob.investor_user_id)
+    if (authError || !auth?.user?.email) throw new Error('Investor email unavailable.')
+    recipient = auth.user.email
+    recipientName = auth.user.user_metadata?.name || undefined
+  }
   const { data: fund } = await db.from('offerings').select('name').eq('id', ob.offering_id).maybeSingle()
   const { data: sender } = await db.auth.admin.getUserById(actorId)
   const day = new Date().toISOString().slice(0, 10)
   const { sendTemplateEmail } = await import('@/lib/email-templates/send-email')
-  const result: any = await sendTemplateEmail('signing-reminder', auth.user.email, {
+  const result: any = await sendTemplateEmail('signing-reminder', recipient!, {
     managed: true,
     inboxForAnyUser: true,
     // One notice per investment per day, so repeated clicks don't spam the investor.
     idempotencyKey: kind === 'subscription' ? `subscription-sign:${ob.id}:${day}` : `document-request:${kind}:${ob.id}:${day}`,
     templateData: {
-      recipientName: auth.user.user_metadata?.name || 'there',
+      recipientName: recipientName || 'there',
       documentTitle: spec.title,
       fundName: fund?.name ?? 'your fund',
       steps: [...spec.steps],
@@ -47,6 +63,6 @@ export async function sendSubscriptionSignNotice(db: any, actorId: string, input
       ctaLabel: spec.label,
     },
   })
-  if (result && result.sent === false) return { sent: false, reason: result.reason ?? 'not_sent' }
-  return { sent: true }
+  if (result && result.sent === false) return { sent: false, invited, reason: result.reason ?? 'not_sent' }
+  return { sent: true, invited }
 }
