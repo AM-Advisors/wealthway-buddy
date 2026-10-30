@@ -1,5 +1,10 @@
 # Roadmap
 
+## Arbitration saves and existing EIN (2026-10-30)
+- [ ] Fix arbitration city/state persistence through the canonical fund save.
+- [ ] Existing EIN must not request SS-4 or show its absence as incomplete; keep EIN evidence requirements.
+- [ ] Run focused regression checks; do not change live fund facts or approvals.
+
 ## Launch approval clarity (2026-10-30)
 - [x] Economics completion reads approved canonical terms and refreshes after approval; duplicate task blockers removed; exact unfinished tasks link to existing setup/approval/document/banking pages.
 - [x] 44 focused safeguards passed; preview build OK. No real approvals performed.
