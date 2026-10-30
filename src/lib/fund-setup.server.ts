@@ -758,6 +758,7 @@ export async function approveEconomics(userId: string, versionId: string) {
     actorRole: actor.isStaff ? "harmonious" : "client",
   });
   await syncInvestorClassesFromEconomics(version.setup_id, data);
+  await (await import("@/lib/fund-setup-extras.server")).autoCompleteAfterSave({ offeringId: (await setupById(version.setup_id)).offering_id });
   return data;
 }
 
@@ -1701,10 +1702,11 @@ export async function launchStatusForOffering(userId: string, offeringId: string
   const { data } = await db().from("fund_setups").select("id, launch_state").eq("offering_id", offeringId).order("created_at", { ascending: false }).limit(1);
   const setup = ((data ?? []) as any[])[0];
   if (!setup) return null;
-  const { result } = await readinessFor(setup.id);
+  const { result, taskRows } = await readinessFor(setup.id);
   return {
     setupId: setup.id as string,
     launchState: setup.launch_state as string,
     blockers: result.unmet.filter((u) => u.key !== "harmonious_approval"),
+    openTasks: taskRows.filter((t) => (t.blocking ?? true) && t.status !== "complete").map((t) => ({ key: t.task_key as string, label: t.label as string, section: t.section as string })),
   };
 }

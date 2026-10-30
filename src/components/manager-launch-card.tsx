@@ -5,9 +5,11 @@ import { toast } from "sonner";
 import { ApprovalButton } from "@/components/approval-button";
 import { launchStatusFn, decideLaunchFn, launchFundFn } from "@/lib/fund-setup.functions";
 import { invalidateFund } from "@/lib/fund-query-keys";
+import { Button } from "@/components/ui/button";
+import { launchAction } from "@/lib/launch-action";
 
 /** Self-serve launch for fund managers. The server re-checks every requirement. */
-export function ManagerLaunchCard({ fundId }: { fundId: string }) {
+export function ManagerLaunchCard({ fundId, onNavigate }: { fundId: string; onNavigate?: (target: "setup" | "approvals" | "documents" | "banking" | "accounting") => void }) {
   const qc = useQueryClient();
   const status = useServerFn(launchStatusFn);
   const decide = useServerFn(decideLaunchFn);
@@ -15,6 +17,10 @@ export function ManagerLaunchCard({ fundId }: { fundId: string }) {
   const [busy, setBusy] = useState(false);
   const q = useQuery({ queryKey: ["launch-status", fundId], queryFn: () => status({ data: { offeringId: fundId } }) });
   const s = q.data;
+  const items = s ? [
+    ...s.blockers.filter(b => b.key !== "blocking_tasks_complete"),
+    ...(s.openTasks ?? []).filter(t => !s.blockers.some(b => b.key === "economics_approved" && t.key === "economics_terms")),
+  ] : [];
   if (q.isError) return <p role="alert" className="text-sm text-destructive">Launch status couldn't be loaded. Refresh the page to try again.</p>;
   if (!s || s.launchState === "launched") return null;
   const run = async () => {
@@ -32,7 +38,11 @@ export function ManagerLaunchCard({ fundId }: { fundId: string }) {
       {s.blockers.length ? (
         <>
           <p className="text-base text-muted-foreground">Finish these before launching:</p>
-          <ul className="mt-1 list-disc pl-5 text-base">{s.blockers.map((b) => <li key={b.key}>{b.label}</li>)}</ul>
+          <ul className="mt-3 divide-y text-base">{items.map((b) => {
+            const action = launchAction(b.key, "section" in b ? b.section : undefined);
+            return <li key={b.key} className="flex flex-wrap items-center justify-between gap-3 py-3"><span>{b.label}</span>{onNavigate && <Button variant="outline" onClick={() => onNavigate(action.target)}>{action.label}</Button>}</li>;
+          })}</ul>
+          <Button variant="outline" className="mt-3" disabled={q.isFetching} onClick={() => void invalidateFund(qc, fundId)}>{q.isFetching ? "Checking…" : "Check progress again"}</Button>
         </>
       ) : (
         <div className="flex flex-wrap items-center gap-3">

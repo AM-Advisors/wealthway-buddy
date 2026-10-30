@@ -41,7 +41,7 @@ export function OpsFundPage({ fundId, tab = "setup", onTab }: { fundId: string; 
   return <main className="mx-auto max-w-7xl space-y-6 px-4 py-8 sm:px-6">
     <Button variant="ghost" size="sm" asChild><Link to="/ops/funds">← Funds</Link></Button>
     {!d.retired && <FundSalesHandoff fundId={fundId} />}
-    {tab === "setup" && !d.retired && d.canUseOperations && <ManagerLaunchCard fundId={fundId} />}
+    {tab === "setup" && !d.retired && d.canUseOperations && <ManagerLaunchCard fundId={fundId} onNavigate={onTab} />}
     {tab === "setup" && !d.retired && d.canUseOperations && <FundStatusCard fundId={fundId} />}
     {next && !d.retired && !d.setupFinished && d.canSeeOperations && (
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-primary/30 bg-primary/5 px-4 py-3">

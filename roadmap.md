@@ -1,5 +1,9 @@
 # Roadmap
 
+## Launch approval clarity (2026-10-30)
+- [ ] Connect economics completion to approved canonical terms, remove duplicate task blockers and show exact unfinished tasks with direct destinations.
+- [ ] Run focused safeguards; live approval read-back requires independently isolated QA, and no real approvals will be performed.
+
 ## Personal onboarding access recovery (2026-10-30)
 - [x] Confirm Steve's successful login and repeated denied onboarding reads; no supporting account, investment or person-request verification row found despite a Person approved label.
 - [x] Reuse shared account verification gate before personal onboarding mounts, providing start/continue/check-again instead of repeated denied reads; no approvals fabricated.

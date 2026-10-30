@@ -463,7 +463,7 @@ export function evaluateReadiness(input: ReadinessInput): ReadinessResult {
   const unmet: { key: string; label: string }[] = [];
   for (const c of input.conditions) {
     if (!c.required) continue;
-    if (c.conditionKey === "harmonious_approval") continue;
+    if (c.conditionKey === "harmonious_approval" || c.conditionKey === "blocking_tasks_complete") continue;
     if (!c.satisfied) unmet.push({ key: c.conditionKey, label: c.label });
   }
   const blockingOpen = input.tasks.filter(

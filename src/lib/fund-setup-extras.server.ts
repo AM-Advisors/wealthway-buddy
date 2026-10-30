@@ -162,7 +162,7 @@ export async function autoCompleteTasks(offeringId: string) {
     // More steps that close themselves from data already recorded elsewhere (forward-only).
     const [{ data: w9 }, { data: fees }, { data: sigs }, { data: team }, { data: docs }, { data: bank }, { data: elig }, { data: onb }, { data: reg }, { data: bp }, { data: fundLetters }] = await Promise.all([
       db().from("fund_setup_documents").select("id").eq("setup_id", s.id).in("doc_type", ["signed_w9", "ein_letter"]).eq("is_current", true).limit(1),
-      db().from("fund_fee_terms").select("id").eq("offering_id", offeringId).eq("status", "active").limit(1),
+      db().from("fund_economics_versions").select("id").eq("setup_id", s.id).eq("status", "approved").limit(1),
       db().from("fund_signatories").select("id").eq("offering_id", offeringId).eq("status", "active").limit(1),
       db().from("fund_team_members").select("id").eq("offering_id", offeringId).is("removed_at", null).limit(1),
       db().from("offering_documents").select("doc_type, document_category").eq("offering_id", offeringId),
