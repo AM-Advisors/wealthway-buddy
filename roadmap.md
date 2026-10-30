@@ -1,5 +1,11 @@
 # Roadmap
 
+## Trust profile correction (2026-10-30)
+- [x] Found trust type saved but display label retained the individual name.
+- [x] Synchronize legal/display names through conversion and existing profile correction saves, refresh readers, retain personal verification/history.
+- [x] 77 investor-record, participant and document-requirement regressions passed; preview build OK.
+- [ ] Kimberly’s recorded name remains J Girardi; requested J GIRARDI K GIRARDI REV TRUST save returned 403 through Alyssa’s normal authenticated endpoint. Requires authorized platform sign-in; no bypass or direct database update. Durable QA requires isolated records/sessions; not published.
+
 ## Investor invitation visibility (2026-10-30)
 - [x] Steve's exact ROAS invitation was accepted October 30 at 19:52 UTC, expires November 29; no resend needed and no email sent.
 - [x] Put the shared invitation card on investor Overview with status, recipient, last-email date, copy and authorized send/resend, refresh and truthful send errors; no authority or link replacement changes.

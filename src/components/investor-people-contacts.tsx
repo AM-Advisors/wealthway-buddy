@@ -21,7 +21,7 @@ export function InvestorPeopleAndContacts({ onboardingId, onSaved }: { onboardin
   const changeFn = useServerFn(changeInvestingAsFn);
   const addFn = useServerFn(addPersonForKycFn);
   const q = useQuery({ queryKey: key, queryFn: () => listFn({ data: { onboardingId } }) });
-  const refresh = () => { qc.invalidateQueries({ queryKey: key }); qc.invalidateQueries({ queryKey: ["investor-email-history", onboardingId] }); onSaved?.(); };
+  const refresh = () => { qc.invalidateQueries({ queryKey: key }); qc.invalidateQueries({ queryKey: ["investor-email-history", onboardingId] }); for (const queryKey of [["investor-record", onboardingId], ["fund-investor-records"], ["onboarding"], ["onboarding-profiles"], ["profile-detail"], ["investment-profiles"], ["investment-readiness"], ["investor-prefill", onboardingId]]) qc.invalidateQueries({ queryKey }); onSaved?.(); };
 
   const [contact, setContact] = useState<{ fullName: string; email: string; title: string } | null>(null);
   const [change, setChange] = useState<{ type: "joint" | "entity" | "trust"; subType: string; legalName: string } | null>(null);
@@ -34,7 +34,7 @@ export function InvestorPeopleAndContacts({ onboardingId, onSaved }: { onboardin
   });
   const remove = useMutation({ mutationFn: (id: string) => removeFn({ data: { participantId: id } }), onSuccess: () => { toast.success("Access ended. Their history is kept."); refresh(); }, onError: (e) => toast.error((e as Error).message) });
   const doChange = useMutation({
-    mutationFn: () => changeFn({ data: { onboardingId, type: change!.type, subType: change!.subType || null, legalName: change!.legalName || null } }),
+    mutationFn: () => { if (!change) throw new Error("Choose how they are investing."); return changeFn({ data: { onboardingId, type: change.type, subType: change.subType || null, legalName: change.legalName || null } }); },
     onSuccess: () => { toast.success("Updated how they're investing. Add the other people below."); setChange(null); refresh(); },
     onError: (e) => toast.error((e as Error).message),
   });

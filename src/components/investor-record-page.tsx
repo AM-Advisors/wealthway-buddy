@@ -62,7 +62,7 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
   const { data, isLoading, error } = useQuery({ queryKey: ["investor-record", onboardingId], queryFn: () => load({ data: { onboardingId } }) });
   const [edit, setEdit] = useState<Record<string, string>>({});
   const set = (k: string) => (e: { target: { value: string } }) => setEdit((s) => ({ ...s, [k]: e.target.value }));
-  const refresh = () => { qc.invalidateQueries({ queryKey: ["investor-record", onboardingId] }); qc.invalidateQueries({ queryKey: ["fund-investor-records", fundId] }); };
+  const refresh = () => { qc.invalidateQueries({ queryKey: ["investor-record", onboardingId] }); qc.invalidateQueries({ queryKey: ["fund-investor-records", fundId] }); for (const queryKey of [["onboarding"], ["onboarding-profiles"], ["profile-detail"], ["investment-profiles"], ["investment-readiness"], ["investor-prefill", onboardingId]]) qc.invalidateQueries({ queryKey }); };
 
   if (isLoading) return <p className="text-sm text-muted-foreground">Loading investor…</p>;
   if (error || !data) return <p className="text-sm text-destructive">{(error as Error)?.message ?? "Investor not found."}</p>;
@@ -111,7 +111,7 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>{onOps ? <Link to="/ops/fund/$fundId" params={{ fundId }} className="text-sm text-muted-foreground hover:underline">← {data.fund?.name ?? "Fund"}</Link> : <Link to="/manager/fund/$fundId/investors" params={{ fundId }} className="text-sm text-muted-foreground hover:underline">← {data.fund?.name ?? "Fund"} investors</Link>}
           <h2 className="mt-1 text-xl">{data.overview.name}</h2>
-          <p className="text-sm text-muted-foreground">{data.profile?.label ?? "No investing profile yet"} · {prettyStatus(data.overview.stage)} · Entered by {SOURCE_LABELS[data.overview.enteredBy as EntrySource] ?? "Investor"}{data.overview.investorConfirmedAt ? " · confirmed by investor" : ""}</p></div>
+          <p className="text-sm text-muted-foreground">{data.profile?.legalName || data.profile?.label || "No investing profile yet"} · {prettyStatus(data.overview.stage)} · Entered by {SOURCE_LABELS[data.overview.enteredBy as EntrySource] ?? "Investor"}{data.overview.investorConfirmedAt ? " · confirmed by investor" : ""}</p></div>
         <div className="flex flex-wrap gap-2">
           {!data.overview.removed ? <Button size="sm" variant="outline" onClick={correctDetails}><Pencil className="mr-2 h-4 w-4" />Correct investor details</Button> : null}
           {staff && data.overview.investorUserId ? <Button asChild size="sm" variant="outline"><Link to="/ops/investors/$investorId" params={{ investorId: data.overview.investorUserId }} search={{ tab: undefined }}>Open Investor 360</Link></Button> : null}
@@ -170,7 +170,7 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
           {field("legalName", "Legal investor name", data.profile.legalName)}
           {data.profile.type === "entity" || data.profile.type === "trust" ? field("jurisdiction", "Jurisdiction", (data.profile.details as any).jurisdiction) : null}
           {data.profile.type === "ira" ? field("custodianName", "Custodian", (data.profile.details as any).custodianName) : null}
-          <Button className="sm:w-fit" disabled={data.overview.removed} onClick={() => save({ onboardingId, profile: { legalName: edit['legalName'], details: Object.fromEntries(["jurisdiction", "custodianName"].filter((k) => edit[k] !== undefined).map((k) => [k, edit[k]!])) } })}>Save profile</Button>
+          <Button className="sm:w-fit" disabled={data.overview.removed} onClick={() => save({ onboardingId, profile: { legalName: edit['legalName'], details: Object.fromEntries(["jurisdiction", "custodianName"].filter((k) => edit[k] !== undefined).map((k) => [k, edit[k]])) } })}>Save profile</Button>
           <RelatedPartiesEditor onboardingId={onboardingId} related={data.related as any} editable={!data.overview.removed && (data as any).profileEditMode === "direct"} onChanged={refresh} />
           <p className="text-xs text-muted-foreground sm:col-span-2">Tax forms, ID images and verification evidence are never shown here.</p>
         </CardContent></Card> : null}
