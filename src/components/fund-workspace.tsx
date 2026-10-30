@@ -227,7 +227,7 @@ export function FundWorkspace({ fundId, tab: rawTab, onTab, mode = "client", ext
           <FundChangeSummary fundId={fundId} onNavigate={onTab} />
           {tab === "overview" && <FundCommandCenter fundId={fundId} onNavigate={(t) => onTab(t === "capital" ? "distributions" : t)} />}
           {staff && <HarmoniousTodos steps={steps as any} onSetup={() => onTab("setup")} />}
-          <TodosTab steps={steps.filter((s) => s.owner === "You" && (!s.done || s.section === "economics"))} hasApprovedTerms={cap?.hasApprovedTerms} onNavigate={onTab} />
+          <TodosTab steps={steps.filter((s) => s.owner === "You" && (!s.done || s.section === "economics"))} hasApprovedTerms={cap?.hasApprovedTerms ?? false} onNavigate={onTab} />
         </TabsContent>
         <TabsContent value="calendar"><FundCalendar fundId={fundId} /></TabsContent>
         <TabsContent value="approvals">{tab === "approvals" && <FundApprovalsHub fundId={fundId} staff={staff} initial="approvals" />}</TabsContent>
