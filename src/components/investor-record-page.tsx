@@ -7,7 +7,10 @@ import { InvestorRecordDocuments } from "@/components/investor-document-review";
 import { InvestorDocumentAi } from "@/components/investor-document-ai";
 import { DistributionBankCard, InvestorTaxIdCard, RelatedPartiesEditor } from "@/components/investor-record-extras";
 import { useState } from "react";
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import { openTargetFor } from "@/lib/readiness-open-target";
+import { sendSubscriptionSignNoticeFn } from "@/lib/fund-tabs.functions";
+import { prepareSubscriptionDocumentsFn } from "@/lib/investor-onboarding.functions";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -41,6 +44,9 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
   const load = useServerFn(investorRecordDetailFn);
   const update = useServerFn(updateInvestorRecordFn);
   const resolve = useServerFn(resolveSuggestionFn);
+  const sendDoc = useServerFn(sendSubscriptionSignNoticeFn);
+  const prepareDocs = useServerFn(prepareSubscriptionDocumentsFn);
+  const navigate = useNavigate();
   const qc = useQueryClient();
   const { data, isLoading, error } = useQuery({ queryKey: ["investor-record", onboardingId], queryFn: () => load({ data: { onboardingId } }) });
   const [edit, setEdit] = useState<Record<string, string>>({});
@@ -51,6 +57,31 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
   if (error || !data) return <p className="text-sm text-destructive">{(error as Error)?.message ?? "Investor not found."}</p>;
   const staff = data.viewer === "staff";
   const p = data.person; const inv = data.investment as any;
+  const openItem = async (key: string) => {
+    const t = openTargetFor(key);
+    if (t.kind === "tab") { setTab(t.tab); setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 50); return; }
+    if (t.kind === "fund") {
+      if (onOps) navigate({ to: "/ops/fund/$fundId", params: { fundId }, search: { tab: t.area } });
+      else if (t.area === "approvals") navigate({ to: "/manager/fund/$fundId/approvals", params: { fundId } });
+      else navigate({ to: "/manager/fund-banking/$fundId", params: { fundId } });
+      return;
+    }
+    if (t.kind === "ops_onboarding") {
+      if (staff) navigate({ to: "/admin/investor-onboarding" });
+      else toast.message("Harmonious handles this step. It's already on their list.");
+      return;
+    }
+    try {
+      if (t.action === "send_tax_form") {
+        const r = await sendDoc({ data: { fundId, onboardingId, kind: "tax_form" } });
+        toast.success(r.sent ? (r.invited ? "Invite and tax form sent to the investor to sign" : "Tax form sent to the investor to sign") : "Already sent today, or the email wasn't sent.");
+      } else {
+        const r: any = await prepareDocs({ data: { onboardingId } });
+        toast.success(r?.alreadyPrepared ? "Documents were already prepared" : "Subscription documents prepared for signing");
+        refresh(); qc.invalidateQueries({ queryKey: ["investment-readiness"] });
+      }
+    } catch (e) { toast.error((e as Error).message); }
+  };
   const cents = (v?: string) => (v ? Math.round(Number(v.replace(/[$,\s]/g, "")) * 100) : undefined);
 
   const save = async (payload: any) => {
@@ -81,7 +112,7 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
 
       
       {tab === "overview" ? <div className="grid gap-4 md:grid-cols-2">
-        <Card className="md:col-span-2"><CardHeader><CardTitle className="text-base">Status, review & actions</CardTitle></CardHeader><CardContent><InvestorReviewPanel fundId={fundId} id={onboardingId} embedded onOpenItem={(key) => { setTab(/tax|doc|subscri|sign|accred|side|exception/i.test(key) ? "documents" : "details"); setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 50); }} /></CardContent></Card>
+        <Card className="md:col-span-2"><CardHeader><CardTitle className="text-base">Status, review & actions</CardTitle></CardHeader><CardContent><InvestorReviewPanel fundId={fundId} id={onboardingId} embedded onOpenItem={openItem} /></CardContent></Card>
         {staff && data.suggestions.length ? <Card className="md:col-span-2"><CardHeader><CardTitle className="text-base">Information conflicts & suggested updates</CardTitle></CardHeader><CardContent className="divide-y">
           {data.suggestions.map((s) => <div key={s.id} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm">
             <div><p className="font-medium">{prettyStatus(s.field)}</p><p className="text-muted-foreground">Harmonious record: {JSON.stringify(s.current)} · {SOURCE_LABELS[s.source as EntrySource] ?? s.source}: {JSON.stringify(s.proposed)}{s.status === "review_later" ? " · marked for later" : ""}</p></div>

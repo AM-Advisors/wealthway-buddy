@@ -1,3 +1,4 @@
+import { openLabelFor } from "@/lib/readiness-open-target";
 import { LoadError } from "@/components/load-error";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -95,7 +96,7 @@ export function AttentionNeeded({ r, viewer, onOpenItem }: { r: any; viewer: Vie
               <p className="text-sm font-medium">{i.action ?? i.label}</p>
             </div>
             <span className={cn("text-xs font-medium", tone(i.status))}>{plainStatus(i.status, viewer)}</span>
-            {onOpenItem ? <Button variant="outline" onClick={() => onOpenItem(i.key)}>{i.key === "aml" ? "Open screening review" : i.key === "tax_documentation" ? "Open tax form" : i.owner === "investor" ? "View details" : "Review"}</Button> : null}
+            {onOpenItem ? <Button variant="outline" onClick={() => onOpenItem(i.key)}>{openLabelFor(i.key, i.owner)}</Button> : null}
           </li>
         ))}
       </ul>
