@@ -33,7 +33,7 @@ describe("uploaded tax-form handoff", () => {
       person: { personId: "person", kycStatus: "approved", amlStatus: "clear" },
       profile: { profileId: investment.investment_profile_id, profileType: "individual", relatedPeople: [] },
       subscription: { requestedAmountCents: 5_000_000, documentsPrepared: true, signatureStatus: "completed" },
-      compliance: { tax: taxStateWithUpload({ state: "missing" }, copy) },
+      compliance: { tax: taxStateWithUpload({ state: "missing" as const }, copy) },
       nowIso: "2026-10-29T23:54:00Z",
     });
     const result = computeReadiness({ requirements, stage: "harmonious_review", fundingStatus: "not_funded", approvedToFundAt: null, acceptedAt: null, acceptedAmountCents: null, closedAt: null, exceptions: [] });
