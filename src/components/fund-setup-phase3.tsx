@@ -27,6 +27,7 @@ import {
   BANKING_PATH_LABELS,
   EIN_STATUSES,
   EIN_STATUS_LABELS,
+  needsEinApplication,
   FILING_RESPONSIBILITY_LABELS,
   HARMONIOUS_BANK_STATUSES,
   HARMONIOUS_BANK_STATUS_LABELS,
@@ -310,7 +311,7 @@ function EntityEinCard({ d, offeringId, onChanged }: { d: D; offeringId: string;
           <p className="text-sm font-medium">How will the EIN be handled?</p>
           <div className="flex flex-wrap gap-2">
             <Button size="sm" variant={e.path === "existing" ? "default" : "outline"} disabled={!d.canEditClient || busy} onClick={() => run(() => setPath({ data: { offeringId, path: "existing" } }), "Saved")}>I already have an EIN</Button>
-            <Button size="sm" variant={e.path === "harmonious" ? "default" : "outline"} disabled={!d.canEditClient || busy} onClick={() => run(() => setPath({ data: { offeringId, path: "harmonious" } }), "Saved")}>Have Harmonious obtain the EIN</Button>
+            {!e.hasEin && <Button size="sm" variant={e.path === "harmonious" ? "default" : "outline"} disabled={!d.canEditClient || busy} onClick={() => run(() => setPath({ data: { offeringId, path: "harmonious" } }), "Saved")}>Have Harmonious obtain the EIN</Button>}
           </div>
         </div>
 
@@ -347,7 +348,7 @@ function EntityEinCard({ d, offeringId, onChanged }: { d: D; offeringId: string;
           </div>
         )}
 
-        {e.path === "harmonious" && (
+        {e.path === "harmonious" && needsEinApplication(e.hasEin) && (
           <div className="space-y-3">
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-sm font-medium">Obtain EIN:</span>

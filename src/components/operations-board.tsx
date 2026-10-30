@@ -352,17 +352,20 @@ export function OperationsSs4({ fundId }: { fundId?: string }) {
   const [notes, setNotes] = useState<Record<string, string>>({});
 
   const mutation = useMutation({
-    mutationFn: (input: { offeringId: string; status: "approved" | "rejected" | "pending" }) =>
-      review({
+    mutationFn: (input: { offeringId: string; status: "approved" | "rejected" | "pending" }) => {
+      const entity = q.data?.entities.find((e) => e.offeringId === input.offeringId);
+      if (!entity) throw new Error("Refresh the fund details before reviewing.");
+      return review({
         data: {
           offeringId: input.offeringId,
           einStatus: input.status,
-          ss4Status: q.data?.entities.find((e) => e.offeringId === input.offeringId)?.hasEin
-            ? (q.data.entities.find((e) => e.offeringId === input.offeringId)?.ss4Status ?? "pending") as "approved" | "rejected" | "pending"
+          ss4Status: entity.hasEin
+            ? entity.ss4Status as "approved" | "rejected" | "pending"
             : input.status,
           note: notes[input.offeringId] ?? "",
         },
-      }),
+      });
+    },
     onSuccess: () => {
       toast.success("Saved");
       queryClient.invalidateQueries({ queryKey: ["ops-queue"] });
