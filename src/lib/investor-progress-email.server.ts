@@ -77,8 +77,8 @@ export async function drainProgressEmails(limit = 100) {
         const results = await Promise.all([
           db.from('investor_onboardings').select('investor_user_id,offering_id,removed_at').eq('id', meta.onboarding_id).maybeSingle(),
           db.from('fund_managers').select('user_id').eq('offering_id', first.offering_id),
-          db.from('profiles').select('email,legal_name').eq('user_id', meta.recipient_user_id).maybeSingle(),
-          db.from('profiles').select('legal_name').eq('user_id', first.investor_user_id).maybeSingle(),
+          db.from('profiles').select('email').eq('user_id', meta.recipient_user_id).maybeSingle(),
+          (async () => { const { loadAccountNames } = await import('./profile-name.server'); return loadAccountNames([meta.recipient_user_id, first.investor_user_id]); })(),
           db.from('offerings').select('name').eq('id', first.offering_id).maybeSingle(),
           db.from('notification_preferences').select('alerts_enabled').eq('user_id', meta.recipient_user_id).maybeSingle(),
         ])
