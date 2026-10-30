@@ -10,6 +10,7 @@ import { getMyFundRequests } from "@/lib/self-service.functions";
 import { getManagerFundProgress } from "@/lib/manager-fund.functions";
 import { money, prettyStatus } from "@/lib/status";
 import { AlertPreferenceToggle } from "@/components/alert-preference-toggle";
+import { ManagerApprovalsBanner } from "@/components/approvals-inbox-banner";
 import { AttentionCenter } from "@/components/attention-center";
 
 import { FundInvitations } from "@/components/fund-invitations";
@@ -127,7 +128,7 @@ function ManagerPortfolio() {
         {funds.length === 0 ? <p className="text-sm text-muted-foreground">{all.length ? "No funds match these filters." : "No funds yet: request your first fund or SPV above."}</p> : null}
       </div>
 
-      <div className="mt-8"><AttentionCenter workspace="fund_manager" /></div>
+      <div className="mt-8"><ManagerApprovalsBanner /><AttentionCenter workspace="fund_manager" /></div>
 
       <div className="mt-6 grid min-w-0 grid-cols-1 gap-6 lg:grid-cols-2"><FundInvitations title="Invite people to a fund" /><Card><CardHeader><CardTitle className="text-base">Email alerts</CardTitle><CardDescription>Choose which fund activity reaches your inbox.</CardDescription></CardHeader><CardContent><AlertPreferenceToggle /></CardContent></Card></div>
     </main>
