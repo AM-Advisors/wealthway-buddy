@@ -20,17 +20,23 @@ export async function loadAccountNames(userIds: (string | null | undefined)[]): 
   const names = new Map<string, string>();
   if (!ids.length) return names;
   const d = await adminClient();
-  const [profiles, persons] = await Promise.all([
+  const [{ data: profileRows }, { data: personRows }] = await Promise.all([
     d.from("profiles").select("user_id, legal_name, email").in("user_id", ids),
-    d.from("persons").select("user_id, email, legal_first_name, legal_last_name").in("user_id", ids),
+    (async () => {
+      const { data: emailOwners } = await d.from("profiles").select("email").in("user_id", ids);
+      const emails = [...new Set(((emailOwners ?? []) as any[]).map((p) => String(p.email ?? "").toLowerCase()).filter(Boolean))];
+      const orParts = [`user_id.in.(${ids.join(",")})`];
+      if (emails.length) orParts.push(`email.in.(${emails.join(",")})`);
+      return d.from("persons").select("user_id, email, legal_first_name, legal_last_name").or(orParts.join(","));
+    })(),
   ]);
   const byEmail = new Map<string, string>();
-  for (const p of ((persons as any).data ?? []) as any[]) {
+  for (const p of (personRows ?? []) as any[]) {
     const name = personName(p);
     if (p.user_id && name) names.set(p.user_id, name);
     if (p.email && name) byEmail.set(String(p.email).toLowerCase(), name);
   }
-  for (const pr of ((profiles as any).data ?? []) as any[]) {
+  for (const pr of (profileRows ?? []) as any[]) {
     if (!pr.user_id || names.has(pr.user_id)) continue;
     const name = pr.legal_name || byEmail.get(String(pr.email ?? "").toLowerCase()) || null;
     if (name) names.set(pr.user_id, name);
