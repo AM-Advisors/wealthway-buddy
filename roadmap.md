@@ -3,7 +3,8 @@
 ## Personal onboarding access recovery (2026-10-30)
 - [x] Confirm Steve's successful login and repeated denied onboarding reads; no supporting account, investment or person-request verification row found despite a Person approved label.
 - [x] Reuse shared account verification gate before personal onboarding mounts, providing start/continue/check-again instead of repeated denied reads; no approvals fabricated.
-- [ ] Check focused safeguards and preview build; authenticated synthetic read-back requires isolated QA. Steve's supporting verification must be recovered or he must complete the existing check.
+- [x] 28 onboarding/account-verification tests passed; preview build OK.
+- [ ] Authenticated synthetic read-back requires isolated QA. Steve's supporting verification must be recovered or he must complete the existing check; live release needs publishing.
 
 ## Kimberly investor clarity (2026-10-30)
 - [x] Confirm canonical Erebor person/profile name is Kimberly Girardi and account identity check is approved; Joe/Dante occur in original verification evidence, not current investor fields.
