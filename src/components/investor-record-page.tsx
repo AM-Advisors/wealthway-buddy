@@ -80,7 +80,7 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
 
       
       {tab === "overview" ? <div className="grid gap-4 md:grid-cols-2">
-        <Card className="md:col-span-2"><CardHeader><CardTitle className="text-base">Status, review & actions</CardTitle></CardHeader><CardContent><InvestorReviewPanel fundId={fundId} id={onboardingId} embedded onOpenItem={(key) => setTab(key === "tax_documentation" ? "documents" : "details")} /></CardContent></Card>
+        <Card className="md:col-span-2"><CardHeader><CardTitle className="text-base">Status, review & actions</CardTitle></CardHeader><CardContent><InvestorReviewPanel fundId={fundId} id={onboardingId} embedded onOpenItem={(key) => { setTab(/tax|doc|subscri|sign|accred|side|exception/i.test(key) ? "documents" : "details"); setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 50); }} /></CardContent></Card>
         {staff && data.suggestions.length ? <Card className="md:col-span-2"><CardHeader><CardTitle className="text-base">Information conflicts & suggested updates</CardTitle></CardHeader><CardContent className="divide-y">
           {data.suggestions.map((s) => <div key={s.id} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm">
             <div><p className="font-medium">{prettyStatus(s.field)}</p><p className="text-muted-foreground">Harmonious record: {JSON.stringify(s.current)} · {SOURCE_LABELS[s.source as EntrySource] ?? s.source}: {JSON.stringify(s.proposed)}{s.status === "review_later" ? " · marked for later" : ""}</p></div>
