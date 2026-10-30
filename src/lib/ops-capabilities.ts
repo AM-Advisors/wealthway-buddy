@@ -161,6 +161,7 @@ export const OPS_WORK_AREAS: OpsWorkArea[] = [
   {
     id: "clients", title: "Clients", url: "/ops/clients", icon: "briefcase", group: "records", queues: ["clients", "tasks"],
     screens: [
+      { title: "Approvals inbox", url: "/ops/approvals", description: "Every review and approval waiting on Harmonious, oldest first", step: "Start" },
       { title: "Work queue", url: "/ops/queue", description: "Everything waiting on Harmonious across all clients, including stuck funds", step: "Start" },
       { title: "My clients", url: "/staff", description: "Clients assigned to you", cap: "tasks", step: "Start" },
       { title: "Client onboarding", url: "/admin/onboarding", description: "Set up a new client", cap: "onboarding", step: "Start" },
