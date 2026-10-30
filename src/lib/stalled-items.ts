@@ -31,7 +31,7 @@ export const STAGE_ACTION: Record<string, { action: string; owner: "Investor" | 
   signature: { action: "Investor needs to sign the subscription documents", owner: "Investor" },
   harmonious_review: { action: "Fund manager needs to approve the investor to send funds", owner: "Fund manager" },
   approved_to_fund: { action: "Investor needs to send the wire", owner: "Investor" },
-  awaiting_funds: { action: "Fund manager needs to match the received wire", owner: "Fund manager" },
+  awaiting_funds: { action: "Harmonious needs to match the received wire", owner: "Harmonious" },
 };
 export const INVESTOR_STALL_DAYS = 7;
 export function investorStageAction(stage: string | null | undefined) {

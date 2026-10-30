@@ -953,7 +953,11 @@ export async function assertApplicationSigningVerification(userId: string, appli
 }
 
 export async function prepareSubscriptionDocuments(userId: string, onboardingId: string) {
-  const { actor, row } = await assertInvestorOwns(userId, onboardingId);
+  // Preparation only snapshots the documents for signing; the investor, staff or this fund's managers may trigger it. Signing stays investor-only.
+  const access = await assertOnboardingAccess(userId, onboardingId);
+  if (["closed", "declined", "cancelled"].includes(String(access.row.stage))) fail("This investment can no longer be changed.");
+  const { actor, row } = access;
+  const prepRole = access.role === "staff" ? "harmonious" : access.role;
   if (row.executed_snapshot) return { alreadyPrepared: true };
 
   const facts = await gatherFacts(row);
@@ -981,7 +985,7 @@ export async function prepareSubscriptionDocuments(userId: string, onboardingId:
     event: "documents_generated",
     detail: { templateVersion: version, documents: docs.map((d) => ({ id: d.id, v: d.current_version })) },
     actorUserId: actor.userId,
-    actorRole: "investor",
+    actorRole: prepRole,
   });
   return { templateVersion: version, documents: docs };
 }
