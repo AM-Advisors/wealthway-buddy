@@ -758,7 +758,8 @@ export async function approveEconomics(userId: string, versionId: string) {
     actorRole: actor.isStaff ? "harmonious" : "client",
   });
   await syncInvestorClassesFromEconomics(version.setup_id, data);
-  await (await import("@/lib/fund-setup-extras.server")).autoCompleteAfterSave({ offeringId: (await setupById(version.setup_id)).offering_id });
+  const { data: approvedSetup } = await db().from("fund_setups").select("offering_id").eq("id", version.setup_id).maybeSingle();
+  if (approvedSetup?.offering_id) await (await import("@/lib/fund-setup-extras.server")).autoCompleteAfterSave({ offeringId: approvedSetup.offering_id });
   return data;
 }
 

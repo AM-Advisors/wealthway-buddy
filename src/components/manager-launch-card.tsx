@@ -39,7 +39,7 @@ export function ManagerLaunchCard({ fundId, onNavigate }: { fundId: string; onNa
         <>
           <p className="text-base text-muted-foreground">Finish these before launching:</p>
           <ul className="mt-3 divide-y text-base">{items.map((b) => {
-            const action = launchAction(b.key, "section" in b ? b.section : undefined);
+            const action = launchAction(b.key, "section" in b && typeof b.section === "string" ? b.section : undefined);
             return <li key={b.key} className="flex flex-wrap items-center justify-between gap-3 py-3"><span>{b.label}</span>{onNavigate && <Button variant="outline" onClick={() => onNavigate(action.target)}>{action.label}</Button>}</li>;
           })}</ul>
           <Button variant="outline" className="mt-3" disabled={q.isFetching} onClick={() => void invalidateFund(qc, fundId)}>{q.isFetching ? "Checking…" : "Check progress again"}</Button>
