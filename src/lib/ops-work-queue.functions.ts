@@ -50,3 +50,8 @@ export const getOpsRecentActivity = createServerFn({ method: "POST" })
 export const getStalledWork = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => (await server()).stalledWork(context as any));
+
+/** One Approvals inbox for Harmonious staff; staff access and capabilities are checked on the server. */
+export const getApprovalsInbox = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => (await server()).approvalsInbox(context as any));

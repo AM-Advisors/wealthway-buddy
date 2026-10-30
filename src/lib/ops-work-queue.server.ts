@@ -1277,6 +1277,30 @@ export async function workQueue(context: Ctx, input: WorkQueueInput = {}) {
 }
 
 /** The sanitized trail already kept by the platform, newest first. */
+/** One inbox of every review/approval this staff member may see, oldest first. Read only. */
+export async function approvalsInbox(context: Ctx) {
+  const { capabilities } = await requireOperations(context);
+  const { isApprovalItem, sortOldestFirst, waitingDays, isStalledApproval } = await import("@/lib/approvals-inbox");
+  const s = context.supabase;
+  const now = new Date();
+  const lookup = await lookups(s);
+  const collected = await Promise.all(
+    COLLECTORS.map(async ({ area, load }) => (can(capabilities, area, "see") ? load(s, lookup, now).catch(() => [] as WorkItem[]) : [])),
+  );
+  const items = sortOldestFirst(filterByCapability(collected.flat(), capabilities).filter(summaryIsSafe).filter(isApprovalItem)).slice(0, 300);
+  return {
+    total: items.length,
+    stalled: items.filter((i) => isStalledApproval(i.at, now)).length,
+    items: items.map((i) => ({
+      id: i.id, title: i.title, reason: i.reason, requiredAction: i.requiredAction,
+      fundId: i.fundId ?? null, fundName: i.fundName ?? null, clientName: i.clientName ?? null,
+      investorName: i.investorName ?? null, assignedToName: i.assignedToName ?? null, at: i.at ?? null,
+      days: waitingDays(i.at, now), stalled: isStalledApproval(i.at, now), destination: destinationFor(i),
+    })),
+  };
+}
+
+/** The sanitized trail already kept by the platform, newest first. */
 export async function recentOperationsActivity(context: Ctx, limit = 20) {
   await requireOperations(context);
   const s = context.supabase;
