@@ -3,7 +3,8 @@
 ## Fund setup to-do usability (2026-10-30)
 - [x] Replace generic answer/check-off forms with direct existing setup and approval actions; terms completion uses the authorized approved-terms projection, never a note.
 - [x] Remove the repeated fund-change summary on Overview.
-- [ ] Run focused status safeguards and verify the actual to-do controls against fictional data; durable signed-in read-back needs independently isolated QA.
+- [x] 20 focused checks passed; actual to-do control with fictional terms navigates to approvals and displays approved completion with no answer field or duplicate action at 522px. Preview build OK.
+- [ ] Durable signed-in fund read-back needs independently isolated QA; not published and no real approvals changed.
 
 ## Arbitration saves and existing EIN (2026-10-30)
 - [x] Restore arbitration city/state in staff and manager read projections and canonical edit saves; previously saved values remain intact.
