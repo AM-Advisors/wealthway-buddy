@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -94,4 +95,19 @@ export function InviteInvestorButton({ onboardingId }: { onboardingId: string })
     }}>{busy ? "Sending…" : data.link?.lastSentAt ? "Resend invite" : "Invite investor"}</Button>
     {data.link?.lastSentAt ? <p className="text-xs text-muted-foreground">Last invited {new Date(data.link.lastSentAt).toLocaleDateString()}</p> : null}
   </div>;
+}
+
+/** Menu item for roster rows: creates the personal link if needed and emails the invite. Server checks authorization. */
+export function InviteInvestorMenuItem({ onboardingId, label = "Invite investor" }: { onboardingId: string; label?: string }) {
+  const create = useServerFn(createPersonalInvestmentLink), send = useServerFn(sendPersonalInvestmentLink), load = useServerFn(getPersonalInvestmentLink), qc = useQueryClient();
+  return <DropdownMenuItem onClick={async () => {
+    try {
+      const cur = await load({ data: { onboardingId } });
+      if (cur.link?.state === "claimed") { toast.message("This investor already accepted their invite."); return; }
+      if (!cur.link) await create({ data: { onboardingId } });
+      await send({ data: { onboardingId } });
+      toast.success("Invite sent to the investor");
+      qc.invalidateQueries({ queryKey: ["personal-investment-link", onboardingId] });
+    } catch (e) { toast.error((e as Error).message); }
+  }}>{label}</DropdownMenuItem>;
 }

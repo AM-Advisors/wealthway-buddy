@@ -1,3 +1,4 @@
+import { InviteInvestorMenuItem } from "@/components/personal-investment-link";
 import { useApplicationRoute, useInvestorRecordRoute } from "@/lib/use-investor-record-route";
 import { useMemo, useState, type ReactNode } from "react";
 import { InvestorRecordsSync } from "@/components/investor-records-sync";
@@ -117,6 +118,7 @@ export function ManagerFundInvestors({ fundId, extraTabs }: { fundId: string; ex
       investment={<Link to={recordTo} params={{ fundId, onboardingId: r.onboardingId }} search={{ tab: "investment" }}>Edit investment</Link>}
       readiness={<Link to={recordTo} params={{ fundId, onboardingId: r.onboardingId }} search={{ tab: "readiness" }}>View readiness</Link>}
       perspective={isStaff && r.hasAccount ? <Link to="/ops/readiness">View client perspective</Link> : undefined}
+      invitation={!r.hasAccount ? <InviteInvestorMenuItem onboardingId={r.onboardingId} /> : undefined}
       removal={<DropdownMenuItem className="text-destructive" onClick={() => { if (window.confirm(`Remove ${r.name} from this Fund? Their person record, other Funds and history are kept.`)) run(() => remove({ data: { onboardingId: r.onboardingId } }), "Removed from Fund"); }}>Remove from Fund</DropdownMenuItem>}
     />
   );
