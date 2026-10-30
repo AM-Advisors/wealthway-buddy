@@ -95,7 +95,7 @@ export function AttentionNeeded({ r, viewer, onOpenItem }: { r: any; viewer: Vie
               <p className="text-sm font-medium">{i.action ?? i.label}</p>
             </div>
             <span className={cn("text-xs font-medium", tone(i.status))}>{plainStatus(i.status, viewer)}</span>
-            {onOpenItem && ["aml", "tax_documentation"].includes(i.key) ? <Button variant="outline" onClick={() => onOpenItem(i.key)}>{i.key === "aml" ? "Open screening review" : "Open tax form"}</Button> : null}
+            {onOpenItem ? <Button variant="outline" onClick={() => onOpenItem(i.key)}>{i.key === "aml" ? "Open screening review" : i.key === "tax_documentation" ? "Open tax form" : i.owner === "investor" ? "View details" : "Review"}</Button> : null}
           </li>
         ))}
       </ul>
