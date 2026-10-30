@@ -58,8 +58,8 @@ export async function setPasswordLink(supabaseAdmin: any, email: string, created
 export async function previewInviteLink(supabaseAdmin: any, token: string) {
   const row = await findLink(supabaseAdmin, token);
   if (!row) return { ok: false as const };
-  const { data: prof } = await supabaseAdmin.from("profiles").select("legal_name").eq("user_id", row.user_id).maybeSingle();
-  const first = String((prof as any)?.legal_name ?? "").trim().split(/\s+/)[0] || null;
+  const { accountFirstName } = await import("@/lib/profile-name.server");
+  const first = (await accountFirstName([row.user_id])).get(row.user_id) ?? null;
   return { ok: true as const, firstName: first };
 }
 
