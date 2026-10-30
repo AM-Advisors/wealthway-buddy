@@ -16,7 +16,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 const LABEL: Record<string, string> = { not_started: "Not started", pending: "In progress", review: "Needs review", approved: "Approved", declined: "Declined", expired: "ID expired", sent_back: "Sent back" };
 
 /** Harmonious compliance queue for account identity checks (portal access gate). */
-export function AccountIdentityQueue() {
+export function AccountIdentityQueue({ userId }: { userId?: string | undefined } = {}) {
   const qc = useQueryClient();
   const list = useServerFn(accountCheckQueueFn);
   const decide = useServerFn(decideAccountCheckFn);
@@ -27,16 +27,16 @@ export function AccountIdentityQueue() {
   const [filter, setFilter] = useState<"review" | "all">("review");
   const m = useMutation({
     mutationFn: (v: { checkId: string; action: "approve" | "decline" | "send_back" }) => decide({ data: { ...v, note: notes[v.checkId]?.trim() || null } }),
-    onSuccess: () => { toast.success("Decision saved."); qc.invalidateQueries({ queryKey: ["account-identity-queue"] }); },
+    onSuccess: () => { toast.success("Decision saved."); qc.invalidateQueries({ queryKey: ["account-identity-queue"] }); qc.invalidateQueries({ queryKey: ["investor-record"] }); qc.invalidateQueries({ queryKey: ["investment-readiness"] }); },
     onError: (e: Error) => toast.error(e.message),
   });
-  const rows = (q.data ?? []).filter((r: any) => filter === "all" || r.status === "review");
+  const rows = (q.data ?? []).filter((r: any) => (!userId || r.user_id === userId) && (userId ? true : filter === "all" || r.status === "review"));
   const selected = (q.data ?? []).find((r: any) => r.id === selectedId);
   const decisionControls = (r: any) => ["review", "approved", "declined", "expired"].includes(r.status) ? (
     <div className="space-y-2">
       <Textarea rows={2} aria-label={`Review note for ${r.email}`} placeholder="Note (required to decline or send back)" value={notes[r.id] ?? ""} onChange={(e) => setNotes({ ...notes, [r.id]: e.target.value })} />
       <div className="flex flex-wrap gap-2">
-        {r.status === "review" && <Button size="sm" disabled={m.isPending} onClick={() => m.mutate({ checkId: r.id, action: "approve" })}>Approve</Button>}
+        {r.status === "review" && <Button size="sm" disabled={m.isPending} onClick={() => m.mutate({ checkId: r.id, action: "approve" })}>Approve: it's good</Button>}
         {r.status === "review" && <Button size="sm" variant="destructive" disabled={m.isPending} onClick={() => m.mutate({ checkId: r.id, action: "decline" })}>Decline</Button>}
         <Button size="sm" variant="outline" disabled={m.isPending} onClick={() => m.mutate({ checkId: r.id, action: "send_back" })}>Ask to verify again</Button>
       </div>
@@ -45,8 +45,8 @@ export function AccountIdentityQueue() {
   return (
     <Card>
       <CardHeader className="flex-row flex-wrap items-start justify-between gap-3 space-y-0">
-        <div><CardTitle className="text-base">Account identity checks</CardTitle><CardDescription>Everyone except Harmonious staff must pass before using the portal. Approve or decline checks marked Needs review. You can't decide your own.</CardDescription></div>
-        <div className="flex gap-1"><Button size="sm" variant={filter === "review" ? "default" : "outline"} onClick={() => setFilter("review")}>Needs review</Button><Button size="sm" variant={filter === "all" ? "default" : "outline"} onClick={() => setFilter("all")}>All</Button></div>
+        <div><CardTitle className="text-base">{userId ? "Identity & compliance screening" : "Account identity checks"}</CardTitle><CardDescription>{userId ? "Review the results, then approve to confirm it's good. You can't decide your own." : "Everyone except Harmonious staff must pass before using the portal. Approve or decline checks marked Needs review. You can't decide your own."}</CardDescription></div>
+        {!userId && <div className="flex gap-1"><Button size="sm" variant={filter === "review" ? "default" : "outline"} onClick={() => setFilter("review")}>Needs review</Button><Button size="sm" variant={filter === "all" ? "default" : "outline"} onClick={() => setFilter("all")}>All</Button></div>}
       </CardHeader>
       <CardContent className="space-y-3">
         {q.isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> : q.error ? <p className="text-sm text-destructive">{(q.error as Error).message}</p> : !rows.length ? <p className="py-6 text-center text-sm text-muted-foreground">Nothing waiting.</p> : rows.map((r: any) => {
