@@ -1,5 +1,10 @@
 # Roadmap
 
+## Fund setup to-do usability (2026-10-30)
+- [x] Replace generic answer/check-off forms with direct existing setup and approval actions; terms completion uses the authorized approved-terms projection, never a note.
+- [x] Remove the repeated fund-change summary on Overview.
+- [ ] Run focused status safeguards and verify the actual to-do controls against fictional data; durable signed-in read-back needs independently isolated QA.
+
 ## Arbitration saves and existing EIN (2026-10-30)
 - [x] Restore arbitration city/state in staff and manager read projections and canonical edit saves; previously saved values remain intact.
 - [x] Existing EIN suppresses SS-4 preparation and reminders, preserves historical forms, and leaves EIN evidence requirements intact; new sends/reminders check EIN server-side.
