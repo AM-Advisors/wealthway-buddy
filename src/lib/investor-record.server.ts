@@ -368,12 +368,16 @@ export async function updateInvestorRecord(userId: string, input: {
   }
 
   if (input.profile && row.investment_profile_id) {
-    const { data: cur } = await db().from("investment_profiles").select("legal_name, details, status").eq("id", row.investment_profile_id).maybeSingle();
+    const { data: cur } = await db().from("investment_profiles").select("legal_name, display_label, details, status").eq("id", row.investment_profile_id).maybeSingle();
     if (cur?.status === "locked") fail("This investing profile is locked.");
     const apply: Record<string, unknown> = {};
     if (input.profile.legalName !== undefined && !sameValue(cur?.legal_name, input.profile.legalName)) {
       apply['legal_name'] = input.profile.legalName;
       changes.push({ offeringId: row.offering_id, onboardingId: row.id, table: "investment_profiles", id: row.investment_profile_id, field: "legal_name", from: cur?.legal_name ?? null, to: input.profile.legalName, source, actor: actor.userId });
+    }
+    if (input.profile.legalName?.trim() && !sameValue(cur?.display_label, input.profile.legalName.trim())) {
+      apply['display_label'] = input.profile.legalName.trim();
+      changes.push({ offeringId: row.offering_id, onboardingId: row.id, table: "investment_profiles", id: row.investment_profile_id, field: "display_label", from: cur?.display_label ?? null, to: input.profile.legalName.trim(), source, actor: actor.userId });
     }
     if (input.profile.details) {
       const next = { ...(cur?.details ?? {}), ...sanitizePatch(input.profile.details, actor) };

@@ -158,15 +158,18 @@ export async function changeInvestingAs(userId: string, input: { onboardingId: s
   const { investorEditWindow, exclusiveRecord } = await import("@/lib/manager-edit-window.server");
   if (!actor.isStaff && !(await investorEditWindow(full) && await exclusiveRecord(full, "investment_profile_id"))) forbid("signing or funding has started, or this profile is used elsewhere; ask Harmonious.");
   if (actor.isStaff && !(await investorEditWindow(full))) forbid("signing or funding has started; this can't be changed now.");
-  const { data: pr } = await db().from("investment_profiles").select("id, profile_type, legal_name").eq("id", row.investment_profile_id).maybeSingle();
+  const { data: pr } = await db().from("investment_profiles").select("id, profile_type, legal_name, display_label, status").eq("id", row.investment_profile_id).maybeSingle();
   if (!pr) fail("Profile not found.");
+  if (pr.status === "locked") fail("This investing profile is locked.");
   const next = input.type === "entity" ? (ENTITY_SUBTYPES.has(String(input.subType)) ? String(input.subType) : "other_entity") : input.type;
   if (input.type !== "joint" && !input.legalName?.trim()) fail("Enter the entity or trust legal name.");
-  const patch: Record<string, unknown> = { profile_type: next, ...(input.legalName?.trim() ? { legal_name: input.legalName.trim() } : {}) };
+  const patch: Record<string, unknown> = { profile_type: next, ...(input.legalName?.trim() ? { legal_name: input.legalName.trim(), display_label: input.legalName.trim() } : {}) };
   const { error } = await db().from("investment_profiles").update(patch).eq("id", pr.id);
   if (error) fail(error.message);
   await db().from("investor_record_changes").insert(Object.entries(patch).map(([f, v]) => ({ offering_id: row.offering_id, onboarding_id: row.id, subject_table: "investment_profiles", subject_id: pr.id, field: f, old_value: (pr as any)[f] ?? null, new_value: v, source: actor.isStaff ? "harmonious" : "fund_manager", actor_user_id: userId, manager_visible: true })));
   await event(row, "investing_as_changed", userId, role, { from: pr.profile_type, to: next });
+  const { reconcileAfter } = await import("@/lib/investor-onboarding.server");
+  await reconcileAfter([row.id], { actorUserId: userId, trigger: "investing_as_changed" });
   return { ok: true, profileType: next };
 }
 

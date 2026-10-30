@@ -70,3 +70,4 @@
 - Investor correction shortcuts reuse the existing investor-record save/review path; account-review current name/contact comes from that authorized record, while original verification evidence remains separately labeled and inspectable. Why: simpler corrections must not rewrite screening history or grant identity authority.
 - Personal onboarding mounts private content behind shared AccountKycGate. Why: unverified accounts get recovery instead of repeated denied reads; server checks remain authoritative.
 
+- Investing-party conversion and legal-name corrections synchronize investment_profiles legal_name and display_label, log changes, reconcile readiness and invalidate profile readers; personal identity stays separate. Why: trust names must persist across views without rewriting personal verification.

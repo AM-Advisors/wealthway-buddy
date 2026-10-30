@@ -244,6 +244,24 @@ describe("claim & confirmation", () => {
 });
 
 describe("sync, provenance and scope", () => {
+  it("trust conversion saves the full investing-party name on only the linked profile", async () => {
+    const s = await srv();
+    const r = await s.createInvestor(STAFF, jane());
+    const other = await s.createInvestor(STAFF, jane({ personId: r.personId, profile: { type: "trust", legalName: "Other Trust" } }));
+    const { changeInvestingAs } = await import("@/lib/onboarding-participants.server");
+    await changeInvestingAs(STAFF, { onboardingId: r.onboardingId, type: "trust", legalName: "J GIRARDI K GIRARDI REV TRUST" });
+    expect(tables.investment_profiles.find((p) => p.id === r.profileId)).toMatchObject({ profile_type: "trust", legal_name: "J GIRARDI K GIRARDI REV TRUST", display_label: "J GIRARDI K GIRARDI REV TRUST" });
+    expect(tables.investment_profiles.find((p) => p.id === other.profileId).legal_name).toBe("Other Trust");
+    expect(tables.persons[0].legal_first_name).toBe("Jane");
+    expect(reconciled).toContain(r.onboardingId);
+  });
+  it("trust name corrections synchronize the display without renaming the person", async () => {
+    const s = await srv();
+    const r = await s.createInvestor(STAFF, jane({ profile: { type: "trust", legalName: "J Girardi" } }));
+    await s.updateInvestorRecord(STAFF, { onboardingId: r.onboardingId, profile: { legalName: "J GIRARDI K GIRARDI REV TRUST" } });
+    expect(tables.investment_profiles[0]).toMatchObject({ legal_name: "J GIRARDI K GIRARDI REV TRUST", display_label: "J GIRARDI K GIRARDI REV TRUST" });
+    expect(tables.persons[0].legal_first_name).toBe("Jane");
+  });
   it("updates change canonical records once, log old/new, and reconcile readiness", async () => {
     const s = await srv();
     const r = await s.createInvestor(STAFF, jane());
@@ -271,7 +289,7 @@ describe("sync, provenance and scope", () => {
     const r = await s.createInvestor(STAFF, jane());
     tables["fund_file_signatures"] = [{ onboarding_id: r.onboardingId, signer_role: "investor", status: "signed" }];
     const out = await s.updateInvestorRecord(MGR_A, { onboardingId: r.onboardingId, person: { addressLine1: "9 Other Rd" }, profile: { legalName: "Changed investor" }, investment: { amountCents: 200 } });
-    expect(out.suggested).toBe(3);
+    expect(out.suggested).toBe(4);
     expect(out.changed).toBe(0);
     expect(tables["persons"][0].address_line1).toBe("1 Main St");
     expect(tables["investor_onboardings"][0].requested_amount_cents).toBe(10_000_000);
