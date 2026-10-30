@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -68,4 +69,29 @@ export function PersonalLinkCopyButton({ onboardingId }: { onboardingId: string 
     } catch (e) { toast.error((e as Error).message); }
   };
   return <Button size="sm" variant="outline" className="whitespace-nowrap" onClick={go}>Copy link</Button>;
+}
+
+/** One-click invite: creates the investor's personal link if needed, then emails it. Uses the same authorized link engine. */
+export function InviteInvestorButton({ onboardingId }: { onboardingId: string }) {
+  const load = useServerFn(getPersonalInvestmentLink), create = useServerFn(createPersonalInvestmentLink), send = useServerFn(sendPersonalInvestmentLink), qc = useQueryClient();
+  const key = ["personal-investment-link", onboardingId];
+  const { data } = useQuery({ queryKey: key, queryFn: () => load({ data: { onboardingId } }) });
+  const [busy, setBusy] = useState(false);
+  if (!data) return null;
+  if (data.link?.state === "claimed") return <p className="text-sm text-muted-foreground">Investor has accepted their invite and set up their account.</p>;
+  if (!data.hasEmail) return <p className="text-sm text-muted-foreground">Add the investor's email to send an invite.</p>;
+  if (!data.link && !data.canCreate) return null;
+  return <div className="space-y-1">
+    <Button size="lg" className="w-full justify-start text-base sm:w-auto" disabled={busy} onClick={async () => {
+      setBusy(true);
+      try {
+        if (!data.link) await create({ data: { onboardingId } });
+        await send({ data: { onboardingId } });
+        toast.success("Invite sent to the investor");
+        qc.invalidateQueries({ queryKey: key });
+      } catch (e) { toast.error((e as Error).message); }
+      finally { setBusy(false); }
+    }}>{busy ? "Sending…" : data.link?.lastSentAt ? "Resend invite" : "Invite investor"}</Button>
+    {data.link?.lastSentAt ? <p className="text-xs text-muted-foreground">Last invited {new Date(data.link.lastSentAt).toLocaleDateString()}</p> : null}
+  </div>;
 }
