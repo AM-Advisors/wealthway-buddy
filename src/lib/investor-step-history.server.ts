@@ -29,11 +29,10 @@ export async function investorStepHistory(userId: string, offeringId: string, on
     ...(ok<any[]>(pe) ?? []).flatMap((e) => obs.filter((o) => o.investment_profile_id === e.profile_id).map((o) => ({ id: `pe-${e.id}-${o.id}`, at: e.created_at, onboardingId: o.id, kind: 'profile' as const, event: `profile_${e.event}`, actorId: e.actor_id }))),
   ];
   const actorIds = [...new Set(raw.map((r) => r.actorId).filter(Boolean))] as string[];
-  const [roles, people] = actorIds.length ? await Promise.all([
-    db.from('user_roles').select('user_id,role').in('user_id', actorIds).eq('role', 'admin'),
-    db.from('profiles').select('user_id,legal_name,email').in('user_id', actorIds),
-  ]) : [{ data: [] }, { data: [] }];
-  const names = new Map<string, string>(((people as any).data ?? []).map((p: any) => [p.user_id, p.legal_name || p.email]));
+  const [roles, names] = await Promise.all([
+    actorIds.length ? db.from('user_roles').select('user_id,role').in('user_id', actorIds).eq('role', 'admin') : Promise.resolve({ data: [] }),
+    (async () => { const { loadAccountNames } = await import('./profile-name.server'); return loadAccountNames(actorIds); })(),
+  ]);
   const entries = normaliseSteps(raw, { viewerIsStaff: actor.isStaff, staffIds: new Set(((roles as any).data ?? []).map((r: any) => r.user_id)), investorIds: new Set(obs.map((o) => o.investor_user_id).filter(Boolean)), names });
   return { entries, investors: obs.map((o) => ({ id: o.id, name: profName(o.investment_profile_id) || 'Investor' })) };
 }

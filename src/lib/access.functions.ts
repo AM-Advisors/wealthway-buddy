@@ -22,10 +22,10 @@ async function loadDirectory(): Promise<DirectoryEntry[]> {
 
   const users = data?.users ?? [];
   const ids = users.map((u) => u.id);
-  const { data: profiles } = ids.length
-    ? await supabaseAdmin.from("profiles").select("user_id, legal_name").in("user_id", ids)
-    : { data: [] as any[] };
-  const nameMap = new Map((profiles ?? []).map((p: any) => [p.user_id, p.legal_name]));
+  const nameMap = await (async () => {
+    const { loadAccountNames } = await import("@/lib/profile-name.server");
+    return loadAccountNames(ids);
+  })();
 
   return users
     .map((u) => ({

@@ -34,7 +34,7 @@ export async function loadBundle() {
     if (data.users.length < 1000) break;
   }
   const q = (t: string, cols: string) => db.from(t).select(cols).limit(10000).then((r: any) => (r.data ?? []) as any[]);
-  const [profiles, roles, grants, customRoles, fms, ifa, ips, cus, clients, companies, offerings, pms, orgs, dels, dperms, assignments, pgrants, roleDefs, auditEvents, classifications] = await Promise.all([
+  const [profiles, roles, grants, customRoles, fms, ifa, ips, cus, clients, companies, offerings, pms, orgs, dels, dperms, assignments, pgrants, roleDefs, auditEvents, classifications, persons] = await Promise.all([
     q("profiles", "user_id, legal_name, email"),
     q("user_roles", "user_id, role, created_at"),
     q("staff_capability_grants", "id, user_id, capability, role_key, granted_by, granted_at, reason, revoked_by, revoked_at"),
@@ -55,8 +55,9 @@ export async function loadBundle() {
     q("access_role_definitions", "*"),
     db.from("access_audit_events").select("*").order("created_at", { ascending: false }).limit(1000).then((r: any) => (r.data ?? []) as any[]),
     q("access_account_classifications", "id, user_id, classification, reason, recorded_by, created_at"),
+    q("persons", "user_id, email, legal_first_name, legal_last_name"),
   ]);
-  return { users, profiles, roles, grants, customRoles, fms, ifa, ips, cus, clients, companies, offerings, pms, orgs, dels, dperms, assignments, pgrants, roleDefs, auditEvents, classifications };
+  return { users, profiles, roles, grants, customRoles, fms, ifa, ips, cus, clients, companies, offerings, pms, orgs, dels, dperms, assignments, pgrants, roleDefs, auditEvents, classifications, persons };
 }
 
 export function factsFor(b: Bundle, userId: string, names: Map<string, string>): Facts {
@@ -115,7 +116,13 @@ export function lastChange(b: Bundle, userId: string): string | null {
 export function nameMap(b: Bundle) {
   const m = new Map<string, string>();
   for (const u of b.users) m.set(u.id, u.email ?? u.id);
+  const hasProfileName = new Set(b.profiles.filter((p: any) => p.legal_name).map((p: any) => p.user_id));
   for (const p of b.profiles) if (p.legal_name) m.set(p.user_id, p.legal_name);
+  for (const p of b.persons) {
+    if (!p.user_id || hasProfileName.has(p.user_id)) continue;
+    const full = `${p.legal_first_name ?? ""} ${p.legal_last_name ?? ""}`.trim();
+    if (full.length) m.set(p.user_id, full);
+  }
   return m;
 }
 

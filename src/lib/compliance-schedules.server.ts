@@ -16,8 +16,8 @@ export async function listSchedules(userId: string) {
   ]);
   const schedules = checked<any[]>(s) ?? [], deliveries = checked<any[]>(d) ?? [];
   const ids = [...new Set([...schedules.map((x) => x.created_by), ...deliveries.map((x) => x.decided_by)].filter(Boolean))];
-  const people = ids.length ? checked<any[]>(await db.from('profiles').select('user_id,legal_name,email').in('user_id', ids)) ?? [] : [];
-  const name = (id: string | null) => (id ? people.find((p) => p.user_id === id)?.legal_name || people.find((p) => p.user_id === id)?.email || 'Team member' : null);
+  const names = ids.length ? await (async () => { const { loadAccountNames } = await import('./profile-name.server'); return loadAccountNames(ids); })() : new Map<string, string>();
+  const name = (id: string | null) => (id ? names.get(id) || 'Team member' : null);
   return {
     viewerId: userId,
     schedules: schedules.map((x) => ({ id: x.id, name: x.name, reportType: x.report_type, frequency: x.frequency, recipients: x.recipients, sections: (x.sections ?? []) as ReportSection[], outsideRecipients: (x.outside_recipients ?? []) as any[], nextRunOn: x.next_run_on, active: x.active, createdBy: x.created_by, createdByName: name(x.created_by) })),

@@ -181,11 +181,11 @@ export async function team(fundId: string) {
     d.from("fund_managers").select("user_id").eq("offering_id", fundId),
   ]);
   const ids = ((managers ?? []) as any[]).map((m) => m.user_id);
-  const { data: profs } = ids.length ? await d.from("profiles").select("user_id, legal_name, email").in("user_id", ids) : { data: [] };
+  const managerNames = await (async () => { const { loadAccountNames } = await import("@/lib/profile-name.server"); return loadAccountNames(ids); })();
   const feeRows = (fees ?? []) as any[];
   return {
     members: (members ?? []) as any[],
-    signedInManagers: ((profs ?? []) as any[]).map((p) => ({ name: p.legal_name ?? p.email ?? "Fund manager", email: p.email ?? null })),
+    signedInManagers: ids.map((id) => ({ name: managerNames.get(id) ?? "Fund manager", email: null })),
     activeFee: feeRows.find((f) => f.status === "active") ?? null,
     pendingFee: feeRows.find((f) => f.status === "pending_approval") ?? null,
     feeHistory: feeRows,
