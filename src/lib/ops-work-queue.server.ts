@@ -1276,7 +1276,6 @@ export async function workQueue(context: Ctx, input: WorkQueueInput = {}) {
   };
 }
 
-/** The sanitized trail already kept by the platform, newest first. */
 /** One inbox of every review/approval this staff member may see, oldest first. Read only. */
 export async function approvalsInbox(context: Ctx) {
   const { capabilities } = await requireOperations(context);
