@@ -23,7 +23,7 @@
 - Sales menus follow resolved staff roles; invoice ACH/wire links reuse /ops/billing/payment-instructions and its remittance engine — why: no duplicate settings or implied authority.
 - Server functions import requireSupabaseAuth only from src/lib/require-auth.ts, never the generated module — why: light context avoids preview typecheck limits.
 - Fund workspace mounts selected tabs only; primary Approvals uses fund-setup-reviews and existing fee/document/question tools; banking shares FundBankingReview + BankInstructionRelease — why: discoverable actions, unchanged authority.
-- Setup %: fund-launch-summary.ts; banking: bankSetupStatus; launch: ManagerLaunchCard; setup refresh: invalidateFund — why: shared facts, scoped refresh.
+- Setup %: fund-launch-summary.ts; bank: bankSetupStatus; launch: ManagerLaunchCard + launch-action; refresh: invalidateFund. Economics completion reads approved fund_economics_versions. Why: shared facts, no duplicate blockers.
 - Launch links reuse ensureFundLaunchLink before launch state changes; active tokens persist and disabled links need explicit enablement — why: no launched fund without its canonical entry point.
 - Fund origin separates new/migration workflows; investor-progress-email uses canonical steps, audit frequency and the existing drain — why: no inferred takeover or duplicate engine.
 
