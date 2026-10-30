@@ -3939,6 +3939,185 @@ export type Database = {
         }
         Relationships: []
       }
+      bsa_beneficial_owners: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          full_name: string
+          id: string
+          notes: string | null
+          ownership_percent: number | null
+          person_id: string
+          removed_at: string | null
+          removed_by: string | null
+          role: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          full_name: string
+          id?: string
+          notes?: string | null
+          ownership_percent?: number | null
+          person_id: string
+          removed_at?: string | null
+          removed_by?: string | null
+          role?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          full_name?: string
+          id?: string
+          notes?: string | null
+          ownership_percent?: number | null
+          person_id?: string
+          removed_at?: string | null
+          removed_by?: string | null
+          role?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bsa_beneficial_owners_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bsa_documents: {
+        Row: {
+          archived_at: string | null
+          archived_by: string | null
+          created_at: string
+          file_name: string
+          id: string
+          kind: string
+          person_id: string
+          storage_path: string
+          title: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          archived_at?: string | null
+          archived_by?: string | null
+          created_at?: string
+          file_name: string
+          id?: string
+          kind: string
+          person_id: string
+          storage_path: string
+          title: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          archived_at?: string | null
+          archived_by?: string | null
+          created_at?: string
+          file_name?: string
+          id?: string
+          kind?: string
+          person_id?: string
+          storage_path?: string
+          title?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bsa_documents_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bsa_profile_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          detail: Json
+          event: string
+          id: string
+          person_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          detail?: Json
+          event: string
+          id?: string
+          person_id: string
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          detail?: Json
+          event?: string
+          id?: string
+          person_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bsa_profile_events_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bsa_profiles: {
+        Row: {
+          created_at: string
+          last_reviewed_at: string | null
+          last_reviewed_by: string | null
+          next_review_date: string | null
+          person_id: string
+          risk_rating: string | null
+          risk_reason: string | null
+          source_of_funds: string | null
+          source_of_wealth: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          last_reviewed_at?: string | null
+          last_reviewed_by?: string | null
+          next_review_date?: string | null
+          person_id: string
+          risk_rating?: string | null
+          risk_reason?: string | null
+          source_of_funds?: string | null
+          source_of_wealth?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          last_reviewed_at?: string | null
+          last_reviewed_by?: string | null
+          next_review_date?: string | null
+          person_id?: string
+          risk_rating?: string | null
+          risk_reason?: string | null
+          source_of_funds?: string | null
+          source_of_wealth?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bsa_profiles_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: true
+            referencedRelation: "persons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cap_certificates: {
         Row: {
           cancelled_at: string | null
