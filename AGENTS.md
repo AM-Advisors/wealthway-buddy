@@ -29,7 +29,8 @@
 
 - Marketing/email/CSA STAR/direct signing-email rules: src/lib/AGENTS.md.
 - Operations and Account Managers may review/approve others' internal work via src/lib/ops-capabilities.ts (never their own; money paths use capabilitiesFor(roles, { moneyPath: true })); tax, money and administration keep their own approvers - why: user-approved peer approval without widening money authority.
-- Fund Drive: offerings.drive_folder_url is the main folder; offerings.drive_links holds staff-only labeled links — why: multiple folders, unchanged permissions.
+- Fund Drive: drive_folder_url is primary; drive_links are staff-only. Why: multiple folders, same permissions.
+- Formation uses one upload and hasFormationEvidence; retain legacy certificate keys/history. Why: no duplicate requirement.
 - Setup uses canonical approvals and exact-fund next actions; ApprovalButton undo is pre-submit only. Manager approval opens released wires before final admission. Why: preserve authority/history.
 - Request/task routing and progress sync atomically, not approvals; task details staff-only; payment skip needs funds/prepare — why: no drift.
 - People & Access is the only directory; activity views show recorded evidence, never online presence; View account resets use admin-checked account-security — why: truthful audit, unchanged authority.
