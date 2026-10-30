@@ -10,7 +10,7 @@ export const DOCUMENT_REQUESTS = {
 } as const
 export type DocumentRequestKind = keyof typeof DOCUMENT_REQUESTS
 
-export async function sendSubscriptionSignNotice(db: any, actorId: string, input: { fundId: string; onboardingId: string; kind?: DocumentRequestKind }) {
+export async function sendSubscriptionSignNotice(db: any, actorId: string, input: { fundId: string; onboardingId: string; kind?: DocumentRequestKind | undefined }) {
   const kind: DocumentRequestKind = input.kind ?? 'subscription'
   const spec = DOCUMENT_REQUESTS[kind]
   // Only that fund's managers or Harmonious staff — general fund membership is not enough.
