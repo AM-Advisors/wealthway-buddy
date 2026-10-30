@@ -30,7 +30,7 @@ import { investorLevelsFn } from "@/lib/fund-tabs.functions";
 import { FEATURE_LABELS, LEVELS, portalFeatures } from "@/lib/investor-levels";
 import { INVESTOR_TIERS } from "@/lib/product-pricing";
 import { fmtDate, usd } from "./shared";
-import { PersonalInvestmentLinkCard, PersonalLinkCopyButton } from "@/components/personal-investment-link";
+import { InviteInvestorButton, PersonalInvestmentLinkCard, PersonalLinkCopyButton } from "@/components/personal-investment-link";
 import { InvestorEmailHistory, InvestorHelpers, InvestorQuickEdit } from "@/components/investor-panel-extras";
 import { InvestorPeopleAndContacts } from "@/components/investor-people-contacts";
 import { InvestorPriorVerification } from "@/components/investor-prior-verification";
@@ -434,6 +434,11 @@ export function InvestorReviewPanel({ fundId, id, embedded = false, onOpenItem }
           </section>
             </TabsContent>
             <TabsContent value="actions" className="space-y-6">
+          {id && <section className="rounded-lg border p-3" aria-label="Invite investor">
+            <h4 className="mb-1 font-medium">Investor account</h4>
+            <p className="mb-2 text-muted-foreground">Email the investor their personal invite so they can set up their account and start onboarding.</p>
+            <InviteInvestorButton onboardingId={id} />
+          </section>}
           <section className="rounded-lg border p-3" aria-label="Send documents">
             <h4 className="mb-1 font-medium">Send a document to this investor</h4>
             <p className="text-muted-foreground">Each button emails the investor a link to that one item. Sending never signs, approves or certifies anything.</p>
