@@ -81,7 +81,7 @@ function ReadinessHeader({ r, title, subtitle, action }: { r: any; title: string
   );
 }
 
-export function AttentionNeeded({ r, viewer, onOpenItem }: { r: any; viewer: Viewer; onOpenItem?: (key: string) => void }) {
+export function AttentionNeeded({ r, viewer, onOpenItem }: { r: any; viewer: Viewer; onOpenItem?: ((key: string) => void) | undefined }) {
   const list = blockersOf(r);
   if (!list.length || r.terminal) return null;
   return (
@@ -183,7 +183,7 @@ function AuditDetails({ r }: { r: any }) {
   );
 }
 
-export function ReadinessSurface({ r, viewer, title, subtitle, action, onOpenItem }: { r: any; viewer: Viewer; title: string; subtitle: string; action?: React.ReactNode; onOpenItem?: (key: string) => void }) {
+export function ReadinessSurface({ r, viewer, title, subtitle, action, onOpenItem }: { r: any; viewer: Viewer; title: string; subtitle: string; action?: React.ReactNode; onOpenItem?: ((key: string) => void) | undefined }) {
   return (
     <div className="space-y-6 rounded-xl border bg-card p-5 sm:p-6">
       <ReadinessHeader r={r} title={title} subtitle={subtitle} action={action} />
@@ -209,7 +209,7 @@ function Empty({ title, body, icon }: { title: string; body: string; icon?: Reac
 }
 
 /** Investor / manager / staff view of one Investment's canonical checklist. */
-export function InvestmentChecklist({ onboardingId, viewAs = false, onOpenItem }: { onboardingId: string; viewAs?: boolean; onOpenItem?: (key: string) => void }) {
+export function InvestmentChecklist({ onboardingId, viewAs = false, onOpenItem }: { onboardingId: string; viewAs?: boolean; onOpenItem?: ((key: string) => void) | undefined }) {
   const load = useServerFn(investmentReadinessFn);
   const loadAs = useServerFn(viewAsInvestmentFn);
   // In View As the server resolves the investment from the live perspective; no ID is sent.
