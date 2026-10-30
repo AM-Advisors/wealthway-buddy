@@ -2,6 +2,7 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 
 import { OnboardPortal, OnboardShell } from "@/components/onboard-portal";
 import { MyPersonalInvestmentLinks } from "@/components/personal-investment-link";
+import { AccountKycGate } from "@/components/account-kyc-gate";
 import { supabase } from "@/integrations/supabase/client";
 
 /** One investment's onboarding. Ownership is enforced on the server for every read. */
@@ -29,8 +30,10 @@ function PortalPage() {
   const { onboardingId } = Route.useParams();
   return (
     <OnboardShell>
-      <OnboardPortal onboardingId={onboardingId} />
-      <div className="mt-6"><MyPersonalInvestmentLinks onlyOnboardingId={onboardingId} /></div>
+      <AccountKycGate onSignOut={() => supabase.auth.signOut().then(() => undefined)}>
+        <OnboardPortal onboardingId={onboardingId} />
+        <div className="mt-6"><MyPersonalInvestmentLinks onlyOnboardingId={onboardingId} /></div>
+      </AccountKycGate>
     </OnboardShell>
   );
 }
