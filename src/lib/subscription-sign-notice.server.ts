@@ -1,7 +1,18 @@
 /** Emails one investor a link to the Sign step of their own investment. No signing or approval is recorded here. */
 const CLOSED = ['declined', 'cancelled', 'closed', 'funded']
 
-export async function sendSubscriptionSignNotice(db: any, actorId: string, input: { fundId: string; onboardingId: string }) {
+/** One fixed request per document. Each opens the investor's own step; nothing is signed, approved or certified by sending. */
+export const DOCUMENT_REQUESTS = {
+  subscription: { title: 'Your Subscription Agreement', step: 'sign', label: 'Open and sign', steps: ['Sign in to Harmonious', 'Finish any earlier steps shown', 'Review and sign the Subscription Agreement'] },
+  tax_form: { title: 'Your tax form (W-9 or W-8)', step: 'sign', label: 'Open tax form', steps: ['Sign in to Harmonious', 'Open the Sign step', 'Complete and sign your tax form'] },
+  accreditation: { title: 'Your accreditation proof', step: 'verify', label: 'Open accreditation', steps: ['Sign in to Harmonious', 'Open the Verification step', 'Upload proof or ask your CPA or lawyer to send it'] },
+  fund_documents: { title: "The fund's documents", step: 'sign', label: 'Open fund documents', steps: ['Sign in to Harmonious', 'Open the Sign step', 'Read and acknowledge each fund document'] },
+} as const
+export type DocumentRequestKind = keyof typeof DOCUMENT_REQUESTS
+
+export async function sendSubscriptionSignNotice(db: any, actorId: string, input: { fundId: string; onboardingId: string; kind?: DocumentRequestKind | undefined }) {
+  const kind: DocumentRequestKind = input.kind ?? 'subscription'
+  const spec = DOCUMENT_REQUESTS[kind]
   // Only that fund's managers or Harmonious staff — general fund membership is not enough.
   const { isStaff } = await import('@/lib/fund-tabs.server')
   const staff = await isStaff(actorId)
@@ -13,7 +24,7 @@ export async function sendSubscriptionSignNotice(db: any, actorId: string, input
     .select('id, offering_id, investor_user_id, stage, removed_at').eq('id', input.onboardingId).maybeSingle()
   if (error) throw new Error('Investment unavailable.')
   if (!ob || ob.offering_id !== input.fundId || ob.removed_at) throw new Error('Investment not found for this fund.')
-  if (CLOSED.includes(ob.stage)) throw new Error('This investment is no longer open for signing.')
+  if (CLOSED.includes(ob.stage)) throw new Error('This investment is no longer open.')
   if (!ob.investor_user_id) throw new Error("The investor hasn't created their account yet. Send their invitation first.")
   const { data: auth, error: authError } = await db.auth.admin.getUserById(ob.investor_user_id)
   if (authError || !auth?.user?.email) throw new Error('Investor email unavailable.')
@@ -25,15 +36,15 @@ export async function sendSubscriptionSignNotice(db: any, actorId: string, input
     managed: true,
     inboxForAnyUser: true,
     // One notice per investment per day, so repeated clicks don't spam the investor.
-    idempotencyKey: `subscription-sign:${ob.id}:${day}`,
+    idempotencyKey: kind === 'subscription' ? `subscription-sign:${ob.id}:${day}` : `document-request:${kind}:${ob.id}:${day}`,
     templateData: {
       recipientName: auth.user.user_metadata?.name || 'there',
-      documentTitle: 'Your Subscription Agreement',
+      documentTitle: spec.title,
       fundName: fund?.name ?? 'your fund',
-      steps: ['Sign in to Harmonious', 'Finish any earlier steps shown', 'Review and sign the Subscription Agreement'],
+      steps: [...spec.steps],
       requestedBy: sender?.user?.user_metadata?.name || undefined,
-      ctaUrl: `https://app.harmonious.co/investment/${ob.id}?step=sign`,
-      ctaLabel: 'Open and sign',
+      ctaUrl: `https://app.harmonious.co/investment/${ob.id}?step=${spec.step}`,
+      ctaLabel: spec.label,
     },
   })
   if (result && result.sent === false) return { sent: false, reason: result.reason ?? 'not_sent' }

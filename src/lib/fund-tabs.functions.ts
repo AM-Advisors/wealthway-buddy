@@ -34,7 +34,7 @@ export const managerInvestorTaxFormFn = createServerFn({ method: "POST" }).middl
   });
 
 export const sendSubscriptionSignNoticeFn = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .validator(fund.extend({ onboardingId: uuid }).parse)
+  .validator(fund.extend({ onboardingId: uuid, kind: z.enum(["subscription", "tax_form", "accreditation", "fund_documents"]).optional() }).parse)
   .handler(async ({ data, context }) => {
     const s = await srv();
     return (await import("./subscription-sign-notice.server")).sendSubscriptionSignNotice(await s.db(), context.userId, data);
