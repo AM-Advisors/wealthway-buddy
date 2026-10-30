@@ -50,6 +50,7 @@ import { RequestHarmoniousButton } from "@/components/fund-tabs/request-harmonio
 import { fundEinFn } from "@/lib/fund-tabs.functions";
 import { FundChangeSummary } from "@/components/fund-change-summary";
 import { FUND_SUB_LABEL, FUND_TOP_TABS, normalizeFundTab, topTabFor } from "@/lib/fund-tab-map";
+import { fundTodoState } from "@/lib/fund-todo-model";
 
 const nice = (v: string | null | undefined) => (v ? v.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) : "");
 
@@ -213,7 +214,7 @@ export function FundWorkspace({ fundId, tab: rawTab, onTab, mode = "client", ext
           { l: "Investors", t: "investors", v: cap ? String(cap.totals.investors) : "-" },
           { l: "Committed", t: "investors", v: cap ? usd(cap.totals.commitCents) : "-" },
           { l: "Funded (reconciled)", t: "investors", v: cap ? usd(cap.totals.fundedCents) : "-" },
-          { l: "Open to dos", t: "overview", v: String(steps.filter((s) => s.owner === "You" && !s.done && s.status !== "review").length) },
+          { l: "Open to dos", t: "overview", v: String(steps.filter((s) => s.owner === "You" && !fundTodoState(s, cap?.hasApprovedTerms).complete).length) },
           { l: "Next deadline", t: "calendar", v: (() => { const n = nextDeadline((rq.data?.calendar ?? []) as any); return n ? `${n.date}` : "-"; })() },
         ].map((k) => (
           <button key={k.l} type="button" onClick={() => onTab(k.t)} className="group rounded-lg border bg-card p-4 text-left transition-colors hover:border-primary hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
@@ -223,11 +224,10 @@ export function FundWorkspace({ fundId, tab: rawTab, onTab, mode = "client", ext
         ))}
       </div>
 
-      <FundChangeSummary fundId={fundId} onNavigate={onTab} />
           <FundChangeSummary fundId={fundId} onNavigate={onTab} />
           {tab === "overview" && <FundCommandCenter fundId={fundId} onNavigate={(t) => onTab(t === "capital" ? "distributions" : t)} />}
           {staff && <HarmoniousTodos steps={steps as any} onSetup={() => onTab("setup")} />}
-          <TodosTab fundId={fundId} steps={steps.filter((s) => s.owner === "You" && !s.done) as any} />
+          <TodosTab steps={steps.filter((s) => s.owner === "You" && (!s.done || s.section === "economics"))} hasApprovedTerms={cap?.hasApprovedTerms ?? false} onNavigate={onTab} />
         </TabsContent>
         <TabsContent value="calendar"><FundCalendar fundId={fundId} /></TabsContent>
         <TabsContent value="approvals">{tab === "approvals" && <FundApprovalsHub fundId={fundId} staff={staff} initial="approvals" />}</TabsContent>
