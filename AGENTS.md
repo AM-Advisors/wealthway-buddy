@@ -40,7 +40,6 @@
 - approveToFund allows admin staff/exact-fund managers, never self — why: staff approve, signatories sign; money/identity unchanged.
 - Inbox channels and the automatic fund onboarding email depend on the fund's active service level via src/lib/inbox-policy.ts — why: one rule for Self Serve vs paid.
 - Migrated client billing (past fees/invoices/payments, generated or uploaded SOWs, commission hand-off) lives in migrated-billing.server.ts; commissions reuse the signed-quote engine via a recorded quote, and the recorder can't also push to commissions — why: one commission engine, maker-checker kept.
-- Payment selection/reporting uses payment-planning.ts and PaymentPlanner; payment_plan_versions stores actor-owned append-only planning snapshots after canonical authorized reads, never changes invoice terms or commission queue deadlines — why: reporting cadence and planning cadence must be independent without implying payment authority.
 - Existing contact/person selection uses SearchableSelect over each caller's entitled options; FundPersonPicker retains identity badges and multi-recipient controls retain independent selections — why: consistent suggestions without a global directory or broader access.
 - Missing Sales quote/document recipients use the existing CRM prospect engine with record-scoped authorization and conditional, audited assignment before sending; no client membership is granted — why: add contacts inline without replacing sent recipients or duplicating identity/access workflows.
 - CRM companies use durable owner/fund-scoped crm_companies links; company history reads only individually entitled contacts and deals through crm.server.ts, while title/phone edits retain existing contact saves and audits — why: connected prospect records without a second directory, inferred identity merges or expanded access.
@@ -48,7 +47,7 @@
 
 - Forecast rules (projections only, ForecastInput forms, operating and fund cash-flow models): src/lib/AGENTS.md.
 
-- Billing and ROAS payment tracking rules: src/lib/AGENTS.md. Why: canonical receipts, no automatic posting.
+- Billing, ROAS payment tracking, payment planning and quote package rules: src/lib/AGENTS.md. Why: canonical receipts, no automatic posting.
 
 - Commission basis is gross profit from append-only cost entries/settings; expected signed-SOW rows are computed projections, never payable; existing queue/payout amounts remain historical.
 - Bookkeeping uses the shared quote engine with recorded proposed configurations and frozen line snapshots; database gates keep these draft-only until a separately approved release — why: staged pricing must never reach live signing, billing or enrollment.
@@ -66,6 +65,5 @@
 - Commercial views use scoped readers and fictional QA only. Sales handoffs use quote-keyed staff_tasks and the service-only save_sales_operations_handoff transaction for owner, due date and receiving-owner transitions with task events. Why: one queue, no access or money grants.
 - Listed contacts/team entries auto-link to a confirmed same-email login via connect_listed_entries (triggers + sign-in RPC, logged); view-only client access, never manager rights — why: no separate invite needed.
 - Amount-range classes: FundClass min/max (exclusive) + class-tiers.ts; agreement prep picks the series from the signed amount, records it, and refuses when several fit until staff/manager records the choice — why: investors never self-select overlapping series.
-- One-click quote package (sendQuotePackage + quote-package-model.ts) drafts the SOW, emails the quote and issues every invoice through Dec 31 next year; the quote's approval is the issue check, and signing/schedules skip anything already billed via package_issued_through — why: no gaps or double billing between quote, SOW and invoices.
 - Investor roster menus share InvestorActionsMenu; only unique explicit same-fund application links from the authorized roster use canonical routes/actions. Unlinked or ambiguous legacy records keep legacy routes, disabled unsupported actions and distinct revocation/removal. Why: navigation must not infer identity or authority.
 

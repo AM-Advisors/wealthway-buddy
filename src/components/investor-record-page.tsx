@@ -20,6 +20,7 @@ import { prettyStatus } from "@/lib/status";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { BsaProfilePanel } from "@/components/bsa-profile-panel";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -28,8 +29,8 @@ export const INVESTOR_RECORD_TABS = ["overview", "investment", "profile", "onboa
 export type InvestorRecordTab = (typeof INVESTOR_RECORD_TABS)[number];
 /** Four visible tabs; older links to merged tabs still land in the right place. */
 const VISIBLE_TABS = ["overview", "details", "documents", "activity"] as const;
-type VisibleTab = (typeof VISIBLE_TABS)[number];
-const TAB_LABEL: Record<VisibleTab, string> = { overview: "Overview", details: "Details", documents: "Documents", activity: "Activity" };
+type VisibleTab = (typeof VISIBLE_TABS)[number] | "bsa";
+const TAB_LABEL: Record<VisibleTab, string> = { overview: "Overview", details: "Details", documents: "Documents", activity: "Activity", bsa: "BSA (staff only)" };
 function visibleTab(t?: InvestorRecordTab): VisibleTab {
   if (t === "investment" || t === "profile") return "details";
   if (t === "documents") return "documents";
@@ -108,7 +109,8 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
           {data.pendingReviewCount ? <Badge variant="secondary">{data.pendingReviewCount} awaiting Harmonious review</Badge> : null}
         </div>
       </div>
-      <div className="flex gap-1 overflow-x-auto border-b pb-1">{VISIBLE_TABS.map((t) => <Button key={t} size="sm" variant={t === tab ? "default" : "ghost"} className="shrink-0" onClick={() => setTab(t)}>{TAB_LABEL[t]}</Button>)}</div>
+      <div className="flex gap-1 overflow-x-auto border-b pb-1">{([...VISIBLE_TABS, ...(staff ? ["bsa" as const] : [])] as VisibleTab[]).map((t) => <Button key={t} size="sm" variant={t === tab ? "default" : "ghost"} className="shrink-0" onClick={() => setTab(t)}>{TAB_LABEL[t]}</Button>)}</div>
+      {tab === "bsa" && staff ? <BsaProfilePanel onboardingId={onboardingId} /> : null}
 
       
       {tab === "overview" ? <div className="grid gap-4 md:grid-cols-2">
