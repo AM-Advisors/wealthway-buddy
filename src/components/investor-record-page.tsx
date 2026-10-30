@@ -1,3 +1,4 @@
+import { AccountIdentityQueue } from "@/components/account-identity-queue";
 import { InvestorVerificationCard } from "@/components/investor-verification-card";
 import { InvestorReviewPanel } from "@/components/fund-tabs/investors-tab";
 import { UploadForInvestor } from "@/components/upload-for-investor";
@@ -104,6 +105,7 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
         } })}>{data.detailsEditMode === "suggest" ? "Submit investment changes" : "Save investment"}</Button>
       </CardContent></Card> : null}
 
+      {tab === "details" && staff && data.overview.investorUserId ? <AccountIdentityQueue userId={data.overview.investorUserId} /> : null}
       {tab === "details" ? <div className="space-y-4">
         {staff && data.overview.investorUserId ? <InvestorVerificationCard investorUserId={data.overview.investorUserId} /> : null}
         <Card><CardHeader><CardTitle className="text-base">Contact</CardTitle>
