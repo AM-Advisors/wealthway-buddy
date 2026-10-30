@@ -6,6 +6,8 @@
  * or writes the database lives in fund-setup.server.ts.
  */
 
+import { hasFormationEvidence } from "./fund-formation";
+
 // ------------------------------------------------------------- structures
 
 export const FUND_STRUCTURES = [
@@ -328,7 +330,10 @@ export function entityStepError(
   if (toIndex > fromIndex + 1) return "Entity formation steps are completed in order.";
   // A series is created under its Master LLC and has no formation document or certificate of its own.
   const needed = opts.isSeries && (to === "formation_filed" || to === "formation_accepted") ? undefined : EVIDENCE_REQUIRED[to];
-  if (needed && !evidence[needed]) {
+  const hasEvidence = to === "formation_filed" || to === "formation_accepted"
+    ? hasFormationEvidence(evidence)
+    : needed ? !!evidence[needed] : true;
+  if (needed && !hasEvidence) {
     return `${to.replace(/_/g, " ")} needs the supporting document on file first.`;
   }
   return null;

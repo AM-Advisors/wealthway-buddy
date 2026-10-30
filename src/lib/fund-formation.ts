@@ -4,8 +4,7 @@
  * Nothing here files with a state or orders from a provider.
  */
 export const FORMATION_DOC_TYPES = [
-  { key: "formation_document", label: "Articles / Formation document" },
-  { key: "certificate_of_formation", label: "Certificate of Formation" },
+  { key: "formation_document", label: "Formation document" },
   { key: "operating_agreement", label: "Operating / LP agreement" },
   { key: "good_standing", label: "Certificate of good standing" },
   { key: "registered_agent_consent", label: "Registered agent consent" },
@@ -13,8 +12,13 @@ export const FORMATION_DOC_TYPES = [
   { key: "formation_other", label: "Other formation document" },
 ] as const;
 export type FormationDocType = (typeof FORMATION_DOC_TYPES)[number]["key"];
-export const FORMATION_DOC_KEYS = FORMATION_DOC_TYPES.map((d) => d.key) as string[];
-export const docTypeLabel = (k: string) => FORMATION_DOC_TYPES.find((d) => d.key === k)?.label ?? "Formation document";
+export const FORMATION_DOC_KEYS = [...FORMATION_DOC_TYPES.map((d) => d.key), "certificate_of_formation"] as string[];
+export const docTypeLabel = (k: string) => FORMATION_DOC_TYPES.find((d) => d.key === (k === "certificate_of_formation" ? "formation_document" : k))?.label ?? "Formation document";
+
+/** Either historical formation category satisfies the same document requirement. */
+export function hasFormationEvidence(evidence: { formationDocumentId?: unknown; certificateDocumentId?: unknown }) {
+  return !!(evidence.formationDocumentId || evidence.certificateDocumentId);
+}
 
 export const PROCESSING_OPTIONS = ["Standard", "Expedited", "Same day"] as const;
 export const NAME_CHECK_RESULTS = ["Not checked", "Available", "Unavailable", "Reserved"] as const;

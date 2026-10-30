@@ -95,7 +95,6 @@ export function ServiceProvidersSection({ offeringId }: { offeringId: string }) 
 
 const EVIDENCE: { kind: "formation" | "certificate" | "ein_letter"; label: string }[] = [
   { kind: "formation", label: "Formation document" },
-  { kind: "certificate", label: "Certificate of formation" },
   { kind: "ein_letter", label: "IRS EIN letter" },
 ];
 
@@ -122,8 +121,8 @@ export function FormationEvidenceSection({ offeringId, kinds }: { offeringId: st
       <p className="text-sm font-medium">Formation documents</p>
       <p className="text-xs text-muted-foreground">Fund formation evidence</p>
       <ul className="divide-y">
-        {EVIDENCE.filter((e) => !kinds || kinds.includes(e.kind)).map((e) => {
-          const ev = data.evidence[e.kind];
+        {EVIDENCE.filter((e) => !kinds || kinds.includes(e.kind) || (e.kind === "formation" && kinds.includes("certificate"))).map((e) => {
+          const ev = e.kind === "formation" && !data.evidence.formation.present ? data.evidence.certificate : data.evidence[e.kind];
           return (
             <li key={e.kind} className="space-y-2 py-3">
               <span className="flex items-center gap-2 text-sm">

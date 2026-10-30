@@ -6,6 +6,7 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { setupActor, forbid } from "@/lib/fund-setup.server";
 import { autoCompleteTasks } from "@/lib/fund-setup-extras.server";
+import { hasFormationEvidence } from "@/lib/fund-formation";
 import {
   checkTransition, managerView, SERVICE_KINDS, allowedNext,
   type ServiceKind, type ServiceStatus,
@@ -45,8 +46,8 @@ export async function logEvent(orderId: string, userId: string, ev: string, from
 async function evidenceFlags(offeringId: string) {
   const { data: s } = await db().from("fund_setups").select("id").eq("offering_id", offeringId).maybeSingle();
   if (!s) return { hasCertificate: false, hasEinLetter: false, setupId: null as string | null };
-  const { data: ef } = await db().from("fund_entity_formation").select("certificate_document_id, ein_letter_document_id").eq("setup_id", s.id).maybeSingle();
-  return { hasCertificate: !!ef?.certificate_document_id, hasEinLetter: !!ef?.ein_letter_document_id, setupId: s.id as string };
+  const { data: ef } = await db().from("fund_entity_formation").select("formation_document_id, certificate_document_id, ein_letter_document_id").eq("setup_id", s.id).maybeSingle();
+  return { hasCertificate: hasFormationEvidence({ formationDocumentId: ef?.formation_document_id, certificateDocumentId: ef?.certificate_document_id }), hasEinLetter: !!ef?.ein_letter_document_id, setupId: s.id as string };
 }
 
 async function names(userIds: string[]) {

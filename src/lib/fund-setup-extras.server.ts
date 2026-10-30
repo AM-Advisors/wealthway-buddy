@@ -5,6 +5,7 @@
  */
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { setupActor, forbid } from "@/lib/fund-setup.server";
+import { hasFormationEvidence } from "@/lib/fund-formation";
 
 const db = () => supabaseAdmin as any;
 
@@ -153,7 +154,7 @@ export async function autoCompleteTasks(offeringId: string) {
       client_service_providers: providersComplete(s.service_providers ?? {}),
       fund_information: !!(o?.legal_entity_name && o?.fund_type),
       entity_registered_agent: !!(o?.registered_agent || ef?.registered_agent),
-      entity_formation: !!(ef?.formation_document_id && ef?.certificate_document_id),
+      entity_formation: hasFormationEvidence({ formationDocumentId: ef?.formation_document_id, certificateDocumentId: ef?.certificate_document_id }),
       entity_ein: !!ef?.ein_letter_document_id,
       offering_config: !!(o?.reg_type && o?.min_investment_cents != null),
       investment_target: !!o?.target_raise_cents,
