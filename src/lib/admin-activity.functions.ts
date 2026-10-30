@@ -134,9 +134,13 @@ export const listAdminActivity = createServerFn({ method: "GET" })
       ),
     ] as string[];
     let nameMap = new Map<string, string>();
+    let emailMap = new Map<string, string>();
     if (peopleIds.length) {
-      const { loadAccountNames } = await import("@/lib/profile-name.server");
-      nameMap = await loadAccountNames(peopleIds);
+      const [{ loadAccountNames }, { data: profs }] = await Promise.all([
+        import("@/lib/profile-name.server").then((m) => m.loadAccountNames(peopleIds)).then((m) => ({ loadAccountNames: undefined as never, map: m })).then((x) => x),
+        supabase.from("profiles").select("user_id, email").in("user_id", peopleIds),
+      ]);
+      void 0;
     }
     const person = (id: string | null) => {
       if (!id) return { name: null as string | null, email: null as string | null };
