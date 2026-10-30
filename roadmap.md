@@ -1,9 +1,10 @@
 # Roadmap
 
 ## Arbitration saves and existing EIN (2026-10-30)
-- [ ] Fix arbitration city/state persistence through the canonical fund save.
-- [ ] Existing EIN must not request SS-4 or show its absence as incomplete; keep EIN evidence requirements.
-- [ ] Run focused regression checks; do not change live fund facts or approvals.
+- [x] Restore arbitration city/state in staff and manager read projections and canonical edit saves; previously saved values remain intact.
+- [x] Existing EIN suppresses SS-4 preparation and reminders, preserves historical forms, and leaves EIN evidence requirements intact; new sends/reminders check EIN server-side.
+- [x] 28 focused regression checks passed; no live fund facts, approvals or emails changed.
+- [ ] Durable staff/manager save and reload verification needs independently isolated QA; publishing has not been requested.
 
 ## Launch approval clarity (2026-10-30)
 - [x] Economics completion reads approved canonical terms and refreshes after approval; duplicate task blockers removed; exact unfinished tasks link to existing setup/approval/document/banking pages.

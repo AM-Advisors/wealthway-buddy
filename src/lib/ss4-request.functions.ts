@@ -207,6 +207,7 @@ export const resendSs4RequestFn = createServerFn({ method: "POST" })
     if (!r) throw new Error("Request not found.");
     await requireStaffOrManager(context.userId, r.offering_id);
     if (r.status !== "requested") throw new Error("Only a request still waiting for signature can be reminded.");
+    if (!needsEinApplication(await fundHasEin(context, r.offering_id))) throw new Error("An EIN is already recorded. No SS-4 reminder is needed.");
     const { data: prof } = await db.from("profiles").select("email, legal_name").eq("user_id", r.signer_user_id).maybeSingle();
     const signerEmail = ((prof as any)?.email ?? null) as string | null;
     if (!signerEmail) throw new Error("The signer has no email address on file.");
