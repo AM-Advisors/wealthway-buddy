@@ -136,15 +136,16 @@ export const listAdminActivity = createServerFn({ method: "GET" })
     let nameMap = new Map<string, string>();
     let emailMap = new Map<string, string>();
     if (peopleIds.length) {
-      const [{ loadAccountNames }, { data: profs }] = await Promise.all([
-        import("@/lib/profile-name.server").then((m) => m.loadAccountNames(peopleIds)).then((m) => ({ loadAccountNames: undefined as never, map: m })).then((x) => x),
+      const [names, { data: profs }] = await Promise.all([
+        import("@/lib/profile-name.server").then((m) => m.loadAccountNames(peopleIds)),
         supabase.from("profiles").select("user_id, email").in("user_id", peopleIds),
       ]);
-      void 0;
+      nameMap = names;
+      emailMap = new Map(((profs ?? []) as any[]).filter((p) => p.email).map((p) => [p.user_id, p.email as string]));
     }
     const person = (id: string | null) => {
       if (!id) return { name: null as string | null, email: null as string | null };
-      return { name: nameMap.get(id) ?? null, email: null as string | null };
+      return { name: nameMap.get(id) ?? null, email: emailMap.get(id) ?? null };
     };
 
     const entries: AdminActivityEntry[] = [];
