@@ -255,6 +255,7 @@ import { Route as AuthenticatedOpsAccessControlRouteImport } from './routes/_aut
 import { Route as AuthenticatedOpsAccountingRouteImport } from './routes/_authenticated/ops.accounting'
 import { Route as AuthenticatedOpsAgreementsRouteImport } from './routes/_authenticated/ops.agreements'
 import { Route as AuthenticatedOpsAllocationsRouteImport } from './routes/_authenticated/ops.allocations'
+import { Route as AuthenticatedOpsApprovalsRouteImport } from './routes/_authenticated/ops.approvals'
 import { Route as AuthenticatedOpsBankingRouteImport } from './routes/_authenticated/ops.banking'
 import { Route as AuthenticatedOpsClientApprovalsRouteImport } from './routes/_authenticated/ops.client-approvals'
 import { Route as AuthenticatedOpsClientPortalLaunchRouteImport } from './routes/_authenticated/ops.client-portal-launch'
@@ -1867,6 +1868,12 @@ const AuthenticatedOpsAllocationsRoute =
     path: '/ops/allocations',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOpsApprovalsRoute =
+  AuthenticatedOpsApprovalsRouteImport.update({
+    id: '/ops/approvals',
+    path: '/ops/approvals',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOpsBankingRoute = AuthenticatedOpsBankingRouteImport.update({
   id: '/ops/banking',
   path: '/ops/banking',
@@ -3470,6 +3477,7 @@ export interface FileRoutesByFullPath {
   '/ops/accounting': typeof AuthenticatedOpsAccountingRoute
   '/ops/agreements': typeof AuthenticatedOpsAgreementsRoute
   '/ops/allocations': typeof AuthenticatedOpsAllocationsRoute
+  '/ops/approvals': typeof AuthenticatedOpsApprovalsRoute
   '/ops/banking': typeof AuthenticatedOpsBankingRoute
   '/ops/client-approvals': typeof AuthenticatedOpsClientApprovalsRoute
   '/ops/client-portal-launch': typeof AuthenticatedOpsClientPortalLaunchRoute
@@ -3944,6 +3952,7 @@ export interface FileRoutesByTo {
   '/ops/accounting': typeof AuthenticatedOpsAccountingRoute
   '/ops/agreements': typeof AuthenticatedOpsAgreementsRoute
   '/ops/allocations': typeof AuthenticatedOpsAllocationsRoute
+  '/ops/approvals': typeof AuthenticatedOpsApprovalsRoute
   '/ops/banking': typeof AuthenticatedOpsBankingRoute
   '/ops/client-approvals': typeof AuthenticatedOpsClientApprovalsRoute
   '/ops/client-portal-launch': typeof AuthenticatedOpsClientPortalLaunchRoute
@@ -4426,6 +4435,7 @@ export interface FileRoutesById {
   '/_authenticated/ops/accounting': typeof AuthenticatedOpsAccountingRoute
   '/_authenticated/ops/agreements': typeof AuthenticatedOpsAgreementsRoute
   '/_authenticated/ops/allocations': typeof AuthenticatedOpsAllocationsRoute
+  '/_authenticated/ops/approvals': typeof AuthenticatedOpsApprovalsRoute
   '/_authenticated/ops/banking': typeof AuthenticatedOpsBankingRoute
   '/_authenticated/ops/client-approvals': typeof AuthenticatedOpsClientApprovalsRoute
   '/_authenticated/ops/client-portal-launch': typeof AuthenticatedOpsClientPortalLaunchRoute
@@ -4909,6 +4919,7 @@ export interface FileRouteTypes {
     | '/ops/accounting'
     | '/ops/agreements'
     | '/ops/allocations'
+    | '/ops/approvals'
     | '/ops/banking'
     | '/ops/client-approvals'
     | '/ops/client-portal-launch'
@@ -5383,6 +5394,7 @@ export interface FileRouteTypes {
     | '/ops/accounting'
     | '/ops/agreements'
     | '/ops/allocations'
+    | '/ops/approvals'
     | '/ops/banking'
     | '/ops/client-approvals'
     | '/ops/client-portal-launch'
@@ -5864,6 +5876,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ops/accounting'
     | '/_authenticated/ops/agreements'
     | '/_authenticated/ops/allocations'
+    | '/_authenticated/ops/approvals'
     | '/_authenticated/ops/banking'
     | '/_authenticated/ops/client-approvals'
     | '/_authenticated/ops/client-portal-launch'
@@ -7917,6 +7930,13 @@ declare module '@tanstack/react-router' {
       path: '/ops/allocations'
       fullPath: '/ops/allocations'
       preLoaderRoute: typeof AuthenticatedOpsAllocationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ops/approvals': {
+      id: '/_authenticated/ops/approvals'
+      path: '/ops/approvals'
+      fullPath: '/ops/approvals'
+      preLoaderRoute: typeof AuthenticatedOpsApprovalsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/ops/banking': {
@@ -10023,6 +10043,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOpsAccountingRoute: typeof AuthenticatedOpsAccountingRoute
   AuthenticatedOpsAgreementsRoute: typeof AuthenticatedOpsAgreementsRoute
   AuthenticatedOpsAllocationsRoute: typeof AuthenticatedOpsAllocationsRoute
+  AuthenticatedOpsApprovalsRoute: typeof AuthenticatedOpsApprovalsRoute
   AuthenticatedOpsBankingRoute: typeof AuthenticatedOpsBankingRoute
   AuthenticatedOpsClientApprovalsRoute: typeof AuthenticatedOpsClientApprovalsRoute
   AuthenticatedOpsClientPortalLaunchRoute: typeof AuthenticatedOpsClientPortalLaunchRoute
@@ -10367,6 +10388,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOpsAccountingRoute: AuthenticatedOpsAccountingRoute,
   AuthenticatedOpsAgreementsRoute: AuthenticatedOpsAgreementsRoute,
   AuthenticatedOpsAllocationsRoute: AuthenticatedOpsAllocationsRoute,
+  AuthenticatedOpsApprovalsRoute: AuthenticatedOpsApprovalsRoute,
   AuthenticatedOpsBankingRoute: AuthenticatedOpsBankingRoute,
   AuthenticatedOpsClientApprovalsRoute: AuthenticatedOpsClientApprovalsRoute,
   AuthenticatedOpsClientPortalLaunchRoute:

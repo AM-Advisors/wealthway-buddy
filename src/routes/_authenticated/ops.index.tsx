@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
+import { StaffApprovalsBanner } from "@/components/approvals-inbox-banner";
 import { OperationsWorkHome } from "@/components/ops-home";
 import { OpsDashboard } from "@/components/ops-dashboard";
 
@@ -23,6 +24,7 @@ export const Route = createFileRoute("/_authenticated/ops/")({
   }),
   component: () => (
     <>
+      <StaffApprovalsBanner />
       <OpsDashboard />
       <OperationsWorkHome />
     </>

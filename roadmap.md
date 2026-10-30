@@ -904,3 +904,5 @@
 - [x] Remove signer, make main signer and remove team member use confirm + undo; signed documents and history unchanged.
 - [x] Operations queue flags manager-owned work once stalled (drafts 3 days, ready-not-launched 3 days, signer ID check 7 days), display-only. 5 rule tests pass.
 - [ ] Authenticated on-screen check blocked by authenticator sign-in in testing.
+
+- [ ] Approval email reminders to the assigned approver after 3 days waiting (Slack alerts already post for new items) — awaiting go-ahead on wording/frequency

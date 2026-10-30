@@ -1,3 +1,4 @@
+import { useApprovalsInbox } from "@/components/approvals-inbox-banner";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useRouterState } from "@tanstack/react-router";
@@ -66,7 +67,7 @@ const ICONS: Record<string, typeof Home> = {
 };
 
 
-type NavItem = { id: string; title: string; url: string; icon: string; sub?: { title: string; url: string }[] };
+type NavItem = { id: string; title: string; url: string; icon: string; badge?: number; sub?: { title: string; url: string }[] };
 
 /** Key screens shown as sub-items under each Operations area (filtered by capability). */
 const OPS_SUB: Record<string, { title: string; url: string; always?: boolean }[]> = {
@@ -127,6 +128,7 @@ function NavSection({ id, label, items, pathname, collapsed, onNavigate, isActiv
                       <Link to={item.url as never} aria-current={active ? "page" : undefined} onClick={onNavigate} className="flex items-center gap-2">
                         <Icon className="h-4 w-4 shrink-0" />
                         <span className="truncate">{item.title}</span>
+                        {!!item.badge && <span className="ml-auto rounded-full bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground" aria-label={`${item.badge} waiting`}>{item.badge}</span>}
                       </Link>
                     </SidebarMenuButton>
                     {!collapsed && !compactGroups && <FavoriteStar url={item.url} label={item.title} className="absolute right-1 top-1 hidden group-hover/item:block" />}
@@ -186,6 +188,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
   const peopleHits = canSeePeople ? records.data?.people ?? [] : [];
   const allowedUrls = useMemo(() => new Set(opsWorkAreas(capabilities).flatMap((a) => a.screens.map((s) => s.url))), [capabilities]);
 
+  const approvalsCount = useApprovalsInbox(allowedUrls.has("/ops/queue")).data?.total ?? 0;
   const home = sections.find((s) => s.id === "home");
   const adminSection = sections.find((s) => s.id === "administration");
   const has = (...r: string[]) => staffRoles.some((x) => r.includes(x));
@@ -195,6 +198,7 @@ export function OpsSidebar({ onSignOut }: { onSignOut: () => void }) {
   const opsItems: NavItem[] = salesOnly ? [] : [
     { id: "ops-command", title: "Command Center", url: "/ops/command-center", icon: "report", sub: [{ title: "Overview", url: "/ops/command-center" }, ...commandSub] },
     ...(leader || has("operations", "fund_administration") ? [{ id: "dash-ops", title: "Operations dashboard", url: "/ops/dashboards/operations", icon: "report" }] : []),
+    ...(allowedUrls.has("/ops/queue") ? [{ id: "approvals", title: "Approvals inbox", url: "/ops/approvals", icon: "check", badge: approvalsCount }] : []),
     ...(allowedUrls.has("/ops/queue") ? [{ id: "queue", title: "Work queue", url: "/ops/queue", icon: "tasks" }] : []),
     ...(allowedUrls.has("/ops/queue") ? [{ id: "stalled", title: "Stalled items", url: "/ops/stalled", icon: "tasks" }] : []),
     ...sections.filter((s) => !["home", "administration", ...FINANCE_IDS].includes(s.id)).map(toItem),
