@@ -16,7 +16,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 const LABEL: Record<string, string> = { not_started: "Not started", pending: "In progress", review: "Needs review", approved: "Approved", declined: "Declined", expired: "ID expired", sent_back: "Sent back" };
 
 /** Harmonious compliance queue for account identity checks (portal access gate). */
-export function AccountIdentityQueue({ userId }: { userId?: string | undefined } = {}) {
+export function AccountIdentityQueue({ userId, investorName, investorEmail }: { userId?: string | undefined; investorName?: string | undefined; investorEmail?: string | undefined } = {}) {
   const qc = useQueryClient();
   const list = useServerFn(accountCheckQueueFn);
   const decide = useServerFn(decideAccountCheckFn);
@@ -53,7 +53,8 @@ export function AccountIdentityQueue({ userId }: { userId?: string | undefined }
           const d = r.decision_summary ?? {};
           return (
             <div key={r.id} className="space-y-2 rounded-md border p-3 text-sm">
-              <div className="flex flex-wrap items-center justify-between gap-2"><Button variant="link" className="h-auto min-w-0 max-w-full justify-start whitespace-normal p-0 text-left" onClick={() => setSelectedId(r.id)} aria-label={`Review identity check for ${r.email}`}><span className="break-all">{r.email}</span><ChevronRight className="ml-1 h-4 w-4 shrink-0" /></Button><Badge variant={r.status === "review" ? "destructive" : "outline"}>{LABEL[r.status] ?? r.status}</Badge></div>
+              <div className="flex flex-wrap items-center justify-between gap-2"><Button variant="link" className="h-auto min-w-0 max-w-full justify-start whitespace-normal p-0 text-left" onClick={() => setSelectedId(r.id)} aria-label={`Review identity check for ${investorName || r.email}`}><span className="break-words">{investorName || r.email}</span><ChevronRight className="ml-1 h-4 w-4 shrink-0" /></Button><Badge variant={r.status === "review" ? "destructive" : "outline"}>{LABEL[r.status] ?? r.status}</Badge></div>
+              {investorName && investorEmail ? <p className="break-all text-muted-foreground">{investorEmail}</p> : null}
               <p className="text-xs text-muted-foreground">Started {new Date(r.created_at).toLocaleDateString()} · ID {d.document?.type ?? "Not recorded"} {d.document?.country ?? ""}{d.document?.last4 ? ` ••••${d.document.last4}` : ""} · Liveness {d.liveness ?? "Not recorded"} · Face {d.faceMatch ?? "Not recorded"} · Address {d.address ?? "Not recorded"} · AML {d.aml?.status ?? "Not recorded"}{d.aml?.hits ? ` (${d.aml.hits} hit${d.aml.hits > 1 ? "s" : ""})` : ""}</p>
               <Button size="sm" variant="outline" onClick={() => setSelectedId(r.id)}>Review details<ChevronRight className="ml-1 h-4 w-4" /></Button>
               {!!(r.warnings ?? []).length && <ul className="list-disc pl-5 text-xs text-destructive">{r.warnings.slice(0, 6).map((w: string) => <li key={w}>{w}</li>)}</ul>}
@@ -69,11 +70,11 @@ export function AccountIdentityQueue({ userId }: { userId?: string | undefined }
         <DialogContent className="max-w-5xl p-4 sm:p-6">
           <DialogHeader className="pr-6 text-left">
             <DialogTitle>Identity check review</DialogTitle>
-            <DialogDescription className="break-all">{selected?.email}</DialogDescription>
+            <DialogDescription className="break-words">{investorName || selected?.email}{investorName && investorEmail ? ` · ${investorEmail}` : ""}</DialogDescription>
           </DialogHeader>
           {selected && <div className="min-w-0 space-y-4">
             <div className="flex flex-wrap items-center gap-2"><Badge variant={selected.status === "review" ? "destructive" : "outline"}>{LABEL[selected.status] ?? selected.status}</Badge><span className="text-xs text-muted-foreground">Updated {new Date(selected.updated_at).toLocaleString()}</span></div>
-            {selected.review_details ? <KycReviewPanel key={selected.id} rd={selected.review_details} checkId={selected.id} /> : <p className="text-sm text-muted-foreground">Detailed evidence has not been recorded for this check.</p>}
+            {selected.review_details ? <details className="rounded-md border p-3"><summary className="cursor-pointer text-sm font-medium">Original verification evidence</summary><p className="my-3 text-sm text-muted-foreground">Names and email addresses below were captured when this check began. They are historical evidence, not current investor details. The current Harmonious decision is shown above.</p><KycReviewPanel key={selected.id} rd={selected.review_details} checkId={selected.id} /></details> : <p className="text-sm text-muted-foreground">Detailed evidence has not been recorded for this check.</p>}
             {!!selected.warnings?.length && <section><h3 className="mb-2 text-sm font-semibold">Recorded warnings</h3><ul className="list-disc space-y-1 pl-5 text-sm text-destructive">{selected.warnings.map((w: string, i: number) => <li key={i}>{w}</li>)}</ul></section>}
             {(selected.review_details?.aml?.totalHits ?? selected.decision_summary?.aml?.hits ?? 0) > 0 && <AmlMatchReview key={selected.id} checkId={selected.id} />}
             {selected.decision_note && <p className="break-words text-sm">Decision note: {selected.decision_note}</p>}

@@ -1,5 +1,10 @@
 # Roadmap
 
+## Kimberly investor clarity (2026-10-30)
+- [x] Confirm canonical Erebor person/profile name is Kimberly Girardi and account identity check is approved; Joe/Dante occur in original verification evidence, not current investor fields.
+- [ ] Add a direct investor-details correction shortcut for staff and managers, and separate current investor identity from historical verification evidence without changing permissions or decisions.
+- [ ] Run focused safeguards; live staff/manager read-back requires independently isolated QA and synthetic sessions.
+
 ## Uploaded tax-form handoff
 - [x] Exact-investment uploaded tax copies show certification review pending, not an investor reupload task. Valid certified forms and renewal requirements retain precedence.
 - [x] Investor Sign acknowledges the copy already on file; investor-record checklist opens Documents or verification Details directly. No tax certification, compliance or funding decisions changed.
