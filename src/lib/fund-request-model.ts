@@ -181,7 +181,7 @@ export const visibleSteps = (r: Pick<FundRequest, "kind" | "simplified">) =>
 
 /** Entity documents to ask for: a series has no certificate of formation of its own. */
 export const entityDocKinds = (r: Pick<FundRequest, "vehicle_structure">) =>
-  r.vehicle_structure === "Series LLC" ? ["Series designation / joinder (if any)", "IRS EIN letter"] : ["Formation document", "Certificate of formation", "IRS EIN letter"];
+  r.vehicle_structure === "Series LLC" ? ["Series designation / joinder (if any)", "IRS EIN letter"] : ["Formation document", "IRS EIN letter"];
 
 /** Missing required answers, per step. Empty object means ready to send. */
 export function missingFields(r: FundRequest): Partial<Record<RequestStepKey, string[]>> {
