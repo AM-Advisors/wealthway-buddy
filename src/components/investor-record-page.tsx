@@ -6,7 +6,8 @@ import { InvestorStepHistory } from "@/components/investor-step-history";
 import { InvestorRecordDocuments } from "@/components/investor-document-review";
 import { InvestorDocumentAi } from "@/components/investor-document-ai";
 import { DistributionBankCard, InvestorTaxIdCard, RelatedPartiesEditor } from "@/components/investor-record-extras";
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { Pencil } from "lucide-react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { openTargetFor } from "@/lib/readiness-open-target";
 import { sendSubscriptionSignNoticeFn } from "@/lib/fund-tabs.functions";
@@ -42,6 +43,14 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
   // Staff open records on the Operations address; links stay there so the sign-in is kept.
   const onOps = useRouterState({ select: (st) => st.location.pathname.startsWith("/ops") });
   const [tab, setTab] = useState<VisibleTab>(visibleTab(initial));
+  const contactRef = useRef<HTMLDivElement>(null);
+  const correctDetails = () => {
+    setTab("details");
+    requestAnimationFrame(() => {
+      contactRef.current?.scrollIntoView({ behavior: "auto", block: "start" });
+      document.getElementById("ir-firstName")?.focus({ preventScroll: true });
+    });
+  };
   const load = useServerFn(investorRecordDetailFn);
   const update = useServerFn(updateInvestorRecordFn);
   const resolve = useServerFn(resolveSuggestionFn);
@@ -103,6 +112,7 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
           <h2 className="mt-1 text-xl">{data.overview.name}</h2>
           <p className="text-sm text-muted-foreground">{data.profile?.label ?? "No investing profile yet"} · {prettyStatus(data.overview.stage)} · Entered by {SOURCE_LABELS[data.overview.enteredBy as EntrySource] ?? "Investor"}{data.overview.investorConfirmedAt ? " · confirmed by investor" : ""}</p></div>
         <div className="flex flex-wrap gap-2">
+          {!data.overview.removed ? <Button size="sm" variant="outline" onClick={correctDetails}><Pencil className="mr-2 h-4 w-4" />Correct investor details</Button> : null}
           {staff && data.overview.investorUserId ? <Button asChild size="sm" variant="outline"><Link to="/ops/investors/$investorId" params={{ investorId: data.overview.investorUserId }} search={{ tab: undefined }}>Open Investor 360</Link></Button> : null}
           {data.overview.removed ? <Badge variant="destructive">Removed from Fund</Badge> : null}
           {data.claimState === "prepared" ? <Badge variant="outline">{CLAIM_STATE_LABELS[data.claimState]}</Badge> : null}
@@ -138,10 +148,10 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
         } })}>{data.detailsEditMode === "suggest" ? "Submit investment changes" : "Save investment"}</Button>
       </CardContent></Card> : null}
 
-      {tab === "details" && staff && data.overview.investorUserId ? <AccountIdentityQueue userId={data.overview.investorUserId} /> : null}
+      {tab === "details" && staff && data.overview.investorUserId ? <AccountIdentityQueue userId={data.overview.investorUserId} investorName={[p?.firstName, p?.middleName, p?.lastName].filter(Boolean).join(" ")} investorEmail={p?.email ?? undefined} /> : null}
       {tab === "details" ? <div className="space-y-4">
         {staff && data.overview.investorUserId ? <InvestorVerificationCard investorUserId={data.overview.investorUserId} /> : null}
-        <Card><CardHeader><CardTitle className="text-base">Contact</CardTitle>
+        <Card ref={contactRef} className="scroll-mt-4"><CardHeader><CardTitle className="text-base">Investor details</CardTitle>
           {data.contactEditMode === "suggest" ? <p className="text-sm text-muted-foreground">Changes need review because signing or funding has started, or this contact is shared with another investment.</p>
             : data.claimState === "prepared" ? <p className="text-sm text-muted-foreground">Prepared record: entered by {SOURCE_LABELS[data.overview.enteredBy as EntrySource] ?? "the Fund team"}, not by the investor. Nobody has access to it until the investor signs in with this email, and they'll be asked to confirm it.</p> : null}
         </CardHeader><CardContent className="grid gap-3 sm:grid-cols-2">
@@ -152,7 +162,7 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
           <Button className="sm:w-fit" disabled={data.overview.removed} onClick={() => save({ onboardingId, person: {
             firstName: edit['firstName'], middleName: edit['middleName'], lastName: edit['lastName'], preferredName: edit['preferredName'], email: edit['email'], phone: edit['phone'],
             citizenship: edit['citizenship'], dateOfBirth: edit["dob"] || undefined, addressLine1: edit['address1'], addressLine2: edit['address2'], city: edit['city'], region: edit['region'], postalCode: edit['postal'], country: edit['country'],
-          } })}>{data.contactEditMode === "suggest" ? "Suggest change" : "Save contact"}</Button>
+          } })}>{data.contactEditMode === "suggest" ? "Submit correction for review" : "Save investor details"}</Button>
         </CardContent></Card>
         {data.profile ? <Card><CardHeader><CardTitle className="text-base">Investment Profile · {data.profile.typeLabel}</CardTitle></CardHeader><CardContent className="grid gap-3 sm:grid-cols-2">
           {field("legalName", "Legal investor name", data.profile.legalName)}

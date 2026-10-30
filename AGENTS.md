@@ -66,4 +66,5 @@
 - Listed contacts/team entries auto-link to a confirmed same-email login via connect_listed_entries (triggers + sign-in RPC, logged); view-only client access, never manager rights — why: no separate invite needed.
 - Amount-range classes: FundClass min/max (exclusive) + class-tiers.ts; agreement prep picks the series from the signed amount, records it, and refuses when several fit until staff/manager records the choice — why: investors never self-select overlapping series.
 - Investor roster menus share InvestorActionsMenu; only unique explicit same-fund application links from the authorized roster use canonical routes/actions. Unlinked or ambiguous legacy records keep legacy routes, disabled unsupported actions and distinct revocation/removal. Why: navigation must not infer identity or authority.
+- Investor correction shortcuts reuse the existing investor-record save/review path; account-review current name/contact comes from that authorized record, while original verification evidence remains separately labeled and inspectable. Why: simpler corrections must not rewrite screening history or grant identity authority.
 
