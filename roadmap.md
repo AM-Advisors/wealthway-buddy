@@ -1,5 +1,10 @@
 # Roadmap
 
+## Launch approval clarity (2026-10-30)
+- [x] Economics completion reads approved canonical terms and refreshes after approval; duplicate task blockers removed; exact unfinished tasks link to existing setup/approval/document/banking pages.
+- [x] 44 focused safeguards passed; preview build OK. No real approvals performed.
+- [ ] Live approval read-back requires independently isolated QA; the screenshot does not identify the fund for record-specific diagnosis.
+
 ## Personal onboarding access recovery (2026-10-30)
 - [x] Confirm Steve's successful login and repeated denied onboarding reads; no supporting account, investment or person-request verification row found despite a Person approved label.
 - [x] Reuse shared account verification gate before personal onboarding mounts, providing start/continue/check-again instead of repeated denied reads; no approvals fabricated.
