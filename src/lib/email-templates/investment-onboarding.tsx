@@ -41,9 +41,16 @@ function InvestmentOnboarding({
           </Text>
           <Text style={{ color: '#221F20', fontSize: '15px', lineHeight: '24px' }}>
             {managerName} uses Harmonious for investor onboarding. To complete your investment
-            {amount ? ` of ${amount}` : ''} in {fundName}, please verify your identity and review
-            the applicable investment documents.
+            {amount ? ` of ${amount}` : ''} in {fundName}, please complete these steps:
           </Text>
+          <Section style={{ margin: '16px 0', padding: '0 20px' }}>
+            <Text style={{ color: '#221F20', fontSize: '14px', lineHeight: '26px', margin: 0 }}>
+              1. About you: share your details (about 2 minutes)<br />
+              2. Verify your identity: a quick ID check (about 3 minutes)<br />
+              3. Sign: review and sign your investment documents (about 4 minutes)<br />
+              4. Fund: send your investment to the fund (about 1 minute)
+            </Text>
+          </Section>
           <Section style={{ margin: '28px 0' }}>
             <Button href={ctaUrl} style={{ backgroundColor: '#142647', borderRadius: '6px', color: '#ffffff', fontSize: '15px', fontWeight: 600, padding: '14px 24px' }}>
               Complete Onboarding
@@ -51,7 +58,7 @@ function InvestmentOnboarding({
           </Section>
           <Text style={{ color: '#5b6472', fontSize: '13px', lineHeight: '20px' }}>
             You'll be asked to sign in with this email address. You can stop at any time and pick
-            up where you left off. Harmonious will never ask for bank details by email.
+            up right where you left off. Harmonious will never ask for bank details by email.
           </Text>
         </Container>
       </Body>
