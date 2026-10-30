@@ -7,6 +7,7 @@ vi.mock("@/integrations/supabase/client.server", () => ({ supabaseAdmin: {
     const q: any = {
       select: () => q, eq: (key: string, value: unknown) => { filters.push((r) => r[key] === value); return q; },
       in: (key: string, values: unknown[]) => { filters.push((r) => values.includes(r[key])); return q; },
+      or: (clause: string) => { const parts = clause.split(/,(?=(?:user_id|email)\.)/); filters.push((r) => parts.some((part) => { const m = part.match(/^(user_id|email)\.in\.\((.*)\)$/); if (!m) return false; const vals = m[2] ? m[2].split(",") : []; return vals.includes(String(r[m[1]] ?? "")); })); return q; },
       order: () => q,
       maybeSingle: async () => ({ data: (mock.tables[table] ?? []).filter((r) => filters.every((f) => f(r)))[0] ?? null }),
       then: (resolve: any) => Promise.resolve({ data: (mock.tables[table] ?? []).filter((r) => filters.every((f) => f(r))) }).then(resolve),
