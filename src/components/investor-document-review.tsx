@@ -3,6 +3,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
+import { Send } from "lucide-react";
+import { sendSubscriptionSignNoticeFn } from "@/lib/fund-tabs.functions";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -31,6 +33,7 @@ function SignedCopyButton({ offeringId, signatureId }: { offeringId: string; sig
 function DocRow({ offeringId, onboardingId, title, version, d, readOnly }: { offeringId: string; onboardingId: string; title: string; version: number | null; d: any; readOnly?: boolean }) {
   const decide = useServerFn(decideDocumentFn);
   const emailSignatory = useServerFn(emailFundSignatoryFn);
+  const sendRequest = useServerFn(sendSubscriptionSignNoticeFn);
   const qc = useQueryClient();
   const [returning, setReturning] = useState(false);
   const [note, setNote] = useState("");
@@ -63,6 +66,15 @@ function DocRow({ offeringId, onboardingId, title, version, d, readOnly }: { off
           ) : null}
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          {!d.signed && !readOnly ? <Button size="sm" variant="outline" disabled={busy} aria-label={`Send ${title} request to investor`} onClick={async () => {
+            setBusy(true);
+            try {
+              const r = await sendRequest({ data: { fundId: offeringId, onboardingId, kind: /subscription/i.test(title) ? "subscription" : "fund_documents" } });
+              if (r.sent) toast.success(r.invited ? "Invitation and document request sent" : "Document request sent");
+              else toast.message("Already requested today, or the email wasn't sent.");
+            } catch (e) { toast.error((e as Error).message); }
+            finally { setBusy(false); }
+          }}><Send className="mr-2 h-4 w-4" />{busy ? "Sending…" : "Send"}</Button> : null}
           {!d.signed ? <Badge variant="outline">Investor hasn't signed yet</Badge> : d.decision === "approved" ? <Badge>Approved</Badge> : d.decision === "returned" ? <Badge variant="destructive">Declined</Badge> : <Badge variant="secondary">Signed - awaiting your decision</Badge>}
           {d.signed && d.decision === "approved" && d.countersignSignerId && !readOnly ? (
             <Button size="sm" onClick={() => navigate({ to: "/manager/countersign/$signerId", params: { signerId: d.countersignSignerId } })}>Sign now</Button>
