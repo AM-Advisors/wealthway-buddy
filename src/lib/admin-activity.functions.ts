@@ -133,18 +133,14 @@ export const listAdminActivity = createServerFn({ method: "GET" })
         ].filter(Boolean),
       ),
     ] as string[];
-    let profiles: any[] = [];
+    let nameMap = new Map<string, string>();
     if (peopleIds.length) {
-      const { data: profs } = await supabase
-        .from("profiles")
-        .select("user_id, legal_name, email")
-        .in("user_id", peopleIds);
-      profiles = (profs ?? []) as any[];
+      const { loadAccountNames } = await import("@/lib/profile-name.server");
+      nameMap = await loadAccountNames(peopleIds);
     }
     const person = (id: string | null) => {
       if (!id) return { name: null as string | null, email: null as string | null };
-      const p = profiles.find((x) => x.user_id === id);
-      return { name: p?.legal_name ?? null, email: p?.email ?? null };
+      return { name: nameMap.get(id) ?? null, email: null as string | null };
     };
 
     const entries: AdminActivityEntry[] = [];

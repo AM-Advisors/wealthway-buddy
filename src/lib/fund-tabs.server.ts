@@ -185,7 +185,7 @@ export async function team(fundId: string) {
   const feeRows = (fees ?? []) as any[];
   return {
     members: (members ?? []) as any[],
-    signedInManagers: ((profs ?? []) as any[]).map((p) => ({ name: p.legal_name ?? p.email ?? "Fund manager", email: p.email ?? null })),
+    signedInManagers: ids.map((id) => ({ name: managerNames.get(id) ?? "Fund manager", email: null })),
     activeFee: feeRows.find((f) => f.status === "active") ?? null,
     pendingFee: feeRows.find((f) => f.status === "pending_approval") ?? null,
     feeHistory: feeRows,
