@@ -1,5 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { personalLinkPermissions } from "./personal-investment-link-model";
+import { personalLinkPermissions, personalLinkStatus } from "./personal-investment-link-model";
+
+describe("recorded invitation status", () => {
+  it("accepted invitations remain usable", () => {
+    expect(personalLinkStatus({ state: "claimed", lastSentAt: null }).usable).toBe(true);
+  });
+  it("expired invitations cannot be copied as working links", () => {
+    expect(personalLinkStatus({ state: "expired", lastSentAt: null }).usable).toBe(false);
+  });
+  it("disabled invitations cannot be copied as working links", () => {
+    expect(personalLinkStatus({ state: "disabled", lastSentAt: null }).usable).toBe(false);
+  });
+});
 
 describe("personal investment link permissions", () => {
   it("lets a manager create a link only when none exists and an email is on file", () => {

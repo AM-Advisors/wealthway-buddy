@@ -434,7 +434,7 @@ export function InvestorReviewPanel({ fundId, id, embedded = false, onOpenItem }
           </section>
             </TabsContent>
             <TabsContent value="actions" className="space-y-6">
-          {id && <section className="rounded-lg border p-3" aria-label="Invite investor">
+          {id && !embedded && <section className="rounded-lg border p-3" aria-label="Invite investor">
             <h4 className="mb-1 font-medium">Investor account</h4>
             <p className="mb-2 text-muted-foreground">Email the investor their personal invite so they can set up their account and start onboarding.</p>
             <InviteInvestorButton onboardingId={id} />

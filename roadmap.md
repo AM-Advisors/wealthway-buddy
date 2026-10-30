@@ -1,5 +1,11 @@
 # Roadmap
 
+## Investor invitation visibility (2026-10-30)
+- [x] Steve's exact ROAS invitation was accepted October 30 at 19:52 UTC, expires November 29; no resend needed and no email sent.
+- [x] Put the shared invitation card on investor Overview with status, recipient, last-email date, copy and authorized send/resend, refresh and truthful send errors; no authority or link replacement changes.
+- [x] Six invitation status/permission checks passed; preview build OK.
+- [ ] Visual control check did not render in the fictional harness; durable authenticated read-back requires isolated QA.
+
 ## Fund setup to-do usability (2026-10-30)
 - [x] Replace generic answer/check-off forms with direct existing setup and approval actions; terms completion uses the authorized approved-terms projection, never a note.
 - [x] Remove the repeated fund-change summary on Overview.

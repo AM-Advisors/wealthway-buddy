@@ -1,5 +1,6 @@
 import { AccountIdentityQueue } from "@/components/account-identity-queue";
 import { InvestorVerificationCard } from "@/components/investor-verification-card";
+import { PersonalInvestmentLinkCard } from "@/components/personal-investment-link";
 import { InvestorReviewPanel } from "@/components/fund-tabs/investors-tab";
 import { UploadForInvestor } from "@/components/upload-for-investor";
 import { InvestorStepHistory } from "@/components/investor-step-history";
@@ -124,6 +125,7 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
 
       
       {tab === "overview" ? <div className="grid gap-4 md:grid-cols-2">
+        {!data.overview.removed && <PersonalInvestmentLinkCard onboardingId={onboardingId} email={p?.email ?? undefined} />}
         <Card className="md:col-span-2"><CardHeader><CardTitle className="text-base">Status, review & actions</CardTitle></CardHeader><CardContent><InvestorReviewPanel fundId={fundId} id={onboardingId} embedded onOpenItem={openItem} /></CardContent></Card>
         {staff && data.suggestions.length ? <Card className="md:col-span-2"><CardHeader><CardTitle className="text-base">Information conflicts & suggested updates</CardTitle></CardHeader><CardContent className="divide-y">
           {data.suggestions.map((s) => <div key={s.id} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm">
