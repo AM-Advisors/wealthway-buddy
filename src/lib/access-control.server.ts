@@ -115,19 +115,13 @@ export function lastChange(b: Bundle, userId: string): string | null {
 
 export function nameMap(b: Bundle) {
   const m = new Map<string, string>();
-  const personName = (u_id: string | null, email: string | null) => {
-    if (!u_id) return null;
-    const p = b.persons.find((x: any) => x.user_id === u_id);
-    if (!p) return null;
-    const full = `${p.legal_first_name ?? ""} ${p.legal_last_name ?? ""}`.trim();
-    return full.length ? full : null;
-  };
   for (const u of b.users) m.set(u.id, u.email ?? u.id);
-  for (const p of b.persons) {
-    const name = personName(p.user_id, p.email);
-    if (p.user_id && name) m.set(p.user_id, name);
-  }
   for (const p of b.profiles) if (p.legal_name) m.set(p.user_id, p.legal_name);
+  for (const p of b.persons) {
+    if (!p.user_id || m.get(p.user_id) !== (b.profiles.find((x: any) => x.user_id === p.user_id)?.email ?? b.users.find((u: any) => u.id === p.user_id)?.email)) continue;
+    const full = `${p.legal_first_name ?? ""} ${p.legal_last_name ?? ""}`.trim();
+    if (full.length) m.set(p.user_id, full);
+  }
   return m;
 }
 
