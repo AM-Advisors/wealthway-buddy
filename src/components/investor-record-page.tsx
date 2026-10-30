@@ -62,7 +62,7 @@ export function InvestorRecordPage({ fundId, onboardingId, initial }: { fundId: 
   const { data, isLoading, error } = useQuery({ queryKey: ["investor-record", onboardingId], queryFn: () => load({ data: { onboardingId } }) });
   const [edit, setEdit] = useState<Record<string, string>>({});
   const set = (k: string) => (e: { target: { value: string } }) => setEdit((s) => ({ ...s, [k]: e.target.value }));
-  const refresh = () => { qc.invalidateQueries({ queryKey: ["investor-record", onboardingId] }); qc.invalidateQueries({ queryKey: ["fund-investor-records", fundId] }); for (const queryKey of [["onboarding"], ["profile-detail"], ["investment-profiles"], ["investment-readiness"], ["investor-prefill", onboardingId]]) qc.invalidateQueries({ queryKey }); };
+  const refresh = () => { qc.invalidateQueries({ queryKey: ["investor-record", onboardingId] }); qc.invalidateQueries({ queryKey: ["fund-investor-records", fundId] }); for (const queryKey of [["onboarding"], ["onboarding-profiles"], ["profile-detail"], ["investment-profiles"], ["investment-readiness"], ["investor-prefill", onboardingId]]) qc.invalidateQueries({ queryKey }); };
 
   if (isLoading) return <p className="text-sm text-muted-foreground">Loading investor…</p>;
   if (error || !data) return <p className="text-sm text-destructive">{(error as Error)?.message ?? "Investor not found."}</p>;

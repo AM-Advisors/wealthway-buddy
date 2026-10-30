@@ -21,7 +21,7 @@ export function InvestorPeopleAndContacts({ onboardingId, onSaved }: { onboardin
   const changeFn = useServerFn(changeInvestingAsFn);
   const addFn = useServerFn(addPersonForKycFn);
   const q = useQuery({ queryKey: key, queryFn: () => listFn({ data: { onboardingId } }) });
-  const refresh = () => { qc.invalidateQueries({ queryKey: key }); qc.invalidateQueries({ queryKey: ["investor-email-history", onboardingId] }); for (const queryKey of [["investor-record", onboardingId], ["fund-investor-records"], ["onboarding"], ["profile-detail"], ["investment-profiles"], ["investment-readiness"], ["investor-prefill", onboardingId]]) qc.invalidateQueries({ queryKey }); onSaved?.(); };
+  const refresh = () => { qc.invalidateQueries({ queryKey: key }); qc.invalidateQueries({ queryKey: ["investor-email-history", onboardingId] }); for (const queryKey of [["investor-record", onboardingId], ["fund-investor-records"], ["onboarding"], ["onboarding-profiles"], ["profile-detail"], ["investment-profiles"], ["investment-readiness"], ["investor-prefill", onboardingId]]) qc.invalidateQueries({ queryKey }); onSaved?.(); };
 
   const [contact, setContact] = useState<{ fullName: string; email: string; title: string } | null>(null);
   const [change, setChange] = useState<{ type: "joint" | "entity" | "trust"; subType: string; legalName: string } | null>(null);
