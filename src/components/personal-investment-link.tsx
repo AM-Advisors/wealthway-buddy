@@ -7,29 +7,34 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { createPersonalInvestmentLink, getMyPersonalInvestmentLinks, getPersonalInvestmentLink, recordPersonalInvestmentLinkCopy, sendPersonalInvestmentLink } from "@/lib/personal-investment-link.functions";
-
-const STATE: Record<string, string> = { active: "Not opened yet", claimed: "Claimed by investor", expired: "Expired", disabled: "Disabled" };
+import { personalLinkStatus } from "@/lib/personal-investment-link-model";
 
 /** Fund manager / Harmonious: the investor's own personal link for this investment. */
-export function PersonalInvestmentLinkCard({ onboardingId }: { onboardingId: string }) {
+export function PersonalInvestmentLinkCard({ onboardingId, email }: { onboardingId: string; email?: string | undefined }) {
   const load = useServerFn(getPersonalInvestmentLink), create = useServerFn(createPersonalInvestmentLink), send = useServerFn(sendPersonalInvestmentLink), copied = useServerFn(recordPersonalInvestmentLinkCopy), qc = useQueryClient();
   const key = ["personal-investment-link", onboardingId];
-  const { data, isLoading } = useQuery({ queryKey: key, queryFn: () => load({ data: { onboardingId } }) });
-  const run = async (fn: () => Promise<unknown>, ok: string) => { try { await fn(); toast.success(ok); qc.invalidateQueries({ queryKey: key }); } catch (e) { toast.error((e as Error).message); } };
-  const copy = async (url: string) => { await navigator.clipboard?.writeText(url).catch(() => undefined); toast.success("Link copied"); void copied({ data: { onboardingId } }).catch(() => null); };
+  const { data, isLoading, error, refetch } = useQuery({ queryKey: key, queryFn: () => load({ data: { onboardingId } }) });
+  const [busy, setBusy] = useState(false);
+  const run = async (fn: () => Promise<unknown>, ok: string) => { setBusy(true); try { await fn(); toast.success(ok); await qc.invalidateQueries({ queryKey: key }); } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); } };
+  const copy = async (url: string) => { try { if (!navigator.clipboard) throw new Error("Copy isn't available in this browser."); await navigator.clipboard.writeText(url); toast.success("Link copied"); void copied({ data: { onboardingId } }).catch(() => null); } catch { toast.error("Couldn't copy the link. Please try again."); } };
+  const status = personalLinkStatus(data?.link ?? null);
   return (
-    <Card className="md:col-span-2"><CardHeader><CardTitle className="text-base">Personal link</CardTitle></CardHeader><CardContent className="space-y-3 text-sm">
-      {isLoading || !data ? <p className="text-muted-foreground">Loading…</p> : data.link ? <>
-        <div className="flex flex-wrap items-center gap-2"><code className="break-all rounded bg-muted px-2 py-1 text-xs">{data.link.url}</code><Button size="sm" variant="outline" onClick={() => copy(data.link!.url)}>Copy</Button></div>
-        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground"><Badge variant={data.link.state === "claimed" ? "default" : "secondary"}>{STATE[data.link.state] ?? data.link.state}</Badge>
-          <span>{data.link.lastSentAt ? `Emailed ${new Date(data.link.lastSentAt).toLocaleDateString()}` : "Not emailed"}</span>
-          {data.link.expiresAt ? <span>· expires {new Date(data.link.expiresAt).toLocaleDateString()}</span> : null}</div>
-        {data.canSend ? <Button size="sm" onClick={() => run(() => send({ data: { onboardingId } }), "Invite email sent")}>Send invite email</Button> : null}
+    <Card className="md:col-span-2"><CardHeader><CardTitle className="text-base">Investor invitation</CardTitle>{email && <p className="break-all text-sm text-muted-foreground">{email}</p>}</CardHeader><CardContent className="space-y-3 text-sm">
+      {error ? <div><p className="text-destructive">Couldn't check this invitation.</p><Button variant="outline" onClick={() => refetch()}>Check again</Button></div> : isLoading || !data ? <p className="text-muted-foreground">Checking invitation…</p> : data.link ? <>
+        <div className="flex flex-wrap items-center gap-2"><Badge variant={data.link.state === "claimed" ? "default" : "secondary"}>{status.label}</Badge>
+          <span>{data.link.lastSentAt ? `Last emailed ${new Date(data.link.lastSentAt).toLocaleString()}` : "Not emailed"}</span>
+          {data.link.expiresAt ? <span>Expires {new Date(data.link.expiresAt).toLocaleDateString()}</span> : null}</div>
+        {data.link.state === "claimed" && <p className="text-muted-foreground">The investor has connected their account. No new invite is needed.</p>}
+        {!status.usable && <p className="text-muted-foreground">This invite cannot be used. Harmonious needs to replace it before sending another.</p>}
+        <div className="flex flex-wrap gap-2">
+          {status.usable && <Button variant="outline" onClick={() => { if (data.link) void copy(data.link.url); }}>Copy investor link</Button>}
+          {data.canSend && <Button disabled={busy} onClick={() => run(async () => { const result = await send({ data: { onboardingId } }); if (!result.emailSent) throw new Error("The invite email wasn't sent. Please try again."); }, "Invite email sent")}>{busy ? "Sending…" : data.link.lastSentAt ? "Resend invite" : "Send invite"}</Button>}
+          <Button variant="ghost" disabled={busy} onClick={() => refetch()}>Check status</Button>
+        </div>
       </> : <>
-        <p className="text-muted-foreground">No personal link yet. Creating one does not email the investor; share it however you like, or send the invite email after.</p>
-        {data.canCreate ? <Button size="sm" onClick={() => run(() => create({ data: { onboardingId } }), "Personal link created")}>Create personal link</Button> : !data.hasEmail ? <p className="text-xs text-muted-foreground">Add the investor's email first.</p> : null}
+        <Badge variant="outline">Not invited</Badge>
+        {data.canCreate ? <Button disabled={busy} onClick={() => run(async () => { await create({ data: { onboardingId } }); const result = await send({ data: { onboardingId } }); if (!result.emailSent) throw new Error("The link was created but the email wasn't sent. Check status and try again."); }, "Invite email sent")}>{busy ? "Sending…" : "Invite investor"}</Button> : !data.hasEmail ? <p className="text-muted-foreground">Add the investor's email first.</p> : null}
       </>}
-      <p className="text-xs text-muted-foreground">Only the investor, signed in with this email, can open it.{data && !data.launched ? " This fund opens to new investments at launch; the investor can still review and prepare their existing investment." : ""}</p>
     </CardContent></Card>
   );
 }
@@ -79,7 +84,7 @@ export function InviteInvestorButton({ onboardingId }: { onboardingId: string })
   const { data } = useQuery({ queryKey: key, queryFn: () => load({ data: { onboardingId } }) });
   const [busy, setBusy] = useState(false);
   if (!data) return null;
-  if (data.link?.state === "claimed") return <p className="text-sm text-muted-foreground">Investor has accepted their invite and set up their account.</p>;
+  if (data.link?.state === "claimed") return <p className="text-sm text-muted-foreground">Invite accepted. No new invite is needed.</p>;
   if (!data.hasEmail) return <p className="text-sm text-muted-foreground">Add the investor's email to send an invite.</p>;
   if (!data.link && !data.canCreate) return null;
   return <div className="space-y-1">
