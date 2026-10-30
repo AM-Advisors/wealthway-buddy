@@ -223,6 +223,7 @@ function DetailsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; onS
       regType: o.regType ?? "506b", targetRaise: fromCents(o.targetRaiseCents), maxOffering: fromCents(o.maxOfferingCents),
       minInvestment: fromCents(o.minInvestmentCents), maxInvestment: fromCents(o.maxInvestmentCents),
       offeringOpenDate: o.offeringOpenDate ?? "", offeringCloseDate: o.offeringCloseDate ?? "",
+      arbitrationCity: o.arbitrationCity, arbitrationState: o.arbitrationState,
       rollingCloses: o.rollingCloses ? "yes" : o.rollingCloses === false ? "no" : "",
       driveFolderUrl: o.driveFolderUrl ?? "",
     });
@@ -252,6 +253,7 @@ function DetailsCard({ d, offeringId, onSaved }: { d: D; offeringId: string; onS
             targetRaiseCents: toCents(f.targetRaise ?? ""), maxOfferingCents: toCents(f.maxOffering ?? ""),
             minInvestmentCents: toCents(f.minInvestment ?? "") ?? 0, maxInvestmentCents: toCents(f.maxInvestment ?? ""),
             offeringOpenDate: f.offeringOpenDate || null, offeringCloseDate: f.offeringCloseDate || null,
+            arbitrationCity: f.arbitrationCity || null, arbitrationState: f.arbitrationState || null,
             rollingCloses: f.rollingCloses === "" ? null : f.rollingCloses === "yes",
             driveFolderUrl: f.driveFolderUrl?.trim() || null,
             driveLinks: links.filter((l) => l.url.trim()).map((l) => ({ label: l.label.trim(), url: l.url.trim() })),

@@ -136,7 +136,10 @@ export function Ss4RequestPanel({ fundId }: { fundId: string }) {
   useEffect(() => { if (q.data) { setForm(q.data.form as Form); if (!signer && q.data.signerUserId) setSigner(q.data.signerUserId); } }, [q.data]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const send = useMutation({
-    mutationFn: () => sendFn({ data: { offeringId: fundId, signerUserId: signer!, form: form!, note: note || undefined } }),
+    mutationFn: () => {
+      if (!signer || !form) throw new Error("Choose a fund manager and complete the form first.");
+      return sendFn({ data: { offeringId: fundId, signerUserId: signer, form, note: note || undefined } });
+    },
     onSuccess: (r) => { toast.success(r.emailed ? `Sent to ${r.signerEmail} to sign.` : "Request created. The manager has no login email, so share the link with them."); setOpen(false); setNote(""); qc.invalidateQueries({ queryKey: ["ss4-request", fundId] }); },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -158,19 +161,20 @@ export function Ss4RequestPanel({ fundId }: { fundId: string }) {
 
   if (q.isLoading) return <div className="h-20 animate-pulse rounded-lg bg-muted" />;
   if (q.error) return <p className="text-sm text-destructive">{(q.error as Error).message}</p>;
-  const d = q.data!;
+  const d = q.data;
+  if (!d) return null;
   return (
     <div className="space-y-4 rounded-lg border bg-background p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h3 className="text-sm font-semibold">Request Form SS-4 signature from the fund manager</h3>
-          <p className="text-xs text-muted-foreground">Every line is filled in from the fund's details. The manager checks it, adds the Responsible Party SSN or ITIN, and signs. Harmonious files the signed form with the IRS by hand.</p>
+          <h3 className="text-sm font-semibold">{d.hasEin ? "EIN already recorded" : "Request Form SS-4 signature from the fund manager"}</h3>
+          <p className="text-xs text-muted-foreground">{d.hasEin ? "No SS-4 application is required." : "The manager reviews and signs the EIN application. Harmonious files the signed form with the IRS by hand."}</p>
         </div>
-        {!open && <Button size="sm" onClick={() => setOpen(true)} disabled={!d.managers.length}>Prepare SS-4 to sign</Button>}
+        {!d.hasEin && !open && <Button size="sm" onClick={() => setOpen(true)} disabled={!d.managers.length}>Prepare SS-4 to sign</Button>}
       </div>
-      {!d.managers.length && <p className="text-sm text-muted-foreground">This fund has no fund manager with a login yet, so there's no one to send it to.</p>}
+      {!d.hasEin && !d.managers.length && <p className="text-sm text-muted-foreground">This fund has no fund manager with a login yet, so there's no one to send it to.</p>}
 
-      {open && form && (
+      {!d.hasEin && open && form && (
         <div className="space-y-4 border-t pt-4">
           <div className="grid gap-3 md:grid-cols-2">
             <div className="space-y-1">
@@ -205,7 +209,7 @@ export function Ss4RequestPanel({ fundId }: { fundId: string }) {
               <div className="flex items-center gap-2">
                 <Badge variant={r.status === "signed" ? "default" : "outline"}>{r.status === "requested" ? "Waiting for signature" : r.status === "signed" ? "Signed" : "Cancelled"}</Badge>
                 {r.hasPdf && <Button size="sm" variant="outline" onClick={() => openPdf(r.id)}>Open signed SS-4</Button>}
-                {r.status === "requested" && <Button size="sm" variant="outline" onClick={() => resend.mutate(r.id)} disabled={resend.isPending}>{resend.isPending ? "Sending…" : "Send reminder"}</Button>}
+                {!d.hasEin && r.status === "requested" && <Button size="sm" variant="outline" onClick={() => resend.mutate(r.id)} disabled={resend.isPending}>{resend.isPending ? "Sending…" : "Send reminder"}</Button>}
                 {r.status === "requested" && <Button size="sm" variant="ghost" onClick={() => cancel.mutate(r.id)}>Cancel</Button>}
               </div>
             </div>

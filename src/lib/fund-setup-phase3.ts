@@ -92,6 +92,8 @@ export function bankingSection(input: {
 // ------------------------------------------------------------------ EIN / SS-4
 
 export type EinPath = "existing" | "harmonious";
+/** An SS-4 applies only while obtaining an EIN, never when one is already recorded. */
+export function needsEinApplication(hasEin: boolean) { return !hasEin; }
 export const EIN_STATUSES = [
   "information_needed",
   "ready_for_review",
@@ -183,7 +185,7 @@ export function ss4Missing(answers: any, opts: { hasEmployees: boolean; usesDesi
 
 export function entitySection(input: { path: EinPath | null; hasEin: boolean; hasEinLetter: boolean; hasSignedW9?: boolean; status: EinStatus | null; basicsComplete: boolean }) {
   if (input.hasEin && (input.hasEinLetter || input.hasSignedW9) && input.basicsComplete) return { status: "complete" as const, next: null, owner: null };
-  if (input.hasEin && !input.hasEinLetter) return { status: "in_progress" as const, next: "Upload the IRS EIN letter", owner: "client" as const };
+  if (input.hasEin) return { status: "in_progress" as const, next: input.hasEinLetter || input.hasSignedW9 ? "Complete the entity details" : "Upload the IRS EIN letter or signed W-9", owner: "client" as const };
   if (!input.path) return { status: input.basicsComplete ? ("in_progress" as const) : ("not_started" as const), next: "Choose how the EIN will be handled", owner: "harmonious" as const };
   if (input.path === "existing") return { status: "in_progress" as const, next: "Enter the EIN and upload the IRS letter", owner: "client" as const };
   const s = input.status ?? "information_needed";

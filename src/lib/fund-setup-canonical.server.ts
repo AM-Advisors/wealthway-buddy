@@ -7,6 +7,7 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import {
   classCountError,
+  recordedArbitrationVenue,
   classAssignmentError,
   classErrors,
   classKey,
@@ -140,6 +141,7 @@ export async function fundSetupOverview(userId: string, offeringId: string, hasE
       maxInvestmentCents: o.max_investment_cents,
       offeringOpenDate: o.offering_open_date,
       offeringCloseDate: o.offering_close_date,
+      ...recordedArbitrationVenue(o),
       rollingCloses: o.rolling_closes,
       hasMultipleClasses: !!o.has_multiple_classes,
       plannedClassCount: (o.planned_class_count ?? null) as number | null,

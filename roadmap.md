@@ -1,5 +1,11 @@
 # Roadmap
 
+## Arbitration saves and existing EIN (2026-10-30)
+- [x] Restore arbitration city/state in staff and manager read projections and canonical edit saves; previously saved values remain intact.
+- [x] Existing EIN suppresses SS-4 preparation and reminders, preserves historical forms, and leaves EIN evidence requirements intact; new sends/reminders check EIN server-side.
+- [x] 28 focused regression checks passed; no live fund facts, approvals or emails changed.
+- [ ] Durable staff/manager save and reload verification needs independently isolated QA; publishing has not been requested.
+
 ## Launch approval clarity (2026-10-30)
 - [x] Economics completion reads approved canonical terms and refreshes after approval; duplicate task blockers removed; exact unfinished tasks link to existing setup/approval/document/banking pages.
 - [x] 44 focused safeguards passed; preview build OK. No real approvals performed.

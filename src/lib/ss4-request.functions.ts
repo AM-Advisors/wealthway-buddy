@@ -10,6 +10,7 @@ import { adoptedSignatureSchema } from "@/lib/adopted-signature";
 
 import { requireSupabaseAuth } from "@/lib/require-auth";
 import { parseAddressParts } from "@/lib/address";
+import { needsEinApplication } from "@/lib/fund-setup-phase3";
 
 const SITE = "https://app.harmonious.co";
 const TEAM_EMAIL = "operations@harmonious.co";
@@ -47,6 +48,12 @@ async function requireStaffOrManager(userId: string, offeringId: string) {
   const { setupActor } = await import("@/lib/fund-setup.server");
   const a = await setupActor(userId);
   if (!a.isStaff && !a.offeringIds.includes(offeringId)) throw new Error("Forbidden: you do not manage that fund.");
+}
+
+async function fundHasEin(context: any, offeringId: string) {
+  const { data, error } = await context.supabase.rpc("get_offering_entity_details", { p_offering_id: offeringId }).maybeSingle();
+  if (error) throw new Error("Could not check the fund's EIN. Try again before requesting a form.");
+  return Boolean(data?.ein);
 }
 
 /** Possible SS-4 signers: the fund's managers plus the chosen fund signatory (if they have a login). */
@@ -122,12 +129,14 @@ export const ss4RequestContextFn = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     await requireStaffOrManager(context.userId, data.offeringId);
     const db = await admin();
+    const hasEin = await fundHasEin(context, data.offeringId);
     const managers = await managersOf(db, data.offeringId);
     const signer = managers.find((m) => m.userId === data.signerUserId) ?? managers[0];
     const form = await prefill(context, data.offeringId, signer ? { name: signer.name, phone: signer.phone } : undefined);
     const { data: reqs } = await db.from("ss4_signature_requests").select("id, signer_user_id, status, created_at, signed_at, signer_name, signer_title, signed_pdf_path").eq("offering_id", data.offeringId).order("created_at", { ascending: false });
     const names = new Map(managers.map((m) => [m.userId, m.name]));
     return {
+      hasEin,
       managers: managers.map((m) => ({ userId: m.userId, name: m.name, email: m.email })),
       signerUserId: signer?.userId ?? null,
       form,
@@ -140,6 +149,7 @@ export const sendSs4RequestFn = createServerFn({ method: "POST" })
   .validator((d: unknown) => z.object({ offeringId: z.string().uuid(), signerUserId: z.string().uuid(), form: formSchema, note: z.string().trim().max(1000).optional() }).parse(d))
   .handler(async ({ context, data }) => {
     await requireStaffOrManager(context.userId, data.offeringId);
+    if (!needsEinApplication(await fundHasEin(context, data.offeringId))) throw new Error("An EIN is already recorded. No SS-4 application is needed.");
     const db = await admin();
     const managers = await managersOf(db, data.offeringId);
     const signer = managers.find((m) => m.userId === data.signerUserId);
@@ -197,6 +207,7 @@ export const resendSs4RequestFn = createServerFn({ method: "POST" })
     if (!r) throw new Error("Request not found.");
     await requireStaffOrManager(context.userId, r.offering_id);
     if (r.status !== "requested") throw new Error("Only a request still waiting for signature can be reminded.");
+    if (!needsEinApplication(await fundHasEin(context, r.offering_id))) throw new Error("An EIN is already recorded. No SS-4 reminder is needed.");
     const { data: prof } = await db.from("profiles").select("email, legal_name").eq("user_id", r.signer_user_id).maybeSingle();
     const signerEmail = ((prof as any)?.email ?? null) as string | null;
     if (!signerEmail) throw new Error("The signer has no email address on file.");

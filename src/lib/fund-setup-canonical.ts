@@ -7,6 +7,11 @@
  * section status, applicability and validation; it never writes anything.
  */
 
+/** Project the recorded venue without falling back to an unrelated formation address. */
+export function recordedArbitrationVenue(o: { arbitration_city?: string | null; arbitration_state?: string | null }) {
+  return { arbitrationCity: o.arbitration_city ?? "", arbitrationState: o.arbitration_state ?? "" };
+}
+
 export const CANONICAL_SECTIONS = [
   "fund_details",
   "entity_ein",
